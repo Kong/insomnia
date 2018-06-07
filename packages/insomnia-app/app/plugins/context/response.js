@@ -1,6 +1,7 @@
 // @flow
 import type {ResponseHeader} from '../../models/response';
 import * as models from '../../models/index';
+import fs from 'fs';
 import {Readable} from 'stream';
 
 type MaybeResponse = {
@@ -14,10 +15,7 @@ type MaybeResponse = {
   headers?: Array<ResponseHeader>
 }
 
-export function init (
-  response: MaybeResponse,
-  bodyBuffer: Buffer | null = null
-): {response: Object} {
+export function init (response: MaybeResponse): { response: Object } {
   if (!response) {
     throw new Error('contexts.response initialized without response');
   }
@@ -49,6 +47,15 @@ export function init (
       },
       getBodyStream (): Readable | null {
         return models.response.getBodyStream(response);
+      },
+      setBody (body: Buffer) {
+        // Should never happen but just in case it does...
+        if (!response.bodyPath) {
+          throw new Error('Could not set body without existing body path');
+        }
+
+        fs.writeFileSync(response.bodyPath, body);
+        response.bytesContent = body.length;
       },
       getHeader (name: string): string | Array<string> | null {
         const headers = response.headers || [];

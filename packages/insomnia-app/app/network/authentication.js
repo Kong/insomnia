@@ -81,7 +81,7 @@ export async function getAuthHeader (
     let parsedAdditionalClaims;
 
     try {
-      parsedAdditionalClaims = JSON.parse(additionalClaims);
+      parsedAdditionalClaims = JSON.parse(additionalClaims || '{}');
     } catch (err) {
       throw new Error(`Unable to parse additional-claims: ${err}`);
     }

@@ -10,16 +10,17 @@ describe('init()', () => {
   it('initializes correctly', async () => {
     const result = plugin.init({});
     expect(Object.keys(result)).toEqual(['response']);
-    expect(Object.keys(result.response)).toEqual([
+    expect(Object.keys(result.response).sort()).toEqual([
+      'getBody',
+      'getBodyStream',
+      'getBytesRead',
+      'getHeader',
       'getRequestId',
       'getStatusCode',
       'getStatusMessage',
-      'getBytesRead',
       'getTime',
-      'getBody',
-      'getBodyStream',
-      'getHeader',
-      'hasHeader'
+      'hasHeader',
+      'setBody'
     ]);
   });
 

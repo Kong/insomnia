@@ -8,7 +8,8 @@ import ModalHeader from '../base/modal-header';
 type Props = {};
 type State = {
   title: string,
-  body: React.Node
+  body: React.Node,
+  tall: boolean,
 }
 
 @autobind
@@ -20,7 +21,8 @@ class WrapperModal extends React.PureComponent<Props, State> {
 
     this.state = {
       title: '',
-      body: null
+      body: null,
+      tall: false
     };
   }
 
@@ -29,19 +31,23 @@ class WrapperModal extends React.PureComponent<Props, State> {
   }
 
   show (options: Object = {}) {
-    const {title, body} = options;
-    this.setState({title, body});
+    const {title, body, tall} = options;
+    this.setState({
+      title,
+      body,
+      tall: !!tall
+    });
 
     this.modal && this.modal.show();
   }
 
   render () {
-    const {title, body} = this.state;
+    const {title, body, tall} = this.state;
 
     return (
-      <Modal ref={this._setModalRef}>
+      <Modal ref={this._setModalRef} tall={tall}>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
-        <ModalBody className="wide pad">
+        <ModalBody>
           {body}
         </ModalBody>
       </Modal>
