@@ -32,6 +32,13 @@ module.exports = function (source, options) {
 
   // construct headers
   Object.keys(source.headersObj).sort().forEach(function (key) {
+    var value = source.headersObj[key];
+
+    // Remove content-type header if it's multipart because curl will add it's own (with boundary)
+    if (key.toLowerCase() === 'content-type' && value.indexOf('multipart/') === 0) {
+      return;
+    }
+
     var header = util.format('%s: %s', key, source.headersObj[key])
     code.push('%s %s', opts.short ? '-H' : '--header', helpers.quote(header))
   })
