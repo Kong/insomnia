@@ -175,7 +175,7 @@ HTTPSnippet.prototype.prepare = function (request) {
   // update the uri object
   request.uriObj.query = request.queryObj
   request.uriObj.search = qs.stringify(request.queryObj, '&', '=', {
-    encodeURIComponent: request.encode ? null : str => str
+    encodeURIComponent: request.settingEncodeUrl ? null : str => str
   })
 
   if (request.uriObj.search) {
