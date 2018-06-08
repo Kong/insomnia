@@ -86,8 +86,12 @@
       padding: @padding-sm;
     }
 
-    & > ul {
+    & > ul,
+    & > ol {
       padding-left: @padding-xs;
+    }
+
+    & > ul {
       list-style: disc;
 
       ul {
@@ -95,7 +99,16 @@
       }
     }
 
-    ul {
+    & > ol {
+      list-style: decimal;
+
+      ol {
+        list-style: lower-alpha;
+      }
+    }
+
+    ul,
+    ol {
       margin-left: @padding-md;
     }
 
