@@ -1,9 +1,10 @@
 // @flow
 import * as electron from 'electron';
 import {showAlert, showPrompt} from '../../ui/components/modals/index';
-import {RENDER_PURPOSE_SEND} from '../../common/render';
+import type {RenderPurpose} from '../../common/render';
+import {RENDER_PURPOSE_GENERAL, RENDER_PURPOSE_SEND} from '../../common/render';
 
-export function init (renderPurpose?: string): {app: Object} {
+export function init (renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {app: Object} {
   return {
     app: {
       alert (title: string, message?: string): Promise<void> {

@@ -12,8 +12,11 @@ import type {Environment} from '../models/environment';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
-export const RENDER_PURPOSE_SEND = 'send';
-export const RENDER_PURPOSE_GENERAL = 'general';
+
+export type RenderPurpose = 'send' | 'general';
+
+export const RENDER_PURPOSE_SEND: RenderPurpose = 'send';
+export const RENDER_PURPOSE_GENERAL: RenderPurpose = 'general';
 
 export type RenderedRequest = Request & {
   cookies: Array<{name: string, value: string, disabled?: boolean}>,

@@ -143,11 +143,11 @@ async function getNunjucks (renderMode: string) {
   const nj = nunjucks.configure(config);
 
   const allTemplateTagPlugins = await plugins.getTemplateTags();
-  const allExtensions = allTemplateTagPlugins.map(p => p.templateTag);
+  const allExtensions = allTemplateTagPlugins;
   for (let i = 0; i < allExtensions.length; i++) {
-    const ext = allExtensions[i];
-    ext.priority = ext.priority || i * 100;
-    const instance = new BaseExtension(ext);
+    const {templateTag, plugin} = allExtensions[i];
+    templateTag.priority = templateTag.priority || i * 100;
+    const instance = new BaseExtension(templateTag, plugin);
     nj.addExtension(instance.getTag(), instance);
 
     // Hidden helper filter to debug complicated things
