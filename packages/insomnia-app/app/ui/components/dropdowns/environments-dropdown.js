@@ -67,7 +67,7 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
     const baseEnvironment = environments.find(e => e.parentId === workspace._id);
     const subEnvironments = environments.filter(
       e => e.parentId === (baseEnvironment && baseEnvironment._id)
-    );
+    ).sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
 
     let description;
     if (!activeEnvironment || activeEnvironment === baseEnvironment) {
