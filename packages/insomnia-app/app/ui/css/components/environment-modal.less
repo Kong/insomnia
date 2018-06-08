@@ -41,52 +41,6 @@
         }
       }
     }
-
-    .env-modal__sidebar-root-item,
-    .env-modal__sidebar-item {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-rows: @line-height-xs;
-      color: @hl;
-
-      & > button {
-        padding: 0 @padding-md 0 @padding-md;
-        width: 100%;
-
-        &:first-child {
-          padding-right: 0;
-        }
-
-        .editable {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          display: block;
-          padding-right: @padding-xs;
-          box-sizing: border-box;
-          width: 100%;
-          line-height: @line-height-xs;
-        }
-      }
-
-      &.env-modal__sidebar-item--active > button {
-        color: var(--color-font);
-        background-color: @hl-xs;
-      }
-
-      &:hover > button {
-        background-color: @hl-xs;
-      }
-    }
-
-    .env-modal__sidebar-item {
-      & > button {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        padding-left: @padding-md;
-      }
-    }
   }
 
   .env-modal__main {
@@ -117,5 +71,54 @@
       font-size: @font-size-xl;
       width: 100%;
     }
+  }
+}
+
+// These are at the top-level because sorting pulls the row out into <body>
+.env-modal__sidebar-root-item,
+.env-modal__sidebar-item {
+  z-index: 100000;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: @line-height-xs;
+  color: @hl;
+
+  & > button {
+    padding: 0 @padding-md 0 @padding-md;
+    width: 100%;
+
+    &:first-child {
+      padding-right: 0;
+    }
+
+    .editable {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+      padding-right: @padding-xs;
+      box-sizing: border-box;
+      width: 100%;
+      line-height: @line-height-xs;
+    }
+  }
+
+  &.env-modal__sidebar-item--dragging > button,
+  &.env-modal__sidebar-item--active > button {
+    color: var(--color-font);
+    background-color: @hl-xs;
+  }
+
+  &:hover > button {
+    background-color: @hl-xs;
+  }
+}
+
+.env-modal__sidebar-item {
+  & > button {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding-left: @padding-md;
   }
 }

@@ -139,6 +139,7 @@
     "react-dnd-html5-backend": "^2.6.0",
     "react-dom": "^16.3.2",
     "react-redux": "^5.0.7",
+    "react-sortable-hoc": "^0.8.3",
     "react-tabs": "^2.2.2",
     "redux": "^4.0.0",
     "redux-thunk": "^2.2.0",

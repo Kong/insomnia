@@ -682,6 +682,8 @@ class App extends PureComponent {
     this._updateDocumentTitle();
 
     db.onChange(async changes => {
+      let needsRefresh = false;
+
       for (const change of changes) {
         const [
           _, // eslint-disable-line no-unused-vars
@@ -700,14 +702,18 @@ class App extends PureComponent {
         // TODO: Only do this for environments in this workspace (not easy because they're nested)
         if (doc.type === models.environment.type) {
           console.log('[App] Forcing update from environment change', change);
-          this._wrapper._forceRequestPaneRefresh();
+          needsRefresh = true;
         }
 
         // Force refresh if sync changes the active request
         if (fromSync && doc._id === activeRequest._id) {
-          this._wrapper._forceRequestPaneRefresh();
+          needsRefresh = true;
           console.log('[App] Forcing update from request change', change);
         }
+      }
+
+      if (needsRefresh) {
+        this._wrapper._forceRequestPaneRefresh();
       }
     });
 

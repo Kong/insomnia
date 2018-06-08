@@ -2,6 +2,7 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
+import {SortableContainer, SortableElement, arrayMove} from 'react-sortable-hoc';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptButton from '../base/prompt-button';
 import Button from '../base/button';
@@ -40,6 +41,51 @@ type State = {
   rootEnvironment: Environment | null,
   selectedEnvironmentId: string | null
 };
+
+const SidebarListItem = SortableElement(({environment, activeEnvironment, showEnvironment, changeEnvironmentName}) => {
+  const classes = classnames({
+    'env-modal__sidebar-item': true,
+    'env-modal__sidebar-item--active': activeEnvironment === environment
+  });
+
+  return (
+    <li key={environment._id} className={classes}>
+      <Button onClick={showEnvironment} value={environment}>
+        {environment.color
+          ? <i className="space-right fa fa-circle" style={{color: environment.color}}/>
+          : <i className="space-right fa fa-empty"/>
+        }
+
+        {environment.isPrivate && (
+          <Tooltip position="top" message="Environment will not be exported or synced">
+            <i className="fa fa-eye-slash faint space-right"/>
+          </Tooltip>
+        )}
+
+        <Editable
+          className="inline-block"
+          onSubmit={name => changeEnvironmentName(environment, name)}
+          value={environment.name}
+        />
+      </Button>
+    </li>
+  );
+});
+
+const SidebarList = SortableContainer(({environments, activeEnvironment, showEnvironment, changeEnvironmentName}) => (
+  <ul>
+    {environments.map((e, i) => (
+      <SidebarListItem
+        key={e._id}
+        environment={e}
+        index={i}
+        activeEnvironment={activeEnvironment}
+        showEnvironment={showEnvironment}
+        changeEnvironmentName={changeEnvironmentName}
+      />
+    ))}
+  </ul>
+));
 
 @autobind
 class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
@@ -226,6 +272,26 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     });
   }
 
+  async _handleSortEnd (results: {oldIndex: number, newIndex: number, collection: Array<Environment>}) {
+    const {oldIndex, newIndex} = results;
+    if (newIndex === oldIndex) {
+      return;
+    }
+
+    const {subEnvironments} = this.state;
+
+    const newSubEnvironments = arrayMove(subEnvironments, oldIndex, newIndex);
+    this.setState({subEnvironments: newSubEnvironments});
+
+    // Do this last so we don't block the sorting
+    db.bufferChanges();
+    for (let i = 0; i < newSubEnvironments.length; i++) {
+      const environment = newSubEnvironments[i];
+      await models.environment.update(environment, {metaSortKey: i});
+    }
+    db.flushChanges();
+  }
+
   async _handleClickColorChange (environment: Environment) {
     let el = document.querySelector('#env-color-picker');
 
@@ -280,38 +346,6 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     }
   }
 
-  renderSidebarRow (environment: Environment) {
-    const activeEnvironment = this._getActiveEnvironment();
-
-    const classes = classnames({
-      'env-modal__sidebar-item': true,
-      'env-modal__sidebar-item--active': activeEnvironment === environment
-    });
-
-    return (
-      <li key={environment._id} className={classes}>
-        <Button onClick={this._handleShowEnvironment} value={environment}>
-          {environment.color
-            ? <i className="space-right fa fa-circle" style={{color: environment.color}}/>
-            : <i className="space-right fa fa-empty"/>
-          }
-
-          {environment.isPrivate && (
-            <Tooltip position="top" message="Environment will not be exported or synced">
-              <i className="fa fa-eye-slash faint space-right"/>
-            </Tooltip>
-          )}
-
-          <Editable
-            className="inline-block"
-            onSubmit={name => this._handleChangeEnvironmentName(environment, name)}
-            value={environment.name}
-          />
-        </Button>
-      </li>
-    );
-  }
-
   render () {
     const {
       editorFontSize,
@@ -364,9 +398,16 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                 </DropdownItem>
               </Dropdown>
             </div>
-            <ul>
-              {subEnvironments.sort((e1, e2) => e1.metaSortKey - e2.metaSortKey).map(this.renderSidebarRow)}
-            </ul>
+            <SidebarList
+              environments={subEnvironments}
+              activeEnvironment={activeEnvironment}
+              showEnvironment={this._handleShowEnvironment}
+              changeEnvironmentName={this._handleChangeEnvironmentName}
+              onSortEnd={this._handleSortEnd}
+              helperClass="env-modal__sidebar-item--dragging"
+              transitionDuration={0}
+              useWindowAsScrollContainer={false}
+            />
           </div>
           <div className="env-modal__main">
             <div className="env-modal__main__header">
@@ -374,12 +415,14 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                 {rootEnvironment === activeEnvironment ? (
                   ROOT_ENVIRONMENT_NAME
                 ) : (
-                  <Editable singleClick
-                            className="wide"
-                            onSubmit={name => (
-                              activeEnvironment &&
-                              this._handleChangeEnvironmentName(activeEnvironment, name))}
-                            value={activeEnvironment ? activeEnvironment.name : ''}/>
+                  <Editable
+                    singleClick
+                    className="wide"
+                    onSubmit={name => (
+                      activeEnvironment &&
+                      this._handleChangeEnvironmentName(activeEnvironment, name))}
+                    value={activeEnvironment ? activeEnvironment.name : ''}
+                  />
                 )}
               </h1>
 

@@ -47,7 +47,7 @@ export function update (environment: Environment, patch: Object): Promise<Enviro
 }
 
 export function findByParentId (parentId: string): Promise<Array<Environment>> {
-  return db.find(type, {parentId});
+  return db.find(type, {parentId}, {metaSortKey: 1});
 }
 
 export async function getOrCreateForWorkspaceId (workspaceId: string): Promise<Environment> {
