@@ -5,8 +5,9 @@ import * as pluginContexts from '../plugins/context';
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 
 export default class BaseExtension {
-  constructor (ext) {
+  constructor (ext, plugin) {
     this._ext = ext;
+    this._plugin = plugin;
     this.tags = [this.getTag()];
   }
 
@@ -72,6 +73,7 @@ export default class BaseExtension {
     // Define a helper context with utils
     const helperContext = {
       ...pluginContexts.app.init(renderPurpose),
+      ...pluginContexts.store.init(this._plugin),
       context: renderContext,
       meta: renderMeta,
       util: {

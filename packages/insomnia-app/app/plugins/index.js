@@ -17,7 +17,7 @@ export type Plugin = {
 };
 
 export type TemplateTag = {
-  plugin: string,
+  plugin: Plugin,
   templateTag: PluginTemplateTag
 }
 
@@ -151,7 +151,7 @@ export async function getTemplateTags (): Promise<Array<TemplateTag>> {
     const templateTags = plugin.module.templateTags || [];
     extensions = [
       ...extensions,
-      ...templateTags.map(tt => ({plugin: plugin.name, templateTag: tt}))
+      ...templateTags.map(tt => ({plugin, templateTag: tt}))
     ];
   }
 
