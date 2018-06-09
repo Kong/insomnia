@@ -359,7 +359,8 @@ describe('exportHarWithRequest()', () => {
         text: 'foo bar'
       },
       queryString: [{name: 'foo bar', value: 'hello&world'}],
-      url: 'http://google.com/'
+      url: 'http://google.com/',
+      settingEncodeUrl: true
     });
   });
 });

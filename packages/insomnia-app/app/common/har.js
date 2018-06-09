@@ -66,7 +66,8 @@ export type HarRequest = {
   postData?: HarPostData,
   headersSize: number,
   bodySize: number,
-  comment?: string
+  comment?: string,
+  settingEncodeUrl: boolean
 };
 
 export type HarContent = {
@@ -360,7 +361,8 @@ export async function exportHarWithRenderedRequest (
     queryString: getRequestQueryString(renderedRequest),
     postData: getRequestPostData(renderedRequest),
     headersSize: -1,
-    bodySize: -1
+    bodySize: -1,
+    settingEncodeUrl: renderedRequest.settingEncodeUrl
   };
 }
 

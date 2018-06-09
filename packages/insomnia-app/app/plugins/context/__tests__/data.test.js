@@ -238,7 +238,8 @@ describe('app.export.*', () => {
                   text: ''
                 },
                 queryString: [],
-                url: 'https://insomnia.rest/'
+                url: 'https://insomnia.rest/',
+                settingEncodeUrl: true
               },
               response: {
                 bodySize: -1,
