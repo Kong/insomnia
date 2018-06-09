@@ -51,6 +51,7 @@ const SidebarListItem = SortableElement(({environment, activeEnvironment, showEn
   return (
     <li key={environment._id} className={classes}>
       <Button onClick={showEnvironment} value={environment}>
+        <i className="fa fa-drag-handle drag-handle"/>
         {environment.color
           ? <i className="space-right fa fa-circle" style={{color: environment.color}}/>
           : <i className="space-right fa fa-empty"/>

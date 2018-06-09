@@ -91,6 +91,14 @@
       padding-right: 0;
     }
 
+    position: relative;
+    .drag-handle {
+      position: absolute;
+      left: 0;
+      opacity: 0;
+      color: var(--hl-lg)
+    }
+
     .editable {
       white-space: nowrap;
       overflow: hidden;
@@ -111,6 +119,11 @@
 
   &:hover > button {
     background-color: @hl-xs;
+  }
+
+  &.env-modal__sidebar-item--dragging .drag-handle,
+  &:hover .drag-handle {
+    opacity: 1;
   }
 }
 
