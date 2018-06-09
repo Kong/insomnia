@@ -10,13 +10,13 @@ export function init (plugin: Plugin) {
         return doc !== null;
       },
       async setItem (key: string, value: string): Promise<void> {
-        await models.pluginData.upsertByKey(plugin.name, key, value);
+        await models.pluginData.upsertByKey(plugin.name, key, String(value));
       },
       async getItem (key: string): Promise<string | null> {
         const doc = await models.pluginData.getByKey(plugin.name, key);
         return doc ? doc.value : null;
       },
-      async clearItem (key: string): Promise<void> {
+      async removeItem (key: string): Promise<void> {
         await models.pluginData.removeByKey(plugin.name, key);
       }
     }
