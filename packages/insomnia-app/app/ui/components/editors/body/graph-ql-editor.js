@@ -7,6 +7,7 @@ import autobind from 'autobind-decorator';
 import {parse, print, typeFromAST} from 'graphql';
 import {introspectionQuery} from 'graphql/utilities/introspectionQuery';
 import {buildClientSchema} from 'graphql/utilities/buildClientSchema';
+import type {CodeMirror} from 'codemirror';
 import CodeEditor from '../../codemirror/code-editor';
 import {jsonParseOr} from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
@@ -77,6 +78,41 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       variablesSyntaxError: '',
       forceRefreshKey: 0
     };
+  }
+
+  _handleQueryCursorActivity (editor: CodeMirror) {
+    const query = editor.getValue();
+    let documentAST;
+    try {
+      documentAST = parse(query);
+    } catch (e) {
+      documentAST = null;
+    }
+    const operations = this._getOperations(documentAST);
+    const cursor = editor.getCursor();
+    const cursorIndex = editor.indexFromPos(cursor);
+    let operationName: void | string;
+    // Loop through all operations to see if one contains the cursor.
+    for (let i = 0; i < operations.length; i++) {
+      const operation = operations[i];
+      if (
+        operation.loc.start <= cursorIndex &&
+        operation.loc.end >= cursorIndex &&
+        operation.name
+      ) {
+        operationName = operation.name.value;
+      }
+    }
+    if (operationName) {
+      this.setState(state => ({
+        body: {
+          ...state.body,
+          operationName
+        }
+      }), () => {
+        this.props.onChange(GraphQLEditor._graphQLToString(this.state.body));
+      });
+    }
   }
 
   _handleViewResponse () {
@@ -224,13 +260,17 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }, 200);
   }
 
-  _getOperationNames (query: string, documentAST: Object | null): Array<string> {
+  _getOperations (documentAST: Object | null) {
     if (!documentAST) {
       return [];
     }
 
     return documentAST.definitions
-      .filter(def => def.kind === 'OperationDefinition')
+      .filter(def => def.kind === 'OperationDefinition');
+  }
+
+  _getOperationNames (query: string, documentAST: Object | null): Array<string> {
+    return this._getOperations(documentAST)
       .map(def => def.name ? def.name.value : null)
       .filter(Boolean);
   }
@@ -251,7 +291,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       body.variables = variables;
     }
 
-    if (operationNames.length) {
+    if (this.state.body.operationName) {
+      body.operationName = this.state.body.operationName;
+    } else if (operationNames.length) {
       body.operationName = operationNames[0];
     }
 
@@ -387,6 +429,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             defaultValue={query}
             className={className}
             onChange={this._handleQueryChange}
+            onCursorActivity={this._handleQueryCursorActivity}
             mode="graphql"
             lineWrapping={settings.editorLineWrapping}
             placeholder=""
