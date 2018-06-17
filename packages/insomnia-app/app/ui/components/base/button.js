@@ -1,10 +1,23 @@
-import React, {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 
+type Props<T> = {
+  children: React.Node,
+  value?: T,
+  className?: string,
+  onDisabledClick?: Function,
+  onClick?: Function,
+  disabled?: boolean,
+  tabIndex?: number,
+  type?: string,
+  id?: string
+}
+
 @autobind
-class Button extends PureComponent {
-  _handleClick (e) {
+class Button<T> extends React.PureComponent<Props<T>> {
+  _handleClick (e: SyntheticMouseEvent<HTMLElement>) {
     const {onClick, onDisabledClick, disabled} = this.props;
     const fn = disabled ? onDisabledClick : onClick;
 

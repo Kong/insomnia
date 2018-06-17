@@ -1,8 +1,15 @@
-import React, {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
-class ModalHeader extends PureComponent {
+type Props = {
+  children: React.Node,
+  hideCloseButton?: boolean,
+  className?: string,
+}
+
+class ModalHeader extends React.PureComponent<Props> {
   render () {
     const {hideCloseButton, className, children} = this.props;
     let closeButton = null;

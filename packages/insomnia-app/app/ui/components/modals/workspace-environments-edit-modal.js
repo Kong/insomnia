@@ -93,7 +93,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   environmentEditorRef: ?EnvironmentEditor;
   colorChangeTimeout: any;
   saveTimeout: any;
-  modal: Modal;
+  modal: null | Modal;
   editorKey: number;
 
   constructor (props: Props) {

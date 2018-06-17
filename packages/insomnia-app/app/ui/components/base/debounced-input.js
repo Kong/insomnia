@@ -1,11 +1,24 @@
-import React, {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import {debounce} from '../../../common/misc';
 
+type Props = {
+  onChange: (value: string) => mixed,
+  onFocus?: (e: SyntheticFocusEvent<HTMLTextAreaElement | HTMLInputElement>) => mixed,
+  onBlur?: (e: SyntheticFocusEvent<HTMLTextAreaElement | HTMLInputElement>) => mixed,
+  textarea?: boolean,
+  delay?: number
+}
+
 @autobind
-class DebouncedInput extends PureComponent {
-  constructor (props) {
+class DebouncedInput extends React.PureComponent<Props> {
+  _handleValueChange: (value: string) => mixed;
+  _hasFocus: boolean;
+  _input: null | HTMLInputElement | HTMLTextAreaElement
+
+  constructor (props: Props) {
     super(props);
 
     if (!props.delay) {
@@ -17,34 +30,34 @@ class DebouncedInput extends PureComponent {
     this._hasFocus = false;
   }
 
-  _handleChange (e) {
-    this._handleValueChange(e.target.value);
+  _handleChange (e: SyntheticKeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) {
+    this._handleValueChange(e.currentTarget.value);
   }
 
-  _handleFocus (e) {
+  _handleFocus (e: SyntheticFocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
     this._hasFocus = true;
     this.props.onFocus && this.props.onFocus(e);
   }
 
-  _handleBlur (e) {
+  _handleBlur (e: SyntheticFocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
     this._hasFocus = false;
     this.props.onBlur && this.props.onBlur(e);
   }
 
-  _setRef (n) {
+  _setRef (n: null | HTMLInputElement | HTMLTextAreaElement) {
     this._input = n;
   }
 
-  setAttribute (name, value) {
-    this._input.setAttribute(name, value);
+  setAttribute (name: string, value: string) {
+    if (this._input) this._input.setAttribute(name, value);
   }
 
-  removeAttribute (name) {
-    this._input.removeAttribute(name);
+  removeAttribute (name: string) {
+    if (this._input) this._input.removeAttribute(name);
   }
 
-  getAttribute (name) {
-    this._input.getAttribute(name);
+  getAttribute (name: string) {
+    if (this._input) this._input.getAttribute(name);
   }
 
   hasFocus () {
@@ -74,10 +87,11 @@ class DebouncedInput extends PureComponent {
   }
 
   focusEnd () {
-    if (this._input) {
+    const {_input} = this;
+    if (_input) {
       // Hack to focus the end (set value to current value);
-      this._input.value = this.getValue();
-      this._input.focus();
+      _input.value = this.getValue();
+      _input.focus();
     }
   }
 

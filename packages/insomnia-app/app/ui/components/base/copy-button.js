@@ -1,18 +1,31 @@
-import React, {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 const {clipboard} = require('electron');
 
+type Props = {
+  content: string | () => Promise<string>,
+  children?: React.Node,
+  title?: string,
+  confirmMessage?: string
+}
+type State = {
+  showConfirmation: boolean
+}
+
 @autobind
-class CopyButton extends PureComponent {
-  constructor (props) {
+class CopyButton extends React.PureComponent<Props, State> {
+  _triggerTimeout: void | TimeoutID
+
+  constructor (props: Props) {
     super(props);
     this.state = {
       showConfirmation: false
     };
   }
 
-  async _handleClick (e) {
+  async _handleClick (e: SyntheticMouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     e.stopPropagation();
 

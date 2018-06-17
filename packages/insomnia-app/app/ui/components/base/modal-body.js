@@ -1,8 +1,15 @@
-import React, {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
-class ModalBody extends PureComponent {
+type Props = {
+  noScroll?: boolean,
+  className?: string,
+  children: React.Node,
+}
+
+class ModalBody extends React.PureComponent<Props> {
   render () {
     const {className, children, noScroll, ...props} = this.props;
     const classes = classnames(

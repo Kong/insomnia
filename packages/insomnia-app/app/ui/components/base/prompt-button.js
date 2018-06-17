@@ -1,4 +1,5 @@
-import React, {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import Button from './button';
@@ -7,9 +8,25 @@ const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
 
+type Props<T> = {
+  onClick: (e: T) => mixed,
+  addIcon?: boolean,
+  children: React.Node,
+  disabled?: boolean,
+  confirmMessage?: string,
+  doneMessage?: string,
+  value?: mixed,
+  tabIndex?: number
+}
+type State = {
+  state: 'default' | 'ask' | 'done'
+}
+
 @autobind
-class PromptButton extends PureComponent {
-  constructor (props) {
+class PromptButton<T> extends React.PureComponent<Props<T>, State> {
+  _triggerTimeout: void | TimeoutID
+  _doneTimeout: void | TimeoutID
+  constructor (props: Props<T>) {
     super(props);
 
     this.state = {
@@ -17,12 +34,12 @@ class PromptButton extends PureComponent {
     };
   }
 
-  _confirm (...args) {
+  _confirm (e: T) {
     // Clear existing timeouts
     clearTimeout(this._triggerTimeout);
 
     // Fire the click handler
-    this.props.onClick(...args);
+    this.props.onClick(e);
 
     // Set the state to done (but delay a bit to not alarm user)
     this._doneTimeout = setTimeout(() => {
@@ -35,12 +52,12 @@ class PromptButton extends PureComponent {
     }, 2000);
   }
 
-  _ask (...args) {
-    const e = args[args.length - 1];
-
-    // Prevent events (ex. won't close dropdown if it's in one)
-    e.preventDefault();
-    e.stopPropagation();
+  _ask (e: T | SyntheticEvent<HTMLElement>) {
+    if (e && typeof e === 'object') {
+      // Prevent events (ex. won't close dropdown if it's in one)
+      typeof e.preventDefault === 'function' && e.preventDefault();
+      typeof e.stopPropagation === 'function' && e.stopPropagation();
+    }
 
     // Toggle the confirmation notice
     this.setState({state: STATE_ASK});
@@ -51,12 +68,12 @@ class PromptButton extends PureComponent {
     }, 2000);
   }
 
-  _handleClick (...args) {
+  _handleClick (e: T) {
     const {state} = this.state;
     if (state === STATE_ASK) {
-      this._confirm(...args);
+      this._confirm(e);
     } else if (state === STATE_DEFAULT) {
-      this._ask(...args);
+      this._ask(e);
     } else {
       // Do nothing
     }

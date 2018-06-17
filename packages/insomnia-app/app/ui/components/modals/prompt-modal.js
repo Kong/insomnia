@@ -206,9 +206,12 @@ class PromptModal extends React.PureComponent<Props, State> {
     if (Array.isArray(hints)) {
       sanitizedHints = hints.slice(0, 15).map(this._renderHintButton);
     }
+    const modalProps = {};
+    modalProps.noEscape = !cancelable;
+    if (onCancel) modalProps.onCancel = onCancel;
 
     return (
-      <Modal ref={this._setModalRef} noEscape={!cancelable} onCancel={onCancel}>
+      <Modal ref={this._setModalRef} {...modalProps}>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">

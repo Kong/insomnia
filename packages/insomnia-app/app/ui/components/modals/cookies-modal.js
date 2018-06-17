@@ -2,7 +2,7 @@
 import React, {PureComponent} from 'react';
 import deepEqual from 'deep-equal';
 import autobind from 'autobind-decorator';
-import Modal from '../base/modal';
+import Modal, {type Props as ModalProps} from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
@@ -12,7 +12,7 @@ import type {Cookie, CookieJar} from '../../../models/cookie-jar';
 import type {Workspace} from '../../../models/workspace';
 import {fuzzyMatch} from '../../../common/misc';
 
-type Props = {
+type Props = ModalProps & {
   handleShowModifyCookieModal: Function,
   handleRender: Function,
   cookieJar: CookieJar,
@@ -38,7 +38,7 @@ class CookiesModal extends PureComponent<Props, State> {
     };
   }
 
-  _setModalRef (n: React.Component<*> | null) {
+  _setModalRef (n: Modal | null) {
     this.modal = n;
   }
 
@@ -170,7 +170,7 @@ class CookiesModal extends PureComponent<Props, State> {
       <Modal ref={this._setModalRef} wide tall {...this.props}>
         <ModalHeader>Manage Cookies</ModalHeader>
         <ModalBody noScroll>
-          {cookieJar && (
+          {!!cookieJar && (
             <div className="cookie-list">
               <div className="pad">
                 <div className="form-control form-control--outlined">

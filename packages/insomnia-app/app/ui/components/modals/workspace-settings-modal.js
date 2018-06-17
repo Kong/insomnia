@@ -68,7 +68,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     this.setState({showDescription: true});
   }
 
-  _handleSetModalRef (n: ?Modal) {
+  _handleSetModalRef (n: null | Modal) {
     this.modal = n;
   }
 
