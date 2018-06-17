@@ -1,8 +1,13 @@
-import React, {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
-class DropdownDivider extends PureComponent {
+type Props = {
+  children: React.Node
+}
+
+class DropdownDivider extends React.PureComponent<Props> {
   render () {
     const {children} = this.props;
 

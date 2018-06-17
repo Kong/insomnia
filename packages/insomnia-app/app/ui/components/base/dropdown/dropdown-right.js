@@ -1,8 +1,14 @@
-import React, {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
-class DropdownRight extends PureComponent {
+type Props = {
+  children: React.Node,
+  className: string,
+}
+
+class DropdownRight extends React.PureComponent<Props> {
   render () {
     const {className, children, ...extraProps} = this.props;
     return (

@@ -212,7 +212,7 @@ export const CLOSE_MODAL: Hotkey = {
   keycode: keycodes.esc
 };
 
-export function pressedHotKey (e: KeyboardEvent, definition: Hotkey): boolean {
+export function pressedHotKey (e: SyntheticKeyboardEvent<HTMLElement>, definition: Hotkey): boolean {
   const isMetaPressed = isMac() ? e.metaKey : e.ctrlKey;
   const isAltPressed = isMac() ? e.ctrlKey : e.altKey;
   const isShiftPressed = e.shiftKey;
@@ -244,7 +244,7 @@ export function pressedHotKey (e: KeyboardEvent, definition: Hotkey): boolean {
 }
 
 export function executeHotKey (
-  e: KeyboardEvent,
+  e: SyntheticKeyboardEvent<HTMLElement>,
   definition: Hotkey,
   callback: Function
 ): void {

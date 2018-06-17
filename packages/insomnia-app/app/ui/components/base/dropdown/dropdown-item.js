@@ -1,11 +1,23 @@
-import React, {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 
+type Props = {
+  buttonClass?: React.ElementType,
+  stayOpenAfterClick?: boolean,
+  value?: any,
+  disabled?: boolean,
+  onClick?: Function,
+  children?: React.Node,
+  className?: string,
+  color?: string
+}
+
 @autobind
-class DropdownItem extends PureComponent {
-  _handleClick (e) {
+class DropdownItem extends React.PureComponent<Props> {
+  _handleClick (e: SyntheticMouseEvent<HTMLElement>) {
     const {stayOpenAfterClick, onClick, disabled} = this.props;
 
     if (stayOpenAfterClick) {
