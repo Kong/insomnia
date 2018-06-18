@@ -6,7 +6,6 @@ import NeDB from 'nedb';
 import fsPath from 'path';
 import {DB_PERSIST_INTERVAL} from './constants';
 import uuid from 'uuid';
-import {DELETE_REQUEST} from './hotkeys';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -96,7 +95,7 @@ export async function init (
   // This isn't the best place for this but w/e
   // Listen for response deletions and delete corresponding response body files
   onChange(async changes => {
-    for (const [type, doc, fromSync] of changes) {
+    for (const [type, doc] of changes) {
       const m: Object | null = models.getModel(doc.type);
 
       if (!m) {
