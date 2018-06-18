@@ -6,6 +6,7 @@ import NeDB from 'nedb';
 import fsPath from 'path';
 import {DB_PERSIST_INTERVAL} from './constants';
 import uuid from 'uuid';
+import {DELETE_REQUEST} from './hotkeys';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -91,6 +92,42 @@ export async function init (
   if (!config.inMemoryOnly) {
     console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
   }
+
+  // This isn't the best place for this but w/e
+  // Listen for response deletions and delete corresponding response body files
+  onChange(async changes => {
+    for (const [type, doc, fromSync] of changes) {
+      const m: Object | null = models.getModel(doc.type);
+
+      if (!m) {
+        continue;
+      }
+
+      if (type === CHANGE_REMOVE && typeof m.hookRemove === 'function') {
+        try {
+          await m.hookRemove(doc);
+        } catch (err) {
+          console.log(`[db] Delete hook failed for ${type} ${doc._id}: ${err.message}`);
+        }
+      }
+
+      if (type === CHANGE_INSERT && typeof m.hookInsert === 'function') {
+        try {
+          await m.hookInsert(doc);
+        } catch (err) {
+          console.log(`[db] Insert hook failed for ${type} ${doc._id}: ${err.message}`);
+        }
+      }
+
+      if (type === CHANGE_UPDATE && typeof m.hookUpdate === 'function') {
+        try {
+          await m.hookUpdate(doc);
+        } catch (err) {
+          console.log(`[db] Update hook failed for ${type} ${doc._id}: ${err.message}`);
+        }
+      }
+    }
+  });
 }
 
 // ~~~~~~~~~~~~~~~~ //

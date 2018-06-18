@@ -79,6 +79,14 @@ export async function migrate (doc: Object) {
   return doc;
 }
 
+export function hookRemove (doc: Response) {
+  if (!doc.bodyPath) {
+    return;
+  }
+
+  fs.unlinkSync(doc.bodyPath);
+}
+
 export function getById (id: string) {
   return db.get(type, id);
 }
