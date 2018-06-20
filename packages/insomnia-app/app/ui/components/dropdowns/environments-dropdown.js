@@ -48,7 +48,7 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
     );
   }
 
-  _handleKeydown (e: KeyboardEvent) {
+  _handleKeydown (e: SyntheticKeyboardEvent<HTMLElement>) {
     hotkeys.executeHotKey(e, hotkeys.TOGGLE_ENVIRONMENTS_MENU, () => {
       this._dropdown && this._dropdown.toggle(true);
     });

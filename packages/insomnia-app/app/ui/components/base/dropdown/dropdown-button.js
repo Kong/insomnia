@@ -1,7 +1,12 @@
-import React, {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
 import PropTypes from 'prop-types';
 
-class DropdownButton extends PureComponent {
+type Props = {
+  children: React.Node
+}
+
+class DropdownButton extends React.PureComponent<Props> {
   render () {
     const {children, ...props} = this.props;
     return (

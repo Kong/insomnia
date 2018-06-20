@@ -1,10 +1,19 @@
-import {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 
+type Props = {
+  delay: number,
+  children: React.Node,
+}
+type State = {
+  show: boolean
+}
+
 @autobind
-class Lazy extends PureComponent {
-  constructor (props) {
+class Lazy extends React.PureComponent<Props, State> {
+  constructor (props: Props) {
     super(props);
     this.state = {show: false};
   }

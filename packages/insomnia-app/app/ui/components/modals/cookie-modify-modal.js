@@ -6,7 +6,7 @@ import * as toughCookie from 'tough-cookie';
 import * as models from '../../../models';
 import clone from 'clone';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
-import Modal from '../base/modal';
+import Modal, {type Props as ModalProps} from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
@@ -15,7 +15,7 @@ import {cookieToString} from 'insomnia-cookies';
 import type {Cookie, CookieJar} from '../../../models/cookie-jar';
 import type {Workspace} from '../../../models/workspace';
 
-type Props = {
+type Props = ModalProps & {
   handleRender: Function,
   handleGetRenderContext: Function,
   nunjucksPowerUserMode: boolean,
@@ -218,7 +218,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
       <Modal ref={this._setModalRef} {...this.props}>
         <ModalHeader>Edit Cookie</ModalHeader>
         <ModalBody className="cookie-modify">
-          {cookieJar && cookie && (
+          {!!(cookieJar && cookie) && (
             <Tabs>
               <TabList>
                 <Tab>

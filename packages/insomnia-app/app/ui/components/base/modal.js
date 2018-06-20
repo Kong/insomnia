@@ -1,17 +1,38 @@
-import React, {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import KeydownBinder from '../keydown-binder';
 import * as hotkeys from '../../../common/hotkeys';
 
+export type Props = {
+  tall?: boolean,
+  wide?: boolean,
+  noEscape?: boolean,
+  dontFocus?: boolean,
+  closeOnKeyCodes?: Array<mixed>,
+  onHide?: () => mixed,
+  onCancel?: () => mixed,
+  freshState?: boolean,
+  children?: React.Node,
+  className?: string
+}
+type State = {
+  open: boolean,
+  forceRefreshCounter: number,
+  zIndex: number,
+}
+
 // Keep global z-index reference so that every modal will
 // appear over top of an existing one.
 let globalZIndex = 1000;
 
 @autobind
-class Modal extends PureComponent {
-  constructor (props) {
+class Modal extends React.PureComponent<Props, State> {
+  _node: null | HTMLDivElement
+
+  constructor (props: Props) {
     super(props);
 
     this.state = {
@@ -21,7 +42,7 @@ class Modal extends PureComponent {
     };
   }
 
-  _handleKeyDown (e) {
+  _handleKeyDown (e: SyntheticKeyboardEvent<HTMLElement>) {
     if (!this.state.open) {
       return;
     }
@@ -43,7 +64,7 @@ class Modal extends PureComponent {
     }
   }
 
-  _handleClick (e) {
+  _handleClick (e: SyntheticMouseEvent<HTMLElement>) {
     // Don't check for close keys if we don't want them
     if (this.props.noEscape) {
       return;
@@ -52,7 +73,7 @@ class Modal extends PureComponent {
     // Did we click a close button. Let's check a few parent nodes up as well
     // because some buttons might have nested elements. Maybe there is a better
     // way to check this?
-    let target = e.target;
+    let target = e.currentTarget;
     let shouldHide = false;
 
     for (let i = 0; i < 5; i++) {
@@ -61,7 +82,9 @@ class Modal extends PureComponent {
         break;
       }
 
-      target = target.parentNode;
+      if (target) {
+        target = target.parentNode;
+      }
     }
 
     if (shouldHide) {
@@ -70,7 +93,7 @@ class Modal extends PureComponent {
     }
   }
 
-  _setModalRef (n) {
+  _setModalRef (n: null | HTMLDivElement) {
     this._node = n;
   }
 

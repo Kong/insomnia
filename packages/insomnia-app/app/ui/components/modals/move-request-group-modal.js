@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import Modal from '../base/modal';
+import Modal, {type Props as ModalProps} from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
@@ -10,7 +10,7 @@ import type {Workspace} from '../../../models/workspace';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 
-type Props = {
+type Props = ModalProps & {
   workspaces: Array<Workspace>
 };
 

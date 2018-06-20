@@ -1,4 +1,5 @@
-import React, {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import Button from './button';
@@ -7,9 +8,25 @@ const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
 
+type Props = {
+  onClick: Function,
+  addIcon?: boolean,
+  children: React.Node,
+  disabled?: boolean,
+  confirmMessage?: string,
+  doneMessage?: string,
+  value?: mixed,
+  tabIndex?: number
+}
+type State = {
+  state: 'default' | 'ask' | 'done'
+}
+
 @autobind
-class PromptButton extends PureComponent {
-  constructor (props) {
+class PromptButton extends React.PureComponent<Props, State> {
+  _triggerTimeout: TimeoutID
+  _doneTimeout: TimeoutID
+  constructor (props: Props) {
     super(props);
 
     this.state = {
@@ -17,7 +34,7 @@ class PromptButton extends PureComponent {
     };
   }
 
-  _confirm (...args) {
+  _confirm (...args: mixed) {
     // Clear existing timeouts
     clearTimeout(this._triggerTimeout);
 
@@ -35,12 +52,14 @@ class PromptButton extends PureComponent {
     }, 2000);
   }
 
-  _ask (...args) {
+  _ask (...args: mixed[]) {
     const e = args[args.length - 1];
 
-    // Prevent events (ex. won't close dropdown if it's in one)
-    e.preventDefault();
-    e.stopPropagation();
+    if (e && typeof e === 'object') {
+      // Prevent events (ex. won't close dropdown if it's in one)
+      typeof e.preventDefault === 'function' && e.preventDefault();
+      typeof e.stopPropagation === 'function' && e.stopPropagation();
+    }
 
     // Toggle the confirmation notice
     this.setState({state: STATE_ASK});
@@ -51,7 +70,7 @@ class PromptButton extends PureComponent {
     }, 2000);
   }
 
-  _handleClick (...args) {
+  _handleClick (...args: mixed[]) {
     const {state} = this.state;
     if (state === STATE_ASK) {
       this._confirm(...args);
