@@ -65,7 +65,9 @@ class Dropdown extends React.PureComponent<Props, State> {
     if (e.key === 'Enter') {
       // Listen for the Enter key and "click" on the active list item
       const selector = `li[data-filter-index="${this.state.filterActiveIndex}"] button`;
-      if (!this._dropdownList) return;
+      if (!this._dropdownList) {
+        return;
+      }
       const button = this._dropdownList.querySelector(selector);
       button && button.click();
     }
@@ -136,7 +138,9 @@ class Dropdown extends React.PureComponent<Props, State> {
       }
     }
 
-    if (this._filter) this._filter.focus();
+    if (this._filter) {
+      this._filter.focus();
+    }
   }
 
   _handleBodyKeyDown (e: SyntheticKeyboardEvent<HTMLElement>) {
@@ -164,7 +168,9 @@ class Dropdown extends React.PureComponent<Props, State> {
       !body ||
       !_dropdownList ||
       !_node
-    ) return;
+    ) {
+      return;
+    }
 
     // Make the dropdown scroll if it drops off screen.
     const dropdownRect = _node.getBoundingClientRect();
@@ -279,7 +285,9 @@ class Dropdown extends React.PureComponent<Props, State> {
     if (!container) {
       container = document.createElement('div');
       container.id = 'dropdowns-container';
-      if (document.body) document.body.appendChild(container);
+      if (document.body) {
+        document.body.appendChild(container);
+      }
     }
 
     return container;
@@ -289,7 +297,9 @@ class Dropdown extends React.PureComponent<Props, State> {
     // Move the element to the body so we can position absolutely
     if (this._dropdownMenu) {
       const el = ReactDOM.findDOMNode(this._dropdownMenu);
-      if (el) this._getContainer().appendChild(el);
+      if (el) {
+        this._getContainer().appendChild(el);
+      }
     }
   }
 
@@ -297,7 +307,9 @@ class Dropdown extends React.PureComponent<Props, State> {
     // Remove the element from the body
     if (this._dropdownMenu) {
       const el = ReactDOM.findDOMNode(this._dropdownMenu);
-      if (el) this._getContainer().removeChild(el);
+      if (el) {
+        this._getContainer().removeChild(el);
+      }
     }
   }
 
@@ -315,7 +327,9 @@ class Dropdown extends React.PureComponent<Props, State> {
   show (filterVisible?: boolean = false) {
     const {body} = document;
     const {_node} = this;
-    if (!body || !_node) return;
+    if (!body || !_node) {
+      return;
+    }
     const bodyHeight = body.getBoundingClientRect().height;
     const dropdownTop = _node.getBoundingClientRect().top;
     const dropUp = dropdownTop > bodyHeight - 200;

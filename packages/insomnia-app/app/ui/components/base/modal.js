@@ -82,7 +82,9 @@ class Modal extends React.PureComponent<Props, State> {
         break;
       }
 
-      if (target) target = target.parentNode;
+      if (target) {
+        target = target.parentNode;
+      }
     }
 
     if (shouldHide) {

@@ -49,15 +49,21 @@ class DebouncedInput extends React.PureComponent<Props> {
   }
 
   setAttribute (name: string, value: string) {
-    if (this._input) this._input.setAttribute(name, value);
+    if (this._input) {
+      this._input.setAttribute(name, value);
+    }
   }
 
   removeAttribute (name: string) {
-    if (this._input) this._input.removeAttribute(name);
+    if (this._input) {
+      this._input.removeAttribute(name);
+    }
   }
 
   getAttribute (name: string) {
-    if (this._input) this._input.getAttribute(name);
+    if (this._input) {
+      this._input.getAttribute(name);
+    }
   }
 
   hasFocus () {

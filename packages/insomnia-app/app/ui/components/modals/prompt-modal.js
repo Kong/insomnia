@@ -208,7 +208,9 @@ class PromptModal extends React.PureComponent<Props, State> {
     }
     const modalProps = {};
     modalProps.noEscape = !cancelable;
-    if (onCancel) modalProps.onCancel = onCancel;
+    if (onCancel) {
+      modalProps.onCancel = onCancel;
+    }
 
     return (
       <Modal ref={this._setModalRef} {...modalProps}>

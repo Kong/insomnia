@@ -8,8 +8,8 @@ const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
 
-type Props<T> = {
-  onClick: (e: T) => mixed,
+type Props = {
+  onClick: Function,
   addIcon?: boolean,
   children: React.Node,
   disabled?: boolean,
@@ -23,10 +23,10 @@ type State = {
 }
 
 @autobind
-class PromptButton<T> extends React.PureComponent<Props<T>, State> {
-  _triggerTimeout: void | TimeoutID
-  _doneTimeout: void | TimeoutID
-  constructor (props: Props<T>) {
+class PromptButton extends React.PureComponent<Props, State> {
+  _triggerTimeout: TimeoutID
+  _doneTimeout: TimeoutID
+  constructor (props: Props) {
     super(props);
 
     this.state = {
@@ -34,12 +34,12 @@ class PromptButton<T> extends React.PureComponent<Props<T>, State> {
     };
   }
 
-  _confirm (e: T) {
+  _confirm (...args: mixed) {
     // Clear existing timeouts
     clearTimeout(this._triggerTimeout);
 
     // Fire the click handler
-    this.props.onClick(e);
+    this.props.onClick(...args);
 
     // Set the state to done (but delay a bit to not alarm user)
     this._doneTimeout = setTimeout(() => {
@@ -52,7 +52,9 @@ class PromptButton<T> extends React.PureComponent<Props<T>, State> {
     }, 2000);
   }
 
-  _ask (e: T | SyntheticEvent<HTMLElement>) {
+  _ask (...args: mixed[]) {
+    const e = args[args.length - 1];
+
     if (e && typeof e === 'object') {
       // Prevent events (ex. won't close dropdown if it's in one)
       typeof e.preventDefault === 'function' && e.preventDefault();
@@ -68,12 +70,12 @@ class PromptButton<T> extends React.PureComponent<Props<T>, State> {
     }, 2000);
   }
 
-  _handleClick (e: T) {
+  _handleClick (...args: mixed[]) {
     const {state} = this.state;
     if (state === STATE_ASK) {
-      this._confirm(e);
+      this._confirm(...args);
     } else if (state === STATE_DEFAULT) {
-      this._ask(e);
+      this._ask(...args);
     } else {
       // Do nothing
     }

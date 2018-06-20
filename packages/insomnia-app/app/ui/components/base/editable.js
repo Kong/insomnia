@@ -58,7 +58,9 @@ class Editable extends React.PureComponent<Props, State> {
 
   _handleEditEnd () {
     const {_input} = this;
-    if (!_input) return;
+    if (!_input) {
+      return;
+    }
     const value = _input.value.trim();
 
     if (!value) {

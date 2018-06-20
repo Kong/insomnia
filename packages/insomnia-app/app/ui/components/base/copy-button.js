@@ -16,7 +16,7 @@ type State = {
 
 @autobind
 class CopyButton extends React.PureComponent<Props, State> {
-  _triggerTimeout: void | TimeoutID
+  _triggerTimeout: TimeoutID
 
   constructor (props: Props) {
     super(props);
