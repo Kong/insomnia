@@ -7,7 +7,7 @@ import autobind from 'autobind-decorator';
 import {parse, print, typeFromAST} from 'graphql';
 import {introspectionQuery} from 'graphql/utilities/introspectionQuery';
 import {buildClientSchema} from 'graphql/utilities/buildClientSchema';
-import type {CodeMirror} from 'codemirror';
+import type {CodeMirror, TextMarker} from 'codemirror';
 import CodeEditor from '../../codemirror/code-editor';
 import {jsonParseOr} from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
@@ -62,11 +62,13 @@ type State = {
 
 @autobind
 class GraphQLEditor extends React.PureComponent<Props, State> {
+  _disabledOperationMarkers: TextMarker[];
   _isMounted: boolean;
   _schemaFetchTimeout: TimeoutID;
 
   constructor (props: Props) {
     super(props);
+    this._disabledOperationMarkers = [];
     this._isMounted = false;
     this.state = {
       body: GraphQLEditor._stringToGraphQL(props.content),
@@ -88,6 +90,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     } catch (e) {
       documentAST = null;
     }
+    if (!documentAST) return;
     const operations = this._getOperations(documentAST);
     const cursor = editor.getCursor();
     const cursorIndex = editor.indexFromPos(cursor);
@@ -103,16 +106,40 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         operationName = operation.name.value;
       }
     }
-    if (operationName) {
-      this.setState(state => ({
-        body: {
-          ...state.body,
-          operationName
-        }
-      }), () => {
-        this.props.onChange(GraphQLEditor._graphQLToString(this.state.body));
-      });
+    if (!operationName) {
+      return;
     }
+    // change marker
+    const disabledDefinition = documentAST.definitions.filter(d => d.name.value !== operationName);
+    if (!disabledDefinition.length === 0) {
+      // unexpected condition
+      return;
+    }
+    this._disabledOperationMarkers.forEach(textMarker => {
+      textMarker.clear();
+    });
+    this._disabledOperationMarkers = disabledDefinition.map(definition => {
+      const from = {
+        line: definition.loc.startToken.line - 1,
+        ch: definition.loc.startToken.column - 1
+      };
+      const to = {
+        line: definition.loc.endToken.line,
+        ch: definition.loc.endToken.column
+      };
+      return editor.doc.markText(from, to, {
+        className: 'graphql-editor__disabled-definition'
+      });
+    });
+
+    this.setState(state => ({
+      body: {
+        ...state.body,
+        operationName
+      }
+    }), () => {
+      this.props.onChange(GraphQLEditor._graphQLToString(this.state.body));
+    });
   }
 
   _handleViewResponse () {
