@@ -4,7 +4,7 @@ import {newBodyRaw} from '../../../../models/request';
 import classnames from 'classnames';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import {parse, print, typeFromAST} from 'graphql';
+import {parse, print, typeFromAST, type Document as DocumentAST} from 'graphql';
 import {introspectionQuery} from 'graphql/utilities/introspectionQuery';
 import {buildClientSchema} from 'graphql/utilities/buildClientSchema';
 import type {CodeMirror, TextMarker} from 'codemirror';
@@ -63,12 +63,16 @@ type State = {
 @autobind
 class GraphQLEditor extends React.PureComponent<Props, State> {
   _disabledOperationMarkers: TextMarker[];
+  _documentAST: null | DocumentAST
   _isMounted: boolean;
+  _queryEditor: null | CodeMirror;
   _schemaFetchTimeout: TimeoutID;
 
   constructor (props: Props) {
     super(props);
     this._disabledOperationMarkers = [];
+    this._documentAST = null;
+    this._queryEditor = null;
     this._isMounted = false;
     this.state = {
       body: GraphQLEditor._stringToGraphQL(props.content),
@@ -82,19 +86,12 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     };
   }
 
-  _handleQueryCursorActivity (editor: CodeMirror) {
-    const query = editor.getValue();
-    let documentAST;
-    try {
-      documentAST = parse(query);
-    } catch (e) {
-      documentAST = null;
-    }
-    if (!documentAST) return;
-    const operations = this._getOperations(documentAST);
-    const cursor = editor.getCursor();
-    const cursorIndex = editor.indexFromPos(cursor);
-    let operationName: void | string;
+  _getCurrentOperation () {
+    const {_queryEditor} = this;
+    if (!_queryEditor) return null;
+    const operations = this._getOperations();
+    const cursor = _queryEditor.getCursor();
+    const cursorIndex = _queryEditor.indexFromPos(cursor);
     // Loop through all operations to see if one contains the cursor.
     for (let i = 0; i < operations.length; i++) {
       const operation = operations[i];
@@ -103,21 +100,38 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         operation.loc.end >= cursorIndex &&
         operation.name
       ) {
-        operationName = operation.name.value;
+        return operation;
       }
     }
-    if (!operationName) {
+  }
+
+  _handleQueryCursorActivity () {
+    const currentOperation = this._getCurrentOperation();
+    if (!currentOperation) {
       return;
     }
-    // change marker
-    const disabledDefinition = documentAST.definitions.filter(d => d.name.value !== operationName);
+    const operationName = currentOperation.name.value;
+    this._highlightOperation(operationName);
+    this.setState(state => ({
+      body: {
+        ...state.body,
+        operationName
+      }
+    }), () => {
+      this.props.onChange(GraphQLEditor._graphQLToString(this.state.body));
+    });
+  }
+
+  _highlightOperation (operationName: string) {
+    const {_documentAST, _queryEditor} = this;
+    if (!_documentAST || !_queryEditor) return null;
+    const disabledDefinition = _documentAST.definitions.filter(d => d.name.value !== operationName);
     if (!disabledDefinition.length === 0) {
       // unexpected condition
       return;
     }
-    this._disabledOperationMarkers.forEach(textMarker => {
-      textMarker.clear();
-    });
+    // remove current query highlighting
+    this._disabledOperationMarkers.forEach(textMarker => textMarker.clear());
     this._disabledOperationMarkers = disabledDefinition.map(definition => {
       const from = {
         line: definition.loc.startToken.line - 1,
@@ -127,18 +141,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         line: definition.loc.endToken.line,
         ch: definition.loc.endToken.column
       };
-      return editor.doc.markText(from, to, {
+      return _queryEditor.doc.markText(from, to, {
         className: 'graphql-editor__disabled-definition'
       });
-    });
-
-    this.setState(state => ({
-      body: {
-        ...state.body,
-        operationName
-      }
-    }), () => {
-      this.props.onChange(GraphQLEditor._graphQLToString(this.state.body));
     });
   }
 
@@ -169,6 +174,28 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
   _hideSchemaFetchError () {
     this.setState({hideSchemaFetchErrors: true});
+  }
+
+  _handleQueryCodeMirrorInit (codeMirror: CodeMirror) {
+    this._queryEditor = codeMirror;
+    const { query } = GraphQLEditor._stringToGraphQL(this.props.content);
+    let documentAST = null;
+    try {
+      documentAST = parse(query);
+    } catch (error) {
+      // do nothing
+    }
+    this._documentAST = documentAST;
+    if (documentAST && documentAST.definitions.length) {
+      const currentOperation = documentAST.definitions[0].name.value;
+      this._highlightOperation(currentOperation);
+      this.setState(prevState => ({
+        body: {
+          ...prevState.body,
+          operationName: currentOperation
+        }
+      }));
+    }
   }
 
   async _fetchAndSetSchema (rawRequest: Request) {
@@ -243,14 +270,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       return {};
     }
 
-    let documentAST;
-    try {
-      documentAST = parse(query);
-    } catch (e) {
-      documentAST = null;
-    }
-
-    const definitions = documentAST ? documentAST.definitions : [];
+    const definitions = this._documentAST ? this._documentAST.definitions : [];
     const variableToType = {};
     for (const {kind, variableDefinitions} of definitions) {
       if (kind !== 'OperationDefinition') {
@@ -279,7 +299,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   _handlePrettify () {
     const {body, forceRefreshKey} = this.state;
     const {variables, query} = body;
-    const prettyQuery = query && print(parse(query));
+    const prettyQuery = query && print(this._documentAST);
     const prettyVariables = variables && JSON.parse(prettify.json(JSON.stringify(variables)));
     this._handleBodyChange(prettyQuery, prettyVariables);
     setTimeout(() => {
@@ -287,30 +307,29 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }, 200);
   }
 
-  _getOperations (documentAST: Object | null) {
-    if (!documentAST) {
+  _getOperations () {
+    if (!this._documentAST) {
       return [];
     }
 
-    return documentAST.definitions
+    return this._documentAST.definitions
       .filter(def => def.kind === 'OperationDefinition');
   }
 
-  _getOperationNames (query: string, documentAST: Object | null): Array<string> {
-    return this._getOperations(documentAST)
+  _getOperationNames (): string[] {
+    return this._getOperations()
       .map(def => def.name ? def.name.value : null)
       .filter(Boolean);
   }
 
   _handleBodyChange (query: string, variables?: Object): void {
-    let documentAST;
     try {
-      documentAST = parse(query);
+      this._documentAST = parse(query);
     } catch (e) {
-      documentAST = null;
+      this._documentAST = null;
     }
 
-    const operationNames = this._getOperationNames(query, documentAST);
+    const operationNames = this._getOperationNames();
 
     const body: GraphQLBody = {query};
 
@@ -318,11 +337,18 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       body.variables = variables;
     }
 
-    if (this.state.body.operationName) {
+    // check if it state.body.operationName still exists (the operation can be deleted)
+    const currentDefinition = this._documentAST
+      ? this._documentAST.definitions.find(d => d.name.value === this.state.body.operationName)
+      : undefined;
+
+    if (this.state.body.operationName && currentDefinition) {
       body.operationName = this.state.body.operationName;
     } else if (operationNames.length) {
       body.operationName = operationNames[0];
     }
+
+    if (body.operationName) this._highlightOperation(body.operationName);
 
     this.setState({
       variablesSyntaxError: '',
@@ -456,6 +482,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             defaultValue={query}
             className={className}
             onChange={this._handleQueryChange}
+            onCodeMirrorInit={this._handleQueryCodeMirrorInit}
             onCursorActivity={this._handleQueryCursorActivity}
             mode="graphql"
             lineWrapping={settings.editorLineWrapping}

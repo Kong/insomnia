@@ -333,6 +333,10 @@ class CodeEditor extends React.Component {
     } else {
       setup();
     }
+
+    if (this.props.onCodeMirrorInit) {
+      this.props.onCodeMirrorInit(this.codeMirror);
+    }
   }
 
   _isJSON (mode) {
@@ -839,6 +843,7 @@ CodeEditor.propTypes = {
   onMouseLeave: PropTypes.func,
   onClick: PropTypes.func,
   onPaste: PropTypes.func,
+  onCodeMirrorInit: PropTypes.func,
   render: PropTypes.func,
   nunjucksPowerUserMode: PropTypes.bool,
   getRenderContext: PropTypes.func,
