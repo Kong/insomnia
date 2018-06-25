@@ -151,30 +151,40 @@
         font-style: italic;
       }
 
-      .hljs-keyword,
       .hljs-selector-tag,
       .hljs-subst {
         color: var(--color-font);
       }
 
-      .hljs-number,
+      .hljs-variable {
+        color: var(--color-success);
+      }
+
       .hljs-literal,
-      .hljs-variable,
       .hljs-template-variable,
       .hljs-built_in,
+      .hljs-keyword,
       .hljs-builtin-name,
       .hljs-type,
-      .hljs-class .hljs-title,
       .hljs-tag .hljs-attr {
         color: var(--color-surprise);
       }
 
       .hljs-symbol,
       .hljs-bullet,
-      .hljs-title,
       .hljs-section,
+      .hljs-class .hljs-title,
       .hljs-selector-id,
+      .hljs-title,
       .hljs-doctag {
+        color: var(--color-warning);
+      }
+
+      .hljs-number {
+        color: var(--color-info);
+      }
+
+      .hljs-sts {
         color: var(--color-danger);
       }
 
