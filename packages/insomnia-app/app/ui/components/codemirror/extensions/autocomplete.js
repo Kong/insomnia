@@ -235,9 +235,10 @@ function hint (cm, options) {
         // We're inside a JSON key
         matchSegments(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS)
           .forEach(m => highPriorityMatches.push(m));
-      } else if (token.type === 'invalidchar'
-        || token.type === 'ws'
-        || (token.type === 'punctuation' && token.string === '{')
+      } else if (
+        token.type === 'invalidchar' ||
+        token.type === 'ws' ||
+        (token.type === 'punctuation' && token.string === '{')
       ) {
         // We're outside of a JSON key
         matchSegments(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS)
