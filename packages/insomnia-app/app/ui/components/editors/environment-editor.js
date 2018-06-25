@@ -24,7 +24,7 @@ type State = {
 class EnvironmentEditor extends React.PureComponent<Props, State> {
   _editor: CodeEditor | null;
 
-  constructor (props: Props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       error: null,
@@ -32,7 +32,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     };
   }
 
-  _handleChange () {
+  _handleChange() {
     let error = null;
     let warning = null;
     let value = null;
@@ -56,7 +56,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
     // Call this last in case component unmounted
     if (this.state.error !== error || this.state.warning !== warning) {
-      this.setState({error, warning}, () => {
+      this.setState({ error, warning }, () => {
         this.props.didChange();
       });
     } else {
@@ -64,11 +64,11 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _setEditorRef (n: ?CodeEditor) {
+  _setEditorRef(n: ?CodeEditor) {
     this._editor = n;
   }
 
-  getValue () {
+  getValue() {
     if (this._editor) {
       return JSON.parse(this._editor.getValue());
     } else {
@@ -76,11 +76,11 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  isValid () {
+  isValid() {
     return !this.state.error;
   }
 
-  render () {
+  render() {
     const {
       environment,
       editorFontSize,
@@ -93,7 +93,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
       ...props
     } = this.props;
 
-    const {error, warning} = this.state;
+    const { error, warning } = this.state;
 
     return (
       <div className="environment-editor">
@@ -113,7 +113,8 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           {...props}
         />
         {error && <p className="notice error margin">{error}</p>}
-        {(!error && warning) && <p className="notice warning margin">{warning}</p>}
+        {!error &&
+          warning && <p className="notice warning margin">{warning}</p>}
       </div>
     );
   }

@@ -8,118 +8,135 @@
  * for any questions or issues regarding the generated code snippet, please open an issue mentioning the author.
  */
 
-'use strict'
+'use strict';
 
-var util = require('util')
-var CodeBuilder = require('../../helpers/code-builder')
+var util = require('util');
+var CodeBuilder = require('../../helpers/code-builder');
 
-module.exports = function (source, options) {
-  var opts = util._extend({
-    indent: '  '
-  }, options)
+module.exports = function(source, options) {
+  var opts = util._extend(
+    {
+      indent: '  '
+    },
+    options
+  );
 
-  var includeFS = false
-  var code = new CodeBuilder(opts.indent)
+  var includeFS = false;
+  var code = new CodeBuilder(opts.indent);
 
-  code.push('var request = require("request");')
-      .blank()
+  code.push('var request = require("request");').blank();
 
   var reqOpts = {
     method: source.method,
     url: source.url
-  }
+  };
 
   if (Object.keys(source.queryObj).length) {
-    reqOpts.qs = source.queryObj
+    reqOpts.qs = source.queryObj;
   }
 
   if (Object.keys(source.headersObj).length) {
-    reqOpts.headers = source.headersObj
+    reqOpts.headers = source.headersObj;
   }
 
   switch (source.postData.mimeType) {
     case 'application/x-www-form-urlencoded':
-      reqOpts.form = source.postData.paramsObj
-      break
+      reqOpts.form = source.postData.paramsObj;
+      break;
 
     case 'application/json':
       if (source.postData.jsonObj) {
-        reqOpts.body = source.postData.jsonObj
-        reqOpts.json = true
+        reqOpts.body = source.postData.jsonObj;
+        reqOpts.json = true;
       }
-      break
+      break;
 
     case 'multipart/form-data':
-      reqOpts.formData = {}
+      reqOpts.formData = {};
 
-      source.postData.params.forEach(function (param) {
-        var attachement = {}
+      source.postData.params.forEach(function(param) {
+        var attachement = {};
 
         if (!param.fileName && !param.fileName && !param.contentType) {
-          reqOpts.formData[param.name] = param.value
-          return
+          reqOpts.formData[param.name] = param.value;
+          return;
         }
 
         if (param.fileName && !param.value) {
-          includeFS = true
+          includeFS = true;
 
-          attachement.value = 'fs.createReadStream("' + param.fileName + '")'
+          attachement.value = 'fs.createReadStream("' + param.fileName + '")';
         } else if (param.value) {
-          attachement.value = param.value
+          attachement.value = param.value;
         }
 
         if (param.fileName) {
           attachement.options = {
             filename: param.fileName,
             contentType: param.contentType ? param.contentType : null
-          }
+          };
         }
 
-        reqOpts.formData[param.name] = attachement
-      })
-      break
+        reqOpts.formData[param.name] = attachement;
+      });
+      break;
 
     default:
       if (source.postData.text) {
-        reqOpts.body = source.postData.text
+        reqOpts.body = source.postData.text;
       }
   }
 
   // construct cookies argument
   if (source.cookies.length) {
-    reqOpts.jar = 'JAR'
+    reqOpts.jar = 'JAR';
 
-    code.push('var jar = request.jar();')
+    code.push('var jar = request.jar();');
 
-    var url = source.url
+    var url = source.url;
 
-    source.cookies.forEach(function (cookie) {
-      code.push('jar.setCookie(request.cookie("%s=%s"), "%s");', encodeURIComponent(cookie.name), encodeURIComponent(cookie.value), url)
-    })
-    code.blank()
+    source.cookies.forEach(function(cookie) {
+      code.push(
+        'jar.setCookie(request.cookie("%s=%s"), "%s");',
+        encodeURIComponent(cookie.name),
+        encodeURIComponent(cookie.value),
+        url
+      );
+    });
+    code.blank();
   }
 
   if (includeFS) {
-    code.unshift('var fs = require("fs");')
+    code.unshift('var fs = require("fs");');
   }
 
-  code.push('var options = %s;', util.inspect(reqOpts, { depth: null }))
+  code
+    .push('var options = %s;', util.inspect(reqOpts, { depth: null }))
+    .blank();
+
+  code
+    .push(
+      util.format('request(options, %s', 'function (error, response, body) {')
+    )
+
+    .push(1, 'if (error) throw new Error(error);')
     .blank()
+    .push(1, 'console.log(body);')
+    .push('});')
+    .blank();
 
-  code.push(util.format('request(options, %s', 'function (error, response, body) {'))
-
-      .push(1, 'if (error) throw new Error(error);')
-      .blank()
-      .push(1, 'console.log(body);')
-      .push('});')
-      .blank()
-
-  return code.join().replace('"JAR"', 'jar').replace(/"fs\.createReadStream\(\\\"(.+)\\\"\)\"/, 'fs.createReadStream("$1")')
-}
+  return code
+    .join()
+    .replace('"JAR"', 'jar')
+    .replace(
+      /"fs\.createReadStream\(\\\"(.+)\\\"\)\"/,
+      'fs.createReadStream("$1")'
+    );
+};
 
 module.exports.info = {
   key: 'request',
   title: 'Request',
   link: 'https://github.com/request/request',
   description: 'Simplified HTTP request client'
-}
+};

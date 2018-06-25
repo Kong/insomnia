@@ -1,25 +1,28 @@
 // @flow
-import type {Request} from '../../../../models/request';
-import {newBodyRaw} from '../../../../models/request';
+import type { Request } from '../../../../models/request';
+import { newBodyRaw } from '../../../../models/request';
 import classnames from 'classnames';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import {parse, print, typeFromAST} from 'graphql';
-import {introspectionQuery} from 'graphql/utilities/introspectionQuery';
-import {buildClientSchema} from 'graphql/utilities/buildClientSchema';
+import { parse, print, typeFromAST } from 'graphql';
+import { introspectionQuery } from 'graphql/utilities/introspectionQuery';
+import { buildClientSchema } from 'graphql/utilities/buildClientSchema';
 import CodeEditor from '../../codemirror/code-editor';
-import {jsonParseOr} from '../../../../common/misc';
+import { jsonParseOr } from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
-import {CONTENT_TYPE_JSON, DEBOUNCE_MILLIS} from '../../../../common/constants';
+import {
+  CONTENT_TYPE_JSON,
+  DEBOUNCE_MILLIS
+} from '../../../../common/constants';
 import prettify from 'insomnia-prettify';
-import type {ResponsePatch} from '../../../../network/network';
+import type { ResponsePatch } from '../../../../network/network';
 import * as network from '../../../../network/network';
-import type {Workspace} from '../../../../models/workspace';
-import type {Settings} from '../../../../models/settings';
+import type { Workspace } from '../../../../models/workspace';
+import type { Settings } from '../../../../models/settings';
 import TimeFromNow from '../../time-from-now';
 import * as models from '../../../../models/index';
 import * as db from '../../../../common/database';
-import {showModal} from '../../modals';
+import { showModal } from '../../modals';
 import WrapperModal from '../../modals/wrapper-modal';
 import ResponseTimelineViewer from '../../viewers/response-timeline-viewer';
 import Tooltip from '../../tooltip';
@@ -28,7 +31,7 @@ type GraphQLBody = {
   query: string,
   variables?: Object,
   operationName?: string
-}
+};
 
 type Props = {
   onChange: Function,
@@ -57,14 +60,14 @@ type State = {
   hideSchemaFetchErrors: boolean,
   variablesSyntaxError: string,
   forceRefreshKey: number
-}
+};
 
 @autobind
 class GraphQLEditor extends React.PureComponent<Props, State> {
   _isMounted: boolean;
   _schemaFetchTimeout: TimeoutID;
 
-  constructor (props: Props) {
+  constructor(props: Props) {
     super(props);
     this._isMounted = false;
     this.state = {
@@ -79,20 +82,20 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     };
   }
 
-  _handleViewResponse () {
-    const {settings} = this.props;
-    const {schemaFetchError} = this.state;
+  _handleViewResponse() {
+    const { settings } = this.props;
+    const { schemaFetchError } = this.state;
     if (!schemaFetchError || !schemaFetchError.response) {
       return;
     }
 
-    const {response} = schemaFetchError;
+    const { response } = schemaFetchError;
 
     showModal(WrapperModal, {
       title: 'Introspection Request',
       tall: true,
       body: (
-        <div style={{display: 'grid'}} className="tall pad-top">
+        <div style={{ display: 'grid' }} className="tall pad-top">
           <ResponseTimelineViewer
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
@@ -104,14 +107,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     });
   }
 
-  _hideSchemaFetchError () {
-    this.setState({hideSchemaFetchErrors: true});
+  _hideSchemaFetchError() {
+    this.setState({ hideSchemaFetchErrors: true });
   }
 
-  async _fetchAndSetSchema (rawRequest: Request) {
-    this.setState({schemaIsFetching: true});
+  async _fetchAndSetSchema(rawRequest: Request) {
+    this.setState({ schemaIsFetching: true });
 
-    const {environmentId} = this.props;
+    const { environmentId } = this.props;
 
     const newState = {
       schema: this.state.schema,
@@ -127,19 +130,28 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         operationName: 'IntrospectionQuery'
       });
 
-      const introspectionRequest = await db.upsert(Object.assign({}, rawRequest, {
-        _id: rawRequest._id + '.graphql',
-        settingMaxTimelineDataSize: 5000,
-        parentId: rawRequest._id,
-        isPrivate: true, // So it doesn't get synced or exported
-        body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON)
-      }));
+      const introspectionRequest = await db.upsert(
+        Object.assign({}, rawRequest, {
+          _id: rawRequest._id + '.graphql',
+          settingMaxTimelineDataSize: 5000,
+          parentId: rawRequest._id,
+          isPrivate: true, // So it doesn't get synced or exported
+          body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON)
+        })
+      );
 
-      responsePatch = await network.send(introspectionRequest._id, environmentId);
+      responsePatch = await network.send(
+        introspectionRequest._id,
+        environmentId
+      );
       const bodyBuffer = models.response.getBodyBuffer(responsePatch);
 
-      const status = typeof responsePatch.statusCode === 'number' ? responsePatch.statusCode : 0;
-      const error = typeof responsePatch.error === 'string' ? responsePatch.error : '';
+      const status =
+        typeof responsePatch.statusCode === 'number'
+          ? responsePatch.statusCode
+          : 0;
+      const error =
+        typeof responsePatch.error === 'string' ? responsePatch.error : '';
 
       if (error) {
         newState.schemaFetchError = {
@@ -153,7 +165,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           response: responsePatch
         };
       } else if (bodyBuffer) {
-        const {data} = JSON.parse(bodyBuffer.toString());
+        const { data } = JSON.parse(bodyBuffer.toString());
         newState.schema = buildClientSchema(data);
         newState.schemaLastFetchTime = Date.now();
       } else {
@@ -175,7 +187,10 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _buildVariableTypes (schema: Object | null, query: string): { [string]: Object } {
+  _buildVariableTypes(
+    schema: Object | null,
+    query: string
+  ): { [string]: Object } {
     if (!schema) {
       return {};
     }
@@ -189,7 +204,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     const definitions = documentAST ? documentAST.definitions : [];
     const variableToType = {};
-    for (const {kind, variableDefinitions} of definitions) {
+    for (const { kind, variableDefinitions } of definitions) {
       if (kind !== 'OperationDefinition') {
         continue;
       }
@@ -198,7 +213,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         continue;
       }
 
-      for (const {variable, type} of variableDefinitions) {
+      for (const { variable, type } of variableDefinitions) {
         const inputType = typeFromAST(schema, type);
         if (!inputType) {
           continue;
@@ -209,33 +224,34 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     return variableToType;
   }
 
-  async _handleRefreshSchema (): Promise<void> {
+  async _handleRefreshSchema(): Promise<void> {
     await this._fetchAndSetSchema(this.props.request);
   }
 
-  _handlePrettify () {
-    const {body, forceRefreshKey} = this.state;
-    const {variables, query} = body;
+  _handlePrettify() {
+    const { body, forceRefreshKey } = this.state;
+    const { variables, query } = body;
     const prettyQuery = query && print(parse(query));
-    const prettyVariables = variables && JSON.parse(prettify.json(JSON.stringify(variables)));
+    const prettyVariables =
+      variables && JSON.parse(prettify.json(JSON.stringify(variables)));
     this._handleBodyChange(prettyQuery, prettyVariables);
     setTimeout(() => {
-      this.setState({forceRefreshKey: forceRefreshKey + 1});
+      this.setState({ forceRefreshKey: forceRefreshKey + 1 });
     }, 200);
   }
 
-  _getOperationNames (query: string, documentAST: Object | null): Array<string> {
+  _getOperationNames(query: string, documentAST: Object | null): Array<string> {
     if (!documentAST) {
       return [];
     }
 
     return documentAST.definitions
       .filter(def => def.kind === 'OperationDefinition')
-      .map(def => def.name ? def.name.value : null)
+      .map(def => (def.name ? def.name.value : null))
       .filter(Boolean);
   }
 
-  _handleBodyChange (query: string, variables?: Object): void {
+  _handleBodyChange(query: string, variables?: Object): void {
     let documentAST;
     try {
       documentAST = parse(query);
@@ -245,7 +261,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     const operationNames = this._getOperationNames(query, documentAST);
 
-    const body: GraphQLBody = {query};
+    const body: GraphQLBody = { query };
 
     if (variables) {
       body.variables = variables;
@@ -263,25 +279,25 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     this.props.onChange(GraphQLEditor._graphQLToString(body));
   }
 
-  _handleQueryChange (query: string): void {
+  _handleQueryChange(query: string): void {
     this._handleBodyChange(query, this.state.body.variables);
   }
 
-  _handleVariablesChange (variables: string): void {
+  _handleVariablesChange(variables: string): void {
     try {
       const variablesObj = JSON.parse(variables || 'null');
       this._handleBodyChange(this.state.body.query, variablesObj);
     } catch (err) {
-      this.setState({variablesSyntaxError: err.message});
+      this.setState({ variablesSyntaxError: err.message });
     }
   }
 
-  static _stringToGraphQL (text: string): GraphQLBody {
+  static _stringToGraphQL(text: string): GraphQLBody {
     let obj: GraphQLBody;
     try {
       obj = JSON.parse(text);
     } catch (err) {
-      obj = {query: ''};
+      obj = { query: '' };
     }
 
     if (typeof obj.variables === 'string') {
@@ -292,17 +308,17 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     const variables = obj.variables || null;
 
     if (variables) {
-      return {query, variables};
+      return { query, variables };
     } else {
-      return {query};
+      return { query };
     }
   }
 
-  static _graphQLToString (body: GraphQLBody): string {
+  static _graphQLToString(body: GraphQLBody): string {
     return JSON.stringify(body);
   }
 
-  componentWillReceiveProps (nextProps: Props) {
+  componentWillReceiveProps(nextProps: Props) {
     if (nextProps.request.modified !== this.props.request.modified) {
       clearTimeout(this._schemaFetchTimeout);
       this._schemaFetchTimeout = setTimeout(async () => {
@@ -311,25 +327,29 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this._isMounted = true;
     (async () => {
       await this._fetchAndSetSchema(this.props.request);
     })();
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     this._isMounted = false;
     clearTimeout(this._schemaFetchTimeout);
   }
 
-  renderSchemaFetchMessage () {
+  renderSchemaFetchMessage() {
     let message;
-    const {schemaLastFetchTime, schemaIsFetching} = this.state;
+    const { schemaLastFetchTime, schemaIsFetching } = this.state;
     if (schemaIsFetching) {
       message = 'Fetching schema...';
     } else if (schemaLastFetchTime > 0) {
-      message = <span>schema last fetched <TimeFromNow timestamp={schemaLastFetchTime}/></span>;
+      message = (
+        <span>
+          schema last fetched <TimeFromNow timestamp={schemaLastFetchTime} />
+        </span>
+      );
     } else {
       message = 'schema not yet fetched';
     }
@@ -341,7 +361,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     );
   }
 
-  render () {
+  render() {
     const {
       content,
       render,
@@ -375,12 +395,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           <CodeEditor
             dynamicHeight
             manualPrettify
-            uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
+            uniquenessKey={
+              uniquenessKey ? uniquenessKey + '::query' : undefined
+            }
             hintOptions={{
               schema: schema || null,
               completeSingle: false
             }}
-            lintOptions={schema ? {schema} : null}
+            lintOptions={schema ? { schema } : null}
             fontSize={settings.editorFontSize}
             indentSize={settings.editorIndentSize}
             keyMap={settings.editorKeyMap}
@@ -393,34 +415,43 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           />
         </div>
         <div className="graphql-editor__schema-error">
-          {!hideSchemaFetchErrors && schemaFetchError && (
-            <div className="notice error margin no-margin-top margin-bottom-sm">
-              <div className="pull-right">
-                <Tooltip position="top" message="View introspection request/response timeline">
-                  <button className="icon icon--success" onClick={this._handleViewResponse}>
-                    <i className="fa fa-bug"/>
+          {!hideSchemaFetchErrors &&
+            schemaFetchError && (
+              <div className="notice error margin no-margin-top margin-bottom-sm">
+                <div className="pull-right">
+                  <Tooltip
+                    position="top"
+                    message="View introspection request/response timeline">
+                    <button
+                      className="icon icon--success"
+                      onClick={this._handleViewResponse}>
+                      <i className="fa fa-bug" />
+                    </button>
+                  </Tooltip>{' '}
+                  <button className="icon" onClick={this._hideSchemaFetchError}>
+                    <i className="fa fa-times" />
                   </button>
-                </Tooltip>
-                {' '}
-                <button className="icon" onClick={this._hideSchemaFetchError}>
-                  <i className="fa fa-times"/>
-                </button>
+                </div>
+                {schemaFetchError.message}
+                <br />
               </div>
-              {schemaFetchError.message}
-              <br/>
-            </div>
-          )}
+            )}
         </div>
         <div className="graphql-editor__schema-notice">
           {this.renderSchemaFetchMessage()}
-          <button className={classnames('icon space-left', {'fa-spin': schemaIsFetching})}
-                  onClick={this._handleRefreshSchema}>
-            <i className="fa fa-refresh"/>
+          <button
+            className={classnames('icon space-left', {
+              'fa-spin': schemaIsFetching
+            })}
+            onClick={this._handleRefreshSchema}>
+            <i className="fa fa-refresh" />
           </button>
         </div>
         <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
-          Query Variables <HelpTooltip>Variables to use in GraphQL query <br/>(JSON
-          format)</HelpTooltip>
+          Query Variables{' '}
+          <HelpTooltip>
+            Variables to use in GraphQL query <br />(JSON format)
+          </HelpTooltip>
           {variablesSyntaxError && (
             <span className="text-danger italic pull-right">
               {variablesSyntaxError}
@@ -430,7 +461,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         <div className="graphql-editor__variables">
           <CodeEditor
             dynamicHeight
-            uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
+            uniquenessKey={
+              uniquenessKey ? uniquenessKey + '::variables' : undefined
+            }
             debounceMillis={DEBOUNCE_MILLIS * 4}
             manualPrettify={false}
             fontSize={settings.editorFontSize}
@@ -452,7 +485,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           />
         </div>
         <div className="pane__footer">
-          <button className="pull-right btn btn--compact" onClick={this._handlePrettify}>
+          <button
+            className="pull-right btn btn--compact"
+            onClick={this._handlePrettify}>
             Prettify GraphQL
           </button>
         </div>

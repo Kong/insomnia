@@ -14,7 +14,7 @@ import * as _settings from './settings';
 import * as _stats from './stats';
 import * as _workspace from './workspace';
 import * as _workspaceMeta from './workspace-meta';
-import {generateId} from '../common/misc';
+import { generateId } from '../common/misc';
 
 export type BaseModel = {
   _id: string,
@@ -22,7 +22,7 @@ export type BaseModel = {
   parentId: string,
   modified: number,
   created: number
-}
+};
 
 // Reference to each model
 export const clientCertificate = _clientCertificate;
@@ -41,7 +41,7 @@ export const stats = _stats;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 
-export function all () {
+export function all() {
   return [
     stats,
     settings,
@@ -61,20 +61,20 @@ export function all () {
   ];
 }
 
-export function types () {
+export function types() {
   return all().map(model => model.type);
 }
 
-export function getModel (type: string): Object | null {
+export function getModel(type: string): Object | null {
   return all().find(m => m.type === type) || null;
 }
 
-export function canDuplicate (type: string) {
+export function canDuplicate(type: string) {
   const model = getModel(type);
   return model ? model.canDuplicate : false;
 }
 
-export function getModelName (type: string, count: number = 1) {
+export function getModelName(type: string, count: number = 1) {
   const model = getModel(type);
   if (!model) {
     return 'Unknown';
@@ -88,25 +88,33 @@ export function getModelName (type: string, count: number = 1) {
   }
 }
 
-export async function initModel<T: BaseModel> (
+export async function initModel<T: BaseModel>(
   type: string,
   ...sources: Array<Object>
 ): Promise<T> {
   const model = getModel(type);
 
   if (!model) {
-    const choices = all().map(m => m.type).join(', ');
-    throw new Error(`Tried to init invalid model "${type}". Choices are ${choices}`);
+    const choices = all()
+      .map(m => m.type)
+      .join(', ');
+    throw new Error(
+      `Tried to init invalid model "${type}". Choices are ${choices}`
+    );
   }
 
   // Define global default fields
-  const objectDefaults = Object.assign({}, {
-    _id: null,
-    type: type,
-    parentId: null,
-    modified: Date.now(),
-    created: Date.now()
-  }, model.init());
+  const objectDefaults = Object.assign(
+    {},
+    {
+      _id: null,
+      type: type,
+      parentId: null,
+      modified: Date.now(),
+      created: Date.now()
+    },
+    model.init()
+  );
 
   const fullObject = Object.assign({}, objectDefaults, ...sources);
 

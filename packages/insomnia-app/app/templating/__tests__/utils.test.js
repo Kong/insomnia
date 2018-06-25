@@ -1,51 +1,44 @@
 import * as utils from '../utils';
-import {globalBeforeEach} from '../../__jest__/before-each';
+import { globalBeforeEach } from '../../__jest__/before-each';
 
 describe('getKeys()', () => {
   beforeEach(globalBeforeEach);
   it('flattens complex object', () => {
     const obj = {
       foo: 'bar',
-      nested: {a: {b: {}}},
+      nested: { a: { b: {} } },
       null: null,
       undefined: undefined,
       false: false,
-      array: [
-        'hello',
-        {hi: 'there'},
-        true,
-        ['x', 'y', 'z']
-      ]
+      array: ['hello', { hi: 'there' }, true, ['x', 'y', 'z']]
     };
 
-    const keys = utils
-      .getKeys(obj)
-      .sort((a, b) => a.name > b.name ? 1 : -1);
+    const keys = utils.getKeys(obj).sort((a, b) => (a.name > b.name ? 1 : -1));
 
     expect(keys).toEqual([
-      {name: 'array[0]', value: obj.array[0]},
-      {name: 'array[1].hi', value: obj.array[1].hi},
-      {name: 'array[2]', value: obj.array[2]},
-      {name: 'array[3][0]', value: obj.array[3][0]},
-      {name: 'array[3][1]', value: obj.array[3][1]},
-      {name: 'array[3][2]', value: obj.array[3][2]},
-      {name: 'false', value: obj.false},
-      {name: 'foo', value: obj.foo},
-      {name: 'null', value: obj.null},
-      {name: 'undefined', value: obj.undefined}
+      { name: 'array[0]', value: obj.array[0] },
+      { name: 'array[1].hi', value: obj.array[1].hi },
+      { name: 'array[2]', value: obj.array[2] },
+      { name: 'array[3][0]', value: obj.array[3][0] },
+      { name: 'array[3][1]', value: obj.array[3][1] },
+      { name: 'array[3][2]', value: obj.array[3][2] },
+      { name: 'false', value: obj.false },
+      { name: 'foo', value: obj.foo },
+      { name: 'null', value: obj.null },
+      { name: 'undefined', value: obj.undefined }
     ]);
   });
 
   it('ignores functions', () => {
     const obj = {
       foo: 'bar',
-      toString: function () {
+      toString: function() {
         // Nothing
       }
     };
 
     const keys = utils.getKeys(obj);
-    expect(keys).toEqual([{name: 'foo', value: 'bar'}]);
+    expect(keys).toEqual([{ name: 'foo', value: 'bar' }]);
   });
 });
 
@@ -59,9 +52,9 @@ describe('tokenizeTag()', () => {
     const expected = {
       name: 'name',
       args: [
-        {type: 'variable', value: 'bar'},
-        {type: 'string', value: 'baz "qux"', quotedBy: '"'},
-        {type: 'expression', value: '1 + 5 | default("foo")'}
+        { type: 'variable', value: 'bar' },
+        { type: 'string', value: 'baz "qux"', quotedBy: '"' },
+        { type: 'expression', value: '1 + 5 | default("foo")' }
       ]
     };
 
@@ -75,8 +68,8 @@ describe('tokenizeTag()', () => {
     const expected = {
       name: 'name',
       args: [
-        {type: 'string', value: 'foo', quotedBy: "'"},
-        {type: 'variable', value: 'bar'}
+        { type: 'string', value: 'foo', quotedBy: "'" },
+        { type: 'variable', value: 'bar' }
       ]
     };
 
@@ -89,7 +82,7 @@ describe('tokenizeTag()', () => {
 
     const expected = {
       name: 'name',
-      args: [{type: 'string', value: 'foo', quotedBy: "'"}]
+      args: [{ type: 'string', value: 'foo', quotedBy: "'" }]
     };
 
     expect(actual).toEqual(expected);
@@ -101,9 +94,9 @@ describe('tokenizeTag()', () => {
     const expected = {
       name: 'name',
       args: [
-        {type: 'number', value: '9.324'},
-        {type: 'number', value: '8'},
-        {type: 'number', value: '7'}
+        { type: 'number', value: '9.324' },
+        { type: 'number', value: '8' },
+        { type: 'number', value: '7' }
       ]
     };
 
@@ -116,8 +109,8 @@ describe('tokenizeTag()', () => {
     const expected = {
       name: 'name',
       args: [
-        {type: 'boolean', value: true},
-        {type: 'boolean', value: false}
+        { type: 'boolean', value: true },
+        { type: 'boolean', value: false }
       ]
     };
 
@@ -125,11 +118,13 @@ describe('tokenizeTag()', () => {
   });
 
   it('handles type expression', () => {
-    const actual = utils.tokenizeTag(`{% name 5 * 10 + 'hello' | default(2 - 3) %}`);
+    const actual = utils.tokenizeTag(
+      `{% name 5 * 10 + 'hello' | default(2 - 3) %}`
+    );
 
     const expected = {
       name: 'name',
-      args: [{type: 'expression', value: `5 * 10 + 'hello' | default(2 - 3)`}]
+      args: [{ type: 'expression', value: `5 * 10 + 'hello' | default(2 - 3)` }]
     };
 
     expect(actual).toEqual(expected);
@@ -144,7 +139,7 @@ describe('tokenizeTag()', () => {
 
     const expected = {
       name: 'name',
-      args: [{type: 'expression', value: 'foo bar baz'}]
+      args: [{ type: 'expression', value: 'foo bar baz' }]
     };
 
     expect(actual).toEqual(expected);
@@ -166,8 +161,8 @@ describe('unTokenizeTag()', () => {
     const tagData = {
       name: 'name',
       args: [
-        {type: 'file', value: 'foo/bar/baz'},
-        {type: 'model', value: 'foo'}
+        { type: 'file', value: 'foo/bar/baz' },
+        { type: 'model', value: 'foo' }
       ]
     };
 

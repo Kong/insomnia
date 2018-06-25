@@ -4,7 +4,7 @@ const iconv = require('iconv-lite');
 describe('Response tag', () => {
   describe('General', () => {
     it('fails on no responses', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
       const context = _genTestContext(requests);
 
@@ -17,14 +17,16 @@ describe('Response tag', () => {
     });
 
     it('fails on no request', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        _body: '{"foo": "bar"}'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          _body: '{"foo": "bar"}'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
@@ -37,14 +39,16 @@ describe('Response tag', () => {
     });
 
     it('fails on empty filter', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        _body: '{"foo": "bar"}'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          _body: '{"foo": "bar"}'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
@@ -59,15 +63,17 @@ describe('Response tag', () => {
 
   describe('JSONPath', () => {
     it('basic query', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'application/json',
-        _body: '{"foo": "bar"}'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/json',
+          _body: '{"foo": "bar"}'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
       const result = await tag.run(context, 'body', 'req_1', '$.foo');
@@ -76,15 +82,17 @@ describe('Response tag', () => {
     });
 
     it('fails on invalid JSON', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'application/json',
-        _body: '{"foo": "'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/json',
+          _body: '{"foo": "'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
@@ -92,20 +100,24 @@ describe('Response tag', () => {
         await tag.run(context, 'body', 'req_1', '$.foo');
         fail('JSON should have failed');
       } catch (err) {
-        expect(err.message).toContain('Invalid JSON: Unexpected end of JSON input');
+        expect(err.message).toContain(
+          'Invalid JSON: Unexpected end of JSON input'
+        );
       }
     });
 
     it('fails on invalid query', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'application/json',
-        _body: '{"foo": "bar"}'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/json',
+          _body: '{"foo": "bar"}'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
@@ -118,15 +130,17 @@ describe('Response tag', () => {
     });
 
     it('fails on no results', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'application/json',
-        _body: '{"foo": "bar"}'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/json',
+          _body: '{"foo": "bar"}'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
@@ -139,15 +153,17 @@ describe('Response tag', () => {
     });
 
     it('fails on more than 1 result', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'application/json',
-        _body: '{"array": ["bar", "baz"]}'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/json',
+          _body: '{"array": ["bar", "baz"]}'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
@@ -155,20 +171,24 @@ describe('Response tag', () => {
         await tag.run(context, 'body', 'req_1', '$.array.*');
         fail('JSON should have failed to parse');
       } catch (err) {
-        expect(err.message).toContain('Returned more than one result: $.array.*');
+        expect(err.message).toContain(
+          'Returned more than one result: $.array.*'
+        );
       }
     });
 
     it('works with utf-16 encoding', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'application/json; charset=UTF-16',
-        _body: iconv.encode('{"array": ["bar", "baz"]}', 'UTF-16')
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/json; charset=UTF-16',
+          _body: iconv.encode('{"array": ["bar", "baz"]}', 'UTF-16')
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
@@ -178,15 +198,17 @@ describe('Response tag', () => {
 
   describe('XPath', async () => {
     it('renders basic response "body" query', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'application/xml',
-        _body: '<foo><bar>Hello World!</bar></foo>'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/xml',
+          _body: '<foo><bar>Hello World!</bar></foo>'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
       const result = await tag.run(context, 'body', 'req_1', '/foo/bar');
@@ -195,15 +217,17 @@ describe('Response tag', () => {
     });
 
     it('renders basic response "body" attribute query', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'application/xml',
-        _body: '<foo><bar hello="World">Hello World!</bar></foo>'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/xml',
+          _body: '<foo><bar hello="World">Hello World!</bar></foo>'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
       const result = await tag.run(context, 'body', 'req_1', '/foo/bar/@hello');
@@ -212,32 +236,41 @@ describe('Response tag', () => {
     });
 
     it('renders query that does not start with slash', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'application/xml',
-        _body: '<foo><bar hello="World">Hello World!</bar></foo>'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/xml',
+          _body: '<foo><bar hello="World">Hello World!</bar></foo>'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
-      const result = await tag.run(context, 'body', 'req_1', 'substring(/foo/bar, 7)');
+      const result = await tag.run(
+        context,
+        'body',
+        'req_1',
+        'substring(/foo/bar, 7)'
+      );
 
       expect(result).toBe('World!');
     });
 
     it('no results on invalid XML', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'application/xml',
-        _body: '<hi></hi></sstr>'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/xml',
+          _body: '<hi></hi></sstr>'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
@@ -250,15 +283,17 @@ describe('Response tag', () => {
     });
 
     it('fails on invalid query', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'application/xml',
-        _body: '<foo></foo>'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/xml',
+          _body: '<foo></foo>'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
@@ -271,15 +306,17 @@ describe('Response tag', () => {
     });
 
     it('fails on no results', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'application/xml',
-        _body: '<foo></foo>'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/xml',
+          _body: '<foo></foo>'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
@@ -292,15 +329,17 @@ describe('Response tag', () => {
     });
 
     it('fails on more than 1 result', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'application/xml',
-        _body: '<foo><bar>Hello World!</bar><bar>And again!</bar></foo>'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/xml',
+          _body: '<foo><bar>Hello World!</bar><bar>And again!</bar></foo>'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
@@ -315,39 +354,51 @@ describe('Response tag', () => {
 
   describe('ResponseExtension Header', async () => {
     it('renders basic response "header"', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: '',
-        headers: [
-          {name: 'Content-Type', value: 'application/json'},
-          {name: 'Content-Length', value: '20'}
-        ]
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: '',
+          headers: [
+            { name: 'Content-Type', value: 'application/json' },
+            { name: 'Content-Length', value: '20' }
+          ]
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
-      expect(await tag.run(context, 'header', 'req_1', 'content-type')).toBe('application/json');
-      expect(await tag.run(context, 'header', 'req_1', 'Content-Type')).toBe('application/json');
-      expect(await tag.run(context, 'header', 'req_1', 'CONTENT-type')).toBe('application/json');
-      expect(await tag.run(context, 'header', 'req_1', 'CONTENT-type    ')).toBe('application/json');
+      expect(await tag.run(context, 'header', 'req_1', 'content-type')).toBe(
+        'application/json'
+      );
+      expect(await tag.run(context, 'header', 'req_1', 'Content-Type')).toBe(
+        'application/json'
+      );
+      expect(await tag.run(context, 'header', 'req_1', 'CONTENT-type')).toBe(
+        'application/json'
+      );
+      expect(
+        await tag.run(context, 'header', 'req_1', 'CONTENT-type    ')
+      ).toBe('application/json');
     });
 
     it('no results on missing header', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        headers: [
-          {name: 'Content-Type', value: 'application/json'},
-          {name: 'Content-Length', value: '20'}
-        ]
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          headers: [
+            { name: 'Content-Type', value: 'application/json' },
+            { name: 'Content-Length', value: '20' }
+          ]
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
@@ -355,23 +406,27 @@ describe('Response tag', () => {
         await tag.run(context, 'header', 'req_1', 'missing');
         fail('should have failed');
       } catch (err) {
-        expect(err.message).toBe('No header with name "missing".\n' +
-          'Choices are [\n\t"Content-Type",\n\t"Content-Length"\n]');
+        expect(err.message).toBe(
+          'No header with name "missing".\n' +
+            'Choices are [\n\t"Content-Type",\n\t"Content-Length"\n]'
+        );
       }
     });
   });
 
   describe('Raw', async () => {
     it('renders basic response', async () => {
-      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
-      const responses = [{
-        _id: 'res_1',
-        parentId: 'req_1',
-        statusCode: 200,
-        contentType: 'text/plain',
-        _body: 'Hello World!'
-      }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'text/plain',
+          _body: 'Hello World!'
+        }
+      ];
 
       const context = _genTestContext(requests, responses);
 
@@ -380,7 +435,7 @@ describe('Response tag', () => {
   });
 });
 
-function _genTestContext (requests, responses) {
+function _genTestContext(requests, responses) {
   requests = requests || [];
   responses = responses || [];
   const bodies = {};
@@ -392,15 +447,15 @@ function _genTestContext (requests, responses) {
     util: {
       models: {
         request: {
-          getById (requestId) {
+          getById(requestId) {
             return requests.find(r => r._id === requestId) || null;
           }
         },
         response: {
-          getLatestForRequestId (requestId) {
+          getLatestForRequestId(requestId) {
             return responses.find(r => r.parentId === requestId) || null;
           },
-          getBodyBuffer (response) {
+          getBodyBuffer(response) {
             const strOrBuffer = bodies[response._id];
 
             if (typeof strOrBuffer === 'string') {

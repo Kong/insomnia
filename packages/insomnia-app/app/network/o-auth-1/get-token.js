@@ -11,30 +11,39 @@ import {
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_HMAC_SHA256
 } from './constants';
-import type {OAuth1SignatureMethod} from './constants';
-import type {RequestAuthentication} from '../../models/request';
+import type { OAuth1SignatureMethod } from './constants';
+import type { RequestAuthentication } from '../../models/request';
 
-function hashFunction (signatureMethod: OAuth1SignatureMethod) {
+function hashFunction(signatureMethod: OAuth1SignatureMethod) {
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA1) {
-    return function (baseString: string, key: string): string {
-      return crypto.createHmac('sha1', key).update(baseString).digest('base64');
+    return function(baseString: string, key: string): string {
+      return crypto
+        .createHmac('sha1', key)
+        .update(baseString)
+        .digest('base64');
     };
   }
 
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA256) {
-    return function (baseString: string, key: string): string {
-      return crypto.createHmac('sha256', key).update(baseString).digest('base64');
+    return function(baseString: string, key: string): string {
+      return crypto
+        .createHmac('sha256', key)
+        .update(baseString)
+        .digest('base64');
     };
   }
 
   if (signatureMethod === SIGNATURE_METHOD_RSA_SHA1) {
-    return function (baseString: string, privatekey: string): string {
-      return crypto.createSign('RSA-SHA1').update(baseString).sign(privatekey, 'base64');
+    return function(baseString: string, privatekey: string): string {
+      return crypto
+        .createSign('RSA-SHA1')
+        .update(baseString)
+        .sign(privatekey, 'base64');
     };
   }
 
   if (signatureMethod === SIGNATURE_METHOD_PLAINTEXT) {
-    return function (baseString: string): string {
+    return function(baseString: string): string {
       return baseString;
     };
   }
@@ -42,11 +51,11 @@ function hashFunction (signatureMethod: OAuth1SignatureMethod) {
   throw new Error(`Invalid signature method ${signatureMethod}`);
 }
 
-export default async function (
+export default async function(
   url: string,
   method: string,
   authentication: RequestAuthentication
-): {[string]: string} {
+): { [string]: string } {
   const oauth = new OAuth1({
     consumer: {
       key: authentication.consumerKey,
@@ -84,15 +93,18 @@ export default async function (
 
   let token = null;
   if (authentication.tokenKey && authentication.tokenSecret) {
-    token = {key: authentication.tokenKey, secret: authentication.tokenSecret};
+    token = {
+      key: authentication.tokenKey,
+      secret: authentication.tokenSecret
+    };
   } else if (authentication.tokenKey) {
-    token = {key: authentication.tokenKey};
+    token = { key: authentication.tokenKey };
   }
 
   if (authentication.signatureMethod === SIGNATURE_METHOD_RSA_SHA1) {
-    token = {key: authentication.tokenKey, secret: authentication.privateKey};
+    token = { key: authentication.tokenKey, secret: authentication.privateKey };
     // We override getSigningKey for RSA-SHA1 because we don't want ddo/oauth-1.0a to percentEncode the token
-    oauth.getSigningKey = function (tokenSecret) {
+    oauth.getSigningKey = function(tokenSecret) {
       return tokenSecret || '';
     };
   }

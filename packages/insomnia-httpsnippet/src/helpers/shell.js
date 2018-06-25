@@ -1,6 +1,6 @@
-'use strict'
+'use strict';
 
-var util = require('util')
+var util = require('util');
 
 module.exports = {
   /**
@@ -8,18 +8,18 @@ module.exports = {
    * to deal with nested single quote characters.
    * http://wiki.bash-hackers.org/syntax/quoting#strong_quoting
    */
-  quote: function (value) {
-    var safe = /^[a-z0-9-_/.@%^=:]+$/i
+  quote: function(value) {
+    var safe = /^[a-z0-9-_/.@%^=:]+$/i;
 
     // Unless `value` is a simple shell-safe string, quote it.
     if (!safe.test(value)) {
-      return util.format('\'%s\'', value.replace(/'/g, "\'\\'\'"))
+      return util.format("'%s'", value.replace(/'/g, "'\\''"));
     }
 
-    return value
+    return value;
   },
 
-  escape: function (value) {
-    return value.replace(/\r/g, '\\r').replace(/\n/g, '\\n')
+  escape: function(value) {
+    return value.replace(/\r/g, '\\r').replace(/\n/g, '\\n');
   }
-}
+};

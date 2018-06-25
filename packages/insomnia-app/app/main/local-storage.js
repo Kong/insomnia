@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 class LocalStorage {
-  constructor (basePath) {
+  constructor(basePath) {
     this._basePath = basePath;
 
     // Debounce writes on a per key basis
@@ -14,13 +14,13 @@ class LocalStorage {
     console.log(`[localstorage] Initialized at ${basePath}`);
   }
 
-  setItem (key, obj) {
+  setItem(key, obj) {
     clearTimeout(this._timeouts[key]);
     this._buffer[key] = JSON.stringify(obj);
     this._timeouts[key] = setTimeout(this._flush.bind(this), 100);
   }
 
-  getItem (key, defaultObj) {
+  getItem(key, defaultObj) {
     // Make sure things are flushed before we read
     this._flush();
 
@@ -38,12 +38,14 @@ class LocalStorage {
     try {
       return JSON.parse(contents);
     } catch (e) {
-      console.error(`[localstorage] Failed to parse item from LocalStorage: ${e}`);
+      console.error(
+        `[localstorage] Failed to parse item from LocalStorage: ${e}`
+      );
       return defaultObj;
     }
   }
 
-  _flush () {
+  _flush() {
     const keys = Object.keys(this._buffer);
 
     if (!keys.length) {
@@ -64,7 +66,7 @@ class LocalStorage {
     }
   }
 
-  _getKeyPath (key) {
+  _getKeyPath(key) {
     return path.join(this._basePath, key);
   }
 }

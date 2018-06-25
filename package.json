@@ -14,11 +14,13 @@
     "test": "lerna run test --stream",
     "app-start": "lerna run start --stream --scope=insomnia-app",
     "app-build": "lerna run build --stream --scope=insomnia-app",
-    "app-package": "lerna run package --stream --scope=insomnia-app"
+    "app-package": "lerna run package --stream --scope=insomnia-app",
+    "format-code": "prettier --write \"**/*.js\""
   },
   "devDependencies": {
     "jest": "^22.1.1",
     "lerna": "^2.7.1",
+    "prettier": "^1.13.6",
     "webpack": "^4.8.3"
   },
   "dependencies": {}

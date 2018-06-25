@@ -4,7 +4,7 @@
  * @param [defaultProto='http:'] {string} - default protocol
  * @returns {string}
  */
-module.exports.setDefaultProtocol = function (url, defaultProto) {
+module.exports.setDefaultProtocol = function(url, defaultProto) {
   defaultProto = defaultProto || 'http:';
 
   // If no url, don't bother returning anything

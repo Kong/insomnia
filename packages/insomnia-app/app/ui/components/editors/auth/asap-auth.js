@@ -1,12 +1,12 @@
 // @flow
-import type {RequestAuthentication} from '../../../../models/request';
+import type { RequestAuthentication } from '../../../../models/request';
 
 import classnames from 'classnames';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import HelpTooltip from '../../help-tooltip';
-import {showModal} from '../../modals';
+import { showModal } from '../../modals';
 import CodePromptModal from '../../modals/code-prompt-modal';
 import Button from '../../base/button';
 
@@ -33,25 +33,25 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 
 @autobind
 class AsapAuth extends React.PureComponent<Props> {
-  _handleDisable () {
-    const {authentication} = this.props;
+  _handleDisable() {
+    const { authentication } = this.props;
     authentication.disabled = !authentication.disabled;
     this.props.onChange(authentication);
   }
 
-  _handleChangeProperty (property: string, value: string | boolean): void {
-    const {authentication} = this.props;
+  _handleChangeProperty(property: string, value: string | boolean): void {
+    const { authentication } = this.props;
     authentication[property] = value;
     this.props.onChange(authentication);
   }
 
-  _handleChangePrivateKey (value: string): void {
-    const {authentication} = this.props;
+  _handleChangePrivateKey(value: string): void {
+    const { authentication } = this.props;
     authentication.privateKey = value;
     this.props.onChange(authentication);
   }
 
-  renderAsapAuthenticationFields (): React.Node {
+  renderAsapAuthenticationFields(): React.Node {
     const asapIssuer = this.renderTextInput(
       'Issuer (iss)',
       'issuer',
@@ -63,7 +63,7 @@ class AsapAuth extends React.PureComponent<Props> {
       'Subject (sub)',
       'subject',
       'text/plain',
-      (value) => this._handleChangeProperty('subject', value)
+      value => this._handleChangeProperty('subject', value)
     );
 
     const asapAudience = this.renderTextInput(
@@ -77,7 +77,7 @@ class AsapAuth extends React.PureComponent<Props> {
       'Additional Claims',
       'additionalClaims',
       'application/json',
-      (value) => this._handleChangeProperty('additionalClaims', value)
+      value => this._handleChangeProperty('additionalClaims', value)
     );
 
     const asapKeyId = this.renderTextInput(
@@ -87,20 +87,30 @@ class AsapAuth extends React.PureComponent<Props> {
       value => this._handleChangeProperty('keyId', value)
     );
 
-    const asapPrivateKey = this.renderPrivateKeyInput(
-      'Private Key'
-    );
+    const asapPrivateKey = this.renderPrivateKeyInput('Private Key');
 
-    return [asapIssuer, asapSubject, asapAudience, asapAdditionalClaims, asapKeyId, asapPrivateKey];
+    return [
+      asapIssuer,
+      asapSubject,
+      asapAudience,
+      asapAdditionalClaims,
+      asapKeyId,
+      asapPrivateKey
+    ];
   }
 
-  renderTextInput (
+  renderTextInput(
     label: string,
     property: string,
     mode: string,
     onChange: Function
   ): React.Element<*> {
-    const {handleRender, handleGetRenderContext, authentication, nunjucksPowerUserMode} = this.props;
+    const {
+      handleRender,
+      handleGetRenderContext,
+      authentication,
+      nunjucksPowerUserMode
+    } = this.props;
     const id = label.replace(/ /g, '-');
     return (
       <tr key={id}>
@@ -110,9 +120,13 @@ class AsapAuth extends React.PureComponent<Props> {
           </label>
         </td>
         <td className="wide">
-          <div className={classnames('form-control form-control--underlined no-margin', {
-            'form-control--inactive': authentication.disabled
-          })}>
+          <div
+            className={classnames(
+              'form-control form-control--underlined no-margin',
+              {
+                'form-control--inactive': authentication.disabled
+              }
+            )}>
             <OneLineEditor
               id={id}
               mode={mode}
@@ -128,8 +142,8 @@ class AsapAuth extends React.PureComponent<Props> {
     );
   }
 
-  _handleEditPrivateKey () {
-    const {handleRender, handleGetRenderContext, authentication} = this.props;
+  _handleEditPrivateKey() {
+    const { handleRender, handleGetRenderContext, authentication } = this.props;
     showModal(CodePromptModal, {
       submitName: 'Done',
       title: `Edit Private Key`,
@@ -142,28 +156,33 @@ class AsapAuth extends React.PureComponent<Props> {
     });
   }
 
-  renderPrivateKeyInput (
-    label: string
-  ): React.Element<*> {
+  renderPrivateKeyInput(label: string): React.Element<*> {
     const id = label.replace(/ /g, '-');
-    const {authentication} = this.props;
+    const { authentication } = this.props;
     return (
       <tr key={id}>
         <td className="pad-right pad-top-sm no-wrap valign-top">
           <label htmlFor={id} className="label--small no-pad">
             {label}
-            <HelpTooltip>Can also use single line data-uri format (e.g. obtained from asap-cli
-              export-as-data-uri command), useful for saving as environment data</HelpTooltip>
+            <HelpTooltip>
+              Can also use single line data-uri format (e.g. obtained from
+              asap-cli export-as-data-uri command), useful for saving as
+              environment data
+            </HelpTooltip>
           </label>
         </td>
         <td className="wide">
-          <div className={
-            classnames('form-control form-control--underlined form-control--tall no-margin', {
-              'form-control--inactive': authentication.disabled
-            })
-          }>
-            <button className="btn btn--clicky wide" onClick={this._handleEditPrivateKey}>
-              <i className="fa fa-edit space-right"/>
+          <div
+            className={classnames(
+              'form-control form-control--underlined form-control--tall no-margin',
+              {
+                'form-control--inactive': authentication.disabled
+              }
+            )}>
+            <button
+              className="btn btn--clicky wide"
+              onClick={this._handleEditPrivateKey}>
+              <i className="fa fa-edit space-right" />
               {authentication.privateKey ? 'Click to Edit' : 'Click to Add'}
             </button>
           </div>
@@ -172,36 +191,40 @@ class AsapAuth extends React.PureComponent<Props> {
     );
   }
 
-  render () {
+  render() {
     const fields = this.renderAsapAuthenticationFields();
-    const {authentication} = this.props;
+    const { authentication } = this.props;
 
     return (
       <div className="pad">
         <table>
           <tbody>
-          {fields}
-          <tr>
-            <td className="pad-right no-wrap valign-middle">
-              <label htmlFor="enabled" className="label--small no-pad">
-                Enabled
-              </label>
-            </td>
-            <td className="wide">
-              <div className="form-control form-control--underlined">
-                <Button className="btn btn--super-duper-compact"
-                        id="enabled"
-                        onClick={this._handleDisable}
-                        value={!authentication.disabled}
-                        title={authentication.disabled ? 'Enable item' : 'Disable item'}>
-                  {authentication.disabled
-                    ? <i className="fa fa-square-o"/>
-                    : <i className="fa fa-check-square-o"/>
-                  }
-                </Button>
-              </div>
-            </td>
-          </tr>
+            {fields}
+            <tr>
+              <td className="pad-right no-wrap valign-middle">
+                <label htmlFor="enabled" className="label--small no-pad">
+                  Enabled
+                </label>
+              </td>
+              <td className="wide">
+                <div className="form-control form-control--underlined">
+                  <Button
+                    className="btn btn--super-duper-compact"
+                    id="enabled"
+                    onClick={this._handleDisable}
+                    value={!authentication.disabled}
+                    title={
+                      authentication.disabled ? 'Enable item' : 'Disable item'
+                    }>
+                    {authentication.disabled ? (
+                      <i className="fa fa-square-o" />
+                    ) : (
+                      <i className="fa fa-check-square-o" />
+                    )}
+                  </Button>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

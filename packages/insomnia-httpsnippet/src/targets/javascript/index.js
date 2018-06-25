@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 module.exports = {
   info: {
@@ -10,4 +10,4 @@ module.exports = {
 
   jquery: require('./jquery'),
   xhr: require('./xhr')
-}
+};

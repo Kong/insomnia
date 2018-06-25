@@ -1,15 +1,15 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import HTTPSnippet, {availableTargets} from 'insomnia-httpsnippet';
+import HTTPSnippet, { availableTargets } from 'insomnia-httpsnippet';
 import CopyButton from '../base/copy-button';
-import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
+import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 import CodeEditor from '../codemirror/code-editor';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import {exportHarRequest} from '../../../common/har';
+import { exportHarRequest } from '../../../common/har';
 import Link from '../base/link';
 
 const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell');
@@ -29,7 +29,7 @@ const TO_ADD_CONTENT_LENGTH = {
 
 @autobind
 class GenerateCodeModal extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
 
     let client;
@@ -38,13 +38,15 @@ class GenerateCodeModal extends PureComponent {
     // Load preferences from localStorage
 
     try {
-      target = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target'));
-    } catch (e) {
-    }
+      target = JSON.parse(
+        window.localStorage.getItem('insomnia::generateCode::target')
+      );
+    } catch (e) {}
     try {
-      client = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client'));
-    } catch (e) {
-    }
+      client = JSON.parse(
+        window.localStorage.getItem('insomnia::generateCode::client')
+      );
+    } catch (e) {}
 
     this.state = {
       cmd: '',
@@ -54,24 +56,24 @@ class GenerateCodeModal extends PureComponent {
     };
   }
 
-  _setModalRef (n) {
+  _setModalRef(n) {
     this.modal = n;
   }
-  _setEditorRef (n) {
+  _setEditorRef(n) {
     this._editor = n;
   }
 
-  hide () {
+  hide() {
     this.modal.hide();
   }
 
-  _handleClientChange (client) {
-    const {target, request} = this.state;
+  _handleClientChange(client) {
+    const { target, request } = this.state;
     this._generateCode(request, target, client);
   }
 
-  _handleTargetChange (target) {
-    const {target: currentTarget} = this.state;
+  _handleTargetChange(target) {
+    const { target: currentTarget } = this.state;
     if (currentTarget.key === target.key) {
       // No change
       return;
@@ -81,31 +83,43 @@ class GenerateCodeModal extends PureComponent {
     this._generateCode(this.state.request, target, client);
   }
 
-  async _generateCode (request, target, client) {
+  async _generateCode(request, target, client) {
     // Some clients need a content-length for the request to succeed
-    const addContentLength = (TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key);
+    const addContentLength = (TO_ADD_CONTENT_LENGTH[target.key] || []).find(
+      c => c === client.key
+    );
 
-    const {environmentId} = this.props;
-    const har = await exportHarRequest(request._id, environmentId, addContentLength);
+    const { environmentId } = this.props;
+    const har = await exportHarRequest(
+      request._id,
+      environmentId,
+      addContentLength
+    );
     const snippet = new HTTPSnippet(har);
     const cmd = snippet.convert(target.key, client.key);
 
-    this.setState({request, cmd, client, target});
+    this.setState({ request, cmd, client, target });
 
     // Save client/target for next time
-    window.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(client));
-    window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(target));
+    window.localStorage.setItem(
+      'insomnia::generateCode::client',
+      JSON.stringify(client)
+    );
+    window.localStorage.setItem(
+      'insomnia::generateCode::target',
+      JSON.stringify(target)
+    );
   }
 
-  show (request) {
-    const {client, target} = this.state;
+  show(request) {
+    const { client, target } = this.state;
     this._generateCode(request, target, client);
     this.modal.show();
   }
 
-  render () {
-    const {cmd, target, client} = this.state;
-    const {editorFontSize, editorIndentSize, editorKeyMap} = this.props;
+  render() {
+    const { cmd, target, client } = this.state;
+    const { editorFontSize, editorIndentSize, editorKeyMap } = this.props;
 
     const targets = availableTargets();
 
@@ -118,19 +132,24 @@ class GenerateCodeModal extends PureComponent {
     return (
       <Modal ref={this._setModalRef} tall {...this.props}>
         <ModalHeader>Generate Client Code</ModalHeader>
-        <ModalBody noScroll style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr)',
-          gridTemplateRows: 'auto minmax(0, 1fr)'
-        }}>
+        <ModalBody
+          noScroll
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr)',
+            gridTemplateRows: 'auto minmax(0, 1fr)'
+          }}>
           <div className="pad">
             <Dropdown outline>
               <DropdownButton className="btn btn--clicky">
                 {target ? target.title : 'n/a'}
-                <i className="fa fa-caret-down"/>
+                <i className="fa fa-caret-down" />
               </DropdownButton>
               {targets.map(target => (
-                <DropdownItem key={target.key} onClick={this._handleTargetChange} value={target}>
+                <DropdownItem
+                  key={target.key}
+                  onClick={this._handleTargetChange}
+                  value={target}>
                   {target.title}
                 </DropdownItem>
               ))}
@@ -139,16 +158,19 @@ class GenerateCodeModal extends PureComponent {
             <Dropdown outline>
               <DropdownButton className="btn btn--clicky">
                 {client ? client.title : 'n/a'}
-                <i className="fa fa-caret-down"/>
+                <i className="fa fa-caret-down" />
               </DropdownButton>
               {clients.map(client => (
-                <DropdownItem key={client.key} onClick={this._handleClientChange} value={client}>
+                <DropdownItem
+                  key={client.key}
+                  onClick={this._handleClientChange}
+                  value={client}>
                   {client.title}
                 </DropdownItem>
               ))}
             </Dropdown>
             &nbsp;&nbsp;
-            <CopyButton content={cmd} className="pull-right btn btn--clicky"/>
+            <CopyButton content={cmd} className="pull-right btn btn--clicky" />
           </div>
           <CodeEditor
             lineWrapping

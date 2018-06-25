@@ -1,14 +1,14 @@
 // @flow
-import type {Request} from '../models/request';
-import type {BaseModel} from '../models/index';
+import type { Request } from '../models/request';
+import type { BaseModel } from '../models/index';
 
-import {setDefaultProtocol} from 'insomnia-url';
+import { setDefaultProtocol } from 'insomnia-url';
 import clone from 'clone';
 import * as models from '../models';
 import * as db from './database';
 import * as templating from '../templating';
-import type {CookieJar} from '../models/cookie-jar';
-import type {Environment} from '../models/environment';
+import type { CookieJar } from '../models/cookie-jar';
+import type { Environment } from '../models/environment';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -19,11 +19,11 @@ export const RENDER_PURPOSE_SEND: RenderPurpose = 'send';
 export const RENDER_PURPOSE_GENERAL: RenderPurpose = 'general';
 
 export type RenderedRequest = Request & {
-  cookies: Array<{name: string, value: string, disabled?: boolean}>,
+  cookies: Array<{ name: string, value: string, disabled?: boolean }>,
   cookieJar: CookieJar
 };
 
-export async function buildRenderContext (
+export async function buildRenderContext(
   ancestors: Array<BaseModel> | null,
   rootEnvironment: Environment | null,
   subEnvironment: Environment | null,
@@ -108,7 +108,7 @@ export async function buildRenderContext (
  * @param name - name to include in error message
  * @return {Promise.<*>}
  */
-export async function render<T> (
+export async function render<T>(
   obj: T,
   context: Object = {},
   blacklistPathRegex: RegExp | null = null,
@@ -118,7 +118,11 @@ export async function render<T> (
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
 
-  async function next (x: any, path: string, first: boolean = false): Promise<any> {
+  async function next(
+    x: any,
+    path: string,
+    first: boolean = false
+  ): Promise<any> {
     if (blacklistPathRegex && path.match(blacklistPathRegex)) {
       return x;
     }
@@ -138,13 +142,13 @@ export async function render<T> (
       // Do nothing to these types
     } else if (typeof x === 'string') {
       try {
-        x = await templating.render(x, {context, path});
+        x = await templating.render(x, { context, path });
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
         //   {{ foo }} => {% uuid 'v4' %} => dd265685-16a3-4d76-a59c-e8264c16835a
         if (x.includes('{%')) {
-          x = await templating.render(x, {context, path});
+          x = await templating.render(x, { context, path });
         }
       } catch (err) {
         if (errorMode !== KEEP_ON_ERROR) {
@@ -179,7 +183,7 @@ export async function render<T> (
   return next(newObj, name, true);
 }
 
-export async function getRenderContext (
+export async function getRenderContext(
   request: Request,
   environmentId: string,
   ancestors: Array<BaseModel> | null = null,
@@ -202,7 +206,9 @@ export async function getRenderContext (
     throw new Error('Failed to render. Could not find workspace');
   }
 
-  const rootEnvironment = await models.environment.getOrCreateForWorkspaceId(workspace ? workspace._id : 'n/a');
+  const rootEnvironment = await models.environment.getOrCreateForWorkspaceId(
+    workspace ? workspace._id : 'n/a'
+  );
   const subEnvironment = await models.environment.getById(environmentId);
 
   // Add meta data helper function
@@ -223,11 +229,11 @@ export async function getRenderContext (
   );
 }
 
-export async function getRenderedRequestAndContext (
+export async function getRenderedRequestAndContext(
   request: Request,
   environmentId: string,
   purpose?: string
-): Promise<{request: RenderedRequest, context: Object}> {
+): Promise<{ request: RenderedRequest, context: Object }> {
   const ancestors = await db.withAncestors(request, [
     models.request.type,
     models.requestGroup.type,
@@ -237,11 +243,16 @@ export async function getRenderedRequestAndContext (
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
 
-  const renderContext = await getRenderContext(request, environmentId, ancestors, purpose);
+  const renderContext = await getRenderContext(
+    request,
+    environmentId,
+    ancestors,
+    purpose
+  );
 
   // Render all request properties
   const renderResult = await render(
-    {_request: request, _cookieJar: cookieJar},
+    { _request: request, _cookieJar: cookieJar },
     renderContext,
     request.settingDisableRenderRequestBody ? /^body.*/ : null
   );
@@ -250,18 +261,25 @@ export async function getRenderedRequestAndContext (
   const renderedCookieJar = renderResult._cookieJar;
 
   // Remove disabled params
-  renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
+  renderedRequest.parameters = renderedRequest.parameters.filter(
+    p => !p.disabled
+  );
 
   // Remove disabled headers
   renderedRequest.headers = renderedRequest.headers.filter(p => !p.disabled);
 
   // Remove disabled body params
   if (renderedRequest.body && Array.isArray(renderedRequest.body.params)) {
-    renderedRequest.body.params = renderedRequest.body.params.filter(p => !p.disabled);
+    renderedRequest.body.params = renderedRequest.body.params.filter(
+      p => !p.disabled
+    );
   }
 
   // Remove disabled authentication
-  if (renderedRequest.authentication && renderedRequest.authentication.disabled) {
+  if (
+    renderedRequest.authentication &&
+    renderedRequest.authentication.disabled
+  ) {
     renderedRequest.authentication = {};
   }
 
@@ -291,7 +309,8 @@ export async function getRenderedRequestAndContext (
       name: renderedRequest.name,
       parameters: renderedRequest.parameters,
       parentId: renderedRequest.parentId,
-      settingDisableRenderRequestBody: renderedRequest.settingDisableRenderRequestBody,
+      settingDisableRenderRequestBody:
+        renderedRequest.settingDisableRenderRequestBody,
       settingEncodeUrl: renderedRequest.settingEncodeUrl,
       settingSendCookies: renderedRequest.settingSendCookies,
       settingStoreCookies: renderedRequest.settingStoreCookies,
@@ -303,12 +322,16 @@ export async function getRenderedRequestAndContext (
   };
 }
 
-export async function getRenderedRequest (
+export async function getRenderedRequest(
   request: Request,
   environmentId: string,
   purpose?: string
 ): Promise<RenderedRequest> {
-  const result = await getRenderedRequestAndContext(request, environmentId, purpose);
+  const result = await getRenderedRequestAndContext(
+    request,
+    environmentId,
+    purpose
+  );
   return result.request;
 }
 
@@ -320,7 +343,7 @@ export async function getRenderedRequest (
  * @param v
  * @returns {number}
  */
-function _nunjucksSortValue (v) {
+function _nunjucksSortValue(v) {
   if (v && v.match && v.match(/({%)/)) {
     return 3;
   } else if (v && v.match && v.match(/({{)/)) {
@@ -330,7 +353,7 @@ function _nunjucksSortValue (v) {
   }
 }
 
-function _getOrderedEnvironmentKeys (finalRenderContext: Object): Array<string> {
+function _getOrderedEnvironmentKeys(finalRenderContext: Object): Array<string> {
   return Object.keys(finalRenderContext).sort((k1, k2) => {
     const k1Sort = _nunjucksSortValue(finalRenderContext[k1]);
     const k2Sort = _nunjucksSortValue(finalRenderContext[k2]);

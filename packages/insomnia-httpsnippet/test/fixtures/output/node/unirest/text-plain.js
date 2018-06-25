@@ -1,16 +1,15 @@
-var unirest = require("unirest");
+var unirest = require('unirest');
 
-var req = unirest("POST", "http://mockbin.com/har");
+var req = unirest('POST', 'http://mockbin.com/har');
 
 req.headers({
-  "content-type": "text/plain"
+  'content-type': 'text/plain'
 });
 
-  req.send("Hello World");
+req.send('Hello World');
 
-req.end(function (res) {
+req.end(function(res) {
   if (res.error) throw new Error(res.error);
 
   console.log(res.body);
 });
-

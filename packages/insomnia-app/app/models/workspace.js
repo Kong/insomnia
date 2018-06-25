@@ -1,5 +1,5 @@
 // @flow
-import type {BaseModel} from './index';
+import type { BaseModel } from './index';
 import * as db from '../common/database';
 import * as models from './index';
 
@@ -15,49 +15,54 @@ type BaseWorkspace = {
 
 export type Workspace = BaseModel & BaseWorkspace;
 
-export function init () {
+export function init() {
   return {
     name: 'New Workspace',
     description: ''
   };
 }
 
-export async function migrate (doc: Workspace): Promise<Workspace> {
+export async function migrate(doc: Workspace): Promise<Workspace> {
   return _migrateExtractClientCertificates(doc);
 }
 
-export function getById (id: string): Promise<Workspace | null> {
+export function getById(id: string): Promise<Workspace | null> {
   return db.get(type, id);
 }
 
-export async function create (patch: Object = {}): Promise<Workspace> {
+export async function create(patch: Object = {}): Promise<Workspace> {
   return db.docCreate(type, patch);
 }
 
-export async function all (): Promise<Array<Workspace>> {
+export async function all(): Promise<Array<Workspace>> {
   const workspaces = await db.all(type);
 
   if (workspaces.length === 0) {
-    await create({name: 'Insomnia'});
+    await create({ name: 'Insomnia' });
     return all();
   } else {
     return workspaces;
   }
 }
 
-export function count () {
+export function count() {
   return db.count(type);
 }
 
-export function update (workspace: Workspace, patch: Object): Promise<Workspace> {
+export function update(
+  workspace: Workspace,
+  patch: Object
+): Promise<Workspace> {
   return db.docUpdate(workspace, patch);
 }
 
-export function remove (workspace: Workspace): Promise<void> {
+export function remove(workspace: Workspace): Promise<void> {
   return db.remove(workspace);
 }
 
-async function _migrateExtractClientCertificates (workspace: Workspace): Promise<Workspace> {
+async function _migrateExtractClientCertificates(
+  workspace: Workspace
+): Promise<Workspace> {
   const certificates = (workspace: Object).certificates || null;
   if (!Array.isArray(certificates)) {
     // Already migrated

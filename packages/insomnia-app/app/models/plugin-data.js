@@ -1,6 +1,6 @@
 // @flow
 import * as db from '../common/database';
-import type {BaseModel} from './index';
+import type { BaseModel } from './index';
 
 export const name = 'PluginData';
 export const type = 'PluginData';
@@ -10,12 +10,12 @@ export const canDuplicate = false;
 type BasePluginData = {
   plugin: string,
   key: string,
-  value: string,
+  value: string
 };
 
 export type PluginData = BaseModel & BasePluginData;
 
-export function init (): BasePluginData {
+export function init(): BasePluginData {
   return {
     plugin: '',
     key: '',
@@ -23,27 +23,37 @@ export function init (): BasePluginData {
   };
 }
 
-export function migrate (doc: PluginData): PluginData {
+export function migrate(doc: PluginData): PluginData {
   return doc;
 }
 
-export function create (patch: Object = {}): Promise<PluginData> {
+export function create(patch: Object = {}): Promise<PluginData> {
   return db.docCreate(type, patch);
 }
 
-export async function update (doc: PluginData, patch: Object): Promise<PluginData> {
+export async function update(
+  doc: PluginData,
+  patch: Object
+): Promise<PluginData> {
   return db.docUpdate(doc, patch);
 }
 
-export async function upsertByKey (plugin: string, key: string, value: string): Promise<PluginData> {
+export async function upsertByKey(
+  plugin: string,
+  key: string,
+  value: string
+): Promise<PluginData> {
   const doc = await getByKey(plugin, key);
-  return doc ? update(doc, {value}) : create({plugin, key, value});
+  return doc ? update(doc, { value }) : create({ plugin, key, value });
 }
 
-export async function removeByKey (plugin: string, key: string): Promise<void> {
-  return db.removeWhere(type, {plugin, key});
+export async function removeByKey(plugin: string, key: string): Promise<void> {
+  return db.removeWhere(type, { plugin, key });
 }
 
-export async function getByKey (plugin: string, key: string): Promise<PluginData | null> {
-  return db.getWhere(type, {plugin, key});
+export async function getByKey(
+  plugin: string,
+  key: string
+): Promise<PluginData | null> {
+  return db.getWhere(type, { plugin, key });
 }

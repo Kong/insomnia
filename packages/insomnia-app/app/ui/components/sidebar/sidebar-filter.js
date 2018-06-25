@@ -1,18 +1,23 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
-import {DEBOUNCE_MILLIS} from '../../../common/constants';
+import {
+  Dropdown,
+  DropdownHint,
+  DropdownButton,
+  DropdownItem
+} from '../base/dropdown';
+import { DEBOUNCE_MILLIS } from '../../../common/constants';
 import KeydownBinder from '../keydown-binder';
 import * as hotkeys from '../../../common/hotkeys';
 
 @autobind
 class SidebarFilter extends PureComponent {
-  _setInputRef (n) {
+  _setInputRef(n) {
     this._input = n;
   }
 
-  _handleOnChange (e) {
+  _handleOnChange(e) {
     const value = e.target.value;
 
     clearTimeout(this._triggerTimeout);
@@ -24,21 +29,21 @@ class SidebarFilter extends PureComponent {
     clearTimeout(this._analyticsTimeout);
   }
 
-  _handleRequestGroupCreate () {
+  _handleRequestGroupCreate() {
     this.props.requestGroupCreate();
   }
 
-  _handleRequestCreate () {
+  _handleRequestCreate() {
     this.props.requestCreate();
   }
 
-  _handleKeydown (e) {
+  _handleKeydown(e) {
     hotkeys.executeHotKey(e, hotkeys.FOCUS_FILTER, () => {
       this._input && this._input.focus();
     });
   }
 
-  render () {
+  render() {
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
         <div className="sidebar__filter">
@@ -53,15 +58,16 @@ class SidebarFilter extends PureComponent {
           </div>
           <Dropdown right>
             <DropdownButton className="btn btn--compact">
-              <i className="fa fa-plus-circle"/><i className="fa fa-caret-down"/>
+              <i className="fa fa-plus-circle" />
+              <i className="fa fa-caret-down" />
             </DropdownButton>
             <DropdownItem onClick={this._handleRequestCreate}>
-              <i className="fa fa-plus-circle"/> New Request
-              <DropdownHint hotkey={hotkeys.CREATE_REQUEST}/>
+              <i className="fa fa-plus-circle" /> New Request
+              <DropdownHint hotkey={hotkeys.CREATE_REQUEST} />
             </DropdownItem>
             <DropdownItem onClick={this._handleRequestGroupCreate}>
-              <i className="fa fa-folder"/> New Folder
-              <DropdownHint hotkey={hotkeys.CREATE_FOLDER}/>
+              <i className="fa fa-folder" /> New Folder
+              <DropdownHint hotkey={hotkeys.CREATE_FOLDER} />
             </DropdownItem>
           </Dropdown>
         </div>

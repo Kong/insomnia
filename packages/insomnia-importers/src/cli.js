@@ -4,9 +4,9 @@ const program = require('commander');
 const path = require('path');
 const importers = require('../index');
 const fs = require('fs');
-const {version} = require('../package.json');
+const { version } = require('../package.json');
 
-module.exports.go = async function () {
+module.exports.go = async function() {
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Configure the arguments parsing //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //

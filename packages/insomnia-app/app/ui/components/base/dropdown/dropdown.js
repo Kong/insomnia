@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
@@ -6,13 +6,13 @@ import classnames from 'classnames';
 import DropdownButton from './dropdown-button';
 import DropdownItem from './dropdown-item';
 import DropdownDivider from './dropdown-divider';
-import {fuzzyMatch} from '../../../../common/misc';
+import { fuzzyMatch } from '../../../../common/misc';
 import KeydownBinder from '../../keydown-binder';
 import * as hotkeys from '../../../../common/hotkeys';
 
 @autobind
 class Dropdown extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
 
     this.state = {
@@ -30,20 +30,22 @@ class Dropdown extends PureComponent {
     };
   }
 
-  _setRef (n) {
+  _setRef(n) {
     this._node = n;
   }
 
-  _handleCheckFilterSubmit (e) {
+  _handleCheckFilterSubmit(e) {
     if (e.key === 'Enter') {
       // Listen for the Enter key and "click" on the active list item
-      const selector = `li[data-filter-index="${this.state.filterActiveIndex}"] button`;
+      const selector = `li[data-filter-index="${
+        this.state.filterActiveIndex
+      }"] button`;
       const button = this._dropdownList.querySelector(selector);
       button && button.click();
     }
   }
 
-  _handleChangeFilter (e) {
+  _handleChangeFilter(e) {
     const newFilter = e.target.value;
 
     // Nothing to do if the filter didn't change
@@ -59,10 +61,18 @@ class Dropdown extends PureComponent {
       }
 
       // We're matching against lowercase things with no special characters
-      const listItemTextWithoutSpaces = listItem.textContent.toLowerCase().replace(/[^\w_]*/g, '');
-      const filterWithoutSpaces = newFilter.toLowerCase().replace(/[^\w_]*/g, '');
+      const listItemTextWithoutSpaces = listItem.textContent
+        .toLowerCase()
+        .replace(/[^\w_]*/g, '');
+      const filterWithoutSpaces = newFilter
+        .toLowerCase()
+        .replace(/[^\w_]*/g, '');
 
-      if (!newFilter || fuzzyMatch(filterWithoutSpaces, listItemTextWithoutSpaces).searchTermsMatched) {
+      if (
+        !newFilter ||
+        fuzzyMatch(filterWithoutSpaces, listItemTextWithoutSpaces)
+          .searchTermsMatched
+      ) {
         const filterIndex = listItem.getAttribute('data-filter-index');
         filterItems.push(parseInt(filterIndex, 10));
       }
@@ -76,11 +86,11 @@ class Dropdown extends PureComponent {
     });
   }
 
-  _handleDropdownNavigation (e) {
-    const {key, shiftKey} = e;
+  _handleDropdownNavigation(e) {
+    const { key, shiftKey } = e;
 
     // Handle tab and arrows to move up and down dropdown entries
-    const {filterItems, filterActiveIndex} = this.state;
+    const { filterItems, filterActiveIndex } = this.state;
     if (['Tab', 'ArrowDown', 'ArrowUp'].includes(key)) {
       e.preventDefault();
       let items = filterItems || [];
@@ -96,16 +106,16 @@ class Dropdown extends PureComponent {
       const i = items.indexOf(filterActiveIndex);
       if (key === 'ArrowUp' || (key === 'Tab' && shiftKey)) {
         const nextI = i > 0 ? items[i - 1] : items[items.length - 1];
-        this.setState({filterActiveIndex: nextI});
+        this.setState({ filterActiveIndex: nextI });
       } else {
-        this.setState({filterActiveIndex: items[i + 1] || items[0]});
+        this.setState({ filterActiveIndex: items[i + 1] || items[0] });
       }
     }
 
     this._filter.focus();
   }
 
-  _handleBodyKeyDown (e) {
+  _handleBodyKeyDown(e) {
     if (!this.state.open) {
       return;
     }
@@ -120,7 +130,7 @@ class Dropdown extends PureComponent {
     });
   }
 
-  _checkSizeAndPosition () {
+  _checkSizeAndPosition() {
     if (!this.state.open || !this._dropdownList) {
       return;
     }
@@ -152,10 +162,10 @@ class Dropdown extends PureComponent {
       ul.setAttribute('data-fixed-shape', 'on');
     }
 
-    const {right, wide} = this.props;
+    const { right, wide } = this.props;
     if (right || wide) {
-      const {right} = dropdownRect;
-      const {beside} = this.props;
+      const { right } = dropdownRect;
+      const { beside } = this.props;
       const offset = beside ? dropdownRect.width - dropdownRect.height : 0;
       this._dropdownList.style.right = `${bodyRect.width - right + offset}px`;
       this._dropdownList.style.maxWidth = `${right + offset}px`;
@@ -163,39 +173,45 @@ class Dropdown extends PureComponent {
     }
 
     if (!right || wide) {
-      const {left} = dropdownRect;
-      const {beside} = this.props;
+      const { left } = dropdownRect;
+      const { beside } = this.props;
       const offset = beside ? dropdownRect.width - dropdownRect.height : 0;
       this._dropdownList.style.left = `${left + offset}px`;
-      this._dropdownList.style.maxWidth = `${bodyRect.width - left - 5 - offset}px`;
-      this._dropdownList.style.minWidth = `${Math.min(bodyRect.width - left, 200)}px`;
+      this._dropdownList.style.maxWidth = `${bodyRect.width -
+        left -
+        5 -
+        offset}px`;
+      this._dropdownList.style.minWidth = `${Math.min(
+        bodyRect.width - left,
+        200
+      )}px`;
     }
 
     if (dropUp) {
-      const {top} = dropdownRect;
+      const { top } = dropdownRect;
       this._dropdownList.style.bottom = `${bodyRect.height - top}px`;
       this._dropdownList.style.maxHeight = `${top - 5}px`;
     } else {
-      const {bottom} = dropdownRect;
+      const { bottom } = dropdownRect;
       this._dropdownList.style.top = `${bottom}px`;
       this._dropdownList.style.maxHeight = `${bodyRect.height - bottom - 5}px`;
     }
   }
 
-  _handleClick () {
+  _handleClick() {
     this.toggle();
   }
 
-  _handleMouseDown (e) {
+  _handleMouseDown(e) {
     // Intercept mouse down so that clicks don't trigger things like drag and drop.
     e.preventDefault();
   }
 
-  _addDropdownListRef (n) {
+  _addDropdownListRef(n) {
     this._dropdownList = n;
   }
 
-  _addFilterRef (n) {
+  _addFilterRef(n) {
     this._filter = n;
 
     // Automatically focus the filter element when mounted so we can start typing
@@ -204,11 +220,11 @@ class Dropdown extends PureComponent {
     }
   }
 
-  _addDropdownMenuRef (n) {
+  _addDropdownMenuRef(n) {
     this._dropdownMenu = n;
   }
 
-  _getFlattenedChildren (children) {
+  _getFlattenedChildren(children) {
     let newChildren = [];
 
     for (const child of children) {
@@ -227,11 +243,11 @@ class Dropdown extends PureComponent {
     return newChildren;
   }
 
-  componentDidUpdate () {
+  componentDidUpdate() {
     this._checkSizeAndPosition();
   }
 
-  _getContainer () {
+  _getContainer() {
     let container = document.querySelector('#dropdowns-container');
     if (!container) {
       container = document.createElement('div');
@@ -242,7 +258,7 @@ class Dropdown extends PureComponent {
     return container;
   }
 
-  componentDidMount () {
+  componentDidMount() {
     // Move the element to the body so we can position absolutely
     if (this._dropdownMenu) {
       const el = ReactDOM.findDOMNode(this._dropdownMenu);
@@ -250,7 +266,7 @@ class Dropdown extends PureComponent {
     }
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     // Remove the element from the body
     if (this._dropdownMenu) {
       const el = ReactDOM.findDOMNode(this._dropdownMenu);
@@ -258,18 +274,18 @@ class Dropdown extends PureComponent {
     }
   }
 
-  hide () {
+  hide() {
     // Focus the dropdown button after hiding
     if (this._node) {
       const button = this._node.querySelector('button');
       button && button.focus();
     }
 
-    this.setState({open: false});
+    this.setState({ open: false });
     this.props.onHide && this.props.onHide();
   }
 
-  show (filterVisible = false) {
+  show(filterVisible = false) {
     const bodyHeight = document.body.getBoundingClientRect().height;
     const dropdownTop = this._node.getBoundingClientRect().top;
     const dropUp = dropdownTop > bodyHeight - 200;
@@ -287,7 +303,7 @@ class Dropdown extends PureComponent {
     this.props.onOpen && this.props.onOpen();
   }
 
-  toggle (filterVisible = false) {
+  toggle(filterVisible = false) {
     if (this.state.open) {
       this.hide();
     } else {
@@ -295,15 +311,8 @@ class Dropdown extends PureComponent {
     }
   }
 
-  render () {
-    const {
-      right,
-      outline,
-      wide,
-      className,
-      style,
-      children
-    } = this.props;
+  render() {
+    const { right, outline, wide, className, style, children } = this.props;
 
     const {
       dropUp,
@@ -321,7 +330,7 @@ class Dropdown extends PureComponent {
     });
 
     const menuClasses = classnames({
-      'dropdown__menu': true,
+      dropdown__menu: true,
       'theme--dropdown__menu': true,
       'dropdown__menu--open': open,
       'dropdown__menu--outlined': outline,
@@ -352,7 +361,10 @@ class Dropdown extends PureComponent {
         const active = i === filterActiveIndex;
         const hide = !visibleChildren.includes(child);
         dropdownItems.push(
-          <li key={i} data-filter-index={i} className={classnames({active, hide})}>
+          <li
+            key={i}
+            data-filter-index={i}
+            className={classnames({ active, hide })}>
             {child}
           </li>
         );
@@ -370,45 +382,54 @@ class Dropdown extends PureComponent {
     let finalChildren = [];
     if (dropdownButtons.length !== 1) {
       console.error(
-        `Dropdown needs exactly one DropdownButton! Got ${dropdownButtons.length}`,
-        {allChildren}
+        `Dropdown needs exactly one DropdownButton! Got ${
+          dropdownButtons.length
+        }`,
+        { allChildren }
       );
     } else {
       const noResults = filter && filterItems && filterItems.length === 0;
       finalChildren = [
         dropdownButtons[0],
         <div key="item" className={menuClasses} ref={this._addDropdownMenuRef}>
-          <div className="dropdown__backdrop theme--overlay"></div>
-          <div key={uniquenessKey}
-               ref={this._addDropdownListRef}
-               tabIndex="-1"
-               className={classnames('dropdown__list', {
-                 'dropdown__list--filtering': filterVisible
-               })}>
+          <div className="dropdown__backdrop theme--overlay" />
+          <div
+            key={uniquenessKey}
+            ref={this._addDropdownListRef}
+            tabIndex="-1"
+            className={classnames('dropdown__list', {
+              'dropdown__list--filtering': filterVisible
+            })}>
             <div className="form-control dropdown__filter">
-              <i className="fa fa-search"/>
-              <input type="text"
-                     onInput={this._handleChangeFilter}
-                     ref={this._addFilterRef}
-                     onKeyPress={this._handleCheckFilterSubmit}/>
+              <i className="fa fa-search" />
+              <input
+                type="text"
+                onInput={this._handleChangeFilter}
+                ref={this._addFilterRef}
+                onKeyPress={this._handleCheckFilterSubmit}
+              />
             </div>
-            {noResults && <div className="text-center pad faint">Nothing to show</div>}
-            <ul className={classnames({hide: noResults})}>
-              {dropdownItems}
-            </ul>
+            {noResults && (
+              <div className="text-center pad faint">Nothing to show</div>
+            )}
+            <ul className={classnames({ hide: noResults })}>{dropdownItems}</ul>
           </div>
         </div>
       ];
     }
 
     return (
-      <KeydownBinder stopMetaPropagation onKeydown={this._handleBodyKeyDown} disabled={!open}>
-        <div style={style}
-             className={classes}
-             ref={this._setRef}
-             onClick={this._handleClick}
-             tabIndex="-1"
-             onMouseDown={this._handleMouseDown}>
+      <KeydownBinder
+        stopMetaPropagation
+        onKeydown={this._handleBodyKeyDown}
+        disabled={!open}>
+        <div
+          style={style}
+          className={classes}
+          ref={this._setRef}
+          onClick={this._handleClick}
+          tabIndex="-1"
+          onMouseDown={this._handleMouseDown}>
           {finalChildren}
         </div>
       </KeydownBinder>

@@ -1,11 +1,11 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import {debounce} from '../../../common/misc';
+import { debounce } from '../../../common/misc';
 
 @autobind
 class DebouncedInput extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
 
     if (!props.delay) {
@@ -17,41 +17,41 @@ class DebouncedInput extends PureComponent {
     this._hasFocus = false;
   }
 
-  _handleChange (e) {
+  _handleChange(e) {
     this._handleValueChange(e.target.value);
   }
 
-  _handleFocus (e) {
+  _handleFocus(e) {
     this._hasFocus = true;
     this.props.onFocus && this.props.onFocus(e);
   }
 
-  _handleBlur (e) {
+  _handleBlur(e) {
     this._hasFocus = false;
     this.props.onBlur && this.props.onBlur(e);
   }
 
-  _setRef (n) {
+  _setRef(n) {
     this._input = n;
   }
 
-  setAttribute (name, value) {
+  setAttribute(name, value) {
     this._input.setAttribute(name, value);
   }
 
-  removeAttribute (name) {
+  removeAttribute(name) {
     this._input.removeAttribute(name);
   }
 
-  getAttribute (name) {
+  getAttribute(name) {
     this._input.getAttribute(name);
   }
 
-  hasFocus () {
+  hasFocus() {
     return this._hasFocus;
   }
 
-  getSelectionStart () {
+  getSelectionStart() {
     if (this._input) {
       return this._input.selectionStart;
     } else {
@@ -59,7 +59,7 @@ class DebouncedInput extends PureComponent {
     }
   }
 
-  getSelectionEnd () {
+  getSelectionEnd() {
     if (this._input) {
       return this._input.selectionEnd;
     } else {
@@ -67,13 +67,13 @@ class DebouncedInput extends PureComponent {
     }
   }
 
-  focus () {
+  focus() {
     if (this._input) {
       this._input.focus();
     }
   }
 
-  focusEnd () {
+  focusEnd() {
     if (this._input) {
       // Hack to focus the end (set value to current value);
       this._input.value = this.getValue();
@@ -81,19 +81,19 @@ class DebouncedInput extends PureComponent {
     }
   }
 
-  blur () {
+  blur() {
     if (this._input) {
       this._input.blur();
     }
   }
 
-  select () {
+  select() {
     if (this._input) {
       this._input.select();
     }
   }
 
-  getValue () {
+  getValue() {
     if (this._input) {
       return this._input.value;
     } else {
@@ -101,7 +101,7 @@ class DebouncedInput extends PureComponent {
     }
   }
 
-  render () {
+  render() {
     const {
       onChange, // eslint-disable-line no-unused-vars
       onFocus, // eslint-disable-line no-unused-vars

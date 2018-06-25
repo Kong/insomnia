@@ -26,7 +26,7 @@ module.exports = {
   },
   plugins: [
     ...baseConfig.plugins,
-    new webpack.LoaderOptionsPlugin({debug: true}), // Legacy global loader option
+    new webpack.LoaderOptionsPlugin({ debug: true }), // Legacy global loader option
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoEmitOnErrorsPlugin(),
     new webpack.NamedModulesPlugin(),

@@ -1,17 +1,20 @@
 import * as models from '../../models';
 import * as importUtil from '../import';
-import {getAppVersion} from '../constants';
-import {globalBeforeEach} from '../../__jest__/before-each';
+import { getAppVersion } from '../constants';
+import { globalBeforeEach } from '../../__jest__/before-each';
 
 describe('exportHAR()', () => {
   beforeEach(globalBeforeEach);
   it('exports a single workspace as an HTTP Archive', async () => {
-    const wrk1 = await models.workspace.create({_id: 'wrk_1', name: 'Workspace 1'});
+    const wrk1 = await models.workspace.create({
+      _id: 'wrk_1',
+      name: 'Workspace 1'
+    });
     const req1 = await models.request.create({
       _id: 'req_1',
       name: 'Request 1',
       parentId: wrk1._id,
-      headers: [ { name: 'X-Environment', value: '{{ envvalue }}' } ],
+      headers: [{ name: 'X-Environment', value: '{{ envvalue }}' }],
       metaSortKey: 0
     });
     const req2 = await models.request.create({
@@ -38,7 +41,10 @@ describe('exportHAR()', () => {
       activeEnvironmentId: env1Private._id
     });
 
-    const wrk2 = await models.workspace.create({_id: 'wrk_2', name: 'Workspace 2'});
+    const wrk2 = await models.workspace.create({
+      _id: 'wrk_2',
+      name: 'Workspace 2'
+    });
     await models.request.create({
       _id: 'req_3',
       name: 'Request 3',
@@ -54,9 +60,7 @@ describe('exportHAR()', () => {
         entries: [
           {
             request: {
-              headers: [
-                { name: 'X-Environment', value: 'private1' }
-              ]
+              headers: [{ name: 'X-Environment', value: 'private1' }]
             },
             comment: req1.name
           },
@@ -69,19 +73,25 @@ describe('exportHAR()', () => {
     expect(data.log.entries.length).toBe(2);
   });
   it('exports all workspaces as an HTTP Archive', async () => {
-    const wrk1 = await models.workspace.create({_id: 'wrk_1', name: 'Workspace 1'});
-    const wrk2 = await models.workspace.create({_id: 'wrk_2', name: 'Workspace 2'});
+    const wrk1 = await models.workspace.create({
+      _id: 'wrk_1',
+      name: 'Workspace 1'
+    });
+    const wrk2 = await models.workspace.create({
+      _id: 'wrk_2',
+      name: 'Workspace 2'
+    });
     await models.request.create({
       _id: 'req_1',
       name: 'Request 1',
       parentId: wrk1._id,
-      headers: [ { name: 'X-Environment', value: '{{ envvalue }}' } ]
+      headers: [{ name: 'X-Environment', value: '{{ envvalue }}' }]
     });
     await models.request.create({
       _id: 'req_2',
       name: 'Request 2',
       parentId: wrk2._id,
-      headers: [ { name: 'X-Environment', value: '{{ envvalue }}' } ]
+      headers: [{ name: 'X-Environment', value: '{{ envvalue }}' }]
     });
 
     let env1Base = await models.environment.getOrCreateForWorkspace(wrk1);
@@ -130,17 +140,13 @@ describe('exportHAR()', () => {
         entries: [
           {
             request: {
-              headers: [
-                { name: 'X-Environment', value: 'public1' }
-              ]
+              headers: [{ name: 'X-Environment', value: 'public1' }]
             },
             comment: 'Request 1'
           },
           {
             request: {
-              headers: [
-                { name: 'X-Environment', value: 'base2' }
-              ]
+              headers: [{ name: 'X-Environment', value: 'base2' }]
             },
             comment: 'Request 2'
           }
@@ -153,20 +159,34 @@ describe('exportHAR()', () => {
 describe('exportJSON()', () => {
   beforeEach(globalBeforeEach);
   it('exports all workspaces', async () => {
-    const w = await models.workspace.create({name: 'Workspace'});
+    const w = await models.workspace.create({ name: 'Workspace' });
     const jar = await models.cookieJar.getOrCreateForParentId(w._id);
-    const r1 = await models.request.create({name: 'Request', parentId: w._id});
+    const r1 = await models.request.create({
+      name: 'Request',
+      parentId: w._id
+    });
     const eBase = await models.environment.getOrCreateForWorkspace(w);
-    const ePub = await models.environment.create({name: 'Public', parentId: eBase._id});
-    await models.environment.create({name: 'Private', isPrivate: true, parentId: eBase._id});
+    const ePub = await models.environment.create({
+      name: 'Public',
+      parentId: eBase._id
+    });
+    await models.environment.create({
+      name: 'Private',
+      isPrivate: true,
+      parentId: eBase._id
+    });
 
     const json = await importUtil.exportJSON();
     const data = JSON.parse(json);
 
     expect(data._type).toBe('export');
     expect(data.__export_format).toBe(3);
-    expect(data.__export_date).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/);
-    expect(data.__export_source).toBe(`insomnia.desktop.app:v${getAppVersion()}`);
+    expect(data.__export_date).toMatch(
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/
+    );
+    expect(data.__export_source).toBe(
+      `insomnia.desktop.app:v${getAppVersion()}`
+    );
     expect(data.resources[0]._id).toBe(w._id);
     expect(data.resources[1]._id).toBe(eBase._id);
     expect(data.resources[2]._id).toBe(jar._id);

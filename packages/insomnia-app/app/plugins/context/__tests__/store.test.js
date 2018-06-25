@@ -1,5 +1,5 @@
 import * as plugin from '../store';
-import {globalBeforeEach} from '../../../__jest__/before-each';
+import { globalBeforeEach } from '../../../__jest__/before-each';
 
 const PLUGIN = {
   name: 'my-plugin',
@@ -11,7 +11,7 @@ const PLUGIN = {
 describe('init()', () => {
   beforeEach(globalBeforeEach);
   it('initializes correctly', async () => {
-    const result = plugin.init({name: PLUGIN});
+    const result = plugin.init({ name: PLUGIN });
     expect(Object.keys(result.store).sort()).toEqual([
       'getItem',
       'hasItem',

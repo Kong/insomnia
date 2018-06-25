@@ -6,7 +6,7 @@ type Props = {
 };
 
 class Wrap extends React.PureComponent<Props> {
-  render () {
+  render() {
     return this.props.children;
   }
 }

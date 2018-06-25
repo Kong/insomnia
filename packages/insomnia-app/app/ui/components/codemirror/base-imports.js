@@ -55,5 +55,5 @@ import 'codemirror/lib/codemirror.css';
 import '../../css/editor/index.less';
 
 // Make jsonlint available to the jsonlint plugin
-import {parser as jsonlint} from 'jsonlint';
+import { parser as jsonlint } from 'jsonlint';
 global.jsonlint = jsonlint;

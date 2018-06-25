@@ -16,7 +16,7 @@ type State = {
 
 @autobind
 class CheckForUpdatesButton extends React.PureComponent<Props, State> {
-  constructor (props: Props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       status: '',
@@ -25,37 +25,49 @@ class CheckForUpdatesButton extends React.PureComponent<Props, State> {
     };
   }
 
-  _listenerCheckComplete (e: any, updateAvailable: true, status: string) {
-    this.setState({status, updateAvailable});
+  _listenerCheckComplete(e: any, updateAvailable: true, status: string) {
+    this.setState({ status, updateAvailable });
   }
 
-  _listenerCheckStatus (e: any, status: string) {
+  _listenerCheckStatus(e: any, status: string) {
     if (this.state.checking) {
-      this.setState({status});
+      this.setState({ status });
     }
   }
 
-  _handleCheckForUpdates () {
+  _handleCheckForUpdates() {
     electron.ipcRenderer.send('updater.check');
-    this.setState({checking: true});
+    this.setState({ checking: true });
   }
 
-  componentDidMount () {
+  componentDidMount() {
     electron.ipcRenderer.on('updater.check.status', this._listenerCheckStatus);
-    electron.ipcRenderer.on('updater.check.complete', this._listenerCheckComplete);
+    electron.ipcRenderer.on(
+      'updater.check.complete',
+      this._listenerCheckComplete
+    );
   }
 
-  componentWillUnmount () {
-    electron.ipcRenderer.removeListener('updater.check.complete', this._listenerCheckComplete);
-    electron.ipcRenderer.removeListener('updater.check.status', this._listenerCheckStatus);
+  componentWillUnmount() {
+    electron.ipcRenderer.removeListener(
+      'updater.check.complete',
+      this._listenerCheckComplete
+    );
+    electron.ipcRenderer.removeListener(
+      'updater.check.status',
+      this._listenerCheckStatus
+    );
   }
 
-  render () {
-    const {children, className} = this.props;
-    const {status, checking} = this.state;
+  render() {
+    const { children, className } = this.props;
+    const { status, checking } = this.state;
 
     return (
-      <button className={className} disabled={checking} onClick={this._handleCheckForUpdates}>
+      <button
+        className={className}
+        disabled={checking}
+        onClick={this._handleCheckForUpdates}>
         {status || children}
       </button>
     );

@@ -31,7 +31,7 @@ type State = {
 class Toast extends React.PureComponent<Props, State> {
   _interval: any;
 
-  constructor (props: Props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       notification: null,
@@ -39,8 +39,8 @@ class Toast extends React.PureComponent<Props, State> {
     };
   }
 
-  _handlePostCTACleanup () {
-    const {notification} = this.state;
+  _handlePostCTACleanup() {
+    const { notification } = this.state;
     if (!notification) {
       return;
     }
@@ -48,8 +48,8 @@ class Toast extends React.PureComponent<Props, State> {
     this._dismissNotification();
   }
 
-  _handleCancelClick () {
-    const {notification} = this.state;
+  _handleCancelClick() {
+    const { notification } = this.state;
     if (!notification) {
       return;
     }
@@ -57,12 +57,12 @@ class Toast extends React.PureComponent<Props, State> {
     this._dismissNotification();
   }
 
-  _hasSeenNotification (notification: ToastNotification) {
+  _hasSeenNotification(notification: ToastNotification) {
     const seenNotifications = this._loadSeen();
     return seenNotifications[notification.key];
   }
 
-  async _checkForNotifications () {
+  async _checkForNotifications() {
     // If there is a notification open, skip check
     if (this.state.notification) {
       return;
@@ -97,7 +97,7 @@ class Toast extends React.PureComponent<Props, State> {
     this._handleNotification(notification);
   }
 
-  _handleNotification (notification: ?ToastNotification) {
+  _handleNotification(notification: ?ToastNotification) {
     // No new notifications
     if (!notification || this._hasSeenNotification(notification)) {
       return;
@@ -110,13 +110,13 @@ class Toast extends React.PureComponent<Props, State> {
     window.localStorage.setItem(LOCALSTORAGE_KEY, obj);
 
     // Show the notification
-    this.setState({notification, visible: false});
+    this.setState({ notification, visible: false });
 
     // Fade the notification in
-    setTimeout(() => this.setState({visible: true}), 1000);
+    setTimeout(() => this.setState({ visible: true }), 1000);
   }
 
-  _loadSeen () {
+  _loadSeen() {
     try {
       return JSON.parse(window.localStorage.getItem(LOCALSTORAGE_KEY)) || {};
     } catch (e) {
@@ -124,65 +124,76 @@ class Toast extends React.PureComponent<Props, State> {
     }
   }
 
-  _dismissNotification () {
-    const {notification} = this.state;
+  _dismissNotification() {
+    const { notification } = this.state;
     if (!notification) {
       return;
     }
 
     // Hide the currently showing notification
-    this.setState({visible: false});
+    this.setState({ visible: false });
 
     // Give time for toast to fade out, then remove it
     setTimeout(() => {
-      this.setState({notification: null}, async () => {
+      this.setState({ notification: null }, async () => {
         await this._checkForNotifications();
       });
     }, 1000);
   }
 
-  _listenerShowNotification (e: any, notification: ToastNotification) {
+  _listenerShowNotification(e: any, notification: ToastNotification) {
     console.log('[toast] Received notification ' + notification.key);
     this._handleNotification(notification);
   }
 
-  componentDidMount () {
+  componentDidMount() {
     setTimeout(this._checkForNotifications, 1000 * 10);
     this._interval = setInterval(this._checkForNotifications, 1000 * 60 * 30);
-    electron.ipcRenderer.on('show-notification', this._listenerShowNotification);
+    electron.ipcRenderer.on(
+      'show-notification',
+      this._listenerShowNotification
+    );
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     clearInterval(this._interval);
-    electron.ipcRenderer.removeListener('show-notification', this._listenerShowNotification);
+    electron.ipcRenderer.removeListener(
+      'show-notification',
+      this._listenerShowNotification
+    );
   }
 
-  render () {
-    const {notification, visible} = this.state;
+  render() {
+    const { notification, visible } = this.state;
 
     if (!notification) {
       return null;
     }
 
     return (
-      <div className={classnames('toast', {'toast--show': visible})}>
+      <div className={classnames('toast', { 'toast--show': visible })}>
         <div className="toast__image">
-          <GravatarImg email={notification.email || 'gschier1990@gmail.com'} size={100}/>
+          <GravatarImg
+            email={notification.email || 'gschier1990@gmail.com'}
+            size={100}
+          />
         </div>
         <div className="toast__content">
           <p className="toast__message">
             {notification ? notification.message : 'Unknown'}
           </p>
           <footer className="toast__actions">
-            <button className="btn btn--super-duper-compact btn--outlined"
-                    onClick={this._handleCancelClick}>
+            <button
+              className="btn btn--super-duper-compact btn--outlined"
+              onClick={this._handleCancelClick}>
               Dismiss
             </button>
             &nbsp;&nbsp;
-            <Link button
-                  className="btn btn--super-duper-compact btn--outlined no-wrap"
-                  onClick={this._handlePostCTACleanup}
-                  href={notification.url}>
+            <Link
+              button
+              className="btn btn--super-duper-compact btn--outlined no-wrap"
+              onClick={this._handlePostCTACleanup}
+              href={notification.url}>
               {notification.cta}
             </Link>
           </footer>

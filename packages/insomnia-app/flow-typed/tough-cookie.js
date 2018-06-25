@@ -1,3 +1,3 @@
 declare module 'tough-cookie' {
-  declare module.exports: *
+  declare module.exports: *;
 }

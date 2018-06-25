@@ -1,28 +1,28 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 
 @autobind
 class Editable extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = {
       editing: false
     };
   }
 
-  _handleSetInputRef (n) {
+  _handleSetInputRef(n) {
     this._input = n;
   }
 
-  _handleSingleClickEditStart () {
+  _handleSingleClickEditStart() {
     if (this.props.singleClick) {
       this._handleEditStart();
     }
   }
 
-  _handleEditStart () {
-    this.setState({editing: true});
+  _handleEditStart() {
+    this.setState({ editing: true });
 
     setTimeout(() => {
       this._input && this._input.focus();
@@ -34,7 +34,7 @@ class Editable extends PureComponent {
     }
   }
 
-  _handleEditEnd () {
+  _handleEditEnd() {
     const value = this._input.value.trim();
 
     if (!value) {
@@ -46,10 +46,10 @@ class Editable extends PureComponent {
 
     // This timeout prevents the UI from showing the old value after submit.
     // It should give the UI enough time to redraw the new value.
-    setTimeout(async () => this.setState({editing: false}), 100);
+    setTimeout(async () => this.setState({ editing: false }), 100);
   }
 
-  _handleEditKeyDown (e) {
+  _handleEditKeyDown(e) {
     if (e.keyCode === 13) {
       // Pressed Enter
       this._handleEditEnd();
@@ -61,7 +61,7 @@ class Editable extends PureComponent {
     }
   }
 
-  render () {
+  render() {
     const {
       value,
       singleClick,
@@ -70,17 +70,18 @@ class Editable extends PureComponent {
       renderReadView,
       ...extra
     } = this.props;
-    const {editing} = this.state;
+    const { editing } = this.state;
 
     if (editing) {
       return (
-        <input {...extra}
-               className={`editable ${className || ''}`}
-               type="text"
-               ref={this._handleSetInputRef}
-               defaultValue={value}
-               onKeyDown={this._handleEditKeyDown}
-               onBlur={this._handleEditEnd}
+        <input
+          {...extra}
+          className={`editable ${className || ''}`}
+          type="text"
+          ref={this._handleSetInputRef}
+          defaultValue={value}
+          onKeyDown={this._handleEditKeyDown}
+          onBlur={this._handleEditEnd}
         />
       );
     } else {

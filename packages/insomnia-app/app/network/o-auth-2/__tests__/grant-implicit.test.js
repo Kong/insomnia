@@ -1,6 +1,6 @@
 import getToken from '../grant-implicit';
-import {createBWRedirectMock} from './helpers';
-import {globalBeforeEach} from '../../../__jest__/before-each';
+import { createBWRedirectMock } from './helpers';
+import { globalBeforeEach } from '../../../__jest__/before-each';
 
 // Mock some test things
 const AUTHORIZE_URL = 'https://foo.com/authorizeAuthCode';
@@ -12,7 +12,9 @@ const STATE = 'state_123';
 describe('implicit', () => {
   beforeEach(globalBeforeEach);
   it('works in default case', async () => {
-    createBWRedirectMock(`${REDIRECT_URI}#access_token=token_123&state=${STATE}&foo=bar`);
+    createBWRedirectMock(
+      `${REDIRECT_URI}#access_token=token_123&state=${STATE}&foo=bar`
+    );
 
     const result = await getToken(
       AUTHORIZE_URL,

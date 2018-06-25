@@ -7,5 +7,5 @@ declare module 'insomnia-url' {
     extractQueryStringFromUrl: Function,
     buildQueryParameter: Function,
     buildQueryStringFromParams: Function
-  }
+  };
 }

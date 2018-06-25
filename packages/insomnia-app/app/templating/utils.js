@@ -25,7 +25,10 @@ export type NunjucksParsedTag = {
  * @param {String} [prefix] - base path to prefix to all paths
  * @returns {Array} - list of paths
  */
-export function getKeys (obj: any, prefix: string = ''): Array<{name: string, value: any}> {
+export function getKeys(
+  obj: any,
+  prefix: string = ''
+): Array<{ name: string, value: any }> {
   let allKeys = [];
 
   const typeOfObj = Object.prototype.toString.call(obj);
@@ -43,7 +46,7 @@ export function getKeys (obj: any, prefix: string = ''): Array<{name: string, va
   } else if (typeOfObj === '[object Function]') {
     // Ignore functions
   } else if (prefix) {
-    allKeys.push({name: prefix, value: obj});
+    allKeys.push({ name: prefix, value: obj });
   }
 
   return allKeys;
@@ -54,7 +57,7 @@ export function getKeys (obj: any, prefix: string = ''): Array<{name: string, va
  * @param {string} tagStr - the template string for the tag
  * @return {object} parsed tag data
  */
-export function tokenizeTag (tagStr: string): NunjucksParsedTag {
+export function tokenizeTag(tagStr: string): NunjucksParsedTag {
   // ~~~~~~~~ //
   // Sanitize //
   // ~~~~~~~~ //
@@ -125,15 +128,15 @@ export function tokenizeTag (tagStr: string): NunjucksParsedTag {
     if (currentArg !== null && argCompleted) {
       let arg;
       if (quotedBy) {
-        arg = {type: 'string', value: currentArg, quotedBy};
+        arg = { type: 'string', value: currentArg, quotedBy };
       } else if (['true', 'false'].includes(currentArg)) {
-        arg = {type: 'boolean', value: currentArg.toLowerCase() === 'true'};
+        arg = { type: 'boolean', value: currentArg.toLowerCase() === 'true' };
       } else if (currentArg.match(/^\d*\.?\d*$/)) {
-        arg = {type: 'number', value: currentArg};
+        arg = { type: 'number', value: currentArg };
       } else if (currentArg.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
-        arg = {type: 'variable', value: currentArg};
+        arg = { type: 'variable', value: currentArg };
       } else {
-        arg = {type: 'expression', value: currentArg};
+        arg = { type: 'expression', value: currentArg };
       }
 
       args.push(arg);
@@ -143,11 +146,11 @@ export function tokenizeTag (tagStr: string): NunjucksParsedTag {
     }
   }
 
-  return {name, args};
+  return { name, args };
 }
 
 /** Convert a tokenized tag back into a Nunjucks string */
-export function unTokenizeTag (tagData: NunjucksParsedTag): string {
+export function unTokenizeTag(tagData: NunjucksParsedTag): string {
   const args = [];
   for (const arg of tagData.args) {
     if (['string', 'model', 'file'].includes(arg.type)) {
@@ -167,12 +170,16 @@ export function unTokenizeTag (tagData: NunjucksParsedTag): string {
 }
 
 /** Get the default Nunjucks string for an extension */
-export function getDefaultFill (name: string, args: Array<NunjucksParsedTagArg>): string {
+export function getDefaultFill(
+  name: string,
+  args: Array<NunjucksParsedTagArg>
+): string {
   const stringArgs: Array<string> = (args || []).map(argDefinition => {
     switch (argDefinition.type) {
       case 'enum':
-        const {defaultValue, options} = argDefinition;
-        const value = defaultValue !== undefined ? defaultValue : options[0].value;
+        const { defaultValue, options } = argDefinition;
+        const value =
+          defaultValue !== undefined ? defaultValue : options[0].value;
         return `'${value}'`;
       case 'number':
         return `${parseFloat(argDefinition.defaultValue) || 0}`;

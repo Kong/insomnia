@@ -1,4 +1,4 @@
-export function init () {
+export function init() {
   process.on('uncaughtException', err => {
     console.error('[catcher] Uncaught exception:', err.stack);
   });

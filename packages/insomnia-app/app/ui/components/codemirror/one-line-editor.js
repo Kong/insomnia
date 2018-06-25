@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
@@ -13,7 +13,7 @@ const NUNJUCKS_REGEX = /({%|%}|{{|}})/;
 
 @autobind
 class OneLineEditor extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
 
     let mode;
@@ -32,7 +32,7 @@ class OneLineEditor extends PureComponent {
     };
   }
 
-  focus (setToEnd = false) {
+  focus(setToEnd = false) {
     if (this.state.mode === MODE_EDITOR) {
       if (this._editor && !this._editor.hasFocus()) {
         setToEnd ? this._editor.focusEnd() : this._editor.focus();
@@ -44,11 +44,11 @@ class OneLineEditor extends PureComponent {
     }
   }
 
-  focusEnd () {
+  focusEnd() {
     this.focus(true);
   }
 
-  selectAll () {
+  selectAll() {
     if (this.state.mode === MODE_EDITOR) {
       this._editor.selectAll();
     } else {
@@ -56,7 +56,7 @@ class OneLineEditor extends PureComponent {
     }
   }
 
-  getValue () {
+  getValue() {
     if (this.state.mode === MODE_EDITOR) {
       return this._editor.getValue();
     } else {
@@ -64,33 +64,40 @@ class OneLineEditor extends PureComponent {
     }
   }
 
-  getSelectionStart () {
+  getSelectionStart() {
     if (this._editor) {
       return this._editor.getSelectionStart();
     } else {
-      console.warn('Tried to get selection start of one-line-editor when <input>');
+      console.warn(
+        'Tried to get selection start of one-line-editor when <input>'
+      );
       return this._input.value.length;
     }
   }
 
-  getSelectionEnd () {
+  getSelectionEnd() {
     if (this._editor) {
       return this._editor.getSelectionEnd();
     } else {
-      console.warn('Tried to get selection end of one-line-editor when <input>');
+      console.warn(
+        'Tried to get selection end of one-line-editor when <input>'
+      );
       return this._input.value.length;
     }
   }
 
-  componentDidMount () {
+  componentDidMount() {
     document.body.addEventListener('mousedown', this._handleDocumentMousedown);
   }
 
-  componentWillUnmount () {
-    document.body.removeEventListener('mousedown', this._handleDocumentMousedown);
+  componentWillUnmount() {
+    document.body.removeEventListener(
+      'mousedown',
+      this._handleDocumentMousedown
+    );
   }
 
-  _handleDocumentMousedown (e) {
+  _handleDocumentMousedown(e) {
     if (!this._editor) {
       return;
     }
@@ -105,28 +112,31 @@ class OneLineEditor extends PureComponent {
     }
   }
 
-  _handleInputDragEnter () {
+  _handleInputDragEnter() {
     this._convertToEditorPreserveFocus();
   }
 
-  _handleInputMouseEnter () {
+  _handleInputMouseEnter() {
     // Convert to editor when user hovers mouse over input
     /*
      * NOTE: we're doing it in a timeout because we don't want to convert if the
      * mouse goes in an out right away.
      */
-    this._mouseEnterTimeout = setTimeout(this._convertToEditorPreserveFocus, 100);
+    this._mouseEnterTimeout = setTimeout(
+      this._convertToEditorPreserveFocus,
+      100
+    );
   }
 
-  _handleInputMouseLeave () {
+  _handleInputMouseLeave() {
     clearTimeout(this._mouseEnterTimeout);
   }
 
-  _handleEditorMouseLeave () {
+  _handleEditorMouseLeave() {
     this._convertToInputIfNotFocused();
   }
 
-  _handleEditorFocus (e) {
+  _handleEditorFocus(e) {
     const focusedFromTabEvent = !!e.sourceCapabilities;
 
     if (focusedFromTabEvent) {
@@ -144,7 +154,7 @@ class OneLineEditor extends PureComponent {
     this.props.onFocus && this.props.onFocus(e);
   }
 
-  _handleInputFocus (e) {
+  _handleInputFocus(e) {
     // If we're focusing the whole thing, blur the input. This happens when
     // the user tabs to the field.
     const start = this._input.getSelectionStart();
@@ -166,25 +176,25 @@ class OneLineEditor extends PureComponent {
     this.props.onFocus && this.props.onFocus(e);
   }
 
-  _handleInputChange (value) {
+  _handleInputChange(value) {
     this._convertToEditorPreserveFocus();
     this.props.onChange && this.props.onChange(value);
   }
 
-  _handleInputKeyDown (e) {
+  _handleInputKeyDown(e) {
     if (this.props.onKeyDown) {
       this.props.onKeyDown(e, e.target.value);
     }
   }
 
-  _handleInputBlur () {
+  _handleInputBlur() {
     // Set focused state
     this._input.removeAttribute('data-focused');
 
     this.props.onBlur && this.props.onBlur();
   }
 
-  _handleEditorBlur () {
+  _handleEditorBlur() {
     // Editor was already removed from the DOM, so do nothing
     if (!this._editor) {
       return;
@@ -206,7 +216,7 @@ class OneLineEditor extends PureComponent {
     this.props.onBlur && this.props.onBlur();
   }
 
-  _handleKeyDown (e) {
+  _handleKeyDown(e) {
     // submit form if needed
     if (e.keyCode === 13) {
       let node = e.target;
@@ -224,7 +234,7 @@ class OneLineEditor extends PureComponent {
     this.props.onKeyDown && this.props.onKeyDown(e, this.getValue());
   }
 
-  _convertToEditorPreserveFocus () {
+  _convertToEditorPreserveFocus() {
     if (this.state.mode !== MODE_INPUT || this.props.forceInput) {
       return;
     }
@@ -251,10 +261,10 @@ class OneLineEditor extends PureComponent {
       setTimeout(check);
     }
 
-    this.setState({mode: MODE_EDITOR});
+    this.setState({ mode: MODE_EDITOR });
   }
 
-  _convertToInputIfNotFocused () {
+  _convertToInputIfNotFocused() {
     if (this.state.mode === MODE_INPUT || this.props.forceEditor) {
       return;
     }
@@ -267,18 +277,18 @@ class OneLineEditor extends PureComponent {
       return;
     }
 
-    this.setState({mode: MODE_INPUT});
+    this.setState({ mode: MODE_INPUT });
   }
 
-  _setEditorRef (n) {
+  _setEditorRef(n) {
     this._editor = n;
   }
 
-  _setInputRef (n) {
+  _setInputRef(n) {
     this._input = n;
   }
 
-  _mayContainNunjucks (text) {
+  _mayContainNunjucks(text) {
     // Not sure, but sometimes this isn't a string
     if (typeof text !== 'string') {
       return false;
@@ -288,7 +298,7 @@ class OneLineEditor extends PureComponent {
     return !!text.match(NUNJUCKS_REGEX);
   }
 
-  render () {
+  render() {
     const {
       id,
       defaultValue,
@@ -304,7 +314,7 @@ class OneLineEditor extends PureComponent {
       type: originalType
     } = this.props;
 
-    const {mode} = this.state;
+    const { mode } = this.state;
 
     const type = originalType || TYPE_TEXT;
     const showEditor = mode === MODE_EDITOR;

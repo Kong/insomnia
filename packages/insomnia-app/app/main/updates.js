@@ -1,13 +1,22 @@
 // @flow
 import electron from 'electron';
-import {CHECK_FOR_UPDATES_INTERVAL, getAppVersion, isDevelopment, UPDATE_URL_MAC, UPDATE_URL_WINDOWS} from '../common/constants';
+import {
+  CHECK_FOR_UPDATES_INTERVAL,
+  getAppVersion,
+  isDevelopment,
+  UPDATE_URL_MAC,
+  UPDATE_URL_WINDOWS
+} from '../common/constants';
 import * as models from '../models/index';
-import {buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
-import {delay} from '../common/misc';
+import {
+  buildQueryStringFromParams,
+  joinUrlAndQueryString
+} from 'insomnia-url';
+import { delay } from '../common/misc';
 
-const {autoUpdater, BrowserWindow, ipcMain} = electron;
+const { autoUpdater, BrowserWindow, ipcMain } = electron;
 
-async function getUpdateUrl (force: boolean): Promise<string | null> {
+async function getUpdateUrl(force: boolean): Promise<string | null> {
   const platform = process.platform;
   const settings = await models.settings.getOrCreate();
   let updateUrl = null;
@@ -21,8 +30,8 @@ async function getUpdateUrl (force: boolean): Promise<string | null> {
   }
 
   const params = [
-    {name: 'v', value: getAppVersion()},
-    {name: 'channel', value: settings.updateChannel}
+    { name: 'v', value: getAppVersion() },
+    { name: 'channel', value: settings.updateChannel }
   ];
 
   const qs = buildQueryStringFromParams(params);
@@ -30,7 +39,9 @@ async function getUpdateUrl (force: boolean): Promise<string | null> {
   console.log(`[updater] Using url ${fullUrl}`);
 
   if (process.env.INSOMNIA_DISABLE_AUTOMATIC_UPDATES) {
-    console.log(`[updater] Disabled by INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable`);
+    console.log(
+      `[updater] Disabled by INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable`
+    );
     return null;
   }
 
@@ -45,14 +56,14 @@ async function getUpdateUrl (force: boolean): Promise<string | null> {
   return fullUrl;
 }
 
-function _sendUpdateStatus (status) {
+function _sendUpdateStatus(status) {
   const windows = BrowserWindow.getAllWindows();
   for (const w of windows) {
     w.send('updater.check.status', status);
   }
 }
 
-function _sendUpdateComplete (success: boolean, msg: string) {
+function _sendUpdateComplete(success: boolean, msg: string) {
   const windows = BrowserWindow.getAllWindows();
   for (const w of windows) {
     w.send('updater.check.complete', success, msg);
@@ -61,7 +72,7 @@ function _sendUpdateComplete (success: boolean, msg: string) {
 
 let hasPromptedForUpdates = false;
 
-export async function init () {
+export async function init() {
   autoUpdater.on('error', e => {
     console.warn(`[updater] Error: ${e.message}`);
   });
@@ -76,11 +87,14 @@ export async function init () {
     _sendUpdateStatus('Downloading...');
   });
 
-  autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
-    console.log(`[updater] Downloaded ${releaseName}`);
-    _sendUpdateComplete(true, 'Updated (Restart Required)');
-    _showUpdateNotification();
-  });
+  autoUpdater.on(
+    'update-downloaded',
+    (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
+      console.log(`[updater] Downloaded ${releaseName}`);
+      _sendUpdateComplete(true, 'Updated (Restart Required)');
+      _showUpdateNotification();
+    }
+  );
 
   ipcMain.on('updater.check', async e => {
     await _checkForUpdates(true);
@@ -95,7 +109,7 @@ export async function init () {
   await _checkForUpdates(false);
 }
 
-function _showUpdateNotification () {
+function _showUpdateNotification() {
   if (hasPromptedForUpdates) {
     return;
   }
@@ -108,7 +122,7 @@ function _showUpdateNotification () {
   hasPromptedForUpdates = true;
 }
 
-async function _checkForUpdates (force: boolean) {
+async function _checkForUpdates(force: boolean) {
   _sendUpdateStatus('Checking');
   await delay(500);
 
@@ -124,7 +138,11 @@ async function _checkForUpdates (force: boolean) {
   const updateUrl = await getUpdateUrl(force);
 
   if (updateUrl === null) {
-    console.log(`[updater] Updater not running platform=${process.platform} dev=${isDevelopment()}`);
+    console.log(
+      `[updater] Updater not running platform=${
+        process.platform
+      } dev=${isDevelopment()}`
+    );
     _sendUpdateComplete(false, 'Updates Not Supported');
     return;
   }

@@ -21,5 +21,5 @@ declare module 'electron' {
     clipboard: Object,
     screen: Object,
     autoUpdater: Object
-  }
+  };
 }

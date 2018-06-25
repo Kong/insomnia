@@ -1,12 +1,19 @@
 import electron from 'electron';
 import path from 'path';
-import {Curl} from 'insomnia-libcurl';
+import { Curl } from 'insomnia-libcurl';
 import fs from 'fs';
 import LocalStorage from './local-storage';
-import {CHANGELOG_BASE_URL, getAppLongName, getAppName, getAppVersion, isDevelopment, isMac} from '../common/constants';
+import {
+  CHANGELOG_BASE_URL,
+  getAppLongName,
+  getAppName,
+  getAppVersion,
+  isDevelopment,
+  isMac
+} from '../common/constants';
 import * as misc from '../common/misc';
 
-const {app, Menu, BrowserWindow, shell, dialog} = electron;
+const { app, Menu, BrowserWindow, shell, dialog } = electron;
 
 const DEFAULT_WIDTH = 1100;
 const DEFAULT_HEIGHT = 550;
@@ -16,15 +23,15 @@ const MINIMUM_HEIGHT = 400;
 let mainWindow = null;
 let localStorage = null;
 
-export function init () {
+export function init() {
   initLocalStorage();
   initContextMenus();
 }
 
-export function createWindow () {
+export function createWindow() {
   const zoomFactor = getZoomFactor();
-  const {bounds, fullscreen, maximize} = getBounds();
-  const {x, y, width, height} = bounds;
+  const { bounds, fullscreen, maximize } = getBounds();
+  const { x, y, width, height } = bounds;
 
   // Make sure we don't place the window outside of the visible space
   let maxX = 0;
@@ -89,14 +96,16 @@ export function createWindow () {
   const applicationMenu = {
     label: 'Application',
     submenu: [
-      ...(isMac() ? [
-        {label: `About ${getAppName()}`, role: 'about'},
-        {type: 'separator'}
-      ] : []),
+      ...(isMac()
+        ? [
+            { label: `About ${getAppName()}`, role: 'about' },
+            { type: 'separator' }
+          ]
+        : []),
       {
         label: 'Preferences',
         accelerator: 'CmdOrCtrl+,',
-        click: function (menuItem, window, e) {
+        click: function(menuItem, window, e) {
           if (!window || !window.webContents) {
             return;
           }
@@ -105,40 +114,42 @@ export function createWindow () {
       },
       {
         label: 'Changelog',
-        click: function (menuItem, window, e) {
+        click: function(menuItem, window, e) {
           if (!window || !window.webContents) {
             return;
           }
           misc.clickLink(`${CHANGELOG_BASE_URL}/${getAppVersion()}/`);
         }
       },
-      ...(isMac() ? [
-        {type: 'separator'},
-        {role: 'hide'},
-        {role: 'hideothers'}
-      ] : []),
-      {type: 'separator'},
-      {label: 'Quit', accelerator: 'CmdOrCtrl+Q', click: () => app.quit()}
+      ...(isMac()
+        ? [{ type: 'separator' }, { role: 'hide' }, { role: 'hideothers' }]
+        : []),
+      { type: 'separator' },
+      { label: 'Quit', accelerator: 'CmdOrCtrl+Q', click: () => app.quit() }
     ]
   };
 
   const editMenu = {
     label: 'Edit',
     submenu: [
-      {label: 'Undo', accelerator: 'CmdOrCtrl+Z', selector: 'undo:'},
-      {label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:'},
-      {type: 'separator'},
-      {label: 'Cut', accelerator: 'CmdOrCtrl+X', selector: 'cut:'},
-      {label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:'},
-      {label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:'},
-      {label: 'Select All', accelerator: 'CmdOrCtrl+A', selector: 'selectAll:'}
+      { label: 'Undo', accelerator: 'CmdOrCtrl+Z', selector: 'undo:' },
+      { label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:' },
+      { type: 'separator' },
+      { label: 'Cut', accelerator: 'CmdOrCtrl+X', selector: 'cut:' },
+      { label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
+      { label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
+      {
+        label: 'Select All',
+        accelerator: 'CmdOrCtrl+A',
+        selector: 'selectAll:'
+      }
     ]
   };
 
   const viewMenu = {
     label: 'View',
     submenu: [
-      {role: 'togglefullscreen'},
+      { role: 'togglefullscreen' },
       {
         label: 'Actual Size',
         accelerator: 'CmdOrCtrl+0',
@@ -204,10 +215,7 @@ export function createWindow () {
   const windowMenu = {
     label: 'Window',
     role: 'window',
-    submenu: [
-      {role: 'minimize'},
-      ...(isMac() ? [{role: 'close'}] : [])
-    ]
+    submenu: [{ role: 'minimize' }, ...(isMac() ? [{ role: 'close' }] : [])]
   };
 
   const helpMenu = {
@@ -272,48 +280,59 @@ export function createWindow () {
   const developerMenu = {
     label: 'Developer',
     position: 'before=help',
-    submenu: [{
-      label: 'Reload',
-      accelerator: 'Shift+F5',
-      click: () => mainWindow.reload()
-    }, {
-      label: 'Toggle DevTools',
-      accelerator: 'Alt+CmdOrCtrl+I',
-      click: () => mainWindow.toggleDevTools()
-    }, {
-      label: 'Resize to Default',
-      click: () => mainWindow.setBounds({
-        x: 100,
-        y: 100,
-        width: DEFAULT_WIDTH,
-        height: DEFAULT_HEIGHT
-      })
-    }, {
-      label: 'Take Screenshot',
-      click: function () {
-        mainWindow.capturePage(image => {
-          const buffer = image.toPNG();
-          const dir = app.getPath('desktop');
-          fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
-        });
+    submenu: [
+      {
+        label: 'Reload',
+        accelerator: 'Shift+F5',
+        click: () => mainWindow.reload()
+      },
+      {
+        label: 'Toggle DevTools',
+        accelerator: 'Alt+CmdOrCtrl+I',
+        click: () => mainWindow.toggleDevTools()
+      },
+      {
+        label: 'Resize to Default',
+        click: () =>
+          mainWindow.setBounds({
+            x: 100,
+            y: 100,
+            width: DEFAULT_WIDTH,
+            height: DEFAULT_HEIGHT
+          })
+      },
+      {
+        label: 'Take Screenshot',
+        click: function() {
+          mainWindow.capturePage(image => {
+            const buffer = image.toPNG();
+            const dir = app.getPath('desktop');
+            fs.writeFileSync(
+              path.join(dir, `Screenshot-${new Date()}.png`),
+              buffer
+            );
+          });
+        }
       }
-    }]
+    ]
   };
 
   const toolsMenu = {
     label: 'Tools',
-    submenu: [{
-      label: 'Reload Plugins',
-      accelerator: 'CmdOrCtrl+Shift+R',
-      click: () => {
-        const window = BrowserWindow.getFocusedWindow();
-        if (!window || !window.webContents) {
-          return;
-        }
+    submenu: [
+      {
+        label: 'Reload Plugins',
+        accelerator: 'CmdOrCtrl+Shift+R',
+        click: () => {
+          const window = BrowserWindow.getFocusedWindow();
+          if (!window || !window.webContents) {
+            return;
+          }
 
-        window.webContents.send('reload-plugins');
+          window.webContents.send('reload-plugins');
+        }
       }
-    }]
+    ]
   };
 
   let template = [];
@@ -334,23 +353,26 @@ export function createWindow () {
   return mainWindow;
 }
 
-function showUnresponsiveModal () {
-  dialog.showMessageBox({
-    type: 'info',
-    buttons: ['Cancel', 'Reload'],
-    defaultId: 1,
-    cancelId: 0,
-    title: 'Unresponsive',
-    message: 'Insomnia has become unresponsive. Do you want to reload?'
-  }, id => {
-    if (id === 1) {
-      mainWindow.destroy();
-      createWindow();
+function showUnresponsiveModal() {
+  dialog.showMessageBox(
+    {
+      type: 'info',
+      buttons: ['Cancel', 'Reload'],
+      defaultId: 1,
+      cancelId: 0,
+      title: 'Unresponsive',
+      message: 'Insomnia has become unresponsive. Do you want to reload?'
+    },
+    id => {
+      if (id === 1) {
+        mainWindow.destroy();
+        createWindow();
+      }
     }
-  });
+  );
 }
 
-function saveBounds () {
+function saveBounds() {
   if (!mainWindow) {
     return;
   }
@@ -367,7 +389,7 @@ function saveBounds () {
   }
 }
 
-function getBounds () {
+function getBounds() {
   let bounds = {};
   let fullscreen = false;
   let maximize = false;
@@ -380,14 +402,14 @@ function getBounds () {
     console.error('Failed to parse window bounds', e);
   }
 
-  return {bounds, fullscreen, maximize};
+  return { bounds, fullscreen, maximize };
 }
 
-function saveZoomFactor (zoomFactor) {
+function saveZoomFactor(zoomFactor) {
   localStorage.setItem('zoomFactor', zoomFactor);
 }
 
-function getZoomFactor () {
+function getZoomFactor() {
   let zoomFactor = 1;
   try {
     zoomFactor = localStorage.getItem('zoomFactor', 1);
@@ -399,11 +421,11 @@ function getZoomFactor () {
   return zoomFactor;
 }
 
-function initLocalStorage () {
+function initLocalStorage() {
   const localStoragePath = path.join(app.getPath('userData'), 'localStorage');
   localStorage = new LocalStorage(localStoragePath);
 }
 
-function initContextMenus () {
+function initContextMenus() {
   require('electron-context-menu')({});
 }

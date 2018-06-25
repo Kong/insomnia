@@ -12,12 +12,8 @@ type Props = {
 };
 
 class TimeTag extends React.PureComponent<Props> {
-  render () {
-    const {
-      milliseconds,
-      small,
-      className
-    } = this.props;
+  render() {
+    const { milliseconds, small, className } = this.props;
 
     let unit = 'ms';
     let number = milliseconds;
@@ -41,7 +37,7 @@ class TimeTag extends React.PureComponent<Props> {
 
     let description = `${milliseconds.toFixed(3)} milliseconds`;
     return (
-      <div className={classnames('tag', {'tag--small': small}, className)}>
+      <div className={classnames('tag', { 'tag--small': small }, className)}>
         <Tooltip message={description} position="bottom">
           <strong>TIME</strong> {number} {unit}
         </Tooltip>

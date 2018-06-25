@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
@@ -11,7 +11,7 @@ let globalZIndex = 1000;
 
 @autobind
 class Modal extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
 
     this.state = {
@@ -21,7 +21,7 @@ class Modal extends PureComponent {
     };
   }
 
-  _handleKeyDown (e) {
+  _handleKeyDown(e) {
     if (!this.state.open) {
       return;
     }
@@ -43,7 +43,7 @@ class Modal extends PureComponent {
     }
   }
 
-  _handleClick (e) {
+  _handleClick(e) {
     // Don't check for close keys if we don't want them
     if (this.props.noEscape) {
       return;
@@ -56,7 +56,10 @@ class Modal extends PureComponent {
     let shouldHide = false;
 
     for (let i = 0; i < 5; i++) {
-      if (target instanceof HTMLElement && target.hasAttribute('data-close-modal')) {
+      if (
+        target instanceof HTMLElement &&
+        target.hasAttribute('data-close-modal')
+      ) {
         shouldHide = true;
         break;
       }
@@ -70,13 +73,13 @@ class Modal extends PureComponent {
     }
   }
 
-  _setModalRef (n) {
+  _setModalRef(n) {
     this._node = n;
   }
 
-  show () {
-    const {freshState} = this.props;
-    const {forceRefreshCounter} = this.state;
+  show() {
+    const { freshState } = this.props;
+    const { forceRefreshCounter } = this.state;
 
     this.setState({
       open: true,
@@ -91,7 +94,7 @@ class Modal extends PureComponent {
     setTimeout(() => this._node && this._node.focus());
   }
 
-  toggle () {
+  toggle() {
     if (this.state.open) {
       this.hide();
     } else {
@@ -99,18 +102,18 @@ class Modal extends PureComponent {
     }
   }
 
-  isOpen () {
+  isOpen() {
     return this.state.open;
   }
 
-  hide () {
-    this.setState({open: false});
+  hide() {
+    this.setState({ open: false });
     this.props.onHide && this.props.onHide();
   }
 
-  render () {
-    const {tall, wide, noEscape, className, children} = this.props;
-    const {open, zIndex, forceRefreshCounter} = this.state;
+  render() {
+    const { tall, wide, noEscape, className, children } = this.props;
+    const { open, zIndex, forceRefreshCounter } = this.state;
 
     if (!open) {
       return null;
@@ -119,9 +122,9 @@ class Modal extends PureComponent {
     const classes = classnames(
       'modal',
       className,
-      {'modal--fixed-height': tall},
-      {'modal--noescape': noEscape},
-      {'modal--wide': wide}
+      { 'modal--fixed-height': tall },
+      { 'modal--noescape': noEscape },
+      { 'modal--wide': wide }
     );
 
     const styles = {};
@@ -131,12 +134,16 @@ class Modal extends PureComponent {
 
     return (
       <KeydownBinder stopMetaPropagation scoped onKeydown={this._handleKeyDown}>
-        <div ref={this._setModalRef}
-             tabIndex="-1"
-             className={classes}
-             style={styles}
-             onClick={this._handleClick}>
-          <div className="modal__backdrop overlay theme--overlay" data-close-modal></div>
+        <div
+          ref={this._setModalRef}
+          tabIndex="-1"
+          className={classes}
+          style={styles}
+          onClick={this._handleClick}>
+          <div
+            className="modal__backdrop overlay theme--overlay"
+            data-close-modal
+          />
           <div className="modal__content__wrapper">
             <div className="modal__content" key={forceRefreshCounter}>
               {children}

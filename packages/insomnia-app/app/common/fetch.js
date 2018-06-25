@@ -1,40 +1,40 @@
 import 'whatwg-fetch';
-import {parse as urlParse} from 'url';
-import {getClientString} from './constants';
+import { parse as urlParse } from 'url';
+import { getClientString } from './constants';
 import * as session from '../sync/session';
 import * as zlib from 'zlib';
 
 let commandListeners = [];
 
-export function onCommand (callback) {
+export function onCommand(callback) {
   commandListeners.push(callback);
 }
 
-export function offCommand (callback) {
+export function offCommand(callback) {
   commandListeners = commandListeners.filter(l => l !== callback);
 }
 
-export function post (path, obj) {
+export function post(path, obj) {
   return _fetch('POST', path, obj);
 }
 
-export function get (path, sessionId = null) {
+export function get(path, sessionId = null) {
   return _fetch('GET', path, null, sessionId);
 }
 
-export function del (path, sessionId = null) {
+export function del(path, sessionId = null) {
   return _fetch('DELETE', path, null, sessionId);
 }
 
-export function put (path, sessionId = null) {
+export function put(path, sessionId = null) {
   return _fetch('PUT', path, null, sessionId);
 }
 
-export function rawFetch (...args) {
+export function rawFetch(...args) {
   return window.fetch(...args);
 }
 
-async function _fetch (method, path, obj, sessionId = null) {
+async function _fetch(method, path, obj, sessionId = null) {
   const config = {
     method: method,
     headers: new window.Headers()
@@ -65,19 +65,22 @@ async function _fetch (method, path, obj, sessionId = null) {
     throw err;
   }
 
-  if (response.headers.get('content-type') === 'application/json' || path.match(/\.json$/)) {
+  if (
+    response.headers.get('content-type') === 'application/json' ||
+    path.match(/\.json$/)
+  ) {
     return response.json();
   } else {
     return response.text();
   }
 }
 
-function _getUrl (path) {
+function _getUrl(path) {
   const baseUrl = process.env.INSOMNIA_SYNC_URL || 'https://api.insomnia.rest';
   return `${baseUrl}${path}`;
 }
 
-function _notifyCommandListeners (uri) {
+function _notifyCommandListeners(uri) {
   const parsed = urlParse(uri, true);
 
   const command = `${parsed.hostname}${parsed.pathname}`;

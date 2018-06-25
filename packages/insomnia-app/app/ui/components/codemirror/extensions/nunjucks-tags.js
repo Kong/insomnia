@@ -1,13 +1,13 @@
 import CodeMirror from 'codemirror';
 import * as misc from '../../../../common/misc';
 import NunjucksVariableModal from '../../modals/nunjucks-modal';
-import {showModal} from '../../modals/index';
-import {tokenizeTag} from '../../../../templating/utils';
-import {getTagDefinitions} from '../../../../templating/index';
+import { showModal } from '../../modals/index';
+import { tokenizeTag } from '../../../../templating/utils';
+import { getTagDefinitions } from '../../../../templating/index';
 
-CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
+CodeMirror.defineExtension('enableNunjucksTags', function(handleRender) {
   if (!handleRender) {
-    console.warn('enableNunjucksTags wasn\'t passed a render function');
+    console.warn("enableNunjucksTags wasn't passed a render function");
     return;
   }
 
@@ -32,7 +32,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
   refreshFn();
 });
 
-async function _highlightNunjucksTags (render) {
+async function _highlightNunjucksTags(render) {
   const renderCacheKey = Math.random() + '';
   const renderString = text => render(text, renderCacheKey);
 
@@ -43,7 +43,9 @@ async function _highlightNunjucksTags (render) {
   const vp = this.getViewport();
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
     const line = this.getLineTokens(lineNo);
-    const tokens = line.filter(({type}) => type && type.indexOf('nunjucks') >= 0);
+    const tokens = line.filter(
+      ({ type }) => type && type.indexOf('nunjucks') >= 0
+    );
 
     // Aggregate same tokens
     const newTokens = [];
@@ -51,7 +53,11 @@ async function _highlightNunjucksTags (render) {
     for (let i = 0; i < tokens.length; i++) {
       const nextTok = tokens[i];
 
-      if (currTok && currTok.type === nextTok.type && currTok.end === nextTok.start) {
+      if (
+        currTok &&
+        currTok.type === nextTok.type &&
+        currTok.end === nextTok.start
+      ) {
         currTok.end = nextTok.end;
         currTok.string += nextTok.string;
       } else if (currTok) {
@@ -70,11 +76,12 @@ async function _highlightNunjucksTags (render) {
     }
 
     for (const tok of newTokens) {
-      const start = {line: lineNo, ch: tok.start};
-      const end = {line: lineNo, ch: tok.end};
+      const start = { line: lineNo, ch: tok.start };
+      const end = { line: lineNo, ch: tok.end };
       const cursor = doc.getCursor();
       const isSameLine = cursor.line === lineNo;
-      const isCursorInToken = isSameLine && cursor.ch > tok.start && cursor.ch < tok.end;
+      const isCursorInToken =
+        isSameLine && cursor.ch > tok.start && cursor.ch < tok.end;
       const isFocused = this.hasFocus();
 
       // Show the token again if we're not inside of it.
@@ -111,7 +118,7 @@ async function _highlightNunjucksTags (render) {
         replacedWith: el
       });
 
-      (async function () {
+      (async function() {
         await _updateElementText(renderString, mark, tok.string);
       })();
 
@@ -129,7 +136,7 @@ async function _highlightNunjucksTags (render) {
           onDone: template => {
             const pos = mark.find();
             if (pos) {
-              const {from, to} = pos;
+              const { from, to } = pos;
               this.replaceRange(template, from, to);
             } else {
               console.warn('Tried to replace mark that did not exist', mark);
@@ -173,7 +180,7 @@ async function _highlightNunjucksTags (render) {
         // TODO: Actually only use dropEffect for this logic. For some reason
         // changing it doesn't seem to take affect in Chromium 56 (maybe bug?)
         if (droppedInSameEditor) {
-          const {from, to} = mark.find();
+          const { from, to } = mark.find();
           this.replaceRange('', from, to, '+dnd');
         }
 
@@ -192,8 +199,8 @@ async function _highlightNunjucksTags (render) {
   // Clear all the marks that we didn't just modify/add
   // For example, adding a {% raw %} tag would need to clear everything it wrapped
   const marksInViewport = doc.findMarks(
-    {ch: 0, line: vp.from},
-    {ch: 0, line: vp.to}
+    { ch: 0, line: vp.from },
+    { ch: 0, line: vp.to }
   );
 
   for (const mark of marksInViewport) {
@@ -215,7 +222,7 @@ async function _highlightNunjucksTags (render) {
   }
 }
 
-async function _updateElementText (render, mark, text) {
+async function _updateElementText(render, mark, text) {
   const el = mark.replacedWith;
 
   try {
@@ -230,18 +237,25 @@ async function _updateElementText (render, mark, text) {
 
     if (tagMatch) {
       const tagData = tokenizeTag(str);
-      const tagDefinition = (await getTagDefinitions()).find(d => d.name === tagData.name);
+      const tagDefinition = (await getTagDefinitions()).find(
+        d => d.name === tagData.name
+      );
 
       if (tagDefinition) {
         // Try rendering these so we can show errors if needed
         const firstArg = tagDefinition.args[0];
         if (firstArg && firstArg.type === 'enum') {
           const argData = tagData.args[0];
-          const foundOption = firstArg.options.find(d => d.value === argData.value);
+          const foundOption = firstArg.options.find(
+            d => d.value === argData.value
+          );
           const option = foundOption || firstArg.options[0];
-          el.innerHTML = `<label></label>${tagDefinition.displayName} &rArr; ${option.displayName}`;
+          el.innerHTML = `<label></label>${tagDefinition.displayName} &rArr; ${
+            option.displayName
+          }`;
         } else {
-          el.innerHTML = `<label></label>${tagDefinition.displayName || tagData.name}`;
+          el.innerHTML = `<label></label>${tagDefinition.displayName ||
+            tagData.name}`;
         }
         el.title = await render(text);
       } else {
@@ -260,7 +274,9 @@ async function _updateElementText (render, mark, text) {
     const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
     let message = fullMessage;
     const label = el.querySelector('label');
-    label.innerHTML = `<i class="fa fa-exclamation-triangle"></i>${label.innerHTML}`;
+    label.innerHTML = `<i class="fa fa-exclamation-triangle"></i>${
+      label.innerHTML
+    }`;
     el.title = message;
     el.setAttribute('data-error', 'on');
     mark.changed();

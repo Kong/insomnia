@@ -1,4 +1,4 @@
-const {setDefaultProtocol} = require('../protocol');
+const { setDefaultProtocol } = require('../protocol');
 
 describe('setDefaultProtocol()', () => {
   it('no-ops on empty url', () => {
@@ -26,5 +26,3 @@ describe('setDefaultProtocol()', () => {
     expect(url).toBe('httbad://google.com');
   });
 });
-
-

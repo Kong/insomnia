@@ -1,6 +1,6 @@
 import electron from 'electron';
 import * as React from 'react';
-import {combineReducers} from 'redux';
+import { combineReducers } from 'redux';
 import fs from 'fs';
 import path from 'path';
 import AskModal from '../../../ui/components/modals/ask-modal';
@@ -12,7 +12,7 @@ import PaymentNotificationModal from '../../components/modals/payment-notificati
 import LoginModal from '../../components/modals/login-modal';
 import * as models from '../../../models';
 import SelectModal from '../../components/modals/select-modal';
-import {showError, showModal} from '../../components/modals/index';
+import { showError, showModal } from '../../components/modals/index';
 
 const LOCALSTORAGE_PREFIX = `insomnia::meta`;
 
@@ -31,7 +31,7 @@ const COMMAND_IMPORT_URI = 'app/import';
 // REDUCERS //
 // ~~~~~~~~ //
 
-function activeWorkspaceReducer (state = null, action) {
+function activeWorkspaceReducer(state = null, action) {
   switch (action.type) {
     case SET_ACTIVE_WORKSPACE:
       return action.workspaceId;
@@ -40,7 +40,7 @@ function activeWorkspaceReducer (state = null, action) {
   }
 }
 
-function loadingReducer (state = false, action) {
+function loadingReducer(state = false, action) {
   switch (action.type) {
     case LOAD_START:
       return true;
@@ -51,12 +51,12 @@ function loadingReducer (state = false, action) {
   }
 }
 
-function loadingRequestsReducer (state = {}, action) {
+function loadingRequestsReducer(state = {}, action) {
   switch (action.type) {
     case LOAD_REQUEST_START:
-      return Object.assign({}, state, {[action.requestId]: action.time});
+      return Object.assign({}, state, { [action.requestId]: action.time });
     case LOAD_REQUEST_STOP:
-      return Object.assign({}, state, {[action.requestId]: -1});
+      return Object.assign({}, state, { [action.requestId]: -1 });
     default:
       return state;
   }
@@ -72,14 +72,14 @@ export const reducer = combineReducers({
 // ACTIONS //
 // ~~~~~~~ //
 
-export function newCommand (command, args) {
+export function newCommand(command, args) {
   return async dispatch => {
     switch (command) {
       case COMMAND_ALERT:
-        showModal(AlertModal, {title: args.title, message: args.message});
+        showModal(AlertModal, { title: args.title, message: args.message });
         break;
       case COMMAND_LOGIN:
-        showModal(LoginModal, {title: args.title, message: args.message});
+        showModal(LoginModal, { title: args.title, message: args.message });
         break;
       case COMMAND_TRIAL_END:
         showModal(PaymentNotificationModal);
@@ -87,7 +87,11 @@ export function newCommand (command, args) {
       case COMMAND_IMPORT_URI:
         await showModal(AlertModal, {
           title: 'Confirm Data Import',
-          message: <span>Do you really want to import <code>{args.uri}</code>?</span>,
+          message: (
+            <span>
+              Do you really want to import <code>{args.uri}</code>?
+            </span>
+          ),
           addCancel: true
         });
         dispatch(importUri(args.workspaceId, args.uri));
@@ -96,35 +100,38 @@ export function newCommand (command, args) {
   };
 }
 
-export function loadStart () {
-  return {type: LOAD_START};
+export function loadStart() {
+  return { type: LOAD_START };
 }
 
-export function loadStop () {
-  return {type: LOAD_STOP};
+export function loadStop() {
+  return { type: LOAD_STOP };
 }
 
-export function loadRequestStart (requestId) {
-  return {type: LOAD_REQUEST_START, requestId, time: Date.now()};
+export function loadRequestStart(requestId) {
+  return { type: LOAD_REQUEST_START, requestId, time: Date.now() };
 }
 
-export function loadRequestStop (requestId) {
-  return {type: LOAD_REQUEST_STOP, requestId};
+export function loadRequestStop(requestId) {
+  return { type: LOAD_REQUEST_STOP, requestId };
 }
 
-export function setActiveWorkspace (workspaceId) {
-  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activeWorkspaceId`, JSON.stringify(workspaceId));
-  return {type: SET_ACTIVE_WORKSPACE, workspaceId};
+export function setActiveWorkspace(workspaceId) {
+  window.localStorage.setItem(
+    `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`,
+    JSON.stringify(workspaceId)
+  );
+  return { type: SET_ACTIVE_WORKSPACE, workspaceId };
 }
 
-export function toggleRequestGroup (requestGroup) {
+export function toggleRequestGroup(requestGroup) {
   return {
     type: REQUEST_GROUP_TOGGLE_COLLAPSE,
     requestGroupId: requestGroup._id
   };
 }
 
-export function importFile (workspaceId) {
+export function importFile(workspaceId) {
   return async dispatch => {
     dispatch(loadStart());
 
@@ -132,12 +139,23 @@ export function importFile (workspaceId) {
       title: 'Import Insomnia Data',
       buttonLabel: 'Import',
       properties: ['openFile'],
-      filters: [{
-        name: 'Insomnia Import',
-        extensions: [
-          '', 'sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell', 'yaml', 'yml'
-        ]
-      }]
+      filters: [
+        {
+          name: 'Insomnia Import',
+          extensions: [
+            '',
+            'sh',
+            'txt',
+            'json',
+            'har',
+            'curl',
+            'bash',
+            'shell',
+            'yaml',
+            'yml'
+          ]
+        }
+      ]
     };
 
     electron.remote.dialog.showOpenDialog(options, async paths => {
@@ -153,7 +171,7 @@ export function importFile (workspaceId) {
           const uri = `file://${p}`;
           await importUtils.importUri(workspaceId, uri);
         } catch (err) {
-          showModal(AlertModal, {title: 'Import Failed', message: err + ''});
+          showModal(AlertModal, { title: 'Import Failed', message: err + '' });
         } finally {
           dispatch(loadStop());
         }
@@ -162,20 +180,20 @@ export function importFile (workspaceId) {
   };
 }
 
-export function importUri (workspaceId, uri) {
+export function importUri(workspaceId, uri) {
   return async dispatch => {
     dispatch(loadStart());
     try {
       await importUtils.importUri(workspaceId, uri);
     } catch (err) {
-      showModal(AlertModal, {title: 'Import Failed', message: err + ''});
+      showModal(AlertModal, { title: 'Import Failed', message: err + '' });
     } finally {
       dispatch(loadStop());
     }
   };
 }
 
-export function exportFile (workspaceId = null) {
+export function exportFile(workspaceId = null) {
   return dispatch => {
     dispatch(loadStart());
 
@@ -185,24 +203,28 @@ export function exportFile (workspaceId = null) {
     showModal(SelectModal, {
       title: 'Select Export Type',
       options: [
-        {name: 'Insomnia – Sharable with other Insomnia users', value: VALUE_JSON},
-        {name: 'HAR – HTTP Archive Format', value: VALUE_HAR}
+        {
+          name: 'Insomnia – Sharable with other Insomnia users',
+          value: VALUE_JSON
+        },
+        { name: 'HAR – HTTP Archive Format', value: VALUE_HAR }
       ],
       message: 'Which format would you like to export as?',
       onCancel: () => {
         dispatch(loadStop());
       },
       onDone: async selectedFormat => {
-        const workspace = await
-          models.workspace.getById(workspaceId);
+        const workspace = await models.workspace.getById(workspaceId);
 
         // Check if we want to export private environments
         let environments;
         if (workspace) {
-          const parentEnv = await models.environment.getOrCreateForWorkspace(workspace);
+          const parentEnv = await models.environment.getOrCreateForWorkspace(
+            workspace
+          );
           environments = [
             parentEnv,
-            ...await models.environment.findByParentId(parentEnv._id)
+            ...(await models.environment.findByParentId(parentEnv._id))
           ];
         } else {
           environments = await models.environment.all();
@@ -219,7 +241,10 @@ export function exportFile (workspaceId = null) {
         }
 
         const date = moment().format('YYYY-MM-DD');
-        const name = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
+        const name = (workspace ? workspace.name : 'Insomnia All').replace(
+          / /g,
+          '-'
+        );
         const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
         const dir = lastDir || electron.remote.app.getPath('desktop');
 
@@ -231,9 +256,14 @@ export function exportFile (workspaceId = null) {
         };
 
         if (selectedFormat === VALUE_HAR) {
-          options.filters = [{name: 'HTTP Archive 1.2', extensions: ['har', 'har.json', 'json']}];
+          options.filters = [
+            {
+              name: 'HTTP Archive 1.2',
+              extensions: ['har', 'har.json', 'json']
+            }
+          ];
         } else {
-          options.filters = [{name: 'Insomnia Export', extensions: ['json']}];
+          options.filters = [{ name: 'Insomnia Export', extensions: ['json'] }];
         }
 
         electron.remote.dialog.showSaveDialog(options, async filename => {
@@ -246,9 +276,15 @@ export function exportFile (workspaceId = null) {
           let json;
           try {
             if (selectedFormat === VALUE_HAR) {
-              json = await importUtils.exportHAR(workspace, exportPrivateEnvironments);
+              json = await importUtils.exportHAR(
+                workspace,
+                exportPrivateEnvironments
+              );
             } else {
-              json = await importUtils.exportJSON(workspace, exportPrivateEnvironments);
+              json = await importUtils.exportJSON(
+                workspace,
+                exportPrivateEnvironments
+              );
             }
           } catch (err) {
             showError({
@@ -279,7 +315,7 @@ export function exportFile (workspaceId = null) {
   };
 }
 
-export function init () {
+export function init() {
   let workspaceId = null;
 
   try {

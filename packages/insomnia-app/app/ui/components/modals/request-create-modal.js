@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import autobind from 'autobind-decorator';
 import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
 import MethodDropdown from '../dropdowns/method-dropdown';
@@ -6,12 +6,18 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import {getContentTypeName, METHOD_GET, METHOD_HEAD, METHOD_OPTIONS, METHOD_DELETE} from '../../../common/constants';
+import {
+  getContentTypeName,
+  METHOD_GET,
+  METHOD_HEAD,
+  METHOD_OPTIONS,
+  METHOD_DELETE
+} from '../../../common/constants';
 import * as models from '../../../models/index';
 
 @autobind
 class RequestCreateModal extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
 
     this.state = {
@@ -21,21 +27,21 @@ class RequestCreateModal extends PureComponent {
     };
   }
 
-  _setModalRef (n) {
+  _setModalRef(n) {
     this.modal = n;
   }
 
-  _setInputRef (n) {
+  _setInputRef(n) {
     this._input = n;
     if (this._input) {
       this._input.value = 'My Request';
     }
   }
 
-  async _handleSubmit (e) {
+  async _handleSubmit(e) {
     e.preventDefault();
 
-    const {parentId, selectedContentType, selectedMethod} = this.state;
+    const { parentId, selectedContentType, selectedMethod } = this.state;
     const request = await models.initModel(models.request.type, {
       parentId,
       name: this._input.value,
@@ -53,16 +59,16 @@ class RequestCreateModal extends PureComponent {
     this.hide();
   }
 
-  _handleChangeSelectedContentType (selectedContentType) {
-    this.setState({selectedContentType});
+  _handleChangeSelectedContentType(selectedContentType) {
+    this.setState({ selectedContentType });
   }
 
-  _handleChangeSelectedMethod (selectedMethod) {
-    this.setState({selectedMethod});
+  _handleChangeSelectedMethod(selectedMethod) {
+    this.setState({ selectedMethod });
   }
 
-  _shouldNotHaveBody () {
-    const {selectedMethod} = this.state;
+  _shouldNotHaveBody() {
+    const { selectedMethod } = this.state;
     return (
       selectedMethod === METHOD_GET ||
       selectedMethod === METHOD_HEAD ||
@@ -71,11 +77,11 @@ class RequestCreateModal extends PureComponent {
     );
   }
 
-  hide () {
+  hide() {
     this.modal.hide();
   }
 
-  show ({parentId, onComplete}) {
+  show({ parentId, onComplete }) {
     this.setState({
       parentId,
       selectedContentType: null,
@@ -93,8 +99,8 @@ class RequestCreateModal extends PureComponent {
     this._onComplete = onComplete;
   }
 
-  render () {
-    const {selectedContentType, selectedMethod} = this.state;
+  render() {
+    const { selectedContentType, selectedMethod } = this.state;
 
     return (
       <Modal ref={this._setModalRef}>
@@ -103,11 +109,14 @@ class RequestCreateModal extends PureComponent {
           <form onSubmit={this._handleSubmit} className="pad">
             <div className="form-row">
               <div className="form-control form-control--outlined">
-                <label>Name
-                  <input ref={this._setInputRef} type="text"/>
+                <label>
+                  Name
+                  <input ref={this._setInputRef} type="text" />
                 </label>
               </div>
-              <div className="form-control form-control--no-label" style={{width: 'auto'}}>
+              <div
+                className="form-control form-control--no-label"
+                style={{ width: 'auto' }}>
                 <MethodDropdown
                   right
                   className="btn btn--clicky no-wrap"
@@ -116,15 +125,17 @@ class RequestCreateModal extends PureComponent {
                 />
               </div>
               {!this._shouldNotHaveBody() && (
-                <div className="form-control form-control--no-label" style={{width: 'auto'}}>
-                  <ContentTypeDropdown className="btn btn--clicky no-wrap"
-                                       right
-                                       contentType={selectedContentType}
-                                       request={null}
-                                       onChange={this._handleChangeSelectedContentType}>
-                    {getContentTypeName(selectedContentType) || 'No Body'}
-                    {' '}
-                    <i className="fa fa-caret-down"/>
+                <div
+                  className="form-control form-control--no-label"
+                  style={{ width: 'auto' }}>
+                  <ContentTypeDropdown
+                    className="btn btn--clicky no-wrap"
+                    right
+                    contentType={selectedContentType}
+                    request={null}
+                    onChange={this._handleChangeSelectedContentType}>
+                    {getContentTypeName(selectedContentType) || 'No Body'}{' '}
+                    <i className="fa fa-caret-down" />
                   </ContentTypeDropdown>
                 </div>
               )}

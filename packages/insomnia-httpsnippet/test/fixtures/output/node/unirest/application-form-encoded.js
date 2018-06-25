@@ -1,19 +1,18 @@
-var unirest = require("unirest");
+var unirest = require('unirest');
 
-var req = unirest("POST", "http://mockbin.com/har");
+var req = unirest('POST', 'http://mockbin.com/har');
 
 req.headers({
-  "content-type": "application/x-www-form-urlencoded"
+  'content-type': 'application/x-www-form-urlencoded'
 });
 
 req.form({
-  "foo": "bar",
-  "hello": "world"
+  foo: 'bar',
+  hello: 'world'
 });
 
-req.end(function (res) {
+req.end(function(res) {
   if (res.error) throw new Error(res.error);
 
   console.log(res.body);
 });
-

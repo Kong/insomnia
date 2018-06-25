@@ -7,9 +7,10 @@ const WORKSPACE_ID = '__WORKSPACE_1__';
 
 module.exports.id = 'swagger2';
 module.exports.name = 'Swagger 2.0';
-module.exports.description = 'Importer for Swagger 2.0 specification (json/yaml)';
+module.exports.description =
+  'Importer for Swagger 2.0 specification (json/yaml)';
 
-module.exports.convert = async function (rawData) {
+module.exports.convert = async function(rawData) {
   // Validate
   const api = await parseDocument(rawData);
   if (!api || api.swagger !== SUPPORTED_SWAGGER_VERSION) {
@@ -42,21 +43,15 @@ module.exports.convert = async function (rawData) {
     name: 'Swagger env',
     data: {
       base_path: api.basePath || '',
-      scheme: (api.schemes || ["http"])[0],
+      scheme: (api.schemes || ['http'])[0],
       host: api.host || ''
     }
   };
 
   const endpoints = parseEndpoints(api);
 
-  return [
-    workspace,
-    baseEnv,
-    swaggerEnv,
-    ...endpoints
-  ];
+  return [workspace, baseEnv, swaggerEnv, ...endpoints];
 };
-
 
 /**
  * Parse string data into swagger 2.0 object (https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#swagger-object)
@@ -65,9 +60,10 @@ module.exports.convert = async function (rawData) {
  *
  * @returns {Object|null} Swagger 2.0 object
  */
-async function parseDocument (rawData) {
+async function parseDocument(rawData) {
   try {
-    const api = unthrowableParseJson(rawData) || SwaggerParser.YAML.parse(rawData);
+    const api =
+      unthrowableParseJson(rawData) || SwaggerParser.YAML.parse(rawData);
     if (!api) {
       return null;
     }
@@ -78,9 +74,9 @@ async function parseDocument (rawData) {
     return null;
   }
 
-  function unthrowableParseJson (rawData) {
+  function unthrowableParseJson(rawData) {
     try {
-      return JSON.parse(rawData)
+      return JSON.parse(rawData);
     } catch (err) {
       return null;
     }
@@ -94,22 +90,24 @@ async function parseDocument (rawData) {
  *
  * @returns {Object[]} array of insomnia endpoints definitions
  */
-function parseEndpoints (document) {
+function parseEndpoints(document) {
   const defaultParent = WORKSPACE_ID;
   const globalMimeTypes = document.consumes;
 
   const paths = Object.keys(document.paths);
-  const endpointsSchemas = paths.map(path => {
-    const schemasPerMethod = document.paths[path];
-    const methods = Object.keys(schemasPerMethod);
+  const endpointsSchemas = paths
+    .map(path => {
+      const schemasPerMethod = document.paths[path];
+      const methods = Object.keys(schemasPerMethod);
 
-    return methods.map(method => (
-      Object.assign({}, schemasPerMethod[method], {path, method})
-    ))
-  }).reduce((flat, arr) => flat.concat(arr), []); //flat single array
+      return methods.map(method =>
+        Object.assign({}, schemasPerMethod[method], { path, method })
+      );
+    })
+    .reduce((flat, arr) => flat.concat(arr), []); //flat single array
 
   return endpointsSchemas.map((endpointSchema, index) => {
-    let {path, method, operationId: _id, summary} = endpointSchema;
+    let { path, method, operationId: _id, summary } = endpointSchema;
     const name = summary || `${method} ${path}`;
 
     return {
@@ -122,7 +120,7 @@ function parseEndpoints (document) {
       body: prepareBody(endpointSchema, globalMimeTypes),
       headers: prepareHeaders(endpointSchema),
       parameters: prepareQueryParams(endpointSchema)
-    }
+    };
   });
 }
 
@@ -134,7 +132,7 @@ function parseEndpoints (document) {
  * @param {string} path
  * @returns {string}
  */
-function pathWithParamsAsVariables (path) {
+function pathWithParamsAsVariables(path) {
   return path.replace(/{([^}]+)}/g, '{{ $1 }}');
 }
 
@@ -144,7 +142,7 @@ function pathWithParamsAsVariables (path) {
  * @param {Object} endpointSchema - swagger 2.0 endpoint schema
  * @returns {Object[]} array of parameters definitions
  */
-function prepareQueryParams (endpointSchema) {
+function prepareQueryParams(endpointSchema) {
   const isSendInQuery = p => p.in === 'query';
   const parameters = endpointSchema.parameters || [];
   const queryParameters = parameters.filter(isSendInQuery);
@@ -157,7 +155,7 @@ function prepareQueryParams (endpointSchema) {
  * @param {Object} endpointSchema - swagger 2.0 endpoint schema
  * @returns {Object[]} array of parameters definitions
  */
-function prepareHeaders (endpointSchema) {
+function prepareHeaders(endpointSchema) {
   const isSendInHeader = p => p.in === 'header';
   const parameters = endpointSchema.parameters || [];
   const headerParameters = parameters.filter(isSendInHeader);
@@ -174,7 +172,7 @@ function prepareHeaders (endpointSchema) {
  *
  * @return {Object} insomnia request's body definition
  */
-function prepareBody (endpointSchema, globalMimeTypes) {
+function prepareBody(endpointSchema, globalMimeTypes) {
   const mimeTypes = endpointSchema.consumes || globalMimeTypes || [];
   const isAvailable = m => mimeTypes.includes(m);
   const supportedMimeType = SUPPORTED_MIME_TYPES.find(isAvailable);
@@ -186,15 +184,17 @@ function prepareBody (endpointSchema, globalMimeTypes) {
     if (!bodyParameter) {
       return {
         mimeType: supportedMimeType
-      }
+      };
     }
 
-    const example = (bodyParameter) ? generateParameterExample(bodyParameter.schema) : undefined;
+    const example = bodyParameter
+      ? generateParameterExample(bodyParameter.schema)
+      : undefined;
     const text = JSON.stringify(example, null, 2);
     return {
       mimeType: supportedMimeType,
       text
-    }
+    };
   }
 
   if (mimeTypes && mimeTypes.length) {
@@ -212,15 +212,15 @@ function prepareBody (endpointSchema, globalMimeTypes) {
  * @param {Object[]} parameters - array of swagger schemas of parameters
  * @returns {Object[]} array of insomnia parameters definitions
  */
-function convertParameters (parameters) {
+function convertParameters(parameters) {
   return parameters.map(parameter => {
-    const {required, name} = parameter;
+    const { required, name } = parameter;
     return {
       name,
       disabled: required !== true,
       value: `${generateParameterExample(parameter)}`
-    }
-  })
+    };
+  });
 }
 
 /**
@@ -232,28 +232,30 @@ function convertParameters (parameters) {
  *
  * @returns {*}
  */
-function generateParameterExample (schema) {
+function generateParameterExample(schema) {
   const typeExamples = {
-    'string': () => 'string',
-    'string_email': () => 'user@example.com',
+    string: () => 'string',
+    string_email: () => 'user@example.com',
     'string_date-time': () => new Date().toISOString(),
-    'string_byte': () => 'ZXhhbXBsZQ==',
-    'number': () => 0,
-    'number_float': () => 0.0,
-    'number_double': () => 0.0,
-    'integer': () => 0,
-    'boolean': () => true,
-    'object': schema => {
+    string_byte: () => 'ZXhhbXBsZQ==',
+    number: () => 0,
+    number_float: () => 0.0,
+    number_double: () => 0.0,
+    integer: () => 0,
+    boolean: () => true,
+    object: schema => {
       const example = {};
-      const {properties} = schema;
+      const { properties } = schema;
 
       Object.keys(properties).forEach(propertyName => {
-        example[propertyName] = generateParameterExample(properties[propertyName]);
+        example[propertyName] = generateParameterExample(
+          properties[propertyName]
+        );
       });
 
       return example;
     },
-    'array': schema => {
+    array: schema => {
       const value = generateParameterExample(schema.items);
       if (schema.collectionFormat === 'csv') {
         return value;
@@ -268,7 +270,7 @@ function generateParameterExample (schema) {
   }
 
   if (schema instanceof Object) {
-    const {type, format, example, default: defaultValue} = schema;
+    const { type, format, example, default: defaultValue } = schema;
 
     if (example) {
       return example;

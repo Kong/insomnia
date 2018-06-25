@@ -1,15 +1,15 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 import highlight from 'highlight.js';
 import * as misc from '../../common/misc';
-import {markdownToHTML} from '../../common/markdown-to-html';
+import { markdownToHTML } from '../../common/markdown-to-html';
 
 @autobind
 class MarkdownPreview extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = {
       compiled: '',
@@ -20,7 +20,7 @@ class MarkdownPreview extends PureComponent {
   /**
    * Debounce and compile the markdown (won't debounce first render)
    */
-  _compileMarkdown (markdown) {
+  _compileMarkdown(markdown) {
     clearTimeout(this._compileTimeout);
     this._compileTimeout = setTimeout(async () => {
       try {
@@ -38,16 +38,16 @@ class MarkdownPreview extends PureComponent {
     }, this.state.compiled ? this.props.debounceMillis : 0);
   }
 
-  _setPreviewRef (n) {
+  _setPreviewRef(n) {
     this._preview = n;
   }
 
-  _handleClickLink (e) {
+  _handleClickLink(e) {
     e.preventDefault();
     misc.clickLink(e.target.getAttribute('href'));
   }
 
-  _highlightCodeBlocks () {
+  _highlightCodeBlocks() {
     if (!this._preview) {
       return;
     }
@@ -64,41 +64,44 @@ class MarkdownPreview extends PureComponent {
     }
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     clearTimeout(this._compileTimeout);
   }
 
-  componentWillMount () {
+  componentWillMount() {
     this._compileMarkdown(this.props.markdown);
   }
 
-  componentWillReceiveProps (nextProps) {
+  componentWillReceiveProps(nextProps) {
     this._compileMarkdown(nextProps.markdown);
   }
 
-  componentDidUpdate () {
+  componentDidUpdate() {
     this._highlightCodeBlocks();
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this._highlightCodeBlocks();
   }
 
-  render () {
-    const {className, heading} = this.props;
-    const {compiled, renderError} = this.state;
+  render() {
+    const { className, heading } = this.props;
+    const { compiled, renderError } = this.state;
 
     let html = heading ? `<h1>${heading}</h1>\n${compiled}` : compiled;
 
     return (
-      <div ref={this._setPreviewRef} className={classnames('markdown-preview', className)}>
+      <div
+        ref={this._setPreviewRef}
+        className={classnames('markdown-preview', className)}>
         {renderError && (
           <p className="notice error no-margin">
             Failed to render: {renderError}
           </p>
         )}
-        <div className="markdown-preview__content selectable"
-             dangerouslySetInnerHTML={{__html: html}}>
+        <div
+          className="markdown-preview__content selectable"
+          dangerouslySetInnerHTML={{ __html: html }}>
           {/* Set from above */}
         </div>
       </div>

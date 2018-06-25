@@ -5,41 +5,41 @@ import * as pluginContexts from '../plugins/context';
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 
 export default class BaseExtension {
-  constructor (ext, plugin) {
+  constructor(ext, plugin) {
     this._ext = ext;
     this._plugin = plugin;
     this.tags = [this.getTag()];
   }
 
-  getTag () {
+  getTag() {
     return this._ext.name;
   }
 
-  getPriority () {
+  getPriority() {
     return this._ext.priority || -1;
   }
 
-  getName () {
+  getName() {
     return this._ext.displayName || this.getTag();
   }
 
-  getDescription () {
+  getDescription() {
     return this._ext.description || 'no description';
   }
 
-  getArgs () {
+  getArgs() {
     return this._ext.args || [];
   }
 
-  isDeprecated () {
+  isDeprecated() {
     return this._ext.deprecated || false;
   }
 
-  run (...args) {
+  run(...args) {
     return this._ext.run(...args);
   }
 
-  parse (parser, nodes, lexer) {
+  parse(parser, nodes, lexer) {
     const tok = parser.nextToken();
 
     let args;
@@ -55,7 +55,7 @@ export default class BaseExtension {
     return new nodes.CallExtensionAsync(this, 'asyncRun', args);
   }
 
-  asyncRun ({ctx: renderContext}, ...runArgs) {
+  asyncRun({ ctx: renderContext }, ...runArgs) {
     // Pull the callback off the end
     const callback = runArgs[runArgs.length - 1];
 
@@ -63,7 +63,9 @@ export default class BaseExtension {
     const renderMeta = renderContext.getMeta ? renderContext.getMeta() : {};
 
     // Pull out the purpose
-    const renderPurpose = renderContext.getPurpose ? renderContext.getPurpose() : null;
+    const renderPurpose = renderContext.getPurpose
+      ? renderContext.getPurpose()
+      : null;
 
     // Extract the rest of the args
     const args = runArgs
@@ -77,12 +79,12 @@ export default class BaseExtension {
       context: renderContext,
       meta: renderMeta,
       util: {
-        render: str => templating.render(str, {context: renderContext}),
+        render: str => templating.render(str, { context: renderContext }),
         models: {
-          request: {getById: models.request.getById},
-          requestGroup: {getById: models.requestGroup.getById},
-          workspace: {getById: models.workspace.getById},
-          oAuth2Token: {getByRequestId: models.oAuth2Token.getByParentId},
+          request: { getById: models.request.getById },
+          requestGroup: { getById: models.requestGroup.getById },
+          workspace: { getById: models.workspace.getById },
+          oAuth2Token: { getByRequestId: models.oAuth2Token.getByParentId },
           cookieJar: {
             getOrCreateForWorkspace: workspace => {
               return models.cookieJar.getOrCreateForParentId(workspace._id);

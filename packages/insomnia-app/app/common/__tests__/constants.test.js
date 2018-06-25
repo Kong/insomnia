@@ -1,5 +1,5 @@
-import {FLEXIBLE_URL_REGEX} from '../constants';
-import {globalBeforeEach} from '../../__jest__/before-each';
+import { FLEXIBLE_URL_REGEX } from '../constants';
+import { globalBeforeEach } from '../../__jest__/before-each';
 describe('URL Regex', () => {
   beforeEach(globalBeforeEach);
   it('matches valid URLs', () => {
@@ -10,7 +10,9 @@ describe('URL Regex', () => {
     expect('https://google').toMatch(FLEXIBLE_URL_REGEX);
     expect('https://dash-domain.com').toMatch(FLEXIBLE_URL_REGEX);
     expect('http://localhost:8000').toMatch(FLEXIBLE_URL_REGEX);
-    expect('http://localhost:8000/foo/b@@r?hi=there#hello').toMatch(FLEXIBLE_URL_REGEX);
+    expect('http://localhost:8000/foo/b@@r?hi=there#hello').toMatch(
+      FLEXIBLE_URL_REGEX
+    );
   });
 
   it('does not match "stop" characters', () => {

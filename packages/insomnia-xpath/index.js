@@ -1,5 +1,5 @@
 const xpath = require('xpath');
-const {DOMParser} = require('xmldom');
+const { DOMParser } = require('xmldom');
 
 /**
  * Query an XML blob with XPath
@@ -7,7 +7,7 @@ const {DOMParser} = require('xmldom');
  * @param query {string}
  * @returns {Array<{outer: string, inner: string}>}
  */
-module.exports.query = function (xml, query) {
+module.exports.query = function(xml, query) {
   const dom = new DOMParser().parseFromString(xml);
   let rawResults = [];
 

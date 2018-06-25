@@ -1,14 +1,14 @@
-import {createStore, applyMiddleware, compose} from 'redux';
+import { createStore, applyMiddleware, compose } from 'redux';
 import thunkMiddleware from 'redux-thunk';
-import {reducer} from './modules';
+import { reducer } from './modules';
 
-export default function () {
+export default function() {
   const composeEnhancers =
-    typeof window === 'object' &&
-    window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
+    typeof window === 'object' && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
       ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({
-        // Specify extension’s options like name, actionsBlacklist, actionsCreators, serialize...
-      }) : compose;
+          // Specify extension’s options like name, actionsBlacklist, actionsCreators, serialize...
+        })
+      : compose;
   const middleware = [thunkMiddleware];
   const enhancer = composeEnhancers(
     applyMiddleware(...middleware)

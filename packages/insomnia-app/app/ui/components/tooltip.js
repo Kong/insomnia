@@ -26,7 +26,7 @@ class Tooltip extends React.PureComponent<Props, State> {
   _tooltip: ?HTMLDivElement;
   _bubble: ?HTMLDivElement;
 
-  constructor (props: any) {
+  constructor(props: any) {
     super(props);
 
     this.state = {
@@ -40,19 +40,19 @@ class Tooltip extends React.PureComponent<Props, State> {
     };
   }
 
-  _setTooltipRef (n: ?HTMLDivElement) {
+  _setTooltipRef(n: ?HTMLDivElement) {
     this._tooltip = n;
   }
 
-  _setBubbleRef (n: ?HTMLDivElement) {
+  _setBubbleRef(n: ?HTMLDivElement) {
     this._bubble = n;
   }
 
-  _handleStopClick (e: MouseEvent): void {
+  _handleStopClick(e: MouseEvent): void {
     e.stopPropagation();
   }
 
-  _handleMouseEnter (e: MouseEvent): void {
+  _handleMouseEnter(e: MouseEvent): void {
     this._showTimeout = setTimeout((): void => {
       const tooltip = this._tooltip;
       const bubble = this._bubble;
@@ -73,37 +73,41 @@ class Tooltip extends React.PureComponent<Props, State> {
       let top = 0;
       switch (this.props.position) {
         case 'right':
-          top = tooltipRect.top - (bubbleRect.height / 2) + (tooltipRect.height / 2);
+          top =
+            tooltipRect.top - bubbleRect.height / 2 + tooltipRect.height / 2;
           left = tooltipRect.left + tooltipRect.width + margin;
           break;
 
         case 'left':
-          top = tooltipRect.top - (bubbleRect.height / 2) + (tooltipRect.height / 2);
+          top =
+            tooltipRect.top - bubbleRect.height / 2 + tooltipRect.height / 2;
           left = tooltipRect.left - bubbleRect.width - margin;
           break;
 
         case 'bottom':
           top = tooltipRect.top + tooltipRect.height + margin;
-          left = tooltipRect.left - (bubbleRect.width / 2) + (tooltipRect.width / 2);
+          left =
+            tooltipRect.left - bubbleRect.width / 2 + tooltipRect.width / 2;
           break;
 
         case 'top':
         default:
           top = tooltipRect.top - bubbleRect.height - margin;
-          left = tooltipRect.left - (bubbleRect.width / 2) + (tooltipRect.width / 2);
+          left =
+            tooltipRect.left - bubbleRect.width / 2 + tooltipRect.width / 2;
           break;
       }
 
       bubble.style.left = `${Math.max(0, left)}px`;
       bubble.style.top = `${Math.max(0, top)}px`;
 
-      this.setState({visible: true});
+      this.setState({ visible: true });
     }, this.props.delay || 100);
   }
 
-  _handleMouseLeave (): void {
+  _handleMouseLeave(): void {
     clearTimeout(this._showTimeout);
-    this.setState({visible: false});
+    this.setState({ visible: false });
 
     const bubble = this._bubble;
     if (!bubble) {
@@ -117,7 +121,7 @@ class Tooltip extends React.PureComponent<Props, State> {
     bubble.style.right = '';
   }
 
-  _getContainer (): HTMLElement {
+  _getContainer(): HTMLElement {
     let container = document.querySelector('#tooltips-container');
     if (!container) {
       container = document.createElement('div');
@@ -129,7 +133,7 @@ class Tooltip extends React.PureComponent<Props, State> {
     return container;
   }
 
-  componentDidMount () {
+  componentDidMount() {
     // Move the element to the body so we can position absolutely
     if (this._bubble) {
       const el = ReactDOM.findDOMNode(this._bubble);
@@ -137,7 +141,7 @@ class Tooltip extends React.PureComponent<Props, State> {
     }
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     // Remove the element from the body
     if (this._bubble) {
       const el = ReactDOM.findDOMNode(this._bubble);
@@ -145,9 +149,9 @@ class Tooltip extends React.PureComponent<Props, State> {
     }
   }
 
-  render () {
-    const {children, message, className} = this.props;
-    const {visible} = this.state;
+  render() {
+    const { children, message, className } = this.props;
+    const { visible } = this.state;
 
     const tooltipClasses = classnames(className, 'tooltip');
     const bubbleClasses = classnames('tooltip__bubble', {
@@ -155,13 +159,15 @@ class Tooltip extends React.PureComponent<Props, State> {
     });
 
     return (
-      <div className={tooltipClasses}
-           ref={this._setTooltipRef}
-           onMouseEnter={this._handleMouseEnter}
-           onMouseLeave={this._handleMouseLeave}>
-        <div className={bubbleClasses}
-             onClick={this._handleStopClick}
-             ref={this._setBubbleRef}>
+      <div
+        className={tooltipClasses}
+        ref={this._setTooltipRef}
+        onMouseEnter={this._handleMouseEnter}
+        onMouseLeave={this._handleMouseLeave}>
+        <div
+          className={bubbleClasses}
+          onClick={this._handleStopClick}
+          ref={this._setBubbleRef}>
           {message}
         </div>
         {children}

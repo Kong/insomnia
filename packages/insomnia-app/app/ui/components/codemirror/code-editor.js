@@ -6,17 +6,17 @@ import classnames from 'classnames';
 import clone from 'clone';
 import jq from 'jsonpath';
 import vkBeautify from 'vkbeautify';
-import {showModal} from '../modals/index';
+import { showModal } from '../modals/index';
 import FilterHelpModal from '../modals/filter-help-modal';
 import * as misc from '../../../common/misc';
 import prettify from 'insomnia-prettify';
-import {DEBOUNCE_MILLIS, isMac} from '../../../common/constants';
+import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import './base-imports';
-import {getTagDefinitions} from '../../../templating/index';
+import { getTagDefinitions } from '../../../templating/index';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
-import {query as queryXPath} from 'insomnia-xpath';
+import { query as queryXPath } from 'insomnia-xpath';
 import deepEqual from 'deep-equal';
 
 const TAB_KEY = 9;
@@ -49,10 +49,10 @@ const BASE_CODEMIRROR_OPTIONS = {
   cursorScrollMargin: 12, // NOTE: This is px
   keyMap: 'default',
   extraKeys: CodeMirror.normalizeKeyMap({
-    'Ctrl-Q': function (cm) {
+    'Ctrl-Q': function(cm) {
       cm.foldCode(cm.getCursor());
     },
-    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function (cm) {
+    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function(cm) {
       // HACK: So nothing conflicts withe the "Send Request" shortcut
     },
     'Ctrl-Space': 'autocomplete',
@@ -65,7 +65,7 @@ const BASE_CODEMIRROR_OPTIONS = {
 
 @autobind
 class CodeEditor extends React.Component {
-  constructor (props) {
+  constructor(props) {
     super(props);
 
     this.state = {
@@ -77,34 +77,37 @@ class CodeEditor extends React.Component {
     this._previousUniquenessKey = 'n/a';
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     if (this.codeMirror) {
       this.codeMirror.toTextArea();
     }
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this._restoreState();
   }
 
-  componentWillReceiveProps (nextProps) {
+  componentWillReceiveProps(nextProps) {
     this._uniquenessKey = nextProps.uniquenessKey;
     this._previousUniquenessKey = this.props.uniquenessKey;
 
     // Sync the filter too
-    this.setState({filter: nextProps.filter || ''});
+    this.setState({ filter: nextProps.filter || '' });
   }
 
-  componentDidUpdate () {
+  componentDidUpdate() {
     this._codemirrorSetOptions();
-    const {defaultValue} = this.props;
-    if (this._uniquenessKey && this._uniquenessKey !== this._previousUniquenessKey) {
+    const { defaultValue } = this.props;
+    if (
+      this._uniquenessKey &&
+      this._uniquenessKey !== this._previousUniquenessKey
+    ) {
       this._codemirrorSetValue(defaultValue);
       this._restoreState();
     }
   }
 
-  shouldComponentUpdate (nextProps) {
+  shouldComponentUpdate(nextProps) {
     // Update if any properties changed, except value. We ignore value.
     for (const key of Object.keys(nextProps)) {
       if (key === 'defaultValue') {
@@ -119,40 +122,37 @@ class CodeEditor extends React.Component {
     return false;
   }
 
-  selectAll () {
+  selectAll() {
     if (this.codeMirror) {
       this.codeMirror.setSelection(
-        {line: 0, ch: 0},
-        {line: this.codeMirror.lineCount(), ch: 0}
+        { line: 0, ch: 0 },
+        { line: this.codeMirror.lineCount(), ch: 0 }
       );
     }
   }
 
-  focus () {
+  focus() {
     if (this.codeMirror) {
       this.codeMirror.focus();
     }
   }
 
-  setCursor (ch, line = 0) {
+  setCursor(ch, line = 0) {
     if (this.codeMirror) {
       if (!this.hasFocus()) {
         this.focus();
       }
-      this.codeMirror.setCursor({line, ch});
+      this.codeMirror.setCursor({ line, ch });
     }
   }
 
-  setSelection (chStart, chEnd, line = 0) {
+  setSelection(chStart, chEnd, line = 0) {
     if (this.codeMirror) {
-      this.codeMirror.setSelection(
-        {line, ch: chStart},
-        {line, ch: chEnd}
-      );
+      this.codeMirror.setSelection({ line, ch: chStart }, { line, ch: chEnd });
     }
   }
 
-  getSelectionStart () {
+  getSelectionStart() {
     const selections = this.codeMirror.listSelections();
     if (selections.length) {
       return selections[0].anchor.ch;
@@ -161,7 +161,7 @@ class CodeEditor extends React.Component {
     }
   }
 
-  getSelectionEnd () {
+  getSelectionEnd() {
     const selections = this.codeMirror.listSelections();
     if (selections.length) {
       return selections[0].head.ch;
@@ -170,7 +170,7 @@ class CodeEditor extends React.Component {
     }
   }
 
-  focusEnd () {
+  focusEnd() {
     if (this.codeMirror) {
       if (!this.hasFocus()) {
         this.focus();
@@ -180,7 +180,7 @@ class CodeEditor extends React.Component {
     }
   }
 
-  hasFocus () {
+  hasFocus() {
     if (this.codeMirror) {
       return this.codeMirror.hasFocus();
     } else {
@@ -188,19 +188,19 @@ class CodeEditor extends React.Component {
     }
   }
 
-  setAttribute (name, value) {
+  setAttribute(name, value) {
     this.codeMirror.getTextArea().parentNode.setAttribute(name, value);
   }
 
-  removeAttribute (name) {
+  removeAttribute(name) {
     this.codeMirror.getTextArea().parentNode.removeAttribute(name);
   }
 
-  getAttribute (name) {
+  getAttribute(name) {
     this.codeMirror.getTextArea().parentNode.getAttribute(name);
   }
 
-  clearSelection () {
+  clearSelection() {
     // Never do this if dropdown is open
     if (this.codeMirror.isHintDropdownActive()) {
       return;
@@ -208,14 +208,14 @@ class CodeEditor extends React.Component {
 
     if (this.codeMirror) {
       this.codeMirror.setSelection(
-        {line: -1, ch: -1},
-        {line: -1, ch: -1},
-        {scroll: false}
+        { line: -1, ch: -1 },
+        { line: -1, ch: -1 },
+        { scroll: false }
       );
     }
   }
 
-  getValue () {
+  getValue() {
     if (this.codeMirror) {
       return this.codeMirror.getValue();
     } else {
@@ -223,8 +223,8 @@ class CodeEditor extends React.Component {
     }
   }
 
-  _persistState () {
-    const {uniquenessKey} = this.props;
+  _persistState() {
+    const { uniquenessKey } = this.props;
 
     if (!uniquenessKey || !this.codeMirror) {
       return;
@@ -238,26 +238,26 @@ class CodeEditor extends React.Component {
     };
   }
 
-  _restoreState () {
-    const {uniquenessKey} = this.props;
+  _restoreState() {
+    const { uniquenessKey } = this.props;
     if (!editorStates.hasOwnProperty(uniquenessKey)) {
       return;
     }
 
-    const {scroll, selections, cursor, history} = editorStates[uniquenessKey];
+    const { scroll, selections, cursor, history } = editorStates[uniquenessKey];
     this.codeMirror.scrollTo(scroll.left, scroll.top);
     this.codeMirror.setHistory(history);
 
     // NOTE: These won't be visible unless the editor is focused
-    this.codeMirror.setCursor(cursor.line, cursor.ch, {scroll: false});
-    this.codeMirror.setSelections(selections, null, {scroll: false});
+    this.codeMirror.setCursor(cursor.line, cursor.ch, { scroll: false });
+    this.codeMirror.setSelections(selections, null, { scroll: false });
   }
 
-  _setFilterInputRef (n) {
+  _setFilterInputRef(n) {
     this._filterInput = n;
   }
 
-  _handleInitTextarea (textarea) {
+  _handleInitTextarea(textarea) {
     if (!textarea) {
       // Not mounted
       return;
@@ -268,12 +268,18 @@ class CodeEditor extends React.Component {
       return;
     }
 
-    const {defaultValue, debounceMillis: ms} = this.props;
-    this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
+    const { defaultValue, debounceMillis: ms } = this.props;
+    this.codeMirror = CodeMirror.fromTextArea(
+      textarea,
+      BASE_CODEMIRROR_OPTIONS
+    );
 
     // Set default listeners
     const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
-    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
+    this.codeMirror.on(
+      'changes',
+      misc.debounce(this._codemirrorValueChanged, debounceMillis)
+    );
     this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
     this.codeMirror.on('keydown', this._codemirrorKeyDown);
     this.codeMirror.on('keyup', this._codemirrorTriggerCompletionKeyUp);
@@ -288,12 +294,14 @@ class CodeEditor extends React.Component {
     this.codeMirror.on('cut', this._codemirrorPreventWhenTypePassword);
     this.codeMirror.on('dragstart', this._codemirrorPreventWhenTypePassword);
 
-    this.codeMirror.setCursor({line: -1, ch: -1});
+    this.codeMirror.setCursor({ line: -1, ch: -1 });
 
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
         Tab: cm => {
-          const spaces = (new Array(this.codeMirror.getOption('indentUnit') + 1)).join(' ');
+          const spaces = new Array(
+            this.codeMirror.getOption('indentUnit') + 1
+          ).join(' ');
           cm.replaceSelection(spaces);
         }
       });
@@ -334,7 +342,7 @@ class CodeEditor extends React.Component {
     }
   }
 
-  _isJSON (mode) {
+  _isJSON(mode) {
     if (!mode) {
       return false;
     }
@@ -342,7 +350,7 @@ class CodeEditor extends React.Component {
     return mode.indexOf('json') !== -1;
   }
 
-  _isXML (mode) {
+  _isXML(mode) {
     if (!mode) {
       return false;
     }
@@ -350,15 +358,15 @@ class CodeEditor extends React.Component {
     return mode.indexOf('xml') !== -1;
   }
 
-  _handleBeautify () {
+  _handleBeautify() {
     this._prettify(this.codeMirror.getValue());
   }
 
-  _prettify (code) {
+  _prettify(code) {
     this._codemirrorSetValue(code, true);
   }
 
-  _prettifyJSON (code) {
+  _prettifyJSON(code) {
     try {
       let jsonString = code;
 
@@ -379,7 +387,7 @@ class CodeEditor extends React.Component {
     }
   }
 
-  _prettifyXML (code) {
+  _prettifyXML(code) {
     if (this.props.updateFilter && this.state.filter) {
       try {
         const results = queryXPath(code, this.state.filter);
@@ -401,7 +409,7 @@ class CodeEditor extends React.Component {
   /**
    * Sets options on the CodeMirror editor while also sanitizing them
    */
-  async _codemirrorSetOptions () {
+  async _codemirrorSetOptions() {
     const {
       mode: rawMode,
       readOnly,
@@ -427,7 +435,7 @@ class CodeEditor extends React.Component {
 
     let mode;
     if (this.props.render) {
-      mode = {name: 'nunjucks', baseMode: this._normalizeMode(rawMode)};
+      mode = { name: 'nunjucks', baseMode: this._normalizeMode(rawMode) };
     } else {
       // foo bar baz
       mode = this._normalizeMode(rawMode);
@@ -507,7 +515,8 @@ class CodeEditor extends React.Component {
             }
 
             for (const option of tagDef.args[0].options) {
-              const optionName = misc.fnOrString(option.displayName, tagDef.args) || option.name;
+              const optionName =
+                misc.fnOrString(option.displayName, tagDef.args) || option.name;
               const newDef = clone(tagDef);
               newDef.displayName = `${tagDef.displayName} ⇒ ${optionName}`;
               newDef.args[0].defaultValue = option.value;
@@ -541,7 +550,7 @@ class CodeEditor extends React.Component {
     });
   }
 
-  _normalizeMode (mode) {
+  _normalizeMode(mode) {
     const mimeType = mode ? mode.split(';')[0] : 'text/plain';
 
     if (mimeType.includes('graphql-variables')) {
@@ -558,7 +567,7 @@ class CodeEditor extends React.Component {
     }
   }
 
-  async _codemirrorKeyDown (doc, e) {
+  async _codemirrorKeyDown(doc, e) {
     // Use default tab behaviour if we're told
     if (this.props.defaultTabBehavior && e.keyCode === TAB_KEY) {
       e.codemirrorIgnore = true;
@@ -569,11 +578,11 @@ class CodeEditor extends React.Component {
     }
   }
 
-  _codemirrorEndCompletion (doc, e) {
+  _codemirrorEndCompletion(doc, e) {
     clearInterval(this._autocompleteDebounce);
   }
 
-  _codemirrorTriggerCompletionKeyUp (doc, e) {
+  _codemirrorTriggerCompletionKeyUp(doc, e) {
     // Enable graphql completion if we're in that mode
     if (doc.options.mode === 'graphql') {
       // Only operate on one-letter keys. This will filter out
@@ -589,24 +598,24 @@ class CodeEditor extends React.Component {
     }
   }
 
-  _codemirrorFocus (doc, e) {
+  _codemirrorFocus(doc, e) {
     if (this.props.onFocus) {
       this.props.onFocus(e);
     }
   }
 
-  _codemirrorBlur (doc, e) {
+  _codemirrorBlur(doc, e) {
     this._persistState();
     if (this.props.onBlur) {
       this.props.onBlur(e);
     }
   }
 
-  _codemirrorScroll () {
+  _codemirrorScroll() {
     this._persistState();
   }
 
-  _codemirrorValueBeforeChange (doc, change) {
+  _codemirrorValueBeforeChange(doc, change) {
     // If we're in single-line mode, merge all changed lines into one
     if (this.props.singleLine && change.text && change.text.length > 1) {
       const text = change.text
@@ -616,14 +625,14 @@ class CodeEditor extends React.Component {
     }
   }
 
-  _codemirrorPaste (cm, e) {
+  _codemirrorPaste(cm, e) {
     if (this.props.onPaste) {
       this.props.onPaste(e);
     }
   }
 
-  _codemirrorPreventWhenTypePassword (cm, e) {
-    const {type} = this.props;
+  _codemirrorPreventWhenTypePassword(cm, e) {
+    const { type } = this.props;
     if (type && type.toLowerCase() === 'password') {
       e.preventDefault();
     }
@@ -632,7 +641,7 @@ class CodeEditor extends React.Component {
   /**
    * Wrapper function to add extra behaviour to our onChange event
    */
-  _codemirrorValueChanged () {
+  _codemirrorValueChanged() {
     // Don't trigger change event if we're ignoring changes
     if (this._ignoreNextChange || !this.props.onChange) {
       this._ignoreNextChange = false;
@@ -641,7 +650,8 @@ class CodeEditor extends React.Component {
 
     const value = this.codeMirror.getDoc().getValue();
 
-    const lint = value.length > MAX_SIZE_FOR_LINTING ? false : !this.props.noLint;
+    const lint =
+      value.length > MAX_SIZE_FOR_LINTING ? false : !this.props.noLint;
     const existingLint = this.codeMirror.options.lint || false;
     if (lint !== existingLint) {
       this.codeMirror.setOption('lint', lint);
@@ -655,7 +665,7 @@ class CodeEditor extends React.Component {
    * @param code the code to set in the editor
    * @param forcePrettify
    */
-  _codemirrorSetValue (code, forcePrettify = false) {
+  _codemirrorSetValue(code, forcePrettify = false) {
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
@@ -681,19 +691,19 @@ class CodeEditor extends React.Component {
     this.codeMirror.setValue(code || '');
   }
 
-  _handleFilterHistorySelect (filter) {
+  _handleFilterHistorySelect(filter) {
     this._filterInput.value = filter;
     this._setFilter(filter);
   }
 
-  _handleFilterChange (e) {
+  _handleFilterChange(e) {
     this._setFilter(e.target.value);
   }
 
-  _setFilter (filter) {
+  _setFilter(filter) {
     clearTimeout(this._filterTimeout);
     this._filterTimeout = setTimeout(() => {
-      this.setState({filter});
+      this.setState({ filter });
       this._codemirrorSetValue(this._originalCode);
       if (this.props.updateFilter) {
         this.props.updateFilter(filter);
@@ -701,17 +711,17 @@ class CodeEditor extends React.Component {
     }, 200);
   }
 
-  _canPrettify () {
-    const {mode} = this.props;
+  _canPrettify() {
+    const { mode } = this.props;
     return this._isJSON(mode) || this._isXML(mode);
   }
 
-  _showFilterHelp () {
+  _showFilterHelp() {
     const isJson = this._isJSON(this.props.mode);
     showModal(FilterHelpModal, isJson);
   }
 
-  render () {
+  render() {
     const {
       id,
       readOnly,
@@ -728,7 +738,7 @@ class CodeEditor extends React.Component {
     } = this.props;
 
     const classes = classnames(className, {
-      'editor': true,
+      editor: true,
       'editor--dynamic-height': dynamicHeight,
       'editor--readonly': readOnly
     });
@@ -742,7 +752,11 @@ class CodeEditor extends React.Component {
           type="text"
           title="Filter response body"
           defaultValue={filter || ''}
-          placeholder={this._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
+          placeholder={
+            this._isJSON(mode)
+              ? '$.store.books[*].author'
+              : '/store/books/author'
+          }
           onChange={this._handleFilterChange}
         />
       );
@@ -751,10 +765,13 @@ class CodeEditor extends React.Component {
         toolbarChildren.push(
           <Dropdown key="history" className="tall" right>
             <DropdownButton className="btn btn--compact">
-              <i className="fa fa-clock-o"/>
+              <i className="fa fa-clock-o" />
             </DropdownButton>
             {filterHistory.reverse().map(filter => (
-              <DropdownItem key={filter} value={filter} onClick={this._handleFilterHistorySelect}>
+              <DropdownItem
+                key={filter}
+                value={filter}
+                onClick={this._handleFilterHistorySelect}>
                 {filter}
               </DropdownItem>
             ))}
@@ -763,8 +780,11 @@ class CodeEditor extends React.Component {
       }
 
       toolbarChildren.push(
-        <button key="help" className="btn btn--compact" onClick={this._showFilterHelp}>
-          <i className="fa fa-question-circle"/>
+        <button
+          key="help"
+          className="btn btn--compact"
+          onClick={this._showFilterHelp}>
+          <i className="fa fa-question-circle" />
         </button>
       );
     }
@@ -778,10 +798,11 @@ class CodeEditor extends React.Component {
       }
 
       toolbarChildren.push(
-        <button key="prettify"
-                className="btn btn--compact"
-                title="Auto-format request body whitespace"
-                onClick={this._handleBeautify}>
+        <button
+          key="prettify"
+          className="btn btn--compact"
+          title="Auto-format request body whitespace"
+          onClick={this._handleBeautify}>
           Beautify {contentTypeName}
         </button>
       );
@@ -803,14 +824,15 @@ class CodeEditor extends React.Component {
 
     return (
       <div className={classes} style={style} data-editor-type={type}>
-        <div className={classnames('editor__container', 'input', className)}
-             style={styles}
-             onClick={onClick}
-             onMouseLeave={onMouseLeave}>
+        <div
+          className={classnames('editor__container', 'input', className)}
+          style={styles}
+          onClick={onClick}
+          onMouseLeave={onMouseLeave}>
           <textarea
             id={id}
             ref={this._handleInitTextarea}
-            style={{display: 'none'}}
+            style={{ display: 'none' }}
             defaultValue=" "
             readOnly={readOnly}
             autoComplete="off"

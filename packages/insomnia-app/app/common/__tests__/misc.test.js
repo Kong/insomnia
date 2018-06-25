@@ -1,12 +1,12 @@
 import * as misc from '../misc';
-import {globalBeforeEach} from '../../__jest__/before-each';
+import { globalBeforeEach } from '../../__jest__/before-each';
 
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
   it('finds valid header', () => {
     const yes = misc.hasAuthHeader([
-      {name: 'foo', value: 'bar'},
-      {name: 'authorization', value: 'foo'}
+      { name: 'foo', value: 'bar' },
+      { name: 'authorization', value: 'foo' }
     ]);
 
     expect(yes).toEqual(true);
@@ -14,8 +14,8 @@ describe('hasAuthHeader()', () => {
 
   it('finds valid header case insensitive', () => {
     const yes = misc.hasAuthHeader([
-      {name: 'foo', value: 'bar'},
-      {name: 'AuthOrizAtiOn', value: 'foo'}
+      { name: 'foo', value: 'bar' },
+      { name: 'AuthOrizAtiOn', value: 'foo' }
     ]);
 
     expect(yes).toEqual(true);
@@ -43,9 +43,12 @@ describe('filterHeaders()', () => {
     expect(misc.filterHeaders(['bad'], null)).toEqual([]);
     expect(misc.filterHeaders(['bad'], 'good')).toEqual([]);
     expect(misc.filterHeaders(null, 'good')).toEqual([]);
-    expect(misc.filterHeaders([{name: 'good', value: 'valid'}], null)).toEqual([]);
-    expect(misc.filterHeaders([{name: 'good', value: 'valid'}], 'good'))
-      .toEqual([{name: 'good', value: 'valid'}]);
+    expect(
+      misc.filterHeaders([{ name: 'good', value: 'valid' }], null)
+    ).toEqual([]);
+    expect(
+      misc.filterHeaders([{ name: 'good', value: 'valid' }], 'good')
+    ).toEqual([{ name: 'good', value: 'valid' }]);
   });
 });
 
@@ -72,11 +75,13 @@ describe('keyedDebounce()', () => {
 
     jest.runAllTimers();
 
-    expect(resultsList).toEqual([{
-      foo: ['bar3'],
-      baz: ['bar'],
-      multi: ['foo', 'bar', 'baz']
-    }]);
+    expect(resultsList).toEqual([
+      {
+        foo: ['bar3'],
+        baz: ['bar'],
+        multi: ['foo', 'bar', 'baz']
+      }
+    ]);
   });
 });
 
@@ -110,9 +115,13 @@ describe('debounce()', () => {
 describe('fuzzyMatch()', () => {
   beforeEach(globalBeforeEach);
   it('can get a positive fuzzy match on a single field', () => {
-    expect(misc.fuzzyMatch('test', 'testing').searchTermsMatched).toBeGreaterThan(0);
+    expect(
+      misc.fuzzyMatch('test', 'testing').searchTermsMatched
+    ).toBeGreaterThan(0);
 
-    expect(misc.fuzzyMatch('tstg', 'testing').searchTermsMatched).toBeGreaterThan(0);
+    expect(
+      misc.fuzzyMatch('tstg', 'testing').searchTermsMatched
+    ).toBeGreaterThan(0);
   });
 
   it('can get a negative fuzzy match on a single field', () => {
@@ -130,12 +139,16 @@ describe('fuzzyMatchAll()', () => {
     expect(misc.fuzzyMatchAll('   ', ['testing'])).toEqual(true);
     expect(misc.fuzzyMatchAll('test', ['testing'])).toEqual(true);
     expect(misc.fuzzyMatchAll('tstg', ['testing'])).toEqual(true);
-    expect(misc.fuzzyMatchAll('tstg  this ou', ['testing', 'this', 'out'])).toEqual(true);
+    expect(
+      misc.fuzzyMatchAll('tstg  this ou', ['testing', 'this', 'out'])
+    ).toEqual(true);
   });
 
   it('can get a negative fuzzy match on multiple fields', () => {
     expect(misc.fuzzyMatchAll('foo', [undefined])).toEqual(false);
     expect(misc.fuzzyMatchAll('foo', ['bar'])).toEqual(false);
-    expect(misc.fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])).toEqual(false);
+    expect(
+      misc.fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])
+    ).toEqual(false);
   });
 });

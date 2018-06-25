@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 module.exports = {
   info: {
@@ -11,4 +11,4 @@ module.exports = {
   curl: require('./curl'),
   httpie: require('./httpie'),
   wget: require('./wget')
-}
+};

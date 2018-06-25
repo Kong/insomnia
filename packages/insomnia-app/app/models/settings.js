@@ -1,7 +1,7 @@
 // @flow
-import type {BaseModel} from './index';
+import type { BaseModel } from './index';
 import * as db from '../common/database';
-import {UPDATE_CHANNEL_STABLE} from '../common/constants';
+import { UPDATE_CHANNEL_STABLE } from '../common/constants';
 
 type BaseSettings = {
   showPasswords: boolean,
@@ -35,7 +35,7 @@ export const type = 'Settings';
 export const prefix = 'set';
 export const canDuplicate = false;
 
-export function init (): BaseSettings {
+export function init(): BaseSettings {
   return {
     showPasswords: false,
     useBulkHeaderEditor: false,
@@ -62,11 +62,11 @@ export function init (): BaseSettings {
   };
 }
 
-export function migrate (doc: Settings): Settings {
+export function migrate(doc: Settings): Settings {
   return doc;
 }
 
-export async function all (patch: Object = {}): Promise<Array<Settings>> {
+export async function all(patch: Object = {}): Promise<Array<Settings>> {
   const settings = await db.all(type);
   if (settings.length === 0) {
     return [await getOrCreate()];
@@ -75,15 +75,18 @@ export async function all (patch: Object = {}): Promise<Array<Settings>> {
   }
 }
 
-export async function create (patch: Object = {}): Promise<Settings> {
+export async function create(patch: Object = {}): Promise<Settings> {
   return db.docCreate(type, patch);
 }
 
-export async function update (settings: Settings, patch: Object): Promise<Settings> {
+export async function update(
+  settings: Settings,
+  patch: Object
+): Promise<Settings> {
   return db.docUpdate(settings, patch);
 }
 
-export async function getOrCreate (patch: Object = {}): Promise<Settings> {
+export async function getOrCreate(patch: Object = {}): Promise<Settings> {
   const results = await db.all(type);
   if (results.length === 0) {
     return create(patch);

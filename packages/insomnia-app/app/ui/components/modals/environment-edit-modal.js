@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import EnvironmentEditor from '../editors/environment-editor';
@@ -9,7 +9,7 @@ import ModalFooter from '../base/modal-footer';
 
 @autobind
 class EnvironmentEditModal extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = {
       requestGroup: null,
@@ -17,45 +17,45 @@ class EnvironmentEditModal extends PureComponent {
     };
   }
 
-  _setModalRef (n) {
+  _setModalRef(n) {
     this.modal = n;
   }
 
-  _setEditorRef (n) {
+  _setEditorRef(n) {
     this._envEditor = n;
   }
 
-  _saveChanges () {
+  _saveChanges() {
     if (!this._envEditor.isValid()) {
       return;
     }
 
     const environment = this._envEditor.getValue();
-    const {requestGroup} = this.state;
+    const { requestGroup } = this.state;
 
-    this.props.onChange(Object.assign({}, requestGroup, {environment}));
+    this.props.onChange(Object.assign({}, requestGroup, { environment }));
   }
 
-  _didChange () {
+  _didChange() {
     this._saveChanges();
 
     const isValid = this._envEditor.isValid();
 
     if (this.state.isValid !== isValid) {
-      this.setState({isValid});
+      this.setState({ isValid });
     }
   }
 
-  show (requestGroup) {
-    this.setState({requestGroup});
+  show(requestGroup) {
+    this.setState({ requestGroup });
     this.modal.show();
   }
 
-  hide () {
+  hide() {
     this.modal.hide();
   }
 
-  render () {
+  render() {
     const {
       editorKeyMap,
       editorFontSize,
@@ -67,10 +67,7 @@ class EnvironmentEditModal extends PureComponent {
       ...extraProps
     } = this.props;
 
-    const {
-      requestGroup,
-      isValid
-    } = this.state;
+    const { requestGroup, isValid } = this.state;
 
     return (
       <Modal ref={this._setModalRef} tall {...extraProps}>

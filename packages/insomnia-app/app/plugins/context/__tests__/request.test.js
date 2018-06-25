@@ -1,20 +1,24 @@
 import * as plugin from '../request';
 import * as models from '../../../models';
-import {globalBeforeEach} from '../../../__jest__/before-each';
+import { globalBeforeEach } from '../../../__jest__/before-each';
 
 const CONTEXT = {
   user_key: 'my_user_key',
   hello: 'world',
   array_test: ['a', 'b'],
-  object_test: {a: 'A', b: 'B'},
+  object_test: { a: 'A', b: 'B' },
   null_test: null
 };
 
 describe('init()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    await models.workspace.create({_id: 'wrk_1', name: 'My Workspace'});
-    await models.request.create({_id: 'req_1', parentId: 'wrk_1', name: 'My Request'});
+    await models.workspace.create({ _id: 'wrk_1', name: 'My Workspace' });
+    await models.request.create({
+      _id: 'req_1',
+      parentId: 'wrk_1',
+      name: 'My Request'
+    });
   });
 
   it('initializes correctly', async () => {
@@ -50,7 +54,11 @@ describe('init()', () => {
   });
 
   it('initializes correctly in read-only mode', async () => {
-    const result = plugin.init(await models.request.getById('req_1'), CONTEXT, true);
+    const result = plugin.init(
+      await models.request.getById('req_1'),
+      CONTEXT,
+      true
+    );
     expect(Object.keys(result)).toEqual(['request']);
     expect(Object.keys(result.request).sort()).toEqual([
       'getBodyText',
@@ -70,27 +78,28 @@ describe('init()', () => {
   });
 
   it('fails to initialize without request', () => {
-    expect(() => plugin.init())
-      .toThrowError('contexts.request initialized without request');
+    expect(() => plugin.init()).toThrowError(
+      'contexts.request initialized without request'
+    );
   });
 });
 
 describe('request.*', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    await models.workspace.create({_id: 'wrk_1', name: 'My Workspace'});
+    await models.workspace.create({ _id: 'wrk_1', name: 'My Workspace' });
     await models.request.create({
       _id: 'req_1',
       parentId: 'wrk_1',
       name: 'My Request',
-      body: {text: 'body'},
+      body: { text: 'body' },
       headers: [
-        {name: 'hello', value: 'world'},
-        {name: 'Content-Type', value: 'application/json'}
+        { name: 'hello', value: 'world' },
+        { name: 'Content-Type', value: 'application/json' }
       ],
       parameters: [
-        {name: 'foo', value: 'bar'},
-        {name: 'message', value: 'Hello World!'}
+        { name: 'foo', value: 'bar' },
+        { name: 'message', value: 'Hello World!' }
       ]
     });
   });
@@ -109,8 +118,8 @@ describe('request.*', () => {
 
     // getParameters()
     expect(result.request.getParameters()).toEqual([
-      {name: 'foo', value: 'bar'},
-      {name: 'message', value: 'Hello World!'}
+      { name: 'foo', value: 'bar' },
+      { name: 'message', value: 'Hello World!' }
     ]);
 
     // getParameter()
@@ -140,8 +149,8 @@ describe('request.*', () => {
 
     // getHeaders()
     expect(result.request.getHeaders()).toEqual([
-      {name: 'hello', value: 'world'},
-      {name: 'Content-Type', value: 'application/json'}
+      { name: 'hello', value: 'world' },
+      { name: 'Content-Type', value: 'application/json' }
     ]);
 
     // getHeader()
@@ -174,7 +183,7 @@ describe('request.*', () => {
 
     result.request.setCookie('foo', 'bar');
     result.request.setCookie('foo', 'baz');
-    expect(request.cookies).toEqual([{name: 'foo', value: 'baz'}]);
+    expect(request.cookies).toEqual([{ name: 'foo', value: 'baz' }]);
   });
 
   it('works for environment', async () => {
@@ -188,15 +197,23 @@ describe('request.*', () => {
       user_key: 'my_user_key',
       hello: 'world',
       array_test: ['a', 'b'],
-      object_test: {a: 'A', b: 'B'},
+      object_test: { a: 'A', b: 'B' },
       null_test: null
     });
 
     // getEnvironmentVariable
-    expect(result.request.getEnvironmentVariable('user_key')).toBe('my_user_key');
+    expect(result.request.getEnvironmentVariable('user_key')).toBe(
+      'my_user_key'
+    );
     expect(result.request.getEnvironmentVariable('hello')).toBe('world');
-    expect(result.request.getEnvironmentVariable('array_test')).toEqual(['a', 'b']);
-    expect(result.request.getEnvironmentVariable('object_test')).toEqual({a: 'A', b: 'B'});
+    expect(result.request.getEnvironmentVariable('array_test')).toEqual([
+      'a',
+      'b'
+    ]);
+    expect(result.request.getEnvironmentVariable('object_test')).toEqual({
+      a: 'A',
+      b: 'B'
+    });
     expect(result.request.getEnvironmentVariable('null_test')).toBe(null);
     expect(result.request.getEnvironmentVariable('bad')).toBeUndefined();
   });

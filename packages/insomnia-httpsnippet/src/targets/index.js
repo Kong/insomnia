@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 module.exports = {
   c: require('./c'),
@@ -14,4 +14,4 @@ module.exports = {
   ruby: require('./ruby'),
   shell: require('./shell'),
   swift: require('./swift')
-}
+};

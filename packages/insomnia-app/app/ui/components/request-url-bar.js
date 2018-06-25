@@ -1,10 +1,16 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import {remote} from 'electron';
-import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';
-import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from './base/dropdown';
-import {showPrompt} from './modals/index';
+import { remote } from 'electron';
+import { DEBOUNCE_MILLIS, isMac } from '../../common/constants';
+import {
+  Dropdown,
+  DropdownButton,
+  DropdownDivider,
+  DropdownHint,
+  DropdownItem
+} from './base/dropdown';
+import { showPrompt } from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
 import PromptButton from './base/prompt-button';
 import OneLineEditor from './codemirror/one-line-editor';
@@ -13,7 +19,7 @@ import KeydownBinder from './keydown-binder';
 
 @autobind
 class RequestUrlBar extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = {
       currentInterval: null,
@@ -25,35 +31,35 @@ class RequestUrlBar extends PureComponent {
     this._lastPastedText = null;
   }
 
-  _setDropdownRef (n) {
+  _setDropdownRef(n) {
     this._dropdown = n;
   }
 
-  _setMethodDropdownRef (n) {
+  _setMethodDropdownRef(n) {
     this._methodDropdown = n;
   }
 
-  _setInputRef (n) {
+  _setInputRef(n) {
     this._input = n;
   }
 
-  _handleMetaClickSend (e) {
+  _handleMetaClickSend(e) {
     e.preventDefault();
     this._dropdown.show();
   }
 
-  _handleFormSubmit (e) {
+  _handleFormSubmit(e) {
     e.preventDefault();
     e.stopPropagation();
 
     this._handleSend();
   }
 
-  _handleMethodChange (method) {
+  _handleMethodChange(method) {
     this.props.onMethodChange(method);
   }
 
-  _handleUrlChange (url) {
+  _handleUrlChange(url) {
     clearTimeout(this._urlChangeDebounceTimeout);
     this._urlChangeDebounceTimeout = setTimeout(async () => {
       const pastedText = this._lastPastedText;
@@ -77,16 +83,16 @@ class RequestUrlBar extends PureComponent {
     }, DEBOUNCE_MILLIS);
   }
 
-  _handleUrlPaste (e) {
+  _handleUrlPaste(e) {
     // NOTE: We're not actually doing the import here to avoid races with onChange
     this._lastPastedText = e.clipboardData.getData('text/plain');
   }
 
-  _handleGenerateCode () {
+  _handleGenerateCode() {
     this.props.handleGenerateCode();
   }
 
-  _handleSetDownloadLocation () {
+  _handleSetDownloadLocation() {
     const options = {
       title: 'Select Download Location',
       buttonLabel: 'Select',
@@ -98,15 +104,15 @@ class RequestUrlBar extends PureComponent {
         return;
       }
 
-      this.setState({downloadPath: paths[0]});
+      this.setState({ downloadPath: paths[0] });
     });
   }
 
-  _handleClearDownloadLocation () {
-    this.setState({downloadPath: null});
+  _handleClearDownloadLocation() {
+    this.setState({ downloadPath: null });
   }
 
-  _handleKeyDown (e) {
+  _handleKeyDown(e) {
     if (!this._input) {
       return;
     }
@@ -132,13 +138,13 @@ class RequestUrlBar extends PureComponent {
     });
   }
 
-  _handleSend () {
+  _handleSend() {
     // Don't stop interval because duh, it needs to keep going!
     // XXX this._handleStopInterval(); XXX
 
     this._handleStopTimeout();
 
-    const {downloadPath} = this.state;
+    const { downloadPath } = this.state;
     if (downloadPath) {
       this.props.handleSendAndDownload(downloadPath);
     } else {
@@ -146,7 +152,7 @@ class RequestUrlBar extends PureComponent {
     }
   }
 
-  _handleSendAfterDelay () {
+  _handleSendAfterDelay() {
     showPrompt({
       inputType: 'decimal',
       title: 'Send After Delay',
@@ -156,12 +162,12 @@ class RequestUrlBar extends PureComponent {
       onComplete: seconds => {
         this._handleStopTimeout();
         this._sendTimeout = setTimeout(this._handleSend, seconds * 1000);
-        this.setState({currentTimeout: seconds});
+        this.setState({ currentTimeout: seconds });
       }
     });
   }
 
-  _handleSendOnInterval () {
+  _handleSendOnInterval() {
     showPrompt({
       inputType: 'decimal',
       title: 'Send on Interval',
@@ -171,31 +177,31 @@ class RequestUrlBar extends PureComponent {
       onComplete: seconds => {
         this._handleStopInterval();
         this._sendInterval = setInterval(this._handleSend, seconds * 1000);
-        this.setState({currentInterval: seconds});
+        this.setState({ currentInterval: seconds });
       }
     });
   }
 
-  _handleStopInterval () {
+  _handleStopInterval() {
     clearTimeout(this._sendInterval);
     if (this.state.currentInterval) {
-      this.setState({currentInterval: null});
+      this.setState({ currentInterval: null });
     }
   }
 
-  _handleStopTimeout () {
+  _handleStopTimeout() {
     clearTimeout(this._sendTimeout);
     if (this.state.currentTimeout) {
-      this.setState({currentTimeout: null});
+      this.setState({ currentTimeout: null });
     }
   }
 
-  _handleResetTimeouts () {
+  _handleResetTimeouts() {
     this._handleStopTimeout();
     this._handleStopInterval();
   }
 
-  _handleClickSend (e) {
+  _handleClickSend(e) {
     const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
 
     // If we're pressing a meta key, let the dropdown open
@@ -209,31 +215,33 @@ class RequestUrlBar extends PureComponent {
     this._handleFormSubmit(e);
   }
 
-  componentWillReceiveProps (nextProps) {
+  componentWillReceiveProps(nextProps) {
     if (nextProps.requestId !== this.props.requestId) {
       this._handleResetTimeouts();
     }
   }
 
-  renderSendButton () {
-    const {currentInterval, currentTimeout, downloadPath} = this.state;
+  renderSendButton() {
+    const { currentInterval, currentTimeout, downloadPath } = this.state;
 
     let cancelButton = null;
     if (currentInterval) {
       cancelButton = (
-        <button type="button"
-                key="cancel-interval"
-                className="urlbar__send-btn danger"
-                onClick={this._handleStopInterval}>
+        <button
+          type="button"
+          key="cancel-interval"
+          className="urlbar__send-btn danger"
+          onClick={this._handleStopInterval}>
           Stop
         </button>
       );
     } else if (currentTimeout) {
       cancelButton = (
-        <button type="button"
-                key="cancel-timeout"
-                className="urlbar__send-btn danger"
-                onClick={this._handleStopTimeout}>
+        <button
+          type="button"
+          key="cancel-timeout"
+          className="urlbar__send-btn danger"
+          onClick={this._handleStopTimeout}>
           Cancel
         </button>
       );
@@ -242,50 +250,54 @@ class RequestUrlBar extends PureComponent {
     let sendButton;
     if (!cancelButton) {
       sendButton = (
-        <Dropdown key="dropdown" className="tall" right ref={this._setDropdownRef}>
-          <DropdownButton className="urlbar__send-btn"
-                          onContextMenu={this._handleMetaClickSend}
-                          onClick={this._handleClickSend}
-                          type="submit">
+        <Dropdown
+          key="dropdown"
+          className="tall"
+          right
+          ref={this._setDropdownRef}>
+          <DropdownButton
+            className="urlbar__send-btn"
+            onContextMenu={this._handleMetaClickSend}
+            onClick={this._handleClickSend}
+            type="submit">
             {downloadPath ? 'Download' : 'Send'}
           </DropdownButton>
           <DropdownDivider>Basic</DropdownDivider>
           <DropdownItem type="submit">
-            <i className="fa fa-arrow-circle-o-right"/> Send Now
-            <DropdownHint hotkey={hotkeys.SEND_REQUEST}/>
+            <i className="fa fa-arrow-circle-o-right" /> Send Now
+            <DropdownHint hotkey={hotkeys.SEND_REQUEST} />
           </DropdownItem>
           <DropdownItem onClick={this._handleGenerateCode}>
-            <i className="fa fa-code"/> Generate Client Code
+            <i className="fa fa-code" /> Generate Client Code
           </DropdownItem>
           <DropdownDivider>Advanced</DropdownDivider>
           <DropdownItem onClick={this._handleSendAfterDelay}>
-            <i className="fa fa-clock-o"/> Send After Delay
+            <i className="fa fa-clock-o" /> Send After Delay
           </DropdownItem>
           <DropdownItem onClick={this._handleSendOnInterval}>
-            <i className="fa fa-repeat"/> Repeat on Interval
+            <i className="fa fa-repeat" /> Repeat on Interval
           </DropdownItem>
           {downloadPath ? (
-            <DropdownItem stayOpenAfterClick addIcon
-                          buttonClass={PromptButton}
-                          onClick={this._handleClearDownloadLocation}>
-              <i className="fa fa-stop-circle"/> Stop Auto-Download
+            <DropdownItem
+              stayOpenAfterClick
+              addIcon
+              buttonClass={PromptButton}
+              onClick={this._handleClearDownloadLocation}>
+              <i className="fa fa-stop-circle" /> Stop Auto-Download
             </DropdownItem>
           ) : (
             <DropdownItem onClick={this._handleSetDownloadLocation}>
-              <i className="fa fa-download"/> Download After Send
+              <i className="fa fa-download" /> Download After Send
             </DropdownItem>
           )}
         </Dropdown>
       );
     }
 
-    return [
-      cancelButton,
-      sendButton
-    ];
+    return [cancelButton, sendButton];
   }
 
-  render () {
+  render() {
     const {
       url,
       method,
@@ -299,10 +311,11 @@ class RequestUrlBar extends PureComponent {
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <div className="urlbar">
-          <MethodDropdown ref={this._setMethodDropdownRef}
-                          onChange={this._handleMethodChange}
-                          method={method}>
-            {method} <i className="fa fa-caret-down"/>
+          <MethodDropdown
+            ref={this._setMethodDropdownRef}
+            onChange={this._handleMethodChange}
+            method={method}>
+            {method} <i className="fa fa-caret-down" />
           </MethodDropdown>
           <form onSubmit={this._handleFormSubmit}>
             <OneLineEditor
@@ -317,7 +330,8 @@ class RequestUrlBar extends PureComponent {
               getRenderContext={handleGetRenderContext}
               placeholder="https://api.myproduct.com/v1/users"
               defaultValue={url}
-              onChange={this._handleUrlChange}/>
+              onChange={this._handleUrlChange}
+            />
             {this.renderSendButton()}
           </form>
         </div>

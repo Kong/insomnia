@@ -1,3 +1,3 @@
 declare module 'deep-equal' {
-  declare module.exports: Function
+  declare module.exports: Function;
 }

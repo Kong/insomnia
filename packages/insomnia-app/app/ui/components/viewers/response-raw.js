@@ -1,19 +1,19 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 
 @autobind
 class ResponseRaw extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this._timeout = null;
   }
 
-  _setTextAreaRef (n) {
+  _setTextAreaRef(n) {
     this._textarea = n;
   }
 
-  _update (value) {
+  _update(value) {
     clearTimeout(this._timeout);
     this._timeout = setTimeout(() => {
       if (this._textarea) {
@@ -22,15 +22,15 @@ class ResponseRaw extends PureComponent {
     }, 200);
   }
 
-  componentDidUpdate () {
+  componentDidUpdate() {
     this._update(this.props.value);
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this._update(this.props.value);
   }
 
-  shouldComponentUpdate (nextProps) {
+  shouldComponentUpdate(nextProps) {
     for (let key in nextProps) {
       if (nextProps.hasOwnProperty(key)) {
         if (nextProps[key] !== this.props[key]) {
@@ -42,8 +42,8 @@ class ResponseRaw extends PureComponent {
     return false;
   }
 
-  render () {
-    const {fontSize} = this.props;
+  render() {
+    const { fontSize } = this.props;
     return (
       <textarea
         ref={this._setTextAreaRef}
@@ -51,8 +51,8 @@ class ResponseRaw extends PureComponent {
         className="force-wrap scrollable wide tall selectable monospace pad no-resize"
         readOnly
         defaultValue=""
-        style={{fontSize}}>
-      </textarea>
+        style={{ fontSize }}
+      />
     );
   }
 }

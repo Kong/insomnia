@@ -9,8 +9,8 @@ import * as models from '../../../models';
 import DebouncedInput from '../base/debounced-input';
 import MarkdownEditor from '../markdown-editor';
 import * as db from '../../../common/database';
-import type {Workspace} from '../../../models/workspace';
-import type {Request} from '../../../models/request';
+import type { Workspace } from '../../../models/workspace';
+import type { Request } from '../../../models/request';
 
 type Props = {
   editorFontSize: number,
@@ -38,7 +38,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _editor: ?MarkdownEditor;
 
-  constructor (props: Props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       request: null,
@@ -52,15 +52,15 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef (n: ?Modal) {
+  _setModalRef(n: ?Modal) {
     this.modal = n;
   }
 
-  _setEditorRef (n: ?MarkdownEditor) {
+  _setEditorRef(n: ?MarkdownEditor) {
     this._editor = n;
   }
 
-  async _updateRequestSettingBoolean (e: SyntheticEvent<HTMLInputElement>) {
+  async _updateRequestSettingBoolean(e: SyntheticEvent<HTMLInputElement>) {
     if (!this.state.request) {
       // Should never happen
       return;
@@ -68,83 +68,97 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
 
     const value = e.currentTarget.checked;
     const setting = e.currentTarget.name;
-    const request = await models.request.update(this.state.request, {[setting]: value});
-    this.setState({request});
+    const request = await models.request.update(this.state.request, {
+      [setting]: value
+    });
+    this.setState({ request });
   }
 
-  async _handleNameChange (name: string) {
+  async _handleNameChange(name: string) {
     if (!this.state.request) {
       return;
     }
-    const request = await models.request.update(this.state.request, {name});
-    this.setState({request});
+    const request = await models.request.update(this.state.request, { name });
+    this.setState({ request });
   }
 
-  async _handleDescriptionChange (description: string) {
+  async _handleDescriptionChange(description: string) {
     if (!this.state.request) {
       return;
     }
-    const request = await models.request.update(this.state.request, {description});
-    this.setState({request, defaultPreviewMode: false});
+    const request = await models.request.update(this.state.request, {
+      description
+    });
+    this.setState({ request, defaultPreviewMode: false });
   }
 
-  _handleAddDescription () {
-    this.setState({showDescription: true});
+  _handleAddDescription() {
+    this.setState({ showDescription: true });
   }
 
-  _handleUpdateMoveCopyWorkspace (e: SyntheticEvent<HTMLSelectElement>) {
+  _handleUpdateMoveCopyWorkspace(e: SyntheticEvent<HTMLSelectElement>) {
     const workspaceId = e.currentTarget.value;
-    this.setState({activeWorkspaceIdToCopyTo: workspaceId});
+    this.setState({ activeWorkspaceIdToCopyTo: workspaceId });
   }
 
-  async _handleMoveToWorkspace () {
-    const {activeWorkspaceIdToCopyTo, request} = this.state;
+  async _handleMoveToWorkspace() {
+    const { activeWorkspaceIdToCopyTo, request } = this.state;
     if (!request) {
       return;
     }
 
-    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo || 'n/a');
+    const workspace = await models.workspace.getById(
+      activeWorkspaceIdToCopyTo || 'n/a'
+    );
     if (!workspace) {
       return;
     }
 
     await models.request.update(request, {
-      sortKey: -1E9, // Move to top of sort order
+      sortKey: -1e9, // Move to top of sort order
       parentId: activeWorkspaceIdToCopyTo
     });
 
-    this.setState({justMoved: true});
+    this.setState({ justMoved: true });
     setTimeout(() => {
-      this.setState({justMoved: false});
+      this.setState({ justMoved: false });
     }, 2000);
   }
 
-  async _handleCopyToWorkspace () {
-    const {activeWorkspaceIdToCopyTo, request} = this.state;
+  async _handleCopyToWorkspace() {
+    const { activeWorkspaceIdToCopyTo, request } = this.state;
     if (!request) {
       return;
     }
 
-    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo || 'n/a');
+    const workspace = await models.workspace.getById(
+      activeWorkspaceIdToCopyTo || 'n/a'
+    );
     if (!workspace) {
       return;
     }
 
     const newRequest = await models.request.duplicate(request);
     await models.request.update(newRequest, {
-      sortKey: -1E9, // Move to top of sort order
+      sortKey: -1e9, // Move to top of sort order
       name: request.name, // Because duplicate will add (Copy) suffix
       parentId: activeWorkspaceIdToCopyTo
     });
 
-    this.setState({justCopied: true});
+    this.setState({ justCopied: true });
     setTimeout(() => {
-      this.setState({justCopied: false});
+      this.setState({ justCopied: false });
     }, 2000);
   }
 
-  async show ({request, forceEditMode}: {request: Request, forceEditMode: boolean}) {
-    const {workspaces} = this.props;
+  async show({
+    request,
+    forceEditMode
+  }: {
+    request: Request,
+    forceEditMode: boolean
+  }) {
+    const { workspaces } = this.props;
 
     const hasDescription = !!request.description;
 
@@ -154,29 +168,32 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     const workspaceId = doc ? doc._id : 'should-never-happen';
     const workspace = workspaces.find(w => w._id === workspaceId);
 
-    this.setState({
-      request,
-      workspace: workspace,
-      activeWorkspaceIdToCopyTo: workspace ? workspace._id : 'n/a',
-      showDescription: forceEditMode || hasDescription,
-      defaultPreviewMode: hasDescription && !forceEditMode
-    }, () => {
-      this.modal && this.modal.show();
+    this.setState(
+      {
+        request,
+        workspace: workspace,
+        activeWorkspaceIdToCopyTo: workspace ? workspace._id : 'n/a',
+        showDescription: forceEditMode || hasDescription,
+        defaultPreviewMode: hasDescription && !forceEditMode
+      },
+      () => {
+        this.modal && this.modal.show();
 
-      if (forceEditMode) {
-        setTimeout(() => {
-          this._editor && this._editor.focus();
-        }, 400);
+        if (forceEditMode) {
+          setTimeout(() => {
+            this._editor && this._editor.focus();
+          }, 400);
+        }
       }
-    });
+    );
   }
 
-  hide () {
+  hide() {
     this.modal && this.modal.hide();
   }
 
-  renderCheckboxInput (setting: string) {
-    const {request} = this.state;
+  renderCheckboxInput(setting: string) {
+    const { request } = this.state;
     if (!request) {
       return;
     }
@@ -191,7 +208,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
-  renderModalBody (request: Request) {
+  renderModalBody(request: Request) {
     const {
       editorLineWrapping,
       editorFontSize,
@@ -215,8 +232,8 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     return (
       <div>
         <div className="form-control form-control--outlined">
-          <label>Name
-            {' '}
+          <label>
+            Name{' '}
             <span className="txt-sm faint italic">
               (also rename by double-clicking in sidebar)
             </span>
@@ -246,59 +263,68 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
             onChange={this._handleDescriptionChange}
           />
         ) : (
-          <button onClick={this._handleAddDescription}
-                  className="btn btn--outlined btn--super-duper-compact">
+          <button
+            onClick={this._handleAddDescription}
+            className="btn btn--outlined btn--super-duper-compact">
             Add Description
           </button>
         )}
         <div className="pad-top">
           <div className="form-control form-control--thin">
-            <label>Send cookies automatically
+            <label>
+              Send cookies automatically
               {this.renderCheckboxInput('settingSendCookies')}
             </label>
           </div>
           <div className="form-control form-control--thin">
-            <label>Store cookies automatically
+            <label>
+              Store cookies automatically
               {this.renderCheckboxInput('settingStoreCookies')}
             </label>
           </div>
           <div className="form-control form-control--thin">
-            <label>Automatically encode special characters in URL
+            <label>
+              Automatically encode special characters in URL
               {this.renderCheckboxInput('settingEncodeUrl')}
               <HelpTooltip position="top" className="space-left">
-                Automatically encode special characters at send time (does not apply to
-                query parameters editor)
+                Automatically encode special characters at send time (does not
+                apply to query parameters editor)
               </HelpTooltip>
             </label>
           </div>
           <div className="form-control form-control--thin">
-            <label>Skip rendering of request body
+            <label>
+              Skip rendering of request body
               {this.renderCheckboxInput('settingDisableRenderRequestBody')}
               <HelpTooltip position="top" className="space-left">
-                Disable rendering of environment variables and tags for the request body
+                Disable rendering of environment variables and tags for the
+                request body
               </HelpTooltip>
             </label>
           </div>
           <div className="form-control form-control--thin">
-            <label>Rebuild path dot sequences
+            <label>
+              Rebuild path dot sequences
               <HelpTooltip position="top" className="space-left">
-                This instructs libcurl to squash sequences of "/../" or "/./" that may exist in
-                the URL's path part and that is supposed to be removed according to RFC 3986
-                section 5.2.4
+                This instructs libcurl to squash sequences of "/../" or "/./"
+                that may exist in the URL's path part and that is supposed to be
+                removed according to RFC 3986 section 5.2.4
               </HelpTooltip>
               {this.renderCheckboxInput('settingRebuildPath')}
             </label>
           </div>
-          <hr/>
+          <hr />
           <div className="form-row">
             <div className="form-control form-control--outlined">
-              <label>Move/Copy to Workspace
+              <label>
+                Move/Copy to Workspace
                 <HelpTooltip position="top" className="space-left">
-                  Copy or move the current request to a new workspace. It will be placed at the
-                  root of the new workspace's folder structure.
+                  Copy or move the current request to a new workspace. It will
+                  be placed at the root of the new workspace's folder structure.
                 </HelpTooltip>
-                <select value={activeWorkspaceIdToCopyTo}
-                        onChange={this._handleUpdateMoveCopyWorkspace}>
+                <select
+                  value={activeWorkspaceIdToCopyTo}
+                  onChange={this._handleUpdateMoveCopyWorkspace}>
                   <option value="n/a">-- Select Workspace --</option>
                   {workspaces.map(w => {
                     if (workspace && workspace._id === w._id) {
@@ -306,19 +332,27 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
                     }
 
                     return (
-                      <option key={w._id} value={w._id}>{w.name}</option>
+                      <option key={w._id} value={w._id}>
+                        {w.name}
+                      </option>
                     );
                   })}
                 </select>
               </label>
             </div>
             <div className="form-control form-control--no-label width-auto">
-              <button disabled={justCopied} className="btn btn--clicky" onClick={this._handleCopyToWorkspace}>
+              <button
+                disabled={justCopied}
+                className="btn btn--clicky"
+                onClick={this._handleCopyToWorkspace}>
                 {justCopied ? 'Copied!' : 'Copy'}
               </button>
             </div>
             <div className="form-control form-control--no-label width-auto">
-              <button disabled={justMoved} className="btn btn--clicky" onClick={this._handleMoveToWorkspace}>
+              <button
+                disabled={justMoved}
+                className="btn btn--clicky"
+                onClick={this._handleMoveToWorkspace}>
                 {justMoved ? 'Moved!' : 'Move'}
               </button>
             </div>
@@ -328,14 +362,15 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
-  render () {
-    const {request} = this.state;
+  render() {
+    const { request } = this.state;
     return (
       <Modal ref={this._setModalRef} freshState>
         <ModalHeader>
-          Request Settings
-          {' '}
-          <span className="txt-sm selectable faint monospace">{request ? request._id : ''}</span>
+          Request Settings{' '}
+          <span className="txt-sm selectable faint monospace">
+            {request ? request._id : ''}
+          </span>
         </ModalHeader>
         <ModalBody className="pad">
           {request ? this.renderModalBody(request) : null}

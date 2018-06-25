@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 module.exports = {
   info: {
@@ -9,4 +9,4 @@ module.exports = {
   },
 
   restsharp: require('./restsharp')
-}
+};

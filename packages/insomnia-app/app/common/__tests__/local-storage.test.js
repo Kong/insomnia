@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import LocalStorage from '../../main/local-storage';
-import {globalBeforeEach} from '../../__jest__/before-each';
+import { globalBeforeEach } from '../../__jest__/before-each';
 
 describe('LocalStorage()', () => {
   beforeEach(async () => {
@@ -34,8 +34,8 @@ describe('LocalStorage()', () => {
     expect(localStorage.getItem('foo', 'BAD')).toBe('bar');
 
     // Test Object storage
-    localStorage.setItem('obj', {foo: 'bar', arr: [1, 2, 3]});
-    expect(localStorage.getItem('obj')).toEqual({foo: 'bar', arr: [1, 2, 3]});
+    localStorage.setItem('obj', { foo: 'bar', arr: [1, 2, 3] });
+    expect(localStorage.getItem('obj')).toEqual({ foo: 'bar', arr: [1, 2, 3] });
 
     // Test default values
     expect(localStorage.getItem('dne', 'default')).toEqual('default');
@@ -52,7 +52,7 @@ describe('LocalStorage()', () => {
 
     // Assert that writing our file actually works
     fs.writeFileSync(path.join(basePath, 'key'), '{"good": "JSON"}');
-    expect(localStorage.getItem('key', 'default')).toEqual({good: 'JSON'});
+    expect(localStorage.getItem('key', 'default')).toEqual({ good: 'JSON' });
   });
 
   it('does handles failing to write file', () => {
@@ -108,7 +108,11 @@ describe('LocalStorage()', () => {
 
     // Make sure only one item exists
     expect(fs.readdirSync(basePath).length).toEqual(2);
-    expect(fs.readFileSync(path.join(basePath, 'foo'), 'utf8')).toEqual('"bar3"');
-    expect(fs.readFileSync(path.join(basePath, 'another'), 'utf8')).toEqual('10');
+    expect(fs.readFileSync(path.join(basePath, 'foo'), 'utf8')).toEqual(
+      '"bar3"'
+    );
+    expect(fs.readFileSync(path.join(basePath, 'another'), 'utf8')).toEqual(
+      '10'
+    );
   });
 });

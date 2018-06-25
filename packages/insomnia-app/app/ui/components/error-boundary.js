@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import {showError} from './modals/index';
+import { showError } from './modals/index';
 import Mailto from './base/mailto';
 
 type Props = {
@@ -12,11 +12,11 @@ type Props = {
 
 type State = {
   error: Error | null,
-  info: {componentStack: string} | null
+  info: { componentStack: string } | null
 };
 
 class SingleErrorBoundary extends React.PureComponent<Props, State> {
-  constructor (props: Props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       error: null,
@@ -24,11 +24,12 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
     };
   }
 
-  componentDidCatch (error: Error, info: {componentStack: string}) {
-    const {children} = this.props;
-    const firstChild = Array.isArray(children) && children.length === 1 ? children[0] : children;
+  componentDidCatch(error: Error, info: { componentStack: string }) {
+    const { children } = this.props;
+    const firstChild =
+      Array.isArray(children) && children.length === 1 ? children[0] : children;
 
-    this.setState({error, info});
+    this.setState({ error, info });
 
     let componentName = 'component';
     try {
@@ -44,10 +45,13 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
           title: 'Application Error',
           message: (
             <p>
-              Failed to render {componentName}.
-              Please send the following error to
-              {' '}
-              <Mailto email="support@insomnia.rest" subject="Error Report" body={error.stack}/>.
+              Failed to render {componentName}. Please send the following error
+              to{' '}
+              <Mailto
+                email="support@insomnia.rest"
+                subject="Error Report"
+                body={error.stack}
+              />.
             </p>
           )
         });
@@ -57,9 +61,9 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
     }
   }
 
-  render () {
-    const {error, info} = this.state;
-    const {errorClassName, children} = this.props;
+  render() {
+    const { error, info } = this.state;
+    const { errorClassName, children } = this.props;
 
     if (error && info) {
       return (
@@ -74,8 +78,8 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
 }
 
 class ErrorBoundary extends React.PureComponent<Props> {
-  render () {
-    const {children, ...extraProps} = this.props;
+  render() {
+    const { children, ...extraProps } = this.props;
 
     if (!children) {
       return null;

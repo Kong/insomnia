@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import VariableEditor from '../templating/variable-editor';
@@ -10,7 +10,7 @@ import ModalFooter from '../base/modal-footer';
 
 @autobind
 class NunjucksModal extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = {
       defaultTemplate: ''
@@ -20,41 +20,46 @@ class NunjucksModal extends PureComponent {
     this._currentTemplate = null;
   }
 
-  _setModalRef (n) {
+  _setModalRef(n) {
     this.modal = n;
   }
 
-  _handleTemplateChange (template) {
+  _handleTemplateChange(template) {
     this._currentTemplate = template;
   }
 
-  _handleSubmit (e) {
+  _handleSubmit(e) {
     e.preventDefault();
     this.hide();
   }
 
-  _handleModalHide () {
+  _handleModalHide() {
     if (this._onDone) {
       this._onDone(this._currentTemplate);
-      this.setState({defaultTemplate: ''});
+      this.setState({ defaultTemplate: '' });
     }
   }
 
-  show ({template, onDone}) {
+  show({ template, onDone }) {
     this._onDone = onDone;
     this._currentTemplate = template;
 
-    this.setState({defaultTemplate: template});
+    this.setState({ defaultTemplate: template });
     this.modal.show();
   }
 
-  hide () {
+  hide() {
     this.modal.hide();
   }
 
-  render () {
-    const {handleRender, handleGetRenderContext, uniqueKey, workspace} = this.props;
-    const {defaultTemplate} = this.state;
+  render() {
+    const {
+      handleRender,
+      handleGetRenderContext,
+      uniqueKey,
+      workspace
+    } = this.props;
+    const { defaultTemplate } = this.state;
 
     let editor = null;
     let title = '';
@@ -82,15 +87,18 @@ class NunjucksModal extends PureComponent {
     }
 
     return (
-      <Modal ref={this._setModalRef} onHide={this._handleModalHide} key={uniqueKey}>
+      <Modal
+        ref={this._setModalRef}
+        onHide={this._handleModalHide}
+        key={uniqueKey}>
         <ModalHeader>Edit {title}</ModalHeader>
         <ModalBody className="pad" key={defaultTemplate}>
-          <form onSubmit={this._handleSubmit}>
-            {editor}
-          </form>
+          <form onSubmit={this._handleSubmit}>{editor}</form>
         </ModalBody>
         <ModalFooter>
-          <button className="btn" onClick={this.hide}>Done</button>
+          <button className="btn" onClick={this.hide}>
+            Done
+          </button>
         </ModalFooter>
       </Modal>
     );

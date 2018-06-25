@@ -4,8 +4,7 @@ module.exports.id = 'postman-environment';
 module.exports.name = 'Postman Environment';
 module.exports.description = 'Importer for Postman environments';
 
-module.exports.convert = function (rawData) {
-
+module.exports.convert = function(rawData) {
   let data;
   try {
     data = JSON.parse(rawData);
@@ -19,7 +18,7 @@ module.exports.convert = function (rawData) {
   return null;
 };
 
-function importEnvironment (environment) {
+function importEnvironment(environment) {
   const newEnvironment = {
     _id: '__ENV_1__',
     _type: 'environment',

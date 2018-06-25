@@ -1,3 +1,3 @@
 declare module 'hawk' {
-  declare module.exports: *
+  declare module.exports: *;
 }

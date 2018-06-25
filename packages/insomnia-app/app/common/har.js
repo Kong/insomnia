@@ -1,21 +1,21 @@
 // @flow
 import fs from 'fs';
 import clone from 'clone';
-import {Cookie as toughCookie} from 'tough-cookie';
+import { Cookie as toughCookie } from 'tough-cookie';
 import * as models from '../models';
-import type {RenderedRequest} from './render';
-import {getRenderedRequestAndContext} from './render';
-import {jarFromCookies} from 'insomnia-cookies';
+import type { RenderedRequest } from './render';
+import { getRenderedRequestAndContext } from './render';
+import { jarFromCookies } from 'insomnia-cookies';
 import * as pluginContexts from '../plugins/context/index';
 import * as misc from './misc';
-import type {Cookie} from '../models/cookie-jar';
-import type {Request} from '../models/request';
-import {newBodyRaw} from '../models/request';
-import type {Response as ResponseModel} from '../models/response';
-import {getAuthHeader} from '../network/authentication';
-import {getAppVersion} from './constants';
-import {RenderError} from '../templating/index';
-import {smartEncodeUrl} from 'insomnia-url';
+import type { Cookie } from '../models/cookie-jar';
+import type { Request } from '../models/request';
+import { newBodyRaw } from '../models/request';
+import type { Response as ResponseModel } from '../models/response';
+import { getAuthHeader } from '../network/authentication';
+import { getAppVersion } from './constants';
+import { RenderError } from '../templating/index';
+import { smartEncodeUrl } from 'insomnia-url';
 import * as plugins from '../plugins';
 
 export type HarCookie = {
@@ -33,13 +33,13 @@ export type HarHeader = {
   name: string,
   value: string,
   comment?: string
-}
+};
 
 export type HarQueryString = {
   name: string,
   value: string,
   comment?: string
-}
+};
 
 export type HarPostParam = {
   name: string,
@@ -98,7 +98,7 @@ export type HarRequestCache = {
   eTag: string,
   hitCount: number,
   comment?: string
-}
+};
 
 export type HarCache = {
   beforeRequest?: HarRequestCache,
@@ -142,7 +142,7 @@ export type HarPage = {
   title: string,
   pageTimings: HarPageTimings,
   comment?: string
-}
+};
 
 export type HarCreator = {
   name: string,
@@ -172,24 +172,33 @@ export type Har = {
 export type ExportRequest = {
   requestId: string,
   environmentId: string
-}
+};
 
-export async function exportHar (exportRequests: Array<ExportRequest>): Promise<Har> {
+export async function exportHar(
+  exportRequests: Array<ExportRequest>
+): Promise<Har> {
   // Export HAR entries with the same start time in order to keep their workspace sort order.
   const startedDateTime = new Date().toISOString();
   const entries: Array<HarEntry> = [];
   for (let exportRequest of exportRequests) {
-    const request: Request | null = await models.request.getById(exportRequest.requestId);
+    const request: Request | null = await models.request.getById(
+      exportRequest.requestId
+    );
     if (!request) {
       continue;
     }
 
-    const harRequest = await exportHarWithRequest(request, exportRequest.environmentId);
+    const harRequest = await exportHarWithRequest(
+      request,
+      exportRequest.environmentId
+    );
     if (!harRequest) {
       continue;
     }
 
-    const response: ResponseModel | null = await models.response.getLatestForRequest(exportRequest.requestId);
+    const response: ResponseModel | null = await models.response.getLatestForRequest(
+      exportRequest.requestId
+    );
     const harResponse = await exportHarResponse(response);
     if (!harResponse) {
       continue;
@@ -228,7 +237,9 @@ export async function exportHar (exportRequests: Array<ExportRequest>): Promise<
   };
 }
 
-export async function exportHarResponse (response: ResponseModel | null): Promise<HarResponse> {
+export async function exportHarResponse(
+  response: ResponseModel | null
+): Promise<HarResponse> {
   if (!response) {
     return {
       status: 0,
@@ -259,7 +270,7 @@ export async function exportHarResponse (response: ResponseModel | null): Promis
   };
 }
 
-export async function exportHarRequest (
+export async function exportHarRequest(
   requestId: string,
   environmentId: string,
   addContentLength: boolean = false
@@ -272,13 +283,16 @@ export async function exportHarRequest (
   return exportHarWithRequest(request, environmentId, addContentLength);
 }
 
-export async function exportHarWithRequest (
+export async function exportHarWithRequest(
   request: Request,
   environmentId: string,
   addContentLength: boolean = false
 ): Promise<HarRequest | null> {
   try {
-    const renderResult = await getRenderedRequestAndContext(request, environmentId);
+    const renderResult = await getRenderedRequestAndContext(
+      request,
+      environmentId
+    );
     const renderedRequest = await _applyRequestPluginHooks(
       renderResult.request,
       renderResult.context
@@ -286,19 +300,23 @@ export async function exportHarWithRequest (
     return exportHarWithRenderedRequest(renderedRequest, addContentLength);
   } catch (err) {
     if (err instanceof RenderError) {
-      throw new Error(`Failed to render "${request.name}:${err.path}"\n ${err.message}`);
+      throw new Error(
+        `Failed to render "${request.name}:${err.path}"\n ${err.message}`
+      );
     } else {
-      throw new Error(`Failed to export request "${request.name}"\n ${err.message}`);
+      throw new Error(
+        `Failed to export request "${request.name}"\n ${err.message}`
+      );
     }
   }
 }
 
-async function _applyRequestPluginHooks (
+async function _applyRequestPluginHooks(
   renderedRequest: RenderedRequest,
   renderedContext: Object
 ): Promise<RenderedRequest> {
   let newRenderedRequest = renderedRequest;
-  for (const {plugin, hook} of await plugins.getRequestHooks()) {
+  for (const { plugin, hook } of await plugins.getRequestHooks()) {
     newRenderedRequest = clone(newRenderedRequest);
 
     const context = {
@@ -317,22 +335,25 @@ async function _applyRequestPluginHooks (
   return newRenderedRequest;
 }
 
-export async function exportHarWithRenderedRequest (
+export async function exportHarWithRenderedRequest(
   renderedRequest: RenderedRequest,
   addContentLength: boolean = false
 ): Promise<HarRequest> {
-  const url = smartEncodeUrl(renderedRequest.url, renderedRequest.settingEncodeUrl);
+  const url = smartEncodeUrl(
+    renderedRequest.url,
+    renderedRequest.settingEncodeUrl
+  );
 
   if (addContentLength) {
-    const hasContentLengthHeader = misc.filterHeaders(
-      renderedRequest.headers,
-      'Content-Length'
-    ).length > 0;
+    const hasContentLengthHeader =
+      misc.filterHeaders(renderedRequest.headers, 'Content-Length').length > 0;
 
     if (!hasContentLengthHeader) {
       const name = 'Content-Length';
-      const value = Buffer.byteLength((renderedRequest.body || {}).text || '').toString();
-      renderedRequest.headers.push({name, value});
+      const value = Buffer.byteLength(
+        (renderedRequest.body || {}).text || ''
+      ).toString();
+      renderedRequest.headers.push({ name, value });
     }
   }
 
@@ -366,28 +387,30 @@ export async function exportHarWithRenderedRequest (
   };
 }
 
-function getRequestCookies (renderedRequest: RenderedRequest): Array<HarCookie> {
+function getRequestCookies(renderedRequest: RenderedRequest): Array<HarCookie> {
   const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
   const domainCookies = jar.getCookiesSync(renderedRequest.url);
   return domainCookies.map(mapCookie);
 }
 
-function getReponseCookies (response: ResponseModel): Array<HarCookie> {
-  return misc.getSetCookieHeaders(response.headers).map(h => {
-    let cookie;
-    try {
-      cookie = toughCookie.parse(h.value || '');
-    } catch (error) {
-    }
-    if (!cookie) {
-      return null;
-    }
+function getReponseCookies(response: ResponseModel): Array<HarCookie> {
+  return misc
+    .getSetCookieHeaders(response.headers)
+    .map(h => {
+      let cookie;
+      try {
+        cookie = toughCookie.parse(h.value || '');
+      } catch (error) {}
+      if (!cookie) {
+        return null;
+      }
 
-    return mapCookie(cookie);
-  }).filter(Boolean);
+      return mapCookie(cookie);
+    })
+    .filter(Boolean);
 }
 
-function mapCookie (cookie: Cookie): HarCookie {
+function mapCookie(cookie: Cookie): HarCookie {
   const harCookie: HarCookie = {
     name: cookie.key,
     value: cookie.value
@@ -428,7 +451,7 @@ function mapCookie (cookie: Cookie): HarCookie {
   return harCookie;
 }
 
-function getResponseContent (response: ResponseModel): HarContent {
+function getResponseContent(response: ResponseModel): HarContent {
   let body: Buffer | null = models.response.getBodyBuffer(response);
 
   if (body === null) {
@@ -442,29 +465,27 @@ function getResponseContent (response: ResponseModel): HarContent {
   };
 }
 
-function getResponseHeaders (response: ResponseModel): Array<HarHeader> {
-  return response.headers
-    .filter(header => (header.name))
-    .map(h => {
-      return {
-        name: h.name,
-        value: h.value
-      };
-    });
+function getResponseHeaders(response: ResponseModel): Array<HarHeader> {
+  return response.headers.filter(header => header.name).map(h => {
+    return {
+      name: h.name,
+      value: h.value
+    };
+  });
 }
 
-function getRequestHeaders (renderedRequest: RenderedRequest): Array<HarHeader> {
-  return renderedRequest.headers
-    .filter(header => (header.name))
-    .map(header => {
-      return {
-        name: header.name,
-        value: header.value
-      };
-    });
+function getRequestHeaders(renderedRequest: RenderedRequest): Array<HarHeader> {
+  return renderedRequest.headers.filter(header => header.name).map(header => {
+    return {
+      name: header.name,
+      value: header.value
+    };
+  });
 }
 
-function getRequestQueryString (renderedRequest: RenderedRequest): Array<HarQueryString> {
+function getRequestQueryString(
+  renderedRequest: RenderedRequest
+): Array<HarQueryString> {
   return renderedRequest.parameters.map(parameter => {
     return {
       name: parameter.name,
@@ -473,11 +494,15 @@ function getRequestQueryString (renderedRequest: RenderedRequest): Array<HarQuer
   });
 }
 
-function getRequestPostData (renderedRequest: RenderedRequest): HarPostData | void {
+function getRequestPostData(
+  renderedRequest: RenderedRequest
+): HarPostData | void {
   let body;
   if (renderedRequest.body.fileName) {
     try {
-      body = newBodyRaw(fs.readFileSync(renderedRequest.body.fileName, 'base64'));
+      body = newBodyRaw(
+        fs.readFileSync(renderedRequest.body.fileName, 'base64')
+      );
     } catch (e) {
       console.warn('[code gen] Failed to read file', e);
       return undefined;

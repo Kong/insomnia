@@ -1,5 +1,4 @@
-
-module.exports.setDefaults = function (obj) {
+module.exports.setDefaults = function(obj) {
   if (!obj || !obj._type) {
     return obj;
   } else if (obj._type === 'request') {
@@ -13,36 +12,45 @@ module.exports.setDefaults = function (obj) {
   }
 };
 
-module.exports.setDefaultsRequest = function (request) {
+module.exports.setDefaultsRequest = function(request) {
   request.method = (request.method || 'GET').toUpperCase();
-  return Object.assign({
-    parentId: '__WORKSPACE_ID__',
-    name: 'Imported',
-    url: '',
-    body: '',
-    method: 'GET',
-    parameters: [],
-    headers: [],
-    authentication: {},
-  }, request)
+  return Object.assign(
+    {
+      parentId: '__WORKSPACE_ID__',
+      name: 'Imported',
+      url: '',
+      body: '',
+      method: 'GET',
+      parameters: [],
+      headers: [],
+      authentication: {}
+    },
+    request
+  );
 };
 
-module.exports.setDefaultsRequestGroup = function (requestGroup) {
-  return Object.assign({
-    parentId: '__WORKSPACE_ID__',
-    name: 'Imported',
-    environment: {},
-  }, requestGroup)
+module.exports.setDefaultsRequestGroup = function(requestGroup) {
+  return Object.assign(
+    {
+      parentId: '__WORKSPACE_ID__',
+      name: 'Imported',
+      environment: {}
+    },
+    requestGroup
+  );
 };
 
-module.exports.setDefaultsEnvironment = function (environment) {
-  return Object.assign({
-    parentId: '__BASE_ENVIRONMENT_ID__',
-    name: 'Imported Environment',
-    data: {},
-  }, environment)
+module.exports.setDefaultsEnvironment = function(environment) {
+  return Object.assign(
+    {
+      parentId: '__BASE_ENVIRONMENT_ID__',
+      name: 'Imported Environment',
+      data: {}
+    },
+    environment
+  );
 };
 
-module.exports.getDateString = function () {
+module.exports.getDateString = function() {
   return new Date().toISOString();
 };

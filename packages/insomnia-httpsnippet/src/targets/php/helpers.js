@@ -1,55 +1,71 @@
-'use strict'
+'use strict';
 
-var convert = function (obj, indent, last_indent) {
-  var i, result
+var convert = function(obj, indent, last_indent) {
+  var i, result;
 
   if (!last_indent) {
-    last_indent = ''
+    last_indent = '';
   }
 
   switch (Object.prototype.toString.call(obj)) {
     case '[object Null]':
-      result = 'null'
-      break
+      result = 'null';
+      break;
 
     case '[object Undefined]':
-      result = 'null'
-      break
+      result = 'null';
+      break;
 
     case '[object String]':
-      result = "'" + obj.replace(/\\/g, '\\\\').replace(/\'/g, "\'") + "'"
-      break
+      result = "'" + obj.replace(/\\/g, '\\\\').replace(/\'/g, "'") + "'";
+      break;
 
     case '[object Number]':
-      result = obj.toString()
-      break
+      result = obj.toString();
+      break;
 
     case '[object Array]':
-      result = []
+      result = [];
 
-      obj.forEach(function (item) {
-        result.push(convert(item, indent + indent, indent))
-      })
+      obj.forEach(function(item) {
+        result.push(convert(item, indent + indent, indent));
+      });
 
-      result = 'array(\n' + indent + result.join(',\n' + indent) + '\n' + last_indent + ')'
-      break
+      result =
+        'array(\n' +
+        indent +
+        result.join(',\n' + indent) +
+        '\n' +
+        last_indent +
+        ')';
+      break;
 
     case '[object Object]':
-      result = []
+      result = [];
       for (i in obj) {
         if (obj.hasOwnProperty(i)) {
-          result.push(convert(i, indent) + ' => ' + convert(obj[i], indent + indent, indent))
+          result.push(
+            convert(i, indent) +
+              ' => ' +
+              convert(obj[i], indent + indent, indent)
+          );
         }
       }
-      result = 'array(\n' + indent + result.join(',\n' + indent) + '\n' + last_indent + ')'
-      break
+      result =
+        'array(\n' +
+        indent +
+        result.join(',\n' + indent) +
+        '\n' +
+        last_indent +
+        ')';
+      break;
 
     default:
-      result = 'null'
+      result = 'null';
   }
 
-  return result
-}
+  return result;
+};
 
 module.exports = {
   convert: convert,
@@ -82,4 +98,4 @@ module.exports = {
     'UPDATE',
     'VERSION_CONTROL'
   ]
-}
+};

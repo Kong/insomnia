@@ -1,6 +1,6 @@
 // @flow
-import type {Request} from '../../../../models/request';
-import type {OAuth2Token} from '../../../../models/o-auth-2-token';
+import type { Request } from '../../../../models/request';
+import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 
 import * as React from 'react';
 import classnames from 'classnames';
@@ -53,7 +53,7 @@ let showAdvanced = false;
 class OAuth2Auth extends React.PureComponent<Props, State> {
   _handleChangeProperty: Function;
 
-  constructor (props: any) {
+  constructor(props: any) {
     super(props);
 
     this.state = {
@@ -63,126 +63,145 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     };
   }
 
-  _handleToggleAdvanced (): void {
+  _handleToggleAdvanced(): void {
     // Remember this for the entirety of the session
     showAdvanced = !this.state.showAdvanced;
-    this.setState({showAdvanced});
+    this.setState({ showAdvanced });
   }
 
-  async _handleUpdateAccessToken (e: SyntheticEvent<HTMLInputElement>): Promise<void> {
-    const {oAuth2Token} = this.props;
+  async _handleUpdateAccessToken(
+    e: SyntheticEvent<HTMLInputElement>
+  ): Promise<void> {
+    const { oAuth2Token } = this.props;
     const accessToken = e.currentTarget.value;
 
     if (oAuth2Token) {
-      await models.oAuth2Token.update(oAuth2Token, {accessToken});
+      await models.oAuth2Token.update(oAuth2Token, { accessToken });
     } else {
-      await models.oAuth2Token.create({accessToken, parentId: this.props.request._id});
+      await models.oAuth2Token.create({
+        accessToken,
+        parentId: this.props.request._id
+      });
     }
   }
 
-  async _handleUpdateRefreshToken (e: SyntheticEvent<HTMLInputElement>): Promise<void> {
-    const {oAuth2Token} = this.props;
+  async _handleUpdateRefreshToken(
+    e: SyntheticEvent<HTMLInputElement>
+  ): Promise<void> {
+    const { oAuth2Token } = this.props;
     const refreshToken = e.currentTarget.value;
 
     if (oAuth2Token) {
-      await models.oAuth2Token.update(oAuth2Token, {refreshToken});
+      await models.oAuth2Token.update(oAuth2Token, { refreshToken });
     } else {
-      await models.oAuth2Token.create({refreshToken, parentId: this.props.request._id});
+      await models.oAuth2Token.create({
+        refreshToken,
+        parentId: this.props.request._id
+      });
     }
   }
 
-  async _handleClearTokens (): Promise<void> {
-    const oAuth2Token = await models.oAuth2Token.getByParentId(this.props.request._id);
+  async _handleClearTokens(): Promise<void> {
+    const oAuth2Token = await models.oAuth2Token.getByParentId(
+      this.props.request._id
+    );
     if (oAuth2Token) {
       await models.oAuth2Token.remove(oAuth2Token);
     }
   }
 
-  async _handleRefreshToken (): Promise<void> {
+  async _handleRefreshToken(): Promise<void> {
     // First, clear the state and the current tokens
-    this.setState({error: '', loading: true});
+    this.setState({ error: '', loading: true });
 
-    const {request} = this.props;
+    const { request } = this.props;
 
     try {
-      const authentication = await this.props.handleRender(request.authentication);
+      const authentication = await this.props.handleRender(
+        request.authentication
+      );
       await getAccessToken(request._id, authentication, true);
-      this.setState({loading: false});
+      this.setState({ loading: false });
     } catch (err) {
       await this._handleClearTokens(); // Clear existing tokens if there's an error
-      this.setState({error: err.message, loading: false});
+      this.setState({ error: err.message, loading: false });
     }
   }
 
-  _handleChangeProperty (property: string, value: string | boolean): void {
-    const {request} = this.props;
-    const authentication = Object.assign({}, request.authentication, {[property]: value});
+  _handleChangeProperty(property: string, value: string | boolean): void {
+    const { request } = this.props;
+    const authentication = Object.assign({}, request.authentication, {
+      [property]: value
+    });
     this.props.onChange(authentication);
   }
 
-  _handlerChangeResponseType (e: SyntheticEvent<HTMLInputElement>): void {
+  _handlerChangeResponseType(e: SyntheticEvent<HTMLInputElement>): void {
     this._handleChangeProperty('responseType', e.currentTarget.value);
   }
 
-  _handleChangeClientId (value: string): void {
+  _handleChangeClientId(value: string): void {
     this._handleChangeProperty('clientId', value);
   }
 
-  _handleChangeCredentialsInBody (e: SyntheticEvent<HTMLInputElement>): void {
-    this._handleChangeProperty('credentialsInBody', e.currentTarget.value === 'true');
+  _handleChangeCredentialsInBody(e: SyntheticEvent<HTMLInputElement>): void {
+    this._handleChangeProperty(
+      'credentialsInBody',
+      e.currentTarget.value === 'true'
+    );
   }
 
-  _handleChangeEnabled (value: boolean): void {
+  _handleChangeEnabled(value: boolean): void {
     this._handleChangeProperty('disabled', value);
   }
 
-  _handleChangeClientSecret (value: string): void {
+  _handleChangeClientSecret(value: string): void {
     this._handleChangeProperty('clientSecret', value);
   }
 
-  _handleChangeAuthorizationUrl (value: string): void {
+  _handleChangeAuthorizationUrl(value: string): void {
     this._handleChangeProperty('authorizationUrl', value);
   }
 
-  _handleChangeAccessTokenUrl (value: string): void {
+  _handleChangeAccessTokenUrl(value: string): void {
     this._handleChangeProperty('accessTokenUrl', value);
   }
 
-  _handleChangeRedirectUrl (value: string): void {
+  _handleChangeRedirectUrl(value: string): void {
     this._handleChangeProperty('redirectUrl', value);
   }
 
-  _handleChangeScope (value: string): void {
+  _handleChangeScope(value: string): void {
     this._handleChangeProperty('scope', value);
   }
 
-  _handleChangeState (value: string): void {
+  _handleChangeState(value: string): void {
     this._handleChangeProperty('state', value);
   }
 
-  _handleChangeUsername (value: string): void {
+  _handleChangeUsername(value: string): void {
     this._handleChangeProperty('username', value);
   }
 
-  _handleChangePassword (value: string): void {
+  _handleChangePassword(value: string): void {
     this._handleChangeProperty('password', value);
   }
 
-  _handleChangeTokenPrefix (value: string): void {
+  _handleChangeTokenPrefix(value: string): void {
     this._handleChangeProperty('tokenPrefix', value);
   }
 
-  _handleChangeAudience (value: string): void {
+  _handleChangeAudience(value: string): void {
     this._handleChangeProperty('audience', value);
   }
 
-  _handleChangeGrantType (e: SyntheticEvent<HTMLInputElement>): void {
+  _handleChangeGrantType(e: SyntheticEvent<HTMLInputElement>): void {
     this._handleChangeProperty('grantType', e.currentTarget.value);
   }
 
-  renderEnabledRow (onChange: (boolean) => void): React.Element<*> {
-    const {request} = this.props;
-    const {authentication} = request;
+  renderEnabledRow(onChange: boolean => void): React.Element<*> {
+    const { request } = this.props;
+    const { authentication } = request;
     return (
       <tr key="enabled">
         <td className="pad-right no-wrap valign-middle">
@@ -192,15 +211,17 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         </td>
         <td className="wide">
           <div className="form-control form-control--underlined no-margin">
-            <Button className="btn btn--super-duper-compact"
-                    id="enabled"
-                    onClick={onChange}
-                    value={!authentication.disabled}
-                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
-              {authentication.disabled
-                ? <i className="fa fa-square-o"/>
-                : <i className="fa fa-check-square-o"/>
-              }
+            <Button
+              className="btn btn--super-duper-compact"
+              id="enabled"
+              onClick={onChange}
+              value={!authentication.disabled}
+              title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+              {authentication.disabled ? (
+                <i className="fa fa-square-o" />
+              ) : (
+                <i className="fa fa-check-square-o" />
+              )}
             </Button>
           </div>
         </td>
@@ -208,17 +229,25 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     );
   }
 
-  renderInputRow (
+  renderInputRow(
     label: string,
     property: string,
     onChange: Function,
     help: string | null = null,
     handleAutocomplete: Function | null = null
   ): React.Element<*> {
-    const {handleRender, handleGetRenderContext, request, nunjucksPowerUserMode} = this.props;
-    const {authentication} = request;
+    const {
+      handleRender,
+      handleGetRenderContext,
+      request,
+      nunjucksPowerUserMode
+    } = this.props;
+    const { authentication } = request;
     const id = label.replace(/ /g, '-');
-    const type = !this.props.showPasswords && property === 'password' ? 'password' : 'text';
+    const type =
+      !this.props.showPasswords && property === 'password'
+        ? 'password'
+        : 'text';
     return (
       <tr key={id}>
         <td className="pad-right no-wrap valign-middle">
@@ -228,9 +257,13 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
           </label>
         </td>
         <td className="wide">
-          <div className={classnames('form-control form-control--underlined no-margin', {
-            'form-control--inactive': authentication.disabled
-          })}>
+          <div
+            className={classnames(
+              'form-control form-control--underlined no-margin',
+              {
+                'form-control--inactive': authentication.disabled
+              }
+            )}>
             <OneLineEditor
               id={id}
               type={type}
@@ -247,15 +280,15 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     );
   }
 
-  renderSelectRow (
+  renderSelectRow(
     label: string,
     property: string,
-    options: Array<{name: string, value: string}>,
+    options: Array<{ name: string, value: string }>,
     onChange: Function,
     help: string | null = null
   ): React.Element<*> {
-    const {request} = this.props;
-    const {authentication} = request;
+    const { request } = this.props;
+    const { authentication } = request;
     const id = label.replace(/ /g, '-');
     const value = request.authentication.hasOwnProperty(property)
       ? request.authentication[property]
@@ -270,12 +303,18 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
           </label>
         </td>
         <td className="wide">
-            <div className={classnames('form-control form-control--outlined no-margin', {
-              'form-control--inactive': authentication.disabled
-            })}>
+          <div
+            className={classnames(
+              'form-control form-control--outlined no-margin',
+              {
+                'form-control--inactive': authentication.disabled
+              }
+            )}>
             <select id={id} onChange={onChange} value={value}>
-              {options.map(({name, value}) => (
-                <option key={value} value={value}>{name}</option>
+              {options.map(({ name, value }) => (
+                <option key={value} value={value}>
+                  {name}
+                </option>
               ))}
             </select>
           </div>
@@ -284,7 +323,9 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     );
   }
 
-  renderGrantTypeFields (grantType: string): {basic: Array<React.Element<*>>, advanced: Array<React.Element<*>>} {
+  renderGrantTypeFields(
+    grantType: string
+  ): { basic: Array<React.Element<*>>, advanced: Array<React.Element<*>> } {
     let basicFields = [];
     let advancedFields = [];
 
@@ -321,8 +362,8 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       'redirectUrl',
       this._handleChangeRedirectUrl,
       'This can be whatever you want or need it to be. Insomnia will automatically ' +
-      'detect a redirect in the client browser window and extract the code from the ' +
-      'redirected URL'
+        'detect a redirect in the client browser window and extract the code from the ' +
+        'redirected URL'
     );
 
     const state = this.renderInputRow(
@@ -360,9 +401,9 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       'Response Type',
       'responseType',
       [
-        {name: 'Access Token', value: RESPONSE_TYPE_TOKEN},
-        {name: 'ID Token', value: RESPONSE_TYPE_ID_TOKEN},
-        {name: 'ID and Access Token', value: RESPONSE_TYPE_ID_TOKEN_TOKEN}
+        { name: 'Access Token', value: RESPONSE_TYPE_TOKEN },
+        { name: 'ID Token', value: RESPONSE_TYPE_ID_TOKEN },
+        { name: 'ID and Access Token', value: RESPONSE_TYPE_ID_TOKEN_TOKEN }
       ],
       this._handlerChangeResponseType,
       'Indicates the type of credentials returned in the response'
@@ -379,8 +420,8 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       'Credentials',
       'credentialsInBody',
       [
-        {name: 'As Basic Auth Header (default)', value: 'false'},
-        {name: 'In Request Body', value: 'true'}
+        { name: 'As Basic Auth Header (default)', value: 'false' },
+        { name: 'In Request Body', value: 'true' }
       ],
       this._handleChangeCredentialsInBody,
       'Whether or not to send credentials as Basic Auth, or as plain text in the request body'
@@ -398,26 +439,11 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         enabled
       ];
 
-      advancedFields = [
-        scope,
-        state,
-        credentialsInBody,
-        tokenPrefix
-      ];
+      advancedFields = [scope, state, credentialsInBody, tokenPrefix];
     } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
-      basicFields = [
-        accessTokenUrl,
-        clientId,
-        clientSecret,
-        enabled
-      ];
+      basicFields = [accessTokenUrl, clientId, clientSecret, enabled];
 
-      advancedFields = [
-        scope,
-        credentialsInBody,
-        tokenPrefix,
-        audience
-      ];
+      advancedFields = [scope, credentialsInBody, tokenPrefix, audience];
     } else if (grantType === GRANT_TYPE_PASSWORD) {
       basicFields = [
         username,
@@ -428,31 +454,19 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         enabled
       ];
 
-      advancedFields = [
-        scope,
-        credentialsInBody,
-        tokenPrefix
-      ];
+      advancedFields = [scope, credentialsInBody, tokenPrefix];
     } else if (grantType === GRANT_TYPE_IMPLICIT) {
-      basicFields = [
-        authorizationUrl,
-        clientId,
-        redirectUri,
-        enabled
-      ];
+      basicFields = [authorizationUrl, clientId, redirectUri, enabled];
 
-      advancedFields = [
-        responseType,
-        scope,
-        state,
-        tokenPrefix
-      ];
+      advancedFields = [responseType, scope, state, tokenPrefix];
     }
 
-    return {basic: basicFields, advanced: advancedFields};
+    return { basic: basicFields, advanced: advancedFields };
   }
 
-  static renderExpireAt (token: OAuth2Token | null): React.Element<*> | string | null {
+  static renderExpireAt(
+    token: OAuth2Token | null
+  ): React.Element<*> | string | null {
     if (!token || !token.accessToken) {
       return null;
     }
@@ -462,13 +476,15 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     }
 
     return (
-      <span>&#x28;expires <TimeFromNow timestamp={token.expiresAt}/>&#x29;</span>
+      <span>
+        &#x28;expires <TimeFromNow timestamp={token.expiresAt} />&#x29;
+      </span>
     );
   }
 
-  render () {
-    const {request, oAuth2Token: tok} = this.props;
-    const {loading, error, showAdvanced} = this.state;
+  render() {
+    const { request, oAuth2Token: tok } = this.props;
+    const { loading, error, showAdvanced } = this.state;
 
     const expireLabel = OAuth2Auth.renderExpireAt(tok);
     const fields = this.renderGrantTypeFields(request.authentication.grantType);
@@ -477,49 +493,61 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       <div className="pad">
         <table>
           <tbody>
-          {this.renderSelectRow('Grant Type', 'grantType', [
-            {name: 'Authorization Code', value: GRANT_TYPE_AUTHORIZATION_CODE},
-            {name: 'Implicit', value: GRANT_TYPE_IMPLICIT},
-            {name: 'Resource Owner Password Credentials', value: GRANT_TYPE_PASSWORD},
-            {name: 'Client Credentials', value: GRANT_TYPE_CLIENT_CREDENTIALS}
-          ], this._handleChangeGrantType)}
-          {fields.basic}
-          <tr>
-            <td className="pad-top">
-              <button onClick={this._handleToggleAdvanced} className="faint">
-                <i style={{minWidth: '0.8rem'}}
-                   className={classnames(
-                     'fa fa--skinny',
-                     `fa-caret-${showAdvanced ? 'down' : 'right'}`
-                   )}
-                />
-                Advanced Options
-              </button>
-            </td>
-          </tr>
-          {showAdvanced && fields.advanced}
+            {this.renderSelectRow(
+              'Grant Type',
+              'grantType',
+              [
+                {
+                  name: 'Authorization Code',
+                  value: GRANT_TYPE_AUTHORIZATION_CODE
+                },
+                { name: 'Implicit', value: GRANT_TYPE_IMPLICIT },
+                {
+                  name: 'Resource Owner Password Credentials',
+                  value: GRANT_TYPE_PASSWORD
+                },
+                {
+                  name: 'Client Credentials',
+                  value: GRANT_TYPE_CLIENT_CREDENTIALS
+                }
+              ],
+              this._handleChangeGrantType
+            )}
+            {fields.basic}
+            <tr>
+              <td className="pad-top">
+                <button onClick={this._handleToggleAdvanced} className="faint">
+                  <i
+                    style={{ minWidth: '0.8rem' }}
+                    className={classnames(
+                      'fa fa--skinny',
+                      `fa-caret-${showAdvanced ? 'down' : 'right'}`
+                    )}
+                  />
+                  Advanced Options
+                </button>
+              </td>
+            </tr>
+            {showAdvanced && fields.advanced}
           </tbody>
         </table>
         <div className="notice subtle margin-top text-left">
           {/* Handle major errors */}
           {error && (
-            <p className="selectable notice warning margin-bottom">
-              {error}
-            </p>
+            <p className="selectable notice warning margin-bottom">{error}</p>
           )}
 
           {/* Handle minor errors */}
           {tok && tok.error ? (
             <div className="notice error margin-bottom">
-              <h2 className="no-margin-top txt-lg force-wrap">
-                {tok.error}
-              </h2>
+              <h2 className="no-margin-top txt-lg force-wrap">{tok.error}</h2>
               <p>
                 {tok.errorDescription || 'no description provided'}
                 {tok.errorUri && (
-                  <span>&nbsp;
+                  <span>
+                    &nbsp;
                     <Link href={tok.errorUri} title={tok.errorUri}>
-                      <i className="fa fa-question-circle"/>
+                      <i className="fa fa-question-circle" />
                     </Link>
                   </span>
                 )}
@@ -528,38 +556,44 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
           ) : null}
           <div className="form-control form-control--outlined">
             <label>
-              <small>
-                Refresh Token
-              </small>
-              <input value={(tok && tok.refreshToken) || ''}
-                     placeholder="n/a"
-                     onChange={this._handleUpdateRefreshToken}/>
+              <small>Refresh Token</small>
+              <input
+                value={(tok && tok.refreshToken) || ''}
+                placeholder="n/a"
+                onChange={this._handleUpdateRefreshToken}
+              />
             </label>
           </div>
           <div className="form-control form-control--outlined">
             <label>
-              <small>
-                Access Token {tok ? <em>{expireLabel}</em> : null}
-              </small>
-              <input value={(tok && tok.accessToken) || ''}
-                     placeholder="n/a"
-                     onChange={this._handleUpdateAccessToken}/>
+              <small>Access Token {tok ? <em>{expireLabel}</em> : null}</small>
+              <input
+                value={(tok && tok.accessToken) || ''}
+                placeholder="n/a"
+                onChange={this._handleUpdateAccessToken}
+              />
             </label>
           </div>
           <div className="pad-top text-right">
             {tok ? (
-              <PromptButton className="btn btn--clicky" onClick={this._handleClearTokens}>
+              <PromptButton
+                className="btn btn--clicky"
+                onClick={this._handleClearTokens}>
                 Clear
               </PromptButton>
             ) : null}
             &nbsp;&nbsp;
-            <button className="btn btn--clicky"
-                    onClick={this._handleRefreshToken}
-                    disabled={loading}>
+            <button
+              className="btn btn--clicky"
+              onClick={this._handleRefreshToken}
+              disabled={loading}>
               {loading
-                ? (tok ? 'Refreshing...' : 'Fetching...')
-                : (tok ? 'Refresh Token' : 'Fetch Tokens')
-              }
+                ? tok
+                  ? 'Refreshing...'
+                  : 'Fetching...'
+                : tok
+                  ? 'Refresh Token'
+                  : 'Fetch Tokens'}
             </button>
           </div>
         </div>

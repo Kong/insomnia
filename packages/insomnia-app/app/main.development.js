@@ -6,16 +6,21 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import * as database from './common/database';
-import {CHANGELOG_BASE_URL, getAppVersion, isDevelopment, isMac} from './common/constants';
-import type {ToastNotification} from './ui/components/toast';
-import type {Stats} from './models/stats';
+import {
+  CHANGELOG_BASE_URL,
+  getAppVersion,
+  isDevelopment,
+  isMac
+} from './common/constants';
+import type { ToastNotification } from './ui/components/toast';
+import type { Stats } from './models/stats';
 
 // Handle potential auto-update
 if (needsRestart) {
   process.exit(0);
 }
 
-const {app, ipcMain, session} = electron;
+const { app, ipcMain, session } = electron;
 const commandLineArgs = process.argv.slice(1);
 
 // So if (window) checks don't throw
@@ -39,7 +44,7 @@ app.on('ready', async () => {
 // Set as default protocol
 app.setAsDefaultProtocolClient(`insomnia${isDevelopment() ? 'dev' : ''}`);
 
-function _addUrlToOpen (e, url) {
+function _addUrlToOpen(e, url) {
   e.preventDefault();
   commandLineArgs.push(url);
 }
@@ -70,7 +75,7 @@ app.on('activate', (e, hasVisibleWindows) => {
   }
 });
 
-function _launchApp () {
+function _launchApp() {
   app.removeListener('open-url', _addUrlToOpen);
   const window = windowUtils.createWindow();
 
@@ -97,11 +102,11 @@ function _launchApp () {
   // Don't send origin header from Insomnia app because we're not technically using CORS
   session.defaultSession.webRequest.onBeforeSendHeaders((details, fn) => {
     delete details.requestHeaders['Origin'];
-    fn({cancel: false, requestHeaders: details.requestHeaders});
+    fn({ cancel: false, requestHeaders: details.requestHeaders });
   });
 }
 
-async function _trackStats () {
+async function _trackStats() {
   // Handle the stats
   const oldStats = await models.stats.get();
   const stats: Stats = await models.stats.update({
@@ -114,19 +119,20 @@ async function _trackStats () {
 
   // Update Stats Object
   const firstLaunch = stats.launches === 1;
-  const justUpdated = !firstLaunch && stats.currentVersion !== stats.lastVersion;
+  const justUpdated =
+    !firstLaunch && stats.currentVersion !== stats.lastVersion;
 
   ipcMain.once('window-ready', () => {
-    const {currentVersion} = stats;
+    const { currentVersion } = stats;
     if (!justUpdated || !currentVersion) {
       return;
     }
 
-    const {BrowserWindow} = electron;
+    const { BrowserWindow } = electron;
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
       url: `${CHANGELOG_BASE_URL}/${currentVersion}/`,
-      cta: 'See What\'s New',
+      cta: "See What's New",
       message: `Updated to ${currentVersion}`,
       email: 'support@insomnia.rest'
     };

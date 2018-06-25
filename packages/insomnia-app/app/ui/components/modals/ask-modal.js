@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -7,7 +7,7 @@ import ModalFooter from '../base/modal-footer';
 
 @autobind
 class AskModal extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
 
     this.state = {
@@ -16,40 +16,36 @@ class AskModal extends PureComponent {
     };
   }
 
-  _setModalRef (m) {
+  _setModalRef(m) {
     this.modal = m;
   }
 
-  _setYesButtonRef (n) {
+  _setYesButtonRef(n) {
     this.yesButton = n;
   }
 
-  _handleYes () {
+  _handleYes() {
     this.hide();
     this._doneCallback && this._doneCallback(true);
     this._promiseCallback(true);
   }
 
-  _handleNo () {
+  _handleNo() {
     this.hide();
     this._doneCallback && this._doneCallback(false);
     this._promiseCallback(false);
   }
 
-  hide () {
+  hide() {
     this.modal.hide();
   }
 
-  show (options = {}) {
-    const {
-      title,
-      message,
-      onDone
-    } = options;
+  show(options = {}) {
+    const { title, message, onDone } = options;
 
     this._doneCallback = onDone;
 
-    this.setState({title, message});
+    this.setState({ title, message });
 
     this.modal.show();
 
@@ -62,21 +58,22 @@ class AskModal extends PureComponent {
     });
   }
 
-  render () {
-    const {message, title} = this.state;
+  render() {
+    const { message, title } = this.state;
 
     return (
       <Modal noEscape ref={this._setModalRef} closeOnKeyCodes={[13]}>
         <ModalHeader>{title || 'Confirm?'}</ModalHeader>
-        <ModalBody className="wide pad">
-          {message}
-        </ModalBody>
+        <ModalBody className="wide pad">{message}</ModalBody>
         <ModalFooter>
           <div>
             <button className="btn" onClick={this._handleNo}>
               No
             </button>
-            <button ref={this._setYesButtonRef} className="btn" onClick={this._handleYes}>
+            <button
+              ref={this._setYesButtonRef}
+              className="btn"
+              onClick={this._handleYes}>
               Yes
             </button>
           </div>

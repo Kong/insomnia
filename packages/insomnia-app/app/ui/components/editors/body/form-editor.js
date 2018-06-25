@@ -1,11 +1,11 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../../key-value-editor/editor';
 
 @autobind
 class FormEditor extends PureComponent {
-  render () {
+  render() {
     const {
       parameters,
       onChange,

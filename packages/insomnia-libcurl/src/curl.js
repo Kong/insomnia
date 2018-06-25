@@ -1,14 +1,14 @@
 const nodeLibcurl = require('insomnia-node-libcurl');
 
 class Curl {
-  constructor () {
+  constructor() {
     this._handle = null;
     this._options = [];
     this._features = [];
     this._handle = new nodeLibcurl.Curl();
   }
 
-  setOpt (option, value) {
+  setOpt(option, value) {
     if (!Object.keys(Curl.option).find(k => Curl.option[k])) {
       throw new Error(`Cannot setOpt for unknown option ${option}`);
     }
@@ -20,26 +20,30 @@ class Curl {
     if (disabledOpts[option]) {
       const name = Curl.optName(option);
       const newName = disabledOpts[option].name;
-      throw new Error(`setOpt(${name}) is deprecated. Please use ${newName}() instead`);
+      throw new Error(
+        `setOpt(${name}) is deprecated. Please use ${newName}() instead`
+      );
     }
 
     this._handle.setOpt(option, value);
   }
 
-  setUrl (url) {
+  setUrl(url) {
     this._handle.setOpt(Curl.option.URL, url);
   }
 
-  static getVersion () {
+  static getVersion() {
     return nodeLibcurl.Curl.getVersion();
   }
 
-  static optName (opt) {
-    const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
+  static optName(opt) {
+    const name = Object.keys(Curl.option).find(
+      name => Curl.option[name] === opt
+    );
     return name || opt;
   }
 
-  getInfo (property) {
+  getInfo(property) {
     if (!Object.keys(Curl.info).find(k => Curl.info[k])) {
       throw new Error(`Cannot getInfo for unknown option ${property}`);
     }
@@ -47,7 +51,7 @@ class Curl {
     return this._handle.getInfo(property);
   }
 
-  enable (feature) {
+  enable(feature) {
     if (!Object.keys(Curl.feature).find(k => Curl.feature[k])) {
       throw new Error(`Cannot enable unknown feature ${feature}`);
     }
@@ -55,11 +59,11 @@ class Curl {
     this._handle.enable(feature);
   }
 
-  perform () {
+  perform() {
     this._handle.perform();
   }
 
-  close () {
+  close() {
     if (this._handle) {
       try {
         this._handle.close();
@@ -69,12 +73,12 @@ class Curl {
     }
   }
 
-  cancel () {
+  cancel() {
     // TODO
     this.close();
   }
 
-  on (name, fn) {
+  on(name, fn) {
     this._handle.on(name, fn);
   }
 }

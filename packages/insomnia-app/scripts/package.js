@@ -22,7 +22,7 @@ if (require.main === module) {
   });
 }
 
-module.exports.start = async function () {
+module.exports.start = async function() {
   console.log('[package] Removing existing directories');
   await emptyDir('../dist/*');
 
@@ -32,7 +32,7 @@ module.exports.start = async function () {
   console.log('[package] Complete!');
 };
 
-async function pkg (relConfigPath) {
+async function pkg(relConfigPath) {
   try {
     const configPath = path.resolve(__dirname, relConfigPath);
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -50,7 +50,7 @@ async function pkg (relConfigPath) {
   }
 }
 
-async function emptyDir (relPath) {
+async function emptyDir(relPath) {
   return new Promise((resolve, reject) => {
     const dir = path.resolve(__dirname, relPath);
     rimraf(dir, err => {

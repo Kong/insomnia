@@ -1,7 +1,7 @@
 // @flow
-import type {BaseModel} from './index';
+import type { BaseModel } from './index';
 import * as models from './index';
-import {Readable} from 'stream';
+import { Readable } from 'stream';
 
 import fs from 'fs';
 import crypto from 'crypto';
@@ -9,7 +9,7 @@ import path from 'path';
 import zlib from 'zlib';
 import mkdirp from 'mkdirp';
 import * as electron from 'electron';
-import {MAX_RESPONSES} from '../common/constants';
+import { MAX_RESPONSES } from '../common/constants';
 import * as db from '../common/database';
 
 export const name = 'Response';
@@ -20,12 +20,12 @@ export const canDuplicate = false;
 export type ResponseHeader = {
   name: string,
   value: string
-}
+};
 
 export type ResponseTimelineEntry = {
   name: string,
   value: string
-}
+};
 
 type BaseResponse = {
   statusCode: number,
@@ -50,7 +50,7 @@ type BaseResponse = {
 
 export type Response = BaseModel & BaseResponse;
 
-export function init (): BaseResponse {
+export function init(): BaseResponse {
   return {
     statusCode: 0,
     statusMessage: '',
@@ -73,13 +73,13 @@ export function init (): BaseResponse {
   };
 }
 
-export async function migrate (doc: Object) {
+export async function migrate(doc: Object) {
   doc = await migrateBodyToFileSystem(doc);
   doc = await migrateBodyCompression(doc);
   return doc;
 }
 
-export function hookRemove (doc: Response) {
+export function hookRemove(doc: Response) {
   if (!doc.bodyPath) {
     return;
   }
@@ -87,73 +87,96 @@ export function hookRemove (doc: Response) {
   fs.unlinkSync(doc.bodyPath);
 }
 
-export function getById (id: string) {
+export function getById(id: string) {
   return db.get(type, id);
 }
 
-export function all () {
+export function all() {
   return db.all(type);
 }
 
-export async function removeForRequest (parentId: string) {
-  await db.removeWhere(type, {parentId});
+export async function removeForRequest(parentId: string) {
+  await db.removeWhere(type, { parentId });
 }
 
-export function remove (response: Response) {
+export function remove(response: Response) {
   return db.remove(response);
 }
 
-export async function findRecentForRequest (
+export async function findRecentForRequest(
   requestId: string,
   limit: number
 ): Promise<Array<Response>> {
-  const responses = await db.findMostRecentlyModified(type, {parentId: requestId}, limit);
+  const responses = await db.findMostRecentlyModified(
+    type,
+    { parentId: requestId },
+    limit
+  );
   return responses;
 }
 
-export async function getLatestForRequest (requestId: string): Promise<Response | null> {
+export async function getLatestForRequest(
+  requestId: string
+): Promise<Response | null> {
   const responses = await findRecentForRequest(requestId, 1);
   const response = (responses[0]: ?Response);
   return response || null;
 }
 
-export async function create (patch: Object = {}) {
+export async function create(patch: Object = {}) {
   if (!patch.parentId) {
     throw new Error('New Response missing `parentId`');
   }
 
-  const {parentId} = patch;
+  const { parentId } = patch;
 
   // Create request version snapshot
   const request = await models.request.getById(parentId);
-  const requestVersion = request ? await models.requestVersion.create(request) : null;
+  const requestVersion = request
+    ? await models.requestVersion.create(request)
+    : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
 
   // Delete all other responses before creating the new one
-  const allResponses = await db.findMostRecentlyModified(type, {parentId}, MAX_RESPONSES);
+  const allResponses = await db.findMostRecentlyModified(
+    type,
+    { parentId },
+    MAX_RESPONSES
+  );
   const recentIds = allResponses.map(r => r._id);
-  await db.removeWhere(type, {parentId, _id: {$nin: recentIds}});
+  await db.removeWhere(type, { parentId, _id: { $nin: recentIds } });
 
   // Actually create the new response
   return db.docCreate(type, patch);
 }
 
-export function getLatestByParentId (parentId: string) {
-  return db.getMostRecentlyModified(type, {parentId});
+export function getLatestByParentId(parentId: string) {
+  return db.getMostRecentlyModified(type, { parentId });
 }
 
-export function getBodyStream<T> (
+export function getBodyStream<T>(
   response: Object,
   readFailureValue: ?T
 ): Readable | null | T {
-  return getBodyStreamFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
+  return getBodyStreamFromPath(
+    response.bodyPath || '',
+    response.bodyCompression,
+    readFailureValue
+  );
 }
 
-export function getBodyBuffer<T> (response: Object, readFailureValue: ?T): Buffer | T | null {
-  return getBodyBufferFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
+export function getBodyBuffer<T>(
+  response: Object,
+  readFailureValue: ?T
+): Buffer | T | null {
+  return getBodyBufferFromPath(
+    response.bodyPath || '',
+    response.bodyCompression,
+    readFailureValue
+  );
 }
 
-function getBodyStreamFromPath<T> (
+function getBodyStreamFromPath<T>(
   bodyPath: string,
   compression: string | null,
   readFailureValue: ?T
@@ -178,7 +201,7 @@ function getBodyStreamFromPath<T> (
   }
 }
 
-function getBodyBufferFromPath<T> (
+function getBodyBufferFromPath<T>(
   bodyPath: string,
   compression: string | null,
   readFailureValue: ?T
@@ -201,16 +224,19 @@ function getBodyBufferFromPath<T> (
   }
 }
 
-async function migrateBodyToFileSystem (doc: Object) {
+async function migrateBodyToFileSystem(doc: Object) {
   if (doc.hasOwnProperty('body') && doc._id && !doc.bodyPath) {
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
-    const {app} = electron.remote || electron;
+    const { app } = electron.remote || electron;
     const root = app.getPath('userData');
     const dir = path.join(root, 'responses');
 
     mkdirp.sync(dir);
 
-    const hash = crypto.createHash('md5').update(bodyBuffer || '').digest('hex');
+    const hash = crypto
+      .createHash('md5')
+      .update(bodyBuffer || '')
+      .digest('hex');
     const bodyPath = path.join(dir, `${hash}.zip`);
 
     try {
@@ -220,13 +246,13 @@ async function migrateBodyToFileSystem (doc: Object) {
       console.warn('Failed to write response body to file', err.message);
     }
 
-    return db.docUpdate(doc, {bodyPath, bodyCompression: null});
+    return db.docUpdate(doc, { bodyPath, bodyCompression: null });
   } else {
     return doc;
   }
 }
 
-function migrateBodyCompression (doc: Object) {
+function migrateBodyCompression(doc: Object) {
   if (doc.bodyCompression === '__NEEDS_MIGRATION__') {
     doc.bodyCompression = 'zip';
   }
