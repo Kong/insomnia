@@ -282,13 +282,12 @@ class App extends PureComponent {
   async _fetchRenderContext() {
     const { activeEnvironment, activeRequest, activeWorkspace } = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
-    const ancestors = activeRequest
-      ? await db.withAncestors(activeRequest, [
-          models.request.type,
-          models.requestGroup.type,
-          models.workspace.type
-        ])
-      : await [activeWorkspace];
+
+    const ancestors = await db.withAncestors(activeRequest || activeWorkspace, [
+      models.request.type,
+      models.requestGroup.type,
+      models.workspace.type
+    ]);
 
     return render.getRenderContext(activeRequest, environmentId, ancestors);
   }

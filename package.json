@@ -19,7 +19,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run format-code"
+      "pre-commit": "pretty-quick --staged"
     }
   },
   "devDependencies": {
@@ -27,7 +27,7 @@
     "jest": "^22.1.1",
     "lerna": "^2.7.1",
     "prettier": "^1.13.6",
+    "pretty-quick": "^1.6.0",
     "webpack": "^4.8.3"
-  },
-  "dependencies": {}
+  }
 }
