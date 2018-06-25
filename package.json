@@ -17,7 +17,13 @@
     "app-package": "lerna run package --stream --scope=insomnia-app",
     "format-code": "prettier --write \"**/*.js\""
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run format-code"
+    }
+  },
   "devDependencies": {
+    "husky": "^1.0.0-rc.9",
     "jest": "^22.1.1",
     "lerna": "^2.7.1",
     "prettier": "^1.13.6",

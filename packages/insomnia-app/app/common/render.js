@@ -189,10 +189,6 @@ export async function getRenderContext(
   ancestors: Array<BaseModel> | null = null,
   purpose: string | null = null
 ): Promise<Object> {
-  if (!request) {
-    return {};
-  }
-
   if (!ancestors) {
     ancestors = await db.withAncestors(request, [
       models.request.type,
@@ -214,7 +210,7 @@ export async function getRenderContext(
   // Add meta data helper function
   const baseContext = {};
   baseContext.getMeta = () => ({
-    requestId: request._id,
+    requestId: request ? request._id : null,
     workspaceId: workspace ? workspace._id : 'n/a'
   });
 
