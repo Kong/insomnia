@@ -206,12 +206,19 @@ function hint (cm, options) {
   const lowPriorityMatches = [];
   const highPriorityMatches = [];
 
+  let mode;
+  try {
+    mode = cm.getOption('mode').baseMode;
+  } catch (e) {
+    mode = 'unknown';
+  }
+
   // Match variables
   if (allowMatchingVariables) {
     matchSegments(variablesToMatch, nameSegment, TYPE_VARIABLE, MAX_VARIABLES)
-      .map(m => lowPriorityMatches.push(m));
+      .forEach(m => lowPriorityMatches.push(m));
     matchSegments(variablesToMatch, nameSegmentLong, TYPE_VARIABLE, MAX_VARIABLES)
-      .map(m => highPriorityMatches.push(m));
+      .forEach(m => highPriorityMatches.push(m));
   }
 
   // Match constants
@@ -219,23 +226,36 @@ function hint (cm, options) {
     const cur = cm.getCursor();
     const token = cm.getTokenAt(cur);
 
-    if (token.type === 'variable') {
-      // For GraphQL to autocomplete constants (variables) in JSON keys
-      matchSegments(constantsToMatch, nameSegment, TYPE_CONSTANT, MAX_CONSTANTS)
-        .map(m => highPriorityMatches.push(m));
+    if (mode === 'graphql-variables') {
+      const segment = token.string.trim()
+        .replace(/^{?"?/, '') // Remove leading '{' and spaces
+        .replace(/"?}?$/, ''); // Remove trailing quotes and spaces
+
+      if (token.type === 'variable') {
+        // We're inside a JSON key
+        matchSegments(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS)
+          .forEach(m => highPriorityMatches.push(m));
+      } else if (token.type === 'invalidchar'
+        || token.type === 'ws'
+        || (token.type === 'punctuation' && token.string === '{')
+      ) {
+        // We're outside of a JSON key
+        matchSegments(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS)
+          .forEach(m => highPriorityMatches.push({...m, text: '"' + m.text + '": '}));
+      }
     } else {
       // Otherwise match full segments
       matchSegments(constantsToMatch, nameSegmentFull, TYPE_CONSTANT, MAX_CONSTANTS)
-        .map(m => highPriorityMatches.push(m));
+        .forEach(m => highPriorityMatches.push(m));
     }
   }
 
   // Match tags
   if (allowMatchingTags) {
     matchSegments(tagsToMatch, nameSegment, TYPE_TAG, MAX_TAGS)
-      .map(m => lowPriorityMatches.push(m));
+      .forEach(m => lowPriorityMatches.push(m));
     matchSegments(tagsToMatch, nameSegmentLong, TYPE_TAG, MAX_TAGS)
-      .map(m => highPriorityMatches.push(m));
+      .forEach(m => highPriorityMatches.push(m));
   }
 
   const matches = [...highPriorityMatches, ...lowPriorityMatches];

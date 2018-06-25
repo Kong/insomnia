@@ -1,5 +1,6 @@
 logs
 *.log
+**/*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -12,6 +13,7 @@ coverage
 .lock-wscript
 build/Release
 node_modules/
+**/node_modules/
 .npm
 .eslintcache
 .node_repl_history
@@ -21,3 +23,4 @@ node_modules/
 .idea
 .DS_Store
 *test-plugins
+.vscode
