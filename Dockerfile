@@ -67,6 +67,7 @@ RUN wget -q https://github.com/curl/curl/releases/download/curl-7_59_0/curl-7.59
 ADD . /src/insomnia
 WORKDIR /src/insomnia
 VOLUME /src/insomnia/packages/insomnia-app/dist
+ENV NODELIBCURL_BUILD_STATIC=yes
 
 # Install root project dependencies
 RUN npm run bootstrap \
