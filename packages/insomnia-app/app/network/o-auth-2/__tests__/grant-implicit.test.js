@@ -6,6 +6,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 const AUTHORIZE_URL = 'https://foo.com/authorizeAuthCode';
 const CLIENT_ID = 'client_123';
 const REDIRECT_URI = 'https://foo.com/redirect';
+const AUDIENCE = 'https://foo.com/userinfo';
 const SCOPE = 'scope_123';
 const STATE = 'state_123';
 
@@ -21,7 +22,8 @@ describe('implicit', () => {
       CLIENT_ID,
       REDIRECT_URI,
       SCOPE,
-      STATE
+      STATE,
+      AUDIENCE
     );
 
     expect(result).toEqual({
