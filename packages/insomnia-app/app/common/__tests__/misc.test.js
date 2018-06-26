@@ -120,7 +120,7 @@ describe('fuzzyMatch()', () => {
     ).toBeGreaterThan(0);
 
     expect(
-      misc.fuzzyMatch('tstg', 'testing').searchTermsMatched
+      misc.fuzzyMatch('tst', 'testing').searchTermsMatched
     ).toBeGreaterThan(0);
   });
 
@@ -138,9 +138,9 @@ describe('fuzzyMatchAll()', () => {
     expect(misc.fuzzyMatchAll('', ['testing'])).toEqual(true);
     expect(misc.fuzzyMatchAll('   ', ['testing'])).toEqual(true);
     expect(misc.fuzzyMatchAll('test', ['testing'])).toEqual(true);
-    expect(misc.fuzzyMatchAll('tstg', ['testing'])).toEqual(true);
+    expect(misc.fuzzyMatchAll('tst', ['testing'])).toEqual(true);
     expect(
-      misc.fuzzyMatchAll('tstg  this ou', ['testing', 'this', 'out'])
+      misc.fuzzyMatchAll('tst  this ou', ['testing', 'this', 'out'])
     ).toEqual(true);
   });
 

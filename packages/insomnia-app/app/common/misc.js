@@ -264,7 +264,7 @@ export function fuzzyMatch(
   const results = searchTerms.reduce((prevResult, nextTerm) => {
     const nextResult = fuzzysort.single(nextTerm, text);
 
-    if (!nextResult || nextResult.score < -999) {
+    if (!nextResult || nextResult.score < -8000) {
       return prevResult;
     }
 
