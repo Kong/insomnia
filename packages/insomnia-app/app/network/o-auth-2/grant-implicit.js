@@ -13,7 +13,8 @@ export default async function(
   responseType: string = c.RESPONSE_TYPE_TOKEN,
   redirectUri: string = '',
   scope: string = '',
-  state: string = ''
+  state: string = '',
+  audience: string = ''
 ): Promise<Object> {
   const params = [
     { name: c.P_RESPONSE_TYPE, value: responseType },
@@ -32,6 +33,7 @@ export default async function(
   redirectUri && params.push({ name: c.P_REDIRECT_URI, value: redirectUri });
   scope && params.push({ name: c.P_SCOPE, value: scope });
   state && params.push({ name: c.P_STATE, value: state });
+  audience && params.push({ name: c.P_AUDIENCE, value: audience });
 
   // Add query params to URL
   const qs = buildQueryStringFromParams(params);

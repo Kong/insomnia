@@ -458,7 +458,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     } else if (grantType === GRANT_TYPE_IMPLICIT) {
       basicFields = [authorizationUrl, clientId, redirectUri, enabled];
 
-      advancedFields = [responseType, scope, state, tokenPrefix];
+      advancedFields = [responseType, scope, state, tokenPrefix, audience];
     }
 
     return { basic: basicFields, advanced: advancedFields };
