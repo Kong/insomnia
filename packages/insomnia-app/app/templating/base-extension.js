@@ -1,6 +1,7 @@
 import * as models from '../models/index';
 import * as templating from './index';
 import * as pluginContexts from '../plugins/context';
+import * as db from '../common/database';
 
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 
@@ -81,8 +82,16 @@ export default class BaseExtension {
       util: {
         render: str => templating.render(str, { context: renderContext }),
         models: {
-          request: { getById: models.request.getById },
-          requestGroup: { getById: models.requestGroup.getById },
+          request: {
+            getById: models.request.getById,
+            getAncestors: async request => {
+              const ancestors = await db.withAncestors(request, [
+                models.requestGroup.type,
+                models.workspace.type
+              ]);
+              return ancestors.filter(doc => doc._id !== request._id);
+            }
+          },
           workspace: { getById: models.workspace.getById },
           oAuth2Token: { getByRequestId: models.oAuth2Token.getByParentId },
           cookieJar: {

@@ -552,7 +552,11 @@ class TagEditor extends React.PureComponent<Props, State> {
     }
 
     const help =
-      typeof argDefinition.help === 'string' ? argDefinition.help : '';
+      typeof argDefinition.help === 'string' ||
+      typeof argDefinition.help === 'function'
+        ? fnOrString(argDefinition.help, argDatas)
+        : '';
+
     const displayName =
       typeof argDefinition.displayName === 'string' ||
       typeof argDefinition.displayName === 'function'

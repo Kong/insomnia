@@ -23,7 +23,7 @@ module.exports.templateTags = [
           {
             displayName: 'Folder',
             value: 'folder',
-            description: 'name of immediate parent folder (or workspace)'
+            description: 'name of parent folder (or workspace)'
           },
           {
             displayName: 'URL',
@@ -61,10 +61,17 @@ module.exports.templateTags = [
               return 'Name';
           }
         }
+      },
+      {
+        hide: args => args[0].value !== 'folder',
+        displayName: 'Parent Index',
+        help:
+          'Specify an index (Starting at 0) for how high up the folder tree to look',
+        type: 'number'
       }
     ],
 
-    async run(context, attribute, name) {
+    async run(context, attribute, name, folderIndex) {
       const { meta } = context;
 
       if (!meta.requestId || !meta.workspaceId) {
@@ -131,10 +138,18 @@ module.exports.templateTags = [
         case 'name':
           return request.name;
         case 'folder':
-          const requestGroup = await context.util.models.requestGroup.getById(
-            request.parentId
+          const ancestors = await context.util.models.request.getAncestors(
+            request
           );
-          return requestGroup ? requestGroup.name : workspace.name;
+          const doc = ancestors[folderIndex || 0];
+          if (!doc) {
+            throw new Error(
+              `Could not get folder by index ${folderIndex}. Must be between 0-${
+                ancestors.length
+              }`
+            );
+          }
+          return doc ? doc.name : null;
       }
 
       return null;
