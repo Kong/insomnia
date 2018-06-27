@@ -225,6 +225,12 @@ async function _highlightNunjucksTags(render) {
 async function _updateElementText(render, mark, text) {
   const el = mark.replacedWith;
 
+  let innerHTML = '';
+  let title = '';
+  let dataIgnore = '';
+  let dataError = '';
+  let showErrorSymbol = false;
+
   try {
     const str = text.replace(/\\/g, '');
     const tagMatch = str.match(/{% *([^ ]+) *.*%}/);
@@ -250,35 +256,41 @@ async function _updateElementText(render, mark, text) {
             d => d.value === argData.value
           );
           const option = foundOption || firstArg.options[0];
-          el.innerHTML = `<label></label>${tagDefinition.displayName} &rArr; ${
+          innerHTML = `${tagDefinition.displayName} &rArr; ${
             option.displayName
           }`;
         } else {
-          el.innerHTML = `<label></label>${tagDefinition.displayName ||
-            tagData.name}`;
+          innerHTML = tagDefinition.displayName || tagData.name;
         }
-        el.title = await render(text);
+        title = await render(text);
       } else {
-        el.innerHTML = `<label></label>${cleanedStr}`;
-        el.title = 'Unrecognized tag';
-        el.setAttribute('data-ignore', 'on');
+        innerHTML = cleanedStr;
+        title = 'Unrecognized tag';
+        dataIgnore = 'on';
       }
     } else {
       // Render if it's a variable
-      el.innerHTML = `<label></label>${cleanedStr}`.trim();
-      el.title = await render(str);
+      innerHTML = cleanedStr;
+      title = await render(str);
     }
-    el.setAttribute('data-error', 'off');
-    mark.changed();
+    dataError = 'off';
   } catch (err) {
     const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
     let message = fullMessage;
-    const label = el.querySelector('label');
-    label.innerHTML = `<i class="fa fa-exclamation-triangle"></i>${
-      label.innerHTML
-    }`;
-    el.title = message;
-    el.setAttribute('data-error', 'on');
-    mark.changed();
+    title = message;
+    dataError = 'on';
   }
+
+  console.log('SET', innerHTML);
+  el.title = title;
+  el.setAttribute('data-ignore', dataIgnore);
+  if (dataError === 'on') {
+    el.setAttribute('data-error', dataError);
+    el.innerHTML =
+      '<label><i class="fa fa-exclamation-triangle"></i></label>' + innerHTML;
+  } else {
+    el.innerHTML = '<label></label>' + innerHTML;
+  }
+
+  mark.changed();
 }
