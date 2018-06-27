@@ -276,7 +276,10 @@ class CodeEditor extends React.Component {
 
     // Set default listeners
     const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
-    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
+    this.codeMirror.on(
+      'changes',
+      misc.debounce(this._codemirrorValueChanged, debounceMillis)
+    );
     this.codeMirror.on('cursorActivity', this._codemirrorCursorActivity);
     this.codeMirror.on(
       'changes',
@@ -573,13 +576,13 @@ class CodeEditor extends React.Component {
     }
   }
 
-  _codemirrorCursorActivity (instance) {
+  _codemirrorCursorActivity(instance) {
     if (this.props.onCursorActivity) {
       this.props.onCursorActivity(instance);
     }
   }
 
-  async _codemirrorKeyDown (doc, e) {
+  async _codemirrorKeyDown(doc, e) {
     // Use default tab behaviour if we're told
     if (this.props.defaultTabBehavior && e.keyCode === TAB_KEY) {
       e.codemirrorIgnore = true;

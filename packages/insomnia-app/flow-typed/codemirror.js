@@ -1,6 +1,6 @@
 declare module 'codemirror' {
   declare class TextMarker {
-    clear(): void
+    clear(): void;
   }
   declare class Doc {
     markText(
@@ -9,20 +9,20 @@ declare module 'codemirror' {
       options?: {|
         inclusiveLeft?: boolean,
         className?: string,
-        color?: string,
+        color?: string
       |}
-    ): TextMarker
+    ): TextMarker;
   }
   declare class Pos {
-    ch: number,
-    line: number,
-    sticky: string,
-    xRel: number,
+    ch: number;
+    line: number;
+    sticky: string;
+    xRel: number;
   }
   declare class CodeMirror {
-    doc: Doc,
-    getCursor(): Pos,
-    getValue(): string,
-    indexFromPos(pos: Pos): number,
+    doc: Doc;
+    getCursor(): Pos;
+    getValue(): string;
+    indexFromPos(pos: Pos): number;
   }
 }

@@ -4,10 +4,15 @@ import { newBodyRaw } from '../../../../models/request';
 import classnames from 'classnames';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import { parse, print, typeFromAST, type Document as DocumentAST } from 'graphql';
+import {
+  parse,
+  print,
+  typeFromAST,
+  type Document as DocumentAST
+} from 'graphql';
 import { introspectionQuery } from 'graphql/utilities/introspectionQuery';
 import { buildClientSchema } from 'graphql/utilities/buildClientSchema';
-import type {CodeMirror, TextMarker} from 'codemirror';
+import type { CodeMirror, TextMarker } from 'codemirror';
 import CodeEditor from '../../codemirror/code-editor';
 import { jsonParseOr } from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
@@ -66,7 +71,7 @@ type State = {
 @autobind
 class GraphQLEditor extends React.PureComponent<Props, State> {
   _disabledOperationMarkers: TextMarker[];
-  _documentAST: null | DocumentAST
+  _documentAST: null | DocumentAST;
   _isMounted: boolean;
   _queryEditor: null | CodeMirror;
   _schemaFetchTimeout: TimeoutID;
@@ -89,8 +94,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     };
   }
 
-  _getCurrentOperation () {
-    const {_queryEditor} = this;
+  _getCurrentOperation() {
+    const { _queryEditor } = this;
     if (!_queryEditor) return null;
     const operations = this._getOperations();
     const cursor = _queryEditor.getCursor();
@@ -108,27 +113,32 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _handleQueryCursorActivity () {
+  _handleQueryCursorActivity() {
     const currentOperation = this._getCurrentOperation();
     if (!currentOperation) {
       return;
     }
     const operationName = currentOperation.name.value;
     this._highlightOperation(operationName);
-    this.setState(state => ({
-      body: {
-        ...state.body,
-        operationName
+    this.setState(
+      state => ({
+        body: {
+          ...state.body,
+          operationName
+        }
+      }),
+      () => {
+        this.props.onChange(GraphQLEditor._graphQLToString(this.state.body));
       }
-    }), () => {
-      this.props.onChange(GraphQLEditor._graphQLToString(this.state.body));
-    });
+    );
   }
 
-  _highlightOperation (operationName: string) {
-    const {_documentAST, _queryEditor} = this;
+  _highlightOperation(operationName: string) {
+    const { _documentAST, _queryEditor } = this;
     if (!_documentAST || !_queryEditor) return null;
-    const disabledDefinition = _documentAST.definitions.filter(d => d.name.value !== operationName);
+    const disabledDefinition = _documentAST.definitions.filter(
+      d => d.name.value !== operationName
+    );
     if (!disabledDefinition.length === 0) {
       // unexpected condition
       return;
@@ -151,9 +161,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _handleViewResponse() {
-    const {settings} = this.props;
-    const {schemaFetchError} = this.state;
-    
+    const { settings } = this.props;
+    const { schemaFetchError } = this.state;
+
     if (!schemaFetchError || !schemaFetchError.response) {
       return;
     }
@@ -180,7 +190,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     this.setState({ hideSchemaFetchErrors: true });
   }
 
-  _handleQueryCodeMirrorInit (codeMirror: CodeMirror) {
+  _handleQueryCodeMirrorInit(codeMirror: CodeMirror) {
     this._queryEditor = codeMirror;
     const { query } = GraphQLEditor._stringToGraphQL(this.props.content);
     let documentAST = null;
@@ -202,9 +212,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  async _fetchAndSetSchema (rawRequest: Request) {
+  async _fetchAndSetSchema(rawRequest: Request) {
     this.setState({ schemaIsFetching: true });
-  
+
     const { environmentId } = this.props;
 
     const newState = {
@@ -324,22 +334,23 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }, 200);
   }
 
-  _getOperations () {
+  _getOperations() {
     if (!this._documentAST) {
       return [];
     }
 
-    return this._documentAST.definitions
-      .filter(def => def.kind === 'OperationDefinition');
+    return this._documentAST.definitions.filter(
+      def => def.kind === 'OperationDefinition'
+    );
   }
 
-  _getOperationNames (): string[] {
+  _getOperationNames(): string[] {
     return this._getOperations()
-      .map(def => def.name ? def.name.value : null)
+      .map(def => (def.name ? def.name.value : null))
       .filter(Boolean);
   }
 
-  _handleBodyChange (query: string, variables?: Object): void {
+  _handleBodyChange(query: string, variables?: Object): void {
     try {
       this._documentAST = parse(query);
     } catch (e) {
@@ -356,7 +367,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     // check if it state.body.operationName still exists (the operation can be deleted)
     const currentDefinition = this._documentAST
-      ? this._documentAST.definitions.find(d => d.name.value === this.state.body.operationName)
+      ? this._documentAST.definitions.find(
+          d => d.name.value === this.state.body.operationName
+        )
       : undefined;
 
     if (this.state.body.operationName && currentDefinition) {

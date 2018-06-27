@@ -6,19 +6,19 @@ declare module 'graphql' {
     line: number,
     next: Tok,
     prev: Tok,
-    start: number,
-  }
-  
+    start: number
+  };
+
   declare type Loc = {
     end: number,
     endToken: Tok,
     source: Source,
     start: number,
-    startToken: Tok,
-  }
-  
-  declare type ParseOptions = mixed
-  declare type Source = mixed
+    startToken: Tok
+  };
+
+  declare type ParseOptions = mixed;
+  declare type Source = mixed;
   declare type Document = {
     definitions: Array<{
       kind: string,
@@ -30,25 +30,25 @@ declare module 'graphql' {
             value: string
           }
         },
-        type: string,
+        type: string
       }>,
       name: {
         kind: string,
         value: string
       }
     }>
-  }
-  
+  };
+
   declare function parse(
     source: Source | string,
     options?: ParseOptions
-  ): Document
-    
+  ): Document;
+
   declare module.exports: {
     parse: typeof parse,
     print: *,
     typeFromAST: *
-  }
+  };
 }
 
 declare module 'graphql/utilities/introspectionQuery' {
