@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
@@ -7,26 +7,29 @@ import SidebarFilter from './sidebar-filter';
 import SidebarChildren from './sidebar-children';
 import SyncButton from '../dropdowns/sync-dropdown';
 import WorkspaceDropdown from '../dropdowns/workspace-dropdown';
-import {SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS} from '../../../common/constants';
+import {
+  SIDEBAR_SKINNY_REMS,
+  COLLAPSE_SIDEBAR_REMS
+} from '../../../common/constants';
 
 @autobind
 class Sidebar extends PureComponent {
-  _handleChangeEnvironment (id) {
-    const {handleSetActiveEnvironment} = this.props;
+  _handleChangeEnvironment(id) {
+    const { handleSetActiveEnvironment } = this.props;
     handleSetActiveEnvironment(id);
   }
 
-  _handleCreateRequestInWorkspace () {
-    const {workspace, handleCreateRequest} = this.props;
+  _handleCreateRequestInWorkspace() {
+    const { workspace, handleCreateRequest } = this.props;
     handleCreateRequest(workspace._id);
   }
 
-  _handleCreateRequestGroupInWorkspace () {
-    const {workspace, handleCreateRequestGroup} = this.props;
+  _handleCreateRequestGroupInWorkspace() {
+    const { workspace, handleCreateRequestGroup } = this.props;
     handleCreateRequestGroup(workspace._id);
   }
 
-  render () {
+  render() {
     const {
       showCookiesModal,
       filter,
@@ -57,11 +60,12 @@ class Sidebar extends PureComponent {
     } = this.props;
 
     return (
-      <aside className={classnames('sidebar', {
-        'sidebar--hidden': hidden,
-        'sidebar--skinny': width < SIDEBAR_SKINNY_REMS,
-        'sidebar--collapsed': width < COLLAPSE_SIDEBAR_REMS
-      })}>
+      <aside
+        className={classnames('sidebar', {
+          'sidebar--hidden': hidden,
+          'sidebar--skinny': width < SIDEBAR_SKINNY_REMS,
+          'sidebar--collapsed': width < COLLAPSE_SIDEBAR_REMS
+        })}>
         <WorkspaceDropdown
           className="sidebar__header"
           activeWorkspace={workspace}

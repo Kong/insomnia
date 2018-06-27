@@ -6,5 +6,5 @@ declare module 'react-tabs' {
     TabList: React.Element<*>,
     TabPanel: React.Element<*>,
     Tabs: React.Element<*>
-  }
+  };
 }

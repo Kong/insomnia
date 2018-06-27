@@ -1,20 +1,25 @@
 // @flow
 import * as electron from 'electron';
-import {showAlert, showPrompt} from '../../ui/components/modals/index';
-import type {RenderPurpose} from '../../common/render';
-import {RENDER_PURPOSE_GENERAL, RENDER_PURPOSE_SEND} from '../../common/render';
+import { showAlert, showPrompt } from '../../ui/components/modals/index';
+import type { RenderPurpose } from '../../common/render';
+import {
+  RENDER_PURPOSE_GENERAL,
+  RENDER_PURPOSE_SEND
+} from '../../common/render';
 
-export function init (renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {app: Object} {
+export function init(
+  renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL
+): { app: Object } {
   return {
     app: {
-      alert (title: string, message?: string): Promise<void> {
+      alert(title: string, message?: string): Promise<void> {
         if (renderPurpose !== RENDER_PURPOSE_SEND) {
           return Promise.resolve();
         }
 
-        return showAlert({title, message});
+        return showAlert({ title, message });
       },
-      prompt (
+      prompt(
         title: string,
         options?: {
           label?: string,
@@ -33,16 +38,16 @@ export function init (renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {a
           showPrompt({
             title,
             ...(options || {}),
-            onCancel () {
+            onCancel() {
               reject(new Error(`Prompt ${title} cancelled`));
             },
-            onComplete (value: string) {
+            onComplete(value: string) {
               resolve(value);
             }
           });
         });
       },
-      getPath (name: string): string {
+      getPath(name: string): string {
         switch (name.toLowerCase()) {
           case 'desktop':
             return electron.remote.app.getPath('desktop');
@@ -50,7 +55,9 @@ export function init (renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {a
             throw new Error(`Unknown path name ${name}`);
         }
       },
-      async showSaveDialog (options: {defaultPath?: string} = {}): Promise<string | null> {
+      async showSaveDialog(
+        options: { defaultPath?: string } = {}
+      ): Promise<string | null> {
         if (renderPurpose !== RENDER_PURPOSE_SEND) {
           return Promise.resolve(null);
         }

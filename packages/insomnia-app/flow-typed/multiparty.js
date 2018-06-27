@@ -1,3 +1,3 @@
 declare module 'multiparty' {
-  declare module.exports: *
+  declare module.exports: *;
 }

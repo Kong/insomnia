@@ -1,3 +1,3 @@
 declare module 'iconv-lite' {
-  declare module.exports: *
+  declare module.exports: *;
 }

@@ -1,12 +1,16 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import {buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl} from 'insomnia-url';
+import {
+  buildQueryStringFromParams,
+  joinUrlAndQueryString,
+  smartEncodeUrl
+} from 'insomnia-url';
 import CopyButton from './base/copy-button';
 
 @autobind
 class RenderedQueryString extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this._interval = null;
     this.state = {
@@ -14,15 +18,15 @@ class RenderedQueryString extends PureComponent {
     };
   }
 
-  async _debouncedUpdate (props) {
+  async _debouncedUpdate(props) {
     clearTimeout(this._interval);
     this._interval = setTimeout(() => {
       this._update(props);
     }, 300);
   }
 
-  async _update (props) {
-    const {request} = props;
+  async _update(props) {
+    const { request } = props;
     const enabledParameters = request.parameters.filter(p => !p.disabled);
 
     let result;
@@ -36,22 +40,24 @@ class RenderedQueryString extends PureComponent {
     }
 
     if (result) {
-      const {url, parameters} = result;
+      const { url, parameters } = result;
       const qs = buildQueryStringFromParams(parameters);
       const fullUrl = joinUrlAndQueryString(url, qs);
-      this.setState({string: smartEncodeUrl(fullUrl, request.settingEncodeUrl)});
+      this.setState({
+        string: smartEncodeUrl(fullUrl, request.settingEncodeUrl)
+      });
     }
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this._update(this.props);
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     clearTimeout(this._interval);
   }
 
-  componentWillReceiveProps (nextProps) {
+  componentWillReceiveProps(nextProps) {
     if (nextProps.request._id !== this.props.request._id) {
       this._update(nextProps);
     } else {
@@ -59,21 +65,24 @@ class RenderedQueryString extends PureComponent {
     }
   }
 
-  render () {
+  render() {
     let inner = null;
     if (this.state.string) {
-      inner = <span className="selectable force-wrap">{this.state.string}</span>;
+      inner = (
+        <span className="selectable force-wrap">{this.state.string}</span>
+      );
     } else {
       inner = <span className="super-duper-faint italic">...</span>;
     }
 
     return (
       <div className="wide scrollable">
-        <CopyButton content={this.state.string}
-                    className="pull-right text-right icon"
-                    title="Copy URL"
-                    confirmMessage="">
-          <i className="fa fa-copy"/>
+        <CopyButton
+          content={this.state.string}
+          className="pull-right text-right icon"
+          title="Copy URL"
+          confirmMessage="">
+          <i className="fa fa-copy" />
         </CopyButton>
         {inner}
       </div>

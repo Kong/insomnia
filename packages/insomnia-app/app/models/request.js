@@ -1,11 +1,35 @@
 // @flow
-import type {BaseModel} from './index';
-import {AUTH_ASAP, AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_HAWK, AUTH_NETRC, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, HAWK_ALGORITHM_SHA256, METHOD_GET, METHOD_POST} from '../common/constants';
+import type { BaseModel } from './index';
+import {
+  AUTH_ASAP,
+  AUTH_AWS_IAM,
+  AUTH_BASIC,
+  AUTH_DIGEST,
+  AUTH_HAWK,
+  AUTH_NETRC,
+  AUTH_NONE,
+  AUTH_NTLM,
+  AUTH_OAUTH_1,
+  AUTH_OAUTH_2,
+  CONTENT_TYPE_FILE,
+  CONTENT_TYPE_FORM_DATA,
+  CONTENT_TYPE_FORM_URLENCODED,
+  CONTENT_TYPE_GRAPHQL,
+  CONTENT_TYPE_JSON,
+  CONTENT_TYPE_OTHER,
+  getContentTypeFromHeaders,
+  HAWK_ALGORITHM_SHA256,
+  METHOD_GET,
+  METHOD_POST
+} from '../common/constants';
 import * as db from '../common/database';
-import {getContentTypeHeader} from '../common/misc';
-import {buildQueryStringFromParams, deconstructQueryStringToParams} from 'insomnia-url';
-import {GRANT_TYPE_AUTHORIZATION_CODE} from '../network/o-auth-2/constants';
-import {SIGNATURE_METHOD_HMAC_SHA1} from '../network/o-auth-1/constants';
+import { getContentTypeHeader } from '../common/misc';
+import {
+  buildQueryStringFromParams,
+  deconstructQueryStringToParams
+} from 'insomnia-url';
+import { GRANT_TYPE_AUTHORIZATION_CODE } from '../network/o-auth-2/constants';
+import { SIGNATURE_METHOD_HMAC_SHA1 } from '../network/o-auth-1/constants';
 
 export const name = 'Request';
 export const type = 'Request';
@@ -68,7 +92,7 @@ type BaseRequest = {
 
 export type Request = BaseModel & BaseRequest;
 
-export function init (): BaseRequest {
+export function init(): BaseRequest {
   return {
     url: '',
     name: 'New Request',
@@ -91,7 +115,10 @@ export function init (): BaseRequest {
   };
 }
 
-export function newAuth (type: string, oldAuth: RequestAuthentication = {}): RequestAuthentication {
+export function newAuth(
+  type: string,
+  oldAuth: RequestAuthentication = {}
+): RequestAuthentication {
   switch (type) {
     // No Auth
     case AUTH_NONE:
@@ -163,72 +190,78 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
     // Types needing no defaults
     case AUTH_NETRC:
     default:
-      return {type};
+      return { type };
   }
 }
 
-export function newBodyNone (): RequestBody {
+export function newBodyNone(): RequestBody {
   return {};
 }
 
-export function newBodyRaw (rawBody: string, contentType?: string): RequestBody {
+export function newBodyRaw(rawBody: string, contentType?: string): RequestBody {
   if (typeof contentType !== 'string') {
-    return {text: rawBody};
+    return { text: rawBody };
   }
 
   const mimeType = contentType.split(';')[0];
-  return {mimeType, text: rawBody};
+  return { mimeType, text: rawBody };
 }
 
-export function newBodyFormUrlEncoded (parameters: Array<RequestBodyParameter> | null): RequestBody {
+export function newBodyFormUrlEncoded(
+  parameters: Array<RequestBodyParameter> | null
+): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FORM_URLENCODED,
     params: parameters || []
   };
 }
 
-export function newBodyFile (path: string): RequestBody {
+export function newBodyFile(path: string): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FILE,
     fileName: path
   };
 }
 
-export function newBodyForm (parameters: Array<RequestBodyParameter>): RequestBody {
+export function newBodyForm(
+  parameters: Array<RequestBodyParameter>
+): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FORM_DATA,
     params: parameters || []
   };
 }
 
-export function migrate (doc: Request): Request {
+export function migrate(doc: Request): Request {
   doc = migrateBody(doc);
   doc = migrateWeirdUrls(doc);
   doc = migrateAuthType(doc);
   return doc;
 }
 
-export function create (patch: Object = {}): Promise<Request> {
+export function create(patch: Object = {}): Promise<Request> {
   if (!patch.parentId) {
-    throw new Error(`New Requests missing \`parentId\`: ${JSON.stringify(patch)}`);
+    throw new Error(
+      `New Requests missing \`parentId\`: ${JSON.stringify(patch)}`
+    );
   }
 
   return db.docCreate(type, patch);
 }
 
-export function getById (id: string): Promise<Request | null> {
+export function getById(id: string): Promise<Request | null> {
   return db.get(type, id);
 }
 
-export function findByParentId (parentId: string): Promise<Array<Request>> {
-  return db.find(type, {parentId: parentId});
+export function findByParentId(parentId: string): Promise<Array<Request>> {
+  return db.find(type, { parentId: parentId });
 }
 
-export function update (request: Request, patch: Object): Promise<Request> {
+export function update(request: Request, patch: Object): Promise<Request> {
   return db.docUpdate(request, patch);
 }
 
-export function updateMimeType (
+export function updateMimeType(
   request: Request,
   mimeType: string,
   doCreate: boolean = false,
@@ -238,9 +271,8 @@ export function updateMimeType (
   const contentTypeHeader = getContentTypeHeader(headers);
 
   // GraphQL uses JSON content-type
-  const contentTypeHeaderValue = mimeType === CONTENT_TYPE_GRAPHQL
-    ? CONTENT_TYPE_JSON
-    : mimeType;
+  const contentTypeHeaderValue =
+    mimeType === CONTENT_TYPE_GRAPHQL ? CONTENT_TYPE_JSON : mimeType;
 
   // GraphQL must be POST
   if (mimeType === CONTENT_TYPE_GRAPHQL) {
@@ -268,7 +300,7 @@ export function updateMimeType (
   } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
     contentTypeHeader.value = contentTypeHeaderValue;
   } else if (mimeType && !contentTypeHeader) {
-    headers.push({name: 'Content-Type', value: contentTypeHeaderValue});
+    headers.push({ name: 'Content-Type', value: contentTypeHeaderValue });
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -277,9 +309,8 @@ export function updateMimeType (
 
   let body;
 
-  const oldBody = Object.keys(savedBody).length === 0
-    ? request.body
-    : savedBody;
+  const oldBody =
+    Object.keys(savedBody).length === 0 ? request.body : savedBody;
 
   if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
     // Urlencoded
@@ -314,33 +345,35 @@ export function updateMimeType (
   // ~~~~~~~~~~~~~~~~~~~~~~~~ //
 
   if (doCreate) {
-    const newRequest: Request = Object.assign({}, request, {headers, body});
+    const newRequest: Request = Object.assign({}, request, { headers, body });
     return create(newRequest);
   } else {
-    return update(request, {headers, body});
+    return update(request, { headers, body });
   }
 }
 
-export async function duplicate (request: Request): Promise<Request> {
+export async function duplicate(request: Request): Promise<Request> {
   const name = `${request.name} (Copy)`;
 
   // Get sort key of next request
-  const q = {metaSortKey: {$gt: request.metaSortKey}};
-  const [nextRequest] = await db.find(type, q, {metaSortKey: 1});
-  const nextSortKey = nextRequest ? nextRequest.metaSortKey : request.metaSortKey + 100;
+  const q = { metaSortKey: { $gt: request.metaSortKey } };
+  const [nextRequest] = await db.find(type, q, { metaSortKey: 1 });
+  const nextSortKey = nextRequest
+    ? nextRequest.metaSortKey
+    : request.metaSortKey + 100;
 
   // Calculate new sort key
   const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
   const metaSortKey = request.metaSortKey + sortKeyIncrement;
 
-  return db.duplicate(request, {name, metaSortKey});
+  return db.duplicate(request, { name, metaSortKey });
 }
 
-export function remove (request: Request): Promise<void> {
+export function remove(request: Request): Promise<void> {
   return db.remove(request);
 }
 
-export function all () {
+export function all() {
   return db.all(type);
 }
 
@@ -353,19 +386,23 @@ export function all () {
  * @param request
  * @returns {*}
  */
-function migrateBody (request: Request): Request {
+function migrateBody(request: Request): Request {
   if (request.body && typeof request.body === 'object') {
     return request;
   }
 
   // Second, convert all existing urlencoded bodies to new format
   const contentType = getContentTypeFromHeaders(request.headers) || '';
-  const wasFormUrlEncoded = !!contentType.match(/^application\/x-www-form-urlencoded/i);
+  const wasFormUrlEncoded = !!contentType.match(
+    /^application\/x-www-form-urlencoded/i
+  );
 
   if (wasFormUrlEncoded) {
     // Convert old-style form-encoded request bodies to new style
     const body = typeof request.body === 'string' ? request.body : '';
-    request.body = newBodyFormUrlEncoded(deconstructQueryStringToParams(body, false));
+    request.body = newBodyFormUrlEncoded(
+      deconstructQueryStringToParams(body, false)
+    );
   } else if (!request.body && !contentType) {
     request.body = {};
   } else {
@@ -381,7 +418,7 @@ function migrateBody (request: Request): Request {
  * @param request
  * @returns {*}
  */
-function migrateWeirdUrls (request: Request): Request {
+function migrateWeirdUrls(request: Request): Request {
   // Some people seem to have requests with URLs that don't have the indexOf
   // function. This should clear that up. This can be removed at a later date.
 
@@ -397,7 +434,7 @@ function migrateWeirdUrls (request: Request): Request {
  * @param request
  * @returns {*}
  */
-function migrateAuthType (request: Request): Request {
+function migrateAuthType(request: Request): Request {
   const isAuthSet = request.authentication && request.authentication.username;
 
   if (isAuthSet && !request.authentication.type) {

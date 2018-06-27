@@ -1,22 +1,22 @@
 // eslint-disable-next-line filenames/match-exported
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
-import {DragSource, DropTarget} from 'react-dnd';
+import { DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 import FileInputButton from '../base/file-input-button';
-import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown/index';
+import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown/index';
 import PromptButton from '../base/prompt-button';
 import CodePromptModal from '../modals/code-prompt-modal';
 import Button from '../base/button';
 import OneLineEditor from '../codemirror/one-line-editor';
-import {showModal} from '../modals/index';
-import {describeByteSize} from '../../../common/misc';
+import { showModal } from '../modals/index';
+import { describeByteSize } from '../../../common/misc';
 
 @autobind
 class KeyValueEditorRow extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
 
     this._nameInput = null;
@@ -26,42 +26,42 @@ class KeyValueEditorRow extends PureComponent {
     };
   }
 
-  focusNameEnd () {
+  focusNameEnd() {
     if (this._nameInput) {
       this._nameInput.focusEnd();
     }
   }
 
-  focusValueEnd () {
+  focusValueEnd() {
     if (this._valueInput) {
       this._valueInput.focusEnd();
     }
   }
 
-  setDragDirection (dragDirection) {
+  setDragDirection(dragDirection) {
     if (dragDirection !== this.state.dragDirection) {
-      this.setState({dragDirection});
+      this.setState({ dragDirection });
     }
   }
 
-  _setNameInputRef (n) {
+  _setNameInputRef(n) {
     this._nameInput = n;
   }
 
-  _setValueInputRef (n) {
+  _setValueInputRef(n) {
     this._valueInput = n;
   }
 
-  _sendChange (patch) {
+  _sendChange(patch) {
     const pair = Object.assign({}, this.props.pair, patch);
     this.props.onChange && this.props.onChange(pair);
   }
 
-  _handleNameChange (name) {
-    this._sendChange({name});
+  _handleNameChange(name) {
+    this._sendChange({ name });
   }
 
-  _handleValuePaste (e) {
+  _handleValuePaste(e) {
     if (!this.props.allowMultiline) {
       return;
     }
@@ -73,86 +73,89 @@ class KeyValueEditorRow extends PureComponent {
       // Insert the pasted text into the current selection. Unfortunately, this
       // is the easiest way to do this.
       const currentValue = this._valueInput.getValue();
-      const prefix = currentValue.slice(0, this._valueInput.getSelectionStart());
+      const prefix = currentValue.slice(
+        0,
+        this._valueInput.getSelectionStart()
+      );
       const suffix = currentValue.slice(this._valueInput.getSelectionEnd());
       const finalValue = `${prefix}${value}${suffix}`;
 
       // Update type and value
-      this._handleTypeChange({type: 'text', multiline: 'text/plain'});
+      this._handleTypeChange({ type: 'text', multiline: 'text/plain' });
       this._handleValueChange(finalValue);
     }
   }
 
-  _handleValueChange (value) {
-    this._sendChange({value});
+  _handleValueChange(value) {
+    this._sendChange({ value });
   }
 
-  _handleFileNameChange (fileName) {
-    this._sendChange({fileName});
+  _handleFileNameChange(fileName) {
+    this._sendChange({ fileName });
   }
 
-  _handleTypeChange (def) {
+  _handleTypeChange(def) {
     // Remove newlines if converting to text
     let value = this.props.pair.value || '';
     if (def.type === 'text' && !def.multiline && value.includes('\n')) {
       value = value.replace(/\n/g, '');
     }
 
-    this._sendChange({type: def.type, multiline: def.multiline, value});
+    this._sendChange({ type: def.type, multiline: def.multiline, value });
   }
 
-  _handleDisableChange (disabled) {
-    this._sendChange({disabled});
+  _handleDisableChange(disabled) {
+    this._sendChange({ disabled });
   }
 
-  _handleFocusName (e) {
+  _handleFocusName(e) {
     this.props.onFocusName(this.props.pair, e);
   }
 
-  _handleFocusValue (e) {
+  _handleFocusValue(e) {
     this.props.onFocusValue(this.props.pair, e);
   }
 
-  _handleBlurName (e) {
+  _handleBlurName(e) {
     if (this.props.onBlurName) {
       this.props.onBlurName(this.props.pair, e);
     }
   }
 
-  _handleBlurValue (e) {
+  _handleBlurValue(e) {
     if (this.props.onBlurName) {
       this.props.onBlurValue(this.props.pair, e);
     }
   }
 
-  _handleDelete () {
+  _handleDelete() {
     if (this.props.onDelete) {
       this.props.onDelete(this.props.pair);
     }
   }
 
-  _handleKeyDown (e, value) {
+  _handleKeyDown(e, value) {
     if (this.props.onKeyDown) {
       this.props.onKeyDown(this.props.pair, e, value);
     }
   }
 
-  _handleAutocompleteNames () {
-    const {handleGetAutocompleteNameConstants} = this.props;
+  _handleAutocompleteNames() {
+    const { handleGetAutocompleteNameConstants } = this.props;
     if (handleGetAutocompleteNameConstants) {
       return handleGetAutocompleteNameConstants(this.props.pair);
     }
   }
 
-  _handleAutocompleteValues () {
-    const {handleGetAutocompleteValueConstants} = this.props;
+  _handleAutocompleteValues() {
+    const { handleGetAutocompleteValueConstants } = this.props;
     if (handleGetAutocompleteValueConstants) {
       return handleGetAutocompleteValueConstants(this.props.pair);
     }
   }
 
-  _handleEditMultiline () {
-    const {pair, handleRender, handleGetRenderContext} = this.props;
+  _handleEditMultiline() {
+    const { pair, handleRender, handleGetRenderContext } = this.props;
 
     showModal(CodePromptModal, {
       submitName: 'Done',
@@ -162,12 +165,12 @@ class KeyValueEditorRow extends PureComponent {
       enableRender: handleRender || handleGetRenderContext,
       mode: pair.multiline || 'text/plain',
       onModeChange: mode => {
-        this._handleTypeChange(Object.assign({}, pair, {multiline: mode}));
+        this._handleTypeChange(Object.assign({}, pair, { multiline: mode }));
       }
     });
   }
 
-  renderPairValue () {
+  renderPairValue() {
     const {
       pair,
       readOnly,
@@ -193,9 +196,10 @@ class KeyValueEditorRow extends PureComponent {
     } else if (pair.type === 'text' && pair.multiline) {
       const bytes = Buffer.from(pair.value, 'utf8').length;
       return (
-        <button className="btn btn--outlined btn--super-duper-compact wide ellipsis"
-                onClick={this._handleEditMultiline}>
-          <i className="fa fa-pencil-square-o space-right"/>
+        <button
+          className="btn btn--outlined btn--super-duper-compact wide ellipsis"
+          onClick={this._handleEditMultiline}>
+          <i className="fa fa-pencil-square-o space-right" />
           {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
         </button>
       );
@@ -222,12 +226,8 @@ class KeyValueEditorRow extends PureComponent {
     }
   }
 
-  renderPairSelector () {
-    const {
-      hideButtons,
-      allowMultiline,
-      allowFile
-    } = this.props;
+  renderPairSelector() {
+    const { hideButtons, allowMultiline, allowFile } = this.props;
 
     const showDropdown = allowMultiline || allowFile;
 
@@ -235,7 +235,7 @@ class KeyValueEditorRow extends PureComponent {
     if (hideButtons && showDropdown) {
       return (
         <button>
-          <i className="fa fa-empty"/>
+          <i className="fa fa-empty" />
         </button>
       );
     }
@@ -248,18 +248,24 @@ class KeyValueEditorRow extends PureComponent {
       return (
         <Dropdown right>
           <DropdownButton className="tall">
-            <i className="fa fa-caret-down"/>
+            <i className="fa fa-caret-down" />
           </DropdownButton>
-          <DropdownItem onClick={this._handleTypeChange} value={{type: 'text', multiline: false}}>
+          <DropdownItem
+            onClick={this._handleTypeChange}
+            value={{ type: 'text', multiline: false }}>
             Text
           </DropdownItem>
           {allowMultiline && (
-            <DropdownItem onClick={this._handleTypeChange} value={{type: 'text', multiline: true}}>
+            <DropdownItem
+              onClick={this._handleTypeChange}
+              value={{ type: 'text', multiline: true }}>
               Text (Multi-line)
             </DropdownItem>
           )}
           {allowFile && (
-            <DropdownItem onClick={this._handleTypeChange} value={{type: 'file'}}>
+            <DropdownItem
+              onClick={this._handleTypeChange}
+              value={{ type: 'file' }}>
               File
             </DropdownItem>
           )}
@@ -270,7 +276,7 @@ class KeyValueEditorRow extends PureComponent {
     }
   }
 
-  render () {
+  render() {
     const {
       pair,
       namePlaceholder,
@@ -292,26 +298,28 @@ class KeyValueEditorRow extends PureComponent {
       connectDropTarget
     } = this.props;
 
-    const {dragDirection} = this.state;
+    const { dragDirection } = this.state;
 
     const classes = classnames(className, {
       'key-value-editor__row-wrapper': true,
       'key-value-editor__row-wrapper--dragging': isDragging,
-      'key-value-editor__row-wrapper--dragging-above': isDraggingOver && dragDirection > 0,
-      'key-value-editor__row-wrapper--dragging-below': isDraggingOver && dragDirection < 0,
+      'key-value-editor__row-wrapper--dragging-above':
+        isDraggingOver && dragDirection > 0,
+      'key-value-editor__row-wrapper--dragging-below':
+        isDraggingOver && dragDirection < 0,
       'key-value-editor__row-wrapper--disabled': pair.disabled
     });
 
     let handle = null;
     if (sortable) {
       handle = renderLeftIcon ? (
-        <div className="key-value-editor__drag">
-          {renderLeftIcon()}
-        </div>
-      ) : connectDragSource(
-        <div className="key-value-editor__drag">
-          <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')}/>
-        </div>
+        <div className="key-value-editor__drag">{renderLeftIcon()}</div>
+      ) : (
+        connectDragSource(
+          <div className="key-value-editor__drag">
+            <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')} />
+          </div>
+        )
       );
     }
 
@@ -319,9 +327,13 @@ class KeyValueEditorRow extends PureComponent {
       <li className={classes}>
         {handle}
         <div className="key-value-editor__row">
-          <div className={classnames('form-control form-control--underlined form-control--wide', {
-            'form-control--inactive': pair.disabled
-          })}>
+          <div
+            className={classnames(
+              'form-control form-control--underlined form-control--wide',
+              {
+                'form-control--inactive': pair.disabled
+              }
+            )}>
             <OneLineEditor
               ref={this._setNameInputRef}
               placeholder={namePlaceholder || 'Name'}
@@ -338,44 +350,51 @@ class KeyValueEditorRow extends PureComponent {
               onKeyDown={this._handleKeyDown}
             />
           </div>
-          <div className={
-            classnames('form-control form-control--underlined form-control--wide no-min-width', {
-              'form-control--inactive': pair.disabled
-            })}>
+          <div
+            className={classnames(
+              'form-control form-control--underlined form-control--wide no-min-width',
+              {
+                'form-control--inactive': pair.disabled
+              }
+            )}>
             {this.renderPairValue()}
           </div>
 
           {this.renderPairSelector()}
 
           {!hideButtons ? (
-            <Button onClick={this._handleDisableChange}
-                    value={!pair.disabled}
-                    title={pair.disabled ? 'Enable item' : 'Disable item'}>
-              {pair.disabled
-                ? <i className="fa fa-square-o"/>
-                : <i className="fa fa-check-square-o"/>
-              }
+            <Button
+              onClick={this._handleDisableChange}
+              value={!pair.disabled}
+              title={pair.disabled ? 'Enable item' : 'Disable item'}>
+              {pair.disabled ? (
+                <i className="fa fa-square-o" />
+              ) : (
+                <i className="fa fa-check-square-o" />
+              )}
             </Button>
           ) : (
-            <button><i className="fa fa-empty"/></button>
+            <button>
+              <i className="fa fa-empty" />
+            </button>
           )}
 
-          {!noDelete && (
-            !hideButtons ? (
-              <PromptButton key={Math.random()}
-                            tabIndex={-1}
-                            confirmMessage=" "
-                            addIcon
-                            onClick={this._handleDelete}
-                            title="Delete item">
-                <i className="fa fa-trash-o"/>
+          {!noDelete &&
+            (!hideButtons ? (
+              <PromptButton
+                key={Math.random()}
+                tabIndex={-1}
+                confirmMessage=" "
+                addIcon
+                onClick={this._handleDelete}
+                title="Delete item">
+                <i className="fa fa-trash-o" />
               </PromptButton>
             ) : (
               <button>
-                <i className="fa fa-empty"/>
+                <i className="fa fa-empty" />
               </button>
-            )
-          )}
+            ))}
         </div>
       </li>
     );
@@ -436,12 +455,12 @@ KeyValueEditorRow.propTypes = {
 };
 
 const dragSource = {
-  beginDrag (props) {
-    return {pair: props.pair};
+  beginDrag(props) {
+    return { pair: props.pair };
   }
 };
 
-function isAbove (monitor, component) {
+function isAbove(monitor, component) {
   const hoveredNode = ReactDOM.findDOMNode(component);
 
   const hoveredTop = hoveredNode.getBoundingClientRect().top;
@@ -449,18 +468,18 @@ function isAbove (monitor, component) {
   const draggedTop = monitor.getSourceClientOffset().y;
 
   // NOTE: Not quite sure why it's height / 3 (seems to work)
-  return hoveredTop > draggedTop - (height / 3);
+  return hoveredTop > draggedTop - height / 3;
 }
 
 const dragTarget = {
-  drop (props, monitor, component) {
+  drop(props, monitor, component) {
     if (isAbove(monitor, component)) {
       props.onMove(monitor.getItem().pair, props.pair, 1);
     } else {
       props.onMove(monitor.getItem().pair, props.pair, -1);
     }
   },
-  hover (props, monitor, component) {
+  hover(props, monitor, component) {
     if (isAbove(monitor, component)) {
       component.decoratedComponentInstance.setDragDirection(1);
     } else {
@@ -469,7 +488,7 @@ const dragTarget = {
   }
 };
 
-function sourceCollect (connect, monitor) {
+function sourceCollect(connect, monitor) {
   return {
     connectDragSource: connect.dragSource(),
     connectDragPreview: connect.dragPreview(),
@@ -477,21 +496,25 @@ function sourceCollect (connect, monitor) {
   };
 }
 
-function targetCollect (connect, monitor) {
+function targetCollect(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
     isDraggingOver: monitor.isOver()
   };
 }
 
-const source = DragSource('KEY_VALUE_EDITOR', dragSource, sourceCollect)(KeyValueEditorRow);
-const target = DropTarget('KEY_VALUE_EDITOR', dragTarget, targetCollect)(source);
+const source = DragSource('KEY_VALUE_EDITOR', dragSource, sourceCollect)(
+  KeyValueEditorRow
+);
+const target = DropTarget('KEY_VALUE_EDITOR', dragTarget, targetCollect)(
+  source
+);
 
-target.prototype.focusNameEnd = function () {
+target.prototype.focusNameEnd = function() {
   this.handler.component.decoratedComponentInstance.focusNameEnd();
 };
 
-target.prototype.focusValueEnd = function () {
+target.prototype.focusValueEnd = function() {
   this.handler.component.decoratedComponentInstance.focusValueEnd();
 };
 

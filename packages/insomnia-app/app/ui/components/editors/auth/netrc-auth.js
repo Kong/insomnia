@@ -1,14 +1,14 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 
 class NetrcAuth extends PureComponent {
-  render () {
+  render() {
     return (
       <div className="vertically-center text-center">
         <p className="pad super-faint text-sm text-center">
-          <br/>
+          <br />
           Your netrc file will be used to authenticate this request
         </p>
-    </div>
+      </div>
     );
   }
 }

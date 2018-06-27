@@ -1,15 +1,18 @@
 // @flow
-import type {ResponseHeader, ResponseTimelineEntry} from '../models/response';
-import type {Request, RequestHeader} from '../models/request';
-import type {Workspace} from '../models/workspace';
-import type {Settings} from '../models/settings';
-import type {RenderedRequest} from '../common/render';
-import {getRenderedRequestAndContext, RENDER_PURPOSE_SEND} from '../common/render';
+import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
+import type { Request, RequestHeader } from '../models/request';
+import type { Workspace } from '../models/workspace';
+import type { Settings } from '../models/settings';
+import type { RenderedRequest } from '../common/render';
+import {
+  getRenderedRequestAndContext,
+  RENDER_PURPOSE_SEND
+} from '../common/render';
 import mkdirp from 'mkdirp';
 import clone from 'clone';
-import {parse as urlParse, resolve as urlResolve} from 'url';
-import {Curl} from 'insomnia-libcurl';
-import {join as pathJoin} from 'path';
+import { parse as urlParse, resolve as urlResolve } from 'url';
+import { Curl } from 'insomnia-libcurl';
+import { join as pathJoin } from 'path';
 import uuid from 'uuid';
 import * as electron from 'electron';
 import * as models from '../models';
@@ -39,19 +42,24 @@ import {
   hasUserAgentHeader,
   waitForStreamToFinish
 } from '../common/misc';
-import {buildQueryStringFromParams, joinUrlAndQueryString, setDefaultProtocol, smartEncodeUrl} from 'insomnia-url';
+import {
+  buildQueryStringFromParams,
+  joinUrlAndQueryString,
+  setDefaultProtocol,
+  smartEncodeUrl
+} from 'insomnia-url';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
 import * as plugins from '../plugins/index';
 import * as pluginContexts from '../plugins/context/index';
-import {getAuthHeader} from './authentication';
-import {cookiesFromJar, jarFromCookies} from 'insomnia-cookies';
-import {urlMatchesCertHost} from './url-matches-cert-host';
+import { getAuthHeader } from './authentication';
+import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
+import { urlMatchesCertHost } from './url-matches-cert-host';
 import aws4 from 'aws4';
-import {buildMultipart} from './multipart';
+import { buildMultipart } from './multipart';
 
-const {app} = electron.remote || electron;
+const { app } = electron.remote || electron;
 
 export type ResponsePatch = {
   statusMessage?: string,
@@ -82,13 +90,13 @@ const DISABLE_HEADER_VALUE = '__Di$aB13d__';
 let cancelRequestFunction = null;
 let lastUserInteraction = Date.now();
 
-export function cancelCurrentRequest () {
+export function cancelCurrentRequest() {
   if (typeof cancelRequestFunction === 'function') {
     cancelRequestFunction();
   }
 }
 
-export async function _actuallySend (
+export async function _actuallySend(
   renderedRequest: RenderedRequest,
   renderContext: Object,
   workspace: Workspace,
@@ -101,15 +109,22 @@ export async function _actuallySend (
     const curl = new Curl();
 
     /** Helper function to respond with a success */
-    async function respond (patch: ResponsePatch, bodyPath: string | null, noPlugins: boolean = false): Promise<void> {
-      const responsePatchBeforeHooks = Object.assign(({
-        parentId: renderedRequest._id,
-        bodyCompression: null, // Will default to .zip otherwise
-        timeline: timeline,
-        bodyPath: bodyPath || '',
-        settingSendCookies: renderedRequest.settingSendCookies,
-        settingStoreCookies: renderedRequest.settingStoreCookies
-      }: ResponsePatch), patch);
+    async function respond(
+      patch: ResponsePatch,
+      bodyPath: string | null,
+      noPlugins: boolean = false
+    ): Promise<void> {
+      const responsePatchBeforeHooks = Object.assign(
+        ({
+          parentId: renderedRequest._id,
+          bodyCompression: null, // Will default to .zip otherwise
+          timeline: timeline,
+          bodyPath: bodyPath || '',
+          settingSendCookies: renderedRequest.settingSendCookies,
+          settingStoreCookies: renderedRequest.settingStoreCookies
+        }: ResponsePatch),
+        patch
+      );
 
       if (noPlugins) {
         resolve(responsePatchBeforeHooks);
@@ -118,9 +133,19 @@ export async function _actuallySend (
 
       let responsePatch: ?ResponsePatch;
       try {
-        responsePatch = await _applyResponsePluginHooks(responsePatchBeforeHooks, renderedRequest, renderContext);
+        responsePatch = await _applyResponsePluginHooks(
+          responsePatchBeforeHooks,
+          renderedRequest,
+          renderContext
+        );
       } catch (err) {
-        handleError(new Error(`[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`));
+        handleError(
+          new Error(
+            `[plugin] Response hook failed plugin=${err.plugin.name} err=${
+              err.message
+            }`
+          )
+        );
         return;
       }
 
@@ -128,46 +153,58 @@ export async function _actuallySend (
     }
 
     /** Helper function to respond with an error */
-    function handleError (err: Error): void {
-      respond({
-        url: renderedRequest.url,
-        parentId: renderedRequest._id,
-        error: err.message,
-        elapsedTime: 0,
-        statusMessage: 'Error',
-        settingSendCookies: renderedRequest.settingSendCookies,
-        settingStoreCookies: renderedRequest.settingStoreCookies
-      }, null, true);
+    function handleError(err: Error): void {
+      respond(
+        {
+          url: renderedRequest.url,
+          parentId: renderedRequest._id,
+          error: err.message,
+          elapsedTime: 0,
+          statusMessage: 'Error',
+          settingSendCookies: renderedRequest.settingSendCookies,
+          settingStoreCookies: renderedRequest.settingStoreCookies
+        },
+        null,
+        true
+      );
     }
 
     /** Helper function to set Curl options */
-    function setOpt (opt: number, val: any, optional: boolean = false) {
-      const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
+    function setOpt(opt: number, val: any, optional: boolean = false) {
+      const name = Object.keys(Curl.option).find(
+        name => Curl.option[name] === opt
+      );
       try {
         curl.setOpt(opt, val);
       } catch (err) {
         if (!optional) {
           throw new Error(`${err.message} (${opt} ${name || 'n/a'})`);
         } else {
-          console.warn(`Failed to set optional Curl opt (${opt} ${name || 'n/a'})`);
+          console.warn(
+            `Failed to set optional Curl opt (${opt} ${name || 'n/a'})`
+          );
         }
       }
     }
 
-    function enable (feature: number) {
+    function enable(feature: number) {
       curl.enable(feature);
     }
 
     try {
       // Setup the cancellation logic
       cancelRequestFunction = () => {
-        respond({
-          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
-          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
-          url: curl.getInfo(Curl.info.EFFECTIVE_URL),
-          statusMessage: 'Cancelled',
-          error: 'Request was cancelled'
-        }, null, true);
+        respond(
+          {
+            elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
+            bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
+            url: curl.getInfo(Curl.info.EFFECTIVE_URL),
+            statusMessage: 'Cancelled',
+            error: 'Request was cancelled'
+          },
+          null,
+          true
+        );
 
         // Kill it!
         curl.close();
@@ -212,7 +249,10 @@ export async function _actuallySend (
 
       // Setup debug handler
       setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, content: string) => {
-        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType) || '';
+        const name =
+          Object.keys(Curl.info.debug).find(
+            k => Curl.info.debug[k] === infoType
+          ) || '';
 
         if (
           infoType === Curl.info.debug.SSL_DATA_IN ||
@@ -225,10 +265,15 @@ export async function _actuallySend (
         if (infoType === Curl.info.debug.DATA_OUT) {
           if (content.length === 0) {
             // Sometimes this happens, but I'm not sure why. Just ignore it.
-          } else if (content.length < renderedRequest.settingMaxTimelineDataSize) {
-            timeline.push({name, value: content});
+          } else if (
+            content.length < renderedRequest.settingMaxTimelineDataSize
+          ) {
+            timeline.push({ name, value: content });
           } else {
-            timeline.push({name, value: `(${describeByteSize(content.length)} hidden)`});
+            timeline.push({
+              name,
+              value: `(${describeByteSize(content.length)} hidden)`
+            });
           }
           return 0;
         }
@@ -242,11 +287,14 @@ export async function _actuallySend (
         }
 
         // Don't show cookie setting because this will display every domain in the jar
-        if (infoType === Curl.info.debug.TEXT && content.indexOf('Added cookie') === 0) {
+        if (
+          infoType === Curl.info.debug.TEXT &&
+          content.indexOf('Added cookie') === 0
+        ) {
           return 0;
         }
 
-        timeline.push({name, value: content});
+        timeline.push({ name, value: content });
 
         return 0; // Must be here
       });
@@ -256,19 +304,23 @@ export async function _actuallySend (
 
       let lastPercent = 0;
       // NOTE: This option was added in 7.32.0 so make it optional
-      setOpt(Curl.option.XFERINFOFUNCTION, (dltotal, dlnow, ultotal, ulnow) => {
-        if (dltotal === 0) {
+      setOpt(
+        Curl.option.XFERINFOFUNCTION,
+        (dltotal, dlnow, ultotal, ulnow) => {
+          if (dltotal === 0) {
+            return 0;
+          }
+
+          const percent = Math.round((dlnow / dltotal) * 100);
+          if (percent !== lastPercent) {
+            // console.log(`[network] Request downloaded ${percent}%`);
+            lastPercent = percent;
+          }
+
           return 0;
-        }
-
-        const percent = Math.round(dlnow / dltotal * 100);
-        if (percent !== lastPercent) {
-          // console.log(`[network] Request downloaded ${percent}%`);
-          lastPercent = percent;
-        }
-
-        return 0;
-      }, true);
+        },
+        true
+      );
 
       // Set the URL, including the query parameters
       const qs = buildQueryStringFromParams(renderedRequest.parameters);
@@ -286,23 +338,29 @@ export async function _actuallySend (
       } else {
         curl.setUrl(finalUrl);
       }
-      timeline.push({name: 'TEXT', value: 'Preparing request to ' + finalUrl});
-      timeline.push({name: 'TEXT', value: `Using ${Curl.getVersion()}`});
+      timeline.push({
+        name: 'TEXT',
+        value: 'Preparing request to ' + finalUrl
+      });
+      timeline.push({ name: 'TEXT', value: `Using ${Curl.getVersion()}` });
 
       // log some things
       if (renderedRequest.settingEncodeUrl) {
-        timeline.push({name: 'TEXT', value: 'Enable automatic URL encoding'});
+        timeline.push({ name: 'TEXT', value: 'Enable automatic URL encoding' });
       } else {
-        timeline.push({name: 'TEXT', value: 'Disable automatic URL encoding'});
+        timeline.push({
+          name: 'TEXT',
+          value: 'Disable automatic URL encoding'
+        });
       }
 
       // SSL Validation
       if (settings.validateSSL) {
-        timeline.push({name: 'TEXT', value: 'Enable SSL validation'});
+        timeline.push({ name: 'TEXT', value: 'Enable SSL validation' });
       } else {
         setOpt(Curl.option.SSL_VERIFYHOST, 0);
         setOpt(Curl.option.SSL_VERIFYPEER, 0);
-        timeline.push({name: 'TEXT', value: 'Disable SSL validation'});
+        timeline.push({ name: 'TEXT', value: 'Disable SSL validation' });
       }
 
       // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
@@ -337,25 +395,29 @@ export async function _actuallySend (
             expiresTimestamp = Math.round(expiresDate.getTime() / 1000);
           }
 
-          setOpt(Curl.option.COOKIELIST, [
-            cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
-            cookie.hostOnly ? 'FALSE' : 'TRUE',
-            cookie.path,
-            cookie.secure ? 'TRUE' : 'FALSE',
-            expiresTimestamp,
-            cookie.key,
-            cookie.value
-          ].join('\t'));
+          setOpt(
+            Curl.option.COOKIELIST,
+            [
+              cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
+              cookie.hostOnly ? 'FALSE' : 'TRUE',
+              cookie.path,
+              cookie.secure ? 'TRUE' : 'FALSE',
+              expiresTimestamp,
+              cookie.key,
+              cookie.value
+            ].join('\t')
+          );
         }
 
-        for (const {name, value} of renderedRequest.cookies) {
+        for (const { name, value } of renderedRequest.cookies) {
           setOpt(Curl.option.COOKIE, `${name}=${value}`);
         }
 
         timeline.push({
           name: 'TEXT',
-          value: 'Enable cookie sending with jar of ' +
-          `${cookies.length} cookie${cookies.length !== 1 ? 's' : ''}`
+          value:
+            'Enable cookie sending with jar of ' +
+            `${cookies.length} cookie${cookies.length !== 1 ? 's' : ''}`
         });
       } else {
         timeline.push({
@@ -366,11 +428,14 @@ export async function _actuallySend (
 
       // Set proxy settings if we have them
       if (settings.proxyEnabled) {
-        const {protocol} = urlParse(renderedRequest.url);
-        const {httpProxy, httpsProxy, noProxy} = settings;
+        const { protocol } = urlParse(renderedRequest.url);
+        const { httpProxy, httpsProxy, noProxy } = settings;
         const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
         const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-        timeline.push({name: 'TEXT', value: `Enable network proxy for ${protocol || ''}`});
+        timeline.push({
+          name: 'TEXT',
+          value: `Enable network proxy for ${protocol || ''}`
+        });
         if (proxy) {
           setOpt(Curl.option.PROXY, proxy);
           setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
@@ -383,13 +448,18 @@ export async function _actuallySend (
       }
 
       // Set client certs if needed
-      const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
+      const clientCertificates = await models.clientCertificate.findByParentId(
+        workspace._id
+      );
       for (const certificate of clientCertificates) {
         if (certificate.disabled) {
           continue;
         }
 
-        const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
+        const cHostWithProtocol = setDefaultProtocol(
+          certificate.host,
+          'https:'
+        );
 
         if (urlMatchesCertHost(cHostWithProtocol, renderedRequest.url)) {
           const ensureFile = blobOrFilename => {
@@ -411,23 +481,32 @@ export async function _actuallySend (
             return blobOrFilename;
           };
 
-          const {passphrase, cert, key, pfx} = certificate;
+          const { passphrase, cert, key, pfx } = certificate;
 
           if (cert) {
             setOpt(Curl.option.SSLCERT, ensureFile(cert));
             setOpt(Curl.option.SSLCERTTYPE, 'PEM');
-            timeline.push({name: 'TEXT', value: 'Adding SSL PEM certificate'});
+            timeline.push({
+              name: 'TEXT',
+              value: 'Adding SSL PEM certificate'
+            });
           }
 
           if (pfx) {
             setOpt(Curl.option.SSLCERT, ensureFile(pfx));
             setOpt(Curl.option.SSLCERTTYPE, 'P12');
-            timeline.push({name: 'TEXT', value: 'Adding SSL P12 certificate'});
+            timeline.push({
+              name: 'TEXT',
+              value: 'Adding SSL P12 certificate'
+            });
           }
 
           if (key) {
             setOpt(Curl.option.SSLKEY, ensureFile(key));
-            timeline.push({name: 'TEXT', value: 'Adding SSL KEY certificate'});
+            timeline.push({
+              name: 'TEXT',
+              value: 'Adding SSL KEY certificate'
+            });
           }
 
           if (passphrase) {
@@ -439,12 +518,21 @@ export async function _actuallySend (
       // Build the body
       let noBody = false;
       let requestBody = null;
-      const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
+      const expectsBody = ['POST', 'PUT', 'PATCH'].includes(
+        renderedRequest.method.toUpperCase()
+      );
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-        requestBody = buildQueryStringFromParams(renderedRequest.body.params || [], false);
+        requestBody = buildQueryStringFromParams(
+          renderedRequest.body.params || [],
+          false
+        );
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const params = renderedRequest.body.params || [];
-        const {filePath: multipartBodyPath, boundary, contentLength} = await buildMultipart(params);
+        const {
+          filePath: multipartBodyPath,
+          boundary,
+          contentLength
+        } = await buildMultipart(params);
 
         // Extend the Content-Type header
         const contentTypeHeader = getContentTypeHeader(headers);
@@ -468,14 +556,13 @@ export async function _actuallySend (
 
         const fn = () => {
           fs.closeSync(fd);
-          fs.unlink(multipartBodyPath, () => {
-          });
+          fs.unlink(multipartBodyPath, () => {});
         };
 
         curl.on('end', fn);
         curl.on('error', fn);
       } else if (renderedRequest.body.fileName) {
-        const {size} = fs.statSync(renderedRequest.body.fileName);
+        const { size } = fs.statSync(renderedRequest.body.fileName);
         const fileName = renderedRequest.body.fileName || '';
         const fd = fs.openSync(fileName, 'r');
 
@@ -489,7 +576,10 @@ export async function _actuallySend (
         const fn = () => fs.closeSync(fd);
         curl.on('end', fn);
         curl.on('error', fn);
-      } else if (typeof renderedRequest.body.mimeType === 'string' || expectsBody) {
+      } else if (
+        typeof renderedRequest.body.mimeType === 'string' ||
+        expectsBody
+      ) {
         requestBody = renderedRequest.body.text || '';
       } else {
         // No body
@@ -498,8 +588,11 @@ export async function _actuallySend (
 
       if (!noBody) {
         // Don't chunk uploads
-        headers.push({name: 'Expect', value: DISABLE_HEADER_VALUE});
-        headers.push({name: 'Transfer-Encoding', value: DISABLE_HEADER_VALUE});
+        headers.push({ name: 'Expect', value: DISABLE_HEADER_VALUE });
+        headers.push({
+          name: 'Transfer-Encoding',
+          value: DISABLE_HEADER_VALUE
+        });
       }
 
       // If we calculated the body within Insomnia (ie. not computed by Curl)
@@ -510,26 +603,29 @@ export async function _actuallySend (
       // Handle Authorization header
       if (!hasAuthHeader(headers) && !renderedRequest.authentication.disabled) {
         if (renderedRequest.authentication.type === AUTH_BASIC) {
-          const {username, password} = renderedRequest.authentication;
+          const { username, password } = renderedRequest.authentication;
           setOpt(Curl.option.HTTPAUTH, Curl.auth.BASIC);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_DIGEST) {
-          const {username, password} = renderedRequest.authentication;
+          const { username, password } = renderedRequest.authentication;
           setOpt(Curl.option.HTTPAUTH, Curl.auth.DIGEST);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_NTLM) {
-          const {username, password} = renderedRequest.authentication;
+          const { username, password } = renderedRequest.authentication;
           setOpt(Curl.option.HTTPAUTH, Curl.auth.NTLM);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
           if (!noBody && !requestBody) {
             return handleError(
-              new Error('AWS authentication not supported for provided body type'));
+              new Error(
+                'AWS authentication not supported for provided body type'
+              )
+            );
           }
-          const {authentication} = renderedRequest;
+          const { authentication } = renderedRequest;
           const credentials = {
             accessKeyId: authentication.accessKeyId || '',
             secretAccessKey: authentication.secretAccessKey || '',
@@ -568,12 +664,12 @@ export async function _actuallySend (
 
       // Send a default Accept headers of anything
       if (!hasAcceptHeader(headers)) {
-        headers.push({name: 'Accept', value: '*/*'}); // Default to anything
+        headers.push({ name: 'Accept', value: '*/*' }); // Default to anything
       }
 
       // Don't auto-send Accept-Encoding header
       if (!hasAcceptEncodingHeader(headers)) {
-        headers.push({name: 'Accept-Encoding', value: DISABLE_HEADER_VALUE});
+        headers.push({ name: 'Accept-Encoding', value: DISABLE_HEADER_VALUE });
       }
 
       // Set User-Agent if it't not already in headers
@@ -583,25 +679,23 @@ export async function _actuallySend (
 
       // Prevent curl from adding default content-type header
       if (!hasContentTypeHeader(headers)) {
-        headers.push({name: 'content-type', value: DISABLE_HEADER_VALUE});
+        headers.push({ name: 'content-type', value: DISABLE_HEADER_VALUE });
       }
 
       // NOTE: This is last because headers might be modified multiple times
-      const headerStrings = headers
-        .filter(h => h.name)
-        .map(h => {
-          const value = h.value || '';
-          if (value === '') {
-            // Curl needs a semicolon suffix to send empty header values
-            return `${h.name};`;
-          } else if (value === DISABLE_HEADER_VALUE) {
-            // Tell Curl NOT to send the header if value is null
-            return `${h.name}:`;
-          } else {
-            // Send normal header value
-            return `${h.name}: ${value}`;
-          }
-        });
+      const headerStrings = headers.filter(h => h.name).map(h => {
+        const value = h.value || '';
+        if (value === '') {
+          // Curl needs a semicolon suffix to send empty header values
+          return `${h.name};`;
+        } else if (value === DISABLE_HEADER_VALUE) {
+          // Tell Curl NOT to send the header if value is null
+          return `${h.name}:`;
+        } else {
+          // Send normal header value
+          return `${h.name}: ${value}`;
+        }
+      });
       setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       let responseBodyBytes = 0;
@@ -621,7 +715,8 @@ export async function _actuallySend (
       curl.on('end', async (_1, _2, rawHeaders) => {
         const allCurlHeadersObjects = _parseHeaders(rawHeaders);
         // Headers are an array (one for each redirect)
-        const lastCurlHeadersObject = allCurlHeadersObjects[allCurlHeadersObjects.length - 1];
+        const lastCurlHeadersObject =
+          allCurlHeadersObjects[allCurlHeadersObjects.length - 1];
 
         // Collect various things
         const httpVersion = lastCurlHeadersObject.version || '';
@@ -640,10 +735,13 @@ export async function _actuallySend (
         let setCookieStrings: Array<string> = [];
         const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
 
-        for (const {headers} of allCurlHeadersObjects) {
+        for (const { headers } of allCurlHeadersObjects) {
           // Collect Set-Cookie headers
           const setCookieHeaders = getSetCookieHeaders(headers);
-          setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
+          setCookieStrings = [
+            ...setCookieStrings,
+            ...setCookieHeaders.map(h => h.value)
+          ];
 
           // Pull out new URL if there is a redirect
           const newLocation = getLocationHeader(headers);
@@ -657,23 +755,32 @@ export async function _actuallySend (
           try {
             jar.setCookieSync(setCookieStr, currentUrl);
           } catch (err) {
-            timeline.push({name: 'TEXT', value: `Rejected cookie: ${err.message}`});
+            timeline.push({
+              name: 'TEXT',
+              value: `Rejected cookie: ${err.message}`
+            });
           }
         }
 
         // Update cookie jar if we need to and if we found any cookies
         if (renderedRequest.settingStoreCookies && setCookieStrings.length) {
           const cookies = await cookiesFromJar(jar);
-          models.cookieJar.update(renderedRequest.cookieJar, {cookies});
+          models.cookieJar.update(renderedRequest.cookieJar, { cookies });
         }
 
         // Print informational message
         if (setCookieStrings.length > 0) {
           const n = setCookieStrings.length;
           if (renderedRequest.settingStoreCookies) {
-            timeline.push({name: 'TEXT', value: `Saved ${n} cookie${n === 1 ? '' : 's'}`});
+            timeline.push({
+              name: 'TEXT',
+              value: `Saved ${n} cookie${n === 1 ? '' : 's'}`
+            });
           } else {
-            timeline.push({name: 'TEXT', value: `Ignored ${n} cookie${n === 1 ? '' : 's'}`});
+            timeline.push({
+              name: 'TEXT',
+              value: `Ignored ${n} cookie${n === 1 ? '' : 's'}`
+            });
           }
         }
 
@@ -699,7 +806,7 @@ export async function _actuallySend (
         respond(responsePatch, responseBodyPath);
       });
 
-      curl.on('error', function (err, code) {
+      curl.on('error', function(err, code) {
         let error = err + '';
         let statusMessage = 'Error';
 
@@ -708,7 +815,7 @@ export async function _actuallySend (
           statusMessage = 'Abort';
         }
 
-        respond({statusMessage, error}, null, true);
+        respond({ statusMessage, error }, null, true);
       });
 
       curl.perform();
@@ -718,7 +825,7 @@ export async function _actuallySend (
   });
 }
 
-export async function sendWithSettings (
+export async function sendWithSettings(
   requestId: string,
   requestPatch: Object
 ): Promise<ResponsePatch> {
@@ -734,32 +841,48 @@ export async function sendWithSettings (
     models.workspace.type
   ]);
 
-  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspaceDoc = ancestors.find(
+    doc => doc.type === models.workspace.type
+  );
   const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
   const workspace = await models.workspace.getById(workspaceId);
   if (!workspace) {
     throw new Error(`Failed to find workspace for: ${requestId}`);
   }
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
+    workspace._id
+  );
   const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
 
-  const newRequest: Request = await models.initModel(models.request.type, requestPatch, {
-    _id: request._id + '.other',
-    parentId: request._id
-  });
+  const newRequest: Request = await models.initModel(
+    models.request.type,
+    requestPatch,
+    {
+      _id: request._id + '.other',
+      parentId: request._id
+    }
+  );
 
   let renderResult: { request: RenderedRequest, context: Object };
   try {
-    renderResult = await getRenderedRequestAndContext(newRequest, environmentId);
+    renderResult = await getRenderedRequestAndContext(
+      newRequest,
+      environmentId
+    );
   } catch (err) {
     throw new Error(`Failed to render request: ${requestId}`);
   }
 
-  return _actuallySend(renderResult.request, renderResult.context, workspace, settings);
+  return _actuallySend(
+    renderResult.request,
+    renderResult.context,
+    workspace,
+    settings
+  );
 }
 
-export async function send (
+export async function send(
   requestId: string,
   environmentId: string
 ): Promise<ResponsePatch> {
@@ -799,8 +922,12 @@ export async function send (
   const renderedRequestBeforePlugins = renderResult.request;
   const renderedContextBeforePlugins = renderResult.context;
 
-  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
-  const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
+  const workspaceDoc = ancestors.find(
+    doc => doc.type === models.workspace.type
+  );
+  const workspace = await models.workspace.getById(
+    workspaceDoc ? workspaceDoc._id : 'n/a'
+  );
   if (!workspace) {
     throw new Error(`Failed to find workspace for request: ${requestId}`);
   }
@@ -823,15 +950,20 @@ export async function send (
     };
   }
 
-  return _actuallySend(renderedRequest, renderedContextBeforePlugins, workspace, settings);
+  return _actuallySend(
+    renderedRequest,
+    renderedContextBeforePlugins,
+    workspace,
+    settings
+  );
 }
 
-async function _applyRequestPluginHooks (
+async function _applyRequestPluginHooks(
   renderedRequest: RenderedRequest,
   renderedContext: Object
 ): Promise<RenderedRequest> {
   const newRenderedRequest = clone(renderedRequest);
-  for (const {plugin, hook} of await plugins.getRequestHooks()) {
+  for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
       ...pluginContexts.app.init(),
       ...pluginContexts.store.init(plugin),
@@ -849,7 +981,7 @@ async function _applyRequestPluginHooks (
   return newRenderedRequest;
 }
 
-async function _applyResponsePluginHooks (
+async function _applyResponsePluginHooks(
   response: ResponsePatch,
   request: RenderedRequest,
   renderContext: Object
@@ -857,7 +989,7 @@ async function _applyResponsePluginHooks (
   const newResponse = clone(response);
   const newRequest = clone(request);
 
-  for (const {plugin, hook} of await plugins.getResponseHooks()) {
+  for (const { plugin, hook } of await plugins.getResponseHooks()) {
     const context = {
       ...pluginContexts.app.init(),
       ...pluginContexts.store.init(plugin),
@@ -876,9 +1008,14 @@ async function _applyResponsePluginHooks (
   return newResponse;
 }
 
-export function _parseHeaders (
+export function _parseHeaders(
   buffer: Buffer
-): Array<{ headers: Array<ResponseHeader>, version: string, code: number, reason: string }> {
+): Array<{
+  headers: Array<ResponseHeader>,
+  version: string,
+  code: number,
+  reason: string
+}> {
   const results = [];
 
   const lines = buffer.toString('utf8').split(/\r?\n|\r/g);
@@ -904,7 +1041,7 @@ export function _parseHeaders (
       };
     } else {
       const [name, value] = line.split(/:\s(.+)/);
-      const header: ResponseHeader = {name, value: value || ''};
+      const header: ResponseHeader = { name, value: value || '' };
       currentResult.headers.push(header);
     }
   }
@@ -913,11 +1050,11 @@ export function _parseHeaders (
 }
 
 // exported for unit tests only
-export function _getAwsAuthHeaders (
+export function _getAwsAuthHeaders(
   credentials: {
     accessKeyId: string,
     secretAccessKey: string,
-    sessionToken: string,
+    sessionToken: string
   },
   headers: Array<RequestHeader>,
   body: string,
@@ -949,7 +1086,7 @@ export function _getAwsAuthHeaders (
 
   return Object.keys(signature.headers)
     .filter(name => name !== 'content-type') // Don't add this because we already have it
-    .map(name => ({name, value: signature.headers[name]}));
+    .map(name => ({ name, value: signature.headers[name] }));
 }
 
 document.addEventListener('keydown', (e: KeyboardEvent) => {

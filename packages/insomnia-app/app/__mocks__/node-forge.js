@@ -9,35 +9,33 @@ module.exports = {
   jsbn: forge.jsbn,
   util: forge.util,
   pkcs5: {
-    pbkdf2 () {
-
-    }
+    pbkdf2() {}
   },
   md: {
     sha256: {
-      create () {
+      create() {
         return 'TODO';
       }
     }
   },
   rsa: {
-    setPublicKey () {
+    setPublicKey() {
       return {
-        encrypt (str) {
+        encrypt(str) {
           return str;
         }
       };
     },
-    setPrivateKey () {
+    setPrivateKey() {
       return {
-        decrypt (str) {
+        decrypt(str) {
           return str;
         }
       };
     }
   },
   random: {
-    getBytesSync (n) {
+    getBytesSync(n) {
       let s = '';
       for (let i = 0; i < n; i++) {
         s += 'a';
@@ -47,7 +45,7 @@ module.exports = {
   },
   pki: {
     rsa: {
-      generateKeyPair () {
+      generateKeyPair() {
         return {
           privateKey: {
             d: 'a',
@@ -68,29 +66,29 @@ module.exports = {
     }
   },
   cipher: {
-    createCipher (alg, key) {
+    createCipher(alg, key) {
       return {
-        start (config) {
+        start(config) {
           this._config = config;
         },
-        update (buffer) {
+        update(buffer) {
           this._data = buffer;
         },
-        finish () {
-          this.mode = {tag: 'tag'};
+        finish() {
+          this.mode = { tag: 'tag' };
           this.output = this._data;
         }
       };
     },
-    createDecipher (alg, key) {
+    createDecipher(alg, key) {
       return {
-        start (config) {
+        start(config) {
           this._config = config;
         },
-        update (buffer) {
+        update(buffer) {
           this.output = buffer;
         },
-        finish () {
+        finish() {
           return true;
         }
       };

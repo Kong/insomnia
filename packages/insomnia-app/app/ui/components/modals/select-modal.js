@@ -10,7 +10,7 @@ type Props = {};
 
 type State = {
   title: string,
-  options: Array<{name: string, value: string}>,
+  options: Array<{ name: string, value: string }>,
   value: string,
   message: string
 };
@@ -21,7 +21,7 @@ class SelectModal extends React.PureComponent<Props, State> {
   doneButton: ?HTMLButtonElement;
   _doneCallback: ?Function;
 
-  constructor (props: Props) {
+  constructor(props: Props) {
     super(props);
 
     this.state = {
@@ -32,39 +32,33 @@ class SelectModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef (m: ?Modal) {
+  _setModalRef(m: ?Modal) {
     this.modal = m;
   }
 
-  _setDoneButtonRef (n: ?HTMLButtonElement) {
+  _setDoneButtonRef(n: ?HTMLButtonElement) {
     this.doneButton = n;
   }
 
-  _handleDone () {
+  _handleDone() {
     this.hide();
     this._doneCallback && this._doneCallback(this.state.value);
   }
 
-  _handleSelectChange (e: SyntheticEvent<HTMLInputElement>) {
-    this.setState({value: e.currentTarget.value});
+  _handleSelectChange(e: SyntheticEvent<HTMLInputElement>) {
+    this.setState({ value: e.currentTarget.value });
   }
 
-  hide () {
+  hide() {
     this.modal && this.modal.hide();
   }
 
-  show (data: Object = {}) {
-    const {
-      title,
-      message,
-      options,
-      value,
-      onDone
-    } = data;
+  show(data: Object = {}) {
+    const { title, message, options, value, onDone } = data;
 
     this._doneCallback = onDone;
 
-    this.setState({title, message, options, value});
+    this.setState({ title, message, options, value });
 
     this.modal && this.modal.show();
     setTimeout(() => {
@@ -72,8 +66,8 @@ class SelectModal extends React.PureComponent<Props, State> {
     }, 100);
   }
 
-  render () {
-    const {message, title, options, value} = this.state;
+  render() {
+    const { message, title, options, value } = this.state;
 
     return (
       <Modal noEscape ref={this._setModalRef}>
@@ -82,14 +76,19 @@ class SelectModal extends React.PureComponent<Props, State> {
           <p>{message}</p>
           <div className="form-control form-control--outlined">
             <select onChange={this._handleSelectChange} value={value}>
-              {options.map(({name, value}) => (
-                <option key={value} value={value}>{name}</option>
+              {options.map(({ name, value }) => (
+                <option key={value} value={value}>
+                  {name}
+                </option>
               ))}
             </select>
           </div>
         </ModalBody>
         <ModalFooter>
-          <button ref={this._setDoneButtonRef} className="btn" onClick={this._handleDone}>
+          <button
+            ref={this._setDoneButtonRef}
+            className="btn"
+            onClick={this._handleDone}>
             Done
           </button>
         </ModalFooter>

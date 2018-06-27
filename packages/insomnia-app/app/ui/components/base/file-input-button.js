@@ -1,8 +1,8 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import {basename as pathBasename} from 'path';
-import {remote} from 'electron';
+import { basename as pathBasename } from 'path';
+import { remote } from 'electron';
 
 type Props = {
   // Required
@@ -18,19 +18,19 @@ type Props = {
 @autobind
 class FileInputButton extends React.PureComponent<Props> {
   _button: ?HTMLButtonElement;
-  focus () {
+  focus() {
     this._button && this._button.focus();
   }
 
-  focusEnd () {
+  focusEnd() {
     this._button && this._button.focus();
   }
 
-  _setRef (n: ?HTMLButtonElement) {
+  _setRef(n: ?HTMLButtonElement) {
     this._button = n;
   }
 
-  _handleChooseFile () {
+  _handleChooseFile() {
     const options = {
       title: 'Import File',
       buttonLabel: 'Import',
@@ -48,16 +48,23 @@ class FileInputButton extends React.PureComponent<Props> {
     });
   }
 
-  render () {
-    const {showFileName, showFileIcon, path, name, ...extraProps} = this.props;
+  render() {
+    const {
+      showFileName,
+      showFileIcon,
+      path,
+      name,
+      ...extraProps
+    } = this.props;
     const fileName = pathBasename(path);
     return (
-      <button type="button"
-              ref={this._setRef}
-              onClick={this._handleChooseFile}
-              title={path}
-              {...extraProps}>
-        {showFileIcon && <i className="fa fa-file-o space-right"/>}
+      <button
+        type="button"
+        ref={this._setRef}
+        onClick={this._handleChooseFile}
+        title={path}
+        {...extraProps}>
+        {showFileIcon && <i className="fa fa-file-o space-right" />}
         {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
       </button>
     );

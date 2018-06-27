@@ -7,7 +7,7 @@ const ENTITY_CHANGES = 'entities/changes';
 // Reducers //
 // ~~~~~~~~ //
 
-function getReducerName (type) {
+function getReducerName(type) {
   const trailer = type.match(/s$/) ? '' : 's';
   return `${type.slice(0, 1).toLowerCase()}${type.slice(1)}${trailer}`;
 }
@@ -18,11 +18,11 @@ for (const type of models.types()) {
   initialState[getReducerName(type)] = {};
 }
 
-export function reducer (state = initialState, action) {
+export function reducer(state = initialState, action) {
   switch (action.type) {
     case ENTITY_CHANGES:
       const newState = Object.assign({}, state);
-      const {changes} = action;
+      const { changes } = action;
 
       for (const [event, doc] of changes) {
         const referenceName = getReducerName(doc.type);
@@ -52,7 +52,7 @@ export function reducer (state = initialState, action) {
 // Actions //
 // ~~~~~~~ //
 
-export function addChanges (changes) {
+export function addChanges(changes) {
   return dispatch => {
     setTimeout(() => {
       dispatch(addChangesSync(changes));
@@ -60,6 +60,6 @@ export function addChanges (changes) {
   };
 }
 
-export function addChangesSync (changes) {
-  return {type: ENTITY_CHANGES, changes};
+export function addChangesSync(changes) {
+  return { type: ENTITY_CHANGES, changes };
 }

@@ -1,27 +1,27 @@
-import {EventEmitter} from 'events';
+import { EventEmitter } from 'events';
 import fs from 'fs';
 
 class Curl extends EventEmitter {
-  constructor () {
+  constructor() {
     super();
     this._options = {};
     this._meta = {};
     this._features = {};
   }
 
-  static getVersion () {
+  static getVersion() {
     return 'libcurl/7.54.0 LibreSSL/2.0.20 zlib/1.2.11 nghttp2/1.24.0';
   }
 
-  enable (name) {
+  enable(name) {
     this._features[name] = true;
   }
 
-  setUrl (url) {
+  setUrl(url) {
     this.setOpt(Curl.option.URL, url);
   }
 
-  setOpt (name, value) {
+  setOpt(name, value) {
     if (!name) {
       throw new Error(`Invalid option ${name} ${value}`);
     }
@@ -51,7 +51,7 @@ class Curl extends EventEmitter {
       this._options[name] = this._options[name] || [];
       this._options[name].push(value);
     } else if (name === Curl.option.READDATA) {
-      const {size} = fs.fstatSync(value);
+      const { size } = fs.fstatSync(value);
       const buffer = Buffer.alloc(size);
       fs.readSync(value, buffer, 0, size, 0);
       this._options[name] = buffer.toString();
@@ -60,10 +60,13 @@ class Curl extends EventEmitter {
     }
   }
 
-  getInfo (name) {
+  getInfo(name) {
     switch (name) {
       case Curl.info.COOKIELIST:
-        return [`#HttpOnly_.insomnia.rest\tTRUE\t/url/path\tTRUE\t${Date.now() / 1000}\tfoo\tbar`];
+        return [
+          `#HttpOnly_.insomnia.rest\tTRUE\t/url/path\tTRUE\t${Date.now() /
+            1000}\tfoo\tbar`
+        ];
       case Curl.info.EFFECTIVE_URL:
         return this._options[Curl.option.URL];
       case Curl.info.TOTAL_TIME:
@@ -75,30 +78,36 @@ class Curl extends EventEmitter {
     }
   }
 
-  perform () {
+  perform() {
     process.nextTick(() => {
-      const data = Buffer.from(JSON.stringify({
-        options: this._options,
-        meta: this._meta,
-        features: this._features
-      }));
+      const data = Buffer.from(
+        JSON.stringify({
+          options: this._options,
+          meta: this._meta,
+          features: this._features
+        })
+      );
 
       this.emit('data', data);
       this._options.WRITEFUNCTION(data);
 
       process.nextTick(() => {
-        this.emit('end', 'NOT_USED', 'NOT_USED', [
-          'HTTP/1.1 200 OK',
-          `Content-Length: ${data.length}`,
-          'Content-Type: application/json',
-          ''
-        ].join('\n'));
+        this.emit(
+          'end',
+          'NOT_USED',
+          'NOT_USED',
+          [
+            'HTTP/1.1 200 OK',
+            `Content-Length: ${data.length}`,
+            'Content-Type: application/json',
+            ''
+          ].join('\n')
+        );
       });
     });
   }
 
-  close () {
-  }
+  close() {}
 }
 
 Curl.info = {

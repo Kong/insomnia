@@ -25,7 +25,7 @@ type State = {
   cancelable: ?boolean,
   onComplete: ?(string) => void,
   onCancel: ?() => void,
-  onDeleteHint: ?(string) => void,
+  onDeleteHint: ?(string) => void
 };
 
 @autobind
@@ -33,7 +33,7 @@ class PromptModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _input: ?HTMLInputElement;
 
-  constructor (props: Props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       title: 'Not Set',
@@ -53,33 +53,33 @@ class PromptModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _done (rawValue: string) {
-    const {onComplete, upperCase} = this.state;
+  _done(rawValue: string) {
+    const { onComplete, upperCase } = this.state;
     const value = upperCase ? rawValue.toUpperCase() : rawValue;
     onComplete && onComplete(value);
     this.hide();
   }
 
-  _setInputRef (n: ?HTMLInputElement) {
+  _setInputRef(n: ?HTMLInputElement) {
     this._input = n;
   }
 
-  _setModalRef (n: ?Modal) {
+  _setModalRef(n: ?Modal) {
     this.modal = n;
   }
 
-  _handleSelectHint (hint: string) {
+  _handleSelectHint(hint: string) {
     this._done(hint);
   }
 
-  _handleDeleteHint (hint: string) {
-    const {onDeleteHint} = this.state;
+  _handleDeleteHint(hint: string) {
+    const { onDeleteHint } = this.state;
     onDeleteHint && onDeleteHint(hint);
     const hints = this.state.hints.filter(h => h !== hint);
-    this.setState({hints});
+    this.setState({ hints });
   }
 
-  _handleSubmit (e: SyntheticEvent<HTMLFormElement>) {
+  _handleSubmit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (this._input) {
@@ -87,11 +87,11 @@ class PromptModal extends React.PureComponent<Props, State> {
     }
   }
 
-  hide () {
+  hide() {
     this.modal && this.modal.hide();
   }
 
-  show (options: {
+  show(options: {
     title: string,
     defaultValue?: string,
     submitName?: string,
@@ -103,9 +103,9 @@ class PromptModal extends React.PureComponent<Props, State> {
     placeholder?: string,
     label?: string,
     hints?: Array<string>,
-    onComplete?: (string) => void,
-    onDeleteHint?: (string) => void,
-    onCancel?: () => void,
+    onComplete?: string => void,
+    onDeleteHint?: string => void,
+    onCancel?: () => void
   }) {
     const {
       title,
@@ -154,7 +154,7 @@ class PromptModal extends React.PureComponent<Props, State> {
     }, 100);
   }
 
-  _renderHintButton (hint: string) {
+  _renderHintButton(hint: string) {
     const classes = classnames(
       'btn btn--outlined btn--super-duper-compact',
       'margin-right-sm margin-top-sm inline-block'
@@ -165,18 +165,19 @@ class PromptModal extends React.PureComponent<Props, State> {
         <Button className="tall" onClick={this._handleSelectHint} value={hint}>
           {hint}
         </Button>
-        <PromptButton addIcon
-                      confirmMessage=" "
-                      className="tall space-left icon"
-                      onClick={this._handleDeleteHint}
-                      value={hint}>
-          <i className="fa fa-close faint"/>
+        <PromptButton
+          addIcon
+          confirmMessage=" "
+          className="tall space-left icon"
+          onClick={this._handleDeleteHint}
+          value={hint}>
+          <i className="fa fa-close faint" />
         </PromptButton>
       </div>
     );
   }
 
-  render () {
+  render() {
     const {
       submitName,
       title,
@@ -194,10 +195,10 @@ class PromptModal extends React.PureComponent<Props, State> {
       <input
         ref={this._setInputRef}
         id="prompt-input"
-        type={inputType === 'decimal' ? 'number' : (inputType || 'text')}
+        type={inputType === 'decimal' ? 'number' : inputType || 'text'}
         step={inputType === 'decimal' ? '0.1' : null}
         min={inputType === 'decimal' ? '0.5' : null}
-        style={{textTransform: upperCase ? 'uppercase' : 'none'}}
+        style={{ textTransform: upperCase ? 'uppercase' : 'none' }}
         placeholder={placeholder || ''}
       />
     );
@@ -213,13 +214,22 @@ class PromptModal extends React.PureComponent<Props, State> {
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">
             <div className="form-control form-control--outlined form-control--wide">
-              {label ? <label>{label}{input}</label> : input}
+              {label ? (
+                <label>
+                  {label}
+                  {input}
+                </label>
+              ) : (
+                input
+              )}
             </div>
             {sanitizedHints}
           </form>
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
+          <div className="margin-left faint italic txt-sm tall">
+            {hint ? `* ${hint}` : ''}
+          </div>
           <button className="btn" onClick={this._handleSubmit}>
             {submitName || 'Submit'}
           </button>

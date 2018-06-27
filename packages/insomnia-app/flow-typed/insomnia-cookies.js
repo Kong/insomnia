@@ -3,5 +3,5 @@ declare module 'insomnia-cookies' {
     cookieToString: Function,
     jarFromCookies: Function,
     cookiesFromJar: Function
-  }
+  };
 }

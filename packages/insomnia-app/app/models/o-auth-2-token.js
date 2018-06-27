@@ -1,5 +1,5 @@
 // @flow
-import type {BaseModel} from './index';
+import type { BaseModel } from './index';
 
 import * as db from '../common/database';
 
@@ -21,7 +21,7 @@ export const type = 'OAuth2Token';
 export const prefix = 'oa2';
 export const canDuplicate = false;
 
-export function init (): BaseOAuth2Token {
+export function init(): BaseOAuth2Token {
   return {
     refreshToken: '',
     accessToken: '',
@@ -34,40 +34,47 @@ export function init (): BaseOAuth2Token {
   };
 }
 
-export function migrate<T> (doc: T): T {
+export function migrate<T>(doc: T): T {
   return doc;
 }
 
-export function create (patch: Object = {}): Promise<OAuth2Token> {
+export function create(patch: Object = {}): Promise<OAuth2Token> {
   if (!patch.parentId) {
-    throw new Error(`New OAuth2Token missing \`parentId\` ${JSON.stringify(patch)}`);
+    throw new Error(
+      `New OAuth2Token missing \`parentId\` ${JSON.stringify(patch)}`
+    );
   }
 
   return db.docCreate(type, patch);
 }
 
-export function update (token: OAuth2Token, patch: Object): Promise<OAuth2Token> {
+export function update(
+  token: OAuth2Token,
+  patch: Object
+): Promise<OAuth2Token> {
   return db.docUpdate(token, patch);
 }
 
-export function remove (token: OAuth2Token): Promise<void> {
+export function remove(token: OAuth2Token): Promise<void> {
   return db.remove(token);
 }
 
-export function getByParentId (parentId: string): Promise<OAuth2Token | null> {
-  return db.getWhere(type, {parentId});
+export function getByParentId(parentId: string): Promise<OAuth2Token | null> {
+  return db.getWhere(type, { parentId });
 }
 
-export async function getOrCreateByParentId (parentId: string): Promise<OAuth2Token> {
-  let token = await db.getWhere(type, {parentId});
+export async function getOrCreateByParentId(
+  parentId: string
+): Promise<OAuth2Token> {
+  let token = await db.getWhere(type, { parentId });
 
   if (!token) {
-    token = await create({parentId});
+    token = await create({ parentId });
   }
 
   return token;
 }
 
-export function all (): Promise<Array<OAuth2Token>> {
+export function all(): Promise<Array<OAuth2Token>> {
   return db.all(type);
 }

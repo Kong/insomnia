@@ -1,7 +1,7 @@
 import HTML5Backend from 'react-dnd-html5-backend/lib/HTML5Backend';
 
 class DNDBackend extends HTML5Backend {
-  handleTopDragEndCapture (e) {
+  handleTopDragEndCapture(e) {
     if (this.isDraggingNativeItem()) {
       setTimeout(() => {
         this.actions.endDrag();
@@ -12,27 +12,27 @@ class DNDBackend extends HTML5Backend {
     super.handleTopDragEndCapture(e);
   }
 
-  handleTopDragOver (e) {
+  handleTopDragOver(e) {
     if (this.isDraggingNativeItem()) return;
     super.handleTopDragOver(e);
   }
 
-  handleTopDragLeaveCapture (e) {
+  handleTopDragLeaveCapture(e) {
     if (this.isDraggingNativeItem()) return;
     super.handleTopDragLeaveCapture(e);
   }
 
-  handleTopDropCapture (e) {
+  handleTopDropCapture(e) {
     if (this.isDraggingNativeItem()) return;
     super.handleTopDropCapture(e);
   }
 
-  handleTopDrop (e) {
+  handleTopDrop(e) {
     if (!this.monitor.isDragging() || this.isDraggingNativeItem()) return;
     super.handleTopDrop(e);
   }
 }
 
-export default function (manager) {
+export default function(manager) {
   return new DNDBackend(manager);
 }

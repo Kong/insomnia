@@ -1,36 +1,31 @@
-var unirest = require("unirest");
+var unirest = require('unirest');
 
-var req = unirest("POST", "http://mockbin.com/har");
+var req = unirest('POST', 'http://mockbin.com/har');
 
 req.headers({
-  "content-type": "application/json"
+  'content-type': 'application/json'
 });
 
-req.type("json");
+req.type('json');
 req.send({
-  "number": 1,
-  "string": "f\"oo",
-  "arr": [
-    1,
-    2,
-    3
-  ],
-  "nested": {
-    "a": "b"
+  number: 1,
+  string: 'f"oo',
+  arr: [1, 2, 3],
+  nested: {
+    a: 'b'
   },
-  "arr_mix": [
+  arr_mix: [
     1,
-    "a",
+    'a',
     {
-      "arr_mix_nested": {}
+      arr_mix_nested: {}
     }
   ],
-  "boolean": false
+  boolean: false
 });
 
-req.end(function (res) {
+req.end(function(res) {
   if (res.error) throw new Error(res.error);
 
   console.log(res.body);
 });
-

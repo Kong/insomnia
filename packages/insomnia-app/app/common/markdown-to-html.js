@@ -11,6 +11,6 @@ marked.setOptions({
   smartypants: false
 });
 
-export function markdownToHTML (markdown) {
+export function markdownToHTML(markdown) {
   return marked(markdown);
 }

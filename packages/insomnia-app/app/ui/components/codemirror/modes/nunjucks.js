@@ -1,22 +1,25 @@
 import CodeMirror from 'codemirror';
 
 CodeMirror.defineMode('nunjucks', (config, parserConfig) => {
-  const baseMode = CodeMirror.getMode(config, parserConfig.baseMode || 'text/plain');
+  const baseMode = CodeMirror.getMode(
+    config,
+    parserConfig.baseMode || 'text/plain'
+  );
   const nunjucksMode = _nunjucksMode();
   return CodeMirror.overlayMode(baseMode, nunjucksMode, false);
 });
 
-function _nunjucksMode () {
+function _nunjucksMode() {
   const regexVariable = /^{{\s*([^ }]+)\s*[^}]*\s*}}/;
   const regexTag = /^{%\s*([^ }]+)\s*[^%]*\s*%}/;
   const regexComment = /^{#\s*[^#]+\s*#}/;
   let ticker = 1;
 
   return {
-    startState () {
-      return {inRaw: false};
+    startState() {
+      return { inRaw: false };
     },
-    token (stream, state) {
+    token(stream, state) {
       let m;
 
       // This makes sure that adjacent tags still have unique types

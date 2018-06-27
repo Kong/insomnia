@@ -1,11 +1,11 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 
 @autobind
 class Button extends PureComponent {
-  _handleClick (e) {
-    const {onClick, onDisabledClick, disabled} = this.props;
+  _handleClick(e) {
+    const { onClick, onDisabledClick, disabled } = this.props;
     const fn = disabled ? onDisabledClick : onClick;
 
     if (this.props.hasOwnProperty('value')) {
@@ -15,25 +15,19 @@ class Button extends PureComponent {
     }
   }
 
-  render () {
-    const {
-      children,
-      disabled,
-      tabIndex,
-      className,
-      type,
-      id
-    } = this.props;
+  render() {
+    const { children, disabled, tabIndex, className, type, id } = this.props;
 
     return (
-      <button disabled={disabled}
-              id={id}
-              type={type}
-              tabIndex={tabIndex}
-              className={className}
-              onClick={this._handleClick}>
+      <button
+        disabled={disabled}
+        id={id}
+        type={type}
+        tabIndex={tabIndex}
+        className={className}
+        onClick={this._handleClick}>
         {children}
-        </button>
+      </button>
     );
   }
 }

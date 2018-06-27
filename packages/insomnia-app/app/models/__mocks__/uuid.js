@@ -192,7 +192,7 @@ const v4UUIDs = [
   '966e9995-938a-4a5e-813c-de3691dddb3a'
 ];
 
-function v1 () {
+function v1() {
   const uuid = v1UUIDs[v1Counter++];
   if (!uuid) {
     throw new Error('Not enough mocked v1 UUIDs to go around');
@@ -201,7 +201,7 @@ function v1 () {
   return uuid;
 }
 
-function v4 () {
+function v4() {
   const uuid = v4UUIDs[v4Counter++];
   if (!uuid) {
     throw new Error('Not enough mocked v4 UUIDs to go around');

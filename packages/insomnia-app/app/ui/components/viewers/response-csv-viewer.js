@@ -8,14 +8,14 @@ type Props = {
 };
 
 type State = {
-  result: null | {data: Array<Array<string>>}
+  result: null | { data: Array<Array<string>> }
 };
 
 @autobind
 class ResponseCSVViewer extends React.PureComponent<Props, State> {
   currentHash: string;
 
-  constructor (props: Props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       result: null
@@ -23,22 +23,22 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
     this.currentHash = '';
   }
 
-  update (body: Buffer) {
+  update(body: Buffer) {
     const csv = body.toString('utf8');
 
     Papa.parse(csv, {
       skipEmptyLines: true,
       complete: result => {
-        this.setState({result});
+        this.setState({ result });
       }
     });
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this.update(this.props.body);
   }
 
-  componentWillUpdate (nextProps: Props, nextState: State) {
+  componentWillUpdate(nextProps: Props, nextState: State) {
     if (this.props.body === nextProps.body) {
       return;
     }
@@ -46,8 +46,8 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
     this.update(nextProps.body);
   }
 
-  render () {
-    const {result} = this.state;
+  render() {
+    const { result } = this.state;
     if (!result) {
       return 'Parsing CSV...';
     }
@@ -56,9 +56,7 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
       <div className="pad-sm">
         <table className="table--fancy table--striped table--compact selectable">
           <tbody>
-          {result.data.map(row => (
-            <tr>{row.map(c => <td>{c}</td>)}</tr>
-          ))}
+            {result.data.map(row => <tr>{row.map(c => <td>{c}</td>)}</tr>)}
           </tbody>
         </table>
       </div>

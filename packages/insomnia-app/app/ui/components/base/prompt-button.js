@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import Button from './button';
@@ -9,7 +9,7 @@ const STATE_DONE = 'done';
 
 @autobind
 class PromptButton extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
 
     this.state = {
@@ -17,7 +17,7 @@ class PromptButton extends PureComponent {
     };
   }
 
-  _confirm (...args) {
+  _confirm(...args) {
     // Clear existing timeouts
     clearTimeout(this._triggerTimeout);
 
@@ -26,16 +26,16 @@ class PromptButton extends PureComponent {
 
     // Set the state to done (but delay a bit to not alarm user)
     this._doneTimeout = setTimeout(() => {
-      this.setState({state: STATE_DONE});
+      this.setState({ state: STATE_DONE });
     }, 100);
 
     // Set a timeout to hide the confirmation
     this._triggerTimeout = setTimeout(() => {
-      this.setState({state: STATE_DEFAULT});
+      this.setState({ state: STATE_DEFAULT });
     }, 2000);
   }
 
-  _ask (...args) {
+  _ask(...args) {
     const e = args[args.length - 1];
 
     // Prevent events (ex. won't close dropdown if it's in one)
@@ -43,16 +43,16 @@ class PromptButton extends PureComponent {
     e.stopPropagation();
 
     // Toggle the confirmation notice
-    this.setState({state: STATE_ASK});
+    this.setState({ state: STATE_ASK });
 
     // Set a timeout to hide the confirmation
     this._triggerTimeout = setTimeout(() => {
-      this.setState({state: STATE_DEFAULT});
+      this.setState({ state: STATE_DEFAULT });
     }, 2000);
   }
 
-  _handleClick (...args) {
-    const {state} = this.state;
+  _handleClick(...args) {
+    const { state } = this.state;
     if (state === STATE_ASK) {
       this._confirm(...args);
     } else if (state === STATE_DEFAULT) {
@@ -62,12 +62,12 @@ class PromptButton extends PureComponent {
     }
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     clearTimeout(this._triggerTimeout);
     clearTimeout(this._doneTimeout);
   }
 
-  render () {
+  render() {
     const {
       onClick, // eslint-disable-line no-unused-vars
       children,
@@ -79,7 +79,7 @@ class PromptButton extends PureComponent {
       ...other
     } = this.props;
 
-    const {state} = this.state;
+    const { state } = this.state;
 
     const finalConfirmMessage = (confirmMessage || 'Click to confirm').trim();
     const finalDoneMessage = doneMessage || 'Done';
@@ -88,11 +88,12 @@ class PromptButton extends PureComponent {
     if (state === STATE_ASK && addIcon) {
       innerMsg = (
         <span className="warning" title="Click again to confirm">
-          <i className="fa fa-exclamation-circle"/>
-          {finalConfirmMessage
-            ? <span className="space-left">{finalConfirmMessage}</span>
-            : ''
-          }
+          <i className="fa fa-exclamation-circle" />
+          {finalConfirmMessage ? (
+            <span className="space-left">{finalConfirmMessage}</span>
+          ) : (
+            ''
+          )}
         </span>
       );
     } else if (state === STATE_ASK) {
@@ -108,10 +109,11 @@ class PromptButton extends PureComponent {
     }
 
     return (
-      <Button onClick={this._handleClick}
-              disabled={disabled}
-              tabIndex={tabIndex}
-              {...other}>
+      <Button
+        onClick={this._handleClick}
+        disabled={disabled}
+        tabIndex={tabIndex}
+        {...other}>
         {innerMsg}
       </Button>
     );

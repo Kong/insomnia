@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 module.exports = {
   info: {
@@ -11,4 +11,4 @@ module.exports = {
   curl: require('./curl'),
   http1: require('./http1'),
   http2: require('./http2')
-}
+};

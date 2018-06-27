@@ -1,14 +1,16 @@
-import {parse as urlParse} from 'url';
+import { parse as urlParse } from 'url';
 import certificateUrlParse from './certificate-url-parse';
-import {escapeRegex} from '../common/misc';
-import {setDefaultProtocol} from 'insomnia-url';
+import { escapeRegex } from '../common/misc';
+import { setDefaultProtocol } from 'insomnia-url';
 
 const DEFAULT_PORT = 443;
 
-export function urlMatchesCertHost (certificateHost, requestUrl) {
+export function urlMatchesCertHost(certificateHost, requestUrl) {
   const cHostWithProtocol = setDefaultProtocol(certificateHost, 'https:');
-  const {hostname, port} = urlParse(requestUrl);
-  const {hostname: cHostname, port: cPort} = certificateUrlParse(cHostWithProtocol);
+  const { hostname, port } = urlParse(requestUrl);
+  const { hostname: cHostname, port: cPort } = certificateUrlParse(
+    cHostWithProtocol
+  );
 
   const assumedPort = parseInt(port) || DEFAULT_PORT;
   const assumedCPort = parseInt(cPort) || DEFAULT_PORT;

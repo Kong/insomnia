@@ -1,3 +1,3 @@
 declare module 'pdfjs-dist/webpack' {
-  declare module.exports: *
+  declare module.exports: *;
 }

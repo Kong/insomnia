@@ -8,6 +8,7 @@ declare module 'graphql' {
     prev: Tok,
     start: number,
   }
+  
   declare type Loc = {
     end: number,
     endToken: Tok,
@@ -15,6 +16,7 @@ declare module 'graphql' {
     start: number,
     startToken: Tok,
   }
+  
   declare type ParseOptions = mixed
   declare type Source = mixed
   declare type Document = {
@@ -36,10 +38,12 @@ declare module 'graphql' {
       }
     }>
   }
+  
   declare function parse(
     source: Source | string,
     options?: ParseOptions
   ): Document
+    
   declare module.exports: {
     parse: typeof parse,
     print: *,
@@ -50,11 +54,11 @@ declare module 'graphql' {
 declare module 'graphql/utilities/introspectionQuery' {
   declare module.exports: {
     introspectionQuery: string
-  }
+  };
 }
 
 declare module 'graphql/utilities/buildClientSchema' {
   declare module.exports: {
     buildClientSchema: Function
-  }
+  };
 }

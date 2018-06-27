@@ -1,3 +1,3 @@
 declare module 'electron-squirrel-startup' {
-  declare module.exports: *
+  declare module.exports: *;
 }

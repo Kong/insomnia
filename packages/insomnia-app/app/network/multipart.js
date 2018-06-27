@@ -3,18 +3,21 @@ import * as electron from 'electron';
 import mimes from 'mime-types';
 import fs from 'fs';
 import path from 'path';
-import type {RequestBodyParameter} from '../models/request';
+import type { RequestBodyParameter } from '../models/request';
 
 export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
 
-export async function buildMultipart (params: Array<RequestBodyParameter>) {
+export async function buildMultipart(params: Array<RequestBodyParameter>) {
   return new Promise(async (resolve: Function, reject: Function) => {
-    const filePath = path.join(electron.remote.app.getPath('temp'), Math.random() + '.body');
+    const filePath = path.join(
+      electron.remote.app.getPath('temp'),
+      Math.random() + '.body'
+    );
     const writeStream = fs.createWriteStream(filePath);
     const lineBreak = '\r\n';
     let totalSize = 0;
 
-    function addFile (path: string): Promise<void> {
+    function addFile(path: string): Promise<void> {
       return new Promise((resolve, reject) => {
         let size;
         try {
@@ -26,7 +29,10 @@ export async function buildMultipart (params: Array<RequestBodyParameter>) {
         stream.once('end', () => {
           resolve();
         });
-        stream.pipe(writeStream, {end: false});
+        stream.pipe(
+          writeStream,
+          { end: false }
+        );
         totalSize += size;
       });
     }
@@ -51,11 +57,12 @@ export async function buildMultipart (params: Array<RequestBodyParameter>) {
       if (param.type === 'file' && param.fileName) {
         const name = param.name || '';
         const fileName = param.fileName;
-        const contentType = mimes.lookup(fileName) || 'application/octet-stream';
+        const contentType =
+          mimes.lookup(fileName) || 'application/octet-stream';
         addString(
           'Content-Disposition: form-data; ' +
-          `name="${name.replace(/"/g, '\\"')}"; ` +
-          `filename="${path.basename(fileName).replace(/"/g, '\\"')}"`
+            `name="${name.replace(/"/g, '\\"')}"; ` +
+            `filename="${path.basename(fileName).replace(/"/g, '\\"')}"`
         );
         addString(lineBreak);
         addString(`Content-Type: ${contentType}`);
@@ -86,7 +93,11 @@ export async function buildMultipart (params: Array<RequestBodyParameter>) {
     });
 
     writeStream.on('close', () => {
-      resolve({boundary: DEFAULT_BOUNDARY, filePath, contentLength: totalSize});
+      resolve({
+        boundary: DEFAULT_BOUNDARY,
+        filePath,
+        contentLength: totalSize
+      });
     });
 
     // We're done here. End the stream and tell FS to save/close the file.

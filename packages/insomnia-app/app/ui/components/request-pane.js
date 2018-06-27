@@ -1,11 +1,11 @@
 // @flow
-import type {Request} from '../../models/request';
-import type {Workspace} from '../../models/workspace';
-import type {OAuth2Token} from '../../models/o-auth-2-token';
+import type { Request } from '../../models/request';
+import type { Workspace } from '../../models/workspace';
+import type { OAuth2Token } from '../../models/o-auth-2-token';
 
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import ContentTypeDropdown from './dropdowns/content-type-dropdown';
 import AuthDropdown from './dropdowns/auth-dropdown';
 import KeyValueEditor from './key-value-editor/editor';
@@ -14,15 +14,22 @@ import RenderedQueryString from './rendered-query-string';
 import BodyEditor from './editors/body/body-editor';
 import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
-import {DEBOUNCE_MILLIS, getAuthTypeName, getContentTypeName} from '../../common/constants';
-import {deconstructQueryStringToParams, extractQueryStringFromUrl} from 'insomnia-url';
+import {
+  DEBOUNCE_MILLIS,
+  getAuthTypeName,
+  getContentTypeName
+} from '../../common/constants';
+import {
+  deconstructQueryStringToParams,
+  extractQueryStringFromUrl
+} from 'insomnia-url';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import Hotkey from './hotkey';
-import {showModal} from './modals/index';
+import { showModal } from './modals/index';
 import RequestSettingsModal from './modals/request-settings-modal';
 import MarkdownPreview from './markdown-preview';
-import type {Settings} from '../../models/settings';
+import type { Settings } from '../../models/settings';
 import * as hotkeys from '../../common/hotkeys';
 import ErrorBoundary from './error-boundary';
 
@@ -63,18 +70,18 @@ type Props = {
 class RequestPane extends React.PureComponent<Props> {
   _handleUpdateRequestUrlTimeout: TimeoutID;
 
-  _handleEditDescriptionAdd () {
+  _handleEditDescriptionAdd() {
     this._handleEditDescription(true);
   }
 
-  _handleEditDescription (addDescription: boolean) {
+  _handleEditDescription(addDescription: boolean) {
     showModal(RequestSettingsModal, {
       request: this.props.request,
       forceEditMode: addDescription
     });
   }
 
-  async _autocompleteUrls (): Promise<Array<string>> {
+  async _autocompleteUrls(): Promise<Array<string>> {
     const docs = await db.withDescendants(
       this.props.workspace,
       models.request.type
@@ -82,37 +89,40 @@ class RequestPane extends React.PureComponent<Props> {
 
     const requestId = this.props.request ? this.props.request._id : 'n/a';
 
-    const urls = docs.filter((d: any) => (
-      d.type === models.request.type && // Only requests
-      d._id !== requestId && // Not current request
-      (d.url || '') // Only ones with non-empty URLs
-    )).map((r: any) => (r.url || '').trim());
+    const urls = docs
+      .filter(
+        (d: any) =>
+          d.type === models.request.type && // Only requests
+          d._id !== requestId && // Not current request
+          (d.url || '') // Only ones with non-empty URLs
+      )
+      .map((r: any) => (r.url || '').trim());
 
     return Array.from(new Set(urls));
   }
 
-  _handleUpdateSettingsUseBulkHeaderEditor () {
-    const {settings, updateSettingsUseBulkHeaderEditor} = this.props;
+  _handleUpdateSettingsUseBulkHeaderEditor() {
+    const { settings, updateSettingsUseBulkHeaderEditor } = this.props;
     updateSettingsUseBulkHeaderEditor(!settings.useBulkHeaderEditor);
   }
 
-  _handleImportFile () {
+  _handleImportFile() {
     this.props.handleImportFile();
   }
 
-  _handleCreateRequest () {
+  _handleCreateRequest() {
     this.props.handleCreateRequest(this.props.request);
   }
 
-  _handleUpdateRequestUrl (url: string) {
+  _handleUpdateRequestUrl(url: string) {
     clearTimeout(this._handleUpdateRequestUrlTimeout);
     this._handleUpdateRequestUrlTimeout = setTimeout(() => {
       this.props.updateRequestUrl(url);
     }, DEBOUNCE_MILLIS);
   }
 
-  _handleImportQueryFromUrl () {
-    const {request} = this.props;
+  _handleImportQueryFromUrl() {
+    const { request } = this.props;
 
     if (!request) {
       console.warn('Tried to import query when no request active');
@@ -136,11 +146,11 @@ class RequestPane extends React.PureComponent<Props> {
 
     // Only update if url changed
     if (url !== request.url) {
-      this.props.forceUpdateRequest({url, parameters});
+      this.props.forceUpdateRequest({ url, parameters });
     }
   }
 
-  render () {
+  render() {
     const {
       forceRefreshCounter,
       forceUpdateRequestHeaders,
@@ -167,38 +177,47 @@ class RequestPane extends React.PureComponent<Props> {
     if (!request) {
       return (
         <section className="request-pane pane">
-          <header className="pane__header"></header>
+          <header className="pane__header" />
           <div className="pane__body pane__body--placeholder">
             <div>
               <table className="table--fancy">
                 <tbody>
-                <tr>
-                  <td>New Request</td>
-                  <td className="text-right">
-                    <code><Hotkey hotkey={hotkeys.CREATE_REQUEST}/></code>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Switch Requests</td>
-                  <td className="text-right">
-                    <code><Hotkey hotkey={hotkeys.SHOW_QUICK_SWITCHER}/></code>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Edit Environments</td>
-                  <td className="text-right">
-                    <code><Hotkey hotkey={hotkeys.SHOW_ENVIRONMENTS}/></code>
-                  </td>
-                </tr>
+                  <tr>
+                    <td>New Request</td>
+                    <td className="text-right">
+                      <code>
+                        <Hotkey hotkey={hotkeys.CREATE_REQUEST} />
+                      </code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Switch Requests</td>
+                    <td className="text-right">
+                      <code>
+                        <Hotkey hotkey={hotkeys.SHOW_QUICK_SWITCHER} />
+                      </code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Edit Environments</td>
+                    <td className="text-right">
+                      <code>
+                        <Hotkey hotkey={hotkeys.SHOW_ENVIRONMENTS} />
+                      </code>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
 
               <div className="text-center pane__body--placeholder__cta">
-                <button className="btn inline-block btn--clicky" onClick={this._handleImportFile}>
+                <button
+                  className="btn inline-block btn--clicky"
+                  onClick={this._handleImportFile}>
                   Import from File
                 </button>
-                <button className="btn inline-block btn--clicky"
-                        onClick={this._handleCreateRequest}>
+                <button
+                  className="btn inline-block btn--clicky"
+                  onClick={this._handleCreateRequest}>
                   New Request
                 </button>
               </div>
@@ -244,35 +263,43 @@ class RequestPane extends React.PureComponent<Props> {
         <Tabs className="react-tabs pane__body" forceRenderTabPanel>
           <TabList>
             <Tab>
-              <ContentTypeDropdown onChange={updateRequestMimeType}
-                                   contentType={request.body.mimeType}
-                                   request={request}
-                                   className="tall">
+              <ContentTypeDropdown
+                onChange={updateRequestMimeType}
+                contentType={request.body.mimeType}
+                request={request}
+                className="tall">
                 {typeof request.body.mimeType === 'string'
                   ? getContentTypeName(request.body.mimeType)
                   : 'Body'}
-                {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
-                <i className="fa fa-caret-down space-left"/>
+                {numBodyParams ? (
+                  <span className="bubble space-left">{numBodyParams}</span>
+                ) : null}
+                <i className="fa fa-caret-down space-left" />
               </ContentTypeDropdown>
             </Tab>
             <Tab>
-              <AuthDropdown onChange={updateRequestAuthentication}
-                            authentication={request.authentication}
-                            className="tall">
+              <AuthDropdown
+                onChange={updateRequestAuthentication}
+                authentication={request.authentication}
+                className="tall">
                 {getAuthTypeName(request.authentication.type) || 'Auth'}
-                <i className="fa fa-caret-down space-left"/>
+                <i className="fa fa-caret-down space-left" />
               </AuthDropdown>
             </Tab>
             <Tab>
               <button>
                 Query
-                {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
+                {numParameters > 0 && (
+                  <span className="bubble space-left">{numParameters}</span>
+                )}
               </button>
             </Tab>
             <Tab>
               <button>
                 Header
-                {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
+                {numHeaders > 0 && (
+                  <span className="bubble space-left">{numHeaders}</span>
+                )}
               </button>
             </Tab>
             <Tab>
@@ -280,13 +307,15 @@ class RequestPane extends React.PureComponent<Props> {
                 Docs
                 {request.description && (
                   <span className="bubble space-left">
-                    <i className="fa fa--skinny fa-check txt-xxs"/>
+                    <i className="fa fa--skinny fa-check txt-xxs" />
                   </span>
                 )}
               </button>
             </Tab>
           </TabList>
-          <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
+          <TabPanel
+            key={uniqueKey}
+            className="react-tabs__tab-panel editor-wrapper">
             <BodyEditor
               key={uniqueKey}
               handleUpdateRequestMimeType={updateRequestMimeType}
@@ -302,12 +331,16 @@ class RequestPane extends React.PureComponent<Props> {
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable">
-              <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+              <ErrorBoundary
+                key={uniqueKey}
+                errorClassName="font-error pad text-center">
                 <AuthWrapper
                   oAuth2Token={oAuth2Token}
                   showPasswords={settings.showPasswords}
                   request={request}
-                  handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
+                  handleUpdateSettingsShowPasswords={
+                    updateSettingsShowPasswords
+                  }
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
                   nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
@@ -320,8 +353,9 @@ class RequestPane extends React.PureComponent<Props> {
             <div className="pad pad-bottom-sm query-editor__preview">
               <label className="label--small no-pad-top">Url Preview</label>
               <code className="txt-sm block faint">
-                <ErrorBoundary key={uniqueKey}
-                               errorClassName="tall wide vertically-align font-error pad text-center">
+                <ErrorBoundary
+                  key={uniqueKey}
+                  errorClassName="tall wide vertically-align font-error pad text-center">
                   <RenderedQueryString
                     handleRender={handleRender}
                     request={request}
@@ -330,7 +364,9 @@ class RequestPane extends React.PureComponent<Props> {
               </code>
             </div>
             <div className="query-editor__editor">
-              <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
+              <ErrorBoundary
+                key={uniqueKey}
+                errorClassName="tall wide vertically-align font-error pad text-center">
                 <KeyValueEditor
                   sortable
                   allowMultiline
@@ -345,15 +381,22 @@ class RequestPane extends React.PureComponent<Props> {
               </ErrorBoundary>
             </div>
             <div className="pad-right text-right">
-              <button className="margin-top-sm btn btn--clicky"
-                      title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
-                      onClick={this._handleImportQueryFromUrl}>
+              <button
+                className="margin-top-sm btn btn--clicky"
+                title={
+                  urlHasQueryParameters
+                    ? 'Import querystring'
+                    : 'No query params to import'
+                }
+                onClick={this._handleImportQueryFromUrl}>
                 Import from Url
               </button>
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel header-editor">
-            <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+            <ErrorBoundary
+              key={uniqueKey}
+              errorClassName="font-error pad text-center">
               <RequestHeadersEditor
                 headers={request.headers}
                 handleRender={handleRender}
@@ -368,17 +411,22 @@ class RequestPane extends React.PureComponent<Props> {
             </ErrorBoundary>
 
             <div className="pad-right text-right">
-              <button className="margin-top-sm btn btn--clicky"
-                      onClick={this._handleUpdateSettingsUseBulkHeaderEditor}>
+              <button
+                className="margin-top-sm btn btn--clicky"
+                onClick={this._handleUpdateSettingsUseBulkHeaderEditor}>
                 {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>
           </TabPanel>
-          <TabPanel key={`docs::${uniqueKey}`} className="react-tabs__tab-panel tall scrollable">
+          <TabPanel
+            key={`docs::${uniqueKey}`}
+            className="react-tabs__tab-panel tall scrollable">
             {request.description ? (
               <div>
                 <div className="pull-right pad bg-default">
-                  <button className="btn btn--clicky" onClick={this._handleEditDescription}>
+                  <button
+                    className="btn btn--clicky"
+                    onClick={this._handleEditDescription}>
                     Edit
                   </button>
                 </div>
@@ -397,13 +445,16 @@ class RequestPane extends React.PureComponent<Props> {
               <div className="overflow-hidden editor vertically-center text-center">
                 <p className="pad text-sm text-center">
                   <span className="super-faint">
-                  <i className="fa fa-file-text-o"
-                     style={{fontSize: '8rem', opacity: 0.3}}
-                  />
+                    <i
+                      className="fa fa-file-text-o"
+                      style={{ fontSize: '8rem', opacity: 0.3 }}
+                    />
                   </span>
-                  <br/><br/>
-                  <button className="btn btn--clicky faint"
-                          onClick={this._handleEditDescriptionAdd}>
+                  <br />
+                  <br />
+                  <button
+                    className="btn btn--clicky faint"
+                    onClick={this._handleEditDescriptionAdd}>
                     Add Description
                   </button>
                 </p>

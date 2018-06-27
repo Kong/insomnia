@@ -45,7 +45,7 @@ declare class Curl {
     USERNAME: number,
     VERBOSE: number,
     WRITEFUNCTION: number,
-    XFERINFOFUNCTION: number,
+    XFERINFOFUNCTION: number
   };
 
   static auth: {
@@ -62,7 +62,7 @@ declare class Curl {
   static netrc: {
     IGNORED: number,
     OPTIONAL: number,
-    REQUIRED: number,
+    REQUIRED: number
   };
 
   static info: {
@@ -95,5 +95,5 @@ declare class Curl {
 declare module 'insomnia-libcurl' {
   declare module.exports: {
     Curl: typeof Curl
-  }
+  };
 }

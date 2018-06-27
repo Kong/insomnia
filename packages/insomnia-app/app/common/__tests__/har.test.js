@@ -2,13 +2,16 @@ import path from 'path';
 import * as harUtils from '../har';
 import * as render from '../render';
 import * as models from '../../models';
-import {AUTH_BASIC} from '../constants';
-import {globalBeforeEach} from '../../__jest__/before-each';
+import { AUTH_BASIC } from '../constants';
+import { globalBeforeEach } from '../../__jest__/before-each';
 
 describe('exportHar()', () => {
   beforeEach(globalBeforeEach);
   it('exports single requests', async () => {
-    const wrk = await models.workspace.create({_id: 'wrk_1', name: 'Workspace'});
+    const wrk = await models.workspace.create({
+      _id: 'wrk_1',
+      name: 'Workspace'
+    });
     const req1 = await models.request.create({
       _id: 'req_1',
       name: 'Request 1',
@@ -32,15 +35,13 @@ describe('exportHar()', () => {
       statusCode: 200,
       statusMessage: 'OK',
       elapsedTime: 999,
-      headers: [
-        { name: 'Content-Type', value: 'application/json' }
-      ],
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
       contentType: 'application/json',
       bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json'),
       bodyCompression: null
     });
 
-    const exportRequests = [ { requestId: req1._id, environmentId: 'n/a' } ];
+    const exportRequests = [{ requestId: req1._id, environmentId: 'n/a' }];
     const harExport = await harUtils.exportHar(exportRequests);
 
     expect(harExport).toMatchObject({
@@ -76,9 +77,7 @@ describe('exportHar()', () => {
               statusText: 'OK',
               httpVersion: 'HTTP/1.1',
               cookies: [],
-              headers: [
-                { name: 'Content-Type', value: 'application/json' }
-              ],
+              headers: [{ name: 'Content-Type', value: 'application/json' }],
               content: {
                 size: 15,
                 mimeType: 'application/json',
@@ -106,7 +105,10 @@ describe('exportHar()', () => {
   });
 
   it('exports multiple requests', async () => {
-    const workspace = await models.workspace.create({_id: 'wrk_1', name: 'Workspace'});
+    const workspace = await models.workspace.create({
+      _id: 'wrk_1',
+      name: 'Workspace'
+    });
 
     const baseReq = await models.request.create({
       _id: 'req_0',
@@ -117,9 +119,7 @@ describe('exportHar()', () => {
       url: 'http://localhost',
       method: 'GET',
       body: {},
-      headers: [
-        { name: 'X-Environment', value: '{{ envvalue }}' }
-      ]
+      headers: [{ name: 'X-Environment', value: '{{ envvalue }}' }]
     });
     const req1 = await models.request.duplicate(baseReq);
     req1._id = 'req_1';
@@ -159,13 +159,22 @@ describe('exportHar()', () => {
         envvalue: ''
       }
     });
-    const envPublic = await models.environment.create({_id: 'env_1', name: 'Public', parentId: envBase._id});
+    const envPublic = await models.environment.create({
+      _id: 'env_1',
+      name: 'Public',
+      parentId: envBase._id
+    });
     await models.environment.update(envPublic, {
       data: {
         envvalue: 'public'
       }
     });
-    const envPrivate = await models.environment.create({_id: 'env_2', name: 'Private', isPrivate: true, parentId: envBase._id});
+    const envPrivate = await models.environment.create({
+      _id: 'env_2',
+      name: 'Private',
+      isPrivate: true,
+      parentId: envBase._id
+    });
     await models.environment.update(envPrivate, {
       data: {
         envvalue: 'private'
@@ -299,18 +308,22 @@ describe('exportHarWithRequest()', () => {
   beforeEach(globalBeforeEach);
   it('renders does it correctly', async () => {
     const workspace = await models.workspace.create();
-    const cookies = [{
-      creation: new Date('2016-10-05T04:40:49.505Z'),
-      key: 'foo',
-      value: 'barrrrr',
-      expires: new Date('2096-10-12T04:40:49.000Z'),
-      domain: 'google.com',
-      path: '/',
-      hostOnly: true,
-      lastAccessed: new Date('2096-10-05T04:40:49.505Z')
-    }];
+    const cookies = [
+      {
+        creation: new Date('2016-10-05T04:40:49.505Z'),
+        key: 'foo',
+        value: 'barrrrr',
+        expires: new Date('2096-10-12T04:40:49.000Z'),
+        domain: 'google.com',
+        path: '/',
+        hostOnly: true,
+        lastAccessed: new Date('2096-10-05T04:40:49.505Z')
+      }
+    ];
 
-    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
+    const cookieJar = await models.cookieJar.getOrCreateForParentId(
+      workspace._id
+    );
     await models.cookieJar.update(cookieJar, {
       parentId: workspace._id,
       cookies
@@ -319,8 +332,8 @@ describe('exportHarWithRequest()', () => {
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
-      headers: [{name: 'Content-Type', value: 'application/json'}],
-      parameters: [{name: 'foo bar', value: 'hello&world'}],
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      parameters: [{ name: 'foo bar', value: 'hello&world' }],
       method: 'POST',
       body: {
         text: 'foo bar'
@@ -339,16 +352,18 @@ describe('exportHarWithRequest()', () => {
     expect(har.cookies.length).toBe(1);
     expect(har).toEqual({
       bodySize: -1,
-      cookies: [{
-        domain: 'google.com',
-        expires: '2096-10-12T04:40:49.000Z',
-        name: 'foo',
-        path: '/',
-        value: 'barrrrr'
-      }],
+      cookies: [
+        {
+          domain: 'google.com',
+          expires: '2096-10-12T04:40:49.000Z',
+          name: 'foo',
+          path: '/',
+          value: 'barrrrr'
+        }
+      ],
       headers: [
-        {name: 'Content-Type', value: 'application/json'},
-        {name: 'Authorization', value: 'Basic dXNlcjpwYXNz'}
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: 'Basic dXNlcjpwYXNz' }
       ],
       headersSize: -1,
       httpVersion: 'HTTP/1.1',
@@ -358,7 +373,7 @@ describe('exportHarWithRequest()', () => {
         params: [],
         text: 'foo bar'
       },
-      queryString: [{name: 'foo bar', value: 'hello&world'}],
+      queryString: [{ name: 'foo bar', value: 'hello&world' }],
       url: 'http://google.com/',
       settingEncodeUrl: true
     });

@@ -7,14 +7,25 @@ import RawEditor from './raw-editor';
 import UrlEncodedEditor from './url-encoded-editor';
 import FormEditor from './form-editor';
 import FileEditor from './file-editor';
-import {CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, getContentTypeFromHeaders} from '../../../../common/constants';
-import type {Request, RequestBodyParameter} from '../../../../models/request';
-import {newBodyFile, newBodyForm, newBodyFormUrlEncoded, newBodyRaw} from '../../../../models/request';
+import {
+  CONTENT_TYPE_FILE,
+  CONTENT_TYPE_FORM_DATA,
+  CONTENT_TYPE_FORM_URLENCODED,
+  CONTENT_TYPE_GRAPHQL,
+  getContentTypeFromHeaders
+} from '../../../../common/constants';
+import type { Request, RequestBodyParameter } from '../../../../models/request';
+import {
+  newBodyFile,
+  newBodyForm,
+  newBodyFormUrlEncoded,
+  newBodyRaw
+} from '../../../../models/request';
 import GraphQLEditor from './graph-ql-editor';
-import {getContentTypeHeader} from '../../../../common/misc';
-import type {Settings} from '../../../../models/settings';
-import type {Workspace} from '../../../../models/workspace';
-import {showModal} from '../../modals/index';
+import { getContentTypeHeader } from '../../../../common/misc';
+import type { Settings } from '../../../../models/settings';
+import type { Workspace } from '../../../../models/workspace';
+import { showModal } from '../../modals/index';
 import AskModal from '../../modals/ask-modal';
 
 type Props = {
@@ -32,8 +43,8 @@ type Props = {
 
 @autobind
 class BodyEditor extends React.PureComponent<Props> {
-  _handleRawChange (rawValue: string) {
-    const {onChange, request} = this.props;
+  _handleRawChange(rawValue: string) {
+    const { onChange, request } = this.props;
 
     const oldContentType = request.body.mimeType || '';
     const newBody = newBodyRaw(rawValue, oldContentType);
@@ -41,32 +52,32 @@ class BodyEditor extends React.PureComponent<Props> {
     onChange(newBody);
   }
 
-  _handleGraphQLChange (content: string) {
-    const {onChange} = this.props;
+  _handleGraphQLChange(content: string) {
+    const { onChange } = this.props;
     const newBody = newBodyRaw(content, CONTENT_TYPE_GRAPHQL);
     onChange(newBody);
   }
 
-  _handleFormUrlEncodedChange (parameters: Array<RequestBodyParameter>) {
-    const {onChange} = this.props;
+  _handleFormUrlEncodedChange(parameters: Array<RequestBodyParameter>) {
+    const { onChange } = this.props;
     const newBody = newBodyFormUrlEncoded(parameters);
     onChange(newBody);
   }
 
-  _handleFormChange (parameters: Array<RequestBodyParameter>) {
-    const {onChange} = this.props;
+  _handleFormChange(parameters: Array<RequestBodyParameter>) {
+    const { onChange } = this.props;
     const newBody = newBodyForm(parameters);
     onChange(newBody);
   }
 
-  async _handleFileChange (path: string) {
-    const {onChange, onChangeHeaders, request} = this.props;
+  async _handleFileChange(path: string) {
+    const { onChange, onChangeHeaders, request } = this.props;
     const headers = clone(request.headers);
 
     let contentTypeHeader = getContentTypeHeader(headers);
 
     if (!contentTypeHeader) {
-      contentTypeHeader = {name: 'Content-Type', value: CONTENT_TYPE_FILE};
+      contentTypeHeader = { name: 'Content-Type', value: CONTENT_TYPE_FILE };
       headers.push(contentTypeHeader);
     }
 
@@ -79,8 +90,8 @@ class BodyEditor extends React.PureComponent<Props> {
         title: 'Change Content-Type',
         message: (
           <p>
-            Do you want set the <span className="monospace">Content-Type</span> header
-            to <span className="monospace">{newContentType}</span>?
+            Do you want set the <span className="monospace">Content-Type</span>{' '}
+            header to <span className="monospace">{newContentType}</span>?
           </p>
         ),
         onDone: saidYes => {
@@ -96,7 +107,7 @@ class BodyEditor extends React.PureComponent<Props> {
     onChange(newBody);
   }
 
-  render () {
+  render() {
     const {
       request,
       workspace,
@@ -162,7 +173,8 @@ class BodyEditor extends React.PureComponent<Props> {
         />
       );
     } else if (!isBodyEmpty) {
-      const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
+      const contentType =
+        getContentTypeFromHeaders(request.headers) || mimeType;
       return (
         <RawEditor
           uniquenessKey={uniqueKey}
@@ -182,8 +194,12 @@ class BodyEditor extends React.PureComponent<Props> {
       return (
         <div className="overflow-hidden editor vertically-center text-center">
           <p className="pad super-faint text-sm text-center">
-            <i className="fa fa-hand-peace-o" style={{fontSize: '8rem', opacity: 0.3}}/>
-            <br/><br/>
+            <i
+              className="fa fa-hand-peace-o"
+              style={{ fontSize: '8rem', opacity: 0.3 }}
+            />
+            <br />
+            <br />
             Select a body type from above
           </p>
         </div>

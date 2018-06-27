@@ -1,3 +1,3 @@
 declare module 'autobind-decorator' {
-  declare module.exports: *
+  declare module.exports: *;
 }

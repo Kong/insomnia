@@ -1,11 +1,11 @@
 import * as plugin from '../data';
 import * as modals from '../../../ui/components/modals';
 import path from 'path';
-import {globalBeforeEach} from '../../../__jest__/before-each';
+import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models/index';
 import * as db from '../../../common/database';
 import fs from 'fs';
-import {getAppVersion} from '../../../common/constants';
+import { getAppVersion } from '../../../common/constants';
 
 const PLUGIN = {
   name: 'my-plugin',
@@ -17,16 +17,10 @@ const PLUGIN = {
 describe('init()', () => {
   beforeEach(globalBeforeEach);
   it('initializes correctly', async () => {
-    const result = plugin.init({name: PLUGIN});
+    const result = plugin.init({ name: PLUGIN });
     expect(Object.keys(result)).toEqual(['import', 'export']);
-    expect(Object.keys(result.export).sort()).toEqual([
-      'har',
-      'insomnia'
-    ]);
-    expect(Object.keys(result.import).sort()).toEqual([
-      'raw',
-      'uri'
-    ]);
+    expect(Object.keys(result.export).sort()).toEqual(['har', 'insomnia']);
+    expect(Object.keys(result.import).sort()).toEqual(['raw', 'uri']);
   });
 });
 
@@ -46,7 +40,10 @@ describe('app.import.*', () => {
     expect(await db.count(models.request.type)).toBe(0);
 
     const result = plugin.init(PLUGIN);
-    const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
+    const filename = path.resolve(
+      __dirname,
+      '../__fixtures__/basic-import.json'
+    );
     await result.import.uri(`file://${filename}`);
 
     const allWorkspaces = await db.all(models.workspace.type);
@@ -62,29 +59,31 @@ describe('app.import.*', () => {
         type: 'Workspace'
       }
     ]);
-    expect(await db.all(models.request.type)).toEqual([{
-      _id: 'req_imported_1',
-      isPrivate: false,
-      authentication: {},
-      body: {},
-      created: 111,
-      description: '',
-      headers: [],
-      metaSortKey: 0,
-      method: 'GET',
-      modified: 222,
-      name: 'Test',
-      parameters: [],
-      parentId: 'wrk_imported_1',
-      settingDisableRenderRequestBody: false,
-      settingEncodeUrl: true,
-      settingSendCookies: true,
-      settingStoreCookies: true,
-      settingRebuildPath: true,
-      settingMaxTimelineDataSize: 1000,
-      type: 'Request',
-      url: 'https://insomnia.rest'
-    }]);
+    expect(await db.all(models.request.type)).toEqual([
+      {
+        _id: 'req_imported_1',
+        isPrivate: false,
+        authentication: {},
+        body: {},
+        created: 111,
+        description: '',
+        headers: [],
+        metaSortKey: 0,
+        method: 'GET',
+        modified: 222,
+        name: 'Test',
+        parameters: [],
+        parentId: 'wrk_imported_1',
+        settingDisableRenderRequestBody: false,
+        settingEncodeUrl: true,
+        settingSendCookies: true,
+        settingStoreCookies: true,
+        settingRebuildPath: true,
+        settingMaxTimelineDataSize: 1000,
+        type: 'Request',
+        url: 'https://insomnia.rest'
+      }
+    ]);
   });
 
   it('importRaw', async () => {
@@ -94,7 +93,10 @@ describe('app.import.*', () => {
     expect(await db.count(models.request.type)).toBe(0);
 
     const result = plugin.init(PLUGIN);
-    const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
+    const filename = path.resolve(
+      __dirname,
+      '../__fixtures__/basic-import.json'
+    );
     await result.import.raw(fs.readFileSync(filename, 'utf8'));
 
     const allWorkspaces = await db.all(models.workspace.type);
@@ -110,29 +112,31 @@ describe('app.import.*', () => {
         type: 'Workspace'
       }
     ]);
-    expect(await db.all(models.request.type)).toEqual([{
-      _id: 'req_imported_1',
-      isPrivate: false,
-      authentication: {},
-      body: {},
-      created: 111,
-      description: '',
-      headers: [],
-      metaSortKey: 0,
-      method: 'GET',
-      modified: 222,
-      name: 'Test',
-      parameters: [],
-      parentId: 'wrk_imported_1',
-      settingDisableRenderRequestBody: false,
-      settingEncodeUrl: true,
-      settingSendCookies: true,
-      settingStoreCookies: true,
-      settingRebuildPath: true,
-      settingMaxTimelineDataSize: 1000,
-      type: 'Request',
-      url: 'https://insomnia.rest'
-    }]);
+    expect(await db.all(models.request.type)).toEqual([
+      {
+        _id: 'req_imported_1',
+        isPrivate: false,
+        authentication: {},
+        body: {},
+        created: 111,
+        description: '',
+        headers: [],
+        metaSortKey: 0,
+        method: 'GET',
+        modified: 222,
+        name: 'Test',
+        parameters: [],
+        parentId: 'wrk_imported_1',
+        settingDisableRenderRequestBody: false,
+        settingEncodeUrl: true,
+        settingSendCookies: true,
+        settingStoreCookies: true,
+        settingRebuildPath: true,
+        settingMaxTimelineDataSize: 1000,
+        type: 'Request',
+        url: 'https://insomnia.rest'
+      }
+    ]);
   });
 });
 
@@ -173,37 +177,40 @@ describe('app.export.*', () => {
       __export_format: 3,
       __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
       _type: 'export',
-      resources: [{
-        _id: 'wrk_1',
-        _type: 'workspace',
-        created: 111,
-        description: '',
-        modified: 222,
-        name: 'New Workspace',
-        parentId: null
-      }, {
-        _id: 'req_1',
-        _type: 'request',
-        isPrivate: false,
-        authentication: {},
-        body: {},
-        created: 111,
-        description: '',
-        headers: [],
-        metaSortKey: 0,
-        method: 'GET',
-        modified: 222,
-        name: 'New Request',
-        parameters: [],
-        parentId: 'wrk_1',
-        settingDisableRenderRequestBody: false,
-        settingEncodeUrl: true,
-        settingSendCookies: true,
-        settingStoreCookies: true,
-        settingRebuildPath: true,
-        settingMaxTimelineDataSize: 1000,
-        url: 'https://insomnia.rest'
-      }]
+      resources: [
+        {
+          _id: 'wrk_1',
+          _type: 'workspace',
+          created: 111,
+          description: '',
+          modified: 222,
+          name: 'New Workspace',
+          parentId: null
+        },
+        {
+          _id: 'req_1',
+          _type: 'request',
+          isPrivate: false,
+          authentication: {},
+          body: {},
+          created: 111,
+          description: '',
+          headers: [],
+          metaSortKey: 0,
+          method: 'GET',
+          modified: 222,
+          name: 'New Request',
+          parameters: [],
+          parentId: 'wrk_1',
+          settingDisableRenderRequestBody: false,
+          settingEncodeUrl: true,
+          settingSendCookies: true,
+          settingStoreCookies: true,
+          settingRebuildPath: true,
+          settingMaxTimelineDataSize: 1000,
+          url: 'https://insomnia.rest'
+        }
+      ]
     });
   });
 
@@ -214,64 +221,62 @@ describe('app.export.*', () => {
     const exported = await result.export.har();
     const exportedData = JSON.parse(exported);
     exportedData.log.entries[0].startedDateTime = '2017-11-24T18:12:12.849Z';
-    expect(exportedData).toEqual(
-      {
-        log: {
-          creator: {
-            name: 'Insomnia REST Client',
-            version: `insomnia.desktop.app:v${getAppVersion()}`
-          },
-          entries: [
-            {
-              cache: {},
-              comment: 'New Request',
-              request: {
-                bodySize: -1,
-                cookies: [],
-                headers: [],
-                headersSize: -1,
-                httpVersion: 'HTTP/1.1',
-                method: 'GET',
-                postData: {
-                  mimeType: '',
-                  params: [],
-                  text: ''
-                },
-                queryString: [],
-                url: 'https://insomnia.rest/',
-                settingEncodeUrl: true
+    expect(exportedData).toEqual({
+      log: {
+        creator: {
+          name: 'Insomnia REST Client',
+          version: `insomnia.desktop.app:v${getAppVersion()}`
+        },
+        entries: [
+          {
+            cache: {},
+            comment: 'New Request',
+            request: {
+              bodySize: -1,
+              cookies: [],
+              headers: [],
+              headersSize: -1,
+              httpVersion: 'HTTP/1.1',
+              method: 'GET',
+              postData: {
+                mimeType: '',
+                params: [],
+                text: ''
               },
-              response: {
-                bodySize: -1,
-                content: {
-                  mimeType: '',
-                  size: 3,
-                  text: 'foo'
-                },
-                cookies: [],
-                headers: [],
-                headersSize: -1,
-                httpVersion: 'HTTP/1.1',
-                redirectURL: '',
-                status: 200,
-                statusText: ''
+              queryString: [],
+              url: 'https://insomnia.rest/',
+              settingEncodeUrl: true
+            },
+            response: {
+              bodySize: -1,
+              content: {
+                mimeType: '',
+                size: 3,
+                text: 'foo'
               },
-              startedDateTime: '2017-11-24T18:12:12.849Z',
-              time: 0,
-              timings: {
-                blocked: -1,
-                connect: -1,
-                dns: -1,
-                receive: 0,
-                send: 0,
-                ssl: -1,
-                wait: 0
-              }
+              cookies: [],
+              headers: [],
+              headersSize: -1,
+              httpVersion: 'HTTP/1.1',
+              redirectURL: '',
+              status: 200,
+              statusText: ''
+            },
+            startedDateTime: '2017-11-24T18:12:12.849Z',
+            time: 0,
+            timings: {
+              blocked: -1,
+              connect: -1,
+              dns: -1,
+              receive: 0,
+              send: 0,
+              ssl: -1,
+              wait: 0
             }
-          ],
-          version: '1.2'
-        }
+          }
+        ],
+        version: '1.2'
       }
-    );
+    });
   });
 });

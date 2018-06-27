@@ -4,7 +4,7 @@ import * as models from '../../models';
 import * as db from '../../common/database';
 import * as syncStorage from '../storage';
 import * as crypt from '../crypt';
-import {globalBeforeEach} from '../../__jest__/before-each';
+import { globalBeforeEach } from '../../__jest__/before-each';
 
 describe('Test push/pull behaviour', () => {
   beforeEach(async () => {
@@ -16,14 +16,22 @@ describe('Test push/pull behaviour', () => {
     await _setupSessionMocks();
 
     // Init sync and storage
-    const config = {inMemoryOnly: true, autoload: false, filename: null};
+    const config = { inMemoryOnly: true, autoload: false, filename: null };
     await syncStorage.initDB(config, true);
 
     // Add some data
-    await models.workspace.create({_id: 'wrk_1', name: 'Workspace 1'});
-    await models.workspace.create({_id: 'wrk_2', name: 'Workspace 2'});
-    await models.request.create({_id: 'req_1', name: 'Request 1', parentId: 'wrk_1'});
-    await models.request.create({_id: 'req_2', name: 'Request 2', parentId: 'wrk_2'});
+    await models.workspace.create({ _id: 'wrk_1', name: 'Workspace 1' });
+    await models.workspace.create({ _id: 'wrk_2', name: 'Workspace 2' });
+    await models.request.create({
+      _id: 'req_1',
+      name: 'Request 1',
+      parentId: 'wrk_1'
+    });
+    await models.request.create({
+      _id: 'req_2',
+      name: 'Request 2',
+      parentId: 'wrk_2'
+    });
 
     // Create resources, resource groups, and configs
     const workspaces = await models.workspace.all();
@@ -40,8 +48,14 @@ describe('Test push/pull behaviour', () => {
     const resourceRequest2 = await syncStorage.getResourceByDocId(request2._id);
 
     // Set up sync modes
-    await sync.createOrUpdateConfig(resourceRequest.resourceGroupId, syncStorage.SYNC_MODE_ON);
-    await sync.createOrUpdateConfig(resourceRequest2.resourceGroupId, syncStorage.SYNC_MODE_UNSET);
+    await sync.createOrUpdateConfig(
+      resourceRequest.resourceGroupId,
+      syncStorage.SYNC_MODE_ON
+    );
+    await sync.createOrUpdateConfig(
+      resourceRequest2.resourceGroupId,
+      syncStorage.SYNC_MODE_UNSET
+    );
 
     await sync.push(); // Push only active configs
     await sync.push(resourceRequest.resourceGroupId); // Force push rg_1
@@ -62,11 +76,14 @@ describe('Test push/pull behaviour', () => {
   it('Updates dirty flag for push response', async () => {
     const request = await models.request.getById('req_1');
     const resourceRequest = await syncStorage.getResourceByDocId(request._id);
-    await sync.createOrUpdateConfig(resourceRequest.resourceGroupId, syncStorage.SYNC_MODE_ON);
+    await sync.createOrUpdateConfig(
+      resourceRequest.resourceGroupId,
+      syncStorage.SYNC_MODE_ON
+    );
 
     session.syncPush.mockReturnValueOnce({
       updated: [],
-      created: [{id: request._id, version: 'new-version'}],
+      created: [{ id: request._id, version: 'new-version' }],
       removed: [],
       conflicts: []
     });
@@ -86,19 +103,35 @@ describe('Test push/pull behaviour', () => {
   it('Updates resources for pull response', async () => {
     const request = await models.request.getById('req_1');
     const request2 = await models.request.getById('req_2');
-    const requestNew = Object.assign({}, request, {_id: 'req_new', name: 'New Request'});
+    const requestNew = Object.assign({}, request, {
+      _id: 'req_new',
+      name: 'New Request'
+    });
     const resourceBefore = await syncStorage.getResourceByDocId(request._id);
-    const resource2Before = await syncStorage.getResourceByDocId(requestNew._id);
-    await sync.createOrUpdateConfig(resourceBefore.resourceGroupId, syncStorage.SYNC_MODE_ON);
-    const updatedRequest = Object.assign({}, request, {name: 'Request Updated'});
+    const resource2Before = await syncStorage.getResourceByDocId(
+      requestNew._id
+    );
+    await sync.createOrUpdateConfig(
+      resourceBefore.resourceGroupId,
+      syncStorage.SYNC_MODE_ON
+    );
+    const updatedRequest = Object.assign({}, request, {
+      name: 'Request Updated'
+    });
     const updatedResource = Object.assign({}, resourceBefore, {
       version: 'ver1',
-      encContent: await sync.encryptDoc(resourceBefore.resourceGroupId, updatedRequest)
+      encContent: await sync.encryptDoc(
+        resourceBefore.resourceGroupId,
+        updatedRequest
+      )
     });
     const createdResourceNew = Object.assign({}, resourceBefore, {
       id: requestNew._id,
       resourceGroupId: 'rg_1',
-      encContent: await sync.encryptDoc(resourceBefore.resourceGroupId, requestNew)
+      encContent: await sync.encryptDoc(
+        resourceBefore.resourceGroupId,
+        requestNew
+      )
     });
 
     session.syncPull.mockReturnValueOnce({
@@ -113,9 +146,14 @@ describe('Test push/pull behaviour', () => {
     const requestAfter = await models.request.getById(request._id);
     const request2After = await models.request.getById(request2._id);
     const requestNewAfter = await models.request.getById('req_new');
-    const resourceAfter = await syncStorage.getResourceByDocId(request._id, resourceBefore.resourceGroupId);
+    const resourceAfter = await syncStorage.getResourceByDocId(
+      request._id,
+      resourceBefore.resourceGroupId
+    );
     const resource2After = await syncStorage.getResourceByDocId(request2._id);
-    const resourceNewAfter = await syncStorage.getResourceByDocId(requestNewAfter._id);
+    const resourceNewAfter = await syncStorage.getResourceByDocId(
+      requestNewAfter._id
+    );
 
     // Assert
     expect(resourceBefore.version).toBe('__NO_VERSION__');
@@ -131,11 +169,18 @@ describe('Test push/pull behaviour', () => {
 
   it('Conflict: local version wins on modified before', async () => {
     const requestClient = await models.request.getById('req_1');
-    const requestServer = Object.assign({}, requestClient, {name: 'Server Request'});
-    const resourceRequest = await syncStorage.getResourceByDocId(requestClient._id);
+    const requestServer = Object.assign({}, requestClient, {
+      name: 'Server Request'
+    });
+    const resourceRequest = await syncStorage.getResourceByDocId(
+      requestClient._id
+    );
     const resourceConflict = Object.assign({}, resourceRequest, {
       version: 'ver-2',
-      encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
+      encContent: await sync.encryptDoc(
+        resourceRequest.resourceGroupId,
+        requestServer
+      ),
       lastEdited: resourceRequest.lastEdited - 1000 // Same edited time
     });
 
@@ -147,7 +192,10 @@ describe('Test push/pull behaviour', () => {
     });
 
     await sync.push(resourceRequest.resourceGroupId);
-    const resourceAfter = await syncStorage.getResourceByDocId(requestClient._id, resourceRequest.resourceGroupId);
+    const resourceAfter = await syncStorage.getResourceByDocId(
+      requestClient._id,
+      resourceRequest.resourceGroupId
+    );
     const requestAfter = await models.request.getById(requestClient._id);
 
     // Assert
@@ -163,11 +211,18 @@ describe('Test push/pull behaviour', () => {
 
   it('Conflict: local version wins on modified tie', async () => {
     const requestClient = await models.request.getById('req_1');
-    const requestServer = Object.assign({}, requestClient, {name: 'Server Request'});
-    const resourceRequest = await syncStorage.getResourceByDocId(requestClient._id);
+    const requestServer = Object.assign({}, requestClient, {
+      name: 'Server Request'
+    });
+    const resourceRequest = await syncStorage.getResourceByDocId(
+      requestClient._id
+    );
     const resourceConflict = Object.assign({}, resourceRequest, {
       version: 'ver-2',
-      encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
+      encContent: await sync.encryptDoc(
+        resourceRequest.resourceGroupId,
+        requestServer
+      ),
       lastEdited: resourceRequest.lastEdited // Same edited time
     });
 
@@ -179,7 +234,10 @@ describe('Test push/pull behaviour', () => {
     });
 
     await sync.push(resourceRequest.resourceGroupId);
-    const resourceAfter = await syncStorage.getResourceByDocId(requestClient._id, resourceRequest.resourceGroupId);
+    const resourceAfter = await syncStorage.getResourceByDocId(
+      requestClient._id,
+      resourceRequest.resourceGroupId
+    );
     const requestAfter = await models.request.getById(requestClient._id);
 
     // Assert
@@ -195,11 +253,18 @@ describe('Test push/pull behaviour', () => {
 
   it('Conflict: server version wins if modified after', async () => {
     const requestClient = await models.request.getById('req_1');
-    const requestServer = Object.assign({}, requestClient, {name: 'Server Request'});
-    const resourceRequest = await syncStorage.getResourceByDocId(requestClient._id);
+    const requestServer = Object.assign({}, requestClient, {
+      name: 'Server Request'
+    });
+    const resourceRequest = await syncStorage.getResourceByDocId(
+      requestClient._id
+    );
     const resourceConflict = Object.assign({}, resourceRequest, {
       version: 'ver-2',
-      encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
+      encContent: await sync.encryptDoc(
+        resourceRequest.resourceGroupId,
+        requestServer
+      ),
       lastEdited: resourceRequest.lastEdited + 1000
     });
 
@@ -211,13 +276,18 @@ describe('Test push/pull behaviour', () => {
     });
 
     await sync.push(resourceRequest.resourceGroupId);
-    const resourceAfter = await syncStorage.getResourceByDocId(requestClient._id, resourceRequest.resourceGroupId);
+    const resourceAfter = await syncStorage.getResourceByDocId(
+      requestClient._id,
+      resourceRequest.resourceGroupId
+    );
     const requestAfter = await models.request.getById(requestClient._id);
 
     // Assert
     expect(session.syncPush.mock.calls.length).toBe(1);
     expect(session.syncPush.mock.calls[0][0].length).toBe(2);
-    expect(resourceAfter.lastEdited).toBeGreaterThan(resourceRequest.lastEdited);
+    expect(resourceAfter.lastEdited).toBeGreaterThan(
+      resourceRequest.lastEdited
+    );
     expect(resourceAfter.version).toBe(resourceConflict.version);
     // Local resource gets marked as dirty so it's pushed right away
     expect(resourceAfter.dirty).toBe(false);
@@ -239,16 +309,36 @@ describe('Integration tests for creating Resources and pushing', () => {
     jest.useFakeTimers();
 
     // Init storage
-    const config = {inMemoryOnly: true, autoload: false, filename: null};
+    const config = { inMemoryOnly: true, autoload: false, filename: null };
     await syncStorage.initDB(config, true);
 
     // Add some data
-    await models.workspace.create({_id: 'wrk_empty', name: 'Workspace Empty'});
-    await models.workspace.create({_id: 'wrk_1', name: 'Workspace 1'});
-    await models.request.create({_id: 'req_1', name: 'Request 1', parentId: 'wrk_1'});
-    await models.request.create({_id: 'req_2', name: 'Request 2', parentId: 'wrk_1'});
-    await models.request.create({_id: 'req_3', name: 'Request 3', parentId: 'wrk_1'});
-    await models.environment.create({_id: 'env_2', name: 'Env Prv', parentId: 'wrk_1', isPrivate: true});
+    await models.workspace.create({
+      _id: 'wrk_empty',
+      name: 'Workspace Empty'
+    });
+    await models.workspace.create({ _id: 'wrk_1', name: 'Workspace 1' });
+    await models.request.create({
+      _id: 'req_1',
+      name: 'Request 1',
+      parentId: 'wrk_1'
+    });
+    await models.request.create({
+      _id: 'req_2',
+      name: 'Request 2',
+      parentId: 'wrk_1'
+    });
+    await models.request.create({
+      _id: 'req_3',
+      name: 'Request 3',
+      parentId: 'wrk_1'
+    });
+    await models.environment.create({
+      _id: 'env_2',
+      name: 'Env Prv',
+      parentId: 'wrk_1',
+      isPrivate: true
+    });
 
     // Flush changes just to be sure they won't affect our tests
     await db.flushChanges();
@@ -326,14 +416,13 @@ describe('Integration tests for creating Resources and pushing', () => {
 
     // Mark resource as removed
     const originalResource = await syncStorage.getResourceByDocId('req_t');
-    const updatedResource = await syncStorage.updateResource(
-      originalResource,
-      {removed: true}
-    );
+    const updatedResource = await syncStorage.updateResource(originalResource, {
+      removed: true
+    });
 
     // Update it and push it again
     await db.bufferChanges();
-    await models.request.update(request, {name: 'New Name'});
+    await models.request.update(request, { name: 'New Name' });
     await db.flushChanges();
     await sync.writePendingChanges();
     await sync.push();
@@ -350,7 +439,9 @@ describe('Integration tests for creating Resources and pushing', () => {
     const request = await models.request.getById('req_1');
     const resource = await syncStorage.getResourceByDocId(request._id);
     await db.bufferChanges();
-    const updatedRequest = await models.request.update(request, {name: 'New Name'});
+    const updatedRequest = await models.request.update(request, {
+      name: 'New Name'
+    });
 
     // Drain and fetch new resource
     await db.flushChanges();
@@ -399,14 +490,14 @@ describe('Integration tests for creating Resources and pushing', () => {
 // Helpers //
 // ~~~~~~~ //
 
-function _decryptResource (resource) {
+function _decryptResource(resource) {
   const message = JSON.parse(resource.encContent);
   const fakeKey = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
   const docJSON = crypt.decryptAES(fakeKey, message);
   return JSON.parse(docJSON);
 }
 
-async function _setSessionData () {
+async function _setSessionData() {
   const symmetricKey = {
     alg: 'A256GCM',
     ext: true,
@@ -424,7 +515,7 @@ async function _setSessionData () {
     n: 'aaaa'
   };
 
-  const {privateKey} = await crypt.generateKeyPairJWK();
+  const { privateKey } = await crypt.generateKeyPairJWK();
   const encPrivateKey = {
     ad: '',
     d: Buffer.from(JSON.stringify(privateKey)).toString('hex'),
@@ -445,7 +536,7 @@ async function _setSessionData () {
   );
 }
 
-async function _setupSessionMocks () {
+async function _setupSessionMocks() {
   const resourceGroups = {};
 
   session.syncCreateResourceGroup = jest.fn((parentId, name, _) => {
@@ -454,15 +545,19 @@ async function _setupSessionMocks () {
     // Generate a public key and use a symmetric equal to it's Id for
     // convenience
     const publicKey = session.getPublicKey();
-    const symmetricKeyStr = JSON.stringify({k: id});
+    const symmetricKeyStr = JSON.stringify({ k: id });
     const encSymmetricKey = crypt.encryptRSAWithJWK(publicKey, symmetricKeyStr);
 
     // Store the resource group and return it
-    resourceGroups[id] = Object.assign({}, {id, encSymmetricKey}, {
-      parentResourceId: parentId,
-      name: name,
-      encSymmetricKey: encSymmetricKey
-    });
+    resourceGroups[id] = Object.assign(
+      {},
+      { id, encSymmetricKey },
+      {
+        parentResourceId: parentId,
+        name: name,
+        encSymmetricKey: encSymmetricKey
+      }
+    );
     return resourceGroups[id];
   });
 

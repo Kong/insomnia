@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import DebouncedInput from '../base/debounced-input';
 import FileInputButton from '../base/file-input-button';
 import Modal from '../base/modal';
@@ -11,8 +11,8 @@ import HelpTooltip from '../help-tooltip';
 import PromptButton from '../base/prompt-button';
 import * as models from '../../../models/index';
 import MarkdownEditor from '../markdown-editor';
-import type {Workspace} from '../../../models/workspace';
-import type {ClientCertificate} from '../../../models/client-certificate';
+import type { Workspace } from '../../../models/workspace';
+import type { ClientCertificate } from '../../../models/client-certificate';
 
 type Props = {
   clientCertificates: Array<ClientCertificate>,
@@ -44,7 +44,7 @@ type State = {
 class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
   modal: Modal | null;
 
-  constructor (props: Props) {
+  constructor(props: Props) {
     super(props);
 
     this.state = {
@@ -60,30 +60,30 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _workspaceUpdate (patch: Object) {
+  _workspaceUpdate(patch: Object) {
     models.workspace.update(this.props.workspace, patch);
   }
 
-  _handleAddDescription () {
-    this.setState({showDescription: true});
+  _handleAddDescription() {
+    this.setState({ showDescription: true });
   }
 
-  _handleSetModalRef (n: ?Modal) {
+  _handleSetModalRef(n: ?Modal) {
     this.modal = n;
   }
 
-  _handleRemoveWorkspace () {
+  _handleRemoveWorkspace() {
     this.props.handleRemoveWorkspace();
     this.hide();
   }
 
-  _handleDuplicateWorkspace () {
+  _handleDuplicateWorkspace() {
     this.props.handleDuplicateWorkspace(() => {
       this.hide();
     });
   }
 
-  _handleToggleCertificateForm () {
+  _handleToggleCertificateForm() {
     this.setState(state => ({
       showAddCertificateForm: !state.showAddCertificateForm,
       crtPath: '',
@@ -95,47 +95,54 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     }));
   }
 
-  _handleRename (name: string) {
-    this._workspaceUpdate({name});
+  _handleRename(name: string) {
+    this._workspaceUpdate({ name });
   }
 
-  _handleDescriptionChange (description: string) {
-    this._workspaceUpdate({description});
+  _handleDescriptionChange(description: string) {
+    this._workspaceUpdate({ description });
 
     if (this.state.defaultPreviewMode !== false) {
-      this.setState({defaultPreviewMode: false});
+      this.setState({ defaultPreviewMode: false });
     }
   }
 
-  _handleCreateHostChange (e: SyntheticEvent<HTMLInputElement>) {
-    this.setState({host: e.currentTarget.value});
+  _handleCreateHostChange(e: SyntheticEvent<HTMLInputElement>) {
+    this.setState({ host: e.currentTarget.value });
   }
 
-  _handleCreatePfxChange (pfxPath: string) {
-    this.setState({pfxPath});
+  _handleCreatePfxChange(pfxPath: string) {
+    this.setState({ pfxPath });
   }
 
-  _handleCreateCrtChange (crtPath: string) {
-    this.setState({crtPath});
+  _handleCreateCrtChange(crtPath: string) {
+    this.setState({ crtPath });
   }
 
-  _handleCreateKeyChange (keyPath: string) {
-    this.setState({keyPath});
+  _handleCreateKeyChange(keyPath: string) {
+    this.setState({ keyPath });
   }
 
-  _handleCreatePassphraseChange (e: SyntheticEvent<HTMLInputElement>) {
-    this.setState({passphrase: e.currentTarget.value});
+  _handleCreatePassphraseChange(e: SyntheticEvent<HTMLInputElement>) {
+    this.setState({ passphrase: e.currentTarget.value });
   }
 
-  _handleCreateIsPrivateChange (e: SyntheticEvent<HTMLInputElement>) {
-    this.setState({isPrivate: e.currentTarget.checked});
+  _handleCreateIsPrivateChange(e: SyntheticEvent<HTMLInputElement>) {
+    this.setState({ isPrivate: e.currentTarget.checked });
   }
 
-  async _handleCreateCertificate (e: SyntheticEvent<HTMLFormElement>) {
+  async _handleCreateCertificate(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const {workspace} = this.props;
-    const {pfxPath, crtPath, keyPath, host, passphrase, isPrivate} = this.state;
+    const { workspace } = this.props;
+    const {
+      pfxPath,
+      crtPath,
+      keyPath,
+      host,
+      passphrase,
+      isPrivate
+    } = this.state;
 
     const certificate = {
       host,
@@ -152,15 +159,17 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     this._handleToggleCertificateForm();
   }
 
-  async _handleDeleteCertificate (certificate: ClientCertificate) {
+  async _handleDeleteCertificate(certificate: ClientCertificate) {
     await models.clientCertificate.remove(certificate);
   }
 
-  async _handleToggleCertificate (certificate: ClientCertificate) {
-    await models.clientCertificate.update(certificate, {disabled: !certificate.disabled});
+  async _handleToggleCertificate(certificate: ClientCertificate) {
+    await models.clientCertificate.update(certificate, {
+      disabled: !certificate.disabled
+    });
   }
 
-  show () {
+  show() {
     const hasDescription = !!this.props.workspace.description;
     this.setState({
       showDescription: hasDescription,
@@ -171,16 +180,15 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.show();
   }
 
-  hide () {
+  hide() {
     this.modal && this.modal.hide();
   }
 
-  renderModalHeader () {
-    const {workspace} = this.props;
+  renderModalHeader() {
+    const { workspace } = this.props;
     return (
       <ModalHeader key={`header::${workspace._id}`}>
-        Workspace Settings
-        {' '}
+        Workspace Settings{' '}
         <div className="txt-sm selectable faint monospace">
           {workspace ? workspace._id : ''}
         </div>
@@ -188,63 +196,67 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
-  renderCertificate (certificate: ClientCertificate) {
+  renderCertificate(certificate: ClientCertificate) {
     return (
       <div key={certificate._id}>
         <div className="row-spaced">
           <div>
             <span className="pad-right no-wrap">
-                          <strong>PFX:</strong>
-              {' '}
-              {certificate.pfx
-                ? <i className="fa fa-check"/>
-                : <i className="fa fa-remove"/>
-              }
-                        </span>
+              <strong>PFX:</strong>{' '}
+              {certificate.pfx ? (
+                <i className="fa fa-check" />
+              ) : (
+                <i className="fa fa-remove" />
+              )}
+            </span>
             <span className="pad-right no-wrap">
-                          <strong>CRT:</strong>
-              {' '}
-              {certificate.cert
-                ? <i className="fa fa-check"/>
-                : <i className="fa fa-remove"/>
-              }
-                        </span>
+              <strong>CRT:</strong>{' '}
+              {certificate.cert ? (
+                <i className="fa fa-check" />
+              ) : (
+                <i className="fa fa-remove" />
+              )}
+            </span>
             <span className="pad-right no-wrap">
-                          <strong>Key:</strong>
-              {' '}
-              {certificate.key
-                ? <i className="fa fa-check"/>
-                : <i className="fa fa-remove"/>
-              }
-                        </span>
-            <span className="pad-right no-wrap" title={certificate.passphrase || null}>
-                          <strong>Passphrase:</strong>
-              {' '}
-              {certificate.passphrase
-                ? <i className="fa fa-check"/>
-                : <i className="fa fa-remove"/>
-              }
-                        </span>
+              <strong>Key:</strong>{' '}
+              {certificate.key ? (
+                <i className="fa fa-check" />
+              ) : (
+                <i className="fa fa-remove" />
+              )}
+            </span>
+            <span
+              className="pad-right no-wrap"
+              title={certificate.passphrase || null}>
+              <strong>Passphrase:</strong>{' '}
+              {certificate.passphrase ? (
+                <i className="fa fa-check" />
+              ) : (
+                <i className="fa fa-remove" />
+              )}
+            </span>
             <span className="pad-right">
-                          <strong>Host:</strong>
-              {' '}
+              <strong>Host:</strong>{' '}
               <span className="monospace selectable">{certificate.host}</span>
-                      </span>
+            </span>
           </div>
           <div className="no-wrap">
-            <button className="btn btn--super-compact width-auto"
-                    title="Enable or disable certificate"
-                    onClick={() => this._handleToggleCertificate(certificate)}>
-              {certificate.disabled
-                ? <i className="fa fa-square-o"/>
-                : <i className="fa fa-check-square-o"/>
-              }
+            <button
+              className="btn btn--super-compact width-auto"
+              title="Enable or disable certificate"
+              onClick={() => this._handleToggleCertificate(certificate)}>
+              {certificate.disabled ? (
+                <i className="fa fa-square-o" />
+              ) : (
+                <i className="fa fa-check-square-o" />
+              )}
             </button>
-            <PromptButton className="btn btn--super-compact width-auto"
-                          confirmMessage=" "
-                          addIcon
-                          onClick={() => this._handleDeleteCertificate(certificate)}>
-              <i className="fa fa-trash-o"/>
+            <PromptButton
+              className="btn btn--super-compact width-auto"
+              confirmMessage=" "
+              addIcon
+              onClick={() => this._handleDeleteCertificate(certificate)}>
+              <i className="fa fa-trash-o" />
             </PromptButton>
           </div>
         </div>
@@ -252,7 +264,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
-  renderModalBody () {
+  renderModalBody() {
     const {
       clientCertificates,
       workspace,
@@ -291,7 +303,8 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
           </TabList>
           <TabPanel className="react-tabs__tab-panel pad scrollable pad-top-sm">
             <div className="form-control form-control--outlined">
-              <label>Name
+              <label>
+                Name
                 <DebouncedInput
                   type="text"
                   delay={500}
@@ -318,22 +331,25 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
                   onChange={this._handleDescriptionChange}
                 />
               ) : (
-                <button onClick={this._handleAddDescription}
-                        className="btn btn--outlined btn--super-duper-compact">
+                <button
+                  onClick={this._handleAddDescription}
+                  className="btn btn--outlined btn--super-duper-compact">
                   Add Description
                 </button>
               )}
             </div>
             <h2>Workspace Actions</h2>
             <div className="form-control form-control--padded">
-              <PromptButton onClick={this._handleRemoveWorkspace}
-                            addIcon
-                            className="width-auto btn btn--clicky inline-block">
-                <i className="fa fa-trash-o"/> Delete
+              <PromptButton
+                onClick={this._handleRemoveWorkspace}
+                addIcon
+                className="width-auto btn btn--clicky inline-block">
+                <i className="fa fa-trash-o" /> Delete
               </PromptButton>
-              <button onClick={this._handleDuplicateWorkspace}
-                      className="width-auto btn btn--clicky inline-block space-left">
-                <i className="fa fa-copy"/> Duplicate
+              <button
+                onClick={this._handleDuplicateWorkspace}
+                className="width-auto btn btn--clicky inline-block space-left">
+                <i className="fa fa-copy" /> Duplicate
               </button>
             </div>
           </TabPanel>
@@ -348,8 +364,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
 
                 {publicCertificates.length > 0
                   ? publicCertificates.map(this.renderCertificate)
-                  : null
-                }
+                  : null}
 
                 {privateCertificates.length > 0 ? (
                   <div>
@@ -362,10 +377,11 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
                     {privateCertificates.map(this.renderCertificate)}
                   </div>
                 ) : null}
-                <hr className="hr--spaced"/>
+                <hr className="hr--spaced" />
                 <div className="text-center">
-                  <button className="btn btn--clicky auto"
-                          onClick={this._handleToggleCertificateForm}>
+                  <button
+                    className="btn btn--clicky auto"
+                    onClick={this._handleToggleCertificateForm}>
                     New Certificate
                   </button>
                 </div>
@@ -373,10 +389,11 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
             ) : (
               <form onSubmit={this._handleCreateCertificate}>
                 <div className="form-control form-control--outlined no-pad-top">
-                  <label>Host
+                  <label>
+                    Host
                     <HelpTooltip position="right" className="space-left">
-                      The host for which this client certificate is valid.
-                      Port number is optional and * can be used as a wildcard.
+                      The host for which this client certificate is valid. Port
+                      number is optional and * can be used as a wildcard.
                     </HelpTooltip>
                     <input
                       type="text"
@@ -389,7 +406,8 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
                 </div>
                 <div className="form-row">
                   <div className="form-control width-auto">
-                    <label>PFX <span className="faint">(or PKCS12)</span>
+                    <label>
+                      PFX <span className="faint">(or PKCS12)</span>
                       <FileInputButton
                         className="btn btn--clicky"
                         onChange={this._handleCreatePfxChange}
@@ -399,12 +417,14 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
                     </label>
                   </div>
                   <div className="text-center">
-                    <br/><br/>
+                    <br />
+                    <br />
                     &nbsp;&nbsp;Or&nbsp;&nbsp;
                   </div>
                   <div className="row-fill">
                     <div className="form-control">
-                      <label>CRT File
+                      <label>
+                        CRT File
                         <FileInputButton
                           className="btn btn--clicky"
                           name="Cert"
@@ -415,19 +435,22 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
                       </label>
                     </div>
                     <div className="form-control">
-                      <label>Key File
+                      <label>
+                        Key File
                         <FileInputButton
                           className="btn btn--clicky"
                           name="Key"
                           onChange={this._handleCreateKeyChange}
                           path={keyPath}
-                          showFileName/>
+                          showFileName
+                        />
                       </label>
                     </div>
                   </div>
                 </div>
                 <div className="form-control form-control--outlined">
-                  <label>Passphrase
+                  <label>
+                    Passphrase
                     <input
                       type="password"
                       placeholder="•••••••••••"
@@ -436,7 +459,8 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
                   </label>
                 </div>
                 <div className="form-control form-control--slim">
-                  <label>Private
+                  <label>
+                    Private
                     <HelpTooltip className="space-left">
                       Private certificates will not be synced
                     </HelpTooltip>
@@ -447,11 +471,12 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
                     />
                   </label>
                 </div>
-                <br/>
+                <br />
                 <div className="pad-top text-right">
-                  <button type="button"
-                          className="btn btn--super-compact space-right"
-                          onClick={this._handleToggleCertificateForm}>
+                  <button
+                    type="button"
+                    className="btn btn--super-compact space-right"
+                    onClick={this._handleToggleCertificateForm}>
                     Cancel
                   </button>
                   <button className="btn btn--clicky space-right" type="submit">
@@ -466,8 +491,8 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
-  render () {
-    const {workspace} = this.props;
+  render() {
+    const { workspace } = this.props;
     return (
       <Modal ref={this._handleSetModalRef} freshState>
         {workspace ? this.renderModalHeader() : null}

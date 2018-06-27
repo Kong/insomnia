@@ -1,5 +1,5 @@
 import * as plugin from '../store';
-import {globalBeforeEach} from '../../../__jest__/before-each';
+import { globalBeforeEach } from '../../../__jest__/before-each';
 
 const PLUGIN = {
   name: 'my-plugin',
@@ -11,8 +11,9 @@ const PLUGIN = {
 describe('init()', () => {
   beforeEach(globalBeforeEach);
   it('initializes correctly', async () => {
-    const result = plugin.init({name: PLUGIN});
+    const result = plugin.init({ name: PLUGIN });
     expect(Object.keys(result.store).sort()).toEqual([
+      'clear',
       'getItem',
       'hasItem',
       'removeItem',
@@ -38,5 +39,14 @@ describe('store.*', () => {
     await p.store.removeItem('color');
     expect(await p.store.hasItem('color')).toBe(false);
     expect(await p.store.getItem('color')).toBeNull();
+
+    // Clear it
+    await p.store.setItem('a', 'a');
+    await p.store.setItem('b', 'b');
+    await p.store.setItem('c', 'c');
+    await p.store.clear();
+    expect(await p.store.getItem('a')).toBeNull();
+    expect(await p.store.getItem('b')).toBeNull();
+    expect(await p.store.getItem('c')).toBeNull();
   });
 });

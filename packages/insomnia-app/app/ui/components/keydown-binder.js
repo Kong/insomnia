@@ -2,7 +2,7 @@
 import * as React from 'react';
 import ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
-import {isMac} from '../../common/constants';
+import { isMac } from '../../common/constants';
 
 type Props = {
   onKeydown: Function,
@@ -14,8 +14,8 @@ type Props = {
 
 @autobind
 class KeydownBinder extends React.PureComponent<Props> {
-  _handleKeydown (e: KeyboardEvent) {
-    const {stopMetaPropagation, onKeydown, disabled} = this.props;
+  _handleKeydown(e: KeyboardEvent) {
+    const { stopMetaPropagation, onKeydown, disabled } = this.props;
 
     if (disabled) {
       return;
@@ -29,25 +29,27 @@ class KeydownBinder extends React.PureComponent<Props> {
     onKeydown(e);
   }
 
-  componentDidMount () {
+  componentDidMount() {
     if (this.props.scoped) {
       const el = ReactDOM.findDOMNode(this);
       el && el.addEventListener('keydown', this._handleKeydown);
     } else {
-      document.body && document.body.addEventListener('keydown', this._handleKeydown);
+      document.body &&
+        document.body.addEventListener('keydown', this._handleKeydown);
     }
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     if (this.props.scoped) {
       const el = ReactDOM.findDOMNode(this);
       el && el.removeEventListener('keydown', this._handleKeydown);
     } else {
-      document.body && document.body.removeEventListener('keydown', this._handleKeydown);
+      document.body &&
+        document.body.removeEventListener('keydown', this._handleKeydown);
     }
   }
 
-  render () {
+  render() {
     return this.props.children;
   }
 }

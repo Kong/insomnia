@@ -25,7 +25,7 @@ const NUNJUCKS_CLOSE_STATES = {
  * @param indentChars
  * @returns {string}
  */
-module.exports.prettify = function (json, indentChars = '\t') {
+module.exports.prettify = function(json, indentChars = '\t') {
   if (!json) {
     return '';
   }
@@ -154,7 +154,7 @@ module.exports.prettify = function (json, indentChars = '\t') {
   return newJson.replace(/^\s*\n/gm, '');
 };
 
-function _repeatString (s, count) {
+function _repeatString(s, count) {
   return new Array(count + 1).join(s);
 }
 
@@ -166,7 +166,7 @@ function _repeatString (s, count) {
  * @returns {string}
  * @private
  */
-function _convertUnicode (originalStr) {
+function _convertUnicode(originalStr) {
   let m;
   let c;
   let lastI = 0;

@@ -17,7 +17,9 @@ if (process.env.NODE_ENV === 'development') {
   devtool = 'eval-source-map';
   plugins = [
     new webpack.DefinePlugin({
-      'process.env.APP_RENDER_URL': JSON.stringify(`http://localhost:${PORT}/renderer.html`),
+      'process.env.APP_RENDER_URL': JSON.stringify(
+        `http://localhost:${PORT}/renderer.html`
+      ),
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.INSOMNIA_ENV': JSON.stringify('development')
     })
@@ -31,9 +33,7 @@ if (process.env.NODE_ENV === 'development') {
 module.exports = {
   ...productionConfig,
   devtool: devtool,
-  entry: [
-    './main.development.js'
-  ],
+  entry: ['./main.development.js'],
   output: output,
   node: {
     __dirname: false // Use node.js __dirname

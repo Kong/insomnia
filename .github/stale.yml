@@ -4,6 +4,7 @@ exemptLabels:
   - High Priority
   - Accepted
   - Help Wanted
+  - Needs Discussion
   - Blocked
   - Bug
 staleLabel: Stale

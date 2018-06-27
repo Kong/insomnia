@@ -1,6 +1,6 @@
 'use strict';
 
-const {parse} = require('shell-quote');
+const { parse } = require('shell-quote');
 
 let requestCount = 1;
 
@@ -8,7 +8,7 @@ module.exports.id = 'curl';
 module.exports.name = 'cURL';
 module.exports.description = 'cURL command line tool';
 
-module.exports.convert = function (rawData) {
+module.exports.convert = function(rawData) {
   requestCount = 1;
 
   if (!rawData.match(/^\s*curl /)) {
@@ -19,7 +19,6 @@ module.exports.convert = function (rawData) {
 
   // Parse the whole thing into one big tokenized list
   const allArgs = parse(rawData);
-
 
   // ~~~~~~~~~~~~~~~~~~~~~~ //
   // Aggregate the commands //
@@ -55,8 +54,7 @@ module.exports.convert = function (rawData) {
   return requests;
 };
 
-function importArgs (args) {
-
+function importArgs(args) {
   // ~~~~~~~~~~~~~~~~~~~~~ //
   // Collect all the flags //
   // ~~~~~~~~~~~~~~~~~~~~~ //
@@ -102,77 +100,90 @@ function importArgs (args) {
   const url = getPairValue(pairs, singletons[0] || '', 'url');
 
   // Authentication
-  const [username, password] = getPairValue(pairs, '', 'u', 'user').split(/:(.*)$/);
+  const [username, password] = getPairValue(pairs, '', 'u', 'user').split(
+    /:(.*)$/
+  );
   const authentication = username
-    ? {username: username.trim(), password: password.trim()}
+    ? { username: username.trim(), password: password.trim() }
     : {};
 
   // Headers
-  const headers = [
-    ...(pairs['header'] || []),
-    ...(pairs['H'] || [])
-  ].map(str => {
-    const [name, value] = str.split(/:(.*)$/);
-    return {name: name.trim(), value: value.trim()};
-  });
+  const headers = [...(pairs['header'] || []), ...(pairs['H'] || [])].map(
+    str => {
+      const [name, value] = str.split(/:(.*)$/);
+      return { name: name.trim(), value: value.trim() };
+    }
+  );
 
   // Cookies
-  const cookieHeaderValue = [
-    ...(pairs.cookie || []),
-    ...(pairs.b || [])
-  ].map(str => {
-    const name = str.split('=', 1)[0];
-    const value = str.replace(`${name}=`, '');
-    return `${name}=${value}`;
-  }).join('; ');
+  const cookieHeaderValue = [...(pairs.cookie || []), ...(pairs.b || [])]
+    .map(str => {
+      const name = str.split('=', 1)[0];
+      const value = str.replace(`${name}=`, '');
+      return `${name}=${value}`;
+    })
+    .join('; ');
 
   // Convert cookie value to header
-  const existingCookieHeader = headers.find(h => h.name.toLowerCase() === 'cookie');
+  const existingCookieHeader = headers.find(
+    h => h.name.toLowerCase() === 'cookie'
+  );
   if (cookieHeaderValue && existingCookieHeader) {
     // Has existing cookie header, so let's update it
     existingCookieHeader.value += `; ${cookieHeaderValue}`;
   } else if (cookieHeaderValue) {
     // No existing cookie header, so let's make a new one
-    headers.push({name: 'Cookie', value: cookieHeaderValue});
+    headers.push({ name: 'Cookie', value: cookieHeaderValue });
   }
 
   // Body (Text or Blob)
   const bodyAsGET = getPairValue(pairs, false, 'G', 'get');
   const textBody = getPairValue(
-    pairs, null, 'd', 'data', 'data-raw', 'data-urlencode', 'data-binary', 'data-ascii');
-  const contentTypeHeader = headers.find(h => h.name.toLowerCase() === 'content-type');
-  const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : null;
+    pairs,
+    null,
+    'd',
+    'data',
+    'data-raw',
+    'data-urlencode',
+    'data-binary',
+    'data-ascii'
+  );
+  const contentTypeHeader = headers.find(
+    h => h.name.toLowerCase() === 'content-type'
+  );
+  const mimeType = contentTypeHeader
+    ? contentTypeHeader.value.split(';')[0]
+    : null;
 
   // Body (Multipart Form Data)
-  const formDataParams = [
-    ...(pairs['form'] || []),
-    ...(pairs['F'] || [])
-  ].map(str => {
-    const [name, value] = str.split('=');
-    const item = {name};
+  const formDataParams = [...(pairs['form'] || []), ...(pairs['F'] || [])].map(
+    str => {
+      const [name, value] = str.split('=');
+      const item = { name };
 
-    if (value.indexOf('@') === 0) {
-      item.fileName = value.slice(1);
-      item.type = 'file';
-    } else {
-      item.value = value;
-      item.type = 'text';
+      if (value.indexOf('@') === 0) {
+        item.fileName = value.slice(1);
+        item.type = 'file';
+      } else {
+        item.value = value;
+        item.type = 'text';
+      }
+      return item;
     }
-    return item;
-  });
+  );
 
   // Body
   let parameters = [];
-  let body = mimeType ? {mimeType: mimeType} : {};
+  let body = mimeType ? { mimeType: mimeType } : {};
   if (textBody && bodyAsGET) {
     parameters = textBody.split('&').map(v => {
       const [name, value] = v.split('=');
-      return {name: name || '', value: value || ''};
+      return { name: name || '', value: value || '' };
     });
   } else if (textBody && mimeType === 'application/x-www-form-urlencoded') {
     body.params = textBody.split('&').map(v => {
       const [name, value] = v.split('=');
-      return {name: name || '', value: value || ''};
+      return { name: name || '', value: value || '' };
     });
   } else if (textBody) {
     body.text = textBody;
@@ -185,7 +196,7 @@ function importArgs (args) {
   // Method
   let method = getPairValue(pairs, '__UNSET__', 'X', 'request').toUpperCase();
   if (method === '__UNSET__') {
-    method = (body.text || body.params) ? 'POST' : 'GET';
+    method = body.text || body.params ? 'POST' : 'GET';
   }
 
   const count = requestCount++;
@@ -199,11 +210,11 @@ function importArgs (args) {
     method,
     headers,
     authentication,
-    body,
+    body
   };
 }
 
-function getPairValue (pairs, defaultValue, ...names) {
+function getPairValue(pairs, defaultValue, ...names) {
   for (const name of names) {
     if (pairs[name] && pairs[name].length) {
       return pairs[name][0];

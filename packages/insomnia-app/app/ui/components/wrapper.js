@@ -1,14 +1,20 @@
 // @flow
-import type {Settings} from '../../models/settings';
-import type {Response} from '../../models/response';
-import type {OAuth2Token} from '../../models/o-auth-2-token';
-import type {Workspace} from '../../models/workspace';
-import type {Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter} from '../../models/request';
+import type { Settings } from '../../models/settings';
+import type { Response } from '../../models/response';
+import type { OAuth2Token } from '../../models/o-auth-2-token';
+import type { Workspace } from '../../models/workspace';
+import type {
+  Request,
+  RequestAuthentication,
+  RequestBody,
+  RequestHeader,
+  RequestParameter
+} from '../../models/request';
 
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import {registerModal, showModal} from './modals/index';
+import { registerModal, showModal } from './modals/index';
 import AlertModal from './modals/alert-modal';
 import WrapperModal from './modals/wrapper-modal';
 import ErrorModal from './modals/error-modal';
@@ -38,10 +44,10 @@ import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal
 import CodePromptModal from './modals/code-prompt-modal';
 import * as models from '../../models/index';
 import * as importers from 'insomnia-importers';
-import type {CookieJar} from '../../models/cookie-jar';
-import type {Environment} from '../../models/environment';
+import type { CookieJar } from '../../models/cookie-jar';
+import type { Environment } from '../../models/environment';
 import ErrorBoundary from './error-boundary';
-import type {ClientCertificate} from '../../models/client-certificate';
+import type { ClientCertificate } from '../../models/client-certificate';
 import MoveRequestGroupModal from './modals/move-request-group-modal';
 
 type Props = {
@@ -110,7 +116,7 @@ type Props = {
   // Optional
   oAuth2Token: ?OAuth2Token,
   activeRequest: ?Request,
-  activeResponse: ?Response,
+  activeResponse: ?Response
 };
 
 type State = {
@@ -129,7 +135,7 @@ const sUpdate = models.settings.update;
 
 @autobind
 class Wrapper extends React.PureComponent<Props, State> {
-  constructor (props: any) {
+  constructor(props: any) {
     super(props);
     this.state = {
       forceRefreshKey: Date.now()
@@ -137,7 +143,7 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   // Request updaters
-  async _handleForceUpdateRequest (patch: Object): Promise<Request> {
+  async _handleForceUpdateRequest(patch: Object): Promise<Request> {
     const newRequest = await rUpdate(this.props.activeRequest, patch);
 
     // Give it a second for the app to render first. If we don't wait, it will refresh
@@ -147,46 +153,52 @@ class Wrapper extends React.PureComponent<Props, State> {
     return newRequest;
   }
 
-  _handleUpdateRequestBody (body: RequestBody): Promise<Request> {
-    return rUpdate(this.props.activeRequest, {body});
+  _handleUpdateRequestBody(body: RequestBody): Promise<Request> {
+    return rUpdate(this.props.activeRequest, { body });
   }
 
-  _handleUpdateRequestMethod (method: string): Promise<Request> {
-    return rUpdate(this.props.activeRequest, {method});
+  _handleUpdateRequestMethod(method: string): Promise<Request> {
+    return rUpdate(this.props.activeRequest, { method });
   }
 
-  _handleUpdateRequestParameters (parameters: Array<RequestParameter>): Promise<Request> {
-    return rUpdate(this.props.activeRequest, {parameters});
+  _handleUpdateRequestParameters(
+    parameters: Array<RequestParameter>
+  ): Promise<Request> {
+    return rUpdate(this.props.activeRequest, { parameters });
   }
 
-  _handleUpdateRequestAuthentication (authentication: RequestAuthentication): Promise<Request> {
-    return rUpdate(this.props.activeRequest, {authentication});
+  _handleUpdateRequestAuthentication(
+    authentication: RequestAuthentication
+  ): Promise<Request> {
+    return rUpdate(this.props.activeRequest, { authentication });
   }
 
-  _handleUpdateRequestHeaders (headers: Array<RequestHeader>): Promise<Request> {
-    return rUpdate(this.props.activeRequest, {headers});
+  _handleUpdateRequestHeaders(headers: Array<RequestHeader>): Promise<Request> {
+    return rUpdate(this.props.activeRequest, { headers });
   }
 
-  _handleForceUpdateRequestHeaders (headers: Array<RequestHeader>): Promise<Request> {
-    return this._handleForceUpdateRequest({headers});
+  _handleForceUpdateRequestHeaders(
+    headers: Array<RequestHeader>
+  ): Promise<Request> {
+    return this._handleForceUpdateRequest({ headers });
   }
 
-  _handleUpdateRequestUrl (url: string): Promise<Request> {
-    return rUpdate(this.props.activeRequest, {url});
+  _handleUpdateRequestUrl(url: string): Promise<Request> {
+    return rUpdate(this.props.activeRequest, { url });
   }
 
   // Special request updaters
-  _handleStartDragSidebar (e: Event): void {
+  _handleStartDragSidebar(e: Event): void {
     e.preventDefault();
     this.props.handleStartDragSidebar();
   }
 
-  async _handleImport (text: string): Promise<Request | null> {
+  async _handleImport(text: string): Promise<Request | null> {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
     try {
-      const {data} = await importers.convert(text);
-      const {resources} = data;
+      const { data } = await importers.convert(text);
+      const { resources } = data;
       const r = resources[0];
 
       if (r && r._type === 'request') {
@@ -208,53 +220,60 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   // Settings updaters
-  _handleUpdateSettingsShowPasswords (showPasswords: boolean): Promise<Settings> {
-    return sUpdate(this.props.settings, {showPasswords});
+  _handleUpdateSettingsShowPasswords(
+    showPasswords: boolean
+  ): Promise<Settings> {
+    return sUpdate(this.props.settings, { showPasswords });
   }
 
-  _handleUpdateSettingsUseBulkHeaderEditor (useBulkHeaderEditor: boolean): Promise<Settings> {
-    return sUpdate(this.props.settings, {useBulkHeaderEditor});
+  _handleUpdateSettingsUseBulkHeaderEditor(
+    useBulkHeaderEditor: boolean
+  ): Promise<Settings> {
+    return sUpdate(this.props.settings, { useBulkHeaderEditor });
   }
 
   // Other Helpers
-  _handleImportFile (): void {
+  _handleImportFile(): void {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
   }
 
-  _handleImportUri (uri: string): void {
+  _handleImportUri(uri: string): void {
     this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri);
   }
 
-  _handleExportWorkspaceToFile (): void {
+  _handleExportWorkspaceToFile(): void {
     this.props.handleExportFile(this.props.activeWorkspace._id);
   }
 
-  _handleSetActiveResponse (responseId: string | null): void {
+  _handleSetActiveResponse(responseId: string | null): void {
     if (!this.props.activeRequest) {
       console.warn('Tried to set active response when request not active');
       return;
     }
 
-    this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
+    this.props.handleSetActiveResponse(
+      this.props.activeRequest._id,
+      responseId
+    );
   }
 
-  _handleShowEnvironmentsModal (): void {
+  _handleShowEnvironmentsModal(): void {
     showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
   }
 
-  _handleShowCookiesModal (): void {
+  _handleShowCookiesModal(): void {
     showModal(CookiesModal, this.props.activeWorkspace);
   }
 
-  _handleShowModifyCookieModal (cookie: Object): void {
+  _handleShowModifyCookieModal(cookie: Object): void {
     showModal(CookieModifyModal, cookie);
   }
 
-  _handleShowRequestSettingsModal (): void {
-    showModal(RequestSettingsModal, {request: this.props.activeRequest});
+  _handleShowRequestSettingsModal(): void {
+    showModal(RequestSettingsModal, { request: this.props.activeRequest });
   }
 
-  _handleDeleteResponses (): void {
+  _handleDeleteResponses(): void {
     if (!this.props.activeRequest) {
       console.warn('Tried to delete responses when request not active');
       return;
@@ -264,62 +283,82 @@ class Wrapper extends React.PureComponent<Props, State> {
     this._handleSetActiveResponse(null);
   }
 
-  async _handleDeleteResponse (response: Response): Promise<void> {
+  async _handleDeleteResponse(response: Response): Promise<void> {
     if (response) {
       await models.response.remove(response);
     }
 
     // Also unset active response it's the one we're deleting
-    if (this.props.activeResponse && this.props.activeResponse._id === response._id) {
+    if (
+      this.props.activeResponse &&
+      this.props.activeResponse._id === response._id
+    ) {
       this._handleSetActiveResponse(null);
     }
   }
 
-  async _handleRemoveActiveWorkspace (): Promise<void> {
-    const {workspaces, activeWorkspace} = this.props;
+  async _handleRemoveActiveWorkspace(): Promise<void> {
+    const { workspaces, activeWorkspace } = this.props;
     if (workspaces.length <= 1) {
       showModal(AlertModal, {
         title: 'Deleting Last Workspace',
-        message: 'Since you deleted your only workspace, a new one has been created for you.'
+        message:
+          'Since you deleted your only workspace, a new one has been created for you.'
       });
 
-      models.workspace.create({name: 'Insomnia'});
+      models.workspace.create({ name: 'Insomnia' });
     }
 
     await models.workspace.remove(activeWorkspace);
   }
 
-  _handleSendRequestWithActiveEnvironment (): void {
-    const {activeRequest, activeEnvironment, handleSendRequestWithEnvironment} = this.props;
+  _handleSendRequestWithActiveEnvironment(): void {
+    const {
+      activeRequest,
+      activeEnvironment,
+      handleSendRequestWithEnvironment
+    } = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-    const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
+    const activeEnvironmentId = activeEnvironment
+      ? activeEnvironment._id
+      : 'n/a';
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
   }
 
-  _handleSendAndDownloadRequestWithActiveEnvironment (filename: string): void {
-    const {activeRequest, activeEnvironment, handleSendAndDownloadRequestWithEnvironment} = this.props;
+  _handleSendAndDownloadRequestWithActiveEnvironment(filename: string): void {
+    const {
+      activeRequest,
+      activeEnvironment,
+      handleSendAndDownloadRequestWithEnvironment
+    } = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-    const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-    handleSendAndDownloadRequestWithEnvironment(activeRequestId, activeEnvironmentId, filename);
+    const activeEnvironmentId = activeEnvironment
+      ? activeEnvironment._id
+      : 'n/a';
+    handleSendAndDownloadRequestWithEnvironment(
+      activeRequestId,
+      activeEnvironmentId,
+      filename
+    );
   }
 
-  _handleSetPreviewMode (previewMode: string): void {
+  _handleSetPreviewMode(previewMode: string): void {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     this.props.handleSetResponsePreviewMode(activeRequestId, previewMode);
   }
 
-  _handleSetResponseFilter (filter: string): void {
+  _handleSetResponseFilter(filter: string): void {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     this.props.handleSetResponseFilter(activeRequestId, filter);
   }
 
-  _forceRequestPaneRefresh (): void {
-    this.setState({forceRefreshKey: Date.now()});
+  _forceRequestPaneRefresh(): void {
+    this.setState({ forceRefreshKey: Date.now() });
   }
 
-  render () {
+  render() {
     const {
       activeEnvironment,
       activeRequest,
@@ -378,24 +417,25 @@ class Wrapper extends React.PureComponent<Props, State> {
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
 
-    const columns = `${realSidebarWidth}rem 0 minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)`;
+    const columns = `${realSidebarWidth}rem 0 minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 -
+      paneWidth}fr)`;
     const rows = `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
 
     return [
       <div key="modals" className="modals">
         <ErrorBoundary showAlert>
-          <AlertModal ref={registerModal}/>
-          <ErrorModal ref={registerModal}/>
-          <PromptModal ref={registerModal}/>
+          <AlertModal ref={registerModal} />
+          <ErrorModal ref={registerModal} />
+          <PromptModal ref={registerModal} />
 
-          <WrapperModal ref={registerModal}/>
-          <LoginModal ref={registerModal}/>
-          <AskModal ref={registerModal}/>
-          <SelectModal ref={registerModal}/>
-          <RequestCreateModal ref={registerModal}/>
-          <PaymentNotificationModal ref={registerModal}/>
-          <FilterHelpModal ref={registerModal}/>
-          <RequestRenderErrorModal ref={registerModal}/>
+          <WrapperModal ref={registerModal} />
+          <LoginModal ref={registerModal} />
+          <AskModal ref={registerModal} />
+          <SelectModal ref={registerModal} />
+          <RequestCreateModal ref={registerModal} />
+          <PaymentNotificationModal ref={registerModal} />
+          <FilterHelpModal ref={registerModal} />
+          <RequestRenderErrorModal ref={registerModal} />
 
           <CodePromptModal
             ref={registerModal}
@@ -446,10 +486,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             workspace={activeWorkspace}
           />
 
-          <MoveRequestGroupModal
-            ref={registerModal}
-            workspaces={workspaces}
-          />
+          <MoveRequestGroupModal ref={registerModal} workspaces={workspaces} />
 
           <WorkspaceSettingsModal
             ref={registerModal}
@@ -494,7 +531,9 @@ class Wrapper extends React.PureComponent<Props, State> {
             workspaces={workspaces}
             workspaceChildren={workspaceChildren}
             workspaceId={activeWorkspace._id}
-            activeRequestParentId={activeRequest ? activeRequest.parentId : activeWorkspace._id}
+            activeRequestParentId={
+              activeRequest ? activeRequest.parentId : activeWorkspace._id
+            }
             activateRequest={handleActivateRequest}
             handleSetActiveWorkspace={handleSetActiveWorkspace}
           />
@@ -511,10 +550,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           />
 
-          <SetupSyncModal
-            ref={registerModal}
-            workspace={activeWorkspace}
-          />
+          <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
 
           <WorkspaceEnvironmentsEditModal
             ref={registerModal}
@@ -523,18 +559,22 @@ class Wrapper extends React.PureComponent<Props, State> {
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
-            activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
+            activeEnvironmentId={
+              activeEnvironment ? activeEnvironment._id : null
+            }
             render={handleRender}
             getRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           />
         </ErrorBoundary>
       </div>,
-      <div key="wrapper"
-           id="wrapper"
-           className={classnames('wrapper', {'wrapper--vertical': settings.forceVerticalLayout})}
-           style={{gridTemplateColumns: columns, gridTemplateRows: rows}}>
-
+      <div
+        key="wrapper"
+        id="wrapper"
+        className={classnames('wrapper', {
+          'wrapper--vertical': settings.forceVerticalLayout
+        })}
+        style={{ gridTemplateColumns: columns, gridTemplateRows: rows }}>
         <ErrorBoundary showAlert>
           <Sidebar
             ref={handleSetSidebarRef}
@@ -570,8 +610,10 @@ class Wrapper extends React.PureComponent<Props, State> {
         </ErrorBoundary>
 
         <div className="drag drag--sidebar">
-          <div onDoubleClick={handleResetDragSidebar} onMouseDown={this._handleStartDragSidebar}>
-          </div>
+          <div
+            onDoubleClick={handleResetDragSidebar}
+            onMouseDown={this._handleStartDragSidebar}
+          />
         </div>
 
         <ErrorBoundary showAlert>
@@ -594,29 +636,37 @@ class Wrapper extends React.PureComponent<Props, State> {
             updateRequestUrl={this._handleUpdateRequestUrl}
             updateRequestMethod={this._handleUpdateRequestMethod}
             updateRequestParameters={this._handleUpdateRequestParameters}
-            updateRequestAuthentication={this._handleUpdateRequestAuthentication}
+            updateRequestAuthentication={
+              this._handleUpdateRequestAuthentication
+            }
             updateRequestHeaders={this._handleUpdateRequestHeaders}
             updateRequestMimeType={handleUpdateRequestMimeType}
-            updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
-            updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
+            updateSettingsShowPasswords={
+              this._handleUpdateSettingsShowPasswords
+            }
+            updateSettingsUseBulkHeaderEditor={
+              this._handleUpdateSettingsUseBulkHeaderEditor
+            }
             forceRefreshCounter={this.state.forceRefreshKey}
             handleSend={this._handleSendRequestWithActiveEnvironment}
-            handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
+            handleSendAndDownload={
+              this._handleSendAndDownloadRequestWithActiveEnvironment
+            }
           />
         </ErrorBoundary>
 
         <div className="drag drag--pane-horizontal">
           <div
             onMouseDown={handleStartDragPaneHorizontal}
-            onDoubleClick={handleResetDragPaneHorizontal}>
-          </div>
+            onDoubleClick={handleResetDragPaneHorizontal}
+          />
         </div>
 
         <div className="drag drag--pane-vertical">
           <div
             onMouseDown={handleStartDragPaneVertical}
-            onDoubleClick={handleResetDragPaneVertical}>
-          </div>
+            onDoubleClick={handleResetDragPaneVertical}
+          />
         </div>
 
         <ErrorBoundary showAlert>

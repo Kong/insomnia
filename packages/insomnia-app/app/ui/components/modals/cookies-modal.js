@@ -1,5 +1,5 @@
 // @flow
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import deepEqual from 'deep-equal';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
@@ -8,13 +8,13 @@ import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import CookieList from '../cookie-list';
 import * as models from '../../../models';
-import type {Cookie, CookieJar} from '../../../models/cookie-jar';
-import type {Workspace} from '../../../models/workspace';
-import {fuzzyMatch} from '../../../common/misc';
+import type { Cookie, CookieJar } from '../../../models/cookie-jar';
+import type { Workspace } from '../../../models/workspace';
+import { fuzzyMatch } from '../../../common/misc';
 
 type Props = {
   handleShowModifyCookieModal: Function,
-  handleRender: Function,
+  handleRender: (string | Object) => Promise<string | Object>,
   cookieJar: CookieJar,
   workspace: Workspace
 };
@@ -29,7 +29,7 @@ class CookiesModal extends PureComponent<Props, State> {
   modal: Modal | null;
   filterInput: HTMLInputElement | null;
 
-  constructor (props: any) {
+  constructor(props: Props) {
     super(props);
 
     this.state = {
@@ -38,36 +38,36 @@ class CookiesModal extends PureComponent<Props, State> {
     };
   }
 
-  _setModalRef (n: React.Component<*> | null) {
+  _setModalRef(n: React.Component<*> | null) {
     this.modal = n;
   }
 
-  _setFilterInputRef (n: HTMLInputElement | null) {
+  _setFilterInputRef(n: HTMLInputElement | null) {
     this.filterInput = n;
   }
 
-  async _saveChanges () {
-    const {cookieJar} = this.props;
+  async _saveChanges() {
+    const { cookieJar } = this.props;
     await models.cookieJar.update(cookieJar);
   }
 
-  async _handleCookieAdd (cookie: Cookie) {
-    const {cookieJar} = this.props;
-    const {cookies} = cookieJar;
+  async _handleCookieAdd(cookie: Cookie) {
+    const { cookieJar } = this.props;
+    const { cookies } = cookieJar;
 
     cookieJar.cookies = [cookie, ...cookies];
     await this._saveChanges();
   }
 
-  async _handleDeleteAllCookies () {
-    const {cookieJar} = this.props;
+  async _handleDeleteAllCookies() {
+    const { cookieJar } = this.props;
     cookieJar.cookies = [];
     await this._saveChanges();
   }
 
-  async _handleCookieDelete (cookie: Cookie) {
-    const {cookieJar} = this.props;
-    const {cookies} = cookieJar;
+  async _handleCookieDelete(cookie: Cookie) {
+    const { cookieJar } = this.props;
+    const { cookies } = cookieJar;
 
     // NOTE: This is sketchy because it relies on the same reference
     cookieJar.cookies = cookies.filter(c => c.id !== cookie.id);
@@ -75,7 +75,7 @@ class CookiesModal extends PureComponent<Props, State> {
     await this._saveChanges();
   }
 
-  async _handleFilterChange (e: Event) {
+  async _handleFilterChange(e: Event) {
     if (!(e.target instanceof HTMLInputElement)) {
       return;
     }
@@ -84,7 +84,7 @@ class CookiesModal extends PureComponent<Props, State> {
     this._applyFilter(filter, this.props.cookieJar.cookies);
   }
 
-  componentWillReceiveProps (nextProps: any) {
+  componentWillReceiveProps(nextProps: Props) {
     // Re-filter if we received new cookies
     // Compare cookies with Dates cast to strings
     const sameCookies = deepEqual(
@@ -97,12 +97,13 @@ class CookiesModal extends PureComponent<Props, State> {
     }
   }
 
-  async _applyFilter (filter: string, cookies: Array<Cookie>) {
+  async _applyFilter(filter: string, cookies: Array<Cookie>) {
     const renderedCookies = [];
 
     for (const cookie of cookies) {
       try {
-        renderedCookies.push(await this.props.handleRender(cookie));
+        const renderedCookie = await this.props.handleRender(cookie);
+        renderedCookies.push(renderedCookie);
       } catch (err) {
         // It's okay. Filter the raw version instead
         renderedCookies.push(cookie);
@@ -115,8 +116,8 @@ class CookiesModal extends PureComponent<Props, State> {
       visibleCookieIndexes = [];
       for (let i = 0; i < renderedCookies.length; i++) {
         const toSearch = JSON.stringify(renderedCookies[i]);
-        const results = fuzzyMatch(filter, toSearch);
-        if (results.searchTermsMatched > 0) {
+        const match = fuzzyMatch(filter, toSearch, { splitSpace: true });
+        if (match) {
           visibleCookieIndexes.push(i);
         }
       }
@@ -124,12 +125,12 @@ class CookiesModal extends PureComponent<Props, State> {
       visibleCookieIndexes = null;
     }
 
-    this.setState({filter, visibleCookieIndexes});
+    this.setState({ filter, visibleCookieIndexes });
   }
 
-  _getVisibleCookies () {
-    const {cookieJar} = this.props;
-    const {visibleCookieIndexes} = this.state;
+  _getVisibleCookies() {
+    const { cookieJar } = this.props;
+    const { visibleCookieIndexes } = this.state;
 
     if (visibleCookieIndexes === null) {
       return cookieJar.cookies;
@@ -138,7 +139,7 @@ class CookiesModal extends PureComponent<Props, State> {
     return cookieJar.cookies.filter((c, i) => visibleCookieIndexes.includes(i));
   }
 
-  async show () {
+  async show() {
     setTimeout(() => {
       this.filterInput && this.filterInput.focus();
     }, 100);
@@ -149,20 +150,14 @@ class CookiesModal extends PureComponent<Props, State> {
     this.modal && this.modal.show();
   }
 
-  hide () {
+  hide() {
     this.modal && this.modal.hide();
   }
 
-  render () {
-    const {
-      handleShowModifyCookieModal,
-      handleRender,
-      cookieJar
-    } = this.props;
+  render() {
+    const { handleShowModifyCookieModal, handleRender, cookieJar } = this.props;
 
-    const {
-      filter
-    } = this.state;
+    const { filter } = this.state;
 
     const cookies = this._getVisibleCookies();
 
@@ -174,12 +169,15 @@ class CookiesModal extends PureComponent<Props, State> {
             <div className="cookie-list">
               <div className="pad">
                 <div className="form-control form-control--outlined">
-                  <label>Filter Cookies
-                    <input ref={this._setFilterInputRef}
-                           onChange={this._handleFilterChange}
-                           type="text"
-                           placeholder="twitter.com"
-                           defaultValue=""/>
+                  <label>
+                    Filter Cookies
+                    <input
+                      ref={this._setFilterInputRef}
+                      onChange={this._handleFilterChange}
+                      type="text"
+                      placeholder="twitter.com"
+                      defaultValue=""
+                    />
                   </label>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import * as crypt from '../crypt';
-import {globalBeforeEach} from '../../__jest__/before-each';
+import { globalBeforeEach } from '../../__jest__/before-each';
 
 describe('deriveKey()', () => {
   beforeEach(globalBeforeEach);
@@ -15,7 +15,11 @@ describe('deriveKey()', () => {
 describe('encryptRSA', () => {
   beforeEach(globalBeforeEach);
   it('encrypts and decrypts', () => {
-    const resultEncrypted = crypt.encryptAES('rawkey', 'Hello World!', 'additional data');
+    const resultEncrypted = crypt.encryptAES(
+      'rawkey',
+      'Hello World!',
+      'additional data'
+    );
     const resultDecrypted = crypt.decryptAES('rawkey', resultEncrypted);
 
     const expectedEncrypted = {

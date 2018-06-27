@@ -1,25 +1,25 @@
-import React, {PureComponent} from 'react';
-import {EventEmitter} from 'events';
+import React, { PureComponent } from 'react';
+import { EventEmitter } from 'events';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import contextMenu from 'electron-context-menu';
 
 @autobind
 class ResponseWebView extends PureComponent {
-  _handleSetWebViewRef (n) {
+  _handleSetWebViewRef(n) {
     this._webview = n;
     if (n) {
-      contextMenu({window: this._webview});
+      contextMenu({ window: this._webview });
     }
   }
 
-  _handleDOMReady () {
+  _handleDOMReady() {
     this._webview.removeEventListener('dom-ready', this._handleDOMReady);
     this._setBody();
   }
 
-  _setBody () {
-    const {body, contentType, url} = this.props;
+  _setBody() {
+    const { body, contentType, url } = this.props;
     const newBody = body.replace('<head>', `<head><base href="${url}">`);
     this._webview.loadURL(`data:${contentType},${encodeURIComponent(newBody)}`);
 
@@ -29,18 +29,16 @@ class ResponseWebView extends PureComponent {
     this._webview.webContents.session = new EventEmitter();
   }
 
-  componentDidUpdate () {
+  componentDidUpdate() {
     this._setBody();
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this._webview.addEventListener('dom-ready', this._handleDOMReady);
   }
 
-  render () {
-    return (
-      <webview ref={this._handleSetWebViewRef} src="about:blank"></webview>
-    );
+  render() {
+    return <webview ref={this._handleSetWebViewRef} src="about:blank" />;
   }
 }
 

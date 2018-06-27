@@ -1,16 +1,16 @@
 // @flow
-import type {NunjucksParsedTagArg} from '../utils';
-import type {Request} from '../../models/request';
-import type {Response} from '../../models/response';
+import type { NunjucksParsedTagArg } from '../utils';
+import type { Request } from '../../models/request';
+import type { Response } from '../../models/response';
 
 export type PluginArgumentValue = string | number | boolean;
-type DisplayName = string | (args: Array<NunjucksParsedTagArg>) => string;
+type DisplayName = string | ((args: Array<NunjucksParsedTagArg>) => string);
 
 type PluginArgumentBase = {
   displayName: DisplayName,
   description?: string,
   help?: string,
-  hide?: (args: Array<NunjucksParsedTagArg>) => boolean,
+  hide?: (args: Array<NunjucksParsedTagArg>) => boolean
 };
 
 export type PluginArgumentEnumOption = {
@@ -18,7 +18,7 @@ export type PluginArgumentEnumOption = {
   value: PluginArgumentValue,
   description?: string,
   placeholder?: string
-}
+};
 
 export type PluginArgumentEnum = PluginArgumentBase & {
   type: 'enum',
@@ -48,13 +48,13 @@ export type PluginArgumentFile = PluginArgumentBase & {
 };
 
 export type PluginArgumentNumber = PluginArgumentBase & {
-  type: 'number';
+  type: 'number',
   placeholder?: string,
   defaultValue?: number
 };
 
 export type PluginArgument =
-  PluginArgumentEnum
+  | PluginArgumentEnum
   | PluginArgumentModel
   | PluginArgumentString
   | PluginArgumentBoolean
@@ -69,7 +69,10 @@ export type PluginTemplateTagContext = {
       },
       response: {
         getLatestForRequestId: (id: string) => Promise<Response | null>,
-        getBodyBuffer: (response: Response, fallback?: any) => Promise<Buffer | null>,
+        getBodyBuffer: (
+          response: Response,
+          fallback?: any
+        ) => Promise<Buffer | null>
       }
     }
   }
@@ -80,7 +83,10 @@ export type PluginTemplateTag = {
   name: string,
   displayName: DisplayName,
   description: string,
-  run: (context: PluginTemplateTagContext, ...arg: Array<any>) => Promise<any> | any,
+  run: (
+    context: PluginTemplateTagContext,
+    ...arg: Array<any>
+  ) => Promise<any> | any,
   deprecated?: boolean,
   validate?: (value: any) => ?string,
   priority?: number

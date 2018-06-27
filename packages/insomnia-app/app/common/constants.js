@@ -5,51 +5,51 @@ import mkdirp from 'mkdirp';
 
 // App Stuff
 
-export function getAppVersion () {
+export function getAppVersion() {
   return packageJSON.app.version;
 }
 
-export function getAppLongName () {
+export function getAppLongName() {
   return packageJSON.app.longName;
 }
 
-export function getAppName () {
+export function getAppName() {
   return packageJSON.app.productName;
 }
 
-export function getAppPlatform () {
+export function getAppPlatform() {
   return process.platform;
 }
 
-export function getAppEnvironment () {
+export function getAppEnvironment() {
   return process.env.INSOMNIA_ENV || 'production';
 }
 
-export function getTempDir () {
+export function getTempDir() {
   // NOTE: Using a fairly unique name here because "insomnia" is a common word
-  const {app} = electron.remote || electron;
+  const { app } = electron.remote || electron;
   const dir = path.join(app.getPath('temp'), `insomnia_${getAppVersion()}`);
   mkdirp.sync(dir);
   return dir;
 }
 
-export function isMac () {
+export function isMac() {
   return getAppPlatform() === 'darwin';
 }
 
-export function isLinux () {
+export function isLinux() {
   return getAppPlatform() === 'linux';
 }
 
-export function isWindows () {
+export function isWindows() {
   return getAppPlatform() === 'win32';
 }
 
-export function isDevelopment () {
+export function isDevelopment() {
   return getAppEnvironment() === 'development';
 }
 
-export function getClientString () {
+export function getClientString() {
   return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
 }
 
@@ -66,14 +66,17 @@ export const LARGE_RESPONSE_MB = 5;
 export const HUGE_RESPONSE_MB = 100;
 export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ\-_.]+[/\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ.\-+=:\][@%^*&!#?;$]*/;
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
-export const PLUGIN_PATH = path.join((electron.remote || electron).app.getPath('userData'), 'plugins');
+export const PLUGIN_PATH = path.join(
+  (electron.remote || electron).app.getPath('userData'),
+  'plugins'
+);
 
 // Hotkeys
 export const MOD_SYM = isMac() ? '⌘' : 'Ctrl';
 export const ALT_SYM = isMac() ? '⌃' : 'Alt';
 export const SHIFT_SYM = isMac() ? '⇧' : 'Shift';
 export const CTRL_SYM = isMac() ? '⌃' : 'Ctrl';
-export function joinHotKeys (keys) {
+export function joinHotKeys(keys) {
   return keys.join(isMac() ? '' : '+');
 }
 
@@ -175,27 +178,33 @@ const authTypesMap = {
   [AUTH_NETRC]: ['Netrc', 'Netrc File']
 };
 
-export function getPreviewModeName (previewMode, useLong = false) {
+export function getPreviewModeName(previewMode, useLong = false) {
   if (previewModeMap.hasOwnProperty(previewMode)) {
-    return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
+    return useLong
+      ? previewModeMap[previewMode][1]
+      : previewModeMap[previewMode][0];
   } else {
     return '';
   }
 }
 
-export function getContentTypeName (contentType, useLong = false) {
+export function getContentTypeName(contentType, useLong = false) {
   if (typeof contentType !== 'string') {
     return '';
   }
 
   if (contentTypesMap.hasOwnProperty(contentType)) {
-    return useLong ? contentTypesMap[contentType][1] : contentTypesMap[contentType][0];
+    return useLong
+      ? contentTypesMap[contentType][1]
+      : contentTypesMap[contentType][0];
   }
 
-  return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
+  return useLong
+    ? contentTypesMap[CONTENT_TYPE_OTHER][1]
+    : contentTypesMap[CONTENT_TYPE_OTHER][0];
 }
 
-export function getAuthTypeName (authType, useLong = false) {
+export function getAuthTypeName(authType, useLong = false) {
   if (authTypesMap.hasOwnProperty(authType)) {
     return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
   } else {
@@ -203,20 +212,22 @@ export function getAuthTypeName (authType, useLong = false) {
   }
 }
 
-export function getContentTypeFromHeaders (headers, defaultValue = null) {
+export function getContentTypeFromHeaders(headers, defaultValue = null) {
   if (!Array.isArray(headers)) {
     return null;
   }
 
-  const header = headers.find(({name}) => name.toLowerCase() === 'content-type');
+  const header = headers.find(
+    ({ name }) => name.toLowerCase() === 'content-type'
+  );
   return header ? header.value : defaultValue;
 }
 
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 export const RESPONSE_CODE_DESCRIPTIONS = {
-
   // Special
-  [STATUS_CODE_PLUGIN_ERROR]: 'An Insomnia plugin threw an error which prevented the request from sending',
+  [STATUS_CODE_PLUGIN_ERROR]:
+    'An Insomnia plugin threw an error which prevented the request from sending',
 
   // 100s
 
@@ -256,7 +267,7 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   403: 'Client does not have access rights to the content so server is rejecting to give proper response.',
   404: 'Server can not find requested resource. This response code probably is most famous one due to its frequency to occur in web.',
   405: 'The request method is known by the server but has been disabled and cannot be used. The two mandatory methods, GET and HEAD, must never be disabled and should not return this error code.',
-  406: 'This response is sent when the web server, after performing server-driven content negotiation, doesn\'t find any content following the criteria given by the user agent.',
+  406: "This response is sent when the web server, after performing server-driven content negotiation, doesn't find any content following the criteria given by the user agent.",
   407: 'This is similar to 401 but authentication is needed to be done by a proxy.',
   408: 'This response is sent on an idle connection by some servers, even without any previous request by the client. It means that the server would like to shut down this unused connection. This response is used much more since some browsers, like Chrome or IE9, use HTTP preconnection mechanisms to speed up surfing (see bug 881804, which tracks the future implementation of such a mechanism in Firefox). Also note that some servers merely shut down the connection without sending this message.',
   409: 'This response would be sent when a request conflict with current state of server.',
@@ -266,22 +277,22 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   413: 'Request entity is larger than limits defined by server; the server might close the connection or return an Retry-After header field.',
   414: 'The URI requested by the client is longer than the server is willing to interpret.',
   415: 'The media format of the requested data is not supported by the server, so the server is rejecting the request.',
-  416: 'The range specified by the Range header field in the request can\'t be fulfilled; it\'s possible that the range is outside the size of the target URI\'s data.',
-  417: 'This response code means the expectation indicated by the Expect request header field can\'t be met by the server.',
+  416: "The range specified by the Range header field in the request can't be fulfilled; it's possible that the range is outside the size of the target URI's data.",
+  417: "This response code means the expectation indicated by the Expect request header field can't be met by the server.",
   418: 'Any attempt to brew coffee with a teapot should result in the error code "418 I\'m a teapot". The resulting entity body MAY be short and stout.',
   421: 'The request was directed at a server that is not able to produce a response. This can be sent by a server that is not configured to produce responses for the combination of scheme and authority that are included in the request URI.',
   422: 'The request was well-formed but was unable to be followed due to semantic errors.',
   423: 'The resource that is being accessed is locked.',
   424: 'The request failed due to failure of a previous request.',
   426: 'The server refuses to perform the request using the current protocol but might be willing to do so after the client upgrades to a different protocol. The server MUST send an Upgrade header field in a 426 response to indicate the required protocol(s) (Section 6.7 of [RFC7230]).',
-  428: 'The origin server requires the request to be conditional. Intended to prevent "the \'lost update\' problem, where a client GETs a resource\'s state, modifies it, and PUTs it back to the server, when meanwhile a third party has modified the state on the server, leading to a conflict."',
+  428: "The origin server requires the request to be conditional. Intended to prevent \"the 'lost update' problem, where a client GETs a resource's state, modifies it, and PUTs it back to the server, when meanwhile a third party has modified the state on the server, leading to a conflict.\"",
   429: 'The user has sent too many requests in a given amount of time ("rate limiting").',
   431: 'The server is unwilling to process the request because its header fields are too large. The request MAY be resubmitted after reducing the size of the request header fields.',
   451: 'The user requests an illegal resource, such as a web page censored by a government.',
 
   // 500s
 
-  500: 'The server has encountered a situation it doesn\'t know how to handle.',
+  500: "The server has encountered a situation it doesn't know how to handle.",
   501: 'The request method is not supported by the server and cannot be handled. The only methods that servers are required to support (and therefore that must not return this code) are GET and HEAD.',
   502: 'This error response means that the server, while working as a gateway to get a response needed to handle the request, got an invalid response.',
   503: 'The server is not ready to handle the request. Common causes are a server that is down for maintenance or that is overloaded. Note that together with this response, a user-friendly page explaining the problem should be sent. This responses should be used for temporary conditions and the Retry-After: HTTP header should, if possible, contain the estimated time before the recovery of the service. The webmaster must also take care about the caching-related headers that are sent along with this response, as these temporary condition responses should usually not be cached.',

@@ -1,14 +1,12 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
 class ModalFooter extends PureComponent {
-  render () {
-    const {children, className} = this.props;
+  render() {
+    const { children, className } = this.props;
     return (
-      <div className={classnames('modal__footer', className)}>
-        {children}
-      </div>
+      <div className={classnames('modal__footer', className)}>{children}</div>
     );
   }
 }

@@ -15,7 +15,7 @@ type State = {
 class TimeFromNow extends React.PureComponent<Props, State> {
   _interval: any;
 
-  constructor (props: any) {
+  constructor(props: any) {
     super(props);
     this._interval = null;
     this.state = {
@@ -23,24 +23,26 @@ class TimeFromNow extends React.PureComponent<Props, State> {
     };
   }
 
-  _update () {
-    const {timestamp} = this.props;
-    this.setState({text: moment(timestamp).fromNow()});
+  _update() {
+    const { timestamp } = this.props;
+    this.setState({ text: moment(timestamp).fromNow() });
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this._interval = setInterval(this._update, 5000);
     this._update();
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     clearInterval(this._interval);
   }
 
-  render () {
-    return <span title={moment(this.props.timestamp).toString()}>
-      {this.state.text}
-      </span>;
+  render() {
+    return (
+      <span title={moment(this.props.timestamp).toString()}>
+        {this.state.text}
+      </span>
+    );
   }
 }
 

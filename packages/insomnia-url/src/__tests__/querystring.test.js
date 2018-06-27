@@ -1,5 +1,5 @@
 const querystring = require('../querystring');
-const {getJoiner} = querystring._internal;
+const { getJoiner } = querystring._internal;
 const {
   joinUrlAndQueryString,
   buildQueryParameter,
@@ -36,27 +36,19 @@ describe('querystring', () => {
     });
 
     it('gets joiner for URL with ampersand', () => {
-      const joiner = getJoiner(
-        'http://google.com?foo=bar&baz=qux'
-      );
+      const joiner = getJoiner('http://google.com?foo=bar&baz=qux');
       expect(joiner).toBe('&');
     });
   });
 
   describe('joinUrlAndQueryString()', () => {
     it('joins bare URL', () => {
-      const url = joinUrlAndQueryString(
-        'http://google.com',
-        'foo=bar'
-      );
+      const url = joinUrlAndQueryString('http://google.com', 'foo=bar');
       expect(url).toBe('http://google.com?foo=bar');
     });
 
     it('joins with hash', () => {
-      const url = joinUrlAndQueryString(
-        'http://google.com#hash',
-        'foo=bar'
-      );
+      const url = joinUrlAndQueryString('http://google.com#hash', 'foo=bar');
       expect(url).toBe('http://google.com?foo=bar#hash');
     });
 
@@ -87,23 +79,23 @@ describe('querystring', () => {
 
   describe('build()', () => {
     it('builds simple param', () => {
-      const str = buildQueryParameter({name: 'foo', value: 'bar??'});
+      const str = buildQueryParameter({ name: 'foo', value: 'bar??' });
       expect(str).toBe('foo=bar%3F%3F');
     });
 
     it('builds param without value', () => {
-      const str = buildQueryParameter({name: 'foo'});
+      const str = buildQueryParameter({ name: 'foo' });
       expect(str).toBe('foo');
     });
 
     it('builds empty param without name', () => {
-      const str = buildQueryParameter({value: 'bar'});
+      const str = buildQueryParameter({ value: 'bar' });
       expect(str).toBe('');
     });
 
     it('builds with numbers', () => {
-      const str = buildQueryParameter({name: 'number', value: 10});
-      const str2 = buildQueryParameter({name: 'number', value: 0});
+      const str = buildQueryParameter({ name: 'number', value: 10 });
+      const str2 = buildQueryParameter({ name: 'number', value: 0 });
 
       expect(str).toBe('number=10');
       expect(str2).toBe('number=0');
@@ -113,25 +105,30 @@ describe('querystring', () => {
   describe('buildFromParams()', () => {
     it('builds from params', () => {
       const str = buildQueryStringFromParams([
-        {name: 'foo', value: 'bar??'},
-        {name: 'hello'},
-        {name: 'hi there', value: 'bar??'},
-        {name: '', value: 'bar??'},
-        {name: '', value: ''}
+        { name: 'foo', value: 'bar??' },
+        { name: 'hello' },
+        { name: 'hi there', value: 'bar??' },
+        { name: '', value: 'bar??' },
+        { name: '', value: '' }
       ]);
 
       expect(str).toBe('foo=bar%3F%3F&hello&hi%20there=bar%3F%3F');
     });
     it('builds from params', () => {
-      const str = buildQueryStringFromParams([
-        {name: 'foo', value: 'bar??'},
-        {name: 'hello'},
-        {name: 'hi there', value: 'bar??'},
-        {name: '', value: 'bar??'},
-        {name: '', value: ''}
-      ], false);
+      const str = buildQueryStringFromParams(
+        [
+          { name: 'foo', value: 'bar??' },
+          { name: 'hello' },
+          { name: 'hi there', value: 'bar??' },
+          { name: '', value: 'bar??' },
+          { name: '', value: '' }
+        ],
+        false
+      );
 
-      expect(str).toBe('foo=bar%3F%3F&hello=&hi%20there=bar%3F%3F&=bar%3F%3F&=');
+      expect(str).toBe(
+        'foo=bar%3F%3F&hello=&hi%20there=bar%3F%3F&=bar%3F%3F&='
+      );
     });
   });
 
@@ -142,20 +139,18 @@ describe('querystring', () => {
       );
 
       expect(str).toEqual([
-        {name: 'foo', value: 'bar??'},
-        {name: 'hello', value: ''},
-        {name: 'hi there', value: 'bar??'}
+        { name: 'foo', value: 'bar??' },
+        { name: 'hello', value: '' },
+        { name: 'hi there', value: 'bar??' }
       ]);
     });
     it('builds from params with =', () => {
-      const str = deconstructQueryStringToParams(
-        'foo=bar&1=2=3=4&hi'
-      );
+      const str = deconstructQueryStringToParams('foo=bar&1=2=3=4&hi');
 
       expect(str).toEqual([
-        {name: 'foo', value: 'bar'},
-        {name: '1', value: '2=3=4'},
-        {name: 'hi', value: ''}
+        { name: 'foo', value: 'bar' },
+        { name: '1', value: '2=3=4' },
+        { name: 'hi', value: '' }
       ]);
     });
 
@@ -166,11 +161,11 @@ describe('querystring', () => {
       );
 
       expect(str).toEqual([
-        {name: 'foo', value: 'bar??'},
-        {name: 'hello', value: ''},
-        {name: 'hi there', value: 'bar??'},
-        {name: '', value: ''},
-        {name: '', value: 'val'}
+        { name: 'foo', value: 'bar??' },
+        { name: 'hello', value: '' },
+        { name: 'hi there', value: 'bar??' },
+        { name: '', value: '' },
+        { name: '', value: 'val' }
       ]);
     });
   });
@@ -192,12 +187,18 @@ describe('querystring', () => {
     });
 
     it('encodes pathname mixed encoding', () => {
-      const url = smartEncodeUrl('https://google.com/foo bar baz%20qux/100%/foo%25');
-      expect(url).toBe('https://google.com/foo%20bar%20baz%20qux/100%25/foo%25');
+      const url = smartEncodeUrl(
+        'https://google.com/foo bar baz%20qux/100%/foo%25'
+      );
+      expect(url).toBe(
+        'https://google.com/foo%20bar%20baz%20qux/100%25/foo%25'
+      );
     });
 
     it('leaves already encoded pathname', () => {
-      const url = smartEncodeUrl('https://google.com/foo%20bar%20baz/100%25/foo');
+      const url = smartEncodeUrl(
+        'https://google.com/foo%20bar%20baz/100%25/foo'
+      );
       expect(url).toBe('https://google.com/foo%20bar%20baz/100%25/foo');
     });
 
@@ -212,11 +213,15 @@ describe('querystring', () => {
     });
 
     it('encodes querystring with repeated keys', () => {
-      const url = smartEncodeUrl('https://google.com/;@,!?s=foo,;@-!&s=foo %20100%');
-      expect(url).toBe('https://google.com/;@,!?s=foo,%3B%40-!&s=foo%20%20100%25');
+      const url = smartEncodeUrl(
+        'https://google.com/;@,!?s=foo,;@-!&s=foo %20100%'
+      );
+      expect(url).toBe(
+        'https://google.com/;@,!?s=foo,%3B%40-!&s=foo%20%20100%25'
+      );
     });
 
-    it('doesn\'t decode ignored characters', () => {
+    it("doesn't decode ignored characters", () => {
       // Encoded should skip raw versions of @ ; ,
       const url = smartEncodeUrl('https://google.com/@;,&^+');
       expect(url).toBe('https://google.com/@;,%26%5E+');
@@ -231,7 +236,7 @@ describe('querystring', () => {
       expect(url).toBe('https://google.com/%2B%2A%2F%3E');
     });
 
-    it('doesn\'t encode if last param set', () => {
+    it("doesn't encode if last param set", () => {
       const url = smartEncodeUrl('https://google.com/%%?foo=%%', false);
       expect(url).toBe('https://google.com/%%?foo=%%');
     });

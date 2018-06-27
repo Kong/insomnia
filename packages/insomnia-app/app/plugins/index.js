@@ -3,10 +3,10 @@ import mkdirp from 'mkdirp';
 import * as models from '../models';
 import fs from 'fs';
 import path from 'path';
-import {PLUGIN_PATH} from '../common/constants';
-import {resolveHomePath} from '../common/misc';
-import {showError} from '../ui/components/modals/index';
-import type {PluginTemplateTag} from '../templating/extensions/index';
+import { PLUGIN_PATH } from '../common/constants';
+import { resolveHomePath } from '../common/misc';
+import { showError } from '../ui/components/modals/index';
+import type { PluginTemplateTag } from '../templating/extensions/index';
 
 export type Plugin = {
   name: string,
@@ -19,17 +19,17 @@ export type Plugin = {
 export type TemplateTag = {
   plugin: Plugin,
   templateTag: PluginTemplateTag
-}
+};
 
 export type RequestHook = {
   plugin: Plugin,
   hook: Function
-}
+};
 
 export type ResponseHook = {
   plugin: Plugin,
   hook: Function
-}
+};
 
 const CORE_PLUGINS = [
   'insomnia-plugin-base64',
@@ -45,12 +45,12 @@ const CORE_PLUGINS = [
 
 let plugins: ?Array<Plugin> = null;
 
-export async function init (): Promise<void> {
+export async function init(): Promise<void> {
   // Force plugins to load.
   await getPlugins(true);
 }
 
-async function _traversePluginPath (pluginMap: Object, allPaths: Array<string>) {
+async function _traversePluginPath(pluginMap: Object, allPaths: Array<string>) {
   for (const p of allPaths) {
     if (!fs.existsSync(p)) {
       continue;
@@ -94,7 +94,11 @@ async function _traversePluginPath (pluginMap: Object, allPaths: Array<string>) 
         // Delete require cache entry and re-require
         const module = global.require(modulePath);
 
-        pluginMap[pluginJson.name] = _initPlugin(pluginJson || {}, module, modulePath);
+        pluginMap[pluginJson.name] = _initPlugin(
+          pluginJson || {},
+          module,
+          modulePath
+        );
         console.log(`[plugin] Loaded ${modulePath}`);
       } catch (err) {
         showError({
@@ -107,14 +111,19 @@ async function _traversePluginPath (pluginMap: Object, allPaths: Array<string>) 
   }
 }
 
-export async function getPlugins (force: boolean = false): Promise<Array<Plugin>> {
+export async function getPlugins(
+  force: boolean = false
+): Promise<Array<Plugin>> {
   if (force) {
     plugins = null;
   }
 
   if (!plugins) {
     const settings = await models.settings.getOrCreate();
-    const extraPaths = settings.pluginPath.split(':').filter(p => p).map(resolveHomePath);
+    const extraPaths = settings.pluginPath
+      .split(':')
+      .filter(p => p)
+      .map(resolveHomePath);
 
     // Make sure the default directories exist
     mkdirp.sync(PLUGIN_PATH);
@@ -145,46 +154,46 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
   return plugins;
 }
 
-export async function getTemplateTags (): Promise<Array<TemplateTag>> {
+export async function getTemplateTags(): Promise<Array<TemplateTag>> {
   let extensions = [];
   for (const plugin of await getPlugins()) {
     const templateTags = plugin.module.templateTags || [];
     extensions = [
       ...extensions,
-      ...templateTags.map(tt => ({plugin, templateTag: tt}))
+      ...templateTags.map(tt => ({ plugin, templateTag: tt }))
     ];
   }
 
   return extensions;
 }
 
-export async function getRequestHooks (): Promise<Array<RequestHook>> {
+export async function getRequestHooks(): Promise<Array<RequestHook>> {
   let functions = [];
   for (const plugin of await getPlugins()) {
     const moreFunctions = plugin.module.requestHooks || [];
     functions = [
       ...functions,
-      ...moreFunctions.map(hook => ({plugin, hook}))
+      ...moreFunctions.map(hook => ({ plugin, hook }))
     ];
   }
 
   return functions;
 }
 
-export async function getResponseHooks (): Promise<Array<ResponseHook>> {
+export async function getResponseHooks(): Promise<Array<ResponseHook>> {
   let functions = [];
   for (const plugin of await getPlugins()) {
     const moreFunctions = plugin.module.responseHooks || [];
     functions = [
       ...functions,
-      ...moreFunctions.map(hook => ({plugin, hook}))
+      ...moreFunctions.map(hook => ({ plugin, hook }))
     ];
   }
 
   return functions;
 }
 
-function _initPlugin (packageJSON: Object, module: any, path: ?string): Plugin {
+function _initPlugin(packageJSON: Object, module: any, path: ?string): Plugin {
   const meta = packageJSON.insomnia || {};
   return {
     name: packageJSON.name || meta.name,

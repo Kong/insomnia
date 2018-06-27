@@ -11,7 +11,7 @@ const importers = [
   require('./src/importers/swagger2')
 ];
 
-module.exports.convert = async function (contents) {
+module.exports.convert = async function(contents) {
   for (const importer of importers) {
     const resources = await importer.convert(contents);
 
@@ -27,9 +27,9 @@ module.exports.convert = async function (contents) {
           __export_format: 3,
           __export_date: utils.getDateString(),
           __export_source: 'insomnia.importers:v0.1.0',
-          resources: resources.map(utils.setDefaults),
+          resources: resources.map(utils.setDefaults)
         }
-      }
+      };
     }
   }
 

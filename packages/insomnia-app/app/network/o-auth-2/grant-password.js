@@ -1,12 +1,12 @@
 // @flow
-import {setDefaultProtocol} from 'insomnia-url';
+import { setDefaultProtocol } from 'insomnia-url';
 import * as c from './constants';
-import {responseToObject} from './misc';
+import { responseToObject } from './misc';
 import * as network from '../network';
 import * as models from '../../models/index';
-import {getBasicAuthHeader} from '../basic-auth/get-header';
+import { getBasicAuthHeader } from '../basic-auth/get-header';
 
-export default async function (
+export default async function(
   requestId: string,
   accessTokenUrl: string,
   credentialsInBody: boolean,
@@ -17,22 +17,25 @@ export default async function (
   scope: string = ''
 ): Promise<Object> {
   const params = [
-    {name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_PASSWORD},
-    {name: c.P_USERNAME, value: username},
-    {name: c.P_PASSWORD, value: password}
+    { name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_PASSWORD },
+    { name: c.P_USERNAME, value: username },
+    { name: c.P_PASSWORD, value: password }
   ];
 
   // Add optional params
-  scope && params.push({name: c.P_SCOPE, value: scope});
+  scope && params.push({ name: c.P_SCOPE, value: scope });
 
   const headers = [
-    {name: 'Content-Type', value: 'application/x-www-form-urlencoded'},
-    {name: 'Accept', value: 'application/x-www-form-urlencoded, application/json'}
+    { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
+    {
+      name: 'Accept',
+      value: 'application/x-www-form-urlencoded, application/json'
+    }
   ];
 
   if (credentialsInBody) {
-    params.push({name: c.P_CLIENT_ID, value: clientId});
-    params.push({name: c.P_CLIENT_SECRET, value: clientSecret});
+    params.push({ name: c.P_CLIENT_ID, value: clientId });
+    params.push({ name: c.P_CLIENT_SECRET, value: clientSecret });
   } else {
     headers.push(getBasicAuthHeader(clientId, clientSecret));
   }
@@ -53,7 +56,9 @@ export default async function (
 
   const statusCode = response.statusCode || 0;
   if (statusCode < 200 || statusCode >= 300) {
-    throw new Error(`[oauth2] Failed to fetch access token url=${url} status=${statusCode}`);
+    throw new Error(
+      `[oauth2] Failed to fetch access token url=${url} status=${statusCode}`
+    );
   }
 
   const results = responseToObject(bodyBuffer.toString(), [

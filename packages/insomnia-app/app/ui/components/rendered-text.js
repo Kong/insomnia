@@ -12,7 +12,7 @@ type State = {
 };
 
 class RenderedText extends React.PureComponent<Props, State> {
-  constructor (props: any) {
+  constructor(props: any) {
     super(props);
     this.state = {
       renderedText: '',
@@ -20,8 +20,8 @@ class RenderedText extends React.PureComponent<Props, State> {
     };
   }
 
-  async _render () {
-    const {render, children} = this.props;
+  async _render() {
+    const { render, children } = this.props;
 
     if (!children) {
       return;
@@ -29,24 +29,26 @@ class RenderedText extends React.PureComponent<Props, State> {
 
     try {
       const renderedText = await render(children);
-      this.setState({renderedText, error: ''});
+      this.setState({ renderedText, error: '' });
     } catch (err) {
-      this.setState({error: err.message});
+      this.setState({ error: err.message });
     }
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this._render();
   }
 
-  componentDidUpdate () {
+  componentDidUpdate() {
     this._render();
   }
 
-  render () {
+  render() {
     if (this.state.error) {
       return (
-        <span className="font-error" style={{fontSize: '0.9em', fontStyle: 'italic'}}>
+        <span
+          className="font-error"
+          style={{ fontSize: '0.9em', fontStyle: 'italic' }}>
           {this.state.error || 'Unknown Error'}
         </span>
       );

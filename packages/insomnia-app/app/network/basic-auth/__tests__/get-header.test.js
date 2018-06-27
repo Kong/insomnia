@@ -1,5 +1,5 @@
-import {globalBeforeEach} from '../../../__jest__/before-each';
-import {getBasicAuthHeader} from '../get-header';
+import { globalBeforeEach } from '../../../__jest__/before-each';
+import { getBasicAuthHeader } from '../get-header';
 
 describe('getBasicAuthHeader()', () => {
   beforeEach(globalBeforeEach);

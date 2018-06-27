@@ -3,9 +3,9 @@ import * as React from 'react';
 import SidebarRequestRow from './sidebar-request-row';
 import SidebarRequestGroupRow from './sidebar-request-group-row';
 import * as models from '../../../models/index';
-import type {RequestGroup} from '../../../models/request-group';
-import type {Workspace} from '../../../models/workspace';
-import type {Request} from '../../../models/request';
+import type { RequestGroup } from '../../../models/request-group';
+import type { Workspace } from '../../../models/workspace';
+import type { Request } from '../../../models/request';
 
 type Child = {
   doc: Request | RequestGroup,
@@ -35,7 +35,7 @@ type Props = {
 };
 
 class SidebarChildren extends React.PureComponent<Props> {
-  _renderChildren (children: Array<Child>) {
+  _renderChildren(children: Array<Child>) {
     const {
       filter,
       handleCreateRequest,
@@ -81,7 +81,7 @@ class SidebarChildren extends React.PureComponent<Props> {
 
       const requestGroup = child.doc;
 
-      function hasActiveChild (children) {
+      function hasActiveChild(children) {
         for (const c of children) {
           if (hasActiveChild(c.children || [])) {
             return true;
@@ -119,8 +119,8 @@ class SidebarChildren extends React.PureComponent<Props> {
     });
   }
 
-  render () {
-    const {childObjects} = this.props;
+  render() {
+    const { childObjects } = this.props;
 
     return (
       <ul className="sidebar__list sidebar__list-root">

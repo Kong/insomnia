@@ -1,15 +1,18 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import * as constants from '../../../common/constants';
 import * as util from '../../../common/misc';
 
 class MethodTag extends PureComponent {
-  render () {
-    const {method, fullNames} = this.props;
+  render() {
+    const { method, fullNames } = this.props;
     let methodName = method;
 
     if (!fullNames) {
-      if (method === constants.METHOD_DELETE || method === constants.METHOD_OPTIONS) {
+      if (
+        method === constants.METHOD_DELETE ||
+        method === constants.METHOD_OPTIONS
+      ) {
         methodName = method.slice(0, 3);
       } else if (method.length > 4) {
         methodName = util.removeVowels(method).slice(0, 4);
@@ -18,7 +21,7 @@ class MethodTag extends PureComponent {
 
     return (
       <div className={'tag tag--no-bg tag--small http-method-' + method}>
-        <span className='tag__inner'>{methodName}</span>
+        <span className="tag__inner">{methodName}</span>
       </div>
     );
   }

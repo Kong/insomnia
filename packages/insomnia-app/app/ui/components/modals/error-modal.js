@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -7,7 +7,7 @@ import ModalFooter from '../base/modal-footer';
 
 @autobind
 class ErrorModal extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
 
     this.state = {
@@ -18,22 +18,22 @@ class ErrorModal extends PureComponent {
     };
   }
 
-  _setModalRef (m) {
+  _setModalRef(m) {
     this.modal = m;
   }
 
-  _handleOk () {
+  _handleOk() {
     this.hide();
     this._okCallback();
   }
 
-  hide () {
+  hide() {
     this.modal.hide();
   }
 
-  show (options = {}) {
-    const {title, error, addCancel, message} = options;
-    this.setState({title, error, addCancel, message});
+  show(options = {}) {
+    const { title, error, addCancel, message } = options;
+    this.setState({ title, error, addCancel, message });
 
     this.modal.show();
 
@@ -42,16 +42,14 @@ class ErrorModal extends PureComponent {
     });
   }
 
-  render () {
-    const {error, message, title, addCancel} = this.state;
+  render() {
+    const { error, message, title, addCancel } = this.state;
 
     return (
       <Modal ref={this._setModalRef}>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
         <ModalBody className="wide pad">
-          {message ? (
-            <div className="notice error">{message}</div>
-          ) : null}
+          {message ? <div className="notice error">{message}</div> : null}
           {error && (
             <pre className="pad-top-sm force-wrap selectable">
               <code>{error.stack}</code>
@@ -60,7 +58,11 @@ class ErrorModal extends PureComponent {
         </ModalBody>
         <ModalFooter>
           <div>
-            {addCancel ? <button className="btn" onClick={this.hide}>Cancel</button> : null}
+            {addCancel ? (
+              <button className="btn" onClick={this.hide}>
+                Cancel
+              </button>
+            ) : null}
             <button className="btn" onClick={this._handleOk}>
               Ok
             </button>

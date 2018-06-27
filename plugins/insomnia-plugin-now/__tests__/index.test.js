@@ -1,7 +1,7 @@
 const tag = require('..').templateTags[0];
 
-function assertTemplate (args, expected) {
-  return async function () {
+function assertTemplate(args, expected) {
+  return async function() {
     const result = await tag.run(null, ...args);
     if (expected instanceof RegExp) {
       expect(result).toMatch(expected);
@@ -11,8 +11,8 @@ function assertTemplate (args, expected) {
   };
 }
 
-function assertTemplateFails (args, expected) {
-  return async function () {
+function assertTemplateFails(args, expected) {
+  return async function() {
     try {
       await tag.run(null, ...args);
       fail(`Render should have thrown ${expected}`);

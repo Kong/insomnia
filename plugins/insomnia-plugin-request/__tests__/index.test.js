@@ -1,21 +1,26 @@
-const {jarFromCookies, cookiesFromJar} = require('insomnia-cookies');
+const { jarFromCookies, cookiesFromJar } = require('insomnia-cookies');
 const tag = require('..').templateTags[0];
 
 describe('plugin', () => {
   describe('RequestExtension cookie', async () => {
     it('should get cookie by name', async () => {
       const jar = jarFromCookies([]);
-      jar.setCookieSync([
-        'foo=bar',
-        'path=/',
-        'domain=.insomnia.rest',
-        'HttpOnly Cache-Control: public, no-cache'
-      ].join('; '), 'https://insomnia.rest');
+      jar.setCookieSync(
+        [
+          'foo=bar',
+          'path=/',
+          'domain=.insomnia.rest',
+          'HttpOnly Cache-Control: public, no-cache'
+        ].join('; '),
+        'https://insomnia.rest'
+      );
 
       const cookies = await cookiesFromJar(jar);
-      const requests = [{_id: 'req_1', parameters: [], url: 'https://insomnia.rest/foo/bar'}];
-      const jars = [{_id: 'jar_1', parentId: 'wrk_1', cookies}];
-      const context = _getTestContext([{_id: 'wrk_1'}], requests, jars);
+      const requests = [
+        { _id: 'req_1', parameters: [], url: 'https://insomnia.rest/foo/bar' }
+      ];
+      const jars = [{ _id: 'jar_1', parentId: 'wrk_1', cookies }];
+      const context = _getTestContext([{ _id: 'wrk_1' }], requests, jars);
       const result = await tag.run(context, 'cookie', 'foo');
 
       expect(result).toBe('bar');
@@ -24,24 +29,28 @@ describe('plugin', () => {
 
   describe('RequestExtension url', async () => {
     it('should get url', async () => {
-      const requests = [{
-        _id: 'req_1',
-        parameters: [{name: 'foo', value: 'bar'}],
-        url: 'https://insomnia.rest/foo/bar'
-      }];
-      const context = _getTestContext([{_id: 'wrk_1'}], requests);
+      const requests = [
+        {
+          _id: 'req_1',
+          parameters: [{ name: 'foo', value: 'bar' }],
+          url: 'https://insomnia.rest/foo/bar'
+        }
+      ];
+      const context = _getTestContext([{ _id: 'wrk_1' }], requests);
       const result = await tag.run(context, 'url');
 
       expect(result).toBe('https://insomnia.rest/foo/bar?foo=bar');
     });
 
     it('should get rendered url', async () => {
-      const requests = [{
-        _id: 'req_1',
-        parameters: [{name: 'foo', value: '{{ foo }}'}],
-        url: 'https://insomnia.rest/foo/bar'
-      }];
-      const context = _getTestContext([{_id: 'wrk_1'}], requests);
+      const requests = [
+        {
+          _id: 'req_1',
+          parameters: [{ name: 'foo', value: '{{ foo }}' }],
+          url: 'https://insomnia.rest/foo/bar'
+        }
+      ];
+      const context = _getTestContext([{ _id: 'wrk_1' }], requests);
       const result = await tag.run(context, 'url');
 
       expect(result).toBe('https://insomnia.rest/foo/bar?foo=bar');
@@ -50,12 +59,14 @@ describe('plugin', () => {
 
   describe('RequestExtension header', async () => {
     it('should get url', async () => {
-      const requests = [{
-        _id: 'req_1',
-        headers: [{name: 'foo', value: '{{ foo }}'}],
-        url: 'https://insomnia.rest/foo/bar'
-      }];
-      const context = _getTestContext([{_id: 'wrk_1'}], requests);
+      const requests = [
+        {
+          _id: 'req_1',
+          headers: [{ name: 'foo', value: '{{ foo }}' }],
+          url: 'https://insomnia.rest/foo/bar'
+        }
+      ];
+      const context = _getTestContext([{ _id: 'wrk_1' }], requests);
       const result = await tag.run(context, 'header', 'foo');
 
       expect(result).toBe('bar');
@@ -63,7 +74,7 @@ describe('plugin', () => {
   });
 });
 
-function _getTestContext (workspaces, requests, jars) {
+function _getTestContext(workspaces, requests, jars) {
   jars = jars || [];
   return {
     meta: {
@@ -71,26 +82,28 @@ function _getTestContext (workspaces, requests, jars) {
       workspaceId: workspaces[0]._id
     },
     util: {
-      render (str) {
+      render(str) {
         return str.replace(/{{ foo }}/g, 'bar');
       },
       models: {
         request: {
-          getById (id) {
+          getById(id) {
             return requests.find(r => r._id === id);
           }
         },
         workspace: {
-          getById (id) {
+          getById(id) {
             return workspaces.find(w => w._id === id);
           }
         },
         cookieJar: {
-          getOrCreateForWorkspace (workspace) {
-            return jars.find(j => j.parentId === workspace._id) || {
-              parentId: workspace._id,
-              cookies: []
-            };
+          getOrCreateForWorkspace(workspace) {
+            return (
+              jars.find(j => j.parentId === workspace._id) || {
+                parentId: workspace._id,
+                cookies: []
+              }
+            );
           }
         }
       }

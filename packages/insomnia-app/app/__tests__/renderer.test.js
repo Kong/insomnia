@@ -1,5 +1,5 @@
 import * as renderer from '../renderer';
-import {globalBeforeEach} from '../__jest__/before-each';
+import { globalBeforeEach } from '../__jest__/before-each';
 
 describe('imports', () => {
   beforeEach(globalBeforeEach);

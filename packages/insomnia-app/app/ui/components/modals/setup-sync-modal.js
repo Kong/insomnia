@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
@@ -6,11 +6,16 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import * as sync from '../../../sync';
-import {SYNC_MODE_OFF, SYNC_MODE_ON, SYNC_MODE_NEVER, SYNC_MODE_UNSET} from '../../../sync/storage';
+import {
+  SYNC_MODE_OFF,
+  SYNC_MODE_ON,
+  SYNC_MODE_NEVER,
+  SYNC_MODE_UNSET
+} from '../../../sync/storage';
 
 @autobind
 class SetupSyncModal extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = {
       syncMode: SYNC_MODE_UNSET,
@@ -18,13 +23,13 @@ class SetupSyncModal extends PureComponent {
     };
   }
 
-  _setModalRef (n) {
+  _setModalRef(n) {
     this.modal = n;
   }
 
-  async _handleDone () {
-    const {workspace} = this.props;
-    const {selectedSyncMode} = this.state;
+  async _handleDone() {
+    const { workspace } = this.props;
+    const { selectedSyncMode } = this.state;
 
     const resource = await sync.getOrCreateResourceForDoc(workspace);
     await sync.createOrUpdateConfig(resource.resourceGroupId, selectedSyncMode);
@@ -34,19 +39,20 @@ class SetupSyncModal extends PureComponent {
     this._resolvePromise && this._resolvePromise(selectedSyncMode);
   }
 
-  _handleSyncModeChange (e) {
-    this.setState({selectedSyncMode: e.target.value});
+  _handleSyncModeChange(e) {
+    this.setState({ selectedSyncMode: e.target.value });
   }
 
-  async show () {
-    const {workspace} = this.props;
+  async show() {
+    const { workspace } = this.props;
 
     const resource = await sync.getOrCreateResourceForDoc(workspace);
     const config = await sync.getOrCreateConfig(resource.resourceGroupId);
-    const {syncMode} = config;
+    const { syncMode } = config;
 
     // Set selected sync mode. If it's unset, default it to ON
-    const selectedSyncMode = syncMode !== SYNC_MODE_UNSET ? syncMode : SYNC_MODE_ON;
+    const selectedSyncMode =
+      syncMode !== SYNC_MODE_UNSET ? syncMode : SYNC_MODE_ON;
 
     this.setState({
       syncMode,
@@ -62,40 +68,40 @@ class SetupSyncModal extends PureComponent {
     return this._promise;
   }
 
-  hide () {
+  hide() {
     this.modal.hide();
   }
 
-  render () {
-    const {workspace} = this.props;
-    const {syncMode, selectedSyncMode} = this.state;
+  render() {
+    const { workspace } = this.props;
+    const { syncMode, selectedSyncMode } = this.state;
 
     return (
       <Modal ref={this._setModalRef} noEscape>
         <ModalHeader>Workspace Sync Setup</ModalHeader>
         <ModalBody className="wide pad">
-          {syncMode === SYNC_MODE_UNSET
-            ? <p className="notice info">
-              You have not yet configured sync for your <strong>{workspace.name}</strong> workspace.
-            </p> : null
-          }
-          <br/>
+          {syncMode === SYNC_MODE_UNSET ? (
+            <p className="notice info">
+              You have not yet configured sync for your{' '}
+              <strong>{workspace.name}</strong> workspace.
+            </p>
+          ) : null}
+          <br />
           <div className="form-control form-control--outlined">
-            <label>Choose sync mode
-              <select onChange={this._handleSyncModeChange} value={selectedSyncMode}>
-                <option value={SYNC_MODE_ON}>
-                  Automatically sync changes
-                </option>
-                <option value={SYNC_MODE_OFF}>
-                  Manually sync changes
-                </option>
+            <label>
+              Choose sync mode
+              <select
+                onChange={this._handleSyncModeChange}
+                value={selectedSyncMode}>
+                <option value={SYNC_MODE_ON}>Automatically sync changes</option>
+                <option value={SYNC_MODE_OFF}>Manually sync changes</option>
                 <option value={SYNC_MODE_NEVER}>
                   Disable sync for this workspace
                 </option>
               </select>
             </label>
           </div>
-          <br/>
+          <br />
         </ModalBody>
         <ModalFooter>
           <div className="margin-left faint italic txt-sm tall">

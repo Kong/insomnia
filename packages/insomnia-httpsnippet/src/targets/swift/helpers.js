@@ -1,6 +1,6 @@
-'use strict'
+'use strict';
 
-var util = require('util')
+var util = require('util');
 
 /**
  * Create a string of given length filled with blank spaces
@@ -8,23 +8,27 @@ var util = require('util')
  * @param {number} length Length of the array to return
  * @return {string}
  */
-function buildString (length, str) {
-  return Array.apply(null, new Array(length)).map(String.prototype.valueOf, str).join('')
+function buildString(length, str) {
+  return Array.apply(null, new Array(length))
+    .map(String.prototype.valueOf, str)
+    .join('');
 }
 
 /**
  * Create a string corresponding to a Dictionary or Array literal representation with pretty option
  * and indentation.
  */
-function concatArray (arr, pretty, indentation, indentLevel) {
-  var currentIndent = buildString(indentLevel, indentation)
-  var closingBraceIndent = buildString(indentLevel - 1, indentation)
-  var join = pretty ? ',\n' + currentIndent : ', '
+function concatArray(arr, pretty, indentation, indentLevel) {
+  var currentIndent = buildString(indentLevel, indentation);
+  var closingBraceIndent = buildString(indentLevel - 1, indentation);
+  var join = pretty ? ',\n' + currentIndent : ', ';
 
   if (pretty) {
-    return '[\n' + currentIndent + arr.join(join) + '\n' + closingBraceIndent + ']'
+    return (
+      '[\n' + currentIndent + arr.join(join) + '\n' + closingBraceIndent + ']'
+    );
   } else {
-    return '[' + arr.join(join) + ']'
+    return '[' + arr.join(join) + ']';
   }
 }
 
@@ -37,8 +41,12 @@ module.exports = {
    * @param {Object} opts Target options
    * @return {string}
    */
-  literalDeclaration: function (name, parameters, opts) {
-    return util.format('let %s = %s', name, this.literalRepresentation(parameters, opts))
+  literalDeclaration: function(name, parameters, opts) {
+    return util.format(
+      'let %s = %s',
+      name,
+      this.literalRepresentation(parameters, opts)
+    );
   },
 
   /**
@@ -48,33 +56,51 @@ module.exports = {
    * @param {Object} opts Target options
    * @return {string}
    */
-  literalRepresentation: function (value, opts, indentLevel) {
-    indentLevel = indentLevel === undefined ? 1 : indentLevel + 1
+  literalRepresentation: function(value, opts, indentLevel) {
+    indentLevel = indentLevel === undefined ? 1 : indentLevel + 1;
 
     switch (Object.prototype.toString.call(value)) {
       case '[object Number]':
-        return value
+        return value;
       case '[object Array]':
         // Don't prettify arrays to not take too much space
-        var pretty = false
-        var valuesRepresentation = value.map(function (v) {
-          // Switch to prettify if the value is a dictionary with multiple keys
-          if (Object.prototype.toString.call(v) === '[object Object]') {
-            pretty = Object.keys(v).length > 1
-          }
-          return this.literalRepresentation(v, opts, indentLevel)
-        }.bind(this))
-        return concatArray(valuesRepresentation, pretty, opts.indent, indentLevel)
+        var pretty = false;
+        var valuesRepresentation = value.map(
+          function(v) {
+            // Switch to prettify if the value is a dictionary with multiple keys
+            if (Object.prototype.toString.call(v) === '[object Object]') {
+              pretty = Object.keys(v).length > 1;
+            }
+            return this.literalRepresentation(v, opts, indentLevel);
+          }.bind(this)
+        );
+        return concatArray(
+          valuesRepresentation,
+          pretty,
+          opts.indent,
+          indentLevel
+        );
       case '[object Object]':
-        var keyValuePairs = []
+        var keyValuePairs = [];
         for (var k in value) {
-          keyValuePairs.push(util.format('"%s": %s', k, this.literalRepresentation(value[k], opts, indentLevel)))
+          keyValuePairs.push(
+            util.format(
+              '"%s": %s',
+              k,
+              this.literalRepresentation(value[k], opts, indentLevel)
+            )
+          );
         }
-        return concatArray(keyValuePairs, opts.pretty && keyValuePairs.length > 1, opts.indent, indentLevel)
+        return concatArray(
+          keyValuePairs,
+          opts.pretty && keyValuePairs.length > 1,
+          opts.indent,
+          indentLevel
+        );
       case '[object Boolean]':
-        return value.toString()
+        return value.toString();
       default:
-        return '"' + value.toString().replace(/"/g, '\\"') + '"'
+        return '"' + value.toString().replace(/"/g, '\\"') + '"';
     }
   }
-}
+};

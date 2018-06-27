@@ -1,13 +1,13 @@
 // @flow
-import type {Request} from '../../models/request';
-import type {Response} from '../../models/response';
+import type { Request } from '../../models/request';
+import type { Response } from '../../models/response';
 
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import mime from 'mime-types';
-import {remote} from 'electron';
-import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
+import { remote } from 'electron';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import SizeTag from './tags/size-tag';
 import StatusTag from './tags/status-tag';
 import TimeTag from './tags/time-tag';
@@ -20,9 +20,9 @@ import ResponseTimelineViewer from './viewers/response-timeline-viewer';
 import ResponseHeadersViewer from './viewers/response-headers-viewer';
 import ResponseCookiesViewer from './viewers/response-cookies-viewer';
 import * as models from '../../models';
-import {PREVIEW_MODE_SOURCE} from '../../common/constants';
-import {getSetCookieHeaders, nullFn} from '../../common/misc';
-import {cancelCurrentRequest} from '../../network/network';
+import { PREVIEW_MODE_SOURCE } from '../../common/constants';
+import { getSetCookieHeaders, nullFn } from '../../common/misc';
+import { cancelCurrentRequest } from '../../network/network';
 import Hotkey from './hotkey';
 import * as hotkeys from '../../common/hotkeys';
 import ErrorBoundary from './error-boundary';
@@ -55,7 +55,7 @@ type Props = {
 
 @autobind
 class ResponsePane extends React.PureComponent<Props> {
-  _handleGetResponseBody (): Buffer | null {
+  _handleGetResponseBody(): Buffer | null {
     if (!this.props.response) {
       return null;
     }
@@ -63,21 +63,24 @@ class ResponsePane extends React.PureComponent<Props> {
     return models.response.getBodyBuffer(this.props.response);
   }
 
-  async _handleDownloadResponseBody () {
-    const {response, request} = this.props;
+  async _handleDownloadResponseBody() {
+    const { response, request } = this.props;
     if (!response || !request) {
       // Should never happen
       console.warn('No response to download');
       return;
     }
 
-    const {contentType} = response;
+    const { contentType } = response;
     const extension = mime.extension(contentType) || 'unknown';
 
     const options = {
       title: 'Save Response Body',
       buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`
+      defaultPath: `${request.name.replace(
+        / +/g,
+        '_'
+      )}-${Date.now()}.${extension}`
     };
 
     remote.dialog.showSaveDialog(options, outputPath => {
@@ -96,8 +99,8 @@ class ResponsePane extends React.PureComponent<Props> {
     });
   }
 
-  _handleDownloadFullResponseBody () {
-    const {response, request} = this.props;
+  _handleDownloadFullResponseBody() {
+    const { response, request } = this.props;
 
     if (!response || !request) {
       // Should never happen
@@ -133,7 +136,7 @@ class ResponsePane extends React.PureComponent<Props> {
     });
   }
 
-  render () {
+  render() {
     const {
       request,
       responses,
@@ -158,8 +161,8 @@ class ResponsePane extends React.PureComponent<Props> {
     if (!request) {
       return (
         <section className="response-pane pane">
-          <header className="pane__header"></header>
-          <div className="pane__body pane__body--placeholder"></div>
+          <header className="pane__header" />
+          <div className="pane__body pane__body--placeholder" />
         </section>
       );
     }
@@ -167,35 +170,43 @@ class ResponsePane extends React.PureComponent<Props> {
     if (!response) {
       return (
         <section className="response-pane pane">
-          <header className="pane__header"></header>
+          <header className="pane__header" />
           <div className="pane__body pane__body--placeholder">
             <div>
               <table className="table--fancy">
                 <tbody>
-                <tr>
-                  <td>Send Request</td>
-                  <td className="text-right">
-                    <code><Hotkey hotkey={hotkeys.SEND_REQUEST}/></code>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Focus Url Bar</td>
-                  <td className="text-right">
-                    <code><Hotkey hotkey={hotkeys.FOCUS_URL}/></code>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Manage Cookies</td>
-                  <td className="text-right">
-                    <code><Hotkey hotkey={hotkeys.SHOW_COOKIES}/></code>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Edit Environments</td>
-                  <td className="text-right">
-                    <code><Hotkey hotkey={hotkeys.SHOW_ENVIRONMENTS}/></code>
-                  </td>
-                </tr>
+                  <tr>
+                    <td>Send Request</td>
+                    <td className="text-right">
+                      <code>
+                        <Hotkey hotkey={hotkeys.SEND_REQUEST} />
+                      </code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Focus Url Bar</td>
+                    <td className="text-right">
+                      <code>
+                        <Hotkey hotkey={hotkeys.FOCUS_URL} />
+                      </code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Manage Cookies</td>
+                    <td className="text-right">
+                      <code>
+                        <Hotkey hotkey={hotkeys.SHOW_COOKIES} />
+                      </code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Edit Environments</td>
+                    <td className="text-right">
+                      <code>
+                        <Hotkey hotkey={hotkeys.SHOW_ENVIRONMENTS} />
+                      </code>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -220,8 +231,11 @@ class ResponsePane extends React.PureComponent<Props> {
                 statusCode={response.statusCode}
                 statusMessage={response.statusMessage}
               />
-              <TimeTag milliseconds={response.elapsedTime}/>
-              <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent}/>
+              <TimeTag milliseconds={response.elapsedTime} />
+              <SizeTag
+                bytesRead={response.bytesRead}
+                bytesContent={response.bytesContent}
+              />
             </div>
             <ResponseHistoryDropdown
               activeResponse={response}
@@ -248,8 +262,7 @@ class ResponsePane extends React.PureComponent<Props> {
             </Tab>
             <Tab>
               <Button>
-                Header
-                {' '}
+                Header{' '}
                 {response.headers.length > 0 && (
                   <span className="bubble">{response.headers.length}</span>
                 )}
@@ -257,8 +270,10 @@ class ResponsePane extends React.PureComponent<Props> {
             </Tab>
             <Tab>
               <Button>
-                Cookie {cookieHeaders.length ? (
-                <span className="bubble">{cookieHeaders.length}</span>) : null}
+                Cookie{' '}
+                {cookieHeaders.length ? (
+                  <span className="bubble">{cookieHeaders.length}</span>
+                ) : null}
               </Button>
             </Tab>
             <Tab>
@@ -287,14 +302,18 @@ class ResponsePane extends React.PureComponent<Props> {
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable pad">
-              <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-                <ResponseHeadersViewer headers={response.headers}/>
+              <ErrorBoundary
+                key={response._id}
+                errorClassName="font-error pad text-center">
+                <ResponseHeadersViewer headers={response.headers} />
               </ErrorBoundary>
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable pad">
-              <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+              <ErrorBoundary
+                key={response._id}
+                errorClassName="font-error pad text-center">
                 <ResponseCookiesViewer
                   handleShowRequestSettings={handleShowRequestSettings}
                   cookiesSent={response.settingSendCookies}
@@ -306,7 +325,9 @@ class ResponsePane extends React.PureComponent<Props> {
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel">
-            <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+            <ErrorBoundary
+              key={response._id}
+              errorClassName="font-error pad text-center">
               <ResponseTimelineViewer
                 timeline={response.timeline || []}
                 editorLineWrapping={editorLineWrapping}

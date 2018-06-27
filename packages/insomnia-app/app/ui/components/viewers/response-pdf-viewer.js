@@ -9,7 +9,7 @@ type Props = {
 };
 
 type State = {
-  numPages: number | null;
+  numPages: number | null
 };
 
 @autobind
@@ -17,11 +17,11 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
   container: ?HTMLDivElement;
   debounceTimeout: any;
 
-  setRef (n: ?HTMLDivElement) {
+  setRef(n: ?HTMLDivElement) {
     this.container = n;
   }
 
-  loadPDF () {
+  loadPDF() {
     clearTimeout(this.debounceTimeout);
     this.debounceTimeout = setTimeout(async () => {
       // get node for this react component
@@ -34,12 +34,14 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
       container.innerHTML = '';
 
       const containerWidth = container.clientWidth;
-      const pdf = await PDF.getDocument({data: this.props.body.toString('binary')});
+      const pdf = await PDF.getDocument({
+        data: this.props.body.toString('binary')
+      });
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const density = window.devicePixelRatio || 1;
 
-        const {width: pdfWidth, height: pdfHeight} = page.getViewport(1);
+        const { width: pdfWidth, height: pdfHeight } = page.getViewport(1);
         const ratio = pdfHeight / pdfWidth;
         const scale = containerWidth / pdfWidth;
         const viewport = page.getViewport(scale * density);
@@ -68,7 +70,7 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
     }, 100);
   }
 
-  handleResize (e: SyntheticEvent<HTMLDivElement>) {
+  handleResize(e: SyntheticEvent<HTMLDivElement>) {
     if (!this.container) {
       return;
     }
@@ -77,20 +79,20 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
     this.debounceTimeout = setTimeout(this.loadPDF, 300);
   }
 
-  componentDidUpdate () {
+  componentDidUpdate() {
     this.loadPDF();
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this.loadPDF();
     window.addEventListener('resize', this.handleResize);
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize);
   }
 
-  render () {
+  render() {
     const styles = {
       width: '100%',
       height: '100%',

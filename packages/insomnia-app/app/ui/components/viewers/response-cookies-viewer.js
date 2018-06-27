@@ -1,11 +1,11 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import {Cookie} from 'tough-cookie';
+import { Cookie } from 'tough-cookie';
 
 @autobind
 class ResponseCookiesViewer extends PureComponent {
-  renderRow (h, i) {
+  renderRow(h, i) {
     let cookie = null;
     try {
       cookie = h ? Cookie.parse(h.value || '') : null;
@@ -22,7 +22,7 @@ class ResponseCookiesViewer extends PureComponent {
     );
   }
 
-  render () {
+  render() {
     const {
       headers,
       showCookiesModal,
@@ -46,25 +46,29 @@ class ResponseCookiesViewer extends PureComponent {
         {noticeMessage && (
           <div className="notice info margin-bottom no-margin-top">
             <p>
-              Automatic {noticeMessage} of cookies was disabled at the time this request was made
+              Automatic {noticeMessage} of cookies was disabled at the time this
+              request was made
             </p>
           </div>
         )}
 
         <table className="table--fancy table--striped table--compact">
           <thead>
-          <tr>
-            <th>Name</th>
-            <th>Value</th>
-          </tr>
+            <tr>
+              <th>Name</th>
+              <th>Value</th>
+            </tr>
           </thead>
           <tbody>
-          {!headers.length ? this.renderRow(null, -1) : headers.map(this.renderRow)}
+            {!headers.length
+              ? this.renderRow(null, -1)
+              : headers.map(this.renderRow)}
           </tbody>
         </table>
         <p className="pad-top">
-          <button className="pull-right btn btn--clicky"
-                  onClick={e => showCookiesModal()}>
+          <button
+            className="pull-right btn btn--clicky"
+            onClick={e => showCookiesModal()}>
             Manage Cookies
           </button>
         </p>

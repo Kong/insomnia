@@ -1,7 +1,7 @@
 import * as plugin from '../app';
 import * as modals from '../../../ui/components/modals';
-import {globalBeforeEach} from '../../../__jest__/before-each';
-import {RENDER_PURPOSE_SEND} from '../../../common/render';
+import { globalBeforeEach } from '../../../__jest__/before-each';
+import { RENDER_PURPOSE_SEND } from '../../../common/render';
 
 describe('init()', () => {
   beforeEach(globalBeforeEach);
@@ -39,8 +39,8 @@ describe('app.alert()', () => {
 
     // Make sure it passes correct arguments
     expect(modals.showAlert.mock.calls).toEqual([
-      [{title: 'Title'}],
-      [{title: 'Title', message: 'Message'}]
+      [{ title: 'Title' }],
+      [{ title: 'Title', message: 'Message' }]
     ]);
   });
 });
@@ -63,12 +63,25 @@ describe('app.prompt()', () => {
 
     // Make sure it returns result of showAlert()
     result.app.prompt('Title');
-    result.app.prompt('Title', {label: 'Label'});
+    result.app.prompt('Title', { label: 'Label' });
 
     // Make sure it passes correct arguments
     expect(modals.showPrompt.mock.calls).toEqual([
-      [{title: 'Title', onComplete: expect.any(Function), onCancel: expect.any(Function)}],
-      [{title: 'Title', label: 'Label', onComplete: expect.any(Function), onCancel: expect.any(Function)}]
+      [
+        {
+          title: 'Title',
+          onComplete: expect.any(Function),
+          onCancel: expect.any(Function)
+        }
+      ],
+      [
+        {
+          title: 'Title',
+          label: 'Label',
+          onComplete: expect.any(Function),
+          onCancel: expect.any(Function)
+        }
+      ]
     ]);
   });
 });

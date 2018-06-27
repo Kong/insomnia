@@ -14,7 +14,7 @@ module.exports.id = 'insomnia-1';
 module.exports.name = 'Insomnia v1';
 module.exports.description = 'Legacy Insomnia format';
 
-module.exports.convert = function (rawData) {
+module.exports.convert = function(rawData) {
   requestCount = 1;
   requestGroupCount = 1;
 
@@ -33,7 +33,7 @@ module.exports.convert = function (rawData) {
   return importItems(data.items, '__WORKSPACE_ID__');
 };
 
-function importItems (items, parentId) {
+function importItems(items, parentId) {
   let resources = [];
 
   for (const item of items) {
@@ -48,7 +48,7 @@ function importItems (items, parentId) {
   return resources;
 }
 
-function importRequestGroupItem (item, parentId) {
+function importRequestGroupItem(item, parentId) {
   let environment = {};
   if (item.environments && item.environments.base) {
     environment = item.environments.base;
@@ -60,11 +60,11 @@ function importRequestGroupItem (item, parentId) {
     _id: `__GRP_${count}__`,
     parentId,
     environment,
-    name: item.name || `Imported Folder ${count}`,
-  }
+    name: item.name || `Imported Folder ${count}`
+  };
 }
 
-function importRequestItem (item, parentId) {
+function importRequestItem(item, parentId) {
   let authentication = {};
   if (item.authentication) {
     authentication.username = item.authentication.username;
@@ -72,20 +72,22 @@ function importRequestItem (item, parentId) {
   }
 
   const headers = item.headers || [];
-  let contentTypeHeader = headers.find(h => h.name.toLowerCase() === 'content-type');
+  let contentTypeHeader = headers.find(
+    h => h.name.toLowerCase() === 'content-type'
+  );
   if (item.__insomnia && item.__insomnia.format) {
     const contentType = FORMAT_MAP[item.__insomnia.format];
     if (!contentTypeHeader) {
-      contentTypeHeader = {name: 'Content-Type', value: contentType};
+      contentTypeHeader = { name: 'Content-Type', value: contentType };
       headers.push(contentTypeHeader);
     }
   }
 
   let body = {};
-  if (contentTypeHeader && (
-      contentTypeHeader.value.match(/^application\/x-www-form-urlencoded/i) ||
-      contentTypeHeader.value.match(/^multipart\/form-encoded/i)
-    )
+  if (
+    contentTypeHeader &&
+    (contentTypeHeader.value.match(/^application\/x-www-form-urlencoded/i) ||
+      contentTypeHeader.value.match(/^multipart\/form-encoded/i))
   ) {
     body.mimeType = contentTypeHeader.value.split(';')[0];
     body.params = (item.body || '').split('&').map(v => {
@@ -94,12 +96,12 @@ function importRequestItem (item, parentId) {
         name: decodeURIComponent(name),
         value: decodeURIComponent(value || '')
       };
-    })
+    });
   } else if (item.body) {
     body = {
       mimeType: FORMAT_MAP[item.__insomnia.format] || '',
-      text: item.body,
-    }
+      text: item.body
+    };
   }
 
   const count = requestCount++;
@@ -113,6 +115,6 @@ function importRequestItem (item, parentId) {
     body: body,
     parameters: item.params || [],
     headers,
-    authentication,
-  }
+    authentication
+  };
 }

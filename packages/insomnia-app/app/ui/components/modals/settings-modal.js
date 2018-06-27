@@ -1,6 +1,6 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import Button from '../base/button';
@@ -14,8 +14,8 @@ import Account from '../settings/account';
 import Plugins from '../settings/plugins';
 import Theme from '../settings/theme';
 import * as models from '../../../models/index';
-import {Curl} from 'insomnia-libcurl';
-import {getAppName, getAppVersion} from '../../../common/constants';
+import { Curl } from 'insomnia-libcurl';
+import { getAppName, getAppVersion } from '../../../common/constants';
 import * as session from '../../../sync/session';
 import Tooltip from '../tooltip';
 
@@ -24,65 +24,65 @@ export const TAB_INDEX_SHORTCUTS = 3;
 
 @autobind
 class SettingsModal extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = {};
   }
 
-  _setModalRef (n) {
+  _setModalRef(n) {
     this.modal = n;
   }
 
-  _handleUpdateSetting (key, value) {
-    models.settings.update(this.props.settings, {[key]: value});
+  _handleUpdateSetting(key, value) {
+    models.settings.update(this.props.settings, { [key]: value });
   }
 
-  _handleExportAllToFile () {
+  _handleExportAllToFile() {
     this.props.handleExportAllToFile();
     this.modal.hide();
   }
 
-  _handleExportWorkspace () {
+  _handleExportWorkspace() {
     this.props.handleExportWorkspaceToFile();
     this.modal.hide();
   }
 
-  _handleImportFile () {
+  _handleImportFile() {
     this.props.handleImportFile();
     this.modal.hide();
   }
 
-  _handleImportUri (uri) {
+  _handleImportUri(uri) {
     this.props.handleImportUri(uri);
     this.modal.hide();
   }
 
-  _handleChangeTheme (theme, persist = true) {
+  _handleChangeTheme(theme, persist = true) {
     document.body.setAttribute('theme', theme);
 
     if (persist) {
-      models.settings.update(this.props.settings, {theme});
+      models.settings.update(this.props.settings, { theme });
     }
   }
 
-  componentDidMount () {
+  componentDidMount() {
     // Hacky way to set theme on launch
     // TODO: move somewhere else
     this._handleChangeTheme(this.props.settings.theme, false);
   }
 
-  show (currentTabIndex = 0) {
-    this.setState({currentTabIndex});
+  show(currentTabIndex = 0) {
+    this.setState({ currentTabIndex });
     this.modal.show();
   }
 
-  hide () {
+  hide() {
     this.modal.hide();
   }
 
-  render () {
-    const {settings} = this.props;
-    const {currentTabIndex} = this.state;
+  render() {
+    const { settings } = this.props;
+    const { currentTabIndex } = this.state;
     const email = session.isLoggedIn() ? session.getEmail() : null;
 
     return (
@@ -90,10 +90,9 @@ class SettingsModal extends PureComponent {
         <ModalHeader>
           {getAppName()} Preferences
           <span className="faint txt-sm">
-          &nbsp;&nbsp;–&nbsp;
-            v{getAppVersion()}
+            &nbsp;&nbsp;–&nbsp; v{getAppVersion()}
             <Tooltip position="bottom" message={Curl.getVersion()}>
-              <i className="fa fa-info-circle"/>
+              <i className="fa fa-info-circle" />
             </Tooltip>
             {email ? ` – ${email}` : null}
           </span>
@@ -102,39 +101,25 @@ class SettingsModal extends PureComponent {
           <Tabs className="react-tabs" defaultIndex={currentTabIndex}>
             <TabList>
               <Tab>
-                <Button value="General">
-                  General
-                </Button>
+                <Button value="General">General</Button>
               </Tab>
               <Tab>
-                <Button value="Import/Export">
-                  Data
-                </Button>
+                <Button value="Import/Export">Data</Button>
               </Tab>
               <Tab>
-                <Button value="Themes">
-                  Themes
-                </Button>
+                <Button value="Themes">Themes</Button>
               </Tab>
               <Tab>
-                <Button value="Shortcuts">
-                  Keyboard
-                </Button>
+                <Button value="Shortcuts">Keyboard</Button>
               </Tab>
               <Tab>
-                <Button value="Account">
-                  Account
-                </Button>
+                <Button value="Account">Account</Button>
               </Tab>
               <Tab>
-                <Button value="Plugins">
-                  Plugins
-                </Button>
+                <Button value="Plugins">Plugins</Button>
               </Tab>
               <Tab>
-                <Button value="About">
-                  About
-                </Button>
+                <Button value="About">About</Button>
               </Tab>
             </TabList>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
@@ -158,11 +143,18 @@ class SettingsModal extends PureComponent {
                 activeTheme={settings.theme}
               />
             </TabPanel>
-            <TabPanel
-              className="react-tabs__tab-panel pad scrollable"><SettingsShortcuts/></TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad scrollable"><Account/></TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad scrollable"><Plugins/></TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad scrollable"><About/></TabPanel>
+            <TabPanel className="react-tabs__tab-panel pad scrollable">
+              <SettingsShortcuts />
+            </TabPanel>
+            <TabPanel className="react-tabs__tab-panel pad scrollable">
+              <Account />
+            </TabPanel>
+            <TabPanel className="react-tabs__tab-panel pad scrollable">
+              <Plugins />
+            </TabPanel>
+            <TabPanel className="react-tabs__tab-panel pad scrollable">
+              <About />
+            </TabPanel>
           </Tabs>
         </ModalBody>
       </Modal>

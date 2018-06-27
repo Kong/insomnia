@@ -5,18 +5,18 @@ export const type = 'RequestGroupMeta';
 export const prefix = 'fldm';
 export const canDuplicate = false;
 
-export function init () {
+export function init() {
   return {
     parentId: null,
     collapsed: false
   };
 }
 
-export function migrate (doc) {
+export function migrate(doc) {
   return doc;
 }
 
-export function create (patch = {}) {
+export function create(patch = {}) {
   if (!patch.parentId) {
     throw new Error('New RequestGroupMeta missing `parentId`', patch);
   }
@@ -24,14 +24,14 @@ export function create (patch = {}) {
   return db.docCreate(type, patch);
 }
 
-export function update (requestGroupMeta, patch) {
+export function update(requestGroupMeta, patch) {
   return db.docUpdate(requestGroupMeta, patch);
 }
 
-export function getByParentId (parentId) {
-  return db.getWhere(type, {parentId});
+export function getByParentId(parentId) {
+  return db.getWhere(type, { parentId });
 }
 
-export function all () {
+export function all() {
   return db.all(type);
 }

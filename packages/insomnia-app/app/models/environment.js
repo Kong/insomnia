@@ -1,7 +1,7 @@
 // @flow
 import * as db from '../common/database';
-import type {BaseModel} from './index';
-import type {Workspace} from './workspace';
+import type { BaseModel } from './index';
+import type { Workspace } from './workspace';
 
 export const name = 'Environment';
 export const type = 'Environment';
@@ -20,7 +20,7 @@ type BaseEnvironment = {
 
 export type Environment = BaseModel & BaseEnvironment;
 
-export function init () {
+export function init() {
   return {
     name: 'New Environment',
     data: {},
@@ -30,28 +30,35 @@ export function init () {
   };
 }
 
-export function migrate (doc: Environment): Environment {
+export function migrate(doc: Environment): Environment {
   return doc;
 }
 
-export function create (patch: Object = {}): Promise<Environment> {
+export function create(patch: Object = {}): Promise<Environment> {
   if (!patch.parentId) {
-    throw new Error(`New Environment missing \`parentId\`: ${JSON.stringify(patch)}`);
+    throw new Error(
+      `New Environment missing \`parentId\`: ${JSON.stringify(patch)}`
+    );
   }
 
   return db.docCreate(type, patch);
 }
 
-export function update (environment: Environment, patch: Object): Promise<Environment> {
+export function update(
+  environment: Environment,
+  patch: Object
+): Promise<Environment> {
   return db.docUpdate(environment, patch);
 }
 
-export function findByParentId (parentId: string): Promise<Array<Environment>> {
-  return db.find(type, {parentId}, {metaSortKey: 1});
+export function findByParentId(parentId: string): Promise<Array<Environment>> {
+  return db.find(type, { parentId }, { metaSortKey: 1 });
 }
 
-export async function getOrCreateForWorkspaceId (workspaceId: string): Promise<Environment> {
-  const environments = await db.find(type, {parentId: workspaceId});
+export async function getOrCreateForWorkspaceId(
+  workspaceId: string
+): Promise<Environment> {
+  const environments = await db.find(type, { parentId: workspaceId });
 
   if (!environments.length) {
     return create({
@@ -63,18 +70,20 @@ export async function getOrCreateForWorkspaceId (workspaceId: string): Promise<E
   return environments[environments.length - 1];
 }
 
-export async function getOrCreateForWorkspace (workspace: Workspace): Promise<Environment> {
+export async function getOrCreateForWorkspace(
+  workspace: Workspace
+): Promise<Environment> {
   return getOrCreateForWorkspaceId(workspace._id);
 }
 
-export function getById (id: string): Promise<Environment | null> {
+export function getById(id: string): Promise<Environment | null> {
   return db.get(type, id);
 }
 
-export function remove (environment: Environment): Promise<void> {
+export function remove(environment: Environment): Promise<void> {
   return db.remove(environment);
 }
 
-export function all (): Promise<Array<Environment>> {
+export function all(): Promise<Array<Environment>> {
   return db.all(type);
 }

@@ -1,22 +1,22 @@
 import * as React from 'react';
 import ReactDOM from 'react-dom';
-import {AppContainer} from 'react-hot-loader';
-import {Provider} from 'react-redux';
-import {DragDropContext} from 'react-dnd';
+import { AppContainer } from 'react-hot-loader';
+import { Provider } from 'react-redux';
+import { DragDropContext } from 'react-dnd';
 import App from './containers/app';
 import * as models from '../models';
 import * as db from '../common/database';
-import {init as initStore} from './redux/modules';
-import {init as initSync} from '../sync';
-import {init as initPlugins} from '../plugins';
+import { init as initStore } from './redux/modules';
+import { init as initSync } from '../sync';
+import { init as initPlugins } from '../plugins';
 import DNDBackend from './dnd-backend';
 import './css/index.less';
-import {isDevelopment} from '../common/constants';
+import { isDevelopment } from '../common/constants';
 
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
 
-(async function () {
+(async function() {
   await db.initClient();
 
   // Create Redux store
@@ -28,7 +28,7 @@ document.body.setAttribute('data-platform', process.platform);
     ReactDOM.render(
       <AppContainer>
         <Provider store={store}>
-          <Component/>
+          <Component />
         </Provider>
       </AppContainer>,
       document.getElementById('root')
@@ -66,7 +66,7 @@ if (window && !isDevelopment()) {
   });
 }
 
-function showUpdateNotification () {
+function showUpdateNotification() {
   console.log('[app] Update Available');
 
   // eslint-disable-next-line no-new
@@ -77,7 +77,7 @@ function showUpdateNotification () {
   });
 }
 
-const {ipcRenderer} = require('electron');
+const { ipcRenderer } = require('electron');
 ipcRenderer.on('update-available', () => {
   // Give it a few seconds before showing this. Sometimes, when
   // you relaunch too soon it doesn't work the first time.

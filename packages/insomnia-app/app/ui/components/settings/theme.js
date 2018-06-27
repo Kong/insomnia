@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import Button from '../base/button';
@@ -17,70 +17,96 @@ import * as session from '../../../sync/session';
 
 const THEMES_PER_ROW = 3;
 const THEMES = [
-  {key: 'default', name: 'Insomnia', img: imgDefault},
-  {key: 'light', name: 'Simple Light', img: imgLight},
-  {key: 'dark', name: 'Simple Dark', img: imgDark},
-  {key: 'purple', name: 'Purple', img: imgPurple, paid: true},
-  {key: 'material', name: 'Material', img: imgMaterial, paid: true},
-  {key: 'solarized', name: 'Solarized', img: imgSolarized, paid: true},
-  {key: 'solarized-light', name: 'Solarized Light', img: imgSolarizedLight, paid: true},
-  {key: 'solarized-dark', name: 'Solarized Dark', img: imgSolarizedDark, paid: true},
-  {key: 'railscasts', name: 'Railscasts', img: imgRailscasts, paid: true}
+  { key: 'default', name: 'Insomnia', img: imgDefault },
+  { key: 'light', name: 'Simple Light', img: imgLight },
+  { key: 'dark', name: 'Simple Dark', img: imgDark },
+  { key: 'purple', name: 'Purple', img: imgPurple, paid: true },
+  { key: 'material', name: 'Material', img: imgMaterial, paid: true },
+  { key: 'solarized', name: 'Solarized', img: imgSolarized, paid: true },
+  {
+    key: 'solarized-light',
+    name: 'Solarized Light',
+    img: imgSolarizedLight,
+    paid: true
+  },
+  {
+    key: 'solarized-dark',
+    name: 'Solarized Dark',
+    img: imgSolarizedDark,
+    paid: true
+  },
+  { key: 'railscasts', name: 'Railscasts', img: imgRailscasts, paid: true }
 ];
 
 @autobind
 class Theme extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = {
-      isPremium: window.localStorage.getItem('settings.theme.isPremium') || false
+      isPremium:
+        window.localStorage.getItem('settings.theme.isPremium') || false
     };
   }
 
-  async componentDidMount () {
+  async componentDidMount() {
     // NOTE: This is kind of sketchy because we're relying on our parent (tab view)
     // to remove->add us every time our tab is shown. If it didn't, we would need to
     // also hook into componentWillUpdate somehow to refresh more often.
 
     if (!session.isLoggedIn()) {
-      this.setState({isPremium: false});
+      this.setState({ isPremium: false });
       return;
     }
 
-    const {isPremium} = await session.whoami();
+    const { isPremium } = await session.whoami();
     if (this.state.isPremium !== isPremium) {
-      this.setState({isPremium});
+      this.setState({ isPremium });
       window.localStorage.setItem('settings.theme.isPremium', isPremium);
     }
   }
 
-  renderTheme (theme) {
-    const {handleChangeTheme, activeTheme} = this.props;
-    const {isPremium} = this.state;
+  renderTheme(theme) {
+    const { handleChangeTheme, activeTheme } = this.props;
+    const { isPremium } = this.state;
     const isActive = activeTheme === theme.key;
     const disabled = theme.paid && !isPremium;
 
     return (
-      <div key={theme.key} className="themes__theme" style={{maxWidth: `${100 / THEMES_PER_ROW}%`}}>
+      <div
+        key={theme.key}
+        className="themes__theme"
+        style={{ maxWidth: `${100 / THEMES_PER_ROW}%` }}>
         <h2 className="txt-lg">
-          {theme.name}
-          {' '}
-          {isActive ? <span className="no-margin-top faint italic txt-md">(Active)</span> : null}
+          {theme.name}{' '}
+          {isActive ? (
+            <span className="no-margin-top faint italic txt-md">(Active)</span>
+          ) : null}
         </h2>
         {disabled ? (
-            <Link button href="https://insomnia.rest/pricing/" className="themes__theme--locked">
-              <img src={theme.img} alt={theme.name} style={{maxWidth: '100%'}}/>
-            </Link>
-          ) : (
-            <Button onClick={handleChangeTheme} value={theme.key}>
-              <img src={theme.img} alt={theme.name} style={{maxWidth: '100%'}}/>
-            </Button>
-          )}
+          <Link
+            button
+            href="https://insomnia.rest/pricing/"
+            className="themes__theme--locked">
+            <img
+              src={theme.img}
+              alt={theme.name}
+              style={{ maxWidth: '100%' }}
+            />
+          </Link>
+        ) : (
+          <Button onClick={handleChangeTheme} value={theme.key}>
+            <img
+              src={theme.img}
+              alt={theme.name}
+              style={{ maxWidth: '100%' }}
+            />
+          </Button>
+        )}
       </div>
     );
   }
 
-  renderThemeRows (themes) {
+  renderThemeRows(themes) {
     const rows = [];
     let row = [];
 
@@ -104,12 +130,8 @@ class Theme extends PureComponent {
     ));
   }
 
-  render () {
-    return (
-      <div className="themes pad-top">
-        {this.renderThemeRows(THEMES)}
-      </div>
-    );
+  render() {
+    return <div className="themes pad-top">{this.renderThemeRows(THEMES)}</div>;
   }
 }
 

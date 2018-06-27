@@ -5,10 +5,7 @@ const pkg = require('../package.json');
 module.exports = {
   devtool: 'source-map',
   context: path.join(__dirname, '../app'),
-  entry: [
-    './renderer.js',
-    './renderer.html'
-  ],
+  entry: ['./renderer.js', './renderer.html'],
   output: {
     path: path.join(__dirname, '../build'),
     filename: 'bundle.js',
@@ -31,8 +28,8 @@ module.exports = {
         test: /\.(less|css)$/,
         use: [
           'style-loader',
-          {loader: 'css-loader', options: {importLoaders: 1}},
-          {loader: 'less-loader', options: {noIeCompat: true}}
+          { loader: 'css-loader', options: { importLoaders: 1 } },
+          { loader: 'less-loader', options: { noIeCompat: true } }
         ]
       },
       {
@@ -50,20 +47,28 @@ module.exports = {
   },
   resolve: {
     extensions: ['.js', '.json'],
-    mainFields: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
+    mainFields: [
+      'webpack',
+      'browser',
+      'web',
+      'browserify',
+      ['jam', 'main'],
+      'main'
+    ]
   },
   node: {
     __dirname: false // Use Node __dirname
   },
   externals: [
     // Omit all dependencies in app/package.json (we want them loaded at runtime via NodeJS)
-    ...Object.keys(pkg.dependencies).filter(name => !pkg.packedDependencies.includes(name)),
+    ...Object.keys(pkg.dependencies).filter(
+      name => !pkg.packedDependencies.includes(name)
+    ),
 
     // To get jsonlint working...
-    'file', 'system'
+    'file',
+    'system'
   ],
-  plugins: [
-    new webpack.optimize.LimitChunkCountPlugin({maxChunks: 1})
-  ],
+  plugins: [new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 })],
   target: 'electron-renderer'
 };

@@ -15,7 +15,7 @@ if (require.main === module) {
   });
 }
 
-module.exports.start = async function () {
+module.exports.start = async function() {
   // Remove folders first
   console.log('[build] Removing existing directories');
   await emptyDir('../build');
@@ -41,7 +41,7 @@ module.exports.start = async function () {
   console.log('[build] Complete!');
 };
 
-async function buildWebpack (config) {
+async function buildWebpack(config) {
   return new Promise((resolve, reject) => {
     webpack(config, (err, stats) => {
       if (err || stats.hasErrors()) {
@@ -53,7 +53,7 @@ async function buildWebpack (config) {
   });
 }
 
-async function emptyDir (relPath) {
+async function emptyDir(relPath) {
   return new Promise((resolve, reject) => {
     const dir = path.resolve(__dirname, relPath);
     rimraf(dir, err => {
@@ -67,7 +67,7 @@ async function emptyDir (relPath) {
   });
 }
 
-async function copyFiles (relSource, relDest) {
+async function copyFiles(relSource, relDest) {
   return new Promise((resolve, reject) => {
     const source = path.resolve(__dirname, relSource);
     const dest = path.resolve(__dirname, relDest);
@@ -81,26 +81,29 @@ async function copyFiles (relSource, relDest) {
   });
 }
 
-async function install (relDir) {
+async function install(relDir) {
   return new Promise((resolve, reject) => {
     const prefix = path.resolve(__dirname, relDir);
-    npm.load({prefix, production: true, optional: false, 'package-lock': false}, err => {
-      if (err) {
-        return reject(err);
-      }
-
-      npm.commands.install([prefix], err => {
+    npm.load(
+      { prefix, production: true, optional: false, 'package-lock': false },
+      err => {
         if (err) {
-          reject(err);
-        } else {
-          resolve();
+          return reject(err);
         }
-      });
-    });
+
+        npm.commands.install([prefix], err => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      }
+    );
   });
 }
 
-function generatePackageJson (relBasePkg, relOutPkg) {
+function generatePackageJson(relBasePkg, relOutPkg) {
   // Read package.json's
   const basePath = path.resolve(__dirname, relBasePkg);
   const outPath = path.resolve(__dirname, relOutPkg);

@@ -6,7 +6,7 @@ module.exports.id = 'insomnia-3';
 module.exports.name = 'Insomnia v3';
 module.exports.description = 'Insomnia export format 3';
 
-module.exports.convert = function (rawData) {
+module.exports.convert = function(rawData) {
   let data;
   try {
     data = JSON.parse(rawData);

@@ -1,12 +1,12 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 
 @autobind
 class DropdownItem extends PureComponent {
-  _handleClick (e) {
-    const {stayOpenAfterClick, onClick, disabled} = this.props;
+  _handleClick(e) {
+    const { stayOpenAfterClick, onClick, disabled } = this.props;
 
     if (stayOpenAfterClick) {
       e.stopPropagation();
@@ -23,7 +23,7 @@ class DropdownItem extends PureComponent {
     }
   }
 
-  render () {
+  render() {
     const {
       buttonClass,
       children,
@@ -34,7 +34,7 @@ class DropdownItem extends PureComponent {
       ...props
     } = this.props;
 
-    const styles = color ? {color} : {};
+    const styles = color ? { color } : {};
 
     const inner = (
       <div className={classnames('dropdown__inner', className)}>

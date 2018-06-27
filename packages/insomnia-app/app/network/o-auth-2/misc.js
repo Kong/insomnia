@@ -4,18 +4,16 @@ import querystring from 'querystring';
 
 const AUTH_WINDOW_SESSION_ID = uuid.v4();
 
-export function responseToObject (body, keys) {
+export function responseToObject(body, keys) {
   let data = null;
   try {
     data = JSON.parse(body);
-  } catch (err) {
-  }
+  } catch (err) {}
 
   if (!data) {
     try {
       data = querystring.parse(body);
-    } catch (err) {
-    }
+    } catch (err) {}
   }
 
   let results = {};
@@ -26,7 +24,7 @@ export function responseToObject (body, keys) {
   return results;
 }
 
-export function authorizeUserInWindow (
+export function authorizeUserInWindow(
   url,
   urlSuccessRegex = /(code=).*/,
   urlFailureRegex = /(error=).*/
@@ -34,20 +32,26 @@ export function authorizeUserInWindow (
   return new Promise((resolve, reject) => {
     let finalUrl = null;
 
-    function _parseUrl (currentUrl) {
+    function _parseUrl(currentUrl) {
       if (currentUrl.match(urlSuccessRegex)) {
-        console.log(`[oauth2] Matched success redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`);
+        console.log(
+          `[oauth2] Matched success redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`
+        );
         finalUrl = currentUrl;
         child.close();
       } else if (currentUrl.match(urlFailureRegex)) {
-        console.log(`[oauth2] Matched error redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`);
+        console.log(
+          `[oauth2] Matched error redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`
+        );
         finalUrl = currentUrl;
         child.close();
       } else if (currentUrl === url) {
         // It's the first one, so it's not a redirect
         console.log(`[oauth2] Loaded "${currentUrl}"`);
       } else {
-        console.log(`[oauth2] Ignoring URL "${currentUrl}". Didn't match ${urlSuccessRegex.toString()}`);
+        console.log(
+          `[oauth2] Ignoring URL "${currentUrl}". Didn't match ${urlSuccessRegex.toString()}`
+        );
       }
     }
 
@@ -77,10 +81,13 @@ export function authorizeUserInWindow (
       _parseUrl(currentUrl);
     });
 
-    child.webContents.on('did-fail-load', (e, errorCode, errorDescription, url) => {
-      // Listen for did-fail-load to be able to parse the URL even when the callback server is unreachable
-      _parseUrl(url);
-    });
+    child.webContents.on(
+      'did-fail-load',
+      (e, errorCode, errorDescription, url) => {
+        // Listen for did-fail-load to be able to parse the URL even when the callback server is unreachable
+        _parseUrl(url);
+      }
+    );
 
     // Show the window to the user after it loads
     child.on('ready-to-show', child.show.bind(child));
