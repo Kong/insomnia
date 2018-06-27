@@ -144,9 +144,8 @@ module.exports.templateTags = [
           const doc = ancestors[folderIndex || 0];
           if (!doc) {
             throw new Error(
-              `Could not get folder by index ${folderIndex}. Must be between 0-${
-                ancestors.length
-              }`
+              `Could not get folder by index ${folderIndex}. Must be between 0-${ancestors.length -
+                1}`
             );
           }
           return doc ? doc.name : null;
