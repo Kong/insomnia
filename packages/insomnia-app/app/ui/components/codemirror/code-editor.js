@@ -276,6 +276,8 @@ class CodeEditor extends React.Component {
 
     // Set default listeners
     const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
+    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
+    this.codeMirror.on('cursorActivity', this._codemirrorCursorActivity);
     this.codeMirror.on(
       'changes',
       misc.debounce(this._codemirrorValueChanged, debounceMillis)
@@ -339,6 +341,10 @@ class CodeEditor extends React.Component {
       setTimeout(setup, 100);
     } else {
       setup();
+    }
+
+    if (this.props.onCodeMirrorInit) {
+      this.props.onCodeMirrorInit(this.codeMirror);
     }
   }
 
@@ -567,7 +573,13 @@ class CodeEditor extends React.Component {
     }
   }
 
-  async _codemirrorKeyDown(doc, e) {
+  _codemirrorCursorActivity (instance) {
+    if (this.props.onCursorActivity) {
+      this.props.onCursorActivity(instance);
+    }
+  }
+
+  async _codemirrorKeyDown (doc, e) {
     // Use default tab behaviour if we're told
     if (this.props.defaultTabBehavior && e.keyCode === TAB_KEY) {
       e.codemirrorIgnore = true;
@@ -846,6 +858,7 @@ class CodeEditor extends React.Component {
 
 CodeEditor.propTypes = {
   onChange: PropTypes.func,
+  onCursorActivity: PropTypes.func,
   onFocus: PropTypes.func,
   onBlur: PropTypes.func,
   onClickLink: PropTypes.func,
@@ -853,6 +866,7 @@ CodeEditor.propTypes = {
   onMouseLeave: PropTypes.func,
   onClick: PropTypes.func,
   onPaste: PropTypes.func,
+  onCodeMirrorInit: PropTypes.func,
   render: PropTypes.func,
   nunjucksPowerUserMode: PropTypes.bool,
   getRenderContext: PropTypes.func,
