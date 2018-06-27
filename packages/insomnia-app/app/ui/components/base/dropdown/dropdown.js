@@ -60,19 +60,9 @@ class Dropdown extends PureComponent {
         continue;
       }
 
-      // We're matching against lowercase things with no special characters
-      const listItemTextWithoutSpaces = listItem.textContent
-        .toLowerCase()
-        .replace(/[^\w_]*/g, '');
-      const filterWithoutSpaces = newFilter
-        .toLowerCase()
-        .replace(/[^\w_]*/g, '');
+      const match = fuzzyMatch(newFilter, listItem.textContent);
 
-      if (
-        !newFilter ||
-        fuzzyMatch(filterWithoutSpaces, listItemTextWithoutSpaces)
-          .searchTermsMatched
-      ) {
+      if (!newFilter || match) {
         const filterIndex = listItem.getAttribute('data-filter-index');
         filterItems.push(parseInt(filterIndex, 10));
       }

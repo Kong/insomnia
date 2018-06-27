@@ -240,73 +240,63 @@ export function escapeRegex(str: string): string {
 
 export function fuzzyMatch(
   searchString: string,
-  text: string
-): {
-  searchTermsMatched: number,
-  indexes: number[]
-} {
-  const searchTerms = searchString.trim().split(' ');
-  const emptyResults = {
-    searchTermsMatched: 0,
-    searchTermsCount: searchTerms.length,
-    indexes: []
-  };
-
-  if (
-    !searchString ||
-    !searchString.trim() ||
-    !searchTerms ||
-    searchTerms.length === 0
-  ) {
-    return emptyResults;
-  }
-
-  const results = searchTerms.reduce((prevResult, nextTerm) => {
-    const nextResult = fuzzysort.single(nextTerm, text);
-
-    if (!nextResult || nextResult.score < -8000) {
-      return prevResult;
-    }
-
-    if (!prevResult) {
-      return nextResult;
-    }
-
-    const sort = array => array.sort((a, b) => a - b);
-    const uniq = array => Array.from(new Set(array));
-
-    return {
-      ...prevResult,
-      ...nextResult,
-
-      searchTermsMatched: prevResult.searchTermsMatched + 1,
-
-      indexes: sort(uniq([...prevResult.indexes, ...nextResult.indexes]))
-    };
-  }, emptyResults);
-
-  if (results.indexes.length === 0) {
-    return emptyResults;
-  }
-
-  return results;
+  text: string,
+  options: { splitSpace?: boolean, loose?: boolean } = {}
+): null | { score: number, indexes: Array<number> } {
+  return fuzzyMatchAll(searchString, [text], options);
 }
 
 export function fuzzyMatchAll(
   searchString: string,
-  allText: Array<string>
-): boolean {
+  allText: Array<string>,
+  options: { splitSpace?: boolean, loose?: boolean } = {}
+): null | { score: number, indexes: Array<number> } {
   if (!searchString || !searchString.trim()) {
-    return true;
+    return null;
   }
 
-  return searchString
-    .split(' ')
-    .map(searchTerm => searchTerm.trim())
-    .filter(searchTerm => !!searchTerm)
-    .every(searchTerm =>
-      allText.some(text => fuzzyMatch(searchTerm, text).searchTermsMatched > 0)
-    );
+  const words = searchString.split(' ').filter(w => w.trim());
+  const terms = options.splitSpace ? [...words, searchString] : [searchString];
+
+  let maxScore = null;
+  let indexes = [];
+  let termsMatched = 0;
+  for (const term of terms) {
+    let matchedTerm = false;
+    for (const text of allText.filter(t => !t || t.trim())) {
+      const result = fuzzysort.single(term, text);
+      if (!result) {
+        continue;
+      }
+
+      // Don't match garbage
+      if (result.score < -8000) {
+        continue;
+      }
+
+      if (maxScore === null || result.score > maxScore) {
+        maxScore = result.score;
+      }
+
+      indexes = [...indexes, ...result.indexes];
+      matchedTerm = true;
+    }
+
+    if (matchedTerm) {
+      termsMatched++;
+    }
+  }
+
+  // Make sure we match all provided terms except the last (full) one
+  if (!options.loose && termsMatched < terms.length - 1) {
+    return null;
+  }
+
+  if (maxScore === null) {
+    return null;
+  }
+
+  return { score: maxScore, indexes, target: allText.join(' ') };
 }
 
 export function getViewportSize(): string | null {

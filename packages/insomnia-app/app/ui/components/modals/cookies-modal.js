@@ -14,7 +14,7 @@ import { fuzzyMatch } from '../../../common/misc';
 
 type Props = {
   handleShowModifyCookieModal: Function,
-  handleRender: Function,
+  handleRender: (string | Object) => Promise<string | Object>,
   cookieJar: CookieJar,
   workspace: Workspace
 };
@@ -29,7 +29,7 @@ class CookiesModal extends PureComponent<Props, State> {
   modal: Modal | null;
   filterInput: HTMLInputElement | null;
 
-  constructor(props: any) {
+  constructor(props: Props) {
     super(props);
 
     this.state = {
@@ -84,7 +84,7 @@ class CookiesModal extends PureComponent<Props, State> {
     this._applyFilter(filter, this.props.cookieJar.cookies);
   }
 
-  componentWillReceiveProps(nextProps: any) {
+  componentWillReceiveProps(nextProps: Props) {
     // Re-filter if we received new cookies
     // Compare cookies with Dates cast to strings
     const sameCookies = deepEqual(
@@ -102,7 +102,8 @@ class CookiesModal extends PureComponent<Props, State> {
 
     for (const cookie of cookies) {
       try {
-        renderedCookies.push(await this.props.handleRender(cookie));
+        const renderedCookie = await this.props.handleRender(cookie);
+        renderedCookies.push(renderedCookie);
       } catch (err) {
         // It's okay. Filter the raw version instead
         renderedCookies.push(cookie);
@@ -115,8 +116,8 @@ class CookiesModal extends PureComponent<Props, State> {
       visibleCookieIndexes = [];
       for (let i = 0; i < renderedCookies.length; i++) {
         const toSearch = JSON.stringify(renderedCookies[i]);
-        const results = fuzzyMatch(filter, toSearch);
-        if (results.searchTermsMatched > 0) {
+        const match = fuzzyMatch(filter, toSearch, { splitSpace: true });
+        if (match) {
           visibleCookieIndexes.push(i);
         }
       }

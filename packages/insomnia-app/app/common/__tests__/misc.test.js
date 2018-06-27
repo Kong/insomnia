@@ -115,40 +115,65 @@ describe('debounce()', () => {
 describe('fuzzyMatch()', () => {
   beforeEach(globalBeforeEach);
   it('can get a positive fuzzy match on a single field', () => {
-    expect(
-      misc.fuzzyMatch('test', 'testing').searchTermsMatched
-    ).toBeGreaterThan(0);
+    expect(misc.fuzzyMatch('test', 'testing')).toEqual({
+      score: -3,
+      indexes: [0, 1, 2, 3],
+      target: 'testing'
+    });
 
-    expect(
-      misc.fuzzyMatch('tst', 'testing').searchTermsMatched
-    ).toBeGreaterThan(0);
+    expect(misc.fuzzyMatch('tst', 'testing')).toEqual({
+      score: -2004,
+      indexes: [0, 2, 3],
+      target: 'testing'
+    });
   });
 
   it('can get a negative fuzzy match on a single field', () => {
-    expect(misc.fuzzyMatch('foo', undefined).searchTermsMatched).toEqual(0);
-    expect(misc.fuzzyMatch('foo', 'bar').searchTermsMatched).toEqual(0);
+    expect(misc.fuzzyMatch('foo', undefined)).toBeNull();
+    expect(misc.fuzzyMatch('foo', 'bar')).toBeNull();
   });
 });
 
 describe('fuzzyMatchAll()', () => {
   beforeEach(globalBeforeEach);
   it('can get a positive fuzzy match on multiple fields', () => {
-    expect(misc.fuzzyMatchAll('', [undefined])).toEqual(true);
-
-    expect(misc.fuzzyMatchAll('', ['testing'])).toEqual(true);
-    expect(misc.fuzzyMatchAll('   ', ['testing'])).toEqual(true);
-    expect(misc.fuzzyMatchAll('test', ['testing'])).toEqual(true);
-    expect(misc.fuzzyMatchAll('tst', ['testing'])).toEqual(true);
+    expect(misc.fuzzyMatchAll('', [undefined])).toEqual(null);
+    expect(misc.fuzzyMatchAll('', ['testing'])).toEqual(null);
+    expect(misc.fuzzyMatchAll('   ', ['testing'])).toEqual(null);
+    expect(misc.fuzzyMatchAll('test', ['testing', 'foo'])).toEqual({
+      score: -3,
+      indexes: [0, 1, 2, 3],
+      target: 'testing foo'
+    });
     expect(
-      misc.fuzzyMatchAll('tst  this ou', ['testing', 'this', 'out'])
-    ).toEqual(true);
+      misc.fuzzyMatchAll('test foo', ['testing', 'foo'], { splitSpace: true })
+    ).toEqual({
+      score: 0,
+      indexes: [0, 1, 2, 3, 0, 1, 2],
+      target: 'testing foo'
+    });
+    expect(misc.fuzzyMatchAll('tst', ['testing'])).toEqual({
+      score: -2004,
+      indexes: [0, 2, 3],
+      target: 'testing'
+    });
+    expect(
+      misc.fuzzyMatch('tst  this ou', 'testing this out', {
+        splitSpace: true,
+        loose: true
+      })
+    ).toEqual({
+      score: -20,
+      indexes: [0, 2, 3, 8, 9, 10, 11, 13, 14],
+      target: 'testing this out'
+    });
   });
 
   it('can get a negative fuzzy match on multiple fields', () => {
-    expect(misc.fuzzyMatchAll('foo', [undefined])).toEqual(false);
-    expect(misc.fuzzyMatchAll('foo', ['bar'])).toEqual(false);
+    expect(misc.fuzzyMatchAll('foo', [undefined])).toEqual(null);
+    expect(misc.fuzzyMatchAll('foo', ['bar'])).toEqual(null);
     expect(
       misc.fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])
-    ).toEqual(false);
+    ).toEqual(null);
   });
 });
