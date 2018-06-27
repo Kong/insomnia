@@ -1,9 +1,9 @@
-module.exports.responseHooks = [
+module.exports.requestHooks = [
   context => {
-    const requestId = context.response.getRequestId();
+    const requestId = context.request.getId();
 
-    // Delete cached value so it will prompt again on the next request
-    context.store.removeItem(requestId);
+    // Delete cached values we prompt again on the next request
+    context.store.clear();
   }
 ];
 
@@ -15,7 +15,9 @@ module.exports.templateTags = [
     args: [
       {
         displayName: 'Title',
-        type: 'string'
+        type: 'string',
+        help: 'Title is a unique string used to identify the prompt value',
+        validate: v => (v ? '' : 'Required')
       },
       {
         displayName: 'Label',
@@ -39,11 +41,16 @@ module.exports.templateTags = [
       }
     ],
     async run(context, title, label, defaultValue, explicitStorageKey) {
+      if (!title) {
+        throw new Error('Title attribute is required for prompt tag');
+      }
+
       // If we don't have a key, default to request ID.
       // We do this because we may render the prompt multiple times per request.
       // We cache it under the requestId so it only prompts once. We then clear
       // the cache in a response hook when the request is sent.
-      const storageKey = explicitStorageKey || context.meta.requestId;
+      const storageKey =
+        explicitStorageKey || `${context.meta.requestId}.${title}`;
       const cachedValue = await context.store.getItem(storageKey);
 
       if (cachedValue) {
