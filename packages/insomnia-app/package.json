@@ -20,7 +20,8 @@
   },
   "scripts": {
     "lint": "eslint \"**/*.js\" \"**/*.html\" \"**/*.json\"",
-    "test": "flow check && npm run lint && cross-env NODE_ENV=test jest --silent",
+    "test": "flow check && npm run lint && npm run test:jest",
+    "test:jest": "cross-env NODE_ENV=test jest --silent",
     "test-appveyor": "npm run test -- --maxWorkers 1",
     "bootstrap": "electron-rebuild -f -w insomnia-libcurl",
     "start:electron": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js && electron .",

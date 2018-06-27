@@ -179,28 +179,39 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     return this._groupOf(matchedGroups[0]);
   }
 
-  _isMatch(searchStrings: string): Request => boolean {
-    return (request: Request): boolean => {
-      let finalUrl = request.url;
-      if (request.parameters) {
-        finalUrl = joinUrlAndQueryString(
-          finalUrl,
-          buildQueryStringFromParams(request.parameters)
-        );
-      }
+  _isMatch(request: Request, searchStrings: string): number | null {
+    let finalUrl = request.url;
+    if (request.parameters) {
+      finalUrl = joinUrlAndQueryString(
+        finalUrl,
+        buildQueryStringFromParams(request.parameters)
+      );
+    }
 
-      let matchesAttributes = fuzzyMatchAll(searchStrings, [
+    const match = fuzzyMatchAll(
+      searchStrings,
+      [
         request.name,
         finalUrl,
-        request.method,
+        request.method || '',
         this._groupOf(request).join('/')
-      ]);
+      ],
+      { splitSpace: true }
+    );
 
-      // Match exact Id
-      const matchesId = request._id === searchStrings;
+    // Match exact Id
+    const matchesId = request._id === searchStrings;
 
-      return matchesAttributes || matchesId;
-    };
+    // _id match is the highest;
+    if (matchesId) {
+      return Infinity;
+    }
+
+    if (!match) {
+      return null;
+    }
+
+    return match.score;
   }
 
   async _handleChangeValue(searchString: string) {
@@ -208,15 +219,8 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     const { workspaceId, activeRequestParentId } = this.props;
 
     // OPTIMIZATION: This only filters if we have a filter
-    let matchedRequests = workspaceChildren.filter(
-      d => d.type === models.request.type
-    );
-
-    if (searchString) {
-      matchedRequests = matchedRequests.filter(this._isMatch(searchString));
-    }
-
-    matchedRequests = matchedRequests
+    let matchedRequests = workspaceChildren
+      .filter(d => d.type === models.request.type)
       .sort((a, b) => {
         if (a.parentId === b.parentId) {
           // Sort Requests by name inside of the same parent
@@ -232,8 +236,21 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
             return a.parentId > b.parentId ? -1 : 1;
           }
         }
-      })
-      .slice(0, 20); // show 20 max
+      });
+
+    if (searchString) {
+      matchedRequests = matchedRequests
+        .map(r => ({
+          request: r,
+          score: this._isMatch((r: any), searchString)
+        }))
+        .filter(v => v.score !== null)
+        .sort((a, b) => (a.score || -Infinity) - (b.score || -Infinity))
+        .map(v => v.request);
+    }
+
+    // Show 20 max
+    matchedRequests = matchedRequests.slice(0, 20);
 
     const matchedWorkspaces = workspaces
       .filter(w => w._id !== workspaceId)

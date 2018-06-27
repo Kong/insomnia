@@ -1,3 +1,5 @@
+// @flow
+
 declare module 'deep-equal' {
-  declare module.exports: Function;
+  declare module.exports: (any, any) => boolean;
 }

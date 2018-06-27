@@ -1,5 +1,6 @@
 import { createSelector } from 'reselect';
 import { fuzzyMatchAll } from '../../common/misc';
+import * as models from '../../models';
 
 // ~~~~~~~~~ //
 // Selectors //
@@ -88,7 +89,9 @@ export const selectSidebarChildren = createSelector(
 
     function next(parentId) {
       const children = requestsAndRequestGroups
-        .filter(e => e.parentId === parentId)
+        .filter(doc => {
+          return doc.parentId === parentId;
+        })
         .sort((a, b) => {
           if (a.metaSortKey === b.metaSortKey) {
             return a._id > b._id ? -1 : 1;
@@ -100,9 +103,11 @@ export const selectSidebarChildren = createSelector(
       if (children.length > 0) {
         return children.map(c => ({
           doc: c,
-          children: next(c._id),
           hidden: false,
-          collapsed: !!collapsed[c._id]
+          collapsed: !!collapsed[c._id],
+
+          // Don't add children of requests
+          children: c.type === models.request.type ? [] : next(c._id)
         }));
       } else {
         return children;
@@ -123,15 +128,14 @@ export const selectSidebarChildren = createSelector(
 
         // Try to match request attributes
         const { name, method } = child.doc;
-
-        const hasMatchedAttributes = fuzzyMatchAll(sidebarFilter, [
-          name,
-          method,
-          ...parentNames
-        ]);
+        const match = fuzzyMatchAll(
+          sidebarFilter,
+          [name, method, ...parentNames],
+          { splitSpace: true }
+        );
 
         // Update hidden state depending on whether it matched
-        const matched = hasMatchedChildren || hasMatchedAttributes;
+        const matched = hasMatchedChildren || match;
         child.hidden = !matched;
       }
 
