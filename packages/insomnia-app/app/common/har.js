@@ -321,7 +321,8 @@ async function _applyRequestPluginHooks(
 
     const context = {
       ...pluginContexts.app.init(),
-      ...pluginContexts.request.init(newRenderedRequest, renderedContext)
+      ...pluginContexts.request.init(newRenderedRequest, renderedContext),
+      ...pluginContexts.store.init(plugin)
     };
 
     try {
