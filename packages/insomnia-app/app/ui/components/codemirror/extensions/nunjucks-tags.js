@@ -122,8 +122,8 @@ async function _highlightNunjucksTags(render) {
         await _updateElementText(renderString, mark, tok.string);
       })();
 
-      // Update it every mouseover because it may generate a new value every time
-      el.addEventListener('mouseover', async () => {
+      // Update it every mouseenter because it may generate a new value every time
+      el.addEventListener('mouseenter', async () => {
         await _updateElementText(renderString, mark, tok.string);
       });
 
