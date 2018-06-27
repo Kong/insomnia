@@ -1,4 +1,12 @@
-const STORE = {};
+module.exports.responseHooks = [
+  context => {
+    const requestId = context.response.getRequestId();
+
+    // Delete cached value so it will prompt again on the next request
+    context.store.removeItem(requestId);
+  }
+];
+
 module.exports.templateTags = [
   {
     displayName: 'Prompt',
@@ -30,10 +38,17 @@ module.exports.templateTags = [
           'something else.'
       }
     ],
-    async run(context, title, label, defaultValue, storageKey) {
-      if (STORE[storageKey]) {
+    async run(context, title, label, defaultValue, explicitStorageKey) {
+      // If we don't have a key, default to request ID.
+      // We do this because we may render the prompt multiple times per request.
+      // We cache it under the requestId so it only prompts once. We then clear
+      // the cache in a response hook when the request is sent.
+      const storageKey = explicitStorageKey || context.meta.requestId;
+      const cachedValue = await context.store.getItem(storageKey);
+
+      if (cachedValue) {
         console.log(`[prompt] Used cached value under ${storageKey}`);
-        return STORE[storageKey];
+        return cachedValue;
       }
 
       const value = await context.app.prompt(title || 'Enter Value', {
@@ -41,10 +56,9 @@ module.exports.templateTags = [
         defaultValue
       });
 
-      // Store if a key is set
       if (storageKey) {
         console.log(`[prompt] Stored value under ${storageKey}`);
-        STORE[storageKey] = value;
+        await context.store.setItem(storageKey, value);
       }
 
       return value;

@@ -51,6 +51,10 @@ export async function removeByKey(plugin: string, key: string): Promise<void> {
   return db.removeWhere(type, { plugin, key });
 }
 
+export async function removeAll(plugin: string): Promise<void> {
+  return db.removeWhere(type, { plugin });
+}
+
 export async function getByKey(
   plugin: string,
   key: string
