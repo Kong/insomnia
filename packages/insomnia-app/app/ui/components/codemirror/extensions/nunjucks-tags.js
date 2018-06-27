@@ -229,7 +229,6 @@ async function _updateElementText(render, mark, text) {
   let title = '';
   let dataIgnore = '';
   let dataError = '';
-  let showErrorSymbol = false;
 
   try {
     const str = text.replace(/\\/g, '');
@@ -281,7 +280,6 @@ async function _updateElementText(render, mark, text) {
     dataError = 'on';
   }
 
-  console.log('SET', innerHTML);
   el.title = title;
   el.setAttribute('data-ignore', dataIgnore);
   if (dataError === 'on') {
