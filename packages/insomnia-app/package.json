@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "1.0.20",
+  "version": "1.0.21",
   "name": "insomnia-app",
   "app": {
     "name": "insomnia",
@@ -114,7 +114,7 @@
     "insomnia-plugin-jsonpath": "^1.0.2",
     "insomnia-plugin-now": "^1.0.5",
     "insomnia-plugin-prompt": "^1.1.3",
-    "insomnia-plugin-request": "^1.0.9",
+    "insomnia-plugin-request": "^1.0.10",
     "insomnia-plugin-response": "^1.0.8",
     "insomnia-plugin-uuid": "^1.0.4",
     "insomnia-prettify": "^0.1.3",
