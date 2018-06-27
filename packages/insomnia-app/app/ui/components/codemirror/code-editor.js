@@ -280,7 +280,6 @@ class CodeEditor extends React.Component {
       'changes',
       misc.debounce(this._codemirrorValueChanged, debounceMillis)
     );
-    this.codeMirror.on('cursorActivity', this._codemirrorCursorActivity);
     this.codeMirror.on(
       'changes',
       misc.debounce(this._codemirrorValueChanged, debounceMillis)
@@ -349,6 +348,10 @@ class CodeEditor extends React.Component {
     if (this.props.onCodeMirrorInit) {
       this.props.onCodeMirrorInit(this.codeMirror);
     }
+
+    // NOTE: Start listening to cursor after everything because it seems to fire
+    // immediately for some reason
+    this.codeMirror.on('cursorActivity', this._codemirrorCursorActivity);
   }
 
   _isJSON(mode) {
@@ -576,7 +579,7 @@ class CodeEditor extends React.Component {
     }
   }
 
-  _codemirrorCursorActivity(instance) {
+  _codemirrorCursorActivity(instance, e) {
     if (this.props.onCursorActivity) {
       this.props.onCursorActivity(instance);
     }
