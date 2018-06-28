@@ -1,3 +1,5 @@
+// @flow
+
 declare module 'codemirror' {
   declare class TextMarker {
     clear(): void;

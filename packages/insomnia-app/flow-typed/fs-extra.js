@@ -1,3 +1,5 @@
+// @flow
+
 declare module 'fs-extra' {
   declare module.exports: {
     moveSync: (

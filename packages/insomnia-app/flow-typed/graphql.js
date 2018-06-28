@@ -1,3 +1,5 @@
+// @flow
+
 declare module 'graphql' {
   declare type Tok = {
     column: number,

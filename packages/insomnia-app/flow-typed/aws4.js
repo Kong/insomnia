@@ -1,3 +1,5 @@
+// @flow
+
 declare module 'aws4' {
   declare module.exports: {
     sign: (

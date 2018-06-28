@@ -1,3 +1,5 @@
+// @flow
+
 declare type moment = {
   fromNow: () => string,
   format: (fmt: string) => string

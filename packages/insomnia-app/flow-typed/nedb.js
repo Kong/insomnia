@@ -1,3 +1,5 @@
+// @flow
+
 declare class NeDB {
   constructor(config: Object): NeDB;
   persistence: {

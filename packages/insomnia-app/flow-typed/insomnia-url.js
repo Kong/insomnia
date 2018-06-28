@@ -1,3 +1,5 @@
+// @flow
+
 declare module 'insomnia-url' {
   declare module.exports: {
     setDefaultProtocol: Function,

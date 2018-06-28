@@ -1,3 +1,5 @@
+// @flow
+
 type NunjucksConfig = {
   autoescape: boolean,
   throwOnUndefined: boolean,

@@ -1,3 +1,5 @@
+// @flow
+
 declare class Curl {
   static getVersion: () => string;
   static feature: {

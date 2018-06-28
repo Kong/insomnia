@@ -1,3 +1,5 @@
+// @flow
+
 type SignatureMethod = 'HMAC-SHA1' | 'RSA-SHA1' | 'PLAINTEXT';
 type Token = { key: string, secret?: string };
 type RequestData = {

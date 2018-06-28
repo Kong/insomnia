@@ -1,3 +1,5 @@
+// @flow
+
 declare module 'insomnia-importers' {
   declare module.exports: {
     convert: (
