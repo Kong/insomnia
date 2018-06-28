@@ -3,6 +3,7 @@ import type { Request } from '../../../../models/request';
 import { newBodyRaw } from '../../../../models/request';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
+import { markdownToHTML } from '../../../../common/markdown-to-html';
 import {
   parse,
   print,
@@ -515,6 +516,18 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             hintOptions={{
               schema: schema || null,
               completeSingle: false
+            }}
+            infoOptions={{
+              schema: schema || null,
+              renderDescription: text => {
+                const html = markdownToHTML(text);
+                return `<div class="markdown-preview__content">${html}</div>`;
+              }
+              // onClick: reference => console.log('CLICK', reference)
+            }}
+            jumpOptions={{
+              schema: schema || null,
+              onClick: reference => console.log('JUMP', reference)
             }}
             lintOptions={schema ? { schema } : null}
             fontSize={settings.editorFontSize}
