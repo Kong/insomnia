@@ -247,8 +247,8 @@ export async function getRenderedRequestAndContext(
     purpose
   );
 
-  // HACK: Remove comments from GraphQL.query because comments (#})
-  // can cause rendering to fail (https://github.com/getinsomnia/insomnia/issues/895)
+  // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
+  // https://github.com/getinsomnia/insomnia/issues/895
   try {
     if (request.body.text && request.body.mimeType === CONTENT_TYPE_GRAPHQL) {
       const o = JSON.parse(request.body.text);
