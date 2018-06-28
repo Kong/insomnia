@@ -28,7 +28,6 @@ class Account extends PureComponent {
           <p>
             &#128640; Sync your data across devices or with a team<br />
             &#128640; Keep synced data safe with end-to-end encryption<br />
-            &#128640; Access to premium color themes<br />
             &#128640; Prioritized email support<br />
           </p>
           <br />
