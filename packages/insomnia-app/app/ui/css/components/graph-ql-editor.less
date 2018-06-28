@@ -26,7 +26,27 @@
   }
 
   .graphql-editor__query .cm-gql-disabled {
-    opacity: 0.7;
-    filter: grayscale(0.7);
+    opacity: 0.8;
+    filter: grayscale(0.8);
+  }
+
+  .graphql-editor__schema-notice {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .graphql-editor__operation-name {
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  .graphql-editor__meta {
+    color: var(--hl);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 @padding-sm;
+    flex-wrap: wrap;
   }
 }

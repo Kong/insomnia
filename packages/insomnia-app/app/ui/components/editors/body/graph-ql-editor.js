@@ -122,7 +122,11 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       }
     }
 
-    return this.state.body.operationName || null;
+    return null;
+  }
+
+  _handleQueryFocus() {
+    this._handleQueryUserActivity();
   }
 
   _handleQueryUserActivity() {
@@ -444,26 +448,31 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     clearTimeout(this._schemaFetchTimeout);
   }
 
+  renderSelectedOperationName() {
+    const { operationName } = this.state.body;
+    if (!operationName) {
+      return null;
+    } else {
+      return <span title="Current operationName">{operationName}</span>;
+    }
+  }
+
   renderSchemaFetchMessage() {
     let message;
     const { schemaLastFetchTime, schemaIsFetching } = this.state;
     if (schemaIsFetching) {
-      message = 'Fetching schema...';
+      message = 'fetching schema...';
     } else if (schemaLastFetchTime > 0) {
       message = (
-        <span className="faded">
+        <span>
           schema fetched <TimeFromNow timestamp={schemaLastFetchTime} />
         </span>
       );
     } else {
-      message = 'schema not yet fetched';
+      message = <span>schema not yet fetched</span>;
     }
 
-    return (
-      <div className="txt-sm super-faint italic pad-sm no-pad-right inline-block">
-        {message}
-      </div>
-    );
+    return message;
   }
 
   render() {
@@ -516,7 +525,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             onChange={this._handleQueryChange}
             onCodeMirrorInit={this._handleQueryEditorInit}
             onCursorActivity={this._handleQueryUserActivity}
-            onClick={this._handleQueryUserActivity}
+            onFocus={this._handleQueryFocus}
             mode="graphql"
             lineWrapping={settings.editorLineWrapping}
             placeholder=""
@@ -545,15 +554,20 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
               </div>
             )}
         </div>
-        <div className="graphql-editor__schema-notice">
-          {this.renderSchemaFetchMessage()}
-          {!schemaIsFetching && (
-            <button
-              className="icon space-left"
-              onClick={this._handleRefreshSchema}>
-              <i className="fa fa-refresh" />
-            </button>
-          )}
+        <div className="graphql-editor__meta">
+          <div className="graphql-editor__schema-notice">
+            {this.renderSchemaFetchMessage()}
+            {!schemaIsFetching && (
+              <button
+                className="icon space-left"
+                onClick={this._handleRefreshSchema}>
+                <i className="fa fa-refresh" />
+              </button>
+            )}
+          </div>
+          <div className="graphql-editor__operation-name">
+            {this.renderSelectedOperationName()}
+          </div>
         </div>
         <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
           Query Variables{' '}
