@@ -247,7 +247,6 @@ export function createWindow() {
       },
       {
         label: 'Insomnia Help',
-        accelerator: 'CmdOrCtrl+/',
         click: () => {
           shell.openExternal('https://support.insomnia.rest');
         }

@@ -5,6 +5,7 @@ import type { BaseModel } from '../models/index';
 import { setDefaultProtocol } from 'insomnia-url';
 import clone from 'clone';
 import * as models from '../models';
+import { CONTENT_TYPE_GRAPHQL } from '../common/constants';
 import * as db from './database';
 import * as templating from '../templating';
 import type { CookieJar } from '../models/cookie-jar';
@@ -245,6 +246,16 @@ export async function getRenderedRequestAndContext(
     ancestors,
     purpose
   );
+
+  // HACK: Remove comments from GraphQL.query because comments (#})
+  // can cause rendering to fail (https://github.com/getinsomnia/insomnia/issues/895)
+  try {
+    if (request.body.text && request.body.mimeType === CONTENT_TYPE_GRAPHQL) {
+      const o = JSON.parse(request.body.text);
+      o.query = o.query.replace(/#}/g, '# }');
+      request.body.text = JSON.stringify(o);
+    }
+  } catch (err) {}
 
   // Render all request properties
   const renderResult = await render(
