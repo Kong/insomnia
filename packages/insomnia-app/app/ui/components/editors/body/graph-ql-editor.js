@@ -525,10 +525,10 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
               }
               // onClick: reference => console.log('CLICK', reference)
             }}
-            jumpOptions={{
-              schema: schema || null,
-              onClick: reference => console.log('JUMP', reference)
-            }}
+            // jumpOptions={{
+            //   schema: schema || null,
+            //   onClick: reference => console.log('JUMP', reference)
+            // }}
             lintOptions={schema ? { schema } : null}
             fontSize={settings.editorFontSize}
             indentSize={settings.editorIndentSize}
