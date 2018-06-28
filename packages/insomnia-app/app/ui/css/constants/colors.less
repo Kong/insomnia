@@ -34,7 +34,7 @@ body {
   }
 }
 
-*[theme="default"] {
+*[theme='default'] {
   --hl-xxs: rgba(130, 130, 130, 0.05);
   --hl-xs: rgba(130, 130, 130, 0.1);
   --hl-sm: rgba(130, 130, 130, 0.2);
@@ -78,6 +78,7 @@ body {
 
   .pane__header,
   .theme--dropdown__menu,
+  .CodeMirror-info,
   .modal {
     --color-bg: #fff;
     --color-font: #555;
@@ -101,7 +102,7 @@ body {
   }
 }
 
-*[theme="purple"] {
+*[theme='purple'] {
   --color-bg: #fff;
   --color-font: #555;
 
@@ -116,6 +117,7 @@ body {
   .request-pane,
   .response-pane,
   .theme--dropdown__menu,
+  .CodeMirror-info,
   .modal {
     --hl-xxs: rgba(130, 130, 130, 0.05);
     --hl-xs: rgba(130, 130, 130, 0.1);
@@ -164,6 +166,7 @@ body {
     --color-bg: #fafaff;
   }
 
+  .CodeMirror-info,
   .theme--dropdown__menu {
     --color-bg: #fff;
     --color-font: #666;
@@ -175,7 +178,7 @@ body {
   }
 }
 
-*[theme="dark"] {
+*[theme='dark'] {
   --color-success: #83c438;
   --color-notice: #d8c84d;
   --color-warning: #f48d02;
@@ -209,6 +212,7 @@ body {
   }
 
   .theme--dropdown__menu,
+  .CodeMirror-info,
   .modal {
     --color-bg: #282925;
   }
@@ -217,12 +221,13 @@ body {
     --color-font: #ccc;
   }
 
+  .CodeMirror-info,
   .theme--dropdown__menu {
     --color-font: #aaa;
   }
 }
 
-*[theme="light"] {
+*[theme='light'] {
   --color-success: #59a210;
   --color-notice: #ae9602;
   --color-warning: #d07502;
@@ -230,7 +235,8 @@ body {
   --color-surprise: #7d69cb;
   --color-info: #1c90b4;
 
-  &, .dropdown {
+  &,
+  .dropdown {
     --color-bg: #fff;
     --color-font: #333;
   }
@@ -249,7 +255,7 @@ body {
   }
 }
 
-*[theme="solarized-light"] {
+*[theme='solarized-light'] {
   --color-success: #859900;
   --color-notice: #b58900;
   --color-warning: #cb4b16;
@@ -273,13 +279,14 @@ body {
     --color-font: #657b83;
   }
 
+  .CodeMirror-info,
   .theme--dropdown__menu,
   .modal {
     --color-bg: #fff8e5;
   }
 }
 
-*[theme="solarized-dark"] {
+*[theme='solarized-dark'] {
   --color-success: #859900;
   --color-notice: #b58900;
   --color-warning: #cb4b16;
@@ -303,22 +310,23 @@ body {
     --color-font: #8ea0a2;
   }
 
+  .CodeMirror-info,
   .theme--dropdown__menu,
   .modal {
     --color-bg: #073642;
   }
 }
 
-*[theme="material"] {
+*[theme='material'] {
   --color-bg: #263238;
   --color-font: #dde1e1;
 
-  --color-success: #80CBC4;
-  --color-notice: #FFCB6B;
-  --color-warning: #F77669;
+  --color-success: #80cbc4;
+  --color-notice: #ffcb6b;
+  --color-warning: #f77669;
   --color-danger: #ff5370;
   --color-surprise: #c792ea;
-  --color-info: #82B1FF;
+  --color-info: #82b1ff;
 
   --hl-xxs: rgba(114, 145, 143, 0.05);
   --hl-xs: rgba(114, 145, 143, 0.1);
@@ -342,6 +350,7 @@ body {
   }
 
   .modal > *,
+  .CodeMirror-info,
   .theme--dropdown__menu {
     --color-bg: #303c43;
     --color-font: #dde1e1;
@@ -351,10 +360,10 @@ body {
   .pane > *,
   .modal,
   .sidebar {
-    --hl-xxs: rgba(114, 145, 143, 0.0);
-    --hl-xs: rgba(114, 145, 143, 0.0);
-    --hl-sm: rgba(114, 145, 143, 0.0);
-    --hl-md: rgba(114, 145, 143, 0.0);
+    --hl-xxs: rgba(114, 145, 143, 0);
+    --hl-xs: rgba(114, 145, 143, 0);
+    --hl-sm: rgba(114, 145, 143, 0);
+    --hl-md: rgba(114, 145, 143, 0);
     --hl-lg: rgba(114, 145, 143, 0.1);
     --hl-xl: rgba(114, 145, 143, 0.1);
     --hl: rgb(125, 153, 151);
@@ -371,6 +380,7 @@ body {
   .btn,
   .tag,
   .theme--dropdown__menu,
+  .CodeMirror-info,
   .CodeMirror,
   .pane__body,
   .modal__header,
@@ -401,7 +411,7 @@ body {
   }
 }
 
-*[theme="solarized"] {
+*[theme='solarized'] {
   --color-success: #859900;
   --color-notice: #b58900;
   --color-warning: #cb4b16;
@@ -425,6 +435,7 @@ body {
   }
 
   .theme--dropdown__menu,
+  .CodeMirror-info,
   .modal {
     --color-bg: #fff8e5;
     --color-font: #657b83;
@@ -450,10 +461,9 @@ body {
     --hl-xl: rgba(91, 127, 143, 0.8);
     --hl: rgb(98, 127, 143);
   }
-
 }
 
-*[theme="railscasts"] {
+*[theme='railscasts'] {
   --color-success: #a5c261;
   --color-notice: #ffc66d;
   --color-warning: #cc7833;
@@ -478,6 +488,7 @@ body {
   }
 
   .theme--dropdown__menu,
+  .CodeMirror-info,
   .modal {
     --color-bg: #323232;
   }
@@ -494,8 +505,8 @@ body {
 @hl-xl: var(--hl-xl);
 @hl: var(--hl);
 
-[class^="http-method-"],
-[class*=" http-method-"] {
+[class^='http-method-'],
+[class*=' http-method-'] {
   // Default method color
   color: var(--color-font);
 }

@@ -34,12 +34,6 @@ CodeMirror.defineExtension('isHintDropdownActive', function() {
   );
 });
 
-CodeMirror.defineExtension('closeHint', function() {
-  if (this.state.completionActive) {
-    this.state.completionActive.close();
-  }
-});
-
 CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   if (!options) {
     return;
@@ -137,12 +131,16 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   let keydownDebounce = null;
 
   cm.on('keydown', (cm, e) => {
-    // Close dropdown on Escape if it's open
+    // Close autocomplete on Escape if it's open
     if (cm.isHintDropdownActive() && e.key === 'Escape') {
-      cm.closeHint();
+      if (!cm.state.completionActive) {
+        return;
+      }
+
       e.preventDefault();
       e.stopPropagation();
-      return;
+
+      cm.state.completionActive.close();
     }
 
     // Only operate on one-letter keys. This will filter out
@@ -171,9 +169,6 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     'Ctrl-Space': completeForce, // Force autocomplete on hotkey
     "' '": completeIfAfterTagOrVarOpen
   });
-
-  // Close dropdown whenever something is clicked
-  document.addEventListener('click', () => cm.closeHint());
 });
 
 /**

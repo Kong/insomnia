@@ -55,6 +55,7 @@ const BASE_CODEMIRROR_OPTIONS = {
     [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function(cm) {
       // HACK: So nothing conflicts withe the "Send Request" shortcut
     },
+    [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
     'Ctrl-Space': 'autocomplete',
 
     // Change default find command from "find" to "findPersistent" so the
@@ -442,6 +443,7 @@ class CodeEditor extends React.Component {
       dynamicHeight,
       hintOptions,
       infoOptions,
+      jumpOptions,
       lintOptions
     } = this.props;
 
@@ -494,6 +496,10 @@ class CodeEditor extends React.Component {
 
     if (infoOptions) {
       options.info = infoOptions;
+    }
+
+    if (jumpOptions) {
+      options.jump = jumpOptions;
     }
 
     if (lintOptions) {
@@ -909,6 +915,7 @@ CodeEditor.propTypes = {
   hintOptions: PropTypes.object,
   lintOptions: PropTypes.object,
   infoOptions: PropTypes.object,
+  jumpOptions: PropTypes.object,
   uniquenessKey: PropTypes.any
 };
 

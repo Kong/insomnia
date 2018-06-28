@@ -49,4 +49,52 @@
     padding: 0 @padding-sm;
     flex-wrap: wrap;
   }
+
+  .CodeMirror-jump-token {
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: bold;
+  }
+}
+
+.CodeMirror-info {
+  background: var(--color-bg);
+  position: fixed;
+  z-index: 1000;
+  padding: @padding-xs @padding-sm;
+  border: 1px solid @border-color;
+  color: var(--color-font);
+  font-weight: 600;
+
+  .info-description {
+    font-weight: initial;
+    padding-top: @padding-xs;
+
+    // HACK: Cancel out padding on parent container
+    margin-bottom: -@padding-sm;
+
+    & > * {
+      margin: @padding-xs 0 @padding-sm 0;
+    }
+  }
+
+  .type-name {
+    color: var(--color-surprise);
+  }
+
+  .field-name {
+    color: var(--color-success);
+  }
+
+  .enum-value {
+    color: var(--color-info);
+  }
+
+  .arg-name {
+    color: var(--color-surprise);
+  }
+
+  .directive-name {
+    color: var(--color-warning);
+  }
 }
