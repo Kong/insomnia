@@ -1,12 +1,12 @@
 {
   "private": true,
-  "version": "1.0.21",
+  "version": "1.0.22",
   "name": "insomnia-app",
   "app": {
     "name": "insomnia",
     "productName": "Insomnia",
     "longName": "Insomnia REST Client",
-    "version": "5.16.6",
+    "version": "6.0.0-beta.1",
     "main": "main.min.js"
   },
   "licence": "MIT",
@@ -107,7 +107,7 @@
     "insomnia-cookies": "^0.0.5",
     "insomnia-httpsnippet": "^1.16.9",
     "insomnia-importers": "^2.0.4",
-    "insomnia-libcurl": "^0.0.4",
+    "insomnia-libcurl": "^0.0.5",
     "insomnia-plugin-base64": "^1.0.4",
     "insomnia-plugin-file": "^1.0.4",
     "insomnia-plugin-hash": "^1.0.4",
