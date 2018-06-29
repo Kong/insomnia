@@ -56,8 +56,8 @@ export async function buildRenderContext(
     const keys = _getOrderedEnvironmentKeys(envObject);
     for (const key of keys) {
       /*
-       * If we're overwriting a string, try to render it first with the base as
-       * a context. This allows for the following scenario:
+       * If we're overwriting a string, try to render it first using the same key from the base
+       * environment to support same-variable recursion. This allows for the following scenario:
        *
        * base:  { base_url: 'google.com' }
        * obj:   { base_url: '{{ base_url }}/foo' }
@@ -67,13 +67,17 @@ export async function buildRenderContext(
        * original base_url of google.com would be lost.
        */
       if (typeof renderContext[key] === 'string') {
-        renderContext[key] = await render(
+        const rendered = await render(
           envObject[key],
-          renderContext,
+          { [key]: renderContext[key] }, // Only render with key being overwritten
           null,
           KEEP_ON_ERROR,
           'Environment'
         );
+
+        // Only use rendered version if rendering actually yielded something different.
+        renderContext[key] =
+          rendered !== envObject[key] ? rendered : envObject[key];
       } else {
         renderContext[key] = envObject[key];
       }

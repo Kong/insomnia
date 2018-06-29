@@ -91,6 +91,48 @@ describe('buildRenderContext()', () => {
     });
   });
 
+  it('does not recursive render if itself is not used in var', async () => {
+    const root = {
+      type: models.environment.type,
+      data: {
+        proto: 'http',
+        domain: 'base.com',
+        url: '{{ proto }}://{{ domain }}'
+      }
+    };
+
+    const sub = {
+      type: models.environment.type,
+      data: {
+        proto: 'https',
+        domain: 'sub.com',
+        port: 8000,
+        url: '{{ proto }}://{{ domain }}:{{ port }}'
+      }
+    };
+
+    const ancestors = [
+      {
+        // Folder Environment
+        type: models.requestGroup.type,
+        environment: {
+          proto: 'https',
+          domain: 'folder.com',
+          port: 7000
+        }
+      }
+    ];
+
+    const context = await renderUtils.buildRenderContext(ancestors, root, sub);
+
+    expect(context).toEqual({
+      proto: 'https',
+      domain: 'folder.com',
+      port: 7000,
+      url: 'https://folder.com:7000'
+    });
+  });
+
   it('render up to 3 recursion levels', async () => {
     const ancestors = [
       {
