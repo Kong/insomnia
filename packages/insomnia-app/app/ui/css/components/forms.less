@@ -8,6 +8,34 @@
   width: 100%;
   box-sizing: border-box;
 
+  &.form-control--btn-right {
+    position: relative;
+
+    input {
+      padding-right: 2em;
+    }
+
+    &:hover .form-control__right {
+      opacity: 0.8;
+    }
+
+    .form-control__right {
+      position: absolute;
+      right: 0;
+      top: 0;
+      padding: 0 @padding-sm;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      margin: 0;
+      opacity: 0.5;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
   .input,
   input,
   textarea,
@@ -21,13 +49,13 @@
   }
 
   button,
-  input[type="radio"],
-  input[type="checkbox"] {
+  input[type='radio'],
+  input[type='checkbox'] {
     width: auto;
   }
 
-  input[type="radio"],
-  input[type="checkbox"] {
+  input[type='radio'],
+  input[type='checkbox'] {
     height: 1rem;
     float: left;
     margin-top: @padding-xxs;
@@ -82,7 +110,7 @@
       }
     }
 
-    .input[data-focused="on"],
+    .input[data-focused='on'],
     textarea:focus,
     select:focus,
     input:focus {
@@ -91,7 +119,7 @@
     }
   }
 
-  &.form-control--underlined .input[data-focused="on"],
+  &.form-control--underlined .input[data-focused='on'],
   &.form-control--underlined input:focus,
   &.form-control--underlined textarea:focus {
     border-color: var(--hl);
@@ -255,7 +283,11 @@
   }
 }
 
-textarea, input, .input, button, select {
+textarea,
+input,
+.input,
+button,
+select {
   transition: all 130ms ease-out;
   box-sizing: border-box;
   text-align: left;
@@ -273,11 +305,12 @@ textarea, input, .input, button, select {
   }
 }
 
-input[type=number]::-webkit-inner-spin-button {
+input[type='number']::-webkit-inner-spin-button {
   opacity: 0.8;
 }
 
-input.input--error, .input.input--error {
+input.input--error,
+.input.input--error {
   border-color: var(--color-danger) !important;
 }
 
@@ -297,7 +330,7 @@ textarea.no-resize {
   resize: none;
 }
 
-input[type="color"] {
+input[type='color'] {
   height: @line-height-xs !important;
   padding: @padding-xxs !important;
 }
@@ -307,8 +340,8 @@ label {
   position: relative;
   z-index: 1;
 
-  input[type="checkbox"]:focus,
-  input[type="radio"]:focus {
+  input[type='checkbox']:focus,
+  input[type='radio']:focus {
     &::before {
       z-index: -1;
       content: ' ';

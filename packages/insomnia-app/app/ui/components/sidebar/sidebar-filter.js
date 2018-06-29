@@ -1,5 +1,5 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import {
   Dropdown,
@@ -11,22 +11,37 @@ import { DEBOUNCE_MILLIS } from '../../../common/constants';
 import KeydownBinder from '../keydown-binder';
 import * as hotkeys from '../../../common/hotkeys';
 
+type Props = {
+  onChange: string => void,
+  requestCreate: () => void,
+  requestGroupCreate: () => void,
+  filter: string
+};
+
 @autobind
-class SidebarFilter extends PureComponent {
-  _setInputRef(n) {
+class SidebarFilter extends React.PureComponent<Props> {
+  _input: ?HTMLInputElement;
+  _triggerTimeout: TimeoutID;
+
+  _setInputRef(n: ?HTMLInputElement) {
     this._input = n;
   }
 
-  _handleOnChange(e) {
-    const value = e.target.value;
+  _handleClearFilter(e: SyntheticEvent<HTMLButtonElement>) {
+    this.props.onChange('');
+    if (this._input) {
+      this._input.value = '';
+      this._input.focus();
+    }
+  }
+
+  _handleOnChange(e: SyntheticEvent<HTMLInputElement>) {
+    const value = e.currentTarget.value;
 
     clearTimeout(this._triggerTimeout);
     this._triggerTimeout = setTimeout(() => {
       this.props.onChange(value);
     }, DEBOUNCE_MILLIS);
-
-    // So we don't track on every keystroke, give analytics a longer timeout
-    clearTimeout(this._analyticsTimeout);
   }
 
   _handleRequestGroupCreate() {
@@ -37,24 +52,32 @@ class SidebarFilter extends PureComponent {
     this.props.requestCreate();
   }
 
-  _handleKeydown(e) {
+  _handleKeydown(e: KeyboardEvent) {
     hotkeys.executeHotKey(e, hotkeys.FOCUS_FILTER, () => {
       this._input && this._input.focus();
     });
   }
 
   render() {
+    const { filter } = this.props;
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
         <div className="sidebar__filter">
-          <div className="form-control form-control--outlined">
+          <div className="form-control form-control--outlined form-control--btn-right">
             <input
               ref={this._setInputRef}
               type="text"
               placeholder="Filter"
-              defaultValue={this.props.filter}
+              defaultValue={filter}
               onChange={this._handleOnChange}
             />
+            {filter && (
+              <button
+                className="form-control__right"
+                onClick={this._handleClearFilter}>
+                <i className="fa fa-times-circle" />
+              </button>
+            )}
           </div>
           <Dropdown right>
             <DropdownButton className="btn btn--compact">
@@ -75,13 +98,5 @@ class SidebarFilter extends PureComponent {
     );
   }
 }
-
-SidebarFilter.propTypes = {
-  // Required
-  onChange: PropTypes.func.isRequired,
-  requestCreate: PropTypes.func.isRequired,
-  requestGroupCreate: PropTypes.func.isRequired,
-  filter: PropTypes.string.isRequired
-};
 
 export default SidebarFilter;
