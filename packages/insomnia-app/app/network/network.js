@@ -631,6 +631,7 @@ export async function _actuallySend(
             secretAccessKey: authentication.secretAccessKey || '',
             sessionToken: authentication.sessionToken || ''
           };
+
           const extraHeaders = _getAwsAuthHeaders(
             credentials,
             headers,
@@ -640,6 +641,7 @@ export async function _actuallySend(
             authentication.region || '',
             authentication.service || ''
           );
+
           for (const header of extraHeaders) {
             headers.push(header);
           }
@@ -1077,9 +1079,7 @@ export function _getAwsAuthHeaders(
     method,
     host,
     path: parsedUrl.path,
-    headers: {
-      'content-type': contentTypeHeader ? contentTypeHeader.value : ''
-    }
+    headers: contentTypeHeader ? { 'content-type': contentTypeHeader } : {}
   };
 
   const signature = aws4.sign(awsSignOptions, credentials);
