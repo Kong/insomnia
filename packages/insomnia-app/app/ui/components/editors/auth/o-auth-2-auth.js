@@ -501,7 +501,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       oAuth2Token && oAuth2Token.xResponseId ? (
         <button
           onClick={this._handleDebugResponseClick}
-          className="icon space-left"
+          className="icon icon--success space-left"
           title="View response timeline">
           <i className="fa fa-bug" />
         </button>

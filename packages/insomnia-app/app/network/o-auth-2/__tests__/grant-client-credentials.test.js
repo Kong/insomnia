@@ -27,6 +27,8 @@ describe('client_credentials', () => {
 
     network.sendWithSettings = jest.fn(() => ({
       bodyPath,
+      bodyCompression: '',
+      parentId: 'req_1',
       statusCode: 200,
       headers: [{ name: 'Content-Type', value: 'application/json' }]
     }));
@@ -80,12 +82,13 @@ describe('client_credentials', () => {
       scope: SCOPE,
       error: null,
       error_uri: null,
-      error_description: null
+      error_description: null,
+      xResponseId: 'res_dd2ccc1a2745477a881a9e8ef9d42403'
     });
   });
 
   it('gets token with urlencoded and body auth', async () => {
-    const bodyPath = path.join(getTempDir(), 'foo.response');
+    const bodyPath = path.join(getTempDir(), 'req_1.response');
 
     fs.writeFileSync(
       bodyPath,
@@ -98,6 +101,8 @@ describe('client_credentials', () => {
 
     network.sendWithSettings = jest.fn(() => ({
       bodyPath,
+      bodyCompression: '',
+      parentId: 'req_1',
       statusCode: 200,
       headers: [
         { name: 'Content-Type', value: 'application/x-www-form-urlencoded' }
@@ -151,7 +156,8 @@ describe('client_credentials', () => {
       scope: SCOPE,
       error: null,
       error_uri: null,
-      error_description: null
+      error_description: null,
+      xResponseId: 'res_e3e96e5fdd6842298b66dee1f0940f3d'
     });
   });
 });

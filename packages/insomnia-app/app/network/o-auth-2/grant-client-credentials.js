@@ -75,5 +75,7 @@ export default async function(
     c.P_ERROR_DESCRIPTION
   ]);
 
+  results[c.X_RESPONSE_ID] = response._id;
+
   return results;
 }

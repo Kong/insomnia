@@ -42,23 +42,29 @@ export default async function(
 
   const url = setDefaultProtocol(accessTokenUrl);
 
-  const response = await network.sendWithSettings(requestId, {
+  const responsePatch = await network.sendWithSettings(requestId, {
     url,
     headers,
     method: 'POST',
     body: models.request.newBodyFormUrlEncoded(params)
   });
 
+  const response = await models.response.create(responsePatch);
+
   const bodyBuffer = models.response.getBodyBuffer(response);
   if (!bodyBuffer) {
-    throw new Error(`[oauth2] No body returned from ${url}`);
+    return {
+      [c.X_ERROR]: `No body returned from ${url}`,
+      [c.X_RESPONSE_ID]: response._id
+    };
   }
 
   const statusCode = response.statusCode || 0;
   if (statusCode < 200 || statusCode >= 300) {
-    throw new Error(
-      `[oauth2] Failed to fetch access token url=${url} status=${statusCode}`
-    );
+    return {
+      [c.X_ERROR]: `Failed to fetch token url=${url} status=${statusCode}`,
+      [c.X_RESPONSE_ID]: response._id
+    };
   }
 
   const results = responseToObject(bodyBuffer.toString(), [
@@ -71,6 +77,8 @@ export default async function(
     c.P_ERROR_URI,
     c.P_ERROR_DESCRIPTION
   ]);
+
+  results[c.X_RESPONSE_ID] = response._id;
 
   return results;
 }

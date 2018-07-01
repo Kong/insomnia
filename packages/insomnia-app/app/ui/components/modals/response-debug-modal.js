@@ -35,8 +35,10 @@ class ResponseDebugModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async show(options: { responseId: string }) {
-    const response = await models.response.getById(options.responseId);
+  async show(options: { responseId?: string, response?: Response }) {
+    const response = options.response
+      ? options.response
+      : await models.response.getById(options.responseId || 'n/a');
 
     this.setState({ response });
     this.modal && this.modal.show();
@@ -59,7 +61,7 @@ class ResponseDebugModal extends React.PureComponent<Props, State> {
                 timeline={response.timeline}
               />
             ) : (
-              <div>Poop</div>
+              <div>No response found</div>
             )}
           </div>
         </ModalBody>
