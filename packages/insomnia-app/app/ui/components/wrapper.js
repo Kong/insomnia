@@ -23,6 +23,7 @@ import CookieModifyModal from '../components/modals/cookie-modify-modal';
 import EnvironmentEditModal from './modals/environment-edit-modal';
 import GenerateCodeModal from './modals/generate-code-modal';
 import LoginModal from './modals/login-modal';
+import ResponseDebugModal from './modals/response-debug-modal';
 import PaymentNotificationModal from './modals/payment-notification-modal';
 import NunjucksModal from './modals/nunjucks-modal';
 import PromptModal from './modals/prompt-modal';
@@ -525,6 +526,8 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleToggleMenuBar={handleToggleMenuBar}
             settings={settings}
           />
+
+          <ResponseDebugModal ref={registerModal} settings={settings} />
 
           <RequestSwitcherModal
             ref={registerModal}

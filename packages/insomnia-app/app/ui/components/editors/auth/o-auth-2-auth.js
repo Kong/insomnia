@@ -24,6 +24,8 @@ import HelpTooltip from '../../help-tooltip';
 import PromptButton from '../../base/prompt-button';
 import TimeFromNow from '../../time-from-now';
 import Button from '../../base/button';
+import { showModal } from '../../modals';
+import ResponseDebugModal from '../../modals/response-debug-modal';
 
 type Props = {
   handleRender: Function,
@@ -108,6 +110,16 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     if (oAuth2Token) {
       await models.oAuth2Token.remove(oAuth2Token);
     }
+  }
+
+  _handleDebugResponseClick(responseId: string) {
+    const { oAuth2Token } = this.props;
+
+    if (!oAuth2Token || !oAuth2Token.xResponseId) {
+      return;
+    }
+
+    showModal(ResponseDebugModal, { responseId: oAuth2Token.xResponseId });
   }
 
   async _handleRefreshToken(): Promise<void> {
@@ -482,6 +494,46 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     );
   }
 
+  renderError() {
+    const { oAuth2Token } = this.props;
+
+    const debugButton =
+      oAuth2Token && oAuth2Token.xResponseId ? (
+        <button
+          onClick={this._handleDebugResponseClick}
+          className="icon icon--success space-left"
+          title="View response timeline">
+          <i className="fa fa-bug" />
+        </button>
+      ) : null;
+
+    const errorUriButton =
+      oAuth2Token && oAuth2Token.errorUri ? (
+        <Link
+          href={oAuth2Token.errorUri}
+          title={oAuth2Token.errorUri}
+          className="space-left icon">
+          <i className="fa fa-question-circle" />
+        </Link>
+      ) : null;
+
+    const error = oAuth2Token ? oAuth2Token.error || oAuth2Token.xError : null;
+
+    if (oAuth2Token && error) {
+      const { errorDescription } = oAuth2Token;
+      return (
+        <div className="notice error margin-bottom">
+          <h2 className="no-margin-top txt-lg force-wrap">{error}</h2>
+          <p>
+            {errorDescription || 'no description provided'}
+            {errorUriButton}
+            {debugButton}
+          </p>
+        </div>
+      );
+    }
+  }
+
   render() {
     const { request, oAuth2Token: tok } = this.props;
     const { loading, error, showAdvanced } = this.state;
@@ -532,28 +584,10 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
           </tbody>
         </table>
         <div className="notice subtle margin-top text-left">
-          {/* Handle major errors */}
           {error && (
             <p className="selectable notice warning margin-bottom">{error}</p>
           )}
-
-          {/* Handle minor errors */}
-          {tok && tok.error ? (
-            <div className="notice error margin-bottom">
-              <h2 className="no-margin-top txt-lg force-wrap">{tok.error}</h2>
-              <p>
-                {tok.errorDescription || 'no description provided'}
-                {tok.errorUri && (
-                  <span>
-                    &nbsp;
-                    <Link href={tok.errorUri} title={tok.errorUri}>
-                      <i className="fa fa-question-circle" />
-                    </Link>
-                  </span>
-                )}
-              </p>
-            </div>
-          ) : null}
+          {this.renderError()}
           <div className="form-control form-control--outlined">
             <label>
               <small>Refresh Token</small>

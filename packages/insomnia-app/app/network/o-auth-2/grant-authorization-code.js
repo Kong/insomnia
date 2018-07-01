@@ -133,27 +133,32 @@ async function _getToken(
     headers.push(getBasicAuthHeader(clientId, clientSecret));
   }
 
-  const response = await sendWithSettings(requestId, {
+  const responsePatch = await sendWithSettings(requestId, {
     headers,
     url,
     method: 'POST',
     body: models.request.newBodyFormUrlEncoded(params)
   });
 
+  const response = await models.response.create(responsePatch);
+
   const bodyBuffer = models.response.getBodyBuffer(response);
   if (!bodyBuffer) {
-    throw new Error(`[oauth2] No body returned from ${url}`);
+    return {
+      [c.X_ERROR]: `No body returned from ${url}`,
+      [c.X_RESPONSE_ID]: response._id
+    };
   }
 
   const statusCode = response.statusCode || 0;
   if (statusCode < 200 || statusCode >= 300) {
-    throw new Error(
-      `[oauth2] Failed to fetch token url=${url} status=${statusCode}\n` +
-        bodyBuffer.toString('utf8')
-    );
+    return {
+      [c.X_ERROR]: `Failed to fetch token url=${url} status=${statusCode}`,
+      [c.X_RESPONSE_ID]: response._id
+    };
   }
 
-  return responseToObject(bodyBuffer.toString('utf8'), [
+  const results = responseToObject(bodyBuffer.toString('utf8'), [
     c.P_ACCESS_TOKEN,
     c.P_REFRESH_TOKEN,
     c.P_EXPIRES_IN,
@@ -163,4 +168,8 @@ async function _getToken(
     c.P_ERROR_URI,
     c.P_ERROR_DESCRIPTION
   ]);
+
+  results[c.X_RESPONSE_ID] = response._id;
+
+  return results;
 }

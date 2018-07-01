@@ -29,8 +29,7 @@ import TimeFromNow from '../../time-from-now';
 import * as models from '../../../../models/index';
 import * as db from '../../../../common/database';
 import { showModal } from '../../modals';
-import WrapperModal from '../../modals/wrapper-modal';
-import ResponseTimelineViewer from '../../viewers/response-timeline-viewer';
+import ResponseDebugModal from '../../modals/response-debug-modal';
 import Tooltip from '../../tooltip';
 
 type GraphQLBody = {
@@ -175,7 +174,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _handleViewResponse() {
-    const { settings } = this.props;
     const { schemaFetchError } = this.state;
 
     if (!schemaFetchError || !schemaFetchError.response) {
@@ -184,19 +182,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     const { response } = schemaFetchError;
 
-    showModal(WrapperModal, {
+    showModal(ResponseDebugModal, {
       title: 'Introspection Request',
-      tall: true,
-      body: (
-        <div style={{ display: 'grid' }} className="tall pad-top">
-          <ResponseTimelineViewer
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorLineWrapping={settings.editorLineWrapping}
-            timeline={response.timeline}
-          />
-        </div>
-      )
+      response: response
     });
   }
 
