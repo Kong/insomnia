@@ -8,6 +8,10 @@ type BaseOAuth2Token = {
   accessToken: string,
   expiresAt: number | null, // Should be Date.now() if valid
 
+  // Debug
+  xResponseId: string | null,
+  xError: string | null,
+
   // Error handling
   error: string,
   errorDescription: string,
@@ -26,6 +30,10 @@ export function init(): BaseOAuth2Token {
     refreshToken: '',
     accessToken: '',
     expiresAt: null, // Should be Date.now() if valid
+
+    // Debug
+    xResponseId: null,
+    xError: null,
 
     // Error handling
     error: '',

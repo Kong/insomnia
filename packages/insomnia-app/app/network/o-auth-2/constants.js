@@ -28,3 +28,6 @@ export const P_SCOPE = 'scope';
 export const P_STATE = 'state';
 export const P_TOKEN_TYPE = 'token_type';
 export const P_USERNAME = 'username';
+
+export const X_RESPONSE_ID = 'xResponseId';
+export const X_ERROR = 'xError';

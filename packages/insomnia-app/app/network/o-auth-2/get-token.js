@@ -10,11 +10,13 @@ import {
   GRANT_TYPE_IMPLICIT,
   GRANT_TYPE_PASSWORD,
   P_ACCESS_TOKEN,
-  P_ERROR,
   P_ERROR_DESCRIPTION,
   P_ERROR_URI,
+  P_ERROR,
   P_EXPIRES_IN,
-  P_REFRESH_TOKEN
+  P_REFRESH_TOKEN,
+  X_RESPONSE_ID,
+  X_ERROR
 } from './constants';
 import * as models from '../../models';
 import type { RequestAuthentication } from '../../models/request';
@@ -236,6 +238,10 @@ async function _updateOAuth2Token(
     accessToken: authResults[P_ACCESS_TOKEN] || null,
     error: authResults[P_ERROR] || null,
     errorDescription: authResults[P_ERROR_DESCRIPTION] || null,
-    errorUri: authResults[P_ERROR_URI] || null
+    errorUri: authResults[P_ERROR_URI] || null,
+
+    // Special Cases
+    xResponseId: authResults[X_RESPONSE_ID] || null,
+    xError: authResults[X_ERROR] || null
   });
 }
