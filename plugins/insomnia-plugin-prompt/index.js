@@ -40,7 +40,7 @@ module.exports.templateTags = [
           'something else.'
       },
       {
-        displayName: 'Secure Text',
+        displayName: 'Mask Text',
         type: 'boolean',
         help:
           'If this is enabled, the value when input will be masked like a password field.',
@@ -53,7 +53,7 @@ module.exports.templateTags = [
       label,
       defaultValue,
       explicitStorageKey,
-      secureText
+      maskText
     ) {
       if (!title) {
         throw new Error('Title attribute is required for prompt tag');
@@ -75,7 +75,7 @@ module.exports.templateTags = [
       const value = await context.app.prompt(title || 'Enter Value', {
         label,
         defaultValue,
-        inputType: secureText ? 'password' : 'text'
+        inputType: maskText ? 'password' : 'text'
       });
 
       if (storageKey) {
