@@ -2,7 +2,7 @@ const { jarFromCookies, cookiesFromJar } = require('insomnia-cookies');
 const tag = require('..').templateTags[0];
 
 describe('plugin', () => {
-  describe('CookieJarPlugin: cookie domain not found', async () => {
+  describe('CookieJarPlugin: no cookies for url', async () => {
     it('should get cookie by name', async () => {
       const jar = jarFromCookies([]);
       jar.setCookieSync(
@@ -22,15 +22,14 @@ describe('plugin', () => {
       const jars = [{ _id: 'jar_1', parentId: 'wrk_1', cookies }];
       const context = _getTestContext([{ _id: 'wrk_1' }], requests, jars);
       try {
-        const result = await tag.run(context, 'fake.insomnia.rest');
+        const result = await tag.run(context, 'https://google.com/', '');
       } catch(err) {
-        expect(err.message).toContain('No cookie domain with name "fake.insomnia.rest"');
-        expect(err.message).toContain('"insomnia.rest"');
+        expect(err.message).toContain('No cookies in store for url "https://google.com/');
       }
     });
   });
 
-  describe('CookieJarPlugin: cookie name not found', async () => {
+  describe('CookieJarPlugin: cookie not found', async () => {
     it('should get cookie by name', async () => {
       const jar = jarFromCookies([]);
       jar.setCookieSync(
@@ -50,9 +49,9 @@ describe('plugin', () => {
       const jars = [{ _id: 'jar_1', parentId: 'wrk_1', cookies }];
       const context = _getTestContext([{ _id: 'wrk_1' }], requests, jars);
       try {
-        const result = await tag.run(context, 'insomnia.rest', 'bar');
+        const result = await tag.run(context, 'https://insomnia.rest', 'bar');
       } catch(err) {
-        expect(err.message).toContain('No cookie key with name "bar"');
+        expect(err.message).toContain('No cookie with name "bar"');
         expect(err.message).toContain('"foo"');
       }
     });
@@ -78,7 +77,7 @@ describe('plugin', () => {
       ];
       const jars = [{ _id: 'jar_1', parentId: 'wrk_1', cookies }];
       const context = _getTestContext([{ _id: 'wrk_1' }], requests, jars);
-      const result = await tag.run(context, 'insomnia.rest', 'foo');
+      const result = await tag.run(context, 'https://insomnia.rest', 'foo');
 
       expect(result).toBe('bar');
     });
