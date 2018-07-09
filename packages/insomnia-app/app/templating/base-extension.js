@@ -118,14 +118,13 @@ export default class BaseExtension {
 
     // If the result is a promise, resolve it async
     if (result instanceof Promise) {
-      result.then(
-        r => {
+      result
+        .then(r => {
           callback(null, r);
-        },
-        err => {
+        })
+        .catch(err => {
           callback(err);
-        }
-      );
+        });
       return;
     }
 
