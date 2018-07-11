@@ -25,7 +25,7 @@
   "devDependencies": {
     "husky": "^1.0.0-rc.9",
     "jest": "^22.1.1",
-    "lerna": "^2.7.1",
+    "lerna": "^2.11.0",
     "prettier": "^1.13.6",
     "pretty-quick": "^1.6.0",
     "webpack": "^4.8.3"
