@@ -61,11 +61,18 @@ async function _isInsomniaPlugin(moduleName: string): Promise<Object> {
   return new Promise((resolve, reject) => {
     console.log(`[plugins] Fetching module info from npm`);
     childProcess.execFile(
-      process.execPath,
-      [_getYarnPath(), 'info', moduleName, '--json'],
+      escape(process.execPath),
+      [
+        '--no-deprecation', // Because Yarn still uses `new Buffer()`
+        _getYarnPath(),
+        'info',
+        moduleName,
+        '--json'
+      ],
       {
         timeout: 5 * 60 * 1000,
         maxBuffer: 1024 * 1024,
+        shell: true,
         env: {
           NODE_ENV: 'production',
           ELECTRON_RUN_AS_NODE: 'true'
@@ -124,8 +131,9 @@ async function _installPluginToTmpDir(
     mkdirp.sync(tmpDir);
     console.log(`[plugins] Installing plugin to ${tmpDir}`);
     childProcess.execFile(
-      process.execPath,
+      escape(process.execPath),
       [
+        '--no-deprecation', // Because Yarn still uses `new Buffer()`
         _getYarnPath(),
         'add',
         moduleName,
@@ -141,6 +149,7 @@ async function _installPluginToTmpDir(
         timeout: 5 * 60 * 1000,
         maxBuffer: 1024 * 1024,
         cwd: tmpDir,
+        shell: true, // Some package installs require a shell
         env: {
           NODE_ENV: 'production',
           ELECTRON_RUN_AS_NODE: 'true'
@@ -172,4 +181,8 @@ function _getYarnPath() {
   } else {
     return path.resolve(app.getAppPath(), '../bin/yarn-standalone.js');
   }
+}
+
+function escape(p) {
+  return p.replace(/(\s+)/g, '\\$1');
 }
