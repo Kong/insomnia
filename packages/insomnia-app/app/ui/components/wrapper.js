@@ -423,13 +423,6 @@ class Wrapper extends React.PureComponent<Props, State> {
     const rows = `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
 
     return [
-      activeEnvironment &&
-      activeEnvironment.color &&
-      settings.colorIndicatorType === 'bar' ? (
-        <div
-          style={{ height: '5px', 'background-color': activeEnvironment.color }}
-        />
-      ) : null,
       <div key="modals" className="modals">
         <ErrorBoundary showAlert>
           <AlertModal ref={registerModal} />
@@ -584,7 +577,16 @@ class Wrapper extends React.PureComponent<Props, State> {
         className={classnames('wrapper', {
           'wrapper--vertical': settings.forceVerticalLayout
         })}
-        style={{ gridTemplateColumns: columns, gridTemplateRows: rows }}>
+        style={{
+          gridTemplateColumns: columns,
+          gridTemplateRows: rows,
+          borderTop:
+            activeEnvironment &&
+            activeEnvironment.color &&
+            settings.environmentHighlightColorStyle === 'bar'
+              ? '5px solid ' + activeEnvironment.color
+              : null
+        }}>
         <ErrorBoundary showAlert>
           <Sidebar
             ref={handleSetSidebarRef}
@@ -616,7 +618,9 @@ class Wrapper extends React.PureComponent<Props, State> {
             isLoading={isLoading}
             workspaces={workspaces}
             environments={environments}
-            colorIndicatorType={settings.colorIndicatorType}
+            environmentHighlightColorStyle={
+              settings.environmentHighlightColorStyle
+            }
           />
         </ErrorBoundary>
 

@@ -26,7 +26,7 @@ type BaseSettings = {
   deviceId: string | null,
   updateChannel: string,
   updateAutomatically: boolean,
-  colorIndicatorType: string
+  environmentHighlightColorStyle: string
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -60,7 +60,7 @@ export function init(): BaseSettings {
     deviceId: null,
     updateChannel: UPDATE_CHANNEL_STABLE,
     updateAutomatically: true,
-    colorIndicatorType: 'dot'
+    environmentHighlightColorStyle: 'dot'
   };
 }
 
