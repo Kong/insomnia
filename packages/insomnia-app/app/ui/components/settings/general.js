@@ -144,6 +144,19 @@ class General extends React.PureComponent<Props> {
           </label>
         </div>
 
+        <div className="form-control form-control--outlined pad-top-sm">
+          <label>
+            Color Indicator Type
+            <select
+              defaultValue={settings.colorIndicatorType}
+              name="colorIndicatorType"
+              onChange={this._handleUpdateSetting}>
+              <option value="dot">Dot</option>
+              <option value="bar">Bar</option>
+            </select>
+          </label>
+        </div>
+
         <div className="form-row">
           <div className="form-control form-control--outlined pad-top-sm">
             <label>

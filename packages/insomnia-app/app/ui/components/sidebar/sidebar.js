@@ -56,7 +56,8 @@ class Sidebar extends PureComponent {
       handleSetRequestGroupCollapsed,
       moveDoc,
       handleActivateRequest,
-      activeRequest
+      activeRequest,
+      colorIndicatorType
     } = this.props;
 
     return (
@@ -83,6 +84,7 @@ class Sidebar extends PureComponent {
             activeEnvironment={activeEnvironment}
             environments={environments}
             workspace={workspace}
+            colorIndicatorType={colorIndicatorType}
           />
           <button className="btn btn--super-compact" onClick={showCookiesModal}>
             <div className="sidebar__menu__thing">
@@ -155,6 +157,7 @@ Sidebar.propTypes = {
   workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   unseenWorkspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
+  colorIndicatorType: PropTypes.string.isRequired,
 
   // Optional
   filter: PropTypes.string,

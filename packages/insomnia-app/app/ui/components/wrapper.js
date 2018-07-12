@@ -423,6 +423,13 @@ class Wrapper extends React.PureComponent<Props, State> {
     const rows = `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
 
     return [
+      activeEnvironment &&
+      activeEnvironment.color &&
+      settings.colorIndicatorType === 'bar' ? (
+        <div
+          style={{ height: '5px', 'background-color': activeEnvironment.color }}
+        />
+      ) : null,
       <div key="modals" className="modals">
         <ErrorBoundary showAlert>
           <AlertModal ref={registerModal} />
@@ -609,6 +616,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             isLoading={isLoading}
             workspaces={workspaces}
             environments={environments}
+            colorIndicatorType={settings.colorIndicatorType}
           />
         </ErrorBoundary>
 
