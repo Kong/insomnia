@@ -182,7 +182,7 @@ function getCookieValue(cookieJar, url, name) {
       }
 
       if (!cookies || cookies.length === 0) {
-        reject(new Error(`No cookies in stored for url "${url}"`));
+        reject(new Error(`No cookies in store for url "${url}"`));
       }
 
       const cookie = cookies.find(cookie => cookie.key === name);
