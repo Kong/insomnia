@@ -144,6 +144,22 @@ class General extends React.PureComponent<Props> {
           </label>
         </div>
 
+        <div className="form-control form-control--outlined pad-top-sm">
+          <label>
+            Environment Highlight Color Style{' '}
+            <HelpTooltip>
+              Configures the appearance of environment's color indicator
+            </HelpTooltip>
+            <select
+              defaultValue={settings.environmentHighlightColorStyle}
+              name="environmentHighlightColorStyle"
+              onChange={this._handleUpdateSetting}>
+              <option value="dot">Dot</option>
+              <option value="bar">Bar</option>
+            </select>
+          </label>
+        </div>
+
         <div className="form-row">
           <div className="form-control form-control--outlined pad-top-sm">
             <label>
