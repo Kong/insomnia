@@ -10,7 +10,7 @@ RUN apt-get install -y \
     wget
 
 # Install Node and app-related dependencies
-RUN wget -O- https://deb.nodesource.com/setup_8.x | bash - \
+RUN wget -O- https://deb.nodesource.com/setup_10.x | bash - \
     && apt-get install -y nodejs graphicsmagick icnsutils
 
 # Build zlib from source (for Curl)
