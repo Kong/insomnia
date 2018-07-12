@@ -23,7 +23,7 @@
     "test": "flow check && npm run lint && npm run test:jest",
     "test:jest": "cross-env NODE_ENV=test jest --silent",
     "test-appveyor": "npm run test -- --maxWorkers 1",
-    "pre-bootstrap": "npm install && electron-rebuild -f -w insomnia-libcurl",
+    "pre-bootstrap": "npm install --build-from-source && electron-rebuild -f -w insomnia-libcurl",
     "start:electron": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js && electron .",
     "start:dev-server": "webpack-dev-server --config ./webpack/webpack.config.development.babel.js",
     "start": "concurrently --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",

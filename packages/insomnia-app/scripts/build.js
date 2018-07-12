@@ -85,7 +85,13 @@ async function install(relDir) {
   return new Promise((resolve, reject) => {
     const prefix = path.resolve(__dirname, relDir);
     npm.load(
-      { prefix, production: true, optional: false, 'package-lock': false },
+      {
+        prefix,
+        buildFromSource: true,
+        production: true,
+        optional: false,
+        'package-lock': false
+      },
       err => {
         if (err) {
           return reject(err);
