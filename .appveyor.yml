@@ -15,6 +15,7 @@ environment:
 
 # Things to install after repo clone
 install:
+  - SET "PATH=%PATH%;C:\Program Files\Git\mingw64\libexec\git-core" # For weird git bug
   - ps: Install-Product node $env:NODEJS_VERSION $env:Platform
   - node --version
   - npm --version
