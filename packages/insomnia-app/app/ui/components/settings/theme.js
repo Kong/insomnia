@@ -23,7 +23,9 @@ const THEMES = [
   { key: 'solarized', name: 'Solarized', img: imgSolarized },
   { key: 'solarized-light', name: 'Solarized Light', img: imgSolarizedLight },
   { key: 'solarized-dark', name: 'Solarized Dark', img: imgSolarizedDark },
-  { key: 'railscasts', name: 'Railscasts', img: imgRailscasts }
+  { key: 'railscasts', name: 'Railscasts', img: imgRailscasts },
+  { key: 'one-dark', name: 'One Dark', img: imgRailscasts },
+  { key: 'one-light', name: 'One Light', img: imgRailscasts }
 ];
 
 @autobind
