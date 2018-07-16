@@ -286,13 +286,12 @@ class ResponseViewer extends React.Component<Props, State> {
         </div>
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.includes('html')) {
-      const justContentType = contentType.split(';')[0];
       const match = contentType.match(/charset=([\w-]+)/);
       const charset = match && match.length >= 2 ? match[1] : 'utf-8';
       return (
         <ResponseWebView
           body={this._decodeIconv(bodyBuffer, charset)}
-          contentType={justContentType}
+          contentType={contentType}
           url={url}
         />
       );
