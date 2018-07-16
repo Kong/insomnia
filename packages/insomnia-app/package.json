@@ -14,6 +14,7 @@
   "description": "Debug APIs like a human, not a robot",
   "author": "Insomnia <support@insomnia.rest>",
   "main": "app/main.min.js",
+  "appveyorCacheBreaker": 1,
   "repository": {
     "type": "git",
     "url": "https://github.com/getinsomnia/insomnia"
