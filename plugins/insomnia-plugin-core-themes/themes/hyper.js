@@ -11,7 +11,7 @@ module.exports = {
       notice: '#f8d245',
       warning: '#f9ac2a',
       danger: '#ff505c',
-      surprise: '#ec48f9',
+      surprise: '#f24aff',
       info: '#23dce8'
     },
     styles: {
@@ -32,7 +32,7 @@ module.exports = {
           notice: '#ebc742',
           warning: '#ea9f29',
           danger: '#df4b56',
-          surprise: '#d945e5',
+          surprise: '#ed46f9',
           info: '#20bec9'
         }
       }

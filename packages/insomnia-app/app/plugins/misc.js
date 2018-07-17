@@ -34,6 +34,7 @@ type ThemeBlock = {
 
 type ThemeInner = {
   ...ThemeBlock,
+  rawCss?: string,
   styles: ?{
     overlay?: ThemeBlock,
     dropdown?: ThemeBlock,
@@ -143,7 +144,9 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
     css += wrapStyles(n, '.CodeMirror-info', getThemeBlockCSS(styles.dialog));
   }
 
-  return css;
+  return typeof renderedTheme.rawCss === 'string'
+    ? css + '\n\n' + renderedTheme.rawCss
+    : css;
 }
 
 function getThemeBlockCSS(block?: ThemeBlock): string {
