@@ -44,7 +44,8 @@
     h1 {
       margin: 0;
     }
-    h1, h1 * {
+    h1,
+    h1 * {
       font-size: @font-size-xl;
     }
   }
@@ -167,7 +168,6 @@
 
   .sidebar__list-root {
     // Add some space above so it's not so squished
-    border-top: 1px solid @hl-sm;
     padding-top: @padding-xxs;
     padding-bottom: @padding-md;
     box-shadow: inset 0 2rem 2rem -2rem rgba(0, 0, 0, 0.03);
@@ -208,8 +208,8 @@
       right: 0;
       left: 0;
       border-bottom: 2px dotted var(--color-surprise);
-      content: " ";
-      display: block
+      content: ' ';
+      display: block;
     }
   }
 
@@ -299,19 +299,41 @@
     padding-left: @padding-sm + @padding-md * 2;
   }
 
-  .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+  .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__clickable {
     padding-left: @padding-sm + @padding-md * 3;
   }
 
-  .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+  .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__clickable {
     padding-left: @padding-sm + @padding-md * 4;
   }
 
-  .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+  .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__clickable {
     padding-left: @padding-sm + @padding-md * 5;
   }
 
-  .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+  .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__list
+    .sidebar__clickable {
     padding-left: @padding-sm + @padding-md * 6;
   }
 

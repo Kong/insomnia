@@ -158,20 +158,24 @@ class ResponsePane extends React.PureComponent<Props> {
       showCookiesModal
     } = this.props;
 
+    const paneClasses = 'response-pane theme--pane pane';
+    const paneHeaderClasses = 'pane__header theme--pane__header';
+    const paneBodyClasses = 'pane__body theme--pane__body';
+
     if (!request) {
       return (
-        <section className="response-pane pane">
-          <header className="pane__header" />
-          <div className="pane__body pane__body--placeholder" />
+        <section className={paneClasses}>
+          <header className={paneHeaderClasses} />
+          <div className={paneBodyClasses + ' pane__body--placeholder'} />
         </section>
       );
     }
 
     if (!response) {
       return (
-        <section className="response-pane pane">
-          <header className="pane__header" />
-          <div className="pane__body pane__body--placeholder">
+        <section className={paneClasses}>
+          <header className={paneHeaderClasses} />
+          <div className={paneBodyClasses + ' pane__body--placeholder'}>
             <div>
               <table className="table--fancy">
                 <tbody>
@@ -223,9 +227,9 @@ class ResponsePane extends React.PureComponent<Props> {
     const cookieHeaders = getSetCookieHeaders(response.headers);
 
     return (
-      <section className="response-pane pane">
+      <section className={paneClasses}>
         {!response ? null : (
-          <header className="pane__header row-spaced">
+          <header className={paneHeaderClasses + ' row-spaced'}>
             <div className="no-wrap scrollable scrollable--no-bars pad-left">
               <StatusTag
                 statusCode={response.statusCode}
@@ -250,7 +254,7 @@ class ResponsePane extends React.PureComponent<Props> {
             />
           </header>
         )}
-        <Tabs className="react-tabs pane__body" forceRenderTabPanel>
+        <Tabs className={paneBodyClasses + ' react-tabs'} forceRenderTabPanel>
           <TabList>
             <Tab>
               <PreviewModeDropdown

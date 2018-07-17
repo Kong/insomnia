@@ -62,7 +62,7 @@ class Plugins extends React.PureComponent<void, State> {
     this.setState(newState);
   }
 
-  _handleOpenDirectory(directory: string): void {
+  static _handleOpenDirectory(directory: string): void {
     electron.remote.shell.showItemInFolder(directory);
   }
 
@@ -88,7 +88,7 @@ class Plugins extends React.PureComponent<void, State> {
     await this._handleRefreshPlugins();
   }
 
-  _handleClickShowPluginsFolder() {
+  static _handleClickShowPluginsFolder() {
     electron.remote.shell.showItemInFolder(PLUGIN_PATH);
   }
 
@@ -152,7 +152,7 @@ class Plugins extends React.PureComponent<void, State> {
                         </CopyButton>{' '}
                         <Button
                           className="btn btn--outlined btn--super-duper-compact"
-                          onClick={this._handleOpenDirectory}
+                          onClick={Plugins._handleOpenDirectory}
                           value={plugin.directory}>
                           Show Folder
                         </Button>
@@ -204,7 +204,7 @@ class Plugins extends React.PureComponent<void, State> {
           <button
             type="button"
             className="btn btn--clicky"
-            onClick={this._handleClickShowPluginsFolder}>
+            onClick={Plugins._handleClickShowPluginsFolder}>
             Show Plugins Folder
           </button>
           <button

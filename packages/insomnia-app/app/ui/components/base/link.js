@@ -41,7 +41,7 @@ class Link extends React.PureComponent<Props> {
       <a
         href={href}
         onClick={this._handleClick}
-        className={className}
+        className={(className || '') + ' theme--link'}
         {...other}>
         {children}
       </a>

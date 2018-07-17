@@ -62,7 +62,7 @@ class SidebarFilter extends React.PureComponent<Props> {
     const { filter } = this.props;
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
-        <div className="sidebar__filter">
+        <div className="sidebar__filter theme--sidebar__actions">
           <div className="form-control form-control--outlined form-control--btn-right">
             <input
               ref={this._setInputRef}

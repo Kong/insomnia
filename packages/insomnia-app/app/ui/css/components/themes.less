@@ -2,10 +2,12 @@
 @import '../constants/colors';
 
 .themes {
+  padding-top: @padding-lg;
+
   .themes__row {
     display: flex;
     flex-direction: row;
-    margin-bottom: @padding-lg;
+    margin-bottom: @padding-md;
   }
 
   .themes__theme {
@@ -13,21 +15,68 @@
 
     h2 {
       margin-top: 0;
+      margin-bottom: @padding-xs;
+      font-size: @font-size-md !important;
+    }
+
+    svg {
+      .bg-fill {
+        fill: var(--color-bg);
+      }
+
+      .success-fill {
+        fill: var(--color-success);
+      }
+
+      .notice-fill {
+        fill: var(--color-notice);
+      }
+
+      .warning-fill {
+        fill: var(--color-warning);
+      }
+
+      .danger-fill {
+        fill: var(--color-danger);
+      }
+
+      .surprise-fill {
+        fill: var(--color-surprise);
+      }
+
+      .info-fill {
+        fill: var(--color-info);
+      }
+
+      .fg-fill {
+        fill: var(--color-fg);
+      }
+
+      .hl-stroke {
+        stroke: var(--hl-md);
+      }
     }
   }
 
   button {
     position: relative;
     margin: 0 @padding-md;
+    font-size: 0;
+    border-radius: @radius-md;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.1);
 
-    img {
-      border: 1px solid @hl-md;
-      box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);
-      border-radius: @radius-md;
+    &.active {
+      border: @padding-xs solid var(--color-surprise);
     }
 
-    &.themes__theme--locked {
-      opacity: 1;
+    &:hover {
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(1.1);
+      transition: all 50ms ease-out;
     }
 
     &::after {
@@ -45,30 +94,6 @@
       top: 0;
       bottom: 0;
       visibility: hidden;
-    }
-
-    &.themes__theme--locked::after {
-      content: '\01f512';
-      font-size: 2rem;
-      opacity: 0.5;
-      visibility: visible;
-    }
-
-    &:not(.themes__theme--locked):hover::after {
-      content: 'Activate';
-      visibility: visible;
-      transform: rotate(-15deg);
-      mix-blend-mode: exclusion;
-      opacity: 1;
-    }
-
-    &.themes__theme--locked:hover::after {
-      content: 'Upgrade to Plus';
-      visibility: visible;
-      font-size: @font-size-md;
-      transform: rotate(-15deg);
-      mix-blend-mode: exclusion;
-      opacity: 1;
     }
   }
 }

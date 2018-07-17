@@ -30,7 +30,10 @@ let nunjucksAll = null;
  * @param {Object} [config.path] - Path to include in the error message
  * @param {Object} [config.renderMode] - Only render variables (not tags)
  */
-export function render(text: string, config: Object = {}): Promise<string> {
+export function render(
+  text: string,
+  config: { context?: Object, path?: string, renderMode?: string } = {}
+): Promise<string> {
   const context = config.context || {};
   const path = config.path || null;
   const renderMode = config.renderMode || RENDER_ALL;

@@ -46,7 +46,7 @@ class ResponseTimer extends PureComponent {
 
     return (
       <div
-        className={classnames('overlay theme--overlay', {
+        className={classnames('overlay theme--transparent-overlay', {
           'overlay--hidden': !show
         })}>
         {elapsedTime >= REQUEST_TIME_TO_SHOW_COUNTER ? (

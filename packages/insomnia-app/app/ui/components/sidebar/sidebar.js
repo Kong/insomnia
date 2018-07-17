@@ -62,13 +62,13 @@ class Sidebar extends PureComponent {
 
     return (
       <aside
-        className={classnames('sidebar', {
+        className={classnames('sidebar', 'theme--sidebar', {
           'sidebar--hidden': hidden,
           'sidebar--skinny': width < SIDEBAR_SKINNY_REMS,
           'sidebar--collapsed': width < COLLAPSE_SIDEBAR_REMS
         })}>
         <WorkspaceDropdown
-          className="sidebar__header"
+          className="sidebar__header theme--sidebar__header"
           activeWorkspace={workspace}
           workspaces={workspaces}
           unseenWorkspaces={unseenWorkspaces}

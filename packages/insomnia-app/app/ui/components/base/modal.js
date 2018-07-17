@@ -121,6 +121,7 @@ class Modal extends PureComponent {
 
     const classes = classnames(
       'modal',
+      'theme--dialog',
       className,
       { 'modal--fixed-height': tall },
       { 'modal--noescape': noEscape },
@@ -141,7 +142,7 @@ class Modal extends PureComponent {
           style={styles}
           onClick={this._handleClick}>
           <div
-            className="modal__backdrop overlay theme--overlay"
+            className="modal__backdrop overlay theme--transparent-overlay"
             data-close-modal
           />
           <div className="modal__content__wrapper">

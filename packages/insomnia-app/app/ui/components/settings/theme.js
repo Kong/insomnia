@@ -1,61 +1,180 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import Button from '../base/button';
+import type { Theme as ThemeType } from '../../../plugins';
+import { getThemes } from '../../../plugins';
 
-import imgLight from '../../images/light.png';
-import imgDark from '../../images/dark.png';
-import imgDefault from '../../images/default.png';
-import imgSolarizedLight from '../../images/solarized-light.png';
-import imgSolarizedDark from '../../images/solarized-dark.png';
-import imgSolarized from '../../images/solarized.png';
-import imgRailscasts from '../../images/railscasts.png';
-import imgPurple from '../../images/purple.png';
-import imgMaterial from '../../images/material.png';
+const THEMES_PER_ROW = 4;
 
-const THEMES_PER_ROW = 3;
-const THEMES = [
-  { key: 'default', name: 'Insomnia', img: imgDefault },
-  { key: 'light', name: 'Simple Light', img: imgLight },
-  { key: 'dark', name: 'Simple Dark', img: imgDark },
-  { key: 'purple', name: 'Purple', img: imgPurple },
-  { key: 'material', name: 'Material', img: imgMaterial },
-  { key: 'solarized', name: 'Solarized', img: imgSolarized },
-  { key: 'solarized-light', name: 'Solarized Light', img: imgSolarizedLight },
-  { key: 'solarized-dark', name: 'Solarized Dark', img: imgSolarizedDark },
-  { key: 'railscasts', name: 'Railscasts', img: imgRailscasts },
-  { key: 'one-dark', name: 'One Dark', img: imgRailscasts },
-  { key: 'one-light', name: 'One Light', img: imgRailscasts }
-];
+type Props = {
+  handleChangeTheme: string => void,
+  activeTheme: string
+};
+
+type State = {
+  themes: Array<ThemeType>
+};
 
 @autobind
-class Theme extends PureComponent {
-  renderTheme(theme) {
+class Theme extends React.PureComponent<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      themes: []
+    };
+  }
+
+  componentDidMount() {
+    this._loadThemes();
+  }
+
+  async _loadThemes() {
+    const themes = await getThemes();
+    this.setState({ themes });
+  }
+
+  renderTheme(theme: ThemeType) {
     const { handleChangeTheme, activeTheme } = this.props;
-    const isActive = activeTheme === theme.key;
+    const isActive = activeTheme === theme.theme.name;
 
     return (
       <div
-        key={theme.key}
+        key={theme.theme.name}
         className="themes__theme"
         style={{ maxWidth: `${100 / THEMES_PER_ROW}%` }}>
-        <h2 className="txt-lg">
-          {theme.name}{' '}
-          {isActive ? (
-            <span className="no-margin-top faint italic txt-md">(Active)</span>
-          ) : null}
-        </h2>
-        <Button onClick={handleChangeTheme} value={theme.key}>
-          <img src={theme.img} alt={theme.name} style={{ maxWidth: '100%' }} />
+        <h2 className="txt-lg">{theme.theme.displayName}</h2>
+        <Button
+          onClick={handleChangeTheme}
+          value={theme.theme.name}
+          className={isActive ? 'active' : ''}>
+          <svg width="100%" height="100%" viewBox="0 0 500 300">
+            <g subtheme={theme.theme.name}>
+              {/* Panes */}
+              <g className="theme--pane--sub">
+                <rect
+                  x="0"
+                  y="0"
+                  width="100%"
+                  height="100%"
+                  className="bg-fill"
+                />
+                <rect
+                  x="25%"
+                  y="0"
+                  width="100%"
+                  height="10%"
+                  className="theme--pane__header--sub bg-fill"
+                />
+              </g>
+
+              {/* Sidebar */}
+              <g className="theme--sidebar--sub">
+                <rect
+                  x="0"
+                  y="0"
+                  width="25%"
+                  height="100%"
+                  className="bg-fill"
+                />
+                <rect
+                  x="0"
+                  y="0"
+                  width="25%"
+                  height="10%"
+                  className="theme--sidebar__header--sub bg-fill"
+                />
+              </g>
+
+              {/* Lines */}
+              <line
+                x1="25%"
+                x2="100%"
+                y1="10%"
+                y2="10%"
+                strokeWidth="1"
+                className="hl-stroke"
+              />
+              <line
+                x1="62%"
+                x2="62%"
+                y1="0"
+                y2="100%"
+                strokeWidth="1"
+                className="hl-stroke"
+              />
+              <line
+                x1="25%"
+                x2="25%"
+                y1="0"
+                y2="100%"
+                strokeWidth="1"
+                className="hl-stroke"
+              />
+              <line
+                x1="0"
+                x2="25%"
+                y1="10%"
+                y2="10%"
+                strokeWidth="1"
+                className="hl-stroke"
+              />
+
+              {/* Colors */}
+              <rect
+                x="40%"
+                y="85%"
+                width="5%"
+                height="8%"
+                className="success-fill"
+              />
+              <rect
+                x="50%"
+                y="85%"
+                width="5%"
+                height="8%"
+                className="info-fill"
+              />
+              <rect
+                x="60%"
+                y="85%"
+                width="5%"
+                height="8%"
+                className="warning-fill"
+              />
+              <rect
+                x="70%"
+                y="85%"
+                width="5%"
+                height="8%"
+                className="danger-fill"
+              />
+              <rect
+                x="80%"
+                y="85%"
+                width="5%"
+                height="8%"
+                className="surprise-fill"
+              />
+              <rect
+                x="90%"
+                y="85%"
+                width="5%"
+                height="8%"
+                className="info-fill"
+              />
+            </g>
+          </svg>
         </Button>
       </div>
     );
   }
 
-  renderThemeRows(themes) {
+  renderThemeRows() {
+    const { themes } = this.state;
+
     const rows = [];
     let row = [];
-
     for (const theme of themes) {
       row.push(theme);
       if (row.length === THEMES_PER_ROW) {
@@ -77,13 +196,8 @@ class Theme extends PureComponent {
   }
 
   render() {
-    return <div className="themes pad-top">{this.renderThemeRows(THEMES)}</div>;
+    return <div className="themes pad-top">{this.renderThemeRows()}</div>;
   }
 }
-
-Theme.propTypes = {
-  handleChangeTheme: PropTypes.func.isRequired,
-  activeTheme: PropTypes.string.isRequired
-};
 
 export default Theme;

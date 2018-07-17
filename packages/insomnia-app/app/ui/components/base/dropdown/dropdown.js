@@ -242,6 +242,8 @@ class Dropdown extends PureComponent {
     if (!container) {
       container = document.createElement('div');
       container.id = 'dropdowns-container';
+      container.style.zIndex = '1000000';
+      container.style.position = 'relative';
       document.body.appendChild(container);
     }
 
@@ -382,7 +384,7 @@ class Dropdown extends PureComponent {
       finalChildren = [
         dropdownButtons[0],
         <div key="item" className={menuClasses} ref={this._addDropdownMenuRef}>
-          <div className="dropdown__backdrop theme--overlay" />
+          <div className="dropdown__backdrop theme--transparent-overlay" />
           <div
             key={uniquenessKey}
             ref={this._addDropdownListRef}

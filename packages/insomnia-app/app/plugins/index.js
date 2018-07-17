@@ -7,6 +7,7 @@ import { PLUGIN_PATH } from '../common/constants';
 import { resolveHomePath } from '../common/misc';
 import { showError } from '../ui/components/modals/index';
 import type { PluginTemplateTag } from '../templating/extensions/index';
+import type { PluginTheme } from './misc';
 
 export type Plugin = {
   name: string,
@@ -31,6 +32,11 @@ export type ResponseHook = {
   hook: Function
 };
 
+export type Theme = {
+  plugin: Plugin,
+  theme: PluginTheme
+};
+
 const CORE_PLUGINS = [
   'insomnia-plugin-base64',
   'insomnia-plugin-hash',
@@ -40,7 +46,8 @@ const CORE_PLUGINS = [
   'insomnia-plugin-prompt',
   'insomnia-plugin-request',
   'insomnia-plugin-response',
-  'insomnia-plugin-jsonpath'
+  'insomnia-plugin-jsonpath',
+  'insomnia-plugin-core-themes'
 ];
 
 let plugins: ?Array<Plugin> = null;
@@ -191,6 +198,16 @@ export async function getResponseHooks(): Promise<Array<ResponseHook>> {
   }
 
   return functions;
+}
+
+export async function getThemes(): Promise<Array<Theme>> {
+  let extensions = [];
+  for (const plugin of await getPlugins()) {
+    const themes = plugin.module.themes || [];
+    extensions = [...extensions, ...themes.map(theme => ({ plugin, theme }))];
+  }
+
+  return extensions;
 }
 
 function _initPlugin(packageJSON: Object, module: any, path: ?string): Plugin {

@@ -57,7 +57,7 @@ class SettingsModal extends PureComponent {
     this.modal.hide();
   }
 
-  _handleChangeTheme(theme, persist = true) {
+  async _handleChangeTheme(theme, persist = true) {
     document.body.setAttribute('theme', theme);
 
     if (persist) {

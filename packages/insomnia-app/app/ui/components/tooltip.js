@@ -126,6 +126,8 @@ class Tooltip extends React.PureComponent<Props, State> {
     if (!container) {
       container = document.createElement('div');
       container.id = 'tooltips-container';
+      container.style.zIndex = '1000000';
+      container.style.position = 'relative';
 
       document.body && document.body.appendChild(container);
     }
@@ -154,7 +156,7 @@ class Tooltip extends React.PureComponent<Props, State> {
     const { visible } = this.state;
 
     const tooltipClasses = classnames(className, 'tooltip');
-    const bubbleClasses = classnames('tooltip__bubble', {
+    const bubbleClasses = classnames('tooltip__bubble theme--tooltip', {
       'tooltip__bubble--visible': visible
     });
 
