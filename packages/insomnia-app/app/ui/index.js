@@ -12,11 +12,13 @@ import { init as initPlugins } from '../plugins';
 import DNDBackend from './dnd-backend';
 import './css/index.less';
 import { isDevelopment } from '../common/constants';
+import { setThemes } from '../plugins/misc';
 
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
 
 (async function() {
+  await setThemes();
   await db.initClient();
 
   // Create Redux store

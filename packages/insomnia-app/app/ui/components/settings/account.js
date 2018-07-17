@@ -48,7 +48,7 @@ class Account extends PureComponent {
         </div>
         <p>
           Or{' '}
-          <a href="#" onClick={this._handleLogin}>
+          <a href="#" onClick={this._handleLogin} className="theme--link">
             Login
           </a>
         </p>

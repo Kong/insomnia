@@ -19,7 +19,11 @@ class ModalHeader extends PureComponent {
     }
 
     return (
-      <div className={classnames('modal__header', className)}>
+      <div
+        className={classnames(
+          'modal__header theme--dialog__header',
+          className
+        )}>
         <div className="modal__header__children">{children}</div>
         {closeButton}
       </div>

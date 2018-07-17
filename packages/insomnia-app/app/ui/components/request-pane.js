@@ -174,11 +174,15 @@ class RequestPane extends React.PureComponent<Props> {
       updateSettingsShowPasswords
     } = this.props;
 
+    const paneClasses = 'request-pane theme--pane pane';
+    const paneHeaderClasses = 'pane__header theme--pane__header';
+    const paneBodyClasses = 'pane__body theme--pane__body';
+
     if (!request) {
       return (
-        <section className="request-pane pane">
-          <header className="pane__header" />
-          <div className="pane__body pane__body--placeholder">
+        <section className={paneClasses}>
+          <header className={paneHeaderClasses} />
+          <div className={paneBodyClasses + ' pane__body--placeholder'}>
             <div>
               <table className="table--fancy">
                 <tbody>
@@ -239,8 +243,8 @@ class RequestPane extends React.PureComponent<Props> {
     const uniqueKey = `${forceRefreshCounter}::${request._id}`;
 
     return (
-      <section className="pane request-pane">
-        <header className="pane__header">
+      <section className={paneClasses}>
+        <header className={paneHeaderClasses}>
           <ErrorBoundary errorClassName="font-error pad text-center">
             <RequestUrlBar
               uniquenessKey={uniqueKey}
@@ -260,7 +264,7 @@ class RequestPane extends React.PureComponent<Props> {
             />
           </ErrorBoundary>
         </header>
-        <Tabs className="react-tabs pane__body" forceRenderTabPanel>
+        <Tabs className={paneBodyClasses + ' react-tabs'} forceRenderTabPanel>
           <TabList>
             <Tab>
               <ContentTypeDropdown

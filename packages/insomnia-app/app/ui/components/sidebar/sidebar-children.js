@@ -123,7 +123,7 @@ class SidebarChildren extends React.PureComponent<Props> {
     const { childObjects } = this.props;
 
     return (
-      <ul className="sidebar__list sidebar__list-root">
+      <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
         {this._renderChildren(childObjects)}
       </ul>
     );
