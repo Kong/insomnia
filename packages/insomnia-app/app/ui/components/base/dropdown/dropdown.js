@@ -242,6 +242,8 @@ class Dropdown extends PureComponent {
     if (!container) {
       container = document.createElement('div');
       container.id = 'dropdowns-container';
+      container.style.zIndex = '1000000';
+      container.style.position = 'relative';
       document.body.appendChild(container);
     }
 

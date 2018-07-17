@@ -27,7 +27,7 @@ module.exports = {
       },
       dialog: {
         background: {
-          default: '#282828'
+          default: '#2a2a2a'
         }
       }
     }

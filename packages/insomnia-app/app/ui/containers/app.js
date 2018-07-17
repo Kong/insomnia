@@ -68,7 +68,6 @@ import * as templating from '../../templating/index';
 import AskModal from '../components/modals/ask-modal';
 import { updateMimeType } from '../../models/request';
 import MoveRequestGroupModal from '../components/modals/move-request-group-modal';
-import { generateThemeCSS } from '../../plugins/misc';
 import * as themes from '../../plugins/misc';
 
 @autobind

@@ -18,7 +18,6 @@ import { Curl } from 'insomnia-libcurl';
 import { getAppName, getAppVersion } from '../../../common/constants';
 import * as session from '../../../sync/session';
 import Tooltip from '../tooltip';
-import { generateThemeCSS } from '../../../plugins/misc';
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;

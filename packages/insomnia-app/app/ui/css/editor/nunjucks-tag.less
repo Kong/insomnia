@@ -19,13 +19,16 @@
       left: 0;
       height: 100%;
       width: 100%;
-      opacity: 0.7; // not so bright!
-      content: " ";
+      content: ' ';
       z-index: -1;
       border-radius: 0.2em;
       box-sizing: border-box;
       box-shadow: inset 0 0 0.1em rgba(0, 0, 0, 0.4);
       transition: background-color 300ms;
+
+      // not so bright!
+      opacity: 0.8;
+      filter: grayscale(20%);
     }
 
     label {
@@ -61,14 +64,14 @@
       background: rgba(255, 255, 255, 0.1);
     }
 
-    &[data-error="on"] {
+    &[data-error='on'] {
       color: var(--color-font-danger);
       &::after {
         background: var(--color-danger);
       }
     }
 
-    &[data-ignore="on"]::after {
+    &[data-ignore='on']::after {
       background: var(--hl-xl);
       color: bar(--color-font);
     }
