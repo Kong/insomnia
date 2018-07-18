@@ -12,14 +12,17 @@ import { init as initPlugins } from '../plugins';
 import DNDBackend from './dnd-backend';
 import './css/index.less';
 import { isDevelopment } from '../common/constants';
-import { setThemes } from '../plugins/misc';
+import { setTheme } from '../plugins/misc';
 
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
 
 (async function() {
-  await setThemes();
   await db.initClient();
+  await initPlugins();
+
+  const settings = await models.settings.getOrCreate();
+  await setTheme(settings.theme);
 
   // Create Redux store
   const store = await initStore();
@@ -48,7 +51,6 @@ document.body.setAttribute('data-platform', process.platform);
 
   // Do things that can wait
   process.nextTick(initSync);
-  process.nextTick(initPlugins);
 })();
 
 // Export some useful things for dev

@@ -12,7 +12,7 @@ module.exports = {
       info: '#2aa198'
     },
     foreground: {
-      default: '#8ea0a2'
+      default: '#98aaac'
     },
     highlight: {
       default: 'rgb(142, 149, 146)',

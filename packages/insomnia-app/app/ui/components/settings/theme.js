@@ -5,7 +5,7 @@ import Button from '../base/button';
 import type { Theme as ThemeType } from '../../../plugins';
 import { getThemes } from '../../../plugins';
 
-const THEMES_PER_ROW = 4;
+const THEMES_PER_ROW = 5;
 
 type Props = {
   handleChangeTheme: string => void,

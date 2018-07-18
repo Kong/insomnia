@@ -3,7 +3,7 @@ module.exports = {
   displayName: 'Hyper',
   theme: {
     foreground: {
-      default: '#ccc'
+      default: '#ddd'
     },
     background: {
       default: '#000',
@@ -14,6 +14,11 @@ module.exports = {
       surprise: '#f24aff',
       info: '#23dce8'
     },
+    rawCss: `
+      .tooltip, .dropdown__menu {
+        opacity: 0.95;
+      }
+    `,
     styles: {
       dialog: {
         background: {
@@ -23,6 +28,11 @@ module.exports = {
       transparentOverlay: {
         background: {
           default: 'rgba(0, 0, 0, 0.5)'
+        }
+      },
+      sidebar: {
+        highlight: {
+          default: '#aaa'
         }
       },
       paneHeader: {

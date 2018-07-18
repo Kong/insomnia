@@ -29,6 +29,11 @@ module.exports = {
       lg: 'rgba(114, 145, 143, 0.6)',
       xl: 'rgba(114, 145, 143, 0.8)'
     },
+    rawCss: `
+      .tooltip, .dropdown__menu {
+        opacity: 0.95;
+      }
+    `,
     styles: {
       link: {
         foreground: {
@@ -82,6 +87,11 @@ module.exports = {
           md: 'rgba(114, 145, 143, 0.2)',
           lg: 'rgba(114, 145, 143, 0.5)',
           xl: 'rgba(114, 145, 143, 0.7)'
+        }
+      },
+      transparentOverlay: {
+        background: {
+          default: 'rgba(37, 49, 55, 0.9)'
         }
       }
     }

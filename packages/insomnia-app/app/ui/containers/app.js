@@ -839,9 +839,10 @@ class App extends PureComponent {
     });
 
     ipcRenderer.on('reload-plugins', async () => {
+      const { settings } = this.props;
       await plugins.getPlugins(true);
       templating.reload();
-      themes.setThemes();
+      themes.setTheme(settings.theme);
       console.log('[plugins] reloaded');
     });
 

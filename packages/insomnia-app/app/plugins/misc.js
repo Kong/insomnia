@@ -1,6 +1,7 @@
 // @flow
 import { render, THROW_ON_ERROR } from '../common/render';
 import { getThemes } from './index';
+import type { Theme } from './index';
 
 type ThemeBlock = {
   background?: {
@@ -144,9 +145,7 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
     css += wrapStyles(n, '.CodeMirror-info', getThemeBlockCSS(styles.dialog));
   }
 
-  return typeof renderedTheme.rawCss === 'string'
-    ? css + '\n\n' + renderedTheme.rawCss
-    : css;
+  return css;
 }
 
 function getThemeBlockCSS(block?: ThemeBlock): string {
@@ -229,29 +228,36 @@ function wrapStyles(theme: string, selector: string, styles: string) {
   ].join('\n');
 }
 
-export async function setThemes() {
+export async function setTheme(themeName: string) {
   if (!document) {
     return;
   }
 
   const head = document.head;
+  const body = document.body;
 
-  if (!head) {
+  if (!head || !body) {
     return;
   }
 
-  const themes = await getThemes();
+  body.setAttribute('theme', themeName);
+  const themes: Array<Theme> = await getThemes();
 
   for (const theme of themes) {
-    const themeCSS = (await generateThemeCSS(theme.theme)) + '\n';
+    let themeCSS = (await generateThemeCSS(theme.theme)) + '\n';
+    const { name } = theme.theme;
+    const { rawCss } = theme.theme.theme;
 
-    let s = document.querySelector(
-      `style[data-theme-name="${theme.theme.name}"]`
-    );
+    let s = document.querySelector(`style[data-theme-name="${name}"]`);
+
     if (!s) {
       s = document.createElement('style');
-      s.setAttribute('data-theme-name', theme.theme.name);
+      s.setAttribute('data-theme-name', name);
       head.appendChild(s);
+    }
+
+    if (typeof rawCss === 'string' && name === themeName) {
+      themeCSS += '\n\n' + rawCss;
     }
 
     s.innerHTML = themeCSS;

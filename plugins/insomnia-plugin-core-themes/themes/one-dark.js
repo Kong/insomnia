@@ -5,7 +5,7 @@ module.exports = {
     background: {
       default: '#272c35',
       success: '#98c379',
-      notice: '#d19a66',
+      notice: '#e3a96c',
       warning: '#d19a66',
       danger: '#e06c75',
       surprise: '#c678dd',
@@ -25,8 +25,8 @@ module.exports = {
       xxs: 'rgba(114, 121, 133, 0.05)',
       xs: 'rgba(114, 121, 133, 0.1)',
       sm: 'rgba(114, 121, 133, 0.2)',
-      md: 'rgba(114, 121, 133, 0.3)',
-      lg: 'rgba(114, 121, 133, 0.5)',
+      md: 'rgba(114, 121, 133, 0.4)',
+      lg: 'rgba(114, 121, 133, 0.6)',
       xl: 'rgba(114, 121, 133, 0.8)'
     },
     styles: {
@@ -37,7 +37,7 @@ module.exports = {
       },
       dialog: {
         background: {
-          default: '#2b303a'
+          default: '#303640'
         }
       },
       paneHeader: {

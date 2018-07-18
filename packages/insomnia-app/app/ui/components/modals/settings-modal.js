@@ -18,6 +18,7 @@ import { Curl } from 'insomnia-libcurl';
 import { getAppName, getAppVersion } from '../../../common/constants';
 import * as session from '../../../sync/session';
 import Tooltip from '../tooltip';
+import { setTheme } from '../../../plugins/misc';
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
@@ -58,7 +59,7 @@ class SettingsModal extends PureComponent {
   }
 
   async _handleChangeTheme(theme, persist = true) {
-    document.body.setAttribute('theme', theme);
+    setTheme(theme);
 
     if (persist) {
       models.settings.update(this.props.settings, { theme });

@@ -402,7 +402,7 @@ class Dropdown extends PureComponent {
               />
             </div>
             {noResults && (
-              <div className="text-center pad faint">Nothing to show</div>
+              <div className="text-center pad warning">No match :(</div>
             )}
             <ul className={classnames({ hide: noResults })}>{dropdownItems}</ul>
           </div>

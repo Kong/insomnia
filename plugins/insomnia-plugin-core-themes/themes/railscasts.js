@@ -10,7 +10,7 @@ module.exports = {
       success: '#a5c261',
       notice: '#ffc66d',
       warning: '#e48a37',
-      danger: '#dc4939',
+      danger: '#ee4b3b',
       surprise: '#b6b3eb',
       info: '#6d9cbe'
     },

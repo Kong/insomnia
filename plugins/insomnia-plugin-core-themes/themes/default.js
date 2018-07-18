@@ -65,9 +65,9 @@ module.exports = {
           success: '#75ba24',
           notice: '#d8c84d',
           warning: '#ec8702',
-          danger: '#ee5655',
-          surprise: '#a590ff',
-          info: '#22c1ee'
+          danger: '#e15251',
+          surprise: '#8776d5',
+          info: '#20aed9'
         }
       },
       pane: {
@@ -79,9 +79,6 @@ module.exports = {
           danger: '{{ styles.sidebar.background.danger }}',
           surprise: '{{ styles.sidebar.background.surprise }}',
           info: '{{ styles.sidebar.background.info }}'
-        },
-        foreground: {
-          default: 'e0e0e0'
         },
         highlight: {
           default: '#999'

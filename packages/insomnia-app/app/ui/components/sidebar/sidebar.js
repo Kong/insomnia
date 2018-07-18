@@ -78,28 +78,32 @@ class Sidebar extends PureComponent {
           isLoading={isLoading}
         />
 
-        <div className="sidebar__menu">
-          <EnvironmentsDropdown
-            handleChangeEnvironment={this._handleChangeEnvironment}
-            activeEnvironment={activeEnvironment}
-            environments={environments}
-            workspace={workspace}
-            environmentHighlightColorStyle={environmentHighlightColorStyle}
-          />
-          <button className="btn btn--super-compact" onClick={showCookiesModal}>
-            <div className="sidebar__menu__thing">
-              <span>Cookies</span>
-            </div>
-          </button>
-        </div>
+        <div className="sidebar__top theme--sidebar__actions">
+          <div className="sidebar__menu">
+            <EnvironmentsDropdown
+              handleChangeEnvironment={this._handleChangeEnvironment}
+              activeEnvironment={activeEnvironment}
+              environments={environments}
+              workspace={workspace}
+              environmentHighlightColorStyle={environmentHighlightColorStyle}
+            />
+            <button
+              className="btn btn--super-compact"
+              onClick={showCookiesModal}>
+              <div className="sidebar__menu__thing">
+                <span>Cookies</span>
+              </div>
+            </button>
+          </div>
 
-        <SidebarFilter
-          key={`${workspace._id}::filter`}
-          onChange={handleChangeFilter}
-          requestCreate={this._handleCreateRequestInWorkspace}
-          requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
-          filter={filter || ''}
-        />
+          <SidebarFilter
+            key={`${workspace._id}::filter`}
+            onChange={handleChangeFilter}
+            requestCreate={this._handleCreateRequestInWorkspace}
+            requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
+            filter={filter || ''}
+          />
+        </div>
 
         <SidebarChildren
           childObjects={childObjects}
