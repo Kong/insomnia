@@ -29,7 +29,8 @@
     "start": "concurrently --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "build": "node ./scripts/build.js",
     "package": "node ./scripts/package.js",
-    "postinstall": "rimraf node_modules/.bin/npm && electron-rebuild -f -w insomnia-libcurl"
+    "bootstrap": "electron-rebuild -f -w insomnia-libcurl",
+    "postinstall": "rimraf node_modules/.bin/npm"
   },
   "dev": {
     "dev-server-port": 3333
