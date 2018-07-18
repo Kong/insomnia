@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "1.0.30",
+  "version": "1.0.31",
   "name": "insomnia-app",
   "app": {
     "name": "insomnia",
@@ -167,7 +167,7 @@
     "concurrently": "^3.5.0",
     "cross-env": "^2.0.0",
     "css-loader": "^0.28.11",
-    "electron": "^2.0.5",
+    "electron": "^1.8.7",
     "electron-builder": "^20.10.0",
     "electron-builder-lib": "^20.10.0",
     "electron-builder-squirrel-windows": "^20.10.0",
