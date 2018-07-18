@@ -191,6 +191,7 @@
     "less": "^2.7.2",
     "less-loader": "^4.1.0",
     "ncp": "^2.0.0",
+    "npm": "^6.2.0",
     "react-hot-loader": "^4.1.0",
     "redux-mock-store": "^1.0.2",
     "rimraf": "^2.6.2",
