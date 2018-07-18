@@ -108,7 +108,7 @@
     "insomnia-cookies": "^0.0.7",
     "insomnia-httpsnippet": "^1.16.11",
     "insomnia-importers": "^2.0.6",
-    "insomnia-libcurl": "^0.0.10",
+    "insomnia-libcurl": "^0.0.12",
     "insomnia-plugin-base64": "^1.0.4",
     "insomnia-plugin-core-themes": "^1.0.3",
     "insomnia-plugin-file": "^1.0.4",
