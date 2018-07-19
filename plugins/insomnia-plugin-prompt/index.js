@@ -1,7 +1,5 @@
 module.exports.requestHooks = [
   context => {
-    const requestId = context.request.getId();
-
     // Delete cached values we prompt again on the next request
     context.store.clear();
   }

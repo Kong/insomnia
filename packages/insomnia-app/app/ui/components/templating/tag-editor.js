@@ -631,10 +631,15 @@ class TagEditor extends React.PureComponent<Props, State> {
     let previewElement;
     if (error) {
       previewElement = (
-        <textarea className="danger" value={error || 'Error'} readOnly />
+        <textarea
+          className="danger"
+          value={error || 'Error'}
+          readOnly
+          rows={5}
+        />
       );
     } else if (rendering) {
-      previewElement = <textarea value="rendering..." readOnly />;
+      previewElement = <textarea value="rendering..." readOnly rows={5} />;
     } else {
       previewElement = (
         <textarea value={preview || 'error'} readOnly rows={5} />
