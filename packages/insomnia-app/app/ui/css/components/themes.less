@@ -60,14 +60,14 @@
 
   button {
     position: relative;
-    margin: 0 @padding-md;
+    margin: @padding-md @padding-md;
     font-size: 0;
     border-radius: @radius-md;
     overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 0 1px @hl-sm;
 
     &.active {
-      border: @padding-xs solid var(--color-surprise);
+      box-shadow: 0 0 0 @padding-xs var(--color-surprise);
     }
 
     &:hover {
@@ -75,7 +75,6 @@
     }
 
     &:active {
-      transform: scale(1.1);
       transition: all 50ms ease-out;
     }
 
