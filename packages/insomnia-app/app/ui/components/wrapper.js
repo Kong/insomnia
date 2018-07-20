@@ -584,25 +584,25 @@ class Wrapper extends React.PureComponent<Props, State> {
           borderTop:
             activeEnvironment &&
             activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'bar'
+            settings.environmentHighlightColorStyle === 'window-top'
               ? '5px solid ' + activeEnvironment.color
               : null,
           borderBottom:
             activeEnvironment &&
             activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'bar-bottom'
+            settings.environmentHighlightColorStyle === 'window-bottom'
               ? '5px solid ' + activeEnvironment.color
               : null,
           borderLeft:
             activeEnvironment &&
             activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'bar-left'
+            settings.environmentHighlightColorStyle === 'window-left'
               ? '5px solid ' + activeEnvironment.color
               : null,
           borderRight:
             activeEnvironment &&
             activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'bar-right'
+            settings.environmentHighlightColorStyle === 'window-right'
               ? '5px solid ' + activeEnvironment.color
               : null
         }}>

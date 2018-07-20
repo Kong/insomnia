@@ -104,7 +104,7 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
               <div className="sidebar__menu__thing__text">
                 {activeEnvironment &&
                 activeEnvironment.color &&
-                environmentHighlightColorStyle === 'dot' ? (
+                environmentHighlightColorStyle === 'sidebar-indicator' ? (
                   <i
                     className="fa fa-circle space-right"
                     style={{ color: activeEnvironment.color }}

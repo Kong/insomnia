@@ -72,7 +72,7 @@ class Sidebar extends PureComponent {
           borderRight:
             activeEnvironment &&
             activeEnvironment.color &&
-            environmentHighlightColorStyle === 'bar-sidebar'
+            environmentHighlightColorStyle === 'sidebar-edge'
               ? '5px solid ' + activeEnvironment.color
               : null
         }}>
