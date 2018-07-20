@@ -102,6 +102,12 @@
       background-color: @hl-xxs;
     }
 
+    // Because <select> is weird
+    select {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+
     &:not(.form-control--tall) {
       .input,
       input,
