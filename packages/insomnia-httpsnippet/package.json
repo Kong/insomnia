@@ -47,9 +47,9 @@
   },
   "scripts": {
     "quick": "mocha --no-timeouts --fgrep 'Request Validation' --invert",
-    "pretest": "standard && echint",
+    "__pretest": "standard && echint",
     "__test": "mocha --no-timeouts",
-    "posttest": "npm run coverage",
+    "__posttest": "npm run coverage",
     "coverage": "istanbul cover --dir coverage _mocha -- --fgrep 'Request Validation' --invert -R dot",
     "codeclimate": "codeclimate < coverage/lcov.info"
   },
