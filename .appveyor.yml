@@ -24,7 +24,6 @@ install:
   - npm test
 
 cache:
-  - '%APPDATA%\npm-cache -> packages/insomnia-app/package.json'
   - '%USERPROFILE%\.electron -> packages/insomnia-app/package.json'
 
 #---------------------------------#
