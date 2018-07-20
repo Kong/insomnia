@@ -580,10 +580,17 @@ class Wrapper extends React.PureComponent<Props, State> {
         style={{
           gridTemplateColumns: columns,
           gridTemplateRows: rows,
+          boxSizing: 'border-box',
           borderTop:
             activeEnvironment &&
             activeEnvironment.color &&
             settings.environmentHighlightColorStyle === 'bar'
+              ? '5px solid ' + activeEnvironment.color
+              : null,
+          borderBottom:
+            activeEnvironment &&
+            activeEnvironment.color &&
+            settings.environmentHighlightColorStyle === 'bar-bottom'
               ? '5px solid ' + activeEnvironment.color
               : null
         }}>
@@ -683,20 +690,6 @@ class Wrapper extends React.PureComponent<Props, State> {
             onDoubleClick={handleResetDragPaneVertical}
           />
         </div>
-
-        {activeEnvironment &&
-        activeEnvironment.color &&
-        settings.environmentHighlightColorStyle === 'bar-bottom' ? (
-          <div
-            style={{
-              height: '5px',
-              backgroundColor: activeEnvironment.color,
-              gridRowStart: 4,
-              gridColumnStart: 1,
-              gridColumnEnd: 'span 5'
-            }}
-          />
-        ) : null}
 
         <ErrorBoundary showAlert>
           <ResponsePane
