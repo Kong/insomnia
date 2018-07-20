@@ -29,8 +29,7 @@
     "start": "concurrently --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "build": "node ./scripts/build.js",
     "package": "node ./scripts/package.js",
-    "bootstrap": "electron-rebuild -f -w insomnia-libcurl",
-    "postinstall": "rimraf node_modules/.bin/npm"
+    "bootstrap": "electron-rebuild -f -w insomnia-libcurl"
   },
   "dev": {
     "dev-server-port": 3333
@@ -192,7 +191,7 @@
     "less": "^2.7.2",
     "less-loader": "^4.1.0",
     "ncp": "^2.0.0",
-    "npm": "^6.2.0",
+    "npm": "^5.5.1",
     "react-hot-loader": "^4.1.0",
     "redux-mock-store": "^1.0.2",
     "rimraf": "^2.6.2",
