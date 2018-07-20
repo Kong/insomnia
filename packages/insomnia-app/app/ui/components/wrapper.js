@@ -684,6 +684,20 @@ class Wrapper extends React.PureComponent<Props, State> {
           />
         </div>
 
+        {activeEnvironment &&
+        activeEnvironment.color &&
+        settings.environmentHighlightColorStyle === 'bar-bottom' ? (
+          <div
+            style={{
+              height: '5px',
+              backgroundColor: activeEnvironment.color,
+              gridRowStart: 4,
+              gridColumnStart: 1,
+              gridColumnEnd: 'span 5'
+            }}
+          />
+        ) : null}
+
         <ErrorBoundary showAlert>
           <ResponsePane
             ref={handleSetResponsePaneRef}

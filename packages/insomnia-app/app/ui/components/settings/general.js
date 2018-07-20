@@ -155,7 +155,8 @@ class General extends React.PureComponent<Props> {
               name="environmentHighlightColorStyle"
               onChange={this._handleUpdateSetting}>
               <option value="dot">Dot</option>
-              <option value="bar">Bar</option>
+              <option value="bar">Top bar</option>
+              <option value="bar-bottom">Bottom bar</option>
             </select>
           </label>
         </div>
