@@ -592,6 +592,18 @@ class Wrapper extends React.PureComponent<Props, State> {
             activeEnvironment.color &&
             settings.environmentHighlightColorStyle === 'bar-bottom'
               ? '5px solid ' + activeEnvironment.color
+              : null,
+          borderLeft:
+            activeEnvironment &&
+            activeEnvironment.color &&
+            settings.environmentHighlightColorStyle === 'bar-left'
+              ? '5px solid ' + activeEnvironment.color
+              : null,
+          borderRight:
+            activeEnvironment &&
+            activeEnvironment.color &&
+            settings.environmentHighlightColorStyle === 'bar-right'
+              ? '5px solid ' + activeEnvironment.color
               : null
         }}>
         <ErrorBoundary showAlert>

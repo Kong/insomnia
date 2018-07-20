@@ -157,6 +157,9 @@ class General extends React.PureComponent<Props> {
               <option value="dot">Dot</option>
               <option value="bar">Top bar</option>
               <option value="bar-bottom">Bottom bar</option>
+              <option value="bar-left">Left bar</option>
+              <option value="bar-right">Right bar</option>
+              <option value="bar-sidebar">Sidebar border</option>
             </select>
           </label>
         </div>
