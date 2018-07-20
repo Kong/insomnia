@@ -66,7 +66,16 @@ class Sidebar extends PureComponent {
           'sidebar--hidden': hidden,
           'sidebar--skinny': width < SIDEBAR_SKINNY_REMS,
           'sidebar--collapsed': width < COLLAPSE_SIDEBAR_REMS
-        })}>
+        })}
+        style={{
+          boxSizing: 'border-box',
+          borderRight:
+            activeEnvironment &&
+            activeEnvironment.color &&
+            environmentHighlightColorStyle === 'sidebar-edge'
+              ? '5px solid ' + activeEnvironment.color
+              : null
+        }}>
         <WorkspaceDropdown
           className="sidebar__header theme--sidebar__header"
           activeWorkspace={workspace}

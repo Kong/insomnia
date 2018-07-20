@@ -580,10 +580,29 @@ class Wrapper extends React.PureComponent<Props, State> {
         style={{
           gridTemplateColumns: columns,
           gridTemplateRows: rows,
+          boxSizing: 'border-box',
           borderTop:
             activeEnvironment &&
             activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'bar'
+            settings.environmentHighlightColorStyle === 'window-top'
+              ? '5px solid ' + activeEnvironment.color
+              : null,
+          borderBottom:
+            activeEnvironment &&
+            activeEnvironment.color &&
+            settings.environmentHighlightColorStyle === 'window-bottom'
+              ? '5px solid ' + activeEnvironment.color
+              : null,
+          borderLeft:
+            activeEnvironment &&
+            activeEnvironment.color &&
+            settings.environmentHighlightColorStyle === 'window-left'
+              ? '5px solid ' + activeEnvironment.color
+              : null,
+          borderRight:
+            activeEnvironment &&
+            activeEnvironment.color &&
+            settings.environmentHighlightColorStyle === 'window-right'
               ? '5px solid ' + activeEnvironment.color
               : null
         }}>

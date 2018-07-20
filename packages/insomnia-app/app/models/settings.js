@@ -60,7 +60,7 @@ export function init(): BaseSettings {
     deviceId: null,
     updateChannel: UPDATE_CHANNEL_STABLE,
     updateAutomatically: true,
-    environmentHighlightColorStyle: 'dot'
+    environmentHighlightColorStyle: 'sidebar-indicator'
   };
 }
 

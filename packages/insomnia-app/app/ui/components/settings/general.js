@@ -154,8 +154,12 @@ class General extends React.PureComponent<Props> {
               defaultValue={settings.environmentHighlightColorStyle}
               name="environmentHighlightColorStyle"
               onChange={this._handleUpdateSetting}>
-              <option value="dot">Dot</option>
-              <option value="bar">Bar</option>
+              <option value="sidebar-indicator">Sidebar indicator</option>
+              <option value="sidebar-edge">Sidebar edge</option>
+              <option value="window-top">Window top</option>
+              <option value="window-bottom">Window bottom</option>
+              <option value="window-left">Window left</option>
+              <option value="window-right">Window right</option>
             </select>
           </label>
         </div>
