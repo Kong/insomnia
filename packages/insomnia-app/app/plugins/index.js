@@ -47,6 +47,7 @@ const CORE_PLUGINS = [
   'insomnia-plugin-request',
   'insomnia-plugin-response',
   'insomnia-plugin-jsonpath',
+  'insomnia-plugin-cookie-jar',
   'insomnia-plugin-core-themes'
 ];
 

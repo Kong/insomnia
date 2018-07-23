@@ -4,7 +4,7 @@ module.exports.templateTags = [
   {
     name: 'hash',
     displayName: 'Hash',
-    description: 'Apply hash to a value',
+    description: 'apply hash to a value',
     args: [
       {
         displayName: 'Algorithm',

@@ -4,7 +4,7 @@ module.exports.templateTags = [
   {
     displayName: 'JSONPath',
     name: 'jsonpath',
-    description: 'Pull data from JSON strings with JSONPath',
+    description: 'pull data from JSON strings with JSONPath',
     args: [
       {
         displayName: 'JSON string',

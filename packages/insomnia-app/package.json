@@ -110,6 +110,7 @@
     "insomnia-importers": "^2.0.6",
     "insomnia-libcurl": "^0.0.16",
     "insomnia-plugin-base64": "^1.0.4",
+    "insomnia-plugin-cookie-jar": "^1.0.1",
     "insomnia-plugin-core-themes": "^1.0.3",
     "insomnia-plugin-file": "^1.0.4",
     "insomnia-plugin-hash": "^1.0.4",

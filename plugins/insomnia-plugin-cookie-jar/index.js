@@ -2,18 +2,18 @@ const { jarFromCookies } = require('insomnia-cookies');
 
 module.exports.templateTags = [
   {
-    name: 'cookieJar',
-    displayName: 'Cookie Jar',
+    name: 'cookie',
+    displayName: 'Cookie',
     description: 'reference a cookie value from the cookie jar',
     args: [
       {
         type: 'string',
-        displayName: "Cookie Url",
-        description: "fully qualified URL (e.g. https://insomnia.rest/path)"
+        displayName: 'Cookie Url',
+        description: 'fully qualified URL (e.g. https://domain.tld/path)'
       },
       {
         type: 'string',
-        displayName: "Cookie Name"
+        displayName: 'Cookie Name'
       }
     ],
     async run(context, url, name) {
@@ -35,21 +35,14 @@ module.exports.templateTags = [
         workspace
       );
 
-      const cookies = cookieJar.cookies;
-
-      return await getCookieValue(cookieJar, url, name);
+      return getCookieValue(cookieJar, url, name);
     }
   }
 ];
 
-function unique(input) {
-  return uniqueValues = [...new Set(input)];
-}
-
 function getCookieValue(cookieJar, url, name) {
   return new Promise((resolve, reject) => {
     const jar = jarFromCookies(cookieJar.cookies);
-    console.log(jar);
 
     jar.getCookies(url, {}, (err, cookies) => {
       if (err) {
@@ -73,4 +66,3 @@ function getCookieValue(cookieJar, url, name) {
     });
   });
 }
-
