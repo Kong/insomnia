@@ -1,4 +1,5 @@
 // @flow
+import type {Request} from '../../../models/request';
 import * as React from 'react';
 import iconv from 'iconv-lite';
 import autobind from 'autobind-decorator';
@@ -34,7 +35,11 @@ type Props = {
 
   // Optional
   updateFilter: Function | null,
-  error: string | null
+  error: string | null,
+  currentRequest: Request | null,
+  handleUpdateRequest: Function | null,
+  handleSendRequest: Function | null,
+  handleSendOnNewRequest: Function | null
 };
 
 type State = {
@@ -99,7 +104,11 @@ class ResponseViewer extends React.Component<Props, State> {
     for (const rv of this._responseViewers) {
       if (rv.previewMode === this.props.previewMode && matchRegexs(contentType, rv.contentType)) {
         return React.createElement(rv.component, {
-          bodyBuffer: this.state.bodyBuffer
+          bodyBuffer: this.state.bodyBuffer,
+          currentRequest: this.props.currentRequest,
+          handleUpdateRequest: this.props.handleUpdateRequest,
+          handleSendRequest: this.props.handleSendRequest,
+          handleSendOnNewRequest: this.props.handleSendOnNewRequest
         });
       }
     }

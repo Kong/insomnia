@@ -135,6 +135,12 @@ class Wrapper extends React.PureComponent<Props, State> {
     };
   }
 
+  async _handleSendOnNewRequest (newRequestPatch: Request): Promise<void> {
+    const newRequest = await this.props.handleDuplicateRequest(this.props.activeRequest, newRequestPatch);
+    const activeEnvironmentId = this.props.activeEnvironment ? this.props.activeEnvironment._id : 'n/a';
+    this.props.handleSendRequestWithEnvironment(newRequest._id, activeEnvironmentId);
+  }
+
   // Request updaters
   async _handleForceUpdateRequest (patch: Object): Promise<Request> {
     const newRequest = await rUpdate(this.props.activeRequest, patch);
@@ -629,6 +635,9 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleDeleteResponses={this._handleDeleteResponses}
             handleDeleteResponse={this._handleDeleteResponse}
             handleSetFilter={this._handleSetResponseFilter}
+            handleUpdateRequest={this._handleForceUpdateRequest}
+            handleSendRequest={this._handleSendRequestWithActiveEnvironment}
+            handleSendOnNewRequest={this._handleSendOnNewRequest}
           />
         </ErrorBoundary>
       </div>

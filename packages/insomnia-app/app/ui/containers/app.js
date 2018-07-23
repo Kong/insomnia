@@ -183,13 +183,14 @@ class App extends PureComponent {
     models.requestGroup.duplicate(requestGroup);
   }
 
-  async _requestDuplicate (request) {
+  async _requestDuplicate (request, patch = {}) {
     if (!request) {
       return;
     }
 
-    const newRequest = await models.request.duplicate(request);
+    const newRequest = await models.request.duplicate(request, patch);
     await this._handleSetActiveRequest(newRequest._id);
+    return newRequest;
   }
 
   async _workspaceDuplicate (callback) {
