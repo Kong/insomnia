@@ -36,6 +36,9 @@ type Props = {
   handleSetActiveResponse: Function,
   handleDeleteResponses: Function,
   handleDeleteResponse: Function,
+  handleUpdateRequest: Function,
+  handleSendRequest: Function,
+  handleSendOnNewRequest: Function,
   handleShowRequestSettings: Function,
 
   // Required
@@ -150,6 +153,9 @@ class ResponsePane extends React.PureComponent<Props> {
       responses,
       response,
       previewMode,
+      handleUpdateRequest,
+      handleSendRequest,
+      handleSendOnNewRequest,
       handleShowRequestSettings,
       handleSetPreviewMode,
       handleSetActiveResponse,
@@ -295,6 +301,10 @@ class ResponsePane extends React.PureComponent<Props> {
               editorIndentSize={editorIndentSize}
               editorKeyMap={editorKeyMap}
               url={response.url}
+              currentRequest={request}
+              handleUpdateRequest={handleUpdateRequest}
+              handleSendRequest={handleSendRequest}
+              handleSendOnNewRequest={handleSendOnNewRequest}
             />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">

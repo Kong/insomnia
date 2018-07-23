@@ -285,6 +285,10 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
               responseId={`${responseId}[${activePart}]`}
               updateFilter={null}
               url={url}
+              currentRequest={null}
+              handleUpdateRequest={null}
+              handleSendRequest={null}
+              handleSendOnNewRequest={null}
             />
           </div>
         ) : null}

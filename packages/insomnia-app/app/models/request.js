@@ -333,7 +333,7 @@ export function updateMimeType (
   }
 }
 
-export async function duplicate (request: Request): Promise<Request> {
+export async function duplicate (request: Request, patch: Object = {}): Promise<Request> {
   const name = `${request.name} (Copy)`;
 
   // Get sort key of next request
@@ -345,7 +345,7 @@ export async function duplicate (request: Request): Promise<Request> {
   const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
   const metaSortKey = request.metaSortKey + sortKeyIncrement;
 
-  return db.duplicate(request, {name, metaSortKey});
+  return db.duplicate(request, Object.assign({name, metaSortKey}, patch));
 }
 
 export function remove (request: Request): Promise<void> {
