@@ -110,19 +110,34 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     const cursor = _queryEditor.getCursor();
     const cursorIndex = _queryEditor.indexFromPos(cursor);
 
+    let operationName = null;
+    let allOperationNames = [];
+
     // Loop through all operations to see if one contains the cursor.
     for (let i = 0; i < operations.length; i++) {
       const operation = operations[i];
-      if (
-        operation.loc.start <= cursorIndex &&
-        operation.loc.end >= cursorIndex &&
-        operation.name
-      ) {
-        return operation.name.value;
+
+      if (!operation.name) {
+        continue;
+      }
+
+      allOperationNames.push(operation.name.value);
+
+      const { start, end } = operation.loc;
+      if (start <= cursorIndex && end >= cursorIndex) {
+        operationName = operation.name.value;
       }
     }
 
-    return null;
+    if (!operationName && operations.length > 0) {
+      operationName = this.state.body.operationName || null;
+    }
+
+    if (!allOperationNames.includes(operationName)) {
+      return null;
+    }
+
+    return operationName;
   }
 
   _handleQueryFocus() {
