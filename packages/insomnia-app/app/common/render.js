@@ -67,17 +67,22 @@ export async function buildRenderContext(
        * original base_url of google.com would be lost.
        */
       if (typeof renderContext[key] === 'string') {
-        const rendered = await render(
-          envObject[key],
-          { [key]: renderContext[key] }, // Only render with key being overwritten
-          null,
-          KEEP_ON_ERROR,
-          'Environment'
-        );
+        const isSelfRecursive = envObject[key].match(`{{ ?${key}[ |][^}]*}}`);
 
-        // Only use rendered version if rendering actually yielded something different.
-        renderContext[key] =
-          rendered !== envObject[key] ? rendered : envObject[key];
+        if (isSelfRecursive) {
+          // If we're overwriting a variable that contains itself, make sure we
+          // render it first
+          renderContext[key] = await render(
+            envObject[key],
+            renderContext, // Only render with key being overwritten
+            null,
+            KEEP_ON_ERROR,
+            'Environment'
+          );
+        } else {
+          // Otherwise it's just a regular replacement
+          renderContext[key] = envObject[key];
+        }
       } else {
         renderContext[key] = envObject[key];
       }
@@ -123,11 +128,7 @@ export async function render<T>(
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
 
-  async function next(
-    x: any,
-    path: string,
-    first: boolean = false
-  ): Promise<any> {
+  async function next(x: any, path: string, first: boolean = false): Promise<any> {
     if (blacklistPathRegex && path.match(blacklistPathRegex)) {
       return x;
     }
@@ -222,12 +223,7 @@ export async function getRenderContext(
   baseContext.getPurpose = () => purpose;
 
   // Generate the context we need to render
-  return buildRenderContext(
-    ancestors,
-    rootEnvironment,
-    subEnvironment,
-    baseContext
-  );
+  return buildRenderContext(ancestors, rootEnvironment, subEnvironment, baseContext);
 }
 
 export async function getRenderedRequestAndContext(
@@ -244,12 +240,7 @@ export async function getRenderedRequestAndContext(
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
 
-  const renderContext = await getRenderContext(
-    request,
-    environmentId,
-    ancestors,
-    purpose
-  );
+  const renderContext = await getRenderContext(request, environmentId, ancestors, purpose);
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
   // https://github.com/getinsomnia/insomnia/issues/895
@@ -272,25 +263,18 @@ export async function getRenderedRequestAndContext(
   const renderedCookieJar = renderResult._cookieJar;
 
   // Remove disabled params
-  renderedRequest.parameters = renderedRequest.parameters.filter(
-    p => !p.disabled
-  );
+  renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
 
   // Remove disabled headers
   renderedRequest.headers = renderedRequest.headers.filter(p => !p.disabled);
 
   // Remove disabled body params
   if (renderedRequest.body && Array.isArray(renderedRequest.body.params)) {
-    renderedRequest.body.params = renderedRequest.body.params.filter(
-      p => !p.disabled
-    );
+    renderedRequest.body.params = renderedRequest.body.params.filter(p => !p.disabled);
   }
 
   // Remove disabled authentication
-  if (
-    renderedRequest.authentication &&
-    renderedRequest.authentication.disabled
-  ) {
+  if (renderedRequest.authentication && renderedRequest.authentication.disabled) {
     renderedRequest.authentication = {};
   }
 
@@ -320,8 +304,7 @@ export async function getRenderedRequestAndContext(
       name: renderedRequest.name,
       parameters: renderedRequest.parameters,
       parentId: renderedRequest.parentId,
-      settingDisableRenderRequestBody:
-        renderedRequest.settingDisableRenderRequestBody,
+      settingDisableRenderRequestBody: renderedRequest.settingDisableRenderRequestBody,
       settingEncodeUrl: renderedRequest.settingEncodeUrl,
       settingSendCookies: renderedRequest.settingSendCookies,
       settingStoreCookies: renderedRequest.settingStoreCookies,
@@ -338,11 +321,7 @@ export async function getRenderedRequest(
   environmentId: string,
   purpose?: string
 ): Promise<RenderedRequest> {
-  const result = await getRenderedRequestAndContext(
-    request,
-    environmentId,
-    purpose
-  );
+  const result = await getRenderedRequestAndContext(request, environmentId, purpose);
   return result.request;
 }
 

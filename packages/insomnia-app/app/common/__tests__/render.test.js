@@ -15,9 +15,7 @@ describe('render()', () => {
 
   it('renders custom tag: uuid', async () => {
     const rendered = await renderUtils.render('Hello {% uuid %}!');
-    expect(rendered).toMatch(
-      /Hello [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}!/
-    );
+    expect(rendered).toMatch(/Hello [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}!/);
   });
 
   it('renders custom tag: timestamp', async () => {
@@ -86,8 +84,7 @@ describe('buildRenderContext()', () => {
 
     // This is longer than 3 because it multiplies every time (1 -> 2 -> 4 -> 8)
     expect(context).toEqual({
-      recursive:
-        '{{ recursive }}/hello/hello/hello/hello/hello/hello/hello/hello'
+      recursive: '{{ recursive }}/hello/hello/hello/hello/hello/hello/hello/hello'
     });
   });
 
@@ -130,6 +127,36 @@ describe('buildRenderContext()', () => {
       domain: 'folder.com',
       port: 7000,
       url: 'https://folder.com:7000'
+    });
+  });
+
+  it('does the thing', async () => {
+    const root = {
+      type: models.environment.type,
+      data: { url: 'insomnia.rest' }
+    };
+
+    const sub = {
+      type: models.environment.type,
+      data: { url: '{{ url }}/sub' }
+    };
+
+    const ancestors = [
+      {
+        // Folder Environment
+        type: models.requestGroup.type,
+        environment: {
+          url: '{{ url }}/{{ name }}',
+          name: 'folder'
+        }
+      }
+    ];
+
+    const context = await renderUtils.buildRenderContext(ancestors, root, sub);
+
+    expect(context).toEqual({
+      url: 'insomnia.rest/sub/folder',
+      name: 'folder'
     });
   });
 

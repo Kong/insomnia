@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 # Install core deps
 RUN apt-get update && apt-get upgrade -y
@@ -7,6 +7,7 @@ RUN apt-get install -y \
     autoconf \
     libtool \
     pkg-config \
+    snapcraft \
     wget
 
 # Install Node and app-related dependencies
