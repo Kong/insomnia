@@ -147,7 +147,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     const disabledDefinitions = _documentAST.definitions.filter(d => {
       const name = d.name ? d.name.value : null;
-      return name !== operationName;
+      return d.kind === 'OperationDefinition' && name !== operationName;
     });
 
     // Remove current query highlighting
