@@ -6,6 +6,6 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "test": "jest --silent"
+    "test": "jest"
   }
 }

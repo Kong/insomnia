@@ -169,24 +169,28 @@ function _repeatString(s, count) {
 function _convertUnicode(originalStr) {
   let m;
   let c;
+  let cStr;
   let lastI = 0;
 
   // Matches \u#### but not \\u####
-  const unicodeRegex = /[^\\]\\u([0-9a-fA-F]{4})/g;
+  const unicodeRegex = /[^\\]\\u[0-9a-fA-F]{4}/g;
 
   let convertedStr = '';
   while ((m = unicodeRegex.exec(originalStr))) {
     try {
-      c = String.fromCharCode(parseInt(m[1], 16));
+      cStr = m[0].slice(3); // Trim off start
+      c = String.fromCharCode(parseInt(cStr, 16));
       if (c === '"') {
         // Escape it if it's double quotes
         c = `\\${c}`;
       }
-      convertedStr += originalStr.slice(lastI, m.index) + c;
+
+      // + 1 to account for first matched (non-backslash) character
+      convertedStr += originalStr.slice(lastI, m.index + 1) + c;
       lastI = m.index + m[0].length;
     } catch (err) {
       // Some reason we couldn't convert a char. Should never actually happen
-      console.warn('Failed to convert unicode char', m[1], err);
+      console.warn('Failed to convert unicode char', m[0], err);
     }
   }
 
