@@ -80,6 +80,9 @@ module.exports = {
           surprise: '{{ styles.sidebar.background.surprise }}',
           info: '{{ styles.sidebar.background.info }}'
         },
+        foreground: {
+          default: '#e0e0e0'
+        },
         highlight: {
           default: '#999'
         }

@@ -26,7 +26,7 @@ module.exports = {
       xs: 'rgba(114, 145, 143, 0.1)',
       sm: 'rgba(114, 145, 143, 0.15)',
       md: 'rgba(114, 145, 143, 0.2)',
-      lg: 'rgba(114, 145, 143, 0.6)',
+      lg: 'rgba(114, 145, 143, 0.5)',
       xl: 'rgba(114, 145, 143, 0.8)'
     },
     rawCss: `
@@ -58,17 +58,6 @@ module.exports = {
           info: '#6c93d8'
         }
       },
-      sidebar: {
-        highlight: {
-          default: 'rgb(125, 153, 151)',
-          xxs: 'rgba(114, 145, 143, 0)',
-          xs: 'rgba(114, 145, 143, 0)',
-          sm: 'rgba(114, 145, 143, 0)',
-          md: 'rgba(114, 145, 143, 0)',
-          lg: 'rgba(114, 145, 143, 0.1)',
-          xl: 'rgba(114, 145, 143, 0.1)'
-        }
-      },
       sidebarHeader: {
         highlight: {
           xxs: 'rgba(114, 145, 143, 0.05)',
@@ -77,16 +66,6 @@ module.exports = {
           md: 'rgba(114, 145, 143, 0.2)',
           lg: 'rgba(114, 145, 143, 0.4)',
           xl: 'rgba(114, 145, 143, 0.5)'
-        }
-      },
-      sidebarActions: {
-        highlight: {
-          xxs: 'rgba(114, 145, 143, 0.05)',
-          xs: 'rgba(114, 145, 143, 0.08)',
-          sm: 'rgba(114, 145, 143, 0.1)',
-          md: 'rgba(114, 145, 143, 0.2)',
-          lg: 'rgba(114, 145, 143, 0.5)',
-          xl: 'rgba(114, 145, 143, 0.7)'
         }
       },
       transparentOverlay: {

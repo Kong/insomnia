@@ -129,11 +129,6 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
     );
     css += wrapStyles(
       n,
-      '.theme--sidebar__actions',
-      getThemeBlockCSS(styles.sidebarActions)
-    );
-    css += wrapStyles(
-      n,
       '.theme--sidebar__header',
       getThemeBlockCSS(styles.sidebarHeader)
     );

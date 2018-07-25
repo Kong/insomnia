@@ -171,7 +171,10 @@ class Toast extends React.PureComponent<Props, State> {
     }
 
     return (
-      <div className={classnames('toast', { 'toast--show': visible })}>
+      <div
+        className={classnames('toast theme--dialog', {
+          'toast--show': visible
+        })}>
         <div className="toast__image">
           <GravatarImg
             email={notification.email || 'gschier1990@gmail.com'}
