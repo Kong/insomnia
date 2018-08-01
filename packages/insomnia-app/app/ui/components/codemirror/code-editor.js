@@ -99,10 +99,7 @@ class CodeEditor extends React.Component {
   componentDidUpdate() {
     this._codemirrorSetOptions();
     const { defaultValue } = this.props;
-    if (
-      this._uniquenessKey &&
-      this._uniquenessKey !== this._previousUniquenessKey
-    ) {
+    if (this._uniquenessKey && this._uniquenessKey !== this._previousUniquenessKey) {
       this._codemirrorSetValue(defaultValue);
       this._restoreState();
     }
@@ -208,11 +205,7 @@ class CodeEditor extends React.Component {
     }
 
     if (this.codeMirror) {
-      this.codeMirror.setSelection(
-        { line: -1, ch: -1 },
-        { line: -1, ch: -1 },
-        { scroll: false }
-      );
+      this.codeMirror.setSelection({ line: -1, ch: -1 }, { line: -1, ch: -1 }, { scroll: false });
     }
   }
 
@@ -270,21 +263,12 @@ class CodeEditor extends React.Component {
     }
 
     const { defaultValue, debounceMillis: ms } = this.props;
-    this.codeMirror = CodeMirror.fromTextArea(
-      textarea,
-      BASE_CODEMIRROR_OPTIONS
-    );
+    this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
 
     // Set default listeners
     const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
-    this.codeMirror.on(
-      'changes',
-      misc.debounce(this._codemirrorValueChanged, debounceMillis)
-    );
-    this.codeMirror.on(
-      'changes',
-      misc.debounce(this._codemirrorValueChanged, debounceMillis)
-    );
+    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
+    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
     this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
     this.codeMirror.on('keydown', this._codemirrorKeyDown);
     this.codeMirror.on('keyup', this._codemirrorTriggerCompletionKeyUp);
@@ -304,9 +288,7 @@ class CodeEditor extends React.Component {
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
         Tab: cm => {
-          const spaces = new Array(
-            this.codeMirror.getOption('indentUnit') + 1
-          ).join(' ');
+          const spaces = new Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
           cm.replaceSelection(spaces);
         }
       });
@@ -393,7 +375,7 @@ class CodeEditor extends React.Component {
         }
       }
 
-      return prettify.json(jsonString, '\t');
+      return prettify.json(jsonString, '\t', this.props.autoPrettify);
     } catch (e) {
       // That's Ok, just leave it
       return code;
@@ -533,8 +515,7 @@ class CodeEditor extends React.Component {
             }
 
             for (const option of tagDef.args[0].options) {
-              const optionName =
-                misc.fnOrString(option.displayName, tagDef.args) || option.name;
+              const optionName = misc.fnOrString(option.displayName, tagDef.args) || option.name;
               const newDef = clone(tagDef);
               newDef.displayName = `${tagDef.displayName} ⇒ ${optionName}`;
               newDef.args[0].defaultValue = option.value;
@@ -674,8 +655,7 @@ class CodeEditor extends React.Component {
 
     const value = this.codeMirror.getDoc().getValue();
 
-    const lint =
-      value.length > MAX_SIZE_FOR_LINTING ? false : !this.props.noLint;
+    const lint = value.length > MAX_SIZE_FOR_LINTING ? false : !this.props.noLint;
     const existingLint = this.codeMirror.options.lint || false;
     if (lint !== existingLint) {
       this.codeMirror.setOption('lint', lint);
@@ -776,11 +756,7 @@ class CodeEditor extends React.Component {
           type="text"
           title="Filter response body"
           defaultValue={filter || ''}
-          placeholder={
-            this._isJSON(mode)
-              ? '$.store.books[*].author'
-              : '/store/books/author'
-          }
+          placeholder={this._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
           onChange={this._handleFilterChange}
         />
       );
@@ -792,10 +768,7 @@ class CodeEditor extends React.Component {
               <i className="fa fa-clock-o" />
             </DropdownButton>
             {filterHistory.reverse().map(filter => (
-              <DropdownItem
-                key={filter}
-                value={filter}
-                onClick={this._handleFilterHistorySelect}>
+              <DropdownItem key={filter} value={filter} onClick={this._handleFilterHistorySelect}>
                 {filter}
               </DropdownItem>
             ))}
@@ -804,10 +777,7 @@ class CodeEditor extends React.Component {
       }
 
       toolbarChildren.push(
-        <button
-          key="help"
-          className="btn btn--compact"
-          onClick={this._showFilterHelp}>
+        <button key="help" className="btn btn--compact" onClick={this._showFilterHelp}>
           <i className="fa fa-question-circle" />
         </button>
       );

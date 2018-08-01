@@ -23,20 +23,23 @@ const NUNJUCKS_CLOSE_STATES = {
  *
  * @param json
  * @param indentChars
+ * @param replaceUnicode
  * @returns {string}
  */
-module.exports.prettify = function(json, indentChars = '\t') {
+module.exports.prettify = function(json, indentChars = '\t', replaceUnicode = true) {
   if (!json) {
     return '';
   }
 
   // Convert the unicode. To correctly mimic JSON.stringify(JSON.parse(json), null, indentChars)
   // we need to convert all escaped unicode characters to proper unicode characters.
-  try {
-    json = _convertUnicode(json);
-  } catch (err) {
-    // Just in case (should never happen)
-    console.warn('Prettify failed to handle unicode', err);
+  if (replaceUnicode) {
+    try {
+      json = _convertUnicode(json);
+    } catch (err) {
+      // Just in case (should never happen)
+      console.warn('Prettify failed to handle unicode', err);
+    }
   }
 
   let i = 0;
@@ -173,12 +176,17 @@ function _convertUnicode(originalStr) {
   let lastI = 0;
 
   // Matches \u#### but not \\u####
-  const unicodeRegex = /[^\\]\\u[0-9a-fA-F]{4}/g;
+  const unicodeRegex = /\\u[0-9a-fA-F]{4}/g;
 
   let convertedStr = '';
   while ((m = unicodeRegex.exec(originalStr))) {
+    // Don't convert if the backslash itself is escaped
+    if (originalStr[m.index - 1] === '\\') {
+      continue;
+    }
+
     try {
-      cStr = m[0].slice(3); // Trim off start
+      cStr = m[0].slice(2); // Trim off start
       c = String.fromCharCode(parseInt(cStr, 16));
       if (c === '"') {
         // Escape it if it's double quotes
@@ -186,7 +194,7 @@ function _convertUnicode(originalStr) {
       }
 
       // + 1 to account for first matched (non-backslash) character
-      convertedStr += originalStr.slice(lastI, m.index + 1) + c;
+      convertedStr += originalStr.slice(lastI, m.index) + c;
       lastI = m.index + m[0].length;
     } catch (err) {
       // Some reason we couldn't convert a char. Should never actually happen
