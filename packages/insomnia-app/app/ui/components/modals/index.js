@@ -21,7 +21,11 @@ export function showAlert(config) {
 }
 
 export function showError(config) {
-  return showModal(ErrorModal, config);
+  try {
+    return showModal(ErrorModal, config);
+  } catch (err) {
+    console.log('[modal] Cannot show modal', err, config);
+  }
 }
 
 export function showModal(modalCls, ...args) {
