@@ -46,9 +46,7 @@ describe('actuallySend()', () => {
       }
     ];
 
-    const cookieJar = await models.cookieJar.getOrCreateForParentId(
-      workspace._id
-    );
+    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
     await models.cookieJar.update(cookieJar, {
       parentId: workspace._id,
       cookies
@@ -57,10 +55,7 @@ describe('actuallySend()', () => {
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
-      headers: [
-        { name: 'Content-Type', value: 'application/json' },
-        { name: 'Empty', value: '' }
-      ],
+      headers: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Empty', value: '' }],
       parameters: [{ name: 'foo bar', value: 'hello&world' }],
       method: 'POST',
       body: {
@@ -609,16 +604,12 @@ describe('_getAwsAuthHeaders', () => {
       req.url,
       req.method
     );
-    expect(filterHeaders(headers, 'x-amz-date')[0].value).toMatch(
-      /^\d{8}T\d{6}Z$/
-    );
-    expect(filterHeaders(headers, 'host')[0].value).toEqual(
-      'ec2.us-west-2.amazonaws.com'
-    );
+    expect(filterHeaders(headers, 'x-amz-date')[0].value).toMatch(/^\d{8}T\d{6}Z$/);
+    expect(filterHeaders(headers, 'host')[0].value).toEqual('ec2.us-west-2.amazonaws.com');
     expect(filterHeaders(headers, 'authorization')[0].value).toMatch(
       /^AWS4-HMAC-SHA256 Credential=AKIA99999999\/\d{8}\/us-west-2\/ec2\/aws4_request, SignedHeaders=content-length;content-type;host;x-amz-date;x-amz-security-token, Signature=[a-z0-9]*$/
     );
-    expect(filterHeaders(headers, 'content-type')).toHaveLength(0);
+    expect(filterHeaders(headers, 'content-type')).toEqual([]);
   });
 
   it('should handle sparse request', () => {
@@ -648,14 +639,12 @@ describe('_getAwsAuthHeaders', () => {
       'ec2'
     );
 
-    expect(filterHeaders(headers, 'x-amz-date')[0].value).toMatch(
-      /^\d{8}T\d{6}Z$/
-    );
+    expect(filterHeaders(headers, 'x-amz-date')[0].value).toMatch(/^\d{8}T\d{6}Z$/);
     expect(filterHeaders(headers, 'host')[0].value).toEqual('example.com');
     expect(filterHeaders(headers, 'authorization')[0].value).toMatch(
       /^AWS4-HMAC-SHA256 Credential=AKIA99999999\/\d{8}\/us-west-2\/ec2\/aws4_request, SignedHeaders=host;x-amz-date;x-amz-security-token, Signature=[a-z0-9]*$/
     );
-    expect(filterHeaders(headers, 'content-type')).toHaveLength(0);
+    expect(filterHeaders(headers, 'content-type')).toEqual([]);
   });
 });
 
@@ -677,9 +666,7 @@ describe('_parseHeaders', () => {
   const minimalHeaders = ['HTTP/1.1 301', ''];
 
   it('Parses single response headers', () => {
-    expect(
-      networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\n')))
-    ).toEqual([
+    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\n')))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',
@@ -700,9 +687,7 @@ describe('_parseHeaders', () => {
   });
 
   it('Parses Windows newlines', () => {
-    expect(
-      networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\r\n')))
-    ).toEqual([
+    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\r\n')))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',

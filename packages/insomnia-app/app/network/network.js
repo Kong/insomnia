@@ -4,10 +4,7 @@ import type { Request, RequestHeader } from '../models/request';
 import type { Workspace } from '../models/workspace';
 import type { Settings } from '../models/settings';
 import type { RenderedRequest } from '../common/render';
-import {
-  getRenderedRequestAndContext,
-  RENDER_PURPOSE_SEND
-} from '../common/render';
+import { getRenderedRequestAndContext, RENDER_PURPOSE_SEND } from '../common/render';
 import mkdirp from 'mkdirp';
 import clone from 'clone';
 import { parse as urlParse, resolve as urlResolve } from 'url';
@@ -140,11 +137,7 @@ export async function _actuallySend(
         );
       } catch (err) {
         handleError(
-          new Error(
-            `[plugin] Response hook failed plugin=${err.plugin.name} err=${
-              err.message
-            }`
-          )
+          new Error(`[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`)
         );
         return;
       }
@@ -171,18 +164,14 @@ export async function _actuallySend(
 
     /** Helper function to set Curl options */
     function setOpt(opt: number, val: any, optional: boolean = false) {
-      const name = Object.keys(Curl.option).find(
-        name => Curl.option[name] === opt
-      );
+      const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
       try {
         curl.setOpt(opt, val);
       } catch (err) {
         if (!optional) {
           throw new Error(`${err.message} (${opt} ${name || 'n/a'})`);
         } else {
-          console.warn(
-            `Failed to set optional Curl opt (${opt} ${name || 'n/a'})`
-          );
+          console.warn(`Failed to set optional Curl opt (${opt} ${name || 'n/a'})`);
         }
       }
     }
@@ -249,15 +238,9 @@ export async function _actuallySend(
 
       // Setup debug handler
       setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, content: string) => {
-        const name =
-          Object.keys(Curl.info.debug).find(
-            k => Curl.info.debug[k] === infoType
-          ) || '';
+        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType) || '';
 
-        if (
-          infoType === Curl.info.debug.SSL_DATA_IN ||
-          infoType === Curl.info.debug.SSL_DATA_OUT
-        ) {
+        if (infoType === Curl.info.debug.SSL_DATA_IN || infoType === Curl.info.debug.SSL_DATA_OUT) {
           return 0;
         }
 
@@ -265,9 +248,7 @@ export async function _actuallySend(
         if (infoType === Curl.info.debug.DATA_OUT) {
           if (content.length === 0) {
             // Sometimes this happens, but I'm not sure why. Just ignore it.
-          } else if (
-            content.length < renderedRequest.settingMaxTimelineDataSize
-          ) {
+          } else if (content.length < renderedRequest.settingMaxTimelineDataSize) {
             timeline.push({ name, value: content });
           } else {
             timeline.push({
@@ -287,10 +268,7 @@ export async function _actuallySend(
         }
 
         // Don't show cookie setting because this will display every domain in the jar
-        if (
-          infoType === Curl.info.debug.TEXT &&
-          content.indexOf('Added cookie') === 0
-        ) {
+        if (infoType === Curl.info.debug.TEXT && content.indexOf('Added cookie') === 0) {
           return 0;
         }
 
@@ -448,18 +426,13 @@ export async function _actuallySend(
       }
 
       // Set client certs if needed
-      const clientCertificates = await models.clientCertificate.findByParentId(
-        workspace._id
-      );
+      const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
       for (const certificate of clientCertificates) {
         if (certificate.disabled) {
           continue;
         }
 
-        const cHostWithProtocol = setDefaultProtocol(
-          certificate.host,
-          'https:'
-        );
+        const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
 
         if (urlMatchesCertHost(cHostWithProtocol, renderedRequest.url)) {
           const ensureFile = blobOrFilename => {
@@ -518,21 +491,14 @@ export async function _actuallySend(
       // Build the body
       let noBody = false;
       let requestBody = null;
-      const expectsBody = ['POST', 'PUT', 'PATCH'].includes(
-        renderedRequest.method.toUpperCase()
-      );
+      const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-        requestBody = buildQueryStringFromParams(
-          renderedRequest.body.params || [],
-          false
-        );
+        requestBody = buildQueryStringFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const params = renderedRequest.body.params || [];
-        const {
-          filePath: multipartBodyPath,
-          boundary,
-          contentLength
-        } = await buildMultipart(params);
+        const { filePath: multipartBodyPath, boundary, contentLength } = await buildMultipart(
+          params
+        );
 
         // Extend the Content-Type header
         const contentTypeHeader = getContentTypeHeader(headers);
@@ -576,10 +542,7 @@ export async function _actuallySend(
         const fn = () => fs.closeSync(fd);
         curl.on('end', fn);
         curl.on('error', fn);
-      } else if (
-        typeof renderedRequest.body.mimeType === 'string' ||
-        expectsBody
-      ) {
+      } else if (typeof renderedRequest.body.mimeType === 'string' || expectsBody) {
         requestBody = renderedRequest.body.text || '';
       } else {
         // No body
@@ -620,9 +583,7 @@ export async function _actuallySend(
         } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
           if (!noBody && !requestBody) {
             return handleError(
-              new Error(
-                'AWS authentication not supported for provided body type'
-              )
+              new Error('AWS authentication not supported for provided body type')
             );
           }
           const { authentication } = renderedRequest;
@@ -717,8 +678,7 @@ export async function _actuallySend(
       curl.on('end', async (_1, _2, rawHeaders) => {
         const allCurlHeadersObjects = _parseHeaders(rawHeaders);
         // Headers are an array (one for each redirect)
-        const lastCurlHeadersObject =
-          allCurlHeadersObjects[allCurlHeadersObjects.length - 1];
+        const lastCurlHeadersObject = allCurlHeadersObjects[allCurlHeadersObjects.length - 1];
 
         // Collect various things
         const httpVersion = lastCurlHeadersObject.version || '';
@@ -740,10 +700,7 @@ export async function _actuallySend(
         for (const { headers } of allCurlHeadersObjects) {
           // Collect Set-Cookie headers
           const setCookieHeaders = getSetCookieHeaders(headers);
-          setCookieStrings = [
-            ...setCookieStrings,
-            ...setCookieHeaders.map(h => h.value)
-          ];
+          setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
 
           // Pull out new URL if there is a redirect
           const newLocation = getLocationHeader(headers);
@@ -843,51 +800,32 @@ export async function sendWithSettings(
     models.workspace.type
   ]);
 
-  const workspaceDoc = ancestors.find(
-    doc => doc.type === models.workspace.type
-  );
+  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
   const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
   const workspace = await models.workspace.getById(workspaceId);
   if (!workspace) {
     throw new Error(`Failed to find workspace for: ${requestId}`);
   }
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
-    workspace._id
-  );
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
   const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
 
-  const newRequest: Request = await models.initModel(
-    models.request.type,
-    requestPatch,
-    {
-      _id: request._id + '.other',
-      parentId: request._id
-    }
-  );
+  const newRequest: Request = await models.initModel(models.request.type, requestPatch, {
+    _id: request._id + '.other',
+    parentId: request._id
+  });
 
   let renderResult: { request: RenderedRequest, context: Object };
   try {
-    renderResult = await getRenderedRequestAndContext(
-      newRequest,
-      environmentId
-    );
+    renderResult = await getRenderedRequestAndContext(newRequest, environmentId);
   } catch (err) {
     throw new Error(`Failed to render request: ${requestId}`);
   }
 
-  return _actuallySend(
-    renderResult.request,
-    renderResult.context,
-    workspace,
-    settings
-  );
+  return _actuallySend(renderResult.request, renderResult.context, workspace, settings);
 }
 
-export async function send(
-  requestId: string,
-  environmentId: string
-): Promise<ResponsePatch> {
+export async function send(requestId: string, environmentId: string): Promise<ResponsePatch> {
   // HACK: wait for all debounces to finish
   /*
    * TODO: Do this in a more robust way
@@ -924,12 +862,8 @@ export async function send(
   const renderedRequestBeforePlugins = renderResult.request;
   const renderedContextBeforePlugins = renderResult.context;
 
-  const workspaceDoc = ancestors.find(
-    doc => doc.type === models.workspace.type
-  );
-  const workspace = await models.workspace.getById(
-    workspaceDoc ? workspaceDoc._id : 'n/a'
-  );
+  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
   if (!workspace) {
     throw new Error(`Failed to find workspace for request: ${requestId}`);
   }
@@ -952,12 +886,7 @@ export async function send(
     };
   }
 
-  return _actuallySend(
-    renderedRequest,
-    renderedContextBeforePlugins,
-    workspace,
-    settings
-  );
+  return _actuallySend(renderedRequest, renderedContextBeforePlugins, workspace, settings);
 }
 
 async function _applyRequestPluginHooks(
@@ -1079,7 +1008,7 @@ export function _getAwsAuthHeaders(
     method,
     host,
     path: parsedUrl.path,
-    headers: contentTypeHeader ? { 'content-type': contentTypeHeader } : {}
+    headers: contentTypeHeader ? { 'content-type': contentTypeHeader.value } : {}
   };
 
   const signature = aws4.sign(awsSignOptions, credentials);
