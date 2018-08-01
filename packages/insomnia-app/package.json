@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "1.0.39",
+  "version": "1.0.40",
   "name": "insomnia-app",
   "app": {
     "name": "insomnia",
@@ -120,7 +120,7 @@
     "insomnia-plugin-request": "^1.0.12",
     "insomnia-plugin-response": "^1.0.10",
     "insomnia-plugin-uuid": "^1.0.5",
-    "insomnia-prettify": "^0.1.4",
+    "insomnia-prettify": "^0.1.5",
     "insomnia-url": "^0.1.3",
     "insomnia-xpath": "^1.0.4",
     "jsonlint": "^1.6.2",
