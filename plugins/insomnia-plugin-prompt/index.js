@@ -1,4 +1,4 @@
-module.exports.requestHooks = [
+module.exports.responseHooks = [
   context => {
     // Delete cached values we prompt again on the next request
     context.store.clear();
@@ -40,19 +40,11 @@ module.exports.templateTags = [
       {
         displayName: 'Mask Text',
         type: 'boolean',
-        help:
-          'If this is enabled, the value when input will be masked like a password field.',
+        help: 'If this is enabled, the value when input will be masked like a password field.',
         defaultValue: false
       }
     ],
-    async run(
-      context,
-      title,
-      label,
-      defaultValue,
-      explicitStorageKey,
-      maskText
-    ) {
+    async run(context, title, label, defaultValue, explicitStorageKey, maskText) {
       if (!title) {
         throw new Error('Title attribute is required for prompt tag');
       }
@@ -61,8 +53,7 @@ module.exports.templateTags = [
       // We do this because we may render the prompt multiple times per request.
       // We cache it under the requestId so it only prompts once. We then clear
       // the cache in a response hook when the request is sent.
-      const storageKey =
-        explicitStorageKey || `${context.meta.requestId}.${title}`;
+      const storageKey = explicitStorageKey || `${context.meta.requestId}.${title}`;
       const cachedValue = await context.store.getItem(storageKey);
 
       if (cachedValue) {

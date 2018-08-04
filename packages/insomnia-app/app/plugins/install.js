@@ -7,11 +7,14 @@ import { getTempDir, isDevelopment, PLUGIN_PATH } from '../common/constants';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
-export default async function(moduleName: string): Promise<void> {
+export default async function(lookupName: string): Promise<void> {
   return new Promise(async (resolve, reject) => {
     let info: Object = {};
     try {
-      info = await _isInsomniaPlugin(moduleName);
+      info = await _isInsomniaPlugin(lookupName);
+
+      // Get actual module name without version suffixes and things
+      const moduleName = info.name;
 
       const pluginDir = path.join(PLUGIN_PATH, moduleName);
 
@@ -21,14 +24,10 @@ export default async function(moduleName: string): Promise<void> {
       // Download the module
       const request = electron.remote.net.request(info.dist.tarball);
       request.on('error', err => {
-        reject(
-          new Error(
-            `Failed to make plugin request ${info.dist.tarball}: ${err.message}`
-          )
-        );
+        reject(new Error(`Failed to make plugin request ${info.dist.tarball}: ${err.message}`));
       });
 
-      const { tmpDir } = await _installPluginToTmpDir(moduleName);
+      const { tmpDir } = await _installPluginToTmpDir(lookupName);
       console.log(`[plugins] Moving plugin from ${tmpDir} to ${pluginDir}`);
 
       // Move entire module to plugins folder
@@ -57,7 +56,7 @@ export default async function(moduleName: string): Promise<void> {
   });
 }
 
-async function _isInsomniaPlugin(moduleName: string): Promise<Object> {
+async function _isInsomniaPlugin(lookupName: string): Promise<Object> {
   return new Promise((resolve, reject) => {
     console.log(`[plugins] Fetching module info from npm`);
     childProcess.execFile(
@@ -66,7 +65,7 @@ async function _isInsomniaPlugin(moduleName: string): Promise<Object> {
         '--no-deprecation', // Because Yarn still uses `new Buffer()`
         _getYarnPath(),
         'info',
-        moduleName,
+        lookupName,
         '--json'
       ],
       {
@@ -80,7 +79,7 @@ async function _isInsomniaPlugin(moduleName: string): Promise<Object> {
       },
       (err, stdout, stderr) => {
         if (err) {
-          reject(new Error(`${moduleName} npm error: ${err.message}`));
+          reject(new Error(`${lookupName} npm error: ${err.message}`));
           return;
         }
 
@@ -99,11 +98,7 @@ async function _isInsomniaPlugin(moduleName: string): Promise<Object> {
 
         const data = yarnOutput.data;
         if (!data.hasOwnProperty('insomnia')) {
-          reject(
-            new Error(
-              `"${moduleName}" not a plugin! Package missing "insomnia" attribute`
-            )
-          );
+          reject(new Error(`"${lookupName}" not a plugin! Package missing "insomnia" attribute`));
           return;
         }
 
@@ -123,11 +118,9 @@ async function _isInsomniaPlugin(moduleName: string): Promise<Object> {
   });
 }
 
-async function _installPluginToTmpDir(
-  moduleName: string
-): Promise<{ tmpDir: string }> {
+async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: string }> {
   return new Promise((resolve, reject) => {
-    const tmpDir = path.join(getTempDir(), `${moduleName}-${Date.now()}`);
+    const tmpDir = path.join(getTempDir(), `${lookupName}-${Date.now()}`);
     mkdirp.sync(tmpDir);
     console.log(`[plugins] Installing plugin to ${tmpDir}`);
     childProcess.execFile(
@@ -136,7 +129,7 @@ async function _installPluginToTmpDir(
         '--no-deprecation', // Because Yarn still uses `new Buffer()`
         _getYarnPath(),
         'add',
-        moduleName,
+        lookupName,
         '--modules-folder',
         tmpDir,
         '--cwd',
@@ -157,7 +150,7 @@ async function _installPluginToTmpDir(
       },
       (err, stdout, stderr) => {
         if (err) {
-          reject(new Error(`${moduleName} install error: ${err.message}`));
+          reject(new Error(`${lookupName} install error: ${err.message}`));
           return;
         }
 
