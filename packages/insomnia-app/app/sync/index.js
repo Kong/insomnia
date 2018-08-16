@@ -16,6 +16,8 @@ const WHITE_LIST = {
   [models.request.type]: true,
   [models.requestGroup.type]: true,
   [models.environment.type]: true,
+
+  // These can be overridden in sync config
   [models.cookieJar.type]: true,
   [models.clientCertificate.type]: true
 };
@@ -162,11 +164,7 @@ export async function fixDuplicateResourceGroups() {
   }
 
   if (duplicateCount) {
-    logger.debug(
-      `Fixed ${duplicateCount}/${workspaces.length} duplicate synced Workspaces`
-    );
-  } else {
-    logger.debug('No dupes found to fix');
+    logger.debug(`Fixed ${duplicateCount}/${workspaces.length} duplicate synced Workspaces`);
   }
 }
 
@@ -193,18 +191,34 @@ export async function push(resourceGroupId = null) {
     return;
   }
 
-  let dirtyResources = [];
+  let allDirtyResources = [];
   if (resourceGroupId) {
-    dirtyResources = await store.findActiveDirtyResourcesForResourceGroup(
-      resourceGroupId
-    );
+    allDirtyResources = await store.findActiveDirtyResourcesForResourceGroup(resourceGroupId);
   } else {
-    dirtyResources = await store.findActiveDirtyResources();
+    allDirtyResources = await store.findActiveDirtyResources();
   }
 
-  if (!dirtyResources.length) {
+  if (!allDirtyResources.length) {
     logger.debug('No changes to push');
     return;
+  }
+
+  let dirtyResources = [];
+  for (const r of allDirtyResources) {
+    // Check if resource type is blacklisted by user
+    const config = await store.getConfig(r.resourceGroupId);
+
+    if (r.type === models.clientCertificate.type && config.syncDisableClientCertificates) {
+      logger.debug(`Skipping pushing blacklisted client certificate ${r.id}`);
+      continue;
+    }
+
+    if (r.type === models.cookieJar.type && config.syncDisableCookieJars) {
+      logger.debug(`Skipping pushing blacklisted cookie jar ${r.id}`);
+      continue;
+    }
+
+    dirtyResources.push(r);
   }
 
   let responseBody;
@@ -283,10 +297,7 @@ export async function push(resourceGroupId = null) {
   db.flushChangesAsync();
 }
 
-export async function pull(
-  resourceGroupId = null,
-  createMissingResources = true
-) {
+export async function pull(resourceGroupId = null, createMissingResources = true) {
   if (!session.isLoggedIn()) {
     return;
   }
@@ -306,9 +317,7 @@ export async function pull(
   if (resourceGroupId) {
     // When doing specific sync, blacklist all configs except the one we're trying to sync.
     const allConfigs = await store.allConfigs();
-    blacklistedConfigs = allConfigs.filter(
-      c => c.resourceGroupId !== resourceGroupId
-    );
+    blacklistedConfigs = allConfigs.filter(c => c.resourceGroupId !== resourceGroupId);
   } else {
     // When doing a full sync, blacklist the inactive configs
     blacklistedConfigs = await store.findInactiveConfigs(resourceGroupId);
@@ -321,9 +330,7 @@ export async function pull(
     removed: r.removed
   }));
 
-  const blacklistedResourceGroupIds = blacklistedConfigs.map(
-    c => c.resourceGroupId
-  );
+  const blacklistedResourceGroupIds = blacklistedConfigs.map(c => c.resourceGroupId);
 
   const body = {
     resources,
@@ -340,12 +347,7 @@ export async function pull(
     return;
   }
 
-  const {
-    updatedResources,
-    createdResources,
-    idsToPush,
-    idsToRemove
-  } = responseBody;
+  const { updatedResources, createdResources, idsToPush, idsToRemove } = responseBody;
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Insert all the created docs to the DB //
@@ -361,6 +363,22 @@ export async function pull(
     } catch (e) {
       logger.warn('Failed to decode created resource', e, serverResource);
       return;
+    }
+
+    // Check if resource type is blacklisted by user
+    const config = await store.getConfig(serverResource.resourceGroupId);
+
+    if (
+      serverResource.type === models.clientCertificate.type &&
+      config.syncDisableClientCertificates
+    ) {
+      logger.debug(`[sync] Skipping pulling blacklisted client certificate ${serverResource.id}`);
+      continue;
+    }
+
+    if (serverResource.type === models.cookieJar.type && config.syncDisableCookieJars) {
+      logger.debug(`[sync] Skipping pulling blacklisted cookie jar ${serverResource.id}`);
+      continue;
     }
 
     // Update local Resource
@@ -383,9 +401,7 @@ export async function pull(
     } else {
       // Mark as not seen if we created a new workspace from sync
       if (doc.type === models.workspace.type) {
-        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
-          doc._id
-        );
+        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
         await models.workspaceMeta.update(workspaceMeta, { hasSeen: false });
       }
       await db.insert(doc, true);
@@ -486,14 +502,14 @@ export async function ensureConfigExists(resourceGroupId, syncMode) {
   }
 }
 
-export async function createOrUpdateConfig(resourceGroupId, syncMode) {
+export async function createOrUpdateConfig(resourceGroupId, patch) {
   const config = await store.getConfig(resourceGroupId);
-  const patch = { resourceGroupId, syncMode };
+  const finalPatch = { resourceGroupId, ...patch };
 
   if (config) {
-    return store.updateConfig(config, patch);
+    return store.updateConfig(config, finalPatch);
   } else {
-    return store.insertConfig(patch);
+    return store.insertConfig(finalPatch);
   }
 }
 
@@ -554,10 +570,7 @@ async function _handleChangeAndPush(event, doc, timestamp) {
 const _fetchResourceGroupPromises = {};
 const _resourceGroupCache = {};
 
-export async function fetchResourceGroup(
-  resourceGroupId,
-  invalidateCache = false
-) {
+export async function fetchResourceGroup(resourceGroupId, invalidateCache = false) {
   if (invalidateCache) {
     delete _resourceGroupCache[resourceGroupId];
     delete _fetchResourceGroupPromises[resourceGroupId];
@@ -668,10 +681,7 @@ export async function decryptDoc(resourceGroupId, messageJSON) {
     const message = JSON.parse(messageJSON);
     decrypted = crypt.decryptAES(symmetricKey, message);
   } catch (e) {
-    logger.error(
-      `Failed to decrypt from ${resourceGroupId}: ${e}`,
-      messageJSON
-    );
+    logger.error(`Failed to decrypt from ${resourceGroupId}: ${e}`, messageJSON);
     throw e;
   }
 
@@ -684,10 +694,7 @@ export async function decryptDoc(resourceGroupId, messageJSON) {
   try {
     return JSON.parse(decrypted);
   } catch (e) {
-    logger.error(
-      `Failed to parse after decrypt from ${resourceGroupId}: ${e}`,
-      decrypted
-    );
+    logger.error(`Failed to parse after decrypt from ${resourceGroupId}: ${e}`, decrypted);
     throw e;
   }
 }
@@ -704,19 +711,12 @@ export async function createResourceGroup(parentId, name) {
 
   // Encrypt the symmetric key with Account public key
   const publicJWK = session.getPublicKey();
-  const encRGSymmetricJWK = crypt.encryptRSAWithJWK(
-    publicJWK,
-    rgSymmetricJWKStr
-  );
+  const encRGSymmetricJWK = crypt.encryptRSAWithJWK(publicJWK, rgSymmetricJWKStr);
 
   // Create the new ResourceGroup
   let resourceGroup;
   try {
-    resourceGroup = await session.syncCreateResourceGroup(
-      parentId,
-      name,
-      encRGSymmetricJWK
-    );
+    resourceGroup = await session.syncCreateResourceGroup(parentId, name, encRGSymmetricJWK);
   } catch (e) {
     logger.error(`Failed to create ResourceGroup: ${e}`);
     throw e;
@@ -758,14 +758,8 @@ export async function createResourceForDoc(doc) {
   let workspaceResource = await store.getResourceByDocId(workspace._id);
 
   if (!workspaceResource) {
-    const workspaceResourceGroup = await createResourceGroup(
-      workspace._id,
-      workspace.name
-    );
-    workspaceResource = await createResource(
-      workspace,
-      workspaceResourceGroup.id
-    );
+    const workspaceResourceGroup = await createResourceGroup(workspace._id, workspace.name);
+    workspaceResource = await createResource(workspace, workspaceResourceGroup.id);
   }
 
   if (workspace === doc) {
@@ -798,9 +792,7 @@ export async function getOrCreateAllActiveResources(resourceGroupId = null) {
 
   let activeResources;
   if (resourceGroupId) {
-    activeResources = await store.activeResourcesForResourceGroup(
-      resourceGroupId
-    );
+    activeResources = await store.activeResourcesForResourceGroup(resourceGroupId);
   } else {
     activeResources = await store.allActiveResources();
   }
@@ -834,15 +826,11 @@ export async function getOrCreateAllActiveResources(resourceGroupId = null) {
     }
   }
 
-  const resources = Object.keys(activeResourceMap).map(
-    k => activeResourceMap[k]
-  );
+  const resources = Object.keys(activeResourceMap).map(k => activeResourceMap[k]);
 
   const time = (Date.now() - startTime) / 1000;
   if (created > 0) {
-    logger.debug(
-      `Created ${created}/${resources.length} Resources (${time.toFixed(2)}s)`
-    );
+    logger.debug(`Created ${created}/${resources.length} Resources (${time.toFixed(2)}s)`);
   }
   return resources;
 }
