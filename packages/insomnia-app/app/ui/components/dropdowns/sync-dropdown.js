@@ -1,12 +1,7 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import {
-  Dropdown,
-  DropdownButton,
-  DropdownDivider,
-  DropdownItem
-} from '../base/dropdown';
+import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showModal } from '../modals';
 import * as syncStorage from '../../../sync/storage';
 import * as session from '../../../sync/session';
@@ -89,15 +84,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const config = await sync.getOrCreateConfig(resourceGroupId);
 
     // Analyze it
-    const dirty = await syncStorage.findDirtyResourcesForResourceGroup(
-      resourceGroupId
-    );
-    const all = await syncStorage.findResourcesForResourceGroup(
-      resourceGroupId
-    );
+    const dirty = await syncStorage.findDirtyResourcesForResourceGroup(resourceGroupId);
+    const all = await syncStorage.findResourcesForResourceGroup(resourceGroupId);
     const numClean = all.length - dirty.length;
-    const syncPercent =
-      all.length === 0 ? 100 : parseInt((numClean / all.length) * 1000) / 10;
+    const syncPercent = all.length === 0 ? 100 : parseInt((numClean / all.length) * 1000) / 10;
 
     if (this._isMounted) {
       this.setState({
@@ -110,8 +100,11 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleShowSyncModePrompt() {
-    await showModal(SetupSyncModal);
-    await this._reloadData();
+    showModal(SetupSyncModal, {
+      onSelectSyncMode: async syncMode => {
+        await this._reloadData();
+      }
+    });
   }
 
   componentDidMount() {
@@ -200,9 +193,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
             {/* SYNCED */}
 
             {syncMode !== syncStorage.SYNC_MODE_NEVER ? (
-              <DropdownItem
-                onClick={this._handleSyncResourceGroupId}
-                stayOpenAfterClick>
+              <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick>
                 {loading ? (
                   <i className="fa fa-refresh fa-spin" />
                 ) : (

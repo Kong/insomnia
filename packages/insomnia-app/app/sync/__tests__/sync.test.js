@@ -48,14 +48,12 @@ describe('Test push/pull behaviour', () => {
     const resourceRequest2 = await syncStorage.getResourceByDocId(request2._id);
 
     // Set up sync modes
-    await sync.createOrUpdateConfig(
-      resourceRequest.resourceGroupId,
-      syncStorage.SYNC_MODE_ON
-    );
-    await sync.createOrUpdateConfig(
-      resourceRequest2.resourceGroupId,
-      syncStorage.SYNC_MODE_UNSET
-    );
+    await sync.createOrUpdateConfig(resourceRequest.resourceGroupId, {
+      syncMode: syncStorage.SYNC_MODE_ON
+    });
+    await sync.createOrUpdateConfig(resourceRequest2.resourceGroupId, {
+      syncMode: syncStorage.SYNC_MODE_UNSET
+    });
 
     await sync.push(); // Push only active configs
     await sync.push(resourceRequest.resourceGroupId); // Force push rg_1
@@ -76,10 +74,9 @@ describe('Test push/pull behaviour', () => {
   it('Updates dirty flag for push response', async () => {
     const request = await models.request.getById('req_1');
     const resourceRequest = await syncStorage.getResourceByDocId(request._id);
-    await sync.createOrUpdateConfig(
-      resourceRequest.resourceGroupId,
-      syncStorage.SYNC_MODE_ON
-    );
+    await sync.createOrUpdateConfig(resourceRequest.resourceGroupId, {
+      syncMode: syncStorage.SYNC_MODE_ON
+    });
 
     session.syncPush.mockReturnValueOnce({
       updated: [],
@@ -108,30 +105,21 @@ describe('Test push/pull behaviour', () => {
       name: 'New Request'
     });
     const resourceBefore = await syncStorage.getResourceByDocId(request._id);
-    const resource2Before = await syncStorage.getResourceByDocId(
-      requestNew._id
-    );
-    await sync.createOrUpdateConfig(
-      resourceBefore.resourceGroupId,
-      syncStorage.SYNC_MODE_ON
-    );
+    const resource2Before = await syncStorage.getResourceByDocId(requestNew._id);
+    await sync.createOrUpdateConfig(resourceBefore.resourceGroupId, {
+      syncMode: syncStorage.SYNC_MODE_ON
+    });
     const updatedRequest = Object.assign({}, request, {
       name: 'Request Updated'
     });
     const updatedResource = Object.assign({}, resourceBefore, {
       version: 'ver1',
-      encContent: await sync.encryptDoc(
-        resourceBefore.resourceGroupId,
-        updatedRequest
-      )
+      encContent: await sync.encryptDoc(resourceBefore.resourceGroupId, updatedRequest)
     });
     const createdResourceNew = Object.assign({}, resourceBefore, {
       id: requestNew._id,
       resourceGroupId: 'rg_1',
-      encContent: await sync.encryptDoc(
-        resourceBefore.resourceGroupId,
-        requestNew
-      )
+      encContent: await sync.encryptDoc(resourceBefore.resourceGroupId, requestNew)
     });
 
     session.syncPull.mockReturnValueOnce({
@@ -151,9 +139,7 @@ describe('Test push/pull behaviour', () => {
       resourceBefore.resourceGroupId
     );
     const resource2After = await syncStorage.getResourceByDocId(request2._id);
-    const resourceNewAfter = await syncStorage.getResourceByDocId(
-      requestNewAfter._id
-    );
+    const resourceNewAfter = await syncStorage.getResourceByDocId(requestNewAfter._id);
 
     // Assert
     expect(resourceBefore.version).toBe('__NO_VERSION__');
@@ -172,15 +158,10 @@ describe('Test push/pull behaviour', () => {
     const requestServer = Object.assign({}, requestClient, {
       name: 'Server Request'
     });
-    const resourceRequest = await syncStorage.getResourceByDocId(
-      requestClient._id
-    );
+    const resourceRequest = await syncStorage.getResourceByDocId(requestClient._id);
     const resourceConflict = Object.assign({}, resourceRequest, {
       version: 'ver-2',
-      encContent: await sync.encryptDoc(
-        resourceRequest.resourceGroupId,
-        requestServer
-      ),
+      encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
       lastEdited: resourceRequest.lastEdited - 1000 // Same edited time
     });
 
@@ -214,15 +195,10 @@ describe('Test push/pull behaviour', () => {
     const requestServer = Object.assign({}, requestClient, {
       name: 'Server Request'
     });
-    const resourceRequest = await syncStorage.getResourceByDocId(
-      requestClient._id
-    );
+    const resourceRequest = await syncStorage.getResourceByDocId(requestClient._id);
     const resourceConflict = Object.assign({}, resourceRequest, {
       version: 'ver-2',
-      encContent: await sync.encryptDoc(
-        resourceRequest.resourceGroupId,
-        requestServer
-      ),
+      encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
       lastEdited: resourceRequest.lastEdited // Same edited time
     });
 
@@ -256,15 +232,10 @@ describe('Test push/pull behaviour', () => {
     const requestServer = Object.assign({}, requestClient, {
       name: 'Server Request'
     });
-    const resourceRequest = await syncStorage.getResourceByDocId(
-      requestClient._id
-    );
+    const resourceRequest = await syncStorage.getResourceByDocId(requestClient._id);
     const resourceConflict = Object.assign({}, resourceRequest, {
       version: 'ver-2',
-      encContent: await sync.encryptDoc(
-        resourceRequest.resourceGroupId,
-        requestServer
-      ),
+      encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
       lastEdited: resourceRequest.lastEdited + 1000
     });
 
@@ -285,9 +256,7 @@ describe('Test push/pull behaviour', () => {
     // Assert
     expect(session.syncPush.mock.calls.length).toBe(1);
     expect(session.syncPush.mock.calls[0][0].length).toBe(2);
-    expect(resourceAfter.lastEdited).toBeGreaterThan(
-      resourceRequest.lastEdited
-    );
+    expect(resourceAfter.lastEdited).toBeGreaterThan(resourceRequest.lastEdited);
     expect(resourceAfter.version).toBe(resourceConflict.version);
     // Local resource gets marked as dirty so it's pushed right away
     expect(resourceAfter.dirty).toBe(false);
