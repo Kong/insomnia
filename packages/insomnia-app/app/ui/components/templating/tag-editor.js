@@ -369,7 +369,7 @@ class TagEditor extends React.PureComponent<Props, State> {
 
   renderArgFile(
     value: string,
-    inputTypes: Array<string>,
+    itemTypes: Array<string>,
     argIndex: number,
     extensions?: Array<string>
   ) {
@@ -380,7 +380,7 @@ class TagEditor extends React.PureComponent<Props, State> {
         className="btn btn--clicky btn--super-compact"
         onChange={path => this._handleChangeFile(path, argIndex)}
         path={value}
-        inputtypes={inputTypes}
+        itemtypes={itemTypes}
         extensions={extensions}
       />
     );
@@ -497,18 +497,9 @@ class TagEditor extends React.PureComponent<Props, State> {
       const { options } = argDefinition;
       argInput = this.renderArgEnum(strValue, options);
     } else if (argDefinition.type === 'file') {
-      argInput = this.renderArgFile(strValue, ['openFile'], argIndex, argDefinition.extensions);
-    } else if (argDefinition.type === 'directory') {
       argInput = this.renderArgFile(
         strValue,
-        ['openDirectory'],
-        argIndex,
-        argDefinition.extensions
-      );
-    } else if (argDefinition.type === 'fileDirectory') {
-      argInput = this.renderArgFile(
-        strValue,
-        ['openFile', 'openDirectory'],
+        argDefinition.itemTypes,
         argIndex,
         argDefinition.extensions
       );

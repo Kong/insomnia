@@ -47,14 +47,6 @@ export type PluginArgumentFile = PluginArgumentBase & {
   type: 'file'
 };
 
-export type PluginArgumentDirectory = PluginArgumentBase & {
-  type: 'directory'
-};
-
-export type PluginArgumentFileDirectory = PluginArgumentBase & {
-  type: 'fileDirectory'
-};
-
 export type PluginArgumentNumber = PluginArgumentBase & {
   type: 'number',
   placeholder?: string,
@@ -67,8 +59,6 @@ export type PluginArgument =
   | PluginArgumentString
   | PluginArgumentBoolean
   | PluginArgumentFile
-  | PluginArgumentDirectory
-  | PluginArgumentFileDirectory
   | PluginArgumentNumber;
 
 export type PluginTemplateTagContext = {
