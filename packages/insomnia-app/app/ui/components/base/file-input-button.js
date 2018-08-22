@@ -2,7 +2,7 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { basename as pathBasename } from 'path';
-import { OpenDialogOptions, remote } from 'electron';
+import { remote } from 'electron';
 
 type Props = {
   // Required
@@ -45,7 +45,7 @@ class FileInputButton extends React.PureComponent<Props> {
     if (types.includes('directory')) {
       title += ' Directory';
     }
-    const options: OpenDialogOptions = {
+    const options = {
       title: title,
       buttonLabel: 'Select',
       properties: types.map(type => {
@@ -55,7 +55,8 @@ class FileInputButton extends React.PureComponent<Props> {
         if (type === 'directory') {
           return 'openDirectory';
         }
-      })
+      }),
+      filters: []
     };
 
     // If extensions are provided then filter for just those extensions
