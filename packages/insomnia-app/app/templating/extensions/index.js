@@ -47,6 +47,14 @@ export type PluginArgumentFile = PluginArgumentBase & {
   type: 'file'
 };
 
+export type PluginArgumentDirectory = PluginArgumentBase & {
+  type: 'directory'
+};
+
+export type PluginArgumentFileDirectory = PluginArgumentBase & {
+  type: 'fileDirectory'
+};
+
 export type PluginArgumentNumber = PluginArgumentBase & {
   type: 'number',
   placeholder?: string,
@@ -59,6 +67,8 @@ export type PluginArgument =
   | PluginArgumentString
   | PluginArgumentBoolean
   | PluginArgumentFile
+  | PluginArgumentDirectory
+  | PluginArgumentFileDirectory
   | PluginArgumentNumber;
 
 export type PluginTemplateTagContext = {
@@ -69,10 +79,7 @@ export type PluginTemplateTagContext = {
       },
       response: {
         getLatestForRequestId: (id: string) => Promise<Response | null>,
-        getBodyBuffer: (
-          response: Response,
-          fallback?: any
-        ) => Promise<Buffer | null>
+        getBodyBuffer: (response: Response, fallback?: any) => Promise<Buffer | null>
       }
     }
   }
@@ -83,10 +90,7 @@ export type PluginTemplateTag = {
   name: string,
   displayName: DisplayName,
   description: string,
-  run: (
-    context: PluginTemplateTagContext,
-    ...arg: Array<any>
-  ) => Promise<any> | any,
+  run: (context: PluginTemplateTagContext, ...arg: Array<any>) => Promise<any> | any,
   deprecated?: boolean,
   validate?: (value: any) => ?string,
   priority?: number
