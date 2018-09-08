@@ -83,7 +83,6 @@ class SetupSyncModal extends React.PureComponent<Props, State> {
     const resource = await sync.getOrCreateResourceForDoc(workspace);
     const config = await sync.getOrCreateConfig(resource.resourceGroupId);
     const { syncMode, syncDisableCookieJars, syncDisableClientCertificates } = config;
-    console.log('CONFIG', config);
 
     // Set selected sync mode. If it's unset, default it to ON
     const selectedSyncMode = syncMode !== SYNC_MODE_UNSET ? syncMode : SYNC_MODE_ON;

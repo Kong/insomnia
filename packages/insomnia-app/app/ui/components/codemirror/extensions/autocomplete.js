@@ -1,7 +1,7 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/overlay';
 import { getDefaultFill } from '../../../../templating/utils';
-import { escapeRegex } from '../../../../common/misc';
+import { escapeHTML, escapeRegex } from '../../../../common/misc';
 
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;
 const NAME_MATCH = /[\w.\][]+$/;
@@ -63,12 +63,8 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       hintsContainer = el;
     }
 
-    const constants = options.getConstants
-      ? await options.getConstants()
-      : null;
-    const variables = options.getVariables
-      ? await options.getVariables()
-      : null;
+    const constants = options.getConstants ? await options.getConstants() : null;
+    const variables = options.getVariables ? await options.getVariables() : null;
     const tags = options.getTags ? await options.getTags() : null;
 
     // Actually show the hint
@@ -196,9 +192,7 @@ function hint(cm, options) {
   const allowMatchingConstants = isInNothing;
 
   // Define fallback segment to match everything or nothing
-  const fallbackSegment = options.showAllOnNoMatch
-    ? ''
-    : '__will_not_match_anything__';
+  const fallbackSegment = options.showAllOnNoMatch ? '' : '__will_not_match_anything__';
 
   // See if we're completing a variable name
   const nameMatch = previousText.match(NAME_MATCH);
@@ -220,18 +214,12 @@ function hint(cm, options) {
 
   // Match variables
   if (allowMatchingVariables) {
-    matchSegments(
-      variablesToMatch,
-      nameSegment,
-      TYPE_VARIABLE,
-      MAX_VARIABLES
-    ).forEach(m => lowPriorityMatches.push(m));
-    matchSegments(
-      variablesToMatch,
-      nameSegmentLong,
-      TYPE_VARIABLE,
-      MAX_VARIABLES
-    ).forEach(m => highPriorityMatches.push(m));
+    matchSegments(variablesToMatch, nameSegment, TYPE_VARIABLE, MAX_VARIABLES).forEach(m =>
+      lowPriorityMatches.push(m)
+    );
+    matchSegments(variablesToMatch, nameSegmentLong, TYPE_VARIABLE, MAX_VARIABLES).forEach(m =>
+      highPriorityMatches.push(m)
+    );
   }
 
   // Match constants
@@ -247,35 +235,24 @@ function hint(cm, options) {
 
       if (token.type === 'variable') {
         // We're inside a JSON key
-        matchSegments(
-          constantsToMatch,
-          segment,
-          TYPE_CONSTANT,
-          MAX_CONSTANTS
-        ).forEach(m => highPriorityMatches.push(m));
+        matchSegments(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS).forEach(m =>
+          highPriorityMatches.push(m)
+        );
       } else if (
         token.type === 'invalidchar' ||
         token.type === 'ws' ||
         (token.type === 'punctuation' && token.string === '{')
       ) {
         // We're outside of a JSON key
-        matchSegments(
-          constantsToMatch,
-          segment,
-          TYPE_CONSTANT,
-          MAX_CONSTANTS
-        ).forEach(m =>
+        matchSegments(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS).forEach(m =>
           highPriorityMatches.push({ ...m, text: '"' + m.text + '": ' })
         );
       }
     } else {
       // Otherwise match full segments
-      matchSegments(
-        constantsToMatch,
-        nameSegmentFull,
-        TYPE_CONSTANT,
-        MAX_CONSTANTS
-      ).forEach(m => highPriorityMatches.push(m));
+      matchSegments(constantsToMatch, nameSegmentFull, TYPE_CONSTANT, MAX_CONSTANTS).forEach(m =>
+        highPriorityMatches.push(m)
+      );
     }
   }
 
@@ -373,8 +350,7 @@ function matchSegments(listOfThings, segment, type, limit = -1) {
     const name = typeof t === 'string' ? t : t.name;
     const value = typeof t === 'string' ? '' : t.value;
     const displayName = t.displayName || name;
-    const defaultFill =
-      typeof t === 'string' ? name : getDefaultFill(t.name, t.args);
+    const defaultFill = typeof t === 'string' ? name : getDefaultFill(t.name, t.args);
 
     const matchSegment = segment.toLowerCase();
     const matchName = displayName.toLowerCase();
@@ -430,12 +406,7 @@ function replaceWithSurround(text, find, prefix, suffix) {
 function renderHintMatch(li, self, data) {
   // Bold the matched text
   const { displayText, segment } = data;
-  const markedName = replaceWithSurround(
-    displayText,
-    segment,
-    '<strong>',
-    '</strong>'
-  );
+  const markedName = replaceWithSurround(displayText, segment, '<strong>', '</strong>');
 
   const { char, title } = ICONS[data.type];
 
@@ -443,7 +414,7 @@ function renderHintMatch(li, self, data) {
     <label class="label" title="${title}">${char}</label>
     <div class="name">${markedName}</div>
     <div class="value" title=${data.displayValue}>
-      ${data.displayValue || ''}
+      ${escapeHTML(data.displayValue || '')}
     </div>
   `;
 

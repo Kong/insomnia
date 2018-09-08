@@ -19,10 +19,7 @@ type Parameter = {
   value: string
 };
 
-export function filterParameters<T: Parameter>(
-  parameters: Array<T>,
-  name: string
-): Array<T> {
+export function filterParameters<T: Parameter>(parameters: Array<T>, name: string): Array<T> {
   if (!Array.isArray(parameters) || !name) {
     return [];
   }
@@ -30,10 +27,7 @@ export function filterParameters<T: Parameter>(
   return parameters.filter(h => (!h || !h.name ? false : h.name === name));
 }
 
-export function filterHeaders<T: Header>(
-  headers: Array<T>,
-  name: string
-): Array<T> {
+export function filterHeaders<T: Header>(headers: Array<T>, name: string): Array<T> {
   if (!Array.isArray(headers) || !name) {
     return [];
   }
@@ -90,9 +84,7 @@ export function getHostHeader<T: Header>(headers: Array<T>): T | null {
   return matches.length ? matches[0] : null;
 }
 
-export function getContentDispositionHeader<T: Header>(
-  headers: Array<T>
-): T | null {
+export function getContentDispositionHeader<T: Header>(headers: Array<T>): T | null {
   const matches = filterHeaders(headers, 'content-disposition');
   return matches.length ? matches[0] : null;
 }
@@ -125,10 +117,7 @@ export function removeVowels(str: string): string {
   return str.replace(/[aeiouyAEIOUY]/g, '');
 }
 
-export function keyedDebounce(
-  callback: Function,
-  millis: number = DEBOUNCE_MILLIS
-): Function {
+export function keyedDebounce(callback: Function, millis: number = DEBOUNCE_MILLIS): Function {
   let timeout;
   let results = {};
 
@@ -147,10 +136,7 @@ export function keyedDebounce(
   };
 }
 
-export function debounce(
-  callback: Function,
-  millis: number = DEBOUNCE_MILLIS
-): Function {
+export function debounce(callback: Function, millis: number = DEBOUNCE_MILLIS): Function {
   // For regular debounce, just use a keyed debounce with a fixed key
   return keyedDebounce(results => {
     callback.apply(null, results['__key__']);
@@ -229,6 +215,12 @@ export function jsonParseOr(str: string, fallback: any): any {
   }
 }
 
+export function escapeHTML(unsafeText: string): string {
+  let div = document.createElement('div');
+  div.innerText = unsafeText;
+  return div.innerHTML;
+}
+
 /**
  * Escape a dynamic string for use inside of a regular expression
  * @param str - string to escape
@@ -301,8 +293,7 @@ export function fuzzyMatchAll(
 
 export function getViewportSize(): string | null {
   const { BrowserWindow } = electron.remote || electron;
-  const w =
-    BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+  const w = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
 
   if (w) {
     const { width, height } = w.getContentBounds();
@@ -324,9 +315,7 @@ export function getUserLanguage(): string {
   return app.getLocale();
 }
 
-export async function waitForStreamToFinish(
-  s: Readable | Writable
-): Promise<void> {
+export async function waitForStreamToFinish(s: Readable | Writable): Promise<void> {
   return new Promise(resolve => {
     if ((s: any)._readableState && (s: any)._readableState.finished) {
       return resolve();
