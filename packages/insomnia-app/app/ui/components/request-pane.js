@@ -393,7 +393,7 @@ class RequestPane extends React.PureComponent<Props> {
                     : 'No query params to import'
                 }
                 onClick={this._handleImportQueryFromUrl}>
-                Import from Url
+                Import from URL
               </button>
             </div>
           </TabPanel>
