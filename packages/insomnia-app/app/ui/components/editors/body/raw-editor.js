@@ -15,6 +15,7 @@ class RawEditor extends PureComponent {
       indentSize,
       keyMap,
       lineWrapping,
+      indentWithTabs,
       nunjucksPowerUserMode,
       onChange,
       render,
@@ -27,6 +28,7 @@ class RawEditor extends PureComponent {
         uniquenessKey={uniquenessKey}
         fontSize={fontSize}
         indentSize={indentSize}
+        indentWithTabs={indentWithTabs}
         keyMap={keyMap}
         defaultValue={content}
         className={className}
@@ -57,7 +59,8 @@ RawEditor.propTypes = {
   // Optional
   className: PropTypes.string,
   render: PropTypes.func,
-  getRenderContext: PropTypes.func
+  getRenderContext: PropTypes.func,
+  indentWithTabs: PropTypes.bool
 };
 
 export default RawEditor;
