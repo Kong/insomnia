@@ -105,12 +105,13 @@ class WorkspaceDropdown extends PureComponent {
       activeWorkspace,
       unseenWorkspaces,
       isLoading,
+      isWorkspaceListOrdered,
       ...other
     } = this.props;
 
-    const nonActiveWorkspaces = workspaces.filter(
-      w => w._id !== activeWorkspace._id
-    );
+    const nonActiveWorkspaces = workspaces
+      .filter(w => w._id !== activeWorkspace._id)
+      .sort((w1, w2) => isWorkspaceListOrdered ? w1.name.localeCompare(w2.name) : 0);
     const addedWorkspaceNames = unseenWorkspaces
       .map(w => `"${w.name}"`)
       .join(', ');

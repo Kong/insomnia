@@ -57,7 +57,8 @@ class Sidebar extends PureComponent {
       moveDoc,
       handleActivateRequest,
       activeRequest,
-      environmentHighlightColorStyle
+      environmentHighlightColorStyle,
+      isWorkspaceListOrdered
     } = this.props;
 
     return (
@@ -84,6 +85,7 @@ class Sidebar extends PureComponent {
           handleImportFile={handleImportFile}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
           isLoading={isLoading}
+          isWorkspaceListOrdered={isWorkspaceListOrdered}
         />
 
         <div className="sidebar__menu">
