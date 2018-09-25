@@ -71,9 +71,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     this.setState({ showAdvanced });
   }
 
-  async _handleUpdateAccessToken(
-    e: SyntheticEvent<HTMLInputElement>
-  ): Promise<void> {
+  async _handleUpdateAccessToken(e: SyntheticEvent<HTMLInputElement>): Promise<void> {
     const { oAuth2Token } = this.props;
     const accessToken = e.currentTarget.value;
 
@@ -87,9 +85,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     }
   }
 
-  async _handleUpdateRefreshToken(
-    e: SyntheticEvent<HTMLInputElement>
-  ): Promise<void> {
+  async _handleUpdateRefreshToken(e: SyntheticEvent<HTMLInputElement>): Promise<void> {
     const { oAuth2Token } = this.props;
     const refreshToken = e.currentTarget.value;
 
@@ -104,9 +100,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
   }
 
   async _handleClearTokens(): Promise<void> {
-    const oAuth2Token = await models.oAuth2Token.getByParentId(
-      this.props.request._id
-    );
+    const oAuth2Token = await models.oAuth2Token.getByParentId(this.props.request._id);
     if (oAuth2Token) {
       await models.oAuth2Token.remove(oAuth2Token);
     }
@@ -129,9 +123,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     const { request } = this.props;
 
     try {
-      const authentication = await this.props.handleRender(
-        request.authentication
-      );
+      const authentication = await this.props.handleRender(request.authentication);
       await getAccessToken(request._id, authentication, true);
       this.setState({ loading: false });
     } catch (err) {
@@ -157,10 +149,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
   }
 
   _handleChangeCredentialsInBody(e: SyntheticEvent<HTMLInputElement>): void {
-    this._handleChangeProperty(
-      'credentialsInBody',
-      e.currentTarget.value === 'true'
-    );
+    this._handleChangeProperty('credentialsInBody', e.currentTarget.value === 'true');
   }
 
   _handleChangeEnabled(value: boolean): void {
@@ -207,6 +196,10 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     this._handleChangeProperty('audience', value);
   }
 
+  _handleChangeResource(value: string): void {
+    this._handleChangeProperty('resource', value);
+  }
+
   _handleChangeGrantType(e: SyntheticEvent<HTMLInputElement>): void {
     this._handleChangeProperty('grantType', e.currentTarget.value);
   }
@@ -248,18 +241,10 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     help: string | null = null,
     handleAutocomplete: Function | null = null
   ): React.Element<*> {
-    const {
-      handleRender,
-      handleGetRenderContext,
-      request,
-      nunjucksPowerUserMode
-    } = this.props;
+    const { handleRender, handleGetRenderContext, request, nunjucksPowerUserMode } = this.props;
     const { authentication } = request;
     const id = label.replace(/ /g, '-');
-    const type =
-      !this.props.showPasswords && property === 'password'
-        ? 'password'
-        : 'text';
+    const type = !this.props.showPasswords && property === 'password' ? 'password' : 'text';
     return (
       <tr key={id}>
         <td className="pad-right no-wrap valign-middle">
@@ -270,12 +255,9 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         </td>
         <td className="wide">
           <div
-            className={classnames(
-              'form-control form-control--underlined no-margin',
-              {
-                'form-control--inactive': authentication.disabled
-              }
-            )}>
+            className={classnames('form-control form-control--underlined no-margin', {
+              'form-control--inactive': authentication.disabled
+            })}>
             <OneLineEditor
               id={id}
               type={type}
@@ -316,12 +298,9 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         </td>
         <td className="wide">
           <div
-            className={classnames(
-              'form-control form-control--outlined no-margin',
-              {
-                'form-control--inactive': authentication.disabled
-              }
-            )}>
+            className={classnames('form-control form-control--outlined no-margin', {
+              'form-control--inactive': authentication.disabled
+            })}>
             <select id={id} onChange={onChange} value={value}>
               {options.map(({ name, value }) => (
                 <option key={value} value={value}>
@@ -341,11 +320,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     let basicFields = [];
     let advancedFields = [];
 
-    const clientId = this.renderInputRow(
-      'Client ID',
-      'clientId',
-      this._handleChangeClientId
-    );
+    const clientId = this.renderInputRow('Client ID', 'clientId', this._handleChangeClientId);
 
     const clientSecret = this.renderInputRow(
       'Client Secret',
@@ -378,29 +353,13 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         'redirected URL'
     );
 
-    const state = this.renderInputRow(
-      'State',
-      'state',
-      this._handleChangeState
-    );
+    const state = this.renderInputRow('State', 'state', this._handleChangeState);
 
-    const scope = this.renderInputRow(
-      'Scope',
-      'scope',
-      this._handleChangeScope
-    );
+    const scope = this.renderInputRow('Scope', 'scope', this._handleChangeScope);
 
-    const username = this.renderInputRow(
-      'Username',
-      'username',
-      this._handleChangeUsername
-    );
+    const username = this.renderInputRow('Username', 'username', this._handleChangeUsername);
 
-    const password = this.renderInputRow(
-      'Password',
-      'password',
-      this._handleChangePassword
-    );
+    const password = this.renderInputRow('Password', 'password', this._handleChangePassword);
 
     const tokenPrefix = this.renderInputRow(
       'Header Prefix',
@@ -426,6 +385,13 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       'audience',
       this._handleChangeAudience,
       'Indicate what resource server to access'
+    );
+
+    const resource = this.renderInputRow(
+      'Resource',
+      'resource',
+      this._handleChangeResource,
+      'Indicate what resource to access'
     );
 
     const credentialsInBody = this.renderSelectRow(
@@ -455,16 +421,9 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
       basicFields = [accessTokenUrl, clientId, clientSecret, enabled];
 
-      advancedFields = [scope, credentialsInBody, tokenPrefix, audience];
+      advancedFields = [scope, credentialsInBody, tokenPrefix, audience, resource];
     } else if (grantType === GRANT_TYPE_PASSWORD) {
-      basicFields = [
-        username,
-        password,
-        accessTokenUrl,
-        clientId,
-        clientSecret,
-        enabled
-      ];
+      basicFields = [username, password, accessTokenUrl, clientId, clientSecret, enabled];
 
       advancedFields = [scope, credentialsInBody, tokenPrefix];
     } else if (grantType === GRANT_TYPE_IMPLICIT) {
@@ -476,9 +435,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     return { basic: basicFields, advanced: advancedFields };
   }
 
-  static renderExpireAt(
-    token: OAuth2Token | null
-  ): React.Element<*> | string | null {
+  static renderExpireAt(token: OAuth2Token | null): React.Element<*> | string | null {
     if (!token || !token.accessToken) {
       return null;
     }
@@ -509,10 +466,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
 
     const errorUriButton =
       oAuth2Token && oAuth2Token.errorUri ? (
-        <Link
-          href={oAuth2Token.errorUri}
-          title={oAuth2Token.errorUri}
-          className="space-left icon">
+        <Link href={oAuth2Token.errorUri} title={oAuth2Token.errorUri} className="space-left icon">
           <i className="fa fa-question-circle" />
         </Link>
       ) : null;
@@ -584,9 +538,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
           </tbody>
         </table>
         <div className="notice subtle margin-top text-left">
-          {error && (
-            <p className="selectable notice warning margin-bottom">{error}</p>
-          )}
+          {error && <p className="selectable notice warning margin-bottom">{error}</p>}
           {this.renderError()}
           <div className="form-control form-control--outlined">
             <label>
@@ -610,9 +562,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
           </div>
           <div className="pad-top text-right">
             {tok ? (
-              <PromptButton
-                className="btn btn--clicky"
-                onClick={this._handleClearTokens}>
+              <PromptButton className="btn btn--clicky" onClick={this._handleClearTokens}>
                 Clear
               </PromptButton>
             ) : null}

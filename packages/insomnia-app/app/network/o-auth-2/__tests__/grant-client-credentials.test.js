@@ -10,6 +10,8 @@ const ACCESS_TOKEN_URL = 'https://foo.com/access_token';
 const CLIENT_ID = 'client_123';
 const CLIENT_SECRET = 'secret_12345456677756343';
 const SCOPE = 'scope_123';
+const AUDIENCE = 'https://foo.com/userinfo';
+const RESOURCE = 'https://foo.com/resource';
 
 describe('client_credentials', () => {
   beforeEach(globalBeforeEach);
@@ -21,7 +23,9 @@ describe('client_credentials', () => {
       JSON.stringify({
         access_token: 'token_123',
         token_type: 'token_type',
-        scope: SCOPE
+        scope: SCOPE,
+        audience: AUDIENCE,
+        resource: RESOURCE
       })
     );
 
@@ -39,7 +43,9 @@ describe('client_credentials', () => {
       false,
       CLIENT_ID,
       CLIENT_SECRET,
-      SCOPE
+      SCOPE,
+      AUDIENCE,
+      RESOURCE
     );
 
     // Check the request to fetch the token
@@ -53,7 +59,9 @@ describe('client_credentials', () => {
             mimeType: 'application/x-www-form-urlencoded',
             params: [
               { name: 'grant_type', value: 'client_credentials' },
-              { name: 'scope', value: SCOPE }
+              { name: 'scope', value: SCOPE },
+              { name: 'audience', value: AUDIENCE },
+              { name: 'resource', value: RESOURCE }
             ]
           },
           headers: [
@@ -80,6 +88,8 @@ describe('client_credentials', () => {
       expires_in: null,
       token_type: 'token_type',
       scope: SCOPE,
+      audience: AUDIENCE,
+      resource: RESOURCE,
       error: null,
       error_uri: null,
       error_description: null,
@@ -95,7 +105,9 @@ describe('client_credentials', () => {
       JSON.stringify({
         access_token: 'token_123',
         token_type: 'token_type',
-        scope: SCOPE
+        scope: SCOPE,
+        audience: AUDIENCE,
+        resource: RESOURCE
       })
     );
 
@@ -104,9 +116,7 @@ describe('client_credentials', () => {
       bodyCompression: '',
       parentId: 'req_1',
       statusCode: 200,
-      headers: [
-        { name: 'Content-Type', value: 'application/x-www-form-urlencoded' }
-      ]
+      headers: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }]
     }));
 
     const result = await getToken(
@@ -115,7 +125,9 @@ describe('client_credentials', () => {
       true,
       CLIENT_ID,
       CLIENT_SECRET,
-      SCOPE
+      SCOPE,
+      AUDIENCE,
+      RESOURCE
     );
 
     // Check the request to fetch the token
@@ -130,6 +142,8 @@ describe('client_credentials', () => {
             params: [
               { name: 'grant_type', value: 'client_credentials' },
               { name: 'scope', value: SCOPE },
+              { name: 'audience', value: AUDIENCE },
+              { name: 'resource', value: RESOURCE },
               { name: 'client_id', value: CLIENT_ID },
               { name: 'client_secret', value: CLIENT_SECRET }
             ]
@@ -154,6 +168,8 @@ describe('client_credentials', () => {
       expires_in: null,
       token_type: 'token_type',
       scope: SCOPE,
+      audience: AUDIENCE,
+      resource: RESOURCE,
       error: null,
       error_uri: null,
       error_description: null,
