@@ -30,17 +30,9 @@ export default async function(
 ): Promise<OAuth2Token | null> {
   switch (authentication.grantType) {
     case GRANT_TYPE_AUTHORIZATION_CODE:
-      return _getOAuth2AuthorizationCodeHeader(
-        requestId,
-        authentication,
-        forceRefresh
-      );
+      return _getOAuth2AuthorizationCodeHeader(requestId, authentication, forceRefresh);
     case GRANT_TYPE_CLIENT_CREDENTIALS:
-      return _getOAuth2ClientCredentialsHeader(
-        requestId,
-        authentication,
-        forceRefresh
-      );
+      return _getOAuth2ClientCredentialsHeader(requestId, authentication, forceRefresh);
     case GRANT_TYPE_IMPLICIT:
       return _getOAuth2ImplicitHeader(requestId, authentication, forceRefresh);
     case GRANT_TYPE_PASSWORD:
@@ -55,11 +47,7 @@ async function _getOAuth2AuthorizationCodeHeader(
   authentication: RequestAuthentication,
   forceRefresh: boolean
 ): Promise<OAuth2Token | null> {
-  const oAuth2Token = await _getAccessToken(
-    requestId,
-    authentication,
-    forceRefresh
-  );
+  const oAuth2Token = await _getAccessToken(requestId, authentication, forceRefresh);
 
   if (oAuth2Token) {
     return oAuth2Token;
@@ -85,11 +73,7 @@ async function _getOAuth2ClientCredentialsHeader(
   authentication: RequestAuthentication,
   forceRefresh: boolean
 ): Promise<OAuth2Token | null> {
-  const oAuth2Token = await _getAccessToken(
-    requestId,
-    authentication,
-    forceRefresh
-  );
+  const oAuth2Token = await _getAccessToken(requestId, authentication, forceRefresh);
 
   if (oAuth2Token) {
     return oAuth2Token;
@@ -102,7 +86,8 @@ async function _getOAuth2ClientCredentialsHeader(
     authentication.clientId,
     authentication.clientSecret,
     authentication.scope,
-    authentication.audience
+    authentication.audience,
+    authentication.resource
   );
 
   return _updateOAuth2Token(requestId, results);
@@ -113,11 +98,7 @@ async function _getOAuth2ImplicitHeader(
   authentication: RequestAuthentication,
   forceRefresh: boolean
 ): Promise<OAuth2Token | null> {
-  const oAuth2Token = await _getAccessToken(
-    requestId,
-    authentication,
-    forceRefresh
-  );
+  const oAuth2Token = await _getAccessToken(requestId, authentication, forceRefresh);
 
   if (oAuth2Token) {
     return oAuth2Token;
@@ -142,11 +123,7 @@ async function _getOAuth2PasswordHeader(
   authentication: RequestAuthentication,
   forceRefresh: boolean
 ): Promise<OAuth2Token | null> {
-  const oAuth2Token = await _getAccessToken(
-    requestId,
-    authentication,
-    forceRefresh
-  );
+  const oAuth2Token = await _getAccessToken(requestId, authentication, forceRefresh);
 
   if (oAuth2Token) {
     return oAuth2Token;
@@ -175,9 +152,7 @@ async function _getAccessToken(
   // See if we have a token already //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  let token: OAuth2Token | null = await models.oAuth2Token.getByParentId(
-    requestId
-  );
+  let token: OAuth2Token | null = await models.oAuth2Token.getByParentId(requestId);
 
   if (!token) {
     return null;
@@ -222,10 +197,7 @@ async function _getAccessToken(
   return _updateOAuth2Token(requestId, refreshResults);
 }
 
-async function _updateOAuth2Token(
-  requestId: string,
-  authResults: Object
-): Promise<OAuth2Token> {
+async function _updateOAuth2Token(requestId: string, authResults: Object): Promise<OAuth2Token> {
   const oAuth2Token = await models.oAuth2Token.getOrCreateByParentId(requestId);
 
   // Calculate expiry date

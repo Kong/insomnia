@@ -13,15 +13,15 @@ export default async function(
   clientId: string,
   clientSecret: string,
   scope: string = '',
-  audience: string = ''
+  audience: string = '',
+  resource: string = ''
 ): Promise<Object> {
-  const params = [
-    { name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_CLIENT_CREDENTIALS }
-  ];
+  const params = [{ name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_CLIENT_CREDENTIALS }];
 
   // Add optional params
   scope && params.push({ name: c.P_SCOPE, value: scope });
   audience && params.push({ name: c.P_AUDIENCE, value: audience });
+  resource && params.push({ name: c.P_RESOURCE, value: resource });
 
   const headers = [
     { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
@@ -70,6 +70,8 @@ export default async function(
     c.P_TOKEN_TYPE,
     c.P_EXPIRES_IN,
     c.P_SCOPE,
+    c.P_AUDIENCE,
+    c.P_RESOURCE,
     c.P_ERROR,
     c.P_ERROR_URI,
     c.P_ERROR_DESCRIPTION

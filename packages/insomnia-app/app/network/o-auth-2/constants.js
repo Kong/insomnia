@@ -13,6 +13,7 @@ export const P_ACCESS_TOKEN = 'access_token';
 export const P_CLIENT_ID = 'client_id';
 export const P_CLIENT_SECRET = 'client_secret';
 export const P_AUDIENCE = 'audience';
+export const P_RESOURCE = 'resource';
 export const P_CODE = 'code';
 export const P_NONCE = 'nonce';
 export const P_ERROR = 'error';
