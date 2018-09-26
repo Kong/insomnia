@@ -288,7 +288,7 @@ class CodeEditor extends React.Component {
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
         Tab: cm => {
-          const spaces = new Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
+          const spaces = this._indentChars();
           cm.replaceSelection(spaces);
         }
       });
@@ -353,6 +353,10 @@ class CodeEditor extends React.Component {
     return mode.indexOf('xml') !== -1;
   }
 
+  _indentChars() {
+    return this.codeMirror.getOption('indentWithTabs') ? '\t' : new Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
+  }
+
   _handleBeautify() {
     this._prettify(this.codeMirror.getValue());
   }
@@ -375,7 +379,7 @@ class CodeEditor extends React.Component {
         }
       }
 
-      return prettify.json(jsonString, '\t', this.props.autoPrettify);
+      return prettify.json(jsonString, this._indentChars(), this.props.autoPrettify);
     } catch (e) {
       // That's Ok, just leave it
       return code;
@@ -394,7 +398,7 @@ class CodeEditor extends React.Component {
     }
 
     try {
-      return vkBeautify.xml(code, '\t');
+      return vkBeautify.xml(code, this._indentChars());
     } catch (e) {
       // Failed to parse so just return original
       return code;
@@ -422,6 +426,7 @@ class CodeEditor extends React.Component {
       noStyleActiveLine,
       noLint,
       indentSize,
+      indentWithTabs,
       dynamicHeight,
       hintOptions,
       infoOptions,
@@ -448,6 +453,7 @@ class CodeEditor extends React.Component {
       lineNumbers: !hideGutters && !hideLineNumbers,
       foldGutter: !hideGutters && !hideLineNumbers,
       lineWrapping: lineWrapping,
+      indentWithTabs: indentWithTabs,
       matchBrackets: !noMatchBrackets,
       lint: !noLint && !readOnly,
       gutters: []

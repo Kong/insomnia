@@ -144,6 +144,18 @@ class General extends React.PureComponent<Props> {
           </label>
         </div>
 
+        <div className="form-control form-control--thin">
+          <label className="inline-block">
+            Indent With Tabs
+            <input
+              type="checkbox"
+              name="editorIndentWithTabs"
+              checked={settings.editorIndentWithTabs}
+              onChange={this._handleUpdateSetting}
+            />
+          </label>
+        </div>
+
         <div className="form-control form-control--outlined pad-top-sm">
           <label>
             Environment Highlight Color Style{' '}

@@ -182,6 +182,7 @@ class BodyEditor extends React.PureComponent<Props> {
           indentSize={settings.editorIndentSize}
           keyMap={settings.editorKeyMap}
           lineWrapping={settings.editorLineWrapping}
+          indentWithTabs={settings.editorIndentWithTabs}
           contentType={contentType || 'text/plain'}
           content={request.body.text || ''}
           render={handleRender}
