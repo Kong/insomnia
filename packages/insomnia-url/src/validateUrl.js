@@ -5,6 +5,7 @@ function validateUrl(urlString) {
     const parsedURL = new URL(urlString);
     if (!parsedURL.protocol || !parsedURL.hostname) return false;
     if (!validateScheme(parsedURL.protocol)) return false;
+    console.log(parsedURL.hostname)
     if (!validateHostname(parsedURL.hostname)) return false;
     return true;
   } catch (error) {
@@ -14,15 +15,38 @@ function validateUrl(urlString) {
 
 function validateScheme(scheme) {
   scheme = scheme.slice(0, -1);
-  const urlSchemes = ['ftp', 'file', 'gopher', 'http', 'https', 'ws', 'wss'];
+  urlSchemes = getValidUrlSchemes()
   return urlSchemes.includes(scheme);
 }
 
 function validateHostname(hostname) {
-  const domainNameRegExp = new RegExp('[a-zA-Z0-9.a-zA-Z]+');
-  const ipv4RegExp = new RegExp('((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(.|$)){4}');
-  const ipv6RegExp = new RegExp('([0-9a-f]|:){1,4}(:([0-9a-f]{0,4})*){1,7}$');
+  const domainNameRegExp = getDomainNameRegExp()
+  const ipv4RegExp = getIPv4RegExp()
+  const ipv6RegExp = getIPv6RegExp()
   return domainNameRegExp.test(hostname) || ipv4RegExp.test(hostname) || ipv6RegExp.test(hostname);
 }
 
-module.exports = validateUrl;
+function getValidUrlSchemes () {
+  return ['ftp', 'file', 'gopher', 'http', 'https', 'ws', 'wss'];
+}
+
+function getDomainNameRegExp () {
+  return new RegExp('^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$')
+}
+
+function getIPv4RegExp () {
+  return new RegExp('^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$')
+}
+
+function getIPv6RegExp () {
+  return new RegExp('^\\[(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}\\]$')
+}
+
+module.exports = { validateUrl,
+  validateScheme,
+  validateHostname,
+  getValidUrlSchemes,
+  getDomainNameRegExp,
+  getIPv4RegExp,
+  getIPv6RegExp
+}
