@@ -144,18 +144,6 @@ class General extends React.PureComponent<Props> {
           </label>
         </div>
 
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Ordered Workspace List
-            <input
-              type="checkbox"
-              name="isWorkspaceListOrdered"
-              checked={settings.isWorkspaceListOrdered}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
-
         <div className="form-control form-control--outlined pad-top-sm">
           <label>
             Environment Highlight Color Style{' '}

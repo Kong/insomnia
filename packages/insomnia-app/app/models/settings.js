@@ -26,8 +26,7 @@ type BaseSettings = {
   deviceId: string | null,
   updateChannel: string,
   updateAutomatically: boolean,
-  environmentHighlightColorStyle: string,
-  isWorkspaceListOrdered: boolean
+  environmentHighlightColorStyle: string
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -61,8 +60,7 @@ export function init(): BaseSettings {
     deviceId: null,
     updateChannel: UPDATE_CHANNEL_STABLE,
     updateAutomatically: true,
-    environmentHighlightColorStyle: 'sidebar-indicator',
-    isWorkspaceListOrdered: true
+    environmentHighlightColorStyle: 'sidebar-indicator'
   };
 }
 

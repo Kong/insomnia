@@ -640,7 +640,6 @@ class Wrapper extends React.PureComponent<Props, State> {
             environmentHighlightColorStyle={
               settings.environmentHighlightColorStyle
             }
-            isWorkspaceListOrdered={settings.isWorkspaceListOrdered}
           />
         </ErrorBoundary>
 
