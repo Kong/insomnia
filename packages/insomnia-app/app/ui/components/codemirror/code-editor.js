@@ -2,7 +2,6 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import CodeMirror from 'codemirror';
-import 'codemirror/mode/clojure/clojure';
 import classnames from 'classnames';
 import clone from 'clone';
 import jq from 'jsonpath';
