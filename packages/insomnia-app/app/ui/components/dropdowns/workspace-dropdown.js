@@ -105,7 +105,6 @@ class WorkspaceDropdown extends PureComponent {
       activeWorkspace,
       unseenWorkspaces,
       isLoading,
-      isWorkspaceListOrdered,
       ...other
     } = this.props;
 
