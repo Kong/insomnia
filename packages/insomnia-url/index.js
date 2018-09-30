@@ -1,5 +1,6 @@
 const protocol = require('./src/protocol');
 const querystring = require('./src/querystring');
+const { validateURL } = require('./src/validateURL');
 
 module.exports = {
   setDefaultProtocol: protocol.setDefaultProtocol,
@@ -8,5 +9,6 @@ module.exports = {
   extractQueryStringFromUrl: querystring.extractQueryStringFromUrl,
   deconstructQueryStringToParams: querystring.deconstructQueryStringToParams,
   buildQueryParameter: querystring.buildQueryParameter,
-  buildQueryStringFromParams: querystring.buildQueryStringFromParams
+  buildQueryStringFromParams: querystring.buildQueryStringFromParams,
+  validateURL: validateURL
 };
