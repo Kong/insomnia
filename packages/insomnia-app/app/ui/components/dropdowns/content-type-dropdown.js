@@ -15,6 +15,7 @@ import {
   CONTENT_TYPE_JSON,
   CONTENT_TYPE_OTHER,
   CONTENT_TYPE_XML,
+  CONTENT_TYPE_EDN,
   getContentTypeName
 } from '../../../common/constants';
 import { showModal } from '../modals/index';
@@ -116,6 +117,7 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
         </DropdownDivider>
         {this._renderDropdownItem(CONTENT_TYPE_JSON)}
         {this._renderDropdownItem(CONTENT_TYPE_XML)}
+        {this._renderDropdownItem(CONTENT_TYPE_EDN)}
         {this._renderDropdownItem(CONTENT_TYPE_OTHER)}
         <DropdownDivider>
           <span>

@@ -16,6 +16,7 @@ const MODES = {
   'text/plain': 'Plain Text',
   'application/json': 'JSON',
   'application/xml': 'XML',
+  'application/edn': 'EDN',
   'text/x-markdown': 'Markdown',
   'text/html': 'HTML'
 };

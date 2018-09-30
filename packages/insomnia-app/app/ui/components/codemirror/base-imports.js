@@ -10,6 +10,7 @@ import 'codemirror/mode/markdown/markdown';
 import 'codemirror/mode/python/python';
 import 'codemirror/mode/ruby/ruby';
 import 'codemirror/mode/swift/swift';
+import 'codemirror/mode/clojure/clojure';
 
 import 'codemirror/addon/display/autorefresh';
 import 'codemirror/addon/dialog/dialog';

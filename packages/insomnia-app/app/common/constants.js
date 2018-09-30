@@ -133,6 +133,7 @@ export const PREVIEW_MODES = Object.keys(previewModeMap);
 // Content Types
 export const CONTENT_TYPE_JSON = 'application/json';
 export const CONTENT_TYPE_XML = 'application/xml';
+export const CONTENT_TYPE_EDN = 'application/edn';
 export const CONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
 export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_FILE = 'application/octet-stream';
@@ -146,7 +147,8 @@ const contentTypesMap = {
   [CONTENT_TYPE_FORM_URLENCODED]: ['Form', 'Form URL Encoded'],
   [CONTENT_TYPE_FILE]: ['File', 'Binary File'],
   [CONTENT_TYPE_GRAPHQL]: ['GraphQL', 'GraphQL Query'],
-  [CONTENT_TYPE_OTHER]: ['Other', 'Other']
+  [CONTENT_TYPE_OTHER]: ['Other', 'Other'],
+  [CONTENT_TYPE_EDN]: ['EDN', 'EDN']
 };
 
 // Auth Types

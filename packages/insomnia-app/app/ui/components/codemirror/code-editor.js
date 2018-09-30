@@ -18,6 +18,7 @@ import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
 import { query as queryXPath } from 'insomnia-xpath';
 import deepEqual from 'deep-equal';
+import zprint from 'zprint-clj';
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -353,6 +354,14 @@ class CodeEditor extends React.Component {
     return mode.indexOf('xml') !== -1;
   }
 
+  _isEDN(mode) {
+    if (!mode) {
+      return false;
+    }
+
+    return mode === 'application/edn' || mode.indexOf('clojure') !== -1;
+  }
+
   _indentChars() {
     return this.codeMirror.getOption('indentWithTabs') ? '\t' : new Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
   }
@@ -382,6 +391,14 @@ class CodeEditor extends React.Component {
       return prettify.json(jsonString, this._indentChars(), this.props.autoPrettify);
     } catch (e) {
       // That's Ok, just leave it
+      return code;
+    }
+  }
+
+  _prettifyEDN(code) {
+    try {
+      return zprint(code, null);
+    } catch (e) {
       return code;
     }
   }
@@ -565,6 +582,8 @@ class CodeEditor extends React.Component {
       return 'graphql';
     } else if (this._isJSON(mimeType)) {
       return 'application/json';
+    } else if (this._isEDN(mimeType)) {
+      return 'application/edn';
     } else if (this._isXML(mimeType)) {
       return 'application/xml';
     } else {
@@ -693,6 +712,8 @@ class CodeEditor extends React.Component {
     if (shouldPrettify && this._canPrettify()) {
       if (this._isXML(this.props.mode)) {
         code = this._prettifyXML(code);
+      } else if (this._isEDN(this.props.mode)) {
+        code = this._prettifyEDN(code);
       } else {
         code = this._prettifyJSON(code);
       }
@@ -723,7 +744,7 @@ class CodeEditor extends React.Component {
 
   _canPrettify() {
     const { mode } = this.props;
-    return this._isJSON(mode) || this._isXML(mode);
+    return this._isJSON(mode) || this._isXML(mode) || this._isEDN(mode);
   }
 
   _showFilterHelp() {
@@ -795,6 +816,8 @@ class CodeEditor extends React.Component {
         contentTypeName = 'JSON';
       } else if (this._isXML(mode)) {
         contentTypeName = 'XML';
+      } else if (this._isEDN(mode)) {
+        contentTypeName = 'EDN';
       }
 
       toolbarChildren.push(
