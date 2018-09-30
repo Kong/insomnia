@@ -2,6 +2,8 @@
 import * as React from 'react';
 import CopyButton from '../base/copy-button';
 import type { ResponseHeader } from '../../../models/response';
+import { validateURL } from '../../../../../insomnia-url/index';
+import Link from '../base/link';
 
 type Props = {
   headers: Array<ResponseHeader>
@@ -28,17 +30,14 @@ class ResponseHeadersViewer extends React.PureComponent<Props> {
                 {h.name}
               </td>
               <td style={{ width: '50%' }} className="force-wrap">
-                {h.value}
+                {validateURL(h.value) ? <Link href={h.value}>{h.value}</Link> : h.value}
               </td>
             </tr>
           ))}
         </tbody>
       </table>,
       <p key="copy" className="pad-top">
-        <CopyButton
-          className="pull-right btn btn--clicky"
-          content={headersString}
-        />
+        <CopyButton className="pull-right btn btn--clicky" content={headersString} />
       </p>
     ];
   }
