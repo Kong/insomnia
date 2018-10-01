@@ -3,6 +3,7 @@ import * as React from 'react';
 import CopyButton from '../base/copy-button';
 import type { ResponseHeader } from '../../../models/response';
 import Link from '../base/link';
+const { URL } = require('url');
 
 type Props = {
   headers: Array<ResponseHeader>
