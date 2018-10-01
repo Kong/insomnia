@@ -2,12 +2,21 @@
 import * as React from 'react';
 import CopyButton from '../base/copy-button';
 import type { ResponseHeader } from '../../../models/response';
-import { validateURL } from '../../../../../insomnia-url/index';
 import Link from '../base/link';
 
 type Props = {
   headers: Array<ResponseHeader>
 };
+
+function validateURL(urlString) {
+  try {
+    let parsedUrl = new URL(urlString);
+    if (!parsedUrl.hostname) return false;
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
 
 class ResponseHeadersViewer extends React.PureComponent<Props> {
   render() {
