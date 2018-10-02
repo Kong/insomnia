@@ -7,14 +7,13 @@ var qs = require('querystring');
 var reducer = require('./helpers/reducer');
 var targets = require('./targets');
 var url = require('url');
-var util = require('util');
 var validate = require('har-validator/lib/async');
 
 // constructor
 var HTTPSnippet = function(data) {
   var entries;
   var self = this;
-  var input = util._extend({}, data);
+  var input = Object.assign({}, data);
 
   // prep the main container
   self.requests = [];
@@ -37,8 +36,7 @@ var HTTPSnippet = function(data) {
     entry.request.headers = entry.request.headers || [];
     entry.request.cookies = entry.request.cookies || [];
     entry.request.postData = entry.request.postData || {};
-    entry.request.postData.mimeType =
-      entry.request.postData.mimeType || 'application/octet-stream';
+    entry.request.postData.mimeType = entry.request.postData.mimeType || 'application/octet-stream';
 
     entry.request.bodySize = 0;
     entry.request.headersSize = 0;
@@ -89,9 +87,7 @@ HTTPSnippet.prototype.prepare = function(request) {
 
   // construct Cookie header
   var cookies = request.cookies.map(function(cookie) {
-    return (
-      encodeURIComponent(cookie.name) + '=' + encodeURIComponent(cookie.value)
-    );
+    return encodeURIComponent(cookie.name) + '=' + encodeURIComponent(cookie.value);
   });
 
   if (cookies.length) {
@@ -127,8 +123,7 @@ HTTPSnippet.prototype.prepare = function(request) {
         );
 
         request.postData.boundary = form.getBoundary();
-        request.headersObj['content-type'] =
-          'multipart/form-data; boundary=' + form.getBoundary();
+        request.headersObj['content-type'] = 'multipart/form-data; boundary=' + form.getBoundary();
       }
       break;
 
@@ -136,10 +131,7 @@ HTTPSnippet.prototype.prepare = function(request) {
       if (!request.postData.params) {
         request.postData.text = '';
       } else {
-        request.postData.paramsObj = request.postData.params.reduce(
-          reducer,
-          {}
-        );
+        request.postData.paramsObj = request.postData.params.reduce(reducer, {});
 
         // always overwrite
         request.postData.text = qs.stringify(request.postData.paramsObj);
@@ -167,13 +159,13 @@ HTTPSnippet.prototype.prepare = function(request) {
   }
 
   // create allHeaders object
-  request.allHeaders = util._extend(request.allHeaders, request.headersObj);
+  request.allHeaders = Object.assign(request.allHeaders, request.headersObj);
 
   // deconstruct the uri
   request.uriObj = url.parse(request.url, true, true);
 
   // merge all possible queryString values
-  request.queryObj = util._extend(request.queryObj, request.uriObj.query);
+  request.queryObj = Object.assign(request.queryObj, request.uriObj.query);
 
   // reset uriObj values for a clean url
   request.uriObj.query = null;
@@ -224,10 +216,7 @@ HTTPSnippet.prototype._matchTarget = function(target, client) {
   }
 
   // shorthand
-  if (
-    typeof client === 'string' &&
-    typeof targets[target][client] === 'function'
-  ) {
+  if (typeof client === 'string' && typeof targets[target][client] === 'function') {
     return targets[target][client];
   }
 
@@ -240,7 +229,7 @@ module.exports = HTTPSnippet;
 
 module.exports.availableTargets = function() {
   return Object.keys(targets).map(function(key) {
-    var target = util._extend({}, targets[key].info);
+    var target = Object.assign({}, targets[key].info);
     var clients = Object.keys(targets[key])
 
       .filter(function(prop) {
