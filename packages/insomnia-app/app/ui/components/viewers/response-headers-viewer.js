@@ -2,10 +2,22 @@
 import * as React from 'react';
 import CopyButton from '../base/copy-button';
 import type { ResponseHeader } from '../../../models/response';
+import Link from '../base/link';
+const { URL } = require('url');
 
 type Props = {
   headers: Array<ResponseHeader>
 };
+
+function validateURL(urlString) {
+  try {
+    let parsedUrl = new URL(urlString);
+    if (!parsedUrl.hostname) return false;
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
 
 class ResponseHeadersViewer extends React.PureComponent<Props> {
   render() {
@@ -28,17 +40,14 @@ class ResponseHeadersViewer extends React.PureComponent<Props> {
                 {h.name}
               </td>
               <td style={{ width: '50%' }} className="force-wrap">
-                {h.value}
+                {validateURL(h.value) ? <Link href={h.value}>{h.value}</Link> : h.value}
               </td>
             </tr>
           ))}
         </tbody>
       </table>,
       <p key="copy" className="pad-top">
-        <CopyButton
-          className="pull-right btn btn--clicky"
-          content={headersString}
-        />
+        <CopyButton className="pull-right btn btn--clicky" content={headersString} />
       </p>
     ];
   }
