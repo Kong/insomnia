@@ -22,16 +22,11 @@ module.exports.convert = function(rawData) {
 };
 
 function importRequest(request) {
-  const cookieHeaderValue = mapImporter(
-    request.cookies,
-    importCookieToHeaderString
-  ).join('; ');
+  const cookieHeaderValue = mapImporter(request.cookies, importCookieToHeaderString).join('; ');
   const headers = mapImporter(request.headers, importHeader);
 
   // Convert cookie value to header
-  const existingCookieHeader = headers.find(
-    h => h.name.toLowerCase() === 'cookie'
-  );
+  const existingCookieHeader = headers.find(h => h.name.toLowerCase() === 'cookie');
   if (cookieHeaderValue && existingCookieHeader) {
     // Has existing cookie header, so let's update it
     existingCookieHeader.value += `; ${cookieHeaderValue}`;
@@ -132,6 +127,11 @@ function extractRequests(harRoot) {
   }
 
   for (const entry of log.entries) {
+    if (entry.comment && entry.request && !entry.request.comment) {
+      // Preserve the entry comment for request name generation
+      entry.request.comment = entry.comment;
+    }
+
     requests.push(entry.request);
   }
 
