@@ -436,8 +436,16 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
   }
 
   static renderExpireAt(token: OAuth2Token | null): React.Element<*> | string | null {
-    if (!token || !token.accessToken) {
+    if (!token) {
       return null;
+    }
+
+    if (!token.accessToken) {
+      token.accessToken = null;
+    }
+
+    if (!token.refreshToken) {
+      token.refreshToken = null;
     }
 
     if (!token.expiresAt) {
@@ -542,7 +550,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
           {this.renderError()}
           <div className="form-control form-control--outlined">
             <label>
-              <small>Refresh Token</small>
+              <small>Refresh Token {tok.refreshToken ? <em>{expireLabel}</em> : null}</small>
               <input
                 value={(tok && tok.refreshToken) || ''}
                 placeholder="n/a"
@@ -552,7 +560,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
           </div>
           <div className="form-control form-control--outlined">
             <label>
-              <small>Access Token {tok ? <em>{expireLabel}</em> : null}</small>
+              <small>Access Token {tok.accessToken ? <em>{expireLabel}</em> : null}</small>
               <input
                 value={(tok && tok.accessToken) || ''}
                 placeholder="n/a"
