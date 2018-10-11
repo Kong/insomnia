@@ -11,6 +11,11 @@ describe('setDefaultProtocol()', () => {
     expect(url).toBe('http://google.com');
   });
 
+  it('correctly sets protocol for padded domain', () => {
+    const url = setDefaultProtocol('   google.com   ');
+    expect(url).toBe('http://google.com');
+  });
+
   it('does not set for valid url', () => {
     const url = setDefaultProtocol('https://google.com');
     expect(url).toBe('https://google.com');
