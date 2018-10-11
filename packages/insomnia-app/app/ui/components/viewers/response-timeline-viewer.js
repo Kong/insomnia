@@ -36,11 +36,11 @@ class ResponseTimelineViewer extends PureComponent {
         break;
     }
 
+    // TODO: Somehow show row timestamps
+
     if (prefix !== null) {
       const lines = (value + '').replace(/\n$/, '').split('\n');
-      const newLines = lines
-        .filter(l => !l.match(/^\s*$/))
-        .map(l => `${prefix}${l}`);
+      const newLines = lines.filter(l => !l.match(/^\s*$/)).map(l => `${prefix}${l}`);
       return newLines.join('\n');
     } else {
       return null;
@@ -48,12 +48,7 @@ class ResponseTimelineViewer extends PureComponent {
   }
 
   render() {
-    const {
-      timeline,
-      editorFontSize,
-      editorIndentSize,
-      editorLineWrapping
-    } = this.props;
+    const { timeline, editorFontSize, editorIndentSize, editorLineWrapping } = this.props;
     const rows = timeline
       .map(this.renderRow)
       .filter(r => r !== null)

@@ -102,6 +102,14 @@ export async function _actuallySend(
   return new Promise(async resolve => {
     let timeline: Array<ResponseTimelineEntry> = [];
 
+    function addTimeline(name, value) {
+      timeline.push({ name, value, timestamp: Date.now() });
+    }
+
+    function addTimelineText(value) {
+      addTimeline('TEXT', value);
+    }
+
     // Initialize the curl handle
     const curl = new Curl();
 
@@ -249,21 +257,15 @@ export async function _actuallySend(
           if (content.length === 0) {
             // Sometimes this happens, but I'm not sure why. Just ignore it.
           } else if (content.length < renderedRequest.settingMaxTimelineDataSize) {
-            timeline.push({ name, value: content });
+            addTimeline(name, content);
           } else {
-            timeline.push({
-              name,
-              value: `(${describeByteSize(content.length)} hidden)`
-            });
+            addTimeline(name, `(${describeByteSize(content.length)} hidden)`);
           }
           return 0;
         }
 
         if (infoType === Curl.info.debug.DATA_IN) {
-          timeline.push({
-            name: 'TEXT',
-            value: `Received ${describeByteSize(content.length)} chunk`
-          });
+          addTimelineText(`Received ${describeByteSize(content.length)} chunk`);
           return 0;
         }
 
@@ -272,7 +274,7 @@ export async function _actuallySend(
           return 0;
         }
 
-        timeline.push({ name, value: content });
+        addTimeline(name, content);
 
         return 0; // Must be here
       });
@@ -316,29 +318,23 @@ export async function _actuallySend(
       } else {
         curl.setUrl(finalUrl);
       }
-      timeline.push({
-        name: 'TEXT',
-        value: 'Preparing request to ' + finalUrl
-      });
-      timeline.push({ name: 'TEXT', value: `Using ${Curl.getVersion()}` });
+      addTimelineText('Preparing request to ' + finalUrl);
+      addTimelineText(`Using ${Curl.getVersion()}`);
 
       // log some things
       if (renderedRequest.settingEncodeUrl) {
-        timeline.push({ name: 'TEXT', value: 'Enable automatic URL encoding' });
+        addTimelineText('Enable automatic URL encoding');
       } else {
-        timeline.push({
-          name: 'TEXT',
-          value: 'Disable automatic URL encoding'
-        });
+        addTimelineText('Disable automatic URL encoding');
       }
 
       // SSL Validation
       if (settings.validateSSL) {
-        timeline.push({ name: 'TEXT', value: 'Enable SSL validation' });
+        addTimelineText('Enable SSL validation');
       } else {
         setOpt(Curl.option.SSL_VERIFYHOST, 0);
         setOpt(Curl.option.SSL_VERIFYPEER, 0);
-        timeline.push({ name: 'TEXT', value: 'Disable SSL validation' });
+        addTimelineText('Disable SSL validation');
       }
 
       // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
@@ -391,17 +387,12 @@ export async function _actuallySend(
           setOpt(Curl.option.COOKIE, `${name}=${value}`);
         }
 
-        timeline.push({
-          name: 'TEXT',
-          value:
-            'Enable cookie sending with jar of ' +
+        addTimelineText(
+          'Enable cookie sending with jar of ' +
             `${cookies.length} cookie${cookies.length !== 1 ? 's' : ''}`
-        });
+        );
       } else {
-        timeline.push({
-          name: 'TEXT',
-          value: 'Disable cookie sending due to user setting'
-        });
+        addTimelineText('Disable cookie sending due to user setting');
       }
 
       // Set proxy settings if we have them
@@ -410,10 +401,7 @@ export async function _actuallySend(
         const { httpProxy, httpsProxy, noProxy } = settings;
         const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
         const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-        timeline.push({
-          name: 'TEXT',
-          value: `Enable network proxy for ${protocol || ''}`
-        });
+        addTimelineText(`Enable network proxy for ${protocol || ''}`);
         if (proxy) {
           setOpt(Curl.option.PROXY, proxy);
           setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
@@ -459,27 +447,18 @@ export async function _actuallySend(
           if (cert) {
             setOpt(Curl.option.SSLCERT, ensureFile(cert));
             setOpt(Curl.option.SSLCERTTYPE, 'PEM');
-            timeline.push({
-              name: 'TEXT',
-              value: 'Adding SSL PEM certificate'
-            });
+            addTimelineText('Adding SSL PEM certificate');
           }
 
           if (pfx) {
             setOpt(Curl.option.SSLCERT, ensureFile(pfx));
             setOpt(Curl.option.SSLCERTTYPE, 'P12');
-            timeline.push({
-              name: 'TEXT',
-              value: 'Adding SSL P12 certificate'
-            });
+            addTimelineText('Adding SSL P12 certificate');
           }
 
           if (key) {
             setOpt(Curl.option.SSLKEY, ensureFile(key));
-            timeline.push({
-              name: 'TEXT',
-              value: 'Adding SSL KEY certificate'
-            });
+            addTimelineText('Adding SSL KEY certificate');
           }
 
           if (passphrase) {
@@ -714,10 +693,7 @@ export async function _actuallySend(
           try {
             jar.setCookieSync(setCookieStr, currentUrl);
           } catch (err) {
-            timeline.push({
-              name: 'TEXT',
-              value: `Rejected cookie: ${err.message}`
-            });
+            addTimelineText(`Rejected cookie: ${err.message}`);
           }
         }
 
@@ -731,15 +707,9 @@ export async function _actuallySend(
         if (setCookieStrings.length > 0) {
           const n = setCookieStrings.length;
           if (renderedRequest.settingStoreCookies) {
-            timeline.push({
-              name: 'TEXT',
-              value: `Saved ${n} cookie${n === 1 ? '' : 's'}`
-            });
+            addTimelineText(`Saved ${n} cookie${n === 1 ? '' : 's'}`);
           } else {
-            timeline.push({
-              name: 'TEXT',
-              value: `Ignored ${n} cookie${n === 1 ? '' : 's'}`
-            });
+            addTimelineText(`Ignored ${n} cookie${n === 1 ? '' : 's'}`);
           }
         }
 
@@ -1004,9 +974,9 @@ export function _getAwsAuthHeaders(
   const awsSignOptions = {
     service,
     region,
+    host,
     body,
     method,
-    host,
     path: parsedUrl.path,
     headers: contentTypeHeader ? { 'content-type': contentTypeHeader.value } : {}
   };
@@ -1026,6 +996,6 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
   lastUserInteraction = Date.now();
 });
 
-document.addEventListener('paste', e => {
+document.addEventListener('paste', (e: Event) => {
   lastUserInteraction = Date.now();
 });
