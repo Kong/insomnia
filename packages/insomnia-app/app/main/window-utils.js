@@ -5,6 +5,7 @@ import fs from 'fs';
 import LocalStorage from './local-storage';
 import {
   CHANGELOG_BASE_URL,
+  MNEMONIC_SYM,
   getAppLongName,
   getAppName,
   getAppVersion,
@@ -94,16 +95,13 @@ export function createWindow() {
   });
 
   const applicationMenu = {
-    label: 'Application',
+    label: `${MNEMONIC_SYM}Application`,
     submenu: [
       ...(isMac()
-        ? [
-            { label: `About ${getAppName()}`, role: 'about' },
-            { type: 'separator' }
-          ]
+        ? [{ label: `About ${getAppName()}`, role: 'about' }, { type: 'separator' }]
         : []),
       {
-        label: 'Preferences',
+        label: `${MNEMONIC_SYM}Preferences`,
         accelerator: 'CmdOrCtrl+,',
         click: function(menuItem, window, e) {
           if (!window || !window.webContents) {
@@ -113,7 +111,7 @@ export function createWindow() {
         }
       },
       {
-        label: 'Changelog',
+        label: `${MNEMONIC_SYM}Changelog`,
         click: function(menuItem, window, e) {
           if (!window || !window.webContents) {
             return;
@@ -121,16 +119,14 @@ export function createWindow() {
           misc.clickLink(`${CHANGELOG_BASE_URL}/${getAppVersion()}/`);
         }
       },
-      ...(isMac()
-        ? [{ type: 'separator' }, { role: 'hide' }, { role: 'hideothers' }]
-        : []),
+      ...(isMac() ? [{ type: 'separator' }, { role: 'hide' }, { role: 'hideothers' }] : []),
       { type: 'separator' },
-      { label: 'Quit', accelerator: 'CmdOrCtrl+Q', click: () => app.quit() }
+      { label: `${MNEMONIC_SYM}Quit`, accelerator: 'CmdOrCtrl+Q', click: () => app.quit() }
     ]
   };
 
   const editMenu = {
-    label: 'Edit',
+    label: `${MNEMONIC_SYM}Edit`,
     submenu: [
       { label: 'Undo', accelerator: 'CmdOrCtrl+Z', selector: 'undo:' },
       { label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:' },
@@ -147,7 +143,7 @@ export function createWindow() {
   };
 
   const viewMenu = {
-    label: 'View',
+    label: `${MNEMONIC_SYM}View`,
     submenu: [
       { role: 'togglefullscreen' },
       {
@@ -213,13 +209,13 @@ export function createWindow() {
   };
 
   const windowMenu = {
-    label: 'Window',
+    label: `${MNEMONIC_SYM}Window`,
     role: 'window',
     submenu: [{ role: 'minimize' }, ...(isMac() ? [{ role: 'close' }] : [])]
   };
 
   const helpMenu = {
-    label: 'Help',
+    label: `${MNEMONIC_SYM}Help`,
     role: 'help',
     id: 'help',
     submenu: [
@@ -277,7 +273,7 @@ export function createWindow() {
   }
 
   const developerMenu = {
-    label: 'Developer',
+    label: `${MNEMONIC_SYM}Developer`,
     position: 'before=help',
     submenu: [
       {
@@ -306,10 +302,7 @@ export function createWindow() {
           mainWindow.capturePage(image => {
             const buffer = image.toPNG();
             const dir = app.getPath('desktop');
-            fs.writeFileSync(
-              path.join(dir, `Screenshot-${new Date()}.png`),
-              buffer
-            );
+            fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
           });
         }
       }
@@ -317,7 +310,7 @@ export function createWindow() {
   };
 
   const toolsMenu = {
-    label: 'Tools',
+    label: `${MNEMONIC_SYM}Tools`,
     submenu: [
       {
         label: 'Reload Plugins',
