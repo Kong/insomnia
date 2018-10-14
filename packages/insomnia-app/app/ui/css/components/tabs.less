@@ -24,7 +24,7 @@
 
     &::-webkit-scrollbar {
       height: @scrollbar-height;
-      border-radius: @scrollbar-height / 2;
+      border-radius: calc(@scrollbar-height / 2);
     }
 
     &::-webkit-scrollbar-track {
@@ -46,7 +46,7 @@
     &::after {
       width: 100%;
       height: @line-height-sm;
-      content: "";
+      content: '';
       border-bottom: 1px solid @border-color;
     }
   }
@@ -94,8 +94,8 @@
     & > * {
       color: @hl;
       height: 100%;
-      padding-left: @padding-md / 4;
-      padding-right: @padding-md / 4;
+      padding-left: calc(@padding-md / 4);
+      padding-right: calc(@padding-md / 4);
 
       &:first-child {
         padding-left: @padding-md;

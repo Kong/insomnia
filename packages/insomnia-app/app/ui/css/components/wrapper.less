@@ -38,7 +38,7 @@
       width: @drag-width;
       top: 0;
       // More to the right so it doesn't cover scroll bars
-      left: -@drag-width / 8;
+      left: calc((@drag-width / 8) * -1);
     }
   }
 
@@ -92,7 +92,7 @@
       width: 100%;
       left: 0;
       // More to the right so it doesn't cover scroll bars
-      top: -@drag-width / 2;
+      top: calc(@drag-width / 2 * -1);
     }
   }
 }

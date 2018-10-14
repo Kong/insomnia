@@ -77,16 +77,8 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
     const styles = renderedTheme.styles;
 
     // Dropdown Menus
-    css += wrapStyles(
-      n,
-      '.theme--dropdown__menu',
-      getThemeBlockCSS(styles.dialog)
-    );
-    css += wrapStyles(
-      n,
-      '.theme--dropdown__menu',
-      getThemeBlockCSS(styles.dropdown)
-    );
+    css += wrapStyles(n, '.theme--dropdown__menu', getThemeBlockCSS(styles.dialog));
+    css += wrapStyles(n, '.theme--dropdown__menu', getThemeBlockCSS(styles.dropdown));
 
     // Tooltips
     css += wrapStyles(n, '.theme--tooltip', getThemeBlockCSS(styles.dialog));
@@ -101,37 +93,17 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
 
     // Dialogs
     css += wrapStyles(n, '.theme--dialog', getThemeBlockCSS(styles.dialog));
-    css += wrapStyles(
-      n,
-      '.theme--dialog__header',
-      getThemeBlockCSS(styles.dialogHeader)
-    );
-    css += wrapStyles(
-      n,
-      '.theme--dialog__footer',
-      getThemeBlockCSS(styles.dialogFooter)
-    );
+    css += wrapStyles(n, '.theme--dialog__header', getThemeBlockCSS(styles.dialogHeader));
+    css += wrapStyles(n, '.theme--dialog__footer', getThemeBlockCSS(styles.dialogFooter));
 
     // Panes
     css += wrapStyles(n, '.theme--pane', getThemeBlockCSS(styles.pane));
-    css += wrapStyles(
-      n,
-      '.theme--pane__header',
-      getThemeBlockCSS(styles.paneHeader)
-    );
+    css += wrapStyles(n, '.theme--pane__header', getThemeBlockCSS(styles.paneHeader));
 
     // Sidebar Styles
     css += wrapStyles(n, '.theme--sidebar', getThemeBlockCSS(styles.sidebar));
-    css += wrapStyles(
-      n,
-      '.theme--sidebar__list',
-      getThemeBlockCSS(styles.sidebarList)
-    );
-    css += wrapStyles(
-      n,
-      '.theme--sidebar__header',
-      getThemeBlockCSS(styles.sidebarHeader)
-    );
+    css += wrapStyles(n, '.theme--sidebar__list', getThemeBlockCSS(styles.sidebarList));
+    css += wrapStyles(n, '.theme--sidebar__header', getThemeBlockCSS(styles.sidebarHeader));
 
     // Link
     css += wrapStyles(n, '.theme--link', getThemeBlockCSS(styles.link));
@@ -257,4 +229,30 @@ export async function setTheme(themeName: string) {
 
     s.innerHTML = themeCSS;
   }
+}
+
+export async function setFont(settings: Object) {
+  if (!document) {
+    return;
+  }
+
+  const html = document.querySelector('html');
+
+  if (!html) {
+    return;
+  }
+
+  if (settings.fontDefault !== 'default') {
+    html.style.setProperty('--font-default', settings.fontDefault);
+  }
+
+  if (settings.fontMonospace !== 'default') {
+    html.style.setProperty('--font-monospace', settings.fontMonospace);
+  }
+
+  html.style.setProperty('font-size', `${settings.fontSize}px`);
+  html.style.setProperty(
+    'font-variant-ligatures',
+    settings.fontVariantLigatures ? 'normal' : 'none'
+  );
 }

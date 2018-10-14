@@ -224,7 +224,7 @@
   background: var(--color-bg);
 
   &:not(.btn--plain) {
-    padding: 0 (@padding-md * 1.5);
+    padding: 0 calc(@padding-md * 1.5);
     height: @line-height-md;
     border: 1px solid transparent;
   }
@@ -353,10 +353,10 @@ label {
       z-index: -1;
       content: ' ';
       position: absolute;
-      top: -@padding-xxs;
-      bottom: -@padding-xxs;
-      left: -@padding-xxs;
-      right: -@padding-xxs;
+      top: calc(-@padding-xxs * -1);
+      bottom: calc(-@padding-xxs * -1);
+      left: calc(-@padding-xxs * -1);
+      right: calc(-@padding-xxs * -1);
       border-radius: @radius-sm;
       background-color: var(--hl-sm);
     }

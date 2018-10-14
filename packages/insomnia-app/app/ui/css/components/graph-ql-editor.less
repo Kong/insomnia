@@ -71,7 +71,7 @@
     padding-top: @padding-xs;
 
     // HACK: Cancel out padding on parent container
-    margin-bottom: -@padding-sm;
+    margin-bottom: calc(@padding-sm * -1);
 
     & > * {
       margin: @padding-xs 0 @padding-sm 0;
