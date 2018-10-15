@@ -17,6 +17,7 @@ import {
   CONTENT_TYPE_GRAPHQL,
   CONTENT_TYPE_JSON,
   CONTENT_TYPE_OTHER,
+  CONTENT_TYPE_NO_BODY,
   getContentTypeFromHeaders,
   HAWK_ALGORITHM_SHA256,
   METHOD_GET,
@@ -281,8 +282,9 @@ export function updateMimeType(
   // 1. Update Content-Type header //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  const hasBody = typeof mimeType === 'string';
-  if (!hasBody || mimeType === CONTENT_TYPE_OTHER) {
+  if (mimeType === CONTENT_TYPE_NO_BODY) {
+    headers = headers.filter(x => x.name.toLowerCase() !== 'content-type');
+  } else if (mimeType === CONTENT_TYPE_OTHER) {
     // Leave headers alone
   } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
     contentTypeHeader.value = contentTypeHeaderValue;
@@ -316,7 +318,7 @@ export function updateMimeType(
       contentTypeHeader.value = CONTENT_TYPE_JSON;
     }
     body = newBodyRaw(oldBody.text || '', CONTENT_TYPE_GRAPHQL);
-  } else if (typeof mimeType !== 'string') {
+  } else if (mimeType === CONTENT_TYPE_NO_BODY) {
     // No body
     body = newBodyNone();
   } else {

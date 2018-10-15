@@ -119,7 +119,7 @@ describe('updateMimeType()', async () => {
     expect(newRequest.headers).toEqual([{ name: 'content-tYPE', value: 'text/html' }]);
   });
 
-  it('keeps content-type', async () => {
+  it('removes existing content-type when set to null (i.e. no body)', async () => {
     const request = await models.request.create({
       name: 'My Request',
       parentId: 'fld_1',
@@ -129,7 +129,7 @@ describe('updateMimeType()', async () => {
 
     const newRequest = await models.request.updateMimeType(request, null);
     expect(newRequest.body).toEqual({});
-    expect(newRequest.headers).toEqual([{ name: 'content-tYPE', value: 'application/json' }]);
+    expect(newRequest.headers).toEqual([]);
   });
 
   it('uses saved body when provided', async () => {
