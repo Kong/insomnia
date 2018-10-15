@@ -191,7 +191,6 @@
     "eslint-plugin-standard": "^3.0.1",
     "file-loader": "^1.1.11",
     "flow-bin": "^0.70.0",
-    "fsevents": "^1.2.4",
     "less": "^2.7.2",
     "less-loader": "^4.1.0",
     "ncp": "^2.0.0",
