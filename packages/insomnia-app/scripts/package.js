@@ -37,13 +37,12 @@ async function pkg(relConfigPath) {
     const configPath = path.resolve(__dirname, relConfigPath);
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     const targetPlatform = PLATFORM_MAP[process.platform];
-    const packager = new electronBuilder.Packager({
+    return electronBuilder.build({
       config,
       cscLink: process.env.CSC_LINK,
       cscKeyPassword: process.env.CSC_KEY_PASSWORD,
       [targetPlatform]: config[targetPlatform].target
     });
-    return packager.build();
   } catch (err) {
     console.log('[package] Failed: ' + err.stack);
     throw err;
