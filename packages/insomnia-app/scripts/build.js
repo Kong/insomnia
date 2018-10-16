@@ -1,4 +1,4 @@
-const npm = require('npm');
+const childProcess = require('child_process');
 const webpack = require('webpack');
 const rimraf = require('rimraf');
 const ncp = require('ncp').ncp;
@@ -84,28 +84,25 @@ async function copyFiles(relSource, relDest) {
 async function install(relDir) {
   return new Promise((resolve, reject) => {
     const prefix = path.resolve(__dirname, relDir);
-    npm.load(
-      {
-        prefix,
-        buildFromSource: true,
-        production: true,
-        optional: false,
-        'package-lock': false
-      },
-      err => {
-        if (err) {
-          return reject(err);
-        }
 
-        npm.commands.install([prefix], err => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      }
+    const p = childProcess.spawn(
+      'npm',
+      ['install', '--production', '--no-package-lock', '--no-optional'],
+      { cwd: prefix }
     );
+
+    p.stdout.on('data', data => {
+      console.log(data.toString());
+    });
+
+    p.stderr.on('data', data => {
+      console.log(data.toString());
+    });
+
+    p.on('exit', code => {
+      console.log('child process exited with code ' + code.toString());
+      resolve();
+    });
   });
 }
 
@@ -138,9 +135,7 @@ function generatePackageJson(relBasePkg, relOutPkg) {
   // Figure out which dependencies to pack
   const allDependencies = Object.keys(basePkg.dependencies);
   const packedDependencies = basePkg.packedDependencies;
-  const unpackedDependencies = allDependencies.filter(
-    name => !packedDependencies.includes(name)
-  );
+  const unpackedDependencies = allDependencies.filter(name => !packedDependencies.includes(name));
 
   // Add dependencies
   for (const name of unpackedDependencies) {
