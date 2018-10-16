@@ -39,8 +39,6 @@ async function pkg(relConfigPath) {
     const targetPlatform = PLATFORM_MAP[process.platform];
     return electronBuilder.build({
       config,
-      cscLink: process.env.CSC_LINK,
-      cscKeyPassword: process.env.CSC_KEY_PASSWORD,
       [targetPlatform]: config[targetPlatform].target
     });
   } catch (err) {
