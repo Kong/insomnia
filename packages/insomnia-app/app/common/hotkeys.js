@@ -27,6 +27,14 @@ export const SHOW_REQUEST_SETTINGS: Hotkey = {
   keycode: keycodes.comma
 };
 
+export const SHOW_KEYBOARD_SHORTCUTS: Hotkey = {
+  description: 'Show Keyboard Shortcuts',
+  meta: true,
+  alt: false,
+  shift: true,
+  keycode: keycodes.forwardslash
+};
+
 export const SHOW_SETTINGS: Hotkey = {
   description: 'Show App Preferences',
   meta: true,
@@ -243,20 +251,14 @@ export function pressedHotKey(e: KeyboardEvent, definition: Hotkey): boolean {
   return false;
 }
 
-export function executeHotKey(
-  e: KeyboardEvent,
-  definition: Hotkey,
-  callback: Function
-): void {
+export function executeHotKey(e: KeyboardEvent, definition: Hotkey, callback: Function): void {
   if (pressedHotKey(e, definition)) {
     callback();
   }
 }
 
 export function getChar(hotkey: Hotkey) {
-  const codes = Array.isArray(hotkey.keycode)
-    ? hotkey.keycode
-    : [hotkey.keycode];
+  const codes = Array.isArray(hotkey.keycode) ? hotkey.keycode : [hotkey.keycode];
   const chars = [];
 
   for (const keycode of codes) {

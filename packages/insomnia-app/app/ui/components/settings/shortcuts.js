@@ -23,6 +23,7 @@ class Shortcuts extends PureComponent {
       <div>
         <table className="table--fancy">
           <tbody>
+            {this.renderHotkey(hotkeys.SHOW_KEYBOARD_SHORTCUTS)}
             {this.renderHotkey(hotkeys.SHOW_QUICK_SWITCHER)}
             {this.renderHotkey(hotkeys.SEND_REQUEST)}
             {this.renderHotkey(hotkeys.SHOW_SEND_OPTIONS)}
