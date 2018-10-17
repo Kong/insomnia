@@ -34,8 +34,8 @@ class SettingsModal extends PureComponent {
     this.modal = n;
   }
 
-  _handleUpdateSetting(key, value) {
-    models.settings.update(this.props.settings, { [key]: value });
+  async _handleUpdateSetting(key, value) {
+    return models.settings.update(this.props.settings, { [key]: value });
   }
 
   _handleExportAllToFile() {
@@ -58,27 +58,12 @@ class SettingsModal extends PureComponent {
     this.modal.hide();
   }
 
-  _handleRootCssChange(variableName, value) {
-    const elem = document.querySelector('html');
-    if (value) {
-      elem.style.setProperty(variableName, value);
-      return;
-    }
-    elem.style.setProperty(variableName, value);
-  }
-
   async _handleChangeTheme(theme, persist = true) {
     setTheme(theme);
 
     if (persist) {
       models.settings.update(this.props.settings, { theme });
     }
-  }
-
-  componentDidMount() {
-    // Hacky way to set theme on launch
-    // TODO: move somewhere else
-    this._handleChangeTheme(this.props.settings.theme, false);
   }
 
   show(currentTabIndex = 0) {

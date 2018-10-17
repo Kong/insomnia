@@ -242,17 +242,10 @@ export async function setFont(settings: Object) {
     return;
   }
 
-  if (settings.fontDefault !== 'default') {
-    html.style.setProperty('--font-default', settings.fontDefault);
-  }
+  console.log('SETTINGS', settings);
 
-  if (settings.fontMonospace !== 'default') {
-    html.style.setProperty('--font-monospace', settings.fontMonospace);
-  }
-
+  html.style.setProperty('--font-default', settings.fontInterface);
+  html.style.setProperty('--font-monospace', settings.fontMonospace);
+  html.style.setProperty('--font-ligatures', settings.fontVariantLigatures ? 'normal' : 'none');
   html.style.setProperty('font-size', `${settings.fontSize}px`);
-  html.style.setProperty(
-    'font-variant-ligatures',
-    settings.fontVariantLigatures ? 'normal' : 'none'
-  );
 }

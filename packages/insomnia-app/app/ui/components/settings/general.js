@@ -12,6 +12,7 @@ import {
 import type { Settings } from '../../../models/settings';
 import Wrap from '../wrap';
 import CheckForUpdatesButton from '../check-for-updates-button';
+import { setFont } from '../../../plugins/misc';
 
 type Props = {
   settings: Settings,
@@ -33,19 +34,17 @@ class General extends React.PureComponent<Props, State> {
     };
   }
 
-  _getAvailableFonts() {
-    fontManager.getAvailableFonts(fonts => {
-      this.setState({
-        fonts: fonts.filter(i => i.style === 'Regular')
-      });
+  componentDidMount() {
+    fontManager.getAvailableFonts(allFonts => {
+      const fonts = allFonts
+        .filter(i => i.style.toLowerCase() === 'regular' && !i.italic)
+        .sort((a, b) => a.family > b.family ? 1 : -1);
+
+      this.setState({ fonts });
     });
   }
 
-  componentDidMount() {
-    this._getAvailableFonts();
-  }
-
-  _handleUpdateSetting(e: SyntheticEvent<HTMLInputElement>) {
+  async _handleUpdateSetting(e: SyntheticEvent<HTMLInputElement>): Promise<Settings> {
     const el = e.currentTarget;
     let value = el.type === 'checkbox' ? el.checked : el.value;
 
@@ -53,42 +52,31 @@ class General extends React.PureComponent<Props, State> {
       value = parseInt(value, 10);
     }
 
-    this.props.updateSetting(el.name, value);
-
-    return value;
-  }
-
-  _handleToggleMenuBar(e: SyntheticEvent<HTMLInputElement>) {
-    const value = this._handleUpdateSetting(e);
-    this.props.handleToggleMenuBar(value);
-  }
-
-  _textToCssName(text: string, prefix: ?string) {
-    const replaced = text.replace(/([A-Z])/g, g => `-${g[0].toLowerCase()}`);
-    return prefix ? prefix + replaced : replaced;
-  }
-
-  _handleRootCssChange(el: SyntheticEvent<HTMLInputElement>) {
-    this.props.handleRootCssChange(this._textToCssName(el.currentTarget.name));
-  }
-
-  _handleFontLigatureChange(el: SyntheticEvent<HTMLInputElement>) {
-    const value = this._handleUpdateSetting(el);
-    this.props.handleRootCssChange('font-variant-ligatures', value ? 'normal' : 'none');
-  }
-
-  _handleFontSizeChange(el: SyntheticEvent<HTMLInputElement>) {
-    const value = this._handleUpdateSetting(el);
-    this.props.handleRootCssChange('font-size', `${value.toString()}px`);
-  }
-
-  _handleFontChange(el: SyntheticEvent<HTMLInputElement>) {
-    let value = this._handleUpdateSetting(el);
-    if (value === 'default') {
+    if (e.currentTarget.value === '__NULL__') {
       value = null;
     }
-    const cssName = this._textToCssName(el.currentTarget.name, '--');
-    this.props.handleRootCssChange(cssName, value);
+
+    return this.props.updateSetting(el.name, value);
+  }
+
+  async _handleToggleMenuBar(e: SyntheticEvent<HTMLInputElement>) {
+    const settings = await this._handleUpdateSetting(e);
+    this.props.handleToggleMenuBar(settings.autoHideMenuBar);
+  }
+
+  async _handleFontLigatureChange(el: SyntheticEvent<HTMLInputElement>) {
+    const settings = await this._handleUpdateSetting(el);
+    setFont(settings);
+  }
+
+  async _handleFontSizeChange(el: SyntheticEvent<HTMLInputElement>) {
+    const settings = await this._handleUpdateSetting(el);
+    setFont(settings);
+  }
+
+  async _handleFontChange(el: SyntheticEvent<HTMLInputElement>) {
+    const settings = await this._handleUpdateSetting(el);
+    setFont(settings);
   }
 
   render() {
@@ -209,6 +197,18 @@ class General extends React.PureComponent<Props, State> {
           </label>
         </div>
 
+        <div className="form-control form-control--thin">
+          <label className="inline-block">
+            Font Ligatures
+            <input
+              type="checkbox"
+              name="fontVariantLigatures"
+              checked={settings.fontVariantLigatures}
+              onChange={this._handleFontLigatureChange}
+            />
+          </label>
+        </div>
+
         <div className="form-control form-control--outlined pad-top-sm">
           <label>
             Environment Highlight Color Style{' '}
@@ -228,73 +228,55 @@ class General extends React.PureComponent<Props, State> {
         </div>
 
         <div className="form-row">
-          <div className="form-control form-control--outlined pad-top-sm">
+          <div className="form-control form-control--outlined">
             <label>
-              Font Default
+              Interface Font
               <select
-                name="fontDefault"
-                value={settings.fontDefault}
+                name="fontInterface"
+                value={settings.fontInterface || '__NULL__'}
                 onChange={this._handleFontChange}>
-                <option value="default">Default</option>
-                {fonts.map(function(item, index) {
-                  return (
-                    <option key={index} value={item.family}>
-                      {item.family} {item.style}
-                    </option>
-                  );
-                })}
+                <option value="__NULL__">-- System Default --</option>
+                {fonts.map((item, index) => (
+                  <option key={index} value={item.family}>
+                    {item.family}
+                  </option>
+                ))}
               </select>
             </label>
           </div>
-
-          <div className="form-control form-control--outlined pad-top-sm">
+          <div className="form-control form-control--outlined">
             <label>
-              Font Monospace
-              <select
-                name="fontMonospace"
-                value={settings.fontMonospace}
-                onChange={this._handleFontChange}>
-                <option value="default">Default</option>
-                {fonts.filter(i => i.monospace).map(function(item, index) {
-                  return (
-                    <option key={index} value={item.family}>
-                      {item.family} {item.style}
-                    </option>
-                  );
-                })}
-              </select>
+              Interface Font Size (px)
+              <input
+                type="number"
+                name="fontSize"
+                min={8}
+                max={20}
+                defaultValue={settings.fontSize}
+                onChange={this._handleFontSizeChange}
+              />
             </label>
           </div>
-        </div>
-
-        <div className="form-control form-control--outlined pad-top-sm">
-          <label>
-            Default & Monospace Font Size
-            <input
-              type="number"
-              name="fontSize"
-              min={8}
-              max={20}
-              defaultValue={settings.fontSize}
-              onChange={this._handleFontSizeChange}
-            />
-          </label>
-        </div>
-
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Font Variant Ligatures
-            <input
-              type="checkbox"
-              name="fontVariantLigatures"
-              checked={settings.fontVariantLigatures}
-              onChange={this._handleFontLigatureChange}
-            />
-          </label>
         </div>
 
         <div className="form-row">
-          <div className="form-control form-control--outlined pad-top-sm">
+          <div className="form-control form-control--outlined">
+            <label>
+              Text Editor Font
+              <select
+                name="fontMonospace"
+                value={settings.fontMonospace || '__NULL__'}
+                onChange={this._handleFontChange}>
+                <option value="__NULL__">-- System Default --</option>
+                {fonts.filter(i => i.monospace).map((item, index) => (
+                  <option key={index} value={item.family}>
+                    {item.family}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="form-control form-control--outlined">
             <label>
               Text Editor Font Size (px)
               <input
@@ -307,8 +289,11 @@ class General extends React.PureComponent<Props, State> {
               />
             </label>
           </div>
+        </div>
 
-          <div className="form-control form-control--outlined pad-top-sm">
+        <div className="form-row">
+
+          <div className="form-control form-control--outlined">
             <label>
               Text Editor Indent Size
               <input
@@ -322,7 +307,7 @@ class General extends React.PureComponent<Props, State> {
             </label>
           </div>
 
-          <div className="form-control form-control--outlined pad-top-sm">
+          <div className="form-control form-control--outlined">
             <label>
               Text Editor Key Map
               <select
@@ -338,36 +323,50 @@ class General extends React.PureComponent<Props, State> {
           </div>
         </div>
 
-        <div className="form-control form-control--outlined">
-          <label>
-            Maximum Redirects
-            <HelpTooltip className="space-left">(-1 for unlimited)</HelpTooltip>
-            <input
-              type="number"
-              name="maxRedirects"
-              min={-1}
-              defaultValue={settings.maxRedirects}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
+        <hr className="pad-top"/>
+
+        <h2>
+          HTTP Network Proxy
+          <HelpTooltip
+            className="space-left txt-md"
+            style={{ maxWidth: '20rem', lineWrap: 'word' }}>
+            Enable global network proxy. Supports authentication via Basic Auth, digest, or NTLM
+          </HelpTooltip>
+        </h2>
+
+        <div className="form-row">
+          <div className="form-control form-control--outlined">
+            <label>
+              Maximum Redirects
+              <HelpTooltip className="space-left">(-1 for unlimited)</HelpTooltip>
+              <input
+                type="number"
+                name="maxRedirects"
+                min={-1}
+                defaultValue={settings.maxRedirects}
+                onChange={this._handleUpdateSetting}
+              />
+            </label>
+          </div>
+
+          <div className="form-control form-control--outlined">
+            <label>
+              Network Request Timeout
+              <HelpTooltip className="space-left">
+                Request timeout in milliseconds (0 for no timeout)
+              </HelpTooltip>
+              <input
+                type="number"
+                name="timeout"
+                min={-1}
+                defaultValue={settings.timeout}
+                onChange={this._handleUpdateSetting}
+              />
+            </label>
+          </div>
         </div>
 
-        <div className="form-control form-control--outlined">
-          <label>
-            Network Request Timeout
-            <HelpTooltip className="space-left">
-              Request timeout in milliseconds (0 for no timeout)
-            </HelpTooltip>
-            <input
-              type="number"
-              name="timeout"
-              min={-1}
-              defaultValue={settings.timeout}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
-        <hr className="pad-top" />
+        <hr className="pad-top"/>
 
         <h2>
           HTTP Network Proxy
@@ -437,7 +436,7 @@ class General extends React.PureComponent<Props, State> {
 
         {isWindows() || isMac() ? (
           <Wrap>
-            <hr className="pad-top" />
+            <hr className="pad-top"/>
             <div>
               <div className="pull-right">
                 <CheckForUpdatesButton className="btn btn--outlined btn--super-duper-compact">
@@ -475,7 +474,7 @@ class General extends React.PureComponent<Props, State> {
           </Wrap>
         ) : null}
 
-        <hr className="pad-top" />
+        <hr className="pad-top"/>
         <h2>Plugins</h2>
 
         <div className="form-control form-control--outlined">
@@ -492,7 +491,7 @@ class General extends React.PureComponent<Props, State> {
           </label>
         </div>
 
-        <br />
+        <br/>
       </div>
     );
   }

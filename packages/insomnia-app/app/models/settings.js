@@ -28,8 +28,8 @@ type BaseSettings = {
   updateChannel: string,
   updateAutomatically: boolean,
   environmentHighlightColorStyle: string,
-  fontMonospace: string,
-  fontDefault: string,
+  fontMonospace: string | null,
+  fontInterface: string | null,
   fontSize: number,
   fontVariantLigatures: boolean
 };
@@ -67,8 +67,8 @@ export function init(): BaseSettings {
     updateChannel: UPDATE_CHANNEL_STABLE,
     updateAutomatically: true,
     environmentHighlightColorStyle: 'sidebar-indicator',
-    fontMonospace: 'default',
-    fontDefault: 'default',
+    fontMonospace: null,
+    fontInterface: null,
     fontSize: 13,
     fontVariantLigatures: true
   };

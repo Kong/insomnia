@@ -307,6 +307,10 @@ select {
   padding: 0;
   color: inherit;
 
+  // Explicitly set font-family because browser stylesheet
+  // will use default it
+  font-family: var(--font-family);
+
   &::-webkit-input-placeholder {
     color: @hl-lg;
   }
