@@ -70,9 +70,7 @@ module.exports = function(source, options) {
         .push('$body = new http\\Message\\Body;')
         .push(
           '$body->addForm(%s, %s);',
-          Object.keys(fields).length
-            ? helpers.convert(fields, opts.indent)
-            : 'NULL',
+          Object.keys(fields).length ? helpers.convert(fields, opts.indent) : 'NULL',
           files.length ? helpers.convert(files, opts.indent) : 'NULL'
         );
 
@@ -114,21 +112,13 @@ module.exports = function(source, options) {
   }
 
   if (Object.keys(source.headersObj).length) {
-    code
-      .push(
-        '$request->setHeaders(%s);',
-        helpers.convert(source.headersObj, opts.indent)
-      )
-      .blank();
+    code.push('$request->setHeaders(%s);', helpers.convert(source.headersObj, opts.indent)).blank();
   }
 
   if (Object.keys(source.cookiesObj).length) {
     code
       .blank()
-      .push(
-        '$client->setCookies(%s);',
-        helpers.convert(source.cookiesObj, opts.indent)
-      )
+      .push('$client->setCookies(%s);', helpers.convert(source.cookiesObj, opts.indent))
       .blank();
   }
 

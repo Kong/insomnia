@@ -46,12 +46,9 @@ class BearerAuth extends PureComponent {
               </td>
               <td className="wide">
                 <div
-                  className={classnames(
-                    'form-control form-control--underlined no-margin',
-                    {
-                      'form-control--inactive': authentication.disabled
-                    }
-                  )}>
+                  className={classnames('form-control form-control--underlined no-margin', {
+                    'form-control--inactive': authentication.disabled
+                  })}>
                   <OneLineEditor
                     type="text"
                     id="token"
@@ -70,19 +67,15 @@ class BearerAuth extends PureComponent {
                 <label htmlFor="prefix" className="label--small no-pad">
                   Prefix{' '}
                   <HelpTooltip>
-                    Prefix to use when sending the Authorization header.
-                    Defaults to Bearer.
+                    Prefix to use when sending the Authorization header. Defaults to Bearer.
                   </HelpTooltip>
                 </label>
               </td>
               <td className="wide">
                 <div
-                  className={classnames(
-                    'form-control form-control--underlined no-margin',
-                    {
-                      'form-control--inactive': authentication.disabled
-                    }
-                  )}>
+                  className={classnames('form-control form-control--underlined no-margin', {
+                    'form-control--inactive': authentication.disabled
+                  })}>
                   <OneLineEditor
                     type="text"
                     id="prefix"
@@ -109,9 +102,7 @@ class BearerAuth extends PureComponent {
                     id="enabled"
                     onClick={this._handleDisable}
                     value={!authentication.disabled}
-                    title={
-                      authentication.disabled ? 'Enable item' : 'Disable item'
-                    }>
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
                     {authentication.disabled ? (
                       <i className="fa fa-square-o" />
                     ) : (

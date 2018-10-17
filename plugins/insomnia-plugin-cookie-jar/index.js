@@ -23,17 +23,13 @@ module.exports.templateTags = [
         return null;
       }
 
-      const workspace = await context.util.models.workspace.getById(
-        meta.workspaceId
-      );
+      const workspace = await context.util.models.workspace.getById(meta.workspaceId);
 
       if (!workspace) {
         throw new Error(`Workspace not found for ${meta.workspaceId}`);
       }
 
-      const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(
-        workspace
-      );
+      const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(workspace);
 
       return getCookieValue(cookieJar, url, name);
     }

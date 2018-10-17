@@ -4,10 +4,7 @@ const WILDCARD_CHARACTER = '*';
 const WILDCARD_SUBSTITUTION = Math.random()
   .toString()
   .split('.')[1];
-const WILDCARD_SUBSTITUTION_PATTERN = new RegExp(
-  `${WILDCARD_SUBSTITUTION}`,
-  'g'
-);
+const WILDCARD_SUBSTITUTION_PATTERN = new RegExp(`${WILDCARD_SUBSTITUTION}`, 'g');
 
 export default function certificateUrlParse(url) {
   if (url.indexOf(WILDCARD_CHARACTER) === -1) {

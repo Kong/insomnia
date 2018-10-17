@@ -197,10 +197,7 @@ class Editor extends PureComponent {
     const pair = this.state.pairs[position];
     this.props.onDelete && this.props.onDelete(pair);
 
-    const pairs = [
-      ...this.state.pairs.slice(0, position),
-      ...this.state.pairs.slice(position + 1)
-    ];
+    const pairs = [...this.state.pairs.slice(0, position), ...this.state.pairs.slice(position + 1)];
 
     if (focusedPosition >= position) {
       const newPosition = breakFocus ? -1 : focusedPosition - 1;
@@ -368,12 +365,8 @@ class Editor extends PureComponent {
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
-              handleGetAutocompleteNameConstants={
-                handleGetAutocompleteNameConstants
-              }
-              handleGetAutocompleteValueConstants={
-                handleGetAutocompleteValueConstants
-              }
+              handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}
+              handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
               allowMultiline={allowMultiline}
               allowFile={allowFile}
               pair={pair}
@@ -396,9 +389,7 @@ class Editor extends PureComponent {
                   <DropdownButton>
                     <i className="fa fa-cog" />
                   </DropdownButton>
-                  <DropdownItem
-                    onClick={this._handleDeleteAll}
-                    buttonClass={PromptButton}>
+                  <DropdownItem onClick={this._handleDeleteAll} buttonClass={PromptButton}>
                     Delete All Items
                   </DropdownItem>
                 </Dropdown>

@@ -92,10 +92,7 @@ class RequestGroupActionsDropdown extends PureComponent {
         <DropdownItem onClick={this._handleRequestGroupMove}>
           <i className="fa fa-exchange" /> Move
         </DropdownItem>
-        <DropdownItem
-          buttonClass={PromptButton}
-          addIcon
-          onClick={this._handleDeleteFolder}>
+        <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteFolder}>
           <i className="fa fa-trash-o" /> Delete
         </DropdownItem>
       </Dropdown>

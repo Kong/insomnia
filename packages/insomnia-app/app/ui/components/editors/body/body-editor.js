@@ -90,8 +90,8 @@ class BodyEditor extends React.PureComponent<Props> {
         title: 'Change Content-Type',
         message: (
           <p>
-            Do you want set the <span className="monospace">Content-Type</span>{' '}
-            header to <span className="monospace">{newContentType}</span>?
+            Do you want set the <span className="monospace">Content-Type</span> header to{' '}
+            <span className="monospace">{newContentType}</span>?
           </p>
         ),
         onDone: saidYes => {
@@ -150,13 +150,7 @@ class BodyEditor extends React.PureComponent<Props> {
         />
       );
     } else if (mimeType === CONTENT_TYPE_FILE) {
-      return (
-        <FileEditor
-          key={uniqueKey}
-          onChange={this._handleFileChange}
-          path={fileName || ''}
-        />
-      );
+      return <FileEditor key={uniqueKey} onChange={this._handleFileChange} path={fileName || ''} />;
     } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
       return (
         <GraphQLEditor
@@ -173,8 +167,7 @@ class BodyEditor extends React.PureComponent<Props> {
         />
       );
     } else if (!isBodyEmpty) {
-      const contentType =
-        getContentTypeFromHeaders(request.headers) || mimeType;
+      const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return (
         <RawEditor
           uniquenessKey={uniqueKey}
@@ -195,10 +188,7 @@ class BodyEditor extends React.PureComponent<Props> {
       return (
         <div className="overflow-hidden editor vertically-center text-center">
           <p className="pad super-faint text-sm text-center">
-            <i
-              className="fa fa-hand-peace-o"
-              style={{ fontSize: '8rem', opacity: 0.3 }}
-            />
+            <i className="fa fa-hand-peace-o" style={{ fontSize: '8rem', opacity: 0.3 }} />
             <br />
             <br />
             Select a body type from above

@@ -104,7 +104,9 @@ function parseEndpoints(document) {
       const schemasPerMethod = document.paths[path];
       const methods = Object.keys(schemasPerMethod);
 
-      return methods.map(method => Object.assign({}, schemasPerMethod[method], { path, method }));
+      return methods
+        .filter(method => method !== 'parameters')
+        .map(method => Object.assign({}, schemasPerMethod[method], { path, method }));
     })
     .reduce((flat, arr) => flat.concat(arr), []); //flat single array
 

@@ -1,10 +1,7 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import {
-  buildQueryStringFromParams,
-  joinUrlAndQueryString
-} from 'insomnia-url';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import Link from './link';
 
 type Props = {|

@@ -26,9 +26,7 @@ module.exports.templateTags = [
       } else if (op === 'decode') {
         return Buffer.from(text, 'base64').toString('utf8');
       } else {
-        throw new Error(
-          'Unsupported operation "' + op + '". Must be encode or decode.'
-        );
+        throw new Error('Unsupported operation "' + op + '". Must be encode or decode.');
       }
     }
   }

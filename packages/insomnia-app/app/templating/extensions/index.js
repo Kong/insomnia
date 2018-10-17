@@ -69,10 +69,7 @@ export type PluginTemplateTagContext = {
       },
       response: {
         getLatestForRequestId: (id: string) => Promise<Response | null>,
-        getBodyBuffer: (
-          response: Response,
-          fallback?: any
-        ) => Promise<Buffer | null>
+        getBodyBuffer: (response: Response, fallback?: any) => Promise<Buffer | null>
       }
     }
   }
@@ -83,10 +80,7 @@ export type PluginTemplateTag = {
   name: string,
   displayName: DisplayName,
   description: string,
-  run: (
-    context: PluginTemplateTagContext,
-    ...arg: Array<any>
-  ) => Promise<any> | any,
+  run: (context: PluginTemplateTagContext, ...arg: Array<any>) => Promise<any> | any,
   deprecated?: boolean,
   validate?: (value: any) => ?string,
   priority?: number

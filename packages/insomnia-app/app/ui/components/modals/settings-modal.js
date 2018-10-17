@@ -34,8 +34,8 @@ class SettingsModal extends PureComponent {
     this.modal = n;
   }
 
-  _handleUpdateSetting(key, value) {
-    models.settings.update(this.props.settings, { [key]: value });
+  async _handleUpdateSetting(key, value) {
+    return models.settings.update(this.props.settings, { [key]: value });
   }
 
   _handleExportAllToFile() {
@@ -64,12 +64,6 @@ class SettingsModal extends PureComponent {
     if (persist) {
       models.settings.update(this.props.settings, { theme });
     }
-  }
-
-  componentDidMount() {
-    // Hacky way to set theme on launch
-    // TODO: move somewhere else
-    this._handleChangeTheme(this.props.settings.theme, false);
   }
 
   show(currentTabIndex = 0) {
@@ -128,6 +122,7 @@ class SettingsModal extends PureComponent {
                 settings={settings}
                 handleToggleMenuBar={this.props.handleToggleMenuBar}
                 updateSetting={this._handleUpdateSetting}
+                handleRootCssChange={this._handleRootCssChange}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
@@ -139,10 +134,7 @@ class SettingsModal extends PureComponent {
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel scrollable">
-              <Theme
-                handleChangeTheme={this._handleChangeTheme}
-                activeTheme={settings.theme}
-              />
+              <Theme handleChangeTheme={this._handleChangeTheme} activeTheme={settings.theme} />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <SettingsShortcuts />

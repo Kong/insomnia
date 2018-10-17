@@ -16,14 +16,12 @@ describe('plugin', () => {
       );
 
       const cookies = await cookiesFromJar(jar);
-      const requests = [
-        { _id: 'req_1', parameters: [], url: 'https://insomnia.rest/foo/bar' }
-      ];
+      const requests = [{ _id: 'req_1', parameters: [], url: 'https://insomnia.rest/foo/bar' }];
       const jars = [{ _id: 'jar_1', parentId: 'wrk_1', cookies }];
       const context = _getTestContext([{ _id: 'wrk_1' }], requests, jars);
       try {
         const result = await tag.run(context, 'https://google.com/', '');
-      } catch(err) {
+      } catch (err) {
         expect(err.message).toContain('No cookies in store for url "https://google.com/');
       }
     });
@@ -43,20 +41,17 @@ describe('plugin', () => {
       );
 
       const cookies = await cookiesFromJar(jar);
-      const requests = [
-        { _id: 'req_1', parameters: [], url: 'https://insomnia.rest/foo/bar' }
-      ];
+      const requests = [{ _id: 'req_1', parameters: [], url: 'https://insomnia.rest/foo/bar' }];
       const jars = [{ _id: 'jar_1', parentId: 'wrk_1', cookies }];
       const context = _getTestContext([{ _id: 'wrk_1' }], requests, jars);
       try {
         const result = await tag.run(context, 'https://insomnia.rest', 'bar');
-      } catch(err) {
+      } catch (err) {
         expect(err.message).toContain('No cookie with name "bar"');
         expect(err.message).toContain('"foo"');
       }
     });
   });
-
 
   describe('CookieJarPlugin: cookie name found', async () => {
     it('should get cookie by name', async () => {
@@ -72,9 +67,7 @@ describe('plugin', () => {
       );
 
       const cookies = await cookiesFromJar(jar);
-      const requests = [
-        { _id: 'req_1', parameters: [], url: 'https://insomnia.rest/foo/bar' }
-      ];
+      const requests = [{ _id: 'req_1', parameters: [], url: 'https://insomnia.rest/foo/bar' }];
       const jars = [{ _id: 'jar_1', parentId: 'wrk_1', cookies }];
       const context = _getTestContext([{ _id: 'wrk_1' }], requests, jars);
       const result = await tag.run(context, 'https://insomnia.rest', 'foo');

@@ -53,10 +53,7 @@ module.exports = function(source, options) {
   // Add body
   if (source.postData.text) {
     // Just text
-    code.push(
-      'let body = Cohttp_lwt_body.of_string %s in',
-      JSON.stringify(source.postData.text)
-    );
+    code.push('let body = Cohttp_lwt_body.of_string %s in', JSON.stringify(source.postData.text));
   }
 
   // Do the request
@@ -72,9 +69,7 @@ module.exports = function(source, options) {
   );
 
   // Catch result
-  code
-    .push('>>= fun (res, body_stream) ->')
-    .push(1, '(* Do stuff with the result *)');
+  code.push('>>= fun (res, body_stream) ->').push(1, '(* Do stuff with the result *)');
 
   return code.join();
 };
@@ -83,6 +78,5 @@ module.exports.info = {
   key: 'cohttp',
   title: 'CoHTTP',
   link: 'https://github.com/mirage/ocaml-cohttp',
-  description:
-    'Cohttp is a very lightweight HTTP server using Lwt or Async for OCaml'
+  description: 'Cohttp is a very lightweight HTTP server using Lwt or Async for OCaml'
 };

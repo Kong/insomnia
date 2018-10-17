@@ -70,10 +70,7 @@ class AskModal extends PureComponent {
             <button className="btn" onClick={this._handleNo}>
               No
             </button>
-            <button
-              ref={this._setYesButtonRef}
-              className="btn"
-              onClick={this._handleYes}>
+            <button ref={this._setYesButtonRef} className="btn" onClick={this._handleYes}>
               Yes
             </button>
           </div>

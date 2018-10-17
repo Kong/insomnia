@@ -26,8 +26,7 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
 
   componentDidCatch(error: Error, info: { componentStack: string }) {
     const { children } = this.props;
-    const firstChild =
-      Array.isArray(children) && children.length === 1 ? children[0] : children;
+    const firstChild = Array.isArray(children) && children.length === 1 ? children[0] : children;
 
     this.setState({ error, info });
 
@@ -45,13 +44,8 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
           title: 'Application Error',
           message: (
             <p>
-              Failed to render {componentName}. Please send the following error
-              to{' '}
-              <Mailto
-                email="support@insomnia.rest"
-                subject="Error Report"
-                body={error.stack}
-              />.
+              Failed to render {componentName}. Please send the following error to{' '}
+              <Mailto email="support@insomnia.rest" subject="Error Report" body={error.stack} />.
             </p>
           )
         });
@@ -66,11 +60,7 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
     const { errorClassName, children } = this.props;
 
     if (error && info) {
-      return (
-        <div className={errorClassName || null}>
-          Render Failure: {error.message}
-        </div>
-      );
+      return <div className={errorClassName || null}>Render Failure: {error.message}</div>;
     }
 
     return children;

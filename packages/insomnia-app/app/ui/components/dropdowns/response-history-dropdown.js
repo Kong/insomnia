@@ -1,12 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import {
-  Dropdown,
-  DropdownButton,
-  DropdownDivider,
-  DropdownItem
-} from '../base/dropdown';
+import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import StatusTag from '../tags/status-tag';
 import URLTag from '../tags/url-tag';
 import PromptButton from '../base/prompt-button';
@@ -57,11 +52,7 @@ class ResponseHistoryDropdown extends PureComponent {
         disabled={active}
         value={i === 0 ? null : response}
         onClick={this._handleSetActiveResponse}>
-        {active ? (
-          <i className="fa fa-thumb-tack" />
-        ) : (
-          <i className="fa fa-empty" />
-        )}{' '}
+        {active ? <i className="fa fa-thumb-tack" /> : <i className="fa fa-empty" />}{' '}
         <StatusTag
           small
           statusCode={response.statusCode}
@@ -69,14 +60,8 @@ class ResponseHistoryDropdown extends PureComponent {
         />
         <URLTag small url={response.url} />
         <TimeTag milliseconds={response.elapsedTime} small />
-        <SizeTag
-          bytesRead={response.bytesRead}
-          bytesContent={response.bytesContent}
-          small
-        />
-        {!response.requestVersionId && (
-          <i className="icon fa fa-info-circle" title={message} />
-        )}
+        <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} small />
+        {!response.requestVersionId && <i className="icon fa fa-info-circle" title={message} />}
       </DropdownItem>
     );
   }
@@ -91,8 +76,7 @@ class ResponseHistoryDropdown extends PureComponent {
       ...extraProps
     } = this.props;
 
-    const isLatestResponseActive =
-      !responses.length || activeResponse._id === responses[0]._id;
+    const isLatestResponseActive = !responses.length || activeResponse._id === responses[0]._id;
 
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
@@ -100,9 +84,7 @@ class ResponseHistoryDropdown extends PureComponent {
           ref={this._setDropdownRef}
           key={activeResponse ? activeResponse._id : 'n/a'}
           {...extraProps}>
-          <DropdownButton
-            className="btn btn--super-compact tall"
-            title="Response history">
+          <DropdownButton className="btn btn--super-compact tall" title="Response history">
             {!isLatestResponseActive ? (
               <i className="fa fa-thumb-tack" />
             ) : (
@@ -111,17 +93,11 @@ class ResponseHistoryDropdown extends PureComponent {
             <i className="fa fa-caret-down" />
           </DropdownButton>
           <DropdownDivider>Response History</DropdownDivider>
-          <DropdownItem
-            buttonClass={PromptButton}
-            addIcon
-            onClick={this._handleDeleteResponse}>
+          <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteResponse}>
             <i className="fa fa-trash-o" />
             Delete Current Response
           </DropdownItem>
-          <DropdownItem
-            buttonClass={PromptButton}
-            addIcon
-            onClick={this._handleDeleteResponses}>
+          <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteResponses}>
             <i className="fa fa-trash-o" />
             Clear History
           </DropdownItem>

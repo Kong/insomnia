@@ -12,7 +12,7 @@ import { init as initPlugins } from '../plugins';
 import DNDBackend from './dnd-backend';
 import './css/index.less';
 import { isDevelopment } from '../common/constants';
-import { setTheme } from '../plugins/misc';
+import { setTheme, setFont } from '../plugins/misc';
 
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
@@ -23,6 +23,7 @@ document.body.setAttribute('data-platform', process.platform);
 
   const settings = await models.settings.getOrCreate();
   await setTheme(settings.theme);
+  await setFont(settings);
 
   // Create Redux store
   const store = await initStore();

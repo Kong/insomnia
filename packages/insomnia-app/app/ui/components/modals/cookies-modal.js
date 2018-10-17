@@ -87,10 +87,7 @@ class CookiesModal extends PureComponent<Props, State> {
   componentWillReceiveProps(nextProps: Props) {
     // Re-filter if we received new cookies
     // Compare cookies with Dates cast to strings
-    const sameCookies = deepEqual(
-      this.props.cookieJar.cookies,
-      nextProps.cookieJar.cookies
-    );
+    const sameCookies = deepEqual(this.props.cookieJar.cookies, nextProps.cookieJar.cookies);
 
     if (!sameCookies) {
       this._applyFilter(this.state.filter, nextProps.cookieJar.cookies);

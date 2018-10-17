@@ -17,9 +17,7 @@ class CopyButton extends PureComponent {
     e.stopPropagation();
 
     const content =
-      typeof this.props.content === 'string'
-        ? this.props.content
-        : await this.props.content();
+      typeof this.props.content === 'string' ? this.props.content : await this.props.content();
 
     if (content) {
       clipboard.writeText(content);
@@ -46,8 +44,7 @@ class CopyButton extends PureComponent {
     } = this.props;
     const { showConfirmation } = this.state;
 
-    const confirm =
-      typeof confirmMessage === 'string' ? confirmMessage : 'Copied';
+    const confirm = typeof confirmMessage === 'string' ? confirmMessage : 'Copied';
 
     return (
       <button {...other} title={title} onClick={this._handleClick}>
@@ -65,10 +62,7 @@ class CopyButton extends PureComponent {
 
 CopyButton.propTypes = {
   // Required
-  content: PropTypes.oneOfType([
-    PropTypes.string.isRequired,
-    PropTypes.func.isRequired
-  ]).isRequired,
+  content: PropTypes.oneOfType([PropTypes.string.isRequired, PropTypes.func.isRequired]).isRequired,
 
   // Optional
   children: PropTypes.node,

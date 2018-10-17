@@ -43,12 +43,10 @@ describe('filterHeaders()', () => {
     expect(misc.filterHeaders(['bad'], null)).toEqual([]);
     expect(misc.filterHeaders(['bad'], 'good')).toEqual([]);
     expect(misc.filterHeaders(null, 'good')).toEqual([]);
-    expect(
-      misc.filterHeaders([{ name: 'good', value: 'valid' }], null)
-    ).toEqual([]);
-    expect(
-      misc.filterHeaders([{ name: 'good', value: 'valid' }], 'good')
-    ).toEqual([{ name: 'good', value: 'valid' }]);
+    expect(misc.filterHeaders([{ name: 'good', value: 'valid' }], null)).toEqual([]);
+    expect(misc.filterHeaders([{ name: 'good', value: 'valid' }], 'good')).toEqual([
+      { name: 'good', value: 'valid' }
+    ]);
   });
 });
 
@@ -145,9 +143,7 @@ describe('fuzzyMatchAll()', () => {
       indexes: [0, 1, 2, 3],
       target: 'testing foo'
     });
-    expect(
-      misc.fuzzyMatchAll('test foo', ['testing', 'foo'], { splitSpace: true })
-    ).toEqual({
+    expect(misc.fuzzyMatchAll('test foo', ['testing', 'foo'], { splitSpace: true })).toEqual({
       score: 0,
       indexes: [0, 1, 2, 3, 0, 1, 2],
       target: 'testing foo'
@@ -172,8 +168,6 @@ describe('fuzzyMatchAll()', () => {
   it('can get a negative fuzzy match on multiple fields', () => {
     expect(misc.fuzzyMatchAll('foo', [undefined])).toEqual(null);
     expect(misc.fuzzyMatchAll('foo', ['bar'])).toEqual(null);
-    expect(
-      misc.fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])
-    ).toEqual(null);
+    expect(misc.fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])).toEqual(null);
   });
 });

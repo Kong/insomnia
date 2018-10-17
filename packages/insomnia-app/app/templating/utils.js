@@ -25,10 +25,7 @@ export type NunjucksParsedTag = {
  * @param {String} [prefix] - base path to prefix to all paths
  * @returns {Array} - list of paths
  */
-export function getKeys(
-  obj: any,
-  prefix: string = ''
-): Array<{ name: string, value: any }> {
+export function getKeys(obj: any, prefix: string = ''): Array<{ name: string, value: any }> {
   let allKeys = [];
 
   const typeOfObj = Object.prototype.toString.call(obj);
@@ -170,16 +167,12 @@ export function unTokenizeTag(tagData: NunjucksParsedTag): string {
 }
 
 /** Get the default Nunjucks string for an extension */
-export function getDefaultFill(
-  name: string,
-  args: Array<NunjucksParsedTagArg>
-): string {
+export function getDefaultFill(name: string, args: Array<NunjucksParsedTagArg>): string {
   const stringArgs: Array<string> = (args || []).map(argDefinition => {
     switch (argDefinition.type) {
       case 'enum':
         const { defaultValue, options } = argDefinition;
-        const value =
-          defaultValue !== undefined ? defaultValue : options[0].value;
+        const value = defaultValue !== undefined ? defaultValue : options[0].value;
         return `'${value}'`;
       case 'number':
         return `${parseFloat(argDefinition.defaultValue) || 0}`;

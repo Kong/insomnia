@@ -41,12 +41,7 @@ class CookieList extends React.PureComponent<Props> {
   }
 
   render() {
-    const {
-      cookies,
-      handleDeleteAll,
-      handleShowModifyCookieModal,
-      handleRender
-    } = this.props;
+    const { cookies, handleDeleteAll, handleShowModifyCookieModal, handleRender } = this.props;
 
     return (
       <div>
@@ -65,9 +60,7 @@ class CookieList extends React.PureComponent<Props> {
                   <DropdownItem onClick={this._handleCookieAdd}>
                     <i className="fa fa-plus-circle" /> Add Cookie
                   </DropdownItem>
-                  <DropdownItem
-                    onClick={handleDeleteAll}
-                    buttonClass={PromptButton}>
+                  <DropdownItem onClick={handleDeleteAll} buttonClass={PromptButton}>
                     <i className="fa fa-trash-o" /> Delete All
                   </DropdownItem>
                 </Dropdown>
@@ -76,20 +69,14 @@ class CookieList extends React.PureComponent<Props> {
           </thead>
           <tbody key={cookies.length}>
             {cookies.map((cookie, i) => {
-              const cookieString = cookieToString(
-                toughCookie.Cookie.fromJSON(cookie)
-              );
+              const cookieString = cookieToString(toughCookie.Cookie.fromJSON(cookie));
               return (
                 <tr className="selectable" key={i}>
                   <td>
-                    <RenderedText render={handleRender}>
-                      {cookie.domain || ''}
-                    </RenderedText>
+                    <RenderedText render={handleRender}>{cookie.domain || ''}</RenderedText>
                   </td>
                   <td className="force-wrap wide">
-                    <RenderedText render={handleRender}>
-                      {cookieString || ''}
-                    </RenderedText>
+                    <RenderedText render={handleRender}>{cookieString || ''}</RenderedText>
                   </td>
                   <td onClick={null} className="text-right no-wrap">
                     <button
@@ -116,9 +103,7 @@ class CookieList extends React.PureComponent<Props> {
           <div className="pad faint italic text-center">
             <p>I couldn't find any cookies for you.</p>
             <p>
-              <button
-                className="btn btn--clicky"
-                onClick={e => this._handleCookieAdd()}>
+              <button className="btn btn--clicky" onClick={e => this._handleCookieAdd()}>
                 Add Cookie <i className="fa fa-plus-circle" />
               </button>
             </p>

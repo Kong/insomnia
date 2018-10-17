@@ -18,14 +18,8 @@ class HelpTooltip extends React.PureComponent<Props> {
   render() {
     const { children, className, style, info } = this.props;
     return (
-      <Tooltip
-        position="top"
-        className={className}
-        message={children}
-        style={style}>
-        <i
-          className={'fa ' + (info ? 'fa-info-circle' : 'fa-question-circle')}
-        />
+      <Tooltip position="top" className={className} message={children} style={style}>
+        <i className={'fa ' + (info ? 'fa-info-circle' : 'fa-question-circle')} />
       </Tooltip>
     );
   }

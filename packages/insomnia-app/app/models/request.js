@@ -24,10 +24,7 @@ import {
 } from '../common/constants';
 import * as db from '../common/database';
 import { getContentTypeHeader } from '../common/misc';
-import {
-  buildQueryStringFromParams,
-  deconstructQueryStringToParams
-} from 'insomnia-url';
+import { buildQueryStringFromParams, deconstructQueryStringToParams } from 'insomnia-url';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../network/o-auth-2/constants';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../network/o-auth-1/constants';
 
@@ -115,10 +112,7 @@ export function init(): BaseRequest {
   };
 }
 
-export function newAuth(
-  type: string,
-  oldAuth: RequestAuthentication = {}
-): RequestAuthentication {
+export function newAuth(type: string, oldAuth: RequestAuthentication = {}): RequestAuthentication {
   switch (type) {
     // No Auth
     case AUTH_NONE:
@@ -207,9 +201,7 @@ export function newBodyRaw(rawBody: string, contentType?: string): RequestBody {
   return { mimeType, text: rawBody };
 }
 
-export function newBodyFormUrlEncoded(
-  parameters: Array<RequestBodyParameter> | null
-): RequestBody {
+export function newBodyFormUrlEncoded(parameters: Array<RequestBodyParameter> | null): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FORM_URLENCODED,
     params: parameters || []
@@ -223,9 +215,7 @@ export function newBodyFile(path: string): RequestBody {
   };
 }
 
-export function newBodyForm(
-  parameters: Array<RequestBodyParameter>
-): RequestBody {
+export function newBodyForm(parameters: Array<RequestBodyParameter>): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FORM_DATA,
     params: parameters || []
@@ -241,9 +231,7 @@ export function migrate(doc: Request): Request {
 
 export function create(patch: Object = {}): Promise<Request> {
   if (!patch.parentId) {
-    throw new Error(
-      `New Requests missing \`parentId\`: ${JSON.stringify(patch)}`
-    );
+    throw new Error(`New Requests missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
 
   return db.docCreate(type, patch);
@@ -271,8 +259,7 @@ export function updateMimeType(
   const contentTypeHeader = getContentTypeHeader(headers);
 
   // GraphQL uses JSON content-type
-  const contentTypeHeaderValue =
-    mimeType === CONTENT_TYPE_GRAPHQL ? CONTENT_TYPE_JSON : mimeType;
+  const contentTypeHeaderValue = mimeType === CONTENT_TYPE_GRAPHQL ? CONTENT_TYPE_JSON : mimeType;
 
   // GraphQL must be POST
   if (mimeType === CONTENT_TYPE_GRAPHQL) {
@@ -309,8 +296,7 @@ export function updateMimeType(
 
   let body;
 
-  const oldBody =
-    Object.keys(savedBody).length === 0 ? request.body : savedBody;
+  const oldBody = Object.keys(savedBody).length === 0 ? request.body : savedBody;
 
   if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
     // Urlencoded
@@ -358,9 +344,7 @@ export async function duplicate(request: Request): Promise<Request> {
   // Get sort key of next request
   const q = { metaSortKey: { $gt: request.metaSortKey } };
   const [nextRequest] = await db.find(type, q, { metaSortKey: 1 });
-  const nextSortKey = nextRequest
-    ? nextRequest.metaSortKey
-    : request.metaSortKey + 100;
+  const nextSortKey = nextRequest ? nextRequest.metaSortKey : request.metaSortKey + 100;
 
   // Calculate new sort key
   const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
@@ -393,16 +377,12 @@ function migrateBody(request: Request): Request {
 
   // Second, convert all existing urlencoded bodies to new format
   const contentType = getContentTypeFromHeaders(request.headers) || '';
-  const wasFormUrlEncoded = !!contentType.match(
-    /^application\/x-www-form-urlencoded/i
-  );
+  const wasFormUrlEncoded = !!contentType.match(/^application\/x-www-form-urlencoded/i);
 
   if (wasFormUrlEncoded) {
     // Convert old-style form-encoded request bodies to new style
     const body = typeof request.body === 'string' ? request.body : '';
-    request.body = newBodyFormUrlEncoded(
-      deconstructQueryStringToParams(body, false)
-    );
+    request.body = newBodyFormUrlEncoded(deconstructQueryStringToParams(body, false));
   } else if (!request.body && !contentType) {
     request.body = {};
   } else {

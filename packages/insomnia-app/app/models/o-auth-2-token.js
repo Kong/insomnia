@@ -48,18 +48,13 @@ export function migrate<T>(doc: T): T {
 
 export function create(patch: Object = {}): Promise<OAuth2Token> {
   if (!patch.parentId) {
-    throw new Error(
-      `New OAuth2Token missing \`parentId\` ${JSON.stringify(patch)}`
-    );
+    throw new Error(`New OAuth2Token missing \`parentId\` ${JSON.stringify(patch)}`);
   }
 
   return db.docCreate(type, patch);
 }
 
-export function update(
-  token: OAuth2Token,
-  patch: Object
-): Promise<OAuth2Token> {
+export function update(token: OAuth2Token, patch: Object): Promise<OAuth2Token> {
   return db.docUpdate(token, patch);
 }
 
@@ -71,9 +66,7 @@ export function getByParentId(parentId: string): Promise<OAuth2Token | null> {
   return db.getWhere(type, { parentId });
 }
 
-export async function getOrCreateByParentId(
-  parentId: string
-): Promise<OAuth2Token> {
+export async function getOrCreateByParentId(parentId: string): Promise<OAuth2Token> {
   let token = await db.getWhere(type, { parentId });
 
   if (!token) {

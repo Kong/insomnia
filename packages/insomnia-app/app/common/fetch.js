@@ -65,10 +65,7 @@ async function _fetch(method, path, obj, sessionId = null) {
     throw err;
   }
 
-  if (
-    response.headers.get('content-type') === 'application/json' ||
-    path.match(/\.json$/)
-  ) {
+  if (response.headers.get('content-type') === 'application/json' || path.match(/\.json$/)) {
     return response.json();
   } else {
     return response.text();

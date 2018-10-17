@@ -174,24 +174,17 @@ export type ExportRequest = {
   environmentId: string
 };
 
-export async function exportHar(
-  exportRequests: Array<ExportRequest>
-): Promise<Har> {
+export async function exportHar(exportRequests: Array<ExportRequest>): Promise<Har> {
   // Export HAR entries with the same start time in order to keep their workspace sort order.
   const startedDateTime = new Date().toISOString();
   const entries: Array<HarEntry> = [];
   for (let exportRequest of exportRequests) {
-    const request: Request | null = await models.request.getById(
-      exportRequest.requestId
-    );
+    const request: Request | null = await models.request.getById(exportRequest.requestId);
     if (!request) {
       continue;
     }
 
-    const harRequest = await exportHarWithRequest(
-      request,
-      exportRequest.environmentId
-    );
+    const harRequest = await exportHarWithRequest(request, exportRequest.environmentId);
     if (!harRequest) {
       continue;
     }
@@ -237,9 +230,7 @@ export async function exportHar(
   };
 }
 
-export async function exportHarResponse(
-  response: ResponseModel | null
-): Promise<HarResponse> {
+export async function exportHarResponse(response: ResponseModel | null): Promise<HarResponse> {
   if (!response) {
     return {
       status: 0,
@@ -289,10 +280,7 @@ export async function exportHarWithRequest(
   addContentLength: boolean = false
 ): Promise<HarRequest | null> {
   try {
-    const renderResult = await getRenderedRequestAndContext(
-      request,
-      environmentId
-    );
+    const renderResult = await getRenderedRequestAndContext(request, environmentId);
     const renderedRequest = await _applyRequestPluginHooks(
       renderResult.request,
       renderResult.context
@@ -300,13 +288,9 @@ export async function exportHarWithRequest(
     return exportHarWithRenderedRequest(renderedRequest, addContentLength);
   } catch (err) {
     if (err instanceof RenderError) {
-      throw new Error(
-        `Failed to render "${request.name}:${err.path}"\n ${err.message}`
-      );
+      throw new Error(`Failed to render "${request.name}:${err.path}"\n ${err.message}`);
     } else {
-      throw new Error(
-        `Failed to export request "${request.name}"\n ${err.message}`
-      );
+      throw new Error(`Failed to export request "${request.name}"\n ${err.message}`);
     }
   }
 }
@@ -340,10 +324,7 @@ export async function exportHarWithRenderedRequest(
   renderedRequest: RenderedRequest,
   addContentLength: boolean = false
 ): Promise<HarRequest> {
-  const url = smartEncodeUrl(
-    renderedRequest.url,
-    renderedRequest.settingEncodeUrl
-  );
+  const url = smartEncodeUrl(renderedRequest.url, renderedRequest.settingEncodeUrl);
 
   if (addContentLength) {
     const hasContentLengthHeader =
@@ -351,9 +332,7 @@ export async function exportHarWithRenderedRequest(
 
     if (!hasContentLengthHeader) {
       const name = 'Content-Length';
-      const value = Buffer.byteLength(
-        (renderedRequest.body || {}).text || ''
-      ).toString();
+      const value = Buffer.byteLength((renderedRequest.body || {}).text || '').toString();
       renderedRequest.headers.push({ name, value });
     }
   }
@@ -484,9 +463,7 @@ function getRequestHeaders(renderedRequest: RenderedRequest): Array<HarHeader> {
   });
 }
 
-function getRequestQueryString(
-  renderedRequest: RenderedRequest
-): Array<HarQueryString> {
+function getRequestQueryString(renderedRequest: RenderedRequest): Array<HarQueryString> {
   return renderedRequest.parameters.map(parameter => {
     return {
       name: parameter.name,
@@ -495,15 +472,11 @@ function getRequestQueryString(
   });
 }
 
-function getRequestPostData(
-  renderedRequest: RenderedRequest
-): HarPostData | void {
+function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | void {
   let body;
   if (renderedRequest.body.fileName) {
     try {
-      body = newBodyRaw(
-        fs.readFileSync(renderedRequest.body.fileName, 'base64')
-      );
+      body = newBodyRaw(fs.readFileSync(renderedRequest.body.fileName, 'base64'));
     } catch (e) {
       console.warn('[code gen] Failed to read file', e);
       return undefined;

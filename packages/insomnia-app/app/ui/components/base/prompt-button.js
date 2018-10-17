@@ -89,11 +89,7 @@ class PromptButton extends PureComponent {
       innerMsg = (
         <span className="warning" title="Click again to confirm">
           <i className="fa fa-exclamation-circle" />
-          {finalConfirmMessage ? (
-            <span className="space-left">{finalConfirmMessage}</span>
-          ) : (
-            ''
-          )}
+          {finalConfirmMessage ? <span className="space-left">{finalConfirmMessage}</span> : ''}
         </span>
       );
     } else if (state === STATE_ASK) {
@@ -109,11 +105,7 @@ class PromptButton extends PureComponent {
     }
 
     return (
-      <Button
-        onClick={this._handleClick}
-        disabled={disabled}
-        tabIndex={tabIndex}
-        {...other}>
+      <Button onClick={this._handleClick} disabled={disabled} tabIndex={tabIndex} {...other}>
         {innerMsg}
       </Button>
     );

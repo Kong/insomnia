@@ -1,12 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import {
-  Dropdown,
-  DropdownButton,
-  DropdownDivider,
-  DropdownItem
-} from '../base/dropdown';
+import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showModal } from '../modals';
 import AlertModal from '../modals/alert-modal';
 import * as models from '../../../models';
@@ -33,13 +28,8 @@ class AuthDropdown extends PureComponent {
       return;
     }
 
-    const newAuthentication = models.request.newAuth(
-      type,
-      this.props.authentication
-    );
-    const defaultAuthentication = models.request.newAuth(
-      this.props.authentication.type
-    );
+    const newAuthentication = models.request.newAuth(type, this.props.authentication);
+    const defaultAuthentication = models.request.newAuth(this.props.authentication.type);
 
     // Prompt the user if fields will change between new and old
     for (const key of Object.keys(this.props.authentication)) {
@@ -68,11 +58,7 @@ class AuthDropdown extends PureComponent {
     const currentType = this.props.authentication.type || AUTH_NONE;
     return (
       <DropdownItem onClick={this._handleTypeChange} value={type}>
-        {currentType === type ? (
-          <i className="fa fa-check" />
-        ) : (
-          <i className="fa fa-empty" />
-        )}{' '}
+        {currentType === type ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}{' '}
         {nameOverride || getAuthTypeName(type, true)}
       </DropdownItem>
     );

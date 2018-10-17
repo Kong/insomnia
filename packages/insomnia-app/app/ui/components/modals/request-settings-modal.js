@@ -107,9 +107,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    const workspace = await models.workspace.getById(
-      activeWorkspaceIdToCopyTo || 'n/a'
-    );
+    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo || 'n/a');
     if (!workspace) {
       return;
     }
@@ -131,9 +129,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    const workspace = await models.workspace.getById(
-      activeWorkspaceIdToCopyTo || 'n/a'
-    );
+    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo || 'n/a');
     if (!workspace) {
       return;
     }
@@ -151,13 +147,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     }, 2000);
   }
 
-  async show({
-    request,
-    forceEditMode
-  }: {
-    request: Request,
-    forceEditMode: boolean
-  }) {
+  async show({ request, forceEditMode }: { request: Request, forceEditMode: boolean }) {
     const { workspaces } = this.props;
 
     const hasDescription = !!request.description;
@@ -234,9 +224,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
         <div className="form-control form-control--outlined">
           <label>
             Name{' '}
-            <span className="txt-sm faint italic">
-              (also rename by double-clicking in sidebar)
-            </span>
+            <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
             <DebouncedInput
               delay={500}
               type="text"
@@ -287,8 +275,8 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
               Automatically encode special characters in URL
               {this.renderCheckboxInput('settingEncodeUrl')}
               <HelpTooltip position="top" className="space-left">
-                Automatically encode special characters at send time (does not
-                apply to query parameters editor)
+                Automatically encode special characters at send time (does not apply to query
+                parameters editor)
               </HelpTooltip>
             </label>
           </div>
@@ -297,8 +285,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
               Skip rendering of request body
               {this.renderCheckboxInput('settingDisableRenderRequestBody')}
               <HelpTooltip position="top" className="space-left">
-                Disable rendering of environment variables and tags for the
-                request body
+                Disable rendering of environment variables and tags for the request body
               </HelpTooltip>
             </label>
           </div>
@@ -306,9 +293,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
             <label>
               Rebuild path dot sequences
               <HelpTooltip position="top" className="space-left">
-                This instructs libcurl to squash sequences of "/../" or "/./"
-                that may exist in the URL's path part and that is supposed to be
-                removed according to RFC 3986 section 5.2.4
+                This instructs libcurl to squash sequences of "/../" or "/./" that may exist in the
+                URL's path part and that is supposed to be removed according to RFC 3986 section
+                5.2.4
               </HelpTooltip>
               {this.renderCheckboxInput('settingRebuildPath')}
             </label>
@@ -319,8 +306,8 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
               <label>
                 Move/Copy to Workspace
                 <HelpTooltip position="top" className="space-left">
-                  Copy or move the current request to a new workspace. It will
-                  be placed at the root of the new workspace's folder structure.
+                  Copy or move the current request to a new workspace. It will be placed at the root
+                  of the new workspace's folder structure.
                 </HelpTooltip>
                 <select
                   value={activeWorkspaceIdToCopyTo}
@@ -368,13 +355,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       <Modal ref={this._setModalRef} freshState>
         <ModalHeader>
           Request Settings{' '}
-          <span className="txt-sm selectable faint monospace">
-            {request ? request._id : ''}
-          </span>
+          <span className="txt-sm selectable faint monospace">{request ? request._id : ''}</span>
         </ModalHeader>
-        <ModalBody className="pad">
-          {request ? this.renderModalBody(request) : null}
-        </ModalBody>
+        <ModalBody className="pad">{request ? this.renderModalBody(request) : null}</ModalBody>
       </Modal>
     );
   }

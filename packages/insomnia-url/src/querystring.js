@@ -69,9 +69,7 @@ module.exports.buildQueryParameter = function(param, strict) {
 
   if (!strict || param.value) {
     // Don't encode ',' in values
-    const value = module.exports
-      .flexibleEncodeComponent(param.value || '')
-      .replace(/%2C/gi, ',');
+    const value = module.exports.flexibleEncodeComponent(param.value || '').replace(/%2C/gi, ',');
     const name = module.exports.flexibleEncodeComponent(param.name || '');
 
     return `${name}=${value}`;
@@ -175,12 +173,7 @@ module.exports.smartEncodeUrl = function(url, encode) {
     if (parsedUrl.pathname) {
       const segments = parsedUrl.pathname.split('/');
       parsedUrl.pathname = segments
-        .map(s =>
-          module.exports.flexibleEncodeComponent(
-            s,
-            URL_PATH_CHARACTER_WHITELIST
-          )
-        )
+        .map(s => module.exports.flexibleEncodeComponent(s, URL_PATH_CHARACTER_WHITELIST))
         .join('/');
     }
 
@@ -189,9 +182,7 @@ module.exports.smartEncodeUrl = function(url, encode) {
     // ~~~~~~~~~~~~~~ //
 
     if (parsedUrl.query) {
-      const qsParams = module.exports.deconstructQueryStringToParams(
-        parsedUrl.query
-      );
+      const qsParams = module.exports.deconstructQueryStringToParams(parsedUrl.query);
       const encodedQsParams = [];
       for (const { name, value } of qsParams) {
         encodedQsParams.push({
@@ -200,9 +191,7 @@ module.exports.smartEncodeUrl = function(url, encode) {
         });
       }
 
-      parsedUrl.query = module.exports.buildQueryStringFromParams(
-        encodedQsParams
-      );
+      parsedUrl.query = module.exports.buildQueryStringFromParams(encodedQsParams);
       parsedUrl.search = `?${parsedUrl.query}`;
     }
 

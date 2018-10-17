@@ -138,9 +138,7 @@ function generatePackageJson(relBasePkg, relOutPkg) {
   // Figure out which dependencies to pack
   const allDependencies = Object.keys(basePkg.dependencies);
   const packedDependencies = basePkg.packedDependencies;
-  const unpackedDependencies = allDependencies.filter(
-    name => !packedDependencies.includes(name)
-  );
+  const unpackedDependencies = allDependencies.filter(name => !packedDependencies.includes(name));
 
   // Add dependencies
   for (const name of unpackedDependencies) {

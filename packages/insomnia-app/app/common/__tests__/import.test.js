@@ -181,12 +181,8 @@ describe('exportJSON()', () => {
 
     expect(data._type).toBe('export');
     expect(data.__export_format).toBe(3);
-    expect(data.__export_date).toMatch(
-      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/
-    );
-    expect(data.__export_source).toBe(
-      `insomnia.desktop.app:v${getAppVersion()}`
-    );
+    expect(data.__export_date).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/);
+    expect(data.__export_source).toBe(`insomnia.desktop.app:v${getAppVersion()}`);
     expect(data.resources[0]._id).toBe(w._id);
     expect(data.resources[1]._id).toBe(eBase._id);
     expect(data.resources[2]._id).toBe(jar._id);

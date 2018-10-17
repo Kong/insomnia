@@ -23,12 +23,7 @@ class ResponseCookiesViewer extends PureComponent {
   }
 
   render() {
-    const {
-      headers,
-      showCookiesModal,
-      cookiesSent,
-      cookiesStored
-    } = this.props;
+    const { headers, showCookiesModal, cookiesSent, cookiesStored } = this.props;
 
     const notifyNotStored = !cookiesStored && headers.length;
 
@@ -46,8 +41,7 @@ class ResponseCookiesViewer extends PureComponent {
         {noticeMessage && (
           <div className="notice info margin-bottom no-margin-top">
             <p>
-              Automatic {noticeMessage} of cookies was disabled at the time this
-              request was made
+              Automatic {noticeMessage} of cookies was disabled at the time this request was made
             </p>
           </div>
         )}
@@ -59,16 +53,10 @@ class ResponseCookiesViewer extends PureComponent {
               <th>Value</th>
             </tr>
           </thead>
-          <tbody>
-            {!headers.length
-              ? this.renderRow(null, -1)
-              : headers.map(this.renderRow)}
-          </tbody>
+          <tbody>{!headers.length ? this.renderRow(null, -1) : headers.map(this.renderRow)}</tbody>
         </table>
         <p className="pad-top">
-          <button
-            className="pull-right btn btn--clicky"
-            onClick={e => showCookiesModal()}>
+          <button className="pull-right btn btn--clicky" onClick={e => showCookiesModal()}>
             Manage Cookies
           </button>
         </p>

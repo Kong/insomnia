@@ -31,10 +31,7 @@ module.exports = function(source, options) {
     headers: source.allHeaders
   };
 
-  code.push(
-    'var http = require("%s");',
-    source.uriObj.protocol.replace(':', '')
-  );
+  code.push('var http = require("%s");', source.uriObj.protocol.replace(':', ''));
 
   code
     .blank()
@@ -80,10 +77,7 @@ module.exports = function(source, options) {
 
     default:
       if (source.postData.text) {
-        code.push(
-          'req.write(%s);',
-          JSON.stringify(source.postData.text, null, opts.indent)
-        );
+        code.push('req.write(%s);', JSON.stringify(source.postData.text, null, opts.indent));
       }
   }
 

@@ -182,9 +182,7 @@ const authTypesMap = {
 
 export function getPreviewModeName(previewMode, useLong = false) {
   if (previewModeMap.hasOwnProperty(previewMode)) {
-    return useLong
-      ? previewModeMap[previewMode][1]
-      : previewModeMap[previewMode][0];
+    return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
   } else {
     return '';
   }
@@ -196,14 +194,10 @@ export function getContentTypeName(contentType, useLong = false) {
   }
 
   if (contentTypesMap.hasOwnProperty(contentType)) {
-    return useLong
-      ? contentTypesMap[contentType][1]
-      : contentTypesMap[contentType][0];
+    return useLong ? contentTypesMap[contentType][1] : contentTypesMap[contentType][0];
   }
 
-  return useLong
-    ? contentTypesMap[CONTENT_TYPE_OTHER][1]
-    : contentTypesMap[CONTENT_TYPE_OTHER][0];
+  return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
 }
 
 export function getAuthTypeName(authType, useLong = false) {
@@ -219,9 +213,7 @@ export function getContentTypeFromHeaders(headers, defaultValue = null) {
     return null;
   }
 
-  const header = headers.find(
-    ({ name }) => name.toLowerCase() === 'content-type'
-  );
+  const header = headers.find(({ name }) => name.toLowerCase() === 'content-type');
   return header ? header.value : defaultValue;
 }
 

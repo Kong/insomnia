@@ -52,13 +52,7 @@ class Theme extends React.PureComponent<Props, State> {
             <g subtheme={theme.theme.name}>
               {/* Panes */}
               <g className="theme--pane--sub">
-                <rect
-                  x="0"
-                  y="0"
-                  width="100%"
-                  height="100%"
-                  className="bg-fill"
-                />
+                <rect x="0" y="0" width="100%" height="100%" className="bg-fill" />
                 <rect
                   x="25%"
                   y="0"
@@ -70,13 +64,7 @@ class Theme extends React.PureComponent<Props, State> {
 
               {/* Sidebar */}
               <g className="theme--sidebar--sub">
-                <rect
-                  x="0"
-                  y="0"
-                  width="25%"
-                  height="100%"
-                  className="bg-fill"
-                />
+                <rect x="0" y="0" width="25%" height="100%" className="bg-fill" />
                 <rect
                   x="0"
                   y="0"
@@ -87,82 +75,18 @@ class Theme extends React.PureComponent<Props, State> {
               </g>
 
               {/* Lines */}
-              <line
-                x1="25%"
-                x2="100%"
-                y1="10%"
-                y2="10%"
-                strokeWidth="1"
-                className="hl-stroke"
-              />
-              <line
-                x1="62%"
-                x2="62%"
-                y1="0"
-                y2="100%"
-                strokeWidth="1"
-                className="hl-stroke"
-              />
-              <line
-                x1="25%"
-                x2="25%"
-                y1="0"
-                y2="100%"
-                strokeWidth="1"
-                className="hl-stroke"
-              />
-              <line
-                x1="0"
-                x2="25%"
-                y1="10%"
-                y2="10%"
-                strokeWidth="1"
-                className="hl-stroke"
-              />
+              <line x1="25%" x2="100%" y1="10%" y2="10%" strokeWidth="1" className="hl-stroke" />
+              <line x1="62%" x2="62%" y1="0" y2="100%" strokeWidth="1" className="hl-stroke" />
+              <line x1="25%" x2="25%" y1="0" y2="100%" strokeWidth="1" className="hl-stroke" />
+              <line x1="0" x2="25%" y1="10%" y2="10%" strokeWidth="1" className="hl-stroke" />
 
               {/* Colors */}
-              <rect
-                x="40%"
-                y="85%"
-                width="5%"
-                height="8%"
-                className="success-fill"
-              />
-              <rect
-                x="50%"
-                y="85%"
-                width="5%"
-                height="8%"
-                className="info-fill"
-              />
-              <rect
-                x="60%"
-                y="85%"
-                width="5%"
-                height="8%"
-                className="warning-fill"
-              />
-              <rect
-                x="70%"
-                y="85%"
-                width="5%"
-                height="8%"
-                className="danger-fill"
-              />
-              <rect
-                x="80%"
-                y="85%"
-                width="5%"
-                height="8%"
-                className="surprise-fill"
-              />
-              <rect
-                x="90%"
-                y="85%"
-                width="5%"
-                height="8%"
-                className="info-fill"
-              />
+              <rect x="40%" y="85%" width="5%" height="8%" className="success-fill" />
+              <rect x="50%" y="85%" width="5%" height="8%" className="info-fill" />
+              <rect x="60%" y="85%" width="5%" height="8%" className="warning-fill" />
+              <rect x="70%" y="85%" width="5%" height="8%" className="danger-fill" />
+              <rect x="80%" y="85%" width="5%" height="8%" className="surprise-fill" />
+              <rect x="90%" y="85%" width="5%" height="8%" className="info-fill" />
             </g>
           </svg>
         </Button>

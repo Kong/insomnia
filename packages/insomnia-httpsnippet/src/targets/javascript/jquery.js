@@ -33,9 +33,7 @@ module.exports = function(source, options) {
 
   switch (source.postData.mimeType) {
     case 'application/x-www-form-urlencoded':
-      settings.data = source.postData.paramsObj
-        ? source.postData.paramsObj
-        : source.postData.text;
+      settings.data = source.postData.paramsObj ? source.postData.paramsObj : source.postData.text;
       break;
 
     case 'application/json':
@@ -74,8 +72,7 @@ module.exports = function(source, options) {
 
   code
     .push(
-      'var settings = ' +
-        JSON.stringify(settings, null, opts.indent).replace('"[form]"', 'form')
+      'var settings = ' + JSON.stringify(settings, null, opts.indent).replace('"[form]"', 'form')
     )
     .blank()
     .push('$.ajax(settings).done(function (response) {')

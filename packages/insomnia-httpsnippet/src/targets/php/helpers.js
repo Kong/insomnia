@@ -31,33 +31,17 @@ var convert = function(obj, indent, last_indent) {
         result.push(convert(item, indent + indent, indent));
       });
 
-      result =
-        'array(\n' +
-        indent +
-        result.join(',\n' + indent) +
-        '\n' +
-        last_indent +
-        ')';
+      result = 'array(\n' + indent + result.join(',\n' + indent) + '\n' + last_indent + ')';
       break;
 
     case '[object Object]':
       result = [];
       for (i in obj) {
         if (obj.hasOwnProperty(i)) {
-          result.push(
-            convert(i, indent) +
-              ' => ' +
-              convert(obj[i], indent + indent, indent)
-          );
+          result.push(convert(i, indent) + ' => ' + convert(obj[i], indent + indent, indent));
         }
       }
-      result =
-        'array(\n' +
-        indent +
-        result.join(',\n' + indent) +
-        '\n' +
-        last_indent +
-        ')';
+      result = 'array(\n' + indent + result.join(',\n' + indent) + '\n' + last_indent + ')';
       break;
 
     default:

@@ -41,10 +41,7 @@ declare module 'graphql' {
     }>
   };
 
-  declare function parse(
-    source: Source | string,
-    options?: ParseOptions
-  ): Document;
+  declare function parse(source: Source | string, options?: ParseOptions): Document;
 
   declare module.exports: {
     parse: typeof parse,

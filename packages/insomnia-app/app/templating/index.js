@@ -52,9 +52,7 @@ export function render(
         const location = err.message.match(/\[Line (\d)+, Column (\d)*]/);
         const line = location ? parseInt(location[1]) : 1;
         const column = location ? parseInt(location[2]) : 1;
-        const reason = err.message.includes(
-          'attempted to output null or undefined value'
-        )
+        const reason = err.message.includes('attempted to output null or undefined value')
           ? 'undefined'
           : 'error';
 

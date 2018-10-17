@@ -13,9 +13,7 @@ import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-envir
 import Toast from '../components/toast';
 import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
-import SettingsModal, {
-  TAB_INDEX_SHORTCUTS
-} from '../components/modals/settings-modal';
+import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import {
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
@@ -89,12 +87,8 @@ class App extends PureComponent {
 
     this._getRenderContextPromiseCache = {};
 
-    this._savePaneWidth = debounce(paneWidth =>
-      this._updateActiveWorkspaceMeta({ paneWidth })
-    );
-    this._savePaneHeight = debounce(paneHeight =>
-      this._updateActiveWorkspaceMeta({ paneHeight })
-    );
+    this._savePaneWidth = debounce(paneWidth => this._updateActiveWorkspaceMeta({ paneWidth }));
+    this._savePaneHeight = debounce(paneHeight => this._updateActiveWorkspaceMeta({ paneHeight }));
     this._saveSidebarWidth = debounce(sidebarWidth =>
       this._updateActiveWorkspaceMeta({ sidebarWidth })
     );
@@ -147,9 +141,7 @@ class App extends PureComponent {
         hotkeys.CREATE_REQUEST,
         () => {
           const { activeRequest, activeWorkspace } = this.props;
-          const parentId = activeRequest
-            ? activeRequest.parentId
-            : activeWorkspace._id;
+          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
           this._requestCreate(parentId);
         }
       ],
@@ -178,9 +170,7 @@ class App extends PureComponent {
         hotkeys.CREATE_FOLDER,
         () => {
           const { activeRequest, activeWorkspace } = this.props;
-          const parentId = activeRequest
-            ? activeRequest.parentId
-            : activeWorkspace._id;
+          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
           this._requestGroupCreate(parentId);
         }
       ],
@@ -308,10 +298,7 @@ class App extends PureComponent {
    * @private
    */
   async _handleRenderText(text, contextCacheKey = null) {
-    if (
-      !contextCacheKey ||
-      !this._getRenderContextPromiseCache[contextCacheKey]
-    ) {
+    if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
       const context = this._fetchRenderContext();
 
       // NOTE: We're caching promises here to avoid race conditions
@@ -319,10 +306,7 @@ class App extends PureComponent {
     }
 
     // Set timeout to delete the key eventually
-    setTimeout(
-      () => delete this._getRenderContextPromiseCache[contextCacheKey],
-      5000
-    );
+    setTimeout(() => delete this._getRenderContextPromiseCache[contextCacheKey], 5000);
 
     const context = await this._getRenderContextPromiseCache[contextCacheKey];
     return render.render(text, context);
@@ -346,9 +330,7 @@ class App extends PureComponent {
   }
 
   async _updateRequestGroupMetaByParentId(requestGroupId, patch) {
-    const requestGroupMeta = await models.requestGroupMeta.getByParentId(
-      requestGroupId
-    );
+    const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
     if (requestGroupMeta) {
       await models.requestGroupMeta.update(requestGroupMeta, patch);
     } else {
@@ -359,9 +341,7 @@ class App extends PureComponent {
 
   async _updateActiveWorkspaceMeta(patch) {
     const workspaceId = this.props.activeWorkspace._id;
-    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
-      workspaceId
-    );
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
     if (workspaceMeta) {
       return models.workspaceMeta.update(workspaceMeta, patch);
     } else {
@@ -469,12 +449,7 @@ class App extends PureComponent {
       savedRequestBody: saveValue
     });
 
-    const newRequest = await updateMimeType(
-      this.props.activeRequest,
-      mimeType,
-      false,
-      savedBody
-    );
+    const newRequest = await updateMimeType(this.props.activeRequest, mimeType, false, savedBody);
 
     // Force it to update, because other editor components (header editor)
     // needs to change. Need to wait a delay so the next render can finish
@@ -483,11 +458,7 @@ class App extends PureComponent {
     return newRequest;
   }
 
-  async _handleSendAndDownloadRequestWithEnvironment(
-    requestId,
-    environmentId,
-    dir
-  ) {
+  async _handleSendAndDownloadRequestWithEnvironment(requestId, environmentId, dir) {
     const request = await models.request.getById(requestId);
     if (!request) {
       return;
@@ -514,11 +485,9 @@ class App extends PureComponent {
       }
 
       if (responsePatch.statusCode >= 200 && responsePatch.statusCode < 300) {
-        const extension =
-          mime.extension(responsePatch.contentType) || 'unknown';
+        const extension = mime.extension(responsePatch.contentType) || 'unknown';
         const name =
-          nameFromHeader ||
-          `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
+          nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
 
         const filename = path.join(dir, name);
         const to = fs.createWriteStream(filename);
@@ -536,11 +505,7 @@ class App extends PureComponent {
         });
 
         readStream.on('error', async err => {
-          console.warn(
-            'Failed to download request after sending',
-            responsePatch.bodyPath,
-            err
-          );
+          console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
           await models.response.create(responsePatch);
         });
       }
@@ -700,10 +665,7 @@ class App extends PureComponent {
 
       const pixelOffset = e.clientY - requestPane.offsetTop;
       let paneHeight = pixelOffset / (requestPaneHeight + responsePaneHeight);
-      paneHeight = Math.min(
-        Math.max(paneHeight, MIN_PANE_HEIGHT),
-        MAX_PANE_HEIGHT
-      );
+      paneHeight = Math.min(Math.max(paneHeight, MIN_PANE_HEIGHT), MAX_PANE_HEIGHT);
 
       this._handleSetPaneHeight(paneHeight);
     } else if (this.state.draggingSidebar) {
@@ -919,9 +881,7 @@ class App extends PureComponent {
 
   async _ensureWorkspaceChildren(props) {
     const { activeWorkspace, activeCookieJar, environments } = props;
-    const baseEnvironments = environments.filter(
-      e => e.parentId === activeWorkspace._id
-    );
+    const baseEnvironments = environments.filter(e => e.parentId === activeWorkspace._id);
 
     // Nothing to do
     if (baseEnvironments.length && activeCookieJar) {
@@ -939,18 +899,14 @@ class App extends PureComponent {
     await db.bufferChanges();
     if (baseEnvironments.length === 0) {
       await models.environment.create({ parentId: activeWorkspace._id });
-      console.log(
-        `[app] Created missing base environment for ${activeWorkspace.name}`
-      );
+      console.log(`[app] Created missing base environment for ${activeWorkspace.name}`);
     }
 
     if (!activeCookieJar) {
       await models.cookieJar.create({
         parentId: this.props.activeWorkspace._id
       });
-      console.log(
-        `[app] Created missing cookie jar for ${activeWorkspace.name}`
-      );
+      console.log(`[app] Created missing cookie jar for ${activeWorkspace.name}`);
     }
 
     await db.flushChanges();
@@ -976,9 +932,7 @@ class App extends PureComponent {
     return (
       <KeydownBinder
         onKeydown={this._handleKeyDown}
-        key={
-          this.props.activeWorkspace ? this.props.activeWorkspace._id : 'n/a'
-        }>
+        key={this.props.activeWorkspace ? this.props.activeWorkspace._id : 'n/a'}>
         <div className="app">
           <ErrorBoundary showAlert>
             <Wrapper
@@ -988,9 +942,7 @@ class App extends PureComponent {
               paneHeight={this.state.paneHeight}
               sidebarWidth={this.state.sidebarWidth}
               handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
-              handleSetRequestGroupCollapsed={
-                this._handleSetRequestGroupCollapsed
-              }
+              handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
               handleActivateRequest={this._handleSetActiveRequest}
               handleSetRequestPaneRef={this._setRequestPaneRef}
               handleSetResponsePaneRef={this._setResponsePaneRef}
@@ -1010,15 +962,11 @@ class App extends PureComponent {
               handleDuplicateWorkspace={this._workspaceDuplicate}
               handleCreateRequestGroup={this._requestGroupCreate}
               handleGenerateCode={this._handleGenerateCode}
-              handleGenerateCodeForActiveRequest={
-                this._handleGenerateCodeForActiveRequest
-              }
+              handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
               handleCopyAsCurl={this._handleCopyAsCurl}
               handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
               handleSetResponseFilter={this._handleSetResponseFilter}
-              handleSendRequestWithEnvironment={
-                this._handleSendRequestWithEnvironment
-              }
+              handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
               handleSendAndDownloadRequestWithEnvironment={
                 this._handleSendAndDownloadRequestWithEnvironment
               }
@@ -1036,9 +984,7 @@ class App extends PureComponent {
           </ErrorBoundary>
 
           {/* Block all mouse activity by showing an overlay while dragging */}
-          {this.state.showDragOverlay ? (
-            <div className="blocker-overlay" />
-          ) : null}
+          {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
         </div>
       </KeydownBinder>
     );
@@ -1078,10 +1024,7 @@ function mapStateToProps(state, props) {
   // Workspace stuff
   const workspaceMeta = selectActiveWorkspaceMeta(state, props) || {};
   const activeWorkspace = selectActiveWorkspace(state, props);
-  const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(
-    state,
-    props
-  );
+  const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state, props);
   const sidebarHidden = workspaceMeta.sidebarHidden || false;
   const sidebarFilter = workspaceMeta.sidebarFilter || '';
   const sidebarWidth = workspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
@@ -1099,8 +1042,7 @@ function mapStateToProps(state, props) {
   const activeCookieJar = selectActiveCookieJar(state, props);
 
   // Response stuff
-  const activeRequestResponses =
-    selectActiveRequestResponses(state, props) || [];
+  const activeRequestResponses = selectActiveRequestResponses(state, props) || [];
   const activeResponse = selectActiveResponse(state, props) || null;
 
   // Environment stuff
@@ -1111,13 +1053,9 @@ function mapStateToProps(state, props) {
   const oAuth2Token = selectActiveOAuth2Token(state, props);
 
   // Find other meta things
-  const loadStartTime =
-    loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
+  const loadStartTime = loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
   const sidebarChildren = selectSidebarChildren(state, props);
-  const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(
-    state,
-    props
-  );
+  const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(state, props);
   const unseenWorkspaces = selectUnseenWorkspaces(state, props);
 
   return Object.assign({}, state, {
@@ -1214,9 +1152,7 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
       }
 
       const beforeKey = before ? before.metaSortKey : docs[0].metaSortKey - 100;
-      const afterKey = after
-        ? after.metaSortKey
-        : docs[docs.length - 1].metaSortKey + 100;
+      const afterKey = after ? after.metaSortKey : docs[docs.length - 1].metaSortKey + 100;
 
       if (Math.abs(afterKey - beforeKey) < 0.000001) {
         // If sort keys get too close together, we need to redistribute the list. This is

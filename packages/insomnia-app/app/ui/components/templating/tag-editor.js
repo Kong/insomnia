@@ -4,10 +4,7 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import clone from 'clone';
 import * as templating from '../../../templating';
-import type {
-  NunjucksParsedTag,
-  NunjucksParsedTagArg
-} from '../../../templating/utils';
+import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
@@ -16,12 +13,7 @@ import { delay, fnOrString } from '../../../common/misc';
 import type { BaseModel } from '../../../models/index';
 import type { Workspace } from '../../../models/workspace';
 import type { PluginArgumentEnumOption } from '../../../templating/extensions/index';
-import {
-  Dropdown,
-  DropdownButton,
-  DropdownDivider,
-  DropdownItem
-} from '../base/dropdown/index';
+import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown/index';
 import FileInputButton from '../base/file-input-button';
 
 type Props = {
@@ -118,10 +110,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       allDocs[type] = [];
     }
 
-    for (const doc of await db.withDescendants(
-      workspace,
-      models.request.type
-    )) {
+    for (const doc of await db.withDescendants(workspace, models.request.type)) {
       allDocs[doc.type].push(doc);
     }
 
@@ -181,10 +170,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     this._update(tagDefinitions, activeTagDefinition, tagData, false);
   }
 
-  async _handleChangeArgVariable(options: {
-    argIndex: number,
-    variable: boolean
-  }) {
+  async _handleChangeArgVariable(options: { argIndex: number, variable: boolean }) {
     const { variable, argIndex } = options;
     const { activeTagData, activeTagDefinition, variables } = this.state;
 
@@ -378,9 +364,7 @@ class TagEditor extends React.PureComponent<Props, State> {
   }
 
   renderArgBoolean(checked: boolean) {
-    return (
-      <input type="checkbox" checked={checked} onChange={this._handleChange} />
-    );
+    return <input type="checkbox" checked={checked} onChange={this._handleChange} />;
   }
 
   renderArgFile(value: string, argIndex: number) {
@@ -396,19 +380,14 @@ class TagEditor extends React.PureComponent<Props, State> {
   }
 
   renderArgEnum(value: string, options: Array<PluginArgumentEnumOption>) {
-    const argDatas = this.state.activeTagData
-      ? this.state.activeTagData.args
-      : [];
+    const argDatas = this.state.activeTagData ? this.state.activeTagData.args : [];
     return (
       <select value={value} onChange={this._handleChange}>
         {options.map(option => {
           let label: string;
           const { description } = option;
           if (description) {
-            label = `${fnOrString(
-              option.displayName,
-              argDatas
-            )} – ${description}`;
+            label = `${fnOrString(option.displayName, argDatas)} – ${description}`;
           } else {
             label = fnOrString(option.displayName, argDatas);
           }
@@ -446,27 +425,17 @@ class TagEditor extends React.PureComponent<Props, State> {
           if (doc.type === models.request.type) {
             const requests = allDocs[models.request.type] || [];
             const request: any = requests.find(r => r._id === doc._id);
-            const method =
-              request && typeof request.method === 'string'
-                ? request.method
-                : 'GET';
+            const method = request && typeof request.method === 'string' ? request.method : 'GET';
             const parentId = request ? request.parentId : 'n/a';
             const requestGroups = allDocs[models.requestGroup.type] || [];
-            const requestGroup: any = requestGroups.find(
-              rg => rg._id === parentId
-            );
+            const requestGroup: any = requestGroups.find(rg => rg._id === parentId);
             const requestGroupName =
-              requestGroup && typeof requestGroup.name === 'string'
-                ? requestGroup.name
-                : '';
-            const requestGroupStr = requestGroupName
-              ? `[${requestGroupName}] `
-              : '';
+              requestGroup && typeof requestGroup.name === 'string' ? requestGroup.name : '';
+            const requestGroupStr = requestGroupName ? `[${requestGroupName}] ` : '';
             namePrefix = `${requestGroupStr + method} `;
           }
 
-          const docName =
-            typeof doc.name === 'string' ? doc.name : 'Unknown Request';
+          const docName = typeof doc.name === 'string' ? doc.name : 'Unknown Request';
           return (
             <option key={doc._id} value={doc._id}>
               {namePrefix}
@@ -484,10 +453,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     argIndex: number
   ) {
     // Decide whether or not to show it
-    if (
-      typeof argDefinition.hide === 'function' &&
-      argDefinition.hide(argDatas)
-    ) {
+    if (typeof argDefinition.hide === 'function' && argDefinition.hide(argDatas)) {
       return null;
     }
 
@@ -495,9 +461,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     if (argIndex < argDatas.length) {
       argData = argDatas[argIndex];
     } else if (this.state.activeTagDefinition) {
-      const defaultTagData = this._getDefaultTagData(
-        this.state.activeTagDefinition
-      );
+      const defaultTagData = this._getDefaultTagData(this.state.activeTagDefinition);
       argData = defaultTagData.args[argIndex];
     } else {
       return null;
@@ -514,17 +478,13 @@ class TagEditor extends React.PureComponent<Props, State> {
 
     const strValue = argData.value.toString();
     const isVariable = argData.type === 'variable';
-    const argInputVariable = isVariable
-      ? this.renderArgVariable(strValue)
-      : null;
+    const argInputVariable = isVariable ? this.renderArgVariable(strValue) : null;
 
     let argInput;
     let isVariableAllowed = true;
     if (argDefinition.type === 'string') {
       const placeholder =
-        typeof argDefinition.placeholder === 'string'
-          ? argDefinition.placeholder
-          : '';
+        typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
       argInput = this.renderArgString(strValue, placeholder);
     } else if (argDefinition.type === 'enum') {
       const { options } = argDefinition;
@@ -533,27 +493,21 @@ class TagEditor extends React.PureComponent<Props, State> {
       argInput = this.renderArgFile(strValue, argIndex);
     } else if (argDefinition.type === 'model') {
       isVariableAllowed = false;
-      const model =
-        typeof argDefinition.model === 'string'
-          ? argDefinition.model
-          : 'unknown';
+      const model = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
       const modelId = typeof strValue === 'string' ? strValue : 'unknown';
       argInput = this.renderArgModel(modelId, model);
     } else if (argDefinition.type === 'boolean') {
       argInput = this.renderArgBoolean(strValue.toLowerCase() === 'true');
     } else if (argDefinition.type === 'number') {
       const placeholder =
-        typeof argDefinition.placeholder === 'string'
-          ? argDefinition.placeholder
-          : '';
+        typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
       argInput = this.renderArgNumber(strValue, placeholder || '');
     } else {
       return null;
     }
 
     const help =
-      typeof argDefinition.help === 'string' ||
-      typeof argDefinition.help === 'function'
+      typeof argDefinition.help === 'string' || typeof argDefinition.help === 'function'
         ? fnOrString(argDefinition.help, argDatas)
         : '';
 
@@ -564,8 +518,7 @@ class TagEditor extends React.PureComponent<Props, State> {
         : '';
 
     let validationError = '';
-    const canValidate =
-      argDefinition.type === 'string' || argDefinition.type === 'number';
+    const canValidate = argDefinition.type === 'string' || argDefinition.type === 'number';
     if (canValidate && typeof argDefinition.validate === 'function') {
       validationError = argDefinition.validate(strValue) || '';
     }
@@ -583,9 +536,7 @@ class TagEditor extends React.PureComponent<Props, State> {
             {fnOrString(displayName, argDatas)}
             {isVariable && <span className="faded space-left">(Variable)</span>}
             {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-            {validationError && (
-              <span className="font-error space-left">{validationError}</span>
-            )}
+            {validationError && <span className="font-error space-left">{validationError}</span>}
             {argInputVariable || argInput}
           </label>
         </div>
@@ -599,14 +550,12 @@ class TagEditor extends React.PureComponent<Props, State> {
               <DropdownItem
                 value={{ variable: false, argIndex }}
                 onClick={this._handleChangeArgVariable}>
-                <i className={'fa ' + (isVariable ? '' : 'fa-check')} /> Static
-                Value
+                <i className={'fa ' + (isVariable ? '' : 'fa-check')} /> Static Value
               </DropdownItem>
               <DropdownItem
                 value={{ variable: true, argIndex }}
                 onClick={this._handleChangeArgVariable}>
-                <i className={'fa ' + (isVariable ? 'fa-check' : '')} />{' '}
-                Environment Variable
+                <i className={'fa ' + (isVariable ? 'fa-check' : '')} /> Environment Variable
               </DropdownItem>
             </Dropdown>
           </div>
@@ -616,13 +565,7 @@ class TagEditor extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const {
-      error,
-      preview,
-      activeTagDefinition,
-      activeTagData,
-      rendering
-    } = this.state;
+    const { error, preview, activeTagDefinition, activeTagData, rendering } = this.state;
 
     if (!activeTagData) {
       return null;
@@ -630,20 +573,11 @@ class TagEditor extends React.PureComponent<Props, State> {
 
     let previewElement;
     if (error) {
-      previewElement = (
-        <textarea
-          className="danger"
-          value={error || 'Error'}
-          readOnly
-          rows={5}
-        />
-      );
+      previewElement = <textarea className="danger" value={error || 'Error'} readOnly rows={5} />;
     } else if (rendering) {
       previewElement = <textarea value="rendering..." readOnly rows={5} />;
     } else {
-      previewElement = (
-        <textarea value={preview || 'error'} readOnly rows={5} />
-      );
+      previewElement = <textarea value={preview || 'error'} readOnly rows={5} />;
     }
 
     return (
@@ -656,9 +590,7 @@ class TagEditor extends React.PureComponent<Props, State> {
               onChange={this._handleChangeTag}
               value={activeTagDefinition ? activeTagDefinition.name : ''}>
               {this.state.tagDefinitions.map((tagDefinition, i) => (
-                <option
-                  key={`${i}::${tagDefinition.name}`}
-                  value={tagDefinition.name}>
+                <option key={`${i}::${tagDefinition.name}`} value={tagDefinition.name}>
                   {tagDefinition.displayName} – {tagDefinition.description}
                 </option>
               ))}
@@ -667,9 +599,8 @@ class TagEditor extends React.PureComponent<Props, State> {
           </label>
         </div>
         {activeTagDefinition &&
-          activeTagDefinition.args.map(
-            (argDefinition: NunjucksParsedTagArg, index) =>
-              this.renderArg(argDefinition, activeTagData.args, index)
+          activeTagDefinition.args.map((argDefinition: NunjucksParsedTagArg, index) =>
+            this.renderArg(argDefinition, activeTagData.args, index)
           )}
         {!activeTagDefinition && (
           <div className="form-control form-control--outlined">
