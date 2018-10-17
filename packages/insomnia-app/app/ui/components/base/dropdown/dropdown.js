@@ -152,7 +152,11 @@ class Dropdown extends PureComponent {
 
     const { right, wide } = this.props;
     if (right || wide) {
-      const { right } = dropdownRect;
+      const { right: originalRight } = dropdownRect;
+
+      // Prevent dropdown from squishing against left side of screen
+      const right = Math.max(220, originalRight);
+
       const { beside } = this.props;
       const offset = beside ? dropdownRect.width - dropdownRect.height : 0;
       this._dropdownList.style.right = `${bodyRect.width - right + offset}px`;
