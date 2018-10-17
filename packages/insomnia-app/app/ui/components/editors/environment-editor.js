@@ -113,8 +113,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           {...props}
         />
         {error && <p className="notice error margin">{error}</p>}
-        {!error &&
-          warning && <p className="notice warning margin">{warning}</p>}
+        {!error && warning && <p className="notice warning margin">{warning}</p>}
       </div>
     );
   }

@@ -13,12 +13,10 @@ var targets = require('../src/targets');
 var base = './test/fixtures/output/';
 
 // read all output files
-var output = glob
-  .sync('**/*', { cwd: base, nodir: true })
-  .reduce(function(obj, name) {
-    obj[name] = fs.readFileSync(base + name);
-    return obj;
-  }, {});
+var output = glob.sync('**/*', { cwd: base, nodir: true }).reduce(function(obj, name) {
+  obj[name] = fs.readFileSync(base + name);
+  return obj;
+}, {});
 
 var clearInfo = function(key) {
   return !~['info', 'index'].indexOf(key);
@@ -106,18 +104,9 @@ Object.keys(targets).forEach(function(target) {
             Object.keys(fixtures.requests)
               .filter(clearInfo)
               .forEach(function(request) {
-                itShouldHaveRequestTestOutputFixture(
-                  request,
-                  target,
-                  client + '/'
-                );
+                itShouldHaveRequestTestOutputFixture(request, target, client + '/');
 
-                itShouldGenerateOutput(
-                  request,
-                  target + '/' + client + '/',
-                  target,
-                  client
-                );
+                itShouldGenerateOutput(request, target + '/' + client + '/', target, client);
               });
           });
         });

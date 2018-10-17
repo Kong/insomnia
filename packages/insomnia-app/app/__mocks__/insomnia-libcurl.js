@@ -63,10 +63,7 @@ class Curl extends EventEmitter {
   getInfo(name) {
     switch (name) {
       case Curl.info.COOKIELIST:
-        return [
-          `#HttpOnly_.insomnia.rest\tTRUE\t/url/path\tTRUE\t${Date.now() /
-            1000}\tfoo\tbar`
-        ];
+        return [`#HttpOnly_.insomnia.rest\tTRUE\t/url/path\tTRUE\t${Date.now() / 1000}\tfoo\tbar`];
       case Curl.info.EFFECTIVE_URL:
         return this._options[Curl.option.URL];
       case Curl.info.TOTAL_TIME:

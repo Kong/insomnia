@@ -162,15 +162,11 @@ class Wrapper extends React.PureComponent<Props, State> {
     return rUpdate(this.props.activeRequest, { method });
   }
 
-  _handleUpdateRequestParameters(
-    parameters: Array<RequestParameter>
-  ): Promise<Request> {
+  _handleUpdateRequestParameters(parameters: Array<RequestParameter>): Promise<Request> {
     return rUpdate(this.props.activeRequest, { parameters });
   }
 
-  _handleUpdateRequestAuthentication(
-    authentication: RequestAuthentication
-  ): Promise<Request> {
+  _handleUpdateRequestAuthentication(authentication: RequestAuthentication): Promise<Request> {
     return rUpdate(this.props.activeRequest, { authentication });
   }
 
@@ -178,9 +174,7 @@ class Wrapper extends React.PureComponent<Props, State> {
     return rUpdate(this.props.activeRequest, { headers });
   }
 
-  _handleForceUpdateRequestHeaders(
-    headers: Array<RequestHeader>
-  ): Promise<Request> {
+  _handleForceUpdateRequestHeaders(headers: Array<RequestHeader>): Promise<Request> {
     return this._handleForceUpdateRequest({ headers });
   }
 
@@ -221,15 +215,11 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   // Settings updaters
-  _handleUpdateSettingsShowPasswords(
-    showPasswords: boolean
-  ): Promise<Settings> {
+  _handleUpdateSettingsShowPasswords(showPasswords: boolean): Promise<Settings> {
     return sUpdate(this.props.settings, { showPasswords });
   }
 
-  _handleUpdateSettingsUseBulkHeaderEditor(
-    useBulkHeaderEditor: boolean
-  ): Promise<Settings> {
+  _handleUpdateSettingsUseBulkHeaderEditor(useBulkHeaderEditor: boolean): Promise<Settings> {
     return sUpdate(this.props.settings, { useBulkHeaderEditor });
   }
 
@@ -252,10 +242,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       return;
     }
 
-    this.props.handleSetActiveResponse(
-      this.props.activeRequest._id,
-      responseId
-    );
+    this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
   }
 
   _handleShowEnvironmentsModal(): void {
@@ -290,10 +277,7 @@ class Wrapper extends React.PureComponent<Props, State> {
     }
 
     // Also unset active response it's the one we're deleting
-    if (
-      this.props.activeResponse &&
-      this.props.activeResponse._id === response._id
-    ) {
+    if (this.props.activeResponse && this.props.activeResponse._id === response._id) {
       this._handleSetActiveResponse(null);
     }
   }
@@ -303,8 +287,7 @@ class Wrapper extends React.PureComponent<Props, State> {
     if (workspaces.length <= 1) {
       showModal(AlertModal, {
         title: 'Deleting Last Workspace',
-        message:
-          'Since you deleted your only workspace, a new one has been created for you.'
+        message: 'Since you deleted your only workspace, a new one has been created for you.'
       });
 
       models.workspace.create({ name: 'Insomnia' });
@@ -314,15 +297,9 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   _handleSendRequestWithActiveEnvironment(): void {
-    const {
-      activeRequest,
-      activeEnvironment,
-      handleSendRequestWithEnvironment
-    } = this.props;
+    const { activeRequest, activeEnvironment, handleSendRequestWithEnvironment } = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-    const activeEnvironmentId = activeEnvironment
-      ? activeEnvironment._id
-      : 'n/a';
+    const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
   }
 
@@ -333,14 +310,8 @@ class Wrapper extends React.PureComponent<Props, State> {
       handleSendAndDownloadRequestWithEnvironment
     } = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-    const activeEnvironmentId = activeEnvironment
-      ? activeEnvironment._id
-      : 'n/a';
-    handleSendAndDownloadRequestWithEnvironment(
-      activeRequestId,
-      activeEnvironmentId,
-      filename
-    );
+    const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
+    handleSendAndDownloadRequestWithEnvironment(activeRequestId, activeEnvironmentId, filename);
   }
 
   _handleSetPreviewMode(previewMode: string): void {
@@ -504,10 +475,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleDuplicateWorkspace={handleDuplicateWorkspace}
           />
 
-          <WorkspaceShareSettingsModal
-            ref={registerModal}
-            workspace={activeWorkspace}
-          />
+          <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />
 
           <GenerateCodeModal
             ref={registerModal}
@@ -534,9 +502,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             workspaces={workspaces}
             workspaceChildren={workspaceChildren}
             workspaceId={activeWorkspace._id}
-            activeRequestParentId={
-              activeRequest ? activeRequest.parentId : activeWorkspace._id
-            }
+            activeRequestParentId={activeRequest ? activeRequest.parentId : activeWorkspace._id}
             activateRequest={handleActivateRequest}
             handleSetActiveWorkspace={handleSetActiveWorkspace}
           />
@@ -562,9 +528,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
-            activeEnvironmentId={
-              activeEnvironment ? activeEnvironment._id : null
-            }
+            activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
             render={handleRender}
             getRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
@@ -637,17 +601,12 @@ class Wrapper extends React.PureComponent<Props, State> {
             isLoading={isLoading}
             workspaces={workspaces}
             environments={environments}
-            environmentHighlightColorStyle={
-              settings.environmentHighlightColorStyle
-            }
+            environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
           />
         </ErrorBoundary>
 
         <div className="drag drag--sidebar">
-          <div
-            onDoubleClick={handleResetDragSidebar}
-            onMouseDown={this._handleStartDragSidebar}
-          />
+          <div onDoubleClick={handleResetDragSidebar} onMouseDown={this._handleStartDragSidebar} />
         </div>
 
         <ErrorBoundary showAlert>
@@ -670,22 +629,14 @@ class Wrapper extends React.PureComponent<Props, State> {
             updateRequestUrl={this._handleUpdateRequestUrl}
             updateRequestMethod={this._handleUpdateRequestMethod}
             updateRequestParameters={this._handleUpdateRequestParameters}
-            updateRequestAuthentication={
-              this._handleUpdateRequestAuthentication
-            }
+            updateRequestAuthentication={this._handleUpdateRequestAuthentication}
             updateRequestHeaders={this._handleUpdateRequestHeaders}
             updateRequestMimeType={handleUpdateRequestMimeType}
-            updateSettingsShowPasswords={
-              this._handleUpdateSettingsShowPasswords
-            }
-            updateSettingsUseBulkHeaderEditor={
-              this._handleUpdateSettingsUseBulkHeaderEditor
-            }
+            updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
+            updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
             forceRefreshCounter={this.state.forceRefreshKey}
             handleSend={this._handleSendRequestWithActiveEnvironment}
-            handleSendAndDownload={
-              this._handleSendAndDownloadRequestWithActiveEnvironment
-            }
+            handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
           />
         </ErrorBoundary>
 

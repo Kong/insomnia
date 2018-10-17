@@ -32,10 +32,7 @@ const MODELS = {
   [EXPORT_TYPE_ENVIRONMENT]: models.environment
 };
 
-export async function importUri(
-  workspaceId: string | null,
-  uri: string
-): Promise<void> {
+export async function importUri(workspaceId: string | null, uri: string): Promise<void> {
   let rawText;
   if (uri.match(/^(http|https):\/\//)) {
     const response = await fetch.rawFetch(uri);
@@ -95,9 +92,7 @@ export async function importRaw(
 
   const { data } = results;
 
-  let workspace: Workspace | null = await models.workspace.getById(
-    workspaceId || 'n/a'
-  );
+  let workspace: Workspace | null = await models.workspace.getById(workspaceId || 'n/a');
 
   // Fetch the base environment in case we need it
   let baseEnvironment: Environment | null = await models.environment.getOrCreateForWorkspaceId(
@@ -128,9 +123,7 @@ export async function importRaw(
           name: 'Imported Workspace'
         });
       }
-      baseEnvironment = await models.environment.getOrCreateForWorkspace(
-        workspace
-      );
+      baseEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
     }
     return baseEnvironment._id;
   };
@@ -178,9 +171,7 @@ export async function importRaw(
 
       // Mark as not seen if we created a new workspace from sync
       if (newDoc.type === models.workspace.type) {
-        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
-          newDoc._id
-        );
+        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newDoc._id);
         await models.workspaceMeta.update(workspaceMeta, { hasSeen: false });
       }
     }
@@ -191,10 +182,7 @@ export async function importRaw(
   await db.flushChanges();
 
   return {
-    source:
-      results.type && typeof results.type.id === 'string'
-        ? results.type.id
-        : 'unknown',
+    source: results.type && typeof results.type.id === 'string' ? results.type.id : 'unknown',
     summary: importedDocs,
     error: null
   };
@@ -213,15 +201,9 @@ export async function exportHAR(
 
   const workspaceEnvironmentLookup = {};
   for (let workspace of workspaces) {
-    const workspaceMeta = await models.workspaceMeta.getByParentId(
-      workspace._id
-    );
-    let environmentId = workspaceMeta
-      ? workspaceMeta.activeEnvironmentId
-      : null;
-    const environment = await models.environment.getById(
-      environmentId || 'n/a'
-    );
+    const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
+    let environmentId = workspaceMeta ? workspaceMeta.activeEnvironmentId : null;
+    const environment = await models.environment.getById(environmentId || 'n/a');
     if (!environment || (environment.isPrivate && !includePrivateDocs)) {
       environmentId = 'n/a';
     }
@@ -230,10 +212,7 @@ export async function exportHAR(
 
   const requests = [];
   for (let workspace of workspaces) {
-    const docs: Array<BaseModel> = await getDocWithDescendants(
-      workspace,
-      includePrivateDocs
-    );
+    const docs: Array<BaseModel> = await getDocWithDescendants(workspace, includePrivateDocs);
     const workspaceRequests = docs
       .filter(d => d.type === models.request.type)
       .sort((a: Object, b: Object) => (a.metaSortKey < b.metaSortKey ? -1 : 1))
@@ -264,10 +243,7 @@ export async function exportJSON(
     resources: []
   };
 
-  const docs: Array<BaseModel> = await getDocWithDescendants(
-    parentDoc,
-    includePrivateDocs
-  );
+  const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
 
   data.resources = docs
     .filter(

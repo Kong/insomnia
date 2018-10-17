@@ -44,8 +44,7 @@ describe('HTTPSnippet', function() {
   });
 
   it('should convert multipart/mixed to multipart/form-data', function(done) {
-    var req = new HTTPSnippet(fixtures.mimetypes['multipart/mixed'])
-      .requests[0];
+    var req = new HTTPSnippet(fixtures.mimetypes['multipart/mixed']).requests[0];
 
     req.postData.mimeType.should.eql('multipart/form-data');
 
@@ -53,8 +52,7 @@ describe('HTTPSnippet', function() {
   });
 
   it('should convert multipart/related to multipart/form-data', function(done) {
-    var req = new HTTPSnippet(fixtures.mimetypes['multipart/related'])
-      .requests[0];
+    var req = new HTTPSnippet(fixtures.mimetypes['multipart/related']).requests[0];
 
     req.postData.mimeType.should.eql('multipart/form-data');
 
@@ -62,8 +60,7 @@ describe('HTTPSnippet', function() {
   });
 
   it('should convert multipart/alternative to multipart/form-data', function(done) {
-    var req = new HTTPSnippet(fixtures.mimetypes['multipart/alternative'])
-      .requests[0];
+    var req = new HTTPSnippet(fixtures.mimetypes['multipart/alternative']).requests[0];
 
     req.postData.mimeType.should.eql('multipart/form-data');
 
@@ -87,8 +84,7 @@ describe('HTTPSnippet', function() {
   });
 
   it('should convert application/x-json to application/json', function(done) {
-    var req = new HTTPSnippet(fixtures.mimetypes['application/x-json'])
-      .requests[0];
+    var req = new HTTPSnippet(fixtures.mimetypes['application/x-json']).requests[0];
 
     req.postData.mimeType.should.eql('application/json');
 
@@ -104,9 +100,7 @@ describe('HTTPSnippet', function() {
   });
 
   it('should set postData.text = empty string when postData.params === undefined in application/x-www-form-urlencoded', function(done) {
-    var req = new HTTPSnippet(
-      fixtures.mimetypes['application/x-www-form-urlencoded']
-    ).requests[0];
+    var req = new HTTPSnippet(fixtures.mimetypes['application/x-www-form-urlencoded']).requests[0];
 
     req.postData.text.should.eql('');
 
@@ -177,9 +171,7 @@ describe('HTTPSnippet', function() {
     var req = new HTTPSnippet(fixtures.requests.query).requests[0];
 
     req.fullUrl.should.be.a.String;
-    req.fullUrl.should.eql(
-      'http://mockbin.com/har?foo=bar&foo=baz&baz=abc&key=value'
-    );
+    req.fullUrl.should.eql('http://mockbin.com/har?foo=bar&foo=baz&baz=abc&key=value');
 
     done();
   });

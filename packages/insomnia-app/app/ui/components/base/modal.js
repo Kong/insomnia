@@ -56,10 +56,7 @@ class Modal extends PureComponent {
     let shouldHide = false;
 
     for (let i = 0; i < 5; i++) {
-      if (
-        target instanceof HTMLElement &&
-        target.hasAttribute('data-close-modal')
-      ) {
+      if (target instanceof HTMLElement && target.hasAttribute('data-close-modal')) {
         shouldHide = true;
         break;
       }
@@ -141,10 +138,7 @@ class Modal extends PureComponent {
           className={classes}
           style={styles}
           onClick={this._handleClick}>
-          <div
-            className="modal__backdrop overlay theme--transparent-overlay"
-            data-close-modal
-          />
+          <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
           <div className="modal__content__wrapper">
             <div className="modal__content" key={forceRefreshCounter}>
               {children}

@@ -53,26 +53,17 @@ describe('querystring', () => {
     });
 
     it('joins hash and querystring', () => {
-      const url = joinUrlAndQueryString(
-        'http://google.com?baz=qux#hash',
-        'foo=bar'
-      );
+      const url = joinUrlAndQueryString('http://google.com?baz=qux#hash', 'foo=bar');
       expect(url).toBe('http://google.com?baz=qux&foo=bar#hash');
     });
 
     it('joins multi-hash and querystring', () => {
-      const url = joinUrlAndQueryString(
-        'http://google.com?hi=there&baz=qux#hash#hi#hi',
-        'foo=bar'
-      );
+      const url = joinUrlAndQueryString('http://google.com?hi=there&baz=qux#hash#hi#hi', 'foo=bar');
       expect(url).toBe('http://google.com?hi=there&baz=qux&foo=bar#hash#hi#hi');
     });
 
     it('joins URL with querystring', () => {
-      const url = joinUrlAndQueryString(
-        'http://google.com?hi=there',
-        'foo=bar%20baz'
-      );
+      const url = joinUrlAndQueryString('http://google.com?hi=there', 'foo=bar%20baz');
       expect(url).toBe('http://google.com?hi=there&foo=bar%20baz');
     });
   });
@@ -126,17 +117,13 @@ describe('querystring', () => {
         false
       );
 
-      expect(str).toBe(
-        'foo=bar%3F%3F&hello=&hi%20there=bar%3F%3F&=bar%3F%3F&='
-      );
+      expect(str).toBe('foo=bar%3F%3F&hello=&hi%20there=bar%3F%3F&=bar%3F%3F&=');
     });
   });
 
   describe('deconstructToParams()', () => {
     it('builds from params', () => {
-      const str = deconstructQueryStringToParams(
-        'foo=bar%3F%3F&hello&hi%20there=bar%3F%3F&=&=val'
-      );
+      const str = deconstructQueryStringToParams('foo=bar%3F%3F&hello&hi%20there=bar%3F%3F&=&=val');
 
       expect(str).toEqual([
         { name: 'foo', value: 'bar??' },
@@ -187,18 +174,12 @@ describe('querystring', () => {
     });
 
     it('encodes pathname mixed encoding', () => {
-      const url = smartEncodeUrl(
-        'https://google.com/foo bar baz%20qux/100%/foo%25'
-      );
-      expect(url).toBe(
-        'https://google.com/foo%20bar%20baz%20qux/100%25/foo%25'
-      );
+      const url = smartEncodeUrl('https://google.com/foo bar baz%20qux/100%/foo%25');
+      expect(url).toBe('https://google.com/foo%20bar%20baz%20qux/100%25/foo%25');
     });
 
     it('leaves already encoded pathname', () => {
-      const url = smartEncodeUrl(
-        'https://google.com/foo%20bar%20baz/100%25/foo'
-      );
+      const url = smartEncodeUrl('https://google.com/foo%20bar%20baz/100%25/foo');
       expect(url).toBe('https://google.com/foo%20bar%20baz/100%25/foo');
     });
 
@@ -213,12 +194,8 @@ describe('querystring', () => {
     });
 
     it('encodes querystring with repeated keys', () => {
-      const url = smartEncodeUrl(
-        'https://google.com/;@,!?s=foo,;@-!&s=foo %20100%'
-      );
-      expect(url).toBe(
-        'https://google.com/;@,!?s=foo,%3B%40-!&s=foo%20%20100%25'
-      );
+      const url = smartEncodeUrl('https://google.com/;@,!?s=foo,;@-!&s=foo %20100%');
+      expect(url).toBe('https://google.com/;@,!?s=foo,%3B%40-!&s=foo%20%20100%25');
     });
 
     it("doesn't decode ignored characters", () => {

@@ -77,10 +77,7 @@ class ResponsePane extends React.PureComponent<Props> {
     const options = {
       title: 'Save Response Body',
       buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(
-        / +/g,
-        '_'
-      )}-${Date.now()}.${extension}`
+      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`
     };
 
     remote.dialog.showSaveDialog(options, outputPath => {
@@ -216,10 +213,7 @@ class ResponsePane extends React.PureComponent<Props> {
             </div>
           </div>
 
-          <ResponseTimer
-            handleCancel={cancelCurrentRequest}
-            loadStartTime={loadStartTime}
-          />
+          <ResponseTimer handleCancel={cancelCurrentRequest} loadStartTime={loadStartTime} />
         </section>
       );
     }
@@ -231,15 +225,9 @@ class ResponsePane extends React.PureComponent<Props> {
         {!response ? null : (
           <header className={paneHeaderClasses + ' row-spaced'}>
             <div className="no-wrap scrollable scrollable--no-bars pad-left">
-              <StatusTag
-                statusCode={response.statusCode}
-                statusMessage={response.statusMessage}
-              />
+              <StatusTag statusCode={response.statusCode} statusMessage={response.statusMessage} />
               <TimeTag milliseconds={response.elapsedTime} />
-              <SizeTag
-                bytesRead={response.bytesRead}
-                bytesContent={response.bytesContent}
-              />
+              <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} />
             </div>
             <ResponseHistoryDropdown
               activeResponse={response}
@@ -306,18 +294,14 @@ class ResponsePane extends React.PureComponent<Props> {
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable pad">
-              <ErrorBoundary
-                key={response._id}
-                errorClassName="font-error pad text-center">
+              <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
                 <ResponseHeadersViewer headers={response.headers} />
               </ErrorBoundary>
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable pad">
-              <ErrorBoundary
-                key={response._id}
-                errorClassName="font-error pad text-center">
+              <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
                 <ResponseCookiesViewer
                   handleShowRequestSettings={handleShowRequestSettings}
                   cookiesSent={response.settingSendCookies}
@@ -329,9 +313,7 @@ class ResponsePane extends React.PureComponent<Props> {
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel">
-            <ErrorBoundary
-              key={response._id}
-              errorClassName="font-error pad text-center">
+            <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseTimelineViewer
                 timeline={response.timeline || []}
                 editorLineWrapping={editorLineWrapping}
@@ -342,10 +324,7 @@ class ResponsePane extends React.PureComponent<Props> {
           </TabPanel>
         </Tabs>
         <ErrorBoundary errorClassName="font-error pad text-center">
-          <ResponseTimer
-            handleCancel={cancelCurrentRequest}
-            loadStartTime={loadStartTime}
-          />
+          <ResponseTimer handleCancel={cancelCurrentRequest} loadStartTime={loadStartTime} />
         </ErrorBoundary>
       </section>
     );

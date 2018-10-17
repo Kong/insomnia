@@ -46,12 +46,9 @@ class NTLMAuth extends PureComponent {
               </td>
               <td className="wide">
                 <div
-                  className={classnames(
-                    'form-control form-control--underlined no-margin',
-                    {
-                      'form-control--inactive': authentication.disabled
-                    }
-                  )}>
+                  className={classnames('form-control form-control--underlined no-margin', {
+                    'form-control--inactive': authentication.disabled
+                  })}>
                   <OneLineEditor
                     type="text"
                     id="username"
@@ -73,12 +70,9 @@ class NTLMAuth extends PureComponent {
               </td>
               <td className="wide">
                 <div
-                  className={classnames(
-                    'form-control form-control--underlined no-margin',
-                    {
-                      'form-control--inactive': authentication.disabled
-                    }
-                  )}>
+                  className={classnames('form-control form-control--underlined no-margin', {
+                    'form-control--inactive': authentication.disabled
+                  })}>
                   <OneLineEditor
                     type={showPasswords ? 'text' : 'password'}
                     id="password"
@@ -104,9 +98,7 @@ class NTLMAuth extends PureComponent {
                     id="enabled"
                     onClick={this._handleDisable}
                     value={!authentication.disabled}
-                    title={
-                      authentication.disabled ? 'Enable item' : 'Disable item'
-                    }>
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
                     {authentication.disabled ? (
                       <i className="fa fa-square-o" />
                     ) : (

@@ -114,9 +114,7 @@ class RequestCreateModal extends PureComponent {
                   <input ref={this._setInputRef} type="text" />
                 </label>
               </div>
-              <div
-                className="form-control form-control--no-label"
-                style={{ width: 'auto' }}>
+              <div className="form-control form-control--no-label" style={{ width: 'auto' }}>
                 <MethodDropdown
                   right
                   className="btn btn--clicky no-wrap"
@@ -125,9 +123,7 @@ class RequestCreateModal extends PureComponent {
                 />
               </div>
               {!this._shouldNotHaveBody() && (
-                <div
-                  className="form-control form-control--no-label"
-                  style={{ width: 'auto' }}>
+                <div className="form-control form-control--no-label" style={{ width: 'auto' }}>
                   <ContentTypeDropdown
                     className="btn btn--clicky no-wrap"
                     right

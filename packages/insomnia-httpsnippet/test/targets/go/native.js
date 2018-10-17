@@ -6,13 +6,9 @@ require('should');
 
 module.exports = function(HTTPSnippet, fixtures) {
   it('should support false boilerplate option', function() {
-    var result = new HTTPSnippet(fixtures.requests.full).convert(
-      'go',
-      'native',
-      {
-        showBoilerplate: false
-      }
-    );
+    var result = new HTTPSnippet(fixtures.requests.full).convert('go', 'native', {
+      showBoilerplate: false
+    });
 
     result.should.be.a.String;
     result.should.eql(
@@ -20,13 +16,9 @@ module.exports = function(HTTPSnippet, fixtures) {
     );
   });
   it('should support checkErrors option', function() {
-    var result = new HTTPSnippet(fixtures.requests.full).convert(
-      'go',
-      'native',
-      {
-        checkErrors: true
-      }
-    );
+    var result = new HTTPSnippet(fixtures.requests.full).convert('go', 'native', {
+      checkErrors: true
+    });
 
     result.should.be.a.String;
     result.should.eql(
@@ -34,13 +26,9 @@ module.exports = function(HTTPSnippet, fixtures) {
     );
   });
   it('should support printBody option', function() {
-    var result = new HTTPSnippet(fixtures.requests.full).convert(
-      'go',
-      'native',
-      {
-        printBody: false
-      }
-    );
+    var result = new HTTPSnippet(fixtures.requests.full).convert('go', 'native', {
+      printBody: false
+    });
 
     result.should.be.a.String;
     result.should.eql(
@@ -48,13 +36,9 @@ module.exports = function(HTTPSnippet, fixtures) {
     );
   });
   it('should support timeout option', function() {
-    var result = new HTTPSnippet(fixtures.requests.full).convert(
-      'go',
-      'native',
-      {
-        timeout: 30
-      }
-    );
+    var result = new HTTPSnippet(fixtures.requests.full).convert('go', 'native', {
+      timeout: 30
+    });
 
     result.should.be.a.String;
     result.should.eql(

@@ -107,17 +107,11 @@ export async function findRecentForRequest(
   requestId: string,
   limit: number
 ): Promise<Array<Response>> {
-  const responses = await db.findMostRecentlyModified(
-    type,
-    { parentId: requestId },
-    limit
-  );
+  const responses = await db.findMostRecentlyModified(type, { parentId: requestId }, limit);
   return responses;
 }
 
-export async function getLatestForRequest(
-  requestId: string
-): Promise<Response | null> {
+export async function getLatestForRequest(requestId: string): Promise<Response | null> {
   const responses = await findRecentForRequest(requestId, 1);
   const response = (responses[0]: ?Response);
   return response || null;
@@ -132,17 +126,11 @@ export async function create(patch: Object = {}) {
 
   // Create request version snapshot
   const request = await models.request.getById(parentId);
-  const requestVersion = request
-    ? await models.requestVersion.create(request)
-    : null;
+  const requestVersion = request ? await models.requestVersion.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
 
   // Delete all other responses before creating the new one
-  const allResponses = await db.findMostRecentlyModified(
-    type,
-    { parentId },
-    MAX_RESPONSES
-  );
+  const allResponses = await db.findMostRecentlyModified(type, { parentId }, MAX_RESPONSES);
   const recentIds = allResponses.map(r => r._id);
   await db.removeWhere(type, { parentId, _id: { $nin: recentIds } });
 
@@ -154,26 +142,12 @@ export function getLatestByParentId(parentId: string) {
   return db.getMostRecentlyModified(type, { parentId });
 }
 
-export function getBodyStream<T>(
-  response: Object,
-  readFailureValue: ?T
-): Readable | null | T {
-  return getBodyStreamFromPath(
-    response.bodyPath || '',
-    response.bodyCompression,
-    readFailureValue
-  );
+export function getBodyStream<T>(response: Object, readFailureValue: ?T): Readable | null | T {
+  return getBodyStreamFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
 }
 
-export function getBodyBuffer<T>(
-  response: Object,
-  readFailureValue: ?T
-): Buffer | T | null {
-  return getBodyBufferFromPath(
-    response.bodyPath || '',
-    response.bodyCompression,
-    readFailureValue
-  );
+export function getBodyBuffer<T>(response: Object, readFailureValue: ?T): Buffer | T | null {
+  return getBodyBufferFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
 }
 
 function getBodyStreamFromPath<T>(

@@ -24,10 +24,7 @@ module.exports = function(source, options) {
     options
   );
 
-  var code = new CodeBuilder(
-    opts.indent,
-    opts.indent !== false ? ' \\\n' + opts.indent : ' '
-  );
+  var code = new CodeBuilder(opts.indent, opts.indent !== false ? ' \\\n' + opts.indent : ' ');
 
   if (opts.verbose) {
     code.push('wget %s', opts.short ? '-v' : '--verbose');
@@ -43,14 +40,10 @@ module.exports = function(source, options) {
   });
 
   if (source.postData.text) {
-    code.push(
-      '--body-data ' + helpers.escape(helpers.quote(source.postData.text))
-    );
+    code.push('--body-data ' + helpers.escape(helpers.quote(source.postData.text)));
   }
 
-  code
-    .push(opts.short ? '-O' : '--output-document')
-    .push('- %s', helpers.quote(source.fullUrl));
+  code.push(opts.short ? '-O' : '--output-document').push('- %s', helpers.quote(source.fullUrl));
 
   return code.join();
 };

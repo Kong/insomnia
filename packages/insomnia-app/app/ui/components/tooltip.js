@@ -73,28 +73,24 @@ class Tooltip extends React.PureComponent<Props, State> {
       let top = 0;
       switch (this.props.position) {
         case 'right':
-          top =
-            tooltipRect.top - bubbleRect.height / 2 + tooltipRect.height / 2;
+          top = tooltipRect.top - bubbleRect.height / 2 + tooltipRect.height / 2;
           left = tooltipRect.left + tooltipRect.width + margin;
           break;
 
         case 'left':
-          top =
-            tooltipRect.top - bubbleRect.height / 2 + tooltipRect.height / 2;
+          top = tooltipRect.top - bubbleRect.height / 2 + tooltipRect.height / 2;
           left = tooltipRect.left - bubbleRect.width - margin;
           break;
 
         case 'bottom':
           top = tooltipRect.top + tooltipRect.height + margin;
-          left =
-            tooltipRect.left - bubbleRect.width / 2 + tooltipRect.width / 2;
+          left = tooltipRect.left - bubbleRect.width / 2 + tooltipRect.width / 2;
           break;
 
         case 'top':
         default:
           top = tooltipRect.top - bubbleRect.height - margin;
-          left =
-            tooltipRect.left - bubbleRect.width / 2 + tooltipRect.width / 2;
+          left = tooltipRect.left - bubbleRect.width / 2 + tooltipRect.width / 2;
           break;
       }
 
@@ -166,10 +162,7 @@ class Tooltip extends React.PureComponent<Props, State> {
         ref={this._setTooltipRef}
         onMouseEnter={this._handleMouseEnter}
         onMouseLeave={this._handleMouseLeave}>
-        <div
-          className={bubbleClasses}
-          onClick={this._handleStopClick}
-          ref={this._setBubbleRef}>
+        <div className={bubbleClasses} onClick={this._handleStopClick} ref={this._setBubbleRef}>
           {message}
         </div>
         {children}

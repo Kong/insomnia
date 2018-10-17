@@ -40,10 +40,7 @@ describe('app.import.*', () => {
     expect(await db.count(models.request.type)).toBe(0);
 
     const result = plugin.init(PLUGIN);
-    const filename = path.resolve(
-      __dirname,
-      '../__fixtures__/basic-import.json'
-    );
+    const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
     await result.import.uri(`file://${filename}`);
 
     const allWorkspaces = await db.all(models.workspace.type);
@@ -93,10 +90,7 @@ describe('app.import.*', () => {
     expect(await db.count(models.request.type)).toBe(0);
 
     const result = plugin.init(PLUGIN);
-    const filename = path.resolve(
-      __dirname,
-      '../__fixtures__/basic-import.json'
-    );
+    const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
     await result.import.raw(fs.readFileSync(filename, 'utf8'));
 
     const allWorkspaces = await db.all(models.workspace.type);

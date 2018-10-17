@@ -1,10 +1,7 @@
 // @flow
 import { parse as urlParse } from 'url';
 import * as c from './constants';
-import {
-  buildQueryStringFromParams,
-  joinUrlAndQueryString
-} from 'insomnia-url';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import { authorizeUserInWindow, responseToObject } from './misc';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models/index';
@@ -30,13 +27,7 @@ export default async function(
     throw new Error('Invalid access token URL');
   }
 
-  const authorizeResults = await _authorize(
-    authorizeUrl,
-    clientId,
-    redirectUri,
-    scope,
-    state
-  );
+  const authorizeResults = await _authorize(authorizeUrl, clientId, redirectUri, scope, state);
 
   // Handle the error
   if (authorizeResults[c.P_ERROR]) {
@@ -58,13 +49,7 @@ export default async function(
   );
 }
 
-async function _authorize(
-  url,
-  clientId,
-  redirectUri = '',
-  scope = '',
-  state = ''
-) {
+async function _authorize(url, clientId, redirectUri = '', scope = '', state = '') {
   const params = [
     { name: c.P_RESPONSE_TYPE, value: c.RESPONSE_TYPE_CODE },
     { name: c.P_CLIENT_ID, value: clientId }
@@ -81,11 +66,7 @@ async function _authorize(
   const successRegex = new RegExp(`${escapeRegex(redirectUri)}.*(code=)`, 'i');
   const failureRegex = new RegExp(`${escapeRegex(redirectUri)}.*(error=)`, 'i');
 
-  const redirectedTo = await authorizeUserInWindow(
-    finalUrl,
-    successRegex,
-    failureRegex
-  );
+  const redirectedTo = await authorizeUserInWindow(finalUrl, successRegex, failureRegex);
 
   console.log('[oauth2] Detected redirect ' + redirectedTo);
 

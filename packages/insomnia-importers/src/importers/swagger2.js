@@ -7,8 +7,7 @@ const WORKSPACE_ID = '__WORKSPACE_1__';
 
 module.exports.id = 'swagger2';
 module.exports.name = 'Swagger 2.0';
-module.exports.description =
-  'Importer for Swagger 2.0 specification (json/yaml)';
+module.exports.description = 'Importer for Swagger 2.0 specification (json/yaml)';
 
 module.exports.convert = async function(rawData) {
   // Validate
@@ -62,8 +61,7 @@ module.exports.convert = async function(rawData) {
  */
 async function parseDocument(rawData) {
   try {
-    const api =
-      unthrowableParseJson(rawData) || SwaggerParser.YAML.parse(rawData);
+    const api = unthrowableParseJson(rawData) || SwaggerParser.YAML.parse(rawData);
     if (!api) {
       return null;
     }
@@ -100,9 +98,9 @@ function parseEndpoints(document) {
       const schemasPerMethod = document.paths[path];
       const methods = Object.keys(schemasPerMethod);
 
-      return methods.map(method =>
-        Object.assign({}, schemasPerMethod[method], { path, method })
-      );
+      return methods
+        .filter(method => method !== 'parameters')
+        .map(method => Object.assign({}, schemasPerMethod[method], { path, method }));
     })
     .reduce((flat, arr) => flat.concat(arr), []); //flat single array
 
@@ -187,9 +185,7 @@ function prepareBody(endpointSchema, globalMimeTypes) {
       };
     }
 
-    const example = bodyParameter
-      ? generateParameterExample(bodyParameter.schema)
-      : undefined;
+    const example = bodyParameter ? generateParameterExample(bodyParameter.schema) : undefined;
     const text = JSON.stringify(example, null, 2);
     return {
       mimeType: supportedMimeType,
@@ -248,9 +244,7 @@ function generateParameterExample(schema) {
       const { properties } = schema;
 
       Object.keys(properties).forEach(propertyName => {
-        example[propertyName] = generateParameterExample(
-          properties[propertyName]
-        );
+        example[propertyName] = generateParameterExample(properties[propertyName]);
       });
 
       return example;

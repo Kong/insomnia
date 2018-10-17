@@ -37,9 +37,7 @@ class Dropdown extends PureComponent {
   _handleCheckFilterSubmit(e) {
     if (e.key === 'Enter') {
       // Listen for the Enter key and "click" on the active list item
-      const selector = `li[data-filter-index="${
-        this.state.filterActiveIndex
-      }"] button`;
+      const selector = `li[data-filter-index="${this.state.filterActiveIndex}"] button`;
       const button = this._dropdownList.querySelector(selector);
       button && button.click();
     }
@@ -167,14 +165,8 @@ class Dropdown extends PureComponent {
       const { beside } = this.props;
       const offset = beside ? dropdownRect.width - dropdownRect.height : 0;
       this._dropdownList.style.left = `${left + offset}px`;
-      this._dropdownList.style.maxWidth = `${bodyRect.width -
-        left -
-        5 -
-        offset}px`;
-      this._dropdownList.style.minWidth = `${Math.min(
-        bodyRect.width - left,
-        200
-      )}px`;
+      this._dropdownList.style.maxWidth = `${bodyRect.width - left - 5 - offset}px`;
+      this._dropdownList.style.minWidth = `${Math.min(bodyRect.width - left, 200)}px`;
     }
 
     if (dropUp) {
@@ -353,10 +345,7 @@ class Dropdown extends PureComponent {
         const active = i === filterActiveIndex;
         const hide = !visibleChildren.includes(child);
         dropdownItems.push(
-          <li
-            key={i}
-            data-filter-index={i}
-            className={classnames({ active, hide })}>
+          <li key={i} data-filter-index={i} className={classnames({ active, hide })}>
             {child}
           </li>
         );
@@ -373,12 +362,9 @@ class Dropdown extends PureComponent {
 
     let finalChildren = [];
     if (dropdownButtons.length !== 1) {
-      console.error(
-        `Dropdown needs exactly one DropdownButton! Got ${
-          dropdownButtons.length
-        }`,
-        { allChildren }
-      );
+      console.error(`Dropdown needs exactly one DropdownButton! Got ${dropdownButtons.length}`, {
+        allChildren
+      });
     } else {
       const noResults = filter && filterItems && filterItems.length === 0;
       finalChildren = [
@@ -401,9 +387,7 @@ class Dropdown extends PureComponent {
                 onKeyPress={this._handleCheckFilterSubmit}
               />
             </div>
-            {noResults && (
-              <div className="text-center pad warning">No match :(</div>
-            )}
+            {noResults && <div className="text-center pad warning">No match :(</div>}
             <ul className={classnames({ hide: noResults })}>{dropdownItems}</ul>
           </div>
         </div>
@@ -411,10 +395,7 @@ class Dropdown extends PureComponent {
     }
 
     return (
-      <KeydownBinder
-        stopMetaPropagation
-        onKeydown={this._handleBodyKeyDown}
-        disabled={!open}>
+      <KeydownBinder stopMetaPropagation onKeydown={this._handleBodyKeyDown} disabled={!open}>
         <div
           style={style}
           className={classes}

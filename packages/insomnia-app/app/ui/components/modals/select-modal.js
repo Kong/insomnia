@@ -85,10 +85,7 @@ class SelectModal extends React.PureComponent<Props, State> {
           </div>
         </ModalBody>
         <ModalFooter>
-          <button
-            ref={this._setDoneButtonRef}
-            className="btn"
-            onClick={this._handleDone}>
+          <button ref={this._setDoneButtonRef} className="btn" onClick={this._handleDone}>
             Done
           </button>
         </ModalFooter>

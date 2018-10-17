@@ -94,9 +94,7 @@ class SidebarRequestRow extends PureComponent {
       node = (
         <li className={classes}>
           <div className="sidebar__item">
-            <button
-              className="sidebar__clickable"
-              onClick={this._handleRequestCreateFromEmpty}>
+            <button className="sidebar__clickable" onClick={this._handleRequestCreateFromEmpty}>
               <em className="faded">click to add first request...</em>
             </button>
           </div>
@@ -192,12 +190,9 @@ function isAbove(monitor, component) {
 
 const dragTarget = {
   drop(props, monitor, component) {
-    const movingDoc =
-      monitor.getItem().requestGroup || monitor.getItem().request;
+    const movingDoc = monitor.getItem().requestGroup || monitor.getItem().request;
 
-    const parentId = props.requestGroup
-      ? props.requestGroup._id
-      : props.request.parentId;
+    const parentId = props.requestGroup ? props.requestGroup._id : props.request.parentId;
     const targetId = props.request ? props.request._id : null;
 
     if (isAbove(monitor, component)) {
@@ -229,9 +224,5 @@ function targetCollect(connect, monitor) {
   };
 }
 
-const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(
-  SidebarRequestRow
-);
-export default DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(
-  source
-);
+const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestRow);
+export default DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);

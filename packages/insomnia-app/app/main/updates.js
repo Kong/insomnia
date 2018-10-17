@@ -8,10 +8,7 @@ import {
   UPDATE_URL_WINDOWS
 } from '../common/constants';
 import * as models from '../models/index';
-import {
-  buildQueryStringFromParams,
-  joinUrlAndQueryString
-} from 'insomnia-url';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import { delay } from '../common/misc';
 
 const { autoUpdater, BrowserWindow, ipcMain } = electron;
@@ -39,9 +36,7 @@ async function getUpdateUrl(force: boolean): Promise<string | null> {
   console.log(`[updater] Using url ${fullUrl}`);
 
   if (process.env.INSOMNIA_DISABLE_AUTOMATIC_UPDATES) {
-    console.log(
-      `[updater] Disabled by INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable`
-    );
+    console.log(`[updater] Disabled by INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable`);
     return null;
   }
 
@@ -87,14 +82,11 @@ export async function init() {
     _sendUpdateStatus('Downloading...');
   });
 
-  autoUpdater.on(
-    'update-downloaded',
-    (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
-      console.log(`[updater] Downloaded ${releaseName}`);
-      _sendUpdateComplete(true, 'Updated (Restart Required)');
-      _showUpdateNotification();
-    }
-  );
+  autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
+    console.log(`[updater] Downloaded ${releaseName}`);
+    _sendUpdateComplete(true, 'Updated (Restart Required)');
+    _showUpdateNotification();
+  });
 
   ipcMain.on('updater.check', async e => {
     await _checkForUpdates(true);
@@ -139,9 +131,7 @@ async function _checkForUpdates(force: boolean) {
 
   if (updateUrl === null) {
     console.log(
-      `[updater] Updater not running platform=${
-        process.platform
-      } dev=${isDevelopment()}`
+      `[updater] Updater not running platform=${process.platform} dev=${isDevelopment()}`
     );
     _sendUpdateComplete(false, 'Updates Not Supported');
     return;

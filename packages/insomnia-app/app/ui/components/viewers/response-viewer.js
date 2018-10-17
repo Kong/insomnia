@@ -192,25 +192,18 @@ class ResponseViewer extends React.Component<Props, State> {
         <div className="response-pane__notify">
           {wayTooLarge ? (
             <Wrap>
-              <p className="pad faint">
-                Responses over {HUGE_RESPONSE_MB}MB cannot be shown
-              </p>
-              <button
-                onClick={download}
-                className="inline-block btn btn--clicky">
+              <p className="pad faint">Responses over {HUGE_RESPONSE_MB}MB cannot be shown</p>
+              <button onClick={download} className="inline-block btn btn--clicky">
                 Save Response To File
               </button>
             </Wrap>
           ) : (
             <Wrap>
               <p className="pad faint">
-                Response over {LARGE_RESPONSE_MB}MB hidden for performance
-                reasons
+                Response over {LARGE_RESPONSE_MB}MB hidden for performance reasons
               </p>
               <div>
-                <button
-                  onClick={download}
-                  className="inline-block btn btn--clicky margin-xs">
+                <button onClick={download} className="inline-block btn btn--clicky margin-xs">
                   Save To File
                 </button>
                 <button
@@ -234,11 +227,7 @@ class ResponseViewer extends React.Component<Props, State> {
     }
 
     if (!bodyBuffer) {
-      return (
-        <div className="pad faint">
-          Failed to read response body from filesystem
-        </div>
-      );
+      return <div className="pad faint">Failed to read response body from filesystem</div>;
     }
 
     if (bodyBuffer.length === 0) {
@@ -295,28 +284,19 @@ class ResponseViewer extends React.Component<Props, State> {
           url={url}
         />
       );
-    } else if (
-      previewMode === PREVIEW_MODE_FRIENDLY &&
-      ct.indexOf('application/pdf') === 0
-    ) {
+    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
       return (
         <div className="tall wide scrollable">
           <PDFViewer body={bodyBuffer} uniqueKey={responseId} />
         </div>
       );
-    } else if (
-      previewMode === PREVIEW_MODE_FRIENDLY &&
-      ct.indexOf('text/csv') === 0
-    ) {
+    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('text/csv') === 0) {
       return (
         <div className="tall wide scrollable">
           <CSVViewer body={bodyBuffer} key={responseId} />
         </div>
       );
-    } else if (
-      previewMode === PREVIEW_MODE_FRIENDLY &&
-      ct.indexOf('multipart/') === 0
-    ) {
+    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
       return (
         <MultipartViewer
           key={responseId}
@@ -333,10 +313,7 @@ class ResponseViewer extends React.Component<Props, State> {
           url={url}
         />
       );
-    } else if (
-      previewMode === PREVIEW_MODE_FRIENDLY &&
-      ct.indexOf('audio/') === 0
-    ) {
+    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('audio/') === 0) {
       const justContentType = contentType.split(';')[0];
       const base64Body = bodyBuffer.toString('base64');
       return (

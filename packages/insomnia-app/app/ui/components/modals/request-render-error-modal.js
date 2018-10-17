@@ -41,9 +41,7 @@ class RequestRenderErrorModal extends PureComponent {
     const result = jq.query(request, `$.${error.path}`);
     const template = result && result.length ? result[0] : null;
     const locationLabel =
-      template && template.includes('\n')
-        ? `line ${error.location.line} of`
-        : null;
+      template && template.includes('\n') ? `line ${error.location.line} of` : null;
 
     return (
       <div className="pad">
@@ -88,9 +86,7 @@ class RequestRenderErrorModal extends PureComponent {
     return (
       <Modal ref={this._setModalRef} freshState>
         <ModalHeader>Failed to Render Request</ModalHeader>
-        <ModalBody>
-          {request && error ? this.renderModalBody(request, error) : null}
-        </ModalBody>
+        <ModalBody>{request && error ? this.renderModalBody(request, error) : null}</ModalBody>
       </Modal>
     );
   }

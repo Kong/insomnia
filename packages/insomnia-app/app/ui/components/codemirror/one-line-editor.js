@@ -68,9 +68,7 @@ class OneLineEditor extends PureComponent {
     if (this._editor) {
       return this._editor.getSelectionStart();
     } else {
-      console.warn(
-        'Tried to get selection start of one-line-editor when <input>'
-      );
+      console.warn('Tried to get selection start of one-line-editor when <input>');
       return this._input.value.length;
     }
   }
@@ -79,9 +77,7 @@ class OneLineEditor extends PureComponent {
     if (this._editor) {
       return this._editor.getSelectionEnd();
     } else {
-      console.warn(
-        'Tried to get selection end of one-line-editor when <input>'
-      );
+      console.warn('Tried to get selection end of one-line-editor when <input>');
       return this._input.value.length;
     }
   }
@@ -91,10 +87,7 @@ class OneLineEditor extends PureComponent {
   }
 
   componentWillUnmount() {
-    document.body.removeEventListener(
-      'mousedown',
-      this._handleDocumentMousedown
-    );
+    document.body.removeEventListener('mousedown', this._handleDocumentMousedown);
   }
 
   _handleDocumentMousedown(e) {
@@ -122,10 +115,7 @@ class OneLineEditor extends PureComponent {
      * NOTE: we're doing it in a timeout because we don't want to convert if the
      * mouse goes in an out right away.
      */
-    this._mouseEnterTimeout = setTimeout(
-      this._convertToEditorPreserveFocus,
-      100
-    );
+    this._mouseEnterTimeout = setTimeout(this._convertToEditorPreserveFocus, 100);
   }
 
   _handleInputMouseLeave() {

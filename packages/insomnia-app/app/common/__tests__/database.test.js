@@ -140,15 +140,9 @@ describe('requestGroupDuplicate()', () => {
     const allRequests = await models.request.all();
     const allRequestGroups = await models.requestGroup.all();
     const childRequests = await models.request.findByParentId(requestGroup._id);
-    const childRequestGroups = await models.requestGroup.findByParentId(
-      requestGroup._id
-    );
-    const newChildRequests = await models.request.findByParentId(
-      newRequestGroup._id
-    );
-    const newChildRequestGroups = await models.requestGroup.findByParentId(
-      newRequestGroup._id
-    );
+    const childRequestGroups = await models.requestGroup.findByParentId(requestGroup._id);
+    const newChildRequests = await models.request.findByParentId(newRequestGroup._id);
+    const newChildRequestGroups = await models.requestGroup.findByParentId(newRequestGroup._id);
     // This asserting is pretty garbage but it at least checks
     // to see that the recursion worked (for the most part)
     expect(allRequests.length).toBe(8);
@@ -253,19 +247,13 @@ describe('_fixThings()', () => {
     await models.cookieJar.create({
       _id: 'j1',
       parentId: 'w1',
-      cookies: [
-        { id: '1', key: 'foo', value: '1' },
-        { id: 'j1_1', key: 'j1', value: '1' }
-      ]
+      cookies: [{ id: '1', key: 'foo', value: '1' }, { id: 'j1_1', key: 'j1', value: '1' }]
     });
 
     await models.cookieJar.create({
       _id: 'j2',
       parentId: 'w1',
-      cookies: [
-        { id: '1', key: 'foo', value: '2' },
-        { id: 'j2_1', key: 'j2', value: '2' }
-      ]
+      cookies: [{ id: '1', key: 'foo', value: '2' }, { id: 'j2_1', key: 'j2', value: '2' }]
     });
 
     // Make sure we have everything
@@ -280,18 +268,12 @@ describe('_fixThings()', () => {
       {
         _id: 'j1',
         parentId: 'w1',
-        cookies: [
-          { id: '1', key: 'foo', value: '1' },
-          { id: 'j1_1', key: 'j1', value: '1' }
-        ]
+        cookies: [{ id: '1', key: 'foo', value: '1' }, { id: 'j1_1', key: 'j1', value: '1' }]
       },
       {
         _id: 'j2',
         parentId: 'w1',
-        cookies: [
-          { id: '1', key: 'foo', value: '2' },
-          { id: 'j2_1', key: 'j2', value: '2' }
-        ]
+        cookies: [{ id: '1', key: 'foo', value: '2' }, { id: 'j2_1', key: 'j2', value: '2' }]
       }
     ]);
 

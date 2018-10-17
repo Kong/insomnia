@@ -135,14 +135,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     e.preventDefault();
 
     const { workspace } = this.props;
-    const {
-      pfxPath,
-      crtPath,
-      keyPath,
-      host,
-      passphrase,
-      isPrivate
-    } = this.state;
+    const { pfxPath, crtPath, keyPath, host, passphrase, isPrivate } = this.state;
 
     const certificate = {
       host,
@@ -189,9 +182,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     return (
       <ModalHeader key={`header::${workspace._id}`}>
         Workspace Settings{' '}
-        <div className="txt-sm selectable faint monospace">
-          {workspace ? workspace._id : ''}
-        </div>
+        <div className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
       </ModalHeader>
     );
   }
@@ -203,31 +194,17 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
           <div>
             <span className="pad-right no-wrap">
               <strong>PFX:</strong>{' '}
-              {certificate.pfx ? (
-                <i className="fa fa-check" />
-              ) : (
-                <i className="fa fa-remove" />
-              )}
+              {certificate.pfx ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
             </span>
             <span className="pad-right no-wrap">
               <strong>CRT:</strong>{' '}
-              {certificate.cert ? (
-                <i className="fa fa-check" />
-              ) : (
-                <i className="fa fa-remove" />
-              )}
+              {certificate.cert ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
             </span>
             <span className="pad-right no-wrap">
               <strong>Key:</strong>{' '}
-              {certificate.key ? (
-                <i className="fa fa-check" />
-              ) : (
-                <i className="fa fa-remove" />
-              )}
+              {certificate.key ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
             </span>
-            <span
-              className="pad-right no-wrap"
-              title={certificate.passphrase || null}>
+            <span className="pad-right no-wrap" title={certificate.passphrase || null}>
               <strong>Passphrase:</strong>{' '}
               {certificate.passphrase ? (
                 <i className="fa fa-check" />
@@ -392,8 +369,8 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
                   <label>
                     Host
                     <HelpTooltip position="right" className="space-left">
-                      The host for which this client certificate is valid. Port
-                      number is optional and * can be used as a wildcard.
+                      The host for which this client certificate is valid. Port number is optional
+                      and * can be used as a wildcard.
                     </HelpTooltip>
                     <input
                       type="text"

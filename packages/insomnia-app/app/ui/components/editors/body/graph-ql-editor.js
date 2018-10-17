@@ -4,22 +4,14 @@ import { newBodyRaw } from '../../../../models/request';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
-import {
-  parse,
-  print,
-  typeFromAST,
-  type Document as DocumentAST
-} from 'graphql';
+import { parse, print, typeFromAST, type Document as DocumentAST } from 'graphql';
 import { introspectionQuery } from 'graphql/utilities/introspectionQuery';
 import { buildClientSchema } from 'graphql/utilities/buildClientSchema';
 import type { CodeMirror, TextMarker } from 'codemirror';
 import CodeEditor from '../../codemirror/code-editor';
 import { jsonParseOr } from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
-import {
-  CONTENT_TYPE_JSON,
-  DEBOUNCE_MILLIS
-} from '../../../../common/constants';
+import { CONTENT_TYPE_JSON, DEBOUNCE_MILLIS } from '../../../../common/constants';
 import prettify from 'insomnia-prettify';
 import type { ResponsePatch } from '../../../../network/network';
 import * as network from '../../../../network/network';
@@ -243,18 +235,11 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         })
       );
 
-      responsePatch = await network.send(
-        introspectionRequest._id,
-        environmentId
-      );
+      responsePatch = await network.send(introspectionRequest._id, environmentId);
       const bodyBuffer = models.response.getBodyBuffer(responsePatch);
 
-      const status =
-        typeof responsePatch.statusCode === 'number'
-          ? responsePatch.statusCode
-          : 0;
-      const error =
-        typeof responsePatch.error === 'string' ? responsePatch.error : '';
+      const status = typeof responsePatch.statusCode === 'number' ? responsePatch.statusCode : 0;
+      const error = typeof responsePatch.error === 'string' ? responsePatch.error : '';
 
       if (error) {
         newState.schemaFetchError = {
@@ -290,10 +275,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _buildVariableTypes(
-    schema: Object | null,
-    query: string
-  ): { [string]: Object } {
+  _buildVariableTypes(schema: Object | null, query: string): { [string]: Object } {
     if (!schema) {
       return {};
     }
@@ -328,13 +310,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     const { body, forceRefreshKey } = this.state;
     const { variables, query } = body;
     const prettyQuery = query && print(parse(query));
-    const prettyVariables =
-      variables && JSON.parse(prettify.json(JSON.stringify(variables)));
-    this._handleBodyChange(
-      prettyQuery,
-      prettyVariables,
-      this.state.body.operationName
-    );
+    const prettyVariables = variables && JSON.parse(prettify.json(JSON.stringify(variables)));
+    this._handleBodyChange(prettyQuery, prettyVariables, this.state.body.operationName);
     setTimeout(() => {
       this.setState({ forceRefreshKey: forceRefreshKey + 1 });
     }, 200);
@@ -345,16 +322,10 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       return [];
     }
 
-    return this._documentAST.definitions.filter(
-      def => def.kind === 'OperationDefinition'
-    );
+    return this._documentAST.definitions.filter(def => def.kind === 'OperationDefinition');
   }
 
-  _handleBodyChange(
-    query: string,
-    variables: ?Object,
-    operationName: ?string
-  ): void {
+  _handleBodyChange(query: string, variables: ?Object, operationName: ?string): void {
     try {
       this._documentAST = parse(query);
     } catch (e) {
@@ -388,11 +359,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   _handleVariablesChange(variables: string): void {
     try {
       const variablesObj = JSON.parse(variables || 'null');
-      this._handleBodyChange(
-        this.state.body.query,
-        variablesObj,
-        this.state.body.operationName
-      );
+      this._handleBodyChange(this.state.body.query, variablesObj, this.state.body.operationName);
     } catch (err) {
       this.setState({ variablesSyntaxError: err.message });
     }
@@ -480,14 +447,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const {
-      content,
-      render,
-      getRenderContext,
-      settings,
-      className,
-      uniquenessKey
-    } = this.props;
+    const { content, render, getRenderContext, settings, className, uniquenessKey } = this.props;
 
     const {
       schema,
@@ -498,10 +458,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       schemaIsFetching
     } = this.state;
 
-    const {
-      query,
-      variables: variablesObject
-    } = GraphQLEditor._stringToGraphQL(content);
+    const { query, variables: variablesObject } = GraphQLEditor._stringToGraphQL(content);
 
     const variables = prettify.json(JSON.stringify(variablesObject));
 
@@ -513,9 +470,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           <CodeEditor
             dynamicHeight
             manualPrettify
-            uniquenessKey={
-              uniquenessKey ? uniquenessKey + '::query' : undefined
-            }
+            uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
             hintOptions={{
               schema: schema || null,
               completeSingle: false
@@ -552,12 +507,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             schemaFetchError && (
               <div className="notice error margin no-margin-top margin-bottom-sm">
                 <div className="pull-right">
-                  <Tooltip
-                    position="top"
-                    message="View introspection request/response timeline">
-                    <button
-                      className="icon icon--success"
-                      onClick={this._handleViewResponse}>
+                  <Tooltip position="top" message="View introspection request/response timeline">
+                    <button className="icon icon--success" onClick={this._handleViewResponse}>
                       <i className="fa fa-bug" />
                     </button>
                   </Tooltip>{' '}
@@ -574,16 +525,12 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           <div className="graphql-editor__schema-notice">
             {this.renderSchemaFetchMessage()}
             {!schemaIsFetching && (
-              <button
-                className="icon space-left"
-                onClick={this._handleRefreshSchema}>
+              <button className="icon space-left" onClick={this._handleRefreshSchema}>
                 <i className="fa fa-refresh" />
               </button>
             )}
           </div>
-          <div className="graphql-editor__operation-name">
-            {this.renderSelectedOperationName()}
-          </div>
+          <div className="graphql-editor__operation-name">{this.renderSelectedOperationName()}</div>
         </div>
         <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
           Query Variables{' '}
@@ -591,17 +538,13 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             Variables to use in GraphQL query <br />(JSON format)
           </HelpTooltip>
           {variablesSyntaxError && (
-            <span className="text-danger italic pull-right">
-              {variablesSyntaxError}
-            </span>
+            <span className="text-danger italic pull-right">{variablesSyntaxError}</span>
           )}
         </h2>
         <div className="graphql-editor__variables">
           <CodeEditor
             dynamicHeight
-            uniquenessKey={
-              uniquenessKey ? uniquenessKey + '::variables' : undefined
-            }
+            uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
             debounceMillis={DEBOUNCE_MILLIS * 4}
             manualPrettify={false}
             fontSize={settings.editorFontSize}
@@ -623,9 +566,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           />
         </div>
         <div className="pane__footer">
-          <button
-            className="pull-right btn btn--compact"
-            onClick={this._handlePrettify}>
+          <button className="pull-right btn btn--compact" onClick={this._handlePrettify}>
             Prettify GraphQL
           </button>
         </div>

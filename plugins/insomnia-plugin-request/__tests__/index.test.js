@@ -16,9 +16,7 @@ describe('plugin', () => {
       );
 
       const cookies = await cookiesFromJar(jar);
-      const requests = [
-        { _id: 'req_1', parameters: [], url: 'https://insomnia.rest/foo/bar' }
-      ];
+      const requests = [{ _id: 'req_1', parameters: [], url: 'https://insomnia.rest/foo/bar' }];
       const jars = [{ _id: 'jar_1', parentId: 'wrk_1', cookies }];
       const context = _getTestContext([{ _id: 'wrk_1' }], requests, jars);
       const result = await tag.run(context, 'cookie', 'foo');

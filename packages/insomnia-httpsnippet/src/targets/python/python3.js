@@ -20,13 +20,9 @@ module.exports = function(source, options) {
   // Check which protocol to be used for the client connection
   var protocol = source.uriObj.protocol;
   if (protocol === 'https:') {
-    code
-      .push('conn = http.client.HTTPSConnection("%s")', source.uriObj.host)
-      .blank();
+    code.push('conn = http.client.HTTPSConnection("%s")', source.uriObj.host).blank();
   } else {
-    code
-      .push('conn = http.client.HTTPConnection("%s")', source.uriObj.host)
-      .blank();
+    code.push('conn = http.client.HTTPConnection("%s")', source.uriObj.host).blank();
   }
 
   // Create payload string if it exists

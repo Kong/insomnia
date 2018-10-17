@@ -197,10 +197,7 @@ describe('exportHar()', () => {
         entries: [
           {
             request: {
-              headers: [
-                { name: 'X-Environment', value: '' },
-                { name: 'X-Request', value: '1' }
-              ]
+              headers: [{ name: 'X-Environment', value: '' }, { name: 'X-Request', value: '1' }]
             },
             response: {
               status: 204
@@ -321,9 +318,7 @@ describe('exportHarWithRequest()', () => {
       }
     ];
 
-    const cookieJar = await models.cookieJar.getOrCreateForParentId(
-      workspace._id
-    );
+    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
     await models.cookieJar.update(cookieJar, {
       parentId: workspace._id,
       cookies

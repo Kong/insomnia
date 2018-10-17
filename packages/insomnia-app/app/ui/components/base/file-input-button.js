@@ -49,13 +49,7 @@ class FileInputButton extends React.PureComponent<Props> {
   }
 
   render() {
-    const {
-      showFileName,
-      showFileIcon,
-      path,
-      name,
-      ...extraProps
-    } = this.props;
+    const { showFileName, showFileIcon, path, name, ...extraProps } = this.props;
     const fileName = pathBasename(path);
     return (
       <button

@@ -24,9 +24,7 @@ describe('package.json', () => {
 
   it('packages must be included in webpack build or else errors happen', () => {
     // If this is built by Webpack it fails on multipart/form-data
-    expect(globalPackage.packedDependencies.includes('httpsnippet')).toBe(
-      false
-    );
+    expect(globalPackage.packedDependencies.includes('httpsnippet')).toBe(false);
   });
 
   it('packages must NOT be included in webpack build or else errors happen', () => {

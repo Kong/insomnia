@@ -116,9 +116,7 @@ describe('authorization_code', () => {
       bodyCompression: '',
       parentId: 'req_1',
       statusCode: 200,
-      headers: [
-        { name: 'Content-Type', value: 'application/x-www-form-urlencoded' }
-      ]
+      headers: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }]
     }));
 
     const result = await getToken(

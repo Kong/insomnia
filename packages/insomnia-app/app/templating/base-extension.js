@@ -64,14 +64,10 @@ export default class BaseExtension {
     const renderMeta = renderContext.getMeta ? renderContext.getMeta() : {};
 
     // Pull out the purpose
-    const renderPurpose = renderContext.getPurpose
-      ? renderContext.getPurpose()
-      : null;
+    const renderPurpose = renderContext.getPurpose ? renderContext.getPurpose() : null;
 
     // Extract the rest of the args
-    const args = runArgs
-      .slice(0, runArgs.length - 1)
-      .filter(a => a !== EMPTY_ARG);
+    const args = runArgs.slice(0, runArgs.length - 1).filter(a => a !== EMPTY_ARG);
 
     // Define a helper context with utils
     const helperContext = {

@@ -37,16 +37,10 @@ module.exports = function(source, options) {
 
   if (Object.keys(source.allHeaders).length) {
     req.hasHeaders = true;
-    code
-      .blank()
-      .push(helpers.literalDeclaration('headers', source.allHeaders, opts));
+    code.blank().push(helpers.literalDeclaration('headers', source.allHeaders, opts));
   }
 
-  if (
-    source.postData.text ||
-    source.postData.jsonObj ||
-    source.postData.params
-  ) {
+  if (source.postData.text || source.postData.jsonObj || source.postData.params) {
     req.hasBody = true;
 
     switch (source.postData.mimeType) {
@@ -74,17 +68,11 @@ module.exports = function(source, options) {
         if (source.postData.jsonObj) {
           code
             .push(
-              helpers.literalDeclaration(
-                'parameters',
-                source.postData.jsonObj,
-                opts
-              ),
+              helpers.literalDeclaration('parameters', source.postData.jsonObj, opts),
               'as [String : Any]'
             )
             .blank()
-            .push(
-              'let postData = JSONSerialization.data(withJSONObject: parameters, options: [])'
-            );
+            .push('let postData = JSONSerialization.data(withJSONObject: parameters, options: [])');
         }
         break;
 
@@ -95,13 +83,7 @@ module.exports = function(source, options) {
          * The user can just edit the parameters NSDictionary or put this part of a snippet in a multipart builder method.
          */
         code
-          .push(
-            helpers.literalDeclaration(
-              'parameters',
-              source.postData.params,
-              opts
-            )
-          )
+          .push(helpers.literalDeclaration('parameters', source.postData.params, opts))
           .blank()
           .push('let boundary = "%s"', source.postData.boundary)
           .blank()
@@ -110,10 +92,7 @@ module.exports = function(source, options) {
           .push('for param in parameters {')
           .push(1, 'let paramName = param["name"]!')
           .push(1, 'body += "--\\(boundary)\\r\\n"')
-          .push(
-            1,
-            'body += "Content-Disposition:form-data; name=\\"\\(paramName)\\""'
-          )
+          .push(1, 'body += "Content-Disposition:form-data; name=\\"\\(paramName)\\""')
           .push(1, 'if let filename = param["fileName"] {')
           .push(2, 'let contentType = param["content-type"]!')
           .push(
@@ -145,13 +124,8 @@ module.exports = function(source, options) {
   code
     .blank()
     // NSURLRequestUseProtocolCachePolicy is the default policy, let's just always set it to avoid confusion.
-    .push(
-      'let request = NSMutableURLRequest(url: NSURL(string: "%s")! as URL,',
-      source.fullUrl
-    )
-    .push(
-      '                                        cachePolicy: .useProtocolCachePolicy,'
-    )
+    .push('let request = NSMutableURLRequest(url: NSURL(string: "%s")! as URL,', source.fullUrl)
+    .push('                                        cachePolicy: .useProtocolCachePolicy,')
     .push(
       '                                    timeoutInterval: %s)',
       parseInt(opts.timeout, 10).toFixed(1)

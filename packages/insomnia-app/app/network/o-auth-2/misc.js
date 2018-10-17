@@ -81,13 +81,10 @@ export function authorizeUserInWindow(
       _parseUrl(currentUrl);
     });
 
-    child.webContents.on(
-      'did-fail-load',
-      (e, errorCode, errorDescription, url) => {
-        // Listen for did-fail-load to be able to parse the URL even when the callback server is unreachable
-        _parseUrl(url);
-      }
-    );
+    child.webContents.on('did-fail-load', (e, errorCode, errorDescription, url) => {
+      // Listen for did-fail-load to be able to parse the URL even when the callback server is unreachable
+      _parseUrl(url);
+    });
 
     // Show the window to the user after it loads
     child.on('ready-to-show', child.show.bind(child));
