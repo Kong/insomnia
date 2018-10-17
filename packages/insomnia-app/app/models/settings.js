@@ -83,10 +83,7 @@ export async function create(patch: Object = {}): Promise<Settings> {
   return db.docCreate(type, patch);
 }
 
-export async function update(
-  settings: Settings,
-  patch: Object
-): Promise<Settings> {
+export async function update(settings: Settings, patch: Object): Promise<Settings> {
   return db.docUpdate(settings, patch);
 }
 

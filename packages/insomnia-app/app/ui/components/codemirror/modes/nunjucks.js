@@ -1,10 +1,7 @@
 import CodeMirror from 'codemirror';
 
 CodeMirror.defineMode('nunjucks', (config, parserConfig) => {
-  const baseMode = CodeMirror.getMode(
-    config,
-    parserConfig.baseMode || 'text/plain'
-  );
+  const baseMode = CodeMirror.getMode(config, parserConfig.baseMode || 'text/plain');
   const nunjucksMode = _nunjucksMode();
   return CodeMirror.overlayMode(baseMode, nunjucksMode, false);
 });

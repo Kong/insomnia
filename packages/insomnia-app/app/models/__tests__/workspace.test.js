@@ -6,10 +6,7 @@ describe('migrate()', () => {
   it('migrates client certificates properly', async () => {
     const workspace = await models.workspace.create({
       name: 'My Workspace',
-      certificates: [
-        { key: 'key', passphrase: 'mypass' },
-        { disabled: true, cert: 'cert' }
-      ]
+      certificates: [{ key: 'key', passphrase: 'mypass' }, { disabled: true, cert: 'cert' }]
     });
 
     const migratedWorkspace = await models.workspace.migrate(workspace);
@@ -55,9 +52,7 @@ describe('migrate()', () => {
 
     // Make sure we don't create new certs if we migrate again
     await models.workspace.migrate(migratedWorkspace);
-    const certsAgain = await models.clientCertificate.findByParentId(
-      workspace._id
-    );
+    const certsAgain = await models.clientCertificate.findByParentId(workspace._id);
     expect(certsAgain.length).toBe(2);
   });
 });

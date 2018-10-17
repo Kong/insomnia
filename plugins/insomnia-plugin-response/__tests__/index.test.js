@@ -100,9 +100,7 @@ describe('Response tag', () => {
         await tag.run(context, 'body', 'req_1', '$.foo');
         fail('JSON should have failed');
       } catch (err) {
-        expect(err.message).toContain(
-          'Invalid JSON: Unexpected end of JSON input'
-        );
+        expect(err.message).toContain('Invalid JSON: Unexpected end of JSON input');
       }
     });
 
@@ -171,9 +169,7 @@ describe('Response tag', () => {
         await tag.run(context, 'body', 'req_1', '$.array.*');
         fail('JSON should have failed to parse');
       } catch (err) {
-        expect(err.message).toContain(
-          'Returned more than one result: $.array.*'
-        );
+        expect(err.message).toContain('Returned more than one result: $.array.*');
       }
     });
 
@@ -249,12 +245,7 @@ describe('Response tag', () => {
       ];
 
       const context = _genTestContext(requests, responses);
-      const result = await tag.run(
-        context,
-        'body',
-        'req_1',
-        'substring(/foo/bar, 7)'
-      );
+      const result = await tag.run(context, 'body', 'req_1', 'substring(/foo/bar, 7)');
 
       expect(result).toBe('World!');
     });
@@ -371,18 +362,12 @@ describe('Response tag', () => {
 
       const context = _genTestContext(requests, responses);
 
-      expect(await tag.run(context, 'header', 'req_1', 'content-type')).toBe(
+      expect(await tag.run(context, 'header', 'req_1', 'content-type')).toBe('application/json');
+      expect(await tag.run(context, 'header', 'req_1', 'Content-Type')).toBe('application/json');
+      expect(await tag.run(context, 'header', 'req_1', 'CONTENT-type')).toBe('application/json');
+      expect(await tag.run(context, 'header', 'req_1', 'CONTENT-type    ')).toBe(
         'application/json'
       );
-      expect(await tag.run(context, 'header', 'req_1', 'Content-Type')).toBe(
-        'application/json'
-      );
-      expect(await tag.run(context, 'header', 'req_1', 'CONTENT-type')).toBe(
-        'application/json'
-      );
-      expect(
-        await tag.run(context, 'header', 'req_1', 'CONTENT-type    ')
-      ).toBe('application/json');
     });
 
     it('no results on missing header', async () => {

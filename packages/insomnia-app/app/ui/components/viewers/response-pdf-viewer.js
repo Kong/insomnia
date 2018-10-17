@@ -103,9 +103,7 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
 
     return (
       <div className="S-PDF-ID" ref={this.setRef} style={styles}>
-        <div className="faded text-center vertically-center tall">
-          Loading PDF...
-        </div>
+        <div className="faded text-center vertically-center tall">Loading PDF...</div>
       </div>
     );
   }

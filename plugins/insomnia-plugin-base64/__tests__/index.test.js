@@ -20,20 +20,11 @@ function assertTemplateFails(args, expected) {
 
 describe('Base64EncodeExtension', () => {
   it('encodes nothing', assertTemplate(['encode'], ''));
-  it(
-    'encodes something',
-    assertTemplate(['encode', 'my string'], 'bXkgc3RyaW5n')
-  );
+  it('encodes something', assertTemplate(['encode', 'my string'], 'bXkgc3RyaW5n'));
   it('decodes nothing', assertTemplate(['decode'], ''));
-  it(
-    'decodes something',
-    assertTemplate(['decode', 'bXkgc3RyaW5n'], 'my string')
-  );
+  it('decodes something', assertTemplate(['decode', 'bXkgc3RyaW5n'], 'my string'));
   it(
     'fails on invalid op',
-    assertTemplateFails(
-      ['foo'],
-      'Unsupported operation "foo". Must be encode or decode.'
-    )
+    assertTemplateFails(['foo'], 'Unsupported operation "foo". Must be encode or decode.')
   );
 });

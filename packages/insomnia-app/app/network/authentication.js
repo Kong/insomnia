@@ -45,9 +45,7 @@ export async function getAuthHeader(
     // ID of "{{request_id}}.graphql". Here we are removing the .graphql suffix and
     // pretending we are fetching a token for the original request. This makes sure
     // the same tokens are used for schema fetching. See issue #835 on GitHub.
-    const tokenId = requestId.match(/\.graphql$/)
-      ? requestId.replace(/\.graphql$/, '')
-      : requestId;
+    const tokenId = requestId.match(/\.graphql$/) ? requestId.replace(/\.graphql$/, '') : requestId;
 
     const oAuth2Token = await getOAuth2Token(tokenId, authentication);
     if (oAuth2Token) {
@@ -82,14 +80,7 @@ export async function getAuthHeader(
   }
 
   if (authentication.type === AUTH_ASAP) {
-    const {
-      issuer,
-      subject,
-      audience,
-      keyId,
-      additionalClaims,
-      privateKey
-    } = authentication;
+    const { issuer, subject, audience, keyId, additionalClaims, privateKey } = authentication;
 
     const generator = jwtAuthentication.client.create();
     let claims = { iss: issuer, sub: subject, aud: audience };
@@ -118,20 +109,16 @@ export async function getAuthHeader(
     };
 
     return new Promise((resolve, reject) => {
-      generator.generateAuthorizationHeader(
-        claims,
-        options,
-        (error, headerValue) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve({
-              name: 'Authorization',
-              value: headerValue
-            });
-          }
+      generator.generateAuthorizationHeader(claims, options, (error, headerValue) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve({
+            name: 'Authorization',
+            value: headerValue
+          });
         }
-      );
+      });
     });
   }
 

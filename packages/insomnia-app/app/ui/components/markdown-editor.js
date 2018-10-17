@@ -51,13 +51,9 @@ class MarkdownEditor extends PureComponent {
 
     const { markdown } = this.state;
 
-    const classes = classnames(
-      'react-tabs',
-      'markdown-editor',
-      'outlined',
-      className,
-      { 'markdown-editor--dynamic-height': !tall }
-    );
+    const classes = classnames('react-tabs', 'markdown-editor', 'outlined', className, {
+      'markdown-editor--dynamic-height': !tall
+    });
 
     return (
       <Tabs className={classes} defaultIndex={defaultPreviewMode ? 1 : 0}>
@@ -92,9 +88,7 @@ class MarkdownEditor extends PureComponent {
               onChange={this._handleChange}
             />
           </div>
-          <div className="txt-sm italic faint">
-            Styling with Markdown is supported
-          </div>
+          <div className="txt-sm italic faint">Styling with Markdown is supported</div>
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel markdown-editor__preview">
           <MarkdownPreview markdown={markdown} handleRender={handleRender} />

@@ -243,20 +243,14 @@ export function pressedHotKey(e: KeyboardEvent, definition: Hotkey): boolean {
   return false;
 }
 
-export function executeHotKey(
-  e: KeyboardEvent,
-  definition: Hotkey,
-  callback: Function
-): void {
+export function executeHotKey(e: KeyboardEvent, definition: Hotkey, callback: Function): void {
   if (pressedHotKey(e, definition)) {
     callback();
   }
 }
 
 export function getChar(hotkey: Hotkey) {
-  const codes = Array.isArray(hotkey.keycode)
-    ? hotkey.keycode
-    : [hotkey.keycode];
+  const codes = Array.isArray(hotkey.keycode) ? hotkey.keycode : [hotkey.keycode];
   const chars = [];
 
   for (const keycode of codes) {

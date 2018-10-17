@@ -153,18 +153,10 @@ class OAuth1Auth extends React.PureComponent<Props> {
     help: string | null = null,
     handleAutocomplete: Function | null = null
   ): React.Element<*> {
-    const {
-      handleRender,
-      handleGetRenderContext,
-      request,
-      nunjucksPowerUserMode
-    } = this.props;
+    const { handleRender, handleGetRenderContext, request, nunjucksPowerUserMode } = this.props;
     const { authentication } = request;
     const id = label.replace(/ /g, '-');
-    const type =
-      !this.props.showPasswords && property === 'password'
-        ? 'password'
-        : 'text';
+    const type = !this.props.showPasswords && property === 'password' ? 'password' : 'text';
     return (
       <tr key={id}>
         <td className="pad-right no-wrap valign-middle">
@@ -175,12 +167,9 @@ class OAuth1Auth extends React.PureComponent<Props> {
         </td>
         <td className="wide">
           <div
-            className={classnames(
-              'form-control form-control--underlined no-margin',
-              {
-                'form-control--inactive': authentication.disabled
-              }
-            )}>
+            className={classnames('form-control form-control--underlined no-margin', {
+              'form-control--inactive': authentication.disabled
+            })}>
             <OneLineEditor
               id={id}
               type={type}
@@ -221,12 +210,9 @@ class OAuth1Auth extends React.PureComponent<Props> {
         </td>
         <td className="wide">
           <div
-            className={classnames(
-              'form-control form-control--outlined no-margin',
-              {
-                'form-control--inactive': authentication.disabled
-              }
-            )}>
+            className={classnames('form-control form-control--outlined no-margin', {
+              'form-control--inactive': authentication.disabled
+            })}>
             <select id={id} onChange={onChange} value={value}>
               {options.map(({ name, value }) => (
                 <option key={value} value={value}>
@@ -240,11 +226,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     );
   }
 
-  renderPrivateKeyInput(
-    label: string,
-    property: string,
-    onChange: Function
-  ): React.Element<*> {
+  renderPrivateKeyInput(label: string, property: string, onChange: Function): React.Element<*> {
     const id = label.replace(/ /g, '-');
     const { authentication } = this.props.request;
     return (
@@ -257,9 +239,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
         </td>
         <td className="wide">
           <div className="form-control form-control--underlined form-control--tall no-margin">
-            <button
-              className="btn btn--clicky wide"
-              onClick={this._handleEditPrivateKey}>
+            <button className="btn btn--clicky wide" onClick={this._handleEditPrivateKey}>
               <i className="fa fa-edit space-right" />
               {authentication.privateKey ? 'Click to Edit' : 'Click to Add'}
             </button>
@@ -282,11 +262,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
       this._handleChangeConsumerSecret
     );
 
-    const tokenKey = this.renderInputRow(
-      'Token',
-      'tokenKey',
-      this._handleChangeTokenKey
-    );
+    const tokenKey = this.renderInputRow('Token', 'tokenKey', this._handleChangeTokenKey);
 
     const tokenSecret = this.renderInputRow(
       'Token Secret',
@@ -294,11 +270,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
       this._handleChangeTokenSecret
     );
 
-    const callback = this.renderInputRow(
-      'Callback URL',
-      'callback',
-      this._handleChangeCallback
-    );
+    const callback = this.renderInputRow('Callback URL', 'callback', this._handleChangeCallback);
 
     const realm = this.renderInputRow(
       'Realm',
@@ -346,11 +318,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
       this._handleChangePrivateKey
     );
 
-    const version = this.renderInputRow(
-      'Version',
-      'version',
-      this._handleChangeVersion
-    );
+    const version = this.renderInputRow('Version', 'version', this._handleChangeVersion);
 
     const enabled = this.renderEnabledRow(this._handleChangeEnabled);
 

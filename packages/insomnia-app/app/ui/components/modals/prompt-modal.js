@@ -227,9 +227,7 @@ class PromptModal extends React.PureComponent<Props, State> {
           </form>
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left faint italic txt-sm tall">
-            {hint ? `* ${hint}` : ''}
-          </div>
+          <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
           <button className="btn" onClick={this._handleSubmit}>
             {submitName || 'Submit'}
           </button>

@@ -11,26 +11,19 @@ class ResponseError extends PureComponent {
     let msg = null;
     if (error && error.toLowerCase().indexOf('certificate') !== -1) {
       msg = (
-        <button
-          className="btn btn--clicky"
-          onClick={() => showModal(SettingsModal)}>
+        <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
           Disable SSL Validation
         </button>
       );
     } else if (error && error.toLowerCase().indexOf('getaddrinfo') !== -1) {
       msg = (
-        <button
-          className="btn btn--clicky"
-          onClick={() => showModal(SettingsModal)}>
+        <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
           Setup Network Proxy
         </button>
       );
     } else {
       msg = (
-        <Link
-          button
-          className="btn btn--clicky"
-          href="https://support.insomnia.rest">
+        <Link button className="btn btn--clicky" href="https://support.insomnia.rest">
           Documentation
         </Link>
       );
@@ -38,16 +31,12 @@ class ResponseError extends PureComponent {
 
     return (
       <div>
-        <pre
-          className="selectable pad force-pre-wrap"
-          style={{ fontSize: `${fontSize}px` }}>
+        <pre className="selectable pad force-pre-wrap" style={{ fontSize: `${fontSize}px` }}>
           {error}
         </pre>
         <hr />
         <div className="text-center pad">
-          <p className="faint pad-left pad-right">
-            Here are some additional things that may help.
-          </p>
+          <p className="faint pad-left pad-right">Here are some additional things that may help.</p>
           {msg}
           &nbsp;&nbsp;
           <Link

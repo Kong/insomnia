@@ -38,9 +38,7 @@ class LocalStorage {
     try {
       return JSON.parse(contents);
     } catch (e) {
-      console.error(
-        `[localstorage] Failed to parse item from LocalStorage: ${e}`
-      );
+      console.error(`[localstorage] Failed to parse item from LocalStorage: ${e}`);
       return defaultObj;
     }
   }

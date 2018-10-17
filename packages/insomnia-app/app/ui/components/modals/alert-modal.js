@@ -64,17 +64,11 @@ class AlertModal extends PureComponent {
         <ModalFooter>
           <div>
             {addCancel ? (
-              <button
-                className="btn"
-                ref={this.setCancelRef}
-                onClick={this.hide}>
+              <button className="btn" ref={this.setCancelRef} onClick={this.hide}>
                 Cancel
               </button>
             ) : null}
-            <button
-              className="btn"
-              ref={this.setOkRef}
-              onClick={this._handleOk}>
+            <button className="btn" ref={this.setOkRef} onClick={this._handleOk}>
               Ok
             </button>
           </div>

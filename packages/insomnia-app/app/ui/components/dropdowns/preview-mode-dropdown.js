@@ -1,12 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import {
-  Dropdown,
-  DropdownButton,
-  DropdownDivider,
-  DropdownItem
-} from '../base/dropdown';
+import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { getPreviewModeName, PREVIEW_MODES } from '../../../common/constants';
 
 @autobind
@@ -19,11 +14,7 @@ class PreviewModeDropdown extends PureComponent {
     const { previewMode } = this.props;
     return (
       <DropdownItem key={mode} onClick={this._handleClick} value={mode}>
-        {previewMode === mode ? (
-          <i className="fa fa-check" />
-        ) : (
-          <i className="fa fa-empty" />
-        )}
+        {previewMode === mode ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}
         {getPreviewModeName(mode, true)}
       </DropdownItem>
     );

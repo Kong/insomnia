@@ -5,10 +5,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
-import {
-  HAWK_ALGORITHM_SHA1,
-  HAWK_ALGORITHM_SHA256
-} from '../../../../common/constants';
+import { HAWK_ALGORITHM_SHA1, HAWK_ALGORITHM_SHA256 } from '../../../../common/constants';
 import HelpTooltip from '../../help-tooltip';
 import Button from '../../base/button';
 
@@ -47,17 +44,9 @@ class HawkAuth extends React.PureComponent<Props> {
   }
 
   renderHawkAuthenticationFields(): React.Node {
-    const hawkAuthId = this.renderInputRow(
-      'Auth ID',
-      'id',
-      this._handleChangeHawkAuthId
-    );
+    const hawkAuthId = this.renderInputRow('Auth ID', 'id', this._handleChangeHawkAuthId);
 
-    const hawkAuthKey = this.renderInputRow(
-      'Auth Key',
-      'key',
-      this._handleChangeHawkAuthKey
-    );
+    const hawkAuthKey = this.renderInputRow('Auth Key', 'key', this._handleChangeHawkAuthKey);
 
     const algorithm = this.renderSelectRow(
       'Algorithm',
@@ -81,9 +70,7 @@ class HawkAuth extends React.PureComponent<Props> {
   ): React.Element<*> {
     const { authentication } = this.props;
     const id = label.replace(/ /g, '-');
-    const value = authentication.hasOwnProperty(property)
-      ? authentication[property]
-      : options[0];
+    const value = authentication.hasOwnProperty(property) ? authentication[property] : options[0];
 
     return (
       <tr key={id}>
@@ -95,12 +82,9 @@ class HawkAuth extends React.PureComponent<Props> {
         </td>
         <td className="wide">
           <div
-            className={classnames(
-              'form-control form-control--outlined no-margin',
-              {
-                'form-control--inactive': authentication.disabled
-              }
-            )}>
+            className={classnames('form-control form-control--outlined no-margin', {
+              'form-control--inactive': authentication.disabled
+            })}>
             <select id={id} onChange={onChange} value={value}>
               {options.map(({ name, value }) => (
                 <option key={value} value={value}>
@@ -114,11 +98,7 @@ class HawkAuth extends React.PureComponent<Props> {
     );
   }
 
-  renderInputRow(
-    label: string,
-    property: string,
-    onChange: Function
-  ): React.Element<*> {
+  renderInputRow(label: string, property: string, onChange: Function): React.Element<*> {
     const {
       handleRender,
       handleGetRenderContext,
@@ -135,12 +115,9 @@ class HawkAuth extends React.PureComponent<Props> {
         </td>
         <td className="wide">
           <div
-            className={classnames(
-              'form-control form-control--underlined no-margin',
-              {
-                'form-control--inactive': authentication.disabled
-              }
-            )}>
+            className={classnames('form-control form-control--underlined no-margin', {
+              'form-control--inactive': authentication.disabled
+            })}>
             <OneLineEditor
               id={id}
               type="text"
@@ -178,9 +155,7 @@ class HawkAuth extends React.PureComponent<Props> {
                     id="enabled"
                     onClick={this._handleDisable}
                     value={!authentication.disabled}
-                    title={
-                      authentication.disabled ? 'Enable item' : 'Disable item'
-                    }>
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
                     {authentication.disabled ? (
                       <i className="fa fa-square-o" />
                     ) : (

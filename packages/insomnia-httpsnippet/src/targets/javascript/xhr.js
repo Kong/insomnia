@@ -54,9 +54,7 @@ module.exports = function(source, options) {
       break;
 
     default:
-      code
-        .push('var data = %s;', JSON.stringify(source.postData.text || null))
-        .blank();
+      code.push('var data = %s;', JSON.stringify(source.postData.text || null)).blank();
   }
 
   code.push('var xhr = new XMLHttpRequest();');
@@ -73,11 +71,7 @@ module.exports = function(source, options) {
     .push(1, '}')
     .push('});')
     .blank()
-    .push(
-      'xhr.open(%s, %s);',
-      JSON.stringify(source.method),
-      JSON.stringify(source.fullUrl)
-    );
+    .push('xhr.open(%s, %s);', JSON.stringify(source.method), JSON.stringify(source.fullUrl));
 
   Object.keys(source.allHeaders).forEach(function(key) {
     code.push(

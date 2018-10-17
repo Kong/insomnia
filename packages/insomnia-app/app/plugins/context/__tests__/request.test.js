@@ -54,11 +54,7 @@ describe('init()', () => {
   });
 
   it('initializes correctly in read-only mode', async () => {
-    const result = plugin.init(
-      await models.request.getById('req_1'),
-      CONTEXT,
-      true
-    );
+    const result = plugin.init(await models.request.getById('req_1'), CONTEXT, true);
     expect(Object.keys(result)).toEqual(['request']);
     expect(Object.keys(result.request).sort()).toEqual([
       'getBodyText',
@@ -78,9 +74,7 @@ describe('init()', () => {
   });
 
   it('fails to initialize without request', () => {
-    expect(() => plugin.init()).toThrowError(
-      'contexts.request initialized without request'
-    );
+    expect(() => plugin.init()).toThrowError('contexts.request initialized without request');
   });
 });
 
@@ -97,10 +91,7 @@ describe('request.*', () => {
         { name: 'hello', value: 'world' },
         { name: 'Content-Type', value: 'application/json' }
       ],
-      parameters: [
-        { name: 'foo', value: 'bar' },
-        { name: 'message', value: 'Hello World!' }
-      ]
+      parameters: [{ name: 'foo', value: 'bar' }, { name: 'message', value: 'Hello World!' }]
     });
   });
 
@@ -202,14 +193,9 @@ describe('request.*', () => {
     });
 
     // getEnvironmentVariable
-    expect(result.request.getEnvironmentVariable('user_key')).toBe(
-      'my_user_key'
-    );
+    expect(result.request.getEnvironmentVariable('user_key')).toBe('my_user_key');
     expect(result.request.getEnvironmentVariable('hello')).toBe('world');
-    expect(result.request.getEnvironmentVariable('array_test')).toEqual([
-      'a',
-      'b'
-    ]);
+    expect(result.request.getEnvironmentVariable('array_test')).toEqual(['a', 'b']);
     expect(result.request.getEnvironmentVariable('object_test')).toEqual({
       a: 'A',
       b: 'B'

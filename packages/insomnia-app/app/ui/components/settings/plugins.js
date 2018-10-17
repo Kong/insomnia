@@ -102,21 +102,14 @@ class Plugins extends React.PureComponent<void, State> {
   }
 
   render() {
-    const {
-      plugins,
-      error,
-      isInstallingFromNpm,
-      isRefreshingPlugins
-    } = this.state;
+    const { plugins, error, isInstallingFromNpm, isRefreshingPlugins } = this.state;
 
     return (
       <div>
         <p className="notice info no-margin-top">
           Plugins is still an experimental feature. See{' '}
-          <Link href="https://support.insomnia.rest/article/26-plugins">
-            Documentation
-          </Link>{' '}
-          for more info.
+          <Link href="https://support.insomnia.rest/article/26-plugins">Documentation</Link> for
+          more info.
         </p>
         {plugins.length === 0 ? (
           <div className="text-center faint italic pad">No Plugins Added</div>
@@ -166,9 +159,7 @@ class Plugins extends React.PureComponent<void, State> {
 
         {error && (
           <div className="notice error text-left margin-bottom">
-            <button
-              className="pull-right icon"
-              onClick={this._handleClearError}>
+            <button className="pull-right icon" onClick={this._handleClearError}>
               <i className="fa fa-times" />
             </button>
             <div className="selectable force-pre-wrap">{error}</div>
@@ -186,12 +177,8 @@ class Plugins extends React.PureComponent<void, State> {
               />
             </div>
             <div className="form-control width-auto">
-              <button
-                className="btn btn--clicky"
-                disabled={isInstallingFromNpm}>
-                {isInstallingFromNpm && (
-                  <i className="fa fa-refresh fa-spin space-right" />
-                )}
+              <button className="btn btn--clicky" disabled={isInstallingFromNpm}>
+                {isInstallingFromNpm && <i className="fa fa-refresh fa-spin space-right" />}
                 Install Plugin
               </button>
             </div>
@@ -213,9 +200,7 @@ class Plugins extends React.PureComponent<void, State> {
             className="btn btn--clicky space-left"
             onClick={this._handleClickRefreshPlugins}>
             Reload Plugin List
-            {isRefreshingPlugins && (
-              <i className="fa fa-refresh fa-spin space-left" />
-            )}
+            {isRefreshingPlugins && <i className="fa fa-refresh fa-spin space-left" />}
           </button>
         </div>
       </div>

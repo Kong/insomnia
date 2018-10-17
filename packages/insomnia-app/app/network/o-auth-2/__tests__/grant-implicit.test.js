@@ -13,18 +13,9 @@ const STATE = 'state_123';
 describe('implicit', () => {
   beforeEach(globalBeforeEach);
   it('works in default case', async () => {
-    createBWRedirectMock(
-      `${REDIRECT_URI}#access_token=token_123&state=${STATE}&foo=bar`
-    );
+    createBWRedirectMock(`${REDIRECT_URI}#access_token=token_123&state=${STATE}&foo=bar`);
 
-    const result = await getToken(
-      AUTHORIZE_URL,
-      CLIENT_ID,
-      REDIRECT_URI,
-      SCOPE,
-      STATE,
-      AUDIENCE
-    );
+    const result = await getToken(AUTHORIZE_URL, CLIENT_ID, REDIRECT_URI, SCOPE, STATE, AUDIENCE);
 
     expect(result).toEqual({
       access_token: 'token_123',

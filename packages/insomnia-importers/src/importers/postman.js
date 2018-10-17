@@ -15,8 +15,7 @@ module.exports.convert = function(rawData) {
   try {
     data = JSON.parse(rawData);
     if (
-      data.info.schema ===
-      'https://schema.getpostman.com/json/collection/v2.0.0/collection.json'
+      data.info.schema === 'https://schema.getpostman.com/json/collection/v2.0.0/collection.json'
     ) {
       return importCollection(data);
     }
@@ -35,10 +34,7 @@ function importCollection(collection) {
     name: collection.info.name,
     description: collection.info.description
   };
-  return [
-    collectionFolder,
-    ...importItem(collection.item, collectionFolder._id)
-  ];
+  return [collectionFolder, ...importItem(collection.item, collectionFolder._id)];
 }
 
 function importItem(items, parentId = '__WORKSPACE_ID__') {
@@ -49,11 +45,7 @@ function importItem(items, parentId = '__WORKSPACE_ID__') {
       resources = [...resources, importRequestItem(item, parentId)];
     } else {
       const requestGroup = importFolderItem(item, parentId);
-      resources = [
-        ...resources,
-        requestGroup,
-        ...importItem(item.item, requestGroup._id)
-      ];
+      resources = [...resources, requestGroup, ...importItem(item.item, requestGroup._id)];
     }
   }
 

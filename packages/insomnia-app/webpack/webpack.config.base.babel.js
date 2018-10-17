@@ -47,23 +47,14 @@ module.exports = {
   },
   resolve: {
     extensions: ['.js', '.json'],
-    mainFields: [
-      'webpack',
-      'browser',
-      'web',
-      'browserify',
-      ['jam', 'main'],
-      'main'
-    ]
+    mainFields: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
   },
   node: {
     __dirname: false // Use Node __dirname
   },
   externals: [
     // Omit all dependencies in app/package.json (we want them loaded at runtime via NodeJS)
-    ...Object.keys(pkg.dependencies).filter(
-      name => !pkg.packedDependencies.includes(name)
-    ),
+    ...Object.keys(pkg.dependencies).filter(name => !pkg.packedDependencies.includes(name)),
 
     // To get jsonlint working...
     'file',

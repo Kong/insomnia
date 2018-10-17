@@ -142,18 +142,7 @@ export function importFile(workspaceId) {
       filters: [
         {
           name: 'Insomnia Import',
-          extensions: [
-            '',
-            'sh',
-            'txt',
-            'json',
-            'har',
-            'curl',
-            'bash',
-            'shell',
-            'yaml',
-            'yml'
-          ]
+          extensions: ['', 'sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell', 'yaml', 'yml']
         }
       ]
     };
@@ -219,13 +208,8 @@ export function exportFile(workspaceId = null) {
         // Check if we want to export private environments
         let environments;
         if (workspace) {
-          const parentEnv = await models.environment.getOrCreateForWorkspace(
-            workspace
-          );
-          environments = [
-            parentEnv,
-            ...(await models.environment.findByParentId(parentEnv._id))
-          ];
+          const parentEnv = await models.environment.getOrCreateForWorkspace(workspace);
+          environments = [parentEnv, ...(await models.environment.findByParentId(parentEnv._id))];
         } else {
           environments = await models.environment.all();
         }
@@ -241,10 +225,7 @@ export function exportFile(workspaceId = null) {
         }
 
         const date = moment().format('YYYY-MM-DD');
-        const name = (workspace ? workspace.name : 'Insomnia All').replace(
-          / /g,
-          '-'
-        );
+        const name = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
         const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
         const dir = lastDir || electron.remote.app.getPath('desktop');
 
@@ -276,15 +257,9 @@ export function exportFile(workspaceId = null) {
           let json;
           try {
             if (selectedFormat === VALUE_HAR) {
-              json = await importUtils.exportHAR(
-                workspace,
-                exportPrivateEnvironments
-              );
+              json = await importUtils.exportHAR(workspace, exportPrivateEnvironments);
             } else {
-              json = await importUtils.exportJSON(
-                workspace,
-                exportPrivateEnvironments
-              );
+              json = await importUtils.exportJSON(workspace, exportPrivateEnvironments);
             }
           } catch (err) {
             showError({
@@ -297,10 +272,7 @@ export function exportFile(workspaceId = null) {
           }
 
           // Remember last exported path
-          window.localStorage.setItem(
-            'insomnia.lastExportPath',
-            path.dirname(filename)
-          );
+          window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
 
           fs.writeFile(filename, json, {}, err => {
             if (err) {

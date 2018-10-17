@@ -36,18 +36,13 @@ export function migrate(doc: Environment): Environment {
 
 export function create(patch: Object = {}): Promise<Environment> {
   if (!patch.parentId) {
-    throw new Error(
-      `New Environment missing \`parentId\`: ${JSON.stringify(patch)}`
-    );
+    throw new Error(`New Environment missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
 
   return db.docCreate(type, patch);
 }
 
-export function update(
-  environment: Environment,
-  patch: Object
-): Promise<Environment> {
+export function update(environment: Environment, patch: Object): Promise<Environment> {
   return db.docUpdate(environment, patch);
 }
 
@@ -55,9 +50,7 @@ export function findByParentId(parentId: string): Promise<Array<Environment>> {
   return db.find(type, { parentId }, { metaSortKey: 1 });
 }
 
-export async function getOrCreateForWorkspaceId(
-  workspaceId: string
-): Promise<Environment> {
+export async function getOrCreateForWorkspaceId(workspaceId: string): Promise<Environment> {
   const environments = await db.find(type, { parentId: workspaceId });
 
   if (!environments.length) {
@@ -70,9 +63,7 @@ export async function getOrCreateForWorkspaceId(
   return environments[environments.length - 1];
 }
 
-export async function getOrCreateForWorkspace(
-  workspace: Workspace
-): Promise<Environment> {
+export async function getOrCreateForWorkspace(workspace: Workspace): Promise<Environment> {
   return getOrCreateForWorkspaceId(workspace._id);
 }
 

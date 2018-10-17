@@ -77,16 +77,8 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
     const styles = renderedTheme.styles;
 
     // Dropdown Menus
-    css += wrapStyles(
-      n,
-      '.theme--dropdown__menu',
-      getThemeBlockCSS(styles.dialog)
-    );
-    css += wrapStyles(
-      n,
-      '.theme--dropdown__menu',
-      getThemeBlockCSS(styles.dropdown)
-    );
+    css += wrapStyles(n, '.theme--dropdown__menu', getThemeBlockCSS(styles.dialog));
+    css += wrapStyles(n, '.theme--dropdown__menu', getThemeBlockCSS(styles.dropdown));
 
     // Tooltips
     css += wrapStyles(n, '.theme--tooltip', getThemeBlockCSS(styles.dialog));
@@ -101,37 +93,17 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
 
     // Dialogs
     css += wrapStyles(n, '.theme--dialog', getThemeBlockCSS(styles.dialog));
-    css += wrapStyles(
-      n,
-      '.theme--dialog__header',
-      getThemeBlockCSS(styles.dialogHeader)
-    );
-    css += wrapStyles(
-      n,
-      '.theme--dialog__footer',
-      getThemeBlockCSS(styles.dialogFooter)
-    );
+    css += wrapStyles(n, '.theme--dialog__header', getThemeBlockCSS(styles.dialogHeader));
+    css += wrapStyles(n, '.theme--dialog__footer', getThemeBlockCSS(styles.dialogFooter));
 
     // Panes
     css += wrapStyles(n, '.theme--pane', getThemeBlockCSS(styles.pane));
-    css += wrapStyles(
-      n,
-      '.theme--pane__header',
-      getThemeBlockCSS(styles.paneHeader)
-    );
+    css += wrapStyles(n, '.theme--pane__header', getThemeBlockCSS(styles.paneHeader));
 
     // Sidebar Styles
     css += wrapStyles(n, '.theme--sidebar', getThemeBlockCSS(styles.sidebar));
-    css += wrapStyles(
-      n,
-      '.theme--sidebar__list',
-      getThemeBlockCSS(styles.sidebarList)
-    );
-    css += wrapStyles(
-      n,
-      '.theme--sidebar__header',
-      getThemeBlockCSS(styles.sidebarHeader)
-    );
+    css += wrapStyles(n, '.theme--sidebar__list', getThemeBlockCSS(styles.sidebarList));
+    css += wrapStyles(n, '.theme--sidebar__header', getThemeBlockCSS(styles.sidebarHeader));
 
     // Link
     css += wrapStyles(n, '.theme--link', getThemeBlockCSS(styles.link));

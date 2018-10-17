@@ -6,14 +6,10 @@ require('should');
 
 module.exports = function(HTTPSnippet, fixtures) {
   it('should use short options', function() {
-    var result = new HTTPSnippet(fixtures.requests.full).convert(
-      'shell',
-      'curl',
-      {
-        short: true,
-        indent: false
-      }
-    );
+    var result = new HTTPSnippet(fixtures.requests.full).convert('shell', 'curl', {
+      short: true,
+      indent: false
+    });
 
     result.should.be.a.String;
     result.should.eql(
@@ -22,15 +18,11 @@ module.exports = function(HTTPSnippet, fixtures) {
   });
 
   it('should use binary option', function() {
-    var result = new HTTPSnippet(fixtures.requests.full).convert(
-      'shell',
-      'curl',
-      {
-        short: true,
-        indent: false,
-        binary: true
-      }
-    );
+    var result = new HTTPSnippet(fixtures.requests.full).convert('shell', 'curl', {
+      short: true,
+      indent: false,
+      binary: true
+    });
 
     result.should.be.a.String;
     result.should.eql(
@@ -44,19 +36,13 @@ module.exports = function(HTTPSnippet, fixtures) {
     });
 
     result.should.be.a.String;
-    result.should.eql(
-      'curl --request GET --url http://mockbin.com/request --http1.0'
-    );
+    result.should.eql('curl --request GET --url http://mockbin.com/request --http1.0');
   });
 
   it('should use custom indentation', function() {
-    var result = new HTTPSnippet(fixtures.requests.full).convert(
-      'shell',
-      'curl',
-      {
-        indent: '@'
-      }
-    );
+    var result = new HTTPSnippet(fixtures.requests.full).convert('shell', 'curl', {
+      indent: '@'
+    });
 
     result.should.be.a.String;
     result

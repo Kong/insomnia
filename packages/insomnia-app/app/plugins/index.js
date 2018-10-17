@@ -102,11 +102,7 @@ async function _traversePluginPath(pluginMap: Object, allPaths: Array<string>) {
         // Delete require cache entry and re-require
         const module = global.require(modulePath);
 
-        pluginMap[pluginJson.name] = _initPlugin(
-          pluginJson || {},
-          module,
-          modulePath
-        );
+        pluginMap[pluginJson.name] = _initPlugin(pluginJson || {}, module, modulePath);
         console.log(`[plugin] Loaded ${modulePath}`);
       } catch (err) {
         showError({
@@ -119,9 +115,7 @@ async function _traversePluginPath(pluginMap: Object, allPaths: Array<string>) {
   }
 }
 
-export async function getPlugins(
-  force: boolean = false
-): Promise<Array<Plugin>> {
+export async function getPlugins(force: boolean = false): Promise<Array<Plugin>> {
   if (force) {
     plugins = null;
   }
@@ -166,10 +160,7 @@ export async function getTemplateTags(): Promise<Array<TemplateTag>> {
   let extensions = [];
   for (const plugin of await getPlugins()) {
     const templateTags = plugin.module.templateTags || [];
-    extensions = [
-      ...extensions,
-      ...templateTags.map(tt => ({ plugin, templateTag: tt }))
-    ];
+    extensions = [...extensions, ...templateTags.map(tt => ({ plugin, templateTag: tt }))];
   }
 
   return extensions;
@@ -179,10 +170,7 @@ export async function getRequestHooks(): Promise<Array<RequestHook>> {
   let functions = [];
   for (const plugin of await getPlugins()) {
     const moreFunctions = plugin.module.requestHooks || [];
-    functions = [
-      ...functions,
-      ...moreFunctions.map(hook => ({ plugin, hook }))
-    ];
+    functions = [...functions, ...moreFunctions.map(hook => ({ plugin, hook }))];
   }
 
   return functions;
@@ -192,10 +180,7 @@ export async function getResponseHooks(): Promise<Array<ResponseHook>> {
   let functions = [];
   for (const plugin of await getPlugins()) {
     const moreFunctions = plugin.module.responseHooks || [];
-    functions = [
-      ...functions,
-      ...moreFunctions.map(hook => ({ plugin, hook }))
-    ];
+    functions = [...functions, ...moreFunctions.map(hook => ({ plugin, hook }))];
   }
 
   return functions;

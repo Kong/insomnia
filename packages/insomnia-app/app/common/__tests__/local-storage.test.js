@@ -108,11 +108,7 @@ describe('LocalStorage()', () => {
 
     // Make sure only one item exists
     expect(fs.readdirSync(basePath).length).toEqual(2);
-    expect(fs.readFileSync(path.join(basePath, 'foo'), 'utf8')).toEqual(
-      '"bar3"'
-    );
-    expect(fs.readFileSync(path.join(basePath, 'another'), 'utf8')).toEqual(
-      '10'
-    );
+    expect(fs.readFileSync(path.join(basePath, 'foo'), 'utf8')).toEqual('"bar3"');
+    expect(fs.readFileSync(path.join(basePath, 'another'), 'utf8')).toEqual('10');
   });
 });

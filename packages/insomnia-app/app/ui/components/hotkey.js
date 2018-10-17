@@ -3,14 +3,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import type { Hotkey as HotkeyType } from '../../common/hotkeys';
 import * as hotkeys from '../../common/hotkeys';
-import {
-  ALT_SYM,
-  CTRL_SYM,
-  isMac,
-  joinHotKeys,
-  MOD_SYM,
-  SHIFT_SYM
-} from '../../common/constants';
+import { ALT_SYM, CTRL_SYM, isMac, joinHotKeys, MOD_SYM, SHIFT_SYM } from '../../common/constants';
 
 type Props = {
   hotkey: HotkeyType,

@@ -32,14 +32,8 @@ module.exports.templateTags = [
       }
     ],
     run(context, algorithm, encoding, value = '') {
-      if (
-        encoding !== 'hex' &&
-        encoding !== 'latin1' &&
-        encoding !== 'base64'
-      ) {
-        throw new Error(
-          `Invalid encoding ${encoding}. Choices are hex, latin1, base64`
-        );
+      if (encoding !== 'hex' && encoding !== 'latin1' && encoding !== 'base64') {
+        throw new Error(`Invalid encoding ${encoding}. Choices are hex, latin1, base64`);
       }
 
       const valueType = typeof value;

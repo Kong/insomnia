@@ -250,11 +250,7 @@ class RequestUrlBar extends PureComponent {
     let sendButton;
     if (!cancelButton) {
       sendButton = (
-        <Dropdown
-          key="dropdown"
-          className="tall"
-          right
-          ref={this._setDropdownRef}>
+        <Dropdown key="dropdown" className="tall" right ref={this._setDropdownRef}>
           <DropdownButton
             className="urlbar__send-btn"
             onContextMenu={this._handleMetaClickSend}

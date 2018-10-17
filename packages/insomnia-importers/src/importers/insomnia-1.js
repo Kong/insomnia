@@ -72,9 +72,7 @@ function importRequestItem(item, parentId) {
   }
 
   const headers = item.headers || [];
-  let contentTypeHeader = headers.find(
-    h => h.name.toLowerCase() === 'content-type'
-  );
+  let contentTypeHeader = headers.find(h => h.name.toLowerCase() === 'content-type');
   if (item.__insomnia && item.__insomnia.format) {
     const contentType = FORMAT_MAP[item.__insomnia.format];
     if (!contentTypeHeader) {

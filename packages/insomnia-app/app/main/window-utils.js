@@ -97,10 +97,7 @@ export function createWindow() {
     label: 'Application',
     submenu: [
       ...(isMac()
-        ? [
-            { label: `About ${getAppName()}`, role: 'about' },
-            { type: 'separator' }
-          ]
+        ? [{ label: `About ${getAppName()}`, role: 'about' }, { type: 'separator' }]
         : []),
       {
         label: 'Preferences',
@@ -121,9 +118,7 @@ export function createWindow() {
           misc.clickLink(`${CHANGELOG_BASE_URL}/${getAppVersion()}/`);
         }
       },
-      ...(isMac()
-        ? [{ type: 'separator' }, { role: 'hide' }, { role: 'hideothers' }]
-        : []),
+      ...(isMac() ? [{ type: 'separator' }, { role: 'hide' }, { role: 'hideothers' }] : []),
       { type: 'separator' },
       { label: 'Quit', accelerator: 'CmdOrCtrl+Q', click: () => app.quit() }
     ]
@@ -306,10 +301,7 @@ export function createWindow() {
           mainWindow.capturePage(image => {
             const buffer = image.toPNG();
             const dir = app.getPath('desktop');
-            fs.writeFileSync(
-              path.join(dir, `Screenshot-${new Date()}.png`),
-              buffer
-            );
+            fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
           });
         }
       }

@@ -6,9 +6,7 @@ class DropdownRight extends PureComponent {
   render() {
     const { className, children, ...extraProps } = this.props;
     return (
-      <span
-        className={classnames('dropdown__right', className)}
-        {...extraProps}>
+      <span className={classnames('dropdown__right', className)} {...extraProps}>
         {children}
       </span>
     );

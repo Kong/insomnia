@@ -38,11 +38,7 @@ class TimeFromNow extends React.PureComponent<Props, State> {
   }
 
   render() {
-    return (
-      <span title={moment(this.props.timestamp).toString()}>
-        {this.state.text}
-      </span>
-    );
+    return <span title={moment(this.props.timestamp).toString()}>{this.state.text}</span>;
   }
 }
 

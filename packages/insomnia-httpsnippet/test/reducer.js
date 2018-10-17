@@ -8,10 +8,7 @@ require('should');
 
 describe('Reducer', function() {
   it('should convert array object pair to key-value object', function(done) {
-    var query = [
-      { name: 'key', value: 'value' },
-      { name: 'foo', value: 'bar' }
-    ];
+    var query = [{ name: 'key', value: 'value' }, { name: 'foo', value: 'bar' }];
 
     var obj = query.reduce(reducer, {});
 

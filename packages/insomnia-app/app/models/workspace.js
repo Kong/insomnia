@@ -49,10 +49,7 @@ export function count() {
   return db.count(type);
 }
 
-export function update(
-  workspace: Workspace,
-  patch: Object
-): Promise<Workspace> {
+export function update(workspace: Workspace, patch: Object): Promise<Workspace> {
   return db.docUpdate(workspace, patch);
 }
 
@@ -60,9 +57,7 @@ export function remove(workspace: Workspace): Promise<void> {
   return db.remove(workspace);
 }
 
-async function _migrateExtractClientCertificates(
-  workspace: Workspace
-): Promise<Workspace> {
+async function _migrateExtractClientCertificates(workspace: Workspace): Promise<Workspace> {
   const certificates = (workspace: Object).certificates || null;
   if (!Array.isArray(certificates)) {
     // Already migrated

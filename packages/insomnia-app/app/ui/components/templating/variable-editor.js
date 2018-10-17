@@ -7,9 +7,7 @@ class VariableEditor extends PureComponent {
   constructor(props) {
     super(props);
 
-    const inner = props.defaultValue
-      .replace(/\s*}}$/, '')
-      .replace(/^{{\s*/, '');
+    const inner = props.defaultValue.replace(/\s*}}$/, '').replace(/^{{\s*/, '');
 
     this.state = {
       variables: [],
@@ -72,13 +70,8 @@ class VariableEditor extends PureComponent {
         <div className="form-control form-control--outlined">
           <label>
             Environment Variable
-            <select
-              ref={this._setSelectRef}
-              value={value}
-              onChange={this._handleChange}>
-              <option value={`{{ 'my custom template logic' | urlencode }}`}>
-                -- Custom --
-              </option>
+            <select ref={this._setSelectRef} value={value} onChange={this._handleChange}>
+              <option value={`{{ 'my custom template logic' | urlencode }}`}>-- Custom --</option>
               {variables.map((v, i) => (
                 <option key={`${i}::${v.name}`} value={`{{ ${v.name} }}`}>
                   {v.name}
@@ -89,11 +82,7 @@ class VariableEditor extends PureComponent {
         </div>
         {isOther && (
           <div className="form-control form-control--outlined">
-            <input
-              type="text"
-              defaultValue={value}
-              onChange={this._handleChange}
-            />
+            <input type="text" defaultValue={value} onChange={this._handleChange} />
           </div>
         )}
         <div className="form-control form-control--outlined">

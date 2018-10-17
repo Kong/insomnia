@@ -55,9 +55,7 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
     return (
       <div className="pad-sm">
         <table className="table--fancy table--striped table--compact selectable">
-          <tbody>
-            {result.data.map(row => <tr>{row.map(c => <td>{c}</td>)}</tr>)}
-          </tbody>
+          <tbody>{result.data.map(row => <tr>{row.map(c => <td>{c}</td>)}</tr>)}</tbody>
         </table>
       </div>
     );

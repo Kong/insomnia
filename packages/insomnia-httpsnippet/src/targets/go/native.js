@@ -76,11 +76,7 @@ module.exports = function(source, options) {
     client = 'client';
     code
       .push(indent, 'client := http.Client{')
-      .push(
-        indent + 1,
-        'Timeout: time.Duration(%s * time.Second),',
-        opts.timeout
-      )
+      .push(indent + 1, 'Timeout: time.Duration(%s * time.Second),', opts.timeout)
       .push(indent, '}')
       .blank();
   } else {
@@ -92,11 +88,7 @@ module.exports = function(source, options) {
   // If we have body content or not create the var and reader or nil
   if (source.postData.text) {
     code
-      .push(
-        indent,
-        'payload := strings.NewReader(%s)',
-        JSON.stringify(source.postData.text)
-      )
+      .push(indent, 'payload := strings.NewReader(%s)', JSON.stringify(source.postData.text))
       .blank()
       .push(
         indent,
@@ -107,12 +99,7 @@ module.exports = function(source, options) {
       .blank();
   } else {
     code
-      .push(
-        indent,
-        'req, %s := http.NewRequest("%s", url, nil)',
-        errorPlaceholder,
-        source.method
-      )
+      .push(indent, 'req, %s := http.NewRequest("%s", url, nil)', errorPlaceholder, source.method)
       .blank();
   }
 
@@ -121,12 +108,7 @@ module.exports = function(source, options) {
   // Add headers
   if (Object.keys(source.allHeaders).length) {
     Object.keys(source.allHeaders).forEach(function(key) {
-      code.push(
-        indent,
-        'req.Header.Add("%s", "%s")',
-        key,
-        source.allHeaders[key]
-      );
+      code.push(indent, 'req.Header.Add("%s", "%s")', key, source.allHeaders[key]);
     });
 
     code.blank();
