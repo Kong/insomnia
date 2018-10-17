@@ -230,3 +230,29 @@ export async function setTheme(themeName: string) {
     s.innerHTML = themeCSS;
   }
 }
+
+export async function setFont(settings: Object) {
+  if (!document) {
+    return;
+  }
+
+  const html = document.querySelector('html');
+
+  if (!html) {
+    return;
+  }
+
+  if (settings.fontDefault !== 'default') {
+    html.style.setProperty('--font-default', settings.fontDefault);
+  }
+
+  if (settings.fontMonospace !== 'default') {
+    html.style.setProperty('--font-monospace', settings.fontMonospace);
+  }
+
+  html.style.setProperty('font-size', `${settings.fontSize}px`);
+  html.style.setProperty(
+    'font-variant-ligatures',
+    settings.fontVariantLigatures ? 'normal' : 'none'
+  );
+}

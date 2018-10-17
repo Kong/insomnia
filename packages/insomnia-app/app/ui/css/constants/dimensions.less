@@ -1,48 +1,55 @@
 /* Fonts */
-@font-size: 13px;
-@font-size-xxs: round(@font-size * 0.6);
-@font-size-xs: round(@font-size * 0.8);
-@font-size-sm: round(@font-size * 0.9);
-@font-size-md: round(@font-size * 1.0);
-@font-size-lg: round(@font-size * 1.2);
-@font-size-xl: round(@font-size * 1.35);
-@font-size-xxl: round(@font-size * 1.5);
-@font-size-xxxl: round(@font-size * 1.7);
+html {
+  --font-size: 13px;
+}
+
+@font-size: var(--font-size);
+@font-size-xxs: ~'calc(var(--font-size) * 0.6)';
+@font-size-xs: ~'calc(var(--font-size) * 0.8)';
+@font-size-sm: ~'calc(var(--font-size) * 0.9)';
+@font-size-md: ~'calc(var(--font-size) * 1.0)';
+@font-size-lg: ~'calc(var(--font-size) * 1.2)';
+@font-size-xl: ~'calc(var(--font-size) * 1.35)';
+@font-size-xxl: ~'calc(var(--font-size) * 1.5)';
+@font-size-xxxl: ~'calc(var(--font-size) * 1.7)';
 
 /* Padding */
-@padding-md: round(@font-size * 1.2);
-@padding-sm: round(@font-size * 0.6);
-@padding-xs: round(@font-size * 0.4);
-@padding-xxs: round(@font-size * 0.2);
-@padding-lg: round(@font-size * 2.5);
-@padding-xl: round(@font-size * 5);
-
+@padding-md: ~'calc(var(--font-size) * 1.2)';
+@padding-sm: ~'calc(var(--font-size) * 0.6)';
+@padding-xs: ~'calc(var(--font-size) * 0.4)';
+@padding-xxs: ~'calc(var(--font-size) * 0.2)';
+@padding-lg: ~'calc(var(--font-size) * 2.5)';
+@padding-xl: ~'calc(var(--font-size) * 5)';
 
 /* Wrapper */
-@line-height-md: round(@font-size * 3.6);
-@line-height-sm: round(@line-height-md * 0.8);
-@line-height-xs: round(@line-height-sm * 0.85);
-@line-height-xxs: round(@line-height-xs * 0.85);
+// line-height-md = x * 3.6
+// line-height-sm = x * 3.6 * 0.8 (2.88)
+// line-height-xs = x * 3.6 * 0.8 * 0.85 (2.448)
+// line-height-xxs= x * 3.6 * 0.8 * 0.85 * 0.85 (2.08)
+@line-height-md: ~'calc(var(--font-size) * 3.6)';
+@line-height-sm: ~'calc(var(--font-size) * 2.88)';
+@line-height-xs: ~'calc(var(--font-size) * 2.448)';
+@line-height-xxs: ~'calc(var(--font-size) * 2.08)';
 
 /* Nav */
 @height-nav: @line-height-md;
 
 /* Scrollbars */
-@scrollbar-width: round(@font-size * 0.6);
+@scrollbar-width: ~'calc(var(--font-size) * 0.6)';
 
 /* Borders */
-@radius-sm: round(@font-size * 0.2);
-@radius-md: round(@font-size * 0.3);
+@radius-sm: ~'calc(var(--font-size) * 0.2)';
+@radius-md: ~'calc(var(--font-size) * 0.3)';
 
 /* Dropdowns */
-@dropdown-min-width: round(@font-size * 12);
+@dropdown-min-width: ~'calc(var(--font-size) * 12)';
 
 /* Modals */
-@modal-width: round(@font-size * 60);
-@modal-width-wide: round(@font-size * 70);
+@modal-width: ~'calc(var(--font-size) * 60)';
+@modal-width-wide: ~'calc(var(--font-size) * 70)';
 
 /* Other */
-@drag-width: round(@font-size * 0.5);
+@drag-width: ~'calc(var(--font-size) * 0.5)';
 
 /* Breakpoints */
 @breakpoint-lg: 1100px;

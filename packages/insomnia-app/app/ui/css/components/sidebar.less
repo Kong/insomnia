@@ -64,7 +64,7 @@
     padding: 0 0 0 @padding-sm;
 
     .btn {
-      padding: 0 (@padding-md - @padding-xs);
+      padding: 0 calc(@padding-md - @padding-xs);
       margin-right: @padding-xxs;
       border-radius: @radius-md;
       margin-left: @padding-xxs;
@@ -297,28 +297,19 @@
   }
 
   .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: @padding-sm + @padding-md * 1;
+    padding-left: calc(@padding-sm + @padding-md * 1);
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: @padding-sm + @padding-md * 2;
+    padding-left: calc(@padding-sm + @padding-md * 2);
   }
 
-  .sidebar__list
-    .sidebar__list
-    .sidebar__list
-    .sidebar__list
-    .sidebar__clickable {
-    padding-left: @padding-sm + @padding-md * 3;
+  .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+    padding-left: calc(@padding-sm + @padding-md * 3);
   }
 
-  .sidebar__list
-    .sidebar__list
-    .sidebar__list
-    .sidebar__list
-    .sidebar__list
-    .sidebar__clickable {
-    padding-left: @padding-sm + @padding-md * 4;
+  .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+    padding-left: calc(@padding-sm + @padding-md * 4);
   }
 
   .sidebar__list
@@ -328,7 +319,7 @@
     .sidebar__list
     .sidebar__list
     .sidebar__clickable {
-    padding-left: @padding-sm + @padding-md * 5;
+    padding-left: calc(@padding-sm + @padding-md * 5);
   }
 
   .sidebar__list
@@ -339,7 +330,7 @@
     .sidebar__list
     .sidebar__list
     .sidebar__clickable {
-    padding-left: @padding-sm + @padding-md * 6;
+    padding-left: calc(@padding-sm + @padding-md * 6);
   }
 
   // ~~~~~~~~~~~~~~~ //

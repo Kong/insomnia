@@ -3,15 +3,24 @@
 @import '../constants/fonts';
 
 html {
-  font-size: @font-size;
+  font-size: var(--font-size);
 }
 
-html, body, #root {
+html,
+body,
+#root {
   width: 100%;
   height: 100%;
 }
 
-html, h1, h2, h3, h4, h5, h6, input {
+html,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+input {
   font-weight: 400;
   font-family: @font-default;
 }
@@ -33,7 +42,10 @@ h3 {
   font-size: @font-size-lg;
 }
 
-p, h1, h2, h3 {
+p,
+h1,
+h2,
+h3 {
   margin-bottom: @padding-sm;
   margin-top: @padding-md;
 }
@@ -92,11 +104,13 @@ webview {
 table.table--fancy {
   width: 100%;
 
-  td, th {
+  td,
+  th {
     padding: @padding-sm;
   }
 
-  &.table--compact td, th {
+  &.table--compact td,
+  th {
     padding: @padding-xs;
   }
 
@@ -124,7 +138,9 @@ code {
   }
 }
 
-code, pre, .monospace {
+code,
+pre,
+.monospace {
   font-family: @font-monospace;
   tab-size: 4;
 }
@@ -142,7 +158,7 @@ div.notice,
 p.notice {
   text-align: center;
   color: var(--color-font) !important;
-  padding: @padding-sm * 1.5;
+  padding: calc(@padding-sm * 1.5);
   border: 1px dotted var(--hl);
   border-radius: @radius-md;
   position: relative;
@@ -439,7 +455,7 @@ i.fa:not(.fa--skinny) {
 }
 
 .pad-left-sm {
-  padding-left: @padding-md / 2;
+  padding-left: calc(@padding-md / 2);
 }
 
 .pad-right {
@@ -448,7 +464,7 @@ i.fa:not(.fa--skinny) {
 }
 
 .pad-right-sm {
-  padding-right: @padding-md / 2;
+  padding-right: calc(@padding-md / 2);
 }
 
 .pad-top {
@@ -458,7 +474,7 @@ i.fa:not(.fa--skinny) {
 
 .pad-top-sm {
   box-sizing: border-box;
-  padding-top: @padding-sm;
+  padding-top: calc(@padding-sm);
 }
 
 .space-left {
@@ -646,7 +662,7 @@ i.fa:not(.fa--skinny) {
 }
 
 .fa-drag-handle:before {
-  content: "\f142\f142";
+  content: '\f142\f142';
   letter-spacing: 0.1em;
 }
 
@@ -683,7 +699,7 @@ strong {
 
 @media (max-width: @breakpoint-md) {
   html {
-    font-size: @font-size * 0.95;
+    font-size: calc(@font-size * 0.95);
   }
 
   .hide-below-md {

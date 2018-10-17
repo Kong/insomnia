@@ -58,6 +58,15 @@ class SettingsModal extends PureComponent {
     this.modal.hide();
   }
 
+  _handleRootCssChange(variableName, value) {
+    const elem = document.querySelector('html');
+    if (value) {
+      elem.style.setProperty(variableName, value);
+      return;
+    }
+    elem.style.setProperty(variableName, value);
+  }
+
   async _handleChangeTheme(theme, persist = true) {
     setTheme(theme);
 
@@ -128,6 +137,7 @@ class SettingsModal extends PureComponent {
                 settings={settings}
                 handleToggleMenuBar={this.props.handleToggleMenuBar}
                 updateSetting={this._handleUpdateSetting}
+                handleRootCssChange={this._handleRootCssChange}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">

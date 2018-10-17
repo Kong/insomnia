@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import * as fontManager from 'font-manager';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
 import {
@@ -15,11 +16,35 @@ import CheckForUpdatesButton from '../check-for-updates-button';
 type Props = {
   settings: Settings,
   updateSetting: Function,
-  handleToggleMenuBar: Function
+  handleToggleMenuBar: Function,
+  handleRootCssChange: Function
+};
+
+type State = {
+  fonts: []
 };
 
 @autobind
-class General extends React.PureComponent<Props> {
+class General extends React.PureComponent<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      fonts: []
+    };
+  }
+
+  _getAvailableFonts() {
+    fontManager.getAvailableFonts(fonts => {
+      this.setState({
+        fonts: fonts.filter(i => i.style === 'Regular')
+      });
+    });
+  }
+
+  componentDidMount() {
+    this._getAvailableFonts();
+  }
+
   _handleUpdateSetting(e: SyntheticEvent<HTMLInputElement>) {
     const el = e.currentTarget;
     let value = el.type === 'checkbox' ? el.checked : el.value;
@@ -38,8 +63,37 @@ class General extends React.PureComponent<Props> {
     this.props.handleToggleMenuBar(value);
   }
 
+  _textToCssName(text: string, prefix: ?string) {
+    const replaced = text.replace(/([A-Z])/g, g => `-${g[0].toLowerCase()}`);
+    return prefix ? prefix + replaced : replaced;
+  }
+
+  _handleRootCssChange(el: SyntheticEvent<HTMLInputElement>) {
+    this.props.handleRootCssChange(this._textToCssName(el.currentTarget.name));
+  }
+
+  _handleFontLigatureChange(el: SyntheticEvent<HTMLInputElement>) {
+    const value = this._handleUpdateSetting(el);
+    this.props.handleRootCssChange('font-variant-ligatures', value ? 'normal' : 'none');
+  }
+
+  _handleFontSizeChange(el: SyntheticEvent<HTMLInputElement>) {
+    const value = this._handleUpdateSetting(el);
+    this.props.handleRootCssChange('font-size', `${value.toString()}px`);
+  }
+
+  _handleFontChange(el: SyntheticEvent<HTMLInputElement>) {
+    let value = this._handleUpdateSetting(el);
+    if (value === 'default') {
+      value = null;
+    }
+    const cssName = this._textToCssName(el.currentTarget.name, '--');
+    this.props.handleRootCssChange(cssName, value);
+  }
+
   render() {
     const { settings } = this.props;
+    const { fonts } = this.state;
     return (
       <div>
         <div className="form-control form-control--thin">
@@ -170,6 +224,72 @@ class General extends React.PureComponent<Props> {
               <option value="window-left">Window left</option>
               <option value="window-right">Window right</option>
             </select>
+          </label>
+        </div>
+
+        <div className="form-row">
+          <div className="form-control form-control--outlined pad-top-sm">
+            <label>
+              Font Default
+              <select
+                name="fontDefault"
+                value={settings.fontDefault}
+                onChange={this._handleFontChange}>
+                <option value="default">Default</option>
+                {fonts.map(function(item, index) {
+                  return (
+                    <option key={index} value={item.family}>
+                      {item.family} {item.style}
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+          </div>
+
+          <div className="form-control form-control--outlined pad-top-sm">
+            <label>
+              Font Monospace
+              <select
+                name="fontMonospace"
+                value={settings.fontMonospace}
+                onChange={this._handleFontChange}>
+                <option value="default">Default</option>
+                {fonts.filter(i => i.monospace).map(function(item, index) {
+                  return (
+                    <option key={index} value={item.family}>
+                      {item.family} {item.style}
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div className="form-control form-control--outlined pad-top-sm">
+          <label>
+            Default & Monospace Font Size
+            <input
+              type="number"
+              name="fontSize"
+              min={8}
+              max={20}
+              defaultValue={settings.fontSize}
+              onChange={this._handleFontSizeChange}
+            />
+          </label>
+        </div>
+
+        <div className="form-control form-control--thin">
+          <label className="inline-block">
+            Font Variant Ligatures
+            <input
+              type="checkbox"
+              name="fontVariantLigatures"
+              checked={settings.fontVariantLigatures}
+              onChange={this._handleFontLigatureChange}
+            />
           </label>
         </div>
 

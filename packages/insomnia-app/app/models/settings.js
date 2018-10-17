@@ -27,7 +27,11 @@ type BaseSettings = {
   deviceId: string | null,
   updateChannel: string,
   updateAutomatically: boolean,
-  environmentHighlightColorStyle: string
+  environmentHighlightColorStyle: string,
+  fontMonospace: string,
+  fontDefault: string,
+  fontSize: number,
+  fontVariantLigatures: boolean
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -62,7 +66,11 @@ export function init(): BaseSettings {
     deviceId: null,
     updateChannel: UPDATE_CHANNEL_STABLE,
     updateAutomatically: true,
-    environmentHighlightColorStyle: 'sidebar-indicator'
+    environmentHighlightColorStyle: 'sidebar-indicator',
+    fontMonospace: 'default',
+    fontDefault: 'default',
+    fontSize: 13,
+    fontVariantLigatures: true
   };
 }
 

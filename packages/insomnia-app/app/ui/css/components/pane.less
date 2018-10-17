@@ -23,7 +23,7 @@
     border-top: 1px solid @hl-md;
 
     .pane__header__right {
-      box-shadow: -@padding-md 0 @padding-md -@padding-sm var(--color-bg);
+      box-shadow: calc(@padding-md * -1) 0 @padding-md calc(@padding-sm * -1) var(--color-bg);
       background: var(--color-bg);
       font-size: @font-size-sm;
     }
@@ -45,7 +45,8 @@
     align-items: center;
     justify-content: center;
 
-    &, * {
+    &,
+    * {
       color: @hl;
     }
 
@@ -87,6 +88,6 @@
   }
 }
 
-body[data-platform="win32"] .pane .pane__header {
+body[data-platform='win32'] .pane .pane__header {
   border-top: 1px solid @hl-md;
 }
