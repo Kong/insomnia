@@ -458,6 +458,21 @@ class App extends PureComponent {
     return newRequest;
   }
 
+  async _getDownloadLocation() {
+    return new Promise(resolve => {
+      const options = {
+        title: 'Select Download Location',
+        buttonLabel: 'Send and Save',
+        defaultPath: window.localStorage.getItem('insomnia.sendAndDownloadLocation')
+      };
+
+      remote.dialog.showSaveDialog(options, filename => {
+        window.localStorage.setItem('insomnia.sendAndDownloadLocation', filename);
+        resolve(filename);
+      });
+    });
+  }
+
   async _handleSendAndDownloadRequestWithEnvironment(requestId, environmentId, dir) {
     const request = await models.request.getById(requestId);
     if (!request) {
@@ -489,7 +504,13 @@ class App extends PureComponent {
         const name =
           nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
 
-        const filename = path.join(dir, name);
+        let filename;
+        if (dir) {
+          filename = path.join(dir, name);
+        } else {
+          filename = await this._getDownloadLocation();
+        }
+
         const to = fs.createWriteStream(filename);
         const readStream = models.response.getBodyStream(responsePatch);
 

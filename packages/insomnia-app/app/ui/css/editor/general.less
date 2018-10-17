@@ -10,11 +10,11 @@
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-columns: 100%;
 
-  &[data-editor-type="password"] .CodeMirror-line {
+  &[data-editor-type='password'] .CodeMirror-line {
     -webkit-text-security: disc;
 
     // NOTE: <span cm-text> appears with hidden character when editor is empty
-    [cm-text=""],
+    [cm-text=''],
     .CodeMirror-widget {
       -webkit-text-security: none;
     }

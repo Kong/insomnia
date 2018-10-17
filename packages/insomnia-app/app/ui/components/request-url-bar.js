@@ -152,6 +152,10 @@ class RequestUrlBar extends PureComponent {
     }
   }
 
+  _handleClickSendAndDownload() {
+    this.props.handleSendAndDownload();
+  }
+
   _handleSendAfterDelay() {
     showPrompt({
       inputType: 'decimal',
@@ -286,6 +290,9 @@ class RequestUrlBar extends PureComponent {
               <i className="fa fa-download" /> Download After Send
             </DropdownItem>
           )}
+          <DropdownItem onClick={this._handleClickSendAndDownload}>
+            <i className="fa fa-download" /> Send And Download
+          </DropdownItem>
         </Dropdown>
       );
     }

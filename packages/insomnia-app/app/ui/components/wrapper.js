@@ -303,7 +303,7 @@ class Wrapper extends React.PureComponent<Props, State> {
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
   }
 
-  _handleSendAndDownloadRequestWithActiveEnvironment(filename: string): void {
+  _handleSendAndDownloadRequestWithActiveEnvironment(filename?: string): void {
     const {
       activeRequest,
       activeEnvironment,

@@ -38,7 +38,7 @@ class General extends React.PureComponent<Props, State> {
     fontManager.getAvailableFonts(allFonts => {
       const fonts = allFonts
         .filter(i => i.style.toLowerCase() === 'regular' && !i.italic)
-        .sort((a, b) => a.family > b.family ? 1 : -1);
+        .sort((a, b) => (a.family > b.family ? 1 : -1));
 
       this.setState({ fonts });
     });
@@ -292,7 +292,6 @@ class General extends React.PureComponent<Props, State> {
         </div>
 
         <div className="form-row">
-
           <div className="form-control form-control--outlined">
             <label>
               Text Editor Indent Size
@@ -323,7 +322,7 @@ class General extends React.PureComponent<Props, State> {
           </div>
         </div>
 
-        <hr className="pad-top"/>
+        <hr className="pad-top" />
 
         <h2>
           HTTP Network Proxy
@@ -366,7 +365,7 @@ class General extends React.PureComponent<Props, State> {
           </div>
         </div>
 
-        <hr className="pad-top"/>
+        <hr className="pad-top" />
 
         <h2>
           HTTP Network Proxy
@@ -436,7 +435,7 @@ class General extends React.PureComponent<Props, State> {
 
         {isWindows() || isMac() ? (
           <Wrap>
-            <hr className="pad-top"/>
+            <hr className="pad-top" />
             <div>
               <div className="pull-right">
                 <CheckForUpdatesButton className="btn btn--outlined btn--super-duper-compact">
@@ -474,7 +473,7 @@ class General extends React.PureComponent<Props, State> {
           </Wrap>
         ) : null}
 
-        <hr className="pad-top"/>
+        <hr className="pad-top" />
         <h2>Plugins</h2>
 
         <div className="form-control form-control--outlined">
@@ -491,7 +490,7 @@ class General extends React.PureComponent<Props, State> {
           </label>
         </div>
 
-        <br/>
+        <br />
       </div>
     );
   }
