@@ -25,11 +25,9 @@ matrix:
         - CSC_LINK=$MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
       before_deploy:
-        - >
-          grep --include=\*.json -rn . -e 'dependencies": \[\]'
+        - npm run check
         - npm run app-package
-        - >
-          grep --include=\*.json -rn . -e 'dependencies": \[\]'
+        - npm run check
 
 cache:
   directories:
