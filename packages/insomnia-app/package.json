@@ -70,6 +70,7 @@
     "fuzzysort",
     "graphql",
     "highlight.js",
+    "jsonlint",
     "jwt-authentication",
     "moment",
     "nunjucks",
