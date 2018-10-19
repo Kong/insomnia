@@ -16,7 +16,7 @@
     "app-build": "lerna run build --stream --scope=insomnia-app",
     "app-package": "lerna run package --stream --scope=insomnia-app",
     "format-code": "prettier --write \"**/*.js\"",
-    "check": "grep --include=\\*.json -rn . -e 'dependencies\": \\[\\]'"
+    "check": "node scripts/check.js"
   },
   "husky": {
     "hooks": {
@@ -29,6 +29,7 @@
     "lerna": "^3.4.3",
     "prettier": "^1.13.6",
     "pretty-quick": "^1.6.0",
+    "shelljs": "^0.8.2",
     "webpack": "^4.8.3"
   },
   "dependencies": {}
