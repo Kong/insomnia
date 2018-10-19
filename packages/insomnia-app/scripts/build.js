@@ -16,6 +16,10 @@ if (require.main === module) {
 }
 
 module.exports.start = async function() {
+  console.log('[build] Starting build');
+  console.log('[build] npm: ' + childProcess.spawnSync('npm', ['--version']).stdout);
+  console.log('[build] node: ' + childProcess.spawnSync('node', ['--version']).stdout);
+
   // Remove folders first
   console.log('[build] Removing existing directories');
   await emptyDir('../build');

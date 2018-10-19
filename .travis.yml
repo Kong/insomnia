@@ -25,10 +25,7 @@ matrix:
         - CSC_LINK=$MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
       before_deploy:
-        - npm run app-build
-        - npm run check
         - npm run app-package
-        - npm run check
 
 cache:
   directories:
