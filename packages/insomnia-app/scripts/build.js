@@ -30,6 +30,7 @@ module.exports.start = async function() {
   await copyFiles('../bin', '../build/');
   await copyFiles('../app/static', '../build/static');
   await copyFiles('../app/icons/', '../build/');
+  await copyFiles('../package-lock.json', '../build/package-lock.json');
 
   // Generate package.json
   await generatePackageJson('../package.json', '../build/package.json');
@@ -71,6 +72,7 @@ async function copyFiles(relSource, relDest) {
   return new Promise((resolve, reject) => {
     const source = path.resolve(__dirname, relSource);
     const dest = path.resolve(__dirname, relDest);
+    console.log(`[build] copy ${source} to ${dest}`);
     ncp(source, dest, err => {
       if (err) {
         reject(err);
@@ -85,14 +87,10 @@ async function install(relDir) {
   return new Promise((resolve, reject) => {
     const prefix = path.resolve(__dirname, relDir);
 
-    const p = childProcess.spawn(
-      'npm',
-      ['install', '--production', '--no-package-lock', '--no-optional'],
-      {
-        cwd: prefix,
-        shell: true
-      }
-    );
+    const p = childProcess.spawn('npm', ['install', '--production', '--no-optional'], {
+      cwd: prefix,
+      shell: true
+    });
 
     p.stdout.on('data', data => {
       console.log(data.toString());

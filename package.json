@@ -29,5 +29,6 @@
     "prettier": "^1.13.6",
     "pretty-quick": "^1.6.0",
     "webpack": "^4.8.3"
-  }
+  },
+  "dependencies": {}
 }

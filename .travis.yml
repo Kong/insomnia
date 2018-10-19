@@ -24,7 +24,6 @@ matrix:
       env:
         - CSC_LINK=$MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
-        - DEBUG=electron-builder
       before_deploy:
         - npm run app-package
 
