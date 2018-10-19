@@ -9,6 +9,6 @@
     "test": "node --version"
   },
   "dependencies": {
-    "insomnia-node-libcurl": "git+https://github.com/getinsomnia/node-libcurl.git#8b084b81f7b29a680059645ad52a0bfb7113b7b8"
+    "insomnia-node-libcurl": "^2.0.0-alpha.0-0"
   }
 }
