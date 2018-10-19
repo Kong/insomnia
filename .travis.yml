@@ -23,6 +23,8 @@ matrix:
         - CSC_LINK=$MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
       before_deploy:
+        - npm run app-build
+        - tar -zcvf build.tar.gz ./packages/insomnia-app/build
         - npm run app-package
 
 cache:
@@ -45,6 +47,7 @@ deploy:
   file_glob: true
   prerelease: true
   file:
+    - build.tar.gz
     - packages/insomnia-app/dist/**/*.zip
     - packages/insomnia-app/dist/**/*.dmg
     - packages/insomnia-app/dist/**/*.deb
