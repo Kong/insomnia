@@ -1,5 +1,11 @@
 // @flow
-import type { Request } from '../../models/request';
+import type {
+  Request,
+  RequestAuthentication,
+  RequestBody,
+  RequestHeader,
+  RequestParameter
+} from '../../models/request';
 import type { Workspace } from '../../models/workspace';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 
@@ -30,19 +36,19 @@ type Props = {
   // Functions
   forceUpdateRequest: Function,
   forceUpdateRequestHeaders: Function,
-  handleSend: Function,
-  handleSendAndDownload: Function,
+  handleSend: () => void,
+  handleSendAndDownload: (filename?: string) => void,
   handleCreateRequest: Function,
   handleGenerateCode: Function,
   handleRender: Function,
   handleGetRenderContext: Function,
-  updateRequestUrl: Function,
-  updateRequestMethod: Function,
-  updateRequestBody: Function,
-  updateRequestParameters: Function,
-  updateRequestAuthentication: Function,
-  updateRequestHeaders: Function,
-  updateRequestMimeType: Function,
+  updateRequestUrl: (r: Request, url: string) => Promise<Request>,
+  updateRequestMethod: (r: Request, method: string) => Promise<Request>,
+  updateRequestBody: (r: Request, body: RequestBody) => Promise<Request>,
+  updateRequestParameters: (r: Request, params: Array<RequestParameter>) => Promise<Request>,
+  updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>,
+  updateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>,
+  updateRequestMimeType: (r: Request, mimeType: string) => Promise<Request>,
   updateSettingsShowPasswords: Function,
   updateSettingsUseBulkHeaderEditor: Function,
   handleImport: Function,
@@ -104,10 +110,20 @@ class RequestPane extends React.PureComponent<Props> {
     this.props.handleCreateRequest(this.props.request);
   }
 
+  _handleUpdateRequestMethod(method: string) {
+    const { updateRequestMethod, request } = this.props;
+    if (request) {
+      updateRequestMethod(request, method);
+    }
+  }
+
   _handleUpdateRequestUrl(url: string) {
     clearTimeout(this._handleUpdateRequestUrlTimeout);
     this._handleUpdateRequestUrlTimeout = setTimeout(() => {
-      this.props.updateRequestUrl(url);
+      const { updateRequestUrl, request } = this.props;
+      if (request) {
+        updateRequestUrl(request, url);
+      }
     }, DEBOUNCE_MILLIS);
   }
 
@@ -155,7 +171,6 @@ class RequestPane extends React.PureComponent<Props> {
       updateRequestAuthentication,
       updateRequestBody,
       updateRequestHeaders,
-      updateRequestMethod,
       updateRequestMimeType,
       updateRequestParameters,
       updateSettingsShowPasswords
@@ -234,7 +249,7 @@ class RequestPane extends React.PureComponent<Props> {
             <RequestUrlBar
               uniquenessKey={uniqueKey}
               method={request.method}
-              onMethodChange={updateRequestMethod}
+              onMethodChange={this._handleUpdateRequestMethod}
               onUrlChange={this._handleUpdateRequestUrl}
               handleAutocompleteUrls={this._autocompleteUrls}
               handleImport={handleImport}

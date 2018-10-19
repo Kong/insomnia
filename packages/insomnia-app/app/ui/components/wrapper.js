@@ -144,8 +144,8 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   // Request updaters
-  async _handleForceUpdateRequest(patch: Object): Promise<Request> {
-    const newRequest = await rUpdate(this.props.activeRequest, patch);
+  async _handleForceUpdateRequest(r: Request, patch: Object): Promise<Request> {
+    const newRequest = await rUpdate(r, patch);
 
     // Give it a second for the app to render first. If we don't wait, it will refresh
     // on the old request and won't catch the newest one.
@@ -154,32 +154,38 @@ class Wrapper extends React.PureComponent<Props, State> {
     return newRequest;
   }
 
-  _handleUpdateRequestBody(body: RequestBody): Promise<Request> {
-    return rUpdate(this.props.activeRequest, { body });
+  _handleUpdateRequestBody(r: Request, body: RequestBody): Promise<Request> {
+    return rUpdate(r, { body });
   }
 
-  _handleUpdateRequestMethod(method: string): Promise<Request> {
-    return rUpdate(this.props.activeRequest, { method });
+  _handleUpdateRequestMethod(r: Request, method: string): Promise<Request> {
+    return rUpdate(r, { method });
   }
 
-  _handleUpdateRequestParameters(parameters: Array<RequestParameter>): Promise<Request> {
-    return rUpdate(this.props.activeRequest, { parameters });
+  _handleUpdateRequestParameters(
+    r: Request,
+    parameters: Array<RequestParameter>
+  ): Promise<Request> {
+    return rUpdate(r, { parameters });
   }
 
-  _handleUpdateRequestAuthentication(authentication: RequestAuthentication): Promise<Request> {
-    return rUpdate(this.props.activeRequest, { authentication });
+  _handleUpdateRequestAuthentication(
+    r: Request,
+    authentication: RequestAuthentication
+  ): Promise<Request> {
+    return rUpdate(r, { authentication });
   }
 
-  _handleUpdateRequestHeaders(headers: Array<RequestHeader>): Promise<Request> {
-    return rUpdate(this.props.activeRequest, { headers });
+  _handleUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>): Promise<Request> {
+    return rUpdate(r, { headers });
   }
 
-  _handleForceUpdateRequestHeaders(headers: Array<RequestHeader>): Promise<Request> {
-    return this._handleForceUpdateRequest({ headers });
+  _handleForceUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>): Promise<Request> {
+    return this._handleForceUpdateRequest(r, { headers });
   }
 
-  _handleUpdateRequestUrl(url: string): Promise<Request> {
-    return rUpdate(this.props.activeRequest, { url });
+  _handleUpdateRequestUrl(r: Request, url: string): Promise<Request> {
+    return rUpdate(r, { url });
   }
 
   // Special request updaters
@@ -196,9 +202,9 @@ class Wrapper extends React.PureComponent<Props, State> {
       const { resources } = data;
       const r = resources[0];
 
-      if (r && r._type === 'request') {
+      if (r && r._type === 'request' && this.props.activeRequest) {
         // Only pull fields that we want to update
-        return this._handleForceUpdateRequest({
+        return this._handleForceUpdateRequest(this.props.activeRequest, {
           url: r.url,
           method: r.method,
           headers: r.headers,

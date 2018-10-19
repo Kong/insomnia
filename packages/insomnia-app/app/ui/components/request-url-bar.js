@@ -1,5 +1,5 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { remote } from 'electron';
 import { DEBOUNCE_MILLIS, isMac } from '../../common/constants';
@@ -17,9 +17,40 @@ import OneLineEditor from './codemirror/one-line-editor';
 import * as hotkeys from '../../common/hotkeys';
 import KeydownBinder from './keydown-binder';
 
+type Props = {
+  handleSend: () => void,
+  handleSendAndDownload: (filepath?: string) => void,
+  handleRender: string => Promise<string>,
+  handleGetRenderContext: Function,
+  handleImport: Function,
+  handleAutocompleteUrls: Function,
+  onUrlChange: (url: string) => void,
+  onMethodChange: (method: string) => void,
+  handleGenerateCode: Function,
+  nunjucksPowerUserMode: boolean,
+  url: string,
+  method: string,
+  requestId: string,
+  uniquenessKey: string
+};
+
+type State = {
+  currentInterval: number | null,
+  currentTimeout: number | null,
+  downloadPath: string | null
+};
+
 @autobind
-class RequestUrlBar extends PureComponent {
-  constructor(props) {
+class RequestUrlBar extends React.PureComponent<Props, State> {
+  _urlChangeDebounceTimeout: TimeoutID;
+  _sendTimeout: TimeoutID;
+  _sendInterval: IntervalID;
+  _lastPastedText: string | null;
+  _dropdown: ?Dropdown;
+  _methodDropdown: ?Dropdown;
+  _input: ?OneLineEditor;
+
+  constructor(props: Props) {
     super(props);
     this.state = {
       currentInterval: null,
@@ -27,39 +58,40 @@ class RequestUrlBar extends PureComponent {
       downloadPath: null
     };
 
-    this._urlChangeDebounceTimeout = null;
     this._lastPastedText = null;
   }
 
-  _setDropdownRef(n) {
+  _setDropdownRef(n: Dropdown | null) {
     this._dropdown = n;
   }
 
-  _setMethodDropdownRef(n) {
+  _setMethodDropdownRef(n: Dropdown | null) {
     this._methodDropdown = n;
   }
 
-  _setInputRef(n) {
+  _setInputRef(n: HTMLInputElement | null) {
     this._input = n;
   }
 
-  _handleMetaClickSend(e) {
+  _handleMetaClickSend(e: MouseEvent) {
     e.preventDefault();
-    this._dropdown.show();
+    this._dropdown && this._dropdown.show();
   }
 
-  _handleFormSubmit(e) {
-    e.preventDefault();
-    e.stopPropagation();
+  _handleFormSubmit(e?: SyntheticEvent<HTMLFormElement>) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
     this._handleSend();
   }
 
-  _handleMethodChange(method) {
+  _handleMethodChange(method: string) {
     this.props.onMethodChange(method);
   }
 
-  _handleUrlChange(url) {
+  _handleUrlChange(url: string) {
     clearTimeout(this._urlChangeDebounceTimeout);
     this._urlChangeDebounceTimeout = setTimeout(async () => {
       const pastedText = this._lastPastedText;
@@ -83,7 +115,7 @@ class RequestUrlBar extends PureComponent {
     }, DEBOUNCE_MILLIS);
   }
 
-  _handleUrlPaste(e) {
+  _handleUrlPaste(e: SyntheticClipboardEvent<HTMLInputElement>) {
     // NOTE: We're not actually doing the import here to avoid races with onChange
     this._lastPastedText = e.clipboardData.getData('text/plain');
   }
@@ -112,29 +144,22 @@ class RequestUrlBar extends PureComponent {
     this.setState({ downloadPath: null });
   }
 
-  _handleKeyDown(e) {
+  _handleKeyDown(e: KeyboardEvent) {
     if (!this._input) {
       return;
     }
 
     hotkeys.executeHotKey(e, hotkeys.FOCUS_URL, () => {
-      if (!this._input) {
-        return;
-      }
-
-      this._input.focus();
-      this._input.selectAll();
+      this._input && this._input.focus();
+      this._input && this._input.selectAll();
     });
 
     hotkeys.executeHotKey(e, hotkeys.TOGGLE_METHOD_DROPDOWN, () => {
-      if (!this._methodDropdown) {
-        return;
-      }
-      this._methodDropdown.toggle();
+      this._methodDropdown && this._methodDropdown.toggle();
     });
 
     hotkeys.executeHotKey(e, hotkeys.SHOW_SEND_OPTIONS, () => {
-      this._dropdown.toggle(true);
+      this._dropdown && this._dropdown.toggle(true);
     });
   }
 
@@ -187,7 +212,7 @@ class RequestUrlBar extends PureComponent {
   }
 
   _handleStopInterval() {
-    clearTimeout(this._sendInterval);
+    clearInterval(this._sendInterval);
     if (this.state.currentInterval) {
       this.setState({ currentInterval: null });
     }
@@ -205,7 +230,7 @@ class RequestUrlBar extends PureComponent {
     this._handleStopInterval();
   }
 
-  _handleClickSend(e) {
+  _handleClickSend(e: MouseEvent) {
     const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
 
     // If we're pressing a meta key, let the dropdown open
@@ -216,10 +241,10 @@ class RequestUrlBar extends PureComponent {
 
     // If we're not pressing a meta key, cancel dropdown and send the request
     e.stopPropagation(); // Don't trigger the dropdown
-    this._handleFormSubmit(e);
+    this._handleFormSubmit();
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps: Props) {
     if (nextProps.requestId !== this.props.requestId) {
       this._handleResetTimeouts();
     }
@@ -342,22 +367,5 @@ class RequestUrlBar extends PureComponent {
     );
   }
 }
-
-RequestUrlBar.propTypes = {
-  handleSend: PropTypes.func.isRequired,
-  handleSendAndDownload: PropTypes.func.isRequired,
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  handleImport: PropTypes.func.isRequired,
-  handleAutocompleteUrls: PropTypes.func.isRequired,
-  onUrlChange: PropTypes.func.isRequired,
-  onMethodChange: PropTypes.func.isRequired,
-  handleGenerateCode: PropTypes.func.isRequired,
-  url: PropTypes.string.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  method: PropTypes.string.isRequired,
-  requestId: PropTypes.string.isRequired,
-  uniquenessKey: PropTypes.string.isRequired
-};
 
 export default RequestUrlBar;
