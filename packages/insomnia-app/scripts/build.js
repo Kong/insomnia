@@ -88,7 +88,10 @@ async function install(relDir) {
     const p = childProcess.spawn(
       'npm',
       ['install', '--production', '--no-package-lock', '--no-optional'],
-      { cwd: prefix }
+      {
+        cwd: prefix,
+        shell: true
+      }
     );
 
     p.stdout.on('data', data => {
