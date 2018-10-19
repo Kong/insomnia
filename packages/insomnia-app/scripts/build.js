@@ -30,7 +30,6 @@ module.exports.start = async function() {
   await copyFiles('../bin', '../build/');
   await copyFiles('../app/static', '../build/static');
   await copyFiles('../app/icons/', '../build/');
-  await copyFiles('../package-lock.json', '../build/package-lock.json');
 
   // Generate package.json
   await generatePackageJson('../package.json', '../build/package.json');
