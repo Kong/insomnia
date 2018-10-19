@@ -200,7 +200,6 @@
     "less-loader": "^4.1.0",
     "ncp": "^2.0.0",
     "react-hot-loader": "^4.1.0",
-    "redux-mock-store": "^1.0.2",
     "rimraf": "^2.6.2",
     "style-loader": "^0.20.3",
     "url-loader": "^1.0.1",
@@ -208,6 +207,6 @@
     "webpack-cli": "^3.1.2",
     "webpack-dev-server": "^3.1.9",
     "webpack-target-electron-renderer": "^0.4.0",
-    "worker-loader": "^1.1.1"
+    "worker-loader": "^2.0.0"
   }
 }

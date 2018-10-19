@@ -19,8 +19,6 @@ matrix:
         - docker-compose build package
         - docker-compose run package
     - os: osx
-      install:
-        - npm install 7zip-bin-mac > /dev/null
       env:
         - CSC_LINK=$MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
