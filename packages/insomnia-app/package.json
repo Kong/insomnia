@@ -65,13 +65,18 @@
   },
   "packedDependencies": [
     "autobind-decorator",
+    "classnames",
     "codemirror",
     "codemirror-graphql",
+    "electron-context-menu",
     "fuzzysort",
     "graphql",
     "highlight.js",
     "jsonlint",
+    "jsonpath",
     "jwt-authentication",
+    "marked",
+    "mime-types",
     "moment",
     "nunjucks",
     "pdfjs-dist",
@@ -86,7 +91,9 @@
     "redux-thunk",
     "reselect",
     "srp-js",
-    "vkbeautify"
+    "vkbeautify",
+    "whatwg-fetch",
+    "zprint-clj"
   ],
   "dependencies": {
     "autobind-decorator": "^2.1.0",
