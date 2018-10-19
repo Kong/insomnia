@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "1.0.43",
+  "version": "1.0.44",
   "name": "insomnia-app",
   "app": {
     "name": "insomnia",
@@ -108,7 +108,7 @@
     "insomnia-cookies": "^0.0.9",
     "insomnia-httpsnippet": "^1.16.14",
     "insomnia-importers": "^2.0.8",
-    "insomnia-libcurl": "^0.0.19",
+    "insomnia-libcurl": "^0.0.20",
     "insomnia-plugin-base64": "^1.0.4",
     "insomnia-plugin-cookie-jar": "^1.0.4",
     "insomnia-plugin-core-themes": "^1.0.4",
