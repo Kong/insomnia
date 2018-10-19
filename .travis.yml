@@ -47,6 +47,7 @@ deploy:
   file_glob: true
   prerelease: true
   file:
+    - packages/insomnia-app/build/*.json
     - packages/insomnia-app/dist/**/*.zip
     - packages/insomnia-app/dist/**/*.dmg
     - packages/insomnia-app/dist/**/*.deb
