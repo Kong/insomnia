@@ -27,7 +27,11 @@ type BaseSettings = {
   deviceId: string | null,
   updateChannel: string,
   updateAutomatically: boolean,
-  environmentHighlightColorStyle: string
+  environmentHighlightColorStyle: string,
+  fontMonospace: string | null,
+  fontInterface: string | null,
+  fontSize: number,
+  fontVariantLigatures: boolean
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -62,7 +66,11 @@ export function init(): BaseSettings {
     deviceId: null,
     updateChannel: UPDATE_CHANNEL_STABLE,
     updateAutomatically: true,
-    environmentHighlightColorStyle: 'sidebar-indicator'
+    environmentHighlightColorStyle: 'sidebar-indicator',
+    fontMonospace: null,
+    fontInterface: null,
+    fontSize: 13,
+    fontVariantLigatures: true
   };
 }
 
@@ -83,10 +91,7 @@ export async function create(patch: Object = {}): Promise<Settings> {
   return db.docCreate(type, patch);
 }
 
-export async function update(
-  settings: Settings,
-  patch: Object
-): Promise<Settings> {
+export async function update(settings: Settings, patch: Object): Promise<Settings> {
   return db.docUpdate(settings, patch);
 }
 

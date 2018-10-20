@@ -46,9 +46,7 @@ export function migrate(doc: CookieJar): CookieJar {
 
 export function create(patch: Object = {}) {
   if (!patch.parentId) {
-    throw new Error(
-      `New CookieJar missing \`parentId\`: ${JSON.stringify(patch)}`
-    );
+    throw new Error(`New CookieJar missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
 
   return db.docCreate(type, patch);

@@ -152,6 +152,10 @@ class RequestUrlBar extends PureComponent {
     }
   }
 
+  _handleClickSendAndDownload() {
+    this.props.handleSendAndDownload();
+  }
+
   _handleSendAfterDelay() {
     showPrompt({
       inputType: 'decimal',
@@ -250,11 +254,7 @@ class RequestUrlBar extends PureComponent {
     let sendButton;
     if (!cancelButton) {
       sendButton = (
-        <Dropdown
-          key="dropdown"
-          className="tall"
-          right
-          ref={this._setDropdownRef}>
+        <Dropdown key="dropdown" className="tall" right ref={this._setDropdownRef}>
           <DropdownButton
             className="urlbar__send-btn"
             onContextMenu={this._handleMetaClickSend}
@@ -290,6 +290,9 @@ class RequestUrlBar extends PureComponent {
               <i className="fa fa-download" /> Download After Send
             </DropdownItem>
           )}
+          <DropdownItem onClick={this._handleClickSendAndDownload}>
+            <i className="fa fa-download" /> Send And Download
+          </DropdownItem>
         </Dropdown>
       );
     }

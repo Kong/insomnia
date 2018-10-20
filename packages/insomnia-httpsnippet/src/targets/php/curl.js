@@ -69,10 +69,7 @@ module.exports = function(source, options) {
     {
       escape: false,
       name: 'CURLOPT_HTTP_VERSION',
-      value:
-        source.httpVersion === 'HTTP/1.0'
-          ? 'CURL_HTTP_VERSION_1_0'
-          : 'CURL_HTTP_VERSION_1_1'
+      value: source.httpVersion === 'HTTP/1.0' ? 'CURL_HTTP_VERSION_1_0' : 'CURL_HTTP_VERSION_1_1'
     },
     {
       escape: true,
@@ -104,9 +101,7 @@ module.exports = function(source, options) {
 
   // construct cookies
   var cookies = source.cookies.map(function(cookie) {
-    return (
-      encodeURIComponent(cookie.name) + '=' + encodeURIComponent(cookie.value)
-    );
+    return encodeURIComponent(cookie.name) + '=' + encodeURIComponent(cookie.value);
   });
 
   if (cookies.length) {

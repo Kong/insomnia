@@ -24,9 +24,7 @@ function concatArray(arr, pretty, indentation, indentLevel) {
   var join = pretty ? ',\n' + currentIndent : ', ';
 
   if (pretty) {
-    return (
-      '[\n' + currentIndent + arr.join(join) + '\n' + closingBraceIndent + ']'
-    );
+    return '[\n' + currentIndent + arr.join(join) + '\n' + closingBraceIndent + ']';
   } else {
     return '[' + arr.join(join) + ']';
   }
@@ -42,11 +40,7 @@ module.exports = {
    * @return {string}
    */
   literalDeclaration: function(name, parameters, opts) {
-    return util.format(
-      'let %s = %s',
-      name,
-      this.literalRepresentation(parameters, opts)
-    );
+    return util.format('let %s = %s', name, this.literalRepresentation(parameters, opts));
   },
 
   /**
@@ -74,21 +68,12 @@ module.exports = {
             return this.literalRepresentation(v, opts, indentLevel);
           }.bind(this)
         );
-        return concatArray(
-          valuesRepresentation,
-          pretty,
-          opts.indent,
-          indentLevel
-        );
+        return concatArray(valuesRepresentation, pretty, opts.indent, indentLevel);
       case '[object Object]':
         var keyValuePairs = [];
         for (var k in value) {
           keyValuePairs.push(
-            util.format(
-              '"%s": %s',
-              k,
-              this.literalRepresentation(value[k], opts, indentLevel)
-            )
+            util.format('"%s": %s', k, this.literalRepresentation(value[k], opts, indentLevel))
           );
         }
         return concatArray(

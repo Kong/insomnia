@@ -5,8 +5,7 @@ import { globalBeforeEach } from '../../__jest__/before-each';
 describe('certificateUrlParse', () => {
   beforeEach(globalBeforeEach);
   it('should return the result of url.parse if no wildcard paths are supplied', () => {
-    const url =
-      'https://www.example.org:80/some/resources?query=1&other=2#myfragment';
+    const url = 'https://www.example.org:80/some/resources?query=1&other=2#myfragment';
     const expected = urlParse(url);
     expect(certificateUrlParse(url)).toEqual(expected);
   });

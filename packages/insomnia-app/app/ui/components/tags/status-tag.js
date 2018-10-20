@@ -46,8 +46,7 @@ class StatusTag extends React.PureComponent<Props> {
         break;
     }
 
-    const description =
-      RESPONSE_CODE_DESCRIPTIONS[statusCode] || 'Unknown Response Code';
+    const description = RESPONSE_CODE_DESCRIPTIONS[statusCode] || 'Unknown Response Code';
 
     return (
       <div className={classnames('tag', colorClass, { 'tag--small': small })}>

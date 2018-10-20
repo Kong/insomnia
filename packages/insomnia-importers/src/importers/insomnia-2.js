@@ -27,12 +27,8 @@ module.exports.convert = function(rawData) {
 
     // Convert old String request bodies to new (HAR) schema
     const headers = resource.headers || [];
-    const contentTypeHeader = headers.find(
-      h => h.name.toLowerCase() === 'content-type'
-    );
-    const mimeType = contentTypeHeader
-      ? contentTypeHeader.value.split(';')[0]
-      : null;
+    const contentTypeHeader = headers.find(h => h.name.toLowerCase() === 'content-type');
+    const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : null;
     resource.body = {
       mimeType: mimeType || '',
       text: resource.body

@@ -34,9 +34,7 @@ export function getById(id) {
 
 export async function create(request) {
   if (!request.type === models.request.type) {
-    throw new Error(
-      `New ${type} was not given a valid ${models.request.type} instance`
-    );
+    throw new Error(`New ${type} was not given a valid ${models.request.type} instance`);
   }
 
   const parentId = request._id;

@@ -25,9 +25,7 @@ describe('init()', () => {
   });
 
   it('fails to initialize without response', () => {
-    expect(() => plugin.init()).toThrowError(
-      'contexts.response initialized without response'
-    );
+    expect(() => plugin.init()).toThrowError('contexts.response initialized without response');
   });
 });
 
@@ -74,10 +72,7 @@ describe('response.*', () => {
     const result = plugin.init(response);
     expect(result.response.getHeader('Does-Not-Exist')).toBeNull();
     expect(result.response.getHeader('CONTENT-TYPE')).toBe('application/json');
-    expect(result.response.getHeader('set-cookie')).toEqual([
-      'foo=bar',
-      'baz=qux'
-    ]);
+    expect(result.response.getHeader('set-cookie')).toEqual(['foo=bar', 'baz=qux']);
     expect(result.response.hasHeader('foo')).toBe(false);
     expect(result.response.hasHeader('ConTent-Type')).toBe(true);
   });

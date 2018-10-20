@@ -40,11 +40,7 @@ export async function initClient() {
   console.log('[db] Initialized DB client');
 }
 
-export async function init(
-  types: Array<string>,
-  config: Object = {},
-  forceReset: boolean = false
-) {
+export async function init(types: Array<string>, config: Object = {}, forceReset: boolean = false) {
   if (forceReset) {
     changeListeners = [];
     for (const attr of Object.keys(db)) {
@@ -111,9 +107,7 @@ export async function init(
         try {
           await m.hookRemove(doc);
         } catch (err) {
-          console.log(
-            `[db] Delete hook failed for ${type} ${doc._id}: ${err.message}`
-          );
+          console.log(`[db] Delete hook failed for ${type} ${doc._id}: ${err.message}`);
         }
       }
 
@@ -121,9 +115,7 @@ export async function init(
         try {
           await m.hookInsert(doc);
         } catch (err) {
-          console.log(
-            `[db] Insert hook failed for ${type} ${doc._id}: ${err.message}`
-          );
+          console.log(`[db] Insert hook failed for ${type} ${doc._id}: ${err.message}`);
         }
       }
 
@@ -131,9 +123,7 @@ export async function init(
         try {
           await m.hookUpdate(doc);
         } catch (err) {
-          console.log(
-            `[db] Update hook failed for ${type} ${doc._id}: ${err.message}`
-          );
+          console.log(`[db] Update hook failed for ${type} ${doc._id}: ${err.message}`);
         }
       }
     }
@@ -195,11 +185,7 @@ export const flushChanges = (database.flushChanges = async function() {
   }
 });
 
-async function notifyOfChange(
-  event: string,
-  doc: BaseModel,
-  fromSync: boolean
-): Promise<void> {
+async function notifyOfChange(event: string, doc: BaseModel, fromSync: boolean): Promise<void> {
   changeBuffer.push([event, doc, fromSync]);
 
   // Flush right away if we're not buffering
@@ -277,9 +263,7 @@ export const find = (database.find = async function<T: BaseModel>(
   });
 });
 
-export const all = (database.all = async function<T: BaseModel>(
-  type: string
-): Promise<Array<T>> {
+export const all = (database.all = async function<T: BaseModel>(type: string): Promise<Array<T>> {
   if (db._empty) return _send('all', ...arguments);
 
   return database.find(type);
@@ -445,10 +429,7 @@ export async function docUpdate<T: BaseModel>(
   return database.update(doc);
 }
 
-export async function docCreate<T: BaseModel>(
-  type: string,
-  ...patches: Array<Object>
-): Promise<T> {
+export async function docCreate<T: BaseModel>(type: string, ...patches: Array<Object>): Promise<T> {
   const doc = await models.initModel(
     type,
     ...patches,
@@ -472,9 +453,7 @@ export const withDescendants = (database.withDescendants = async function(
 
   let docsToReturn = doc ? [doc] : [];
 
-  async function next(
-    docs: Array<BaseModel | null>
-  ): Promise<Array<BaseModel>> {
+  async function next(docs: Array<BaseModel | null>): Promise<Array<BaseModel>> {
     let foundDocs = [];
 
     for (const d of docs) {
@@ -641,11 +620,7 @@ async function _repairBaseEnvironments(workspace) {
   // Update remaining base env
   await update(chosenBase);
 
-  console.log(
-    `[fix] Merged ${baseEnvironments.length} base environments under ${
-      workspace.name
-    }`
-  );
+  console.log(`[fix] Merged ${baseEnvironments.length} base environments under ${workspace.name}`);
 }
 
 /**
@@ -684,7 +659,5 @@ async function _fixMultipleCookieJars(workspace) {
   // Update remaining jar
   await update(chosenJar);
 
-  console.log(
-    `[fix] Merged ${cookieJars.length} cookie jars under ${workspace.name}`
-  );
+  console.log(`[fix] Merged ${cookieJars.length} cookie jars under ${workspace.name}`);
 }

@@ -73,12 +73,9 @@ class AWSAuth extends React.PureComponent<Props> {
         </td>
         <td className="wide">
           <div
-            className={classnames(
-              'form-control form-control--underlined no-margin',
-              {
-                'form-control--inactive': authentication.disabled
-              }
-            )}>
+            className={classnames('form-control form-control--underlined no-margin', {
+              'form-control--inactive': authentication.disabled
+            })}>
             <OneLineEditor
               id={key}
               onChange={onChange}
@@ -99,11 +96,7 @@ class AWSAuth extends React.PureComponent<Props> {
       <div className="pad">
         <table>
           <tbody>
-            {this.renderRow(
-              'accessKeyId',
-              'Access Key ID',
-              this._handleChangeAccessKeyId
-            )}
+            {this.renderRow('accessKeyId', 'Access Key ID', this._handleChangeAccessKeyId)}
             {this.renderRow(
               'secretAccessKey',
               'Secret Access Key',
@@ -140,9 +133,7 @@ class AWSAuth extends React.PureComponent<Props> {
                     id="enabled"
                     onClick={this._handleDisable}
                     value={!authentication.disabled}
-                    title={
-                      authentication.disabled ? 'Enable item' : 'Disable item'
-                    }>
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
                     {authentication.disabled ? (
                       <i className="fa fa-square-o" />
                     ) : (

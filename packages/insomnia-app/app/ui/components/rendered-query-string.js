@@ -1,11 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import {
-  buildQueryStringFromParams,
-  joinUrlAndQueryString,
-  smartEncodeUrl
-} from 'insomnia-url';
+import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from 'insomnia-url';
 import CopyButton from './base/copy-button';
 
 @autobind
@@ -68,9 +64,7 @@ class RenderedQueryString extends PureComponent {
   render() {
     let inner = null;
     if (this.state.string) {
-      inner = (
-        <span className="selectable force-wrap">{this.state.string}</span>
-      );
+      inner = <span className="selectable force-wrap">{this.state.string}</span>;
     } else {
       inner = <span className="super-duper-faint italic">...</span>;
     }

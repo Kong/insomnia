@@ -38,21 +38,10 @@ module.exports = function(source, options) {
     req.hasHeaders = true;
     code
       .blank()
-      .push(
-        helpers.nsDeclaration(
-          'NSDictionary',
-          'headers',
-          source.allHeaders,
-          opts.pretty
-        )
-      );
+      .push(helpers.nsDeclaration('NSDictionary', 'headers', source.allHeaders, opts.pretty));
   }
 
-  if (
-    source.postData.text ||
-    source.postData.jsonObj ||
-    source.postData.params
-  ) {
+  if (source.postData.text || source.postData.jsonObj || source.postData.params) {
     req.hasBody = true;
 
     switch (source.postData.mimeType) {
@@ -99,14 +88,7 @@ module.exports = function(source, options) {
         // we make it easier for the user to edit it according to his or her needs after pasting.
         // The user can just edit the parameters NSDictionary or put this part of a snippet in a multipart builder method.
         code
-          .push(
-            helpers.nsDeclaration(
-              'NSArray',
-              'parameters',
-              source.postData.params,
-              opts.pretty
-            )
-          )
+          .push(helpers.nsDeclaration('NSArray', 'parameters', source.postData.params, opts.pretty))
           .push('NSString *boundary = @"%s";', source.postData.boundary)
           .blank()
           .push('NSError *error;')
@@ -118,10 +100,7 @@ module.exports = function(source, options) {
             2,
             '[body appendFormat:@"Content-Disposition:form-data; name=\\"%@\\"; filename=\\"%@\\"\\r\\n", param[@"name"], param[@"fileName"]];'
           )
-          .push(
-            2,
-            '[body appendFormat:@"Content-Type: %@\\r\\n\\r\\n", param[@"contentType"]];'
-          )
+          .push(2, '[body appendFormat:@"Content-Type: %@\\r\\n\\r\\n", param[@"contentType"]];')
           .push(
             2,
             '[body appendFormat:@"%@", [NSString stringWithContentsOfFile:param[@"fileName"] encoding:NSUTF8StringEncoding error:&error]];'
@@ -138,9 +117,7 @@ module.exports = function(source, options) {
           .push(1, '}')
           .push('}')
           .push('[body appendFormat:@"\\r\\n--%@--\\r\\n", boundary];')
-          .push(
-            'NSData *postData = [body dataUsingEncoding:NSUTF8StringEncoding];'
-          );
+          .push('NSData *postData = [body dataUsingEncoding:NSUTF8StringEncoding];');
         break;
 
       default:
@@ -184,9 +161,7 @@ module.exports = function(source, options) {
     .blank()
     // Retrieving the shared session will be less verbose than creating a new one.
     .push('NSURLSession *session = [NSURLSession sharedSession];')
-    .push(
-      'NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request'
-    )
+    .push('NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request')
     .push(
       '                                            completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {'
     )
@@ -198,10 +173,7 @@ module.exports = function(source, options) {
       2,
       '                                            NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;'
     )
-    .push(
-      2,
-      '                                            NSLog(@"%@", httpResponse);'
-    )
+    .push(2, '                                            NSLog(@"%@", httpResponse);')
     .push(1, '                                            }')
     .push('                                            }];')
     .push('[dataTask resume];');

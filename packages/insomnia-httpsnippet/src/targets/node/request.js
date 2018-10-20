@@ -110,14 +110,10 @@ module.exports = function(source, options) {
     code.unshift('var fs = require("fs");');
   }
 
-  code
-    .push('var options = %s;', util.inspect(reqOpts, { depth: null }))
-    .blank();
+  code.push('var options = %s;', util.inspect(reqOpts, { depth: null })).blank();
 
   code
-    .push(
-      util.format('request(options, %s', 'function (error, response, body) {')
-    )
+    .push(util.format('request(options, %s', 'function (error, response, body) {'))
 
     .push(1, 'if (error) throw new Error(error);')
     .blank()
@@ -128,10 +124,7 @@ module.exports = function(source, options) {
   return code
     .join()
     .replace('"JAR"', 'jar')
-    .replace(
-      /"fs\.createReadStream\(\\\"(.+)\\\"\)\"/,
-      'fs.createReadStream("$1")'
-    );
+    .replace(/"fs\.createReadStream\(\\\"(.+)\\\"\)\"/, 'fs.createReadStream("$1")');
 };
 
 module.exports.info = {

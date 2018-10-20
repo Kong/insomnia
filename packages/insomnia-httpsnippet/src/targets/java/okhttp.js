@@ -37,10 +37,7 @@ module.exports = function(source, options) {
         source.postData.boundary
       );
     } else {
-      code.push(
-        'MediaType mediaType = MediaType.parse("%s");',
-        source.postData.mimeType
-      );
+      code.push('MediaType mediaType = MediaType.parse("%s");', source.postData.mimeType);
     }
     code.push(
       'RequestBody body = RequestBody.create(mediaType, %s);',

@@ -7,10 +7,7 @@ import SidebarFilter from './sidebar-filter';
 import SidebarChildren from './sidebar-children';
 import SyncButton from '../dropdowns/sync-dropdown';
 import WorkspaceDropdown from '../dropdowns/workspace-dropdown';
-import {
-  SIDEBAR_SKINNY_REMS,
-  COLLAPSE_SIDEBAR_REMS
-} from '../../../common/constants';
+import { SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS } from '../../../common/constants';
 
 @autobind
 class Sidebar extends PureComponent {
@@ -126,11 +123,7 @@ class Sidebar extends PureComponent {
           filter={filter || ''}
         />
 
-        <SyncButton
-          className="sidebar__footer"
-          key={workspace._id}
-          workspace={workspace}
-        />
+        <SyncButton className="sidebar__footer" key={workspace._id} workspace={workspace} />
       </aside>
     );
   }

@@ -6,13 +6,9 @@ require('should');
 
 module.exports = function(HTTPSnippet, fixtures) {
   it('should not use cors', function() {
-    var result = new HTTPSnippet(fixtures.requests.short).convert(
-      'javascript',
-      'xhr',
-      {
-        cors: false
-      }
-    );
+    var result = new HTTPSnippet(fixtures.requests.short).convert('javascript', 'xhr', {
+      cors: false
+    });
 
     result.should.be.a.String;
     result

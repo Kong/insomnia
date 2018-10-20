@@ -63,10 +63,7 @@ class RequestActionsDropdown extends PureComponent {
         <DropdownItem onClick={this._handleCopyAsCurl}>
           <i className="fa fa-copy" /> Copy as Curl
         </DropdownItem>
-        <DropdownItem
-          buttonClass={PromptButton}
-          onClick={this._handleRemove}
-          addIcon>
+        <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon>
           <i className="fa fa-trash-o" /> Delete
         </DropdownItem>
 

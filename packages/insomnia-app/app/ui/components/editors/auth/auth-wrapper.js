@@ -148,10 +148,7 @@ class AuthWrapper extends PureComponent {
       return (
         <div className="vertically-center text-center">
           <p className="pad super-faint text-sm text-center">
-            <i
-              className="fa fa-unlock-alt"
-              style={{ fontSize: '8rem', opacity: 0.3 }}
-            />
+            <i className="fa fa-unlock-alt" style={{ fontSize: '8rem', opacity: 0.3 }} />
             <br />
             <br />
             Select an auth type from above

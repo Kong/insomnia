@@ -28,17 +28,9 @@ fixtures.cli.forEach(function(cli) {
   describe(targets[cli.target].info.title + ' Request Validation', function() {
     cli.clients.forEach(function(client) {
       requests.forEach(function(request) {
-        it(client + ' request should match mock for ' + request, function(
-          done
-        ) {
+        it(client + ' request should match mock for ' + request, function(done) {
           var stdout = '';
-          var fixture =
-            cli.target +
-            '/' +
-            client +
-            '/' +
-            request +
-            HTTPSnippet.extname(cli.target);
+          var fixture = cli.target + '/' + client + '/' + request + HTTPSnippet.extname(cli.target);
           var command = util.format(cli.run, base + fixture);
 
           var ls = shell.exec(command);
@@ -56,14 +48,8 @@ fixtures.cli.forEach(function(cli) {
 
             // make an exception for multipart/form-data
             if (fixtures.requests[request].headers) {
-              fixtures.requests[request].headers.forEach(function(
-                header,
-                index
-              ) {
-                if (
-                  header.name === 'content-type' &&
-                  header.value === 'multipart/form-data'
-                ) {
+              fixtures.requests[request].headers.forEach(function(header, index) {
+                if (header.name === 'content-type' && header.value === 'multipart/form-data') {
                   delete fixtures.requests[request].headers[index];
                 }
               });
@@ -72,9 +58,7 @@ fixtures.cli.forEach(function(cli) {
             har.should.have.property('log');
             har.log.should.have.property('entries').and.be.Array;
             har.log.entries[0].should.have.property('request');
-            har.log.entries[0].request.should.containDeep(
-              fixtures.requests[request]
-            );
+            har.log.entries[0].request.should.containDeep(fixtures.requests[request]);
 
             done();
           });

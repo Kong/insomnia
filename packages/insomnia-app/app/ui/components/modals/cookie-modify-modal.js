@@ -126,11 +126,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    cookieJar.cookies = [
-      ...cookies.slice(0, index),
-      cookie,
-      ...cookies.slice(index + 1)
-    ];
+    cookieJar.cookies = [...cookies.slice(0, index), cookie, ...cookies.slice(index + 1)];
 
     this.setState({ cookie });
 
@@ -177,9 +173,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     }
 
     try {
-      return cookieToString(
-        toughCookie.Cookie.fromJSON(JSON.stringify(cookie))
-      );
+      return cookieToString(toughCookie.Cookie.fromJSON(JSON.stringify(cookie)));
     } catch (err) {
       console.warn('Failed to parse cookie string', err);
       return '';
@@ -188,11 +182,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
 
   _renderInputField(field: string, error: string | null = null) {
     const { cookie } = this.state;
-    const {
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode
-    } = this.props;
+    const { handleRender, handleGetRenderContext, nunjucksPowerUserMode } = this.props;
 
     if (!cookie) {
       return null;
@@ -248,9 +238,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
                     </div>
                     {this._renderInputField(
                       'expires',
-                      isNaN(new Date(cookie.expires || 0).getTime())
-                        ? 'Invalid Date'
-                        : null
+                      isNaN(new Date(cookie.expires || 0).getTime()) ? 'Invalid Date' : null
                     )}
                   </div>
                   <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">

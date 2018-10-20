@@ -38,9 +38,7 @@ class WorkspaceDropdown extends PureComponent {
   async _handleDropdownHide() {
     // Mark all unseen workspace as seen
     for (const workspace of this.props.unseenWorkspaces) {
-      const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
-        workspace._id
-      );
+      const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
       if (!workspaceMeta.hasSeen) {
         models.workspaceMeta.update(workspaceMeta, { hasSeen: true });
       }
@@ -111,9 +109,7 @@ class WorkspaceDropdown extends PureComponent {
     const nonActiveWorkspaces = workspaces
       .filter(w => w._id !== activeWorkspace._id)
       .sort((w1, w2) => w1.name.localeCompare(w2.name));
-    const addedWorkspaceNames = unseenWorkspaces
-      .map(w => `"${w.name}"`)
-      .join(', ');
+    const addedWorkspaceNames = unseenWorkspaces.map(w => `"${w.name}"`).join(', ');
     const classes = classnames(className, 'wide', 'workspace-dropdown');
 
     const unseenWorkspacesMessage = (
@@ -153,8 +149,7 @@ class WorkspaceDropdown extends PureComponent {
           </DropdownItem>
 
           <DropdownItem onClick={this._handleShowShareSettings}>
-            <i className="fa fa-globe" /> Share{' '}
-            <strong>{activeWorkspace.name}</strong>
+            <i className="fa fa-globe" /> Share <strong>{activeWorkspace.name}</strong>
           </DropdownItem>
 
           <DropdownDivider>Switch Workspace</DropdownDivider>
@@ -162,10 +157,7 @@ class WorkspaceDropdown extends PureComponent {
           {nonActiveWorkspaces.map(w => {
             const isUnseen = !!unseenWorkspaces.find(v => v._id === w._id);
             return (
-              <DropdownItem
-                key={w._id}
-                onClick={this._handleSwitchWorkspace}
-                value={w._id}>
+              <DropdownItem key={w._id} onClick={this._handleSwitchWorkspace} value={w._id}>
                 <i className="fa fa-random" /> To <strong>{w.name}</strong>
                 {isUnseen && (
                   <Tooltip message="This workspace is new">

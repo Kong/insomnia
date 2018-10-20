@@ -49,9 +49,7 @@ export default async function(
 
   const statusCode = response.statusCode || 0;
   if (statusCode < 200 || statusCode >= 300) {
-    throw new Error(
-      `[oauth2] Failed to refresh token url=${url} status=${statusCode}`
-    );
+    throw new Error(`[oauth2] Failed to refresh token url=${url} status=${statusCode}`);
   }
 
   const bodyBuffer = models.response.getBodyBuffer(response);

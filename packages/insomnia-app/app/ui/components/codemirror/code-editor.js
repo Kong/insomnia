@@ -363,7 +363,9 @@ class CodeEditor extends React.Component {
   }
 
   _indentChars() {
-    return this.codeMirror.getOption('indentWithTabs') ? '\t' : new Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
+    return this.codeMirror.getOption('indentWithTabs')
+      ? '\t'
+      : new Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
   }
 
   _handleBeautify() {

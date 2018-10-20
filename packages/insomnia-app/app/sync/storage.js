@@ -55,18 +55,14 @@ export async function findResources(query = {}) {
 export async function findActiveResources(query) {
   const configs = await findActiveConfigs();
   const resourceGroupIds = configs.map(c => c.resourceGroupId);
-  return findResources(
-    Object.assign({ resourceGroupId: { $in: resourceGroupIds } }, query)
-  );
+  return findResources(Object.assign({ resourceGroupId: { $in: resourceGroupIds } }, query));
 }
 
 export async function findActiveDirtyResources() {
   return findActiveResources({ dirty: true });
 }
 
-export async function findActiveDirtyResourcesForResourceGroup(
-  resourceGroupId
-) {
+export async function findActiveDirtyResourcesForResourceGroup(resourceGroupId) {
   return findActiveResources({ dirty: true, resourceGroupId });
 }
 
@@ -134,12 +130,7 @@ export async function updateResource(resource, ...patches) {
 }
 
 export async function removeResource(resource) {
-  await _execDB(
-    TYPE_RESOURCE,
-    'remove',
-    { _id: resource._id },
-    { multi: true }
-  );
+  await _execDB(TYPE_RESOURCE, 'remove', { _id: resource._id }, { multi: true });
   _notifyChange();
 }
 
@@ -219,9 +210,7 @@ export function initDB(config, forceReset) {
       Object.assign({ filename: resourcePath, autoload: true }, config)
     );
 
-    _database['Config'] = new NeDB(
-      Object.assign({ filename: configPath, autoload: true }, config)
-    );
+    _database['Config'] = new NeDB(Object.assign({ filename: configPath, autoload: true }, config));
 
     for (const key of Object.keys(_database)) {
       _database[key].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);

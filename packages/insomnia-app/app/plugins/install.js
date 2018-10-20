@@ -3,7 +3,7 @@ import * as electron from 'electron';
 import fs from 'fs';
 import fsx from 'fs-extra';
 import childProcess from 'child_process';
-import { getTempDir, isDevelopment, PLUGIN_PATH } from '../common/constants';
+import { getTempDir, isDevelopment, isWindows, PLUGIN_PATH } from '../common/constants';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
@@ -177,5 +177,11 @@ function _getYarnPath() {
 }
 
 function escape(p) {
-  return p.replace(/(\s+)/g, '\\$1');
+  if (isWindows()) {
+    // Quote for Windows paths
+    return `"${p}"`;
+  } else {
+    // Escape with backslashes for Unix paths
+    return p.replace(/(\s+)/g, '\\$1');
+  }
 }

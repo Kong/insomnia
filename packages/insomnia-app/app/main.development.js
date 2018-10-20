@@ -6,12 +6,7 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import * as database from './common/database';
-import {
-  CHANGELOG_BASE_URL,
-  getAppVersion,
-  isDevelopment,
-  isMac
-} from './common/constants';
+import { CHANGELOG_BASE_URL, getAppVersion, isDevelopment, isMac } from './common/constants';
 import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';
 
@@ -119,8 +114,7 @@ async function _trackStats() {
 
   // Update Stats Object
   const firstLaunch = stats.launches === 1;
-  const justUpdated =
-    !firstLaunch && stats.currentVersion !== stats.lastVersion;
+  const justUpdated = !firstLaunch && stats.currentVersion !== stats.lastVersion;
 
   ipcMain.once('window-ready', () => {
     const { currentVersion } = stats;

@@ -41,8 +41,8 @@ class FilterHelpModal extends PureComponent {
         <ModalHeader>Response Filtering Help</ModalHeader>
         <ModalBody className="pad">
           <p>
-            Use {link} to filter the response body. Here are some examples that
-            you might use on a book store API.
+            Use {link} to filter the response body. Here are some examples that you might use on a
+            book store API.
           </p>
           <table className="table--fancy pad-top-sm">
             <tbody>
@@ -57,9 +57,7 @@ class FilterHelpModal extends PureComponent {
               <tr>
                 <td>
                   <code className="selectable">
-                    {isJson
-                      ? '$.store.books[?(@.price < 10)].title'
-                      : '/store/books[price < 10]'}
+                    {isJson ? '$.store.books[?(@.price < 10)].title' : '/store/books[price < 10]'}
                   </code>
                 </td>
                 <td>Get books costing less than $10</td>

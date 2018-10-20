@@ -81,13 +81,8 @@ describe('updateMimeType()', async () => {
     });
     expect(request).not.toBeNull();
 
-    const newRequest = await models.request.updateMimeType(
-      request,
-      'text/html'
-    );
-    expect(newRequest.headers).toEqual([
-      { name: 'Content-Type', value: 'text/html' }
-    ]);
+    const newRequest = await models.request.updateMimeType(request, 'text/html');
+    expect(newRequest.headers).toEqual([{ name: 'Content-Type', value: 'text/html' }]);
   });
 
   it('replaces header when exists', async () => {
@@ -103,10 +98,7 @@ describe('updateMimeType()', async () => {
     });
     expect(request).not.toBeNull();
 
-    const newRequest = await models.request.updateMimeType(
-      request,
-      'text/html'
-    );
+    const newRequest = await models.request.updateMimeType(request, 'text/html');
     expect(newRequest.headers).toEqual([
       { name: 'content-tYPE', value: 'text/html' },
       { name: 'foo', value: 'bar' },
@@ -123,13 +115,8 @@ describe('updateMimeType()', async () => {
     });
     expect(request).not.toBeNull();
 
-    const newRequest = await models.request.updateMimeType(
-      request,
-      'text/html'
-    );
-    expect(newRequest.headers).toEqual([
-      { name: 'content-tYPE', value: 'text/html' }
-    ]);
+    const newRequest = await models.request.updateMimeType(request, 'text/html');
+    expect(newRequest.headers).toEqual([{ name: 'content-tYPE', value: 'text/html' }]);
   });
 
   it('keeps content-type', async () => {
@@ -142,9 +129,7 @@ describe('updateMimeType()', async () => {
 
     const newRequest = await models.request.updateMimeType(request, null);
     expect(newRequest.body).toEqual({});
-    expect(newRequest.headers).toEqual([
-      { name: 'content-tYPE', value: 'application/json' }
-    ]);
+    expect(newRequest.headers).toEqual([{ name: 'content-tYPE', value: 'application/json' }]);
   });
 
   it('uses saved body when provided', async () => {
@@ -157,12 +142,9 @@ describe('updateMimeType()', async () => {
     });
     expect(request).not.toBeNull();
 
-    const newRequest = await models.request.updateMimeType(
-      request,
-      'application/json',
-      false,
-      { text: 'Saved Data' }
-    );
+    const newRequest = await models.request.updateMimeType(request, 'application/json', false, {
+      text: 'Saved Data'
+    });
     expect(newRequest.body.text).toEqual('Saved Data');
   });
 
@@ -176,12 +158,7 @@ describe('updateMimeType()', async () => {
     });
     expect(request).not.toBeNull();
 
-    const newRequest = await models.request.updateMimeType(
-      request,
-      'application/json',
-      false,
-      {}
-    );
+    const newRequest = await models.request.updateMimeType(request, 'application/json', false, {});
     expect(newRequest.body.text).toEqual('My Data');
   });
 });
@@ -205,22 +182,15 @@ describe('migrate()', () => {
 
   it('migrates form-urlencoded', () => {
     const original = {
-      headers: [
-        { name: 'content-type', value: 'application/x-www-form-urlencoded' }
-      ],
+      headers: [{ name: 'content-type', value: 'application/x-www-form-urlencoded' }],
       body: 'foo=bar&baz={{ hello }}'
     };
 
     const expected = {
-      headers: [
-        { name: 'content-type', value: 'application/x-www-form-urlencoded' }
-      ],
+      headers: [{ name: 'content-type', value: 'application/x-www-form-urlencoded' }],
       body: {
         mimeType: 'application/x-www-form-urlencoded',
-        params: [
-          { name: 'foo', value: 'bar' },
-          { name: 'baz', value: '{{ hello }}' }
-        ]
+        params: [{ name: 'foo', value: 'bar' }, { name: 'baz', value: '{{ hello }}' }]
       },
       url: ''
     };
@@ -248,10 +218,7 @@ describe('migrate()', () => {
       ],
       body: {
         mimeType: 'application/x-www-form-urlencoded',
-        params: [
-          { name: 'foo', value: 'bar' },
-          { name: 'baz', value: '{{ hello }}' }
-        ]
+        params: [{ name: 'foo', value: 'bar' }, { name: 'baz', value: '{{ hello }}' }]
       },
       url: ''
     };
@@ -261,16 +228,12 @@ describe('migrate()', () => {
 
   it('migrates form-urlencoded malformed', () => {
     const original = {
-      headers: [
-        { name: 'content-type', value: 'application/x-www-form-urlencoded' }
-      ],
+      headers: [{ name: 'content-type', value: 'application/x-www-form-urlencoded' }],
       body: '{"foo": "bar"}'
     };
 
     const expected = {
-      headers: [
-        { name: 'content-type', value: 'application/x-www-form-urlencoded' }
-      ],
+      headers: [{ name: 'content-type', value: 'application/x-www-form-urlencoded' }],
       body: {
         mimeType: 'application/x-www-form-urlencoded',
         params: [{ name: '{"foo": "bar"}', value: '' }]

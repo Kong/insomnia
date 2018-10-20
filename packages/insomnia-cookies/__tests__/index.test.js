@@ -51,9 +51,7 @@ describe('cookiesFromJar()', () => {
     expect(cookies[0].domain).toBe('insomnia.rest');
     expect(cookies[0].key).toBe('bar');
     expect(cookies[0].value).toBe('baz');
-    expect(cookies[0].creation).toMatch(
-      /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/
-    );
+    expect(cookies[0].creation).toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/);
     expect(cookies[0].expires).toEqual(d.toISOString());
   });
 

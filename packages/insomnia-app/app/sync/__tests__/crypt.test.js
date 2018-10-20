@@ -15,11 +15,7 @@ describe('deriveKey()', () => {
 describe('encryptRSA', () => {
   beforeEach(globalBeforeEach);
   it('encrypts and decrypts', () => {
-    const resultEncrypted = crypt.encryptAES(
-      'rawkey',
-      'Hello World!',
-      'additional data'
-    );
+    const resultEncrypted = crypt.encryptAES('rawkey', 'Hello World!', 'additional data');
     const resultDecrypted = crypt.decryptAES('rawkey', resultEncrypted);
 
     const expectedEncrypted = {

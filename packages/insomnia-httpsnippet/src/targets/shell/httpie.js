@@ -33,10 +33,7 @@ module.exports = function(source, options) {
     options
   );
 
-  var code = new CodeBuilder(
-    opts.indent,
-    opts.indent !== false ? ' \\\n' + opts.indent : ' '
-  );
+  var code = new CodeBuilder(opts.indent, opts.indent !== false ? ' \\\n' + opts.indent : ' ');
 
   var raw = false;
   var flags = [];

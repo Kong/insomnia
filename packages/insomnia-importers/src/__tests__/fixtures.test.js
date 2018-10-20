@@ -10,9 +10,7 @@ const fixtures = fs.readdirSync(fixturesPath);
 describe('Fixtures', () => {
   for (const name of fixtures) {
     const dir = path.join(fixturesPath, `./${name}`);
-    const inputs = fs
-      .readdirSync(dir)
-      .filter(name => !!name.match(/^(.+)-?input\.[^.]+$/));
+    const inputs = fs.readdirSync(dir).filter(name => !!name.match(/^(.+)-?input\.[^.]+$/));
 
     for (const input of inputs) {
       const prefix = input.replace(/-input\.[^.]+/, '');

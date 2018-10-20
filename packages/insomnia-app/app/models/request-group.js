@@ -31,18 +31,13 @@ export function migrate(doc: RequestGroup) {
 
 export function create(patch: Object = {}): Promise<RequestGroup> {
   if (!patch.parentId) {
-    throw new Error(
-      'New RequestGroup missing `parentId`: ' + JSON.stringify(patch)
-    );
+    throw new Error('New RequestGroup missing `parentId`: ' + JSON.stringify(patch));
   }
 
   return db.docCreate(type, patch);
 }
 
-export function update(
-  requestGroup: RequestGroup,
-  patch: Object = {}
-): Promise<RequestGroup> {
+export function update(requestGroup: RequestGroup, patch: Object = {}): Promise<RequestGroup> {
   return db.docUpdate(requestGroup, patch);
 }
 
@@ -62,9 +57,7 @@ export function all(): Promise<Array<RequestGroup>> {
   return db.all(type);
 }
 
-export async function duplicate(
-  requestGroup: RequestGroup
-): Promise<RequestGroup> {
+export async function duplicate(requestGroup: RequestGroup): Promise<RequestGroup> {
   const name = `${requestGroup.name} (Copy)`;
 
   // Get sort key of next request

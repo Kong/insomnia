@@ -44,9 +44,7 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    const workspace = await models.workspace.getById(
-      selectedWorkspaceId || 'n/a'
-    );
+    const workspace = await models.workspace.getById(selectedWorkspaceId || 'n/a');
     if (!workspace) {
       return;
     }
@@ -86,12 +84,8 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
             <div className="form-control form-control--outlined">
               <label>
                 New Workspace&nbsp;
-                <HelpTooltip>
-                  Workspace will be moved to the root of the new workspace
-                </HelpTooltip>
-                <select
-                  onChange={this._handleChangeSelectedWorkspace}
-                  value={selectedWorkspaceId}>
+                <HelpTooltip>Workspace will be moved to the root of the new workspace</HelpTooltip>
+                <select onChange={this._handleChangeSelectedWorkspace} value={selectedWorkspaceId}>
                   <option value="n/a">-- Select Workspace --</option>
                   {workspaces.map(w => (
                     <option key={w._id} value={w._id}>

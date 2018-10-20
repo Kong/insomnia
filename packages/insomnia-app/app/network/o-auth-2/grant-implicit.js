@@ -1,9 +1,6 @@
 // @flow
 import * as c from './constants';
-import {
-  buildQueryStringFromParams,
-  joinUrlAndQueryString
-} from 'insomnia-url';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import { responseToObject, authorizeUserInWindow } from './misc';
 
 export default async function(
@@ -39,11 +36,7 @@ export default async function(
   const qs = buildQueryStringFromParams(params);
   const finalUrl = joinUrlAndQueryString(authorizationUrl, qs);
 
-  const redirectedTo = await authorizeUserInWindow(
-    finalUrl,
-    /(access_token=)/,
-    /(error=)/
-  );
+  const redirectedTo = await authorizeUserInWindow(finalUrl, /(access_token=)/, /(error=)/);
   const fragment = redirectedTo.split('#')[1];
 
   if (fragment) {

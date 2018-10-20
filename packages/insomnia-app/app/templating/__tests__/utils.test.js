@@ -45,9 +45,7 @@ describe('getKeys()', () => {
 describe('tokenizeTag()', () => {
   beforeEach(globalBeforeEach);
   it('tokenizes complex tag', () => {
-    const actual = utils.tokenizeTag(
-      `{% name bar, "baz \\"qux\\""   , 1 + 5 | default("foo") %}`
-    );
+    const actual = utils.tokenizeTag(`{% name bar, "baz \\"qux\\""   , 1 + 5 | default("foo") %}`);
 
     const expected = {
       name: 'name',
@@ -67,10 +65,7 @@ describe('tokenizeTag()', () => {
 
     const expected = {
       name: 'name',
-      args: [
-        { type: 'string', value: 'foo', quotedBy: "'" },
-        { type: 'variable', value: 'bar' }
-      ]
+      args: [{ type: 'string', value: 'foo', quotedBy: "'" }, { type: 'variable', value: 'bar' }]
     };
 
     expect(minimal).toEqual(expected);
@@ -108,19 +103,14 @@ describe('tokenizeTag()', () => {
 
     const expected = {
       name: 'name',
-      args: [
-        { type: 'boolean', value: true },
-        { type: 'boolean', value: false }
-      ]
+      args: [{ type: 'boolean', value: true }, { type: 'boolean', value: false }]
     };
 
     expect(actual).toEqual(expected);
   });
 
   it('handles type expression', () => {
-    const actual = utils.tokenizeTag(
-      `{% name 5 * 10 + 'hello' | default(2 - 3) %}`
-    );
+    const actual = utils.tokenizeTag(`{% name 5 * 10 + 'hello' | default(2 - 3) %}`);
 
     const expected = {
       name: 'name',
@@ -160,10 +150,7 @@ describe('unTokenizeTag()', () => {
   it('fixes missing quotedBy attribute', () => {
     const tagData = {
       name: 'name',
-      args: [
-        { type: 'file', value: 'foo/bar/baz' },
-        { type: 'model', value: 'foo' }
-      ]
+      args: [{ type: 'file', value: 'foo/bar/baz' }, { type: 'model', value: 'foo' }]
     };
 
     const result = utils.unTokenizeTag(tagData);

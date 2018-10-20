@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import * as fontManager from 'font-manager';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
 import {
@@ -11,16 +12,39 @@ import {
 import type { Settings } from '../../../models/settings';
 import Wrap from '../wrap';
 import CheckForUpdatesButton from '../check-for-updates-button';
+import { setFont } from '../../../plugins/misc';
 
 type Props = {
   settings: Settings,
   updateSetting: Function,
-  handleToggleMenuBar: Function
+  handleToggleMenuBar: Function,
+  handleRootCssChange: Function
+};
+
+type State = {
+  fonts: []
 };
 
 @autobind
-class General extends React.PureComponent<Props> {
-  _handleUpdateSetting(e: SyntheticEvent<HTMLInputElement>) {
+class General extends React.PureComponent<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      fonts: []
+    };
+  }
+
+  componentDidMount() {
+    fontManager.getAvailableFonts(allFonts => {
+      const fonts = allFonts
+        .filter(i => i.style.toLowerCase() === 'regular' && !i.italic)
+        .sort((a, b) => (a.family > b.family ? 1 : -1));
+
+      this.setState({ fonts });
+    });
+  }
+
+  async _handleUpdateSetting(e: SyntheticEvent<HTMLInputElement>): Promise<Settings> {
     const el = e.currentTarget;
     let value = el.type === 'checkbox' ? el.checked : el.value;
 
@@ -28,18 +52,36 @@ class General extends React.PureComponent<Props> {
       value = parseInt(value, 10);
     }
 
-    this.props.updateSetting(el.name, value);
+    if (e.currentTarget.value === '__NULL__') {
+      value = null;
+    }
 
-    return value;
+    return this.props.updateSetting(el.name, value);
   }
 
-  _handleToggleMenuBar(e: SyntheticEvent<HTMLInputElement>) {
-    const value = this._handleUpdateSetting(e);
-    this.props.handleToggleMenuBar(value);
+  async _handleToggleMenuBar(e: SyntheticEvent<HTMLInputElement>) {
+    const settings = await this._handleUpdateSetting(e);
+    this.props.handleToggleMenuBar(settings.autoHideMenuBar);
+  }
+
+  async _handleFontLigatureChange(el: SyntheticEvent<HTMLInputElement>) {
+    const settings = await this._handleUpdateSetting(el);
+    setFont(settings);
+  }
+
+  async _handleFontSizeChange(el: SyntheticEvent<HTMLInputElement>) {
+    const settings = await this._handleUpdateSetting(el);
+    setFont(settings);
+  }
+
+  async _handleFontChange(el: SyntheticEvent<HTMLInputElement>) {
+    const settings = await this._handleUpdateSetting(el);
+    setFont(settings);
   }
 
   render() {
     const { settings } = this.props;
+    const { fonts } = this.state;
     return (
       <div>
         <div className="form-control form-control--thin">
@@ -132,8 +174,7 @@ class General extends React.PureComponent<Props> {
           <label className="inline-block">
             Nunjucks Power User Mode{' '}
             <HelpTooltip>
-              Disable tag editing interface in favor of raw Nunjucks syntax
-              (requires restart)
+              Disable tag editing interface in favor of raw Nunjucks syntax (requires restart)
             </HelpTooltip>
             <input
               type="checkbox"
@@ -156,12 +197,22 @@ class General extends React.PureComponent<Props> {
           </label>
         </div>
 
+        <div className="form-control form-control--thin">
+          <label className="inline-block">
+            Font Ligatures
+            <input
+              type="checkbox"
+              name="fontVariantLigatures"
+              checked={settings.fontVariantLigatures}
+              onChange={this._handleFontLigatureChange}
+            />
+          </label>
+        </div>
+
         <div className="form-control form-control--outlined pad-top-sm">
           <label>
             Environment Highlight Color Style{' '}
-            <HelpTooltip>
-              Configures the appearance of environment's color indicator
-            </HelpTooltip>
+            <HelpTooltip>Configures the appearance of environment's color indicator</HelpTooltip>
             <select
               defaultValue={settings.environmentHighlightColorStyle}
               name="environmentHighlightColorStyle"
@@ -177,7 +228,55 @@ class General extends React.PureComponent<Props> {
         </div>
 
         <div className="form-row">
-          <div className="form-control form-control--outlined pad-top-sm">
+          <div className="form-control form-control--outlined">
+            <label>
+              Interface Font
+              <select
+                name="fontInterface"
+                value={settings.fontInterface || '__NULL__'}
+                onChange={this._handleFontChange}>
+                <option value="__NULL__">-- System Default --</option>
+                {fonts.map((item, index) => (
+                  <option key={index} value={item.family}>
+                    {item.family}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="form-control form-control--outlined">
+            <label>
+              Interface Font Size (px)
+              <input
+                type="number"
+                name="fontSize"
+                min={8}
+                max={20}
+                defaultValue={settings.fontSize}
+                onChange={this._handleFontSizeChange}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-control form-control--outlined">
+            <label>
+              Text Editor Font
+              <select
+                name="fontMonospace"
+                value={settings.fontMonospace || '__NULL__'}
+                onChange={this._handleFontChange}>
+                <option value="__NULL__">-- System Default --</option>
+                {fonts.filter(i => i.monospace).map((item, index) => (
+                  <option key={index} value={item.family}>
+                    {item.family}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="form-control form-control--outlined">
             <label>
               Text Editor Font Size (px)
               <input
@@ -190,8 +289,10 @@ class General extends React.PureComponent<Props> {
               />
             </label>
           </div>
+        </div>
 
-          <div className="form-control form-control--outlined pad-top-sm">
+        <div className="form-row">
+          <div className="form-control form-control--outlined">
             <label>
               Text Editor Indent Size
               <input
@@ -205,7 +306,7 @@ class General extends React.PureComponent<Props> {
             </label>
           </div>
 
-          <div className="form-control form-control--outlined pad-top-sm">
+          <div className="form-control form-control--outlined">
             <label>
               Text Editor Key Map
               <select
@@ -221,35 +322,6 @@ class General extends React.PureComponent<Props> {
           </div>
         </div>
 
-        <div className="form-control form-control--outlined">
-          <label>
-            Maximum Redirects
-            <HelpTooltip className="space-left">(-1 for unlimited)</HelpTooltip>
-            <input
-              type="number"
-              name="maxRedirects"
-              min={-1}
-              defaultValue={settings.maxRedirects}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
-
-        <div className="form-control form-control--outlined">
-          <label>
-            Network Request Timeout
-            <HelpTooltip className="space-left">
-              Request timeout in milliseconds (0 for no timeout)
-            </HelpTooltip>
-            <input
-              type="number"
-              name="timeout"
-              min={-1}
-              defaultValue={settings.timeout}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
         <hr className="pad-top" />
 
         <h2>
@@ -257,8 +329,50 @@ class General extends React.PureComponent<Props> {
           <HelpTooltip
             className="space-left txt-md"
             style={{ maxWidth: '20rem', lineWrap: 'word' }}>
-            Enable global network proxy. Supports authentication via Basic Auth,
-            digest, or NTLM
+            Enable global network proxy. Supports authentication via Basic Auth, digest, or NTLM
+          </HelpTooltip>
+        </h2>
+
+        <div className="form-row">
+          <div className="form-control form-control--outlined">
+            <label>
+              Maximum Redirects
+              <HelpTooltip className="space-left">(-1 for unlimited)</HelpTooltip>
+              <input
+                type="number"
+                name="maxRedirects"
+                min={-1}
+                defaultValue={settings.maxRedirects}
+                onChange={this._handleUpdateSetting}
+              />
+            </label>
+          </div>
+
+          <div className="form-control form-control--outlined">
+            <label>
+              Network Request Timeout
+              <HelpTooltip className="space-left">
+                Request timeout in milliseconds (0 for no timeout)
+              </HelpTooltip>
+              <input
+                type="number"
+                name="timeout"
+                min={-1}
+                defaultValue={settings.timeout}
+                onChange={this._handleUpdateSetting}
+              />
+            </label>
+          </div>
+        </div>
+
+        <hr className="pad-top" />
+
+        <h2>
+          HTTP Network Proxy
+          <HelpTooltip
+            className="space-left txt-md"
+            style={{ maxWidth: '20rem', lineWrap: 'word' }}>
+            Enable global network proxy. Supports authentication via Basic Auth, digest, or NTLM
           </HelpTooltip>
         </h2>
 
@@ -305,8 +419,7 @@ class General extends React.PureComponent<Props> {
             <label>
               No Proxy{' '}
               <HelpTooltip>
-                Comma-separated list of hostnames that do not require a proxy to
-                be contacted
+                Comma-separated list of hostnames that do not require a proxy to be contacted
               </HelpTooltip>
               <input
                 placeholder="localhost,127.0.0.1"
@@ -335,8 +448,7 @@ class General extends React.PureComponent<Props> {
               <label className="inline-block">
                 Automatically download and install updates
                 <HelpTooltip className="space-left">
-                  If disabled, you will receive a notification when a new update
-                  is available
+                  If disabled, you will receive a notification when a new update is available
                 </HelpTooltip>
                 <input
                   type="checkbox"
@@ -353,12 +465,8 @@ class General extends React.PureComponent<Props> {
                   value={settings.updateChannel}
                   name="updateChannel"
                   onChange={this._handleUpdateSetting}>
-                  <option value={UPDATE_CHANNEL_STABLE}>
-                    Release (Recommended)
-                  </option>
-                  <option value={UPDATE_CHANNEL_BETA}>
-                    Early Access (Beta)
-                  </option>
+                  <option value={UPDATE_CHANNEL_STABLE}>Release (Recommended)</option>
+                  <option value={UPDATE_CHANNEL_BETA}>Early Access (Beta)</option>
                 </select>
               </label>
             </div>
@@ -371,9 +479,7 @@ class General extends React.PureComponent<Props> {
         <div className="form-control form-control--outlined">
           <label>
             Additional Plugin Path{' '}
-            <HelpTooltip>
-              Tell Insomnia to look for plugins in a different directory
-            </HelpTooltip>
+            <HelpTooltip>Tell Insomnia to look for plugins in a different directory</HelpTooltip>
             <input
               placeholder="~/.insomnia:/other/path"
               name="pluginPath"

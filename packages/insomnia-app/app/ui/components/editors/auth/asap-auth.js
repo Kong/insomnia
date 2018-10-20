@@ -52,25 +52,16 @@ class AsapAuth extends React.PureComponent<Props> {
   }
 
   renderAsapAuthenticationFields(): React.Node {
-    const asapIssuer = this.renderTextInput(
-      'Issuer (iss)',
-      'issuer',
-      'text/plain',
-      value => this._handleChangeProperty('issuer', value)
+    const asapIssuer = this.renderTextInput('Issuer (iss)', 'issuer', 'text/plain', value =>
+      this._handleChangeProperty('issuer', value)
     );
 
-    const asapSubject = this.renderTextInput(
-      'Subject (sub)',
-      'subject',
-      'text/plain',
-      value => this._handleChangeProperty('subject', value)
+    const asapSubject = this.renderTextInput('Subject (sub)', 'subject', 'text/plain', value =>
+      this._handleChangeProperty('subject', value)
     );
 
-    const asapAudience = this.renderTextInput(
-      'Audience (aud)',
-      'audience',
-      'text/plain',
-      value => this._handleChangeProperty('audience', value)
+    const asapAudience = this.renderTextInput('Audience (aud)', 'audience', 'text/plain', value =>
+      this._handleChangeProperty('audience', value)
     );
 
     const asapAdditionalClaims = this.renderTextInput(
@@ -80,23 +71,13 @@ class AsapAuth extends React.PureComponent<Props> {
       value => this._handleChangeProperty('additionalClaims', value)
     );
 
-    const asapKeyId = this.renderTextInput(
-      'Key ID (kid)',
-      'keyId',
-      'text/plain',
-      value => this._handleChangeProperty('keyId', value)
+    const asapKeyId = this.renderTextInput('Key ID (kid)', 'keyId', 'text/plain', value =>
+      this._handleChangeProperty('keyId', value)
     );
 
     const asapPrivateKey = this.renderPrivateKeyInput('Private Key');
 
-    return [
-      asapIssuer,
-      asapSubject,
-      asapAudience,
-      asapAdditionalClaims,
-      asapKeyId,
-      asapPrivateKey
-    ];
+    return [asapIssuer, asapSubject, asapAudience, asapAdditionalClaims, asapKeyId, asapPrivateKey];
   }
 
   renderTextInput(
@@ -121,12 +102,9 @@ class AsapAuth extends React.PureComponent<Props> {
         </td>
         <td className="wide">
           <div
-            className={classnames(
-              'form-control form-control--underlined no-margin',
-              {
-                'form-control--inactive': authentication.disabled
-              }
-            )}>
+            className={classnames('form-control form-control--underlined no-margin', {
+              'form-control--inactive': authentication.disabled
+            })}>
             <OneLineEditor
               id={id}
               mode={mode}
@@ -165,9 +143,8 @@ class AsapAuth extends React.PureComponent<Props> {
           <label htmlFor={id} className="label--small no-pad">
             {label}
             <HelpTooltip>
-              Can also use single line data-uri format (e.g. obtained from
-              asap-cli export-as-data-uri command), useful for saving as
-              environment data
+              Can also use single line data-uri format (e.g. obtained from asap-cli
+              export-as-data-uri command), useful for saving as environment data
             </HelpTooltip>
           </label>
         </td>
@@ -179,9 +156,7 @@ class AsapAuth extends React.PureComponent<Props> {
                 'form-control--inactive': authentication.disabled
               }
             )}>
-            <button
-              className="btn btn--clicky wide"
-              onClick={this._handleEditPrivateKey}>
+            <button className="btn btn--clicky wide" onClick={this._handleEditPrivateKey}>
               <i className="fa fa-edit space-right" />
               {authentication.privateKey ? 'Click to Edit' : 'Click to Add'}
             </button>
@@ -213,9 +188,7 @@ class AsapAuth extends React.PureComponent<Props> {
                     id="enabled"
                     onClick={this._handleDisable}
                     value={!authentication.disabled}
-                    title={
-                      authentication.disabled ? 'Enable item' : 'Disable item'
-                    }>
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
                     {authentication.disabled ? (
                       <i className="fa fa-square-o" />
                     ) : (

@@ -47,7 +47,7 @@
     }
 
     &:not(.fancy-hint)::before {
-      margin-left: -@padding-sm;
+      margin-left: calc(@padding-sm * -1);
       content: '\1d43a';
       background: var(--color-warning);
       color: var(--color-font-warning);

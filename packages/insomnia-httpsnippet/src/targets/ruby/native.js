@@ -32,10 +32,7 @@ module.exports = function(source, options) {
     code
       .push('class Net::HTTP::%s < Net::HTTPRequest', capMethod)
       .push("  METHOD = '%s'", method.toUpperCase())
-      .push(
-        "  REQUEST_HAS_BODY = '%s'",
-        source.postData.text ? 'true' : 'false'
-      )
+      .push("  REQUEST_HAS_BODY = '%s'", source.postData.text ? 'true' : 'false')
       .push('  RESPONSE_HAS_BODY = true')
       .push('end')
       .blank();
@@ -47,9 +44,7 @@ module.exports = function(source, options) {
     .push('http = Net::HTTP.new(url.host, url.port)');
 
   if (source.uriObj.protocol === 'https:') {
-    code
-      .push('http.use_ssl = true')
-      .push('http.verify_mode = OpenSSL::SSL::VERIFY_NONE');
+    code.push('http.use_ssl = true').push('http.verify_mode = OpenSSL::SSL::VERIFY_NONE');
   }
 
   code.blank().push('request = Net::HTTP::%s.new(url)', capMethod);

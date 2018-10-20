@@ -79,8 +79,7 @@ export function recryptRSAWithJWK(privateJWK, publicJWK, encryptedBlob) {
  */
 export function encryptAES(jwkOrKey, plaintext, additionalData = '') {
   // TODO: Add assertion checks for JWK
-  const rawKey =
-    typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
   const key = forge.util.hexToBytes(rawKey);
 
   const iv = forge.random.getBytesSync(12);
@@ -110,8 +109,7 @@ export function encryptAES(jwkOrKey, plaintext, additionalData = '') {
  */
 export function decryptAES(jwkOrKey, message) {
   // TODO: Add assertion checks for JWK
-  const rawKey =
-    typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
   const key = forge.util.hexToBytes(rawKey);
 
   // ~~~~~~~~~~~~~~~~~~~~ //
@@ -179,11 +177,10 @@ export async function generateAES256Key() {
 
   if (subtle) {
     console.log('[crypt] Using Native AES Key Generation');
-    const key = await subtle.generateKey(
-      { name: 'AES-GCM', length: 256 },
-      true,
-      ['encrypt', 'decrypt']
-    );
+    const key = await subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
+      'encrypt',
+      'decrypt'
+    ]);
     return subtle.exportKey('jwk', key);
   } else {
     console.log('[crypt] Using Fallback Forge AES Key Generation');
@@ -270,9 +267,7 @@ export async function generateKeyPairJWK() {
 function _hkdfSalt(rawSalt, rawEmail) {
   return new Promise(resolve => {
     const hkdf = new HKDF('sha256', rawSalt, rawEmail);
-    hkdf.derive('', DEFAULT_BYTE_LENGTH, buffer =>
-      resolve(buffer.toString('hex'))
-    );
+    hkdf.derive('', DEFAULT_BYTE_LENGTH, buffer => resolve(buffer.toString('hex')));
   });
 }
 
@@ -330,11 +325,7 @@ async function _pbkdf2Passphrase(passphrase, salt) {
       hash: 'SHA-256'
     };
 
-    const derivedKeyRaw = await window.crypto.subtle.deriveBits(
-      algo,
-      k,
-      DEFAULT_BYTE_LENGTH * 8
-    );
+    const derivedKeyRaw = await window.crypto.subtle.deriveBits(algo, k, DEFAULT_BYTE_LENGTH * 8);
     return Buffer.from(derivedKeyRaw).toString('hex');
   } else {
     console.log('[crypt] Using Forge PBKDF2');

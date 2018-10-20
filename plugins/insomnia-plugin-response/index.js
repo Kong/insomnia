@@ -66,9 +66,7 @@ module.exports.templateTags = [
         throw new Error(`Could not find request ${id}`);
       }
 
-      const response = await context.util.models.response.getLatestForRequestId(
-        id
-      );
+      const response = await context.util.models.response.getLatestForRequestId(id);
 
       if (!response) {
         throw new Error('No responses for request');
@@ -87,10 +85,7 @@ module.exports.templateTags = [
       if (field === 'header') {
         return matchHeader(response.headers, sanitizedFilter);
       } else if (field === 'raw') {
-        const bodyBuffer = context.util.models.response.getBodyBuffer(
-          response,
-          ''
-        );
+        const bodyBuffer = context.util.models.response.getBodyBuffer(response, '');
         const match = response.contentType.match(/charset=([\w-]+)/);
         const charset = match && match.length >= 2 ? match[1] : 'utf-8';
 
@@ -102,10 +97,7 @@ module.exports.templateTags = [
           return bodyBuffer.toString();
         }
       } else if (field === 'body') {
-        const bodyBuffer = context.util.models.response.getBodyBuffer(
-          response,
-          ''
-        );
+        const bodyBuffer = context.util.models.response.getBodyBuffer(response, '');
         const match = response.contentType.match(/charset=([\w-]+)/);
         const charset = match && match.length >= 2 ? match[1] : 'utf-8';
 
@@ -180,9 +172,7 @@ function matchHeader(headers, name) {
 
   if (!header) {
     const names = headers.map(c => `"${c.name}"`).join(',\n\t');
-    throw new Error(
-      `No header with name "${name}".\nChoices are [\n\t${names}\n]`
-    );
+    throw new Error(`No header with name "${name}".\nChoices are [\n\t${names}\n]`);
   }
 
   return header.value;

@@ -73,10 +73,7 @@ class KeyValueEditorRow extends PureComponent {
       // Insert the pasted text into the current selection. Unfortunately, this
       // is the easiest way to do this.
       const currentValue = this._valueInput.getValue();
-      const prefix = currentValue.slice(
-        0,
-        this._valueInput.getSelectionStart()
-      );
+      const prefix = currentValue.slice(0, this._valueInput.getSelectionStart());
       const suffix = currentValue.slice(this._valueInput.getSelectionEnd());
       const finalValue = `${prefix}${value}${suffix}`;
 
@@ -250,9 +247,7 @@ class KeyValueEditorRow extends PureComponent {
           <DropdownButton className="tall">
             <i className="fa fa-caret-down" />
           </DropdownButton>
-          <DropdownItem
-            onClick={this._handleTypeChange}
-            value={{ type: 'text', multiline: false }}>
+          <DropdownItem onClick={this._handleTypeChange} value={{ type: 'text', multiline: false }}>
             Text
           </DropdownItem>
           {allowMultiline && (
@@ -263,9 +258,7 @@ class KeyValueEditorRow extends PureComponent {
             </DropdownItem>
           )}
           {allowFile && (
-            <DropdownItem
-              onClick={this._handleTypeChange}
-              value={{ type: 'file' }}>
+            <DropdownItem onClick={this._handleTypeChange} value={{ type: 'file' }}>
               File
             </DropdownItem>
           )}
@@ -303,10 +296,8 @@ class KeyValueEditorRow extends PureComponent {
     const classes = classnames(className, {
       'key-value-editor__row-wrapper': true,
       'key-value-editor__row-wrapper--dragging': isDragging,
-      'key-value-editor__row-wrapper--dragging-above':
-        isDraggingOver && dragDirection > 0,
-      'key-value-editor__row-wrapper--dragging-below':
-        isDraggingOver && dragDirection < 0,
+      'key-value-editor__row-wrapper--dragging-above': isDraggingOver && dragDirection > 0,
+      'key-value-editor__row-wrapper--dragging-below': isDraggingOver && dragDirection < 0,
       'key-value-editor__row-wrapper--disabled': pair.disabled
     });
 
@@ -328,12 +319,9 @@ class KeyValueEditorRow extends PureComponent {
         {handle}
         <div className="key-value-editor__row">
           <div
-            className={classnames(
-              'form-control form-control--underlined form-control--wide',
-              {
-                'form-control--inactive': pair.disabled
-              }
-            )}>
+            className={classnames('form-control form-control--underlined form-control--wide', {
+              'form-control--inactive': pair.disabled
+            })}>
             <OneLineEditor
               ref={this._setNameInputRef}
               placeholder={namePlaceholder || 'Name'}
@@ -503,12 +491,8 @@ function targetCollect(connect, monitor) {
   };
 }
 
-const source = DragSource('KEY_VALUE_EDITOR', dragSource, sourceCollect)(
-  KeyValueEditorRow
-);
-const target = DropTarget('KEY_VALUE_EDITOR', dragTarget, targetCollect)(
-  source
-);
+const source = DragSource('KEY_VALUE_EDITOR', dragSource, sourceCollect)(KeyValueEditorRow);
+const target = DropTarget('KEY_VALUE_EDITOR', dragTarget, targetCollect)(source);
 
 target.prototype.focusNameEnd = function() {
   this.handler.component.decoratedComponentInstance.focusNameEnd();

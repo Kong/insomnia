@@ -14,15 +14,8 @@ import RenderedQueryString from './rendered-query-string';
 import BodyEditor from './editors/body/body-editor';
 import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
-import {
-  DEBOUNCE_MILLIS,
-  getAuthTypeName,
-  getContentTypeName
-} from '../../common/constants';
-import {
-  deconstructQueryStringToParams,
-  extractQueryStringFromUrl
-} from 'insomnia-url';
+import { DEBOUNCE_MILLIS, getAuthTypeName, getContentTypeName } from '../../common/constants';
+import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import Hotkey from './hotkey';
@@ -82,10 +75,7 @@ class RequestPane extends React.PureComponent<Props> {
   }
 
   async _autocompleteUrls(): Promise<Array<string>> {
-    const docs = await db.withDescendants(
-      this.props.workspace,
-      models.request.type
-    );
+    const docs = await db.withDescendants(this.props.workspace, models.request.type);
 
     const requestId = this.props.request ? this.props.request._id : 'n/a';
 
@@ -139,10 +129,7 @@ class RequestPane extends React.PureComponent<Props> {
 
     // Remove the search string (?foo=bar&...) from the Url
     const url = request.url.replace(query, '');
-    const parameters = [
-      ...request.parameters,
-      ...deconstructQueryStringToParams(query)
-    ];
+    const parameters = [...request.parameters, ...deconstructQueryStringToParams(query)];
 
     // Only update if url changed
     if (url !== request.url) {
@@ -214,9 +201,7 @@ class RequestPane extends React.PureComponent<Props> {
               </table>
 
               <div className="text-center pane__body--placeholder__cta">
-                <button
-                  className="btn inline-block btn--clicky"
-                  onClick={this._handleImportFile}>
+                <button className="btn inline-block btn--clicky" onClick={this._handleImportFile}>
                   Import from File
                 </button>
                 <button
@@ -275,9 +260,7 @@ class RequestPane extends React.PureComponent<Props> {
                 {typeof request.body.mimeType === 'string'
                   ? getContentTypeName(request.body.mimeType)
                   : 'Body'}
-                {numBodyParams ? (
-                  <span className="bubble space-left">{numBodyParams}</span>
-                ) : null}
+                {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
                 <i className="fa fa-caret-down space-left" />
               </ContentTypeDropdown>
             </Tab>
@@ -293,17 +276,13 @@ class RequestPane extends React.PureComponent<Props> {
             <Tab>
               <button>
                 Query
-                {numParameters > 0 && (
-                  <span className="bubble space-left">{numParameters}</span>
-                )}
+                {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
               </button>
             </Tab>
             <Tab>
               <button>
                 Header
-                {numHeaders > 0 && (
-                  <span className="bubble space-left">{numHeaders}</span>
-                )}
+                {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
               </button>
             </Tab>
             <Tab>
@@ -317,9 +296,7 @@ class RequestPane extends React.PureComponent<Props> {
               </button>
             </Tab>
           </TabList>
-          <TabPanel
-            key={uniqueKey}
-            className="react-tabs__tab-panel editor-wrapper">
+          <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
             <BodyEditor
               key={uniqueKey}
               handleUpdateRequestMimeType={updateRequestMimeType}
@@ -335,16 +312,12 @@ class RequestPane extends React.PureComponent<Props> {
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable">
-              <ErrorBoundary
-                key={uniqueKey}
-                errorClassName="font-error pad text-center">
+              <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
                 <AuthWrapper
                   oAuth2Token={oAuth2Token}
                   showPasswords={settings.showPasswords}
                   request={request}
-                  handleUpdateSettingsShowPasswords={
-                    updateSettingsShowPasswords
-                  }
+                  handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
                   nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
@@ -360,10 +333,7 @@ class RequestPane extends React.PureComponent<Props> {
                 <ErrorBoundary
                   key={uniqueKey}
                   errorClassName="tall wide vertically-align font-error pad text-center">
-                  <RenderedQueryString
-                    handleRender={handleRender}
-                    request={request}
-                  />
+                  <RenderedQueryString handleRender={handleRender} request={request} />
                 </ErrorBoundary>
               </code>
             </div>
@@ -387,20 +357,14 @@ class RequestPane extends React.PureComponent<Props> {
             <div className="pad-right text-right">
               <button
                 className="margin-top-sm btn btn--clicky"
-                title={
-                  urlHasQueryParameters
-                    ? 'Import querystring'
-                    : 'No query params to import'
-                }
+                title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
                 onClick={this._handleImportQueryFromUrl}>
                 Import from URL
               </button>
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel header-editor">
-            <ErrorBoundary
-              key={uniqueKey}
-              errorClassName="font-error pad text-center">
+            <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
               <RequestHeadersEditor
                 headers={request.headers}
                 handleRender={handleRender}
@@ -422,15 +386,11 @@ class RequestPane extends React.PureComponent<Props> {
               </button>
             </div>
           </TabPanel>
-          <TabPanel
-            key={`docs::${uniqueKey}`}
-            className="react-tabs__tab-panel tall scrollable">
+          <TabPanel key={`docs::${uniqueKey}`} className="react-tabs__tab-panel tall scrollable">
             {request.description ? (
               <div>
                 <div className="pull-right pad bg-default">
-                  <button
-                    className="btn btn--clicky"
-                    onClick={this._handleEditDescription}>
+                  <button className="btn btn--clicky" onClick={this._handleEditDescription}>
                     Edit
                   </button>
                 </div>
@@ -449,10 +409,7 @@ class RequestPane extends React.PureComponent<Props> {
               <div className="overflow-hidden editor vertically-center text-center">
                 <p className="pad text-sm text-center">
                   <span className="super-faint">
-                    <i
-                      className="fa fa-file-text-o"
-                      style={{ fontSize: '8rem', opacity: 0.3 }}
-                    />
+                    <i className="fa fa-file-text-o" style={{ fontSize: '8rem', opacity: 0.3 }} />
                   </span>
                   <br />
                   <br />

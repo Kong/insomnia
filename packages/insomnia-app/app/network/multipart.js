@@ -9,10 +9,7 @@ export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
 
 export async function buildMultipart(params: Array<RequestBodyParameter>) {
   return new Promise(async (resolve: Function, reject: Function) => {
-    const filePath = path.join(
-      electron.remote.app.getPath('temp'),
-      Math.random() + '.body'
-    );
+    const filePath = path.join(electron.remote.app.getPath('temp'), Math.random() + '.body');
     const writeStream = fs.createWriteStream(filePath);
     const lineBreak = '\r\n';
     let totalSize = 0;
@@ -57,8 +54,7 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
       if (param.type === 'file' && param.fileName) {
         const name = param.name || '';
         const fileName = param.fileName;
-        const contentType =
-          mimes.lookup(fileName) || 'application/octet-stream';
+        const contentType = mimes.lookup(fileName) || 'application/octet-stream';
         addString(
           'Content-Disposition: form-data; ' +
             `name="${name.replace(/"/g, '\\"')}"; ` +

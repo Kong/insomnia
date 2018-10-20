@@ -41,18 +41,13 @@ export async function migrate(doc: ClientCertificate) {
 
 export function create(patch: Object = {}): Promise<ClientCertificate> {
   if (!patch.parentId) {
-    throw new Error(
-      'New ClientCertificate missing `parentId`: ' + JSON.stringify(patch)
-    );
+    throw new Error('New ClientCertificate missing `parentId`: ' + JSON.stringify(patch));
   }
 
   return db.docCreate(type, patch);
 }
 
-export function update(
-  cert: ClientCertificate,
-  patch: Object = {}
-): Promise<ClientCertificate> {
+export function update(cert: ClientCertificate, patch: Object = {}): Promise<ClientCertificate> {
   return db.docUpdate(cert, patch);
 }
 
@@ -60,9 +55,7 @@ export function getById(id: string): Promise<ClientCertificate | null> {
   return db.get(type, id);
 }
 
-export function findByParentId(
-  parentId: string
-): Promise<Array<ClientCertificate>> {
+export function findByParentId(parentId: string): Promise<Array<ClientCertificate>> {
   return db.find(type, { parentId });
 }
 

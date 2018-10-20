@@ -87,10 +87,7 @@ describe('migrate()', () => {
   });
 
   it('does it', async () => {
-    const bodyPath = path.join(
-      electron.remote.app.getPath('userData'),
-      'foo.zip'
-    );
+    const bodyPath = path.join(electron.remote.app.getPath('userData'), 'foo.zip');
     fs.writeFileSync(bodyPath, zlib.gzipSync('Hello World!'));
 
     const response = await models.initModel(models.response.type, { bodyPath });

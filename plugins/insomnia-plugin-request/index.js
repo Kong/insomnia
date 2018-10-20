@@ -49,8 +49,7 @@ module.exports.templateTags = [
       },
       {
         type: 'string',
-        hide: args =>
-          ['url', 'oauth2', 'name', 'folder'].includes(args[0].value),
+        hide: args => ['url', 'oauth2', 'name', 'folder'].includes(args[0].value),
         displayName: args => {
           switch (args[0].value) {
             case 'cookie':
@@ -65,8 +64,7 @@ module.exports.templateTags = [
       {
         hide: args => args[0].value !== 'folder',
         displayName: 'Parent Index',
-        help:
-          'Specify an index (Starting at 0) for how high up the folder tree to look',
+        help: 'Specify an index (Starting at 0) for how high up the folder tree to look',
         type: 'number'
       }
     ],
@@ -79,9 +77,7 @@ module.exports.templateTags = [
       }
 
       const request = await context.util.models.request.getById(meta.requestId);
-      const workspace = await context.util.models.workspace.getById(
-        meta.workspaceId
-      );
+      const workspace = await context.util.models.workspace.getById(meta.workspaceId);
 
       if (!request) {
         throw new Error(`Request not found for ${meta.requestId}`);
@@ -99,9 +95,7 @@ module.exports.templateTags = [
             throw new Error('No cookie specified');
           }
 
-          const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(
-            workspace
-          );
+          const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(workspace);
           const url = await getRequestUrl(context, request);
           return getCookieValue(cookieJar, url, name);
         case 'header':
@@ -124,13 +118,9 @@ module.exports.templateTags = [
           }
 
           const namesStr = names.map(n => `"${n}"`).join(',\n\t');
-          throw new Error(
-            `No header with name "${name}".\nChoices are [\n\t${namesStr}\n]`
-          );
+          throw new Error(`No header with name "${name}".\nChoices are [\n\t${namesStr}\n]`);
         case 'oauth2':
-          const token = await context.util.models.oAuth2Token.getByRequestId(
-            request._id
-          );
+          const token = await context.util.models.oAuth2Token.getByRequestId(request._id);
           if (!token) {
             throw new Error('No OAuth 2.0 tokens found for request');
           }
@@ -138,9 +128,7 @@ module.exports.templateTags = [
         case 'name':
           return request.name;
         case 'folder':
-          const ancestors = await context.util.models.request.getAncestors(
-            request
-          );
+          const ancestors = await context.util.models.request.getAncestors(request);
           const doc = ancestors[folderIndex || 0];
           if (!doc) {
             throw new Error(

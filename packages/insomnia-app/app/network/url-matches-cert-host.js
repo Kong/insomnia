@@ -8,9 +8,7 @@ const DEFAULT_PORT = 443;
 export function urlMatchesCertHost(certificateHost, requestUrl) {
   const cHostWithProtocol = setDefaultProtocol(certificateHost, 'https:');
   const { hostname, port } = urlParse(requestUrl);
-  const { hostname: cHostname, port: cPort } = certificateUrlParse(
-    cHostWithProtocol
-  );
+  const { hostname: cHostname, port: cPort } = certificateUrlParse(cHostWithProtocol);
 
   const assumedPort = parseInt(port) || DEFAULT_PORT;
   const assumedCPort = parseInt(cPort) || DEFAULT_PORT;

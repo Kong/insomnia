@@ -9,21 +9,14 @@ class ModalHeader extends PureComponent {
 
     if (!hideCloseButton) {
       closeButton = (
-        <button
-          type="button"
-          className="btn btn--compact modal__close-btn"
-          data-close-modal="true">
+        <button type="button" className="btn btn--compact modal__close-btn" data-close-modal="true">
           <i className="fa fa-times" />
         </button>
       );
     }
 
     return (
-      <div
-        className={classnames(
-          'modal__header theme--dialog__header',
-          className
-        )}>
+      <div className={classnames('modal__header theme--dialog__header', className)}>
         <div className="modal__header__children">{children}</div>
         {closeButton}
       </div>

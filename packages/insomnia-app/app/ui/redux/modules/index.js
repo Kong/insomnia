@@ -10,10 +10,7 @@ export async function init() {
   const store = configureStore();
 
   // Do things that must happen before initial render
-  const { addChanges, addChangesSync } = bindActionCreators(
-    entities,
-    store.dispatch
-  );
+  const { addChanges, addChangesSync } = bindActionCreators(entities, store.dispatch);
   const { newCommand } = bindActionCreators(global, store.dispatch);
 
   const allDocs = await getAllDocs();

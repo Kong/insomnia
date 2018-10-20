@@ -23,11 +23,7 @@ class SidebarRequestGroupRow extends PureComponent {
   }
 
   _handleCollapse() {
-    const {
-      requestGroup,
-      handleSetRequestGroupCollapsed,
-      isCollapsed
-    } = this.props;
+    const { requestGroup, handleSetRequestGroupCollapsed, isCollapsed } = this.props;
     handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
   }
 
@@ -77,9 +73,7 @@ class SidebarRequestGroupRow extends PureComponent {
     // NOTE: We only want the button draggable, not the whole container (ie. no children)
     const button = connectDragSource(
       connectDropTarget(
-        <button
-          onClick={this._handleCollapse}
-          onContextMenu={this._handleShowActions}>
+        <button onClick={this._handleCollapse} onContextMenu={this._handleShowActions}>
           <div className="sidebar__clickable">
             <i className={'sidebar__item__icon fa ' + folderIconClass} />
             <Highlight search={filter} text={requestGroup.name} />
@@ -185,8 +179,7 @@ function isAbove(monitor, component) {
 
 const dragTarget = {
   drop(props, monitor, component) {
-    const movingDoc =
-      monitor.getItem().requestGroup || monitor.getItem().request;
+    const movingDoc = monitor.getItem().requestGroup || monitor.getItem().request;
     const parentId = props.requestGroup.parentId;
     const targetId = props.requestGroup._id;
 
@@ -219,9 +212,5 @@ function targetCollect(connect, monitor) {
   };
 }
 
-const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(
-  SidebarRequestGroupRow
-);
-export default DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(
-  source
-);
+const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestGroupRow);
+export default DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);

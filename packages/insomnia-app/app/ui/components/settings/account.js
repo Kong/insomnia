@@ -32,10 +32,7 @@ class Account extends PureComponent {
           </p>
           <br />
           <div className="pad">
-            <Link
-              button
-              className="btn btn--clicky"
-              href="https://insomnia.rest/plus/">
+            <Link button className="btn btn--clicky" href="https://insomnia.rest/plus/">
               Plus for Individuals <i className="fa fa-external-link" />
             </Link>
             <Link
@@ -61,19 +58,13 @@ class Account extends PureComponent {
       <div>
         <h2 className="no-margin-top">Welcome {session.getFirstName()}!</h2>
         <p>
-          You are currently logged in as{' '}
-          <code className="code--compact">{session.getEmail()}</code>
+          You are currently logged in as <code className="code--compact">{session.getEmail()}</code>
         </p>
         <br />
-        <Link
-          button
-          href="https://insomnia.rest/app/"
-          className="btn btn--clicky">
+        <Link button href="https://insomnia.rest/app/" className="btn btn--clicky">
           Manage Account
         </Link>
-        <PromptButton
-          className="margin-left-sm btn btn--clicky"
-          onClick={this._handleLogout}>
+        <PromptButton className="margin-left-sm btn btn--clicky" onClick={this._handleLogout}>
           Sign Out
         </PromptButton>
       </div>
