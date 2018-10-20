@@ -282,7 +282,9 @@ export function updateMimeType(
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
   const hasBody = typeof mimeType === 'string';
-  if (!hasBody || mimeType === CONTENT_TYPE_OTHER) {
+  if (!hasBody) {
+    headers = headers.filter(h => h !== contentTypeHeader);
+  } else if (mimeType === CONTENT_TYPE_OTHER) {
     // Leave headers alone
   } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
     contentTypeHeader.value = contentTypeHeaderValue;
