@@ -263,7 +263,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         };
       }
     } catch (err) {
-      console.warn('Failed to fetch GraphQL schema', err);
+      console.log('[graphql] ERROR: Failed to fetch schema', err);
       newState.schemaFetchError = {
         message: `Failed to to fetch schema: ${err.message}`,
         response: responsePatch

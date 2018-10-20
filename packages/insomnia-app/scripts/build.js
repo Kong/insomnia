@@ -1,4 +1,4 @@
-const npm = require('npm');
+const childProcess = require('child_process');
 const webpack = require('webpack');
 const rimraf = require('rimraf');
 const ncp = require('ncp').ncp;
@@ -16,6 +16,10 @@ if (require.main === module) {
 }
 
 module.exports.start = async function() {
+  console.log('[build] Starting build');
+  console.log('[build] npm: ' + childProcess.spawnSync('npm', ['--version']).stdout);
+  console.log('[build] node: ' + childProcess.spawnSync('node', ['--version']).stdout);
+
   // Remove folders first
   console.log('[build] Removing existing directories');
   await emptyDir('../build');
@@ -71,6 +75,7 @@ async function copyFiles(relSource, relDest) {
   return new Promise((resolve, reject) => {
     const source = path.resolve(__dirname, relSource);
     const dest = path.resolve(__dirname, relDest);
+    console.log(`[build] copy ${source} to ${dest}`);
     ncp(source, dest, err => {
       if (err) {
         reject(err);
@@ -84,28 +89,24 @@ async function copyFiles(relSource, relDest) {
 async function install(relDir) {
   return new Promise((resolve, reject) => {
     const prefix = path.resolve(__dirname, relDir);
-    npm.load(
-      {
-        prefix,
-        buildFromSource: true,
-        production: true,
-        optional: false,
-        'package-lock': false
-      },
-      err => {
-        if (err) {
-          return reject(err);
-        }
 
-        npm.commands.install([prefix], err => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      }
-    );
+    const p = childProcess.spawn('npm', ['install', '--production', '--no-optional'], {
+      cwd: prefix,
+      shell: true
+    });
+
+    p.stdout.on('data', data => {
+      console.log(data.toString());
+    });
+
+    p.stderr.on('data', data => {
+      console.log(data.toString());
+    });
+
+    p.on('exit', code => {
+      console.log('child process exited with code ' + code.toString());
+      resolve();
+    });
   });
 }
 

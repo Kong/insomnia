@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-declare module 'react-sortable-hoc' {
+declare module 'react-sortable-hoc/dist/es6' {
   declare module.exports: {
     SortableContainer: ((Object) => React.Node) => React.Component,
     SortableElement: ((Object) => React.Node) => React.Component,

@@ -10,7 +10,7 @@
   "scripts": {
     "bootstrap": "npm install && lerna bootstrap && lerna run bootstrap",
     "publish": "lerna publish",
-    "clean": "lerna clean --yes",
+    "clean": "lerna clean --yes && rimraf node_modules",
     "test": "lerna run test --stream",
     "app-start": "lerna run start --stream --scope=insomnia-app",
     "app-build": "lerna run build --stream --scope=insomnia-app",
@@ -25,9 +25,11 @@
   "devDependencies": {
     "husky": "^1.0.0-rc.9",
     "jest": "^22.1.1",
-    "lerna": "^2.5.1",
+    "lerna": "^3.4.3",
     "prettier": "^1.13.6",
     "pretty-quick": "^1.6.0",
+    "rimraf": "^2.6.2",
+    "shelljs": "^0.8.2",
     "webpack": "^4.8.3"
   },
   "dependencies": {}

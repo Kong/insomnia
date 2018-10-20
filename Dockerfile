@@ -11,7 +11,7 @@ RUN apt-get install -y \
     wget
 
 # Install Node and app-related dependencies
-RUN wget -O- https://deb.nodesource.com/setup_8.x | bash - \
+RUN wget -O- https://deb.nodesource.com/setup_10.x | bash - \
     && apt-get install -y nodejs graphicsmagick icnsutils
 
 # Build zlib from source (for Curl)
@@ -45,7 +45,7 @@ RUN wget -q https://github.com/nghttp2/nghttp2/releases/download/v1.31.1/nghttp2
     && ldconfig
 
 # Build Curl from source
-RUN wget -q https://github.com/curl/curl/releases/download/curl-7_59_0/curl-7.59.0.tar.gz -O ./curl.tar.gz \
+RUN wget -q https://github.com/curl/curl/releases/download/curl-7_61_1/curl-7.61.1.tar.gz -O ./curl.tar.gz \
     && mkdir -p /src/curl \
     && tar -xvf curl.tar.gz -C /src/curl --strip 1 \
     && cd /src/curl \
@@ -68,7 +68,6 @@ RUN wget -q https://github.com/curl/curl/releases/download/curl-7_59_0/curl-7.59
 ADD . /src/insomnia
 WORKDIR /src/insomnia
 VOLUME /src/insomnia/packages/insomnia-app/dist
-ENV NODELIBCURL_BUILD_STATIC=yes
 
 # Install root project dependencies
 RUN npm run bootstrap \

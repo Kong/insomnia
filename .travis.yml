@@ -2,43 +2,39 @@ language: node_js
 
 matrix:
   include:
-    - os: linux
-      sudo: required
-      dist: trusty
-      env:
-        - DOCKER_COMPOSE_VERSION=1.20.1
-      # Get newer docker-compose
-      before_install:
-        - sudo rm /usr/local/bin/docker-compose
-        - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-        - chmod +x docker-compose
-        - sudo mv docker-compose /usr/local/bin
-        # Some hack to get stdout to be blocking
-      before_deploy:
-        - python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
-        - docker-compose build package
-        - docker-compose run package
-    - os: osx
-      install:
-        - npm install 7zip-bin-mac > /dev/null
-      env:
-        - CSC_LINK=$MAC_CSC_LINK
-        - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
-      before_deploy:
-        - npm run app-package
+  - os: linux
+    sudo: required
+    dist: trusty
+    env:
+    - DOCKER_COMPOSE_VERSION=1.20.1
+    before_install:
+    - sudo rm /usr/local/bin/docker-compose
+    - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+    - chmod +x docker-compose
+    - sudo mv docker-compose /usr/local/bin
+    before_deploy:
+    - python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
+    - docker-compose build package
+    - docker-compose run package
+  - os: osx
+    env:
+    - CSC_LINK=$MAC_CSC_LINK
+    - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
+    before_deploy:
+    - npm run app-package
 
 cache:
   directories:
-    - node_modules
-    - build/node_modules
-    - $HOME/.electron
-    - $HOME/.cache
+  - node_modules
+  - build/node_modules
+  - $HOME/.electron
+  - $HOME/.cache
 
 script:
-  - node --version
-  - npm --version
-  - npm run bootstrap
-  - npm test
+- node --version
+- npm --version
+- npm run bootstrap
+- npm test
 
 deploy:
   provider: releases
@@ -47,11 +43,11 @@ deploy:
   file_glob: true
   prerelease: true
   file:
-    - packages/insomnia-app/dist/**/*.zip
-    - packages/insomnia-app/dist/**/*.dmg
-    - packages/insomnia-app/dist/**/*.deb
-    - packages/insomnia-app/dist/**/*.snap
-    - packages/insomnia-app/dist/**/*.AppImage
-    - packages/insomnia-app/dist/**/*.tar.gz
+  - packages/insomnia-app/dist/**/*.zip
+  - packages/insomnia-app/dist/**/*.dmg
+  - packages/insomnia-app/dist/**/*.deb
+  - packages/insomnia-app/dist/**/*.snap
+  - packages/insomnia-app/dist/**/*.AppImage
+  - packages/insomnia-app/dist/**/*.tar.gz
   on:
     tags: true

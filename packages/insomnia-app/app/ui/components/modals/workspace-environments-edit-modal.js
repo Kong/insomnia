@@ -2,7 +2,7 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
+import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc/dist/es6';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 import PromptButton from '../base/prompt-button';
 import Button from '../base/button';

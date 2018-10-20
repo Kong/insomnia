@@ -17,7 +17,8 @@ if (require.main === module) {
       await buildTask.start();
       await module.exports.start();
     } catch (err) {
-      console.warn('ERROR: ', err.stack);
+      console.log('[package] ERROR: ', err.stack);
+      process.exit(1);
     }
   });
 }
@@ -33,21 +34,13 @@ module.exports.start = async function() {
 };
 
 async function pkg(relConfigPath) {
-  try {
-    const configPath = path.resolve(__dirname, relConfigPath);
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const targetPlatform = PLATFORM_MAP[process.platform];
-    const packager = new electronBuilder.Packager({
-      config,
-      cscLink: process.env.CSC_LINK,
-      cscKeyPassword: process.env.CSC_KEY_PASSWORD,
-      [targetPlatform]: config[targetPlatform].target
-    });
-    return packager.build();
-  } catch (err) {
-    console.log('[package] Failed: ' + err.stack);
-    throw err;
-  }
+  const configPath = path.resolve(__dirname, relConfigPath);
+  const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  const targetPlatform = PLATFORM_MAP[process.platform];
+  return electronBuilder.build({
+    config,
+    [targetPlatform]: config[targetPlatform].target
+  });
 }
 
 async function emptyDir(relPath) {

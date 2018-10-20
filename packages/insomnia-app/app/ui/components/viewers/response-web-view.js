@@ -8,20 +8,19 @@ import contextMenu from 'electron-context-menu';
 class ResponseWebView extends PureComponent {
   _handleSetWebViewRef(n) {
     this._webview = n;
-    if (n) {
-      contextMenu({ window: this._webview });
-    }
   }
 
   _handleDOMReady() {
     this._webview.removeEventListener('dom-ready', this._handleDOMReady);
+    contextMenu({ window: this._webview });
     this._setBody();
   }
 
   _setBody() {
     const { body, contentType, url } = this.props;
-    const newBody = body.replace('<head>', `<head><base href="${url}">`);
-    this._webview.loadURL(`data:${contentType},${encodeURIComponent(newBody)}`);
+    this._webview.loadURL(`data:${contentType},${encodeURIComponent(body)}`, {
+      baseURLForDataURL: url
+    });
 
     // This is kind of hacky but electron-context-menu fails to save images if
     // this isn't here.
