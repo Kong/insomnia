@@ -139,7 +139,6 @@ export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_FILE = 'application/octet-stream';
 export const CONTENT_TYPE_GRAPHQL = 'application/graphql';
 export const CONTENT_TYPE_OTHER = '';
-export const CONTENT_TYPE_NO_BODY = null;
 
 const contentTypesMap = {
   [CONTENT_TYPE_JSON]: ['JSON', 'JSON'],
