@@ -86,7 +86,7 @@ class GenerateCodeModal extends PureComponent {
     const { environmentId } = this.props;
     const har = await exportHarRequest(request._id, environmentId, addContentLength);
     const snippet = new HTTPSnippet(har);
-    const cmd = snippet.convert(target.key, client.key);
+    const cmd = await snippet.convert(target.key, client.key);
 
     this.setState({ request, cmd, client, target });
 
@@ -95,9 +95,9 @@ class GenerateCodeModal extends PureComponent {
     window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(target));
   }
 
-  show(request) {
+  async show(request) {
     const { client, target } = this.state;
-    this._generateCode(request, target, client);
+    await this._generateCode(request, target, client);
     this.modal.show();
   }
 

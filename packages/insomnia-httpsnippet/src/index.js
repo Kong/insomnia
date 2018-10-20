@@ -18,6 +18,9 @@ var HTTPSnippet = function(data) {
   // prep the main container
   self.requests = [];
 
+  // allow .convert to return only when data is ready
+  self.ready = null;
+
   // is it har?
   if (input.log && input.log.entries) {
     entries = input.log.entries;
@@ -122,6 +125,12 @@ HTTPSnippet.prototype.prepare = function(request) {
           })
         );
 
+        self.ready = new Promise(resolve => {
+          form.on('end', function() {
+            resolve();
+          });
+        });
+
         request.postData.boundary = form.getBoundary();
         request.headersObj['content-type'] = 'multipart/form-data; boundary=' + form.getBoundary();
       }
@@ -157,6 +166,11 @@ HTTPSnippet.prototype.prepare = function(request) {
       }
       break;
   }
+  if (!self.ready) {
+    self.ready = new Promise(resolve => {
+      resolve();
+    });
+  }
 
   // create allHeaders object
   request.allHeaders = Object.assign(request.allHeaders, request.headersObj);
@@ -191,10 +205,12 @@ HTTPSnippet.prototype.prepare = function(request) {
   return request;
 };
 
-HTTPSnippet.prototype.convert = function(target, client, opts) {
+HTTPSnippet.prototype.convert = async function(target, client, opts) {
   if (!opts && client) {
     opts = client;
   }
+
+  await self.ready;
 
   var func = this._matchTarget(target, client);
 

@@ -325,7 +325,7 @@ class App extends PureComponent {
     const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
     const har = await exportHarRequest(request._id, environmentId);
     const snippet = new HTTPSnippet(har);
-    const cmd = snippet.convert('shell', 'curl');
+    const cmd = await snippet.convert('shell', 'curl');
     clipboard.writeText(cmd);
   }
 
