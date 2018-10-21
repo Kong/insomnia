@@ -242,8 +242,6 @@ export async function setFont(settings: Object) {
     return;
   }
 
-  console.log('SETTINGS', settings);
-
   html.style.setProperty('--font-default', settings.fontInterface);
   html.style.setProperty('--font-monospace', settings.fontMonospace);
   html.style.setProperty('--font-ligatures', settings.fontVariantLigatures ? 'normal' : 'none');

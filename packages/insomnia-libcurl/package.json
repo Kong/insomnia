@@ -9,6 +9,6 @@
     "test": "node --version"
   },
   "dependencies": {
-    "insomnia-node-libcurl": "^2.0.0-alpha.0-0"
+    "insomnia-node-libcurl": "^2.0.0-alpha.0-1"
   }
 }
