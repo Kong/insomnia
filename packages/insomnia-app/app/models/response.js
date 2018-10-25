@@ -11,6 +11,7 @@ import mkdirp from 'mkdirp';
 import * as electron from 'electron';
 import { MAX_RESPONSES } from '../common/constants';
 import * as db from '../common/database';
+import {getDataDirectory} from '../common/misc';
 
 export const name = 'Response';
 export const type = 'Response';
@@ -202,7 +203,7 @@ async function migrateBodyToFileSystem(doc: Object) {
   if (doc.hasOwnProperty('body') && doc._id && !doc.bodyPath) {
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
     const { app } = electron.remote || electron;
-    const root = app.getPath('userData');
+    const root = getDataDirectory();
     const dir = path.join(root, 'responses');
 
     mkdirp.sync(dir);

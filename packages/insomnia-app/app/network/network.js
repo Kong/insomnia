@@ -37,7 +37,8 @@ import {
   hasAuthHeader,
   hasContentTypeHeader,
   hasUserAgentHeader,
-  waitForStreamToFinish
+  waitForStreamToFinish,
+  getDataDirectory
 } from '../common/misc';
 import {
   buildQueryStringFromParams,
@@ -641,7 +642,7 @@ export async function _actuallySend(
       setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       let responseBodyBytes = 0;
-      const responsesDir = pathJoin(app.getPath('userData'), 'responses');
+      const responsesDir = pathJoin(getDataDirectory(), 'responses');
       mkdirp.sync(responsesDir);
       const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.response');
       const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);

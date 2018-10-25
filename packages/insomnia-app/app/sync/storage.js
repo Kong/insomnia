@@ -198,7 +198,7 @@ function _initConfig(data) {
 
 export function initDB(config, forceReset) {
   if (!_database || forceReset) {
-    const basePath = electron.remote.app.getPath('userData');
+    const basePath = util.getDataDirectory();
     _database = {};
 
     // NOTE: Do not EVER change this. EVER!
