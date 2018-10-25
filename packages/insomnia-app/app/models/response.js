@@ -11,7 +11,7 @@ import mkdirp from 'mkdirp';
 import * as electron from 'electron';
 import { MAX_RESPONSES } from '../common/constants';
 import * as db from '../common/database';
-import {getDataDirectory} from '../common/misc';
+import { getDataDirectory } from '../common/misc';
 
 export const name = 'Response';
 export const type = 'Response';

@@ -6,7 +6,7 @@ import NeDB from 'nedb';
 import fsPath from 'path';
 import { DB_PERSIST_INTERVAL } from './constants';
 import uuid from 'uuid';
-import {getDataDirectory} from './misc';
+import { getDataDirectory } from './misc';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';

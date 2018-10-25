@@ -4,7 +4,7 @@ import fs from 'fs';
 import * as electron from 'electron';
 import * as models from '../../models';
 import { globalBeforeEach } from '../../__jest__/before-each';
-import {getDataDirectory} from '../../common/misc';
+import { getDataDirectory } from '../../common/misc';
 
 describe('migrate()', () => {
   beforeEach(async () => {

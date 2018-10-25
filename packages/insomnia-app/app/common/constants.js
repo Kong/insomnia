@@ -2,7 +2,7 @@ import * as packageJSON from '../../package.json';
 import * as electron from 'electron';
 import path from 'path';
 import mkdirp from 'mkdirp';
-import {getDataDirectory} from './misc';
+import { getDataDirectory } from './misc';
 
 // App Stuff
 
