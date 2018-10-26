@@ -1,4 +1,3 @@
-import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
 import crypto from 'crypto';

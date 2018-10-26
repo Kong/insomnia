@@ -57,8 +57,6 @@ import { urlMatchesCertHost } from './url-matches-cert-host';
 import aws4 from 'aws4';
 import { buildMultipart } from './multipart';
 
-const { app } = electron.remote || electron;
-
 export type ResponsePatch = {
   statusMessage?: string,
   error?: string,

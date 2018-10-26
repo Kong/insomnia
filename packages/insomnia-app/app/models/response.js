@@ -202,7 +202,6 @@ function getBodyBufferFromPath<T>(
 async function migrateBodyToFileSystem(doc: Object) {
   if (doc.hasOwnProperty('body') && doc._id && !doc.bodyPath) {
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
-    const { app } = electron.remote || electron;
     const root = getDataDirectory();
     const dir = path.join(root, 'responses');
 

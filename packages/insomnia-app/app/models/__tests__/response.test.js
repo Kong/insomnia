@@ -1,7 +1,6 @@
 import path from 'path';
 import zlib from 'zlib';
 import fs from 'fs';
-import * as electron from 'electron';
 import * as models from '../../models';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { getDataDirectory } from '../../common/misc';
