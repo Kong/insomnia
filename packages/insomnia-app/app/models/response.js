@@ -8,7 +8,6 @@ import crypto from 'crypto';
 import path from 'path';
 import zlib from 'zlib';
 import mkdirp from 'mkdirp';
-import * as electron from 'electron';
 import { MAX_RESPONSES } from '../common/constants';
 import * as db from '../common/database';
 import { getDataDirectory } from '../common/misc';

@@ -11,7 +11,6 @@ import { parse as urlParse, resolve as urlResolve } from 'url';
 import { Curl } from 'insomnia-libcurl';
 import { join as pathJoin } from 'path';
 import uuid from 'uuid';
-import * as electron from 'electron';
 import * as models from '../models';
 import {
   AUTH_AWS_IAM,
