@@ -75,7 +75,8 @@ function importRequestItem(item, parentId, schema) {
     url: importUrl(request.url),
     method: request.method || 'GET',
     headers: mapImporter(request.header, importHeader),
-    body: importBody(request.body, schema)
+    body: importBody(request.body, schema),
+    authentication: importAuthentication(request.auth, schema)
   };
 }
 
@@ -180,4 +181,105 @@ function mapImporter(arr, importFn) {
   } else {
     return arr.map(importFn);
   }
+}
+
+function importAuthentication(auth, schema) {
+  if (!auth) {
+    return {};
+  }
+  if (auth.type === 'basic') {
+    return importBasicAuthentication(auth, schema);
+  } else if (auth.type === 'bearer') {
+    return importBearerTokenAuthentication(auth, schema);
+  } else if (auth.type === 'digest') {
+    return importDigestAuthentication(auth, schema);
+  } else {
+    return {};
+  }
+}
+
+function importBasicAuthentication(auth, schema) {
+  if (!auth.basic) {
+    return {};
+  }
+
+  const item = {
+    type: 'basic',
+    disabled: false,
+    username: '',
+    password: ''
+  };
+
+  if (schema === POSTMAN_SCHEMA_V2_0) {
+    item.username = auth.basic.username;
+    item.password = auth.basic.password;
+  }
+
+  if (schema === POSTMAN_SCHEMA_V2_1) {
+    item.username = findValueByKey(auth.basic, 'username');
+    item.password = findValueByKey(auth.basic, 'password');
+  }
+
+  return item;
+}
+
+function importBearerTokenAuthentication(auth, schema) {
+  if (!auth.bearer) {
+    return {};
+  }
+
+  const item = {
+    type: 'bearer',
+    disabled: false,
+    token: '',
+    prefix: ''
+  };
+
+  if (schema === POSTMAN_SCHEMA_V2_0) {
+    item.token = auth.bearer.token;
+  }
+
+  if (schema === POSTMAN_SCHEMA_V2_1) {
+    item.token = findValueByKey(auth.bearer, 'token');
+  }
+
+  return item;
+}
+
+function importDigestAuthentication(auth, schema) {
+  if (!auth.digest) {
+    return {};
+  }
+
+  const item = {
+    type: 'digest',
+    disabled: false,
+    username: '',
+    password: ''
+  };
+
+  if (schema === POSTMAN_SCHEMA_V2_0) {
+    item.username = auth.digest.username;
+    item.password = auth.digest.password;
+  }
+
+  if (schema === POSTMAN_SCHEMA_V2_1) {
+    item.username = findValueByKey(auth.digest, 'username');
+    item.password = findValueByKey(auth.digest, 'password');
+  }
+
+  return item;
+}
+
+function findValueByKey(array, key) {
+  if (!array) {
+    return '';
+  }
+
+  let obj = array.find(o => o.key === key);
+  if (obj) {
+    return obj.value || '';
+  }
+
+  return '';
 }
