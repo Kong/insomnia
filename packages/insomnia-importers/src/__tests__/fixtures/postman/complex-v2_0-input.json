@@ -1,0 +1,116 @@
+{
+  "variables": [],
+  "info": {
+    "name": "Complex Test Collection",
+    "_postman_id": "250d5bd3-4f7e-8fd0-7744-35e942e36a78",
+    "description": "A collection for testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "First Folder",
+      "description": "The first folder",
+      "item": [
+        {
+          "name": "{{base_url}}/api/users",
+          "request": {
+            "url": "{{base_url}}/api/users",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "src": "/home/user/test.txt",
+                  "type": "file",
+                  "enabled": true
+                },
+                {
+                  "key": "foo",
+                  "value": "bar",
+                  "type": "text",
+                  "enabled": true
+                }
+              ]
+            },
+            "description": "First Request"
+          },
+          "response": []
+        },
+        {
+          "name": "Urlencoded Form Test",
+          "request": {
+            "url": "{{base_url}}/api/users",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "foo",
+                  "value": "bar",
+                  "type": "text",
+                  "enabled": true
+                }
+              ]
+            },
+            "description": "First Request"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Test Request Raw Body",
+      "request": {
+        "url": "{{base_url}}/api/users",
+        "method": "POST",
+        "body": {
+          "mode": "raw",
+          "raw": "hello world!"
+        },
+        "description": "Request with raw body"
+      },
+      "response": []
+    },
+    {
+      "name": "Test Request Empty Raw Body",
+      "request": {
+        "url": "{{base_url}}/api/users",
+        "method": "POST",
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "description": "Request with empty raw body"
+      },
+      "response": []
+    },
+    {
+      "name": "Test Request Unknown Body",
+      "request": {
+        "url": "{{base_url}}/api/users",
+        "method": "POST",
+        "body": {
+          "mode": "unknown",
+          "unknown": "foo"
+        },
+        "description": "Request with unknown body"
+      },
+      "response": []
+    }
+  ]
+}
