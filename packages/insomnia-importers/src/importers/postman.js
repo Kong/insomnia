@@ -193,6 +193,10 @@ function importAuthentication(auth, schema) {
     return importBearerTokenAuthentication(auth, schema);
   } else if (auth.type === 'digest') {
     return importDigestAuthentication(auth, schema);
+  } else if (auth.type === 'oauth1') {
+    return importOauth1Authentication(auth, schema);
+  } else if (auth.type === 'oauth2') {
+    return importOauth2Authentication(auth, schema);
   } else {
     return {};
   }
@@ -267,6 +271,76 @@ function importDigestAuthentication(auth, schema) {
     item.username = findValueByKey(auth.digest, 'username');
     item.password = findValueByKey(auth.digest, 'password');
   }
+
+  return item;
+}
+
+function importOauth1Authentication(auth, schema) {
+  if (!auth.oauth1) {
+    return {};
+  }
+
+  const item = {
+    type: 'oauth1',
+    disabled: false,
+    callback: '',
+    consumerKey: '',
+    consumerSecret: '',
+    nonce: '',
+    privateKey: '',
+    realm: '',
+    signatureMethod: '',
+    timestamp: '',
+    tokenKey: '',
+    tokenSecret: '',
+    verifier: '',
+    version: ''
+  };
+
+  if (schema === POSTMAN_SCHEMA_V2_0) {
+    item.consumerKey = auth.oauth1.consumerKey;
+    item.consumerSecret = auth.oauth1.consumerSecret;
+    item.nonce = auth.oauth1.nonce;
+    item.realm = auth.oauth1.realm;
+    item.signatureMethod = auth.oauth1.signatureMethod;
+    item.timestamp = auth.oauth1.timestamp;
+    item.tokenKey = auth.oauth1.token;
+    item.tokenSecret = auth.oauth1.tokenSecret;
+    item.version = auth.oauth1.version;
+  }
+
+  if (schema === POSTMAN_SCHEMA_V2_1) {
+    item.consumerKey = findValueByKey(auth.oauth1, 'consumerKey');
+    item.consumerSecret = findValueByKey(auth.oauth1, 'consumerSecret');
+    item.nonce = findValueByKey(auth.oauth1, 'nonce');
+    item.realm = findValueByKey(auth.oauth1, 'realm');
+    item.signatureMethod = findValueByKey(auth.oauth1, 'signatureMethod');
+    item.timestamp = findValueByKey(auth.oauth1, 'timestamp');
+    item.tokenKey = findValueByKey(auth.oauth1, 'token');
+    item.tokenSecret = findValueByKey(auth.oauth1, 'tokenSecret');
+    item.version = findValueByKey(auth.oauth1, 'version');
+  }
+
+  return item;
+}
+
+function importOauth2Authentication(auth, schema) {
+  if (!auth.oauth2) {
+    return {};
+  }
+
+  // Note: Postman v2.0 and v2.1 don't export any Oauth config. They only export the token
+  // So just return a disabled and empty Oauth 2 configuration so the user can fill it in later.
+
+  const item = {
+    type: 'oauth2',
+    disabled: true,
+    accessTokenUrl: '',
+    authorizationUrl: '',
+    grantType: 'authorization_code',
+    password: '',
+    username: ''
+  };
 
   return item;
 }
