@@ -323,9 +323,7 @@ export function updateMimeType(
     body = newBodyNone();
   } else {
     // Raw Content-Type (ex: application/json)
-    body = oldBody.params
-      ? newBodyRaw(buildQueryStringFromParams(oldBody.params, false), mimeType)
-      : newBodyRaw(oldBody.text || '', mimeType);
+    body = newBodyRaw(oldBody.text || '', mimeType);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~ //
