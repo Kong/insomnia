@@ -10,6 +10,8 @@ type Props = {
   path: string,
 
   // Optional
+  itemtypes?: Array<string>,
+  extensions?: Array<string>,
   showFileName?: boolean,
   showFileIcon?: boolean,
   name?: string
@@ -31,11 +33,36 @@ class FileInputButton extends React.PureComponent<Props> {
   }
 
   _handleChooseFile() {
+    // If no types are selected then default to just files and not directories
+    const types = this.props.itemtypes ? this.props.itemtypes : ['file'];
+    let title = 'Select ';
+    if (types.includes('file')) {
+      title += ' File';
+      if (types.length > 2) {
+        title += ' or';
+      }
+    }
+    if (types.includes('directory')) {
+      title += ' Directory';
+    }
     const options = {
-      title: 'Import File',
-      buttonLabel: 'Import',
-      properties: ['openFile']
+      title: title,
+      buttonLabel: 'Select',
+      properties: types.map(type => {
+        if (type === 'file') {
+          return 'openFile';
+        }
+        if (type === 'directory') {
+          return 'openDirectory';
+        }
+      }),
+      filters: []
     };
+
+    // If extensions are provided then filter for just those extensions
+    if (this.props.extensions) {
+      options.filters = [{ name: 'Files', extensions: this.props.extensions }];
+    }
 
     remote.dialog.showOpenDialog(options, async paths => {
       // Only change the file if a new file was selected
