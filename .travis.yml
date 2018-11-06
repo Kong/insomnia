@@ -6,6 +6,7 @@ matrix:
     sudo: required
     dist: trusty
     env:
+    - COMPOSE_SCRIPT=package_linux
     - DOCKER_COMPOSE_VERSION=1.20.1
     before_install:
     - sudo rm /usr/local/bin/docker-compose
@@ -15,12 +16,13 @@ matrix:
     before_deploy:
     - python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
     - docker-compose build
-    - docker-compose build package_linux
-    - docker-compose run package_linux
+    - docker-compose build $COMPOSE_SCRIPT
+    - docker-compose run $COMPOSE_SCRIPT
   - os: linux
     sudo: required
     dist: trusty
     env:
+    - COMPOSE_SCRIPT=package_snap
     - DOCKER_COMPOSE_VERSION=1.20.1
     before_install:
     - sudo rm /usr/local/bin/docker-compose
@@ -29,8 +31,8 @@ matrix:
     - sudo mv docker-compose /usr/local/bin
     before_deploy:
     - python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
-    - docker-compose build package_snap
-    - docker-compose run package_snap
+    - docker-compose build $COMPOSE_SCRIPT
+    - docker-compose run $COMPOSE_SCRIPT
   - os: osx
     env:
     - CSC_LINK=$MAC_CSC_LINK
