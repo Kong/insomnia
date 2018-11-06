@@ -1,6 +1,5 @@
 // @flow
-import type { Request } from '../../../../models/request';
-import { newBodyRaw } from '../../../../models/request';
+import classnames from 'classnames';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
@@ -21,8 +20,11 @@ import TimeFromNow from '../../time-from-now';
 import * as models from '../../../../models/index';
 import * as db from '../../../../common/database';
 import { showModal } from '../../modals';
+import type { Request } from '../../../../models/request';
+import { newBodyRaw } from '../../../../models/request';
 import ResponseDebugModal from '../../modals/response-debug-modal';
 import Tooltip from '../../tooltip';
+import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../../base/dropdown';
 
 type GraphQLBody = {
   query: string,
@@ -56,7 +58,8 @@ type State = {
   schemaIsFetching: boolean,
   hideSchemaFetchErrors: boolean,
   variablesSyntaxError: string,
-  forceRefreshKey: number
+  forceRefreshKey: number,
+  automaticFetch: boolean
 };
 
 @autobind
@@ -74,6 +77,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     this._queryEditor = null;
     this._isMounted = false;
     const body = GraphQLEditor._stringToGraphQL(props.content);
+
+    let automaticFetch;
+    try {
+      automaticFetch = JSON.parse(window.localStorage.getItem('graphql.automaticFetch'));
+    } catch (err) {
+      automaticFetch = true;
+    }
+
     this.state = {
       body,
       schema: null,
@@ -82,7 +93,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       schemaIsFetching: false,
       hideSchemaFetchErrors: false,
       variablesSyntaxError: '',
-      forceRefreshKey: 0
+      forceRefreshKey: 0,
+      automaticFetch
     };
   }
 
@@ -235,6 +247,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         })
       );
 
+      console.log('FETCH SCHEMA');
       responsePatch = await network.send(introspectionRequest._id, environmentId);
       const bodyBuffer = models.response.getBodyBuffer(responsePatch);
 
@@ -304,6 +317,12 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
   async _handleRefreshSchema(): Promise<void> {
     await this._fetchAndSetSchema(this.props.request);
+  }
+
+  async _handleToggleAutomaticFetching(): Promise<void> {
+    const automaticFetch = !this.state.automaticFetch;
+    this.setState({ automaticFetch });
+    window.localStorage.setItem('graphql.automaticFetch', automaticFetch);
   }
 
   _handlePrettify() {
@@ -399,7 +418,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   componentWillReceiveProps(nextProps: Props) {
-    if (nextProps.request.modified !== this.props.request.modified) {
+    if (this.state.automaticFetch && nextProps.request.url !== this.props.request.url) {
       clearTimeout(this._schemaFetchTimeout);
       this._schemaFetchTimeout = setTimeout(async () => {
         await this._fetchAndSetSchema(nextProps.request);
@@ -455,7 +474,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       hideSchemaFetchErrors,
       variablesSyntaxError,
       forceRefreshKey,
-      schemaIsFetching
+      schemaIsFetching,
+      automaticFetch
     } = this.state;
 
     const { query, variables: variablesObject } = GraphQLEditor._stringToGraphQL(content);
@@ -466,6 +486,25 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     return (
       <div key={forceRefreshKey} className="graphql-editor">
+        <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
+          <DropdownButton className="space-left btn btn--micro btn--outlined">
+            schema <i className="fa fa-wrench" />
+          </DropdownButton>
+          <DropdownDivider>GraphQL Schema</DropdownDivider>
+          <DropdownItem onClick={this._handleRefreshSchema} stayOpenAfterClick>
+            <i className={'fa fa-refresh ' + (schemaIsFetching ? 'fa-spin' : '')} /> Refresh Schema
+          </DropdownItem>
+          <DropdownItem onClick={this._handleToggleAutomaticFetching} stayOpenAfterClick>
+            <i
+              className={classnames('fa', {
+                'fa-toggle-on': automaticFetch,
+                'fa-toggle-off': !automaticFetch
+              })}
+            />{' '}
+            Automatic Fetch
+            <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
+          </DropdownItem>
+        </Dropdown>
         <div className="graphql-editor__query">
           <CodeEditor
             dynamicHeight
@@ -522,19 +561,12 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             )}
         </div>
         <div className="graphql-editor__meta">
-          <div className="graphql-editor__schema-notice">
-            {this.renderSchemaFetchMessage()}
-            {!schemaIsFetching && (
-              <button className="icon space-left" onClick={this._handleRefreshSchema}>
-                <i className="fa fa-refresh" />
-              </button>
-            )}
-          </div>
+          {this.renderSchemaFetchMessage()}
           <div className="graphql-editor__operation-name">{this.renderSelectedOperationName()}</div>
         </div>
         <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
-          Query Variables{' '}
-          <HelpTooltip>
+          Query Variables
+          <HelpTooltip className="space-left">
             Variables to use in GraphQL query <br />(JSON format)
           </HelpTooltip>
           {variablesSyntaxError && (
