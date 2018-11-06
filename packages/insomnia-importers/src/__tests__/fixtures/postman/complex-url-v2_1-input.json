@@ -1,0 +1,34 @@
+{
+  "info": {
+    "_postman_id": "eb8af408-cd8a-4612-afb2-4d7580a938b6",
+    "name": "Complex URL Test Collection",
+    "description": "A collection for testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Test Request",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://insomnia.rest?foo=bar",
+          "protocol": "https",
+          "host": ["insomnia", "rest"],
+          "query": [
+            {
+              "key": "foo",
+              "value": "bar",
+              "description": "baz"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
