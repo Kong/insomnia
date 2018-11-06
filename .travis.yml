@@ -15,8 +15,22 @@ matrix:
     before_deploy:
     - python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
     - docker-compose build
-    - docker-compose run package14
-    - docker-compose run package16
+    - docker-compose build package_linux
+    - docker-compose run package_linux
+  - os: linux
+    sudo: required
+    dist: trusty
+    env:
+    - DOCKER_COMPOSE_VERSION=1.20.1
+    before_install:
+    - sudo rm /usr/local/bin/docker-compose
+    - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+    - chmod +x docker-compose
+    - sudo mv docker-compose /usr/local/bin
+    before_deploy:
+    - python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
+    - docker-compose build package_snap
+    - docker-compose run package_snap
   - os: osx
     env:
     - CSC_LINK=$MAC_CSC_LINK
