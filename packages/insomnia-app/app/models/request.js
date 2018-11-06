@@ -24,7 +24,7 @@ import {
 } from '../common/constants';
 import * as db from '../common/database';
 import { getContentTypeHeader } from '../common/misc';
-import { buildQueryStringFromParams, deconstructQueryStringToParams } from 'insomnia-url';
+import { deconstructQueryStringToParams } from 'insomnia-url';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../network/o-auth-2/constants';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../network/o-auth-1/constants';
 
