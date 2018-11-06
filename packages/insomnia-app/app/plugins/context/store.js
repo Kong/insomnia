@@ -19,8 +19,15 @@ export function init(plugin: Plugin) {
       async removeItem(key: string): Promise<void> {
         await models.pluginData.removeByKey(plugin.name, key);
       },
-      async clear(key: string): Promise<void> {
+      async clear(): Promise<void> {
         await models.pluginData.removeAll(plugin.name);
+      },
+      async all(): Promise<Array<{ key: string, value: string }>> {
+        const docs = await models.pluginData.all(plugin.name);
+        return docs.map(d => ({
+          value: d.value,
+          key: d.key
+        }));
       }
     }
   };
