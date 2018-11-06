@@ -4,7 +4,8 @@ import autobind from 'autobind-decorator';
 import moment from 'moment';
 
 type Props = {
-  timestamp: number
+  timestamp: number,
+  intervalSeconds?: number
 };
 
 type State = {
@@ -29,7 +30,8 @@ class TimeFromNow extends React.PureComponent<Props, State> {
   }
 
   componentDidMount() {
-    this._interval = setInterval(this._update, 5000);
+    const intervalSeconds = this.props.intervalSeconds || 5;
+    this._interval = setInterval(this._update, intervalSeconds * 1000);
     this._update();
   }
 

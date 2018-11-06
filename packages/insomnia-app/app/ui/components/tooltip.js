@@ -7,7 +7,7 @@ import ReactDOM from 'react-dom';
 type Props = {
   children: React.Node,
   message: React.Node,
-  position: 'bottom' | 'top' | 'right' | 'left',
+  position?: 'bottom' | 'top' | 'right' | 'left',
 
   // Optional
   className?: string,

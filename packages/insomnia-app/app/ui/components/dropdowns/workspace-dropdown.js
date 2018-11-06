@@ -19,6 +19,7 @@ import LoginModal from '../modals/login-modal';
 import Tooltip from '../tooltip';
 import * as hotkeys from '../../../common/hotkeys';
 import KeydownBinder from '../keydown-binder';
+import SyncStagingModal from '../modals/sync-staging-modal';
 
 @autobind
 class WorkspaceDropdown extends PureComponent {
@@ -160,7 +161,7 @@ class WorkspaceDropdown extends PureComponent {
               <DropdownItem key={w._id} onClick={this._handleSwitchWorkspace} value={w._id}>
                 <i className="fa fa-random" /> To <strong>{w.name}</strong>
                 {isUnseen && (
-                  <Tooltip message="This workspace is new">
+                  <Tooltip message="This workspace is new" position="top">
                     <i className="width-auto fa fa-asterisk surprise" />
                   </Tooltip>
                 )}
@@ -200,6 +201,10 @@ class WorkspaceDropdown extends PureComponent {
               <i className="fa fa-star surprise fa-outline" />
             </DropdownItem>
           )}
+
+          <DropdownItem key="foo" onClick={() => showModal(SyncStagingModal)}>
+            <i className="fa fa-git" /> Stage Commit
+          </DropdownItem>
         </Dropdown>
       </KeydownBinder>
     );

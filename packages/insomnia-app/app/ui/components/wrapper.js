@@ -37,6 +37,7 @@ import SettingsModal from './modals/settings-modal';
 import FilterHelpModal from './modals/filter-help-modal';
 import ResponsePane from './response-pane';
 import RequestSettingsModal from './modals/request-settings-modal';
+import SyncStagingModal from './modals/sync-staging-modal';
 import RequestRenderErrorModal from './modals/request-render-error-modal';
 import Sidebar from './sidebar/sidebar';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
@@ -520,6 +521,8 @@ class Wrapper extends React.PureComponent<Props, State> {
           />
 
           <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
+
+          <SyncStagingModal ref={registerModal} workspace={activeWorkspace} />
 
           <WorkspaceEnvironmentsEditModal
             ref={registerModal}

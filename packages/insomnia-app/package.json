@@ -126,6 +126,7 @@
     "insomnia-plugin-response": "^1.0.13",
     "insomnia-plugin-uuid": "^1.0.8",
     "insomnia-prettify": "^0.1.5",
+    "insomnia-sync": "^0.0.1",
     "insomnia-url": "^0.1.4",
     "insomnia-xpath": "^1.0.7",
     "jsonlint": "^1.6.2",
