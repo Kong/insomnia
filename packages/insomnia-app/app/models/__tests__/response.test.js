@@ -1,9 +1,9 @@
 import path from 'path';
 import zlib from 'zlib';
 import fs from 'fs';
-import * as electron from 'electron';
 import * as models from '../../models';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import { getDataDirectory } from '../../common/misc';
 
 describe('migrate()', () => {
   beforeEach(async () => {
@@ -17,7 +17,7 @@ describe('migrate()', () => {
 
     const newModel = await models.initModel(models.response.type, initialModel);
     const expectedBodyPath = path.join(
-      electron.remote.app.getPath('userData'),
+      getDataDirectory(),
       `responses/fc3ff98e8c6a0d3087d515c0473f8677.zip`
     );
     const storedBody = models.response.getBodyBuffer(newModel);
@@ -37,7 +37,7 @@ describe('migrate()', () => {
     const newModel = await models.initModel(models.response.type, initialModel);
     jest.runAllTimers();
     const expectedBodyPath = path.join(
-      electron.remote.app.getPath('userData'),
+      getDataDirectory(),
       `responses/fc3ff98e8c6a0d3087d515c0473f8677.zip`
     );
     const storedBody = models.response.getBodyBuffer(newModel);
@@ -59,7 +59,7 @@ describe('migrate()', () => {
     jest.runAllTimers();
 
     const expectedBodyPath = path.join(
-      electron.remote.app.getPath('userData'),
+      getDataDirectory(),
       'responses/d41d8cd98f00b204e9800998ecf8427e.zip'
     );
     const storedBody = models.response.getBodyBuffer(newModel);
@@ -87,7 +87,7 @@ describe('migrate()', () => {
   });
 
   it('does it', async () => {
-    const bodyPath = path.join(electron.remote.app.getPath('userData'), 'foo.zip');
+    const bodyPath = path.join(getDataDirectory(), 'foo.zip');
     fs.writeFileSync(bodyPath, zlib.gzipSync('Hello World!'));
 
     const response = await models.initModel(models.response.type, { bodyPath });

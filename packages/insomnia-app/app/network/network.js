@@ -11,7 +11,6 @@ import { parse as urlParse, resolve as urlResolve } from 'url';
 import { Curl } from 'insomnia-libcurl';
 import { join as pathJoin } from 'path';
 import uuid from 'uuid';
-import * as electron from 'electron';
 import * as models from '../models';
 import {
   AUTH_AWS_IAM,
@@ -37,7 +36,8 @@ import {
   hasAuthHeader,
   hasContentTypeHeader,
   hasUserAgentHeader,
-  waitForStreamToFinish
+  waitForStreamToFinish,
+  getDataDirectory
 } from '../common/misc';
 import {
   buildQueryStringFromParams,
@@ -55,8 +55,6 @@ import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 import aws4 from 'aws4';
 import { buildMultipart } from './multipart';
-
-const { app } = electron.remote || electron;
 
 export type ResponsePatch = {
   statusMessage?: string,
@@ -641,7 +639,7 @@ export async function _actuallySend(
       setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       let responseBodyBytes = 0;
-      const responsesDir = pathJoin(app.getPath('userData'), 'responses');
+      const responsesDir = pathJoin(getDataDirectory(), 'responses');
       mkdirp.sync(responsesDir);
       const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.response');
       const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
