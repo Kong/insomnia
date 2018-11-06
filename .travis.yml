@@ -14,8 +14,9 @@ matrix:
     - sudo mv docker-compose /usr/local/bin
     before_deploy:
     - python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
-    - docker-compose build package
-    - docker-compose run package
+    - docker-compose build
+    - docker-compose run package14
+    - docker-compose run package16
   - os: osx
     env:
     - CSC_LINK=$MAC_CSC_LINK

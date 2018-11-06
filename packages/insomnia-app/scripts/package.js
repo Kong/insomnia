@@ -25,7 +25,10 @@ if (require.main === module) {
 
 module.exports.start = async function() {
   console.log('[package] Removing existing directories');
-  await emptyDir('../dist/*');
+
+  if (process.env.KEEP_DIST_FOLDER !== 'yes') {
+    await emptyDir('../dist/*');
+  }
 
   console.log('[package] Packaging app');
   await pkg('../.electronbuilder');
@@ -37,9 +40,14 @@ async function pkg(relConfigPath) {
   const configPath = path.resolve(__dirname, relConfigPath);
   const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   const targetPlatform = PLATFORM_MAP[process.platform];
+
+  const target = process.env.BUILD_TARGETS
+    ? process.env.BUILD_TARGETS.split(',')
+    : config[targetPlatform].target;
+
   return electronBuilder.build({
     config,
-    [targetPlatform]: config[targetPlatform].target
+    [targetPlatform]: target
   });
 }
 
