@@ -129,7 +129,7 @@
     "insomnia-sync": "^0.0.1",
     "insomnia-url": "^0.1.4",
     "insomnia-xpath": "^1.0.7",
-    "jsonlint": "^1.6.2",
+    "jsonlint": "^1.6.3",
     "jsonpath": "^0.2.12",
     "jwt-authentication": "^0.4.0",
     "marked": "^0.3.9",

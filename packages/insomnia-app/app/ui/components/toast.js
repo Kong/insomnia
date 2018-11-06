@@ -86,6 +86,7 @@ class Toast extends React.PureComponent<Props, State> {
         workspaces: await db.count(models.workspace.type),
         updatesNotSupported: constants.isLinux(),
         autoUpdatesDisabled: !settings.updateAutomatically,
+        disableUpdateNotification: settings.disableUpdateNotification,
         updateChannel: !settings.updateChannel
       };
 

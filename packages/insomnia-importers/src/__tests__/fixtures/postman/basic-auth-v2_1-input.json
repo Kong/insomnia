@@ -1,0 +1,42 @@
+{
+  "info": {
+    "_postman_id": "229681fe-8c82-44c3-a741-b3dc7dfa870f",
+    "name": "Basic Auth Test",
+    "description": "A collection for testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Basic Auth",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "password",
+              "value": "basic-password",
+              "type": "string"
+            },
+            {
+              "key": "username",
+              "value": "basic-username",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://insomnia.rest",
+          "protocol": "https",
+          "host": ["insomnia", "rest"]
+        }
+      },
+      "response": []
+    }
+  ]
+}
