@@ -11,7 +11,6 @@ import {
   UPDATE_CHANNEL_STABLE
 } from '../../../common/constants';
 import type { Settings } from '../../../models/settings';
-import Wrap from '../wrap';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { setFont } from '../../../plugins/misc';
 

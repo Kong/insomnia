@@ -16,7 +16,6 @@ import {
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODE_RAW
 } from '../../../common/constants';
-import Wrap from '../wrap';
 
 let alwaysShowLargeResponses = false;
 
@@ -191,14 +190,14 @@ class ResponseViewer extends React.Component<Props, State> {
       return (
         <div className="response-pane__notify">
           {wayTooLarge ? (
-            <Wrap>
+            <React.Fragment>
               <p className="pad faint">Responses over {HUGE_RESPONSE_MB}MB cannot be shown</p>
               <button onClick={download} className="inline-block btn btn--clicky">
                 Save Response To File
               </button>
-            </Wrap>
+            </React.Fragment>
           ) : (
-            <Wrap>
+            <React.Fragment>
               <p className="pad faint">
                 Response over {LARGE_RESPONSE_MB}MB hidden for performance reasons
               </p>
@@ -220,7 +219,7 @@ class ResponseViewer extends React.Component<Props, State> {
                   Always Show
                 </button>
               </div>
-            </Wrap>
+            </React.Fragment>
           )}
         </div>
       );
