@@ -84,7 +84,9 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       error: '',
       message: ''
     };
-    this.vcs = new VCS('123', new FileSystemDriver({ directory: '/Users/gschier/Desktop/vcs' }));
+
+    const driver = new FileSystemDriver({ directory: '/Users/gschier/Desktop/vcs' });
+    this.vcs = new VCS('123', driver);
   }
 
   async componentDidMount() {
@@ -212,7 +214,13 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
           </div>
           <div className="form-group">
             <div className="form-control form-control--outlined">
-              <textarea cols="30" rows="3" onChange={this._handleMessageChange} value={message} />
+              <textarea
+                cols="30"
+                rows="3"
+                onChange={this._handleMessageChange}
+                value={message}
+                placeholder="My commit message"
+              />
             </div>
             <button className="btn btn--clicky" onClick={this._handleCommit}>
               Commit
