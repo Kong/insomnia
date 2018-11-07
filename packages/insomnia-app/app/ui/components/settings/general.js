@@ -4,6 +4,7 @@ import * as fontManager from 'font-manager';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
 import {
+  isLinux,
   isMac,
   isWindows,
   UPDATE_CHANNEL_BETA,
@@ -433,8 +434,8 @@ class General extends React.PureComponent<Props, State> {
           </div>
         </div>
 
-        {isWindows() || isMac() ? (
-          <Wrap>
+        {(isWindows() || isMac()) && (
+          <React.Fragment>
             <hr className="pad-top" />
             <div>
               <div className="pull-right">
@@ -458,17 +459,6 @@ class General extends React.PureComponent<Props, State> {
                 />
               </label>
             </div>
-            <div className="form-control form-control--thin">
-              <label className="inline-block">
-                Disable update notification
-                <input
-                  type="checkbox"
-                  name="disableUpdateNotification"
-                  checked={settings.disableUpdateNotification}
-                  onChange={this._handleUpdateSetting}
-                />
-              </label>
-            </div>
             <div className="form-control form-control--outlined pad-top-sm">
               <label>
                 Update Channel
@@ -481,8 +471,26 @@ class General extends React.PureComponent<Props, State> {
                 </select>
               </label>
             </div>
-          </Wrap>
-        ) : null}
+          </React.Fragment>
+        )}
+
+        {isLinux() && (
+          <React.Fragment>
+            <hr className="pad-top" />
+            <h2>Software Updates</h2>
+            <div className="form-control form-control--thin">
+              <label className="inline-block">
+                Do not notify of new releases
+                <input
+                  type="checkbox"
+                  name="disableUpdateNotification"
+                  checked={settings.disableUpdateNotification}
+                  onChange={this._handleUpdateSetting}
+                />
+              </label>
+            </div>
+          </React.Fragment>
+        )}
 
         <hr className="pad-top" />
         <h2>Plugins</h2>
