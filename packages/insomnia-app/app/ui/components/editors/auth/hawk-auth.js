@@ -43,6 +43,10 @@ class HawkAuth extends React.PureComponent<Props> {
     this._handleChangeProperty('algorithm', e.currentTarget.value);
   }
 
+  _handleChangeExt(value: string): void {
+    this._handleChangeProperty('ext', value);
+  }
+
   renderHawkAuthenticationFields(): React.Node {
     const hawkAuthId = this.renderInputRow('Auth ID', 'id', this._handleChangeHawkAuthId);
 
@@ -58,7 +62,9 @@ class HawkAuth extends React.PureComponent<Props> {
       this._handleChangeAlgorithm
     );
 
-    return [hawkAuthId, hawkAuthKey, algorithm];
+    const ext = this.renderInputRow('Ext', 'ext', this._handleChangeExt);
+
+    return [hawkAuthId, hawkAuthKey, algorithm, ext];
   }
 
   renderSelectRow(
