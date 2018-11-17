@@ -49,6 +49,8 @@ type State = {
 
 @autobind
 class ResponseViewer extends React.Component<Props, State> {
+  _selectableView: any;
+
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -155,7 +157,7 @@ class ResponseViewer extends React.Component<Props, State> {
     return false;
   }
 
-  _setSelectableViewRef(n) {
+  _setSelectableViewRef(n: any) {
     this._selectableView = n;
   }
 
@@ -167,7 +169,7 @@ class ResponseViewer extends React.Component<Props, State> {
     );
   }
 
-  _handleKeyDown(e) {
+  _handleKeyDown(e: KeyboardEvent) {
     if (!this._isViewSelectable()) {
       return;
     }
