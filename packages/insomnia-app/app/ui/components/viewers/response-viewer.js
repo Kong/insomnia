@@ -16,6 +16,8 @@ import {
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODE_RAW
 } from '../../../common/constants';
+import * as hotkeys from '../../../common/hotkeys';
+import KeydownBinder from '../keydown-binder';
 
 let alwaysShowLargeResponses = false;
 
@@ -153,7 +155,34 @@ class ResponseViewer extends React.Component<Props, State> {
     return false;
   }
 
-  render() {
+  _setSelectableViewRef(n) {
+    this._selectableView = n;
+  }
+
+  _isViewSelectable() {
+    return (
+      this._selectableView != null &&
+      typeof this._selectableView.focus === 'function' &&
+      typeof this._selectableView.selectAll === 'function'
+    );
+  }
+
+  _handleKeyDown(e) {
+    if (!this._isViewSelectable()) {
+      return;
+    }
+
+    hotkeys.executeHotKey(e, hotkeys.FOCUS_RESPONSE, () => {
+      if (!this._isViewSelectable()) {
+        return;
+      }
+
+      this._selectableView.focus();
+      this._selectableView.selectAll();
+    });
+  }
+
+  _renderView() {
     const {
       bytes,
       download,
@@ -328,6 +357,7 @@ class ResponseViewer extends React.Component<Props, State> {
       return (
         <ResponseRaw
           key={responseId}
+          ref={this._setSelectableViewRef}
           value={this._decodeIconv(bodyBuffer, charset)}
           fontSize={editorFontSize}
         />
@@ -351,6 +381,7 @@ class ResponseViewer extends React.Component<Props, State> {
       return (
         <CodeEditor
           uniquenessKey={responseId}
+          ref={this._setSelectableViewRef}
           onClickLink={this._handleOpenLink}
           defaultValue={body}
           updateFilter={updateFilter}
@@ -368,6 +399,10 @@ class ResponseViewer extends React.Component<Props, State> {
         />
       );
     }
+  }
+
+  render() {
+    return <KeydownBinder onKeydown={this._handleKeyDown}>{this._renderView()}</KeydownBinder>;
   }
 }
 

@@ -34,6 +34,7 @@ class Shortcuts extends PureComponent {
             {this.renderHotkey(hotkeys.SHOW_ENVIRONMENTS)}
             {this.renderHotkey(hotkeys.TOGGLE_ENVIRONMENTS_MENU)}
             {this.renderHotkey(hotkeys.FOCUS_URL)}
+            {this.renderHotkey(hotkeys.FOCUS_RESPONSE)}
             {this.renderHotkey(hotkeys.TOGGLE_METHOD_DROPDOWN)}
             {this.renderHotkey(hotkeys.TOGGLE_SIDEBAR)}
             {this.renderHotkey(hotkeys.TOGGLE_HISTORY_DROPDOWN)}

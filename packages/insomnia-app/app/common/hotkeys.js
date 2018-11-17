@@ -156,6 +156,14 @@ export const FOCUS_FILTER: Hotkey = {
   keycode: keycodes.f
 };
 
+export const FOCUS_RESPONSE: Hotkey = {
+  description: 'Focus Response',
+  meta: true,
+  alt: false,
+  shift: false,
+  keycode: keycodes.singlequote
+};
+
 export const SHOW_COOKIES: Hotkey = {
   description: 'Edit Cookies',
   meta: true,
