@@ -34,9 +34,24 @@ function importCollection(collection, schema) {
     _id: `__GRP_${requestGroupCount++}__`,
     _type: 'request_group',
     name: collection.info.name,
-    description: collection.info.description
+    description: collection.info.description,
+    environment: importVariable(collection.variable)
   };
   return [collectionFolder, ...importItem(collection.item, collectionFolder._id, schema)];
+}
+
+function importVariable(items) {
+  let variable = {};
+  if (items.length == 0) {
+    return variable;
+  } else {
+    items;
+    for (let idx = 0; idx < items.length; idx++) {
+      variable[items[idx].key] = items[idx].value;
+    }
+  }
+
+  return variable;
 }
 
 function importItem(items, parentId = '__WORKSPACE_ID__', schema) {
