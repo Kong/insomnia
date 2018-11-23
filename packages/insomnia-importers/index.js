@@ -17,8 +17,8 @@ module.exports.convert = async function(contents) {
 
     if (resources) {
       let environment;
-      if (resources.length > 0 && resources[0].hasOwnProperty('environment')) {
-        environment = resources[0].environment || {};
+      if (resources.length > 0 && resources[0].variable) {
+        environment = resources[0].variable;
       }
       let parsedData = {
         type: {
