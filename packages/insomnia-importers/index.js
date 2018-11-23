@@ -16,9 +16,8 @@ module.exports.convert = async function(contents) {
     const resources = await importer.convert(contents);
 
     if (resources) {
-      let environment;
       if (resources.length > 0 && resources[0].variable) {
-        environment = resources[0].variable;
+        resources[0].environment = resources[0].variable;
       }
       let parsedData = {
         type: {
@@ -34,10 +33,6 @@ module.exports.convert = async function(contents) {
           resources: resources.map(utils.setDefaults)
         }
       };
-
-      if (environment) {
-        parsedData.data.environment = environment;
-      }
 
       return parsedData;
     }
