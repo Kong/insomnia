@@ -307,7 +307,7 @@ class CodeEditor extends React.Component {
 
       // Setup nunjucks listeners
       if (this.props.render && !this.props.nunjucksPowerUserMode) {
-        this.codeMirror.enableNunjucksTags(this.props.render);
+        this.codeMirror.enableNunjucksTags(this.props.render, this.props.getRenderContext);
       }
 
       // Make URLs clickable
