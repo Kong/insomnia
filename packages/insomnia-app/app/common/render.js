@@ -214,17 +214,27 @@ export async function getRenderContext(
   const subEnvironment = await models.environment.getById(environmentId);
 
   let keySource = {};
-  for (let key in rootEnvironment.data) {
+  for (let key in (rootEnvironment || {}).data) {
     keySource[key] = 'root';
   }
-  for (let key in subEnvironment.data) {
-    keySource[key] = subEnvironment.name;
+  if (subEnvironment) {
+    for (let key in subEnvironment.data || {}) {
+      if (subEnvironment.name) {
+        keySource[key] = subEnvironment.name;
+      }
+    }
   }
-  for (let idx = 0; idx < ancestors.length; idx++) {
-    let ancestor = ancestors[idx];
-    if (ancestor.type === 'RequestGroup' && ancestor.environment) {
-      for (let key in ancestor.environment) {
-        keySource[key] = ancestor.name;
+  if (ancestors) {
+    for (let idx = 0; idx < ancestors.length; idx++) {
+      let ancestor: any = ancestors[idx] || {};
+      if (
+        ancestor.type === 'RequestGroup' &&
+        ancestor.hasOwnProperty('environment') &&
+        ancestor.hasOwnProperty('name')
+      ) {
+        for (let key in ancestor.environment || {}) {
+          keySource[key] = ancestor.name || '';
+        }
       }
     }
   }
