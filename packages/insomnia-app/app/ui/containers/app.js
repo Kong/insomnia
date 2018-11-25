@@ -80,7 +80,8 @@ class App extends PureComponent {
       draggingPaneVertical: false,
       sidebarWidth: props.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
       paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
-      paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT
+      paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT,
+      isVariableUncovered: props.isVariableUncovered || false
     };
 
     this._isMigratingChildren = false;
@@ -184,6 +185,12 @@ class App extends PureComponent {
         hotkeys.DUPLICATE_REQUEST,
         async () => {
           await this._requestDuplicate(this.props.activeRequest);
+        }
+      ],
+      [
+        hotkeys.UNCOVER_VARIABLE,
+        async () => {
+          await this._updateIsVariableUncovered();
         }
       ]
     ];
@@ -358,6 +365,10 @@ class App extends PureComponent {
       const newPatch = Object.assign({ parentId: requestId }, patch);
       return models.requestMeta.create(newPatch);
     }
+  }
+
+  _updateIsVariableUncovered(paneWidth) {
+    this.setState({ isVariableUncovered: !this.state.isVariableUncovered });
   }
 
   _handleSetPaneWidth(paneWidth) {
@@ -997,6 +1008,7 @@ class App extends PureComponent {
               handleSetSidebarFilter={this._handleSetSidebarFilter}
               handleToggleMenuBar={this._handleToggleMenuBar}
               handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
+              isVariableUncovered={this.state.isVariableUncovered}
             />
           </ErrorBoundary>
 

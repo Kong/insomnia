@@ -18,6 +18,7 @@ type Props = {
   editorKeyMap: string,
   editorLineWrapping: boolean,
   nunjucksPowerUserMode: boolean,
+  isVariableUncovered: boolean,
   handleRender: Function,
   handleGetRenderContext: Function,
   workspaces: Array<Workspace>
@@ -207,6 +208,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
+      isVariableUncovered,
       workspaces
     } = this.props;
 
@@ -247,6 +249,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
             defaultValue={request.description}
             onChange={this._handleDescriptionChange}
           />

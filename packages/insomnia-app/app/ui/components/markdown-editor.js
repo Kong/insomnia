@@ -46,7 +46,8 @@ class MarkdownEditor extends PureComponent {
       tall,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered
     } = this.props;
 
     const { markdown } = this.state;
@@ -67,26 +68,52 @@ class MarkdownEditor extends PureComponent {
         </TabList>
         <TabPanel className="react-tabs__tab-panel markdown-editor__edit">
           <div className="form-control form-control--outlined">
-            <CodeEditor
-              ref={this._setEditorRef}
-              hideGutters
-              hideLineNumbers
-              dynamicHeight={!tall}
-              manualPrettify
-              noStyleActiveLine
-              mode={mode || 'text/x-markdown'}
-              placeholder={placeholder}
-              debounceMillis={300}
-              keyMap={keyMap}
-              fontSize={fontSize}
-              lineWrapping={lineWrapping}
-              indentSize={indentSize}
-              defaultValue={markdown}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
-              onChange={this._handleChange}
-            />
+            {isVariableUncovered && (
+              <CodeEditor
+                ref={this._setEditorRef}
+                hideGutters
+                hideLineNumbers
+                dynamicHeight={!tall}
+                manualPrettify
+                noStyleActiveLine
+                mode={mode || 'text/x-markdown'}
+                placeholder={placeholder}
+                debounceMillis={300}
+                keyMap={keyMap}
+                fontSize={fontSize}
+                lineWrapping={lineWrapping}
+                indentSize={indentSize}
+                defaultValue={markdown}
+                render={handleRender}
+                getRenderContext={handleGetRenderContext}
+                nunjucksPowerUserMode={nunjucksPowerUserMode}
+                isVariableUncovered={isVariableUncovered}
+                onChange={this._handleChange}
+              />
+            )}
+            {!isVariableUncovered && (
+              <CodeEditor
+                ref={this._setEditorRef}
+                hideGutters
+                hideLineNumbers
+                dynamicHeight={!tall}
+                manualPrettify
+                noStyleActiveLine
+                mode={mode || 'text/x-markdown'}
+                placeholder={placeholder}
+                debounceMillis={300}
+                keyMap={keyMap}
+                fontSize={fontSize}
+                lineWrapping={lineWrapping}
+                indentSize={indentSize}
+                defaultValue={markdown}
+                render={handleRender}
+                getRenderContext={handleGetRenderContext}
+                nunjucksPowerUserMode={nunjucksPowerUserMode}
+                isVariableUncovered={isVariableUncovered}
+                onChange={this._handleChange}
+              />
+            )}
           </div>
           <div className="txt-sm italic faint">Styling with Markdown is supported</div>
         </TabPanel>
@@ -109,6 +136,7 @@ MarkdownEditor.propTypes = {
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
+  isVariableUncovered: PropTypes.bool.isRequired,
 
   // Optional
   placeholder: PropTypes.string,

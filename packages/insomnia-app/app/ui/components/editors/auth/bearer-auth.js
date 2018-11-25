@@ -31,7 +31,8 @@ class BearerAuth extends PureComponent {
       authentication,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered
     } = this.props;
 
     return (
@@ -58,6 +59,7 @@ class BearerAuth extends PureComponent {
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
+                    isVariableUncovered={isVariableUncovered}
                   />
                 </div>
               </td>
@@ -85,6 +87,7 @@ class BearerAuth extends PureComponent {
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
+                    isVariableUncovered={isVariableUncovered}
                   />
                 </div>
               </td>
@@ -124,7 +127,8 @@ BearerAuth.propTypes = {
   handleGetRenderContext: PropTypes.func.isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
   authentication: PropTypes.object.isRequired,
-  onChange: PropTypes.func.isRequired
+  onChange: PropTypes.func.isRequired,
+  isVariableUncovered: PropTypes.bool.isRequired
 };
 
 export default BearerAuth;

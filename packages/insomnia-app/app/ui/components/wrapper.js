@@ -113,6 +113,7 @@ type Props = {
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
   activeWorkspaceClientCertificates: Array<ClientCertificate>,
+  isVariableUncovered: boolean,
 
   // Optional
   oAuth2Token: ?OAuth2Token,
@@ -384,7 +385,8 @@ class Wrapper extends React.PureComponent<Props, State> {
       sidebarWidth,
       workspaceChildren,
       workspaces,
-      unseenWorkspaces
+      unseenWorkspaces,
+      isVariableUncovered
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
@@ -418,6 +420,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
             editorLineWrapping={settings.editorLineWrapping}
+            isVariableUncovered={isVariableUncovered}
           />
 
           <RequestSettingsModal
@@ -430,6 +433,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleGetRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             workspaces={workspaces}
+            isVariableUncovered={isVariableUncovered}
           />
 
           <CookiesModal
@@ -439,6 +443,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             ref={registerModal}
             workspace={activeWorkspace}
             cookieJar={activeCookieJar}
+            isVariableUncovered={isVariableUncovered}
           />
 
           <CookieModifyModal
@@ -448,6 +453,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             ref={registerModal}
             cookieJar={activeCookieJar}
             workspace={activeWorkspace}
+            isVariableUncovered={isVariableUncovered}
           />
 
           <NunjucksModal
@@ -473,6 +479,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
             handleDuplicateWorkspace={handleDuplicateWorkspace}
+            isVariableUncovered={isVariableUncovered}
           />
 
           <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />
@@ -517,6 +524,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             render={handleRender}
             getRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
           />
 
           <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
@@ -532,6 +540,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             render={handleRender}
             getRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
           />
         </ErrorBoundary>
       </div>,
@@ -637,6 +646,8 @@ class Wrapper extends React.PureComponent<Props, State> {
             forceRefreshCounter={this.state.forceRefreshKey}
             handleSend={this._handleSendRequestWithActiveEnvironment}
             handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
           />
         </ErrorBoundary>
 

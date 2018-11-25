@@ -300,6 +300,7 @@ class OneLineEditor extends PureComponent {
       getRenderContext,
       nunjucksPowerUserMode,
       getAutocompleteConstants,
+      isVariableUncovered,
       mode: syntaxMode,
       type: originalType
     } = this.props;
@@ -311,33 +312,69 @@ class OneLineEditor extends PureComponent {
 
     if (showEditor) {
       return (
-        <CodeEditor
-          ref={this._setEditorRef}
-          defaultTabBehavior
-          hideLineNumbers
-          hideScrollbars
-          noMatchBrackets
-          noStyleActiveLine
-          noLint
-          singleLine
-          tabIndex={0}
-          id={id}
-          type={type}
-          mode={syntaxMode}
-          placeholder={placeholder}
-          onPaste={onPaste}
-          onBlur={this._handleEditorBlur}
-          onKeyDown={this._handleKeyDown}
-          onFocus={this._handleEditorFocus}
-          onMouseLeave={this._handleEditorMouseLeave}
-          onChange={onChange}
-          render={render}
-          getRenderContext={getRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
-          getAutocompleteConstants={getAutocompleteConstants}
-          className={classnames('editor--single-line', className)}
-          defaultValue={defaultValue}
-        />
+        <React.Fragment>
+          {isVariableUncovered && (
+            <CodeEditor
+              ref={this._setEditorRef}
+              defaultTabBehavior
+              hideLineNumbers
+              hideScrollbars
+              noMatchBrackets
+              noStyleActiveLine
+              noLint
+              singleLine
+              tabIndex={0}
+              id={id}
+              type={type}
+              mode={syntaxMode}
+              placeholder={placeholder}
+              onPaste={onPaste}
+              onBlur={this._handleEditorBlur}
+              onKeyDown={this._handleKeyDown}
+              onFocus={this._handleEditorFocus}
+              onMouseLeave={this._handleEditorMouseLeave}
+              onChange={onChange}
+              render={render}
+              getRenderContext={getRenderContext}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
+              getAutocompleteConstants={getAutocompleteConstants}
+              className={classnames('editor--single-line', className)}
+              defaultValue={defaultValue}
+              isVariableUncovered={isVariableUncovered}
+            />
+          )}
+
+          {!isVariableUncovered && (
+            <CodeEditor
+              ref={this._setEditorRef}
+              defaultTabBehavior
+              hideLineNumbers
+              hideScrollbars
+              noMatchBrackets
+              noStyleActiveLine
+              noLint
+              singleLine
+              tabIndex={0}
+              id={id}
+              type={type}
+              mode={syntaxMode}
+              placeholder={placeholder}
+              onPaste={onPaste}
+              onBlur={this._handleEditorBlur}
+              onKeyDown={this._handleKeyDown}
+              onFocus={this._handleEditorFocus}
+              onMouseLeave={this._handleEditorMouseLeave}
+              onChange={onChange}
+              render={render}
+              getRenderContext={getRenderContext}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
+              getAutocompleteConstants={getAutocompleteConstants}
+              className={classnames('editor--single-line', className)}
+              defaultValue={defaultValue}
+              isVariableUncovered={isVariableUncovered}
+            />
+          )}
+        </React.Fragment>
       );
     } else {
       return (
@@ -385,7 +422,8 @@ OneLineEditor.propTypes = {
   placeholder: PropTypes.string,
   className: PropTypes.string,
   forceEditor: PropTypes.bool,
-  forceInput: PropTypes.bool
+  forceInput: PropTypes.bool,
+  isVariableUncovered: PropTypes.bool
 };
 
 export default OneLineEditor;

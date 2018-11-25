@@ -38,7 +38,8 @@ type Props = {
   request: Request,
   workspace: Workspace,
   settings: Settings,
-  environmentId: string
+  environmentId: string,
+  isVariableUncovered: boolean
 };
 
 @autobind
@@ -114,7 +115,8 @@ class BodyEditor extends React.PureComponent<Props> {
       settings,
       environmentId,
       handleRender: render,
-      handleGetRenderContext: getRenderContext
+      handleGetRenderContext: getRenderContext,
+      isVariableUncovered
     } = this.props;
 
     const noRender = request.settingDisableRenderRequestBody;
@@ -135,6 +137,7 @@ class BodyEditor extends React.PureComponent<Props> {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+          isVariableUncovered={isVariableUncovered}
           parameters={request.body.params || []}
         />
       );
@@ -146,6 +149,7 @@ class BodyEditor extends React.PureComponent<Props> {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+          isVariableUncovered={isVariableUncovered}
           parameters={request.body.params || []}
         />
       );
@@ -163,6 +167,8 @@ class BodyEditor extends React.PureComponent<Props> {
           settings={settings}
           environmentId={environmentId}
           getRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+          isVariableUncovered={isVariableUncovered}
           onChange={this._handleGraphQLChange}
         />
       );
@@ -181,6 +187,7 @@ class BodyEditor extends React.PureComponent<Props> {
           render={handleRender}
           getRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+          isVariableUncovered={isVariableUncovered}
           onChange={this._handleRawChange}
         />
       );

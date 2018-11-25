@@ -5,13 +5,22 @@ import { showModal } from '../../modals/index';
 import { tokenizeTag } from '../../../../templating/utils';
 import { getTagDefinitions } from '../../../../templating/index';
 
-CodeMirror.defineExtension('enableNunjucksTags', function(handleRender, handleGetRenderContext) {
+CodeMirror.defineExtension('enableNunjucksTags', function(
+  handleRender,
+  handleGetRenderContext,
+  isVariableUncovered = false
+) {
   if (!handleRender) {
     console.warn("enableNunjucksTags wasn't passed a render function");
     return;
   }
 
-  const refreshFn = _highlightNunjucksTags.bind(this, handleRender, handleGetRenderContext);
+  const refreshFn = _highlightNunjucksTags.bind(
+    this,
+    handleRender,
+    handleGetRenderContext,
+    isVariableUncovered
+  );
   const debouncedRefreshFn = misc.debounce(refreshFn);
 
   this.on('change', (cm, change) => {
@@ -32,7 +41,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(handleRender, handleGe
   refreshFn();
 });
 
-async function _highlightNunjucksTags(render, renderContext) {
+async function _highlightNunjucksTags(render, renderContext, isVariableUncovered) {
   const renderCacheKey = Math.random() + '';
   const renderString = text => render(text, renderCacheKey);
   const activeMarks = [];
@@ -111,12 +120,24 @@ async function _highlightNunjucksTags(render, renderContext) {
       });
 
       (async function() {
-        await _updateElementText(renderString, mark, tok.string, renderContext);
+        await _updateElementText(
+          renderString,
+          mark,
+          tok.string,
+          renderContext,
+          isVariableUncovered
+        );
       })();
 
       // Update it every mouseenter because it may generate a new value every time
       el.addEventListener('mouseenter', async () => {
-        await _updateElementText(renderString, mark, tok.string, renderContext);
+        await _updateElementText(
+          renderString,
+          mark,
+          tok.string,
+          renderContext,
+          isVariableUncovered
+        );
       });
 
       activeMarks.push(mark);
@@ -211,7 +232,7 @@ async function _highlightNunjucksTags(render, renderContext) {
   }
 }
 
-async function _updateElementText(render, mark, text, renderContext) {
+async function _updateElementText(render, mark, text, renderContext, isVariableUncovered) {
   const el = mark.replacedWith;
 
   let innerHTML = '';
@@ -252,11 +273,11 @@ async function _updateElementText(render, mark, text, renderContext) {
       }
     } else {
       // Render if it's a variable
-      innerHTML = cleanedStr;
       title = await render(str);
       const context = await renderContext();
       const con = context.context.getKeysContext();
       title = '{' + con.keyContext[cleanedStr] + '}: ' + title;
+      innerHTML = isVariableUncovered ? title : cleanedStr;
     }
     dataError = 'off';
   } catch (err) {
