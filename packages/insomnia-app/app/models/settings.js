@@ -72,7 +72,7 @@ export function init(): BaseSettings {
     fontMonospace: null,
     fontInterface: null,
     fontSize: 13,
-    fontVariantLigatures: true
+    fontVariantLigatures: false
   };
 }
 
