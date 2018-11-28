@@ -259,7 +259,7 @@ export function createWindow() {
           message: getAppLongName(),
           detail: [
             'Version ' + getAppVersion(),
-            'Shell ' + process.versions['atom-shell'],
+            'Shell ' + process.versions.electron,
             'Node ' + process.versions.node,
             'V8 ' + process.versions.v8,
             'Architecture ' + process.arch,
