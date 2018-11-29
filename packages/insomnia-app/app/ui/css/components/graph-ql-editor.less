@@ -1,4 +1,5 @@
 @import '../constants/dimensions';
+@import '../constants/colors';
 
 .graphql-editor {
   position: relative;
@@ -20,7 +21,7 @@
     position: absolute;
     top: 0;
     right: 0;
-    z-index: 1000;
+    z-index: 10;
     margin: @padding-xs;
     opacity: @opacity-subtle;
 
@@ -73,7 +74,7 @@
 .CodeMirror-info {
   background: var(--color-bg);
   position: fixed;
-  z-index: 1000;
+  z-index: 100;
   padding: @padding-xs @padding-sm;
   border: 1px solid @border-color;
   color: var(--color-font);
