@@ -220,11 +220,11 @@ export const CLOSE_MODAL: Hotkey = {
   keycode: keycodes.esc
 };
 
-export const UNCOVER_VARIABLE: Hotkey = {
-  description: 'Close Modal',
+export const UNCOVER_VARIABLES: Hotkey = {
+  description: 'Uncover Variables',
   meta: false,
   alt: true,
-  shift: false,
+  shift: true,
   keycode: keycodes.u
 };
 
@@ -284,6 +284,8 @@ export function getChar(hotkey: Hotkey) {
       chars.push('\\');
     } else if (v.toUpperCase() === 'FORWARDSLASH') {
       chars.push('/');
+    } else if (v.toUpperCase() === 'SINGLEQUOTE') {
+      chars.push("'");
     } else if (v.toUpperCase() === 'SPACE') {
       chars.push('Space');
     } else {

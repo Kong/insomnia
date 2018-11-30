@@ -44,6 +44,7 @@ class Shortcuts extends PureComponent {
             {this.renderHotkey(hotkeys.SHOW_REQUEST_SETTINGS)}
             {this.renderHotkey(hotkeys.TOGGLE_MAIN_MENU)}
             {this.renderHotkey(hotkeys.RELOAD_PLUGINS)}
+            {this.renderHotkey(hotkeys.UNCOVER_VARIABLES)}
           </tbody>
         </table>
       </div>

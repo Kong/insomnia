@@ -188,7 +188,7 @@ class App extends PureComponent {
         }
       ],
       [
-        hotkeys.UNCOVER_VARIABLE,
+        hotkeys.UNCOVER_VARIABLES,
         async () => {
           await this._updateIsVariableUncovered();
         }
