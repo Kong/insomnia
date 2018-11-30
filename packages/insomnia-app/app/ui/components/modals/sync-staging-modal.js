@@ -10,6 +10,7 @@ import type { Workspace } from '../../../models/workspace';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import TimeFromNow from '../time-from-now';
+import PromptButton from '../base/prompt-button';
 
 type VCSCommit = {
   parent: string,
@@ -50,6 +51,7 @@ type Props = {
 
 type State = {
   branch: string,
+  actionBranch: string,
   branches: Array<string>,
   status: VCSStatus,
   message: string,
@@ -74,6 +76,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     super(props);
     this.state = {
       branch: '',
+      actionBranch: '',
       branches: [],
       newBranchName: '',
       commits: [],
@@ -114,15 +117,66 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     await this.updateStatus();
   }
 
-  async _handleCheckoutBranch() {
+  async _handleChangeActionBranch(e: SyntheticEvent<HTMLSelectElement>) {
+    this.setState({ actionBranch: e.currentTarget.value });
+  }
+
+  async _handleCheckoutBranch(e: SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
     await this.vcs.checkout(this.state.newBranchName);
     await this.updateStatus({ newBranchName: '' });
+  }
+
+  async _handleRemoveBranch() {
+    const { actionBranch } = this.state;
+
+    try {
+      await this.vcs.removeBranch(actionBranch);
+    } catch (err) {
+      // Failed, probably because it's the current branch
+      console.log('[vcs] Failed to remove branch', err);
+      return;
+    }
+
+    await this.updateStatus({ actionBranch: '' });
+  }
+
+  async _handleMergeBranch() {
+    const { actionBranch } = this.state;
+
+    try {
+      await this.vcs.merge(actionBranch);
+    } catch (err) {
+      // Failed, probably because it's the current branch
+      console.log('[vcs] Failed to merge branch', err);
+      return;
+    }
+
+    await this.updateStatus();
   }
 
   async _handleStage(e: SyntheticEvent<HTMLInputElement>) {
     const id = e.currentTarget.name;
     const statusItem = this.state.status.unstaged[id];
     await this.vcs.stage(statusItem);
+    await this.updateStatus();
+  }
+
+  async _handleStageAll() {
+    const { unstaged } = this.state.status;
+    for (const id of Object.keys(unstaged)) {
+      await this.vcs.stage(unstaged[id]);
+    }
+
+    await this.updateStatus();
+  }
+
+  async _handleUnstageAll() {
+    const { stage } = this.state.status;
+    for (const id of Object.keys(stage)) {
+      await this.vcs.unstage(stage[id]);
+    }
+
     await this.updateStatus();
   }
 
@@ -148,7 +202,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   async updateStatus(newState?: Object) {
     const items = [];
     const allDocs = await db.withDescendants(this.props.workspace);
-    const docs = allDocs.filter(d => WHITE_LIST[d.type]);
+    const docs = allDocs.filter(d => WHITE_LIST[d.type] && !(d: any).isPrivate);
 
     for (const doc of docs) {
       items.push({
@@ -177,12 +231,28 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   }
 
   async show() {
+    // Make sure we're on a branch
+    const onBranch = await this.vcs.isOnBranch();
+    if (!onBranch) {
+      await this.vcs.checkout('master');
+    }
+
     this.modal && this.modal.show();
     await this.updateStatus();
   }
 
   render() {
-    const { branch, branches, newBranchName, status, commits, message, error } = this.state;
+    const {
+      actionBranch,
+      branch,
+      branches,
+      newBranchName,
+      status,
+      commits,
+      message,
+      error
+    } = this.state;
+
     return (
       <Modal ref={this._setModalRef}>
         <ModalHeader>Stage Files</ModalHeader>
@@ -200,18 +270,48 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
           </div>
           <div className="form-row">
             <div className="form-control form-control--outlined">
-              <input
-                key={branch}
-                type="text"
-                placeholder="my-branch"
-                onChange={this._handleBranchChange}
-                defaultValue={newBranchName}
-              />
+              <select value={actionBranch} onChange={this._handleChangeActionBranch}>
+                <option value="">-- Select Branch --</option>
+                {branches.map(b => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
             </div>
-            <button className="btn btn--clicky width-auto" onClick={this._handleCheckoutBranch}>
-              Create Branch
-            </button>
+            <PromptButton
+              className="btn btn--clicky width-auto"
+              onClick={this._handleRemoveBranch}
+              disabled={!actionBranch || actionBranch === branch}
+              addIcon
+              confirmMessage=" ">
+              <i className="fa fa-trash-o" />
+            </PromptButton>
+            <PromptButton
+              className="btn btn--clicky width-auto"
+              onClick={this._handleMergeBranch}
+              disabled={!actionBranch || actionBranch === branch}
+              addIcon
+              confirmMessage=" ">
+              <i className="fa fa-code-fork" />
+            </PromptButton>
           </div>
+          <form onSubmit={this._handleCheckoutBranch}>
+            <div className="form-row">
+              <div className="form-control form-control--outlined">
+                <input
+                  key={branch}
+                  type="text"
+                  placeholder="my-branch"
+                  onChange={this._handleBranchChange}
+                  defaultValue={newBranchName}
+                />
+              </div>
+              <button type="submit" className="btn btn--clicky width-auto">
+                Create Branch
+              </button>
+            </div>
+          </form>
           <div className="form-group">
             <div className="form-control form-control--outlined">
               <textarea
@@ -227,7 +327,15 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
             </button>
           </div>
           {error && <div className="text-danger">{error}</div>}
-          <h2>Staged</h2>
+          <div>
+            <button
+              className="pull-right btn btn--clicky-small"
+              disabled={Object.keys(status.stage).length === 0}
+              onClick={this._handleUnstageAll}>
+              Remove All
+            </button>
+          </div>
+          <h2>Added Changes</h2>
           <ul>
             {Object.keys(status.stage)
               .sort()
@@ -247,7 +355,15 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
                 </li>
               ))}
           </ul>
-          <h2>Not Staged</h2>
+          <div>
+            <button
+              className="pull-right btn btn--clicky-small"
+              onClick={this._handleStageAll}
+              disabled={Object.keys(status.unstaged).length === 0}>
+              Add All
+            </button>
+            <h2>Changes</h2>
+          </div>
           <ul>
             {Object.keys(status.unstaged)
               .sort()
