@@ -771,7 +771,8 @@ class CodeEditor extends React.Component {
       className,
       dynamicHeight,
       style,
-      type
+      type,
+      isVariableUncovered
     } = this.props;
 
     const classes = classnames(className, {
@@ -859,6 +860,7 @@ class CodeEditor extends React.Component {
           onClick={onClick}
           onMouseLeave={onMouseLeave}>
           <textarea
+            key={isVariableUncovered ? 'foo' : 'bar'}
             id={id}
             ref={this._handleInitTextarea}
             style={{ display: 'none' }}
