@@ -42,6 +42,18 @@ class ResponseRaw extends PureComponent {
     return false;
   }
 
+  focus() {
+    if (this._textarea) {
+      this._textarea.focus();
+    }
+  }
+
+  selectAll() {
+    if (this._textarea) {
+      this._textarea.select();
+    }
+  }
+
   render() {
     const { fontSize } = this.props;
     return (
