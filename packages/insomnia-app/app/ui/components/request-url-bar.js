@@ -306,6 +306,7 @@ class RequestUrlBar extends PureComponent {
       method,
       handleRender,
       nunjucksPowerUserMode,
+      isVariableUncovered,
       handleGetRenderContext,
       handleAutocompleteUrls,
       uniquenessKey
@@ -329,6 +330,7 @@ class RequestUrlBar extends PureComponent {
               type="text"
               render={handleRender}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={handleAutocompleteUrls}
               getRenderContext={handleGetRenderContext}
               placeholder="https://api.myproduct.com/v1/users"
@@ -355,6 +357,7 @@ RequestUrlBar.propTypes = {
   handleGenerateCode: PropTypes.func.isRequired,
   url: PropTypes.string.isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
+  isVariableUncovered: PropTypes.bool.isRequired,
   method: PropTypes.string.isRequired,
   requestId: PropTypes.string.isRequired,
   uniquenessKey: PropTypes.string.isRequired

@@ -176,7 +176,8 @@ class KeyValueEditorRow extends PureComponent {
       valuePlaceholder,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered
     } = this.props;
 
     if (pair.type === 'file') {
@@ -217,6 +218,7 @@ class KeyValueEditorRow extends PureComponent {
           render={handleRender}
           getRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
+          isVariableUncovered={isVariableUncovered}
           getAutocompleteConstants={this._handleAutocompleteValues}
         />
       );
@@ -276,6 +278,7 @@ class KeyValueEditorRow extends PureComponent {
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
+      isVariableUncovered,
       sortable,
       noDropZone,
       hideButtons,
@@ -329,6 +332,7 @@ class KeyValueEditorRow extends PureComponent {
               render={handleRender}
               getRenderContext={handleGetRenderContext}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={this._handleAutocompleteNames}
               forceInput={forceInput}
               readOnly={readOnly}
@@ -419,6 +423,7 @@ KeyValueEditorRow.propTypes = {
   handleRender: PropTypes.func,
   handleGetRenderContext: PropTypes.func,
   nunjucksPowerUserMode: PropTypes.bool,
+  isVariableUncovered: PropTypes.bool,
   handleGetAutocompleteNameConstants: PropTypes.func,
   handleGetAutocompleteValueConstants: PropTypes.func,
   namePlaceholder: PropTypes.string,

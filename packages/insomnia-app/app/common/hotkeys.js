@@ -212,6 +212,14 @@ export const CLOSE_MODAL: Hotkey = {
   keycode: keycodes.esc
 };
 
+export const UNCOVER_VARIABLE: Hotkey = {
+  description: 'Close Modal',
+  meta: false,
+  alt: true,
+  shift: false,
+  keycode: keycodes.u
+};
+
 export function pressedHotKey(e: KeyboardEvent, definition: Hotkey): boolean {
   const isMetaPressed = isMac() ? e.metaKey : e.ctrlKey;
   const isAltPressed = isMac() ? e.ctrlKey : e.altKey;
