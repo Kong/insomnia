@@ -15,6 +15,7 @@ type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
   nunjucksPowerUserMode: boolean,
+  isVariableUncovered: boolean,
   onChange: Function
 };
 
@@ -90,7 +91,8 @@ class AsapAuth extends React.PureComponent<Props> {
       handleRender,
       handleGetRenderContext,
       authentication,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered
     } = this.props;
     const id = label.replace(/ /g, '-');
     return (
@@ -113,6 +115,7 @@ class AsapAuth extends React.PureComponent<Props> {
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               render={handleRender}
               getRenderContext={handleGetRenderContext}
+              isVariableUncovered={isVariableUncovered}
             />
           </div>
         </td>

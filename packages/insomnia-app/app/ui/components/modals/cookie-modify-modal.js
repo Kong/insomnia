@@ -19,6 +19,7 @@ type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
   nunjucksPowerUserMode: boolean,
+  isVariableUncovered: boolean,
   workspace: Workspace,
   cookieJar: CookieJar
 };
@@ -182,7 +183,12 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
 
   _renderInputField(field: string, error: string | null = null) {
     const { cookie } = this.state;
-    const { handleRender, handleGetRenderContext, nunjucksPowerUserMode } = this.props;
+    const {
+      handleRender,
+      handleGetRenderContext,
+      nunjucksPowerUserMode,
+      isVariableUncovered
+    } = this.props;
 
     if (!cookie) {
       return null;
@@ -198,6 +204,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
             render={handleRender}
             getRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
             defaultValue={val || ''}
             onChange={value => this._handleChange(field, value)}
           />

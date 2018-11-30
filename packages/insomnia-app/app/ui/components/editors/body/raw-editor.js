@@ -17,29 +17,55 @@ class RawEditor extends PureComponent {
       lineWrapping,
       indentWithTabs,
       nunjucksPowerUserMode,
+      isVariableUncovered,
       onChange,
       render,
       uniquenessKey
     } = this.props;
 
     return (
-      <CodeEditor
-        manualPrettify
-        uniquenessKey={uniquenessKey}
-        fontSize={fontSize}
-        indentSize={indentSize}
-        indentWithTabs={indentWithTabs}
-        keyMap={keyMap}
-        defaultValue={content}
-        className={className}
-        render={render}
-        getRenderContext={getRenderContext}
-        nunjucksPowerUserMode={nunjucksPowerUserMode}
-        onChange={onChange}
-        mode={contentType}
-        lineWrapping={lineWrapping}
-        placeholder="..."
-      />
+      <React.Fragment>
+        {isVariableUncovered && (
+          <CodeEditor
+            manualPrettify
+            uniquenessKey={uniquenessKey}
+            fontSize={fontSize}
+            indentSize={indentSize}
+            indentWithTabs={indentWithTabs}
+            keyMap={keyMap}
+            defaultValue={content}
+            className={className}
+            render={render}
+            getRenderContext={getRenderContext}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
+            onChange={onChange}
+            mode={contentType}
+            lineWrapping={lineWrapping}
+            placeholder="..."
+          />
+        )}
+        {!isVariableUncovered && (
+          <CodeEditor
+            manualPrettify
+            uniquenessKey={uniquenessKey}
+            fontSize={fontSize}
+            indentSize={indentSize}
+            indentWithTabs={indentWithTabs}
+            keyMap={keyMap}
+            defaultValue={content}
+            className={className}
+            render={render}
+            getRenderContext={getRenderContext}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
+            onChange={onChange}
+            mode={contentType}
+            lineWrapping={lineWrapping}
+            placeholder="..."
+          />
+        )}
+      </React.Fragment>
     );
   }
 }
@@ -55,6 +81,7 @@ RawEditor.propTypes = {
   lineWrapping: PropTypes.bool.isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
   uniquenessKey: PropTypes.string.isRequired,
+  isVariableUncovered: PropTypes.bool.isRequired,
 
   // Optional
   className: PropTypes.string,

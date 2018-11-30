@@ -22,6 +22,7 @@ type Props = {
   editorKeyMap: string,
   editorLineWrapping: boolean,
   nunjucksPowerUserMode: boolean,
+  isVariableUncovered: boolean,
   handleRender: Function,
   handleGetRenderContext: Function,
   handleRemoveWorkspace: Function,
@@ -251,7 +252,8 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
       editorKeyMap,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered
     } = this.props;
 
     const publicCertificates = clientCertificates.filter(c => !c.isPrivate);
@@ -304,6 +306,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  isVariableUncovered={isVariableUncovered}
                   defaultValue={workspace.description}
                   onChange={this._handleDescriptionChange}
                 />

@@ -307,7 +307,11 @@ class CodeEditor extends React.Component {
 
       // Setup nunjucks listeners
       if (this.props.render && !this.props.nunjucksPowerUserMode) {
-        this.codeMirror.enableNunjucksTags(this.props.render);
+        this.codeMirror.enableNunjucksTags(
+          this.props.render,
+          this.props.getRenderContext,
+          this.props.isVariableUncovered
+        );
       }
 
       // Make URLs clickable
@@ -767,7 +771,8 @@ class CodeEditor extends React.Component {
       className,
       dynamicHeight,
       style,
-      type
+      type,
+      isVariableUncovered
     } = this.props;
 
     const classes = classnames(className, {
@@ -855,6 +860,7 @@ class CodeEditor extends React.Component {
           onClick={onClick}
           onMouseLeave={onMouseLeave}>
           <textarea
+            key={isVariableUncovered ? 'foo' : 'bar'}
             id={id}
             ref={this._handleInitTextarea}
             style={{ display: 'none' }}
@@ -917,7 +923,8 @@ CodeEditor.propTypes = {
   lintOptions: PropTypes.object,
   infoOptions: PropTypes.object,
   jumpOptions: PropTypes.object,
-  uniquenessKey: PropTypes.any
+  uniquenessKey: PropTypes.any,
+  isVariableUncovered: PropTypes.bool
 };
 
 export default CodeEditor;

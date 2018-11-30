@@ -31,7 +31,8 @@ type Props = {
   lineWrapping: boolean,
   render: Function,
   getRenderContext: Function,
-  nunjucksPowerUserMode: boolean
+  nunjucksPowerUserMode: boolean,
+  isVariableUncovered: boolean
 };
 
 type State = {
@@ -367,7 +368,8 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       lineWrapping,
       render,
       getRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered
     } = this.props;
 
     const { subEnvironments, rootEnvironment, isValid } = this.state;
@@ -487,6 +489,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                 render={render}
                 getRenderContext={getRenderContext}
                 nunjucksPowerUserMode={nunjucksPowerUserMode}
+                isVariableUncovered={isVariableUncovered}
               />
             </div>
           </div>
