@@ -1,6 +1,8 @@
 @import '../constants/dimensions';
+@import '../constants/colors';
 
 .graphql-editor {
+  position: relative;
   display: grid;
   height: 100%;
   grid-template-columns: minmax(0, 1fr);
@@ -13,6 +15,19 @@
     padding: @padding-xs @padding-sm;
     font-size: @font-size-md;
     border-top: 1px dashed var(--hl-sm);
+  }
+
+  .graphql-editor__schema-dropdown {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 10;
+    margin: @padding-xs;
+    opacity: @opacity-subtle;
+
+    &:hover {
+      opacity: 1;
+    }
   }
 
   .graphql-editor__query,
@@ -31,7 +46,6 @@
   }
 
   .graphql-editor__schema-notice {
-    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
@@ -46,7 +60,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 0 @padding-sm;
+    padding: @padding-xxs @padding-sm;
     flex-wrap: wrap;
   }
 
@@ -60,7 +74,7 @@
 .CodeMirror-info {
   background: var(--color-bg);
   position: fixed;
-  z-index: 1000;
+  z-index: 100;
   padding: @padding-xs @padding-sm;
   border: 1px solid @border-color;
   color: var(--color-font);
@@ -71,7 +85,7 @@
     padding-top: @padding-xs;
 
     // HACK: Cancel out padding on parent container
-    margin-bottom: -@padding-sm;
+    margin-bottom: calc(@padding-sm * -1);
 
     & > * {
       margin: @padding-xs 0 @padding-sm 0;

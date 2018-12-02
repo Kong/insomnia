@@ -164,6 +164,14 @@ export const FOCUS_FILTER: Hotkey = {
   keycode: keycodes.f
 };
 
+export const FOCUS_RESPONSE: Hotkey = {
+  description: 'Focus Response',
+  meta: true,
+  alt: false,
+  shift: false,
+  keycode: keycodes.singlequote
+};
+
 export const SHOW_COOKIES: Hotkey = {
   description: 'Edit Cookies',
   meta: true,
@@ -218,6 +226,14 @@ export const CLOSE_MODAL: Hotkey = {
   alt: false,
   shift: false,
   keycode: keycodes.esc
+};
+
+export const UNCOVER_VARIABLES: Hotkey = {
+  description: 'Uncover Variables',
+  meta: false,
+  alt: true,
+  shift: true,
+  keycode: keycodes.u
 };
 
 export function pressedHotKey(e: KeyboardEvent, definition: Hotkey): boolean {
@@ -276,6 +292,8 @@ export function getChar(hotkey: Hotkey) {
       chars.push('\\');
     } else if (v.toUpperCase() === 'FORWARDSLASH') {
       chars.push('/');
+    } else if (v.toUpperCase() === 'SINGLEQUOTE') {
+      chars.push("'");
     } else if (v.toUpperCase() === 'SPACE') {
       chars.push('Space');
     } else {

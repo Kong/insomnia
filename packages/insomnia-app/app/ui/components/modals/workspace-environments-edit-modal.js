@@ -2,7 +2,7 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
+import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc/dist/es6';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 import PromptButton from '../base/prompt-button';
 import Button from '../base/button';
@@ -31,7 +31,8 @@ type Props = {
   lineWrapping: boolean,
   render: Function,
   getRenderContext: Function,
-  nunjucksPowerUserMode: boolean
+  nunjucksPowerUserMode: boolean,
+  isVariableUncovered: boolean
 };
 
 type State = {
@@ -367,7 +368,8 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       lineWrapping,
       render,
       getRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered
     } = this.props;
 
     const { subEnvironments, rootEnvironment, isValid } = this.state;
@@ -487,6 +489,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                 render={render}
                 getRenderContext={getRenderContext}
                 nunjucksPowerUserMode={nunjucksPowerUserMode}
+                isVariableUncovered={isVariableUncovered}
               />
             </div>
           </div>

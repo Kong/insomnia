@@ -330,6 +330,7 @@ class Editor extends PureComponent {
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
+      isVariableUncovered,
       handleGetAutocompleteNameConstants,
       handleGetAutocompleteValueConstants,
       allowFile,
@@ -363,6 +364,7 @@ class Editor extends PureComponent {
               onBlurValue={this._handleBlurValue}
               onMove={this._handleMove}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
               handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}
@@ -418,6 +420,7 @@ Editor.propTypes = {
   handleRender: PropTypes.func,
   handleGetRenderContext: PropTypes.func,
   nunjucksPowerUserMode: PropTypes.bool,
+  isVariableUncovered: PropTypes.bool,
   handleGetAutocompleteNameConstants: PropTypes.func,
   handleGetAutocompleteValueConstants: PropTypes.func,
   allowFile: PropTypes.bool,

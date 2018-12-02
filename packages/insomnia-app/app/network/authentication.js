@@ -69,9 +69,10 @@ export async function getAuthHeader(
   }
 
   if (authentication.type === AUTH_HAWK) {
-    const { id, key, algorithm } = authentication;
+    const { id, key, algorithm, ext } = authentication;
     const header = Hawk.client.header(url, method, {
-      credentials: { id, key, algorithm }
+      credentials: { id, key, algorithm },
+      ext: ext
     });
     return {
       name: 'Authorization',

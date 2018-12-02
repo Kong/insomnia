@@ -35,7 +35,8 @@ class AuthWrapper extends PureComponent {
       nunjucksPowerUserMode,
       handleUpdateSettingsShowPasswords,
       onChange,
-      showPasswords
+      showPasswords,
+      isVariableUncovered
     } = this.props;
 
     const { authentication } = request;
@@ -50,6 +51,7 @@ class AuthWrapper extends PureComponent {
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
+          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_OAUTH_2) {
@@ -63,6 +65,7 @@ class AuthWrapper extends PureComponent {
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
+          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_HAWK) {
@@ -73,6 +76,7 @@ class AuthWrapper extends PureComponent {
           handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
+          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_OAUTH_1) {
@@ -84,6 +88,7 @@ class AuthWrapper extends PureComponent {
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           showPasswords={showPasswords}
           onChange={onChange}
+          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_DIGEST) {
@@ -96,6 +101,7 @@ class AuthWrapper extends PureComponent {
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
+          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_NTLM) {
@@ -108,6 +114,7 @@ class AuthWrapper extends PureComponent {
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
+          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_BEARER) {
@@ -118,6 +125,7 @@ class AuthWrapper extends PureComponent {
           handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
+          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_AWS_IAM) {
@@ -130,6 +138,7 @@ class AuthWrapper extends PureComponent {
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
+          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_NETRC) {
@@ -142,6 +151,7 @@ class AuthWrapper extends PureComponent {
           handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
+          isVariableUncovered={isVariableUncovered}
         />
       );
     } else {
@@ -171,7 +181,7 @@ AuthWrapper.propTypes = {
   onChange: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired,
   showPasswords: PropTypes.bool.isRequired,
-
+  isVariableUncovered: PropTypes.bool.isRequired,
   // Optional
   oAuth2Token: PropTypes.object
 };

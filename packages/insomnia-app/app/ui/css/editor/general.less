@@ -10,11 +10,11 @@
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-columns: 100%;
 
-  &[data-editor-type="password"] .CodeMirror-line {
+  &[data-editor-type='password'] .CodeMirror-line {
     -webkit-text-security: disc;
 
     // NOTE: <span cm-text> appears with hidden character when editor is empty
-    [cm-text=""],
+    [cm-text=''],
     .CodeMirror-widget {
       -webkit-text-security: none;
     }
@@ -63,6 +63,10 @@
     width: 100%;
     box-sizing: border-box;
     font-family: @font-monospace;
+
+    .CodeMirror-line * {
+      font-variant-ligatures: var(--font-ligatures);
+    }
   }
 
   .CodeMirror,
@@ -83,6 +87,7 @@
   .CodeMirror-foldgutter-open {
     font-size: 1.2em;
     font-family: 'Times New Roman', serif;
+    margin-left: -2px;
   }
 
   .CodeMirror-guttermarker-subtle {

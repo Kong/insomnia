@@ -51,6 +51,7 @@ type Props = {
   // Other
   workspace: Workspace,
   settings: Settings,
+  isVariableUncovered: boolean,
   environmentId: string,
   forceRefreshCounter: number,
 
@@ -152,6 +153,7 @@ class RequestPane extends React.PureComponent<Props> {
       workspace,
       environmentId,
       settings,
+      isVariableUncovered,
       updateRequestAuthentication,
       updateRequestBody,
       updateRequestHeaders,
@@ -243,6 +245,7 @@ class RequestPane extends React.PureComponent<Props> {
               handleSendAndDownload={handleSendAndDownload}
               handleRender={handleRender}
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
               handleGetRenderContext={handleGetRenderContext}
               url={request.url}
               requestId={request._id}
@@ -308,6 +311,8 @@ class RequestPane extends React.PureComponent<Props> {
               settings={settings}
               onChange={updateRequestBody}
               onChangeHeaders={forceUpdateRequestHeaders}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
             />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
@@ -321,6 +326,7 @@ class RequestPane extends React.PureComponent<Props> {
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
                   nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                  isVariableUncovered={isVariableUncovered}
                   onChange={updateRequestAuthentication}
                 />
               </ErrorBoundary>
@@ -350,6 +356,7 @@ class RequestPane extends React.PureComponent<Props> {
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
                   nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                  isVariableUncovered={isVariableUncovered}
                   onChange={updateRequestParameters}
                 />
               </ErrorBoundary>
@@ -370,6 +377,7 @@ class RequestPane extends React.PureComponent<Props> {
                 handleRender={handleRender}
                 handleGetRenderContext={handleGetRenderContext}
                 nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                isVariableUncovered={isVariableUncovered}
                 editorFontSize={settings.editorFontSize}
                 editorIndentSize={settings.editorIndentSize}
                 editorLineWrapping={settings.editorLineWrapping}

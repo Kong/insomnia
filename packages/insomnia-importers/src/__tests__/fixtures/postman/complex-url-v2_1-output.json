@@ -8,7 +8,7 @@
       "_id": "__GRP_1__",
       "_type": "request_group",
       "parentId": "__WORKSPACE_ID__",
-      "name": "Test Collection",
+      "name": "Complex URL Test Collection",
       "description": "A collection for testing",
       "environment": {}
     },

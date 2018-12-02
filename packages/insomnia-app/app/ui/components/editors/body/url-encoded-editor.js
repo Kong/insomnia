@@ -11,7 +11,8 @@ class UrlEncodedEditor extends PureComponent {
       onChange,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered
     } = this.props;
 
     return (
@@ -26,6 +27,7 @@ class UrlEncodedEditor extends PureComponent {
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
             pairs={parameters}
           />
         </div>
@@ -39,6 +41,7 @@ UrlEncodedEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
+  isVariableUncovered: PropTypes.bool.isRequired,
 
   // Optional
   handleRender: PropTypes.func,

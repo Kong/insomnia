@@ -37,7 +37,12 @@ class VariableEditor extends PureComponent {
 
   async _update(value, noCallback = false) {
     const { handleRender } = this.props;
-
+    const cleanedValue = value
+      .replace(/^{%/, '')
+      .replace(/%}$/, '')
+      .replace(/^{{/, '')
+      .replace(/}}$/, '')
+      .trim();
     let preview = '';
     let error = '';
 
@@ -49,10 +54,10 @@ class VariableEditor extends PureComponent {
 
     const context = await this.props.handleGetRenderContext();
     const variables = context.keys;
-
+    const variableSource = context.context.getKeysContext().keyContext[cleanedValue] || '';
     // Hack to skip updating if we unmounted for some reason
     if (this._select) {
-      this.setState({ preview, error, variables, value });
+      this.setState({ preview, error, variables, value, variableSource });
     }
 
     // Call the callback if we need to
@@ -62,9 +67,8 @@ class VariableEditor extends PureComponent {
   }
 
   render() {
-    const { error, value, preview, variables } = this.state;
+    const { error, value, preview, variables, variableSource } = this.state;
     const isOther = !variables.find(v => value === `{{ ${v.name} }}`);
-
     return (
       <div>
         <div className="form-control form-control--outlined">
@@ -87,7 +91,7 @@ class VariableEditor extends PureComponent {
         )}
         <div className="form-control form-control--outlined">
           <label>
-            Live Preview
+            Live Preview {variableSource && ` - {source: ${variableSource} }`}
             {error ? (
               <textarea className="danger" value={error || 'Error'} readOnly />
             ) : (

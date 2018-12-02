@@ -14,6 +14,7 @@ type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
   nunjucksPowerUserMode: boolean,
+  isVariableUncovered: boolean,
   onChange: Function
 };
 
@@ -43,6 +44,10 @@ class HawkAuth extends React.PureComponent<Props> {
     this._handleChangeProperty('algorithm', e.currentTarget.value);
   }
 
+  _handleChangeExt(value: string): void {
+    this._handleChangeProperty('ext', value);
+  }
+
   renderHawkAuthenticationFields(): React.Node {
     const hawkAuthId = this.renderInputRow('Auth ID', 'id', this._handleChangeHawkAuthId);
 
@@ -58,7 +63,9 @@ class HawkAuth extends React.PureComponent<Props> {
       this._handleChangeAlgorithm
     );
 
-    return [hawkAuthId, hawkAuthKey, algorithm];
+    const ext = this.renderInputRow('Ext', 'ext', this._handleChangeExt);
+
+    return [hawkAuthId, hawkAuthKey, algorithm, ext];
   }
 
   renderSelectRow(
@@ -103,7 +110,8 @@ class HawkAuth extends React.PureComponent<Props> {
       handleRender,
       handleGetRenderContext,
       authentication,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered
     } = this.props;
     const id = label.replace(/ /g, '-');
     return (
@@ -126,6 +134,7 @@ class HawkAuth extends React.PureComponent<Props> {
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               render={handleRender}
               getRenderContext={handleGetRenderContext}
+              isVariableUncovered={isVariableUncovered}
             />
           </div>
         </td>

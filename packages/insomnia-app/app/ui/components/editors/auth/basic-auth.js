@@ -31,7 +31,8 @@ class BasicAuth extends PureComponent {
       showPasswords,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered
     } = this.props;
 
     return (
@@ -58,6 +59,7 @@ class BasicAuth extends PureComponent {
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
+                    isVariableUncovered={isVariableUncovered}
                   />
                 </div>
               </td>
@@ -81,6 +83,7 @@ class BasicAuth extends PureComponent {
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
+                    isVariableUncovered={isVariableUncovered}
                   />
                 </div>
               </td>
@@ -122,7 +125,8 @@ BasicAuth.propTypes = {
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
   authentication: PropTypes.object.isRequired,
-  showPasswords: PropTypes.bool.isRequired
+  showPasswords: PropTypes.bool.isRequired,
+  isVariableUncovered: PropTypes.bool.isRequired
 };
 
 export default BasicAuth;

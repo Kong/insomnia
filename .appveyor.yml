@@ -9,7 +9,7 @@ test: off
 shallow_clone: true
 platform: x64
 environment:
-  NODEJS_VERSION: "8"
+  NODEJS_VERSION: "10"
   CSC_LINK: '%WINDOWS_CSC_LINK%'
   CSC_KEY_PASSWORD: '%WINDOWS_CSC_KEY_PASSWORD%'
 
@@ -31,7 +31,6 @@ cache:
 #---------------------------------#
 
 build_script:
-  - npm install --no-save 7zip-bin-win app-builder-bin-win
   - if %APPVEYOR_REPO_TAG%==true npm run app-package
 
 #---------------------------------#

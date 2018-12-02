@@ -18,6 +18,7 @@ type Props = {
   editorKeyMap: string,
   editorLineWrapping: boolean,
   nunjucksPowerUserMode: boolean,
+  isVariableUncovered: boolean,
   handleRender: Function,
   handleGetRenderContext: Function,
   workspaces: Array<Workspace>
@@ -97,7 +98,8 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
   }
 
   _handleUpdateMoveCopyWorkspace(e: SyntheticEvent<HTMLSelectElement>) {
-    const workspaceId = e.currentTarget.value;
+    const { value } = e.currentTarget;
+    const workspaceId = value === '__NULL__' ? null : value;
     this.setState({ activeWorkspaceIdToCopyTo: workspaceId });
   }
 
@@ -162,7 +164,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       {
         request,
         workspace: workspace,
-        activeWorkspaceIdToCopyTo: workspace ? workspace._id : 'n/a',
+        activeWorkspaceIdToCopyTo: null,
         showDescription: forceEditMode || hasDescription,
         defaultPreviewMode: hasDescription && !forceEditMode
       },
@@ -207,6 +209,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
+      isVariableUncovered,
       workspaces
     } = this.props;
 
@@ -247,6 +250,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
             defaultValue={request.description}
             onChange={this._handleDescriptionChange}
           />
@@ -310,9 +314,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
                   of the new workspace's folder structure.
                 </HelpTooltip>
                 <select
-                  value={activeWorkspaceIdToCopyTo}
+                  value={activeWorkspaceIdToCopyTo || '__NULL__'}
                   onChange={this._handleUpdateMoveCopyWorkspace}>
-                  <option value="n/a">-- Select Workspace --</option>
+                  <option value="__NULL__">-- Select Workspace --</option>
                   {workspaces.map(w => {
                     if (workspace && workspace._id === w._id) {
                       return null;
@@ -329,7 +333,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
             </div>
             <div className="form-control form-control--no-label width-auto">
               <button
-                disabled={justCopied}
+                disabled={justCopied || !activeWorkspaceIdToCopyTo}
                 className="btn btn--clicky"
                 onClick={this._handleCopyToWorkspace}>
                 {justCopied ? 'Copied!' : 'Copy'}
@@ -337,7 +341,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
             </div>
             <div className="form-control form-control--no-label width-auto">
               <button
-                disabled={justMoved}
+                disabled={justMoved || !activeWorkspaceIdToCopyTo}
                 className="btn btn--clicky"
                 onClick={this._handleMoveToWorkspace}>
                 {justMoved ? 'Moved!' : 'Move'}

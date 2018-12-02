@@ -84,21 +84,38 @@ class RequestHeadersEditor extends PureComponent {
       onChange,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered
     } = this.props;
 
     return bulk ? (
       <div className="tall">
-        <CodeEditor
-          getRenderContext={handleGetRenderContext}
-          render={handleRender}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
-          fontSize={editorFontSize}
-          indentSize={editorIndentSize}
-          lineWrapping={editorLineWrapping}
-          onChange={this._handleBulkUpdate}
-          defaultValue={this._getHeadersString()}
-        />
+        {isVariableUncovered && (
+          <CodeEditor
+            getRenderContext={handleGetRenderContext}
+            render={handleRender}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
+            fontSize={editorFontSize}
+            indentSize={editorIndentSize}
+            lineWrapping={editorLineWrapping}
+            onChange={this._handleBulkUpdate}
+            defaultValue={this._getHeadersString()}
+          />
+        )}
+        {!isVariableUncovered && (
+          <CodeEditor
+            getRenderContext={handleGetRenderContext}
+            render={handleRender}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
+            fontSize={editorFontSize}
+            indentSize={editorIndentSize}
+            lineWrapping={editorLineWrapping}
+            onChange={this._handleBulkUpdate}
+            defaultValue={this._getHeadersString()}
+          />
+        )}
       </div>
     ) : (
       <div className="pad-bottom scrollable-container">
@@ -109,6 +126,7 @@ class RequestHeadersEditor extends PureComponent {
             valuePlaceholder="Value"
             pairs={headers}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
             handleGetAutocompleteNameConstants={this._getCommonHeaderNames}
@@ -128,6 +146,7 @@ RequestHeadersEditor.propTypes = {
   editorIndentSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
+  isVariableUncovered: PropTypes.bool.isRequired,
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
   headers: PropTypes.arrayOf(

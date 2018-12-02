@@ -237,7 +237,7 @@ export function createWindow() {
       {
         label: 'Show App Data Folder',
         click: (menuItem, window, e) => {
-          const directory = app.getPath('userData');
+          const directory = misc.getDataDirectory();
           shell.showItemInFolder(directory);
         }
       },
@@ -260,7 +260,7 @@ export function createWindow() {
           message: getAppLongName(),
           detail: [
             'Version ' + getAppVersion(),
-            'Shell ' + process.versions['atom-shell'],
+            'Shell ' + process.versions.electron,
             'Node ' + process.versions.node,
             'V8 ' + process.versions.v8,
             'Architecture ' + process.arch,
@@ -414,7 +414,7 @@ function getZoomFactor() {
 }
 
 function initLocalStorage() {
-  const localStoragePath = path.join(app.getPath('userData'), 'localStorage');
+  const localStoragePath = path.join(misc.getDataDirectory(), 'localStorage');
   localStorage = new LocalStorage(localStoragePath);
 }
 

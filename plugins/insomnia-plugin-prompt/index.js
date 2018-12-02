@@ -1,7 +1,14 @@
+const crypto = require('crypto');
+
 module.exports.responseHooks = [
-  context => {
+  async context => {
+    const items = await context.store.all();
+    const requestId = context.request.getId();
+    const toRemove = items.filter(v => v.key.indexOf(requestId) === 0);
     // Delete cached values we prompt again on the next request
-    context.store.clear();
+    for (const { key } of toRemove) {
+      await context.store.removeItem(key);
+    }
   }
 ];
 
@@ -53,7 +60,11 @@ module.exports.templateTags = [
       // We do this because we may render the prompt multiple times per request.
       // We cache it under the requestId so it only prompts once. We then clear
       // the cache in a response hook when the request is sent.
-      const storageKey = explicitStorageKey || `${context.meta.requestId}.${title}`;
+      const titleHash = crypto
+        .createHash('md5')
+        .update(title)
+        .digest('hex');
+      const storageKey = explicitStorageKey || `${context.meta.requestId}.${titleHash}`;
       const cachedValue = await context.store.getItem(storageKey);
 
       if (cachedValue) {

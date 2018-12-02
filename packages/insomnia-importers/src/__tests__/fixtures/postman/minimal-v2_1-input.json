@@ -1,0 +1,13 @@
+{
+  "info": {
+    "_postman_id": "b91b65ea-3876-46c8-b982-0b06dee32f5d",
+    "name": "Minimal Test Collection",
+    "description": "A collection for testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "request": {}
+    }
+  ]
+}

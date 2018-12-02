@@ -213,11 +213,41 @@ export async function getRenderContext(
   );
   const subEnvironment = await models.environment.getById(environmentId);
 
+  let keySource = {};
+  for (let key in (rootEnvironment || {}).data) {
+    keySource[key] = 'root';
+  }
+  if (subEnvironment) {
+    for (let key in subEnvironment.data || {}) {
+      if (subEnvironment.name) {
+        keySource[key] = subEnvironment.name;
+      }
+    }
+  }
+  if (ancestors) {
+    for (let idx = 0; idx < ancestors.length; idx++) {
+      let ancestor: any = ancestors[idx] || {};
+      if (
+        ancestor.type === 'RequestGroup' &&
+        ancestor.hasOwnProperty('environment') &&
+        ancestor.hasOwnProperty('name')
+      ) {
+        for (let key in ancestor.environment || {}) {
+          keySource[key] = ancestor.name || '';
+        }
+      }
+    }
+  }
+
   // Add meta data helper function
   const baseContext = {};
   baseContext.getMeta = () => ({
     requestId: request ? request._id : null,
     workspaceId: workspace ? workspace._id : 'n/a'
+  });
+
+  baseContext.getKeysContext = () => ({
+    keyContext: keySource
   });
 
   baseContext.getPurpose = () => purpose;

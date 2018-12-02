@@ -80,7 +80,8 @@ class App extends PureComponent {
       draggingPaneVertical: false,
       sidebarWidth: props.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
       paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
-      paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT
+      paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT,
+      isVariableUncovered: props.isVariableUncovered || false
     };
 
     this._isMigratingChildren = false;
@@ -190,6 +191,12 @@ class App extends PureComponent {
         hotkeys.DUPLICATE_REQUEST,
         async () => {
           await this._requestDuplicate(this.props.activeRequest);
+        }
+      ],
+      [
+        hotkeys.UNCOVER_VARIABLES,
+        async () => {
+          await this._updateIsVariableUncovered();
         }
       ]
     ];
@@ -366,6 +373,10 @@ class App extends PureComponent {
     }
   }
 
+  _updateIsVariableUncovered(paneWidth) {
+    this.setState({ isVariableUncovered: !this.state.isVariableUncovered });
+  }
+
   _handleSetPaneWidth(paneWidth) {
     this.setState({ paneWidth });
     this._savePaneWidth(paneWidth);
@@ -464,6 +475,21 @@ class App extends PureComponent {
     return newRequest;
   }
 
+  async _getDownloadLocation() {
+    return new Promise(resolve => {
+      const options = {
+        title: 'Select Download Location',
+        buttonLabel: 'Send and Save',
+        defaultPath: window.localStorage.getItem('insomnia.sendAndDownloadLocation')
+      };
+
+      remote.dialog.showSaveDialog(options, filename => {
+        window.localStorage.setItem('insomnia.sendAndDownloadLocation', filename);
+        resolve(filename);
+      });
+    });
+  }
+
   async _handleSendAndDownloadRequestWithEnvironment(requestId, environmentId, dir) {
     const request = await models.request.getById(requestId);
     if (!request) {
@@ -495,7 +521,13 @@ class App extends PureComponent {
         const name =
           nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
 
-        const filename = path.join(dir, name);
+        let filename;
+        if (dir) {
+          filename = path.join(dir, name);
+        } else {
+          filename = await this._getDownloadLocation();
+        }
+
         const to = fs.createWriteStream(filename);
         const readStream = models.response.getBodyStream(responsePatch);
 
@@ -982,6 +1014,7 @@ class App extends PureComponent {
               handleSetSidebarFilter={this._handleSetSidebarFilter}
               handleToggleMenuBar={this._handleToggleMenuBar}
               handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
+              isVariableUncovered={this.state.isVariableUncovered}
             />
           </ErrorBoundary>
 

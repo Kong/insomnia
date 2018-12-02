@@ -42,10 +42,9 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
     const hasFile = body.fileName && body.fileName.length;
     const isEmpty = !hasParams && !hasText && !hasFile;
     const isFile = body.mimeType === CONTENT_TYPE_FILE;
-    const isMultipartWithFiles =
-      body.mimeType === CONTENT_TYPE_FORM_DATA && (body.params || []).find(p => p.type === 'file');
+    const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA;
     const isFormUrlEncoded = body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
-    const isText = !isFile && !isMultipartWithFiles;
+    const isText = !isFile && !isMultipart;
 
     const willBeFile = mimeType === CONTENT_TYPE_FILE;
     const willBeMultipart = mimeType === CONTENT_TYPE_FORM_DATA;

@@ -11,6 +11,7 @@ type Props = {
   authentication: RequestAuthentication,
   nunjucksPowerUserMode: boolean,
   showPasswords: boolean,
+  isVariableUncovered: boolean,
   onChange: RequestAuthentication => void,
   handleRender: string => Promise<string>,
   handleGetRenderContext: () => Promise<Object>,
@@ -60,7 +61,8 @@ class AWSAuth extends React.PureComponent<Props> {
       authentication,
       nunjucksPowerUserMode,
       handleRender,
-      handleGetRenderContext
+      handleGetRenderContext,
+      isVariableUncovered
     } = this.props;
 
     return (
@@ -83,6 +85,7 @@ class AWSAuth extends React.PureComponent<Props> {
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               render={handleRender}
               getRenderContext={handleGetRenderContext}
+              isVariableUncovered={isVariableUncovered}
             />
           </div>
         </td>

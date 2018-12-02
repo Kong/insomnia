@@ -13,6 +13,7 @@ describe('init()', () => {
   it('initializes correctly', async () => {
     const result = plugin.init({ name: PLUGIN });
     expect(Object.keys(result.store).sort()).toEqual([
+      'all',
       'clear',
       'getItem',
       'hasItem',
@@ -40,10 +41,18 @@ describe('store.*', () => {
     expect(await p.store.hasItem('color')).toBe(false);
     expect(await p.store.getItem('color')).toBeNull();
 
+    // Add some more
+    await p.store.setItem('a', 'aaa');
+    await p.store.setItem('b', 'bbb');
+    await p.store.setItem('c', 'ccc');
+    const all = await p.store.all();
+    expect(all.sort((a, b) => (a.key < b.key ? -1 : 1))).toEqual([
+      { key: 'a', value: 'aaa' },
+      { key: 'b', value: 'bbb' },
+      { key: 'c', value: 'ccc' }
+    ]);
+
     // Clear it
-    await p.store.setItem('a', 'a');
-    await p.store.setItem('b', 'b');
-    await p.store.setItem('c', 'c');
     await p.store.clear();
     expect(await p.store.getItem('a')).toBeNull();
     expect(await p.store.getItem('b')).toBeNull();

@@ -5,11 +5,17 @@ const MIMETYPE_JSON = 'application/json';
 const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON];
 const WORKSPACE_ID = '__WORKSPACE_1__';
 
+let requestCount = 1;
+let requestGroupCount = 1;
+
 module.exports.id = 'swagger2';
 module.exports.name = 'Swagger 2.0';
 module.exports.description = 'Importer for Swagger 2.0 specification (json/yaml)';
 
 module.exports.convert = async function(rawData) {
+  requestCount = 1;
+  requestGroupCount = 1;
+
   // Validate
   const api = await parseDocument(rawData);
   if (!api || api.swagger !== SUPPORTED_SWAGGER_VERSION) {
@@ -104,22 +110,69 @@ function parseEndpoints(document) {
     })
     .reduce((flat, arr) => flat.concat(arr), []); //flat single array
 
-  return endpointsSchemas.map((endpointSchema, index) => {
-    let { path, method, operationId: _id, summary } = endpointSchema;
-    const name = summary || `${method} ${path}`;
-
-    return {
-      _type: 'request',
-      _id: endpointSchema.operationId || `__REQUEST_${index}__`,
-      parentId: defaultParent,
-      name,
-      method: method.toUpperCase(),
-      url: '{{ base_url }}' + pathWithParamsAsVariables(path),
-      body: prepareBody(endpointSchema, globalMimeTypes),
-      headers: prepareHeaders(endpointSchema),
-      parameters: prepareQueryParams(endpointSchema)
-    };
+  const tags = document.tags || [];
+  const folders = tags.map(tag => {
+    return importFolderItem(tag, defaultParent);
   });
+  const folderLookup = {};
+  folders.forEach(folder => (folderLookup[folder.name] = folder._id));
+
+  const requests = [];
+  endpointsSchemas.map(endpointSchema => {
+    let { tags } = endpointSchema;
+    if (!tags || tags.length == 0) tags = [''];
+    tags.forEach((tag, index) => {
+      let id =
+        endpointSchema.operationId + (index > 0 ? index : '') || `__REQUEST_${requestCount++}__`;
+      let parentId = folderLookup[tag] || defaultParent;
+      requests.push(importRequest(endpointSchema, globalMimeTypes, id, parentId));
+    });
+  });
+
+  return [...folders, ...requests];
+}
+
+/**
+ * Return Insomnia folder / request group
+ *
+ *
+ * @param {Object} item - swagger 2.0 endpoint schema
+ * @param {string} parentId - id of parent category
+ * @returns {Object}
+ */
+function importFolderItem(item, parentId) {
+  return {
+    parentId,
+    _id: `__GRP_${requestGroupCount++}__`,
+    _type: 'request_group',
+    name: item.name || `Folder {requestGroupCount}`,
+    description: item.description || ''
+  };
+}
+
+/**
+ * Return Insomnia request
+ *
+ *
+ * @param {Object} endpointSchema - swagger 2.0 endpoint schema
+ * @param {string[]} globalMimeTypes - list of mimeTypes available in document globally (i.e. document.consumes)
+ * @param {string} id - id to be given to current request
+ * @param {string} parentId - id of parent category
+ * @returns {Object}
+ */
+function importRequest(endpointSchema, globalMimeTypes, id, parentId) {
+  const name = endpointSchema.summary || `${endpointSchema.method} ${endpointSchema.path}`;
+  return {
+    _type: 'request',
+    _id: id,
+    parentId: parentId,
+    name,
+    method: endpointSchema.method.toUpperCase(),
+    url: '{{ base_url }}' + pathWithParamsAsVariables(endpointSchema.path),
+    body: prepareBody(endpointSchema, globalMimeTypes),
+    headers: prepareHeaders(endpointSchema),
+    parameters: prepareQueryParams(endpointSchema)
+  };
 }
 
 /**

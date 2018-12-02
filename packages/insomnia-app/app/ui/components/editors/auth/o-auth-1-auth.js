@@ -20,6 +20,7 @@ type Props = {
   handleGetRenderContext: Function,
   nunjucksPowerUserMode: boolean,
   showPasswords: boolean,
+  isVariableUncovered: boolean,
   onChange: Function,
   request: Request
 };
@@ -153,7 +154,13 @@ class OAuth1Auth extends React.PureComponent<Props> {
     help: string | null = null,
     handleAutocomplete: Function | null = null
   ): React.Element<*> {
-    const { handleRender, handleGetRenderContext, request, nunjucksPowerUserMode } = this.props;
+    const {
+      handleRender,
+      handleGetRenderContext,
+      request,
+      nunjucksPowerUserMode,
+      isVariableUncovered
+    } = this.props;
     const { authentication } = request;
     const id = label.replace(/ /g, '-');
     const type = !this.props.showPasswords && property === 'password' ? 'password' : 'text';
@@ -179,6 +186,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               getAutocompleteConstants={handleAutocomplete}
               getRenderContext={handleGetRenderContext}
+              isVariableUncovered={isVariableUncovered}
             />
           </div>
         </td>

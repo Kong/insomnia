@@ -224,7 +224,7 @@
   background: var(--color-bg);
 
   &:not(.btn--plain) {
-    padding: 0 (@padding-md * 1.5);
+    padding: 0 calc(@padding-md * 1.5);
     height: @line-height-md;
     border: 1px solid transparent;
   }
@@ -242,6 +242,14 @@
   &.btn--super-duper-compact {
     padding: 0 @padding-sm;
     height: @line-height-xxs;
+  }
+
+  &.btn--micro {
+    font-size: @font-size-xs;
+    line-height: @font-size-xs;
+    padding: @padding-xxs @padding-xs;
+    height: auto;
+    border-radius: 3px;
   }
 
   &.btn--outlined {
@@ -307,6 +315,10 @@ select {
   padding: 0;
   color: inherit;
 
+  // Explicitly set font-family because browser stylesheet
+  // will use default it
+  font-family: var(--font-family);
+
   &::-webkit-input-placeholder {
     color: @hl-lg;
   }
@@ -353,10 +365,10 @@ label {
       z-index: -1;
       content: ' ';
       position: absolute;
-      top: -@padding-xxs;
-      bottom: -@padding-xxs;
-      left: -@padding-xxs;
-      right: -@padding-xxs;
+      top: calc(-@padding-xxs * -1);
+      bottom: calc(-@padding-xxs * -1);
+      left: calc(-@padding-xxs * -1);
+      right: calc(-@padding-xxs * -1);
       border-radius: @radius-sm;
       background-color: var(--hl-sm);
     }
