@@ -232,3 +232,36 @@ function migrateBodyCompression(doc: Object) {
 
   return doc;
 }
+
+export async function cleanDeletedResponses() {
+  const responsesDir = path.join(getDataDirectory(), 'responses');
+  mkdirp.sync(responsesDir);
+
+  let files = fs.readdirSync(responsesDir);
+  if (files.length === 0) {
+    return;
+  }
+
+  // ~~ is for division without remainder.
+  const totalBatch = ~~((files.length - 1) / MAX_RESPONSES) + 1;
+  for (let batch = 0; batch < totalBatch; batch++) {
+    let start = batch * MAX_RESPONSES;
+    let end = (batch + 1) * MAX_RESPONSES;
+    let deleteCandidates = files.slice(start, end).map(file => {
+      return path.join(responsesDir, file);
+    });
+
+    // Batch querying db.
+    let whitelist = await db.find(type, { bodyPath: { $in: deleteCandidates } });
+    whitelist.forEach(response => {
+      let index = deleteCandidates.indexOf(response.bodyPath);
+      if (index !== -1) {
+        deleteCandidates.splice(index, 1);
+      }
+    });
+
+    deleteCandidates.forEach(bodyPath => {
+      fs.unlinkSync(bodyPath);
+    });
+  }
+}

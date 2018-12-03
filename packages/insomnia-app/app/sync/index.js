@@ -106,6 +106,8 @@ export async function init() {
 
   _writeChangesInterval = setInterval(writePendingChanges, WRITE_PERIOD);
 
+  await models.response.cleanDeletedResponses();
+
   logger.debug('Initialized');
 }
 
