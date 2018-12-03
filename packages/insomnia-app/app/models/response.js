@@ -79,6 +79,10 @@ export async function migrate(doc: Object) {
   return doc;
 }
 
+export async function hookDatabaseInit() {
+  console.log('Init responses DB');
+}
+
 export function hookRemove(doc: Response) {
   if (!doc.bodyPath) {
     return;
