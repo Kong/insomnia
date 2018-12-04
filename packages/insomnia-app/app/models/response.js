@@ -80,6 +80,8 @@ export async function migrate(doc: Object) {
 }
 
 export async function hookDatabaseInit() {
+  await models.response.cleanDeletedResponses();
+
   console.log('Init responses DB');
 }
 
@@ -246,26 +248,14 @@ export async function cleanDeletedResponses() {
     return;
   }
 
-  // ~~ is for division without remainder.
-  const totalBatch = ~~((files.length - 1) / MAX_RESPONSES) + 1;
-  for (let batch = 0; batch < totalBatch; batch++) {
-    let start = batch * MAX_RESPONSES;
-    let end = (batch + 1) * MAX_RESPONSES;
-    let deleteCandidates = files.slice(start, end).map(file => {
-      return path.join(responsesDir, file);
-    });
+  let whitelistFiles = (await db.all(type)).map(res => {
+    return res.bodyPath.slice(responsesDir.length + 1);
+  });
 
-    // Batch querying db.
-    let whitelist = await db.find(type, { bodyPath: { $in: deleteCandidates } });
-    whitelist.forEach(response => {
-      let index = deleteCandidates.indexOf(response.bodyPath);
-      if (index !== -1) {
-        deleteCandidates.splice(index, 1);
-      }
-    });
-
-    deleteCandidates.forEach(bodyPath => {
+  for (let index = 0; index < files.length; index++) {
+    if (whitelistFiles.indexOf(files[index]) === -1) {
+      const bodyPath = path.join(responsesDir, files[index]);
       fs.unlinkSync(bodyPath);
-    });
+    }
   }
 }

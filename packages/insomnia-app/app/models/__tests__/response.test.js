@@ -142,24 +142,33 @@ describe('migrate()', () => {
 
 describe('cleanDeletedResponses()', function() {
   beforeEach(globalBeforeEach);
+  afterEach(function() {
+    jest.restoreAllMocks();
+  });
 
   it('deletes nothing if there is no files in directory', async function() {
-    fs.readdirSync = jest.fn().mockReturnValueOnce([]);
-    fs.unlinkSync = jest.fn();
+    const mockReaddirSync = jest.spyOn(fs, 'readdirSync');
+    const mockUnlinkSync = jest.spyOn(fs, 'unlinkSync');
+    mockReaddirSync.mockReturnValueOnce([]);
+    mockUnlinkSync.mockImplementation();
+
     await models.response.cleanDeletedResponses();
+
     expect(fs.unlinkSync.mock.calls.length).toBe(0);
   });
 
-  it('only deletes response files that are not in db', async () => {
+  it('only deletes response files that are not in db', async function() {
     const responsesDir = path.join(getDataDirectory(), 'responses');
-    let dbResponseIds = await createModels(responsesDir, 1);
+    let dbResponseIds = await createModels(responsesDir, 10);
     let notDbResponseIds = [];
-    for (let index = 100; index < 101; index++) {
+    for (let index = 100; index < 110; index++) {
       notDbResponseIds.push('res_' + index);
     }
 
-    fs.readdirSync = jest.fn().mockReturnValueOnce([...dbResponseIds, ...notDbResponseIds]);
-    fs.unlinkSync = jest.fn();
+    const mockReaddirSync = jest.spyOn(fs, 'readdirSync');
+    const mockUnlinkSync = jest.spyOn(fs, 'unlinkSync');
+    mockReaddirSync.mockReturnValueOnce([...dbResponseIds, ...notDbResponseIds]);
+    mockUnlinkSync.mockImplementation();
 
     await models.response.cleanDeletedResponses();
 
