@@ -247,7 +247,7 @@ export function createWindow() {
       },
       {
         label: `Insomnia ${MNEMONIC_SYM}Help`,
-        accelerator: 'F1',
+        accelerator: !isMac() ? 'F1' : null,
         click: () => {
           shell.openExternal('https://support.insomnia.rest');
         }
