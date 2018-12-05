@@ -80,6 +80,8 @@ export async function migrate(doc: Object) {
 }
 
 export async function hookDatabaseInit() {
+  await models.response.cleanDeletedResponses();
+
   console.log('Init responses DB');
 }
 
@@ -235,4 +237,25 @@ function migrateBodyCompression(doc: Object) {
   }
 
   return doc;
+}
+
+export async function cleanDeletedResponses() {
+  const responsesDir = path.join(getDataDirectory(), 'responses');
+  mkdirp.sync(responsesDir);
+
+  let files = fs.readdirSync(responsesDir);
+  if (files.length === 0) {
+    return;
+  }
+
+  let whitelistFiles = (await db.all(type)).map(res => {
+    return res.bodyPath.slice(responsesDir.length + 1);
+  });
+
+  for (let index = 0; index < files.length; index++) {
+    if (whitelistFiles.indexOf(files[index]) === -1) {
+      const bodyPath = path.join(responsesDir, files[index]);
+      fs.unlinkSync(bodyPath);
+    }
+  }
 }
