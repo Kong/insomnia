@@ -127,6 +127,12 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
       }
     }
   });
+
+  for (const model of models.all()) {
+    if (typeof model.hookDatabaseInit === 'function') {
+      await model.hookDatabaseInit();
+    }
+  }
 }
 
 // ~~~~~~~~~~~~~~~~ //
