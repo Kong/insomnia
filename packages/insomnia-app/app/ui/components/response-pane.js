@@ -55,6 +55,12 @@ type Props = {
 
 @autobind
 class ResponsePane extends React.PureComponent<Props> {
+  _responseViewer: any;
+
+  _setResponseViewerRef(n: any) {
+    this._responseViewer = n;
+  }
+
   _handleGetResponseBody(): Buffer | null {
     if (!this.props.response) {
       return null;
@@ -131,6 +137,12 @@ class ResponsePane extends React.PureComponent<Props> {
         });
       }
     });
+  }
+
+  _handleTabSelect(index: number, lastIndex: number) {
+    if (this._responseViewer != null && index === 0 && index !== lastIndex) {
+      this._responseViewer.focus();
+    }
   }
 
   render() {
@@ -242,7 +254,10 @@ class ResponsePane extends React.PureComponent<Props> {
             />
           </header>
         )}
-        <Tabs className={paneBodyClasses + ' react-tabs'} forceRenderTabPanel>
+        <Tabs
+          className={paneBodyClasses + ' react-tabs'}
+          onSelect={this._handleTabSelect}
+          forceRenderTabPanel>
           <TabList>
             <Tab>
               <PreviewModeDropdown
@@ -274,6 +289,7 @@ class ResponsePane extends React.PureComponent<Props> {
           </TabList>
           <TabPanel className="react-tabs__tab-panel">
             <ResponseViewer
+              ref={this._setResponseViewerRef}
               // Send larger one because legacy responses have bytesContent === -1
               responseId={response._id}
               bytes={Math.max(response.bytesContent, response.bytesRead)}

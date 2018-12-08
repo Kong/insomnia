@@ -132,7 +132,12 @@ class CodeEditor extends React.Component {
 
   focus() {
     if (this.codeMirror) {
-      this.codeMirror.focus();
+      // Refresh must happen when the editor is visible,
+      // so use nextTick to give time for it to be visible.
+      process.nextTick(() => {
+        this.codeMirror.refresh();
+        this.codeMirror.focus();
+      });
     }
   }
 
@@ -268,7 +273,6 @@ class CodeEditor extends React.Component {
 
     // Set default listeners
     const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
-    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
     this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
     this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
     this.codeMirror.on('keydown', this._codemirrorKeyDown);
