@@ -10,6 +10,8 @@ import { fuzzyMatch } from '../../../../common/misc';
 import KeydownBinder from '../../keydown-binder';
 import * as hotkeys from '../../../../common/hotkeys';
 
+const dropdownsContainer = document.querySelector('#dropdowns-container');
+
 @autobind
 class Dropdown extends PureComponent {
   constructor(props) {
@@ -123,13 +125,17 @@ class Dropdown extends PureComponent {
       return;
     }
 
-    // Make the dropdown scroll if it drops off screen.
-    const dropdownRect = this._node.getBoundingClientRect();
+    // Get dropdown menu
+    const dropdownList = this._dropdownList;
+
+    // Compute the size of all the menus
+    const dropdownBtnRect = this._node.getBoundingClientRect();
     const bodyRect = document.body.getBoundingClientRect();
+    const dropdownListRect = dropdownList.getBoundingClientRect();
 
     // Should it drop up?
     const bodyHeight = bodyRect.height;
-    const dropdownTop = dropdownRect.top;
+    const dropdownTop = dropdownBtnRect.top;
     const dropUp = dropdownTop > bodyHeight - 200;
 
     // Reset all the things so we can start fresh
@@ -140,45 +146,51 @@ class Dropdown extends PureComponent {
     this._dropdownList.style.minWidth = 'initial';
     this._dropdownList.style.maxWidth = 'initial';
 
-    // Make dropdown keep it's shape when filtering
-    const ul = this._dropdownList.querySelector('ul');
-    const ulRect = ul.getBoundingClientRect();
-    if (!ul.hasAttribute('data-fixed-shape')) {
-      ul.style.minHeight = `${ulRect.height}px`;
-      ul.style.minWidth = `${ulRect.width}px`;
-      ul.style.width = '100%';
-      ul.setAttribute('data-fixed-shape', 'on');
+    if (!dropdownList.hasAttribute('data-fixed-shape')) {
+      this._dropdownList.style.minHeight = `${dropdownListRect.height}px`;
+      this._dropdownList.style.minWidth = `${dropdownListRect.width}px`;
+      this._dropdownList.style.width = '100%';
+      this._dropdownList.setAttribute('data-fixed-shape', 'on');
     }
+
+    const screenMargin = 5;
 
     const { right, wide } = this.props;
     if (right || wide) {
-      const { right: originalRight } = dropdownRect;
+      const { right: originalRight } = dropdownBtnRect;
 
       // Prevent dropdown from squishing against left side of screen
-      const right = Math.max(220, originalRight);
+      const right = Math.max(dropdownListRect.width + screenMargin, originalRight);
 
       const { beside } = this.props;
-      const offset = beside ? dropdownRect.width - dropdownRect.height : 0;
+      const offset = beside ? dropdownBtnRect.width - 40 : 0;
       this._dropdownList.style.right = `${bodyRect.width - right + offset}px`;
-      this._dropdownList.style.maxWidth = `${right + offset}px`;
-      this._dropdownList.style.minWidth = `${Math.min(right, 200)}px`;
+      this._dropdownList.style.maxWidth = `${Math.min(dropdownListRect.width, right + offset)}px`;
     }
 
     if (!right || wide) {
-      const { left } = dropdownRect;
+      const { left: originalLeft } = dropdownBtnRect;
+
       const { beside } = this.props;
-      const offset = beside ? dropdownRect.width - dropdownRect.height : 0;
+      const offset = beside ? dropdownBtnRect.width - 40 : 0;
+
+      // Prevent dropdown from squishing against right side of screen
+      const left =
+        Math.min(bodyRect.width - dropdownListRect.width - screenMargin, originalLeft) - offset;
+
       this._dropdownList.style.left = `${left + offset}px`;
-      this._dropdownList.style.maxWidth = `${bodyRect.width - left - 5 - offset}px`;
-      this._dropdownList.style.minWidth = `${Math.min(bodyRect.width - left, 200)}px`;
+      this._dropdownList.style.maxWidth = `${Math.min(
+        dropdownListRect.width,
+        bodyRect.width - left - offset
+      )}px`;
     }
 
     if (dropUp) {
-      const { top } = dropdownRect;
+      const { top } = dropdownBtnRect;
       this._dropdownList.style.bottom = `${bodyRect.height - top}px`;
       this._dropdownList.style.maxHeight = `${top - 5}px`;
     } else {
-      const { bottom } = dropdownRect;
+      const { bottom } = dropdownBtnRect;
       this._dropdownList.style.top = `${bottom}px`;
       this._dropdownList.style.maxHeight = `${bodyRect.height - bottom - 5}px`;
     }
@@ -188,7 +200,7 @@ class Dropdown extends PureComponent {
     this.toggle();
   }
 
-  _handleMouseDown(e) {
+  static _handleMouseDown(e) {
     // Intercept mouse down so that clicks don't trigger things like drag and drop.
     e.preventDefault();
   }
@@ -231,35 +243,6 @@ class Dropdown extends PureComponent {
 
   componentDidUpdate() {
     this._checkSizeAndPosition();
-  }
-
-  _getContainer() {
-    let container = document.querySelector('#dropdowns-container');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'dropdowns-container';
-      container.style.zIndex = '1000000';
-      container.style.position = 'relative';
-      document.body.appendChild(container);
-    }
-
-    return container;
-  }
-
-  componentDidMount() {
-    // Move the element to the body so we can position absolutely
-    if (this._dropdownMenu) {
-      const el = ReactDOM.findDOMNode(this._dropdownMenu);
-      this._getContainer().appendChild(el);
-    }
-  }
-
-  componentWillUnmount() {
-    // Remove the element from the body
-    if (this._dropdownMenu) {
-      const el = ReactDOM.findDOMNode(this._dropdownMenu);
-      this._getContainer().removeChild(el);
-    }
   }
 
   hide() {
@@ -373,28 +356,31 @@ class Dropdown extends PureComponent {
       const noResults = filter && filterItems && filterItems.length === 0;
       finalChildren = [
         dropdownButtons[0],
-        <div key="item" className={menuClasses} ref={this._addDropdownMenuRef}>
-          <div className="dropdown__backdrop theme--transparent-overlay" />
-          <div
-            key={uniquenessKey}
-            ref={this._addDropdownListRef}
-            tabIndex="-1"
-            className={classnames('dropdown__list', {
-              'dropdown__list--filtering': filterVisible
-            })}>
-            <div className="form-control dropdown__filter">
-              <i className="fa fa-search" />
-              <input
-                type="text"
-                onInput={this._handleChangeFilter}
-                ref={this._addFilterRef}
-                onKeyPress={this._handleCheckFilterSubmit}
-              />
+        ReactDOM.createPortal(
+          <div key="item" className={menuClasses} ref={this._addDropdownMenuRef}>
+            <div className="dropdown__backdrop theme--transparent-overlay" />
+            <div
+              key={uniquenessKey}
+              ref={this._addDropdownListRef}
+              tabIndex="-1"
+              className={classnames('dropdown__list', {
+                'dropdown__list--filtering': filterVisible
+              })}>
+              <div className="form-control dropdown__filter">
+                <i className="fa fa-search" />
+                <input
+                  type="text"
+                  onInput={this._handleChangeFilter}
+                  ref={this._addFilterRef}
+                  onKeyPress={this._handleCheckFilterSubmit}
+                />
+              </div>
+              {noResults && <div className="text-center pad warning">No match :(</div>}
+              <ul className={classnames({ hide: noResults })}>{dropdownItems}</ul>
             </div>
-            {noResults && <div className="text-center pad warning">No match :(</div>}
-            <ul className={classnames({ hide: noResults })}>{dropdownItems}</ul>
-          </div>
-        </div>
+          </div>,
+          dropdownsContainer
+        )
       ];
     }
 
@@ -406,7 +392,7 @@ class Dropdown extends PureComponent {
           ref={this._setRef}
           onClick={this._handleClick}
           tabIndex="-1"
-          onMouseDown={this._handleMouseDown}>
+          onMouseDown={Dropdown._handleMouseDown}>
           {finalChildren}
         </div>
       </KeydownBinder>

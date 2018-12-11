@@ -409,6 +409,24 @@ class TagEditor extends React.PureComponent<Props, State> {
     );
   }
 
+  resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: Array<any>): string {
+    let prefix = '';
+    let reqGroup: any;
+
+    do {
+      // Get prefix from inner most request group.
+      reqGroup = allRequestGroups.find(rg => rg._id === requestGroupId);
+      if (reqGroup == null) {
+        break;
+      }
+      let name = typeof reqGroup.name === 'string' ? reqGroup.name : '';
+      prefix = `[${name}] ` + prefix;
+      requestGroupId = reqGroup.parentId;
+    } while (true);
+
+    return prefix;
+  }
+
   renderArgModel(value: string, modelType: string) {
     const { allDocs, loadingDocs } = this.state;
     const docs = allDocs[modelType] || [];
@@ -434,12 +452,9 @@ class TagEditor extends React.PureComponent<Props, State> {
             const request: any = requests.find(r => r._id === doc._id);
             const method = request && typeof request.method === 'string' ? request.method : 'GET';
             const parentId = request ? request.parentId : 'n/a';
-            const requestGroups = allDocs[models.requestGroup.type] || [];
-            const requestGroup: any = requestGroups.find(rg => rg._id === parentId);
-            const requestGroupName =
-              requestGroup && typeof requestGroup.name === 'string' ? requestGroup.name : '';
-            const requestGroupStr = requestGroupName ? `[${requestGroupName}] ` : '';
-            namePrefix = `${requestGroupStr + method} `;
+            const allRequestGroups = allDocs[models.requestGroup.type] || [];
+            const requestGroupPrefix = this.resolveRequestGroupPrefix(parentId, allRequestGroups);
+            namePrefix = `${requestGroupPrefix + method} `;
           }
 
           const docName = typeof doc.name === 'string' ? doc.name : 'Unknown Request';
