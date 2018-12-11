@@ -5,6 +5,7 @@ import fs from 'fs';
 import LocalStorage from './local-storage';
 import {
   CHANGELOG_BASE_URL,
+  MNEMONIC_SYM,
   getAppLongName,
   getAppName,
   getAppVersion,
@@ -94,13 +95,13 @@ export function createWindow() {
   });
 
   const applicationMenu = {
-    label: 'Application',
+    label: `${MNEMONIC_SYM}Application`,
     submenu: [
       ...(isMac()
-        ? [{ label: `About ${getAppName()}`, role: 'about' }, { type: 'separator' }]
+        ? [{ label: `A${MNEMONIC_SYM}bout ${getAppName()}`, role: 'about' }, { type: 'separator' }]
         : []),
       {
-        label: 'Preferences',
+        label: `${MNEMONIC_SYM}Preferences`,
         accelerator: 'CmdOrCtrl+,',
         click: function(menuItem, window, e) {
           if (!window || !window.webContents) {
@@ -110,7 +111,7 @@ export function createWindow() {
         }
       },
       {
-        label: 'Changelog',
+        label: `${MNEMONIC_SYM}Changelog`,
         click: function(menuItem, window, e) {
           if (!window || !window.webContents) {
             return;
@@ -120,21 +121,21 @@ export function createWindow() {
       },
       ...(isMac() ? [{ type: 'separator' }, { role: 'hide' }, { role: 'hideothers' }] : []),
       { type: 'separator' },
-      { label: 'Quit', accelerator: 'CmdOrCtrl+Q', click: () => app.quit() }
+      { label: `${MNEMONIC_SYM}Quit`, accelerator: 'CmdOrCtrl+Q', click: () => app.quit() }
     ]
   };
 
   const editMenu = {
-    label: 'Edit',
+    label: `${MNEMONIC_SYM}Edit`,
     submenu: [
-      { label: 'Undo', accelerator: 'CmdOrCtrl+Z', selector: 'undo:' },
-      { label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:' },
+      { label: `${MNEMONIC_SYM}Undo`, accelerator: 'CmdOrCtrl+Z', selector: 'undo:' },
+      { label: `${MNEMONIC_SYM}Redo`, accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:' },
       { type: 'separator' },
-      { label: 'Cut', accelerator: 'CmdOrCtrl+X', selector: 'cut:' },
-      { label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
-      { label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
+      { label: `Cu${MNEMONIC_SYM}t`, accelerator: 'CmdOrCtrl+X', selector: 'cut:' },
+      { label: `${MNEMONIC_SYM}Copy`, accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
+      { label: `${MNEMONIC_SYM}Paste`, accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
       {
-        label: 'Select All',
+        label: `Select ${MNEMONIC_SYM}All`,
         accelerator: 'CmdOrCtrl+A',
         selector: 'selectAll:'
       }
@@ -142,11 +143,11 @@ export function createWindow() {
   };
 
   const viewMenu = {
-    label: 'View',
+    label: `${MNEMONIC_SYM}View`,
     submenu: [
-      { role: 'togglefullscreen' },
+      { label: `Toggle ${MNEMONIC_SYM}Full Screen`, role: 'togglefullscreen' },
       {
-        label: 'Actual Size',
+        label: `${MNEMONIC_SYM}Actual Size`,
         accelerator: 'CmdOrCtrl+0',
         click: () => {
           const window = BrowserWindow.getFocusedWindow();
@@ -160,7 +161,7 @@ export function createWindow() {
         }
       },
       {
-        label: 'Zoom In',
+        label: `Zoom ${MNEMONIC_SYM}In`,
         accelerator: isMac() ? 'CmdOrCtrl+Plus' : 'CmdOrCtrl+=',
         click: () => {
           const window = BrowserWindow.getFocusedWindow();
@@ -175,7 +176,7 @@ export function createWindow() {
         }
       },
       {
-        label: 'Zoom Out',
+        label: `Zoom ${MNEMONIC_SYM}Out`,
         accelerator: 'CmdOrCtrl+-',
         click: () => {
           const window = BrowserWindow.getFocusedWindow();
@@ -189,7 +190,7 @@ export function createWindow() {
         }
       },
       {
-        label: 'Toggle Sidebar',
+        label: `Toggle ${MNEMONIC_SYM}Sidebar`,
         accelerator: 'CmdOrCtrl+\\',
         click: () => {
           const window = BrowserWindow.getFocusedWindow();
@@ -201,31 +202,35 @@ export function createWindow() {
         }
       },
       {
-        label: 'Toggle DevTools',
+        label: `Toggle ${MNEMONIC_SYM}DevTools`,
         click: () => mainWindow.toggleDevTools()
       }
     ]
   };
 
   const windowMenu = {
-    label: 'Window',
+    label: `${MNEMONIC_SYM}Window`,
     role: 'window',
-    submenu: [{ role: 'minimize' }, ...(isMac() ? [{ role: 'close' }] : [])]
+    submenu: [
+      { label: `${MNEMONIC_SYM}Minimize`, role: 'minimize' },
+      ...(isMac() ? [{ label: `${MNEMONIC_SYM}Close`, role: 'close' }] : [])
+    ]
   };
 
   const helpMenu = {
-    label: 'Help',
+    label: `${MNEMONIC_SYM}Help`,
     role: 'help',
     id: 'help',
     submenu: [
       {
-        label: 'Contact Support',
+        label: `Contact ${MNEMONIC_SYM}Support`,
         click: () => {
           shell.openExternal('https://insomnia.rest/support/');
         }
       },
       {
-        label: 'Keyboard Shortcuts',
+        label: `${MNEMONIC_SYM}Keyboard Shortcuts`,
+        accelerator: 'CmdOrCtrl+Shift+?',
         click: (menuItem, window, e) => {
           if (!window || !window.webContents) {
             return;
@@ -234,14 +239,15 @@ export function createWindow() {
         }
       },
       {
-        label: 'Show App Data Folder',
+        label: `Show App ${MNEMONIC_SYM}Data Folder`,
         click: (menuItem, window, e) => {
           const directory = misc.getDataDirectory();
           shell.showItemInFolder(directory);
         }
       },
       {
-        label: 'Insomnia Help',
+        label: `Insomnia ${MNEMONIC_SYM}Help`,
+        accelerator: !isMac() ? 'F1' : null,
         click: () => {
           shell.openExternal('https://support.insomnia.rest');
         }
@@ -251,7 +257,7 @@ export function createWindow() {
 
   if (!isMac()) {
     helpMenu.submenu.unshift({
-      label: 'About',
+      label: `${MNEMONIC_SYM}About`,
       click: () => {
         dialog.showMessageBox({
           type: 'info',
@@ -272,21 +278,21 @@ export function createWindow() {
   }
 
   const developerMenu = {
-    label: 'Developer',
+    label: `${MNEMONIC_SYM}Developer`,
     position: 'before=help',
     submenu: [
       {
-        label: 'Reload',
+        label: `${MNEMONIC_SYM}Reload`,
         accelerator: 'Shift+F5',
         click: () => mainWindow.reload()
       },
       {
-        label: 'Toggle DevTools',
+        label: `Toggle ${MNEMONIC_SYM}DevTools`,
         accelerator: 'Alt+CmdOrCtrl+I',
         click: () => mainWindow.toggleDevTools()
       },
       {
-        label: 'Resize to Default',
+        label: `Resize to Defaul${MNEMONIC_SYM}t`,
         click: () =>
           mainWindow.setBounds({
             x: 100,
@@ -296,7 +302,7 @@ export function createWindow() {
           })
       },
       {
-        label: 'Take Screenshot',
+        label: `Take ${MNEMONIC_SYM}Screenshot`,
         click: function() {
           mainWindow.capturePage(image => {
             const buffer = image.toPNG();
@@ -309,10 +315,10 @@ export function createWindow() {
   };
 
   const toolsMenu = {
-    label: 'Tools',
+    label: `${MNEMONIC_SYM}Tools`,
     submenu: [
       {
-        label: 'Reload Plugins',
+        label: `${MNEMONIC_SYM}Reload Plugins`,
         accelerator: 'CmdOrCtrl+Shift+R',
         click: () => {
           const window = BrowserWindow.getFocusedWindow();

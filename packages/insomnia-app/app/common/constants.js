@@ -73,6 +73,7 @@ export const PLUGIN_PATH = path.join(
 );
 
 // Hotkeys
+export const MNEMONIC_SYM = isMac() ? '' : '&';
 export const MOD_SYM = isMac() ? '⌘' : 'Ctrl';
 export const ALT_SYM = isMac() ? '⌃' : 'Alt';
 export const SHIFT_SYM = isMac() ? '⇧' : 'Shift';
