@@ -80,8 +80,19 @@ function _launchApp() {
   });
 
   // Called when second instance launched with args (Windows)
-  app.makeSingleInstance(args => {
-    args.length && window.send('run-command', args[0]);
+  const gotTheLock = app.requestSingleInstanceLock();
+
+  if (!gotTheLock) {
+    console.error('[app] Failed to get instance lock');
+    return;
+  }
+
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Someone tried to run a second instance, we should focus our window.
+    if (window) {
+      if (window.isMinimized()) window.restore();
+      window.focus();
+    }
   });
 
   // Handle URLs when app already open
