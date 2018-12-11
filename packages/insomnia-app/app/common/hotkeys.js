@@ -27,6 +27,14 @@ export const SHOW_REQUEST_SETTINGS: Hotkey = {
   keycode: keycodes.comma
 };
 
+export const SHOW_KEYBOARD_SHORTCUTS: Hotkey = {
+  description: 'Show Keyboard Shortcuts',
+  meta: true,
+  alt: false,
+  shift: true,
+  keycode: keycodes.forwardslash
+};
+
 export const SHOW_SETTINGS: Hotkey = {
   description: 'Show App Preferences',
   meta: true,
