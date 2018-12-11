@@ -181,7 +181,18 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   _handleUpdateRequestUrl(url: string): Promise<Request> {
-    return rUpdate(this.props.activeRequest, { url });
+    const { activeRequest } = this.props;
+
+    if (!activeRequest) {
+      throw new Error('Cannot update undefined request');
+    }
+
+    // Don't update if we don't need to
+    if (activeRequest.url === url) {
+      return Promise.resolve(activeRequest);
+    }
+
+    return rUpdate(activeRequest, { url });
   }
 
   // Special request updaters
@@ -255,7 +266,7 @@ class Wrapper extends React.PureComponent<Props, State> {
     showModal(CookiesModal, this.props.activeWorkspace);
   }
 
-  _handleShowModifyCookieModal(cookie: Object): void {
+  static _handleShowModifyCookieModal(cookie: Object): void {
     showModal(CookieModifyModal, cookie);
   }
 
@@ -438,7 +449,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           />
 
           <CookiesModal
-            handleShowModifyCookieModal={this._handleShowModifyCookieModal}
+            handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
             handleRender={handleRender}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             ref={registerModal}

@@ -100,7 +100,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     this.modal = m;
   }
 
-  _handleDone(e: SyntheticEvent<HTMLButtonElement>) {
+  _handleDone() {
     this.hide();
   }
 
@@ -187,7 +187,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     await this.updateStatus();
   }
 
-  async _handleCommit(e: SyntheticEvent<HTMLButtonElement>) {
+  async _handleCommit() {
     const { message } = this.state;
     try {
       await this.vcs.commit(message);
@@ -334,8 +334,8 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
               onClick={this._handleUnstageAll}>
               Remove All
             </button>
+            <h2>Added Changes</h2>
           </div>
-          <h2>Added Changes</h2>
           <ul>
             {Object.keys(status.stage)
               .sort()
