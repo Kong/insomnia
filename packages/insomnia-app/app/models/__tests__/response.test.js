@@ -8,7 +8,7 @@ import { getDataDirectory } from '../../common/misc';
 describe('migrate()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    Date.now = jest.genMockFunction().mockReturnValue(1234567890);
+    Date.now = jest.fn(() => 1234567890);
     jest.useFakeTimers();
   });
 
