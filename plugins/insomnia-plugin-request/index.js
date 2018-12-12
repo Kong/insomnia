@@ -21,11 +21,6 @@ module.exports.templateTags = [
             description: 'name of request'
           },
           {
-            displayName: 'Query Paramter',
-            value: 'parameter',
-            description: 'value of query parameter from request'
-          },
-          {
             displayName: 'Folder',
             value: 'folder',
             description: 'name of parent folder (or workspace)'
@@ -36,14 +31,19 @@ module.exports.templateTags = [
             description: 'fully qualified URL'
           },
           {
-            displayName: 'Cookie',
-            value: 'cookie',
-            description: 'cookie value by name'
+            displayName: 'Query Paramter',
+            value: 'parameter',
+            description: 'query parameter by name'
           },
           {
             displayName: 'Header',
             value: 'header',
             description: 'header value by name'
+          },
+          {
+            displayName: 'Cookie',
+            value: 'cookie',
+            description: 'cookie value by name'
           },
           {
             displayName: 'OAuth 2.0 Token',
@@ -113,7 +113,7 @@ module.exports.templateTags = [
           const parameterNames = [];
 
           if (request.parameters.length === 0) {
-            throw new Error(`No headers available`);
+            throw new Error(`No query parameters available`);
           }
 
           for (const queryParameter of request.parameters) {
