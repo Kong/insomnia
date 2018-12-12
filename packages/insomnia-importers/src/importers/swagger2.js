@@ -122,8 +122,9 @@ function parseEndpoints(document) {
     let { tags } = endpointSchema;
     if (!tags || tags.length == 0) tags = [''];
     tags.forEach((tag, index) => {
-      let id =
-        endpointSchema.operationId + (index > 0 ? index : '') || `__REQUEST_${requestCount++}__`;
+      let id = endpointSchema.operationId
+        ? `${endpointSchema.operationId}${index > 0 ? index : ''}`
+        : `__REQUEST_${requestCount++}__`;
       let parentId = folderLookup[tag] || defaultParent;
       requests.push(importRequest(endpointSchema, globalMimeTypes, id, parentId));
     });
