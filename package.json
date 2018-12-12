@@ -24,13 +24,10 @@
   },
   "devDependencies": {
     "husky": "^1.0.0-rc.9",
-    "jest": "^22.1.1",
+    "jest": "^23.6.0",
     "lerna": "^3.4.3",
     "prettier": "^1.13.6",
     "pretty-quick": "^1.6.0",
-    "rimraf": "^2.6.2",
-    "shelljs": "^0.8.2",
-    "webpack": "^4.8.3"
-  },
-  "dependencies": {}
+    "rimraf": "^2.6.2"
+  }
 }

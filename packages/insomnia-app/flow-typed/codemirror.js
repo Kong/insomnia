@@ -25,6 +25,7 @@ declare module 'codemirror' {
     doc: Doc;
     getCursor(): Pos;
     getValue(): string;
+    setValue(string): void;
     hasFocus(): boolean;
     indexFromPos(pos: Pos): number;
   }

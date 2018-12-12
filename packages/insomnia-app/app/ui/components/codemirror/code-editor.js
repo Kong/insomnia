@@ -62,7 +62,11 @@ const BASE_CODEMIRROR_OPTIONS = {
     // Change default find command from "find" to "findPersistent" so the
     // search box stays open after pressing Enter
     [isMac() ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent'
-  })
+  }),
+
+  // NOTE: Because the lint mode is initialized immediately, the lint gutter needs to
+  //   be in the default options. DO NOT REMOVE THIS.
+  gutters: ['CodeMirror-lint-markers']
 };
 
 @autobind
@@ -342,7 +346,7 @@ class CodeEditor extends React.Component {
     this.codeMirror.on('cursorActivity', this._codemirrorCursorActivity);
   }
 
-  _isJSON(mode) {
+  static _isJSON(mode) {
     if (!mode) {
       return false;
     }
@@ -350,7 +354,7 @@ class CodeEditor extends React.Component {
     return mode.indexOf('json') !== -1;
   }
 
-  _isXML(mode) {
+  static _isXML(mode) {
     if (!mode) {
       return false;
     }
@@ -358,7 +362,7 @@ class CodeEditor extends React.Component {
     return mode.indexOf('xml') !== -1;
   }
 
-  _isEDN(mode) {
+  static _isEDN(mode) {
     if (!mode) {
       return false;
     }
@@ -401,7 +405,7 @@ class CodeEditor extends React.Component {
     }
   }
 
-  _prettifyEDN(code) {
+  static _prettifyEDN(code) {
     try {
       return zprint(code, null);
     } catch (e) {
@@ -459,10 +463,10 @@ class CodeEditor extends React.Component {
 
     let mode;
     if (this.props.render) {
-      mode = { name: 'nunjucks', baseMode: this._normalizeMode(rawMode) };
+      mode = { name: 'nunjucks', baseMode: CodeEditor._normalizeMode(rawMode) };
     } else {
       // foo bar baz
-      mode = this._normalizeMode(rawMode);
+      mode = CodeEditor._normalizeMode(rawMode);
     }
 
     let options = {
@@ -491,6 +495,10 @@ class CodeEditor extends React.Component {
     if (indentSize) {
       options.tabSize = indentSize;
       options.indentUnit = indentSize;
+    }
+
+    if (!hideGutters && options.lint) {
+      options.gutters.push('CodeMirror-lint-markers');
     }
 
     if (!hideGutters && options.lineNumbers) {
@@ -578,7 +586,7 @@ class CodeEditor extends React.Component {
     });
   }
 
-  _normalizeMode(mode) {
+  static _normalizeMode(mode) {
     const mimeType = mode ? mode.split(';')[0] : 'text/plain';
 
     if (mimeType.includes('graphql-variables')) {
@@ -586,18 +594,18 @@ class CodeEditor extends React.Component {
     } else if (mimeType.includes('graphql')) {
       // Because graphQL plugin doesn't recognize application/graphql content-type
       return 'graphql';
-    } else if (this._isJSON(mimeType)) {
+    } else if (CodeEditor._isJSON(mimeType)) {
       return 'application/json';
-    } else if (this._isEDN(mimeType)) {
+    } else if (CodeEditor._isEDN(mimeType)) {
       return 'application/edn';
-    } else if (this._isXML(mimeType)) {
+    } else if (CodeEditor._isXML(mimeType)) {
       return 'application/xml';
     } else {
       return mimeType;
     }
   }
 
-  _codemirrorCursorActivity(instance, e) {
+  _codemirrorCursorActivity(instance) {
     if (this.props.onCursorActivity) {
       this.props.onCursorActivity(instance);
     }
@@ -614,7 +622,7 @@ class CodeEditor extends React.Component {
     }
   }
 
-  _codemirrorEndCompletion(doc, e) {
+  _codemirrorEndCompletion() {
     clearInterval(this._autocompleteDebounce);
   }
 
@@ -716,10 +724,10 @@ class CodeEditor extends React.Component {
     const shouldPrettify = forcePrettify || this.props.autoPrettify;
 
     if (shouldPrettify && this._canPrettify()) {
-      if (this._isXML(this.props.mode)) {
+      if (CodeEditor._isXML(this.props.mode)) {
         code = this._prettifyXML(code);
-      } else if (this._isEDN(this.props.mode)) {
-        code = this._prettifyEDN(code);
+      } else if (CodeEditor._isEDN(this.props.mode)) {
+        code = CodeEditor._prettifyEDN(code);
       } else {
         code = this._prettifyJSON(code);
       }
@@ -750,11 +758,11 @@ class CodeEditor extends React.Component {
 
   _canPrettify() {
     const { mode } = this.props;
-    return this._isJSON(mode) || this._isXML(mode) || this._isEDN(mode);
+    return CodeEditor._isJSON(mode) || CodeEditor._isXML(mode) || CodeEditor._isEDN(mode);
   }
 
   _showFilterHelp() {
-    const isJson = this._isJSON(this.props.mode);
+    const isJson = CodeEditor._isJSON(this.props.mode);
     showModal(FilterHelpModal, isJson);
   }
 
@@ -782,7 +790,7 @@ class CodeEditor extends React.Component {
     });
 
     const toolbarChildren = [];
-    if (this.props.updateFilter && (this._isJSON(mode) || this._isXML(mode))) {
+    if (this.props.updateFilter && (CodeEditor._isJSON(mode) || CodeEditor._isXML(mode))) {
       toolbarChildren.push(
         <input
           ref={this._setFilterInputRef}
@@ -790,7 +798,7 @@ class CodeEditor extends React.Component {
           type="text"
           title="Filter response body"
           defaultValue={filter || ''}
-          placeholder={this._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
+          placeholder={CodeEditor._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
           onChange={this._handleFilterChange}
         />
       );
@@ -819,11 +827,11 @@ class CodeEditor extends React.Component {
 
     if (this.props.manualPrettify && this._canPrettify()) {
       let contentTypeName = '';
-      if (this._isJSON(mode)) {
+      if (CodeEditor._isJSON(mode)) {
         contentTypeName = 'JSON';
-      } else if (this._isXML(mode)) {
+      } else if (CodeEditor._isXML(mode)) {
         contentTypeName = 'XML';
-      } else if (this._isEDN(mode)) {
+      } else if (CodeEditor._isEDN(mode)) {
         contentTypeName = 'EDN';
       }
 

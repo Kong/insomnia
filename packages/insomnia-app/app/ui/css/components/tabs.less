@@ -2,6 +2,7 @@
 @import '../constants/dimensions';
 
 @border-color: var(--hl-md);
+@focus-color: var(--hl-md);
 
 .react-tabs {
   width: 100%;
@@ -108,6 +109,14 @@
 
     &:not(.react-tabs__tab--selected) .dropdown i.fa {
       opacity: @opacity-super-subtle;
+    }
+
+    &.react-tabs__tab--selected:focus {
+      background-color: @focus-color;
+    }
+
+    &.react-tabs__tab button:focus {
+      text-decoration: underline;
     }
 
     &.react-tabs__tab--selected {

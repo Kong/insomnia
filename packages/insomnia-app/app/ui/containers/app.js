@@ -100,6 +100,12 @@ class App extends PureComponent {
   _setGlobalKeyMap() {
     this._globalKeyMap = [
       [
+        hotkeys.SHOW_KEYBOARD_SHORTCUTS,
+        () => {
+          showModal(SettingsModal, TAB_INDEX_SHORTCUTS);
+        }
+      ],
+      [
         hotkeys.SHOW_WORKSPACE_SETTINGS,
         () => {
           const { activeWorkspace } = this.props;

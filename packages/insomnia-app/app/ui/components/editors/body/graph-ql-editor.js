@@ -58,7 +58,6 @@ type State = {
   schemaIsFetching: boolean,
   hideSchemaFetchErrors: boolean,
   variablesSyntaxError: string,
-  forceRefreshKey: number,
   automaticFetch: boolean
 };
 
@@ -93,7 +92,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       schemaIsFetching: false,
       hideSchemaFetchErrors: false,
       variablesSyntaxError: '',
-      forceRefreshKey: 0,
       automaticFetch
     };
   }
@@ -287,7 +285,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _buildVariableTypes(schema: Object | null, query: string): { [string]: Object } {
+  _buildVariableTypes(schema: Object | null): { [string]: Object } {
     if (!schema) {
       return {};
     }
@@ -325,14 +323,16 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _handlePrettify() {
-    const { body, forceRefreshKey } = this.state;
+    const { body } = this.state;
     const { variables, query } = body;
     const prettyQuery = query && print(parse(query));
     const prettyVariables = variables && JSON.parse(prettify.json(JSON.stringify(variables)));
     this._handleBodyChange(prettyQuery, prettyVariables, this.state.body.operationName);
-    setTimeout(() => {
-      this.setState({ forceRefreshKey: forceRefreshKey + 1 });
-    }, 200);
+
+    // Update editor contents
+    if (this._queryEditor) {
+      this._queryEditor.setValue(prettyQuery);
+    }
   }
 
   _getOperations() {
@@ -480,7 +480,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       schemaFetchError,
       hideSchemaFetchErrors,
       variablesSyntaxError,
-      forceRefreshKey,
       schemaIsFetching,
       automaticFetch
     } = this.state;
@@ -489,10 +488,10 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     const variables = prettify.json(JSON.stringify(variablesObject));
 
-    const variableTypes = this._buildVariableTypes(schema, query);
+    const variableTypes = this._buildVariableTypes(schema);
 
     return (
-      <div key={forceRefreshKey} className="graphql-editor">
+      <div className="graphql-editor">
         <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
           <DropdownButton className="space-left btn btn--micro btn--outlined">
             schema <i className="fa fa-wrench" />

@@ -70,6 +70,22 @@ describe('plugin', () => {
       expect(result).toBe('bar');
     });
   });
+
+  describe('RequestExtension parameter', async () => {
+    it('should get parameter', async () => {
+      const requests = [
+        {
+          _id: 'req_1',
+          parameters: [{ name: 'foo', value: '{{ foo }}' }],
+          url: 'https://insomnia.rest/foo/bar'
+        }
+      ];
+      const context = _getTestContext([{ _id: 'wrk_1' }], requests);
+      const result = await tag.run(context, 'parameter', 'foo');
+
+      expect(result).toBe('bar');
+    });
+  });
 });
 
 function _getTestContext(workspaces, requests, jars) {

@@ -59,10 +59,10 @@ class MarkdownEditor extends PureComponent {
     return (
       <Tabs className={classes} defaultIndex={defaultPreviewMode ? 1 : 0}>
         <TabList>
-          <Tab>
+          <Tab tabIndex="-1">
             <Button value="Write">Write</Button>
           </Tab>
-          <Tab>
+          <Tab tabIndex="-1">
             <Button value="Preview">Preview</Button>
           </Tab>
         </TabList>
