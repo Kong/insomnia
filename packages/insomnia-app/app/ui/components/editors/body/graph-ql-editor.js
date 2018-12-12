@@ -245,7 +245,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         })
       );
 
-      console.log('FETCH SCHEMA');
       responsePatch = await network.send(introspectionRequest._id, environmentId);
       const bodyBuffer = models.response.getBodyBuffer(responsePatch);
 

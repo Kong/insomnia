@@ -153,11 +153,11 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     this._handleToggleCertificateForm();
   }
 
-  async _handleDeleteCertificate(certificate: ClientCertificate) {
+  static async _handleDeleteCertificate(certificate: ClientCertificate) {
     await models.clientCertificate.remove(certificate);
   }
 
-  async _handleToggleCertificate(certificate: ClientCertificate) {
+  static async _handleToggleCertificate(certificate: ClientCertificate) {
     await models.clientCertificate.update(certificate, {
       disabled: !certificate.disabled
     });
@@ -222,7 +222,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
             <button
               className="btn btn--super-compact width-auto"
               title="Enable or disable certificate"
-              onClick={() => this._handleToggleCertificate(certificate)}>
+              onClick={() => WorkspaceSettingsModal._handleToggleCertificate(certificate)}>
               {certificate.disabled ? (
                 <i className="fa fa-square-o" />
               ) : (
@@ -233,7 +233,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
               className="btn btn--super-compact width-auto"
               confirmMessage=" "
               addIcon
-              onClick={() => this._handleDeleteCertificate(certificate)}>
+              onClick={() => WorkspaceSettingsModal._handleDeleteCertificate(certificate)}>
               <i className="fa fa-trash-o" />
             </PromptButton>
           </div>
@@ -273,10 +273,10 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
       <ModalBody key={`body::${workspace._id}`} noScroll>
         <Tabs forceRenderTabPanel className="react-tabs">
           <TabList>
-            <Tab>
+            <Tab tabIndex="-1">
               <button>Overview</button>
             </Tab>
-            <Tab>
+            <Tab tabIndex="-1">
               <button>Client Certificates</button>
             </Tab>
           </TabList>
