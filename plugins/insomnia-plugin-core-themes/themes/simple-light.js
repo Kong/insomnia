@@ -5,12 +5,12 @@ module.exports = {
     styles: {
       transparentOverlay: {
         background: {
-          default: 'rgba(240, 240, 240, 0.8)'
+          default: 'rgba(240, 240, 240, 0.8)',
         },
         foreground: {
-          default: '#555'
-        }
-      }
-    }
-  }
+          default: '#555',
+        },
+      },
+    },
+  },
 };

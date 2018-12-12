@@ -29,7 +29,7 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../../b
 type GraphQLBody = {
   query: string,
   variables?: Object,
-  operationName?: string
+  operationName?: string,
 };
 
 type Props = {
@@ -44,7 +44,7 @@ type Props = {
   isVariableUncovered: boolean,
   // Optional
   className?: string,
-  uniquenessKey?: string
+  uniquenessKey?: string,
 };
 
 type State = {
@@ -52,13 +52,13 @@ type State = {
   schema: Object | null,
   schemaFetchError: {
     message: string,
-    response: ResponsePatch | null
+    response: ResponsePatch | null,
   } | null,
   schemaLastFetchTime: number,
   schemaIsFetching: boolean,
   hideSchemaFetchErrors: boolean,
   variablesSyntaxError: string,
-  automaticFetch: boolean
+  automaticFetch: boolean,
 };
 
 @autobind
@@ -92,7 +92,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       schemaIsFetching: false,
       hideSchemaFetchErrors: false,
       variablesSyntaxError: '',
-      automaticFetch
+      automaticFetch,
     };
   }
 
@@ -176,16 +176,16 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
       const from = {
         line: startToken.line - 1,
-        ch: startToken.column - 1
+        ch: startToken.column - 1,
       };
 
       const to = {
         line: endToken.line,
-        ch: endToken.column - 1
+        ch: endToken.column - 1,
       };
 
       return _queryEditor.doc.markText(from, to, {
-        className: 'cm-gql-disabled'
+        className: 'cm-gql-disabled',
       });
     });
   }
@@ -201,7 +201,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     showModal(ResponseDebugModal, {
       title: 'Introspection Request',
-      response: response
+      response: response,
     });
   }
 
@@ -225,14 +225,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       schema: this.state.schema,
       schemaFetchError: (null: any),
       schemaLastFetchTime: this.state.schemaLastFetchTime,
-      schemaIsFetching: false
+      schemaIsFetching: false,
     };
 
     let responsePatch: ResponsePatch | null = null;
     try {
       const bodyJson = JSON.stringify({
         query: introspectionQuery,
-        operationName: 'IntrospectionQuery'
+        operationName: 'IntrospectionQuery',
       });
 
       const introspectionRequest = await db.upsert(
@@ -241,8 +241,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           settingMaxTimelineDataSize: 5000,
           parentId: rawRequest._id,
           isPrivate: true, // So it doesn't get synced or exported
-          body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON)
-        })
+          body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON),
+        }),
       );
 
       responsePatch = await network.send(introspectionRequest._id, environmentId);
@@ -254,13 +254,13 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       if (error) {
         newState.schemaFetchError = {
           message: error,
-          response: responsePatch
+          response: responsePatch,
         };
       } else if (status < 200 || status >= 300) {
         const renderedURL = responsePatch.url || rawRequest.url;
         newState.schemaFetchError = {
           message: `Got status ${status} fetching schema from "${renderedURL}"`,
-          response: responsePatch
+          response: responsePatch,
         };
       } else if (bodyBuffer) {
         const { data } = JSON.parse(bodyBuffer.toString());
@@ -269,14 +269,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       } else {
         newState.schemaFetchError = {
           message: 'No response body received when fetching schema',
-          response: responsePatch
+          response: responsePatch,
         };
       }
     } catch (err) {
       console.log('[graphql] ERROR: Failed to fetch schema', err);
       newState.schemaFetchError = {
         message: `Failed to to fetch schema: ${err.message}`,
-        response: responsePatch
+        response: responsePatch,
       };
     }
 
@@ -362,7 +362,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     this.setState({
       variablesSyntaxError: '',
-      body
+      body,
     });
 
     this.props.onChange(GraphQLEditor._graphQLToString(body));
@@ -472,7 +472,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       settings,
       className,
       uniquenessKey,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
 
     const {
@@ -481,7 +481,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       hideSchemaFetchErrors,
       variablesSyntaxError,
       schemaIsFetching,
-      automaticFetch
+      automaticFetch,
     } = this.state;
 
     const { query, variables: variablesObject } = GraphQLEditor._stringToGraphQL(content);
@@ -504,7 +504,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             <i
               className={classnames('fa', {
                 'fa-toggle-on': automaticFetch,
-                'fa-toggle-off': !automaticFetch
+                'fa-toggle-off': !automaticFetch,
               })}
             />{' '}
             Automatic Fetch
@@ -518,14 +518,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
             hintOptions={{
               schema: schema || null,
-              completeSingle: false
+              completeSingle: false,
             }}
             infoOptions={{
               schema: schema || null,
               renderDescription: text => {
                 const html = markdownToHTML(text);
                 return `<div class="markdown-preview__content">${html}</div>`;
-              }
+              },
               // onClick: reference => console.log('CLICK', reference)
             }}
             // jumpOptions={{
@@ -595,7 +595,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
               getRenderContext={getRenderContext}
               getAutocompleteConstants={() => Object.keys(variableTypes || {})}
               lintOptions={{
-                variableToType: variableTypes
+                variableToType: variableTypes,
               }}
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
@@ -620,7 +620,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
               getRenderContext={getRenderContext}
               getAutocompleteConstants={() => Object.keys(variableTypes || {})}
               lintOptions={{
-                variableToType: variableTypes
+                variableToType: variableTypes,
               }}
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}

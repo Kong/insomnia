@@ -7,7 +7,7 @@ class DropdownDivider extends PureComponent {
     const { children } = this.props;
 
     const classes = classnames('dropdown__divider', {
-      'dropdown__divider--no-name': !children
+      'dropdown__divider--no-name': !children,
     });
 
     return (
@@ -19,7 +19,7 @@ class DropdownDivider extends PureComponent {
 }
 
 DropdownDivider.propTypes = {
-  children: PropTypes.node
+  children: PropTypes.node,
 };
 
 export default DropdownDivider;

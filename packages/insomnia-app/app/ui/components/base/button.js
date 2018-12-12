@@ -44,7 +44,7 @@ Button.propTypes = {
   disabled: PropTypes.bool,
   tabIndex: PropTypes.number,
   type: PropTypes.string,
-  id: PropTypes.string
+  id: PropTypes.string,
 };
 
 export default Button;

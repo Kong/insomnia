@@ -187,7 +187,7 @@ module.exports.smartEncodeUrl = function(url, encode) {
       for (const { name, value } of qsParams) {
         encodedQsParams.push({
           name: module.exports.flexibleEncodeComponent(name),
-          value: module.exports.flexibleEncodeComponent(value)
+          value: module.exports.flexibleEncodeComponent(value),
         });
       }
 
@@ -249,5 +249,5 @@ function _getJoiner(url) {
 }
 
 module.exports._internal = {
-  getJoiner: _getJoiner
+  getJoiner: _getJoiner,
 };

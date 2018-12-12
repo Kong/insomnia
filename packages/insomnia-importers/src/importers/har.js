@@ -51,7 +51,7 @@ function importRequest(request) {
     // Authentication isn't part of HAR, but we should be able to
     // sniff for things like Basic Authentication headers and pull
     // out the auth info
-    authentication: {}
+    authentication: {},
   };
 }
 
@@ -96,7 +96,7 @@ function importPostData(obj) {
   } else {
     return {
       mimeType: obj.mimeType || '',
-      text: obj.text || ''
+      text: obj.text || '',
     };
   }
 }

@@ -11,7 +11,7 @@ type ThemeBlock = {
     warning?: string,
     danger?: string,
     surprise?: string,
-    info?: string
+    info?: string,
   },
   foreground?: {
     default: string,
@@ -20,7 +20,7 @@ type ThemeBlock = {
     warning?: string,
     danger?: string,
     surprise?: string,
-    info?: string
+    info?: string,
   },
   highlight?: {
     default: string,
@@ -29,8 +29,8 @@ type ThemeBlock = {
     sm?: string,
     md?: string,
     lg?: string,
-    xl?: string
-  }
+    xl?: string,
+  },
 };
 
 type ThemeInner = {
@@ -50,14 +50,14 @@ type ThemeInner = {
     dialogHeader?: ThemeBlock,
     dialogFooter?: ThemeBlock,
     transparentOverlay?: ThemeBlock,
-    link?: ThemeBlock
-  }
+    link?: ThemeBlock,
+  },
 };
 
 export type PluginTheme = {
   name: string,
   displayName: string,
-  theme: ThemeInner
+  theme: ThemeInner,
 };
 
 export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
@@ -66,7 +66,7 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
     theme.theme,
     null,
     THROW_ON_ERROR,
-    theme.name
+    theme.name,
   );
   const n = theme.name;
 
@@ -88,7 +88,7 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
     css += wrapStyles(
       n,
       '.theme--transparent-overlay',
-      getThemeBlockCSS(styles.transparentOverlay)
+      getThemeBlockCSS(styles.transparentOverlay),
     );
 
     // Dialogs
@@ -191,7 +191,7 @@ function wrapStyles(theme: string, selector: string, styles: string) {
     styles,
     '}',
     '',
-    ''
+    '',
   ].join('\n');
 }
 

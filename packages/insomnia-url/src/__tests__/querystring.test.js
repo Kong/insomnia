@@ -5,7 +5,7 @@ const {
   buildQueryParameter,
   buildQueryStringFromParams,
   deconstructQueryStringToParams,
-  smartEncodeUrl
+  smartEncodeUrl,
 } = querystring;
 
 describe('querystring', () => {
@@ -100,7 +100,7 @@ describe('querystring', () => {
         { name: 'hello' },
         { name: 'hi there', value: 'bar??' },
         { name: '', value: 'bar??' },
-        { name: '', value: '' }
+        { name: '', value: '' },
       ]);
 
       expect(str).toBe('foo=bar%3F%3F&hello&hi%20there=bar%3F%3F');
@@ -112,9 +112,9 @@ describe('querystring', () => {
           { name: 'hello' },
           { name: 'hi there', value: 'bar??' },
           { name: '', value: 'bar??' },
-          { name: '', value: '' }
+          { name: '', value: '' },
         ],
-        false
+        false,
       );
 
       expect(str).toBe('foo=bar%3F%3F&hello=&hi%20there=bar%3F%3F&=bar%3F%3F&=');
@@ -128,7 +128,7 @@ describe('querystring', () => {
       expect(str).toEqual([
         { name: 'foo', value: 'bar??' },
         { name: 'hello', value: '' },
-        { name: 'hi there', value: 'bar??' }
+        { name: 'hi there', value: 'bar??' },
       ]);
     });
     it('builds from params with =', () => {
@@ -137,14 +137,14 @@ describe('querystring', () => {
       expect(str).toEqual([
         { name: 'foo', value: 'bar' },
         { name: '1', value: '2=3=4' },
-        { name: 'hi', value: '' }
+        { name: 'hi', value: '' },
       ]);
     });
 
     it('builds from params not strict', () => {
       const str = deconstructQueryStringToParams(
         'foo=bar%3F%3F&hello&hi%20there=bar%3F%3F&=&=val',
-        false
+        false,
       );
 
       expect(str).toEqual([
@@ -152,7 +152,7 @@ describe('querystring', () => {
         { name: 'hello', value: '' },
         { name: 'hi there', value: 'bar??' },
         { name: '', value: '' },
-        { name: '', value: 'val' }
+        { name: '', value: 'val' },
       ]);
     });
   });

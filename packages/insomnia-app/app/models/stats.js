@@ -12,7 +12,7 @@ type BaseStats = {
   lastLaunch: number | null,
   currentVersion: string | null,
   lastVersion: string | null,
-  launches: number
+  launches: number,
 };
 
 export type Stats = BaseModel & BaseStats;
@@ -23,7 +23,7 @@ export function init(): BaseStats {
     lastLaunch: null,
     currentVersion: null,
     lastVersion: null,
-    launches: 0
+    launches: 0,
   };
 }
 

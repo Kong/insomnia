@@ -25,7 +25,7 @@ type State = {
   cancelable: ?boolean,
   onComplete: ?(string) => void,
   onCancel: ?() => void,
-  onDeleteHint: ?(string) => void
+  onDeleteHint: ?(string) => void,
 };
 
 @autobind
@@ -49,7 +49,7 @@ class PromptModal extends React.PureComponent<Props, State> {
       cancelable: false,
       onComplete: undefined,
       onCancel: undefined,
-      onDeleteHint: undefined
+      onDeleteHint: undefined,
     };
   }
 
@@ -105,7 +105,7 @@ class PromptModal extends React.PureComponent<Props, State> {
     hints?: Array<string>,
     onComplete?: string => void,
     onDeleteHint?: string => void,
-    onCancel?: () => void
+    onCancel?: () => void,
   }) {
     const {
       title,
@@ -121,7 +121,7 @@ class PromptModal extends React.PureComponent<Props, State> {
       hints,
       onComplete,
       onCancel,
-      onDeleteHint
+      onDeleteHint,
     } = options;
 
     this.setState({
@@ -138,7 +138,7 @@ class PromptModal extends React.PureComponent<Props, State> {
       hint,
       inputType,
       label,
-      hints: hints || []
+      hints: hints || [],
     });
 
     this.modal && this.modal.show();
@@ -157,7 +157,7 @@ class PromptModal extends React.PureComponent<Props, State> {
   _renderHintButton(hint: string) {
     const classes = classnames(
       'btn btn--outlined btn--super-duper-compact',
-      'margin-right-sm margin-top-sm inline-block'
+      'margin-right-sm margin-top-sm inline-block',
     );
 
     return (
@@ -188,7 +188,7 @@ class PromptModal extends React.PureComponent<Props, State> {
       upperCase,
       hints,
       cancelable,
-      onCancel
+      onCancel,
     } = this.state;
 
     const input = (

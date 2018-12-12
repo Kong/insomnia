@@ -5,7 +5,7 @@ import * as misc from '../../common/misc';
 export function init(
   renderedRequest: RenderedRequest,
   renderedContext: Object,
-  readOnly: boolean = false
+  readOnly: boolean = false,
 ): { request: Object } {
   if (!renderedRequest) {
     throw new Error('contexts.request initialized without request');
@@ -69,7 +69,7 @@ export function init(
     getHeaders(): Array<{ name: string, value: string }> {
       return renderedRequest.headers.map(h => ({
         name: h.name,
-        value: h.value
+        value: h.value,
       }));
     },
     hasHeader(name: string): boolean {
@@ -106,7 +106,7 @@ export function init(
     getParameters(): Array<{ name: string, value: string }> {
       return renderedRequest.parameters.map(p => ({
         name: p.name,
-        value: p.value
+        value: p.value,
       }));
     },
     hasParameter(name: string): boolean {
@@ -129,7 +129,7 @@ export function init(
       if (!parameter) {
         renderedRequest.parameters.push({ name, value });
       }
-    }
+    },
 
     // NOTE: For these to make sense, we'd need to account for cookies in the jar as well
     // addCookie (name: string, value: string): void {}

@@ -5,9 +5,9 @@ module.exports = {
     key: 'javascript',
     title: 'JavaScript',
     extname: '.js',
-    default: 'xhr'
+    default: 'xhr',
   },
 
   jquery: require('./jquery'),
-  xhr: require('./xhr')
+  xhr: require('./xhr'),
 };

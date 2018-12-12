@@ -66,26 +66,26 @@ module.exports = {
               pretty = Object.keys(v).length > 1;
             }
             return this.literalRepresentation(v, opts, indentLevel);
-          }.bind(this)
+          }.bind(this),
         );
         return concatArray(valuesRepresentation, pretty, opts.indent, indentLevel);
       case '[object Object]':
         var keyValuePairs = [];
         for (var k in value) {
           keyValuePairs.push(
-            util.format('"%s": %s', k, this.literalRepresentation(value[k], opts, indentLevel))
+            util.format('"%s": %s', k, this.literalRepresentation(value[k], opts, indentLevel)),
           );
         }
         return concatArray(
           keyValuePairs,
           opts.pretty && keyValuePairs.length > 1,
           opts.indent,
-          indentLevel
+          indentLevel,
         );
       case '[object Boolean]':
         return value.toString();
       default:
         return '"' + value.toString().replace(/"/g, '\\"') + '"';
     }
-  }
+  },
 };

@@ -8,7 +8,7 @@ class CopyButton extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      showConfirmation: false
+      showConfirmation: false,
     };
   }
 
@@ -67,7 +67,7 @@ CopyButton.propTypes = {
   // Optional
   children: PropTypes.node,
   title: PropTypes.string,
-  confirmMessage: PropTypes.string
+  confirmMessage: PropTypes.string,
 };
 
 export default CopyButton;

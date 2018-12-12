@@ -13,16 +13,16 @@ module.exports.templateTags = [
           { displayName: 'ISO-8601', value: 'iso-8601' },
           { displayName: 'Milliseconds', value: 'millis' },
           { displayName: 'Unix', value: 'unix' },
-          { displayName: 'Custom Format', value: 'custom' }
-        ]
+          { displayName: 'Custom Format', value: 'custom' },
+        ],
       },
       {
         help: 'moment.js format string',
         displayName: 'Custom Format Template',
         type: 'string',
         placeholder: 'MMMM Do YYYY, h:mm:ss a',
-        hide: args => args[0].value !== 'custom'
-      }
+        hide: args => args[0].value !== 'custom',
+      },
     ],
     run(context, dateType = 'iso-8601', formatStr = '') {
       if (typeof dateType === 'string') {
@@ -46,7 +46,7 @@ module.exports.templateTags = [
         default:
           throw new Error(`Invalid date type "${dateType}"`);
       }
-    }
+    },
   },
   {
     // Old deprecated "timestamp" tag
@@ -56,6 +56,6 @@ module.exports.templateTags = [
     description: 'generate timestamp in milliseconds',
     run(context) {
       return Date.now();
-    }
-  }
+    },
+  },
 ];

@@ -9,7 +9,7 @@ module.exports = {
       warning: '#d19a66',
       danger: '#e06c75',
       surprise: '#c678dd',
-      info: '#56b6c2'
+      info: '#56b6c2',
     },
     foreground: {
       default: '#bbb',
@@ -18,7 +18,7 @@ module.exports = {
       warning: '#fff',
       danger: '#fff',
       surprise: '#fff',
-      info: '#fff'
+      info: '#fff',
     },
     highlight: {
       default: 'rgba(114, 121, 133, 1)',
@@ -27,18 +27,18 @@ module.exports = {
       sm: 'rgba(114, 121, 133, 0.2)',
       md: 'rgba(114, 121, 133, 0.4)',
       lg: 'rgba(114, 121, 133, 0.6)',
-      xl: 'rgba(114, 121, 133, 0.8)'
+      xl: 'rgba(114, 121, 133, 0.8)',
     },
     styles: {
       sidebar: {
         background: {
-          default: '#20252c'
-        }
+          default: '#20252c',
+        },
       },
       dialog: {
         background: {
-          default: '#303640'
-        }
+          default: '#303640',
+        },
       },
       paneHeader: {
         background: {
@@ -47,14 +47,14 @@ module.exports = {
           warning: '#d19a66',
           danger: '#d86a6f',
           surprise: '#c678dd',
-          info: '#51acb7'
-        }
+          info: '#51acb7',
+        },
       },
       transparentOverlay: {
         background: {
-          default: 'rgba(30, 33, 40, 0.8)'
-        }
-      }
-    }
-  }
+          default: 'rgba(30, 33, 40, 0.8)',
+        },
+      },
+    },
+  },
 };

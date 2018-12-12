@@ -11,11 +11,11 @@ export default async function(
   redirectUri: string = '',
   scope: string = '',
   state: string = '',
-  audience: string = ''
+  audience: string = '',
 ): Promise<Object> {
   const params = [
     { name: c.P_RESPONSE_TYPE, value: responseType },
-    { name: c.P_CLIENT_ID, value: clientId }
+    { name: c.P_CLIENT_ID, value: clientId },
   ];
 
   // Add optional params
@@ -48,7 +48,7 @@ export default async function(
       c.P_STATE,
       c.P_ERROR,
       c.P_ERROR_DESCRIPTION,
-      c.P_ERROR_URI
+      c.P_ERROR_URI,
     ]);
   } else {
     // Bad redirect

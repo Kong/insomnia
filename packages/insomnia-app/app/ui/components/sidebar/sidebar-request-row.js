@@ -18,7 +18,7 @@ class SidebarRequestRow extends PureComponent {
     super(props);
     this.state = {
       dragDirection: 0,
-      isEditing: false
+      isEditing: false,
     };
   }
 
@@ -77,7 +77,7 @@ class SidebarRequestRow extends PureComponent {
       isDraggingOver,
       request,
       requestGroup,
-      isActive
+      isActive,
     } = this.props;
 
     const { dragDirection } = this.state;
@@ -87,7 +87,7 @@ class SidebarRequestRow extends PureComponent {
     const classes = classnames('sidebar__row', {
       'sidebar__row--dragging': isDragging,
       'sidebar__row--dragging-above': isDraggingOver && dragDirection > 0,
-      'sidebar__row--dragging-below': isDraggingOver && dragDirection < 0
+      'sidebar__row--dragging-below': isDraggingOver && dragDirection < 0,
     });
 
     if (!request) {
@@ -105,7 +105,7 @@ class SidebarRequestRow extends PureComponent {
         <li className={classes}>
           <div
             className={classnames('sidebar__item', 'sidebar__item--request', {
-              'sidebar__item--active': isActive
+              'sidebar__item--active': isActive,
             })}>
             <button
               className="wide"
@@ -170,13 +170,13 @@ SidebarRequestRow.propTypes = {
 
   // Optional
   requestGroup: PropTypes.object,
-  request: PropTypes.object
+  request: PropTypes.object,
 };
 
 const dragSource = {
   beginDrag(props) {
     return { request: props.request };
-  }
+  },
 };
 
 function isAbove(monitor, component) {
@@ -207,20 +207,20 @@ const dragTarget = {
     } else {
       component.decoratedComponentInstance.setDragDirection(-1);
     }
-  }
+  },
 };
 
 function sourceCollect(connect, monitor) {
   return {
     connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging()
+    isDragging: monitor.isDragging(),
   };
 }
 
 function targetCollect(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
-    isDraggingOver: monitor.isOver()
+    isDraggingOver: monitor.isOver(),
   };
 }
 

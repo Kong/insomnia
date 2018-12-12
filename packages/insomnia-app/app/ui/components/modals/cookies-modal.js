@@ -16,12 +16,12 @@ type Props = {
   handleShowModifyCookieModal: Function,
   handleRender: (string | Object) => Promise<string | Object>,
   cookieJar: CookieJar,
-  workspace: Workspace
+  workspace: Workspace,
 };
 
 type State = {
   filter: string,
-  visibleCookieIndexes: Array<number> | null
+  visibleCookieIndexes: Array<number> | null,
 };
 
 @autobind
@@ -34,7 +34,7 @@ class CookiesModal extends PureComponent<Props, State> {
 
     this.state = {
       filter: '',
-      visibleCookieIndexes: null
+      visibleCookieIndexes: null,
     };
   }
 

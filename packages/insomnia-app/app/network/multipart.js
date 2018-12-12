@@ -28,7 +28,7 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
         });
         stream.pipe(
           writeStream,
-          { end: false }
+          { end: false },
         );
         totalSize += size;
       });
@@ -58,7 +58,7 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
         addString(
           'Content-Disposition: form-data; ' +
             `name="${name.replace(/"/g, '\\"')}"; ` +
-            `filename="${path.basename(fileName).replace(/"/g, '\\"')}"`
+            `filename="${path.basename(fileName).replace(/"/g, '\\"')}"`,
         );
         addString(lineBreak);
         addString(`Content-Type: ${contentType}`);
@@ -92,7 +92,7 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
       resolve({
         boundary: DEFAULT_BOUNDARY,
         filePath,
-        contentLength: totalSize
+        contentLength: totalSize,
       });
     });
 

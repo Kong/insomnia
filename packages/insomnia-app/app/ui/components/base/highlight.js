@@ -6,7 +6,7 @@ import { fuzzyMatch } from '../../../common/misc';
 
 type Props = {|
   search: string,
-  text: string
+  text: string,
 |};
 
 @autobind
@@ -28,8 +28,8 @@ class Highlight extends React.PureComponent<Props> {
           __html: fuzzySort.highlight(
             result,
             '<strong style="font-style: italic; text-decoration: underline;">',
-            '</strong>'
-          )
+            '</strong>',
+          ),
         }}
       />
     );

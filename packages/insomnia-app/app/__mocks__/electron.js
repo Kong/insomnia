@@ -14,14 +14,14 @@ const remote = {
     },
     getLocale() {
       return 'en-US';
-    }
+    },
   },
   net: {
     request(url) {
       const req = new events.EventEmitter();
       req.end = function() {};
       return req;
-    }
+    },
   },
   BrowserWindow: {
     getAllWindows() {
@@ -31,15 +31,15 @@ const remote = {
       return {
         getContentBounds() {
           return { width: 1900, height: 1060 };
-        }
+        },
       };
-    }
+    },
   },
   screen: {
     getPrimaryDisplay() {
       return { workAreaSize: { width: 1920, height: 1080 } };
-    }
-  }
+    },
+  },
 };
 
 module.exports = {
@@ -47,11 +47,11 @@ module.exports = {
   remote: remote,
   ipcMain: {
     on() {},
-    once() {}
+    once() {},
   },
   ipcRenderer: {
     on() {},
     once() {},
-    send() {}
-  }
+    send() {},
+  },
 };

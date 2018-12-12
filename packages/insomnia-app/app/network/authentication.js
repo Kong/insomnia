@@ -5,7 +5,7 @@ import {
   AUTH_BEARER,
   AUTH_HAWK,
   AUTH_OAUTH_1,
-  AUTH_OAUTH_2
+  AUTH_OAUTH_2,
 } from '../common/constants';
 import getOAuth2Token from './o-auth-2/get-token';
 import getOAuth1Token from './o-auth-1/get-token';
@@ -17,14 +17,14 @@ import { getBearerAuthHeader } from './bearer-auth/get-header';
 
 type Header = {
   name: string,
-  value: string
+  value: string,
 };
 
 export async function getAuthHeader(
   requestId: string,
   url: string,
   method: string,
-  authentication: RequestAuthentication
+  authentication: RequestAuthentication,
 ): Promise<Header | null> {
   if (authentication.disabled) {
     return null;
@@ -61,7 +61,7 @@ export async function getAuthHeader(
     if (oAuth1Token) {
       return {
         name: 'Authorization',
-        value: oAuth1Token.Authorization
+        value: oAuth1Token.Authorization,
       };
     } else {
       return null;
@@ -72,11 +72,11 @@ export async function getAuthHeader(
     const { id, key, algorithm, ext } = authentication;
     const header = Hawk.client.header(url, method, {
       credentials: { id, key, algorithm },
-      ext: ext
+      ext: ext,
     });
     return {
       name: 'Authorization',
-      value: header.field
+      value: header.field,
     };
   }
 
@@ -97,7 +97,7 @@ export async function getAuthHeader(
     if (parsedAdditionalClaims) {
       if (typeof parsedAdditionalClaims !== 'object') {
         throw new Error(
-          `additional-claims must be an object received: '${typeof parsedAdditionalClaims}' instead`
+          `additional-claims must be an object received: '${typeof parsedAdditionalClaims}' instead`,
         );
       }
 
@@ -106,7 +106,7 @@ export async function getAuthHeader(
 
     const options = {
       privateKey,
-      kid: keyId
+      kid: keyId,
     };
 
     return new Promise((resolve, reject) => {
@@ -116,7 +116,7 @@ export async function getAuthHeader(
         } else {
           resolve({
             name: 'Authorization',
-            value: headerValue
+            value: headerValue,
           });
         }
       });

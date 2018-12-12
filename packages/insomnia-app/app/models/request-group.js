@@ -11,7 +11,7 @@ type BaseRequestGroup = {
   name: string,
   description: string,
   environment: Object,
-  metaSortKey: number
+  metaSortKey: number,
 };
 
 export type RequestGroup = BaseModel & BaseRequestGroup;
@@ -21,7 +21,7 @@ export function init() {
     name: 'New Folder',
     description: '',
     environment: {},
-    metaSortKey: -1 * Date.now()
+    metaSortKey: -1 * Date.now(),
   };
 }
 

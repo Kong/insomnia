@@ -11,11 +11,11 @@ type Props = {
 
   // Optional
   className?: string,
-  delay?: number
+  delay?: number,
 };
 
 type State = {
-  visible: boolean
+  visible: boolean,
 };
 
 @autobind
@@ -36,7 +36,7 @@ class Tooltip extends React.PureComponent<Props, State> {
       right: null,
       maxWidth: null,
       maxHeight: null,
-      visible: false
+      visible: false,
     };
   }
 
@@ -153,7 +153,7 @@ class Tooltip extends React.PureComponent<Props, State> {
 
     const tooltipClasses = classnames(className, 'tooltip');
     const bubbleClasses = classnames('tooltip__bubble theme--tooltip', {
-      'tooltip__bubble--visible': visible
+      'tooltip__bubble--visible': visible,
     });
 
     return (

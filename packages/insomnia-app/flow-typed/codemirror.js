@@ -11,8 +11,8 @@ declare module 'codemirror' {
       options?: {|
         inclusiveLeft?: boolean,
         className?: string,
-        color?: string
-      |}
+        color?: string,
+      |},
     ): TextMarker;
   }
   declare class Pos {

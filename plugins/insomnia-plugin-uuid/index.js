@@ -11,9 +11,9 @@ module.exports.templateTags = [
         type: 'enum',
         options: [
           { displayName: 'Version 4', value: 'v4' },
-          { displayName: 'Version 1', value: 'v1' }
-        ]
-      }
+          { displayName: 'Version 1', value: 'v1' },
+        ],
+      },
     ],
     run(context, uuidType = 'v4') {
       if (typeof uuidType === 'number') {
@@ -32,6 +32,6 @@ module.exports.templateTags = [
         default:
           throw new Error(`Invalid UUID type "${uuidType}"`);
       }
-    }
-  }
+    },
+  },
 ];

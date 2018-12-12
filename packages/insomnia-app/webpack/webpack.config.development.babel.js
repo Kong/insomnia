@@ -12,17 +12,17 @@ module.exports = {
     'react-hot-loader/patch',
     `webpack-dev-server/client?http://localhost:${PORT}`,
     'webpack/hot/only-dev-server',
-    ...baseConfig.entry
+    ...baseConfig.entry,
   ],
   output: {
     ...baseConfig.output,
-    publicPath: '/'
+    publicPath: '/',
   },
   devServer: {
     host: 'localhost',
     port: PORT,
     publicPath: '/',
-    hot: true
+    hot: true,
   },
   plugins: [
     ...baseConfig.plugins,
@@ -33,7 +33,7 @@ module.exports = {
     new webpack.DefinePlugin({
       __DEV__: true,
       'process.env.NODE_ENV': JSON.stringify('development'),
-      'process.env.INSOMNIA_ENV': JSON.stringify('development')
-    })
-  ]
+      'process.env.INSOMNIA_ENV': JSON.stringify('development'),
+    }),
+  ],
 };

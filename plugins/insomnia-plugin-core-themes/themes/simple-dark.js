@@ -3,7 +3,7 @@ module.exports = {
   displayName: 'Simple Dark',
   theme: {
     foreground: {
-      default: '#ddd'
+      default: '#ddd',
     },
     background: {
       default: '#222',
@@ -12,7 +12,7 @@ module.exports = {
       warning: '#f9a230',
       danger: '#f06d6b',
       surprise: '#aca0f2',
-      info: '#6eccec'
+      info: '#6eccec',
     },
     styles: {
       paneHeader: {
@@ -22,14 +22,14 @@ module.exports = {
           warning: '#d9892c',
           danger: '#d35855',
           surprise: '#8e84cb',
-          info: '#62a6c3'
-        }
+          info: '#62a6c3',
+        },
       },
       dialog: {
         background: {
-          default: '#2a2a2a'
-        }
-      }
-    }
-  }
+          default: '#2a2a2a',
+        },
+      },
+    },
+  },
 };

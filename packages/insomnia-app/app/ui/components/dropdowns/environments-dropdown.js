@@ -7,7 +7,7 @@ import {
   DropdownButton,
   DropdownDivider,
   DropdownHint,
-  DropdownItem
+  DropdownItem,
 } from '../base/dropdown';
 import { showModal } from '../modals/index';
 import Tooltip from '../tooltip';
@@ -25,7 +25,7 @@ type Props = {
 
   // Optional
   className?: string,
-  activeEnvironment: Environment | null
+  activeEnvironment: Environment | null,
 };
 
 @autobind

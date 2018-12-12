@@ -17,9 +17,9 @@ module.exports = function(source, options) {
   var opts = util._extend(
     {
       indent: '  ',
-      cors: true
+      cors: true,
     },
-    options
+    options,
   );
 
   var code = new CodeBuilder(opts.indent);
@@ -29,7 +29,7 @@ module.exports = function(source, options) {
       code
         .push(
           'var data = JSON.stringify(%s);',
-          JSON.stringify(source.postData.jsonObj, null, opts.indent)
+          JSON.stringify(source.postData.jsonObj, null, opts.indent),
         )
         .push(null);
       break;
@@ -41,7 +41,7 @@ module.exports = function(source, options) {
         code.push(
           'data.append(%s, %s);',
           JSON.stringify(param.name),
-          JSON.stringify(param.value || param.fileName || '')
+          JSON.stringify(param.value || param.fileName || ''),
         );
       });
 
@@ -77,7 +77,7 @@ module.exports = function(source, options) {
     code.push(
       'xhr.setRequestHeader(%s, %s);',
       JSON.stringify(key),
-      JSON.stringify(source.allHeaders[key])
+      JSON.stringify(source.allHeaders[key]),
     );
   });
 
@@ -90,5 +90,5 @@ module.exports.info = {
   key: 'xhr',
   title: 'XMLHttpRequest',
   link: 'https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest',
-  description: 'W3C Standard API that provides scripted client functionality'
+  description: 'W3C Standard API that provides scripted client functionality',
 };

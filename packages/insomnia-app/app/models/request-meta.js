@@ -13,7 +13,7 @@ export function init() {
     responseFilter: '',
     responseFilterHistory: [],
     activeResponseId: null,
-    savedRequestBody: {}
+    savedRequestBody: {},
   };
 }
 

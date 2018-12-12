@@ -5,10 +5,10 @@ module.exports = {
     key: 'shell',
     title: 'Shell',
     extname: '.sh',
-    default: 'curl'
+    default: 'curl',
   },
 
   curl: require('./curl'),
   httpie: require('./httpie'),
-  wget: require('./wget')
+  wget: require('./wget'),
 };

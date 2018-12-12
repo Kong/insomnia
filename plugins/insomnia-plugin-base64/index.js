@@ -9,14 +9,14 @@ module.exports.templateTags = [
         type: 'enum',
         options: [
           { displayName: 'Encode', value: 'encode' },
-          { displayName: 'Decode', value: 'decode' }
-        ]
+          { displayName: 'Decode', value: 'decode' },
+        ],
       },
       {
         displayName: 'Value',
         type: 'string',
-        placeholder: 'My text'
-      }
+        placeholder: 'My text',
+      },
     ],
     run(context, op, text) {
       text = text || '';
@@ -28,6 +28,6 @@ module.exports.templateTags = [
       } else {
         throw new Error('Unsupported operation "' + op + '". Must be encode or decode.');
       }
-    }
-  }
+    },
+  },
 ];

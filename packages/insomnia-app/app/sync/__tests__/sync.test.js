@@ -25,12 +25,12 @@ describe('Test push/pull behaviour', () => {
     await models.request.create({
       _id: 'req_1',
       name: 'Request 1',
-      parentId: 'wrk_1'
+      parentId: 'wrk_1',
     });
     await models.request.create({
       _id: 'req_2',
       name: 'Request 2',
-      parentId: 'wrk_2'
+      parentId: 'wrk_2',
     });
 
     // Create resources, resource groups, and configs
@@ -49,10 +49,10 @@ describe('Test push/pull behaviour', () => {
 
     // Set up sync modes
     await sync.createOrUpdateConfig(resourceRequest.resourceGroupId, {
-      syncMode: syncStorage.SYNC_MODE_ON
+      syncMode: syncStorage.SYNC_MODE_ON,
     });
     await sync.createOrUpdateConfig(resourceRequest2.resourceGroupId, {
-      syncMode: syncStorage.SYNC_MODE_UNSET
+      syncMode: syncStorage.SYNC_MODE_UNSET,
     });
 
     await sync.push(); // Push only active configs
@@ -75,14 +75,14 @@ describe('Test push/pull behaviour', () => {
     const request = await models.request.getById('req_1');
     const resourceRequest = await syncStorage.getResourceByDocId(request._id);
     await sync.createOrUpdateConfig(resourceRequest.resourceGroupId, {
-      syncMode: syncStorage.SYNC_MODE_ON
+      syncMode: syncStorage.SYNC_MODE_ON,
     });
 
     session.syncPush.mockReturnValueOnce({
       updated: [],
       created: [{ id: request._id, version: 'new-version' }],
       removed: [],
-      conflicts: []
+      conflicts: [],
     });
 
     const resourceBefore = await syncStorage.getResourceByDocId(request._id);
@@ -102,31 +102,31 @@ describe('Test push/pull behaviour', () => {
     const request2 = await models.request.getById('req_2');
     const requestNew = Object.assign({}, request, {
       _id: 'req_new',
-      name: 'New Request'
+      name: 'New Request',
     });
     const resourceBefore = await syncStorage.getResourceByDocId(request._id);
     const resource2Before = await syncStorage.getResourceByDocId(requestNew._id);
     await sync.createOrUpdateConfig(resourceBefore.resourceGroupId, {
-      syncMode: syncStorage.SYNC_MODE_ON
+      syncMode: syncStorage.SYNC_MODE_ON,
     });
     const updatedRequest = Object.assign({}, request, {
-      name: 'Request Updated'
+      name: 'Request Updated',
     });
     const updatedResource = Object.assign({}, resourceBefore, {
       version: 'ver1',
-      encContent: await sync.encryptDoc(resourceBefore.resourceGroupId, updatedRequest)
+      encContent: await sync.encryptDoc(resourceBefore.resourceGroupId, updatedRequest),
     });
     const createdResourceNew = Object.assign({}, resourceBefore, {
       id: requestNew._id,
       resourceGroupId: 'rg_1',
-      encContent: await sync.encryptDoc(resourceBefore.resourceGroupId, requestNew)
+      encContent: await sync.encryptDoc(resourceBefore.resourceGroupId, requestNew),
     });
 
     session.syncPull.mockReturnValueOnce({
       updatedResources: [updatedResource],
       createdResources: [createdResourceNew],
       idsToPush: [],
-      idsToRemove: ['req_2']
+      idsToRemove: ['req_2'],
     });
 
     // Pull and get docs/resources
@@ -136,7 +136,7 @@ describe('Test push/pull behaviour', () => {
     const requestNewAfter = await models.request.getById('req_new');
     const resourceAfter = await syncStorage.getResourceByDocId(
       request._id,
-      resourceBefore.resourceGroupId
+      resourceBefore.resourceGroupId,
     );
     const resource2After = await syncStorage.getResourceByDocId(request2._id);
     const resourceNewAfter = await syncStorage.getResourceByDocId(requestNewAfter._id);
@@ -156,26 +156,26 @@ describe('Test push/pull behaviour', () => {
   it('Conflict: local version wins on modified before', async () => {
     const requestClient = await models.request.getById('req_1');
     const requestServer = Object.assign({}, requestClient, {
-      name: 'Server Request'
+      name: 'Server Request',
     });
     const resourceRequest = await syncStorage.getResourceByDocId(requestClient._id);
     const resourceConflict = Object.assign({}, resourceRequest, {
       version: 'ver-2',
       encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
-      lastEdited: resourceRequest.lastEdited - 1000 // Same edited time
+      lastEdited: resourceRequest.lastEdited - 1000, // Same edited time
     });
 
     session.syncPush.mockReturnValueOnce({
       updated: [],
       created: [],
       removed: [],
-      conflicts: [resourceConflict]
+      conflicts: [resourceConflict],
     });
 
     await sync.push(resourceRequest.resourceGroupId);
     const resourceAfter = await syncStorage.getResourceByDocId(
       requestClient._id,
-      resourceRequest.resourceGroupId
+      resourceRequest.resourceGroupId,
     );
     const requestAfter = await models.request.getById(requestClient._id);
 
@@ -193,26 +193,26 @@ describe('Test push/pull behaviour', () => {
   it('Conflict: local version wins on modified tie', async () => {
     const requestClient = await models.request.getById('req_1');
     const requestServer = Object.assign({}, requestClient, {
-      name: 'Server Request'
+      name: 'Server Request',
     });
     const resourceRequest = await syncStorage.getResourceByDocId(requestClient._id);
     const resourceConflict = Object.assign({}, resourceRequest, {
       version: 'ver-2',
       encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
-      lastEdited: resourceRequest.lastEdited // Same edited time
+      lastEdited: resourceRequest.lastEdited, // Same edited time
     });
 
     session.syncPush.mockReturnValueOnce({
       updated: [],
       created: [],
       removed: [],
-      conflicts: [resourceConflict]
+      conflicts: [resourceConflict],
     });
 
     await sync.push(resourceRequest.resourceGroupId);
     const resourceAfter = await syncStorage.getResourceByDocId(
       requestClient._id,
-      resourceRequest.resourceGroupId
+      resourceRequest.resourceGroupId,
     );
     const requestAfter = await models.request.getById(requestClient._id);
 
@@ -230,26 +230,26 @@ describe('Test push/pull behaviour', () => {
   it('Conflict: server version wins if modified after', async () => {
     const requestClient = await models.request.getById('req_1');
     const requestServer = Object.assign({}, requestClient, {
-      name: 'Server Request'
+      name: 'Server Request',
     });
     const resourceRequest = await syncStorage.getResourceByDocId(requestClient._id);
     const resourceConflict = Object.assign({}, resourceRequest, {
       version: 'ver-2',
       encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
-      lastEdited: resourceRequest.lastEdited + 1000
+      lastEdited: resourceRequest.lastEdited + 1000,
     });
 
     session.syncPush.mockReturnValueOnce({
       updated: [],
       created: [],
       removed: [],
-      conflicts: [resourceConflict]
+      conflicts: [resourceConflict],
     });
 
     await sync.push(resourceRequest.resourceGroupId);
     const resourceAfter = await syncStorage.getResourceByDocId(
       requestClient._id,
-      resourceRequest.resourceGroupId
+      resourceRequest.resourceGroupId,
     );
     const requestAfter = await models.request.getById(requestClient._id);
 
@@ -284,29 +284,29 @@ describe('Integration tests for creating Resources and pushing', () => {
     // Add some data
     await models.workspace.create({
       _id: 'wrk_empty',
-      name: 'Workspace Empty'
+      name: 'Workspace Empty',
     });
     await models.workspace.create({ _id: 'wrk_1', name: 'Workspace 1' });
     await models.request.create({
       _id: 'req_1',
       name: 'Request 1',
-      parentId: 'wrk_1'
+      parentId: 'wrk_1',
     });
     await models.request.create({
       _id: 'req_2',
       name: 'Request 2',
-      parentId: 'wrk_1'
+      parentId: 'wrk_1',
     });
     await models.request.create({
       _id: 'req_3',
       name: 'Request 3',
-      parentId: 'wrk_1'
+      parentId: 'wrk_1',
     });
     await models.environment.create({
       _id: 'env_2',
       name: 'Env Prv',
       parentId: 'wrk_1',
-      isPrivate: true
+      isPrivate: true,
     });
 
     // Flush changes just to be sure they won't affect our tests
@@ -332,7 +332,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     const configs = await syncStorage.allConfigs();
     for (const config of configs) {
       await syncStorage.updateConfig(config, {
-        syncMode: syncStorage.SYNC_MODE_ON
+        syncMode: syncStorage.SYNC_MODE_ON,
       });
     }
 
@@ -349,7 +349,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     await models.request.create({
       _id: 'req_t',
       url: 'https://google.com',
-      parentId: 'wrk_1'
+      parentId: 'wrk_1',
     });
 
     await db.flushChanges();
@@ -377,7 +377,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     const request = await models.request.create({
       _id: 'req_t',
       name: 'Original Request',
-      parentId: 'wrk_1'
+      parentId: 'wrk_1',
     });
     await db.flushChanges();
     await sync.writePendingChanges();
@@ -386,7 +386,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     // Mark resource as removed
     const originalResource = await syncStorage.getResourceByDocId('req_t');
     const updatedResource = await syncStorage.updateResource(originalResource, {
-      removed: true
+      removed: true,
     });
 
     // Update it and push it again
@@ -409,7 +409,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     const resource = await syncStorage.getResourceByDocId(request._id);
     await db.bufferChanges();
     const updatedRequest = await models.request.update(request, {
-      name: 'New Name'
+      name: 'New Name',
     });
 
     // Drain and fetch new resource
@@ -472,7 +472,7 @@ async function _setSessionData() {
     ext: true,
     k: '3-QU2OcQcpSyFIoL8idgclbImP3M8Y2d0oVAca3Vl4g',
     key_ops: ['encrypt', 'decrypt'],
-    kty: 'oct'
+    kty: 'oct',
   };
 
   const publicKey = {
@@ -481,7 +481,7 @@ async function _setSessionData() {
     ext: true,
     key_ops: ['encrypt'],
     kty: 'RSA',
-    n: 'aaaa'
+    n: 'aaaa',
   };
 
   const { privateKey } = await crypt.generateKeyPairJWK();
@@ -489,7 +489,7 @@ async function _setSessionData() {
     ad: '',
     d: Buffer.from(JSON.stringify(privateKey)).toString('hex'),
     iv: '968f1d810efdaec58f9e313e',
-    t: '0e87a2e57a198ca79cb99585fe9c244a'
+    t: '0e87a2e57a198ca79cb99585fe9c244a',
   };
 
   // Setup mocks and stuff
@@ -501,7 +501,7 @@ async function _setSessionData() {
     'gschier1990@gmail.com',
     symmetricKey,
     publicKey,
-    encPrivateKey
+    encPrivateKey,
   );
 }
 
@@ -524,8 +524,8 @@ async function _setupSessionMocks() {
       {
         parentResourceId: parentId,
         name: name,
-        encSymmetricKey: encSymmetricKey
-      }
+        encSymmetricKey: encSymmetricKey,
+      },
     );
     return resourceGroups[id];
   });
@@ -544,13 +544,13 @@ async function _setupSessionMocks() {
     updatedResources: [],
     createdResources: [],
     idsToPush: [],
-    idsToRemove: []
+    idsToRemove: [],
   }));
 
   session.syncPush = jest.fn(body => ({
     conflicts: [],
     updated: [],
     created: [],
-    removed: []
+    removed: [],
   }));
 }

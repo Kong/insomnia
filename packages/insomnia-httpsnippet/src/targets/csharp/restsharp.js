@@ -34,7 +34,7 @@ module.exports = function(source, options) {
     code.push(
       'request.AddParameter("%s", %s, ParameterType.RequestBody);',
       source.allHeaders['content-type'],
-      JSON.stringify(source.postData.text)
+      JSON.stringify(source.postData.text),
     );
   }
 
@@ -46,5 +46,5 @@ module.exports.info = {
   key: 'restsharp',
   title: 'RestSharp',
   link: 'http://restsharp.org/',
-  description: 'Simple REST and HTTP API Client for .NET'
+  description: 'Simple REST and HTTP API Client for .NET',
 };

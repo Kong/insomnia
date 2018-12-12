@@ -27,7 +27,7 @@ export function responseToObject(body, keys) {
 export function authorizeUserInWindow(
   url,
   urlSuccessRegex = /(code=).*/,
-  urlFailureRegex = /(error=).*/
+  urlFailureRegex = /(error=).*/,
 ) {
   return new Promise((resolve, reject) => {
     let finalUrl = null;
@@ -35,13 +35,13 @@ export function authorizeUserInWindow(
     function _parseUrl(currentUrl) {
       if (currentUrl.match(urlSuccessRegex)) {
         console.log(
-          `[oauth2] Matched success redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`
+          `[oauth2] Matched success redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`,
         );
         finalUrl = currentUrl;
         child.close();
       } else if (currentUrl.match(urlFailureRegex)) {
         console.log(
-          `[oauth2] Matched error redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`
+          `[oauth2] Matched error redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`,
         );
         finalUrl = currentUrl;
         child.close();
@@ -50,7 +50,7 @@ export function authorizeUserInWindow(
         console.log(`[oauth2] Loaded "${currentUrl}"`);
       } else {
         console.log(
-          `[oauth2] Ignoring URL "${currentUrl}". Didn't match ${urlSuccessRegex.toString()}`
+          `[oauth2] Ignoring URL "${currentUrl}". Didn't match ${urlSuccessRegex.toString()}`,
         );
       }
     }
@@ -59,9 +59,9 @@ export function authorizeUserInWindow(
     const child = new electron.remote.BrowserWindow({
       webPreferences: {
         nodeIntegration: false,
-        partition: `oauth2_${AUTH_WINDOW_SESSION_ID}`
+        partition: `oauth2_${AUTH_WINDOW_SESSION_ID}`,
       },
-      show: false
+      show: false,
     });
 
     // Finish on close

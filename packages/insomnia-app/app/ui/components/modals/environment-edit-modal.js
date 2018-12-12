@@ -13,7 +13,7 @@ class EnvironmentEditModal extends PureComponent {
     super(props);
     this.state = {
       requestGroup: null,
-      isValid: true
+      isValid: true,
     };
   }
 
@@ -111,7 +111,7 @@ EnvironmentEditModal.propTypes = {
   getRenderContext: PropTypes.func.isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
   isVariableUncovered: PropTypes.bool.isRequired,
-  lineWrapping: PropTypes.bool.isRequired
+  lineWrapping: PropTypes.bool.isRequired,
 };
 
 export default EnvironmentEditModal;

@@ -21,7 +21,7 @@ type Part = {
   bytes: number,
   value: Buffer,
   filename: string | null,
-  headers: Array<ResponseHeader>
+  headers: Array<ResponseHeader>,
 };
 
 type Props = {
@@ -35,13 +35,13 @@ type Props = {
   editorIndentSize: number,
   editorKeyMap: string,
   editorLineWrapping: boolean,
-  url: string
+  url: string,
 };
 
 type State = {
   activePart: number,
   parts: Array<Part>,
-  error: string | null
+  error: string | null,
 };
 
 @autobind
@@ -51,7 +51,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
     this.state = {
       activePart: -1,
       parts: [],
-      error: null
+      error: null,
     };
   }
 
@@ -110,7 +110,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
         <ResponseHeadersViewer
           headers={[...part.headers, ...part.headers, ...part.headers, ...part.headers]}
         />
-      )
+      ),
     });
   }
 
@@ -136,9 +136,9 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
       filters: [
         {
           name: 'Download',
-          extensions: [extension]
-        }
-      ]
+          extensions: [extension],
+        },
+      ],
     };
 
     electron.remote.dialog.showSaveDialog(options, outputPath => {
@@ -169,7 +169,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
 
       const fakeReq = new PassThrough();
       (fakeReq: Object).headers = {
-        'content-type': contentType
+        'content-type': contentType,
       };
 
       const form = new multiparty.Form();
@@ -191,8 +191,8 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
             bytes: part.byteCount,
             headers: Object.keys(part.headers).map(name => ({
               name,
-              value: part.headers[name]
-            }))
+              value: part.headers[name],
+            })),
           });
         });
       });
@@ -222,7 +222,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
       filter,
       filterHistory,
       responseId,
-      url
+      url,
     } = this.props;
 
     const { activePart, parts, error } = this.state;
@@ -245,7 +245,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
           className="pad-bottom-sm"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) auto'
+            gridTemplateColumns: 'minmax(0, 1fr) auto',
           }}>
           <div>
             <Dropdown wide>

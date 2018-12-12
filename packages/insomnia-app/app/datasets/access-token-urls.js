@@ -12,5 +12,5 @@ export default [
   'https://{{ shop }}.myshopify.com/admin/oauth/authorize',
   'https://api.box.com/oauth2/token',
   'https://api-ssl.bitly.com/oauth/access_token',
-  'https://api.imgur.com/oauth2/token'
+  'https://api.imgur.com/oauth2/token',
 ];

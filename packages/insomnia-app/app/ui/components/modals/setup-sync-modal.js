@@ -10,20 +10,20 @@ import {
   SYNC_MODE_OFF,
   SYNC_MODE_ON,
   SYNC_MODE_NEVER,
-  SYNC_MODE_UNSET
+  SYNC_MODE_UNSET,
 } from '../../../sync/storage';
 import type { Workspace } from '../../../models/workspace';
 import HelpTooltip from '../help-tooltip';
 
 type Props = {
-  workspace: Workspace
+  workspace: Workspace,
 };
 
 type State = {
   syncMode: string,
   selectedSyncMode: string,
   syncDisableCookieJars: boolean,
-  syncDisableClientCertificates: boolean
+  syncDisableClientCertificates: boolean,
 };
 
 @autobind
@@ -37,7 +37,7 @@ class SetupSyncModal extends React.PureComponent<Props, State> {
       syncMode: SYNC_MODE_UNSET,
       selectedSyncMode: SYNC_MODE_ON,
       syncDisableCookieJars: false,
-      syncDisableClientCertificates: false
+      syncDisableClientCertificates: false,
     };
   }
 
@@ -61,7 +61,7 @@ class SetupSyncModal extends React.PureComponent<Props, State> {
     await sync.createOrUpdateConfig(resource.resourceGroupId, {
       syncMode: selectedSyncMode,
       syncDisableClientCertificates: !!syncDisableClientCertificates,
-      syncDisableCookieJars: !!syncDisableCookieJars
+      syncDisableCookieJars: !!syncDisableCookieJars,
     });
 
     this.hide();
@@ -73,7 +73,7 @@ class SetupSyncModal extends React.PureComponent<Props, State> {
     const selectedSyncMode = e.currentTarget.value;
 
     this.setState({
-      selectedSyncMode
+      selectedSyncMode,
     });
   }
 
@@ -91,7 +91,7 @@ class SetupSyncModal extends React.PureComponent<Props, State> {
       syncMode,
       selectedSyncMode,
       syncDisableCookieJars,
-      syncDisableClientCertificates
+      syncDisableClientCertificates,
     });
 
     this._onSelectSyncMode = options.onSelectSyncMode;
@@ -109,7 +109,7 @@ class SetupSyncModal extends React.PureComponent<Props, State> {
       syncMode,
       selectedSyncMode,
       syncDisableClientCertificates,
-      syncDisableCookieJars
+      syncDisableCookieJars,
     } = this.state;
 
     return (

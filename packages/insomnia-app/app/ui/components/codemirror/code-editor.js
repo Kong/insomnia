@@ -61,12 +61,12 @@ const BASE_CODEMIRROR_OPTIONS = {
 
     // Change default find command from "find" to "findPersistent" so the
     // search box stays open after pressing Enter
-    [isMac() ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent'
+    [isMac() ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent',
   }),
 
   // NOTE: Because the lint mode is initialized immediately, the lint gutter needs to
   //   be in the default options. DO NOT REMOVE THIS.
-  gutters: ['CodeMirror-lint-markers']
+  gutters: ['CodeMirror-lint-markers'],
 };
 
 @autobind
@@ -75,7 +75,7 @@ class CodeEditor extends React.Component {
     super(props);
 
     this.state = {
-      filter: props.filter || ''
+      filter: props.filter || '',
     };
 
     this._originalCode = '';
@@ -129,7 +129,7 @@ class CodeEditor extends React.Component {
     if (this.codeMirror) {
       this.codeMirror.setSelection(
         { line: 0, ch: 0 },
-        { line: this.codeMirror.lineCount(), ch: 0 }
+        { line: this.codeMirror.lineCount(), ch: 0 },
       );
     }
   }
@@ -233,7 +233,7 @@ class CodeEditor extends React.Component {
       scroll: this.codeMirror.getScrollInfo(),
       selections: this.codeMirror.listSelections(),
       cursor: this.codeMirror.getCursor(),
-      history: this.codeMirror.getHistory()
+      history: this.codeMirror.getHistory(),
     };
   }
 
@@ -295,7 +295,7 @@ class CodeEditor extends React.Component {
         Tab: cm => {
           const spaces = this._indentChars();
           cm.replaceSelection(spaces);
-        }
+        },
       });
     }
 
@@ -314,7 +314,7 @@ class CodeEditor extends React.Component {
         this.codeMirror.enableNunjucksTags(
           this.props.render,
           this.props.getRenderContext,
-          this.props.isVariableUncovered
+          this.props.isVariableUncovered,
         );
       }
 
@@ -458,7 +458,7 @@ class CodeEditor extends React.Component {
       hintOptions,
       infoOptions,
       jumpOptions,
-      lintOptions
+      lintOptions,
     } = this.props;
 
     let mode;
@@ -483,7 +483,7 @@ class CodeEditor extends React.Component {
       indentWithTabs: indentWithTabs,
       matchBrackets: !noMatchBrackets,
       lint: !noLint && !readOnly,
-      gutters: []
+      gutters: [],
     };
 
     // Only set keyMap if we're not read-only. This is so things like
@@ -566,7 +566,7 @@ class CodeEditor extends React.Component {
       options.environmentAutocomplete = {
         getVariables,
         getTags,
-        getConstants: getAutocompleteConstants
+        getConstants: getAutocompleteConstants,
       };
     }
 
@@ -780,13 +780,13 @@ class CodeEditor extends React.Component {
       dynamicHeight,
       style,
       type,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
 
     const classes = classnames(className, {
       editor: true,
       'editor--dynamic-height': dynamicHeight,
-      'editor--readonly': readOnly
+      'editor--readonly': readOnly,
     });
 
     const toolbarChildren = [];
@@ -800,7 +800,7 @@ class CodeEditor extends React.Component {
           defaultValue={filter || ''}
           placeholder={CodeEditor._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
           onChange={this._handleFilterChange}
-        />
+        />,
       );
 
       if (filterHistory && filterHistory.length) {
@@ -814,14 +814,14 @@ class CodeEditor extends React.Component {
                 {filter}
               </DropdownItem>
             ))}
-          </Dropdown>
+          </Dropdown>,
         );
       }
 
       toolbarChildren.push(
         <button key="help" className="btn btn--compact" onClick={this._showFilterHelp}>
           <i className="fa fa-question-circle" />
-        </button>
+        </button>,
       );
     }
 
@@ -842,7 +842,7 @@ class CodeEditor extends React.Component {
           title="Auto-format request body whitespace"
           onClick={this._handleBeautify}>
           Beautify {contentTypeName}
-        </button>
+        </button>,
       );
     }
 
@@ -932,7 +932,7 @@ CodeEditor.propTypes = {
   infoOptions: PropTypes.object,
   jumpOptions: PropTypes.object,
   uniquenessKey: PropTypes.any,
-  isVariableUncovered: PropTypes.bool
+  isVariableUncovered: PropTypes.bool,
 };
 
 export default CodeEditor;

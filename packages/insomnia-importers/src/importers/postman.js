@@ -35,7 +35,7 @@ function importCollection(collection, schema) {
     _id: `__GRP_${requestGroupCount++}__`,
     _type: 'request_group',
     name: collection.info.name,
-    description: collection.info.description
+    description: collection.info.description,
   };
   if (postmanVariable) {
     collectionFolder.variable = postmanVariable;
@@ -78,7 +78,7 @@ function importFolderItem(item, parentId) {
     _id: `__GRP_${requestGroupCount++}__`,
     _type: 'request_group',
     name: item.name,
-    description: item.description || ''
+    description: item.description || '',
   };
 }
 
@@ -94,14 +94,14 @@ function importRequestItem(item, parentId, schema) {
     method: request.method || 'GET',
     headers: mapImporter(request.header, importHeader),
     body: importBody(request.body, schema),
-    authentication: importAuthentication(request.auth, schema)
+    authentication: importAuthentication(request.auth, schema),
   };
 }
 
 function importHeader(header) {
   return Object.assign({
     name: header.key,
-    value: header.value
+    value: header.value,
   });
 }
 
@@ -136,7 +136,7 @@ function importBodyFormdata(formdata, schema) {
   const params = formdata.map(({ key, value, type, enabled, disabled, src }) => {
     const item = {
       type,
-      name: key
+      name: key,
     };
 
     if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -156,7 +156,7 @@ function importBodyFormdata(formdata, schema) {
 
   return {
     params,
-    mimeType: 'multipart/form-data'
+    mimeType: 'multipart/form-data',
   };
 }
 
@@ -164,7 +164,7 @@ function importBodyFormUrlEncoded(urlEncoded, schema) {
   const params = urlEncoded.map(({ key, value, enabled, disabled }) => {
     const item = {
       value,
-      name: key
+      name: key,
     };
 
     if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -178,7 +178,7 @@ function importBodyFormUrlEncoded(urlEncoded, schema) {
 
   return {
     params,
-    mimeType: 'application/x-www-form-urlencoded'
+    mimeType: 'application/x-www-form-urlencoded',
   };
 }
 
@@ -189,7 +189,7 @@ function importBodyRaw(raw) {
 
   return {
     mimeType: '',
-    text: raw
+    text: raw,
   };
 }
 
@@ -234,7 +234,7 @@ function importAwsV4Authentication(auth, schema) {
     region: 'aws-region',
     secretAccessKey: 'aws-secret-key',
     service: 'aws-service-name',
-    sessionToken: 'aws-session-token'
+    sessionToken: 'aws-session-token',
   };
 
   if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -265,7 +265,7 @@ function importBasicAuthentication(auth, schema) {
     type: 'basic',
     disabled: false,
     username: '',
-    password: ''
+    password: '',
   };
 
   if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -290,7 +290,7 @@ function importBearerTokenAuthentication(auth, schema) {
     type: 'bearer',
     disabled: false,
     token: '',
-    prefix: ''
+    prefix: '',
   };
 
   if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -313,7 +313,7 @@ function importDigestAuthentication(auth, schema) {
     type: 'digest',
     disabled: false,
     username: '',
-    password: ''
+    password: '',
   };
 
   if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -348,7 +348,7 @@ function importOauth1Authentication(auth, schema) {
     tokenKey: '',
     tokenSecret: '',
     verifier: '',
-    version: ''
+    version: '',
   };
 
   if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -393,7 +393,7 @@ function importOauth2Authentication(auth, schema) {
     authorizationUrl: '',
     grantType: 'authorization_code',
     password: '',
-    username: ''
+    username: '',
   };
 
   return item;

@@ -19,7 +19,7 @@ class ResponseWebView extends PureComponent {
   _setBody() {
     const { body, contentType, url } = this.props;
     this._webview.loadURL(`data:${contentType},${encodeURIComponent(body)}`, {
-      baseURLForDataURL: url
+      baseURLForDataURL: url,
     });
 
     // This is kind of hacky but electron-context-menu fails to save images if
@@ -44,7 +44,7 @@ class ResponseWebView extends PureComponent {
 ResponseWebView.propTypes = {
   body: PropTypes.string.isRequired,
   contentType: PropTypes.string.isRequired,
-  url: PropTypes.string.isRequired
+  url: PropTypes.string.isRequired,
 };
 
 export default ResponseWebView;

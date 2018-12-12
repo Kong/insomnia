@@ -10,7 +10,7 @@ class ResponseTimer extends PureComponent {
     super(props);
     this._interval = null;
     this.state = {
-      elapsedTime: 0
+      elapsedTime: 0,
     };
   }
 
@@ -47,7 +47,7 @@ class ResponseTimer extends PureComponent {
     return (
       <div
         className={classnames('overlay theme--transparent-overlay', {
-          'overlay--hidden': !show
+          'overlay--hidden': !show,
         })}>
         {elapsedTime >= REQUEST_TIME_TO_SHOW_COUNTER ? (
           <h2>{elapsedTime.toFixed(1)} seconds...</h2>
@@ -69,7 +69,7 @@ class ResponseTimer extends PureComponent {
 
 ResponseTimer.propTypes = {
   handleCancel: PropTypes.func.isRequired,
-  loadStartTime: PropTypes.number.isRequired
+  loadStartTime: PropTypes.number.isRequired,
 };
 
 export default ResponseTimer;

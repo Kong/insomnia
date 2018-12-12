@@ -8,7 +8,7 @@ type Props = {
 
   // Optional
   small?: boolean,
-  className?: string
+  className?: string,
 };
 
 class TimeTag extends React.PureComponent<Props> {

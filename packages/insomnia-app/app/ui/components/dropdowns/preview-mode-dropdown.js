@@ -51,7 +51,7 @@ PreviewModeDropdown.propTypes = {
   fullDownload: PropTypes.func.isRequired,
 
   // Required
-  previewMode: PropTypes.string.isRequired
+  previewMode: PropTypes.string.isRequired,
 };
 
 export default PreviewModeDropdown;

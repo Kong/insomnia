@@ -20,9 +20,9 @@ type VCSCommit = {
   tree: {
     [string]: {
       name: string,
-      hash: string
-    }
-  }
+      hash: string,
+    },
+  },
 };
 
 type VCSOperation = 'add' | 'modify' | 'delete';
@@ -31,22 +31,22 @@ type VCSStageEntry = {
   operation: VCSOperation,
   hash: string,
   name: string,
-  content: string
+  content: string,
 };
 
 type VCSStage = {
-  [string]: VCSStageEntry
+  [string]: VCSStageEntry,
 };
 
 type VCSStatus = {
   stage: VCSStage,
   unstaged: {
-    [string]: VCSStageEntry & { id: string }
-  }
+    [string]: VCSStageEntry & { id: string },
+  },
 };
 
 type Props = {
-  workspace: Workspace
+  workspace: Workspace,
 };
 
 type State = {
@@ -57,14 +57,14 @@ type State = {
   message: string,
   error: string,
   newBranchName: string,
-  commits: Array<VCSCommit>
+  commits: Array<VCSCommit>,
 };
 
 const WHITE_LIST = {
   [models.workspace.type]: true,
   [models.request.type]: true,
   [models.requestGroup.type]: true,
-  [models.environment.type]: true
+  [models.environment.type]: true,
 };
 
 @autobind
@@ -82,10 +82,10 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       commits: [],
       status: {
         stage: {},
-        unstaged: {}
+        unstaged: {},
       },
       error: '',
-      message: ''
+      message: '',
     };
 
     const driver = new FileSystemDriver({ directory: '/Users/gschier/Desktop/vcs' });
@@ -208,7 +208,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       items.push({
         id: doc._id,
         name: (doc: any).name || 'No Name',
-        content: doc
+        content: doc,
       });
     }
 
@@ -222,7 +222,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       branch,
       branches,
       error: '',
-      ...newState
+      ...newState,
     });
   }
 
@@ -250,7 +250,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       status,
       commits,
       message,
-      error
+      error,
     } = this.state;
 
     return (

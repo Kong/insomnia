@@ -14,7 +14,7 @@ class ErrorModal extends PureComponent {
       title: '',
       error: null,
       message: '',
-      addCancel: false
+      addCancel: false,
     };
   }
 

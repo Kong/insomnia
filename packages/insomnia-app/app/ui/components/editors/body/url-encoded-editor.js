@@ -12,7 +12,7 @@ class UrlEncodedEditor extends PureComponent {
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
 
     return (
@@ -45,7 +45,7 @@ UrlEncodedEditor.propTypes = {
 
   // Optional
   handleRender: PropTypes.func,
-  handleGetRenderContext: PropTypes.func
+  handleGetRenderContext: PropTypes.func,
 };
 
 export default UrlEncodedEditor;

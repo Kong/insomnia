@@ -5,10 +5,10 @@ module.exports = {
     key: 'node',
     title: 'Node.js',
     extname: '.js',
-    default: 'native'
+    default: 'native',
   },
 
   native: require('./native'),
   request: require('./request'),
-  unirest: require('./unirest')
+  unirest: require('./unirest'),
 };

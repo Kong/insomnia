@@ -8,7 +8,7 @@ import {
   DropdownButton,
   DropdownDivider,
   DropdownHint,
-  DropdownItem
+  DropdownItem,
 } from './base/dropdown';
 import { showPrompt } from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
@@ -24,7 +24,7 @@ class RequestUrlBar extends PureComponent {
     this.state = {
       currentInterval: null,
       currentTimeout: null,
-      downloadPath: null
+      downloadPath: null,
     };
 
     this._urlChangeDebounceTimeout = null;
@@ -96,7 +96,7 @@ class RequestUrlBar extends PureComponent {
     const options = {
       title: 'Select Download Location',
       buttonLabel: 'Select',
-      properties: ['openDirectory']
+      properties: ['openDirectory'],
     };
 
     remote.dialog.showOpenDialog(options, paths => {
@@ -167,7 +167,7 @@ class RequestUrlBar extends PureComponent {
         this._handleStopTimeout();
         this._sendTimeout = setTimeout(this._handleSend, seconds * 1000);
         this.setState({ currentTimeout: seconds });
-      }
+      },
     });
   }
 
@@ -182,7 +182,7 @@ class RequestUrlBar extends PureComponent {
         this._handleStopInterval();
         this._sendInterval = setInterval(this._handleSend, seconds * 1000);
         this.setState({ currentInterval: seconds });
-      }
+      },
     });
   }
 
@@ -309,7 +309,7 @@ class RequestUrlBar extends PureComponent {
       isVariableUncovered,
       handleGetRenderContext,
       handleAutocompleteUrls,
-      uniquenessKey
+      uniquenessKey,
     } = this.props;
 
     return (
@@ -360,7 +360,7 @@ RequestUrlBar.propTypes = {
   isVariableUncovered: PropTypes.bool.isRequired,
   method: PropTypes.string.isRequired,
   requestId: PropTypes.string.isRequired,
-  uniquenessKey: PropTypes.string.isRequired
+  uniquenessKey: PropTypes.string.isRequired,
 };
 
 export default RequestUrlBar;

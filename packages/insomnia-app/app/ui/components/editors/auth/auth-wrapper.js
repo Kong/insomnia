@@ -10,7 +10,7 @@ import {
   AUTH_AWS_IAM,
   AUTH_HAWK,
   AUTH_NETRC,
-  AUTH_ASAP
+  AUTH_ASAP,
 } from '../../../../common/constants';
 import BasicAuth from './basic-auth';
 import DigestAuth from './digest-auth';
@@ -36,7 +36,7 @@ class AuthWrapper extends PureComponent {
       handleUpdateSettingsShowPasswords,
       onChange,
       showPasswords,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
 
     const { authentication } = request;
@@ -183,7 +183,7 @@ AuthWrapper.propTypes = {
   showPasswords: PropTypes.bool.isRequired,
   isVariableUncovered: PropTypes.bool.isRequired,
   // Optional
-  oAuth2Token: PropTypes.object
+  oAuth2Token: PropTypes.object,
 };
 
 export default AuthWrapper;

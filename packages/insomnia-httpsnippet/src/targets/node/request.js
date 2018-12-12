@@ -16,9 +16,9 @@ var CodeBuilder = require('../../helpers/code-builder');
 module.exports = function(source, options) {
   var opts = util._extend(
     {
-      indent: '  '
+      indent: '  ',
     },
-    options
+    options,
   );
 
   var includeFS = false;
@@ -28,7 +28,7 @@ module.exports = function(source, options) {
 
   var reqOpts = {
     method: source.method,
-    url: source.url
+    url: source.url,
   };
 
   if (Object.keys(source.queryObj).length) {
@@ -73,7 +73,7 @@ module.exports = function(source, options) {
         if (param.fileName) {
           attachement.options = {
             filename: param.fileName,
-            contentType: param.contentType ? param.contentType : null
+            contentType: param.contentType ? param.contentType : null,
           };
         }
 
@@ -100,7 +100,7 @@ module.exports = function(source, options) {
         'jar.setCookie(request.cookie("%s=%s"), "%s");',
         encodeURIComponent(cookie.name),
         encodeURIComponent(cookie.value),
-        url
+        url,
       );
     });
     code.blank();
@@ -131,5 +131,5 @@ module.exports.info = {
   key: 'request',
   title: 'Request',
   link: 'https://github.com/request/request',
-  description: 'Simplified HTTP request client'
+  description: 'Simplified HTTP request client',
 };

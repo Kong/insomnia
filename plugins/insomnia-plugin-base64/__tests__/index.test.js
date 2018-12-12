@@ -25,6 +25,6 @@ describe('Base64EncodeExtension', () => {
   it('decodes something', assertTemplate(['decode', 'bXkgc3RyaW5n'], 'my string'));
   it(
     'fails on invalid op',
-    assertTemplateFails(['foo'], 'Unsupported operation "foo". Must be encode or decode.')
+    assertTemplateFails(['foo'], 'Unsupported operation "foo". Must be encode or decode.'),
   );
 });

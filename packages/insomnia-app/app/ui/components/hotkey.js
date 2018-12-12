@@ -9,7 +9,7 @@ type Props = {
   hotkey: HotkeyType,
 
   // Optional
-  className?: string
+  className?: string,
 };
 
 class Hotkey extends React.PureComponent<Props> {

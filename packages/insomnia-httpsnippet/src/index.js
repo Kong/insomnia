@@ -24,8 +24,8 @@ var HTTPSnippet = function(data) {
   } else {
     entries = [
       {
-        request: input
-      }
+        request: input,
+      },
     ];
   }
 
@@ -112,14 +112,14 @@ HTTPSnippet.prototype.prepare = function(request) {
         request.postData.params.forEach(function(param) {
           form.append(param.name, param.value || '', {
             filename: param.fileName || null,
-            contentType: param.contentType || null
+            contentType: param.contentType || null,
           });
         });
 
         form.pipe(
           es.map(function(data, cb) {
             request.postData.text += data;
-          })
+          }),
         );
 
         request.postData.boundary = form.getBoundary();
@@ -178,7 +178,7 @@ HTTPSnippet.prototype.prepare = function(request) {
   // update the uri object
   request.uriObj.query = request.queryObj;
   request.uriObj.search = qs.stringify(request.queryObj, '&', '=', {
-    encodeURIComponent: request.settingEncodeUrl ? null : str => str
+    encodeURIComponent: request.settingEncodeUrl ? null : str => str,
   });
 
   if (request.uriObj.search) {

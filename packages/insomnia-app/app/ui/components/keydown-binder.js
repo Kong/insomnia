@@ -9,7 +9,7 @@ type Props = {
   children?: React.Node,
   disabled?: boolean,
   scoped?: boolean,
-  stopMetaPropagation?: boolean
+  stopMetaPropagation?: boolean,
 };
 
 @autobind

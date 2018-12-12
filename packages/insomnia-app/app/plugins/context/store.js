@@ -26,9 +26,9 @@ export function init(plugin: Plugin) {
         const docs = await models.pluginData.all(plugin.name);
         return docs.map(d => ({
           value: d.value,
-          key: d.key
+          key: d.key,
         }));
-      }
-    }
+      },
+    },
   };
 }

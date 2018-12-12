@@ -17,7 +17,7 @@ class Modal extends PureComponent {
     this.state = {
       open: false,
       forceRefreshCounter: 0,
-      zIndex: globalZIndex
+      zIndex: globalZIndex,
     };
   }
 
@@ -81,7 +81,7 @@ class Modal extends PureComponent {
     this.setState({
       open: true,
       zIndex: globalZIndex++,
-      forceRefreshCounter: forceRefreshCounter + (freshState ? 1 : 0)
+      forceRefreshCounter: forceRefreshCounter + (freshState ? 1 : 0),
     });
 
     if (this.props.dontFocus) {
@@ -122,7 +122,7 @@ class Modal extends PureComponent {
       className,
       { 'modal--fixed-height': tall },
       { 'modal--noescape': noEscape },
-      { 'modal--wide': wide }
+      { 'modal--wide': wide },
     );
 
     const styles = {};
@@ -160,7 +160,7 @@ Modal.propTypes = {
   onCancel: PropTypes.func,
   freshState: PropTypes.bool,
   children: PropTypes.node,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 export default Modal;

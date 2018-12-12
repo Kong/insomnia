@@ -26,7 +26,7 @@ class WorkspaceDropdown extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      loggedIn: false
+      loggedIn: false,
     };
   }
 
@@ -64,13 +64,13 @@ class WorkspaceDropdown extends PureComponent {
 
   _handleShowWorkspaceSettings() {
     showModal(WorkspaceSettingsModal, {
-      workspace: this.props.activeWorkspace
+      workspace: this.props.activeWorkspace,
     });
   }
 
   _handleShowShareSettings() {
     showModal(WorkspaceShareSettingsModal, {
-      workspace: this.props.activeWorkspace
+      workspace: this.props.activeWorkspace,
     });
   }
 
@@ -87,7 +87,7 @@ class WorkspaceDropdown extends PureComponent {
       onComplete: async name => {
         const workspace = await models.workspace.create({ name });
         this.props.handleSetActiveWorkspace(workspace._id);
-      }
+      },
     });
   }
 
@@ -222,7 +222,7 @@ WorkspaceDropdown.propTypes = {
   activeWorkspace: PropTypes.object.isRequired,
 
   // Optional
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 export default WorkspaceDropdown;

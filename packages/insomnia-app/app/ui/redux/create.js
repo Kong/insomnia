@@ -11,7 +11,7 @@ export default function() {
       : compose;
   const middleware = [thunkMiddleware];
   const enhancer = composeEnhancers(
-    applyMiddleware(...middleware)
+    applyMiddleware(...middleware),
     // other store enhancers if any
   );
   const store = createStore(reducer, enhancer);

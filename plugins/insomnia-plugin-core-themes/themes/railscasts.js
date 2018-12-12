@@ -3,7 +3,7 @@ module.exports = {
   displayName: 'Railscasts',
   theme: {
     foreground: {
-      default: '#ddd'
+      default: '#ddd',
     },
     background: {
       default: '#2b2b2b',
@@ -12,7 +12,7 @@ module.exports = {
       warning: '#e48a37',
       danger: '#ee4b3b',
       surprise: '#b6b3eb',
-      info: '#6d9cbe'
+      info: '#6d9cbe',
     },
     styles: {
       paneHeader: {
@@ -23,22 +23,22 @@ module.exports = {
           warning: '#e48a37',
           danger: '#dc4939',
           surprise: '#a3a1d3',
-          info: '#6d9cbe'
-        }
+          info: '#6d9cbe',
+        },
       },
       dialog: {
         background: {
-          default: '#323232'
-        }
+          default: '#323232',
+        },
       },
       transparentOverlay: {
         background: {
-          default: 'rgba(30, 30, 30, 0.8)'
+          default: 'rgba(30, 30, 30, 0.8)',
         },
         foreground: {
-          default: '#e1deda'
-        }
-      }
-    }
-  }
+          default: '#e1deda',
+        },
+      },
+    },
+  },
 };

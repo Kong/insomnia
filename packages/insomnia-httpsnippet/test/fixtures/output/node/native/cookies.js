@@ -6,8 +6,8 @@ var options = {
   port: null,
   path: '/har',
   headers: {
-    cookie: 'foo=bar; bar=baz'
-  }
+    cookie: 'foo=bar; bar=baz',
+  },
 };
 
 var req = http.request(options, function(res) {

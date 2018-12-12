@@ -3,7 +3,7 @@ var settings = {
   crossDomain: true,
   url: 'http://mockbin.com/har',
   method: 'PROPFIND',
-  headers: {}
+  headers: {},
 };
 
 $.ajax(settings).done(function(response) {

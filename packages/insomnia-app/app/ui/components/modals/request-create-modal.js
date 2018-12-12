@@ -11,7 +11,7 @@ import {
   METHOD_GET,
   METHOD_HEAD,
   METHOD_OPTIONS,
-  METHOD_DELETE
+  METHOD_DELETE,
 } from '../../../common/constants';
 import * as models from '../../../models/index';
 
@@ -23,7 +23,7 @@ class RequestCreateModal extends PureComponent {
     this.state = {
       selectedContentType: null,
       selectedMethod: METHOD_GET,
-      parentId: null
+      parentId: null,
     };
   }
 
@@ -45,13 +45,13 @@ class RequestCreateModal extends PureComponent {
     const request = await models.initModel(models.request.type, {
       parentId,
       name: this._input.value,
-      method: selectedMethod
+      method: selectedMethod,
     });
 
     const finalRequest = await models.request.updateMimeType(
       request,
       this._shouldNotHaveBody() ? null : selectedContentType,
-      true
+      true,
     );
 
     this._onComplete(finalRequest);
@@ -85,7 +85,7 @@ class RequestCreateModal extends PureComponent {
     this.setState({
       parentId,
       selectedContentType: null,
-      selectedMethod: METHOD_GET
+      selectedMethod: METHOD_GET,
     });
 
     this.modal.show();

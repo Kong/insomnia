@@ -8,8 +8,8 @@ module.exports.templateTags = [
     args: [
       {
         displayName: 'Choose File',
-        type: 'file'
-      }
+        type: 'file',
+      },
     ],
     run(context, path) {
       if (!path) {
@@ -17,6 +17,6 @@ module.exports.templateTags = [
       }
 
       return fs.readFileSync(path, 'utf8');
-    }
-  }
+    },
+  },
 ];

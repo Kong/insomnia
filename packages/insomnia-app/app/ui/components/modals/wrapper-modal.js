@@ -9,7 +9,7 @@ type Props = {};
 type State = {
   title: string,
   body: React.Node,
-  tall: boolean
+  tall: boolean,
 };
 
 @autobind
@@ -22,7 +22,7 @@ class WrapperModal extends React.PureComponent<Props, State> {
     this.state = {
       title: '',
       body: null,
-      tall: false
+      tall: false,
     };
   }
 
@@ -35,7 +35,7 @@ class WrapperModal extends React.PureComponent<Props, State> {
     this.setState({
       title,
       body,
-      tall: !!tall
+      tall: !!tall,
     });
 
     this.modal && this.modal.show();

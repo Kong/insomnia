@@ -5,11 +5,11 @@ import moment from 'moment';
 
 type Props = {
   timestamp: number,
-  intervalSeconds?: number
+  intervalSeconds?: number,
 };
 
 type State = {
-  text: string
+  text: string,
 };
 
 @autobind
@@ -20,7 +20,7 @@ class TimeFromNow extends React.PureComponent<Props, State> {
     super(props);
     this._interval = null;
     this.state = {
-      text: ''
+      text: '',
     };
   }
 

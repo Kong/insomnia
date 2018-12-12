@@ -16,9 +16,9 @@ var CodeBuilder = require('../../helpers/code-builder');
 module.exports = function(source, options) {
   var opts = util._extend(
     {
-      indent: '  '
+      indent: '  ',
     },
-    options
+    options,
   );
 
   var code = new CodeBuilder(opts.indent);
@@ -34,14 +34,14 @@ module.exports = function(source, options) {
       code.push(
         'MediaType mediaType = MediaType.parse("%s; boundary=%s");',
         source.postData.mimeType,
-        source.postData.boundary
+        source.postData.boundary,
       );
     } else {
       code.push('MediaType mediaType = MediaType.parse("%s");', source.postData.mimeType);
     }
     code.push(
       'RequestBody body = RequestBody.create(mediaType, %s);',
-      JSON.stringify(source.postData.text)
+      JSON.stringify(source.postData.text),
     );
   }
 
@@ -85,5 +85,5 @@ module.exports.info = {
   key: 'okhttp',
   title: 'OkHttp',
   link: 'http://square.github.io/okhttp/',
-  description: 'An HTTP Request Client Library'
+  description: 'An HTTP Request Client Library',
 };

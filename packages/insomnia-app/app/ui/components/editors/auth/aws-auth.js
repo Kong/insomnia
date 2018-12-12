@@ -15,7 +15,7 @@ type Props = {
   onChange: RequestAuthentication => void,
   handleRender: string => Promise<string>,
   handleGetRenderContext: () => Promise<Object>,
-  handleUpdateSettingsShowPasswords: boolean => Promise<void>
+  handleUpdateSettingsShowPasswords: boolean => Promise<void>,
 };
 
 @autobind
@@ -62,7 +62,7 @@ class AWSAuth extends React.PureComponent<Props> {
       nunjucksPowerUserMode,
       handleRender,
       handleGetRenderContext,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
 
     return (
@@ -76,7 +76,7 @@ class AWSAuth extends React.PureComponent<Props> {
         <td className="wide">
           <div
             className={classnames('form-control form-control--underlined no-margin', {
-              'form-control--inactive': authentication.disabled
+              'form-control--inactive': authentication.disabled,
             })}>
             <OneLineEditor
               id={key}
@@ -103,25 +103,25 @@ class AWSAuth extends React.PureComponent<Props> {
             {this.renderRow(
               'secretAccessKey',
               'Secret Access Key',
-              this._handleChangeSecretAccessKey
+              this._handleChangeSecretAccessKey,
             )}
             {this.renderRow(
               'region',
               'Region',
               this._handleChangeRegion,
-              "will be calculated from hostname or host or use 'us-east-1' if not given"
+              "will be calculated from hostname or host or use 'us-east-1' if not given",
             )}
             {this.renderRow(
               'service',
               'Service',
               this._handleChangeService,
-              'will be calculated from hostname or host if not given'
+              'will be calculated from hostname or host if not given',
             )}
             {this.renderRow(
               'sessionToken',
               'Session Token',
               this._handleChangeSessionToken,
-              'Optional token used for multi-factor authentication'
+              'Optional token used for multi-factor authentication',
             )}
             <tr>
               <td className="pad-right no-wrap valign-middle">

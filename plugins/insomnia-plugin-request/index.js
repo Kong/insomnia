@@ -1,7 +1,7 @@
 const {
   buildQueryStringFromParams,
   joinUrlAndQueryString,
-  smartEncodeUrl
+  smartEncodeUrl,
 } = require('insomnia-url');
 const { jarFromCookies } = require('insomnia-cookies');
 
@@ -18,39 +18,39 @@ module.exports.templateTags = [
           {
             displayName: 'Name',
             value: 'name',
-            description: 'name of request'
+            description: 'name of request',
           },
           {
             displayName: 'Folder',
             value: 'folder',
-            description: 'name of parent folder (or workspace)'
+            description: 'name of parent folder (or workspace)',
           },
           {
             displayName: 'URL',
             value: 'url',
-            description: 'fully qualified URL'
+            description: 'fully qualified URL',
           },
           {
             displayName: 'Query Paramter',
             value: 'parameter',
-            description: 'query parameter by name'
+            description: 'query parameter by name',
           },
           {
             displayName: 'Header',
             value: 'header',
-            description: 'header value by name'
+            description: 'header value by name',
           },
           {
             displayName: 'Cookie',
             value: 'cookie',
-            description: 'cookie value by name'
+            description: 'cookie value by name',
           },
           {
             displayName: 'OAuth 2.0 Token',
             value: 'oauth2',
-            description: 'access token'
-          }
-        ]
+            description: 'access token',
+          },
+        ],
       },
       {
         type: 'string',
@@ -66,14 +66,14 @@ module.exports.templateTags = [
             default:
               return 'Name';
           }
-        }
+        },
       },
       {
         hide: args => args[0].value !== 'folder',
         displayName: 'Parent Index',
         help: 'Specify an index (Starting at 0) for how high up the folder tree to look',
-        type: 'number'
-      }
+        type: 'number',
+      },
     ],
 
     async run(context, attribute, name, folderIndex) {
@@ -126,7 +126,7 @@ module.exports.templateTags = [
 
           const parameterNamesStr = parameterNames.map(n => `"${n}"`).join(',\n\t');
           throw new Error(
-            `No query parameter with name "${name}".\nChoices are [\n\t${parameterNamesStr}\n]`
+            `No query parameter with name "${name}".\nChoices are [\n\t${parameterNamesStr}\n]`,
           );
         case 'header':
           if (!name) {
@@ -163,15 +163,15 @@ module.exports.templateTags = [
           if (!doc) {
             throw new Error(
               `Could not get folder by index ${folderIndex}. Must be between 0-${ancestors.length -
-                1}`
+                1}`,
             );
           }
           return doc ? doc.name : null;
       }
 
       return null;
-    }
-  }
+    },
+  },
 ];
 
 async function getRequestUrl(context, request) {
@@ -180,7 +180,7 @@ async function getRequestUrl(context, request) {
   for (const p of request.parameters) {
     parameters.push({
       name: await context.util.render(p.name),
-      value: await context.util.render(p.value)
+      value: await context.util.render(p.value),
     });
   }
 
@@ -207,7 +207,7 @@ function getCookieValue(cookieJar, url, name) {
       if (!cookie) {
         const names = cookies.map(c => `"${c.key}"`).join(',\n\t');
         throw new Error(
-          `No cookie with name "${name}".\nChoices are [\n\t${names}\n] for url "${url}"`
+          `No cookie with name "${name}".\nChoices are [\n\t${names}\n] for url "${url}"`,
         );
       } else {
         resolve(cookie ? cookie.value : null);

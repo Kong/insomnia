@@ -29,7 +29,7 @@ describe('onChange()', () => {
     const doc = {
       type: models.request.type,
       parentId: 'nothing',
-      name: 'foo'
+      name: 'foo',
     };
 
     const changesSeen = [];
@@ -44,7 +44,7 @@ describe('onChange()', () => {
 
     expect(changesSeen).toEqual([
       [[db.CHANGE_INSERT, newDoc, false]],
-      [[db.CHANGE_UPDATE, updatedDoc, false]]
+      [[db.CHANGE_UPDATE, updatedDoc, false]],
     ]);
 
     db.offChange(callback);
@@ -59,7 +59,7 @@ describe('bufferChanges()', () => {
     const doc = {
       type: models.request.type,
       parentId: 'n/a',
-      name: 'foo'
+      name: 'foo',
     };
 
     const changesSeen = [];
@@ -78,13 +78,13 @@ describe('bufferChanges()', () => {
     // Assert changes seen after flush
     await db.flushChanges();
     expect(changesSeen).toEqual([
-      [[db.CHANGE_INSERT, newDoc, false], [db.CHANGE_UPDATE, updatedDoc, false]]
+      [[db.CHANGE_INSERT, newDoc, false], [db.CHANGE_UPDATE, updatedDoc, false]],
     ]);
 
     // Assert no more changes seen after flush again
     await db.flushChanges();
     expect(changesSeen).toEqual([
-      [[db.CHANGE_INSERT, newDoc, false], [db.CHANGE_UPDATE, updatedDoc, false]]
+      [[db.CHANGE_INSERT, newDoc, false], [db.CHANGE_UPDATE, updatedDoc, false]],
     ]);
   });
 });
@@ -96,7 +96,7 @@ describe('requestCreate()', () => {
 
     const patch = {
       name: 'My Request',
-      parentId: 'wrk_123'
+      parentId: 'wrk_123',
     };
 
     const r = await models.request.create(patch);
@@ -167,34 +167,34 @@ describe('_fixThings()', () => {
     await models.environment.create({
       _id: 'b1',
       parentId: 'w1',
-      data: { foo: 'b1', b1: true }
+      data: { foo: 'b1', b1: true },
     });
     await models.environment.create({
       _id: 'b1_sub1',
       parentId: 'b1',
-      data: { foo: '1' }
+      data: { foo: '1' },
     });
     await models.environment.create({
       _id: 'b1_sub2',
       parentId: 'b1',
-      data: { foo: '2' }
+      data: { foo: '2' },
     });
 
     // Create second set of sub environments
     await models.environment.create({
       _id: 'b2',
       parentId: 'w1',
-      data: { foo: 'b2', b2: true }
+      data: { foo: 'b2', b2: true },
     });
     await models.environment.create({
       _id: 'b2_sub1',
       parentId: 'b2',
-      data: { foo: '3' }
+      data: { foo: '3' },
     });
     await models.environment.create({
       _id: 'b2_sub2',
       parentId: 'b2',
-      data: { foo: '4' }
+      data: { foo: '4' },
     });
 
     // Make sure we have everything
@@ -202,7 +202,7 @@ describe('_fixThings()', () => {
     const descendants = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
       parentId: d.parentId,
-      data: d.data || null
+      data: d.data || null,
     }));
     expect(descendants).toEqual([
       { _id: 'w1', data: null, parentId: null },
@@ -211,7 +211,7 @@ describe('_fixThings()', () => {
       { _id: 'b1_sub1', data: { foo: '1' }, parentId: 'b1' },
       { _id: 'b1_sub2', data: { foo: '2' }, parentId: 'b1' },
       { _id: 'b2_sub1', data: { foo: '3' }, parentId: 'b2' },
-      { _id: 'b2_sub2', data: { foo: '4' }, parentId: 'b2' }
+      { _id: 'b2_sub2', data: { foo: '4' }, parentId: 'b2' },
     ]);
 
     // Run the fix algorithm
@@ -221,7 +221,7 @@ describe('_fixThings()', () => {
     const descendants2 = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
       parentId: d.parentId,
-      data: d.data || null
+      data: d.data || null,
     }));
     expect(descendants2).toEqual([
       { _id: 'w1', data: null, parentId: null },
@@ -234,7 +234,7 @@ describe('_fixThings()', () => {
       { _id: 'b1_sub1', data: { foo: '1' }, parentId: 'b1' },
       { _id: 'b1_sub2', data: { foo: '2' }, parentId: 'b1' },
       { _id: 'b2_sub1', data: { foo: '3' }, parentId: 'b1' },
-      { _id: 'b2_sub2', data: { foo: '4' }, parentId: 'b1' }
+      { _id: 'b2_sub2', data: { foo: '4' }, parentId: 'b1' },
     ]);
   });
 
@@ -247,13 +247,13 @@ describe('_fixThings()', () => {
     await models.cookieJar.create({
       _id: 'j1',
       parentId: 'w1',
-      cookies: [{ id: '1', key: 'foo', value: '1' }, { id: 'j1_1', key: 'j1', value: '1' }]
+      cookies: [{ id: '1', key: 'foo', value: '1' }, { id: 'j1_1', key: 'j1', value: '1' }],
     });
 
     await models.cookieJar.create({
       _id: 'j2',
       parentId: 'w1',
-      cookies: [{ id: '1', key: 'foo', value: '2' }, { id: 'j2_1', key: 'j2', value: '2' }]
+      cookies: [{ id: '1', key: 'foo', value: '2' }, { id: 'j2_1', key: 'j2', value: '2' }],
     });
 
     // Make sure we have everything
@@ -261,20 +261,20 @@ describe('_fixThings()', () => {
     const descendants = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
       cookies: d.cookies || null,
-      parentId: d.parentId
+      parentId: d.parentId,
     }));
     expect(descendants).toEqual([
       { _id: 'w1', cookies: null, parentId: null },
       {
         _id: 'j1',
         parentId: 'w1',
-        cookies: [{ id: '1', key: 'foo', value: '1' }, { id: 'j1_1', key: 'j1', value: '1' }]
+        cookies: [{ id: '1', key: 'foo', value: '1' }, { id: 'j1_1', key: 'j1', value: '1' }],
       },
       {
         _id: 'j2',
         parentId: 'w1',
-        cookies: [{ id: '1', key: 'foo', value: '2' }, { id: 'j2_1', key: 'j2', value: '2' }]
-      }
+        cookies: [{ id: '1', key: 'foo', value: '2' }, { id: 'j2_1', key: 'j2', value: '2' }],
+      },
     ]);
 
     // Run the fix algorithm
@@ -284,7 +284,7 @@ describe('_fixThings()', () => {
     const descendants2 = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
       cookies: d.cookies || null,
-      parentId: d.parentId
+      parentId: d.parentId,
     }));
     expect(descendants2).toEqual([
       { _id: 'w1', cookies: null, parentId: null },
@@ -294,9 +294,9 @@ describe('_fixThings()', () => {
         cookies: [
           { id: '1', key: 'foo', value: '1' },
           { id: 'j1_1', key: 'j1', value: '1' },
-          { id: 'j2_1', key: 'j2', value: '2' }
-        ]
-      }
+          { id: 'j2_1', key: 'j2', value: '2' },
+        ],
+      },
     ]);
   });
 });

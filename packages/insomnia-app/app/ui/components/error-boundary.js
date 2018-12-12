@@ -7,12 +7,12 @@ type Props = {
   children: React.Node,
   errorClassName?: string,
   showAlert?: boolean,
-  replaceWith?: React.Node
+  replaceWith?: React.Node,
 };
 
 type State = {
   error: Error | null,
-  info: { componentStack: string } | null
+  info: { componentStack: string } | null,
 };
 
 class SingleErrorBoundary extends React.PureComponent<Props, State> {
@@ -20,7 +20,7 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
     super(props);
     this.state = {
       error: null,
-      info: null
+      info: null,
     };
   }
 
@@ -47,7 +47,7 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
               Failed to render {componentName}. Please send the following error to{' '}
               <Mailto email="support@insomnia.rest" subject="Error Report" body={error.stack} />.
             </p>
-          )
+          ),
         });
       } catch (err) {
         // UI is so broken that we can't even show an alert

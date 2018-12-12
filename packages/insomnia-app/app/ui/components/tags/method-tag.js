@@ -28,7 +28,7 @@ MethodTag.propTypes = {
   method: PropTypes.string.isRequired,
 
   // Optional
-  fullNames: PropTypes.bool
+  fullNames: PropTypes.bool,
 };
 
 export default MethodTag;

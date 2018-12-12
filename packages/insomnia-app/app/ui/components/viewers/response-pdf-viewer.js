@@ -5,11 +5,11 @@ import PDF from 'pdfjs-dist/webpack';
 
 type Props = {
   body: Buffer,
-  uniqueKey: string
+  uniqueKey: string,
 };
 
 type State = {
-  numPages: number | null
+  numPages: number | null,
 };
 
 @autobind
@@ -35,7 +35,7 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
 
       const containerWidth = container.clientWidth;
       const pdf = await PDF.getDocument({
-        data: this.props.body.toString('binary')
+        data: this.props.body.toString('binary'),
       });
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
@@ -62,7 +62,7 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
         const renderContext = {
           id: `${this.props.uniqueKey}.${i}`,
           canvasContext: context,
-          viewport: viewport
+          viewport: viewport,
         };
 
         page.render(renderContext);
@@ -98,7 +98,7 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
       height: '100%',
       overflowX: 'hidden',
       overflowY: 'scroll',
-      padding: '0px'
+      padding: '0px',
     };
 
     return (

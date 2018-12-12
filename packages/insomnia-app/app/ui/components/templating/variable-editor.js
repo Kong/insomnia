@@ -13,7 +13,7 @@ class VariableEditor extends PureComponent {
       variables: [],
       value: `{{ ${inner} }}`,
       preview: '',
-      error: ''
+      error: '',
     };
   }
 
@@ -108,7 +108,7 @@ VariableEditor.propTypes = {
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
   defaultValue: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired
+  onChange: PropTypes.func.isRequired,
 };
 
 export default VariableEditor;

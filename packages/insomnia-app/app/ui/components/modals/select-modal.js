@@ -12,7 +12,7 @@ type State = {
   title: string,
   options: Array<{ name: string, value: string }>,
   value: string,
-  message: string
+  message: string,
 };
 
 @autobind
@@ -28,7 +28,7 @@ class SelectModal extends React.PureComponent<Props, State> {
       title: '',
       options: [],
       message: '',
-      value: ''
+      value: '',
     };
   }
 

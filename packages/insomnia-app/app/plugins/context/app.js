@@ -20,8 +20,8 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
           label?: string,
           defaultValue?: string,
           submitName?: string,
-          cancelable?: boolean
-        }
+          cancelable?: boolean,
+        },
       ): Promise<string> {
         options = options || {};
 
@@ -38,7 +38,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
             },
             onComplete(value: string) {
               resolve(value);
-            }
+            },
           });
         });
       },
@@ -59,14 +59,14 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
           const saveOptions = {
             title: 'Save File',
             buttonLabel: 'Save',
-            defaultPath: options.defaultPath
+            defaultPath: options.defaultPath,
           };
 
           electron.remote.dialog.showSaveDialog(saveOptions, filename => {
             resolve(filename || null);
           });
         });
-      }
-    }
+      },
+    },
   };
 }

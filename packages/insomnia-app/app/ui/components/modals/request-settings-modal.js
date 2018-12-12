@@ -21,7 +21,7 @@ type Props = {
   isVariableUncovered: boolean,
   handleRender: Function,
   handleGetRenderContext: Function,
-  workspaces: Array<Workspace>
+  workspaces: Array<Workspace>,
 };
 
 type State = {
@@ -31,7 +31,7 @@ type State = {
   activeWorkspaceIdToCopyTo: string | null,
   workspace: Workspace | null,
   justCopied: boolean,
-  justMoved: boolean
+  justMoved: boolean,
 };
 
 @autobind
@@ -49,7 +49,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       workspace: null,
       workspaces: [],
       justCopied: false,
-      justMoved: false
+      justMoved: false,
     };
   }
 
@@ -70,7 +70,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     const value = e.currentTarget.checked;
     const setting = e.currentTarget.name;
     const request = await models.request.update(this.state.request, {
-      [setting]: value
+      [setting]: value,
     });
     this.setState({ request });
   }
@@ -88,7 +88,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       return;
     }
     const request = await models.request.update(this.state.request, {
-      description
+      description,
     });
     this.setState({ request, defaultPreviewMode: false });
   }
@@ -116,7 +116,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
 
     await models.request.update(request, {
       sortKey: -1e9, // Move to top of sort order
-      parentId: activeWorkspaceIdToCopyTo
+      parentId: activeWorkspaceIdToCopyTo,
     });
 
     this.setState({ justMoved: true });
@@ -140,7 +140,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     await models.request.update(newRequest, {
       sortKey: -1e9, // Move to top of sort order
       name: request.name, // Because duplicate will add (Copy) suffix
-      parentId: activeWorkspaceIdToCopyTo
+      parentId: activeWorkspaceIdToCopyTo,
     });
 
     this.setState({ justCopied: true });
@@ -166,7 +166,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
         workspace: workspace,
         activeWorkspaceIdToCopyTo: null,
         showDescription: forceEditMode || hasDescription,
-        defaultPreviewMode: hasDescription && !forceEditMode
+        defaultPreviewMode: hasDescription && !forceEditMode,
       },
       () => {
         this.modal && this.modal.show();
@@ -176,7 +176,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
             this._editor && this._editor.focus();
           }, 400);
         }
-      }
+      },
     );
   }
 
@@ -210,7 +210,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       handleGetRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
-      workspaces
+      workspaces,
     } = this.props;
 
     const {
@@ -219,7 +219,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       activeWorkspaceIdToCopyTo,
       justMoved,
       justCopied,
-      workspace
+      workspace,
     } = this.state;
 
     return (

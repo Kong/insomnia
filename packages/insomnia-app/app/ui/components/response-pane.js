@@ -50,7 +50,7 @@ type Props = {
 
   // Other
   request: ?Request,
-  response: ?Response
+  response: ?Response,
 };
 
 @autobind
@@ -77,7 +77,7 @@ class ResponsePane extends React.PureComponent<Props> {
     const options = {
       title: 'Save Response Body',
       buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`
+      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
     };
 
     remote.dialog.showSaveDialog(options, outputPath => {
@@ -113,7 +113,7 @@ class ResponsePane extends React.PureComponent<Props> {
     const options = {
       title: 'Save Full Response',
       buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.txt`
+      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
     };
 
     remote.dialog.showSaveDialog(options, filename => {
@@ -152,7 +152,7 @@ class ResponsePane extends React.PureComponent<Props> {
       editorKeyMap,
       filter,
       filterHistory,
-      showCookiesModal
+      showCookiesModal,
     } = this.props;
 
     const paneClasses = 'response-pane theme--pane pane';

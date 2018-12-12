@@ -14,7 +14,7 @@ class SidebarRequestGroupRow extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      dragDirection: 0
+      dragDirection: 0,
     };
   }
 
@@ -54,7 +54,7 @@ class SidebarRequestGroupRow extends PureComponent {
       handleMoveRequestGroup,
       isDragging,
       isDraggingOver,
-      workspace
+      workspace,
     } = this.props;
 
     const { dragDirection } = this.state;
@@ -67,7 +67,7 @@ class SidebarRequestGroupRow extends PureComponent {
     const classes = classnames('sidebar__row', {
       'sidebar__row--dragging': isDragging,
       'sidebar__row--dragging-above': isDraggingOver && dragDirection > 0,
-      'sidebar__row--dragging-below': isDraggingOver && dragDirection < 0
+      'sidebar__row--dragging-below': isDraggingOver && dragDirection < 0,
     });
 
     // NOTE: We only want the button draggable, not the whole container (ie. no children)
@@ -78,15 +78,15 @@ class SidebarRequestGroupRow extends PureComponent {
             <i className={'sidebar__item__icon fa ' + folderIconClass} />
             <Highlight search={filter} text={requestGroup.name} />
           </div>
-        </button>
-      )
+        </button>,
+      ),
     );
 
     return (
       <li key={requestGroup._id} className={classes}>
         <div
           className={classnames('sidebar__item sidebar__item--big', {
-            'sidebar__item--active': isActive
+            'sidebar__item--active': isActive,
           })}>
           {button}
           <div className="sidebar__actions">
@@ -105,7 +105,7 @@ class SidebarRequestGroupRow extends PureComponent {
 
         <ul
           className={classnames('sidebar__list', {
-            'sidebar__list--collapsed': isCollapsed
+            'sidebar__list--collapsed': isCollapsed,
           })}>
           {!isCollapsed && children.length > 0 ? (
             children
@@ -154,7 +154,7 @@ SidebarRequestGroupRow.propTypes = {
   connectDropTarget: PropTypes.func,
 
   // Optional
-  children: PropTypes.node
+  children: PropTypes.node,
 };
 
 /**
@@ -163,9 +163,9 @@ SidebarRequestGroupRow.propTypes = {
 const dragSource = {
   beginDrag(props) {
     return {
-      requestGroup: props.requestGroup
+      requestGroup: props.requestGroup,
     };
-  }
+  },
 };
 
 function isAbove(monitor, component) {
@@ -195,20 +195,20 @@ const dragTarget = {
     } else {
       component.decoratedComponentInstance.setDragDirection(-1);
     }
-  }
+  },
 };
 
 function sourceCollect(connect, monitor) {
   return {
     connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging()
+    isDragging: monitor.isDragging(),
   };
 }
 
 function targetCollect(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
-    isDraggingOver: monitor.isOver()
+    isDraggingOver: monitor.isOver(),
   };
 }
 

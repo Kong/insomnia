@@ -57,7 +57,7 @@ type Props = {
 
   // Optional
   request: ?Request,
-  oAuth2Token: ?OAuth2Token
+  oAuth2Token: ?OAuth2Token,
 };
 
 @autobind
@@ -71,7 +71,7 @@ class RequestPane extends React.PureComponent<Props> {
   _handleEditDescription(addDescription: boolean) {
     showModal(RequestSettingsModal, {
       request: this.props.request,
-      forceEditMode: addDescription
+      forceEditMode: addDescription,
     });
   }
 
@@ -85,7 +85,7 @@ class RequestPane extends React.PureComponent<Props> {
         (d: any) =>
           d.type === models.request.type && // Only requests
           d._id !== requestId && // Not current request
-          (d.url || '') // Only ones with non-empty URLs
+          (d.url || ''), // Only ones with non-empty URLs
       )
       .map((r: any) => (r.url || '').trim());
 
@@ -160,7 +160,7 @@ class RequestPane extends React.PureComponent<Props> {
       updateRequestMethod,
       updateRequestMimeType,
       updateRequestParameters,
-      updateSettingsShowPasswords
+      updateSettingsShowPasswords,
     } = this.props;
 
     const paneClasses = 'request-pane theme--pane pane';

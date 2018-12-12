@@ -94,7 +94,7 @@ module.exports.info = {
   key: 'requests',
   title: 'Requests',
   link: 'http://docs.python-requests.org/en/latest/api/#requests.request',
-  description: 'Requests HTTP library'
+  description: 'Requests HTTP library',
 };
 
 // response = requests.request("POST", url, data=payload, headers=headers, params=querystring)

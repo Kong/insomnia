@@ -6,7 +6,7 @@ describe('migrate()', () => {
   it('migrates client certificates properly', async () => {
     const workspace = await models.workspace.create({
       name: 'My Workspace',
-      certificates: [{ key: 'key', passphrase: 'mypass' }, { disabled: true, cert: 'cert' }]
+      certificates: [{ key: 'key', passphrase: 'mypass' }, { disabled: true, cert: 'cert' }],
     });
 
     const migratedWorkspace = await models.workspace.migrate(workspace);
@@ -32,7 +32,7 @@ describe('migrate()', () => {
         parentId: 'wrk_cc1dd2ca4275747aa88199e8efd42403',
         passphrase: null,
         pfx: null,
-        type: 'ClientCertificate'
+        type: 'ClientCertificate',
       },
       {
         _id: 'crt_dd2ccc1a2745477a881a9e8ef9d42403',
@@ -44,8 +44,8 @@ describe('migrate()', () => {
         parentId: 'wrk_cc1dd2ca4275747aa88199e8efd42403',
         passphrase: 'mypass',
         pfx: null,
-        type: 'ClientCertificate'
-      }
+        type: 'ClientCertificate',
+      },
     ]);
 
     expect(migratedWorkspace.certificates).toBeUndefined();

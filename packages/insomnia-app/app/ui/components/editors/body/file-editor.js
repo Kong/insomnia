@@ -68,7 +68,7 @@ class FileEditor extends PureComponent {
 
 FileEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
-  path: PropTypes.string.isRequired
+  path: PropTypes.string.isRequired,
 };
 
 export default FileEditor;

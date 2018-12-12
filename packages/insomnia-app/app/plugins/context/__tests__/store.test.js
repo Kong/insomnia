@@ -5,7 +5,7 @@ const PLUGIN = {
   name: 'my-plugin',
   version: '1.0.0',
   directory: '/plugins/my-plugin',
-  module: {}
+  module: {},
 };
 
 describe('init()', () => {
@@ -18,7 +18,7 @@ describe('init()', () => {
       'getItem',
       'hasItem',
       'removeItem',
-      'setItem'
+      'setItem',
     ]);
   });
 });
@@ -49,7 +49,7 @@ describe('store.*', () => {
     expect(all.sort((a, b) => (a.key < b.key ? -1 : 1))).toEqual([
       { key: 'a', value: 'aaa' },
       { key: 'b', value: 'bbb' },
-      { key: 'c', value: 'ccc' }
+      { key: 'c', value: 'ccc' },
     ]);
 
     // Clear it

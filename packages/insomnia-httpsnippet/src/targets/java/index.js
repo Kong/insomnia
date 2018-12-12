@@ -5,9 +5,9 @@ module.exports = {
     key: 'java',
     title: 'Java',
     extname: '.java',
-    default: 'unirest'
+    default: 'unirest',
   },
 
   okhttp: require('./okhttp'),
-  unirest: require('./unirest')
+  unirest: require('./unirest'),
 };

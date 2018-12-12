@@ -28,7 +28,7 @@ class OneLineEditor extends PureComponent {
     }
 
     this.state = {
-      mode
+      mode,
     };
   }
 
@@ -302,7 +302,7 @@ class OneLineEditor extends PureComponent {
       getAutocompleteConstants,
       isVariableUncovered,
       mode: syntaxMode,
-      type: originalType
+      type: originalType,
     } = this.props;
 
     const { mode } = this.state;
@@ -385,7 +385,7 @@ class OneLineEditor extends PureComponent {
           className={className}
           style={{
             // background: 'rgba(255, 0, 0, 0.05)', // For debugging
-            width: '100%'
+            width: '100%',
           }}
           placeholder={placeholder}
           defaultValue={defaultValue}
@@ -423,7 +423,7 @@ OneLineEditor.propTypes = {
   className: PropTypes.string,
   forceEditor: PropTypes.bool,
   forceInput: PropTypes.bool,
-  isVariableUncovered: PropTypes.bool
+  isVariableUncovered: PropTypes.bool,
 };
 
 export default OneLineEditor;

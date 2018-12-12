@@ -56,7 +56,7 @@ module.exports = {
         var values_representation = value.map(
           function(v) {
             return this.literalRepresentation(v);
-          }.bind(this)
+          }.bind(this),
         );
         return '@[ ' + values_representation.join(join) + ' ]';
       case '[object Object]':
@@ -70,5 +70,5 @@ module.exports = {
       default:
         return '@"' + value.toString().replace(/"/g, '\\"') + '"';
     }
-  }
+  },
 };

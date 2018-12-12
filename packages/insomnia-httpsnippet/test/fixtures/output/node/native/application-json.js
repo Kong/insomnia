@@ -6,8 +6,8 @@ var options = {
   port: null,
   path: '/har',
   headers: {
-    'content-type': 'application/json'
-  }
+    'content-type': 'application/json',
+  },
 };
 
 var req = http.request(options, function(res) {
@@ -30,7 +30,7 @@ req.write(
     arr: [1, 2, 3],
     nested: { a: 'b' },
     arr_mix: [1, 'a', { arr_mix_nested: {} }],
-    boolean: false
-  })
+    boolean: false,
+  }),
 );
 req.end();

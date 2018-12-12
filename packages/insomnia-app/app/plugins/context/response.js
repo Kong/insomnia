@@ -12,7 +12,7 @@ type MaybeResponse = {
   bytesContent?: number,
   bodyPath?: string,
   elapsedTime?: number,
-  headers?: Array<ResponseHeader>
+  headers?: Array<ResponseHeader>,
 };
 
 export function init(response: MaybeResponse): { response: Object } {
@@ -70,7 +70,7 @@ export function init(response: MaybeResponse): { response: Object } {
       },
       hasHeader(name: string): boolean {
         return this.getHeader(name) !== null;
-      }
-    }
+      },
+    },
   };
 }

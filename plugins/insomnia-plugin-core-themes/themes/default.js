@@ -9,27 +9,27 @@ module.exports = {
       warning: '#d07502',
       danger: '#d04444',
       surprise: '#7d69cb',
-      info: '#1c90b4'
+      info: '#1c90b4',
     },
     foreground: {
-      default: '#eee'
+      default: '#eee',
     },
     styles: {
       transparentOverlay: {
         background: {
-          default: 'rgba(30, 30, 30, 0.8)'
+          default: 'rgba(30, 30, 30, 0.8)',
         },
         foreground: {
-          default: '#ddd'
-        }
+          default: '#ddd',
+        },
       },
       dialog: {
         background: {
-          default: '#fff'
+          default: '#fff',
         },
         foreground: {
-          default: '#333'
-        }
+          default: '#333',
+        },
       },
       sidebar: {
         background: {
@@ -39,26 +39,26 @@ module.exports = {
           warning: '#ff9a1f',
           danger: '#ff5631',
           surprise: '#a896ff',
-          info: '#46c1e6'
+          info: '#46c1e6',
         },
         foreground: {
-          default: 'e0e0e0'
+          default: 'e0e0e0',
         },
         highlight: {
-          default: '#999'
-        }
+          default: '#999',
+        },
       },
       sidebarHeader: {
         background: {
-          default: '#695eb8'
+          default: '#695eb8',
         },
         foreground: {
-          default: '#fff'
-        }
+          default: '#fff',
+        },
       },
       paneHeader: {
         foreground: {
-          default: '#666'
+          default: '#666',
         },
         background: {
           default: '#fff',
@@ -67,8 +67,8 @@ module.exports = {
           warning: '#ec8702',
           danger: '#e15251',
           surprise: '#8776d5',
-          info: '#20aed9'
-        }
+          info: '#20aed9',
+        },
       },
       pane: {
         background: {
@@ -78,15 +78,15 @@ module.exports = {
           warning: '{{ styles.sidebar.background.warning }}',
           danger: '{{ styles.sidebar.background.danger }}',
           surprise: '{{ styles.sidebar.background.surprise }}',
-          info: '{{ styles.sidebar.background.info }}'
+          info: '{{ styles.sidebar.background.info }}',
         },
         foreground: {
-          default: '#e0e0e0'
+          default: '#e0e0e0',
         },
         highlight: {
-          default: '#999'
-        }
-      }
-    }
-  }
+          default: '#999',
+        },
+      },
+    },
+  },
 };

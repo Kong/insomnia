@@ -17,7 +17,7 @@ import {
   AUTH_AWS_IAM,
   AUTH_NETRC,
   AUTH_ASAP,
-  getAuthTypeName
+  getAuthTypeName,
 } from '../../../common/constants';
 
 @autobind
@@ -45,7 +45,7 @@ class AuthDropdown extends PureComponent {
         await showModal(AlertModal, {
           title: 'Switch Authentication?',
           message: 'Current authentication settings will be lost',
-          addCancel: true
+          addCancel: true,
         });
         break;
       }
@@ -93,7 +93,7 @@ AuthDropdown.propTypes = {
 
   // Optional
   className: PropTypes.string,
-  children: PropTypes.node
+  children: PropTypes.node,
 };
 
 export default AuthDropdown;

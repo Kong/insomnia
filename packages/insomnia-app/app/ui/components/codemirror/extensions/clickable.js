@@ -18,7 +18,7 @@ CodeMirror.defineExtension('makeLinksClickable', function(handleClick) {
       }
 
       return null;
-    }
+    },
   });
 
   this.getWrapperElement().addEventListener('click', e => {

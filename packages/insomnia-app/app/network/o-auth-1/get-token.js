@@ -9,7 +9,7 @@ import {
   SIGNATURE_METHOD_HMAC_SHA1,
   SIGNATURE_METHOD_RSA_SHA1,
   SIGNATURE_METHOD_PLAINTEXT,
-  SIGNATURE_METHOD_HMAC_SHA256
+  SIGNATURE_METHOD_HMAC_SHA256,
 } from './constants';
 import type { OAuth1SignatureMethod } from './constants';
 import type { RequestAuthentication } from '../../models/request';
@@ -54,17 +54,17 @@ function hashFunction(signatureMethod: OAuth1SignatureMethod) {
 export default async function(
   url: string,
   method: string,
-  authentication: RequestAuthentication
+  authentication: RequestAuthentication,
 ): { [string]: string } {
   const oauth = new OAuth1({
     consumer: {
       key: authentication.consumerKey,
-      secret: authentication.consumerSecret
+      secret: authentication.consumerSecret,
     },
     signature_method: authentication.signatureMethod,
     version: authentication.version,
     hash_function: hashFunction(authentication.signatureMethod),
-    realm: authentication.realm || null
+    realm: authentication.realm || null,
   });
 
   const requestData = {
@@ -72,7 +72,7 @@ export default async function(
     method: method,
     data: {
       // These are conditionally filled in below
-    }
+    },
   };
 
   if (authentication.callback) {
@@ -95,7 +95,7 @@ export default async function(
   if (authentication.tokenKey && authentication.tokenSecret) {
     token = {
       key: authentication.tokenKey,
-      secret: authentication.tokenSecret
+      secret: authentication.tokenSecret,
     };
   } else if (authentication.tokenKey) {
     token = { key: authentication.tokenKey };

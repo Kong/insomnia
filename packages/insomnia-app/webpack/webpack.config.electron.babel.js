@@ -9,7 +9,7 @@ let devtool;
 let plugins;
 const output = {
   libraryTarget: 'commonjs2',
-  filename: 'main.min.js'
+  filename: 'main.min.js',
 };
 
 if (process.env.NODE_ENV === 'development') {
@@ -19,8 +19,8 @@ if (process.env.NODE_ENV === 'development') {
     new webpack.DefinePlugin({
       'process.env.APP_RENDER_URL': JSON.stringify(`http://localhost:${PORT}/renderer.html`),
       'process.env.NODE_ENV': JSON.stringify('development'),
-      'process.env.INSOMNIA_ENV': JSON.stringify('development')
-    })
+      'process.env.INSOMNIA_ENV': JSON.stringify('development'),
+    }),
   ];
 } else {
   output.path = path.join(__dirname, '../build');
@@ -34,8 +34,8 @@ module.exports = {
   entry: ['./main.development.js'],
   output: output,
   node: {
-    __dirname: false // Use node.js __dirname
+    __dirname: false, // Use node.js __dirname
   },
   target: 'electron-main',
-  plugins: plugins
+  plugins: plugins,
 };

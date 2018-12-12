@@ -11,7 +11,7 @@ import {
   CONTENT_TYPE_OTHER,
   CONTENT_TYPE_XML,
   CONTENT_TYPE_EDN,
-  getContentTypeName
+  getContentTypeName,
 } from '../../../common/constants';
 import { showModal } from '../modals/index';
 import AlertModal from '../modals/alert-modal';
@@ -24,7 +24,7 @@ type Props = {
 
   // Optional
   className?: string,
-  request?: Request
+  request?: Request,
 };
 
 const EMPTY_MIME_TYPE = null;
@@ -58,7 +58,7 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
       await showModal(AlertModal, {
         title: 'Switch Body Type?',
         message: 'Current body will be lost. Are you sure you want to continue?',
-        addCancel: true
+        addCancel: true,
       });
     }
   }

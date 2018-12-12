@@ -14,7 +14,7 @@ export const CHANGE_REMOVE = 'remove';
 
 const database = {};
 const db = {
-  _empty: true
+  _empty: true,
 };
 
 // ~~~~~~~ //
@@ -63,10 +63,10 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
       Object.assign(
         {
           autoload: true,
-          filename: filePath
+          filename: filePath,
         },
-        config
-      )
+        config,
+      ),
     );
 
     collection.persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
@@ -152,7 +152,7 @@ export function offChange(callback: Function): void {
 }
 
 export const bufferChanges = (database.bufferChanges = async function(
-  millis: number = 1000
+  millis: number = 1000,
 ): Promise<void> {
   if (db._empty) return _send('bufferChanges', ...arguments);
 
@@ -205,7 +205,7 @@ async function notifyOfChange(event: string, doc: BaseModel, fromSync: boolean):
 
 export const getMostRecentlyModified = (database.getMostRecentlyModified = async function(
   type: string,
-  query: Object = {}
+  query: Object = {},
 ): Promise<BaseModel | null> {
   if (db._empty) return _send('getMostRecentlyModified', ...arguments);
 
@@ -216,7 +216,7 @@ export const getMostRecentlyModified = (database.getMostRecentlyModified = async
 export const findMostRecentlyModified = (database.findMostRecentlyModified = async function(
   type: string,
   query: Object = {},
-  limit: number | null = null
+  limit: number | null = null,
 ): Promise<Array<BaseModel>> {
   if (db._empty) return _send('findMostRecentlyModified', ...arguments);
 
@@ -245,7 +245,7 @@ export const findMostRecentlyModified = (database.findMostRecentlyModified = asy
 export const find = (database.find = async function<T: BaseModel>(
   type: string,
   query: Object = {},
-  sort: Object = { created: 1 }
+  sort: Object = { created: 1 },
 ): Promise<Array<T>> {
   if (db._empty) return _send('find', ...arguments);
 
@@ -276,7 +276,7 @@ export const all = (database.all = async function<T: BaseModel>(type: string): P
 
 export const getWhere = (database.getWhere = async function<T: BaseModel>(
   type: string,
-  query: Object
+  query: Object,
 ): Promise<T | null> {
   if (db._empty) return _send('getWhere', ...arguments);
 
@@ -286,7 +286,7 @@ export const getWhere = (database.getWhere = async function<T: BaseModel>(
 
 export const get = (database.get = async function<T: BaseModel>(
   type: string,
-  id: string
+  id: string,
 ): Promise<T | null> {
   if (db._empty) return _send('get', ...arguments);
 
@@ -300,7 +300,7 @@ export const get = (database.get = async function<T: BaseModel>(
 
 export const count = (database.count = async function(
   type: string,
-  query: Object = {}
+  query: Object = {},
 ): Promise<number> {
   if (db._empty) return _send('count', ...arguments);
 
@@ -317,7 +317,7 @@ export const count = (database.count = async function(
 
 export const upsert = (database.upsert = async function(
   doc: BaseModel,
-  fromSync: boolean = false
+  fromSync: boolean = false,
 ): Promise<BaseModel> {
   if (db._empty) return _send('upsert', ...arguments);
 
@@ -331,7 +331,7 @@ export const upsert = (database.upsert = async function(
 
 export const insert = (database.insert = async function<T: BaseModel>(
   doc: T,
-  fromSync: boolean = false
+  fromSync: boolean = false,
 ): Promise<T> {
   if (db._empty) return _send('insert', ...arguments);
 
@@ -352,7 +352,7 @@ export const insert = (database.insert = async function<T: BaseModel>(
 
 export const update = (database.update = async function<T: BaseModel>(
   doc: T,
-  fromSync: boolean = false
+  fromSync: boolean = false,
 ): Promise<T> {
   if (db._empty) return _send('update', ...arguments);
 
@@ -373,7 +373,7 @@ export const update = (database.update = async function<T: BaseModel>(
 
 export const remove = (database.remove = async function<T: BaseModel>(
   doc: T,
-  fromSync: boolean = false
+  fromSync: boolean = false,
 ): Promise<void> {
   if (db._empty) return _send('remove', ...arguments);
 
@@ -393,7 +393,7 @@ export const remove = (database.remove = async function<T: BaseModel>(
 
 export const removeWhere = (database.removeWhere = async function(
   type: string,
-  query: Object
+  query: Object,
 ): Promise<void> {
   if (db._empty) return _send('removeWhere', ...arguments);
 
@@ -428,7 +428,7 @@ export async function docUpdate<T: BaseModel>(
     // NOTE: This is before `patch` because we want `patch.modified` to win if it has it
     { modified: Date.now() },
 
-    ...patches
+    ...patches,
   );
 
   return database.update(doc);
@@ -440,7 +440,7 @@ export async function docCreate<T: BaseModel>(type: string, ...patches: Array<Ob
     ...patches,
 
     // Fields that the user can't touch
-    { type: type }
+    { type: type },
   );
 
   return database.insert(doc);
@@ -452,7 +452,7 @@ export async function docCreate<T: BaseModel>(type: string, ...patches: Array<Ob
 
 export const withDescendants = (database.withDescendants = async function(
   doc: BaseModel | null,
-  stopType: string | null = null
+  stopType: string | null = null,
 ): Promise<Array<BaseModel>> {
   if (db._empty) return _send('withDescendants', ...arguments);
 
@@ -489,7 +489,7 @@ export const withDescendants = (database.withDescendants = async function(
 
 export const withAncestors = (database.withAncestors = async function(
   doc: BaseModel | null,
-  types: Array<string> = allTypes()
+  types: Array<string> = allTypes(),
 ): Promise<Array<BaseModel>> {
   if (db._empty) return _send('withAncestors', ...arguments);
 
@@ -524,7 +524,7 @@ export const withAncestors = (database.withAncestors = async function(
 
 export const duplicate = (database.duplicate = async function<T: BaseModel>(
   originalDoc: T,
-  patch: Object = {}
+  patch: Object = {},
 ): Promise<T> {
   if (db._empty) return _send('duplicate', ...arguments);
 
@@ -595,7 +595,7 @@ export async function _repairDatabase() {
  */
 async function _repairBaseEnvironments(workspace) {
   const baseEnvironments = await find(models.environment.type, {
-    parentId: workspace._id
+    parentId: workspace._id,
   });
 
   // Nothing to do here
@@ -611,7 +611,7 @@ async function _repairBaseEnvironments(workspace) {
 
     chosenBase.data = Object.assign(baseEnvironment.data, chosenBase.data);
     const subEnvironments = await find(models.environment.type, {
-      parentId: baseEnvironment._id
+      parentId: baseEnvironment._id,
     });
 
     for (const subEnvironment of subEnvironments) {
@@ -635,7 +635,7 @@ async function _repairBaseEnvironments(workspace) {
  */
 async function _fixMultipleCookieJars(workspace) {
   const cookieJars = await find(models.cookieJar.type, {
-    parentId: workspace._id
+    parentId: workspace._id,
   });
 
   // Nothing to do here

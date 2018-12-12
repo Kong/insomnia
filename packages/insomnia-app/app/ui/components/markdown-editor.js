@@ -12,7 +12,7 @@ class MarkdownEditor extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      markdown: props.defaultValue
+      markdown: props.defaultValue,
     };
   }
 
@@ -47,13 +47,13 @@ class MarkdownEditor extends PureComponent {
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
 
     const { markdown } = this.state;
 
     const classes = classnames('react-tabs', 'markdown-editor', 'outlined', className, {
-      'markdown-editor--dynamic-height': !tall
+      'markdown-editor--dynamic-height': !tall,
     });
 
     return (
@@ -143,7 +143,7 @@ MarkdownEditor.propTypes = {
   defaultPreviewMode: PropTypes.bool,
   className: PropTypes.string,
   mode: PropTypes.string,
-  tall: PropTypes.bool
+  tall: PropTypes.bool,
 };
 
 export default MarkdownEditor;

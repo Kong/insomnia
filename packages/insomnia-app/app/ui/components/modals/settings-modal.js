@@ -164,7 +164,7 @@ SettingsModal.propTypes = {
   handleToggleMenuBar: PropTypes.func.isRequired,
 
   // Properties
-  settings: PropTypes.object.isRequired
+  settings: PropTypes.object.isRequired,
 };
 
 export default SettingsModal;

@@ -12,7 +12,7 @@ describe('OAuth 1.0', () => {
       tokenSecret: 'tokenSecret',
       signatureMethod: 'HMAC-SHA1',
       nonce: 'nonce',
-      timestamp: '1234567890'
+      timestamp: '1234567890',
     });
 
     expect(header).toEqual({
@@ -25,8 +25,8 @@ describe('OAuth 1.0', () => {
         'oauth_signature_method="HMAC-SHA1"',
         'oauth_timestamp="1234567890"',
         'oauth_token="tokenKey"',
-        'oauth_version="1.0"'
-      ].join(', ')
+        'oauth_version="1.0"',
+      ].join(', '),
     });
   });
 
@@ -56,7 +56,7 @@ describe('OAuth 1.0', () => {
         'F29dI2yG3Ti+28/WlSdfYGe9P9SfeYM7RQbNbUp1MHWrkg==\n' +
         '-----END RSA PRIVATE KEY-----',
       nonce: 'nonce',
-      timestamp: '1234567890'
+      timestamp: '1234567890',
     });
 
     expect(header).toEqual({
@@ -69,8 +69,8 @@ describe('OAuth 1.0', () => {
         'oauth_signature_method="RSA-SHA1"',
         'oauth_timestamp="1234567890"',
         'oauth_token="tokenKey"',
-        'oauth_version="1.0"'
-      ].join(', ')
+        'oauth_version="1.0"',
+      ].join(', '),
     });
   });
 
@@ -79,7 +79,7 @@ describe('OAuth 1.0', () => {
       type: AUTH_OAUTH_1,
       consumerKey: 'consumerKey',
       consumerSecret: 'consumerSecret',
-      signatureMethod: 'HMAC-SHA1'
+      signatureMethod: 'HMAC-SHA1',
     });
 
     expect(header.name).toBe('Authorization');
@@ -91,9 +91,9 @@ describe('OAuth 1.0', () => {
           'oauth_signature="[\\w\\d%]*"',
           'oauth_signature_method="HMAC-SHA1"',
           'oauth_timestamp="\\d*"',
-          'oauth_version="1\\.0"'
-        ].join(', ')
-      )
+          'oauth_version="1\\.0"',
+        ].join(', '),
+      ),
     );
   });
 });

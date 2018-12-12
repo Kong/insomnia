@@ -8,7 +8,7 @@ import type {
   RequestAuthentication,
   RequestBody,
   RequestHeader,
-  RequestParameter
+  RequestParameter,
 } from '../../models/request';
 
 import * as React from 'react';
@@ -119,11 +119,11 @@ type Props = {
   // Optional
   oAuth2Token: ?OAuth2Token,
   activeRequest: ?Request,
-  activeResponse: ?Response
+  activeResponse: ?Response,
 };
 
 type State = {
-  forceRefreshKey: number
+  forceRefreshKey: number,
 };
 
 const rUpdate = (request, ...args) => {
@@ -141,7 +141,7 @@ class Wrapper extends React.PureComponent<Props, State> {
   constructor(props: any) {
     super(props);
     this.state = {
-      forceRefreshKey: Date.now()
+      forceRefreshKey: Date.now(),
     };
   }
 
@@ -217,7 +217,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           headers: r.headers,
           body: r.body,
           authentication: r.authentication,
-          parameters: r.parameters
+          parameters: r.parameters,
         });
       }
     } catch (e) {
@@ -300,7 +300,7 @@ class Wrapper extends React.PureComponent<Props, State> {
     if (workspaces.length <= 1) {
       showModal(AlertModal, {
         title: 'Deleting Last Workspace',
-        message: 'Since you deleted your only workspace, a new one has been created for you.'
+        message: 'Since you deleted your only workspace, a new one has been created for you.',
       });
 
       models.workspace.create({ name: 'Insomnia' });
@@ -320,7 +320,7 @@ class Wrapper extends React.PureComponent<Props, State> {
     const {
       activeRequest,
       activeEnvironment,
-      handleSendAndDownloadRequestWithEnvironment
+      handleSendAndDownloadRequestWithEnvironment,
     } = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
@@ -398,7 +398,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       workspaceChildren,
       workspaces,
       unseenWorkspaces,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
@@ -562,7 +562,7 @@ class Wrapper extends React.PureComponent<Props, State> {
         key="wrapper"
         id="wrapper"
         className={classnames('wrapper', {
-          'wrapper--vertical': settings.forceVerticalLayout
+          'wrapper--vertical': settings.forceVerticalLayout,
         })}
         style={{
           gridTemplateColumns: columns,
@@ -591,7 +591,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             activeEnvironment.color &&
             settings.environmentHighlightColorStyle === 'window-right'
               ? '5px solid ' + activeEnvironment.color
-              : null
+              : null,
         }}>
         <ErrorBoundary showAlert>
           <Sidebar
@@ -702,7 +702,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleSetFilter={this._handleSetResponseFilter}
           />
         </ErrorBoundary>
-      </div>
+      </div>,
     ];
   }
 }

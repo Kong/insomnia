@@ -1,3 +1,3 @@
 module.exports = {
-  json: require('./src/json').prettify
+  json: require('./src/json').prettify,
 };

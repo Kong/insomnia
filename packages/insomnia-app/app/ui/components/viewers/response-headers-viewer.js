@@ -6,7 +6,7 @@ import Link from '../base/link';
 const { URL } = require('url');
 
 type Props = {
-  headers: Array<ResponseHeader>
+  headers: Array<ResponseHeader>,
 };
 
 function validateURL(urlString) {
@@ -48,7 +48,7 @@ class ResponseHeadersViewer extends React.PureComponent<Props> {
       </table>,
       <p key="copy" className="pad-top">
         <CopyButton className="pull-right btn btn--clicky" content={headersString} />
-      </p>
+      </p>,
     ];
   }
 }

@@ -31,5 +31,5 @@ export default [
   'User-Agent',
   'Upgrade',
   'Via',
-  'Warning'
+  'Warning',
 ];

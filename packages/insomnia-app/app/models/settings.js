@@ -32,7 +32,7 @@ type BaseSettings = {
   fontMonospace: string | null,
   fontInterface: string | null,
   fontSize: number,
-  fontVariantLigatures: boolean
+  fontVariantLigatures: boolean,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -72,7 +72,7 @@ export function init(): BaseSettings {
     fontMonospace: null,
     fontInterface: null,
     fontSize: 13,
-    fontVariantLigatures: false
+    fontVariantLigatures: false,
   };
 }
 

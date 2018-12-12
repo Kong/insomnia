@@ -19,12 +19,12 @@ export const canDuplicate = false;
 
 export type ResponseHeader = {
   name: string,
-  value: string
+  value: string,
 };
 
 export type ResponseTimelineEntry = {
   name: string,
-  value: string
+  value: string,
 };
 
 type BaseResponse = {
@@ -45,7 +45,7 @@ type BaseResponse = {
 
   // Things from the request
   settingStoreCookies: boolean | null,
-  settingSendCookies: boolean | null
+  settingSendCookies: boolean | null,
 };
 
 export type Response = BaseModel & BaseResponse;
@@ -69,7 +69,7 @@ export function init(): BaseResponse {
 
     // Things from the request
     settingStoreCookies: null,
-    settingSendCookies: null
+    settingSendCookies: null,
   };
 }
 
@@ -111,7 +111,7 @@ export function remove(response: Response) {
 
 export async function findRecentForRequest(
   requestId: string,
-  limit: number
+  limit: number,
 ): Promise<Array<Response>> {
   const responses = await db.findMostRecentlyModified(type, { parentId: requestId }, limit);
   return responses;
@@ -159,7 +159,7 @@ export function getBodyBuffer<T>(response: Object, readFailureValue: ?T): Buffer
 function getBodyStreamFromPath<T>(
   bodyPath: string,
   compression: string | null,
-  readFailureValue: ?T
+  readFailureValue: ?T,
 ): Readable | null | T {
   // No body, so return empty Buffer
   if (!bodyPath) {
@@ -184,7 +184,7 @@ function getBodyStreamFromPath<T>(
 function getBodyBufferFromPath<T>(
   bodyPath: string,
   compression: string | null,
-  readFailureValue: ?T
+  readFailureValue: ?T,
 ): Buffer | T | null {
   // No body, so return empty Buffer
   if (!bodyPath) {

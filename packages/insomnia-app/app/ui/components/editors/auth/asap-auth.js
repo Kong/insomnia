@@ -16,7 +16,7 @@ type Props = {
   handleGetRenderContext: Function,
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
-  onChange: Function
+  onChange: Function,
 };
 
 const PRIVATE_KEY_PLACEHOLDER = `
@@ -54,26 +54,26 @@ class AsapAuth extends React.PureComponent<Props> {
 
   renderAsapAuthenticationFields(): React.Node {
     const asapIssuer = this.renderTextInput('Issuer (iss)', 'issuer', 'text/plain', value =>
-      this._handleChangeProperty('issuer', value)
+      this._handleChangeProperty('issuer', value),
     );
 
     const asapSubject = this.renderTextInput('Subject (sub)', 'subject', 'text/plain', value =>
-      this._handleChangeProperty('subject', value)
+      this._handleChangeProperty('subject', value),
     );
 
     const asapAudience = this.renderTextInput('Audience (aud)', 'audience', 'text/plain', value =>
-      this._handleChangeProperty('audience', value)
+      this._handleChangeProperty('audience', value),
     );
 
     const asapAdditionalClaims = this.renderTextInput(
       'Additional Claims',
       'additionalClaims',
       'application/json',
-      value => this._handleChangeProperty('additionalClaims', value)
+      value => this._handleChangeProperty('additionalClaims', value),
     );
 
     const asapKeyId = this.renderTextInput('Key ID (kid)', 'keyId', 'text/plain', value =>
-      this._handleChangeProperty('keyId', value)
+      this._handleChangeProperty('keyId', value),
     );
 
     const asapPrivateKey = this.renderPrivateKeyInput('Private Key');
@@ -85,14 +85,14 @@ class AsapAuth extends React.PureComponent<Props> {
     label: string,
     property: string,
     mode: string,
-    onChange: Function
+    onChange: Function,
   ): React.Element<*> {
     const {
       handleRender,
       handleGetRenderContext,
       authentication,
       nunjucksPowerUserMode,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
     const id = label.replace(/ /g, '-');
     return (
@@ -105,7 +105,7 @@ class AsapAuth extends React.PureComponent<Props> {
         <td className="wide">
           <div
             className={classnames('form-control form-control--underlined no-margin', {
-              'form-control--inactive': authentication.disabled
+              'form-control--inactive': authentication.disabled,
             })}>
             <OneLineEditor
               id={id}
@@ -133,7 +133,7 @@ class AsapAuth extends React.PureComponent<Props> {
       enableRender: handleRender || handleGetRenderContext,
       placeholder: PRIVATE_KEY_PLACEHOLDER,
       mode: 'text/plain',
-      hideMode: true
+      hideMode: true,
     });
   }
 
@@ -156,8 +156,8 @@ class AsapAuth extends React.PureComponent<Props> {
             className={classnames(
               'form-control form-control--underlined form-control--tall no-margin',
               {
-                'form-control--inactive': authentication.disabled
-              }
+                'form-control--inactive': authentication.disabled,
+              },
             )}>
             <button className="btn btn--clicky wide" onClick={this._handleEditPrivateKey}>
               <i className="fa fa-edit space-right" />

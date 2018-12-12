@@ -20,7 +20,7 @@ class RawEditor extends PureComponent {
       isVariableUncovered,
       onChange,
       render,
-      uniquenessKey
+      uniquenessKey,
     } = this.props;
 
     return (
@@ -87,7 +87,7 @@ RawEditor.propTypes = {
   className: PropTypes.string,
   render: PropTypes.func,
   getRenderContext: PropTypes.func,
-  indentWithTabs: PropTypes.bool
+  indentWithTabs: PropTypes.bool,
 };
 
 export default RawEditor;

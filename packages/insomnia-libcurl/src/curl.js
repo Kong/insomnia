@@ -15,7 +15,7 @@ class Curl {
 
     // Throw on deprecated options
     const disabledOpts = {
-      [nodeLibcurl.Curl.option.URL]: this.setUrl
+      [nodeLibcurl.Curl.option.URL]: this.setUrl,
     };
     if (disabledOpts[option]) {
       const name = Curl.optName(option);

@@ -7,7 +7,7 @@ const buildTask = require('./build');
 const PLATFORM_MAP = {
   darwin: 'mac',
   linux: 'linux',
-  win32: 'win'
+  win32: 'win',
 };
 
 // Start package if ran from CLI
@@ -47,7 +47,7 @@ async function pkg(relConfigPath) {
 
   return electronBuilder.build({
     config,
-    [targetPlatform]: target
+    [targetPlatform]: target,
   });
 }
 

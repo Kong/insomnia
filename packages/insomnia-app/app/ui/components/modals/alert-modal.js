@@ -13,7 +13,7 @@ class AlertModal extends PureComponent {
     this.state = {
       title: '',
       message: '',
-      addCancel: false
+      addCancel: false,
     };
   }
 

@@ -23,9 +23,9 @@ module.exports = function(source, options) {
       showBoilerplate: true,
       checkErrors: false,
       printBody: true,
-      timeout: -1
+      timeout: -1,
     },
-    options
+    options,
   );
 
   var errorPlaceholder = opts.checkErrors ? 'err' : '_';
@@ -94,7 +94,7 @@ module.exports = function(source, options) {
         indent,
         'req, %s := http.NewRequest("%s", url, payload)',
         errorPlaceholder,
-        source.method
+        source.method,
       )
       .blank();
   } else {
@@ -146,5 +146,5 @@ module.exports.info = {
   key: 'native',
   title: 'NewRequest',
   link: 'http://golang.org/pkg/net/http/#NewRequest',
-  description: 'Golang HTTP client request'
+  description: 'Golang HTTP client request',
 };
