@@ -1,6 +1,6 @@
 {
   "name": "insomnia-importers",
-  "version": "2.0.12",
+  "version": "2.0.13",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Various data importers for Insomnia",
   "license": "MIT",
