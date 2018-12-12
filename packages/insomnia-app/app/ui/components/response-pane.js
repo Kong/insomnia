@@ -244,7 +244,7 @@ class ResponsePane extends React.PureComponent<Props> {
         )}
         <Tabs className={paneBodyClasses + ' react-tabs'} forceRenderTabPanel>
           <TabList>
-            <Tab>
+            <Tab tabIndex="-1">
               <PreviewModeDropdown
                 download={this._handleDownloadResponseBody}
                 fullDownload={this._handleDownloadFullResponseBody}
@@ -252,7 +252,7 @@ class ResponsePane extends React.PureComponent<Props> {
                 updatePreviewMode={handleSetPreviewMode}
               />
             </Tab>
-            <Tab>
+            <Tab tabIndex="-1">
               <Button>
                 Header{' '}
                 {response.headers.length > 0 && (
@@ -260,7 +260,7 @@ class ResponsePane extends React.PureComponent<Props> {
                 )}
               </Button>
             </Tab>
-            <Tab>
+            <Tab tabIndex="-1">
               <Button>
                 Cookie{' '}
                 {cookieHeaders.length ? (
@@ -268,7 +268,7 @@ class ResponsePane extends React.PureComponent<Props> {
                 ) : null}
               </Button>
             </Tab>
-            <Tab>
+            <Tab tabIndex="-1">
               <Button>Timeline</Button>
             </Tab>
           </TabList>
