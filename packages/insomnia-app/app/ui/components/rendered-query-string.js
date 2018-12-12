@@ -10,7 +10,7 @@ class RenderedQueryString extends PureComponent {
     super(props);
     this._interval = null;
     this.state = {
-      string: ''
+      string: '',
     };
   }
 
@@ -29,7 +29,7 @@ class RenderedQueryString extends PureComponent {
     try {
       result = await props.handleRender({
         url: request.url,
-        parameters: enabledParameters
+        parameters: enabledParameters,
       });
     } catch (err) {
       // Just ignore failures
@@ -40,7 +40,7 @@ class RenderedQueryString extends PureComponent {
       const qs = buildQueryStringFromParams(parameters);
       const fullUrl = joinUrlAndQueryString(url, qs);
       this.setState({
-        string: smartEncodeUrl(fullUrl, request.settingEncodeUrl)
+        string: smartEncodeUrl(fullUrl, request.settingEncodeUrl),
       });
     }
   }
@@ -86,7 +86,7 @@ class RenderedQueryString extends PureComponent {
 
 RenderedQueryString.propTypes = {
   request: PropTypes.object.isRequired,
-  handleRender: PropTypes.func.isRequired
+  handleRender: PropTypes.func.isRequired,
 };
 
 export default RenderedQueryString;

@@ -12,7 +12,7 @@ describe('init()', () => {
       'alert',
       'getPath',
       'prompt',
-      'showSaveDialog'
+      'showSaveDialog',
     ]);
   });
 });
@@ -40,7 +40,7 @@ describe('app.alert()', () => {
     // Make sure it passes correct arguments
     expect(modals.showAlert.mock.calls).toEqual([
       [{ title: 'Title' }],
-      [{ title: 'Title', message: 'Message' }]
+      [{ title: 'Title', message: 'Message' }],
     ]);
   });
 });
@@ -71,17 +71,17 @@ describe('app.prompt()', () => {
         {
           title: 'Title',
           onComplete: expect.any(Function),
-          onCancel: expect.any(Function)
-        }
+          onCancel: expect.any(Function),
+        },
       ],
       [
         {
           title: 'Title',
           label: 'Label',
           onComplete: expect.any(Function),
-          onCancel: expect.any(Function)
-        }
-      ]
+          onCancel: expect.any(Function),
+        },
+      ],
     ]);
   });
 });

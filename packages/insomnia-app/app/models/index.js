@@ -21,7 +21,7 @@ export type BaseModel = {
   type: string,
   parentId: string,
   modified: number,
-  created: number
+  created: number,
 };
 
 // Reference to each model
@@ -57,7 +57,7 @@ export function all() {
     response,
     oAuth2Token,
     clientCertificate,
-    pluginData
+    pluginData,
   ];
 }
 
@@ -106,9 +106,9 @@ export async function initModel<T: BaseModel>(type: string, ...sources: Array<Ob
       type: type,
       parentId: null,
       modified: Date.now(),
-      created: Date.now()
+      created: Date.now(),
     },
-    model.init()
+    model.init(),
   );
 
   const fullObject = Object.assign({}, objectDefaults, ...sources);

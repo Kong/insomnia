@@ -8,7 +8,7 @@ import {
   isMac,
   isWindows,
   UPDATE_CHANNEL_BETA,
-  UPDATE_CHANNEL_STABLE
+  UPDATE_CHANNEL_STABLE,
 } from '../../../common/constants';
 import type { Settings } from '../../../models/settings';
 import CheckForUpdatesButton from '../check-for-updates-button';
@@ -18,11 +18,11 @@ type Props = {
   settings: Settings,
   updateSetting: Function,
   handleToggleMenuBar: Function,
-  handleRootCssChange: Function
+  handleRootCssChange: Function,
 };
 
 type State = {
-  fonts: []
+  fonts: [],
 };
 
 @autobind
@@ -30,7 +30,7 @@ class General extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      fonts: []
+      fonts: [],
     };
   }
 

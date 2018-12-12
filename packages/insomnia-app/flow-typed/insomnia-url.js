@@ -8,6 +8,6 @@ declare module 'insomnia-url' {
     deconstructQueryStringToParams: Function,
     extractQueryStringFromUrl: Function,
     buildQueryParameter: Function,
-    buildQueryStringFromParams: Function
+    buildQueryStringFromParams: Function,
   };
 }

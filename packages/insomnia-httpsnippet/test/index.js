@@ -124,10 +124,10 @@ describe('HTTPSnippet', function() {
       query: {
         baz: 'abc',
         key: 'value',
-        foo: ['bar', 'baz']
+        foo: ['bar', 'baz'],
       },
       search: 'foo=bar&foo=baz&baz=abc&key=value',
-      slashes: true
+      slashes: true,
     });
 
     done();
@@ -140,7 +140,7 @@ describe('HTTPSnippet', function() {
     req.queryObj.should.eql({
       baz: 'abc',
       key: 'value',
-      foo: ['bar', 'baz']
+      foo: ['bar', 'baz'],
     });
 
     done();
@@ -152,7 +152,7 @@ describe('HTTPSnippet', function() {
     req.headersObj.should.be.an.Object;
     req.headersObj.should.eql({
       accept: 'application/json',
-      'x-foo': 'Bar'
+      'x-foo': 'Bar',
     });
 
     done();

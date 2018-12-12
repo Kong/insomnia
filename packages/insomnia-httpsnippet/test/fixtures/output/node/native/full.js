@@ -9,8 +9,8 @@ var options = {
   headers: {
     cookie: 'foo=bar; bar=baz',
     accept: 'application/json',
-    'content-type': 'application/x-www-form-urlencoded'
-  }
+    'content-type': 'application/x-www-form-urlencoded',
+  },
 };
 
 var req = http.request(options, function(res) {

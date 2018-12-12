@@ -21,12 +21,12 @@ type Props = {
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
   workspace: Workspace,
-  cookieJar: CookieJar
+  cookieJar: CookieJar,
 };
 
 type State = {
   cookie: Cookie | null,
-  rawValue: string
+  rawValue: string,
 };
 
 @autobind
@@ -40,7 +40,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
 
     this.state = {
       cookie: null,
-      rawValue: ''
+      rawValue: '',
     };
   }
 
@@ -187,7 +187,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
 
     if (!cookie) {
@@ -245,7 +245,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
                     </div>
                     {this._renderInputField(
                       'expires',
-                      isNaN(new Date(cookie.expires || 0).getTime()) ? 'Invalid Date' : null
+                      isNaN(new Date(cookie.expires || 0).getTime()) ? 'Invalid Date' : null,
                     )}
                   </div>
                   <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">

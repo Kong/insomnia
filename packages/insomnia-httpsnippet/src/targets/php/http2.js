@@ -20,9 +20,9 @@ module.exports = function(source, options) {
       closingTag: false,
       indent: '  ',
       noTags: false,
-      shortTags: false
+      shortTags: false,
     },
-    options
+    options,
   );
 
   var code = new CodeBuilder(opts.indent);
@@ -43,7 +43,7 @@ module.exports = function(source, options) {
         .push('$body = new http\\Message\\Body;')
         .push(
           '$body->append(new http\\QueryString(%s));',
-          helpers.convert(source.postData.paramsObj, opts.indent)
+          helpers.convert(source.postData.paramsObj, opts.indent),
         )
         .blank();
       hasBody = true;
@@ -59,7 +59,7 @@ module.exports = function(source, options) {
             name: param.name,
             type: param.contentType,
             file: param.fileName,
-            data: param.value
+            data: param.value,
           });
         } else if (param.value) {
           fields[param.name] = param.value;
@@ -71,7 +71,7 @@ module.exports = function(source, options) {
         .push(
           '$body->addForm(%s, %s);',
           Object.keys(fields).length ? helpers.convert(fields, opts.indent) : 'NULL',
-          files.length ? helpers.convert(files, opts.indent) : 'NULL'
+          files.length ? helpers.convert(files, opts.indent) : 'NULL',
         );
 
       // remove the contentType header
@@ -106,7 +106,7 @@ module.exports = function(source, options) {
     code
       .push(
         '$request->setQuery(new http\\QueryString(%s));',
-        helpers.convert(source.queryObj, opts.indent)
+        helpers.convert(source.queryObj, opts.indent),
       )
       .blank();
   }
@@ -139,5 +139,5 @@ module.exports.info = {
   key: 'http2',
   title: 'HTTP v2',
   link: 'http://devel-m6w6.rhcloud.com/mdref/http',
-  description: 'PHP with pecl/http v2'
+  description: 'PHP with pecl/http v2',
 };

@@ -85,7 +85,7 @@ class RequestHeadersEditor extends PureComponent {
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
 
     return bulk ? (
@@ -152,9 +152,9 @@ RequestHeadersEditor.propTypes = {
   headers: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,
-      value: PropTypes.string.isRequired
-    })
-  ).isRequired
+      value: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
 };
 
 export default RequestHeadersEditor;

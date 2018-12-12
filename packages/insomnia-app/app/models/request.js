@@ -20,7 +20,7 @@ import {
   getContentTypeFromHeaders,
   HAWK_ALGORITHM_SHA256,
   METHOD_GET,
-  METHOD_POST
+  METHOD_POST,
 } from '../common/constants';
 import * as db from '../common/database';
 import { getContentTypeHeader } from '../common/misc';
@@ -38,7 +38,7 @@ export type RequestAuthentication = Object;
 export type RequestHeader = {
   name: string,
   value: string,
-  disabled?: boolean
+  disabled?: boolean,
 };
 
 export type RequestParameter = {
@@ -46,7 +46,7 @@ export type RequestParameter = {
   value: string,
   disabled?: boolean,
   id?: string,
-  fileName?: string
+  fileName?: string,
 };
 
 export type RequestBodyParameter = {
@@ -56,14 +56,14 @@ export type RequestBodyParameter = {
   multiline?: string,
   id?: string,
   fileName?: string,
-  type?: string
+  type?: string,
 };
 
 export type RequestBody = {
   mimeType?: string | null,
   text?: string,
   fileName?: string,
-  params?: Array<RequestBodyParameter>
+  params?: Array<RequestBodyParameter>,
 };
 
 type BaseRequest = {
@@ -84,7 +84,7 @@ type BaseRequest = {
   settingDisableRenderRequestBody: boolean,
   settingEncodeUrl: boolean,
   settingRebuildPath: boolean,
-  settingMaxTimelineDataSize: number
+  settingMaxTimelineDataSize: number,
 };
 
 export type Request = BaseModel & BaseRequest;
@@ -108,7 +108,7 @@ export function init(): BaseRequest {
     settingDisableRenderRequestBody: false,
     settingEncodeUrl: true,
     settingRebuildPath: true,
-    settingMaxTimelineDataSize: 1000
+    settingMaxTimelineDataSize: 1000,
   };
 }
 
@@ -126,7 +126,7 @@ export function newAuth(type: string, oldAuth: RequestAuthentication = {}): Requ
         type,
         disabled: oldAuth.disabled || false,
         username: oldAuth.username || '',
-        password: oldAuth.password || ''
+        password: oldAuth.password || '',
       };
 
     case AUTH_OAUTH_1:
@@ -142,14 +142,14 @@ export function newAuth(type: string, oldAuth: RequestAuthentication = {}): Requ
         version: '1.0',
         nonce: '',
         timestamp: '',
-        callback: ''
+        callback: '',
       };
 
     // OAuth 2.0
     case AUTH_OAUTH_2:
       return {
         type,
-        grantType: GRANT_TYPE_AUTHORIZATION_CODE
+        grantType: GRANT_TYPE_AUTHORIZATION_CODE,
       };
 
     // Aws IAM
@@ -159,14 +159,14 @@ export function newAuth(type: string, oldAuth: RequestAuthentication = {}): Requ
         disabled: oldAuth.disabled || false,
         accessKeyId: oldAuth.accessKeyId || '',
         secretAccessKey: oldAuth.secretAccessKey || '',
-        sessionToken: oldAuth.sessionToken || ''
+        sessionToken: oldAuth.sessionToken || '',
       };
 
     // Hawk
     case AUTH_HAWK:
       return {
         type,
-        algorithm: HAWK_ALGORITHM_SHA256
+        algorithm: HAWK_ALGORITHM_SHA256,
       };
 
     // Atlassian ASAP
@@ -178,7 +178,7 @@ export function newAuth(type: string, oldAuth: RequestAuthentication = {}): Requ
         audience: '',
         additionalClaims: '',
         keyId: '',
-        privateKey: ''
+        privateKey: '',
       };
 
     // Types needing no defaults
@@ -204,21 +204,21 @@ export function newBodyRaw(rawBody: string, contentType?: string): RequestBody {
 export function newBodyFormUrlEncoded(parameters: Array<RequestBodyParameter> | null): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FORM_URLENCODED,
-    params: parameters || []
+    params: parameters || [],
   };
 }
 
 export function newBodyFile(path: string): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FILE,
-    fileName: path
+    fileName: path,
   };
 }
 
 export function newBodyForm(parameters: Array<RequestBodyParameter>): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FORM_DATA,
-    params: parameters || []
+    params: parameters || [],
   };
 }
 
@@ -253,7 +253,7 @@ export function updateMimeType(
   request: Request,
   mimeType: string,
   doCreate: boolean = false,
-  savedBody: RequestBody = {}
+  savedBody: RequestBody = {},
 ): Promise<Request> {
   let headers = request.headers ? [...request.headers] : [];
   const contentTypeHeader = getContentTypeHeader(headers);

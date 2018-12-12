@@ -10,7 +10,7 @@ export const canDuplicate = false;
 type BasePluginData = {
   plugin: string,
   key: string,
-  value: string
+  value: string,
 };
 
 export type PluginData = BaseModel & BasePluginData;
@@ -19,7 +19,7 @@ export function init(): BasePluginData {
   return {
     plugin: '',
     key: '',
-    value: ''
+    value: '',
   };
 }
 

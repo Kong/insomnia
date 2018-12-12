@@ -5,8 +5,8 @@ module.exports = {
     key: 'c',
     title: 'C',
     extname: '.c',
-    default: 'libcurl'
+    default: 'libcurl',
   },
 
-  libcurl: require('./libcurl')
+  libcurl: require('./libcurl'),
 };

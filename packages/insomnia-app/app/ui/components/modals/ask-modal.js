@@ -12,7 +12,7 @@ class AskModal extends PureComponent {
 
     this.state = {
       title: '',
-      message: ''
+      message: '',
     };
   }
 

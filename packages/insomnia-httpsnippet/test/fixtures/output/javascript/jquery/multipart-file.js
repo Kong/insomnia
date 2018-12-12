@@ -10,7 +10,7 @@ var settings = {
   processData: false,
   contentType: false,
   mimeType: 'multipart/form-data',
-  data: form
+  data: form,
 };
 
 $.ajax(settings).done(function(response) {

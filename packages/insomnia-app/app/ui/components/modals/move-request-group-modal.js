@@ -11,12 +11,12 @@ import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 
 type Props = {
-  workspaces: Array<Workspace>
+  workspaces: Array<Workspace>,
 };
 
 type State = {
   requestGroup: RequestGroup | null,
-  selectedWorkspaceId: string | null
+  selectedWorkspaceId: string | null,
 };
 
 @autobind
@@ -28,7 +28,7 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
 
     this.state = {
       requestGroup: null,
-      selectedWorkspaceId: null
+      selectedWorkspaceId: null,
     };
   }
 
@@ -53,7 +53,7 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
     await models.requestGroup.update(newRequestGroup, {
       sortKey: -1e9,
       parentId: selectedWorkspaceId,
-      name: requestGroup.name // Because duplicating will add (Copy) suffix
+      name: requestGroup.name, // Because duplicating will add (Copy) suffix
     });
     this.hide();
   }

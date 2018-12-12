@@ -8,7 +8,7 @@ export type Hotkey = {
   alt: boolean,
   shift: boolean,
   keycode: number | Array<number>,
-  metaIsCtrl?: boolean
+  metaIsCtrl?: boolean,
 };
 
 export const SHOW_WORKSPACE_SETTINGS: Hotkey = {
@@ -16,7 +16,7 @@ export const SHOW_WORKSPACE_SETTINGS: Hotkey = {
   meta: true,
   alt: false,
   shift: true,
-  keycode: keycodes.comma
+  keycode: keycodes.comma,
 };
 
 export const SHOW_REQUEST_SETTINGS: Hotkey = {
@@ -24,7 +24,7 @@ export const SHOW_REQUEST_SETTINGS: Hotkey = {
   meta: true,
   alt: true,
   shift: true,
-  keycode: keycodes.comma
+  keycode: keycodes.comma,
 };
 
 export const SHOW_KEYBOARD_SHORTCUTS: Hotkey = {
@@ -32,7 +32,7 @@ export const SHOW_KEYBOARD_SHORTCUTS: Hotkey = {
   meta: true,
   alt: false,
   shift: true,
-  keycode: keycodes.forwardslash
+  keycode: keycodes.forwardslash,
 };
 
 export const SHOW_SETTINGS: Hotkey = {
@@ -40,7 +40,7 @@ export const SHOW_SETTINGS: Hotkey = {
   meta: true,
   alt: false,
   shift: false,
-  keycode: keycodes.comma
+  keycode: keycodes.comma,
 };
 
 export const TOGGLE_MAIN_MENU: Hotkey = {
@@ -48,7 +48,7 @@ export const TOGGLE_MAIN_MENU: Hotkey = {
   meta: true,
   alt: true,
   shift: false,
-  keycode: keycodes.comma
+  keycode: keycodes.comma,
 };
 
 export const TOGGLE_SIDEBAR: Hotkey = {
@@ -56,7 +56,7 @@ export const TOGGLE_SIDEBAR: Hotkey = {
   meta: true,
   alt: false,
   shift: false,
-  keycode: keycodes.backslash
+  keycode: keycodes.backslash,
 };
 
 export const SHOW_QUICK_SWITCHER: Hotkey = {
@@ -64,7 +64,7 @@ export const SHOW_QUICK_SWITCHER: Hotkey = {
   meta: true,
   alt: false,
   shift: false,
-  keycode: keycodes.p
+  keycode: keycodes.p,
 };
 
 export const RELOAD_PLUGINS: Hotkey = {
@@ -72,7 +72,7 @@ export const RELOAD_PLUGINS: Hotkey = {
   meta: true,
   alt: false,
   shift: true,
-  keycode: keycodes.r
+  keycode: keycodes.r,
 };
 
 export const SHOW_AUTOCOMPLETE: Hotkey = {
@@ -81,7 +81,7 @@ export const SHOW_AUTOCOMPLETE: Hotkey = {
   metaIsCtrl: true,
   alt: false,
   shift: false,
-  keycode: keycodes.space
+  keycode: keycodes.space,
 };
 
 export const SEND_REQUEST: Hotkey = {
@@ -89,7 +89,7 @@ export const SEND_REQUEST: Hotkey = {
   meta: true,
   alt: false,
   shift: false,
-  keycode: [keycodes.enter, keycodes.r]
+  keycode: [keycodes.enter, keycodes.r],
 };
 
 export const SEND_REQUEST_F5: Hotkey = {
@@ -97,7 +97,7 @@ export const SEND_REQUEST_F5: Hotkey = {
   meta: false,
   alt: false,
   shift: false,
-  keycode: keycodes.f5
+  keycode: keycodes.f5,
 };
 
 export const SHOW_SEND_OPTIONS: Hotkey = {
@@ -105,7 +105,7 @@ export const SHOW_SEND_OPTIONS: Hotkey = {
   meta: true,
   alt: false,
   shift: true,
-  keycode: keycodes.enter
+  keycode: keycodes.enter,
 };
 
 export const SHOW_ENVIRONMENTS: Hotkey = {
@@ -113,7 +113,7 @@ export const SHOW_ENVIRONMENTS: Hotkey = {
   meta: true,
   alt: false,
   shift: false,
-  keycode: keycodes.e
+  keycode: keycodes.e,
 };
 
 export const TOGGLE_ENVIRONMENTS_MENU: Hotkey = {
@@ -121,7 +121,7 @@ export const TOGGLE_ENVIRONMENTS_MENU: Hotkey = {
   meta: true,
   alt: false,
   shift: true,
-  keycode: keycodes.e
+  keycode: keycodes.e,
 };
 
 export const TOGGLE_METHOD_DROPDOWN: Hotkey = {
@@ -129,7 +129,7 @@ export const TOGGLE_METHOD_DROPDOWN: Hotkey = {
   meta: true,
   alt: false,
   shift: true,
-  keycode: keycodes.l
+  keycode: keycodes.l,
 };
 
 export const TOGGLE_HISTORY_DROPDOWN: Hotkey = {
@@ -137,7 +137,7 @@ export const TOGGLE_HISTORY_DROPDOWN: Hotkey = {
   meta: true,
   alt: false,
   shift: true,
-  keycode: keycodes.h
+  keycode: keycodes.h,
 };
 
 export const FOCUS_URL: Hotkey = {
@@ -145,7 +145,7 @@ export const FOCUS_URL: Hotkey = {
   meta: true,
   alt: false,
   shift: false,
-  keycode: keycodes.l
+  keycode: keycodes.l,
 };
 
 export const GENERATE_CODE: Hotkey = {
@@ -153,7 +153,7 @@ export const GENERATE_CODE: Hotkey = {
   meta: true,
   alt: false,
   shift: true,
-  keycode: keycodes.g
+  keycode: keycodes.g,
 };
 
 export const FOCUS_FILTER: Hotkey = {
@@ -161,7 +161,7 @@ export const FOCUS_FILTER: Hotkey = {
   meta: true,
   alt: false,
   shift: true,
-  keycode: keycodes.f
+  keycode: keycodes.f,
 };
 
 export const FOCUS_RESPONSE: Hotkey = {
@@ -169,7 +169,7 @@ export const FOCUS_RESPONSE: Hotkey = {
   meta: true,
   alt: false,
   shift: false,
-  keycode: keycodes.singlequote
+  keycode: keycodes.singlequote,
 };
 
 export const SHOW_COOKIES: Hotkey = {
@@ -177,7 +177,7 @@ export const SHOW_COOKIES: Hotkey = {
   meta: true,
   alt: false,
   shift: false,
-  keycode: keycodes.k
+  keycode: keycodes.k,
 };
 
 export const CREATE_REQUEST: Hotkey = {
@@ -185,7 +185,7 @@ export const CREATE_REQUEST: Hotkey = {
   meta: true,
   alt: false,
   shift: false,
-  keycode: keycodes.n
+  keycode: keycodes.n,
 };
 
 export const DELETE_REQUEST: Hotkey = {
@@ -193,7 +193,7 @@ export const DELETE_REQUEST: Hotkey = {
   meta: true,
   alt: false,
   shift: true,
-  keycode: keycodes.delete
+  keycode: keycodes.delete,
 };
 
 export const CREATE_FOLDER: Hotkey = {
@@ -201,7 +201,7 @@ export const CREATE_FOLDER: Hotkey = {
   meta: true,
   alt: false,
   shift: true,
-  keycode: keycodes.n
+  keycode: keycodes.n,
 };
 
 export const DUPLICATE_REQUEST: Hotkey = {
@@ -209,7 +209,7 @@ export const DUPLICATE_REQUEST: Hotkey = {
   meta: true,
   alt: false,
   shift: false,
-  keycode: keycodes.d
+  keycode: keycodes.d,
 };
 
 export const CLOSE_DROPDOWN: Hotkey = {
@@ -217,7 +217,7 @@ export const CLOSE_DROPDOWN: Hotkey = {
   meta: false,
   alt: false,
   shift: false,
-  keycode: keycodes.esc
+  keycode: keycodes.esc,
 };
 
 export const CLOSE_MODAL: Hotkey = {
@@ -225,7 +225,7 @@ export const CLOSE_MODAL: Hotkey = {
   meta: false,
   alt: false,
   shift: false,
-  keycode: keycodes.esc
+  keycode: keycodes.esc,
 };
 
 export const UNCOVER_VARIABLES: Hotkey = {
@@ -233,7 +233,7 @@ export const UNCOVER_VARIABLES: Hotkey = {
   meta: false,
   alt: true,
   shift: true,
-  keycode: keycodes.u
+  keycode: keycodes.u,
 };
 
 export function pressedHotKey(e: KeyboardEvent, definition: Hotkey): boolean {

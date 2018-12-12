@@ -10,7 +10,7 @@ import {
   getAppName,
   getAppVersion,
   isDevelopment,
-  isMac
+  isMac,
 } from '../common/constants';
 import * as misc from '../common/misc';
 
@@ -59,8 +59,8 @@ export function createWindow() {
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, 'static/icon.png'),
     webPreferences: {
-      zoomFactor: zoomFactor
-    }
+      zoomFactor: zoomFactor,
+    },
   });
 
   // BrowserWindow doesn't have an option for this, so we have to do it manually :(
@@ -108,7 +108,7 @@ export function createWindow() {
             return;
           }
           window.webContents.send('toggle-preferences');
-        }
+        },
       },
       {
         label: `${MNEMONIC_SYM}Changelog`,
@@ -117,12 +117,12 @@ export function createWindow() {
             return;
           }
           misc.clickLink(`${CHANGELOG_BASE_URL}/${getAppVersion()}/`);
-        }
+        },
       },
       ...(isMac() ? [{ type: 'separator' }, { role: 'hide' }, { role: 'hideothers' }] : []),
       { type: 'separator' },
-      { label: `${MNEMONIC_SYM}Quit`, accelerator: 'CmdOrCtrl+Q', click: () => app.quit() }
-    ]
+      { label: `${MNEMONIC_SYM}Quit`, accelerator: 'CmdOrCtrl+Q', click: () => app.quit() },
+    ],
   };
 
   const editMenu = {
@@ -137,9 +137,9 @@ export function createWindow() {
       {
         label: `Select ${MNEMONIC_SYM}All`,
         accelerator: 'CmdOrCtrl+A',
-        selector: 'selectAll:'
-      }
-    ]
+        selector: 'selectAll:',
+      },
+    ],
   };
 
   const viewMenu = {
@@ -158,7 +158,7 @@ export function createWindow() {
           const zoomFactor = 1;
           window.webContents.setZoomFactor(zoomFactor);
           saveZoomFactor(zoomFactor);
-        }
+        },
       },
       {
         label: `Zoom ${MNEMONIC_SYM}In`,
@@ -173,7 +173,7 @@ export function createWindow() {
           window.webContents.setZoomFactor(zoomFactor);
 
           saveZoomFactor(zoomFactor);
-        }
+        },
       },
       {
         label: `Zoom ${MNEMONIC_SYM}Out`,
@@ -187,7 +187,7 @@ export function createWindow() {
           const zoomFactor = Math.max(0.5, getZoomFactor() - 0.05);
           window.webContents.setZoomFactor(zoomFactor);
           saveZoomFactor(zoomFactor);
-        }
+        },
       },
       {
         label: `Toggle ${MNEMONIC_SYM}Sidebar`,
@@ -199,13 +199,13 @@ export function createWindow() {
           }
 
           window.webContents.send('toggle-sidebar');
-        }
+        },
       },
       {
         label: `Toggle ${MNEMONIC_SYM}DevTools`,
-        click: () => mainWindow.toggleDevTools()
-      }
-    ]
+        click: () => mainWindow.toggleDevTools(),
+      },
+    ],
   };
 
   const windowMenu = {
@@ -213,8 +213,8 @@ export function createWindow() {
     role: 'window',
     submenu: [
       { label: `${MNEMONIC_SYM}Minimize`, role: 'minimize' },
-      ...(isMac() ? [{ label: `${MNEMONIC_SYM}Close`, role: 'close' }] : [])
-    ]
+      ...(isMac() ? [{ label: `${MNEMONIC_SYM}Close`, role: 'close' }] : []),
+    ],
   };
 
   const helpMenu = {
@@ -226,7 +226,7 @@ export function createWindow() {
         label: `Contact ${MNEMONIC_SYM}Support`,
         click: () => {
           shell.openExternal('https://insomnia.rest/support/');
-        }
+        },
       },
       {
         label: `${MNEMONIC_SYM}Keyboard Shortcuts`,
@@ -236,23 +236,23 @@ export function createWindow() {
             return;
           }
           window.webContents.send('toggle-preferences-shortcuts');
-        }
+        },
       },
       {
         label: `Show App ${MNEMONIC_SYM}Data Folder`,
         click: (menuItem, window, e) => {
           const directory = misc.getDataDirectory();
           shell.showItemInFolder(directory);
-        }
+        },
       },
       {
         label: `Insomnia ${MNEMONIC_SYM}Help`,
         accelerator: !isMac() ? 'F1' : null,
         click: () => {
           shell.openExternal('https://support.insomnia.rest');
-        }
-      }
-    ]
+        },
+      },
+    ],
   };
 
   if (!isMac()) {
@@ -270,10 +270,10 @@ export function createWindow() {
             'V8 ' + process.versions.v8,
             'Architecture ' + process.arch,
             '', // Blank line before libcurl
-            Curl.getVersion()
-          ].join('\n')
+            Curl.getVersion(),
+          ].join('\n'),
         });
-      }
+      },
     });
   }
 
@@ -284,12 +284,12 @@ export function createWindow() {
       {
         label: `${MNEMONIC_SYM}Reload`,
         accelerator: 'Shift+F5',
-        click: () => mainWindow.reload()
+        click: () => mainWindow.reload(),
       },
       {
         label: `Toggle ${MNEMONIC_SYM}DevTools`,
         accelerator: 'Alt+CmdOrCtrl+I',
-        click: () => mainWindow.toggleDevTools()
+        click: () => mainWindow.toggleDevTools(),
       },
       {
         label: `Resize to Defaul${MNEMONIC_SYM}t`,
@@ -298,8 +298,8 @@ export function createWindow() {
             x: 100,
             y: 100,
             width: DEFAULT_WIDTH,
-            height: DEFAULT_HEIGHT
-          })
+            height: DEFAULT_HEIGHT,
+          }),
       },
       {
         label: `Take ${MNEMONIC_SYM}Screenshot`,
@@ -309,9 +309,9 @@ export function createWindow() {
             const dir = app.getPath('desktop');
             fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
           });
-        }
-      }
-    ]
+        },
+      },
+    ],
   };
 
   const toolsMenu = {
@@ -327,9 +327,9 @@ export function createWindow() {
           }
 
           window.webContents.send('reload-plugins');
-        }
-      }
-    ]
+        },
+      },
+    ],
   };
 
   let template = [];
@@ -358,14 +358,14 @@ function showUnresponsiveModal() {
       defaultId: 1,
       cancelId: 0,
       title: 'Unresponsive',
-      message: 'Insomnia has become unresponsive. Do you want to reload?'
+      message: 'Insomnia has become unresponsive. Do you want to reload?',
     },
     id => {
       if (id === 1) {
         mainWindow.destroy();
         createWindow();
       }
-    }
+    },
   );
 }
 

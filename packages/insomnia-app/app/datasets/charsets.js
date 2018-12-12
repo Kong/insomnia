@@ -117,5 +117,5 @@ export default [
   'x-mac-icelandic',
   'x-mac-japanese',
   'x-mac-korean',
-  'x-mac-turkish'
+  'x-mac-turkish',
 ];

@@ -22,7 +22,7 @@ describe('setDefaults()', () => {
       method: 'GET',
       parameters: [],
       headers: [],
-      authentication: {}
+      authentication: {},
     });
   });
 
@@ -31,7 +31,7 @@ describe('setDefaults()', () => {
       _type: 'request_group',
       parentId: '__WORKSPACE_ID__',
       name: 'Imported',
-      environment: {}
+      environment: {},
     });
   });
 
@@ -40,7 +40,7 @@ describe('setDefaults()', () => {
       _type: 'environment',
       parentId: '__BASE_ENVIRONMENT_ID__',
       name: 'Imported Environment',
-      data: {}
+      data: {},
     });
   });
 });

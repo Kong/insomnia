@@ -32,7 +32,7 @@ class NTLMAuth extends PureComponent {
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
 
     return (
@@ -48,7 +48,7 @@ class NTLMAuth extends PureComponent {
               <td className="wide">
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
-                    'form-control--inactive': authentication.disabled
+                    'form-control--inactive': authentication.disabled,
                   })}>
                   <OneLineEditor
                     type="text"
@@ -73,7 +73,7 @@ class NTLMAuth extends PureComponent {
               <td className="wide">
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
-                    'form-control--inactive': authentication.disabled
+                    'form-control--inactive': authentication.disabled,
                   })}>
                   <OneLineEditor
                     type={showPasswords ? 'text' : 'password'}
@@ -126,7 +126,7 @@ NTLMAuth.propTypes = {
   onChange: PropTypes.func.isRequired,
   authentication: PropTypes.object.isRequired,
   showPasswords: PropTypes.bool.isRequired,
-  isVariableUncovered: PropTypes.bool.isRequired
+  isVariableUncovered: PropTypes.bool.isRequired,
 };
 
 export default NTLMAuth;

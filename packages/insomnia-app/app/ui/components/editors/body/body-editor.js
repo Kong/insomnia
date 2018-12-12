@@ -12,14 +12,14 @@ import {
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   CONTENT_TYPE_GRAPHQL,
-  getContentTypeFromHeaders
+  getContentTypeFromHeaders,
 } from '../../../../common/constants';
 import type { Request, RequestBodyParameter } from '../../../../models/request';
 import {
   newBodyFile,
   newBodyForm,
   newBodyFormUrlEncoded,
-  newBodyRaw
+  newBodyRaw,
 } from '../../../../models/request';
 import GraphQLEditor from './graph-ql-editor';
 import { getContentTypeHeader } from '../../../../common/misc';
@@ -39,7 +39,7 @@ type Props = {
   workspace: Workspace,
   settings: Settings,
   environmentId: string,
-  isVariableUncovered: boolean
+  isVariableUncovered: boolean,
 };
 
 @autobind
@@ -99,7 +99,7 @@ class BodyEditor extends React.PureComponent<Props> {
           if (saidYes) {
             onChangeHeaders(headers);
           }
-        }
+        },
       });
     }
 
@@ -116,7 +116,7 @@ class BodyEditor extends React.PureComponent<Props> {
       environmentId,
       handleRender: render,
       handleGetRenderContext: getRenderContext,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
 
     const noRender = request.settingDisableRenderRequestBody;

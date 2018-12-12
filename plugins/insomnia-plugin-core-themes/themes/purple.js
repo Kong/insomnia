@@ -3,13 +3,13 @@ module.exports = {
   displayName: 'Purple',
   theme: {
     foreground: {
-      default: '#555'
+      default: '#555',
     },
     styles: {
       link: {
         foreground: {
-          default: '#68a9a2'
-        }
+          default: '#68a9a2',
+        },
       },
       sidebar: {
         background: {
@@ -19,10 +19,10 @@ module.exports = {
           warning: '#ffac49',
           danger: '#ff7472',
           surprise: '#c5bbff',
-          info: '#75ddff'
+          info: '#75ddff',
         },
         foreground: {
-          default: '#fff'
+          default: '#fff',
         },
         highlight: {
           default: 'rgb(217, 204, 255)',
@@ -31,22 +31,22 @@ module.exports = {
           sm: 'rgba(207, 190, 255, 0.2)',
           md: 'rgba(207, 190, 255, 0.3)',
           lg: 'rgba(207, 190, 255, 0.5)',
-          xl: 'rgba(207, 190, 255, 0.8)'
-        }
+          xl: 'rgba(207, 190, 255, 0.8)',
+        },
       },
       sidebarHeader: {
         foreground: {
-          default: '#eee'
-        }
+          default: '#eee',
+        },
       },
       transparentOverlay: {
         background: {
-          default: 'rgba(243, 242, 250, 0.8)'
+          default: 'rgba(243, 242, 250, 0.8)',
         },
         foreground: {
-          default: '#555'
-        }
-      }
-    }
-  }
+          default: '#555',
+        },
+      },
+    },
+  },
 };

@@ -4,7 +4,7 @@ import * as db from '../common/database';
 import {
   DEFAULT_SIDEBAR_WIDTH,
   DEFAULT_PANE_WIDTH,
-  DEFAULT_PANE_HEIGHT
+  DEFAULT_PANE_HEIGHT,
 } from '../common/constants';
 
 export const name = 'Workspace Meta';
@@ -20,7 +20,7 @@ type BaseWorkspaceMeta = {
   sidebarWidth: number,
   paneWidth: number,
   paneHeight: number,
-  hasSeen: boolean
+  hasSeen: boolean,
 };
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
@@ -35,7 +35,7 @@ export function init(): BaseWorkspaceMeta {
     sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
     paneWidth: DEFAULT_PANE_WIDTH,
     paneHeight: DEFAULT_PANE_HEIGHT,
-    hasSeen: true
+    hasSeen: true,
   };
 }
 

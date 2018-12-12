@@ -204,5 +204,5 @@ export default [
   'video/x-f4v',
   'video/x-fli',
   'video/x-flv',
-  'video/x-m4v'
+  'video/x-m4v',
 ];

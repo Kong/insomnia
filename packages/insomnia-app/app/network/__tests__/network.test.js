@@ -10,7 +10,7 @@ import {
   CONTENT_TYPE_FILE,
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
-  getAppVersion
+  getAppVersion,
 } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
 import { globalBeforeEach } from '../../__jest__/before-each';
@@ -32,7 +32,7 @@ describe('actuallySend()', () => {
         domain: 'notlocalhost',
         path: '/',
         hostOnly: true,
-        lastAccessed: new Date('2096-10-05T04:40:49.505Z')
+        lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -42,14 +42,14 @@ describe('actuallySend()', () => {
         domain: 'localhost',
         path: '/',
         hostOnly: true,
-        lastAccessed: new Date('2096-10-05T04:40:49.505Z')
-      }
+        lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
+      },
     ];
 
     const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
     await models.cookieJar.update(cookieJar, {
       parentId: workspace._id,
-      cookies
+      cookies,
     });
 
     const request = Object.assign(models.request.init(), {
@@ -60,14 +60,14 @@ describe('actuallySend()', () => {
       method: 'POST',
       body: {
         mimeType: CONTENT_TYPE_FORM_URLENCODED,
-        params: [{ name: 'foo', value: 'bar' }]
+        params: [{ name: 'foo', value: 'bar' }],
       },
       url: 'http://localhost',
       authentication: {
         type: AUTH_BASIC,
         username: 'user',
-        password: 'pass'
-      }
+        password: 'pass',
+      },
     });
 
     const renderedRequest = await getRenderedRequest(request);
@@ -75,7 +75,7 @@ describe('actuallySend()', () => {
       renderedRequest,
       CONTEXT,
       workspace,
-      settings
+      settings,
     );
 
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -84,12 +84,12 @@ describe('actuallySend()', () => {
       meta: {},
       features: {
         NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true
+        NO_DATA_PARSING: true,
       },
       options: {
         COOKIELIST: [
           'notlocalhost\tFALSE\t/\tFALSE\t4000855249\tfoo\tbarrrrr',
-          'localhost\tFALSE\t/\tFALSE\t4000855249\tfoo\tbar'
+          'localhost\tFALSE\t/\tFALSE\t4000855249\tfoo\tbar',
         ],
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
@@ -100,7 +100,7 @@ describe('actuallySend()', () => {
           'Expect:',
           'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding:'
+          'Accept-Encoding:',
         ],
         NOPROGRESS: false,
         USERNAME: 'user',
@@ -111,8 +111,8 @@ describe('actuallySend()', () => {
         TIMEOUT_MS: 0,
         URL: 'http://localhost/?foo%20bar=hello%26world',
         USERAGENT: `insomnia/${getAppVersion()}`,
-        VERBOSE: true
-      }
+        VERBOSE: true,
+      },
     });
   });
 
@@ -129,10 +129,10 @@ describe('actuallySend()', () => {
         params: [
           { name: 'foo', value: 'bar' },
           { name: 'bar', value: '' },
-          { name: '', value: 'value' }
-        ]
+          { name: '', value: 'value' },
+        ],
       },
-      url: 'http://localhost'
+      url: 'http://localhost',
     });
 
     const renderedRequest = await getRenderedRequest(request);
@@ -140,7 +140,7 @@ describe('actuallySend()', () => {
       renderedRequest,
       CONTEXT,
       workspace,
-      settings
+      settings,
     );
 
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -149,7 +149,7 @@ describe('actuallySend()', () => {
       meta: {},
       features: {
         NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true
+        NO_DATA_PARSING: true,
       },
       options: {
         POST: 1,
@@ -161,7 +161,7 @@ describe('actuallySend()', () => {
           'Expect:',
           'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding:'
+          'Accept-Encoding:',
         ],
         NOPROGRESS: false,
         POSTFIELDS: 'foo=bar&bar=&=value',
@@ -169,8 +169,8 @@ describe('actuallySend()', () => {
         TIMEOUT_MS: 0,
         URL: 'http://localhost/',
         USERAGENT: `insomnia/${getAppVersion()}`,
-        VERBOSE: true
-      }
+        VERBOSE: true,
+      },
     });
   });
 
@@ -186,7 +186,7 @@ describe('actuallySend()', () => {
         domain: 'notlocalhost',
         path: '/',
         hostOnly: true,
-        lastAccessed: new Date('2096-10-05T04:40:49.505Z')
+        lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -196,13 +196,13 @@ describe('actuallySend()', () => {
         domain: 'localhost',
         path: '/',
         hostOnly: true,
-        lastAccessed: new Date('2096-10-05T04:40:49.505Z')
-      }
+        lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
+      },
     ];
 
     await models.cookieJar.create({
       parentId: workspace._id,
-      cookies
+      cookies,
     });
 
     const request = Object.assign(models.request.init(), {
@@ -213,16 +213,16 @@ describe('actuallySend()', () => {
       method: 'GET',
       body: {
         mimeType: CONTENT_TYPE_FORM_URLENCODED,
-        params: [{ name: 'foo', value: 'bar' }]
+        params: [{ name: 'foo', value: 'bar' }],
       },
       url: 'http://localhost',
       authentication: {
         type: AUTH_BASIC,
         username: 'user',
-        password: 'pass'
+        password: 'pass',
       },
       settingStoreCookies: false,
-      settingSendCookies: false
+      settingSendCookies: false,
     });
 
     const renderedRequest = await getRenderedRequest(request);
@@ -230,7 +230,7 @@ describe('actuallySend()', () => {
       renderedRequest,
       CONTEXT,
       workspace,
-      settings
+      settings,
     );
 
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -239,7 +239,7 @@ describe('actuallySend()', () => {
       meta: {},
       features: {
         NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true
+        NO_DATA_PARSING: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -250,7 +250,7 @@ describe('actuallySend()', () => {
           'Expect:',
           'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding:'
+          'Accept-Encoding:',
         ],
         NOPROGRESS: false,
         USERNAME: 'user',
@@ -260,8 +260,8 @@ describe('actuallySend()', () => {
         TIMEOUT_MS: 0,
         URL: 'http://localhost/?foo%20bar=hello%26world',
         USERAGENT: `insomnia/${getAppVersion()}`,
-        VERBOSE: true
-      }
+        VERBOSE: true,
+      },
     });
   });
 
@@ -277,7 +277,7 @@ describe('actuallySend()', () => {
       headers: [{ name: 'Content-Type', value: 'application/octet-stream' }],
       url: 'http://localhost',
       method: 'POST',
-      body: { mimeType: CONTENT_TYPE_FILE, fileName }
+      body: { mimeType: CONTENT_TYPE_FILE, fileName },
     });
 
     const renderedRequest = await getRenderedRequest(request);
@@ -285,7 +285,7 @@ describe('actuallySend()', () => {
       renderedRequest,
       CONTEXT,
       workspace,
-      settings
+      settings,
     );
 
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -295,7 +295,7 @@ describe('actuallySend()', () => {
       meta: {},
       features: {
         NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true
+        NO_DATA_PARSING: true,
       },
       options: {
         POST: 1,
@@ -308,7 +308,7 @@ describe('actuallySend()', () => {
           'Expect:',
           'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding:'
+          'Accept-Encoding:',
         ],
         NOPROGRESS: false,
         INFILESIZE_LARGE: 26,
@@ -318,8 +318,8 @@ describe('actuallySend()', () => {
         UPLOAD: 1,
         URL: 'http://localhost/',
         USERAGENT: `insomnia/${getAppVersion()}`,
-        VERBOSE: true
-      }
+        VERBOSE: true,
+      },
     });
   });
 
@@ -343,9 +343,9 @@ describe('actuallySend()', () => {
 
           // Some extra params
           { name: 'a', value: 'AA' },
-          { name: 'baz', value: 'qux', disabled: true }
-        ]
-      }
+          { name: 'baz', value: 'qux', disabled: true },
+        ],
+      },
     });
 
     const renderedRequest = await getRenderedRequest(request);
@@ -353,7 +353,7 @@ describe('actuallySend()', () => {
       renderedRequest,
       CONTEXT,
       workspace,
-      settings
+      settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);
@@ -361,7 +361,7 @@ describe('actuallySend()', () => {
       meta: {},
       features: {
         NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true
+        NO_DATA_PARSING: true,
       },
       options: {
         POST: 1,
@@ -374,7 +374,7 @@ describe('actuallySend()', () => {
           'Expect:',
           'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding:'
+          'Accept-Encoding:',
         ],
         INFILESIZE_LARGE: 244,
         NOPROGRESS: false,
@@ -389,15 +389,15 @@ describe('actuallySend()', () => {
           '',
           'AA',
           `--${DEFAULT_BOUNDARY}--`,
-          ''
+          '',
         ].join('\r\n'),
         PROXY: '',
         TIMEOUT_MS: 0,
         URL: 'http://localhost/',
         UPLOAD: 1,
         USERAGENT: `insomnia/${getAppVersion()}`,
-        VERBOSE: true
-      }
+        VERBOSE: true,
+      },
     });
   });
 
@@ -409,7 +409,7 @@ describe('actuallySend()', () => {
       _id: 'req_123',
       parentId: workspace._id,
       url: 'http://unix:/my/socket:/my/path',
-      method: 'GET'
+      method: 'GET',
     });
 
     const renderedRequest = await getRenderedRequest(request);
@@ -417,7 +417,7 @@ describe('actuallySend()', () => {
       renderedRequest,
       CONTEXT,
       workspace,
-      settings
+      settings,
     );
 
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -426,7 +426,7 @@ describe('actuallySend()', () => {
       meta: {},
       features: {
         NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true
+        NO_DATA_PARSING: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -440,8 +440,8 @@ describe('actuallySend()', () => {
         URL: 'http://my/path',
         UNIX_SOCKET_PATH: '/my/socket',
         USERAGENT: `insomnia/${getAppVersion()}`,
-        VERBOSE: true
-      }
+        VERBOSE: true,
+      },
     });
   });
 
@@ -453,7 +453,7 @@ describe('actuallySend()', () => {
       _id: 'req_123',
       parentId: workspace._id,
       url: 'http://localhost:3000/foo/bar',
-      method: 'HEAD'
+      method: 'HEAD',
     });
 
     const renderedRequest = await getRenderedRequest(request);
@@ -461,7 +461,7 @@ describe('actuallySend()', () => {
       renderedRequest,
       CONTEXT,
       workspace,
-      settings
+      settings,
     );
 
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -470,7 +470,7 @@ describe('actuallySend()', () => {
       meta: {},
       features: {
         NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true
+        NO_DATA_PARSING: true,
       },
       options: {
         NOBODY: 1,
@@ -483,8 +483,8 @@ describe('actuallySend()', () => {
         TIMEOUT_MS: 0,
         URL: 'http://localhost:3000/foo/bar',
         USERAGENT: `insomnia/${getAppVersion()}`,
-        VERBOSE: true
-      }
+        VERBOSE: true,
+      },
     });
   });
 
@@ -496,7 +496,7 @@ describe('actuallySend()', () => {
       _id: 'req_123',
       parentId: workspace._id,
       url: 'http://unix:3000/my/path',
-      method: 'GET'
+      method: 'GET',
     });
 
     const renderedRequest = await getRenderedRequest(request);
@@ -504,7 +504,7 @@ describe('actuallySend()', () => {
       renderedRequest,
       CONTEXT,
       workspace,
-      settings
+      settings,
     );
 
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -513,7 +513,7 @@ describe('actuallySend()', () => {
       meta: {},
       features: {
         NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true
+        NO_DATA_PARSING: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -526,8 +526,8 @@ describe('actuallySend()', () => {
         TIMEOUT_MS: 0,
         URL: 'http://unix:3000/my/path',
         USERAGENT: `insomnia/${getAppVersion()}`,
-        VERBOSE: true
-      }
+        VERBOSE: true,
+      },
     });
   });
 
@@ -539,8 +539,8 @@ describe('actuallySend()', () => {
       _id: 'req_123',
       parentId: workspace._id,
       authentication: {
-        type: AUTH_NETRC
-      }
+        type: AUTH_NETRC,
+      },
     });
 
     const renderedRequest = await getRenderedRequest(request);
@@ -548,7 +548,7 @@ describe('actuallySend()', () => {
       renderedRequest,
       CONTEXT,
       workspace,
-      settings
+      settings,
     );
 
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -557,7 +557,7 @@ describe('actuallySend()', () => {
       meta: {},
       features: {
         NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true
+        NO_DATA_PARSING: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -571,8 +571,8 @@ describe('actuallySend()', () => {
         NETRC: 2,
         URL: '',
         USERAGENT: `insomnia/${getAppVersion()}`,
-        VERBOSE: true
-      }
+        VERBOSE: true,
+      },
     });
   });
 });
@@ -585,29 +585,29 @@ describe('_getAwsAuthHeaders', () => {
         type: AUTH_AWS_IAM,
         accessKeyId: 'AKIA99999999',
         secretAccessKey: 'SAK9999999999999',
-        sessionToken: 'ST9999999999999999'
+        sessionToken: 'ST9999999999999999',
       },
       headers: [{ name: 'content-type', value: 'application/json' }],
       body: { text: '{}' },
       method: 'POST',
-      url: 'https://ec2.us-west-2.amazonaws.com/path?query=q1'
+      url: 'https://ec2.us-west-2.amazonaws.com/path?query=q1',
     };
     const credentials = {
       accessKeyId: req.authentication.accessKeyId || '',
       secretAccessKey: req.authentication.secretAccessKey || '',
-      sessionToken: req.authentication.sessionToken || ''
+      sessionToken: req.authentication.sessionToken || '',
     };
     const headers = networkUtils._getAwsAuthHeaders(
       credentials,
       req.headers,
       req.body.text,
       req.url,
-      req.method
+      req.method,
     );
     expect(filterHeaders(headers, 'x-amz-date')[0].value).toMatch(/^\d{8}T\d{6}Z$/);
     expect(filterHeaders(headers, 'host')[0].value).toEqual('ec2.us-west-2.amazonaws.com');
     expect(filterHeaders(headers, 'authorization')[0].value).toMatch(
-      /^AWS4-HMAC-SHA256 Credential=AKIA99999999\/\d{8}\/us-west-2\/ec2\/aws4_request, SignedHeaders=content-length;content-type;host;x-amz-date;x-amz-security-token, Signature=[a-z0-9]*$/
+      /^AWS4-HMAC-SHA256 Credential=AKIA99999999\/\d{8}\/us-west-2\/ec2\/aws4_request, SignedHeaders=content-length;content-type;host;x-amz-date;x-amz-security-token, Signature=[a-z0-9]*$/,
     );
     expect(filterHeaders(headers, 'content-type')).toEqual([]);
   });
@@ -618,16 +618,16 @@ describe('_getAwsAuthHeaders', () => {
         type: AUTH_AWS_IAM,
         accessKeyId: 'AKIA99999999',
         secretAccessKey: 'SAK9999999999999',
-        sessionToken: 'ST99999999999999'
+        sessionToken: 'ST99999999999999',
       },
       headers: ['Accept: */*', 'Accept-Encoding:'],
       url: 'https://example.com',
-      method: 'GET'
+      method: 'GET',
     };
     const credentials = {
       accessKeyId: req.authentication.accessKeyId || '',
       secretAccessKey: req.authentication.secretAccessKey || '',
-      sessionToken: req.authentication.sessionToken || ''
+      sessionToken: req.authentication.sessionToken || '',
     };
     const headers = networkUtils._getAwsAuthHeaders(
       credentials,
@@ -636,13 +636,13 @@ describe('_getAwsAuthHeaders', () => {
       req.url,
       req.method,
       'us-west-2',
-      'ec2'
+      'ec2',
     );
 
     expect(filterHeaders(headers, 'x-amz-date')[0].value).toMatch(/^\d{8}T\d{6}Z$/);
     expect(filterHeaders(headers, 'host')[0].value).toEqual('example.com');
     expect(filterHeaders(headers, 'authorization')[0].value).toMatch(
-      /^AWS4-HMAC-SHA256 Credential=AKIA99999999\/\d{8}\/us-west-2\/ec2\/aws4_request, SignedHeaders=host;x-amz-date;x-amz-security-token, Signature=[a-z0-9]*$/
+      /^AWS4-HMAC-SHA256 Credential=AKIA99999999\/\d{8}\/us-west-2\/ec2\/aws4_request, SignedHeaders=host;x-amz-date;x-amz-security-token, Signature=[a-z0-9]*$/,
     );
     expect(filterHeaders(headers, 'content-type')).toEqual([]);
   });
@@ -660,7 +660,7 @@ describe('_parseHeaders', () => {
     'Duplicate: bar',
     'Date: Mon, 13 Nov 2017 22:06:28 GMT',
     'Foo', // Invalid header
-    ''
+    '',
   ];
 
   const minimalHeaders = ['HTTP/1.1 301', ''];
@@ -680,9 +680,9 @@ describe('_parseHeaders', () => {
           { name: 'Duplicate', value: 'foo' },
           { name: 'Duplicate', value: 'bar' },
           { name: 'Date', value: 'Mon, 13 Nov 2017 22:06:28 GMT' },
-          { name: 'Foo', value: '' }
-        ]
-      }
+          { name: 'Foo', value: '' },
+        ],
+      },
     ]);
   });
 
@@ -701,9 +701,9 @@ describe('_parseHeaders', () => {
           { name: 'Duplicate', value: 'foo' },
           { name: 'Duplicate', value: 'bar' },
           { name: 'Date', value: 'Mon, 13 Nov 2017 22:06:28 GMT' },
-          { name: 'Foo', value: '' }
-        ]
-      }
+          { name: 'Foo', value: '' },
+        ],
+      },
     ]);
   });
 
@@ -723,15 +723,15 @@ describe('_parseHeaders', () => {
           { name: 'Duplicate', value: 'foo' },
           { name: 'Duplicate', value: 'bar' },
           { name: 'Date', value: 'Mon, 13 Nov 2017 22:06:28 GMT' },
-          { name: 'Foo', value: '' }
-        ]
+          { name: 'Foo', value: '' },
+        ],
       },
       {
         code: 301,
         headers: [],
         reason: '',
-        version: 'HTTP/1.1'
-      }
+        version: 'HTTP/1.1',
+      },
     ]);
   });
 });

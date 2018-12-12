@@ -28,7 +28,7 @@ class Dropdown extends PureComponent {
       filterActiveIndex: 0,
 
       // Use this to force new menu every time dropdown opens
-      uniquenessKey: 0
+      uniquenessKey: 0,
     };
   }
 
@@ -72,7 +72,7 @@ class Dropdown extends PureComponent {
       filter: newFilter,
       filterItems: newFilter ? filterItems : null,
       filterActiveIndex: filterItems[0] || -1,
-      filterVisible: this.state.filterVisible ? true : newFilter.length > 0
+      filterVisible: this.state.filterVisible ? true : newFilter.length > 0,
     });
   }
 
@@ -181,7 +181,7 @@ class Dropdown extends PureComponent {
       this._dropdownList.style.left = `${left + offset}px`;
       this._dropdownList.style.maxWidth = `${Math.min(
         dropdownListRect.width,
-        bodyRect.width - left - offset
+        bodyRect.width - left - offset,
       )}px`;
     }
 
@@ -268,7 +268,7 @@ class Dropdown extends PureComponent {
       filter: '',
       filterItems: null,
       filterActiveIndex: -1,
-      uniquenessKey: this.state.uniquenessKey + 1
+      uniquenessKey: this.state.uniquenessKey + 1,
     });
 
     this.props.onOpen && this.props.onOpen();
@@ -292,12 +292,12 @@ class Dropdown extends PureComponent {
       filterVisible,
       filterActiveIndex,
       filterItems,
-      filter
+      filter,
     } = this.state;
 
     const classes = classnames('dropdown', className, {
       'dropdown--wide': wide,
-      'dropdown--open': open
+      'dropdown--open': open,
     });
 
     const menuClasses = classnames({
@@ -306,7 +306,7 @@ class Dropdown extends PureComponent {
       'dropdown__menu--open': open,
       'dropdown__menu--outlined': outline,
       'dropdown__menu--up': dropUp,
-      'dropdown__menu--right': right
+      'dropdown__menu--right': right,
     });
 
     const dropdownButtons = [];
@@ -334,7 +334,7 @@ class Dropdown extends PureComponent {
         dropdownItems.push(
           <li key={i} data-filter-index={i} className={classnames({ active, hide })}>
             {child}
-          </li>
+          </li>,
         );
       } else if (child.type.name === DropdownDivider.name) {
         const currentIndex = visibleChildren.indexOf(child);
@@ -350,7 +350,7 @@ class Dropdown extends PureComponent {
     let finalChildren = [];
     if (dropdownButtons.length !== 1) {
       console.error(`Dropdown needs exactly one DropdownButton! Got ${dropdownButtons.length}`, {
-        allChildren
+        allChildren,
       });
     } else {
       const noResults = filter && filterItems && filterItems.length === 0;
@@ -364,7 +364,7 @@ class Dropdown extends PureComponent {
               ref={this._addDropdownListRef}
               tabIndex="-1"
               className={classnames('dropdown__list', {
-                'dropdown__list--filtering': filterVisible
+                'dropdown__list--filtering': filterVisible,
               })}>
               <div className="form-control dropdown__filter">
                 <i className="fa fa-search" />
@@ -379,8 +379,8 @@ class Dropdown extends PureComponent {
               <ul className={classnames({ hide: noResults })}>{dropdownItems}</ul>
             </div>
           </div>,
-          dropdownsContainer
-        )
+          dropdownsContainer,
+        ),
       ];
     }
 
@@ -412,7 +412,7 @@ Dropdown.propTypes = {
   onHide: PropTypes.func,
   className: PropTypes.string,
   style: PropTypes.string,
-  beside: PropTypes.bool
+  beside: PropTypes.bool,
 };
 
 export default Dropdown;

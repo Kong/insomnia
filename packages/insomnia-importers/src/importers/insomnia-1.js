@@ -7,7 +7,7 @@ const FORMAT_MAP = {
   json: 'application/json',
   xml: 'application/xml',
   form: 'application/x-www-form-urlencoded',
-  text: 'text/plain'
+  text: 'text/plain',
 };
 
 module.exports.id = 'insomnia-1';
@@ -41,7 +41,7 @@ function importItems(items, parentId) {
     resources = [
       ...resources,
       requestGroup,
-      ...item.requests.map(item => importRequestItem(item, requestGroup._id))
+      ...item.requests.map(item => importRequestItem(item, requestGroup._id)),
     ];
   }
 
@@ -60,7 +60,7 @@ function importRequestGroupItem(item, parentId) {
     _id: `__GRP_${count}__`,
     parentId,
     environment,
-    name: item.name || `Imported Folder ${count}`
+    name: item.name || `Imported Folder ${count}`,
   };
 }
 
@@ -92,13 +92,13 @@ function importRequestItem(item, parentId) {
       const [name, value] = v.split('=');
       return {
         name: decodeURIComponent(name),
-        value: decodeURIComponent(value || '')
+        value: decodeURIComponent(value || ''),
       };
     });
   } else if (item.body) {
     body = {
       mimeType: FORMAT_MAP[item.__insomnia.format] || '',
-      text: item.body
+      text: item.body,
     };
   }
 
@@ -113,6 +113,6 @@ function importRequestItem(item, parentId) {
     body: body,
     parameters: item.params || [],
     headers,
-    authentication
+    authentication,
   };
 }

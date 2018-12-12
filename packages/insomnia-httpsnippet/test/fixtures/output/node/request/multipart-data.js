@@ -4,14 +4,14 @@ var options = {
   method: 'POST',
   url: 'http://mockbin.com/har',
   headers: {
-    'content-type': 'multipart/form-data; boundary=---011000010111000001101001'
+    'content-type': 'multipart/form-data; boundary=---011000010111000001101001',
   },
   formData: {
     foo: {
       value: 'Hello World',
-      options: { filename: 'hello.txt', contentType: 'text/plain' }
-    }
-  }
+      options: { filename: 'hello.txt', contentType: 'text/plain' },
+    },
+  },
 };
 
 request(options, function(error, response, body) {

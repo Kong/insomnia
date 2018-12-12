@@ -32,7 +32,7 @@ class BearerAuth extends PureComponent {
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
 
     return (
@@ -48,7 +48,7 @@ class BearerAuth extends PureComponent {
               <td className="wide">
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
-                    'form-control--inactive': authentication.disabled
+                    'form-control--inactive': authentication.disabled,
                   })}>
                   <OneLineEditor
                     type="text"
@@ -76,7 +76,7 @@ class BearerAuth extends PureComponent {
               <td className="wide">
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
-                    'form-control--inactive': authentication.disabled
+                    'form-control--inactive': authentication.disabled,
                   })}>
                   <OneLineEditor
                     type="text"
@@ -128,7 +128,7 @@ BearerAuth.propTypes = {
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
   authentication: PropTypes.object.isRequired,
   onChange: PropTypes.func.isRequired,
-  isVariableUncovered: PropTypes.bool.isRequired
+  isVariableUncovered: PropTypes.bool.isRequired,
 };
 
 export default BearerAuth;

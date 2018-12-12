@@ -23,7 +23,7 @@ describe('migrate()', () => {
     const newModel = await models.initModel(models.response.type, initialModel);
     const expectedBodyPath = path.join(
       getDataDirectory(),
-      `responses/fc3ff98e8c6a0d3087d515c0473f8677.zip`
+      `responses/fc3ff98e8c6a0d3087d515c0473f8677.zip`,
     );
     const storedBody = models.response.getBodyBuffer(newModel);
 
@@ -43,7 +43,7 @@ describe('migrate()', () => {
     jest.runAllTimers();
     const expectedBodyPath = path.join(
       getDataDirectory(),
-      `responses/fc3ff98e8c6a0d3087d515c0473f8677.zip`
+      `responses/fc3ff98e8c6a0d3087d515c0473f8677.zip`,
     );
     const storedBody = models.response.getBodyBuffer(newModel);
 
@@ -65,7 +65,7 @@ describe('migrate()', () => {
 
     const expectedBodyPath = path.join(
       getDataDirectory(),
-      'responses/d41d8cd98f00b204e9800998ecf8427e.zip'
+      'responses/d41d8cd98f00b204e9800998ecf8427e.zip',
     );
     const storedBody = models.response.getBodyBuffer(newModel);
 
@@ -105,7 +105,7 @@ describe('migrate()', () => {
   it('migrates old bodies', async () => {
     const response = await models.initModel(models.response.type, {
       body: 'aGVsbG8gd29ybGQh',
-      encoding: 'base64'
+      encoding: 'base64',
     });
     const body = await models.response.getBodyBuffer(response).toString();
 
@@ -117,16 +117,16 @@ describe('migrate()', () => {
     expect(
       (await models.initModel(models.response.type, {
         bodyPath: '/foo/bar',
-        bodyCompression: null
-      })).bodyCompression
+        bodyCompression: null,
+      })).bodyCompression,
     ).toBe(null);
   });
 
   it('migrates sets bodyCompression to zip if does not have one yet', async () => {
     expect(
       (await models.initModel(models.response.type, {
-        bodyPath: '/foo/bar'
-      })).bodyCompression
+        bodyPath: '/foo/bar',
+      })).bodyCompression,
     ).toBe('zip');
   });
 
@@ -134,8 +134,8 @@ describe('migrate()', () => {
     expect(
       (await models.initModel(models.response.type, {
         bodyPath: '/foo/bar',
-        bodyCompression: 'zip'
-      })).bodyCompression
+        bodyCompression: 'zip',
+      })).bodyCompression,
     ).toBe('zip');
   });
 });
@@ -202,7 +202,7 @@ async function createModels(responsesDir, count) {
     await models.workspace.create({
       _id: workspaceId,
       created: 111,
-      modified: 222
+      modified: 222,
     });
     await models.request.create({
       _id: requestId,
@@ -210,7 +210,7 @@ async function createModels(responsesDir, count) {
       created: 111,
       modified: 222,
       metaSortKey: 0,
-      url: 'https://insomnia.rest'
+      url: 'https://insomnia.rest',
     });
 
     await models.response.create({
@@ -218,7 +218,7 @@ async function createModels(responsesDir, count) {
       parentId: requestId,
       statusCode: 200,
       body: 'foo',
-      bodyPath: path.join(responsesDir, responseId)
+      bodyPath: path.join(responsesDir, responseId),
     });
     responseIds.push(responseId);
   }

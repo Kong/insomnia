@@ -12,19 +12,19 @@ describe('query()', () => {
   q(
     'handles basic query',
     ['<x><y>foo</y><y>bar</y></x>', '//y'],
-    [{ inner: 'foo', outer: '<y>foo</y>' }, { inner: 'bar', outer: '<y>bar</y>' }]
+    [{ inner: 'foo', outer: '<y>foo</y>' }, { inner: 'bar', outer: '<y>bar</y>' }],
   );
 
   q(
     'handles attribute query',
     ['<x><y foo="bar">foo</y><y hi="there">bar</y></x>', '//*[@foo="bar"]'],
-    [{ inner: 'foo', outer: '<y foo="bar">foo</y>' }]
+    [{ inner: 'foo', outer: '<y foo="bar">foo</y>' }],
   );
 
   q(
     'handles string query',
     ['<x><y>foo</y><y>bar</y></x>', 'substring(//y[1], 2)'],
-    [{ inner: 'oo', outer: 'oo' }]
+    [{ inner: 'oo', outer: 'oo' }],
   );
 
   it('handles invalid query', () => {

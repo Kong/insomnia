@@ -58,6 +58,6 @@ function _nunjucksMode() {
       }
 
       return null;
-    }
+    },
   };
 }

@@ -19,9 +19,9 @@ module.exports = function(source, options) {
     {
       indent: '  ',
       pretty: true,
-      timeout: '10'
+      timeout: '10',
     },
-    options
+    options,
   );
 
   var code = new CodeBuilder(opts.indent);
@@ -29,7 +29,7 @@ module.exports = function(source, options) {
   // Markers for headers to be created as litteral objects and later be set on the NSURLRequest if exist
   var req = {
     hasHeaders: false,
-    hasBody: false
+    hasBody: false,
   };
 
   // We just want to make sure people understand that is the only dependency
@@ -53,13 +53,13 @@ module.exports = function(source, options) {
           .push(
             'let postData = NSMutableData(data: "%s=%s".data(using: String.Encoding.utf8)!)',
             source.postData.params[0].name,
-            source.postData.params[0].value
+            source.postData.params[0].value,
           );
         for (var i = 1, len = source.postData.params.length; i < len; i++) {
           code.push(
             'postData.append("&%s=%s".data(using: String.Encoding.utf8)!)',
             source.postData.params[i].name,
-            source.postData.params[i].value
+            source.postData.params[i].value,
           );
         }
         break;
@@ -69,7 +69,7 @@ module.exports = function(source, options) {
           code
             .push(
               helpers.literalDeclaration('parameters', source.postData.jsonObj, opts),
-              'as [String : Any]'
+              'as [String : Any]',
             )
             .blank()
             .push('let postData = JSONSerialization.data(withJSONObject: parameters, options: [])');
@@ -97,7 +97,7 @@ module.exports = function(source, options) {
           .push(2, 'let contentType = param["content-type"]!')
           .push(
             2,
-            'let fileContent = String(contentsOfFile: filename, encoding: String.Encoding.utf8)'
+            'let fileContent = String(contentsOfFile: filename, encoding: String.Encoding.utf8)',
           )
           .push(2, 'if (error != nil) {')
           .push(3, 'print(error)')
@@ -116,7 +116,7 @@ module.exports = function(source, options) {
           .blank()
           .push(
             'let postData = NSData(data: "%s".data(using: String.Encoding.utf8)!)',
-            source.postData.text
+            source.postData.text,
           );
     }
   }
@@ -128,7 +128,7 @@ module.exports = function(source, options) {
     .push('                                        cachePolicy: .useProtocolCachePolicy,')
     .push(
       '                                    timeoutInterval: %s)',
-      parseInt(opts.timeout, 10).toFixed(1)
+      parseInt(opts.timeout, 10).toFixed(1),
     )
     .push('request.httpMethod = "%s"', source.method);
 
@@ -145,7 +145,7 @@ module.exports = function(source, options) {
     // Retrieving the shared session will be less verbose than creating a new one.
     .push('let session = URLSession.shared')
     .push(
-      'let dataTask = session.dataTask(with: request as URLRequest, completionHandler: { (data, response, error) -> Void in'
+      'let dataTask = session.dataTask(with: request as URLRequest, completionHandler: { (data, response, error) -> Void in',
     )
     .push(1, 'if (error != nil) {')
     .push(2, 'print(error)')
@@ -166,5 +166,5 @@ module.exports.info = {
   title: 'NSURLSession',
   link:
     'https://developer.apple.com/library/mac/documentation/Foundation/Reference/NSURLSession_class/index.html',
-  description: "Foundation's NSURLSession request"
+  description: "Foundation's NSURLSession request",
 };

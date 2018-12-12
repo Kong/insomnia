@@ -10,7 +10,7 @@ declare module 'electron' {
       session: Object,
       net: Object,
       dialog: Object,
-      screen: Object
+      screen: Object,
     },
     shell: Object,
     app: Object,
@@ -22,6 +22,6 @@ declare module 'electron' {
     dialog: Object,
     clipboard: Object,
     screen: Object,
-    autoUpdater: Object
+    autoUpdater: Object,
   };
 }

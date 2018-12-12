@@ -15,24 +15,24 @@ module.exports.templateTags = [
           {
             displayName: 'Body Attribute',
             description: 'value of response body',
-            value: 'body'
+            value: 'body',
           },
           {
             displayName: 'Raw Body',
             description: 'entire response body',
-            value: 'raw'
+            value: 'raw',
           },
           {
             displayName: 'Header',
             description: 'value of response header',
-            value: 'header'
-          }
-        ]
+            value: 'header',
+          },
+        ],
       },
       {
         displayName: 'Request',
         type: 'model',
-        model: 'Request'
+        model: 'Request',
       },
       {
         type: 'string',
@@ -46,8 +46,8 @@ module.exports.templateTags = [
             default:
               return 'Filter';
           }
-        }
-      }
+        },
+      },
     ],
 
     async run(context, field, id, filter) {
@@ -118,8 +118,8 @@ module.exports.templateTags = [
       } else {
         throw new Error(`Unknown field ${field}`);
       }
-    }
-  }
+    },
+  },
 ];
 
 function matchJSONPath(bodyStr, query) {

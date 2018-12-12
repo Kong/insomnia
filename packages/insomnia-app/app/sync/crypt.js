@@ -40,7 +40,7 @@ export function encryptRSAWithJWK(publicKeyJWK, plaintext) {
   const publicKey = forge.rsa.setPublicKey(n, e);
 
   const encrypted = publicKey.encrypt(encodedPlaintext, 'RSA-OAEP', {
-    md: forge.md.sha256.create()
+    md: forge.md.sha256.create(),
   });
   return forge.util.bytesToHex(encrypted);
 }
@@ -58,7 +58,7 @@ export function decryptRSAWithJWK(privateJWK, encryptedBlob) {
   const privateKey = forge.rsa.setPrivateKey(n, e, d, p, q, dP, dQ, qInv);
   const bytes = forge.util.hexToBytes(encryptedBlob);
   const decrypted = privateKey.decrypt(bytes, 'RSA-OAEP', {
-    md: forge.md.sha256.create()
+    md: forge.md.sha256.create(),
   });
 
   return decodeURIComponent(decrypted);
@@ -96,7 +96,7 @@ export function encryptAES(jwkOrKey, plaintext, additionalData = '') {
     iv: forge.util.bytesToHex(iv),
     t: forge.util.bytesToHex(cipher.mode.tag),
     d: forge.util.bytesToHex(cipher.output),
-    ad: forge.util.bytesToHex(additionalData)
+    ad: forge.util.bytesToHex(additionalData),
   };
 }
 
@@ -121,7 +121,7 @@ export function decryptAES(jwkOrKey, message) {
     iv: forge.util.hexToBytes(message.iv),
     tagLength: message.t.length * 4,
     tag: forge.util.hexToBytes(message.t),
-    additionalData: forge.util.hexToBytes(message.ad)
+    additionalData: forge.util.hexToBytes(message.ad),
   });
 
   decipher.update(forge.util.createBuffer(forge.util.hexToBytes(message.d)));
@@ -179,7 +179,7 @@ export async function generateAES256Key() {
     console.log('[crypt] Using Native AES Key Generation');
     const key = await subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
       'encrypt',
-      'decrypt'
+      'decrypt',
     ]);
     return subtle.exportKey('jwk', key);
   } else {
@@ -190,7 +190,7 @@ export async function generateAES256Key() {
       alg: 'A256GCM',
       ext: true,
       key_ops: ['encrypt', 'decrypt'],
-      k: _hexToB64Url(key)
+      k: _hexToB64Url(key),
     };
   }
 }
@@ -212,15 +212,15 @@ export async function generateKeyPairJWK() {
         name: 'RSA-OAEP',
         publicExponent: new Uint8Array([1, 0, 1]),
         modulusLength: 2048,
-        hash: 'SHA-256'
+        hash: 'SHA-256',
       },
       true,
-      ['encrypt', 'decrypt']
+      ['encrypt', 'decrypt'],
     );
 
     return {
       publicKey: await subtle.exportKey('jwk', pair.publicKey),
-      privateKey: await subtle.exportKey('jwk', pair.privateKey)
+      privateKey: await subtle.exportKey('jwk', pair.privateKey),
     };
   } else {
     console.log('[crypt] Using Forge RSA Generation');
@@ -238,7 +238,7 @@ export async function generateKeyPairJWK() {
       n: _bigIntToB64Url(pair.privateKey.n),
       p: _bigIntToB64Url(pair.privateKey.p),
       q: _bigIntToB64Url(pair.privateKey.q),
-      qi: _bigIntToB64Url(pair.privateKey.qInv)
+      qi: _bigIntToB64Url(pair.privateKey.qInv),
     };
 
     const publicKey = {
@@ -246,7 +246,7 @@ export async function generateKeyPairJWK() {
       kty: 'RSA',
       key_ops: ['encrypt'],
       e: _bigIntToB64Url(pair.publicKey.e),
-      n: _bigIntToB64Url(pair.publicKey.n)
+      n: _bigIntToB64Url(pair.publicKey.n),
     };
 
     return { privateKey, publicKey };
@@ -315,14 +315,14 @@ async function _pbkdf2Passphrase(passphrase, salt) {
       Buffer.from(passphrase, 'utf8'),
       { name: 'PBKDF2' },
       false,
-      ['deriveBits']
+      ['deriveBits'],
     );
 
     const algo = {
       name: 'PBKDF2',
       salt: Buffer.from(salt, 'hex'),
       iterations: DEFAULT_PBKDF2_ITERATIONS,
-      hash: 'SHA-256'
+      hash: 'SHA-256',
     };
 
     const derivedKeyRaw = await window.crypto.subtle.deriveBits(algo, k, DEFAULT_BYTE_LENGTH * 8);
@@ -334,7 +334,7 @@ async function _pbkdf2Passphrase(passphrase, salt) {
       forge.util.hexToBytes(salt),
       DEFAULT_PBKDF2_ITERATIONS,
       DEFAULT_BYTE_LENGTH,
-      forge.md.sha256.create()
+      forge.md.sha256.create(),
     );
 
     return forge.util.bytesToHex(derivedKeyRaw);

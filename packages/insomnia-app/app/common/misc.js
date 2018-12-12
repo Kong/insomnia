@@ -11,12 +11,12 @@ const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
 type Header = {
   name: string,
-  value: string
+  value: string,
 };
 
 type Parameter = {
   name: string,
-  value: string
+  value: string,
 };
 
 export function filterParameters<T: Parameter>(parameters: Array<T>, name: string): Array<T> {
@@ -233,7 +233,7 @@ export function escapeRegex(str: string): string {
 export function fuzzyMatch(
   searchString: string,
   text: string,
-  options: { splitSpace?: boolean, loose?: boolean } = {}
+  options: { splitSpace?: boolean, loose?: boolean } = {},
 ): null | { score: number, indexes: Array<number> } {
   return fuzzyMatchAll(searchString, [text], options);
 }
@@ -241,7 +241,7 @@ export function fuzzyMatch(
 export function fuzzyMatchAll(
   searchString: string,
   allText: Array<string>,
-  options: { splitSpace?: boolean, loose?: boolean } = {}
+  options: { splitSpace?: boolean, loose?: boolean } = {},
 ): null | { score: number, indexes: Array<number> } {
   if (!searchString || !searchString.trim()) {
     return null;

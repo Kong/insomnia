@@ -26,7 +26,7 @@ type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
   handleRemoveWorkspace: Function,
-  handleDuplicateWorkspace: Function
+  handleDuplicateWorkspace: Function,
 };
 
 type State = {
@@ -38,7 +38,7 @@ type State = {
   isPrivate: boolean,
   passphrase: string,
   showDescription: boolean,
-  defaultPreviewMode: boolean
+  defaultPreviewMode: boolean,
 };
 
 @autobind
@@ -57,7 +57,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
       passphrase: '',
       isPrivate: false,
       showDescription: false,
-      defaultPreviewMode: false
+      defaultPreviewMode: false,
     };
   }
 
@@ -92,7 +92,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
       pfxPath: '',
       host: '',
       passphrase: '',
-      isPrivate: false
+      isPrivate: false,
     }));
   }
 
@@ -146,7 +146,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
       disabled: false,
       cert: crtPath || null,
       key: keyPath || null,
-      pfx: pfxPath || null
+      pfx: pfxPath || null,
     };
 
     await models.clientCertificate.create(certificate);
@@ -159,7 +159,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
 
   static async _handleToggleCertificate(certificate: ClientCertificate) {
     await models.clientCertificate.update(certificate, {
-      disabled: !certificate.disabled
+      disabled: !certificate.disabled,
     });
   }
 
@@ -168,7 +168,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     this.setState({
       showDescription: hasDescription,
       defaultPreviewMode: hasDescription,
-      showAddCertificateForm: false
+      showAddCertificateForm: false,
     });
 
     this.modal && this.modal.show();
@@ -253,7 +253,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
 
     const publicCertificates = clientCertificates.filter(c => !c.isPrivate);
@@ -266,7 +266,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
       isPrivate,
       showAddCertificateForm,
       showDescription,
-      defaultPreviewMode
+      defaultPreviewMode,
     } = this.state;
 
     return (

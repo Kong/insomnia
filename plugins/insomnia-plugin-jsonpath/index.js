@@ -8,12 +8,12 @@ module.exports.templateTags = [
     args: [
       {
         displayName: 'JSON string',
-        type: 'string'
+        type: 'string',
       },
       {
         displayName: 'JSONPath Filter',
-        type: 'string'
-      }
+        type: 'string',
+      },
     ],
     run(context, jsonString, filter) {
       let body;
@@ -35,6 +35,6 @@ module.exports.templateTags = [
       }
 
       return results[0];
-    }
-  }
+    },
+  },
 ];

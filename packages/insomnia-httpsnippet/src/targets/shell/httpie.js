@@ -28,9 +28,9 @@ module.exports = function(source, options) {
       style: false,
       timeout: false,
       verbose: false,
-      verify: false
+      verify: false,
     },
-    options
+    options,
   );
 
   var code = new CodeBuilder(opts.indent, opts.indent !== false ? ' \\\n' + opts.indent : ' ');
@@ -115,7 +115,7 @@ module.exports = function(source, options) {
     'http %s%s %s',
     flags.length ? flags.join(' ') + ' ' : '',
     source.method,
-    shell.quote(opts.queryParams ? source.url : source.fullUrl)
+    shell.quote(opts.queryParams ? source.url : source.fullUrl),
   );
 
   if (raw && source.postData.text) {
@@ -129,5 +129,5 @@ module.exports.info = {
   key: 'httpie',
   title: 'HTTPie',
   link: 'http://httpie.org/',
-  description: 'a CLI, cURL-like tool for humans'
+  description: 'a CLI, cURL-like tool for humans',
 };

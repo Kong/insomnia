@@ -144,7 +144,7 @@ function importArgs(args) {
     'data-raw',
     'data-urlencode',
     'data-binary',
-    'data-ascii'
+    'data-ascii',
   );
   const contentTypeHeader = headers.find(h => h.name.toLowerCase() === 'content-type');
   const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : null;
@@ -202,7 +202,7 @@ function importArgs(args) {
     method,
     headers,
     authentication,
-    body
+    body,
   };
 }
 

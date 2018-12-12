@@ -23,8 +23,8 @@ describe('password', () => {
       JSON.stringify({
         access_token: 'token_123',
         token_type: 'token_type',
-        scope: SCOPE
-      })
+        scope: SCOPE,
+      }),
     );
 
     network.sendWithSettings = jest.fn(() => ({
@@ -32,7 +32,7 @@ describe('password', () => {
       bodyCompression: '',
       parentId: 'req_1',
       statusCode: 200,
-      headers: [{ name: 'Content-Type', value: 'application/json' }]
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
     }));
 
     const result = await getToken(
@@ -43,7 +43,7 @@ describe('password', () => {
       CLIENT_SECRET,
       USERNAME,
       PASSWORD,
-      SCOPE
+      SCOPE,
     );
 
     // Check the request to fetch the token
@@ -59,25 +59,25 @@ describe('password', () => {
               { name: 'grant_type', value: 'password' },
               { name: 'username', value: USERNAME },
               { name: 'password', value: PASSWORD },
-              { name: 'scope', value: SCOPE }
-            ]
+              { name: 'scope', value: SCOPE },
+            ],
           },
           headers: [
             {
               name: 'Content-Type',
-              value: 'application/x-www-form-urlencoded'
+              value: 'application/x-www-form-urlencoded',
             },
             {
               name: 'Accept',
-              value: 'application/x-www-form-urlencoded, application/json'
+              value: 'application/x-www-form-urlencoded, application/json',
             },
             {
               name: 'Authorization',
-              value: 'Basic Y2xpZW50XzEyMzpzZWNyZXRfMTIzNDU0NTY2Nzc3NTYzNDM='
-            }
-          ]
-        }
-      ]
+              value: 'Basic Y2xpZW50XzEyMzpzZWNyZXRfMTIzNDU0NTY2Nzc3NTYzNDM=',
+            },
+          ],
+        },
+      ],
     ]);
 
     // Check the expected value
@@ -90,7 +90,7 @@ describe('password', () => {
       error: null,
       error_uri: null,
       error_description: null,
-      xResponseId: 'res_dd2ccc1a2745477a881a9e8ef9d42403'
+      xResponseId: 'res_dd2ccc1a2745477a881a9e8ef9d42403',
     });
   });
 
@@ -102,8 +102,8 @@ describe('password', () => {
       JSON.stringify({
         access_token: 'token_123',
         token_type: 'token_type',
-        scope: SCOPE
-      })
+        scope: SCOPE,
+      }),
     );
 
     network.sendWithSettings = jest.fn(() => ({
@@ -111,7 +111,7 @@ describe('password', () => {
       bodyCompression: '',
       parentId: 'req_1',
       statusCode: 200,
-      headers: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }]
+      headers: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }],
     }));
 
     const result = await getToken(
@@ -122,7 +122,7 @@ describe('password', () => {
       CLIENT_SECRET,
       USERNAME,
       PASSWORD,
-      SCOPE
+      SCOPE,
     );
 
     // Check the request to fetch the token
@@ -140,21 +140,21 @@ describe('password', () => {
               { name: 'password', value: PASSWORD },
               { name: 'scope', value: SCOPE },
               { name: 'client_id', value: CLIENT_ID },
-              { name: 'client_secret', value: CLIENT_SECRET }
-            ]
+              { name: 'client_secret', value: CLIENT_SECRET },
+            ],
           },
           headers: [
             {
               name: 'Content-Type',
-              value: 'application/x-www-form-urlencoded'
+              value: 'application/x-www-form-urlencoded',
             },
             {
               name: 'Accept',
-              value: 'application/x-www-form-urlencoded, application/json'
-            }
-          ]
-        }
-      ]
+              value: 'application/x-www-form-urlencoded, application/json',
+            },
+          ],
+        },
+      ],
     ]);
 
     // Check the expected value
@@ -167,7 +167,7 @@ describe('password', () => {
       error: null,
       error_uri: null,
       error_description: null,
-      xResponseId: 'res_e3e96e5fdd6842298b66dee1f0940f3d'
+      xResponseId: 'res_e3e96e5fdd6842298b66dee1f0940f3d',
     });
   });
 });

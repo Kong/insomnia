@@ -9,7 +9,7 @@ type Props = {|
   button?: boolean,
   onClick?: Function,
   className?: string,
-  children?: React.Node
+  children?: React.Node,
 |};
 
 @autobind

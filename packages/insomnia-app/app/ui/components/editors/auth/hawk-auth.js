@@ -15,7 +15,7 @@ type Props = {
   handleGetRenderContext: Function,
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
-  onChange: Function
+  onChange: Function,
 };
 
 @autobind
@@ -58,9 +58,9 @@ class HawkAuth extends React.PureComponent<Props> {
       'algorithm',
       [
         { name: HAWK_ALGORITHM_SHA256, value: HAWK_ALGORITHM_SHA256 },
-        { name: HAWK_ALGORITHM_SHA1, value: HAWK_ALGORITHM_SHA1 }
+        { name: HAWK_ALGORITHM_SHA1, value: HAWK_ALGORITHM_SHA1 },
       ],
-      this._handleChangeAlgorithm
+      this._handleChangeAlgorithm,
     );
 
     const ext = this.renderInputRow('Ext', 'ext', this._handleChangeExt);
@@ -73,7 +73,7 @@ class HawkAuth extends React.PureComponent<Props> {
     property: string,
     options: Array<{ name: string, value: string }>,
     onChange: Function,
-    help: string | null = null
+    help: string | null = null,
   ): React.Element<*> {
     const { authentication } = this.props;
     const id = label.replace(/ /g, '-');
@@ -90,7 +90,7 @@ class HawkAuth extends React.PureComponent<Props> {
         <td className="wide">
           <div
             className={classnames('form-control form-control--outlined no-margin', {
-              'form-control--inactive': authentication.disabled
+              'form-control--inactive': authentication.disabled,
             })}>
             <select id={id} onChange={onChange} value={value}>
               {options.map(({ name, value }) => (
@@ -111,7 +111,7 @@ class HawkAuth extends React.PureComponent<Props> {
       handleGetRenderContext,
       authentication,
       nunjucksPowerUserMode,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
     const id = label.replace(/ /g, '-');
     return (
@@ -124,7 +124,7 @@ class HawkAuth extends React.PureComponent<Props> {
         <td className="wide">
           <div
             className={classnames('form-control form-control--underlined no-margin', {
-              'form-control--inactive': authentication.disabled
+              'form-control--inactive': authentication.disabled,
             })}>
             <OneLineEditor
               id={id}

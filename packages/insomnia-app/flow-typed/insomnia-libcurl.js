@@ -4,7 +4,7 @@ declare class Curl {
   static getVersion: () => string;
   static feature: {
     NO_HEADER_PARSING: number,
-    NO_DATA_PARSING: number
+    NO_DATA_PARSING: number,
   };
   static option: {
     ACCEPT_ENCODING: number,
@@ -47,24 +47,24 @@ declare class Curl {
     USERNAME: number,
     VERBOSE: number,
     WRITEFUNCTION: number,
-    XFERINFOFUNCTION: number
+    XFERINFOFUNCTION: number,
   };
 
   static auth: {
     NTLM: string,
     DIGEST: string,
     BASIC: string,
-    ANY: string
+    ANY: string,
   };
 
   static code: {
-    CURLE_ABORTED_BY_CALLBACK: string
+    CURLE_ABORTED_BY_CALLBACK: string,
   };
 
   static netrc: {
     IGNORED: number,
     OPTIONAL: number,
-    REQUIRED: number
+    REQUIRED: number,
   };
 
   static info: {
@@ -76,8 +76,8 @@ declare class Curl {
       SSL_DATA_OUT: string,
       DATA_OUT: string,
       DATA_IN: string,
-      TEXT: string
-    }
+      TEXT: string,
+    },
   };
 
   setOpt: (option: number, ...args: Array<any>) => void;
@@ -96,6 +96,6 @@ declare class Curl {
 
 declare module 'insomnia-libcurl' {
   declare module.exports: {
-    Curl: typeof Curl
+    Curl: typeof Curl,
   };
 }

@@ -8,5 +8,5 @@ module.exports = {
   extractQueryStringFromUrl: querystring.extractQueryStringFromUrl,
   deconstructQueryStringToParams: querystring.deconstructQueryStringToParams,
   buildQueryParameter: querystring.buildQueryParameter,
-  buildQueryStringFromParams: querystring.buildQueryStringFromParams
+  buildQueryStringFromParams: querystring.buildQueryStringFromParams,
 };

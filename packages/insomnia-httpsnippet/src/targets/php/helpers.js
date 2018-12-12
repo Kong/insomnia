@@ -80,6 +80,6 @@ module.exports = {
     'UNCHECKOUT',
     'UNLOCK',
     'UPDATE',
-    'VERSION_CONTROL'
-  ]
+    'VERSION_CONTROL',
+  ],
 };

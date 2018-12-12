@@ -30,7 +30,7 @@ ModalHeader.propTypes = {
 
   // Optional
   hideCloseButton: PropTypes.bool,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 export default ModalHeader;

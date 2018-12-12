@@ -5,8 +5,8 @@ module.exports = {
     key: 'ruby',
     title: 'Ruby',
     extname: '.rb',
-    default: 'native'
+    default: 'native',
   },
 
-  native: require('./native')
+  native: require('./native'),
 };

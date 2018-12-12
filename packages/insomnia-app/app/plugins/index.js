@@ -14,27 +14,27 @@ export type Plugin = {
   description: string,
   version: string,
   directory: string,
-  module: *
+  module: *,
 };
 
 export type TemplateTag = {
   plugin: Plugin,
-  templateTag: PluginTemplateTag
+  templateTag: PluginTemplateTag,
 };
 
 export type RequestHook = {
   plugin: Plugin,
-  hook: Function
+  hook: Function,
 };
 
 export type ResponseHook = {
   plugin: Plugin,
-  hook: Function
+  hook: Function,
 };
 
 export type Theme = {
   plugin: Plugin,
-  theme: PluginTheme
+  theme: PluginTheme,
 };
 
 const CORE_PLUGINS = [
@@ -48,7 +48,7 @@ const CORE_PLUGINS = [
   'insomnia-plugin-response',
   'insomnia-plugin-jsonpath',
   'insomnia-plugin-cookie-jar',
-  'insomnia-plugin-core-themes'
+  'insomnia-plugin-core-themes',
 ];
 
 let plugins: ?Array<Plugin> = null;
@@ -108,7 +108,7 @@ async function _traversePluginPath(pluginMap: Object, allPaths: Array<string>) {
         showError({
           title: 'Plugin Error',
           message: 'Failed to load plugin ' + filename,
-          error: err
+          error: err,
         });
       }
     }
@@ -203,6 +203,6 @@ function _initPlugin(packageJSON: Object, module: any, path: ?string): Plugin {
     description: packageJSON.description || meta.description || '',
     version: packageJSON.version || 'unknown',
     directory: path || '',
-    module: module
+    module: module,
   };
 }

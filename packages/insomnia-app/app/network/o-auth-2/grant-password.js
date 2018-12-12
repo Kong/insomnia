@@ -14,12 +14,12 @@ export default async function(
   clientSecret: string,
   username: string,
   password: string,
-  scope: string = ''
+  scope: string = '',
 ): Promise<Object> {
   const params = [
     { name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_PASSWORD },
     { name: c.P_USERNAME, value: username },
-    { name: c.P_PASSWORD, value: password }
+    { name: c.P_PASSWORD, value: password },
   ];
 
   // Add optional params
@@ -29,8 +29,8 @@ export default async function(
     { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
     {
       name: 'Accept',
-      value: 'application/x-www-form-urlencoded, application/json'
-    }
+      value: 'application/x-www-form-urlencoded, application/json',
+    },
   ];
 
   if (credentialsInBody) {
@@ -46,7 +46,7 @@ export default async function(
     url,
     headers,
     method: 'POST',
-    body: models.request.newBodyFormUrlEncoded(params)
+    body: models.request.newBodyFormUrlEncoded(params),
   });
 
   const response = await models.response.create(responsePatch);
@@ -55,7 +55,7 @@ export default async function(
   if (!bodyBuffer) {
     return {
       [c.X_ERROR]: `No body returned from ${url}`,
-      [c.X_RESPONSE_ID]: response._id
+      [c.X_RESPONSE_ID]: response._id,
     };
   }
 
@@ -63,7 +63,7 @@ export default async function(
   if (statusCode < 200 || statusCode >= 300) {
     return {
       [c.X_ERROR]: `Failed to fetch token url=${url} status=${statusCode}`,
-      [c.X_RESPONSE_ID]: response._id
+      [c.X_RESPONSE_ID]: response._id,
     };
   }
 
@@ -75,7 +75,7 @@ export default async function(
     c.P_SCOPE,
     c.P_ERROR,
     c.P_ERROR_URI,
-    c.P_ERROR_DESCRIPTION
+    c.P_ERROR_DESCRIPTION,
   ]);
 
   results[c.X_RESPONSE_ID] = response._id;

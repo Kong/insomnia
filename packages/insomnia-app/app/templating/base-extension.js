@@ -83,24 +83,24 @@ export default class BaseExtension {
             getAncestors: async request => {
               const ancestors = await db.withAncestors(request, [
                 models.requestGroup.type,
-                models.workspace.type
+                models.workspace.type,
               ]);
               return ancestors.filter(doc => doc._id !== request._id);
-            }
+            },
           },
           workspace: { getById: models.workspace.getById },
           oAuth2Token: { getByRequestId: models.oAuth2Token.getByParentId },
           cookieJar: {
             getOrCreateForWorkspace: workspace => {
               return models.cookieJar.getOrCreateForParentId(workspace._id);
-            }
+            },
           },
           response: {
             getLatestForRequestId: models.response.getLatestForRequest,
-            getBodyBuffer: models.response.getBodyBuffer
-          }
-        }
-      }
+            getBodyBuffer: models.response.getBodyBuffer,
+          },
+        },
+      },
     };
 
     let result;

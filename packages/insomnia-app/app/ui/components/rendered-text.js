@@ -3,12 +3,12 @@ import * as React from 'react';
 
 type Props = {
   children: string,
-  render: Function
+  render: Function,
 };
 
 type State = {
   renderedText: string,
-  error: string
+  error: string,
 };
 
 class RenderedText extends React.PureComponent<Props, State> {
@@ -16,7 +16,7 @@ class RenderedText extends React.PureComponent<Props, State> {
     super(props);
     this.state = {
       renderedText: '',
-      error: ''
+      error: '',
     };
   }
 

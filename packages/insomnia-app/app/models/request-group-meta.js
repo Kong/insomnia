@@ -8,7 +8,7 @@ export const canDuplicate = false;
 export function init() {
   return {
     parentId: null,
-    collapsed: false
+    collapsed: false,
   };
 }
 

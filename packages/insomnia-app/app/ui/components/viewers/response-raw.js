@@ -71,7 +71,7 @@ class ResponseRaw extends PureComponent {
 
 ResponseRaw.propTypes = {
   value: PropTypes.string.isRequired,
-  fontSize: PropTypes.number
+  fontSize: PropTypes.number,
 };
 
 export default ResponseRaw;

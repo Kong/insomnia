@@ -21,7 +21,7 @@ type Props = {
   handleGetRenderContext: Function,
   defaultValue: string,
   onChange: Function,
-  workspace: Workspace
+  workspace: Workspace,
 };
 
 type State = {
@@ -33,7 +33,7 @@ type State = {
   rendering: boolean,
   preview: string,
   error: string,
-  variables: Array<{ name: string, value: string }>
+  variables: Array<{ name: string, value: string }>,
 };
 
 @autobind
@@ -52,7 +52,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       rendering: true,
       preview: '',
       error: '',
-      variables: []
+      variables: [],
     };
   }
 
@@ -70,7 +70,7 @@ class TagEditor extends React.PureComponent<Props, State> {
 
     await Promise.all([
       this._refreshModels(this.props.workspace),
-      this._update(tagDefinitions, activeTagDefinition, activeTagData, true)
+      this._update(tagDefinitions, activeTagDefinition, activeTagData, true),
     ]);
   }
 
@@ -98,7 +98,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       this.state.tagDefinitions,
       this.state.activeTagDefinition,
       this.state.activeTagData,
-      true
+      true,
     );
   }
 
@@ -121,7 +121,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     argValue: string | number | boolean,
     argIndex: number,
     forceNewType: string | null = null,
-    patch: Object = {}
+    patch: Object = {},
   ) {
     const { tagDefinitions, activeTagData, activeTagDefinition } = this.state;
 
@@ -250,7 +250,7 @@ class TagEditor extends React.PureComponent<Props, State> {
   _getDefaultTagData(tagDefinition: NunjucksParsedTag): NunjucksParsedTag {
     const defaultFill: string = templateUtils.getDefaultFill(
       tagDefinition.name,
-      tagDefinition.args
+      tagDefinition.args,
     );
 
     return templateUtils.tokenizeTag(defaultFill);
@@ -260,7 +260,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     tagDefinitions: Array<NunjucksParsedTag>,
     tagDefinition: NunjucksParsedTag | null,
     tagData: NunjucksParsedTag | null,
-    noCallback: boolean = false
+    noCallback: boolean = false,
   ) {
     const { handleRender } = this.props;
     this.setState({ rendering: true });
@@ -279,7 +279,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       activeTagData = {
         name: 'custom',
         args: [],
-        rawValue: templateUtils.unTokenizeTag(this.state.activeTagData)
+        rawValue: templateUtils.unTokenizeTag(this.state.activeTagData),
       };
     }
 
@@ -300,7 +300,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       tagDefinitions,
       activeTagData,
       error,
-      activeTagDefinition: tagDefinition
+      activeTagDefinition: tagDefinition,
     });
 
     // Call the callback if we need to
@@ -312,7 +312,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     await delay(300 - (Date.now() - start));
     this.setState({
       rendering: false,
-      preview
+      preview,
     });
   }
 
@@ -371,7 +371,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     value: string,
     itemTypes: Array<string>,
     argIndex: number,
-    extensions?: Array<string>
+    extensions?: Array<string>,
   ) {
     return (
       <FileInputButton
@@ -472,7 +472,7 @@ class TagEditor extends React.PureComponent<Props, State> {
   renderArg(
     argDefinition: NunjucksParsedTagArg,
     argDatas: Array<NunjucksParsedTagArg>,
-    argIndex: number
+    argIndex: number,
   ) {
     // Decide whether or not to show it
     if (typeof argDefinition.hide === 'function' && argDefinition.hide(argDatas)) {
@@ -493,7 +493,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       console.error('Failed to find argument to set default', {
         argDefinition,
         argDatas,
-        argIndex
+        argIndex,
       });
       return null;
     }
@@ -516,7 +516,7 @@ class TagEditor extends React.PureComponent<Props, State> {
         strValue,
         argDefinition.itemTypes,
         argIndex,
-        argDefinition.extensions
+        argDefinition.extensions,
       );
     } else if (argDefinition.type === 'model') {
       isVariableAllowed = false;
@@ -553,7 +553,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     const formControlClasses = classnames({
       'form-control': true,
       'form-control--thin': argDefinition.type === 'boolean',
-      'form-control--outlined': argDefinition.type !== 'boolean'
+      'form-control--outlined': argDefinition.type !== 'boolean',
     });
 
     return (
@@ -627,7 +627,7 @@ class TagEditor extends React.PureComponent<Props, State> {
         </div>
         {activeTagDefinition &&
           activeTagDefinition.args.map((argDefinition: NunjucksParsedTagArg, index) =>
-            this.renderArg(argDefinition, activeTagData.args, index)
+            this.renderArg(argDefinition, activeTagData.args, index),
           )}
         {!activeTagDefinition && (
           <div className="form-control form-control--outlined">
@@ -652,7 +652,7 @@ class TagEditor extends React.PureComponent<Props, State> {
               refresh{' '}
               <i
                 className={classnames('fa fa-refresh', {
-                  'fa-spin': rendering
+                  'fa-spin': rendering,
                 })}
               />
             </button>

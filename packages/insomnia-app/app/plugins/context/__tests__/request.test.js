@@ -7,7 +7,7 @@ const CONTEXT = {
   hello: 'world',
   array_test: ['a', 'b'],
   object_test: { a: 'A', b: 'B' },
-  null_test: null
+  null_test: null,
 };
 
 describe('init()', () => {
@@ -17,7 +17,7 @@ describe('init()', () => {
     await models.request.create({
       _id: 'req_1',
       parentId: 'wrk_1',
-      name: 'My Request'
+      name: 'My Request',
     });
   });
 
@@ -49,7 +49,7 @@ describe('init()', () => {
       'settingDisableRenderRequestBody',
       'settingEncodeUrl',
       'settingSendCookies',
-      'settingStoreCookies'
+      'settingStoreCookies',
     ]);
   });
 
@@ -69,7 +69,7 @@ describe('init()', () => {
       'getParameters',
       'getUrl',
       'hasHeader',
-      'hasParameter'
+      'hasParameter',
     ]);
   });
 
@@ -89,9 +89,9 @@ describe('request.*', () => {
       body: { text: 'body' },
       headers: [
         { name: 'hello', value: 'world' },
-        { name: 'Content-Type', value: 'application/json' }
+        { name: 'Content-Type', value: 'application/json' },
       ],
-      parameters: [{ name: 'foo', value: 'bar' }, { name: 'message', value: 'Hello World!' }]
+      parameters: [{ name: 'foo', value: 'bar' }, { name: 'message', value: 'Hello World!' }],
     });
   });
 
@@ -110,7 +110,7 @@ describe('request.*', () => {
     // getParameters()
     expect(result.request.getParameters()).toEqual([
       { name: 'foo', value: 'bar' },
-      { name: 'message', value: 'Hello World!' }
+      { name: 'message', value: 'Hello World!' },
     ]);
 
     // getParameter()
@@ -141,7 +141,7 @@ describe('request.*', () => {
     // getHeaders()
     expect(result.request.getHeaders()).toEqual([
       { name: 'hello', value: 'world' },
-      { name: 'Content-Type', value: 'application/json' }
+      { name: 'Content-Type', value: 'application/json' },
     ]);
 
     // getHeader()
@@ -189,7 +189,7 @@ describe('request.*', () => {
       hello: 'world',
       array_test: ['a', 'b'],
       object_test: { a: 'A', b: 'B' },
-      null_test: null
+      null_test: null,
     });
 
     // getEnvironmentVariable
@@ -198,7 +198,7 @@ describe('request.*', () => {
     expect(result.request.getEnvironmentVariable('array_test')).toEqual(['a', 'b']);
     expect(result.request.getEnvironmentVariable('object_test')).toEqual({
       a: 'A',
-      b: 'B'
+      b: 'B',
     });
     expect(result.request.getEnvironmentVariable('null_test')).toBe(null);
     expect(result.request.getEnvironmentVariable('bad')).toBeUndefined();

@@ -3,7 +3,7 @@
 declare class NeDB {
   constructor(config: Object): NeDB;
   persistence: {
-    setAutocompactionInterval: (millis: number) => void
+    setAutocompactionInterval: (millis: number) => void,
   };
 }
 

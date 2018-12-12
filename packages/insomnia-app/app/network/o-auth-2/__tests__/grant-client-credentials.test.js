@@ -25,8 +25,8 @@ describe('client_credentials', () => {
         token_type: 'token_type',
         scope: SCOPE,
         audience: AUDIENCE,
-        resource: RESOURCE
-      })
+        resource: RESOURCE,
+      }),
     );
 
     network.sendWithSettings = jest.fn(() => ({
@@ -34,7 +34,7 @@ describe('client_credentials', () => {
       bodyCompression: '',
       parentId: 'req_1',
       statusCode: 200,
-      headers: [{ name: 'Content-Type', value: 'application/json' }]
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
     }));
 
     const result = await getToken(
@@ -45,7 +45,7 @@ describe('client_credentials', () => {
       CLIENT_SECRET,
       SCOPE,
       AUDIENCE,
-      RESOURCE
+      RESOURCE,
     );
 
     // Check the request to fetch the token
@@ -61,25 +61,25 @@ describe('client_credentials', () => {
               { name: 'grant_type', value: 'client_credentials' },
               { name: 'scope', value: SCOPE },
               { name: 'audience', value: AUDIENCE },
-              { name: 'resource', value: RESOURCE }
-            ]
+              { name: 'resource', value: RESOURCE },
+            ],
           },
           headers: [
             {
               name: 'Content-Type',
-              value: 'application/x-www-form-urlencoded'
+              value: 'application/x-www-form-urlencoded',
             },
             {
               name: 'Accept',
-              value: 'application/x-www-form-urlencoded, application/json'
+              value: 'application/x-www-form-urlencoded, application/json',
             },
             {
               name: 'Authorization',
-              value: 'Basic Y2xpZW50XzEyMzpzZWNyZXRfMTIzNDU0NTY2Nzc3NTYzNDM='
-            }
-          ]
-        }
-      ]
+              value: 'Basic Y2xpZW50XzEyMzpzZWNyZXRfMTIzNDU0NTY2Nzc3NTYzNDM=',
+            },
+          ],
+        },
+      ],
     ]);
 
     // Check the expected value
@@ -93,7 +93,7 @@ describe('client_credentials', () => {
       error: null,
       error_uri: null,
       error_description: null,
-      xResponseId: 'res_dd2ccc1a2745477a881a9e8ef9d42403'
+      xResponseId: 'res_dd2ccc1a2745477a881a9e8ef9d42403',
     });
   });
 
@@ -107,8 +107,8 @@ describe('client_credentials', () => {
         token_type: 'token_type',
         scope: SCOPE,
         audience: AUDIENCE,
-        resource: RESOURCE
-      })
+        resource: RESOURCE,
+      }),
     );
 
     network.sendWithSettings = jest.fn(() => ({
@@ -116,7 +116,7 @@ describe('client_credentials', () => {
       bodyCompression: '',
       parentId: 'req_1',
       statusCode: 200,
-      headers: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }]
+      headers: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }],
     }));
 
     const result = await getToken(
@@ -127,7 +127,7 @@ describe('client_credentials', () => {
       CLIENT_SECRET,
       SCOPE,
       AUDIENCE,
-      RESOURCE
+      RESOURCE,
     );
 
     // Check the request to fetch the token
@@ -145,21 +145,21 @@ describe('client_credentials', () => {
               { name: 'audience', value: AUDIENCE },
               { name: 'resource', value: RESOURCE },
               { name: 'client_id', value: CLIENT_ID },
-              { name: 'client_secret', value: CLIENT_SECRET }
-            ]
+              { name: 'client_secret', value: CLIENT_SECRET },
+            ],
           },
           headers: [
             {
               name: 'Content-Type',
-              value: 'application/x-www-form-urlencoded'
+              value: 'application/x-www-form-urlencoded',
             },
             {
               name: 'Accept',
-              value: 'application/x-www-form-urlencoded, application/json'
-            }
-          ]
-        }
-      ]
+              value: 'application/x-www-form-urlencoded, application/json',
+            },
+          ],
+        },
+      ],
     ]);
 
     // Check the expected value
@@ -173,7 +173,7 @@ describe('client_credentials', () => {
       error: null,
       error_uri: null,
       error_description: null,
-      xResponseId: 'res_e3e96e5fdd6842298b66dee1f0940f3d'
+      xResponseId: 'res_e3e96e5fdd6842298b66dee1f0940f3d',
     });
   });
 });

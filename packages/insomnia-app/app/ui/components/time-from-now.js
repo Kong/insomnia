@@ -4,11 +4,11 @@ import autobind from 'autobind-decorator';
 import moment from 'moment';
 
 type Props = {
-  timestamp: number
+  timestamp: number,
 };
 
 type State = {
-  text: string
+  text: string,
 };
 
 @autobind
@@ -19,7 +19,7 @@ class TimeFromNow extends React.PureComponent<Props, State> {
     super(props);
     this._interval = null;
     this.state = {
-      text: ''
+      text: '',
     };
   }
 

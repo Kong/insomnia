@@ -20,9 +20,9 @@ module.exports = function(source, options) {
       closingTag: false,
       indent: '  ',
       noTags: false,
-      shortTags: false
+      shortTags: false,
     },
-    options
+    options,
   );
 
   var code = new CodeBuilder(opts.indent);
@@ -65,7 +65,7 @@ module.exports = function(source, options) {
         .push('$request->setContentType(%s);', helpers.convert(source.postData.mimeType))
         .push(
           '$request->setPostFields(%s);',
-          helpers.convert(source.postData.paramsObj, opts.indent)
+          helpers.convert(source.postData.paramsObj, opts.indent),
         )
         .blank();
       break;
@@ -96,5 +96,5 @@ module.exports.info = {
   key: 'http1',
   title: 'HTTP v1',
   link: 'http://php.net/manual/en/book.http.php',
-  description: 'PHP with pecl/http v1'
+  description: 'PHP with pecl/http v1',
 };

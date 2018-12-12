@@ -55,7 +55,7 @@ class MethodDropdown extends PureComponent {
 
         // Invoke callback
         this.props.onChange(method);
-      }
+      },
     });
   }
 
@@ -106,7 +106,7 @@ MethodDropdown.propTypes = {
   method: PropTypes.string.isRequired,
 
   // Optional
-  right: PropTypes.bool
+  right: PropTypes.bool,
 };
 
 export default MethodDropdown;

@@ -11,7 +11,7 @@ const PLUGIN = {
   name: 'my-plugin',
   version: '1.0.0',
   directory: '/plugins/my-plugin',
-  module: {}
+  module: {},
 };
 
 describe('init()', () => {
@@ -30,7 +30,7 @@ describe('app.import.*', () => {
     await models.workspace.create({
       _id: 'wrk_1',
       created: 111,
-      modified: 222
+      modified: 222,
     });
   });
   it('uri', async () => {
@@ -53,8 +53,8 @@ describe('app.import.*', () => {
         description: '',
         name: 'New',
         parentId: null,
-        type: 'Workspace'
-      }
+        type: 'Workspace',
+      },
     ]);
     expect(await db.all(models.request.type)).toEqual([
       {
@@ -78,8 +78,8 @@ describe('app.import.*', () => {
         settingRebuildPath: true,
         settingMaxTimelineDataSize: 1000,
         type: 'Request',
-        url: 'https://insomnia.rest'
-      }
+        url: 'https://insomnia.rest',
+      },
     ]);
   });
 
@@ -103,8 +103,8 @@ describe('app.import.*', () => {
         description: '',
         name: 'New',
         parentId: null,
-        type: 'Workspace'
-      }
+        type: 'Workspace',
+      },
     ]);
     expect(await db.all(models.request.type)).toEqual([
       {
@@ -128,8 +128,8 @@ describe('app.import.*', () => {
         settingRebuildPath: true,
         settingMaxTimelineDataSize: 1000,
         type: 'Request',
-        url: 'https://insomnia.rest'
-      }
+        url: 'https://insomnia.rest',
+      },
     ]);
   });
 });
@@ -140,7 +140,7 @@ describe('app.export.*', () => {
     await models.workspace.create({
       _id: 'wrk_1',
       created: 111,
-      modified: 222
+      modified: 222,
     });
     await models.request.create({
       _id: 'req_1',
@@ -148,13 +148,13 @@ describe('app.export.*', () => {
       created: 111,
       modified: 222,
       metaSortKey: 0,
-      url: 'https://insomnia.rest'
+      url: 'https://insomnia.rest',
     });
     await models.response.create({
       _id: 'res_1',
       parentId: 'req_1',
       statusCode: 200,
-      body: 'foo'
+      body: 'foo',
     });
   });
 
@@ -179,7 +179,7 @@ describe('app.export.*', () => {
           description: '',
           modified: 222,
           name: 'New Workspace',
-          parentId: null
+          parentId: null,
         },
         {
           _id: 'req_1',
@@ -202,9 +202,9 @@ describe('app.export.*', () => {
           settingStoreCookies: true,
           settingRebuildPath: true,
           settingMaxTimelineDataSize: 1000,
-          url: 'https://insomnia.rest'
-        }
-      ]
+          url: 'https://insomnia.rest',
+        },
+      ],
     });
   });
 
@@ -219,7 +219,7 @@ describe('app.export.*', () => {
       log: {
         creator: {
           name: 'Insomnia REST Client',
-          version: `insomnia.desktop.app:v${getAppVersion()}`
+          version: `insomnia.desktop.app:v${getAppVersion()}`,
         },
         entries: [
           {
@@ -235,18 +235,18 @@ describe('app.export.*', () => {
               postData: {
                 mimeType: '',
                 params: [],
-                text: ''
+                text: '',
               },
               queryString: [],
               url: 'https://insomnia.rest/',
-              settingEncodeUrl: true
+              settingEncodeUrl: true,
             },
             response: {
               bodySize: -1,
               content: {
                 mimeType: '',
                 size: 3,
-                text: 'foo'
+                text: 'foo',
               },
               cookies: [],
               headers: [],
@@ -254,7 +254,7 @@ describe('app.export.*', () => {
               httpVersion: 'HTTP/1.1',
               redirectURL: '',
               status: 200,
-              statusText: ''
+              statusText: '',
             },
             startedDateTime: '2017-11-24T18:12:12.849Z',
             time: 0,
@@ -265,12 +265,12 @@ describe('app.export.*', () => {
               receive: 0,
               send: 0,
               ssl: -1,
-              wait: 0
-            }
-          }
+              wait: 0,
+            },
+          },
         ],
-        version: '1.2'
-      }
+        version: '1.2',
+      },
     });
   });
 });

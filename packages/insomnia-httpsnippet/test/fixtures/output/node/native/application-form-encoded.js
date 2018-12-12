@@ -7,8 +7,8 @@ var options = {
   port: null,
   path: '/har',
   headers: {
-    'content-type': 'application/x-www-form-urlencoded'
-  }
+    'content-type': 'application/x-www-form-urlencoded',
+  },
 };
 
 var req = http.request(options, function(res) {

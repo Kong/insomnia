@@ -9,7 +9,7 @@ import {
   SIGNATURE_METHOD_HMAC_SHA1,
   SIGNATURE_METHOD_HMAC_SHA256,
   SIGNATURE_METHOD_PLAINTEXT,
-  SIGNATURE_METHOD_RSA_SHA1
+  SIGNATURE_METHOD_RSA_SHA1,
 } from '../../../../network/o-auth-1/constants';
 import CodePromptModal from '../../modals/code-prompt-modal';
 import { showModal } from '../../modals';
@@ -22,7 +22,7 @@ type Props = {
   showPasswords: boolean,
   isVariableUncovered: boolean,
   onChange: Function,
-  request: Request
+  request: Request,
 };
 
 const PRIVATE_KEY_PLACEHOLDER = `
@@ -53,14 +53,14 @@ class OAuth1Auth extends React.PureComponent<Props> {
       enableRender: handleRender || handleGetRenderContext,
       placeholder: PRIVATE_KEY_PLACEHOLDER,
       mode: 'text/plain',
-      hideMode: true
+      hideMode: true,
     });
   }
 
   _handleChangeProperty(property: string, value: string | boolean): void {
     const { request } = this.props;
     const authentication = Object.assign({}, request.authentication, {
-      [property]: value
+      [property]: value,
     });
     this.props.onChange(authentication);
   }
@@ -152,14 +152,14 @@ class OAuth1Auth extends React.PureComponent<Props> {
     property: string,
     onChange: Function,
     help: string | null = null,
-    handleAutocomplete: Function | null = null
+    handleAutocomplete: Function | null = null,
   ): React.Element<*> {
     const {
       handleRender,
       handleGetRenderContext,
       request,
       nunjucksPowerUserMode,
-      isVariableUncovered
+      isVariableUncovered,
     } = this.props;
     const { authentication } = request;
     const id = label.replace(/ /g, '-');
@@ -175,7 +175,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
         <td className="wide">
           <div
             className={classnames('form-control form-control--underlined no-margin', {
-              'form-control--inactive': authentication.disabled
+              'form-control--inactive': authentication.disabled,
             })}>
             <OneLineEditor
               id={id}
@@ -199,7 +199,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     property: string,
     options: Array<{ name: string, value: string }>,
     onChange: Function,
-    help: string | null = null
+    help: string | null = null,
   ): React.Element<*> {
     const { request } = this.props;
     const { authentication } = request;
@@ -219,7 +219,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
         <td className="wide">
           <div
             className={classnames('form-control form-control--outlined no-margin', {
-              'form-control--inactive': authentication.disabled
+              'form-control--inactive': authentication.disabled,
             })}>
             <select id={id} onChange={onChange} value={value}>
               {options.map(({ name, value }) => (
@@ -261,13 +261,13 @@ class OAuth1Auth extends React.PureComponent<Props> {
     const consumerKey = this.renderInputRow(
       'Consumer Key',
       'consumerKey',
-      this._handleChangeConsumerKey
+      this._handleChangeConsumerKey,
     );
 
     const consumerSecret = this.renderInputRow(
       'Consumer Secret',
       'consumerSecret',
-      this._handleChangeConsumerSecret
+      this._handleChangeConsumerSecret,
     );
 
     const tokenKey = this.renderInputRow('Token', 'tokenKey', this._handleChangeTokenKey);
@@ -275,7 +275,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     const tokenSecret = this.renderInputRow(
       'Token Secret',
       'tokenSecret',
-      this._handleChangeTokenSecret
+      this._handleChangeTokenSecret,
     );
 
     const callback = this.renderInputRow('Callback URL', 'callback', this._handleChangeCallback);
@@ -284,28 +284,28 @@ class OAuth1Auth extends React.PureComponent<Props> {
       'Realm',
       'realm',
       this._handleChangeRealm,
-      'Leave blank for default'
+      'Leave blank for default',
     );
 
     const nonce = this.renderInputRow(
       'Nonce',
       'nonce',
       this._handleChangeNonce,
-      'Leave blank for default'
+      'Leave blank for default',
     );
 
     const verifier = this.renderInputRow(
       'Verifier',
       'verifier',
       this._handleChangeVerifier,
-      'Leave blank for default'
+      'Leave blank for default',
     );
 
     const timestamp = this.renderInputRow(
       'Timestamp',
       'timestamp',
       this._handleChangeTimestamp,
-      'Leave blank for default'
+      'Leave blank for default',
     );
 
     const signatureMethod = this.renderSelectRow(
@@ -315,15 +315,15 @@ class OAuth1Auth extends React.PureComponent<Props> {
         { name: 'HMAC-SHA1', value: SIGNATURE_METHOD_HMAC_SHA1 },
         { name: 'HMAC-SHA256', value: SIGNATURE_METHOD_HMAC_SHA256 },
         { name: 'RSA-SHA1', value: SIGNATURE_METHOD_RSA_SHA1 },
-        { name: 'PLAINTEXT', value: SIGNATURE_METHOD_PLAINTEXT }
+        { name: 'PLAINTEXT', value: SIGNATURE_METHOD_PLAINTEXT },
       ],
-      this._handleChangeSignatureMethod
+      this._handleChangeSignatureMethod,
     );
 
     const privateKey = this.renderPrivateKeyInput(
       'Private Key',
       'privateKey',
-      this._handleChangePrivateKey
+      this._handleChangePrivateKey,
     );
 
     const version = this.renderInputRow('Version', 'version', this._handleChangeVersion);
@@ -342,7 +342,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
       realm,
       nonce,
       verifier,
-      enabled
+      enabled,
     ];
 
     const { authentication } = this.props.request;

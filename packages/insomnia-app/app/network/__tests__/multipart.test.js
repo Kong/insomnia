@@ -9,7 +9,7 @@ describe('buildMultipart()', () => {
   it('builds a simple request', async () => {
     const { filePath, boundary, contentLength } = await buildMultipart([
       { name: 'foo', value: 'bar' },
-      { name: 'multi-line', value: 'Hello\nWorld!' }
+      { name: 'multi-line', value: 'Hello\nWorld!' },
     ]);
 
     expect(boundary).toBe(DEFAULT_BOUNDARY);
@@ -25,8 +25,8 @@ describe('buildMultipart()', () => {
         '',
         'Hello\nWorld!',
         `--${boundary}--`,
-        ''
-      ].join('\r\n')
+        '',
+      ].join('\r\n'),
     );
   });
 
@@ -35,7 +35,7 @@ describe('buildMultipart()', () => {
     const { filePath, boundary, contentLength } = await buildMultipart([
       { name: 'foo', value: 'bar' },
       { name: 'file', type: 'file', fileName: fileName },
-      { name: 'baz', value: 'qux' }
+      { name: 'baz', value: 'qux' },
     ]);
 
     expect(boundary).toBe(DEFAULT_BOUNDARY);
@@ -56,8 +56,8 @@ describe('buildMultipart()', () => {
         '',
         'qux',
         `--${boundary}--`,
-        ''
-      ].join('\r\n')
+        '',
+      ].join('\r\n'),
     );
   });
 
@@ -66,7 +66,7 @@ describe('buildMultipart()', () => {
       { value: 'bar' },
       { name: 'foo' },
       { name: '', value: '' },
-      { name: '', type: 'file', fileName: '' }
+      { name: '', type: 'file', fileName: '' },
     ]);
 
     expect(boundary).toBe(DEFAULT_BOUNDARY);
@@ -82,8 +82,8 @@ describe('buildMultipart()', () => {
         '',
         '',
         `--${boundary}--`,
-        ''
-      ].join('\r\n')
+        '',
+      ].join('\r\n'),
     );
   });
 });

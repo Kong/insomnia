@@ -17,7 +17,7 @@ export const selectEntitiesLists = createSelector(
     }
 
     return entitiesLists;
-  }
+  },
 );
 
 export const selectActiveWorkspace = createSelector(
@@ -26,7 +26,7 @@ export const selectActiveWorkspace = createSelector(
   state => state.global.activeWorkspaceId,
   (workspaces, entities, activeWorkspaceId) => {
     return entities.workspaces[activeWorkspaceId] || workspaces[0];
-  }
+  },
 );
 
 export const selectActiveWorkspaceClientCertificates = createSelector(
@@ -34,7 +34,7 @@ export const selectActiveWorkspaceClientCertificates = createSelector(
   selectActiveWorkspace,
   (entities, activeWorkspace) => {
     return entities.clientCertificates.filter(c => c.parentId === activeWorkspace._id);
-  }
+  },
 );
 
 export const selectActiveWorkspaceMeta = createSelector(
@@ -43,12 +43,12 @@ export const selectActiveWorkspaceMeta = createSelector(
   (activeWorkspace, entities) => {
     const id = activeWorkspace ? activeWorkspace._id : 'n/a';
     return entities.workspaceMetas.find(m => m.parentId === id);
-  }
+  },
 );
 
 export const selectRequestsAndRequestGroups = createSelector(selectEntitiesLists, entities => [
   ...entities.requests,
-  ...entities.requestGroups
+  ...entities.requestGroups,
 ]);
 
 export const selectCollapsedRequestGroups = createSelector(selectEntitiesLists, entities => {
@@ -95,7 +95,7 @@ export const selectSidebarChildren = createSelector(
           collapsed: !!collapsed[c._id],
 
           // Don't add children of requests
-          children: c.type === models.request.type ? [] : next(c._id)
+          children: c.type === models.request.type ? [] : next(c._id),
         }));
       } else {
         return children;
@@ -117,7 +117,7 @@ export const selectSidebarChildren = createSelector(
         // Try to match request attributes
         const { name, method } = child.doc;
         const match = fuzzyMatchAll(sidebarFilter, [name, method, ...parentNames], {
-          splitSpace: true
+          splitSpace: true,
         });
 
         // Update hidden state depending on whether it matched
@@ -130,7 +130,7 @@ export const selectSidebarChildren = createSelector(
 
     const childrenTree = next(activeWorkspace._id, false);
     return matchChildren(childrenTree);
-  }
+  },
 );
 
 export const selectWorkspaceRequestsAndRequestGroups = createSelector(
@@ -152,7 +152,7 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
     }
 
     return getChildren(activeWorkspace);
-  }
+  },
 );
 
 export const selectActiveRequest = createSelector(
@@ -161,7 +161,7 @@ export const selectActiveRequest = createSelector(
   (entities, workspaceMeta) => {
     const id = workspaceMeta ? workspaceMeta.activeRequestId : 'n/a';
     return entities.requests[id] || null;
-  }
+  },
 );
 
 export const selectActiveCookieJar = createSelector(
@@ -170,7 +170,7 @@ export const selectActiveCookieJar = createSelector(
   (entities, workspace) => {
     const cookieJar = entities.cookieJars.find(cj => cj.parentId === workspace._id);
     return cookieJar || null;
-  }
+  },
 );
 
 export const selectActiveOAuth2Token = createSelector(
@@ -179,7 +179,7 @@ export const selectActiveOAuth2Token = createSelector(
   (entities, workspaceMeta) => {
     const id = workspaceMeta ? workspaceMeta.activeRequestId : 'n/a';
     return entities.oAuth2Tokens.find(t => t.parentId === id);
-  }
+  },
 );
 
 export const selectUnseenWorkspaces = createSelector(selectEntitiesLists, entities => {
@@ -196,7 +196,7 @@ export const selectActiveRequestMeta = createSelector(
   (activeRequest, entities) => {
     const id = activeRequest ? activeRequest._id : 'n/a';
     return entities.requestMetas.find(m => m.parentId === id);
-  }
+  },
 );
 
 export const selectActiveRequestResponses = createSelector(
@@ -207,7 +207,7 @@ export const selectActiveRequestResponses = createSelector(
     return entities.responses
       .filter(response => requestId === response.parentId)
       .sort((a, b) => (a.created > b.created ? -1 : 1));
-  }
+  },
 );
 
 export const selectActiveResponse = createSelector(
@@ -222,5 +222,5 @@ export const selectActiveResponse = createSelector(
     }
 
     return responses[0] || null;
-  }
+  },
 );

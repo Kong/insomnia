@@ -55,7 +55,7 @@ ResponseError.propTypes = {
   // Required
   error: PropTypes.string.isRequired,
   url: PropTypes.string.isRequired,
-  fontSize: PropTypes.number.isRequired
+  fontSize: PropTypes.number.isRequired,
 };
 
 export default ResponseError;

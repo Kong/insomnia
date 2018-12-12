@@ -10,7 +10,7 @@ type Props = {
   onChange: string => void,
   requestCreate: () => void,
   requestGroupCreate: () => void,
-  filter: string
+  filter: string,
 };
 
 @autobind

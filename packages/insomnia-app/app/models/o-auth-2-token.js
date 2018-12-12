@@ -15,7 +15,7 @@ type BaseOAuth2Token = {
   // Error handling
   error: string,
   errorDescription: string,
-  errorUri: string
+  errorUri: string,
 };
 
 export type OAuth2Token = BaseModel & BaseOAuth2Token;
@@ -38,7 +38,7 @@ export function init(): BaseOAuth2Token {
     // Error handling
     error: '',
     errorDescription: '',
-    errorUri: ''
+    errorUri: '',
   };
 }
 

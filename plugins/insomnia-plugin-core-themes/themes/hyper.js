@@ -3,7 +3,7 @@ module.exports = {
   displayName: 'Hyper',
   theme: {
     foreground: {
-      default: '#ddd'
+      default: '#ddd',
     },
     background: {
       default: '#000',
@@ -12,7 +12,7 @@ module.exports = {
       warning: '#f9ac2a',
       danger: '#ff505c',
       surprise: '#f24aff',
-      info: '#23dce8'
+      info: '#23dce8',
     },
     rawCss: `
       .tooltip, .dropdown__menu {
@@ -22,18 +22,18 @@ module.exports = {
     styles: {
       dialog: {
         background: {
-          default: '#111'
-        }
+          default: '#111',
+        },
       },
       transparentOverlay: {
         background: {
-          default: 'rgba(0, 0, 0, 0.5)'
-        }
+          default: 'rgba(0, 0, 0, 0.5)',
+        },
       },
       sidebar: {
         highlight: {
-          default: '#aaa'
-        }
+          default: '#aaa',
+        },
       },
       paneHeader: {
         background: {
@@ -43,9 +43,9 @@ module.exports = {
           warning: '#ea9f29',
           danger: '#df4b56',
           surprise: '#ed46f9',
-          info: '#20bec9'
-        }
-      }
-    }
-  }
+          info: '#20bec9',
+        },
+      },
+    },
+  },
 };

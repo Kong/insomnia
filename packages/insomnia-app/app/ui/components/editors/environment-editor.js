@@ -13,12 +13,12 @@ type Props = {
   getRenderContext: Function,
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
-  lineWrapping: boolean
+  lineWrapping: boolean,
 };
 
 type State = {
   error: string | null,
-  warning: string | null
+  warning: string | null,
 };
 
 @autobind
@@ -29,7 +29,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     super(props);
     this.state = {
       error: null,
-      warning: null
+      warning: null,
     };
   }
 

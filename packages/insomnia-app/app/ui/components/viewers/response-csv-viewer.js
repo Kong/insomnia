@@ -4,11 +4,11 @@ import Papa from 'papaparse';
 import autobind from 'autobind-decorator';
 
 type Props = {
-  body: Buffer
+  body: Buffer,
 };
 
 type State = {
-  result: null | { data: Array<Array<string>> }
+  result: null | { data: Array<Array<string>> },
 };
 
 @autobind
@@ -18,7 +18,7 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      result: null
+      result: null,
     };
     this.currentHash = '';
   }
@@ -30,7 +30,7 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
       skipEmptyLines: true,
       complete: result => {
         this.setState({ result });
-      }
+      },
     });
   }
 

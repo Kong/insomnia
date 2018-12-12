@@ -22,9 +22,9 @@ module.exports = function(source, options) {
       namedErrors: false,
       noTags: false,
       shortTags: false,
-      timeout: 30
+      timeout: 30,
     },
-    options
+    options,
   );
 
   var code = new CodeBuilder(opts.indent);
@@ -39,48 +39,48 @@ module.exports = function(source, options) {
     {
       escape: true,
       name: 'CURLOPT_PORT',
-      value: source.uriObj.port
+      value: source.uriObj.port,
     },
     {
       escape: true,
       name: 'CURLOPT_URL',
-      value: source.fullUrl
+      value: source.fullUrl,
     },
     {
       escape: false,
       name: 'CURLOPT_RETURNTRANSFER',
-      value: 'true'
+      value: 'true',
     },
     {
       escape: true,
       name: 'CURLOPT_ENCODING',
-      value: ''
+      value: '',
     },
     {
       escape: false,
       name: 'CURLOPT_MAXREDIRS',
-      value: opts.maxRedirects
+      value: opts.maxRedirects,
     },
     {
       escape: false,
       name: 'CURLOPT_TIMEOUT',
-      value: opts.timeout
+      value: opts.timeout,
     },
     {
       escape: false,
       name: 'CURLOPT_HTTP_VERSION',
-      value: source.httpVersion === 'HTTP/1.0' ? 'CURL_HTTP_VERSION_1_0' : 'CURL_HTTP_VERSION_1_1'
+      value: source.httpVersion === 'HTTP/1.0' ? 'CURL_HTTP_VERSION_1_0' : 'CURL_HTTP_VERSION_1_1',
     },
     {
       escape: true,
       name: 'CURLOPT_CUSTOMREQUEST',
-      value: source.method
+      value: source.method,
     },
     {
       escape: true,
       name: 'CURLOPT_POSTFIELDS',
-      value: source.postData ? source.postData.text : undefined
-    }
+      value: source.postData ? source.postData.text : undefined,
+    },
   ];
 
   code.push('curl_setopt_array($curl, array(');
@@ -93,8 +93,8 @@ module.exports = function(source, options) {
         util.format(
           '%s => %s,',
           option.name,
-          option.escape ? JSON.stringify(option.value) : option.value
-        )
+          option.escape ? JSON.stringify(option.value) : option.value,
+        ),
       );
     }
   });
@@ -155,5 +155,5 @@ module.exports.info = {
   key: 'curl',
   title: 'cURL',
   link: 'http://php.net/manual/en/book.curl.php',
-  description: 'PHP with ext-curl'
+  description: 'PHP with ext-curl',
 };

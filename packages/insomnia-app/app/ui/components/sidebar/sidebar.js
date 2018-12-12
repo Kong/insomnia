@@ -54,7 +54,7 @@ class Sidebar extends PureComponent {
       moveDoc,
       handleActivateRequest,
       activeRequest,
-      environmentHighlightColorStyle
+      environmentHighlightColorStyle,
     } = this.props;
 
     return (
@@ -62,7 +62,7 @@ class Sidebar extends PureComponent {
         className={classnames('sidebar', 'theme--sidebar', {
           'sidebar--hidden': hidden,
           'sidebar--skinny': width < SIDEBAR_SKINNY_REMS,
-          'sidebar--collapsed': width < COLLAPSE_SIDEBAR_REMS
+          'sidebar--collapsed': width < COLLAPSE_SIDEBAR_REMS,
         })}
         style={{
           borderRight:
@@ -70,7 +70,7 @@ class Sidebar extends PureComponent {
             activeEnvironment.color &&
             environmentHighlightColorStyle === 'sidebar-edge'
               ? '5px solid ' + activeEnvironment.color
-              : null
+              : null,
         }}>
         <WorkspaceDropdown
           className="sidebar__header theme--sidebar__header"
@@ -163,7 +163,7 @@ Sidebar.propTypes = {
   // Optional
   filter: PropTypes.string,
   activeRequest: PropTypes.object,
-  activeEnvironment: PropTypes.object
+  activeEnvironment: PropTypes.object,
 };
 
 export default Sidebar;

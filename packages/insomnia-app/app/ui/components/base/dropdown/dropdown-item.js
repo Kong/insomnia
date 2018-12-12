@@ -47,7 +47,7 @@ class DropdownItem extends PureComponent {
     const buttonProps = {
       type: 'button',
       onClick: this._handleClick,
-      ...props
+      ...props,
     };
 
     return React.createElement(buttonClass || 'button', buttonProps, inner);
@@ -62,7 +62,7 @@ DropdownItem.propTypes = {
   onClick: PropTypes.func,
   children: PropTypes.node,
   className: PropTypes.string,
-  color: PropTypes.string
+  color: PropTypes.string,
 };
 
 export default DropdownItem;

@@ -3,16 +3,16 @@
 declare module 'insomnia-importers' {
   declare module.exports: {
     convert: (
-      data: string
+      data: string,
     ) => Promise<{
       type: {
         id: string,
         name: string,
-        description: string
+        description: string,
       },
       data: {
-        resources: Array<Object>
-      }
-    }>
+        resources: Array<Object>,
+      },
+    }>,
   };
 }

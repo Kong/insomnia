@@ -32,7 +32,7 @@ export default async function(lookupName: string): Promise<void> {
 
       // Move entire module to plugins folder
       fsx.moveSync(path.join(tmpDir, moduleName), pluginDir, {
-        overwrite: true
+        overwrite: true,
       });
 
       // Move each dependency into node_modules folder
@@ -66,7 +66,7 @@ async function _isInsomniaPlugin(lookupName: string): Promise<Object> {
         _getYarnPath(),
         'info',
         lookupName,
-        '--json'
+        '--json',
       ],
       {
         timeout: 5 * 60 * 1000,
@@ -74,8 +74,8 @@ async function _isInsomniaPlugin(lookupName: string): Promise<Object> {
         shell: true,
         env: {
           NODE_ENV: 'production',
-          ELECTRON_RUN_AS_NODE: 'true'
-        }
+          ELECTRON_RUN_AS_NODE: 'true',
+        },
       },
       (err, stdout, stderr) => {
         if (err) {
@@ -110,10 +110,10 @@ async function _isInsomniaPlugin(lookupName: string): Promise<Object> {
           version: data.version,
           dist: {
             shasum: data.dist.shasum,
-            tarball: data.dist.tarball
-          }
+            tarball: data.dist.tarball,
+          },
         });
-      }
+      },
     );
   });
 }
@@ -136,7 +136,7 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
         tmpDir,
         '--no-lockfile',
         '--production',
-        '--no-progress'
+        '--no-progress',
       ],
       {
         timeout: 5 * 60 * 1000,
@@ -145,8 +145,8 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
         shell: true, // Some package installs require a shell
         env: {
           NODE_ENV: 'production',
-          ELECTRON_RUN_AS_NODE: 'true'
-        }
+          ELECTRON_RUN_AS_NODE: 'true',
+        },
       },
       (err, stdout, stderr) => {
         if (err) {
@@ -160,7 +160,7 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
         }
 
         resolve({ tmpDir });
-      }
+      },
     );
   });
 }

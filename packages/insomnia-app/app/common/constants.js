@@ -67,10 +67,7 @@ export const LARGE_RESPONSE_MB = 5;
 export const HUGE_RESPONSE_MB = 100;
 export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ\-_.]+[/\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ.\-+=:\][@%^*&!#?;$]*/;
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
-export const PLUGIN_PATH = path.join(
-  getDataDirectory(),
-  'plugins'
-);
+export const PLUGIN_PATH = path.join(getDataDirectory(), 'plugins');
 
 // Hotkeys
 export const MNEMONIC_SYM = isMac() ? '' : '&';
@@ -116,7 +113,7 @@ export const HTTP_METHODS = [
   METHOD_PATCH,
   METHOD_DELETE,
   METHOD_OPTIONS,
-  METHOD_HEAD
+  METHOD_HEAD,
 ];
 
 // Preview Modes
@@ -127,7 +124,7 @@ export const PREVIEW_MODE_RAW = 'raw';
 const previewModeMap = {
   [PREVIEW_MODE_FRIENDLY]: ['Preview', 'Visual Preview'],
   [PREVIEW_MODE_SOURCE]: ['Source', 'Source Code'],
-  [PREVIEW_MODE_RAW]: ['Raw', 'Raw Data']
+  [PREVIEW_MODE_RAW]: ['Raw', 'Raw Data'],
 };
 
 export const PREVIEW_MODES = Object.keys(previewModeMap);
@@ -150,7 +147,7 @@ const contentTypesMap = {
   [CONTENT_TYPE_FILE]: ['File', 'Binary File'],
   [CONTENT_TYPE_GRAPHQL]: ['GraphQL', 'GraphQL Query'],
   [CONTENT_TYPE_OTHER]: ['Other', 'Other'],
-  [CONTENT_TYPE_EDN]: ['EDN', 'EDN']
+  [CONTENT_TYPE_EDN]: ['EDN', 'EDN'],
 };
 
 // Auth Types
@@ -179,7 +176,7 @@ const authTypesMap = {
   [AUTH_HAWK]: ['Hawk', 'Hawk'],
   [AUTH_AWS_IAM]: ['AWS', 'AWS IAM v4'],
   [AUTH_ASAP]: ['ASAP', 'Atlassian ASAP'],
-  [AUTH_NETRC]: ['Netrc', 'Netrc File']
+  [AUTH_NETRC]: ['Netrc', 'Netrc File'],
 };
 
 export function getPreviewModeName(previewMode, useLong = false) {
@@ -298,5 +295,5 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   507: 'The server has an internal configuration error: the chosen variant resource is configured to engage in transparent content negotiation itself, and is therefore not a proper end point in the negotiation process.',
   508: 'The server detected an infinite loop while processing the request.',
   510: 'Further extensions to the request are required for the server to fulfill it.',
-  511: 'The 511 status code indicates that the client needs to authenticate to gain network access.'
+  511: 'The 511 status code indicates that the client needs to authenticate to gain network access.',
 };

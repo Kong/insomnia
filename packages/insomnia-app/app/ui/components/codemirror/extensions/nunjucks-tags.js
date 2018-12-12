@@ -8,7 +8,7 @@ import { getTagDefinitions } from '../../../../templating/index';
 CodeMirror.defineExtension('enableNunjucksTags', function(
   handleRender,
   handleGetRenderContext,
-  isVariableUncovered = false
+  isVariableUncovered = false,
 ) {
   if (!handleRender) {
     console.warn("enableNunjucksTags wasn't passed a render function");
@@ -19,7 +19,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
     this,
     handleRender,
     handleGetRenderContext,
-    isVariableUncovered
+    isVariableUncovered,
   );
   const debouncedRefreshFn = misc.debounce(refreshFn);
 
@@ -116,7 +116,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
         __nunjucks: true, // Mark that we created it
         __template: tok.string,
         handleMouseEvents: false,
-        replacedWith: el
+        replacedWith: el,
       });
 
       (async function() {
@@ -125,7 +125,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
           mark,
           tok.string,
           renderContext,
-          isVariableUncovered
+          isVariableUncovered,
         );
       })();
 
@@ -136,7 +136,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
           mark,
           tok.string,
           renderContext,
-          isVariableUncovered
+          isVariableUncovered,
         );
       });
 
@@ -154,7 +154,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
             } else {
               console.warn('Tried to replace mark that did not exist', mark);
             }
-          }
+          },
         });
       });
 

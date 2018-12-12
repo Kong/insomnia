@@ -7,13 +7,13 @@ const STATE_NONE = 'none';
 const NUNJUCKS_OPEN_STATES = {
   '{{': STATE_IN_NUN_VAR,
   '{%': STATE_IN_NUN_TAG,
-  '{#': STATE_IN_NUN_COM
+  '{#': STATE_IN_NUN_COM,
 };
 
 const NUNJUCKS_CLOSE_STATES = {
   '}}': STATE_IN_NUN_VAR,
   '%}': STATE_IN_NUN_TAG,
-  '#}': STATE_IN_NUN_COM
+  '#}': STATE_IN_NUN_COM,
 };
 
 /**

@@ -10,9 +10,9 @@ var options = {
     arr: [1, 2, 3],
     nested: { a: 'b' },
     arr_mix: [1, 'a', { arr_mix_nested: {} }],
-    boolean: false
+    boolean: false,
   },
-  json: true
+  json: true,
 };
 
 request(options, function(error, response, body) {

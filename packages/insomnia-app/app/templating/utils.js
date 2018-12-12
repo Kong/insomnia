@@ -10,13 +10,13 @@ export type NunjucksParsedTagArg = {
   displayName?: string,
   quotedBy?: '"' | "'",
   validate?: (value: any) => string,
-  hide?: (Array<NunjucksParsedTagArg>) => boolean
+  hide?: (Array<NunjucksParsedTagArg>) => boolean,
 };
 
 export type NunjucksParsedTag = {
   name: string,
   args: Array<NunjucksParsedTagArg>,
-  rawValue?: string
+  rawValue?: string,
 };
 
 /**

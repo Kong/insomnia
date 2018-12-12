@@ -3,7 +3,7 @@ var settings = {
   crossDomain: true,
   url: 'http://mockbin.com/har?foo=bar&foo=baz&baz=abc&key=value',
   method: 'GET',
-  headers: {}
+  headers: {},
 };
 
 $.ajax(settings).done(function(response) {

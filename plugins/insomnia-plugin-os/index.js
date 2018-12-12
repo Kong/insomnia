@@ -19,15 +19,15 @@ module.exports.templateTags = [
           { displayName: 'hostname', value: 'hostname' },
           { displayName: 'platform', value: 'platform' },
           { displayName: 'release', value: 'release' },
-          { displayName: 'userInfo', value: 'userInfo' }
-        ]
+          { displayName: 'userInfo', value: 'userInfo' },
+        ],
       },
       {
         displayName: 'JSONPath Filter',
         help: 'Some OS functions return objects. Use JSONPath queries to extract desired values.',
         hide: args => !FILTERABLE.includes(args[0].value),
-        type: 'string'
-      }
+        type: 'string',
+      },
     ],
     run(context, fnName, filter) {
       let value = os[fnName]();
@@ -43,6 +43,6 @@ module.exports.templateTags = [
       } else {
         return value;
       }
-    }
-  }
+    },
+  },
 ];

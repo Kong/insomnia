@@ -10,5 +10,5 @@ module.exports.themes = [
   require('./themes/railscasts'),
   require('./themes/solarized-light'),
   require('./themes/solarized'),
-  require('./themes/solarized-dark')
+  require('./themes/solarized-dark'),
 ];

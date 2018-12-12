@@ -10,7 +10,7 @@ describe('exportHar()', () => {
   it('exports single requests', async () => {
     const wrk = await models.workspace.create({
       _id: 'wrk_1',
-      name: 'Workspace'
+      name: 'Workspace',
     });
     const req1 = await models.request.create({
       _id: 'req_1',
@@ -21,13 +21,13 @@ describe('exportHar()', () => {
       method: 'POST',
       body: {
         mimeType: 'application/json',
-        text: '{}'
+        text: '{}',
       },
       headers: [
         { name: 'Content-Type', value: 'application/json' },
         { name: 'Accept', value: 'application/json', disabled: false },
-        { name: 'X-Disabled', value: 'X-Disabled', disabled: true }
-      ]
+        { name: 'X-Disabled', value: 'X-Disabled', disabled: true },
+      ],
     });
     await models.response.create({
       parentId: req1._id,
@@ -38,7 +38,7 @@ describe('exportHar()', () => {
       headers: [{ name: 'Content-Type', value: 'application/json' }],
       contentType: 'application/json',
       bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json'),
-      bodyCompression: null
+      bodyCompression: null,
     });
 
     const exportRequests = [{ requestId: req1._id, environmentId: 'n/a' }];
@@ -48,7 +48,7 @@ describe('exportHar()', () => {
       log: {
         version: '1.2',
         creator: {
-          name: 'Insomnia REST Client'
+          name: 'Insomnia REST Client',
         },
         entries: [
           {
@@ -61,16 +61,16 @@ describe('exportHar()', () => {
               cookies: [],
               headers: [
                 { name: 'Content-Type', value: 'application/json' },
-                { name: 'Accept', value: 'application/json' }
+                { name: 'Accept', value: 'application/json' },
               ],
               queryString: [],
               postData: {
                 mimeType: 'application/json',
                 params: [],
-                text: '{}'
+                text: '{}',
               },
               headersSize: -1,
-              bodySize: -1
+              bodySize: -1,
             },
             response: {
               status: 200,
@@ -81,11 +81,11 @@ describe('exportHar()', () => {
               content: {
                 size: 15,
                 mimeType: 'application/json',
-                text: '{"key":"value"}'
+                text: '{"key":"value"}',
               },
               redirectURL: '',
               headersSize: -1,
-              bodySize: -1
+              bodySize: -1,
             },
             cache: {},
             timings: {
@@ -95,19 +95,19 @@ describe('exportHar()', () => {
               send: 0,
               wait: 999,
               receive: 0,
-              ssl: -1
+              ssl: -1,
             },
-            comment: req1.name
-          }
-        ]
-      }
+            comment: req1.name,
+          },
+        ],
+      },
     });
   });
 
   it('exports multiple requests', async () => {
     const workspace = await models.workspace.create({
       _id: 'wrk_1',
-      name: 'Workspace'
+      name: 'Workspace',
     });
 
     const baseReq = await models.request.create({
@@ -119,7 +119,7 @@ describe('exportHar()', () => {
       url: 'http://localhost',
       method: 'GET',
       body: {},
-      headers: [{ name: 'X-Environment', value: '{{ envvalue }}' }]
+      headers: [{ name: 'X-Environment', value: '{{ envvalue }}' }],
     });
     const req1 = await models.request.duplicate(baseReq);
     req1._id = 'req_1';
@@ -140,51 +140,51 @@ describe('exportHar()', () => {
     await models.response.create({
       _id: 'res_1',
       parentId: req1._id,
-      statusCode: 204
+      statusCode: 204,
     });
     await models.response.create({
       _id: 'res_2',
       parentId: req2._id,
-      statusCode: 404
+      statusCode: 404,
     });
     await models.response.create({
       _id: 'res_3',
       parentId: req3._id,
-      statusCode: 500
+      statusCode: 500,
     });
 
     const envBase = await models.environment.getOrCreateForWorkspace(workspace);
     await models.environment.update(envBase, {
       data: {
-        envvalue: ''
-      }
+        envvalue: '',
+      },
     });
     const envPublic = await models.environment.create({
       _id: 'env_1',
       name: 'Public',
-      parentId: envBase._id
+      parentId: envBase._id,
     });
     await models.environment.update(envPublic, {
       data: {
-        envvalue: 'public'
-      }
+        envvalue: 'public',
+      },
     });
     const envPrivate = await models.environment.create({
       _id: 'env_2',
       name: 'Private',
       isPrivate: true,
-      parentId: envBase._id
+      parentId: envBase._id,
     });
     await models.environment.update(envPrivate, {
       data: {
-        envvalue: 'private'
-      }
+        envvalue: 'private',
+      },
     });
 
     const exportRequests = [
       { requestId: req1._id, environmentId: 'n/a' },
       { requestId: req2._id, environmentId: envPublic._id },
-      { requestId: req3._id, environmentId: envPrivate._id }
+      { requestId: req3._id, environmentId: envPrivate._id },
     ];
     const harExport = await harUtils.exportHar(exportRequests);
 
@@ -192,44 +192,44 @@ describe('exportHar()', () => {
       log: {
         version: '1.2',
         creator: {
-          name: 'Insomnia REST Client'
+          name: 'Insomnia REST Client',
         },
         entries: [
           {
             request: {
-              headers: [{ name: 'X-Environment', value: '' }, { name: 'X-Request', value: '1' }]
+              headers: [{ name: 'X-Environment', value: '' }, { name: 'X-Request', value: '1' }],
             },
             response: {
-              status: 204
+              status: 204,
             },
-            comment: req1.name
+            comment: req1.name,
           },
           {
             request: {
               headers: [
                 { name: 'X-Environment', value: 'public' },
-                { name: 'X-Request', value: '2' }
-              ]
+                { name: 'X-Request', value: '2' },
+              ],
             },
             response: {
-              status: 404
+              status: 404,
             },
-            comment: req2.name
+            comment: req2.name,
           },
           {
             request: {
               headers: [
                 { name: 'X-Environment', value: 'private' },
-                { name: 'X-Request', value: '3' }
-              ]
+                { name: 'X-Request', value: '3' },
+              ],
             },
             response: {
-              status: 500
+              status: 500,
             },
-            comment: req3.name
-          }
-        ]
-      }
+            comment: req3.name,
+          },
+        ],
+      },
     });
   });
 });
@@ -247,8 +247,8 @@ describe('exportHarResponse()', () => {
       httpVersion: 'HTTP/1.1',
       content: {
         size: 0,
-        mimeType: ''
-      }
+        mimeType: '',
+      },
     });
   });
   it('exports a valid har response for a non empty response', async () => {
@@ -264,10 +264,10 @@ describe('exportHarResponse()', () => {
       headers: [
         { name: 'Content-Type', value: 'application/json' },
         { name: 'Content-Length', value: '2' },
-        { name: 'Set-Cookie', value: 'sessionid=12345; HttpOnly; Path=/' }
+        { name: 'Set-Cookie', value: 'sessionid=12345; HttpOnly; Path=/' },
       ],
       contentType: 'application/json',
-      bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json')
+      bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json'),
     });
 
     const harResponse = await harUtils.exportHarResponse(response);
@@ -281,22 +281,22 @@ describe('exportHarResponse()', () => {
           name: 'sessionid',
           value: '12345',
           path: '/',
-          httpOnly: true
-        }
+          httpOnly: true,
+        },
       ],
       headers: [
         { name: 'Content-Type', value: 'application/json' },
         { name: 'Content-Length', value: '2' },
-        { name: 'Set-Cookie', value: 'sessionid=12345; HttpOnly; Path=/' }
+        { name: 'Set-Cookie', value: 'sessionid=12345; HttpOnly; Path=/' },
       ],
       content: {
         size: 15,
         mimeType: 'application/json',
-        text: '{"key":"value"}'
+        text: '{"key":"value"}',
       },
       redirectURL: '',
       headersSize: -1,
-      bodySize: -1
+      bodySize: -1,
     });
   });
 });
@@ -314,14 +314,14 @@ describe('exportHarWithRequest()', () => {
         domain: 'google.com',
         path: '/',
         hostOnly: true,
-        lastAccessed: new Date('2096-10-05T04:40:49.505Z')
-      }
+        lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
+      },
     ];
 
     const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
     await models.cookieJar.update(cookieJar, {
       parentId: workspace._id,
-      cookies
+      cookies,
     });
 
     const request = Object.assign(models.request.init(), {
@@ -331,14 +331,14 @@ describe('exportHarWithRequest()', () => {
       parameters: [{ name: 'foo bar', value: 'hello&world' }],
       method: 'POST',
       body: {
-        text: 'foo bar'
+        text: 'foo bar',
       },
       url: 'http://google.com',
       authentication: {
         type: AUTH_BASIC,
         username: 'user',
-        password: 'pass'
-      }
+        password: 'pass',
+      },
     });
 
     const renderedRequest = await render.getRenderedRequest(request);
@@ -353,12 +353,12 @@ describe('exportHarWithRequest()', () => {
           expires: '2096-10-12T04:40:49.000Z',
           name: 'foo',
           path: '/',
-          value: 'barrrrr'
-        }
+          value: 'barrrrr',
+        },
       ],
       headers: [
         { name: 'Content-Type', value: 'application/json' },
-        { name: 'Authorization', value: 'Basic dXNlcjpwYXNz' }
+        { name: 'Authorization', value: 'Basic dXNlcjpwYXNz' },
       ],
       headersSize: -1,
       httpVersion: 'HTTP/1.1',
@@ -366,11 +366,11 @@ describe('exportHarWithRequest()', () => {
       postData: {
         mimeType: '',
         params: [],
-        text: 'foo bar'
+        text: 'foo bar',
       },
       queryString: [{ name: 'foo bar', value: 'hello&world' }],
       url: 'http://google.com/',
-      settingEncodeUrl: true
+      settingEncodeUrl: true,
     });
   });
 });

@@ -22,7 +22,7 @@ describe('Reducer', function() {
     var query = [
       { name: 'key', value: 'value' },
       { name: 'foo', value: 'bar1' },
-      { name: 'foo', value: 'bar2' }
+      { name: 'foo', value: 'bar2' },
     ];
 
     var obj = query.reduce(reducer, {});

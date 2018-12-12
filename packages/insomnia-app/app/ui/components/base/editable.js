@@ -7,7 +7,7 @@ class Editable extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      editing: false
+      editing: false,
     };
   }
 
@@ -90,7 +90,7 @@ class Editable extends PureComponent {
         title: singleClick ? 'Click to edit' : 'Double click to edit',
         onClick: this._handleSingleClickEditStart,
         onDoubleClick: this._handleEditStart,
-        ...extra
+        ...extra,
       };
 
       if (renderReadView) {
@@ -110,7 +110,7 @@ Editable.propTypes = {
   renderReadView: PropTypes.func,
   singleClick: PropTypes.bool,
   onEditStart: PropTypes.func,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 export default Editable;

@@ -92,7 +92,7 @@ async function install(relDir) {
 
     const p = childProcess.spawn('npm', ['install', '--production', '--no-optional'], {
       cwd: prefix,
-      shell: true
+      shell: true,
     });
 
     p.stdout.on('data', data => {
@@ -127,7 +127,7 @@ function generatePackageJson(relBasePkg, relOutPkg) {
     homepage: basePkg.homepage,
     author: basePkg.author,
     main: 'main.min.js',
-    dependencies: {}
+    dependencies: {},
   };
 
   for (const key of Object.keys(appPkg)) {

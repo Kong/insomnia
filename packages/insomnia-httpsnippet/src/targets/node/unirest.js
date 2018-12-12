@@ -16,9 +16,9 @@ var CodeBuilder = require('../../helpers/code-builder');
 module.exports = function(source, options) {
   var opts = util._extend(
     {
-      indent: '  '
+      indent: '  ',
     },
-    options
+    options,
   );
 
   var includeFS = false;
@@ -38,7 +38,7 @@ module.exports = function(source, options) {
         'CookieJar.add("%s=%s","%s");',
         encodeURIComponent(cookie.name),
         encodeURIComponent(cookie.value),
-        source.url
+        source.url,
       );
     });
 
@@ -98,7 +98,7 @@ module.exports = function(source, options) {
       if (source.postData.text) {
         code.push(
           opts.indent + 'req.send(%s);',
-          JSON.stringify(source.postData.text, null, opts.indent)
+          JSON.stringify(source.postData.text, null, opts.indent),
         );
       }
   }
@@ -125,5 +125,5 @@ module.exports.info = {
   key: 'unirest',
   title: 'Unirest',
   link: 'http://unirest.io/nodejs.html',
-  description: 'Lightweight HTTP Request Client Library'
+  description: 'Lightweight HTTP Request Client Library',
 };

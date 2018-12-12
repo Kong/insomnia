@@ -9,7 +9,7 @@ export function init(): { import: Object, export: Object } {
       },
       async raw(text: string, options: { workspaceId?: string } = {}): Promise<void> {
         await importRaw(options.workspaceId || null, text);
-      }
+      },
     },
     export: {
       async insomnia(options: { includePrivate?: boolean } = {}): Promise<string> {
@@ -18,7 +18,7 @@ export function init(): { import: Object, export: Object } {
       },
       async har(options: { includePrivate?: boolean } = {}): Promise<string> {
         return exportHAR(null, options.includePrivate);
-      }
-    }
+      },
+    },
   };
 }

@@ -18,7 +18,7 @@ class LoginModal extends PureComponent {
       loading: false,
       error: '',
       title: '',
-      message: ''
+      message: '',
     };
   }
 
@@ -107,7 +107,7 @@ class LoginModal extends PureComponent {
             {loading ? <i className="fa fa-spin fa-refresh margin-right-sm" /> : null}
             Login
           </button>
-        </ModalFooter>
+        </ModalFooter>,
       ];
     } else {
       inner = [
@@ -123,7 +123,7 @@ class LoginModal extends PureComponent {
           <button type="button" className="btn" onClick={this.hide}>
             Close
           </button>
-        </ModalFooter>
+        </ModalFooter>,
       ];
     }
 

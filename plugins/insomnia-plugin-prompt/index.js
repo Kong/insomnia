@@ -9,7 +9,7 @@ module.exports.responseHooks = [
     for (const { key } of toRemove) {
       await context.store.removeItem(key);
     }
-  }
+  },
 ];
 
 module.exports.templateTags = [
@@ -22,11 +22,11 @@ module.exports.templateTags = [
         displayName: 'Title',
         type: 'string',
         help: 'Title is a unique string used to identify the prompt value',
-        validate: v => (v ? '' : 'Required')
+        validate: v => (v ? '' : 'Required'),
       },
       {
         displayName: 'Label',
-        type: 'string'
+        type: 'string',
       },
       {
         displayName: 'Default Value',
@@ -34,7 +34,7 @@ module.exports.templateTags = [
         help:
           'This value is used to pre-populate the prompt dialog, but is ALSO used ' +
           'when the app renders preview values (like the one below). This is to prevent the ' +
-          'prompt from displaying too frequently during general app use.'
+          'prompt from displaying too frequently during general app use.',
       },
       {
         displayName: 'Storage Key',
@@ -42,14 +42,14 @@ module.exports.templateTags = [
         help:
           'If this is set, the value will be stored in memory under this key until the app is ' +
           "closed. To force this tag to re-prompt the user, simply change this key's value to " +
-          'something else.'
+          'something else.',
       },
       {
         displayName: 'Mask Text',
         type: 'boolean',
         help: 'If this is enabled, the value when input will be masked like a password field.',
-        defaultValue: false
-      }
+        defaultValue: false,
+      },
     ],
     async run(context, title, label, defaultValue, explicitStorageKey, maskText) {
       if (!title) {
@@ -75,7 +75,7 @@ module.exports.templateTags = [
       const value = await context.app.prompt(title || 'Enter Value', {
         label,
         defaultValue,
-        inputType: maskText ? 'password' : 'text'
+        inputType: maskText ? 'password' : 'text',
       });
 
       if (storageKey) {
@@ -84,6 +84,6 @@ module.exports.templateTags = [
       }
 
       return value;
-    }
-  }
+    },
+  },
 ];

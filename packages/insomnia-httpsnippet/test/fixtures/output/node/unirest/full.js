@@ -10,16 +10,16 @@ req.jar(CookieJar);
 req.query({
   foo: ['bar', 'baz'],
   baz: 'abc',
-  key: 'value'
+  key: 'value',
 });
 
 req.headers({
   'content-type': 'application/x-www-form-urlencoded',
-  accept: 'application/json'
+  accept: 'application/json',
 });
 
 req.form({
-  foo: 'bar'
+  foo: 'bar',
 });
 
 req.end(function(res) {

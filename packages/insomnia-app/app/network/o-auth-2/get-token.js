@@ -16,7 +16,7 @@ import {
   P_EXPIRES_IN,
   P_REFRESH_TOKEN,
   X_RESPONSE_ID,
-  X_ERROR
+  X_ERROR,
 } from './constants';
 import * as models from '../../models';
 import type { RequestAuthentication } from '../../models/request';
@@ -26,7 +26,7 @@ import type { OAuth2Token } from '../../models/o-auth-2-token';
 export default async function(
   requestId: string,
   authentication: RequestAuthentication,
-  forceRefresh: boolean = false
+  forceRefresh: boolean = false,
 ): Promise<OAuth2Token | null> {
   switch (authentication.grantType) {
     case GRANT_TYPE_AUTHORIZATION_CODE:
@@ -45,7 +45,7 @@ export default async function(
 async function _getOAuth2AuthorizationCodeHeader(
   requestId: string,
   authentication: RequestAuthentication,
-  forceRefresh: boolean
+  forceRefresh: boolean,
 ): Promise<OAuth2Token | null> {
   const oAuth2Token = await _getAccessToken(requestId, authentication, forceRefresh);
 
@@ -62,7 +62,7 @@ async function _getOAuth2AuthorizationCodeHeader(
     authentication.clientSecret,
     authentication.redirectUrl,
     authentication.scope,
-    authentication.state
+    authentication.state,
   );
 
   return _updateOAuth2Token(requestId, results);
@@ -71,7 +71,7 @@ async function _getOAuth2AuthorizationCodeHeader(
 async function _getOAuth2ClientCredentialsHeader(
   requestId: string,
   authentication: RequestAuthentication,
-  forceRefresh: boolean
+  forceRefresh: boolean,
 ): Promise<OAuth2Token | null> {
   const oAuth2Token = await _getAccessToken(requestId, authentication, forceRefresh);
 
@@ -87,7 +87,7 @@ async function _getOAuth2ClientCredentialsHeader(
     authentication.clientSecret,
     authentication.scope,
     authentication.audience,
-    authentication.resource
+    authentication.resource,
   );
 
   return _updateOAuth2Token(requestId, results);
@@ -96,7 +96,7 @@ async function _getOAuth2ClientCredentialsHeader(
 async function _getOAuth2ImplicitHeader(
   requestId: string,
   authentication: RequestAuthentication,
-  forceRefresh: boolean
+  forceRefresh: boolean,
 ): Promise<OAuth2Token | null> {
   const oAuth2Token = await _getAccessToken(requestId, authentication, forceRefresh);
 
@@ -112,7 +112,7 @@ async function _getOAuth2ImplicitHeader(
     authentication.redirectUrl,
     authentication.scope,
     authentication.state,
-    authentication.audience
+    authentication.audience,
   );
 
   return _updateOAuth2Token(requestId, results);
@@ -121,7 +121,7 @@ async function _getOAuth2ImplicitHeader(
 async function _getOAuth2PasswordHeader(
   requestId: string,
   authentication: RequestAuthentication,
-  forceRefresh: boolean
+  forceRefresh: boolean,
 ): Promise<OAuth2Token | null> {
   const oAuth2Token = await _getAccessToken(requestId, authentication, forceRefresh);
 
@@ -137,7 +137,7 @@ async function _getOAuth2PasswordHeader(
     authentication.clientSecret,
     authentication.username,
     authentication.password,
-    authentication.scope
+    authentication.scope,
   );
 
   return _updateOAuth2Token(requestId, results);
@@ -146,7 +146,7 @@ async function _getOAuth2PasswordHeader(
 async function _getAccessToken(
   requestId: string,
   authentication: RequestAuthentication,
-  forceRefresh: boolean
+  forceRefresh: boolean,
 ): Promise<OAuth2Token | null> {
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // See if we have a token already //
@@ -187,7 +187,7 @@ async function _getAccessToken(
     authentication.clientId,
     authentication.clientSecret,
     token.refreshToken,
-    authentication.scope
+    authentication.scope,
   );
 
   // ~~~~~~~~~~~~~ //
@@ -214,6 +214,6 @@ async function _updateOAuth2Token(requestId: string, authResults: Object): Promi
 
     // Special Cases
     xResponseId: authResults[X_RESPONSE_ID] || null,
-    xError: authResults[X_ERROR] || null
+    xError: authResults[X_ERROR] || null,
   });
 }

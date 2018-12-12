@@ -21,7 +21,7 @@ describe('init()', () => {
       settingDisableRenderRequestBody: false,
       settingEncodeUrl: true,
       settingRebuildPath: true,
-      settingMaxTimelineDataSize: 1000
+      settingMaxTimelineDataSize: 1000,
     });
   });
 });
@@ -34,7 +34,7 @@ describe('create()', async () => {
     const request = await models.request.create({
       name: 'Test Request',
       parentId: 'fld_124',
-      description: 'A test Request'
+      description: 'A test Request',
     });
     const expected = {
       _id: 'req_cc1dd2ca4275747aa88199e8efd42403',
@@ -57,7 +57,7 @@ describe('create()', async () => {
       settingDisableRenderRequestBody: false,
       settingEncodeUrl: true,
       settingRebuildPath: true,
-      settingMaxTimelineDataSize: 1000
+      settingMaxTimelineDataSize: 1000,
     };
 
     expect(request).toEqual(expected);
@@ -67,7 +67,7 @@ describe('create()', async () => {
   it('fails when missing parentId', async () => {
     Date.now = jest.fn().mockReturnValue(1478795580200);
     expect(() => models.request.create({ name: 'Test Request' })).toThrow(
-      'New Requests missing `parentId`'
+      'New Requests missing `parentId`',
     );
   });
 });
@@ -77,7 +77,7 @@ describe('updateMimeType()', async () => {
   it('adds header when does not exist', async () => {
     const request = await models.request.create({
       name: 'My Request',
-      parentId: 'fld_1'
+      parentId: 'fld_1',
     });
     expect(request).not.toBeNull();
 
@@ -93,8 +93,8 @@ describe('updateMimeType()', async () => {
         { name: 'content-tYPE', value: 'application/json' },
         { name: 'foo', value: 'bar' },
         { bad: true },
-        null
-      ]
+        null,
+      ],
     });
     expect(request).not.toBeNull();
 
@@ -103,7 +103,7 @@ describe('updateMimeType()', async () => {
       { name: 'content-tYPE', value: 'text/html' },
       { name: 'foo', value: 'bar' },
       { bad: true },
-      null
+      null,
     ]);
   });
 
@@ -111,7 +111,7 @@ describe('updateMimeType()', async () => {
     const request = await models.request.create({
       name: 'My Request',
       parentId: 'fld_1',
-      headers: [{ name: 'content-tYPE', value: 'application/json' }]
+      headers: [{ name: 'content-tYPE', value: 'application/json' }],
     });
     expect(request).not.toBeNull();
 
@@ -123,7 +123,7 @@ describe('updateMimeType()', async () => {
     const request = await models.request.create({
       name: 'My Request',
       parentId: 'fld_1',
-      headers: [{ name: 'content-tYPE', value: 'application/json' }]
+      headers: [{ name: 'content-tYPE', value: 'application/json' }],
     });
     expect(request).not.toBeNull();
 
@@ -137,13 +137,13 @@ describe('updateMimeType()', async () => {
       name: 'My Request',
       parentId: 'fld_1',
       body: {
-        text: 'My Data'
-      }
+        text: 'My Data',
+      },
     });
     expect(request).not.toBeNull();
 
     const newRequest = await models.request.updateMimeType(request, 'application/json', false, {
-      text: 'Saved Data'
+      text: 'Saved Data',
     });
     expect(newRequest.body.text).toEqual('Saved Data');
   });
@@ -153,8 +153,8 @@ describe('updateMimeType()', async () => {
       name: 'My Request',
       parentId: 'fld_1',
       body: {
-        text: 'My Data'
-      }
+        text: 'My Data',
+      },
     });
     expect(request).not.toBeNull();
 
@@ -168,13 +168,13 @@ describe('migrate()', () => {
   it('migrates basic case', () => {
     const original = {
       headers: [],
-      body: 'hello world!'
+      body: 'hello world!',
     };
 
     const expected = {
       headers: [],
       body: { mimeType: '', text: 'hello world!' },
-      url: ''
+      url: '',
     };
 
     expect(models.request.migrate(original)).toEqual(expected);
@@ -183,16 +183,16 @@ describe('migrate()', () => {
   it('migrates form-urlencoded', () => {
     const original = {
       headers: [{ name: 'content-type', value: 'application/x-www-form-urlencoded' }],
-      body: 'foo=bar&baz={{ hello }}'
+      body: 'foo=bar&baz={{ hello }}',
     };
 
     const expected = {
       headers: [{ name: 'content-type', value: 'application/x-www-form-urlencoded' }],
       body: {
         mimeType: 'application/x-www-form-urlencoded',
-        params: [{ name: 'foo', value: 'bar' }, { name: 'baz', value: '{{ hello }}' }]
+        params: [{ name: 'foo', value: 'bar' }, { name: 'baz', value: '{{ hello }}' }],
       },
-      url: ''
+      url: '',
     };
 
     expect(models.request.migrate(original)).toEqual(expected);
@@ -203,24 +203,24 @@ describe('migrate()', () => {
       headers: [
         {
           name: 'content-type',
-          value: 'application/x-www-form-urlencoded; charset=utf-8'
-        }
+          value: 'application/x-www-form-urlencoded; charset=utf-8',
+        },
       ],
-      body: 'foo=bar&baz={{ hello }}'
+      body: 'foo=bar&baz={{ hello }}',
     };
 
     const expected = {
       headers: [
         {
           name: 'content-type',
-          value: 'application/x-www-form-urlencoded; charset=utf-8'
-        }
+          value: 'application/x-www-form-urlencoded; charset=utf-8',
+        },
       ],
       body: {
         mimeType: 'application/x-www-form-urlencoded',
-        params: [{ name: 'foo', value: 'bar' }, { name: 'baz', value: '{{ hello }}' }]
+        params: [{ name: 'foo', value: 'bar' }, { name: 'baz', value: '{{ hello }}' }],
       },
-      url: ''
+      url: '',
     };
 
     expect(models.request.migrate(original)).toEqual(expected);
@@ -229,16 +229,16 @@ describe('migrate()', () => {
   it('migrates form-urlencoded malformed', () => {
     const original = {
       headers: [{ name: 'content-type', value: 'application/x-www-form-urlencoded' }],
-      body: '{"foo": "bar"}'
+      body: '{"foo": "bar"}',
     };
 
     const expected = {
       headers: [{ name: 'content-type', value: 'application/x-www-form-urlencoded' }],
       body: {
         mimeType: 'application/x-www-form-urlencoded',
-        params: [{ name: '{"foo": "bar"}', value: '' }]
+        params: [{ name: '{"foo": "bar"}', value: '' }],
       },
-      url: ''
+      url: '',
     };
 
     expect(models.request.migrate(original)).toEqual(expected);
@@ -248,19 +248,19 @@ describe('migrate()', () => {
     const contentToMimeMap = {
       'application/json; charset=utf-8': 'application/json',
       'text/plain': 'text/plain',
-      malformed: 'malformed'
+      malformed: 'malformed',
     };
 
     for (const contentType of Object.keys(contentToMimeMap)) {
       const original = {
         headers: [{ name: 'content-type', value: contentType }],
-        body: ''
+        body: '',
       };
 
       const expected = {
         headers: [{ name: 'content-type', value: contentType }],
         body: { mimeType: contentToMimeMap[contentType], text: '' },
-        url: ''
+        url: '',
       };
 
       expect(models.request.migrate(original)).toEqual(expected);
@@ -269,7 +269,7 @@ describe('migrate()', () => {
 
   it('skips migrate for schema 1', () => {
     const original = {
-      body: { mimeType: 'text/plain', text: 'foo' }
+      body: { mimeType: 'text/plain', text: 'foo' },
     };
 
     expect(models.request.migrate(original)).toBe(original);
@@ -284,14 +284,14 @@ describe('migrate()', () => {
     const expected = {
       body: {
         mimeType: '',
-        text: 'foo bar!'
+        text: 'foo bar!',
       },
-      url: ''
+      url: '',
     };
 
     const expected2 = {
       body: {},
-      url: ''
+      url: '',
     };
 
     expect(models.request.migrate(newBody)).toEqual(expected);
@@ -306,7 +306,7 @@ describe('migrate()', () => {
     const original = {
       _id: 'req_123',
       headers: [],
-      body: 'hello world!'
+      body: 'hello world!',
     };
 
     const expected = {
@@ -330,7 +330,7 @@ describe('migrate()', () => {
       settingDisableRenderRequestBody: false,
       settingEncodeUrl: true,
       settingRebuildPath: true,
-      settingMaxTimelineDataSize: 1000
+      settingMaxTimelineDataSize: 1000,
     };
 
     const migrated = await models.initModel(models.request.type, original);

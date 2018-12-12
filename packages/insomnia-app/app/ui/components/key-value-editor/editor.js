@@ -36,7 +36,7 @@ class Editor extends PureComponent {
     }
 
     this.state = {
-      pairs: pairs
+      pairs: pairs,
     };
   }
 
@@ -52,7 +52,7 @@ class Editor extends PureComponent {
     const pairs = [
       ...this.state.pairs.slice(0, i),
       Object.assign({}, pair),
-      ...this.state.pairs.slice(i + 1)
+      ...this.state.pairs.slice(i + 1),
     ];
 
     this._onChange(pairs);
@@ -79,7 +79,7 @@ class Editor extends PureComponent {
     const pairs = [
       ...withoutPair.slice(0, toIndex),
       Object.assign({}, pairToMove),
-      ...withoutPair.slice(toIndex)
+      ...withoutPair.slice(toIndex),
     ];
 
     this._onChange(pairs);
@@ -167,7 +167,7 @@ class Editor extends PureComponent {
 
     const pair = {
       name: '',
-      value: ''
+      value: '',
     };
 
     // Only add ids if we need 'em
@@ -178,7 +178,7 @@ class Editor extends PureComponent {
     const pairs = [
       ...this.state.pairs.slice(0, position),
       pair,
-      ...this.state.pairs.slice(position)
+      ...this.state.pairs.slice(position),
     ];
 
     this._setFocusedPair(pair);
@@ -336,7 +336,7 @@ class Editor extends PureComponent {
       allowFile,
       allowMultiline,
       sortable,
-      disableDelete
+      disableDelete,
     } = this.props;
 
     const { pairs } = this.state;
@@ -436,7 +436,7 @@ Editor.propTypes = {
   onChooseFile: PropTypes.func,
   onDelete: PropTypes.func,
   onCreate: PropTypes.func,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 export default Editor;

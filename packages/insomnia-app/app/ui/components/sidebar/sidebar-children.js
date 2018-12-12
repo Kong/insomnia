@@ -11,7 +11,7 @@ type Child = {
   doc: Request | RequestGroup,
   children: Array<Child>,
   collapsed: boolean,
-  hidden: boolean
+  hidden: boolean,
 };
 
 type Props = {
@@ -31,7 +31,7 @@ type Props = {
   filter: string,
 
   // Optional
-  activeRequest?: Request
+  activeRequest?: Request,
 };
 
 class SidebarChildren extends React.PureComponent<Props> {
@@ -49,7 +49,7 @@ class SidebarChildren extends React.PureComponent<Props> {
       moveDoc,
       handleActivateRequest,
       activeRequest,
-      workspace
+      workspace,
     } = this.props;
 
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';

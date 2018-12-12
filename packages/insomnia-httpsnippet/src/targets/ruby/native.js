@@ -25,7 +25,7 @@ module.exports = function(source, options) {
     'LOCK',
     'UNLOCK',
     'MOVE',
-    'TRACE'
+    'TRACE',
   ];
   var capMethod = method.charAt(0) + method.substring(1).toLowerCase();
   if (methods.indexOf(method) < 0) {
@@ -72,5 +72,5 @@ module.exports.info = {
   key: 'native',
   title: 'net::http',
   link: 'http://ruby-doc.org/stdlib-2.2.1/libdoc/net/http/rdoc/Net/HTTP.html',
-  description: 'Ruby HTTP client'
+  description: 'Ruby HTTP client',
 };

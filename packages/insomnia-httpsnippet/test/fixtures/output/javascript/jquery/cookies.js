@@ -4,8 +4,8 @@ var settings = {
   url: 'http://mockbin.com/har',
   method: 'POST',
   headers: {
-    cookie: 'foo=bar; bar=baz'
-  }
+    cookie: 'foo=bar; bar=baz',
+  },
 };
 
 $.ajax(settings).done(function(response) {
