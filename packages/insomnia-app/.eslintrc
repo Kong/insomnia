@@ -29,11 +29,11 @@
     "jest/globals": true
   },
   "rules": {
-    "indent": "off",
     "comma-dangle": [
       "error",
       "always-multiline"
     ],
+    "indent": "off",
     "no-var": "error",
     "no-duplicate-imports": "off",
     "react/jsx-uses-react": "error",
