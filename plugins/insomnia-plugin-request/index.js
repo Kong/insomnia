@@ -21,6 +21,11 @@ module.exports.templateTags = [
             description: 'name of request'
           },
           {
+            displayName: 'Query Paramter',
+            value: 'parameter',
+            description: 'value of query parameter from request'
+          },
+          {
             displayName: 'Folder',
             value: 'folder',
             description: 'name of parent folder (or workspace)'
@@ -54,6 +59,8 @@ module.exports.templateTags = [
           switch (args[0].value) {
             case 'cookie':
               return 'Cookie Name';
+            case 'parameter':
+              return 'Query Parameter Name';
             case 'header':
               return 'Header Name';
             default:
@@ -98,12 +105,35 @@ module.exports.templateTags = [
           const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(workspace);
           const url = await getRequestUrl(context, request);
           return getCookieValue(cookieJar, url, name);
+        case 'parameter':
+          if (!name) {
+            throw new Error('No query parameter specified');
+          }
+
+          const parameterNames = [];
+
+          if (request.parameters.length === 0) {
+            throw new Error(`No headers available`);
+          }
+
+          for (const queryParameter of request.parameters) {
+            const queryParameterName = await context.util.render(queryParameter.name);
+            parameterNames.push(queryParameterName);
+            if (queryParameterName.toLowerCase() === name.toLowerCase()) {
+              return context.util.render(queryParameter.value);
+            }
+          }
+
+          const parameterNamesStr = parameterNames.map(n => `"${n}"`).join(',\n\t');
+          throw new Error(
+            `No query parameter with name "${name}".\nChoices are [\n\t${parameterNamesStr}\n]`
+          );
         case 'header':
           if (!name) {
             throw new Error('No header specified');
           }
 
-          const names = [];
+          const headerNames = [];
 
           if (request.headers.length === 0) {
             throw new Error(`No headers available`);
@@ -111,14 +141,14 @@ module.exports.templateTags = [
 
           for (const header of request.headers) {
             const headerName = await context.util.render(header.name);
-            names.push(headerName);
+            headerNames.push(headerName);
             if (headerName.toLowerCase() === name.toLowerCase()) {
               return context.util.render(header.value);
             }
           }
 
-          const namesStr = names.map(n => `"${n}"`).join(',\n\t');
-          throw new Error(`No header with name "${name}".\nChoices are [\n\t${namesStr}\n]`);
+          const headerNamesStr = headerNames.map(n => `"${n}"`).join(',\n\t');
+          throw new Error(`No header with name "${name}".\nChoices are [\n\t${headerNamesStr}\n]`);
         case 'oauth2':
           const token = await context.util.models.oAuth2Token.getByRequestId(request._id);
           if (!token) {
