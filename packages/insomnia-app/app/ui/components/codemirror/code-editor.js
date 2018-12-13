@@ -132,12 +132,13 @@ class CodeEditor extends React.Component {
 
   focus() {
     if (this.codeMirror) {
-      // Refresh must happen when the editor is visible,
-      // so use nextTick to give time for it to be visible.
-      process.nextTick(() => {
-        this.codeMirror.refresh();
-        this.codeMirror.focus();
-      });
+      this.codeMirror.focus();
+    }
+  }
+
+  refresh() {
+    if (this.codeMirror) {
+      this.codeMirror.refresh();
     }
   }
 

@@ -141,7 +141,12 @@ class ResponsePane extends React.PureComponent<Props> {
 
   _handleTabSelect(index: number, lastIndex: number) {
     if (this._responseViewer != null && index === 0 && index !== lastIndex) {
-      this._responseViewer.focus();
+      // Fix for CodeMirror editor not updating its content.
+      // Refresh must be called when the editor is visible,
+      // so use nextTick to give time for it to be visible.
+      process.nextTick(() => {
+        this._responseViewer.refresh();
+      });
     }
   }
 

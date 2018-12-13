@@ -60,9 +60,9 @@ class ResponseViewer extends React.Component<Props, State> {
     };
   }
 
-  focus() {
-    if (this._isViewFocusable()) {
-      this._selectableView.focus();
+  refresh() {
+    if (this._selectableView != null && typeof this._selectableView.refresh === 'function') {
+      this._selectableView.refresh();
     }
   }
 
@@ -167,12 +167,12 @@ class ResponseViewer extends React.Component<Props, State> {
     this._selectableView = n;
   }
 
-  _isViewFocusable() {
-    return this._selectableView != null && typeof this._selectableView.focus === 'function';
-  }
-
   _isViewSelectable() {
-    return this._isViewFocusable() && typeof this._selectableView.selectAll === 'function';
+    return (
+      this._selectableView != null &&
+      typeof this._selectableView.focus === 'function' &&
+      typeof this._selectableView.selectAll === 'function'
+    );
   }
 
   _handleKeyDown(e: KeyboardEvent) {
