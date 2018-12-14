@@ -140,6 +140,12 @@ class CodeEditor extends React.Component {
     }
   }
 
+  refresh() {
+    if (this.codeMirror) {
+      this.codeMirror.refresh();
+    }
+  }
+
   setCursor(ch, line = 0) {
     if (this.codeMirror) {
       if (!this.hasFocus()) {
@@ -272,7 +278,6 @@ class CodeEditor extends React.Component {
 
     // Set default listeners
     const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
-    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
     this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
     this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
     this.codeMirror.on('keydown', this._codemirrorKeyDown);
