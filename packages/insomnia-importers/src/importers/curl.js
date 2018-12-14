@@ -31,6 +31,12 @@ module.exports.convert = function(rawData) {
     if (typeof arg === 'object' && arg.op === ';') {
       commands.push(currentCommand);
       currentCommand = [];
+    } else if (typeof arg === 'object' && arg.op.length > 1 && arg.op.indexOf('$') === 0) {
+      if (arg.op[1] === "'") {
+        // Handle the case where literal like -H $'Header: \'Some Quoted Thing\''
+        const str = arg.op.slice(2, arg.op.length - 1).replace(/\\'/g, "'");
+        currentCommand.push(str);
+      }
     } else if (typeof arg === 'object' && arg.op === 'glob') {
       currentCommand.push(arg.pattern);
     } else if (typeof arg === 'object') {
@@ -138,7 +144,7 @@ function importArgs(args) {
     'data-raw',
     'data-urlencode',
     'data-binary',
-    'data-ascii'
+    'data-ascii',
   );
   const contentTypeHeader = headers.find(h => h.name.toLowerCase() === 'content-type');
   const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : null;
@@ -196,7 +202,7 @@ function importArgs(args) {
     method,
     headers,
     authentication,
-    body
+    body,
   };
 }
 

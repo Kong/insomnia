@@ -37,7 +37,7 @@ document.body.setAttribute('data-platform', process.platform);
           <Component />
         </Provider>
       </AppContainer>,
-      document.getElementById('root')
+      document.getElementById('root'),
     );
   };
 
@@ -78,7 +78,7 @@ function showUpdateNotification() {
   new window.Notification('Insomnia Update Ready', {
     body: 'Relaunch the app for it to take effect',
     silent: true,
-    sticky: true
+    sticky: true,
   });
 }
 

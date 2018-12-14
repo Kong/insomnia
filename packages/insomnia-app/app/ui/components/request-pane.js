@@ -57,12 +57,13 @@ type Props = {
   // Other
   workspace: Workspace,
   settings: Settings,
+  isVariableUncovered: boolean,
   environmentId: string,
   forceRefreshCounter: number,
 
   // Optional
   request: ?Request,
-  oAuth2Token: ?OAuth2Token
+  oAuth2Token: ?OAuth2Token,
 };
 
 @autobind
@@ -76,7 +77,7 @@ class RequestPane extends React.PureComponent<Props> {
   _handleEditDescription(addDescription: boolean) {
     showModal(RequestSettingsModal, {
       request: this.props.request,
-      forceEditMode: addDescription
+      forceEditMode: addDescription,
     });
   }
 
@@ -90,7 +91,7 @@ class RequestPane extends React.PureComponent<Props> {
         (d: any) =>
           d.type === models.request.type && // Only requests
           d._id !== requestId && // Not current request
-          (d.url || '') // Only ones with non-empty URLs
+          (d.url || ''), // Only ones with non-empty URLs
       )
       .map((r: any) => (r.url || '').trim());
 
@@ -168,12 +169,13 @@ class RequestPane extends React.PureComponent<Props> {
       workspace,
       environmentId,
       settings,
+      isVariableUncovered,
       updateRequestAuthentication,
       updateRequestBody,
       updateRequestHeaders,
       updateRequestMimeType,
       updateRequestParameters,
-      updateSettingsShowPasswords
+      updateSettingsShowPasswords,
     } = this.props;
 
     const paneClasses = 'request-pane theme--pane pane';
@@ -258,6 +260,7 @@ class RequestPane extends React.PureComponent<Props> {
               handleSendAndDownload={handleSendAndDownload}
               handleRender={handleRender}
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
               handleGetRenderContext={handleGetRenderContext}
               url={request.url}
               requestId={request._id}
@@ -266,7 +269,7 @@ class RequestPane extends React.PureComponent<Props> {
         </header>
         <Tabs className={paneBodyClasses + ' react-tabs'} forceRenderTabPanel>
           <TabList>
-            <Tab>
+            <Tab tabIndex="-1">
               <ContentTypeDropdown
                 onChange={updateRequestMimeType}
                 contentType={request.body.mimeType}
@@ -279,7 +282,7 @@ class RequestPane extends React.PureComponent<Props> {
                 <i className="fa fa-caret-down space-left" />
               </ContentTypeDropdown>
             </Tab>
-            <Tab>
+            <Tab tabIndex="-1">
               <AuthDropdown
                 onChange={updateRequestAuthentication}
                 authentication={request.authentication}
@@ -288,19 +291,19 @@ class RequestPane extends React.PureComponent<Props> {
                 <i className="fa fa-caret-down space-left" />
               </AuthDropdown>
             </Tab>
-            <Tab>
+            <Tab tabIndex="-1">
               <button>
                 Query
                 {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
               </button>
             </Tab>
-            <Tab>
+            <Tab tabIndex="-1">
               <button>
                 Header
                 {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
               </button>
             </Tab>
-            <Tab>
+            <Tab tabIndex="-1">
               <button>
                 Docs
                 {request.description && (
@@ -323,6 +326,8 @@ class RequestPane extends React.PureComponent<Props> {
               settings={settings}
               onChange={updateRequestBody}
               onChangeHeaders={forceUpdateRequestHeaders}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
             />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
@@ -336,6 +341,7 @@ class RequestPane extends React.PureComponent<Props> {
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
                   nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                  isVariableUncovered={isVariableUncovered}
                   onChange={updateRequestAuthentication}
                 />
               </ErrorBoundary>
@@ -365,6 +371,7 @@ class RequestPane extends React.PureComponent<Props> {
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
                   nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                  isVariableUncovered={isVariableUncovered}
                   onChange={updateRequestParameters}
                 />
               </ErrorBoundary>
@@ -385,6 +392,7 @@ class RequestPane extends React.PureComponent<Props> {
                 handleRender={handleRender}
                 handleGetRenderContext={handleGetRenderContext}
                 nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                isVariableUncovered={isVariableUncovered}
                 editorFontSize={settings.editorFontSize}
                 editorIndentSize={settings.editorIndentSize}
                 editorLineWrapping={settings.editorLineWrapping}

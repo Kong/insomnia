@@ -142,7 +142,7 @@ DebouncedInput.propTypes = {
   onFocus: PropTypes.func,
   onBlur: PropTypes.func,
   textarea: PropTypes.bool,
-  delay: PropTypes.number
+  delay: PropTypes.number,
 };
 
 export default DebouncedInput;

@@ -65,7 +65,7 @@ function loadingRequestsReducer(state = {}, action) {
 export const reducer = combineReducers({
   isLoading: loadingReducer,
   loadingRequestIds: loadingRequestsReducer,
-  activeWorkspaceId: activeWorkspaceReducer
+  activeWorkspaceId: activeWorkspaceReducer,
 });
 
 // ~~~~~~~ //
@@ -92,7 +92,7 @@ export function newCommand(command, args) {
               Do you really want to import <code>{args.uri}</code>?
             </span>
           ),
-          addCancel: true
+          addCancel: true,
         });
         dispatch(importUri(args.workspaceId, args.uri));
         break;
@@ -119,7 +119,7 @@ export function loadRequestStop(requestId) {
 export function setActiveWorkspace(workspaceId) {
   window.localStorage.setItem(
     `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`,
-    JSON.stringify(workspaceId)
+    JSON.stringify(workspaceId),
   );
   return { type: SET_ACTIVE_WORKSPACE, workspaceId };
 }
@@ -127,7 +127,7 @@ export function setActiveWorkspace(workspaceId) {
 export function toggleRequestGroup(requestGroup) {
   return {
     type: REQUEST_GROUP_TOGGLE_COLLAPSE,
-    requestGroupId: requestGroup._id
+    requestGroupId: requestGroup._id,
   };
 }
 
@@ -142,9 +142,9 @@ export function importFile(workspaceId) {
       filters: [
         {
           name: 'Insomnia Import',
-          extensions: ['', 'sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell', 'yaml', 'yml']
-        }
-      ]
+          extensions: ['', 'sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell', 'yaml', 'yml'],
+        },
+      ],
     };
 
     electron.remote.dialog.showOpenDialog(options, async paths => {
@@ -194,9 +194,9 @@ export function exportFile(workspaceId = null) {
       options: [
         {
           name: 'Insomnia – Sharable with other Insomnia users',
-          value: VALUE_JSON
+          value: VALUE_JSON,
         },
-        { name: 'HAR – HTTP Archive Format', value: VALUE_HAR }
+        { name: 'HAR – HTTP Archive Format', value: VALUE_HAR },
       ],
       message: 'Which format would you like to export as?',
       onCancel: () => {
@@ -220,7 +220,7 @@ export function exportFile(workspaceId = null) {
           const names = privateEnvironments.map(e => e.name).join(', ');
           exportPrivateEnvironments = await showModal(AskModal, {
             title: 'Export Private Environments?',
-            message: `Do you want to include private environments (${names}) in your export?`
+            message: `Do you want to include private environments (${names}) in your export?`,
           });
         }
 
@@ -233,15 +233,15 @@ export function exportFile(workspaceId = null) {
           title: 'Export Insomnia Data',
           buttonLabel: 'Export',
           defaultPath: path.join(dir, `${name}_${date}`),
-          filters: []
+          filters: [],
         };
 
         if (selectedFormat === VALUE_HAR) {
           options.filters = [
             {
               name: 'HTTP Archive 1.2',
-              extensions: ['har', 'har.json', 'json']
-            }
+              extensions: ['har', 'har.json', 'json'],
+            },
           ];
         } else {
           options.filters = [{ name: 'Insomnia Export', extensions: ['json'] }];
@@ -265,7 +265,7 @@ export function exportFile(workspaceId = null) {
             showError({
               title: 'Export Failed',
               error: err,
-              message: 'Export failed due to an unexpected error'
+              message: 'Export failed due to an unexpected error',
             });
             dispatch(loadStop());
             return;
@@ -282,7 +282,7 @@ export function exportFile(workspaceId = null) {
             dispatch(loadStop());
           });
         });
-      }
+      },
     });
   };
 }

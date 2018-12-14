@@ -8,7 +8,7 @@ describe('render()', () => {
   beforeEach(globalBeforeEach);
   it('renders hello world', async () => {
     const rendered = await renderUtils.render('Hello {{ msg }}!', {
-      msg: 'World'
+      msg: 'World',
     });
     expect(rendered).toBe('Hello World!');
   });
@@ -39,35 +39,35 @@ describe('buildRenderContext()', () => {
     const ancestors = [
       {
         type: models.requestGroup.type,
-        environment: { foo: 'parent', ancestor: true }
+        environment: { foo: 'parent', ancestor: true },
       },
       {
         type: models.requestGroup.type,
-        environment: { foo: 'grandparent', ancestor: true }
-      }
+        environment: { foo: 'grandparent', ancestor: true },
+      },
     ];
 
     const rootEnvironment = {
       type: models.environment.type,
-      data: { foo: 'root', root: true }
+      data: { foo: 'root', root: true },
     };
 
     const subEnvironment = {
       type: models.environment.type,
-      data: { foo: 'sub', sub: true }
+      data: { foo: 'sub', sub: true },
     };
 
     const context = await renderUtils.buildRenderContext(
       ancestors,
       rootEnvironment,
-      subEnvironment
+      subEnvironment,
     );
 
     expect(context).toEqual({
       foo: 'parent',
       ancestor: true,
       root: true,
-      sub: true
+      sub: true,
     });
   });
 
@@ -76,15 +76,15 @@ describe('buildRenderContext()', () => {
       {
         // Sub Environment
         type: models.requestGroup.type,
-        environment: { recursive: '{{ recursive }}/hello' }
-      }
+        environment: { recursive: '{{ recursive }}/hello' },
+      },
     ];
 
     const context = await renderUtils.buildRenderContext(ancestors);
 
     // This is longer than 3 because it multiplies every time (1 -> 2 -> 4 -> 8)
     expect(context).toEqual({
-      recursive: '{{ recursive }}/hello/hello/hello/hello/hello/hello/hello/hello'
+      recursive: '{{ recursive }}/hello/hello/hello/hello/hello/hello/hello/hello',
     });
   });
 
@@ -94,8 +94,8 @@ describe('buildRenderContext()', () => {
       data: {
         proto: 'http',
         domain: 'base.com',
-        url: '{{ proto }}://{{ domain }}'
-      }
+        url: '{{ proto }}://{{ domain }}',
+      },
     };
 
     const sub = {
@@ -104,8 +104,8 @@ describe('buildRenderContext()', () => {
         proto: 'https',
         domain: 'sub.com',
         port: 8000,
-        url: '{{ proto }}://{{ domain }}:{{ port }}'
-      }
+        url: '{{ proto }}://{{ domain }}:{{ port }}',
+      },
     };
 
     const ancestors = [
@@ -115,9 +115,9 @@ describe('buildRenderContext()', () => {
         environment: {
           proto: 'https',
           domain: 'folder.com',
-          port: 7000
-        }
-      }
+          port: 7000,
+        },
+      },
     ];
 
     const context = await renderUtils.buildRenderContext(ancestors, root, sub);
@@ -126,19 +126,19 @@ describe('buildRenderContext()', () => {
       proto: 'https',
       domain: 'folder.com',
       port: 7000,
-      url: 'https://folder.com:7000'
+      url: 'https://folder.com:7000',
     });
   });
 
   it('does the thing', async () => {
     const root = {
       type: models.environment.type,
-      data: { url: 'insomnia.rest' }
+      data: { url: 'insomnia.rest' },
     };
 
     const sub = {
       type: models.environment.type,
-      data: { url: '{{ url }}/sub' }
+      data: { url: '{{ url }}/sub' },
     };
 
     const ancestors = [
@@ -147,16 +147,16 @@ describe('buildRenderContext()', () => {
         type: models.requestGroup.type,
         environment: {
           url: '{{ url }}/{{ name }}',
-          name: 'folder'
-        }
-      }
+          name: 'folder',
+        },
+      },
     ];
 
     const context = await renderUtils.buildRenderContext(ancestors, root, sub);
 
     expect(context).toEqual({
       url: 'insomnia.rest/sub/folder',
-      name: 'folder'
+      name: 'folder',
     });
   });
 
@@ -170,9 +170,9 @@ describe('buildRenderContext()', () => {
           c: '/c{{ d }}',
           b: '/b{{ c }}',
           a: '/a{{ b }}',
-          test: 'http://insomnia.rest{{ a }}'
-        }
-      }
+          test: 'http://insomnia.rest{{ a }}',
+        },
+      },
     ];
 
     const context = await renderUtils.buildRenderContext(ancestors);
@@ -182,7 +182,7 @@ describe('buildRenderContext()', () => {
       c: '/c/d',
       b: '/b/c/d',
       a: '/a/b/c/d',
-      test: 'http://insomnia.rest/a/b/c/d'
+      test: 'http://insomnia.rest/a/b/c/d',
     });
   });
 
@@ -193,9 +193,9 @@ describe('buildRenderContext()', () => {
         type: models.requestGroup.type,
         environment: {
           sibling: 'sibling',
-          test: '{{ sibling }}/hello'
-        }
-      }
+          test: '{{ sibling }}/hello',
+        },
+      },
     ];
 
     const context = await renderUtils.buildRenderContext(ancestors);
@@ -209,23 +209,23 @@ describe('buildRenderContext()', () => {
         name: 'Parent',
         type: models.requestGroup.type,
         environment: {
-          test: '{{ grandparent }} parent'
-        }
+          test: '{{ grandparent }} parent',
+        },
       },
       {
         name: 'Grandparent',
         type: models.requestGroup.type,
         environment: {
-          grandparent: 'grandparent'
-        }
-      }
+          grandparent: 'grandparent',
+        },
+      },
     ];
 
     const context = await renderUtils.buildRenderContext(ancestors);
 
     expect(context).toEqual({
       grandparent: 'grandparent',
-      test: 'grandparent parent'
+      test: 'grandparent parent',
     });
   });
 
@@ -235,16 +235,16 @@ describe('buildRenderContext()', () => {
         name: 'Parent',
         type: models.requestGroup.type,
         environment: {
-          base_url: '{{ base_url }}/resource'
-        }
+          base_url: '{{ base_url }}/resource',
+        },
       },
       {
         name: 'Grandparent',
         type: models.requestGroup.type,
         environment: {
-          base_url: 'https://insomnia.rest'
-        }
-      }
+          base_url: 'https://insomnia.rest',
+        },
+      },
     ];
 
     const context = await renderUtils.buildRenderContext(ancestors);
@@ -258,8 +258,8 @@ describe('buildRenderContext()', () => {
         name: 'Parent',
         type: models.requestGroup.type,
         environment: {
-          host: 'parent.com'
-        }
+          host: 'parent.com',
+        },
       },
       {
         name: 'Grandparent',
@@ -269,22 +269,22 @@ describe('buildRenderContext()', () => {
           node: {
             admin: 'admin',
             test: 'test',
-            port: 8080
+            port: 8080,
           },
           urls: {
             admin: 'https://{{ host }}/{{ node.admin }}',
-            test: 'https://{{ host }}/{{ node.test }}'
-          }
-        }
-      }
+            test: 'https://{{ host }}/{{ node.test }}',
+          },
+        },
+      },
     ];
 
     const context = await renderUtils.buildRenderContext(ancestors);
     expect(await renderUtils.render('{{ urls.admin }}/foo', context)).toBe(
-      'https://parent.com/admin/foo'
+      'https://parent.com/admin/foo',
     );
     expect(await renderUtils.render('{{ urls.test }}/foo', context)).toBe(
-      'https://parent.com/test/foo'
+      'https://parent.com/test/foo',
     );
   });
 
@@ -294,16 +294,16 @@ describe('buildRenderContext()', () => {
         name: 'Parent',
         type: models.requestGroup.type,
         environment: {
-          parent: 'parent'
-        }
+          parent: 'parent',
+        },
       },
       {
         name: 'Grandparent',
         type: models.requestGroup.type,
         environment: {
-          test: '{{ parent }} grandparent'
-        }
-      }
+          test: '{{ parent }} grandparent',
+        },
+      },
     ];
 
     const context = await renderUtils.buildRenderContext(ancestors);
@@ -318,32 +318,32 @@ describe('buildRenderContext()', () => {
         environment: {
           url: '{{ base_url }}/resource',
           ancestor: true,
-          winner: 'folder parent'
-        }
+          winner: 'folder parent',
+        },
       },
       {
         type: models.requestGroup.type,
         environment: {
           ancestor: true,
-          winner: 'folder grandparent'
-        }
-      }
+          winner: 'folder grandparent',
+        },
+      },
     ];
 
     const subEnvironment = {
       type: models.environment.type,
-      data: { winner: 'sub', sub: true, base_url: 'https://insomnia.rest' }
+      data: { winner: 'sub', sub: true, base_url: 'https://insomnia.rest' },
     };
 
     const rootEnvironment = {
       type: models.environment.type,
-      data: { winner: 'root', root: true, base_url: 'ignore this' }
+      data: { winner: 'root', root: true, base_url: 'ignore this' },
     };
 
     const context = await renderUtils.buildRenderContext(
       ancestors,
       rootEnvironment,
-      subEnvironment
+      subEnvironment,
     );
 
     expect(context).toEqual({
@@ -352,7 +352,7 @@ describe('buildRenderContext()', () => {
       ancestor: true,
       winner: 'folder parent',
       root: true,
-      sub: true
+      sub: true,
     });
   });
 
@@ -365,8 +365,8 @@ describe('buildRenderContext()', () => {
         orderId: 123456789012345,
         password: "{% hash 'sha512', 'hex', hash_input %}",
         password_expected: "{% hash 'sha512', 'hex', hash_input_expected %}",
-        secret: 'ThisIsATopSecretValue'
-      }
+        secret: 'ThisIsATopSecretValue',
+      },
     };
 
     const context = await renderUtils.buildRenderContext([], rootEnvironment);
@@ -379,7 +379,7 @@ describe('buildRenderContext()', () => {
         'ea84d15f33d3f9e9098fe01659b1ea0599d345770bba20ba98bf9056676a83ffe6b5528b2451ad04badbf690cf3009a94c510121cc6897045f8bb4ba0826134c',
       password_expected:
         'ea84d15f33d3f9e9098fe01659b1ea0599d345770bba20ba98bf9056676a83ffe6b5528b2451ad04badbf690cf3009a94c510121cc6897045f8bb4ba0826134c',
-      secret: 'ThisIsATopSecretValue'
+      secret: 'ThisIsATopSecretValue',
     });
   });
 
@@ -391,7 +391,7 @@ describe('buildRenderContext()', () => {
     const context = await renderUtils.buildRenderContext(
       ancestors,
       rootEnvironment,
-      subEnvironment
+      subEnvironment,
     );
 
     expect(context).toEqual({});
@@ -405,15 +405,15 @@ describe('render()', () => {
       {
         foo: '{{ foo }}',
         bar: 'bar',
-        baz: '{{ bad }}'
+        baz: '{{ bad }}',
       },
-      { foo: 'bar', bad: 'hi' }
+      { foo: 'bar', bad: 'hi' },
     );
 
     expect(newObj).toEqual({
       foo: 'bar',
       bar: 'bar',
-      baz: 'hi'
+      baz: 'hi',
     });
   });
 
@@ -428,8 +428,8 @@ describe('render()', () => {
       num: 1234,
       nested: {
         foo: '{{ foo }}',
-        arr: [1, 2, '{{ foo }}']
-      }
+        arr: [1, 2, '{{ foo }}'],
+      },
     };
 
     const newObj = await renderUtils.render(obj, { foo: 'bar' });
@@ -443,8 +443,8 @@ describe('render()', () => {
       num: 1234,
       nested: {
         foo: 'bar',
-        arr: [1, 2, 'bar']
-      }
+        arr: [1, 2, 'bar'],
+      },
     });
 
     // Make sure original request isn't changed
@@ -459,9 +459,9 @@ describe('render()', () => {
         {
           foo: '{{ foo }',
           bar: 'bar',
-          baz: '{{ bad }}'
+          baz: '{{ bad }}',
         },
-        { foo: 'bar' }
+        { foo: 'bar' },
       );
       fail('Render should have failed');
     } catch (err) {
@@ -477,7 +477,7 @@ describe('render()', () => {
       template,
       context,
       null,
-      renderUtils.KEEP_ON_ERROR
+      renderUtils.KEEP_ON_ERROR,
     );
 
     expect(resultOnlyVars).toBe('{{ foo }} {% invalid "hi" %}');
@@ -491,7 +491,7 @@ describe('render()', () => {
 
   it('outputs correct error path', async () => {
     const template = {
-      foo: [{ bar: '{% foo %}' }]
+      foo: [{ bar: '{% foo %}' }],
     };
 
     try {
@@ -504,7 +504,7 @@ describe('render()', () => {
 
   it('outputs correct error path when private first node', async () => {
     const template = {
-      _foo: { _bar: { baz: '{% foo %}' } }
+      _foo: { _bar: { baz: '{% foo %}' } },
     };
 
     try {

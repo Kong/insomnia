@@ -9,8 +9,8 @@ type NunjucksConfig = {
     variableStart: string,
     variableEnd: string,
     commentStart: string,
-    commentEnd: string
-  }
+    commentEnd: string,
+  },
 };
 
 declare class Nunjucks<T> {
@@ -22,6 +22,6 @@ declare class Nunjucks<T> {
 
 declare module 'nunjucks' {
   declare module.exports: {
-    configure: <T>(config: NunjucksConfig) => Nunjucks<T>
+    configure: <T>(config: NunjucksConfig) => Nunjucks<T>,
   };
 }

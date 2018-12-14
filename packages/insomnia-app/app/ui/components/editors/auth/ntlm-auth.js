@@ -31,7 +31,8 @@ class NTLMAuth extends PureComponent {
       showPasswords,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered,
     } = this.props;
 
     return (
@@ -47,7 +48,7 @@ class NTLMAuth extends PureComponent {
               <td className="wide">
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
-                    'form-control--inactive': authentication.disabled
+                    'form-control--inactive': authentication.disabled,
                   })}>
                   <OneLineEditor
                     type="text"
@@ -58,6 +59,7 @@ class NTLMAuth extends PureComponent {
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
+                    isVariableUncovered={isVariableUncovered}
                   />
                 </div>
               </td>
@@ -71,7 +73,7 @@ class NTLMAuth extends PureComponent {
               <td className="wide">
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
-                    'form-control--inactive': authentication.disabled
+                    'form-control--inactive': authentication.disabled,
                   })}>
                   <OneLineEditor
                     type={showPasswords ? 'text' : 'password'}
@@ -81,6 +83,7 @@ class NTLMAuth extends PureComponent {
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
+                    isVariableUncovered={isVariableUncovered}
                   />
                 </div>
               </td>
@@ -122,7 +125,8 @@ NTLMAuth.propTypes = {
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
   authentication: PropTypes.object.isRequired,
-  showPasswords: PropTypes.bool.isRequired
+  showPasswords: PropTypes.bool.isRequired,
+  isVariableUncovered: PropTypes.bool.isRequired,
 };
 
 export default NTLMAuth;

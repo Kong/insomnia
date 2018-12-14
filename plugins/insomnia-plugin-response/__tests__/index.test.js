@@ -24,8 +24,8 @@ describe('Response tag', () => {
           _id: 'res_1',
           parentId: 'req_1',
           statusCode: 200,
-          _body: '{"foo": "bar"}'
-        }
+          _body: '{"foo": "bar"}',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -46,8 +46,8 @@ describe('Response tag', () => {
           _id: 'res_1',
           parentId: 'req_1',
           statusCode: 200,
-          _body: '{"foo": "bar"}'
-        }
+          _body: '{"foo": "bar"}',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -71,8 +71,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'application/json',
-          _body: '{"foo": "bar"}'
-        }
+          _body: '{"foo": "bar"}',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -90,8 +90,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'application/json',
-          _body: '{"foo": "'
-        }
+          _body: '{"foo": "',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -113,8 +113,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'application/json',
-          _body: '{"foo": "bar"}'
-        }
+          _body: '{"foo": "bar"}',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -136,8 +136,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'application/json',
-          _body: '{"foo": "bar"}'
-        }
+          _body: '{"foo": "bar"}',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -159,8 +159,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'application/json',
-          _body: '{"array": ["bar", "baz"]}'
-        }
+          _body: '{"array": ["bar", "baz"]}',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -182,8 +182,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'application/json; charset=UTF-16',
-          _body: iconv.encode('{"array": ["bar", "baz"]}', 'UTF-16')
-        }
+          _body: iconv.encode('{"array": ["bar", "baz"]}', 'UTF-16'),
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -202,8 +202,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'application/xml',
-          _body: '<foo><bar>Hello World!</bar></foo>'
-        }
+          _body: '<foo><bar>Hello World!</bar></foo>',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -221,8 +221,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'application/xml',
-          _body: '<foo><bar hello="World">Hello World!</bar></foo>'
-        }
+          _body: '<foo><bar hello="World">Hello World!</bar></foo>',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -240,8 +240,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'application/xml',
-          _body: '<foo><bar hello="World">Hello World!</bar></foo>'
-        }
+          _body: '<foo><bar hello="World">Hello World!</bar></foo>',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -259,8 +259,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'application/xml',
-          _body: '<hi></hi></sstr>'
-        }
+          _body: '<hi></hi></sstr>',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -282,8 +282,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'application/xml',
-          _body: '<foo></foo>'
-        }
+          _body: '<foo></foo>',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -305,8 +305,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'application/xml',
-          _body: '<foo></foo>'
-        }
+          _body: '<foo></foo>',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -328,8 +328,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'application/xml',
-          _body: '<foo><bar>Hello World!</bar><bar>And again!</bar></foo>'
-        }
+          _body: '<foo><bar>Hello World!</bar><bar>And again!</bar></foo>',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -355,9 +355,9 @@ describe('Response tag', () => {
           contentType: '',
           headers: [
             { name: 'Content-Type', value: 'application/json' },
-            { name: 'Content-Length', value: '20' }
-          ]
-        }
+            { name: 'Content-Length', value: '20' },
+          ],
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -366,7 +366,7 @@ describe('Response tag', () => {
       expect(await tag.run(context, 'header', 'req_1', 'Content-Type')).toBe('application/json');
       expect(await tag.run(context, 'header', 'req_1', 'CONTENT-type')).toBe('application/json');
       expect(await tag.run(context, 'header', 'req_1', 'CONTENT-type    ')).toBe(
-        'application/json'
+        'application/json',
       );
     });
 
@@ -380,9 +380,9 @@ describe('Response tag', () => {
           statusCode: 200,
           headers: [
             { name: 'Content-Type', value: 'application/json' },
-            { name: 'Content-Length', value: '20' }
-          ]
-        }
+            { name: 'Content-Length', value: '20' },
+          ],
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -393,7 +393,7 @@ describe('Response tag', () => {
       } catch (err) {
         expect(err.message).toBe(
           'No header with name "missing".\n' +
-            'Choices are [\n\t"Content-Type",\n\t"Content-Length"\n]'
+            'Choices are [\n\t"Content-Type",\n\t"Content-Length"\n]',
         );
       }
     });
@@ -409,8 +409,8 @@ describe('Response tag', () => {
           parentId: 'req_1',
           statusCode: 200,
           contentType: 'text/plain',
-          _body: 'Hello World!'
-        }
+          _body: 'Hello World!',
+        },
       ];
 
       const context = _genTestContext(requests, responses);
@@ -434,7 +434,7 @@ function _genTestContext(requests, responses) {
         request: {
           getById(requestId) {
             return requests.find(r => r._id === requestId) || null;
-          }
+          },
         },
         response: {
           getLatestForRequestId(requestId) {
@@ -452,9 +452,9 @@ function _genTestContext(requests, responses) {
             }
 
             return strOrBuffer;
-          }
-        }
-      }
-    }
+          },
+        },
+      },
+    },
   };
 }

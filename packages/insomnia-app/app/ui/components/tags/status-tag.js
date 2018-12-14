@@ -9,7 +9,7 @@ type Props = {
 
   // Optional
   small?: boolean,
-  statusMessage?: string
+  statusMessage?: string,
 };
 
 class StatusTag extends React.PureComponent<Props> {

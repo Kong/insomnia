@@ -4,7 +4,7 @@ import type { Hotkey as HotkeyType } from '../../../../common/hotkeys';
 import Hotkey from '../../hotkey';
 
 type Props = {
-  hotkey: HotkeyType
+  hotkey: HotkeyType,
 };
 
 class DropdownHint extends React.PureComponent<Props> {

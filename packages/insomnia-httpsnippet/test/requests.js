@@ -20,7 +20,7 @@ var requests = [
   'https',
   'multipart-data',
   'multipart-form-data',
-  'short'
+  'short',
 ];
 
 // test all the things!

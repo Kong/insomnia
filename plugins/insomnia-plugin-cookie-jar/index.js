@@ -9,12 +9,12 @@ module.exports.templateTags = [
       {
         type: 'string',
         displayName: 'Cookie Url',
-        description: 'fully qualified URL (e.g. https://domain.tld/path)'
+        description: 'fully qualified URL (e.g. https://domain.tld/path)',
       },
       {
         type: 'string',
-        displayName: 'Cookie Name'
-      }
+        displayName: 'Cookie Name',
+      },
     ],
     async run(context, url, name) {
       const { meta } = context;
@@ -32,8 +32,8 @@ module.exports.templateTags = [
       const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(workspace);
 
       return getCookieValue(cookieJar, url, name);
-    }
-  }
+    },
+  },
 ];
 
 function getCookieValue(cookieJar, url, name) {
@@ -54,7 +54,7 @@ function getCookieValue(cookieJar, url, name) {
       if (!cookie) {
         const names = cookies.map(c => `"${c.key}"`).join(',\n\t');
         throw new Error(
-          `No cookie with name "${name}".\nChoices are [\n\t${names}\n] for url "${url}"`
+          `No cookie with name "${name}".\nChoices are [\n\t${names}\n] for url "${url}"`,
         );
       } else {
         resolve(cookie ? cookie.value : null);

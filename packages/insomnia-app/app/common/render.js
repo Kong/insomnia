@@ -21,14 +21,14 @@ export const RENDER_PURPOSE_GENERAL: RenderPurpose = 'general';
 
 export type RenderedRequest = Request & {
   cookies: Array<{ name: string, value: string, disabled?: boolean }>,
-  cookieJar: CookieJar
+  cookieJar: CookieJar,
 };
 
 export async function buildRenderContext(
   ancestors: Array<BaseModel> | null,
   rootEnvironment: Environment | null,
   subEnvironment: Environment | null,
-  baseContext: Object = {}
+  baseContext: Object = {},
 ): Object {
   const envObjects = [];
 
@@ -77,7 +77,7 @@ export async function buildRenderContext(
             renderContext, // Only render with key being overwritten
             null,
             KEEP_ON_ERROR,
-            'Environment'
+            'Environment',
           );
         } else {
           // Otherwise it's just a regular replacement
@@ -101,7 +101,7 @@ export async function buildRenderContext(
         finalRenderContext,
         null,
         KEEP_ON_ERROR,
-        'Environment'
+        'Environment',
       );
     }
   }
@@ -123,7 +123,7 @@ export async function render<T>(
   context: Object = {},
   blacklistPathRegex: RegExp | null = null,
   errorMode: string = THROW_ON_ERROR,
-  name: string = ''
+  name: string = '',
 ): Promise<T> {
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
@@ -193,13 +193,13 @@ export async function getRenderContext(
   request: Request,
   environmentId: string,
   ancestors: Array<BaseModel> | null = null,
-  purpose: string | null = null
+  purpose: string | null = null,
 ): Promise<Object> {
   if (!ancestors) {
     ancestors = await db.withAncestors(request, [
       models.request.type,
       models.requestGroup.type,
-      models.workspace.type
+      models.workspace.type,
     ]);
   }
 
@@ -209,15 +209,45 @@ export async function getRenderContext(
   }
 
   const rootEnvironment = await models.environment.getOrCreateForWorkspaceId(
-    workspace ? workspace._id : 'n/a'
+    workspace ? workspace._id : 'n/a',
   );
   const subEnvironment = await models.environment.getById(environmentId);
+
+  let keySource = {};
+  for (let key in (rootEnvironment || {}).data) {
+    keySource[key] = 'root';
+  }
+  if (subEnvironment) {
+    for (let key in subEnvironment.data || {}) {
+      if (subEnvironment.name) {
+        keySource[key] = subEnvironment.name;
+      }
+    }
+  }
+  if (ancestors) {
+    for (let idx = 0; idx < ancestors.length; idx++) {
+      let ancestor: any = ancestors[idx] || {};
+      if (
+        ancestor.type === 'RequestGroup' &&
+        ancestor.hasOwnProperty('environment') &&
+        ancestor.hasOwnProperty('name')
+      ) {
+        for (let key in ancestor.environment || {}) {
+          keySource[key] = ancestor.name || '';
+        }
+      }
+    }
+  }
 
   // Add meta data helper function
   const baseContext = {};
   baseContext.getMeta = () => ({
     requestId: request ? request._id : null,
-    workspaceId: workspace ? workspace._id : 'n/a'
+    workspaceId: workspace ? workspace._id : 'n/a',
+  });
+
+  baseContext.getKeysContext = () => ({
+    keyContext: keySource,
   });
 
   baseContext.getPurpose = () => purpose;
@@ -229,12 +259,12 @@ export async function getRenderContext(
 export async function getRenderedRequestAndContext(
   request: Request,
   environmentId: string,
-  purpose?: string
+  purpose?: string,
 ): Promise<{ request: RenderedRequest, context: Object }> {
   const ancestors = await db.withAncestors(request, [
     models.request.type,
     models.requestGroup.type,
-    models.workspace.type
+    models.workspace.type,
   ]);
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
   const parentId = workspace ? workspace._id : 'n/a';
@@ -256,7 +286,7 @@ export async function getRenderedRequestAndContext(
   const renderResult = await render(
     { _request: request, _cookieJar: cookieJar },
     renderContext,
-    request.settingDisableRenderRequestBody ? /^body.*/ : null
+    request.settingDisableRenderRequestBody ? /^body.*/ : null,
   );
 
   const renderedRequest = renderResult._request;
@@ -311,15 +341,15 @@ export async function getRenderedRequestAndContext(
       settingRebuildPath: renderedRequest.settingRebuildPath,
       settingMaxTimelineDataSize: renderedRequest.settingMaxTimelineDataSize,
       type: renderedRequest.type,
-      url: renderedRequest.url
-    }
+      url: renderedRequest.url,
+    },
   };
 }
 
 export async function getRenderedRequest(
   request: Request,
   environmentId: string,
-  purpose?: string
+  purpose?: string,
 ): Promise<RenderedRequest> {
   const result = await getRenderedRequestAndContext(request, environmentId, purpose);
   return result.request;

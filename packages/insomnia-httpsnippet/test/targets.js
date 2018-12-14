@@ -53,7 +53,7 @@ var itShouldHaveRequestTestOutputFixture = function(request, target, path) {
           fixture +
           ' fixture file for target: ' +
           target +
-          '. Snippet tests will be skipped.'
+          '. Snippet tests will be skipped.',
       );
   });
 };

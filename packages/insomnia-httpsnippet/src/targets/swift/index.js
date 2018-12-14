@@ -5,8 +5,8 @@ module.exports = {
     key: 'swift',
     title: 'Swift',
     extname: '.swift',
-    default: 'nsurlsession'
+    default: 'nsurlsession',
   },
 
-  nsurlsession: require('./nsurlsession')
+  nsurlsession: require('./nsurlsession'),
 };

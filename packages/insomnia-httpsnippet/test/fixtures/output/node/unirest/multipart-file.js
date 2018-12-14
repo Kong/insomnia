@@ -4,14 +4,14 @@ var unirest = require('unirest');
 var req = unirest('POST', 'http://mockbin.com/har');
 
 req.headers({
-  'content-type': 'multipart/form-data; boundary=---011000010111000001101001'
+  'content-type': 'multipart/form-data; boundary=---011000010111000001101001',
 });
 
 req.multipart([
   {
     body: fs.createReadStream('test/fixtures/files/hello.txt'),
-    'content-type': 'text/plain'
-  }
+    'content-type': 'text/plain',
+  },
 ]);
 
 req.end(function(res) {

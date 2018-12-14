@@ -5,13 +5,13 @@ import * as electron from 'electron';
 
 type Props = {
   children: React.Node,
-  className: ?string
+  className: ?string,
 };
 
 type State = {
   status: string,
   checking: boolean,
-  updateAvailable: boolean
+  updateAvailable: boolean,
 };
 
 @autobind
@@ -21,7 +21,7 @@ class CheckForUpdatesButton extends React.PureComponent<Props, State> {
     this.state = {
       status: '',
       checking: false,
-      updateAvailable: false
+      updateAvailable: false,
     };
   }
 

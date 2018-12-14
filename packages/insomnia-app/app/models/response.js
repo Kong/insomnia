@@ -8,9 +8,9 @@ import crypto from 'crypto';
 import path from 'path';
 import zlib from 'zlib';
 import mkdirp from 'mkdirp';
-import * as electron from 'electron';
 import { MAX_RESPONSES } from '../common/constants';
 import * as db from '../common/database';
+import { getDataDirectory } from '../common/misc';
 
 export const name = 'Response';
 export const type = 'Response';
@@ -19,12 +19,12 @@ export const canDuplicate = false;
 
 export type ResponseHeader = {
   name: string,
-  value: string
+  value: string,
 };
 
 export type ResponseTimelineEntry = {
   name: string,
-  value: string
+  value: string,
 };
 
 type BaseResponse = {
@@ -45,7 +45,7 @@ type BaseResponse = {
 
   // Things from the request
   settingStoreCookies: boolean | null,
-  settingSendCookies: boolean | null
+  settingSendCookies: boolean | null,
 };
 
 export type Response = BaseModel & BaseResponse;
@@ -69,7 +69,7 @@ export function init(): BaseResponse {
 
     // Things from the request
     settingStoreCookies: null,
-    settingSendCookies: null
+    settingSendCookies: null,
   };
 }
 
@@ -77,6 +77,12 @@ export async function migrate(doc: Object) {
   doc = await migrateBodyToFileSystem(doc);
   doc = await migrateBodyCompression(doc);
   return doc;
+}
+
+export async function hookDatabaseInit() {
+  await models.response.cleanDeletedResponses();
+
+  console.log('Init responses DB');
 }
 
 export function hookRemove(doc: Response) {
@@ -105,7 +111,7 @@ export function remove(response: Response) {
 
 export async function findRecentForRequest(
   requestId: string,
-  limit: number
+  limit: number,
 ): Promise<Array<Response>> {
   const responses = await db.findMostRecentlyModified(type, { parentId: requestId }, limit);
   return responses;
@@ -153,7 +159,7 @@ export function getBodyBuffer<T>(response: Object, readFailureValue: ?T): Buffer
 function getBodyStreamFromPath<T>(
   bodyPath: string,
   compression: string | null,
-  readFailureValue: ?T
+  readFailureValue: ?T,
 ): Readable | null | T {
   // No body, so return empty Buffer
   if (!bodyPath) {
@@ -178,7 +184,7 @@ function getBodyStreamFromPath<T>(
 function getBodyBufferFromPath<T>(
   bodyPath: string,
   compression: string | null,
-  readFailureValue: ?T
+  readFailureValue: ?T,
 ): Buffer | T | null {
   // No body, so return empty Buffer
   if (!bodyPath) {
@@ -201,8 +207,7 @@ function getBodyBufferFromPath<T>(
 async function migrateBodyToFileSystem(doc: Object) {
   if (doc.hasOwnProperty('body') && doc._id && !doc.bodyPath) {
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
-    const { app } = electron.remote || electron;
-    const root = app.getPath('userData');
+    const root = getDataDirectory();
     const dir = path.join(root, 'responses');
 
     mkdirp.sync(dir);
@@ -232,4 +237,25 @@ function migrateBodyCompression(doc: Object) {
   }
 
   return doc;
+}
+
+export async function cleanDeletedResponses() {
+  const responsesDir = path.join(getDataDirectory(), 'responses');
+  mkdirp.sync(responsesDir);
+
+  let files = fs.readdirSync(responsesDir);
+  if (files.length === 0) {
+    return;
+  }
+
+  let whitelistFiles = (await db.all(type)).map(res => {
+    return res.bodyPath.slice(responsesDir.length + 1);
+  });
+
+  for (let index = 0; index < files.length; index++) {
+    if (whitelistFiles.indexOf(files[index]) === -1) {
+      const bodyPath = path.join(responsesDir, files[index]);
+      fs.unlinkSync(bodyPath);
+    }
+  }
 }

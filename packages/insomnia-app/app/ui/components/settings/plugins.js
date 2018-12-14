@@ -18,7 +18,7 @@ type State = {
   npmPluginValue: string,
   error: string,
   isInstallingFromNpm: boolean,
-  isRefreshingPlugins: boolean
+  isRefreshingPlugins: boolean,
 };
 
 @autobind
@@ -32,7 +32,7 @@ class Plugins extends React.PureComponent<void, State> {
       npmPluginValue: '',
       error: '',
       isInstallingFromNpm: false,
-      isRefreshingPlugins: false
+      isRefreshingPlugins: false,
     };
   }
 
@@ -151,7 +151,7 @@ class Plugins extends React.PureComponent<void, State> {
                         </Button>
                       </td>
                     </tr>
-                  )
+                  ),
               )}
             </tbody>
           </table>

@@ -13,7 +13,7 @@ class PromptButton extends PureComponent {
     super(props);
 
     this.state = {
-      state: STATE_DEFAULT
+      state: STATE_DEFAULT,
     };
   }
 
@@ -120,7 +120,7 @@ PromptButton.propTypes = {
   confirmMessage: PropTypes.string,
   doneMessage: PropTypes.string,
   value: PropTypes.any,
-  tabIndex: PropTypes.number
+  tabIndex: PropTypes.number,
 };
 
 export default PromptButton;

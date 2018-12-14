@@ -10,7 +10,7 @@ type Props = {
   position?: string,
   className?: string,
   style?: Object,
-  info?: boolean
+  info?: boolean,
 };
 
 @autobind

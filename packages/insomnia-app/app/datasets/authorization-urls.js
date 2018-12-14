@@ -12,5 +12,5 @@ export default [
   'https://todoist.com/oauth/authorize',
   'https://account.box.com/api/oauth2/authorize',
   'https://bitly.com/oauth/authorize',
-  'https://api.imgur.com/oauth2/authorize'
+  'https://api.imgur.com/oauth2/authorize',
 ];

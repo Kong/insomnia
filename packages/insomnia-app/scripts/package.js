@@ -7,7 +7,7 @@ const buildTask = require('./build');
 const PLATFORM_MAP = {
   darwin: 'mac',
   linux: 'linux',
-  win32: 'win'
+  win32: 'win',
 };
 
 // Start package if ran from CLI
@@ -17,14 +17,18 @@ if (require.main === module) {
       await buildTask.start();
       await module.exports.start();
     } catch (err) {
-      console.warn('ERROR: ', err.stack);
+      console.log('[package] ERROR: ', err.stack);
+      process.exit(1);
     }
   });
 }
 
 module.exports.start = async function() {
   console.log('[package] Removing existing directories');
-  await emptyDir('../dist/*');
+
+  if (process.env.KEEP_DIST_FOLDER !== 'yes') {
+    await emptyDir('../dist/*');
+  }
 
   console.log('[package] Packaging app');
   await pkg('../.electronbuilder');
@@ -33,21 +37,18 @@ module.exports.start = async function() {
 };
 
 async function pkg(relConfigPath) {
-  try {
-    const configPath = path.resolve(__dirname, relConfigPath);
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const targetPlatform = PLATFORM_MAP[process.platform];
-    const packager = new electronBuilder.Packager({
-      config,
-      cscLink: process.env.CSC_LINK,
-      cscKeyPassword: process.env.CSC_KEY_PASSWORD,
-      [targetPlatform]: config[targetPlatform].target
-    });
-    return packager.build();
-  } catch (err) {
-    console.log('[package] Failed: ' + err.stack);
-    throw err;
-  }
+  const configPath = path.resolve(__dirname, relConfigPath);
+  const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  const targetPlatform = PLATFORM_MAP[process.platform];
+
+  const target = process.env.BUILD_TARGETS
+    ? process.env.BUILD_TARGETS.split(',')
+    : config[targetPlatform].target;
+
+  return electronBuilder.build({
+    config,
+    [targetPlatform]: target,
+  });
 }
 
 async function emptyDir(relPath) {

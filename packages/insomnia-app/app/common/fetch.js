@@ -37,7 +37,7 @@ export function rawFetch(...args) {
 async function _fetch(method, path, obj, sessionId = null) {
   const config = {
     method: method,
-    headers: new window.Headers()
+    headers: new window.Headers(),
   };
 
   // Set some client information

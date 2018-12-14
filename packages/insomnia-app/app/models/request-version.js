@@ -15,12 +15,12 @@ const FIELDS_TO_IGNORE = [
   'metaSortKey',
   'description',
   'parentId',
-  'name'
+  'name',
 ];
 
 export function init() {
   return {
-    compressedRequest: null
+    compressedRequest: null,
   };
 }
 

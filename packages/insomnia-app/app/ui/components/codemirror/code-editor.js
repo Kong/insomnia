@@ -61,8 +61,12 @@ const BASE_CODEMIRROR_OPTIONS = {
 
     // Change default find command from "find" to "findPersistent" so the
     // search box stays open after pressing Enter
-    [isMac() ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent'
-  })
+    [isMac() ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent',
+  }),
+
+  // NOTE: Because the lint mode is initialized immediately, the lint gutter needs to
+  //   be in the default options. DO NOT REMOVE THIS.
+  gutters: ['CodeMirror-lint-markers'],
 };
 
 @autobind
@@ -71,7 +75,7 @@ class CodeEditor extends React.Component {
     super(props);
 
     this.state = {
-      filter: props.filter || ''
+      filter: props.filter || '',
     };
 
     this._originalCode = '';
@@ -125,7 +129,7 @@ class CodeEditor extends React.Component {
     if (this.codeMirror) {
       this.codeMirror.setSelection(
         { line: 0, ch: 0 },
-        { line: this.codeMirror.lineCount(), ch: 0 }
+        { line: this.codeMirror.lineCount(), ch: 0 },
       );
     }
   }
@@ -133,6 +137,12 @@ class CodeEditor extends React.Component {
   focus() {
     if (this.codeMirror) {
       this.codeMirror.focus();
+    }
+  }
+
+  refresh() {
+    if (this.codeMirror) {
+      this.codeMirror.refresh();
     }
   }
 
@@ -229,7 +239,7 @@ class CodeEditor extends React.Component {
       scroll: this.codeMirror.getScrollInfo(),
       selections: this.codeMirror.listSelections(),
       cursor: this.codeMirror.getCursor(),
-      history: this.codeMirror.getHistory()
+      history: this.codeMirror.getHistory(),
     };
   }
 
@@ -269,7 +279,6 @@ class CodeEditor extends React.Component {
     // Set default listeners
     const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
     this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
-    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
     this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
     this.codeMirror.on('keydown', this._codemirrorKeyDown);
     this.codeMirror.on('keyup', this._codemirrorTriggerCompletionKeyUp);
@@ -291,7 +300,7 @@ class CodeEditor extends React.Component {
         Tab: cm => {
           const spaces = this._indentChars();
           cm.replaceSelection(spaces);
-        }
+        },
       });
     }
 
@@ -307,7 +316,11 @@ class CodeEditor extends React.Component {
 
       // Setup nunjucks listeners
       if (this.props.render && !this.props.nunjucksPowerUserMode) {
-        this.codeMirror.enableNunjucksTags(this.props.render);
+        this.codeMirror.enableNunjucksTags(
+          this.props.render,
+          this.props.getRenderContext,
+          this.props.isVariableUncovered,
+        );
       }
 
       // Make URLs clickable
@@ -338,7 +351,7 @@ class CodeEditor extends React.Component {
     this.codeMirror.on('cursorActivity', this._codemirrorCursorActivity);
   }
 
-  _isJSON(mode) {
+  static _isJSON(mode) {
     if (!mode) {
       return false;
     }
@@ -346,7 +359,7 @@ class CodeEditor extends React.Component {
     return mode.indexOf('json') !== -1;
   }
 
-  _isXML(mode) {
+  static _isXML(mode) {
     if (!mode) {
       return false;
     }
@@ -354,7 +367,7 @@ class CodeEditor extends React.Component {
     return mode.indexOf('xml') !== -1;
   }
 
-  _isEDN(mode) {
+  static _isEDN(mode) {
     if (!mode) {
       return false;
     }
@@ -397,7 +410,7 @@ class CodeEditor extends React.Component {
     }
   }
 
-  _prettifyEDN(code) {
+  static _prettifyEDN(code) {
     try {
       return zprint(code, null);
     } catch (e) {
@@ -450,15 +463,15 @@ class CodeEditor extends React.Component {
       hintOptions,
       infoOptions,
       jumpOptions,
-      lintOptions
+      lintOptions,
     } = this.props;
 
     let mode;
     if (this.props.render) {
-      mode = { name: 'nunjucks', baseMode: this._normalizeMode(rawMode) };
+      mode = { name: 'nunjucks', baseMode: CodeEditor._normalizeMode(rawMode) };
     } else {
       // foo bar baz
-      mode = this._normalizeMode(rawMode);
+      mode = CodeEditor._normalizeMode(rawMode);
     }
 
     let options = {
@@ -475,7 +488,7 @@ class CodeEditor extends React.Component {
       indentWithTabs: indentWithTabs,
       matchBrackets: !noMatchBrackets,
       lint: !noLint && !readOnly,
-      gutters: []
+      gutters: [],
     };
 
     // Only set keyMap if we're not read-only. This is so things like
@@ -487,6 +500,10 @@ class CodeEditor extends React.Component {
     if (indentSize) {
       options.tabSize = indentSize;
       options.indentUnit = indentSize;
+    }
+
+    if (!hideGutters && options.lint) {
+      options.gutters.push('CodeMirror-lint-markers');
     }
 
     if (!hideGutters && options.lineNumbers) {
@@ -554,7 +571,7 @@ class CodeEditor extends React.Component {
       options.environmentAutocomplete = {
         getVariables,
         getTags,
-        getConstants: getAutocompleteConstants
+        getConstants: getAutocompleteConstants,
       };
     }
 
@@ -574,7 +591,7 @@ class CodeEditor extends React.Component {
     });
   }
 
-  _normalizeMode(mode) {
+  static _normalizeMode(mode) {
     const mimeType = mode ? mode.split(';')[0] : 'text/plain';
 
     if (mimeType.includes('graphql-variables')) {
@@ -582,18 +599,18 @@ class CodeEditor extends React.Component {
     } else if (mimeType.includes('graphql')) {
       // Because graphQL plugin doesn't recognize application/graphql content-type
       return 'graphql';
-    } else if (this._isJSON(mimeType)) {
+    } else if (CodeEditor._isJSON(mimeType)) {
       return 'application/json';
-    } else if (this._isEDN(mimeType)) {
+    } else if (CodeEditor._isEDN(mimeType)) {
       return 'application/edn';
-    } else if (this._isXML(mimeType)) {
+    } else if (CodeEditor._isXML(mimeType)) {
       return 'application/xml';
     } else {
       return mimeType;
     }
   }
 
-  _codemirrorCursorActivity(instance, e) {
+  _codemirrorCursorActivity(instance) {
     if (this.props.onCursorActivity) {
       this.props.onCursorActivity(instance);
     }
@@ -610,7 +627,7 @@ class CodeEditor extends React.Component {
     }
   }
 
-  _codemirrorEndCompletion(doc, e) {
+  _codemirrorEndCompletion() {
     clearInterval(this._autocompleteDebounce);
   }
 
@@ -712,10 +729,10 @@ class CodeEditor extends React.Component {
     const shouldPrettify = forcePrettify || this.props.autoPrettify;
 
     if (shouldPrettify && this._canPrettify()) {
-      if (this._isXML(this.props.mode)) {
+      if (CodeEditor._isXML(this.props.mode)) {
         code = this._prettifyXML(code);
-      } else if (this._isEDN(this.props.mode)) {
-        code = this._prettifyEDN(code);
+      } else if (CodeEditor._isEDN(this.props.mode)) {
+        code = CodeEditor._prettifyEDN(code);
       } else {
         code = this._prettifyJSON(code);
       }
@@ -746,11 +763,11 @@ class CodeEditor extends React.Component {
 
   _canPrettify() {
     const { mode } = this.props;
-    return this._isJSON(mode) || this._isXML(mode) || this._isEDN(mode);
+    return CodeEditor._isJSON(mode) || CodeEditor._isXML(mode) || CodeEditor._isEDN(mode);
   }
 
   _showFilterHelp() {
-    const isJson = this._isJSON(this.props.mode);
+    const isJson = CodeEditor._isJSON(this.props.mode);
     showModal(FilterHelpModal, isJson);
   }
 
@@ -767,17 +784,18 @@ class CodeEditor extends React.Component {
       className,
       dynamicHeight,
       style,
-      type
+      type,
+      isVariableUncovered,
     } = this.props;
 
     const classes = classnames(className, {
       editor: true,
       'editor--dynamic-height': dynamicHeight,
-      'editor--readonly': readOnly
+      'editor--readonly': readOnly,
     });
 
     const toolbarChildren = [];
-    if (this.props.updateFilter && (this._isJSON(mode) || this._isXML(mode))) {
+    if (this.props.updateFilter && (CodeEditor._isJSON(mode) || CodeEditor._isXML(mode))) {
       toolbarChildren.push(
         <input
           ref={this._setFilterInputRef}
@@ -785,9 +803,9 @@ class CodeEditor extends React.Component {
           type="text"
           title="Filter response body"
           defaultValue={filter || ''}
-          placeholder={this._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
+          placeholder={CodeEditor._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
           onChange={this._handleFilterChange}
-        />
+        />,
       );
 
       if (filterHistory && filterHistory.length) {
@@ -801,24 +819,24 @@ class CodeEditor extends React.Component {
                 {filter}
               </DropdownItem>
             ))}
-          </Dropdown>
+          </Dropdown>,
         );
       }
 
       toolbarChildren.push(
         <button key="help" className="btn btn--compact" onClick={this._showFilterHelp}>
           <i className="fa fa-question-circle" />
-        </button>
+        </button>,
       );
     }
 
     if (this.props.manualPrettify && this._canPrettify()) {
       let contentTypeName = '';
-      if (this._isJSON(mode)) {
+      if (CodeEditor._isJSON(mode)) {
         contentTypeName = 'JSON';
-      } else if (this._isXML(mode)) {
+      } else if (CodeEditor._isXML(mode)) {
         contentTypeName = 'XML';
-      } else if (this._isEDN(mode)) {
+      } else if (CodeEditor._isEDN(mode)) {
         contentTypeName = 'EDN';
       }
 
@@ -829,7 +847,7 @@ class CodeEditor extends React.Component {
           title="Auto-format request body whitespace"
           onClick={this._handleBeautify}>
           Beautify {contentTypeName}
-        </button>
+        </button>,
       );
     }
 
@@ -855,6 +873,7 @@ class CodeEditor extends React.Component {
           onClick={onClick}
           onMouseLeave={onMouseLeave}>
           <textarea
+            key={isVariableUncovered ? 'foo' : 'bar'}
             id={id}
             ref={this._handleInitTextarea}
             style={{ display: 'none' }}
@@ -917,7 +936,8 @@ CodeEditor.propTypes = {
   lintOptions: PropTypes.object,
   infoOptions: PropTypes.object,
   jumpOptions: PropTypes.object,
-  uniquenessKey: PropTypes.any
+  uniquenessKey: PropTypes.any,
+  isVariableUncovered: PropTypes.bool,
 };
 
 export default CodeEditor;

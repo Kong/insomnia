@@ -20,11 +20,11 @@ const MODE_MAP = {
   csharp: 'clike',
   node: 'javascript',
   objc: 'clike',
-  ocaml: 'mllike'
+  ocaml: 'mllike',
 };
 
 const TO_ADD_CONTENT_LENGTH = {
-  node: ['native']
+  node: ['native'],
 };
 
 @autobind
@@ -48,7 +48,7 @@ class GenerateCodeModal extends PureComponent {
       cmd: '',
       request: null,
       target: target || DEFAULT_TARGET,
-      client: client || DEFAULT_CLIENT
+      client: client || DEFAULT_CLIENT,
     };
   }
 
@@ -121,7 +121,7 @@ class GenerateCodeModal extends PureComponent {
           style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(0, 1fr)',
-            gridTemplateRows: 'auto minmax(0, 1fr)'
+            gridTemplateRows: 'auto minmax(0, 1fr)',
           }}>
           <div className="pad">
             <Dropdown outline>
@@ -181,7 +181,7 @@ GenerateCodeModal.propTypes = {
   environmentId: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorIndentSize: PropTypes.number.isRequired,
-  editorKeyMap: PropTypes.string.isRequired
+  editorKeyMap: PropTypes.string.isRequired,
 };
 
 export default GenerateCodeModal;

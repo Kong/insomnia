@@ -22,7 +22,7 @@ describe('encryptRSA', () => {
       ad: '6164646974696f6e616c2064617461',
       d: '48656c6c6f253230576f726c6421',
       iv: '616161616161616161616161',
-      t: '746167'
+      t: '746167',
     };
 
     const expectedDecrypted = 'Hello World!';

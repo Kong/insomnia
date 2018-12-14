@@ -15,7 +15,7 @@ class ImportExport extends PureComponent {
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
         this.props.handleImportUri(uri);
-      }
+      },
     });
   }
 
@@ -76,7 +76,7 @@ ImportExport.propTypes = {
   handleImportFile: PropTypes.func.isRequired,
   handleImportUri: PropTypes.func.isRequired,
   handleExportAll: PropTypes.func.isRequired,
-  handleExportWorkspace: PropTypes.func.isRequired
+  handleExportWorkspace: PropTypes.func.isRequired,
 };
 
 export default ImportExport;

@@ -6,11 +6,11 @@ var settings = {
   headers: {
     cookie: 'foo=bar; bar=baz',
     accept: 'application/json',
-    'content-type': 'application/x-www-form-urlencoded'
+    'content-type': 'application/x-www-form-urlencoded',
   },
   data: {
-    foo: 'bar'
-  }
+    foo: 'bar',
+  },
 };
 
 $.ajax(settings).done(function(response) {

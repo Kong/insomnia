@@ -73,7 +73,7 @@ ResponseTimelineViewer.propTypes = {
   timeline: PropTypes.array.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorIndentSize: PropTypes.number.isRequired,
-  editorLineWrapping: PropTypes.bool.isRequired
+  editorLineWrapping: PropTypes.bool.isRequired,
 };
 
 export default ResponseTimelineViewer;

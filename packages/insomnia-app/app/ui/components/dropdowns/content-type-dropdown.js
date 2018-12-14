@@ -11,7 +11,7 @@ import {
   CONTENT_TYPE_OTHER,
   CONTENT_TYPE_XML,
   CONTENT_TYPE_EDN,
-  getContentTypeName
+  getContentTypeName,
 } from '../../../common/constants';
 import { showModal } from '../modals/index';
 import AlertModal from '../modals/alert-modal';
@@ -24,7 +24,7 @@ type Props = {
 
   // Optional
   className?: string,
-  request?: Request
+  request?: Request,
 };
 
 const EMPTY_MIME_TYPE = null;
@@ -42,10 +42,9 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
     const hasFile = body.fileName && body.fileName.length;
     const isEmpty = !hasParams && !hasText && !hasFile;
     const isFile = body.mimeType === CONTENT_TYPE_FILE;
-    const isMultipartWithFiles =
-      body.mimeType === CONTENT_TYPE_FORM_DATA && (body.params || []).find(p => p.type === 'file');
+    const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA;
     const isFormUrlEncoded = body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
-    const isText = !isFile && !isMultipartWithFiles;
+    const isText = !isFile && !isMultipart;
 
     const willBeFile = mimeType === CONTENT_TYPE_FILE;
     const willBeMultipart = mimeType === CONTENT_TYPE_FORM_DATA;
@@ -59,7 +58,7 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
       await showModal(AlertModal, {
         title: 'Switch Body Type?',
         message: 'Current body will be lost. Are you sure you want to continue?',
-        addCancel: true
+        addCancel: true,
       });
     }
   }

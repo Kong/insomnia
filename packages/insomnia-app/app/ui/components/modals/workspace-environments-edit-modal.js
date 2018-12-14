@@ -2,7 +2,7 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
+import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc/dist/es6';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 import PromptButton from '../base/prompt-button';
 import Button from '../base/button';
@@ -31,7 +31,8 @@ type Props = {
   lineWrapping: boolean,
   render: Function,
   getRenderContext: Function,
-  nunjucksPowerUserMode: boolean
+  nunjucksPowerUserMode: boolean,
+  isVariableUncovered: boolean,
 };
 
 type State = {
@@ -39,14 +40,14 @@ type State = {
   isValid: boolean,
   subEnvironments: Array<Environment>,
   rootEnvironment: Environment | null,
-  selectedEnvironmentId: string | null
+  selectedEnvironmentId: string | null,
 };
 
 const SidebarListItem = SortableElement(
   ({ environment, activeEnvironment, showEnvironment, changeEnvironmentName }) => {
     const classes = classnames({
       'env-modal__sidebar-item': true,
-      'env-modal__sidebar-item--active': activeEnvironment === environment
+      'env-modal__sidebar-item--active': activeEnvironment === environment,
     });
 
     return (
@@ -73,7 +74,7 @@ const SidebarListItem = SortableElement(
         </Button>
       </li>
     );
-  }
+  },
 );
 
 const SidebarList = SortableContainer(
@@ -90,7 +91,7 @@ const SidebarList = SortableContainer(
         />
       ))}
     </ul>
-  )
+  ),
 );
 
 @autobind
@@ -108,7 +109,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       isValid: true,
       subEnvironments: [],
       rootEnvironment: null,
-      selectedEnvironmentId: null
+      selectedEnvironmentId: null,
     };
 
     this.colorChangeTimeout = null;
@@ -166,7 +167,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       workspace,
       rootEnvironment,
       subEnvironments,
-      selectedEnvironmentId
+      selectedEnvironmentId,
     });
   }
 
@@ -181,7 +182,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     const parentId = rootEnvironment._id;
     const environment = await models.environment.create({
       parentId,
-      isPrivate
+      isPrivate,
     });
     await this._load(workspace, environment);
   }
@@ -269,7 +270,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
         const [
           _, // eslint-disable-line no-unused-vars
           doc,
-          fromSync
+          fromSync,
         ] = change;
 
         // Force an editor refresh if any changes from sync come in
@@ -284,7 +285,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   async _handleSortEnd(results: {
     oldIndex: number,
     newIndex: number,
-    collection: Array<Environment>
+    collection: Array<Environment>,
   }) {
     const { oldIndex, newIndex } = results;
     if (newIndex === oldIndex) {
@@ -367,7 +368,8 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       lineWrapping,
       render,
       getRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered,
     } = this.props;
 
     const { subEnvironments, rootEnvironment, isValid } = this.state;
@@ -381,7 +383,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
           <div className="env-modal__sidebar">
             <li
               className={classnames('env-modal__sidebar-root-item', {
-                'env-modal__sidebar-item--active': activeEnvironment === rootEnvironment
+                'env-modal__sidebar-item--active': activeEnvironment === rootEnvironment,
               })}>
               <Button onClick={this._handleShowEnvironment} value={rootEnvironment}>
                 {ROOT_ENVIRONMENT_NAME}
@@ -487,6 +489,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                 render={render}
                 getRenderContext={getRenderContext}
                 nunjucksPowerUserMode={nunjucksPowerUserMode}
+                isVariableUncovered={isVariableUncovered}
               />
             </div>
           </div>

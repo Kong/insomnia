@@ -16,9 +16,9 @@ var CodeBuilder = require('../../helpers/code-builder');
 module.exports = function(source, options) {
   var opts = util._extend(
     {
-      indent: '  '
+      indent: '  ',
     },
-    options
+    options,
   );
 
   var methods = ['get', 'post', 'head', 'delete', 'patch', 'put', 'options'];
@@ -38,7 +38,7 @@ module.exports = function(source, options) {
     code.push(
       'let headers = Header.add (Header.init ()) "%s" "%s" in',
       headers[0],
-      source.allHeaders[headers[0]]
+      source.allHeaders[headers[0]],
     );
   } else if (headers.length > 1) {
     code.push('let headers = Header.add_list (Header.init ()) [');
@@ -65,7 +65,7 @@ module.exports = function(source, options) {
     source.postData.text ? '~body ' : '',
     methods.indexOf(source.method.toLowerCase()) >= 0
       ? '`' + source.method.toUpperCase()
-      : '(Code.method_of_string "' + source.method + '")'
+      : '(Code.method_of_string "' + source.method + '")',
   );
 
   // Catch result
@@ -78,5 +78,5 @@ module.exports.info = {
   key: 'cohttp',
   title: 'CoHTTP',
   link: 'https://github.com/mirage/ocaml-cohttp',
-  description: 'Cohttp is a very lightweight HTTP server using Lwt or Async for OCaml'
+  description: 'Cohttp is a very lightweight HTTP server using Lwt or Async for OCaml',
 };

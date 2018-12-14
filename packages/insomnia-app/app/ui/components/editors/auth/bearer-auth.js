@@ -31,7 +31,8 @@ class BearerAuth extends PureComponent {
       authentication,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered,
     } = this.props;
 
     return (
@@ -47,7 +48,7 @@ class BearerAuth extends PureComponent {
               <td className="wide">
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
-                    'form-control--inactive': authentication.disabled
+                    'form-control--inactive': authentication.disabled,
                   })}>
                   <OneLineEditor
                     type="text"
@@ -58,6 +59,7 @@ class BearerAuth extends PureComponent {
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
+                    isVariableUncovered={isVariableUncovered}
                   />
                 </div>
               </td>
@@ -74,7 +76,7 @@ class BearerAuth extends PureComponent {
               <td className="wide">
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
-                    'form-control--inactive': authentication.disabled
+                    'form-control--inactive': authentication.disabled,
                   })}>
                   <OneLineEditor
                     type="text"
@@ -85,6 +87,7 @@ class BearerAuth extends PureComponent {
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
+                    isVariableUncovered={isVariableUncovered}
                   />
                 </div>
               </td>
@@ -124,7 +127,8 @@ BearerAuth.propTypes = {
   handleGetRenderContext: PropTypes.func.isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
   authentication: PropTypes.object.isRequired,
-  onChange: PropTypes.func.isRequired
+  onChange: PropTypes.func.isRequired,
+  isVariableUncovered: PropTypes.bool.isRequired,
 };
 
 export default BearerAuth;

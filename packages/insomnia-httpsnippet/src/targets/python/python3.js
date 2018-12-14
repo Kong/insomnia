@@ -83,5 +83,5 @@ module.exports.info = {
   key: 'python3',
   title: 'http.client',
   link: 'https://docs.python.org/3/library/http.client.html',
-  description: 'Python3 HTTP Client'
+  description: 'Python3 HTTP Client',
 };

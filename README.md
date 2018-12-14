@@ -79,6 +79,7 @@ Here is a list of plugins available for installation via NPM.
 - [Chance](https://www.npmjs.com/package/insomnia-plugin-chance) – Generates a random value using Chance.JS
 - [Custom Timestamp](https://www.npmjs.com/package/insomnia-plugin-customtimestamp) – Advanced timestamp creator
 - [Default Headers](https://www.npmjs.com/package/insomnia-plugin-default-headers) – Set default headers on requests
+- [Defaults](https://www.npmjs.com/package/insomnia-plugin-defaults) - Set request defaults through your environment
 - [Faker](https://www.npmjs.com/package/insomnia-plugin-faker) - Generate Faker data right within Insomnia!
 - [Github Apps](https://www.npmjs.com/package/insomnia-plugin-github-apps-helper) – Generates a JWT for auth with the GitHub API as your GitHub App
 - [Javascript Eval](https://www.npmjs.com/package/insomnia-plugin-js-eval) - Evaluate/run Javascript code

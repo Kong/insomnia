@@ -17,14 +17,14 @@ export type ToastNotification = {
   url: string,
   cta: string,
   message: string,
-  email: string
+  email: string,
 };
 
 type Props = {};
 
 type State = {
   notification: ToastNotification | null,
-  visible: boolean
+  visible: boolean,
 };
 
 @autobind
@@ -35,7 +35,7 @@ class Toast extends React.PureComponent<Props, State> {
     super(props);
     this.state = {
       notification: null,
-      visible: false
+      visible: false,
     };
   }
 
@@ -86,7 +86,8 @@ class Toast extends React.PureComponent<Props, State> {
         workspaces: await db.count(models.workspace.type),
         updatesNotSupported: constants.isLinux(),
         autoUpdatesDisabled: !settings.updateAutomatically,
-        updateChannel: !settings.updateChannel
+        disableUpdateNotification: settings.disableUpdateNotification,
+        updateChannel: !settings.updateChannel,
       };
 
       notification = await fetch.post(`/notification`, data);
@@ -167,7 +168,7 @@ class Toast extends React.PureComponent<Props, State> {
     return (
       <div
         className={classnames('toast theme--dialog', {
-          'toast--show': visible
+          'toast--show': visible,
         })}>
         <div className="toast__image">
           <GravatarImg email={notification.email || 'gschier1990@gmail.com'} size={100} />

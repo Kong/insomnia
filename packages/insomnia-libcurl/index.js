@@ -1,3 +1,3 @@
 module.exports = {
-  Curl: require('./src/curl')
+  Curl: require('./src/curl'),
 };

@@ -13,7 +13,7 @@ class MarkdownPreview extends PureComponent {
     super(props);
     this.state = {
       compiled: '',
-      renderError: ''
+      renderError: '',
     };
   }
 
@@ -27,12 +27,12 @@ class MarkdownPreview extends PureComponent {
         const rendered = await this.props.handleRender(markdown);
         this.setState({
           compiled: markdownToHTML(rendered),
-          renderError: ''
+          renderError: '',
         });
       } catch (err) {
         this.setState({
           renderError: err.message,
-          compiled: ''
+          compiled: '',
         });
       }
     }, this.state.compiled ? this.props.debounceMillis : 0);
@@ -111,7 +111,7 @@ MarkdownPreview.propTypes = {
   // Optional
   className: PropTypes.string,
   debounceMillis: PropTypes.number,
-  heading: PropTypes.string
+  heading: PropTypes.string,
 };
 
 export default MarkdownPreview;

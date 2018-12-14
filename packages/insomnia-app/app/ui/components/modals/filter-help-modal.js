@@ -10,7 +10,7 @@ class FilterHelpModal extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      isJson: true
+      isJson: true,
     };
   }
 

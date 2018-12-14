@@ -9,11 +9,11 @@ const THEMES_PER_ROW = 5;
 
 type Props = {
   handleChangeTheme: string => void,
-  activeTheme: string
+  activeTheme: string,
 };
 
 type State = {
-  themes: Array<ThemeType>
+  themes: Array<ThemeType>,
 };
 
 @autobind
@@ -21,7 +21,7 @@ class Theme extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      themes: []
+      themes: [],
     };
   }
 

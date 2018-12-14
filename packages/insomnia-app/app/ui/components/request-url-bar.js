@@ -8,7 +8,7 @@ import {
   DropdownButton,
   DropdownDivider,
   DropdownHint,
-  DropdownItem
+  DropdownItem,
 } from './base/dropdown';
 import { showPrompt } from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
@@ -18,20 +18,21 @@ import * as hotkeys from '../../common/hotkeys';
 import KeydownBinder from './keydown-binder';
 
 type Props = {
-  handleSend: () => void,
-  handleSendAndDownload: (filepath?: string) => void,
-  handleRender: string => Promise<string>,
+  handleAutocompleteUrls: Function,
+  handleGenerateCode: Function,
   handleGetRenderContext: Function,
   handleImport: Function,
-  handleAutocompleteUrls: Function,
-  onUrlChange: (url: string) => void,
-  onMethodChange: (method: string) => void,
-  handleGenerateCode: Function,
-  nunjucksPowerUserMode: boolean,
-  url: string,
+  handleRender: string => Promise<string>,
+  handleSend: () => void,
+  handleSendAndDownload: (filepath?: string) => void,
+  isVariableUncovered: boolean,
   method: string,
+  nunjucksPowerUserMode: boolean,
+  onMethodChange: (method: string) => void,
+  onUrlChange: (url: string) => void,
   requestId: string,
-  uniquenessKey: string
+  uniquenessKey: string,
+  url: string,
 };
 
 type State = {
@@ -55,7 +56,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     this.state = {
       currentInterval: null,
       currentTimeout: null,
-      downloadPath: null
+      downloadPath: null,
     };
 
     this._lastPastedText = null;
@@ -128,7 +129,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     const options = {
       title: 'Select Download Location',
       buttonLabel: 'Select',
-      properties: ['openDirectory']
+      properties: ['openDirectory'],
     };
 
     remote.dialog.showOpenDialog(options, paths => {
@@ -192,7 +193,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
         this._handleStopTimeout();
         this._sendTimeout = setTimeout(this._handleSend, seconds * 1000);
         this.setState({ currentTimeout: seconds });
-      }
+      },
     });
   }
 
@@ -207,7 +208,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
         this._handleStopInterval();
         this._sendInterval = setInterval(this._handleSend, seconds * 1000);
         this.setState({ currentInterval: seconds });
-      }
+      },
     });
   }
 
@@ -331,9 +332,10 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
       method,
       handleRender,
       nunjucksPowerUserMode,
+      isVariableUncovered,
       handleGetRenderContext,
       handleAutocompleteUrls,
-      uniquenessKey
+      uniquenessKey,
     } = this.props;
 
     return (
@@ -354,6 +356,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
               type="text"
               render={handleRender}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={handleAutocompleteUrls}
               getRenderContext={handleGetRenderContext}
               placeholder="https://api.myproduct.com/v1/users"

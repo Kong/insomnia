@@ -13,7 +13,7 @@ class EnvironmentEditModal extends PureComponent {
     super(props);
     this.state = {
       requestGroup: null,
-      isValid: true
+      isValid: true,
     };
   }
 
@@ -64,6 +64,7 @@ class EnvironmentEditModal extends PureComponent {
       render,
       getRenderContext,
       nunjucksPowerUserMode,
+      isVariableUncovered,
       ...extraProps
     } = this.props;
 
@@ -85,6 +86,7 @@ class EnvironmentEditModal extends PureComponent {
             render={render}
             getRenderContext={getRenderContext}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
           />
         </ModalBody>
         <ModalFooter>
@@ -108,7 +110,8 @@ EnvironmentEditModal.propTypes = {
   render: PropTypes.func.isRequired,
   getRenderContext: PropTypes.func.isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  lineWrapping: PropTypes.bool.isRequired
+  isVariableUncovered: PropTypes.bool.isRequired,
+  lineWrapping: PropTypes.bool.isRequired,
 };
 
 export default EnvironmentEditModal;

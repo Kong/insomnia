@@ -5,17 +5,17 @@ type Token = { key: string, secret?: string };
 type RequestData = {
   url: string,
   method: string,
-  data?: { [string]: string }
+  data?: { [string]: string },
 };
 
 type OAuth1Config = {
   consumer: {
     key: string,
-    secret: string
+    secret: string,
   },
   signature_method: 'HMAC-SHA1' | 'RSA-SHA1' | 'PLAINTEXT',
   version: '1.0',
-  hash_function: (signatureMethod: SignatureMethod, key: string) => string
+  hash_function: (signatureMethod: SignatureMethod, key: string) => string,
 };
 
 declare class OAuth1 {

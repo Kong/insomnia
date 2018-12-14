@@ -13,7 +13,7 @@ class RequestRenderErrorModal extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      error: null
+      error: null,
     };
   }
 

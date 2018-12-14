@@ -16,9 +16,9 @@ var CodeBuilder = require('../../helpers/code-builder');
 module.exports = function(source, options) {
   var opts = util._extend(
     {
-      indent: '  '
+      indent: '  ',
     },
-    options
+    options,
   );
 
   var code = new CodeBuilder(opts.indent);
@@ -29,13 +29,13 @@ module.exports = function(source, options) {
     code.push(
       'HttpResponse<String> response = Unirest.customMethod("%s","%s")',
       source.method.toUpperCase(),
-      source.fullUrl
+      source.fullUrl,
     );
   } else {
     code.push(
       'HttpResponse<String> response = Unirest.%s("%s")',
       source.method.toLowerCase(),
-      source.fullUrl
+      source.fullUrl,
     );
   }
 
@@ -62,5 +62,5 @@ module.exports.info = {
   key: 'unirest',
   title: 'Unirest',
   link: 'http://unirest.io/java.html',
-  description: 'Lightweight HTTP Request Client Library'
+  description: 'Lightweight HTTP Request Client Library',
 };

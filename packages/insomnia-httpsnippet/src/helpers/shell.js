@@ -21,5 +21,5 @@ module.exports = {
 
   escape: function(value) {
     return value.replace(/\r/g, '\\r').replace(/\n/g, '\\n');
-  }
+  },
 };

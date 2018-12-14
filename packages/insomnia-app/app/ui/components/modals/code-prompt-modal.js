@@ -18,7 +18,7 @@ const MODES = {
   'application/xml': 'XML',
   'application/edn': 'EDN',
   'text/x-markdown': 'Markdown',
-  'text/html': 'HTML'
+  'text/html': 'HTML',
 };
 
 @autobind
@@ -33,7 +33,7 @@ class CodePromptModal extends PureComponent {
       hint: '',
       mode: 'text/plain',
       hideMode: false,
-      enableRender: false
+      enableRender: false,
     };
   }
 
@@ -65,7 +65,7 @@ class CodePromptModal extends PureComponent {
       hideMode,
       enableRender,
       onChange,
-      onModeChange
+      onModeChange,
     } = options;
 
     this._onChange = onChange;
@@ -81,7 +81,7 @@ class CodePromptModal extends PureComponent {
       hint,
       enableRender,
       hideMode,
-      mode: realMode || this.state.mode || 'text/plain'
+      mode: realMode || this.state.mode || 'text/plain',
     });
 
     this.modal.show();
@@ -91,11 +91,12 @@ class CodePromptModal extends PureComponent {
     const {
       handleGetRenderContext,
       nunjucksPowerUserMode,
+      isVariableUncovered,
       handleRender,
       editorKeyMap,
       editorIndentSize,
       editorFontSize,
-      editorLineWrapping
+      editorLineWrapping,
     } = this.props;
 
     const {
@@ -106,7 +107,7 @@ class CodePromptModal extends PureComponent {
       hint,
       mode,
       hideMode,
-      enableRender
+      enableRender,
     } = this.state;
 
     return (
@@ -128,26 +129,48 @@ class CodePromptModal extends PureComponent {
                 fontSize={editorFontSize}
                 lineWrapping={editorLineWrapping}
                 nunjucksPowerUserMode={nunjucksPowerUserMode}
+                isVariableUncovered={isVariableUncovered}
               />
             </div>
           ) : (
             <div className="pad-sm pad-bottom tall">
               <div className="form-control form-control--outlined form-control--tall tall">
-                <CodeEditor
-                  hideLineNumbers
-                  className="tall"
-                  defaultValue={defaultValue}
-                  placeholder={placeholder}
-                  onChange={this._handleChange}
-                  nunjucksPowerUserMode={nunjucksPowerUserMode}
-                  getRenderContext={enableRender ? handleGetRenderContext : null}
-                  render={enableRender ? handleRender : null}
-                  mode={mode}
-                  keyMap={editorKeyMap}
-                  indentSize={editorIndentSize}
-                  fontSize={editorFontSize}
-                  lineWrapping={editorLineWrapping}
-                />
+                {isVariableUncovered && (
+                  <CodeEditor
+                    hideLineNumbers
+                    className="tall"
+                    defaultValue={defaultValue}
+                    placeholder={placeholder}
+                    onChange={this._handleChange}
+                    nunjucksPowerUserMode={nunjucksPowerUserMode}
+                    isVariableUncovered={isVariableUncovered}
+                    getRenderContext={enableRender ? handleGetRenderContext : null}
+                    render={enableRender ? handleRender : null}
+                    mode={mode}
+                    keyMap={editorKeyMap}
+                    indentSize={editorIndentSize}
+                    fontSize={editorFontSize}
+                    lineWrapping={editorLineWrapping}
+                  />
+                )}
+                {!isVariableUncovered && (
+                  <CodeEditor
+                    hideLineNumbers
+                    className="tall"
+                    defaultValue={defaultValue}
+                    placeholder={placeholder}
+                    onChange={this._handleChange}
+                    nunjucksPowerUserMode={nunjucksPowerUserMode}
+                    isVariableUncovered={isVariableUncovered}
+                    getRenderContext={enableRender ? handleGetRenderContext : null}
+                    render={enableRender ? handleRender : null}
+                    mode={mode}
+                    keyMap={editorKeyMap}
+                    indentSize={editorIndentSize}
+                    fontSize={editorFontSize}
+                    lineWrapping={editorLineWrapping}
+                  />
+                )}
               </div>
             </div>
           )}
@@ -185,10 +208,11 @@ CodePromptModal.propTypes = {
   editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
+  isVariableUncovered: PropTypes.bool.isRequired,
 
   // Optional
   handleGetRenderContext: PropTypes.func,
-  handleRender: PropTypes.func
+  handleRender: PropTypes.func,
 };
 
 export default CodePromptModal;

@@ -15,7 +15,7 @@ type BaseEnvironment = {
   metaSortKey: number,
 
   // For sync control
-  isPrivate: boolean
+  isPrivate: boolean,
 };
 
 export type Environment = BaseModel & BaseEnvironment;
@@ -26,7 +26,7 @@ export function init() {
     data: {},
     color: null,
     isPrivate: false,
-    metaSortKey: Date.now()
+    metaSortKey: Date.now(),
   };
 }
 
@@ -56,7 +56,7 @@ export async function getOrCreateForWorkspaceId(workspaceId: string): Promise<En
   if (!environments.length) {
     return create({
       parentId: workspaceId,
-      name: 'Base Environment'
+      name: 'Base Environment',
     });
   }
 

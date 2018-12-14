@@ -45,5 +45,5 @@ module.exports.info = {
   key: 'libcurl',
   title: 'Libcurl',
   link: 'http://curl.haxx.se/libcurl/',
-  description: 'Simple REST and HTTP API Client for C'
+  description: 'Simple REST and HTTP API Client for C',
 };

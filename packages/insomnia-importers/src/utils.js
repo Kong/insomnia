@@ -23,9 +23,9 @@ module.exports.setDefaultsRequest = function(request) {
       method: 'GET',
       parameters: [],
       headers: [],
-      authentication: {}
+      authentication: {},
     },
-    request
+    request,
   );
 };
 
@@ -34,9 +34,9 @@ module.exports.setDefaultsRequestGroup = function(requestGroup) {
     {
       parentId: '__WORKSPACE_ID__',
       name: 'Imported',
-      environment: {}
+      environment: {},
     },
-    requestGroup
+    requestGroup,
   );
 };
 
@@ -45,9 +45,9 @@ module.exports.setDefaultsEnvironment = function(environment) {
     {
       parentId: '__BASE_ENVIRONMENT_ID__',
       name: 'Imported Environment',
-      data: {}
+      data: {},
     },
-    environment
+    environment,
   );
 };
 

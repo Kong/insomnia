@@ -13,7 +13,7 @@ class NunjucksModal extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      defaultTemplate: ''
+      defaultTemplate: '',
     };
 
     this._onDone = null;
@@ -101,7 +101,7 @@ NunjucksModal.propTypes = {
   uniqueKey: PropTypes.string.isRequired,
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
-  workspace: PropTypes.object.isRequired
+  workspace: PropTypes.object.isRequired,
 };
 
 export default NunjucksModal;

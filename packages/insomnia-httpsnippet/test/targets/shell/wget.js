@@ -8,12 +8,12 @@ module.exports = function(HTTPSnippet, fixtures) {
   it('should use short options', function() {
     var result = new HTTPSnippet(fixtures.requests.full).convert('shell', 'wget', {
       short: true,
-      indent: false
+      indent: false,
     });
 
     result.should.be.a.String;
     result.should.eql(
-      "wget -q --method POST --header 'cookie: foo=bar; bar=baz' --header 'accept: application/json' --header 'content-type: application/x-www-form-urlencoded' --body-data foo=bar -O - 'http://mockbin.com/har?foo=bar&foo=baz&baz=abc&key=value'"
+      "wget -q --method POST --header 'cookie: foo=bar; bar=baz' --header 'accept: application/json' --header 'content-type: application/x-www-form-urlencoded' --body-data foo=bar -O - 'http://mockbin.com/har?foo=bar&foo=baz&baz=abc&key=value'",
     );
   });
 
@@ -21,7 +21,7 @@ module.exports = function(HTTPSnippet, fixtures) {
     var result = new HTTPSnippet(fixtures.requests.short).convert('shell', 'wget', {
       short: true,
       indent: false,
-      verbose: true
+      verbose: true,
     });
 
     result.should.be.a.String;
@@ -32,7 +32,7 @@ module.exports = function(HTTPSnippet, fixtures) {
     var result = new HTTPSnippet(fixtures.requests.short).convert('shell', 'wget', {
       short: false,
       indent: false,
-      verbose: true
+      verbose: true,
     });
 
     result.should.be.a.String;
@@ -41,14 +41,14 @@ module.exports = function(HTTPSnippet, fixtures) {
 
   it('should use custom indentation', function() {
     var result = new HTTPSnippet(fixtures.requests.full).convert('shell', 'wget', {
-      indent: '@'
+      indent: '@',
     });
 
     result.should.be.a.String;
     result
       .replace(/\\\n/g, '')
       .should.eql(
-        "wget --quiet @--method POST @--header 'cookie: foo=bar; bar=baz' @--header 'accept: application/json' @--header 'content-type: application/x-www-form-urlencoded' @--body-data foo=bar @--output-document @- 'http://mockbin.com/har?foo=bar&foo=baz&baz=abc&key=value'"
+        "wget --quiet @--method POST @--header 'cookie: foo=bar; bar=baz' @--header 'accept: application/json' @--header 'content-type: application/x-www-form-urlencoded' @--body-data foo=bar @--output-document @- 'http://mockbin.com/har?foo=bar&foo=baz&baz=abc&key=value'",
       );
   });
 };

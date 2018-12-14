@@ -7,7 +7,7 @@ import {
   DropdownButton,
   DropdownDivider,
   DropdownHint,
-  DropdownItem
+  DropdownItem,
 } from '../base/dropdown/index';
 import * as models from '../../../models';
 import * as hotkeys from '../../../common/hotkeys';
@@ -83,7 +83,7 @@ RequestActionsDropdown.propTypes = {
   handleGenerateCode: PropTypes.func.isRequired,
   handleCopyAsCurl: PropTypes.func.isRequired,
   handleShowSettings: PropTypes.func.isRequired,
-  request: PropTypes.object.isRequired
+  request: PropTypes.object.isRequired,
 };
 
 export default RequestActionsDropdown;

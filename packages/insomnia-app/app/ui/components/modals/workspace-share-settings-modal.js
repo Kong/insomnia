@@ -66,7 +66,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
         } catch (err) {
           this._resetState({ error: err.message, loading: false });
         }
-      }
+      },
     });
   }
 
@@ -88,7 +88,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
       console.warn('Failed to fetch ResourceGroup', err);
       this.setState({
         error: 'No sync info found. Please try again.',
-        loading: false
+        loading: false,
       });
     }
   }
@@ -100,10 +100,10 @@ class WorkspaceShareSettingsModal extends PureComponent {
           teams: [],
           resourceGroup: null,
           error: '',
-          loading: false
+          loading: false,
         },
-        patch
-      )
+        patch,
+      ),
     );
   }
 
@@ -205,7 +205,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
 }
 
 WorkspaceShareSettingsModal.propTypes = {
-  workspace: PropTypes.object.isRequired
+  workspace: PropTypes.object.isRequired,
 };
 
 export default WorkspaceShareSettingsModal;

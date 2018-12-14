@@ -19,7 +19,7 @@ const WHITE_LIST = {
 
   // These can be overridden in sync config
   [models.cookieJar.type]: true,
-  [models.clientCertificate.type]: true
+  [models.clientCertificate.type]: true,
 };
 
 export const logger = new Logger();
@@ -43,7 +43,7 @@ export async function init() {
   db.onChange(async changes => {
     // To help prevent bugs, put Workspaces first
     const sortedChanges = changes.sort(
-      ([event, doc, fromSync]) => (doc.type === models.workspace.type ? 1 : -1)
+      ([event, doc, fromSync]) => (doc.type === models.workspace.type ? 1 : -1),
     );
 
     for (const [event, doc, fromSync] of sortedChanges) {
@@ -263,7 +263,7 @@ export async function push(resourceGroupId = null) {
   for (const serverResource of conflicts) {
     const localResource = await store.getResourceByDocId(
       serverResource.id,
-      serverResource.resourceGroupId
+      serverResource.resourceGroupId,
     );
 
     // On conflict, choose last edited one
@@ -274,7 +274,7 @@ export async function push(resourceGroupId = null) {
     // NOTE: using localResource as the base to make sure we have _id
     await store.updateResource(localResource, winner, {
       version: serverResource.version, // Act as the server resource no matter what
-      dirty: !serverIsNewer // It's dirty if we chose the local doc
+      dirty: !serverIsNewer, // It's dirty if we chose the local doc
     });
 
     // Decrypt the docs from the resources. Don't fetch the local doc from the
@@ -327,14 +327,14 @@ export async function pull(resourceGroupId = null, createMissingResources = true
     id: r.id,
     resourceGroupId: r.resourceGroupId,
     version: r.version,
-    removed: r.removed
+    removed: r.removed,
   }));
 
   const blacklistedResourceGroupIds = blacklistedConfigs.map(c => c.resourceGroupId);
 
   const body = {
     resources,
-    blacklist: blacklistedResourceGroupIds
+    blacklist: blacklistedResourceGroupIds,
   };
 
   logger.debug(`Pulling with ${resources.length} resources`);
@@ -431,7 +431,7 @@ export async function pull(resourceGroupId = null, createMissingResources = true
       // Update local resource
       const resource = await store.getResourceByDocId(
         serverResource.id,
-        serverResource.resourceGroupId
+        serverResource.resourceGroupId,
       );
       await store.updateResource(resource, serverResource, { dirty: false });
     } catch (e) {
@@ -554,7 +554,7 @@ async function _handleChangeAndPush(event, doc, timestamp) {
     lastEditedBy: session.getAccountId(),
     encContent: await encryptDoc(resource.resourceGroupId, doc),
     removed: event === db.CHANGE_REMOVE,
-    dirty: true
+    dirty: true,
   });
 
   // Debounce pushing of dirty resources
@@ -643,7 +643,7 @@ async function _getResourceGroupSymmetricKey(resourceGroupId) {
 
     const symmetricKeyStr = crypt.decryptRSAWithJWK(
       accountPrivateKey,
-      resourceGroup.encSymmetricKey
+      resourceGroup.encSymmetricKey,
     );
 
     key = JSON.parse(symmetricKeyStr);
@@ -741,7 +741,7 @@ export async function createResource(doc, resourceGroupId) {
     removed: false,
     type: doc.type,
     encContent: await encryptDoc(resourceGroupId, doc),
-    dirty: true
+    dirty: true,
   });
 }
 
@@ -803,7 +803,7 @@ export async function getOrCreateAllActiveResources(resourceGroupId = null) {
 
   // Make sure Workspace is first, because the loop below depends on it
   const modelTypes = Object.keys(WHITE_LIST).sort(
-    (a, b) => (a.type === models.workspace.type ? 1 : -1)
+    (a, b) => (a.type === models.workspace.type ? 1 : -1),
   );
 
   let created = 0;

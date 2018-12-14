@@ -14,7 +14,7 @@ type Props = {
   workspace: Workspace,
 
   // Optional
-  className?: string
+  className?: string,
 };
 
 type State = {
@@ -23,7 +23,7 @@ type State = {
   resourceGroupId: string | null,
   syncMode: string | null,
   syncPercent: number,
-  workspaceName: string
+  workspaceName: string,
 };
 
 @autobind
@@ -43,7 +43,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       resourceGroupId: null,
       syncMode: null,
       syncPercent: 0,
-      workspaceName: ''
+      workspaceName: '',
     };
   }
 
@@ -94,7 +94,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         resourceGroupId,
         syncPercent,
         syncMode: config.syncMode,
-        workspaceName: workspace.name
+        workspaceName: workspace.name,
       });
     }
   }
@@ -103,7 +103,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     showModal(SetupSyncModal, {
       onSelectSyncMode: async syncMode => {
         await this._reloadData();
-      }
+      },
     });
   }
 

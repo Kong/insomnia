@@ -2,6 +2,6 @@
 
 declare module 'xmldom' {
   declare module.exports: {
-    DOMParser: Function
+    DOMParser: Function,
   };
 }

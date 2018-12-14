@@ -70,7 +70,7 @@ ResponseCookiesViewer.propTypes = {
   cookiesSent: PropTypes.bool.isRequired,
   cookiesStored: PropTypes.bool.isRequired,
   headers: PropTypes.array.isRequired,
-  handleShowRequestSettings: PropTypes.func.isRequired
+  handleShowRequestSettings: PropTypes.func.isRequired,
 };
 
 export default ResponseCookiesViewer;

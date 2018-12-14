@@ -9,10 +9,10 @@ module.exports = {
       warning: '#c18401',
       danger: '#e45649',
       surprise: '#a626a4',
-      info: '#0184bc'
+      info: '#0184bc',
     },
     foreground: {
-      default: '#777'
+      default: '#777',
     },
     highlight: {
       default: 'rgba(114, 121, 133, 1)',
@@ -21,7 +21,7 @@ module.exports = {
       sm: 'rgba(114, 121, 133, 0.2)',
       md: 'rgba(114, 121, 133, 0.3)',
       lg: 'rgba(114, 121, 133, 0.5)',
-      xl: 'rgba(114, 121, 133, 0.8)'
+      xl: 'rgba(114, 121, 133, 0.8)',
     },
     styles: {
       sidebar: {
@@ -32,14 +32,14 @@ module.exports = {
           warning: '#c18401',
           danger: '#e45649',
           surprise: '#a626a4',
-          info: '#0184bc'
+          info: '#0184bc',
         },
         foreground: {
-          default: '#444'
+          default: '#444',
         },
         highlight: {
-          default: '#888'
-        }
+          default: '#888',
+        },
       },
       paneHeader: {
         background: {
@@ -48,14 +48,14 @@ module.exports = {
           warning: '{{ styles.sidebar.background.warning }}',
           danger: '{{ styles.sidebar.background.danger }}',
           surprise: '{{ styles.sidebar.background.surprise }}',
-          info: '{{ styles.sidebar.background.info }}'
-        }
+          info: '{{ styles.sidebar.background.info }}',
+        },
       },
       transparentOverlay: {
         background: {
-          default: 'rgba(30, 33, 40, 0.8)'
-        }
-      }
-    }
-  }
+          default: 'rgba(30, 33, 40, 0.8)',
+        },
+      },
+    },
+  },
 };

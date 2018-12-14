@@ -12,7 +12,7 @@ import type { Settings } from '../../../models/settings';
 type Props = { settings: Settings };
 
 type State = {
-  response: Response | null
+  response: Response | null,
 };
 
 @autobind
@@ -23,7 +23,7 @@ class ResponseDebugModal extends React.PureComponent<Props, State> {
     super(props);
 
     this.state = {
-      response: null
+      response: null,
     };
   }
 

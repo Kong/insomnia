@@ -11,7 +11,8 @@ class FormEditor extends PureComponent {
       onChange,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered,
     } = this.props;
 
     return (
@@ -26,6 +27,7 @@ class FormEditor extends PureComponent {
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
             onChange={onChange}
             pairs={parameters}
           />
@@ -40,10 +42,11 @@ FormEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
+  isVariableUncovered: PropTypes.bool.isRequired,
 
   // Optional
   handleRender: PropTypes.func,
-  handleGetRenderContext: PropTypes.func
+  handleGetRenderContext: PropTypes.func,
 };
 
 export default FormEditor;

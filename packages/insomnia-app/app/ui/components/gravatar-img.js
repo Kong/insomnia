@@ -31,7 +31,7 @@ GravatarImg.propTypes = {
 
   // Optional
   size: PropTypes.number,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 export default GravatarImg;

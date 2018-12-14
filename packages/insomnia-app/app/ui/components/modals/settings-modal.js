@@ -95,25 +95,25 @@ class SettingsModal extends PureComponent {
         <ModalBody noScroll>
           <Tabs className="react-tabs" defaultIndex={currentTabIndex}>
             <TabList>
-              <Tab>
+              <Tab tabIndex="-1">
                 <Button value="General">General</Button>
               </Tab>
-              <Tab>
+              <Tab tabIndex="-1">
                 <Button value="Import/Export">Data</Button>
               </Tab>
-              <Tab>
+              <Tab tabIndex="-1">
                 <Button value="Themes">Themes</Button>
               </Tab>
-              <Tab>
+              <Tab tabIndex="-1">
                 <Button value="Shortcuts">Keyboard</Button>
               </Tab>
-              <Tab>
+              <Tab tabIndex="-1">
                 <Button value="Account">Account</Button>
               </Tab>
-              <Tab>
+              <Tab tabIndex="-1">
                 <Button value="Plugins">Plugins</Button>
               </Tab>
-              <Tab>
+              <Tab tabIndex="-1">
                 <Button value="About">About</Button>
               </Tab>
             </TabList>
@@ -164,7 +164,7 @@ SettingsModal.propTypes = {
   handleToggleMenuBar: PropTypes.func.isRequired,
 
   // Properties
-  settings: PropTypes.object.isRequired
+  settings: PropTypes.object.isRequired,
 };
 
 export default SettingsModal;

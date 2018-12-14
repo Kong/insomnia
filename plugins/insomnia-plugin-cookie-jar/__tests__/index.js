@@ -10,9 +10,9 @@ describe('plugin', () => {
           'foo=bar',
           'path=/',
           'domain=.insomnia.rest',
-          'HttpOnly Cache-Control: public, no-cache'
+          'HttpOnly Cache-Control: public, no-cache',
         ].join('; '),
-        'https://insomnia.rest'
+        'https://insomnia.rest',
       );
 
       const cookies = await cookiesFromJar(jar);
@@ -35,9 +35,9 @@ describe('plugin', () => {
           'foo=bar',
           'path=/',
           'domain=.insomnia.rest',
-          'HttpOnly Cache-Control: public, no-cache'
+          'HttpOnly Cache-Control: public, no-cache',
         ].join('; '),
-        'https://insomnia.rest'
+        'https://insomnia.rest',
       );
 
       const cookies = await cookiesFromJar(jar);
@@ -61,9 +61,9 @@ describe('plugin', () => {
           'foo=bar',
           'path=/',
           'domain=.insomnia.rest',
-          'HttpOnly Cache-Control: public, no-cache'
+          'HttpOnly Cache-Control: public, no-cache',
         ].join('; '),
-        'https://insomnia.rest'
+        'https://insomnia.rest',
       );
 
       const cookies = await cookiesFromJar(jar);
@@ -82,7 +82,7 @@ function _getTestContext(workspaces, requests, jars) {
   return {
     meta: {
       requestId: requests[0]._id,
-      workspaceId: workspaces[0]._id
+      workspaceId: workspaces[0]._id,
     },
     util: {
       render(str) {
@@ -92,24 +92,24 @@ function _getTestContext(workspaces, requests, jars) {
         request: {
           getById(id) {
             return requests.find(r => r._id === id);
-          }
+          },
         },
         workspace: {
           getById(id) {
             return workspaces.find(w => w._id === id);
-          }
+          },
         },
         cookieJar: {
           getOrCreateForWorkspace(workspace) {
             return (
               jars.find(j => j.parentId === workspace._id) || {
                 parentId: workspace._id,
-                cookies: []
+                cookies: [],
               }
             );
-          }
-        }
-      }
-    }
+          },
+        },
+      },
+    },
   };
 }

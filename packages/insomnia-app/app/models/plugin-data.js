@@ -10,7 +10,7 @@ export const canDuplicate = false;
 type BasePluginData = {
   plugin: string,
   key: string,
-  value: string
+  value: string,
 };
 
 export type PluginData = BaseModel & BasePluginData;
@@ -19,7 +19,7 @@ export function init(): BasePluginData {
   return {
     plugin: '',
     key: '',
-    value: ''
+    value: '',
   };
 }
 
@@ -42,6 +42,10 @@ export async function upsertByKey(plugin: string, key: string, value: string): P
 
 export async function removeByKey(plugin: string, key: string): Promise<void> {
   return db.removeWhere(type, { plugin, key });
+}
+
+export async function all(plugin: string): Promise<Array<PluginData>> {
+  return db.find(type, { plugin });
 }
 
 export async function removeAll(plugin: string): Promise<void> {

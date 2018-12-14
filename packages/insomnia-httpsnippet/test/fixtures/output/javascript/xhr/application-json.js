@@ -3,16 +3,16 @@ var data = JSON.stringify({
   string: 'f"oo',
   arr: [1, 2, 3],
   nested: {
-    a: 'b'
+    a: 'b',
   },
   arr_mix: [
     1,
     'a',
     {
-      arr_mix_nested: {}
-    }
+      arr_mix_nested: {},
+    },
   ],
-  boolean: false
+  boolean: false,
 });
 
 var xhr = new XMLHttpRequest();

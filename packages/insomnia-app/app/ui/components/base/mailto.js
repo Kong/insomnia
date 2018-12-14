@@ -8,7 +8,7 @@ type Props = {|
   email: string,
   children?: React.Node,
   subject?: string,
-  body?: string
+  body?: string,
 |};
 
 @autobind

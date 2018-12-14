@@ -1,4 +1,3 @@
-import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
 import crypto from 'crypto';
@@ -113,7 +112,7 @@ export async function insertResource(resource) {
   h.update(resource.resourceGroupId);
   h.update(resource.id);
   const newResource = Object.assign({}, resource, {
-    _id: `rs_${h.digest('hex')}`
+    _id: `rs_${h.digest('hex')}`,
   });
   await _execDB(TYPE_RESOURCE, 'insert', newResource);
   _notifyChange();
@@ -123,7 +122,7 @@ export async function insertResource(resource) {
 export async function updateResource(resource, ...patches) {
   const newDoc = Object.assign({}, resource, ...patches);
   await _execDB(TYPE_RESOURCE, 'update', { _id: resource._id }, newDoc, {
-    multi: true
+    multi: true,
   });
   _notifyChange();
   return newDoc;
@@ -149,7 +148,7 @@ export function allConfigs() {
 export function findInactiveConfigs(excludedResourceGroupId = null) {
   if (excludedResourceGroupId) {
     return findConfigs({
-      $not: { syncMode: SYNC_MODE_ON, excludedResourceGroupId }
+      $not: { syncMode: SYNC_MODE_ON, excludedResourceGroupId },
     });
   } else {
     return findConfigs({ $not: { syncMode: SYNC_MODE_ON } });
@@ -190,15 +189,15 @@ function _initConfig(data) {
     {
       _id: util.generateId('scf'),
       syncMode: SYNC_MODE_UNSET,
-      resourceGroupId: null
+      resourceGroupId: null,
     },
-    data
+    data,
   );
 }
 
 export function initDB(config, forceReset) {
   if (!_database || forceReset) {
-    const basePath = electron.remote.app.getPath('userData');
+    const basePath = util.getDataDirectory();
     _database = {};
 
     // NOTE: Do not EVER change this. EVER!
@@ -207,7 +206,7 @@ export function initDB(config, forceReset) {
 
     // Fill in the defaults
     _database['Resource'] = new NeDB(
-      Object.assign({ filename: resourcePath, autoload: true }, config)
+      Object.assign({ filename: resourcePath, autoload: true }, config),
     );
 
     _database['Config'] = new NeDB(Object.assign({ filename: configPath, autoload: true }, config));

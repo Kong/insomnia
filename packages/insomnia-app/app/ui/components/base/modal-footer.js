@@ -16,7 +16,7 @@ ModalFooter.propTypes = {
   children: PropTypes.node.isRequired,
 
   // Optional
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 export default ModalFooter;

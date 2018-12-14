@@ -9,7 +9,7 @@ type Props = {
   // Optional
   small?: boolean,
   className?: string,
-  maxLength?: number
+  maxLength?: number,
 };
 
 class URLTag extends React.PureComponent<Props> {

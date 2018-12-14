@@ -19,16 +19,16 @@ module.exports = function(source, options) {
     {
       indent: '    ',
       pretty: true,
-      timeout: '10'
+      timeout: '10',
     },
-    options
+    options,
   );
 
   var code = new CodeBuilder(opts.indent);
   // Markers for headers to be created as litteral objects and later be set on the NSURLRequest if exist
   var req = {
     hasHeaders: false,
-    hasBody: false
+    hasBody: false,
   };
 
   // We just want to make sure people understand that is the only dependency
@@ -54,13 +54,13 @@ module.exports = function(source, options) {
           .push(
             'NSMutableData *postData = [[NSMutableData alloc] initWithData:[@"%s=%s" dataUsingEncoding:NSUTF8StringEncoding]];',
             source.postData.params[0].name,
-            source.postData.params[0].value
+            source.postData.params[0].value,
           );
         for (var i = 1, len = source.postData.params.length; i < len; i++) {
           code.push(
             '[postData appendData:[@"&%s=%s" dataUsingEncoding:NSUTF8StringEncoding]];',
             source.postData.params[i].name,
-            source.postData.params[i].value
+            source.postData.params[i].value,
           );
         }
         break;
@@ -73,12 +73,12 @@ module.exports = function(source, options) {
                 'NSDictionary',
                 'parameters',
                 source.postData.jsonObj,
-                opts.pretty
-              )
+                opts.pretty,
+              ),
             )
             .blank()
             .push(
-              'NSData *postData = [NSJSONSerialization dataWithJSONObject:parameters options:0 error:nil];'
+              'NSData *postData = [NSJSONSerialization dataWithJSONObject:parameters options:0 error:nil];',
             );
         }
         break;
@@ -98,12 +98,12 @@ module.exports = function(source, options) {
           .push(1, 'if (param[@"fileName"]) {')
           .push(
             2,
-            '[body appendFormat:@"Content-Disposition:form-data; name=\\"%@\\"; filename=\\"%@\\"\\r\\n", param[@"name"], param[@"fileName"]];'
+            '[body appendFormat:@"Content-Disposition:form-data; name=\\"%@\\"; filename=\\"%@\\"\\r\\n", param[@"name"], param[@"fileName"]];',
           )
           .push(2, '[body appendFormat:@"Content-Type: %@\\r\\n\\r\\n", param[@"contentType"]];')
           .push(
             2,
-            '[body appendFormat:@"%@", [NSString stringWithContentsOfFile:param[@"fileName"] encoding:NSUTF8StringEncoding error:&error]];'
+            '[body appendFormat:@"%@", [NSString stringWithContentsOfFile:param[@"fileName"] encoding:NSUTF8StringEncoding error:&error]];',
           )
           .push(2, 'if (error) {')
           .push(3, 'NSLog(@"%@", error);')
@@ -111,7 +111,7 @@ module.exports = function(source, options) {
           .push(1, '} else {')
           .push(
             2,
-            '[body appendFormat:@"Content-Disposition:form-data; name=\\"%@\\"\\r\\n\\r\\n", param[@"name"]];'
+            '[body appendFormat:@"Content-Disposition:form-data; name=\\"%@\\"\\r\\n\\r\\n", param[@"name"]];',
           )
           .push(2, '[body appendFormat:@"%@", param[@"value"]];')
           .push(1, '}')
@@ -126,7 +126,7 @@ module.exports = function(source, options) {
           .push(
             'NSData *postData = [[NSData alloc] initWithData:[@"' +
               source.postData.text +
-              '" dataUsingEncoding:NSUTF8StringEncoding]];'
+              '" dataUsingEncoding:NSUTF8StringEncoding]];',
           );
     }
   }
@@ -136,16 +136,16 @@ module.exports = function(source, options) {
     .push(
       'NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"' +
         source.fullUrl +
-        '"]'
+        '"]',
     )
     // NSURLRequestUseProtocolCachePolicy is the default policy, let's just always set it to avoid confusion.
     .push(
-      '                                                       cachePolicy:NSURLRequestUseProtocolCachePolicy'
+      '                                                       cachePolicy:NSURLRequestUseProtocolCachePolicy',
     )
     .push(
       '                                                   timeoutInterval:' +
         parseInt(opts.timeout, 10).toFixed(1) +
-        '];'
+        '];',
     )
     .push('[request setHTTPMethod:@"' + source.method + '"];');
 
@@ -163,7 +163,7 @@ module.exports = function(source, options) {
     .push('NSURLSession *session = [NSURLSession sharedSession];')
     .push('NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request')
     .push(
-      '                                            completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {'
+      '                                            completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {',
     )
     .push(1, '                                            if (error) {')
     .push(2, '                                            NSLog(@"%@", error);')
@@ -171,7 +171,7 @@ module.exports = function(source, options) {
     // Casting the NSURLResponse to NSHTTPURLResponse so the user can see the status     .
     .push(
       2,
-      '                                            NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;'
+      '                                            NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;',
     )
     .push(2, '                                            NSLog(@"%@", httpResponse);')
     .push(1, '                                            }')
@@ -186,5 +186,5 @@ module.exports.info = {
   title: 'NSURLSession',
   link:
     'https://developer.apple.com/library/mac/documentation/Foundation/Reference/NSURLSession_class/index.html',
-  description: "Foundation's NSURLSession request"
+  description: "Foundation's NSURLSession request",
 };

@@ -10,10 +10,10 @@ var options = {
   qs: { foo: ['bar', 'baz'], baz: 'abc', key: 'value' },
   headers: {
     'content-type': 'application/x-www-form-urlencoded',
-    accept: 'application/json'
+    accept: 'application/json',
   },
   form: { foo: 'bar' },
-  jar: 'JAR'
+  jar: 'JAR',
 };
 
 request(options, function(error, response, body) {

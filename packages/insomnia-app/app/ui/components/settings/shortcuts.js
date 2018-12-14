@@ -23,6 +23,7 @@ class Shortcuts extends PureComponent {
       <div>
         <table className="table--fancy">
           <tbody>
+            {this.renderHotkey(hotkeys.SHOW_KEYBOARD_SHORTCUTS)}
             {this.renderHotkey(hotkeys.SHOW_QUICK_SWITCHER)}
             {this.renderHotkey(hotkeys.SEND_REQUEST)}
             {this.renderHotkey(hotkeys.SHOW_SEND_OPTIONS)}
@@ -34,6 +35,7 @@ class Shortcuts extends PureComponent {
             {this.renderHotkey(hotkeys.SHOW_ENVIRONMENTS)}
             {this.renderHotkey(hotkeys.TOGGLE_ENVIRONMENTS_MENU)}
             {this.renderHotkey(hotkeys.FOCUS_URL)}
+            {this.renderHotkey(hotkeys.FOCUS_RESPONSE)}
             {this.renderHotkey(hotkeys.TOGGLE_METHOD_DROPDOWN)}
             {this.renderHotkey(hotkeys.TOGGLE_SIDEBAR)}
             {this.renderHotkey(hotkeys.TOGGLE_HISTORY_DROPDOWN)}
@@ -43,6 +45,7 @@ class Shortcuts extends PureComponent {
             {this.renderHotkey(hotkeys.SHOW_REQUEST_SETTINGS)}
             {this.renderHotkey(hotkeys.TOGGLE_MAIN_MENU)}
             {this.renderHotkey(hotkeys.RELOAD_PLUGINS)}
+            {this.renderHotkey(hotkeys.UNCOVER_VARIABLES)}
           </tbody>
         </table>
       </div>

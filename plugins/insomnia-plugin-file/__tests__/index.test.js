@@ -26,9 +26,9 @@ describe('FileExtension', () => {
   it(
     'fails on missing file',
     assertTemplateFails(
-      ['/foo'],
-      `ENOENT: no such file or directory, open '${path.resolve('/foo')}'`
-    )
+      [process.platform === 'win32' ? 'C:\\foo' : '/foo'],
+      `ENOENT: no such file or directory, open '${path.resolve('/foo')}'`,
+    ),
   );
   it('fails on no 2nd param', assertTemplateFails([], 'No file selected'));
 });

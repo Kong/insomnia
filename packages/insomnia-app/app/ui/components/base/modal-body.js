@@ -6,7 +6,7 @@ class ModalBody extends PureComponent {
   render() {
     const { className, children, noScroll, ...props } = this.props;
     const classes = classnames(className, 'modal__body theme--dialog__body', {
-      'modal__body--no-scroll': noScroll
+      'modal__body--no-scroll': noScroll,
     });
 
     return (
@@ -20,7 +20,7 @@ class ModalBody extends PureComponent {
 ModalBody.propTypes = {
   noScroll: PropTypes.bool,
   className: PropTypes.string,
-  children: PropTypes.node
+  children: PropTypes.node,
 };
 
 export default ModalBody;

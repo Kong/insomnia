@@ -23,7 +23,7 @@ function importEnvironment(environment) {
     _id: '__ENV_1__',
     _type: 'environment',
     name: environment.name || 'Postman Environment',
-    data: {}
+    data: {},
   };
 
   for (const value of environment.values) {

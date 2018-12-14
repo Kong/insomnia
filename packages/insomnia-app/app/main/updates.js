@@ -5,7 +5,7 @@ import {
   getAppVersion,
   isDevelopment,
   UPDATE_URL_MAC,
-  UPDATE_URL_WINDOWS
+  UPDATE_URL_WINDOWS,
 } from '../common/constants';
 import * as models from '../models/index';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
@@ -28,7 +28,7 @@ async function getUpdateUrl(force: boolean): Promise<string | null> {
 
   const params = [
     { name: 'v', value: getAppVersion() },
-    { name: 'channel', value: settings.updateChannel }
+    { name: 'channel', value: settings.updateChannel },
   ];
 
   const qs = buildQueryStringFromParams(params);
@@ -131,7 +131,7 @@ async function _checkForUpdates(force: boolean) {
 
   if (updateUrl === null) {
     console.log(
-      `[updater] Updater not running platform=${process.platform} dev=${isDevelopment()}`
+      `[updater] Updater not running platform=${process.platform} dev=${isDevelopment()}`,
     );
     _sendUpdateComplete(false, 'Updates Not Supported');
     return;

@@ -7,7 +7,7 @@ describe('getBasicAuthHeader()', () => {
     const header = getBasicAuthHeader('user', 'password');
     expect(header).toEqual({
       name: 'Authorization',
-      value: 'Basic dXNlcjpwYXNzd29yZA=='
+      value: 'Basic dXNlcjpwYXNzd29yZA==',
     });
   });
 
@@ -15,7 +15,7 @@ describe('getBasicAuthHeader()', () => {
     const header = getBasicAuthHeader(null, 'password');
     expect(header).toEqual({
       name: 'Authorization',
-      value: 'Basic OnBhc3N3b3Jk'
+      value: 'Basic OnBhc3N3b3Jk',
     });
   });
 
@@ -23,7 +23,7 @@ describe('getBasicAuthHeader()', () => {
     const header = getBasicAuthHeader('user', '');
     expect(header).toEqual({
       name: 'Authorization',
-      value: 'Basic dXNlcjo='
+      value: 'Basic dXNlcjo=',
     });
   });
 
@@ -31,7 +31,7 @@ describe('getBasicAuthHeader()', () => {
     const header = getBasicAuthHeader('user', null);
     expect(header).toEqual({
       name: 'Authorization',
-      value: 'Basic dXNlcjo='
+      value: 'Basic dXNlcjo=',
     });
   });
 });

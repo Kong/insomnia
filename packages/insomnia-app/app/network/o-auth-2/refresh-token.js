@@ -13,11 +13,11 @@ export default async function(
   clientId: string,
   clientSecret: string,
   refreshToken: string,
-  scope: string
+  scope: string,
 ): Promise<Object> {
   const params = [
     { name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_REFRESH },
-    { name: c.P_REFRESH_TOKEN, value: refreshToken }
+    { name: c.P_REFRESH_TOKEN, value: refreshToken },
   ];
 
   // Add optional params
@@ -27,8 +27,8 @@ export default async function(
     { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
     {
       name: 'Accept',
-      value: 'application/x-www-form-urlencoded, application/json'
-    }
+      value: 'application/x-www-form-urlencoded, application/json',
+    },
   ];
 
   if (credentialsInBody) {
@@ -44,7 +44,7 @@ export default async function(
     headers,
     url,
     method: 'POST',
-    body: models.request.newBodyFormUrlEncoded(params)
+    body: models.request.newBodyFormUrlEncoded(params),
   });
 
   const statusCode = response.statusCode || 0;
@@ -65,7 +65,7 @@ export default async function(
     c.P_SCOPE,
     c.P_ERROR,
     c.P_ERROR_URI,
-    c.P_ERROR_DESCRIPTION
+    c.P_ERROR_DESCRIPTION,
   ]);
 
   return results;

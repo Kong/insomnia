@@ -5,11 +5,12 @@ import fs from 'fs';
 import LocalStorage from './local-storage';
 import {
   CHANGELOG_BASE_URL,
+  MNEMONIC_SYM,
   getAppLongName,
   getAppName,
   getAppVersion,
   isDevelopment,
-  isMac
+  isMac,
 } from '../common/constants';
 import * as misc from '../common/misc';
 
@@ -58,8 +59,8 @@ export function createWindow() {
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, 'static/icon.png'),
     webPreferences: {
-      zoomFactor: zoomFactor
-    }
+      zoomFactor: zoomFactor,
+    },
   });
 
   // BrowserWindow doesn't have an option for this, so we have to do it manually :(
@@ -94,59 +95,59 @@ export function createWindow() {
   });
 
   const applicationMenu = {
-    label: 'Application',
+    label: `${MNEMONIC_SYM}Application`,
     submenu: [
       ...(isMac()
-        ? [{ label: `About ${getAppName()}`, role: 'about' }, { type: 'separator' }]
+        ? [{ label: `A${MNEMONIC_SYM}bout ${getAppName()}`, role: 'about' }, { type: 'separator' }]
         : []),
       {
-        label: 'Preferences',
+        label: `${MNEMONIC_SYM}Preferences`,
         accelerator: 'CmdOrCtrl+,',
         click: function(menuItem, window, e) {
           if (!window || !window.webContents) {
             return;
           }
           window.webContents.send('toggle-preferences');
-        }
+        },
       },
       {
-        label: 'Changelog',
+        label: `${MNEMONIC_SYM}Changelog`,
         click: function(menuItem, window, e) {
           if (!window || !window.webContents) {
             return;
           }
           misc.clickLink(`${CHANGELOG_BASE_URL}/${getAppVersion()}/`);
-        }
+        },
       },
       ...(isMac() ? [{ type: 'separator' }, { role: 'hide' }, { role: 'hideothers' }] : []),
       { type: 'separator' },
-      { label: 'Quit', accelerator: 'CmdOrCtrl+Q', click: () => app.quit() }
-    ]
+      { label: `${MNEMONIC_SYM}Quit`, accelerator: 'CmdOrCtrl+Q', click: () => app.quit() },
+    ],
   };
 
   const editMenu = {
-    label: 'Edit',
+    label: `${MNEMONIC_SYM}Edit`,
     submenu: [
-      { label: 'Undo', accelerator: 'CmdOrCtrl+Z', selector: 'undo:' },
-      { label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:' },
+      { label: `${MNEMONIC_SYM}Undo`, accelerator: 'CmdOrCtrl+Z', selector: 'undo:' },
+      { label: `${MNEMONIC_SYM}Redo`, accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:' },
       { type: 'separator' },
-      { label: 'Cut', accelerator: 'CmdOrCtrl+X', selector: 'cut:' },
-      { label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
-      { label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
+      { label: `Cu${MNEMONIC_SYM}t`, accelerator: 'CmdOrCtrl+X', selector: 'cut:' },
+      { label: `${MNEMONIC_SYM}Copy`, accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
+      { label: `${MNEMONIC_SYM}Paste`, accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
       {
-        label: 'Select All',
+        label: `Select ${MNEMONIC_SYM}All`,
         accelerator: 'CmdOrCtrl+A',
-        selector: 'selectAll:'
-      }
-    ]
+        selector: 'selectAll:',
+      },
+    ],
   };
 
   const viewMenu = {
-    label: 'View',
+    label: `${MNEMONIC_SYM}View`,
     submenu: [
-      { role: 'togglefullscreen' },
+      { label: `Toggle ${MNEMONIC_SYM}Full Screen`, role: 'togglefullscreen' },
       {
-        label: 'Actual Size',
+        label: `${MNEMONIC_SYM}Actual Size`,
         accelerator: 'CmdOrCtrl+0',
         click: () => {
           const window = BrowserWindow.getFocusedWindow();
@@ -157,10 +158,10 @@ export function createWindow() {
           const zoomFactor = 1;
           window.webContents.setZoomFactor(zoomFactor);
           saveZoomFactor(zoomFactor);
-        }
+        },
       },
       {
-        label: 'Zoom In',
+        label: `Zoom ${MNEMONIC_SYM}In`,
         accelerator: isMac() ? 'CmdOrCtrl+Plus' : 'CmdOrCtrl+=',
         click: () => {
           const window = BrowserWindow.getFocusedWindow();
@@ -172,10 +173,10 @@ export function createWindow() {
           window.webContents.setZoomFactor(zoomFactor);
 
           saveZoomFactor(zoomFactor);
-        }
+        },
       },
       {
-        label: 'Zoom Out',
+        label: `Zoom ${MNEMONIC_SYM}Out`,
         accelerator: 'CmdOrCtrl+-',
         click: () => {
           const window = BrowserWindow.getFocusedWindow();
@@ -186,10 +187,10 @@ export function createWindow() {
           const zoomFactor = Math.max(0.5, getZoomFactor() - 0.05);
           window.webContents.setZoomFactor(zoomFactor);
           saveZoomFactor(zoomFactor);
-        }
+        },
       },
       {
-        label: 'Toggle Sidebar',
+        label: `Toggle ${MNEMONIC_SYM}Sidebar`,
         accelerator: 'CmdOrCtrl+\\',
         click: () => {
           const window = BrowserWindow.getFocusedWindow();
@@ -198,60 +199,65 @@ export function createWindow() {
           }
 
           window.webContents.send('toggle-sidebar');
-        }
+        },
       },
       {
-        label: 'Toggle DevTools',
-        click: () => mainWindow.toggleDevTools()
-      }
-    ]
+        label: `Toggle ${MNEMONIC_SYM}DevTools`,
+        click: () => mainWindow.toggleDevTools(),
+      },
+    ],
   };
 
   const windowMenu = {
-    label: 'Window',
+    label: `${MNEMONIC_SYM}Window`,
     role: 'window',
-    submenu: [{ role: 'minimize' }, ...(isMac() ? [{ role: 'close' }] : [])]
+    submenu: [
+      { label: `${MNEMONIC_SYM}Minimize`, role: 'minimize' },
+      ...(isMac() ? [{ label: `${MNEMONIC_SYM}Close`, role: 'close' }] : []),
+    ],
   };
 
   const helpMenu = {
-    label: 'Help',
+    label: `${MNEMONIC_SYM}Help`,
     role: 'help',
     id: 'help',
     submenu: [
       {
-        label: 'Contact Support',
+        label: `Contact ${MNEMONIC_SYM}Support`,
         click: () => {
           shell.openExternal('https://insomnia.rest/support/');
-        }
+        },
       },
       {
-        label: 'Keyboard Shortcuts',
+        label: `${MNEMONIC_SYM}Keyboard Shortcuts`,
+        accelerator: 'CmdOrCtrl+Shift+?',
         click: (menuItem, window, e) => {
           if (!window || !window.webContents) {
             return;
           }
           window.webContents.send('toggle-preferences-shortcuts');
-        }
+        },
       },
       {
-        label: 'Show App Data Folder',
+        label: `Show App ${MNEMONIC_SYM}Data Folder`,
         click: (menuItem, window, e) => {
-          const directory = app.getPath('userData');
+          const directory = misc.getDataDirectory();
           shell.showItemInFolder(directory);
-        }
+        },
       },
       {
-        label: 'Insomnia Help',
+        label: `Insomnia ${MNEMONIC_SYM}Help`,
+        accelerator: !isMac() ? 'F1' : null,
         click: () => {
           shell.openExternal('https://support.insomnia.rest');
-        }
-      }
-    ]
+        },
+      },
+    ],
   };
 
   if (!isMac()) {
     helpMenu.submenu.unshift({
-      label: 'About',
+      label: `${MNEMONIC_SYM}About`,
       click: () => {
         dialog.showMessageBox({
           type: 'info',
@@ -259,60 +265,60 @@ export function createWindow() {
           message: getAppLongName(),
           detail: [
             'Version ' + getAppVersion(),
-            'Shell ' + process.versions['atom-shell'],
+            'Shell ' + process.versions.electron,
             'Node ' + process.versions.node,
             'V8 ' + process.versions.v8,
             'Architecture ' + process.arch,
             '', // Blank line before libcurl
-            Curl.getVersion()
-          ].join('\n')
+            Curl.getVersion(),
+          ].join('\n'),
         });
-      }
+      },
     });
   }
 
   const developerMenu = {
-    label: 'Developer',
+    label: `${MNEMONIC_SYM}Developer`,
     position: 'before=help',
     submenu: [
       {
-        label: 'Reload',
+        label: `${MNEMONIC_SYM}Reload`,
         accelerator: 'Shift+F5',
-        click: () => mainWindow.reload()
+        click: () => mainWindow.reload(),
       },
       {
-        label: 'Toggle DevTools',
+        label: `Toggle ${MNEMONIC_SYM}DevTools`,
         accelerator: 'Alt+CmdOrCtrl+I',
-        click: () => mainWindow.toggleDevTools()
+        click: () => mainWindow.toggleDevTools(),
       },
       {
-        label: 'Resize to Default',
+        label: `Resize to Defaul${MNEMONIC_SYM}t`,
         click: () =>
           mainWindow.setBounds({
             x: 100,
             y: 100,
             width: DEFAULT_WIDTH,
-            height: DEFAULT_HEIGHT
-          })
+            height: DEFAULT_HEIGHT,
+          }),
       },
       {
-        label: 'Take Screenshot',
+        label: `Take ${MNEMONIC_SYM}Screenshot`,
         click: function() {
           mainWindow.capturePage(image => {
             const buffer = image.toPNG();
             const dir = app.getPath('desktop');
             fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
           });
-        }
-      }
-    ]
+        },
+      },
+    ],
   };
 
   const toolsMenu = {
-    label: 'Tools',
+    label: `${MNEMONIC_SYM}Tools`,
     submenu: [
       {
-        label: 'Reload Plugins',
+        label: `${MNEMONIC_SYM}Reload Plugins`,
         accelerator: 'CmdOrCtrl+Shift+R',
         click: () => {
           const window = BrowserWindow.getFocusedWindow();
@@ -321,9 +327,9 @@ export function createWindow() {
           }
 
           window.webContents.send('reload-plugins');
-        }
-      }
-    ]
+        },
+      },
+    ],
   };
 
   let template = [];
@@ -352,14 +358,14 @@ function showUnresponsiveModal() {
       defaultId: 1,
       cancelId: 0,
       title: 'Unresponsive',
-      message: 'Insomnia has become unresponsive. Do you want to reload?'
+      message: 'Insomnia has become unresponsive. Do you want to reload?',
     },
     id => {
       if (id === 1) {
         mainWindow.destroy();
         createWindow();
       }
-    }
+    },
   );
 }
 
@@ -413,7 +419,7 @@ function getZoomFactor() {
 }
 
 function initLocalStorage() {
-  const localStoragePath = path.join(app.getPath('userData'), 'localStorage');
+  const localStoragePath = path.join(misc.getDataDirectory(), 'localStorage');
   localStorage = new LocalStorage(localStoragePath);
 }
 

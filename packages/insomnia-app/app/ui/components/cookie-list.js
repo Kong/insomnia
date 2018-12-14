@@ -16,7 +16,7 @@ type Props = {
   cookies: Array<Cookie>,
   newCookieDomainName: string,
   handleShowModifyCookieModal: Function,
-  handleRender: Function
+  handleRender: Function,
 };
 
 @autobind
@@ -30,7 +30,7 @@ class CookieList extends React.PureComponent<Props> {
       expires: null,
       path: '/',
       secure: false,
-      httpOnly: false
+      httpOnly: false,
     };
 
     this.props.handleCookieAdd(newCookie);

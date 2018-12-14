@@ -7,7 +7,7 @@ import {
   DropdownButton,
   DropdownDivider,
   DropdownHint,
-  DropdownItem
+  DropdownItem,
 } from '../base/dropdown';
 import EnvironmentEditModal from '../modals/environment-edit-modal';
 import * as models from '../../../models';
@@ -28,7 +28,7 @@ class RequestGroupActionsDropdown extends PureComponent {
       defaultValue: requestGroup.name,
       onComplete: name => {
         models.requestGroup.update(requestGroup, { name });
-      }
+      },
     });
   }
 
@@ -108,7 +108,7 @@ RequestGroupActionsDropdown.propTypes = {
   handleMoveRequestGroup: PropTypes.func.isRequired,
 
   // Optional
-  requestGroup: PropTypes.object
+  requestGroup: PropTypes.object,
 };
 
 export default RequestGroupActionsDropdown;

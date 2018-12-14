@@ -31,7 +31,7 @@ module.exports.convert = function(rawData) {
     const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : null;
     resource.body = {
       mimeType: mimeType || '',
-      text: resource.body
+      text: resource.body,
     };
   }
 

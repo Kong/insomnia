@@ -29,7 +29,7 @@ const MODELS = {
   [EXPORT_TYPE_REQUEST_GROUP]: models.requestGroup,
   [EXPORT_TYPE_WORKSPACE]: models.workspace,
   [EXPORT_TYPE_COOKIE_JAR]: models.cookieJar,
-  [EXPORT_TYPE_ENVIRONMENT]: models.environment
+  [EXPORT_TYPE_ENVIRONMENT]: models.environment,
 };
 
 export async function importUri(workspaceId: string | null, uri: string): Promise<void> {
@@ -72,11 +72,11 @@ export async function importUri(workspaceId: string | null, uri: string): Promis
 export async function importRaw(
   workspaceId: string | null,
   rawContent: string,
-  generateNewIds: boolean = false
+  generateNewIds: boolean = false,
 ): Promise<{
   source: string,
   error: string | null,
-  summary: { [string]: Array<BaseModel> }
+  summary: { [string]: Array<BaseModel> },
 }> {
   let results;
   try {
@@ -86,7 +86,7 @@ export async function importRaw(
     return {
       source: 'not found',
       error: 'No importers found for file',
-      summary: {}
+      summary: {},
     };
   }
 
@@ -96,7 +96,7 @@ export async function importRaw(
 
   // Fetch the base environment in case we need it
   let baseEnvironment: Environment | null = await models.environment.getOrCreateForWorkspaceId(
-    workspaceId || 'n/a'
+    workspaceId || 'n/a',
   );
 
   // Generate all the ids we may need
@@ -120,7 +120,7 @@ export async function importRaw(
     if (!baseEnvironment) {
       if (!workspace) {
         workspace = await models.workspace.create({
-          name: 'Imported Workspace'
+          name: 'Imported Workspace',
         });
       }
       baseEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
@@ -184,13 +184,13 @@ export async function importRaw(
   return {
     source: results.type && typeof results.type.id === 'string' ? results.type.id : 'unknown',
     summary: importedDocs,
-    error: null
+    error: null,
   };
 }
 
 export async function exportHAR(
   parentDoc: BaseModel | null = null,
-  includePrivateDocs: boolean = false
+  includePrivateDocs: boolean = false,
 ): Promise<string> {
   let workspaces;
   if (parentDoc) {
@@ -219,7 +219,7 @@ export async function exportHAR(
       .map((request: BaseModel) => {
         return {
           requestId: request._id,
-          environmentId: workspaceEnvironmentLookup[workspace._id]
+          environmentId: workspaceEnvironmentLookup[workspace._id],
         };
       });
 
@@ -233,14 +233,14 @@ export async function exportHAR(
 
 export async function exportJSON(
   parentDoc: BaseModel | null = null,
-  includePrivateDocs: boolean = false
+  includePrivateDocs: boolean = false,
 ): Promise<string> {
   const data = {
     _type: 'export',
     __export_format: EXPORT_FORMAT,
     __export_date: new Date(),
     __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
-    resources: []
+    resources: [],
   };
 
   const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
@@ -253,7 +253,7 @@ export async function exportJSON(
         d.type === models.requestGroup.type ||
         d.type === models.workspace.type ||
         d.type === models.cookieJar.type ||
-        d.type === models.environment.type
+        d.type === models.environment.type,
     )
     .map((d: Object) => {
       if (d.type === models.workspace.type) {
@@ -278,12 +278,12 @@ export async function exportJSON(
 
 async function getDocWithDescendants(
   parentDoc: BaseModel | null = null,
-  includePrivateDocs: boolean = false
+  includePrivateDocs: boolean = false,
 ): Promise<Array<BaseModel>> {
   const docs = await db.withDescendants(parentDoc);
   return docs.filter(
     d =>
       // Don't include if private, except if we want to
-      !(d: any).isPrivate || includePrivateDocs
+      !(d: any).isPrivate || includePrivateDocs,
   );
 }

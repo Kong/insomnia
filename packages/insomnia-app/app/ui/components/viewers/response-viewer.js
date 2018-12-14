@@ -14,9 +14,10 @@ import {
   HUGE_RESPONSE_MB,
   LARGE_RESPONSE_MB,
   PREVIEW_MODE_FRIENDLY,
-  PREVIEW_MODE_RAW
+  PREVIEW_MODE_RAW,
 } from '../../../common/constants';
-import Wrap from '../wrap';
+import * as hotkeys from '../../../common/hotkeys';
+import KeydownBinder from '../keydown-binder';
 
 let alwaysShowLargeResponses = false;
 
@@ -37,24 +38,32 @@ type Props = {
 
   // Optional
   updateFilter: Function | null,
-  error: string | null
+  error: string | null,
 };
 
 type State = {
   blockingBecauseTooLarge: boolean,
   bodyBuffer: Buffer | null,
-  error: string
+  error: string,
 };
 
 @autobind
 class ResponseViewer extends React.Component<Props, State> {
+  _selectableView: any;
+
   constructor(props: Props) {
     super(props);
     this.state = {
       blockingBecauseTooLarge: false,
       bodyBuffer: null,
-      error: ''
+      error: '',
     };
+  }
+
+  refresh() {
+    if (this._selectableView != null && typeof this._selectableView.refresh === 'function') {
+      this._selectableView.refresh();
+    }
   }
 
   _decodeIconv(bodyBuffer: Buffer, charset: string): string {
@@ -90,11 +99,11 @@ class ResponseViewer extends React.Component<Props, State> {
         const bodyBuffer = props.getBody();
         this.setState({
           bodyBuffer,
-          blockingBecauseTooLarge: false
+          blockingBecauseTooLarge: false,
         });
       } catch (err) {
         this.setState({
-          error: `Failed reading response from filesystem: ${err.stack}`
+          error: `Failed reading response from filesystem: ${err.stack}`,
         });
       }
     }
@@ -154,7 +163,34 @@ class ResponseViewer extends React.Component<Props, State> {
     return false;
   }
 
-  render() {
+  _setSelectableViewRef(n: any) {
+    this._selectableView = n;
+  }
+
+  _isViewSelectable() {
+    return (
+      this._selectableView != null &&
+      typeof this._selectableView.focus === 'function' &&
+      typeof this._selectableView.selectAll === 'function'
+    );
+  }
+
+  _handleKeyDown(e: KeyboardEvent) {
+    if (!this._isViewSelectable()) {
+      return;
+    }
+
+    hotkeys.executeHotKey(e, hotkeys.FOCUS_RESPONSE, () => {
+      if (!this._isViewSelectable()) {
+        return;
+      }
+
+      this._selectableView.focus();
+      this._selectableView.selectAll();
+    });
+  }
+
+  _renderView() {
     const {
       bytes,
       download,
@@ -168,7 +204,7 @@ class ResponseViewer extends React.Component<Props, State> {
       previewMode,
       responseId,
       updateFilter,
-      url
+      url,
     } = this.props;
 
     let contentType = this.props.contentType;
@@ -191,14 +227,14 @@ class ResponseViewer extends React.Component<Props, State> {
       return (
         <div className="response-pane__notify">
           {wayTooLarge ? (
-            <Wrap>
+            <React.Fragment>
               <p className="pad faint">Responses over {HUGE_RESPONSE_MB}MB cannot be shown</p>
               <button onClick={download} className="inline-block btn btn--clicky">
                 Save Response To File
               </button>
-            </Wrap>
+            </React.Fragment>
           ) : (
-            <Wrap>
+            <React.Fragment>
               <p className="pad faint">
                 Response over {LARGE_RESPONSE_MB}MB hidden for performance reasons
               </p>
@@ -220,7 +256,7 @@ class ResponseViewer extends React.Component<Props, State> {
                   Always Show
                 </button>
               </div>
-            </Wrap>
+            </React.Fragment>
           )}
         </div>
       );
@@ -329,6 +365,7 @@ class ResponseViewer extends React.Component<Props, State> {
       return (
         <ResponseRaw
           key={responseId}
+          ref={this._setSelectableViewRef}
           value={this._decodeIconv(bodyBuffer, charset)}
           fontSize={editorFontSize}
         />
@@ -352,6 +389,7 @@ class ResponseViewer extends React.Component<Props, State> {
       return (
         <CodeEditor
           uniquenessKey={responseId}
+          ref={this._setSelectableViewRef}
           onClickLink={this._handleOpenLink}
           defaultValue={body}
           updateFilter={updateFilter}
@@ -369,6 +407,10 @@ class ResponseViewer extends React.Component<Props, State> {
         />
       );
     }
+  }
+
+  render() {
+    return <KeydownBinder onKeydown={this._handleKeyDown}>{this._renderView()}</KeydownBinder>;
   }
 }
 

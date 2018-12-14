@@ -118,7 +118,7 @@ ResponseHistoryDropdown.propTypes = {
   responses: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional
-  activeResponse: PropTypes.object
+  activeResponse: PropTypes.object,
 };
 
 export default ResponseHistoryDropdown;

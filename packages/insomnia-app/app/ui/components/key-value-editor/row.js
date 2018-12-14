@@ -22,7 +22,7 @@ class KeyValueEditorRow extends PureComponent {
     this._nameInput = null;
     this._valueInput = null;
     this.state = {
-      dragDirection: 0
+      dragDirection: 0,
     };
   }
 
@@ -163,7 +163,7 @@ class KeyValueEditorRow extends PureComponent {
       mode: pair.multiline || 'text/plain',
       onModeChange: mode => {
         this._handleTypeChange(Object.assign({}, pair, { multiline: mode }));
-      }
+      },
     });
   }
 
@@ -176,7 +176,8 @@ class KeyValueEditorRow extends PureComponent {
       valuePlaceholder,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      isVariableUncovered,
     } = this.props;
 
     if (pair.type === 'file') {
@@ -217,6 +218,7 @@ class KeyValueEditorRow extends PureComponent {
           render={handleRender}
           getRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
+          isVariableUncovered={isVariableUncovered}
           getAutocompleteConstants={this._handleAutocompleteValues}
         />
       );
@@ -276,6 +278,7 @@ class KeyValueEditorRow extends PureComponent {
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
+      isVariableUncovered,
       sortable,
       noDropZone,
       hideButtons,
@@ -288,7 +291,7 @@ class KeyValueEditorRow extends PureComponent {
       renderLeftIcon,
       connectDragSource,
       connectDragPreview,
-      connectDropTarget
+      connectDropTarget,
     } = this.props;
 
     const { dragDirection } = this.state;
@@ -298,7 +301,7 @@ class KeyValueEditorRow extends PureComponent {
       'key-value-editor__row-wrapper--dragging': isDragging,
       'key-value-editor__row-wrapper--dragging-above': isDraggingOver && dragDirection > 0,
       'key-value-editor__row-wrapper--dragging-below': isDraggingOver && dragDirection < 0,
-      'key-value-editor__row-wrapper--disabled': pair.disabled
+      'key-value-editor__row-wrapper--disabled': pair.disabled,
     });
 
     let handle = null;
@@ -309,7 +312,7 @@ class KeyValueEditorRow extends PureComponent {
         connectDragSource(
           <div className="key-value-editor__drag">
             <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')} />
-          </div>
+          </div>,
         )
       );
     }
@@ -320,7 +323,7 @@ class KeyValueEditorRow extends PureComponent {
         <div className="key-value-editor__row">
           <div
             className={classnames('form-control form-control--underlined form-control--wide', {
-              'form-control--inactive': pair.disabled
+              'form-control--inactive': pair.disabled,
             })}>
             <OneLineEditor
               ref={this._setNameInputRef}
@@ -329,6 +332,7 @@ class KeyValueEditorRow extends PureComponent {
               render={handleRender}
               getRenderContext={handleGetRenderContext}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={this._handleAutocompleteNames}
               forceInput={forceInput}
               readOnly={readOnly}
@@ -342,8 +346,8 @@ class KeyValueEditorRow extends PureComponent {
             className={classnames(
               'form-control form-control--underlined form-control--wide no-min-width',
               {
-                'form-control--inactive': pair.disabled
-              }
+                'form-control--inactive': pair.disabled,
+              },
             )}>
             {this.renderPairValue()}
           </div>
@@ -407,7 +411,7 @@ KeyValueEditorRow.propTypes = {
     value: PropTypes.string,
     fileName: PropTypes.string,
     type: PropTypes.string,
-    disabled: PropTypes.bool
+    disabled: PropTypes.bool,
   }).isRequired,
 
   // Optional
@@ -419,6 +423,7 @@ KeyValueEditorRow.propTypes = {
   handleRender: PropTypes.func,
   handleGetRenderContext: PropTypes.func,
   nunjucksPowerUserMode: PropTypes.bool,
+  isVariableUncovered: PropTypes.bool,
   handleGetAutocompleteNameConstants: PropTypes.func,
   handleGetAutocompleteValueConstants: PropTypes.func,
   namePlaceholder: PropTypes.string,
@@ -439,13 +444,13 @@ KeyValueEditorRow.propTypes = {
   connectDragPreview: PropTypes.func,
   connectDropTarget: PropTypes.func,
   isDragging: PropTypes.bool,
-  isDraggingOver: PropTypes.bool
+  isDraggingOver: PropTypes.bool,
 };
 
 const dragSource = {
   beginDrag(props) {
     return { pair: props.pair };
-  }
+  },
 };
 
 function isAbove(monitor, component) {
@@ -473,21 +478,21 @@ const dragTarget = {
     } else {
       component.decoratedComponentInstance.setDragDirection(-1);
     }
-  }
+  },
 };
 
 function sourceCollect(connect, monitor) {
   return {
     connectDragSource: connect.dragSource(),
     connectDragPreview: connect.dragPreview(),
-    isDragging: monitor.isDragging()
+    isDragging: monitor.isDragging(),
   };
 }
 
 function targetCollect(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
-    isDraggingOver: monitor.isOver()
+    isDraggingOver: monitor.isOver(),
   };
 }
 

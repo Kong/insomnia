@@ -2,7 +2,7 @@
 
 declare type moment = {
   fromNow: () => string,
-  format: (fmt: string) => string
+  format: (fmt: string) => string,
 };
 
 declare module 'moment' {
