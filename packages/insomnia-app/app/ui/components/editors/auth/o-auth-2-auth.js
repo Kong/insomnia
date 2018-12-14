@@ -1,5 +1,5 @@
 // @flow
-import type { Request } from '../../../../models/request';
+import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 
 import * as React from 'react';
@@ -26,19 +26,20 @@ import TimeFromNow from '../../time-from-now';
 import Button from '../../base/button';
 import { showModal } from '../../modals';
 import ResponseDebugModal from '../../modals/response-debug-modal';
+import type { Settings } from '../../../../models/settings';
 
 type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
-  handleUpdateSettingsShowPasswords: Function,
+  handleUpdateSettingsShowPasswords: (boolean) => Promise<Settings>,
   nunjucksPowerUserMode: boolean,
-  onChange: Function,
+  onChange: (Request, RequestAuthentication) => Promise<Request>,
   request: Request,
   showPasswords: boolean,
   isVariableUncovered: boolean,
 
   // Optional
-  oAuth2Token: OAuth2Token | null,
+  oAuth2Token: ?OAuth2Token,
 };
 
 type State = {
@@ -134,11 +135,12 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
   }
 
   _handleChangeProperty(property: string, value: string | boolean): void {
-    const { request } = this.props;
+    const { onChange, request } = this.props;
     const authentication = Object.assign({}, request.authentication, {
       [property]: value,
     });
-    this.props.onChange(authentication);
+
+    onChange(request, authentication);
   }
 
   _handlerChangeResponseType(e: SyntheticEvent<HTMLInputElement>): void {
@@ -443,7 +445,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     return { basic: basicFields, advanced: advancedFields };
   }
 
-  static renderExpireAt(token: OAuth2Token | null): React.Element<*> | string | null {
+  static renderExpireAt(token: ?OAuth2Token): React.Element<*> | string | null {
     if (!token || !token.accessToken) {
       return null;
     }

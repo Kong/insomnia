@@ -1,5 +1,4 @@
 // @flow
-import type { RequestAuthentication } from '../../../../models/request';
 
 import * as React from 'react';
 import classnames from 'classnames';
@@ -8,28 +7,30 @@ import OneLineEditor from '../../codemirror/one-line-editor';
 import { HAWK_ALGORITHM_SHA1, HAWK_ALGORITHM_SHA256 } from '../../../../common/constants';
 import HelpTooltip from '../../help-tooltip';
 import Button from '../../base/button';
+import type { Request, RequestAuthentication } from '../../../../models/request';
 
 type Props = {
-  authentication: RequestAuthentication,
+  request: Request,
   handleRender: Function,
   handleGetRenderContext: Function,
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
-  onChange: Function,
+  onChange: (Request, RequestAuthentication) => Promise<Request>,
 };
 
 @autobind
 class HawkAuth extends React.PureComponent<Props> {
   _handleDisable() {
-    const { authentication } = this.props;
-    authentication.disabled = !authentication.disabled;
-    this.props.onChange(authentication);
+    const { request, onChange } = this.props;
+    onChange(request, {
+      ...request.authentication,
+      disabled: !request.authentication.disabled,
+    });
   }
 
   _handleChangeProperty(property: string, value: string | boolean): void {
-    const { authentication } = this.props;
-    authentication[property] = value;
-    this.props.onChange(authentication);
+    const { request, onChange } = this.props;
+    onChange(request, { ...request.authentication, [property]: value });
   }
 
   _handleChangeHawkAuthId(value: string): void {
@@ -75,7 +76,7 @@ class HawkAuth extends React.PureComponent<Props> {
     onChange: Function,
     help: string | null = null,
   ): React.Element<*> {
-    const { authentication } = this.props;
+    const { authentication } = this.props.request;
     const id = label.replace(/ /g, '-');
     const value = authentication.hasOwnProperty(property) ? authentication[property] : options[0];
 
@@ -109,10 +110,13 @@ class HawkAuth extends React.PureComponent<Props> {
     const {
       handleRender,
       handleGetRenderContext,
-      authentication,
+      request,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
+
+    const {authentication} = request;
+
     const id = label.replace(/ /g, '-');
     return (
       <tr key={id}>
@@ -144,7 +148,7 @@ class HawkAuth extends React.PureComponent<Props> {
 
   render() {
     const fields = this.renderHawkAuthenticationFields();
-    const { authentication } = this.props;
+    const { authentication } = this.props.request;
 
     return (
       <div className="pad">
