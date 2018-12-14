@@ -3,6 +3,7 @@
 .*/__fixtures__/.*
 
 [include]
+node_modules/insomnia-sync
 ../../plugins
 ../../packages
 

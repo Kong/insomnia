@@ -28,9 +28,10 @@ type VCSCommit = {
 type VCSOperation = 'add' | 'modify' | 'delete';
 
 type VCSStageEntry = {
-  operation: VCSOperation,
+  id: string,
   hash: string,
   name: string,
+  operation: VCSOperation,
   content: string,
 };
 
