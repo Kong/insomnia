@@ -324,6 +324,7 @@ export async function _actuallySend(
         setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
       } else {
         addTimelineText(`Disable timeout`);
+        setOpt(Curl.option.TIMEOUT_MS, 0);
       }
 
       // log some things
