@@ -14,7 +14,7 @@ import {
   CONTENT_TYPE_GRAPHQL,
   getContentTypeFromHeaders,
 } from '../../../../common/constants';
-import type { Request, RequestBodyParameter } from '../../../../models/request';
+import type { Request, RequestBody, RequestBodyParameter, RequestHeader } from '../../../../models/request';
 import {
   newBodyFile,
   newBodyForm,
@@ -30,9 +30,9 @@ import AskModal from '../../modals/ask-modal';
 
 type Props = {
   // Required
-  onChange: Function,
-  onChangeHeaders: Function,
-  handleUpdateRequestMimeType: Function,
+  onChange: (r: Request, body: RequestBody) => Promise<Request>,
+  onChangeHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>,
+  handleUpdateRequestMimeType: (r: Request, mimeType: string) => Promise<Request>,
   handleRender: Function,
   handleGetRenderContext: Function,
   request: Request,
@@ -50,25 +50,25 @@ class BodyEditor extends React.PureComponent<Props> {
     const oldContentType = request.body.mimeType || '';
     const newBody = newBodyRaw(rawValue, oldContentType);
 
-    onChange(newBody);
+    onChange(request, newBody);
   }
 
   _handleGraphQLChange(content: string) {
-    const { onChange } = this.props;
+    const { onChange, request } = this.props;
     const newBody = newBodyRaw(content, CONTENT_TYPE_GRAPHQL);
-    onChange(newBody);
+    onChange(request, newBody);
   }
 
   _handleFormUrlEncodedChange(parameters: Array<RequestBodyParameter>) {
-    const { onChange } = this.props;
+    const { onChange, request } = this.props;
     const newBody = newBodyFormUrlEncoded(parameters);
-    onChange(newBody);
+    onChange(request, newBody);
   }
 
   _handleFormChange(parameters: Array<RequestBodyParameter>) {
-    const { onChange } = this.props;
+    const { onChange, request } = this.props;
     const newBody = newBodyForm(parameters);
-    onChange(newBody);
+    onChange(request, newBody);
   }
 
   async _handleFileChange(path: string) {
@@ -97,7 +97,7 @@ class BodyEditor extends React.PureComponent<Props> {
         ),
         onDone: saidYes => {
           if (saidYes) {
-            onChangeHeaders(headers);
+            onChangeHeaders(request, headers);
           }
         },
       });
@@ -105,7 +105,7 @@ class BodyEditor extends React.PureComponent<Props> {
 
     const newBody = newBodyFile(path);
 
-    onChange(newBody);
+    onChange(request, newBody);
   }
 
   render() {

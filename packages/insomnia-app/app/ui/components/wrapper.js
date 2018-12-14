@@ -150,42 +150,43 @@ class Wrapper extends React.PureComponent<Props, State> {
 
     // Give it a second for the app to render first. If we don't wait, it will refresh
     // on the old request and won't catch the newest one.
+    // TODO: Move this refresh key into redux store so we don't need timeout
     window.setTimeout(this._forceRequestPaneRefresh, 100);
 
     return newRequest;
-  }
-
-  _handleUpdateRequestBody(r: Request, body: RequestBody): Promise<Request> {
-    return rUpdate(r, { body });
-  }
-
-  _handleUpdateRequestMethod(r: Request, method: string): Promise<Request> {
-    return rUpdate(r, { method });
-  }
-
-  _handleUpdateRequestParameters(
-    r: Request,
-    parameters: Array<RequestParameter>
-  ): Promise<Request> {
-    return rUpdate(r, { parameters });
-  }
-
-  _handleUpdateRequestAuthentication(
-    r: Request,
-    authentication: RequestAuthentication
-  ): Promise<Request> {
-    return rUpdate(r, { authentication });
-  }
-
-  _handleUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>): Promise<Request> {
-    return rUpdate(r, { headers });
   }
 
   _handleForceUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>): Promise<Request> {
     return this._handleForceUpdateRequest(r, { headers });
   }
 
-  _handleUpdateRequestUrl(r: Request, url: string): Promise<Request> {
+  static _handleUpdateRequestBody(r: Request, body: RequestBody): Promise<Request> {
+    return rUpdate(r, { body });
+  }
+
+  static _handleUpdateRequestParameters(
+    r: Request,
+    parameters: Array<RequestParameter>,
+  ): Promise<Request> {
+    return rUpdate(r, { parameters });
+  }
+
+  static _handleUpdateRequestAuthentication(
+    r: Request,
+    authentication: RequestAuthentication,
+  ): Promise<Request> {
+    return rUpdate(r, { authentication });
+  }
+
+  static _handleUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>): Promise<Request> {
+    return rUpdate(r, { headers });
+  }
+
+  static _handleUpdateRequestMethod(r: Request, method: string): Promise<Request> {
+    return rUpdate(r, { method });
+  }
+
+  static _handleUpdateRequestUrl(r: Request, url: string): Promise<Request> {
     return rUpdate(r, { url });
   }
 
@@ -260,7 +261,7 @@ class Wrapper extends React.PureComponent<Props, State> {
     showModal(CookiesModal, this.props.activeWorkspace);
   }
 
-  _handleShowModifyCookieModal(cookie: Object): void {
+  static _handleShowModifyCookieModal(cookie: Object): void {
     showModal(CookieModifyModal, cookie);
   }
 
@@ -310,15 +311,16 @@ class Wrapper extends React.PureComponent<Props, State> {
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
   }
 
-  _handleSendAndDownloadRequestWithActiveEnvironment(filename?: string): void {
+  async _handleSendAndDownloadRequestWithActiveEnvironment(filename?: string): Promise<void> {
     const {
       activeRequest,
       activeEnvironment,
       handleSendAndDownloadRequestWithEnvironment,
     } = this.props;
+
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-    handleSendAndDownloadRequestWithEnvironment(activeRequestId, activeEnvironmentId, filename);
+    await handleSendAndDownloadRequestWithEnvironment(activeRequestId, activeEnvironmentId, filename);
   }
 
   _handleSetPreviewMode(previewMode: string): void {
@@ -398,24 +400,24 @@ class Wrapper extends React.PureComponent<Props, State> {
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
 
     const columns = `${realSidebarWidth}rem 0 minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 -
-      paneWidth}fr)`;
+    paneWidth}fr)`;
     const rows = `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
 
     return [
       <div key="modals" className="modals">
         <ErrorBoundary showAlert>
-          <AlertModal ref={registerModal} />
-          <ErrorModal ref={registerModal} />
-          <PromptModal ref={registerModal} />
+          <AlertModal ref={registerModal}/>
+          <ErrorModal ref={registerModal}/>
+          <PromptModal ref={registerModal}/>
 
-          <WrapperModal ref={registerModal} />
-          <LoginModal ref={registerModal} />
-          <AskModal ref={registerModal} />
-          <SelectModal ref={registerModal} />
-          <RequestCreateModal ref={registerModal} />
-          <PaymentNotificationModal ref={registerModal} />
-          <FilterHelpModal ref={registerModal} />
-          <RequestRenderErrorModal ref={registerModal} />
+          <WrapperModal ref={registerModal}/>
+          <LoginModal ref={registerModal}/>
+          <AskModal ref={registerModal}/>
+          <SelectModal ref={registerModal}/>
+          <RequestCreateModal ref={registerModal}/>
+          <PaymentNotificationModal ref={registerModal}/>
+          <FilterHelpModal ref={registerModal}/>
+          <RequestRenderErrorModal ref={registerModal}/>
 
           <CodePromptModal
             ref={registerModal}
@@ -443,7 +445,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           />
 
           <CookiesModal
-            handleShowModifyCookieModal={this._handleShowModifyCookieModal}
+            handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
             handleRender={handleRender}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             ref={registerModal}
@@ -470,7 +472,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             workspace={activeWorkspace}
           />
 
-          <MoveRequestGroupModal ref={registerModal} workspaces={workspaces} />
+          <MoveRequestGroupModal ref={registerModal} workspaces={workspaces}/>
 
           <WorkspaceSettingsModal
             ref={registerModal}
@@ -488,7 +490,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             isVariableUncovered={isVariableUncovered}
           />
 
-          <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />
+          <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace}/>
 
           <GenerateCodeModal
             ref={registerModal}
@@ -508,7 +510,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             settings={settings}
           />
 
-          <ResponseDebugModal ref={registerModal} settings={settings} />
+          <ResponseDebugModal ref={registerModal} settings={settings}/>
 
           <RequestSwitcherModal
             ref={registerModal}
@@ -533,7 +535,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             isVariableUncovered={isVariableUncovered}
           />
 
-          <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
+          <SetupSyncModal ref={registerModal} workspace={activeWorkspace}/>
 
           <WorkspaceEnvironmentsEditModal
             ref={registerModal}
@@ -621,7 +623,7 @@ class Wrapper extends React.PureComponent<Props, State> {
         </ErrorBoundary>
 
         <div className="drag drag--sidebar">
-          <div onDoubleClick={handleResetDragSidebar} onMouseDown={this._handleStartDragSidebar} />
+          <div onDoubleClick={handleResetDragSidebar} onMouseDown={this._handleStartDragSidebar}/>
         </div>
 
         <ErrorBoundary showAlert>
@@ -639,13 +641,13 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleImport={this._handleImport}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
-            updateRequestBody={this._handleUpdateRequestBody}
+            updateRequestBody={Wrapper._handleUpdateRequestBody}
             forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
-            updateRequestUrl={this._handleUpdateRequestUrl}
-            updateRequestMethod={this._handleUpdateRequestMethod}
-            updateRequestParameters={this._handleUpdateRequestParameters}
-            updateRequestAuthentication={this._handleUpdateRequestAuthentication}
-            updateRequestHeaders={this._handleUpdateRequestHeaders}
+            updateRequestUrl={Wrapper._handleUpdateRequestUrl}
+            updateRequestMethod={Wrapper._handleUpdateRequestMethod}
+            updateRequestParameters={Wrapper._handleUpdateRequestParameters}
+            updateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
+            updateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
             updateRequestMimeType={handleUpdateRequestMimeType}
             updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
             updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}

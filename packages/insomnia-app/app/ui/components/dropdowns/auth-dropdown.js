@@ -1,10 +1,12 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+// @flow
+
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showModal } from '../modals';
 import AlertModal from '../modals/alert-modal';
 import * as models from '../../../models';
+import type { Request, RequestAuthentication } from '../../../models/request';
 import {
   AUTH_BASIC,
   AUTH_DIGEST,
@@ -20,24 +22,36 @@ import {
   getAuthTypeName,
 } from '../../../common/constants';
 
+type Props = {
+  onChange: (r: Request, RequestAuthentication) => Promise<Request>,
+  request: Request,
+
+  // Optional
+  className: string,
+  children: React.Node,
+};
+
 @autobind
-class AuthDropdown extends PureComponent {
-  async _handleTypeChange(type) {
-    if (type === this.props.authentication.type) {
+class AuthDropdown extends React.PureComponent<Props> {
+  async _handleTypeChange(type: string) {
+    const { request, onChange } = this.props;
+    const { authentication } = request;
+
+    if (type === authentication.type) {
       // Type didn't change
       return;
     }
 
-    const newAuthentication = models.request.newAuth(type, this.props.authentication);
-    const defaultAuthentication = models.request.newAuth(this.props.authentication.type);
+    const newAuthentication = models.request.newAuth(type, authentication);
+    const defaultAuthentication = models.request.newAuth(authentication.type);
 
     // Prompt the user if fields will change between new and old
-    for (const key of Object.keys(this.props.authentication)) {
+    for (const key of Object.keys(authentication)) {
       if (key === 'type') {
         continue;
       }
 
-      const value = this.props.authentication[key];
+      const value = authentication[key];
       const changedSinceDefault = defaultAuthentication[key] !== value;
       const willChange = newAuthentication[key] !== value;
 
@@ -51,14 +65,16 @@ class AuthDropdown extends PureComponent {
       }
     }
 
-    this.props.onChange(newAuthentication);
+    onChange(request, newAuthentication);
   }
 
-  renderAuthType(type, nameOverride = null) {
-    const currentType = this.props.authentication.type || AUTH_NONE;
+  renderAuthType(type: string, nameOverride: string | null = null) {
+    const {authentication} = this.props.request;
+    const currentType = authentication.type || AUTH_NONE;
+
     return (
       <DropdownItem onClick={this._handleTypeChange} value={type}>
-        {currentType === type ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}{' '}
+        {currentType === type ? <i className="fa fa-check"/> : <i className="fa fa-empty"/>}{' '}
         {nameOverride || getAuthTypeName(type, true)}
       </DropdownItem>
     );
@@ -86,14 +102,5 @@ class AuthDropdown extends PureComponent {
     );
   }
 }
-
-AuthDropdown.propTypes = {
-  onChange: PropTypes.func.isRequired,
-  authentication: PropTypes.object.isRequired,
-
-  // Optional
-  className: PropTypes.string,
-  children: PropTypes.node,
-};
 
 export default AuthDropdown;

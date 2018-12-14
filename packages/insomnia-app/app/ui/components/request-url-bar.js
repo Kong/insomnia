@@ -16,6 +16,7 @@ import PromptButton from './base/prompt-button';
 import OneLineEditor from './codemirror/one-line-editor';
 import * as hotkeys from '../../common/hotkeys';
 import KeydownBinder from './keydown-binder';
+import type { Request } from '../../models/request';
 
 type Props = {
   handleAutocompleteUrls: Function,
@@ -24,15 +25,13 @@ type Props = {
   handleImport: Function,
   handleRender: string => Promise<string>,
   handleSend: () => void,
-  handleSendAndDownload: (filepath?: string) => void,
+  handleSendAndDownload: (filepath?: string) => Promise<void>,
   isVariableUncovered: boolean,
-  method: string,
   nunjucksPowerUserMode: boolean,
-  onMethodChange: (method: string) => void,
-  onUrlChange: (url: string) => void,
-  requestId: string,
+  onMethodChange: (r: Request, method: string) => Promise<Request>,
+  onUrlChange: (r: Request, url: string) => Promise<Request>,
+  request: Request,
   uniquenessKey: string,
-  url: string,
 };
 
 type State = {
@@ -89,7 +88,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
   }
 
   _handleMethodChange(method: string) {
-    this.props.onMethodChange(method);
+    this.props.onMethodChange(this.props.request, method);
   }
 
   _handleUrlChange(url: string) {
@@ -99,7 +98,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
 
       // If no pasted text in the queue, just fire the regular change handler
       if (!pastedText) {
-        this.props.onUrlChange(url);
+        this.props.onUrlChange(this.props.request, url);
         return;
       }
 
@@ -111,7 +110,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
 
       // Update depending on whether something was imported
       if (!importedRequest) {
-        this.props.onUrlChange(url);
+        this.props.onUrlChange(this.props.request, url);
       }
     }, DEBOUNCE_MILLIS);
   }
@@ -246,7 +245,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
   }
 
   componentWillReceiveProps(nextProps: Props) {
-    if (nextProps.requestId !== this.props.requestId) {
+    if (nextProps.request._id !== this.props.request._id) {
       this._handleResetTimeouts();
     }
   }
@@ -290,18 +289,18 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
           </DropdownButton>
           <DropdownDivider>Basic</DropdownDivider>
           <DropdownItem type="submit">
-            <i className="fa fa-arrow-circle-o-right" /> Send Now
-            <DropdownHint hotkey={hotkeys.SEND_REQUEST} />
+            <i className="fa fa-arrow-circle-o-right"/> Send Now
+            <DropdownHint hotkey={hotkeys.SEND_REQUEST}/>
           </DropdownItem>
           <DropdownItem onClick={this._handleGenerateCode}>
-            <i className="fa fa-code" /> Generate Client Code
+            <i className="fa fa-code"/> Generate Client Code
           </DropdownItem>
           <DropdownDivider>Advanced</DropdownDivider>
           <DropdownItem onClick={this._handleSendAfterDelay}>
-            <i className="fa fa-clock-o" /> Send After Delay
+            <i className="fa fa-clock-o"/> Send After Delay
           </DropdownItem>
           <DropdownItem onClick={this._handleSendOnInterval}>
-            <i className="fa fa-repeat" /> Repeat on Interval
+            <i className="fa fa-repeat"/> Repeat on Interval
           </DropdownItem>
           {downloadPath ? (
             <DropdownItem
@@ -309,15 +308,15 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
               addIcon
               buttonClass={PromptButton}
               onClick={this._handleClearDownloadLocation}>
-              <i className="fa fa-stop-circle" /> Stop Auto-Download
+              <i className="fa fa-stop-circle"/> Stop Auto-Download
             </DropdownItem>
           ) : (
             <DropdownItem onClick={this._handleSetDownloadLocation}>
-              <i className="fa fa-download" /> Download After Send
+              <i className="fa fa-download"/> Download After Send
             </DropdownItem>
           )}
           <DropdownItem onClick={this._handleClickSendAndDownload}>
-            <i className="fa fa-download" /> Send And Download
+            <i className="fa fa-download"/> Send And Download
           </DropdownItem>
         </Dropdown>
       );
@@ -328,8 +327,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
 
   render() {
     const {
-      url,
-      method,
+      request,
       handleRender,
       nunjucksPowerUserMode,
       isVariableUncovered,
@@ -338,6 +336,8 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
       uniquenessKey,
     } = this.props;
 
+    const { url, method } = request;
+
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <div className="urlbar">
@@ -345,7 +345,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
             ref={this._setMethodDropdownRef}
             onChange={this._handleMethodChange}
             method={method}>
-            {method} <i className="fa fa-caret-down" />
+            {method} <i className="fa fa-caret-down"/>
           </MethodDropdown>
           <form onSubmit={this._handleFormSubmit}>
             <OneLineEditor
