@@ -60,6 +60,12 @@ class ResponseViewer extends React.Component<Props, State> {
     };
   }
 
+  refresh() {
+    if (this._selectableView != null && typeof this._selectableView.refresh === 'function') {
+      this._selectableView.refresh();
+    }
+  }
+
   _decodeIconv(bodyBuffer: Buffer, charset: string): string {
     try {
       return iconv.decode(bodyBuffer, charset);
