@@ -146,13 +146,6 @@ class Dropdown extends PureComponent {
     this._dropdownList.style.minWidth = 'initial';
     this._dropdownList.style.maxWidth = 'initial';
 
-    if (!dropdownList.hasAttribute('data-fixed-shape')) {
-      this._dropdownList.style.minHeight = `${dropdownListRect.height}px`;
-      this._dropdownList.style.minWidth = `${dropdownListRect.width}px`;
-      this._dropdownList.style.width = '100%';
-      this._dropdownList.setAttribute('data-fixed-shape', 'on');
-    }
-
     const screenMargin = 5;
 
     const { right, wide } = this.props;
@@ -175,8 +168,7 @@ class Dropdown extends PureComponent {
       const offset = beside ? dropdownBtnRect.width - 40 : 0;
 
       // Prevent dropdown from squishing against right side of screen
-      const left =
-        Math.min(bodyRect.width - dropdownListRect.width - screenMargin, originalLeft) - offset;
+      const left = Math.min(bodyRect.width - dropdownListRect.width - screenMargin, originalLeft);
 
       this._dropdownList.style.left = `${left + offset}px`;
       this._dropdownList.style.maxWidth = `${Math.min(
@@ -188,11 +180,11 @@ class Dropdown extends PureComponent {
     if (dropUp) {
       const { top } = dropdownBtnRect;
       this._dropdownList.style.bottom = `${bodyRect.height - top}px`;
-      this._dropdownList.style.maxHeight = `${top - 5}px`;
+      this._dropdownList.style.maxHeight = `${top - screenMargin}px`;
     } else {
       const { bottom } = dropdownBtnRect;
       this._dropdownList.style.top = `${bottom}px`;
-      this._dropdownList.style.maxHeight = `${bodyRect.height - bottom - 5}px`;
+      this._dropdownList.style.maxHeight = `${bodyRect.height - bottom - screenMargin}px`;
     }
   }
 
