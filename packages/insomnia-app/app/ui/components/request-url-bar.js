@@ -78,11 +78,9 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     this._dropdown && this._dropdown.show();
   }
 
-  _handleFormSubmit(e?: SyntheticEvent<HTMLFormElement>) {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  _handleFormSubmit(e: SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    e.stopPropagation();
 
     this._handleSend();
   }
@@ -235,13 +233,12 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
 
     // If we're pressing a meta key, let the dropdown open
     if (metaPressed) {
-      e.preventDefault(); // Don't submit the form
       return;
     }
 
     // If we're not pressing a meta key, cancel dropdown and send the request
     e.stopPropagation(); // Don't trigger the dropdown
-    this._handleFormSubmit();
+    this._handleSend();
   }
 
   componentWillReceiveProps(nextProps: Props) {
