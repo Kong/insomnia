@@ -37,7 +37,7 @@ type Props = {
 type State = {
   currentInterval: number | null,
   currentTimeout: number | null,
-  downloadPath: string | null
+  downloadPath: string | null,
 };
 
 @autobind
@@ -284,23 +284,23 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
             className="urlbar__send-btn"
             onContextMenu={this._handleMetaClickSend}
             onClick={this._handleClickSend}
-            type="submit">
+            type="button">
             {downloadPath ? 'Download' : 'Send'}
           </DropdownButton>
           <DropdownDivider>Basic</DropdownDivider>
-          <DropdownItem type="submit">
-            <i className="fa fa-arrow-circle-o-right"/> Send Now
-            <DropdownHint hotkey={hotkeys.SEND_REQUEST}/>
+          <DropdownItem onClick={this._handleClickSend}>
+            <i className="fa fa-arrow-circle-o-right" /> Send Now
+            <DropdownHint hotkey={hotkeys.SEND_REQUEST} />
           </DropdownItem>
           <DropdownItem onClick={this._handleGenerateCode}>
-            <i className="fa fa-code"/> Generate Client Code
+            <i className="fa fa-code" /> Generate Client Code
           </DropdownItem>
           <DropdownDivider>Advanced</DropdownDivider>
           <DropdownItem onClick={this._handleSendAfterDelay}>
-            <i className="fa fa-clock-o"/> Send After Delay
+            <i className="fa fa-clock-o" /> Send After Delay
           </DropdownItem>
           <DropdownItem onClick={this._handleSendOnInterval}>
-            <i className="fa fa-repeat"/> Repeat on Interval
+            <i className="fa fa-repeat" /> Repeat on Interval
           </DropdownItem>
           {downloadPath ? (
             <DropdownItem
@@ -308,15 +308,15 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
               addIcon
               buttonClass={PromptButton}
               onClick={this._handleClearDownloadLocation}>
-              <i className="fa fa-stop-circle"/> Stop Auto-Download
+              <i className="fa fa-stop-circle" /> Stop Auto-Download
             </DropdownItem>
           ) : (
             <DropdownItem onClick={this._handleSetDownloadLocation}>
-              <i className="fa fa-download"/> Download After Send
+              <i className="fa fa-download" /> Download After Send
             </DropdownItem>
           )}
           <DropdownItem onClick={this._handleClickSendAndDownload}>
-            <i className="fa fa-download"/> Send And Download
+            <i className="fa fa-download" /> Send And Download
           </DropdownItem>
         </Dropdown>
       );
@@ -345,7 +345,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
             ref={this._setMethodDropdownRef}
             onChange={this._handleMethodChange}
             method={method}>
-            {method} <i className="fa fa-caret-down"/>
+            {method} <i className="fa fa-caret-down" />
           </MethodDropdown>
           <form onSubmit={this._handleFormSubmit}>
             <OneLineEditor
