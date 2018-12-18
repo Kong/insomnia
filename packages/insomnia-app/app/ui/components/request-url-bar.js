@@ -14,9 +14,11 @@ import { showPrompt } from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
 import PromptButton from './base/prompt-button';
 import OneLineEditor from './codemirror/one-line-editor';
-import * as hotkeys from '../../common/hotkeys';
 import KeydownBinder from './keydown-binder';
 import type { Request } from '../../models/request';
+import type { HotKeyRegistry } from '../../common/hotkeys';
+import { hotKeyRefs } from '../../common/hotkeys';
+import { executeHotKey } from '../../common/hotkeys-listener';
 
 type Props = {
   handleAutocompleteUrls: Function,
@@ -32,6 +34,7 @@ type Props = {
   onUrlChange: (r: Request, url: string) => Promise<Request>,
   request: Request,
   uniquenessKey: string,
+  hotKeyRegistry: HotKeyRegistry,
 };
 
 type State = {
@@ -142,21 +145,21 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     this.setState({ downloadPath: null });
   }
 
-  _handleKeyDown(e: KeyboardEvent) {
+  async _handleKeyDown(e: KeyboardEvent) {
     if (!this._input) {
       return;
     }
 
-    hotkeys.executeHotKey(e, hotkeys.FOCUS_URL, () => {
+    executeHotKey(e, hotKeyRefs.REQUEST_FOCUS_URL, () => {
       this._input && this._input.focus();
       this._input && this._input.selectAll();
     });
 
-    hotkeys.executeHotKey(e, hotkeys.TOGGLE_METHOD_DROPDOWN, () => {
+    executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
       this._methodDropdown && this._methodDropdown.toggle();
     });
 
-    hotkeys.executeHotKey(e, hotkeys.SHOW_SEND_OPTIONS, () => {
+    executeHotKey(e, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
   }
@@ -248,6 +251,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
   }
 
   renderSendButton() {
+    const { hotKeyRegistry } = this.props;
     const { currentInterval, currentTimeout, downloadPath } = this.state;
 
     let cancelButton = null;
@@ -287,7 +291,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
           <DropdownDivider>Basic</DropdownDivider>
           <DropdownItem onClick={this._handleClickSend}>
             <i className="fa fa-arrow-circle-o-right" /> Send Now
-            <DropdownHint hotkey={hotkeys.SEND_REQUEST} />
+            <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]} />
           </DropdownItem>
           <DropdownItem onClick={this._handleGenerateCode}>
             <i className="fa fa-code" /> Generate Client Code
