@@ -48,7 +48,14 @@ export default async function(
   });
 
   const statusCode = response.statusCode || 0;
-  if (statusCode < 200 || statusCode >= 300) {
+
+  if (statusCode === 401) {
+    // If the refresh token was rejected due an unauthorized request, we will
+    // return a null access_token to trigger an authentication request to fetch
+    // brand new refresh and access tokens.
+
+    return responseToObject(null, [c.P_ACCESS_TOKEN]);
+  } else if (statusCode < 200 || statusCode >= 300) {
     throw new Error(`[oauth2] Failed to refresh token url=${url} status=${statusCode}`);
   }
 
