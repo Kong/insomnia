@@ -3,7 +3,8 @@ import { AUTH_OAUTH_1 } from '../../common/constants';
 
 describe('OAuth 1.0', () => {
   it('Does OAuth 1.0', async () => {
-    const header = await getAuthHeader('req_123', 'https://insomnia.rest/', 'GET', {
+    const request = { url: 'https://insomnia.rest/', method: 'GET' };
+    const header = await getAuthHeader('req_123', request, {
       type: AUTH_OAUTH_1,
       consumerKey: 'consumerKey',
       consumerSecret: 'consumerSecret',
@@ -31,7 +32,8 @@ describe('OAuth 1.0', () => {
   });
 
   it('Does OAuth 1.0 with RSA-SHA1', async () => {
-    const header = await getAuthHeader('req_123', 'https://insomnia.rest/', 'GET', {
+    const request = { url: 'https://insomnia.rest/', method: 'GET' };
+    const header = await getAuthHeader('req_123', request, {
       type: AUTH_OAUTH_1,
       consumerKey: 'consumerKey',
       consumerSecret: 'consumerSecret',
@@ -75,7 +77,8 @@ describe('OAuth 1.0', () => {
   });
 
   it('Does OAuth 1.0 with defaults', async () => {
-    const header = await getAuthHeader('req_123', 'https://insomnia.rest/', 'GET', {
+    const request = { url: 'https://insomnia.rest/', method: 'GET' };
+    const header = await getAuthHeader('req_123', request, {
       type: AUTH_OAUTH_1,
       consumerKey: 'consumerKey',
       consumerSecret: 'consumerSecret',

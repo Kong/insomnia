@@ -596,8 +596,7 @@ export async function _actuallySend(
         } else {
           const authHeader = await getAuthHeader(
             renderedRequest._id,
-            finalUrl,
-            renderedRequest.method,
+            renderedRequest,
             renderedRequest.authentication,
           );
 

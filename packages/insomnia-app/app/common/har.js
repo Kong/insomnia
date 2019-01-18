@@ -341,8 +341,7 @@ export async function exportHarWithRenderedRequest(
   if (!misc.hasAuthHeader(renderedRequest.headers)) {
     const header = await getAuthHeader(
       renderedRequest._id,
-      url,
-      renderedRequest.method,
+      renderedRequest,
       renderedRequest.authentication,
     );
     if (header) {
