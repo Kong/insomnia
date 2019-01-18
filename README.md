@@ -77,6 +77,7 @@ the following tools:
 Here is a list of plugins available for installation via NPM.
 
 - [Chance](https://www.npmjs.com/package/insomnia-plugin-chance) – Generates a random value using Chance.JS
+- [Cuid](https://www.npmjs.com/package/insomnia-plugin-cuid) – Generate random cuids
 - [Custom Timestamp](https://www.npmjs.com/package/insomnia-plugin-customtimestamp) – Advanced timestamp creator
 - [Default Headers](https://www.npmjs.com/package/insomnia-plugin-default-headers) – Set default headers on requests
 - [Defaults](https://www.npmjs.com/package/insomnia-plugin-defaults) - Set request defaults through your environment
