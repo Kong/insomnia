@@ -11,7 +11,6 @@ import getOAuth2Token from './o-auth-2/get-token';
 import getOAuth1Token from './o-auth-1/get-token';
 import * as Hawk from 'hawk';
 import jwtAuthentication from 'jwt-authentication';
-import type { RequestAuthentication } from '../models/request';
 import type { RenderedRequest } from '../common/render';
 import { getBasicAuthHeader } from './basic-auth/get-header';
 import { getBearerAuthHeader } from './bearer-auth/get-header';
@@ -22,11 +21,11 @@ type Header = {
 };
 
 export async function getAuthHeader(
-  requestId: string,
   renderedRequest: RenderedRequest,
-  authentication: RequestAuthentication,
+  url: string,
 ): Promise<Header | null> {
-  const { method, url } = renderedRequest;
+  const { method, authentication } = renderedRequest;
+  const requestId = renderedRequest._id;
 
   if (authentication.disabled) {
     return null;
