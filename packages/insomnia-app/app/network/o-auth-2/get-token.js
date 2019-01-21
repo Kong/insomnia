@@ -190,6 +190,12 @@ async function _getAccessToken(
     authentication.scope,
   );
 
+  // If we didn't receive an access token it means the refresh token didn't succeed,
+  // so we tell caller to fetch brand new access and refresh tokens.
+  if (!refreshResults.access_token) {
+    return null;
+  }
+
   // ~~~~~~~~~~~~~ //
   // Update the DB //
   // ~~~~~~~~~~~~~ //
