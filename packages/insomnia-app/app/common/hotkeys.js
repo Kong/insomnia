@@ -1,12 +1,19 @@
 // @flow
 import keycodes from './keycodes';
-import { isMac, isWindows } from './constants';
+import { isMac } from './constants';
 
+/**
+ * The readable definition of a hotkey.
+ * The {@code id} the hotkey's reference id.
+ */
 export type HotKeyDefinition = {
   id: string,
   description: string,
 };
 
+/**
+ * The combination of key presses that will activate a hotkey if pressed.
+ */
 export type KeyCombination = {
   ctrl: boolean,
   alt: boolean,
@@ -15,20 +22,19 @@ export type KeyCombination = {
   keyCode: number,
 };
 
-type GenericKeyCombination = {
-  ctrlOrCmd: boolean,
-  alt: boolean,
-  shift: boolean,
-  winOrCtrl: boolean,
-  keyCode: number,
-};
-
+/**
+ * The collection of a hotkey's key combinations for each platforms.
+ */
 export type KeyBindings = {
   macKeys: Array<KeyCombination>,
-  winKeys: Array<KeyCombination>,
-  linuxKeys: Array<KeyCombination>,
+  // The key combinations for both Windows and Linux.
+  winLinuxKeys: Array<KeyCombination>,
 };
 
+/**
+ * The collection of defined hotkeys.
+ * The registry maps a hotkey by its reference id to its key bindings.
+ */
 export type HotKeyRegistry = {
   [refId: string]: KeyBindings,
 };
@@ -56,88 +62,27 @@ function keyComb(
   };
 }
 
-function genericKeyComb(
-  ctrlOrCmd: boolean,
-  alt: boolean,
-  shift: boolean,
-  winOrCtrl: boolean,
-  keyCode: number,
-): GenericKeyCombination {
-  return {
-    ctrlOrCmd: ctrlOrCmd,
-    alt: alt,
-    shift: shift,
-    winOrCtrl: winOrCtrl,
-    keyCode: keyCode,
-  };
-}
-
-function toSpecificKeyCombs(
-  isMac: boolean,
-  generic: Array<GenericKeyCombination>,
-): Array<KeyCombination> {
-  let keyCombs: Array<KeyCombination> = [];
-
-  generic.forEach(genKeyComb => {
-    let keyComb: KeyCombination;
-    if (isMac) {
-      keyComb = {
-        ctrl: genKeyComb.winOrCtrl,
-        alt: genKeyComb.alt,
-        shift: genKeyComb.shift,
-        meta: genKeyComb.ctrlOrCmd,
-        keyCode: genKeyComb.keyCode,
-      };
-    } else {
-      keyComb = {
-        ctrl: genKeyComb.ctrlOrCmd,
-        alt: genKeyComb.alt,
-        shift: genKeyComb.shift,
-        meta: genKeyComb.winOrCtrl,
-        keyCode: genKeyComb.keyCode,
-      };
-    }
-    keyCombs.push(keyComb);
-  });
-
-  return keyCombs;
-}
-
 function keyBinds(
-  generic: GenericKeyCombination | Array<GenericKeyCombination>,
-  mac?: KeyCombination | Array<KeyCombination>,
-  win?: KeyCombination | Array<KeyCombination>,
-  linux?: KeyCombination | Array<KeyCombination>,
+  mac: KeyCombination | Array<KeyCombination>,
+  winLinux: KeyCombination | Array<KeyCombination>,
 ): KeyBindings {
-  if (!Array.isArray(generic)) {
-    generic = [generic];
-  }
-
-  if (mac == null) {
-    mac = toSpecificKeyCombs(true, generic);
-  } else if (!Array.isArray(mac)) {
+  if (!Array.isArray(mac)) {
     mac = [mac];
   }
 
-  if (win == null) {
-    win = toSpecificKeyCombs(false, generic);
-  } else if (!Array.isArray(win)) {
-    win = [win];
-  }
-
-  if (linux == null) {
-    linux = toSpecificKeyCombs(false, generic);
-  } else if (!Array.isArray(linux)) {
-    linux = [linux];
+  if (!Array.isArray(winLinux)) {
+    winLinux = [winLinux];
   }
 
   return {
     macKeys: mac,
-    winKeys: win,
-    linuxKeys: linux,
+    winLinuxKeys: winLinux,
   };
 }
 
+/**
+ * The collection of available hotkeys' and their definitions.
+ */
 // Not using dot, because NeDB prohibits field names to contain dots.
 export const hotKeyRefs = {
   WORKSPACE_SHOW_SETTINGS: defineHotKey('workspace_showSettings', 'Show Workspace Settings'),
@@ -204,112 +149,151 @@ export const hotKeyRefs = {
   ENVIRONMENT_UNCOVER_VARIABLES: defineHotKey('environment_uncoverVariables', 'Uncover Variables'),
 };
 
+/**
+ * The default key bindings values of all available hotkeys.
+ */
 const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]: keyBinds(
-    genericKeyComb(true, false, true, false, keycodes.comma),
+    keyComb(false, false, true, true, keycodes.comma),
+    keyComb(true, false, true, false, keycodes.comma),
   ),
 
   [hotKeyRefs.REQUEST_SHOW_SETTINGS.id]: keyBinds(
-    genericKeyComb(true, true, true, false, keycodes.comma),
+    keyComb(false, true, true, true, keycodes.comma),
+    keyComb(true, true, true, false, keycodes.comma),
   ),
 
   [hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS.id]: keyBinds(
-    genericKeyComb(true, false, true, false, keycodes.forwardslash),
+    keyComb(false, false, true, true, keycodes.forwardslash),
+    keyComb(true, false, true, false, keycodes.forwardslash),
   ),
 
   [hotKeyRefs.PREFERENCES_SHOW_GENERAL.id]: keyBinds(
-    genericKeyComb(true, false, false, false, keycodes.comma),
+    keyComb(false, false, false, true, keycodes.comma),
+    keyComb(true, false, false, false, keycodes.comma),
   ),
 
   [hotKeyRefs.TOGGLE_MAIN_MENU.id]: keyBinds(
-    genericKeyComb(true, true, false, false, keycodes.comma),
+    keyComb(false, true, false, true, keycodes.comma),
+    keyComb(true, true, false, false, keycodes.comma),
   ),
 
   [hotKeyRefs.SIDEBAR_TOGGLE.id]: keyBinds(
-    genericKeyComb(true, false, false, false, keycodes.backslash),
+    keyComb(false, false, false, true, keycodes.backslash),
+    keyComb(true, false, false, false, keycodes.backslash),
   ),
 
   [hotKeyRefs.REQUEST_QUICK_SWITCH.id]: keyBinds(
-    genericKeyComb(true, false, false, false, keycodes.p),
+    keyComb(false, false, false, true, keycodes.p),
+    keyComb(true, false, false, false, keycodes.p),
   ),
 
-  [hotKeyRefs.PLUGIN_RELOAD.id]: keyBinds(genericKeyComb(true, false, true, false, keycodes.r)),
+  [hotKeyRefs.PLUGIN_RELOAD.id]: keyBinds(
+    keyComb(false, false, true, true, keycodes.r),
+    keyComb(true, false, true, false, keycodes.r),
+  ),
 
   [hotKeyRefs.SHOW_AUTOCOMPLETE.id]: keyBinds(
-    genericKeyComb(true, false, false, false, keycodes.space),
+    keyComb(true, false, false, false, keycodes.space),
     keyComb(true, false, false, false, keycodes.space),
   ),
 
-  [hotKeyRefs.REQUEST_SEND.id]: keyBinds([
-    genericKeyComb(true, false, false, false, keycodes.enter),
-    genericKeyComb(true, false, false, false, keycodes.r),
-    genericKeyComb(false, false, false, false, keycodes.f5),
-  ]),
+  [hotKeyRefs.REQUEST_SEND.id]: keyBinds(
+    [
+      keyComb(false, false, false, true, keycodes.enter),
+      keyComb(false, false, false, true, keycodes.r),
+      keyComb(false, false, false, false, keycodes.f5),
+    ],
+    [
+      keyComb(true, false, false, false, keycodes.enter),
+      keyComb(true, false, false, false, keycodes.r),
+      keyComb(false, false, false, false, keycodes.f5),
+    ],
+  ),
 
   [hotKeyRefs.REQUEST_SHOW_OPTIONS.id]: keyBinds(
-    genericKeyComb(true, false, true, false, keycodes.enter),
+    keyComb(false, false, true, true, keycodes.enter),
+    keyComb(true, false, true, false, keycodes.enter),
   ),
 
   [hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]: keyBinds(
-    genericKeyComb(true, false, false, false, keycodes.e),
+    keyComb(false, false, false, true, keycodes.e),
+    keyComb(true, false, false, false, keycodes.e),
   ),
 
   [hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU.id]: keyBinds(
-    genericKeyComb(true, false, true, false, keycodes.e),
+    keyComb(false, false, true, true, keycodes.e),
+    keyComb(true, false, true, false, keycodes.e),
   ),
 
   [hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU.id]: keyBinds(
-    genericKeyComb(true, false, true, false, keycodes.l),
+    keyComb(false, false, true, true, keycodes.l),
+    keyComb(true, false, true, false, keycodes.l),
   ),
 
   [hotKeyRefs.REQUEST_TOGGLE_HISTORY.id]: keyBinds(
-    genericKeyComb(true, false, true, false, keycodes.h),
+    keyComb(false, false, true, true, keycodes.h),
+    keyComb(true, false, true, false, keycodes.h),
   ),
 
   [hotKeyRefs.REQUEST_FOCUS_URL.id]: keyBinds(
-    genericKeyComb(true, false, false, false, keycodes.l),
+    keyComb(false, false, false, true, keycodes.l),
+    keyComb(true, false, false, false, keycodes.l),
   ),
 
   [hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR.id]: keyBinds(
-    genericKeyComb(true, false, true, false, keycodes.g),
+    keyComb(false, false, true, true, keycodes.g),
+    keyComb(true, false, true, false, keycodes.g),
   ),
 
   [hotKeyRefs.SIDEBAR_FOCUS_FILTER.id]: keyBinds(
-    genericKeyComb(true, false, true, false, keycodes.f),
+    keyComb(false, false, true, true, keycodes.f),
+    keyComb(true, false, true, false, keycodes.f),
   ),
 
   [hotKeyRefs.RESPONSE_FOCUS.id]: keyBinds(
-    genericKeyComb(true, false, false, false, keycodes.singlequote),
+    keyComb(false, false, false, true, keycodes.singlequote),
+    keyComb(true, false, false, false, keycodes.singlequote),
   ),
 
   [hotKeyRefs.SHOW_COOKIES_EDITOR.id]: keyBinds(
-    genericKeyComb(true, false, false, false, keycodes.k),
+    keyComb(false, false, false, true, keycodes.k),
+    keyComb(true, false, false, false, keycodes.k),
   ),
 
   [hotKeyRefs.REQUEST_SHOW_CREATE.id]: keyBinds(
-    genericKeyComb(true, false, false, false, keycodes.n),
+    keyComb(false, false, false, true, keycodes.n),
+    keyComb(true, false, false, false, keycodes.n),
   ),
 
   [hotKeyRefs.REQUEST_SHOW_DELETE.id]: keyBinds(
-    genericKeyComb(true, false, true, false, keycodes.delete),
+    keyComb(false, false, true, true, keycodes.delete),
+    keyComb(true, false, true, false, keycodes.delete),
   ),
 
   [hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]: keyBinds(
-    genericKeyComb(true, false, true, false, keycodes.n),
+    keyComb(false, false, true, true, keycodes.n),
+    keyComb(true, false, true, false, keycodes.n),
   ),
 
   [hotKeyRefs.REQUEST_SHOW_DUPLICATE.id]: keyBinds(
-    genericKeyComb(true, false, false, false, keycodes.d),
+    keyComb(false, false, false, true, keycodes.d),
+    keyComb(true, false, false, false, keycodes.d),
   ),
 
   [hotKeyRefs.CLOSE_DROPDOWN.id]: keyBinds(
-    genericKeyComb(false, false, false, false, keycodes.esc),
+    keyComb(false, false, false, false, keycodes.esc),
+    keyComb(false, false, false, false, keycodes.esc),
   ),
 
-  [hotKeyRefs.CLOSE_MODAL.id]: keyBinds(genericKeyComb(false, false, false, false, keycodes.esc)),
+  [hotKeyRefs.CLOSE_MODAL.id]: keyBinds(
+    keyComb(false, false, false, false, keycodes.esc),
+    keyComb(false, false, false, false, keycodes.esc),
+  ),
 
   [hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES.id]: keyBinds(
-    genericKeyComb(false, true, true, false, keycodes.u),
+    keyComb(false, true, true, false, keycodes.u),
+    keyComb(false, true, true, false, keycodes.u),
   ),
 };
 
@@ -321,7 +305,11 @@ function copyKeyCombs(sources: Array<KeyCombination>): Array<KeyCombination> {
   return targets;
 }
 
-export function newDefaultRegistry() {
+/**
+ * Get a new copy of hotkey registry with default values.
+ * @returns {HotKeyRegistry}
+ */
+export function newDefaultRegistry(): HotKeyRegistry {
   let newDefaults: HotKeyRegistry = {};
   for (const refId in defaultRegistry) {
     if (!defaultRegistry.hasOwnProperty(refId)) {
@@ -330,24 +318,30 @@ export function newDefaultRegistry() {
     const keyBindings: KeyBindings = defaultRegistry[refId];
     newDefaults[refId] = {
       macKeys: copyKeyCombs(keyBindings.macKeys),
-      winKeys: copyKeyCombs(keyBindings.winKeys),
-      linuxKeys: copyKeyCombs(keyBindings.linuxKeys),
+      winLinuxKeys: copyKeyCombs(keyBindings.winLinuxKeys),
     };
   }
   return newDefaults;
 }
 
+/**
+ * Get the key combinations based on the current platform.
+ * @param bindings
+ * @returns {Array<KeyCombination>}
+ */
 export function getPlatformKeyCombinations(bindings: KeyBindings): Array<KeyCombination> {
   if (isMac()) {
     return bindings.macKeys;
   }
-  if (isWindows()) {
-    return bindings.winKeys;
-  }
-  return bindings.linuxKeys;
+  return bindings.winLinuxKeys;
 }
 
-export function getChar(keyCode: number) {
+/**
+ * Gets the displayed text of a key code.
+ * @param keyCode
+ * @returns {string}
+ */
+export function getChar(keyCode: number): string {
   let char;
   const keyCodeStr = Object.keys(keycodes).find(k => keycodes[k] === keyCode);
 

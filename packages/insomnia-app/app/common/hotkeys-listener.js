@@ -39,6 +39,12 @@ function _pressedHotKey(e: KeyboardEvent, bindings: KeyBindings): boolean {
   return false;
 }
 
+/**
+ * Check whether a hotkey has been pressed.
+ * @param e the activated keyboard event.
+ * @param definition the hotkey definition being checked.
+ * @returns {Promise<boolean>}
+ */
 export async function pressedHotKey(
   e: KeyboardEvent,
   definition: HotKeyDefinition,
@@ -47,6 +53,13 @@ export async function pressedHotKey(
   return _pressedHotKey(e, settings.hotKeyRegistry[definition.id]);
 }
 
+/**
+ * Call callback if the hotkey has been pressed.
+ * @param e the activated keyboard event.
+ * @param definition the hotkey definition being checked.
+ * @param callback to be called if the hotkey has been activated.
+ * @returns {Promise<void>}
+ */
 export async function executeHotKey(
   e: KeyboardEvent,
   definition: HotKeyDefinition,
