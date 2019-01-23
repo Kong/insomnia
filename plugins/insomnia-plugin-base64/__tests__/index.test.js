@@ -19,12 +19,19 @@ function assertTemplateFails(args, expected) {
 }
 
 describe('Base64EncodeExtension', () => {
-  it('encodes nothing', assertTemplate(['encode'], ''));
-  it('encodes something', assertTemplate(['encode', 'my string'], 'bXkgc3RyaW5n'));
-  it('decodes nothing', assertTemplate(['decode'], ''));
-  it('decodes something', assertTemplate(['decode', 'bXkgc3RyaW5n'], 'my string'));
+  it('encodes nothing', assertTemplate(['encode', 'normal', ''], ''));
+  it('encodes something', assertTemplate(['encode', 'normal', 'my string'], 'bXkgc3RyaW5n'));
+  it('urlencodes nothing', assertTemplate(['encode', 'url', ''], ''));
+  it('urlencodes something', assertTemplate(['encode', 'url', 'hello world'], 'aGVsbG8gd29ybGQ'));
+  it('decodes nothing', assertTemplate(['decode', 'normal', ''], ''));
+  it('decodes something', assertTemplate(['decode', 'normal', 'bXkgc3RyaW5n'], 'my string'));
+  it('urldecodes nothing', assertTemplate(['decode', 'url', ''], ''));
+  it('urldecodes something', assertTemplate(['decode', 'url', 'aGVsbG8gd29ybGQ'], 'hello world'));
   it(
-    'fails on invalid op',
-    assertTemplateFails(['foo'], 'Unsupported operation "foo". Must be encode or decode.'),
+    'fails on invalid action',
+    assertTemplateFails(
+      ['foo', 'normal', ''],
+      'Unsupported operation "foo". Must be encode or decode.',
+    ),
   );
 });
