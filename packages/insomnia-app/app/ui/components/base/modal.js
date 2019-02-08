@@ -27,6 +27,8 @@ class Modal extends PureComponent {
       return;
     }
 
+    this.props.onKeyDown && this.props.onKeyDown(e);
+
     // Don't check for close keys if we don't want them
     if (this.props.noEscape) {
       return;
@@ -159,6 +161,7 @@ Modal.propTypes = {
   closeOnKeyCodes: PropTypes.array,
   onHide: PropTypes.func,
   onCancel: PropTypes.func,
+  onKeyDown: PropTypes.func,
   freshState: PropTypes.bool,
   children: PropTypes.node,
   className: PropTypes.string,

@@ -51,6 +51,7 @@ import type { Environment } from '../../models/environment';
 import ErrorBoundary from './error-boundary';
 import type { ClientCertificate } from '../../models/client-certificate';
 import MoveRequestGroupModal from './modals/move-request-group-modal';
+import AddKeyCombinationModal from './modals/add-key-combination-modal';
 
 type Props = {
   // Helper Functions
@@ -564,6 +565,8 @@ class Wrapper extends React.PureComponent<Props, State> {
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
           />
+
+          <AddKeyCombinationModal ref={registerModal} />
         </ErrorBoundary>
       </div>,
       <div
