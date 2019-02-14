@@ -209,22 +209,40 @@ class General extends React.PureComponent<Props, State> {
           </label>
         </div>
 
-        <div className="form-control form-control--outlined pad-top-sm">
-          <label>
-            Environment Highlight Color Style{' '}
-            <HelpTooltip>Configures the appearance of environment's color indicator</HelpTooltip>
-            <select
-              defaultValue={settings.environmentHighlightColorStyle}
-              name="environmentHighlightColorStyle"
-              onChange={this._handleUpdateSetting}>
-              <option value="sidebar-indicator">Sidebar indicator</option>
-              <option value="sidebar-edge">Sidebar edge</option>
-              <option value="window-top">Window top</option>
-              <option value="window-bottom">Window bottom</option>
-              <option value="window-left">Window left</option>
-              <option value="window-right">Window right</option>
-            </select>
-          </label>
+        <div className="form-row">
+          <div className="form-control form-control--outlined pad-top-sm">
+            <label>
+              Environment Highlight Color Style{' '}
+              <HelpTooltip>Configures the appearance of environment's color indicator</HelpTooltip>
+              <select
+                defaultValue={settings.environmentHighlightColorStyle}
+                name="environmentHighlightColorStyle"
+                onChange={this._handleUpdateSetting}>
+                <option value="sidebar-indicator">Sidebar indicator</option>
+                <option value="sidebar-edge">Sidebar edge</option>
+                <option value="window-top">Window top</option>
+                <option value="window-bottom">Window bottom</option>
+                <option value="window-left">Window left</option>
+                <option value="window-right">Window right</option>
+              </select>
+            </label>
+          </div>
+          <div className="form-control form-control--outlined pad-top-sm">
+            <label>
+              Autocomplete popup delay
+              <HelpTooltip className="space-left">
+                Configure the autocomplete popup delay in milliseconds (0 to disable)
+              </HelpTooltip>
+              <input
+                type="number"
+                name="autocompleteDelay"
+                min={0}
+                max={3000}
+                defaultValue={settings.autocompleteDelay}
+                onChange={this._handleUpdateSetting}
+              />
+            </label>
+          </div>
         </div>
 
         <div className="form-row">

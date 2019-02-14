@@ -1,39 +1,51 @@
-import React, { PureComponent } from 'react';
+// @flow
+import * as React from 'react';
 import classnames from 'classnames';
-import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import Button from '../../base/button';
 import HelpTooltip from '../../help-tooltip';
+import type { Request, RequestAuthentication } from '../../../../models/request';
+
+type Props = {
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  nunjucksPowerUserMode: boolean,
+  request: Request,
+  onChange: (Request, RequestAuthentication) => Promise<Request>,
+  isVariableUncovered: boolean,
+};
 
 @autobind
-class BearerAuth extends PureComponent {
+class BearerAuth extends React.PureComponent<Props> {
   _handleDisable() {
-    const { authentication } = this.props;
-    authentication.disabled = !authentication.disabled;
-    this.props.onChange(authentication);
+    const { request, onChange } = this.props;
+    onChange(request, {
+      ...request.authentication,
+      disabled: !request.authentication.disabled,
+    });
   }
 
-  _handleChangeToken(token) {
-    const { authentication } = this.props;
-    authentication.token = token;
-    this.props.onChange(authentication);
+  _handleChangeToken(token: string) {
+    const { request, onChange } = this.props;
+    onChange(request, { ...request.authentication, token });
   }
 
-  _handleChangePrefix(prefix) {
-    const { authentication } = this.props;
-    authentication.prefix = prefix;
-    this.props.onChange(authentication);
+  _handleChangePrefix(prefix: string) {
+    const { request, onChange } = this.props;
+    onChange(request, { ...request.authentication, prefix });
   }
 
   render() {
     const {
-      authentication,
+      request,
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
+
+    const { authentication } = request;
 
     return (
       <div className="pad">
@@ -121,14 +133,5 @@ class BearerAuth extends PureComponent {
     );
   }
 }
-
-BearerAuth.propTypes = {
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  authentication: PropTypes.object.isRequired,
-  onChange: PropTypes.func.isRequired,
-  isVariableUncovered: PropTypes.bool.isRequired,
-};
 
 export default BearerAuth;

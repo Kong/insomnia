@@ -1,39 +1,54 @@
-import React, { PureComponent } from 'react';
+// @flow
+import * as React from 'react';
 import classnames from 'classnames';
-import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import Button from '../../base/button';
+import type { Settings } from '../../../../models/settings';
+import type { Request, RequestAuthentication } from '../../../../models/request';
+
+type Props = {
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  handleUpdateSettingsShowPasswords: boolean => Promise<Settings>,
+  nunjucksPowerUserMode: boolean,
+  onChange: (Request, RequestAuthentication) => Promise<Request>,
+  request: Request,
+  showPasswords: boolean,
+  isVariableUncovered: boolean,
+};
 
 @autobind
-class BasicAuth extends PureComponent {
+class BasicAuth extends React.PureComponent<Props> {
   _handleDisable() {
-    const { authentication } = this.props;
-    authentication.disabled = !authentication.disabled;
-    this.props.onChange(authentication);
+    const { request, onChange } = this.props;
+    onChange(request, {
+      ...request.authentication,
+      disabled: !request.authentication.disabled,
+    });
   }
 
-  _handleChangeUsername(value) {
-    const { authentication } = this.props;
-    authentication.username = value;
-    this.props.onChange(authentication);
+  _handleChangeUsername(value: string) {
+    const { request, onChange } = this.props;
+    onChange(request, { ...request.authentication, username: value });
   }
 
-  _handleChangePassword(value) {
-    const { authentication } = this.props;
-    authentication.password = value;
-    this.props.onChange(authentication);
+  _handleChangePassword(value: string) {
+    const { request, onChange } = this.props;
+    onChange(request, { ...request.authentication, password: value });
   }
 
   render() {
     const {
-      authentication,
+      request,
       showPasswords,
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
+
+    const { authentication } = request;
 
     return (
       <div className="pad">
@@ -117,16 +132,5 @@ class BasicAuth extends PureComponent {
     );
   }
 }
-
-BasicAuth.propTypes = {
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  handleUpdateSettingsShowPasswords: PropTypes.func.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  onChange: PropTypes.func.isRequired,
-  authentication: PropTypes.object.isRequired,
-  showPasswords: PropTypes.bool.isRequired,
-  isVariableUncovered: PropTypes.bool.isRequired,
-};
 
 export default BasicAuth;

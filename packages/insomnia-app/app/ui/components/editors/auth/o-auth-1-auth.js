@@ -1,5 +1,5 @@
 // @flow
-import type { Request } from '../../../../models/request';
+import type { Request, RequestAuthentication } from '../../../../models/request';
 import * as React from 'react';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
@@ -21,7 +21,7 @@ type Props = {
   nunjucksPowerUserMode: boolean,
   showPasswords: boolean,
   isVariableUncovered: boolean,
-  onChange: Function,
+  onChange: (Request, RequestAuthentication) => Promise<Request>,
   request: Request,
 };
 
@@ -62,7 +62,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     const authentication = Object.assign({}, request.authentication, {
       [property]: value,
     });
-    this.props.onChange(authentication);
+    this.props.onChange(request, authentication);
   }
 
   _handleChangeConsumerKey(value: string): void {

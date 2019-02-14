@@ -44,6 +44,7 @@ import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';
 import CodePromptModal from './modals/code-prompt-modal';
+import * as db from '../../common/database';
 import * as models from '../../models/index';
 import * as importers from 'insomnia-importers';
 import type { CookieJar } from '../../models/cookie-jar';
@@ -146,53 +147,54 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   // Request updaters
-  async _handleForceUpdateRequest(patch: Object): Promise<Request> {
-    const newRequest = await rUpdate(this.props.activeRequest, patch);
+  async _handleForceUpdateRequest(r: Request, patch: Object): Promise<Request> {
+    const newRequest = await rUpdate(r, patch);
 
     // Give it a second for the app to render first. If we don't wait, it will refresh
     // on the old request and won't catch the newest one.
+    // TODO: Move this refresh key into redux store so we don't need timeout
     window.setTimeout(this._forceRequestPaneRefresh, 100);
 
     return newRequest;
   }
 
-  _handleUpdateRequestBody(body: RequestBody): Promise<Request> {
-    return rUpdate(this.props.activeRequest, { body });
+  _handleForceUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>): Promise<Request> {
+    return this._handleForceUpdateRequest(r, { headers });
   }
 
-  _handleUpdateRequestMethod(method: string): Promise<Request> {
-    return rUpdate(this.props.activeRequest, { method });
+  static _handleUpdateRequestBody(r: Request, body: RequestBody): Promise<Request> {
+    return rUpdate(r, { body });
   }
 
-  _handleUpdateRequestParameters(parameters: Array<RequestParameter>): Promise<Request> {
-    return rUpdate(this.props.activeRequest, { parameters });
+  static _handleUpdateRequestParameters(
+    r: Request,
+    parameters: Array<RequestParameter>,
+  ): Promise<Request> {
+    return rUpdate(r, { parameters });
   }
 
-  _handleUpdateRequestAuthentication(authentication: RequestAuthentication): Promise<Request> {
-    return rUpdate(this.props.activeRequest, { authentication });
+  static _handleUpdateRequestAuthentication(
+    r: Request,
+    authentication: RequestAuthentication,
+  ): Promise<Request> {
+    return rUpdate(r, { authentication });
   }
 
-  _handleUpdateRequestHeaders(headers: Array<RequestHeader>): Promise<Request> {
-    return rUpdate(this.props.activeRequest, { headers });
+  static _handleUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>): Promise<Request> {
+    return rUpdate(r, { headers });
   }
 
-  _handleForceUpdateRequestHeaders(headers: Array<RequestHeader>): Promise<Request> {
-    return this._handleForceUpdateRequest({ headers });
+  static _handleUpdateRequestMethod(r: Request, method: string): Promise<Request> {
+    return rUpdate(r, { method });
   }
 
-  _handleUpdateRequestUrl(url: string): Promise<Request> {
-    const { activeRequest } = this.props;
-
-    if (!activeRequest) {
-      throw new Error('Cannot update undefined request');
-    }
-
+  static _handleUpdateRequestUrl(r: Request, url: string): Promise<Request> {
     // Don't update if we don't need to
-    if (activeRequest.url === url) {
-      return Promise.resolve(activeRequest);
+    if (r.url === url) {
+      return Promise.resolve(r);
     }
 
-    return rUpdate(activeRequest, { url });
+    return rUpdate(r, { url });
   }
 
   // Special request updaters
@@ -209,9 +211,9 @@ class Wrapper extends React.PureComponent<Props, State> {
       const { resources } = data;
       const r = resources[0];
 
-      if (r && r._type === 'request') {
+      if (r && r._type === 'request' && this.props.activeRequest) {
         // Only pull fields that we want to update
-        return this._handleForceUpdateRequest({
+        return this._handleForceUpdateRequest(this.props.activeRequest, {
           url: r.url,
           method: r.method,
           headers: r.headers,
@@ -274,13 +276,13 @@ class Wrapper extends React.PureComponent<Props, State> {
     showModal(RequestSettingsModal, { request: this.props.activeRequest });
   }
 
-  _handleDeleteResponses(): void {
+  async _handleDeleteResponses(): Promise<void> {
     if (!this.props.activeRequest) {
       console.warn('Tried to delete responses when request not active');
       return;
     }
 
-    models.response.removeForRequest(this.props.activeRequest._id);
+    await models.response.removeForRequest(this.props.activeRequest._id);
     this._handleSetActiveResponse(null);
   }
 
@@ -309,6 +311,14 @@ class Wrapper extends React.PureComponent<Props, State> {
     await models.workspace.remove(activeWorkspace);
   }
 
+  async _handleActiveWorkspaceClearAllResponses(): Promise<void> {
+    const docs = await db.withDescendants(this.props.activeWorkspace, models.request.type);
+    const requests = docs.filter(doc => doc.type === models.request.type);
+    for (const req of requests) {
+      await models.response.removeForRequest(req._id);
+    }
+  }
+
   _handleSendRequestWithActiveEnvironment(): void {
     const { activeRequest, activeEnvironment, handleSendRequestWithEnvironment } = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
@@ -316,15 +326,20 @@ class Wrapper extends React.PureComponent<Props, State> {
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
   }
 
-  _handleSendAndDownloadRequestWithActiveEnvironment(filename?: string): void {
+  async _handleSendAndDownloadRequestWithActiveEnvironment(filename?: string): Promise<void> {
     const {
       activeRequest,
       activeEnvironment,
       handleSendAndDownloadRequestWithEnvironment,
     } = this.props;
+
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-    handleSendAndDownloadRequestWithEnvironment(activeRequestId, activeEnvironmentId, filename);
+    await handleSendAndDownloadRequestWithEnvironment(
+      activeRequestId,
+      activeEnvironmentId,
+      filename,
+    );
   }
 
   _handleSetPreviewMode(previewMode: string): void {
@@ -491,6 +506,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
             handleDuplicateWorkspace={handleDuplicateWorkspace}
+            handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
             isVariableUncovered={isVariableUncovered}
           />
 
@@ -647,13 +663,13 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleImport={this._handleImport}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
-            updateRequestBody={this._handleUpdateRequestBody}
+            updateRequestBody={Wrapper._handleUpdateRequestBody}
             forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
-            updateRequestUrl={this._handleUpdateRequestUrl}
-            updateRequestMethod={this._handleUpdateRequestMethod}
-            updateRequestParameters={this._handleUpdateRequestParameters}
-            updateRequestAuthentication={this._handleUpdateRequestAuthentication}
-            updateRequestHeaders={this._handleUpdateRequestHeaders}
+            updateRequestUrl={Wrapper._handleUpdateRequestUrl}
+            updateRequestMethod={Wrapper._handleUpdateRequestMethod}
+            updateRequestParameters={Wrapper._handleUpdateRequestParameters}
+            updateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
+            updateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
             updateRequestMimeType={handleUpdateRequestMimeType}
             updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
             updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}

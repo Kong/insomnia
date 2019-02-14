@@ -5,12 +5,13 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import { FileSystemDriver, VCS } from 'insomnia-sync';
+import { FileSystemDriver, VCS, remote } from 'insomnia-sync';
 import type { Workspace } from '../../../models/workspace';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import TimeFromNow from '../time-from-now';
 import PromptButton from '../base/prompt-button';
+import * as session from '../../../sync/session';
 
 type VCSCommit = {
   parent: string,
@@ -95,6 +96,10 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
 
   async componentDidMount() {
     await this.show();
+
+    const sessionId = session.getCurrentSessionId();
+    const location = `ws://localhost:8000/api/repos/ws`;
+    remote.test(location, sessionId);
   }
 
   _setModalRef(m: ?Modal) {

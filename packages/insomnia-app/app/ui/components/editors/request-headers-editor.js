@@ -1,5 +1,6 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+// @flow
+
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import CodeEditor from '../codemirror/code-editor';
@@ -7,14 +8,36 @@ import allHeaderNames from '../../../datasets/header-names';
 import allCharsets from '../../../datasets/charsets';
 import allMimeTypes from '../../../datasets/content-types';
 import allEncodings from '../../../datasets/encodings';
+import type { Request, RequestHeader } from '../../../models/request';
+
+type Props = {
+  onChange: (r: Request, headers: Array<RequestHeader>) => Promise<Request>,
+  bulk: boolean,
+  editorFontSize: number,
+  editorIndentSize: number,
+  editorLineWrapping: boolean,
+  nunjucksPowerUserMode: boolean,
+  isVariableUncovered: boolean,
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  request: Request,
+};
 
 @autobind
-class RequestHeadersEditor extends PureComponent {
-  _handleBulkUpdate(headersString) {
-    this.props.onChange(this._getHeadersFromString(headersString));
+class RequestHeadersEditor extends React.PureComponent<Props> {
+  _handleBulkUpdate(headersString: string) {
+    const { onChange, request } = this.props;
+    const headers = RequestHeadersEditor._getHeadersFromString(headersString);
+
+    onChange(request, headers);
   }
 
-  _getHeadersFromString(headersString) {
+  _handleKeyValueUpdate(headers: Array<RequestHeader>) {
+    const { onChange, request } = this.props;
+    onChange(request, headers);
+  }
+
+  static _getHeadersFromString(headersString: string) {
     const headers = [];
     const rows = headersString.split(/\n+/);
 
@@ -35,7 +58,7 @@ class RequestHeadersEditor extends PureComponent {
   }
 
   _getHeadersString() {
-    const { headers } = this.props;
+    const { headers } = this.props.request;
 
     let headersString = '';
 
@@ -56,7 +79,7 @@ class RequestHeadersEditor extends PureComponent {
     return headersString;
   }
 
-  _getCommonHeaderValues(pair) {
+  static _getCommonHeaderValues(pair: RequestHeader) {
     switch (pair.name.toLowerCase()) {
       case 'content-type':
       case 'accept':
@@ -70,18 +93,17 @@ class RequestHeadersEditor extends PureComponent {
     }
   }
 
-  _getCommonHeaderNames(pair) {
+  static _getCommonHeaderNames(pair: RequestHeader) {
     return allHeaderNames;
   }
 
   render() {
     const {
       bulk,
-      headers,
+      request,
       editorFontSize,
       editorIndentSize,
       editorLineWrapping,
-      onChange,
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
@@ -124,37 +146,19 @@ class RequestHeadersEditor extends PureComponent {
             sortable
             namePlaceholder="Header"
             valuePlaceholder="Value"
-            pairs={headers}
+            pairs={request.headers}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
-            handleGetAutocompleteNameConstants={this._getCommonHeaderNames}
-            handleGetAutocompleteValueConstants={this._getCommonHeaderValues}
-            onChange={onChange}
+            handleGetAutocompleteNameConstants={RequestHeadersEditor._getCommonHeaderNames}
+            handleGetAutocompleteValueConstants={RequestHeadersEditor._getCommonHeaderValues}
+            onChange={this._handleKeyValueUpdate}
           />
         </div>
       </div>
     );
   }
 }
-
-RequestHeadersEditor.propTypes = {
-  onChange: PropTypes.func.isRequired,
-  bulk: PropTypes.bool.isRequired,
-  editorFontSize: PropTypes.number.isRequired,
-  editorIndentSize: PropTypes.number.isRequired,
-  editorLineWrapping: PropTypes.bool.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  isVariableUncovered: PropTypes.bool.isRequired,
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  headers: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      value: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
-};
 
 export default RequestHeadersEditor;
