@@ -44,7 +44,8 @@
       "AppImage",
       "deb",
       "tar.gz",
-      "snap"
+      "snap",
+      "rpm"
     ]
   }
 }
