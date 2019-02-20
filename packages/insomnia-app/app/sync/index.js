@@ -33,8 +33,6 @@ let _pendingDBChanges = {};
 let _isInitialized = false;
 
 export async function init() {
-  return;
-
   if (_isInitialized) {
     logger.debug('Already enabled');
     return;

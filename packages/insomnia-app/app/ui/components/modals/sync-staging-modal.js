@@ -205,6 +205,17 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     await this.updateStatus({ message: '' });
   }
 
+  async _handlePush() {
+    try {
+      await this.vcs.push();
+    } catch (err) {
+      this.setState({ error: err.message });
+      return;
+    }
+
+    await this.updateStatus();
+  }
+
   async updateStatus(newState?: Object) {
     const items = [];
     const allDocs = await db.withDescendants(this.props.workspace);
@@ -330,6 +341,9 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
             </div>
             <button className="btn btn--clicky" onClick={this._handleCommit}>
               Commit
+            </button>
+            <button className="btn btn--clicky space-left" onClick={this._handlePush}>
+              Push
             </button>
           </div>
           {error && <div className="text-danger">{error}</div>}

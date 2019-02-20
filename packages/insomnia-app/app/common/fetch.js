@@ -1,6 +1,6 @@
 import 'whatwg-fetch';
 import { parse as urlParse } from 'url';
-import { getClientString, isDevelopment } from './constants';
+import { getClientString } from './constants';
 import * as session from '../sync/session';
 import * as zlib from 'zlib';
 
@@ -73,10 +73,7 @@ async function _fetch(method, path, obj, sessionId = null) {
 }
 
 function _getUrl(path) {
-  const baseUrl =
-    process.env.INSOMNIA_SYNC_URL ||
-    (isDevelopment() ? 'http://localhost:8000' : 'https://api.insomnia.rest');
-  // const baseUrl = process.env.INSOMNIA_SYNC_URL || 'https://api.insomnia.rest';
+  const baseUrl = process.env.INSOMNIA_SYNC_URL || 'https://api.insomnia.rest';
   return `${baseUrl}${path}`;
 }
 
