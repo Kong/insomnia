@@ -350,7 +350,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _handleBodyChange(query: string, variables: ?Object, operationName: ?string): void {
-    console.log('BODY CHANGE');
     try {
       this._documentAST = parse(query);
     } catch (e) {
@@ -377,13 +376,11 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _handleQueryChange(query: string): void {
-    console.log('QUERY CHANGE');
     const currentOperation = this._getCurrentOperation();
     this._handleBodyChange(query, this.state.body.variables, currentOperation);
   }
 
   _handleVariablesChange(variables: string): void {
-    console.log('VARIABLES CHANGE');
     try {
       const variablesObj = JSON.parse(variables || 'null');
       this._handleBodyChange(this.state.body.query, variablesObj, this.state.body.operationName);
