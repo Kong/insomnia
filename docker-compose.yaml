@@ -6,7 +6,7 @@ services:
       dockerfile: './docker/Dockerfile.Ubuntu14'
     environment:
     - 'NODELIBCURL_BUILD_STATIC=yes'
-    - 'BUILD_TARGETS=AppImage,deb,tar.gz'
+    - 'BUILD_TARGETS=AppImage,deb,tar.gz,rpm'
     - 'KEEP_DIST_FOLDER=yes'
     volumes:
     - ./packages/insomnia-app/dist:/src/insomnia/packages/insomnia-app/dist

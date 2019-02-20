@@ -12,6 +12,7 @@ apt-get install -y \
     libtool \
     pkg-config \
     libfontconfig1-dev \
+    rpm \
     wget
 
 # Install Node and app-related dependencies
