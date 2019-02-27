@@ -20,7 +20,12 @@ class ImportExport extends PureComponent {
   }
 
   render() {
-    const { handleImportFile, handleExportAll, handleExportWorkspace } = this.props;
+    const {
+      handleImportFile,
+      handleExportAll,
+      handleExportRequests,
+      handleExportWorkspace,
+    } = this.props;
 
     return (
       <div>
@@ -44,6 +49,10 @@ class ImportExport extends PureComponent {
             <DropdownItem onClick={handleExportWorkspace}>
               <i className="fa fa-home" />
               Current Workspace
+            </DropdownItem>
+            <DropdownItem onClick={handleExportRequests}>
+              <i className="fa fa-home" />
+              Current Workspace's Requests
             </DropdownItem>
             <DropdownItem onClick={handleExportAll}>
               <i className="fa fa-empty" />
@@ -76,6 +85,7 @@ ImportExport.propTypes = {
   handleImportFile: PropTypes.func.isRequired,
   handleImportUri: PropTypes.func.isRequired,
   handleExportAll: PropTypes.func.isRequired,
+  handleExportRequests: PropTypes.func.isRequired,
   handleExportWorkspace: PropTypes.func.isRequired,
 };
 

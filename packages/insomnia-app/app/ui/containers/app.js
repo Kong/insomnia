@@ -67,6 +67,7 @@ import AskModal from '../components/modals/ask-modal';
 import { updateMimeType } from '../../models/request';
 import MoveRequestGroupModal from '../components/modals/move-request-group-modal';
 import * as themes from '../../plugins/misc';
+import ExportRequestsModal from '../components/modals/export-requests-modal';
 
 @autobind
 class App extends PureComponent {
@@ -761,6 +762,10 @@ class App extends PureComponent {
     await this._handleSetSidebarHidden(sidebarHidden);
   }
 
+  _handleExportRequestsToFile() {
+    showModal(ExportRequestsModal);
+  }
+
   _setWrapperRef(n) {
     this._wrapper = n;
   }
@@ -1014,6 +1019,7 @@ class App extends PureComponent {
               handleSetSidebarFilter={this._handleSetSidebarFilter}
               handleToggleMenuBar={this._handleToggleMenuBar}
               handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
+              handleExportRequestsToFile={this._handleExportRequestsToFile}
               isVariableUncovered={this.state.isVariableUncovered}
             />
           </ErrorBoundary>

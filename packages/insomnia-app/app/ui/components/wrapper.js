@@ -51,6 +51,7 @@ import type { Environment } from '../../models/environment';
 import ErrorBoundary from './error-boundary';
 import type { ClientCertificate } from '../../models/client-certificate';
 import MoveRequestGroupModal from './modals/move-request-group-modal';
+import ExportRequestsModal from './modals/export-requests-modal';
 
 type Props = {
   // Helper Functions
@@ -60,6 +61,7 @@ type Props = {
   handleImportFileToWorkspace: Function,
   handleImportUriToWorkspace: Function,
   handleExportFile: Function,
+  handleExportRequestsToFile: Function,
   handleSetActiveWorkspace: Function,
   handleSetActiveEnvironment: Function,
   handleMoveDoc: Function,
@@ -517,6 +519,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           <SettingsModal
             ref={registerModal}
             handleExportWorkspaceToFile={this._handleExportWorkspaceToFile}
+            handleExportRequestsToFile={this.props.handleExportRequestsToFile}
             handleExportAllToFile={handleExportFile}
             handleImportFile={this._handleImportFile}
             handleImportUri={this._handleImportUri}
@@ -564,6 +567,8 @@ class Wrapper extends React.PureComponent<Props, State> {
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
           />
+
+          <ExportRequestsModal ref={registerModal} />
         </ErrorBoundary>
       </div>,
       <div
