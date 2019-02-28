@@ -157,43 +157,40 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _highlightOperation(operationName: string | null) {
-    clearTimeout(this._highlightTimeout);
-    this._highlightTimeout = setTimeout(() => {
-      const { _documentAST, _queryEditor } = this;
+    const { _documentAST, _queryEditor } = this;
 
-      if (!_documentAST || !_queryEditor) {
-        return null;
-      }
+    if (!_documentAST || !_queryEditor) {
+      return null;
+    }
 
-      const disabledDefinitions = _documentAST.definitions.filter(d => {
-        const name = d.name ? d.name.value : null;
-        return d.kind === 'OperationDefinition' && name !== operationName;
+    const disabledDefinitions = _documentAST.definitions.filter(d => {
+      const name = d.name ? d.name.value : null;
+      return d.kind === 'OperationDefinition' && name !== operationName;
+    });
+
+    // Remove current query highlighting
+    for (const textMarker of this._disabledOperationMarkers) {
+      textMarker.clear();
+    }
+
+    // Add "Unhighlight" markers
+    this._disabledOperationMarkers = disabledDefinitions.map(definition => {
+      const { startToken, endToken } = definition.loc;
+
+      const from = {
+        line: startToken.line - 1,
+        ch: startToken.column - 1,
+      };
+
+      const to = {
+        line: endToken.line,
+        ch: endToken.column - 1,
+      };
+
+      return _queryEditor.doc.markText(from, to, {
+        className: 'cm-gql-disabled',
       });
-
-      // Remove current query highlighting
-      for (const textMarker of this._disabledOperationMarkers) {
-        textMarker.clear();
-      }
-
-      // Add "Unhighlight" markers
-      this._disabledOperationMarkers = disabledDefinitions.map(definition => {
-        const { startToken, endToken } = definition.loc;
-
-        const from = {
-          line: startToken.line - 1,
-          ch: startToken.column - 1,
-        };
-
-        const to = {
-          line: endToken.line,
-          ch: endToken.column - 1,
-        };
-
-        return _queryEditor.doc.markText(from, to, {
-          className: 'cm-gql-disabled',
-        });
-      });
-    }, 200);
+    });
   }
 
   _handleViewResponse() {

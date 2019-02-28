@@ -8,8 +8,9 @@ class ResponseTimelineViewer extends PureComponent {
     shell.openExternal(link);
   }
 
-  renderRow(row) {
+  renderRow(row, i, all) {
     const { name, value } = row;
+    const previousName = i > 0 ? all[i - 1].name : '';
 
     let prefix = null;
     switch (name) {
@@ -36,15 +37,22 @@ class ResponseTimelineViewer extends PureComponent {
         break;
     }
 
-    // TODO: Somehow show row timestamps
-
-    if (prefix !== null) {
-      const lines = (value + '').replace(/\n$/, '').split('\n');
-      const newLines = lines.filter(l => !l.match(/^\s*$/)).map(l => `${prefix}${l}`);
-      return newLines.join('\n');
-    } else {
+    if (prefix === null) {
       return null;
     }
+
+    const lines = (value + '').replace(/\n$/, '').split('\n');
+    const newLines = lines.filter(l => !l.match(/^\s*$/)).map(l => `${prefix}${l}`);
+
+    let leadingSpace = '';
+
+    // Prefix each section with a newline to separate them
+    if (previousName !== name) {
+      leadingSpace = '\n';
+    }
+
+    // Join all lines together
+    return leadingSpace + newLines.join('\n');
   }
 
   render() {
