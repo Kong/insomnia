@@ -568,7 +568,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             isVariableUncovered={isVariableUncovered}
           />
 
-          <ExportRequestsModal ref={registerModal} />
+          <ExportRequestsModal ref={registerModal} childObjects={sidebarChildren} />
         </ErrorBoundary>
       </div>,
       <div
