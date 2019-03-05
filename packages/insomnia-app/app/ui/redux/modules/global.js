@@ -13,6 +13,7 @@ import LoginModal from '../../components/modals/login-modal';
 import * as models from '../../../models';
 import SelectModal from '../../components/modals/select-modal';
 import { showError, showModal } from '../../components/modals/index';
+import * as db from '../../../common/database';
 
 const LOCALSTORAGE_PREFIX = `insomnia::meta`;
 
@@ -182,30 +183,75 @@ export function importUri(workspaceId, uri) {
   };
 }
 
-export function exportFile(workspaceId = null) {
-  return dispatch => {
+const VALUE_JSON = 'json';
+const VALUE_HAR = 'har';
+
+function showSelectExportTypeModal(onCancel, onDone) {
+  showModal(SelectModal, {
+    title: 'Select Export Type',
+    options: [
+      {
+        name: 'Insomnia – Sharable with other Insomnia users',
+        value: VALUE_JSON,
+      },
+      { name: 'HAR – HTTP Archive Format', value: VALUE_HAR },
+    ],
+    message: 'Which format would you like to export as?',
+    onCancel: onCancel,
+    onDone: onDone,
+  });
+}
+
+function showExportPrivateEnvironmentsModal(privateEnvNames) {
+  return showModal(AskModal, {
+    title: 'Export Private Environments?',
+    message: `Do you want to include private environments (${privateEnvNames}) in your export?`,
+  });
+}
+
+function showSaveExportedFileDialog(exportedFileNamePrefix, selectedFormat, onDone) {
+  const date = moment().format('YYYY-MM-DD');
+  const name = exportedFileNamePrefix.replace(/ /g, '-');
+  const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
+  const dir = lastDir || electron.remote.app.getPath('desktop');
+
+  const options = {
+    title: 'Export Insomnia Data',
+    buttonLabel: 'Export',
+    defaultPath: path.join(dir, `${name}_${date}`),
+    filters: [],
+  };
+
+  if (selectedFormat === VALUE_HAR) {
+    options.filters = [
+      {
+        name: 'HTTP Archive 1.2',
+        extensions: ['har', 'har.json', 'json'],
+      },
+    ];
+  } else {
+    options.filters = [{ name: 'Insomnia Export', extensions: ['json'] }];
+  }
+
+  electron.remote.dialog.showSaveDialog(options, onDone);
+}
+
+function writeExportedFileToFileSystem(filename, jsonData, onDone) {
+  // Remember last exported path
+  window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
+  fs.writeFile(filename, jsonData, {}, onDone);
+}
+
+export function exportWorkspacesToFile(workspaceId = null) {
+  return async dispatch => {
     dispatch(loadStart());
 
-    const VALUE_JSON = 'json';
-    const VALUE_HAR = 'har';
-
-    showModal(SelectModal, {
-      title: 'Select Export Type',
-      options: [
-        {
-          name: 'Insomnia – Sharable with other Insomnia users',
-          value: VALUE_JSON,
-        },
-        { name: 'HAR – HTTP Archive Format', value: VALUE_HAR },
-      ],
-      message: 'Which format would you like to export as?',
-      onCancel: () => {
-        dispatch(loadStop());
-      },
-      onDone: async selectedFormat => {
+    showSelectExportTypeModal(
+      () => dispatch(loadStop()),
+      async selectedFormat => {
         const workspace = await models.workspace.getById(workspaceId);
 
-        // Check if we want to export private environments
+        // Check if we want to export private environments.
         let environments;
         if (workspace) {
           const parentEnv = await models.environment.getOrCreateForWorkspace(workspace);
@@ -218,38 +264,13 @@ export function exportFile(workspaceId = null) {
         const privateEnvironments = environments.filter(e => e.isPrivate);
         if (privateEnvironments.length) {
           const names = privateEnvironments.map(e => e.name).join(', ');
-          exportPrivateEnvironments = await showModal(AskModal, {
-            title: 'Export Private Environments?',
-            message: `Do you want to include private environments (${names}) in your export?`,
-          });
+          exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
         }
 
-        const date = moment().format('YYYY-MM-DD');
-        const name = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
-        const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
-        const dir = lastDir || electron.remote.app.getPath('desktop');
-
-        const options = {
-          title: 'Export Insomnia Data',
-          buttonLabel: 'Export',
-          defaultPath: path.join(dir, `${name}_${date}`),
-          filters: [],
-        };
-
-        if (selectedFormat === VALUE_HAR) {
-          options.filters = [
-            {
-              name: 'HTTP Archive 1.2',
-              extensions: ['har', 'har.json', 'json'],
-            },
-          ];
-        } else {
-          options.filters = [{ name: 'Insomnia Export', extensions: ['json'] }];
-        }
-
-        electron.remote.dialog.showSaveDialog(options, async filename => {
-          if (!filename) {
-            // It was cancelled, so let's bail out
+        const fileNamePrefix = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
+        showSaveExportedFileDialog(fileNamePrefix, selectedFormat, async fileName => {
+          if (!fileName) {
+            // Cancelled.
             dispatch(loadStop());
             return;
           }
@@ -257,9 +278,9 @@ export function exportFile(workspaceId = null) {
           let json;
           try {
             if (selectedFormat === VALUE_HAR) {
-              json = await importUtils.exportHAR(workspace, exportPrivateEnvironments);
+              json = await importUtils.exportWorkspacesHAR(workspace, exportPrivateEnvironments);
             } else {
-              json = await importUtils.exportJSON(workspace, exportPrivateEnvironments);
+              json = await importUtils.exportWorkspacesJSON(workspace, exportPrivateEnvironments);
             }
           } catch (err) {
             showError({
@@ -271,19 +292,92 @@ export function exportFile(workspaceId = null) {
             return;
           }
 
-          // Remember last exported path
-          window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
-
-          fs.writeFile(filename, json, {}, err => {
+          writeExportedFileToFileSystem(fileName, json, err => {
             if (err) {
               console.warn('Export failed', err);
-              return;
             }
             dispatch(loadStop());
           });
         });
       },
-    });
+    );
+  };
+}
+
+export function exportRequestsToFile(requestIds) {
+  return async dispatch => {
+    dispatch(loadStart());
+
+    showSelectExportTypeModal(
+      () => dispatch(loadStop()),
+      async selectedFormat => {
+        const requests = [];
+        const privateEnvironments = [];
+        const workspaceLookup = {};
+        for (const requestId of requestIds) {
+          const request = await models.request.getById(requestId);
+          if (request == null) {
+            continue;
+          }
+          requests.push(request);
+
+          const ancestors = await db.withAncestors(request, [
+            models.workspace.type,
+            models.requestGroup.type,
+          ]);
+          const workspace = ancestors.find(ancestor => ancestor.type === models.workspace.type);
+          if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
+            continue;
+          }
+          workspaceLookup[workspace._id] = true;
+
+          const descendants = await db.withDescendants(workspace);
+          const privateEnvs = descendants.filter(
+            descendant => descendant.type === models.environment.type && descendant.isPrivate,
+          );
+          privateEnvironments.push(...privateEnvs);
+        }
+
+        let exportPrivateEnvironments = false;
+        if (privateEnvironments.length) {
+          const names = privateEnvironments.map(e => e.name).join(', ');
+          exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
+        }
+
+        const fileNamePrefix = 'Insomnia-Requests';
+        showSaveExportedFileDialog(fileNamePrefix, selectedFormat, async fileName => {
+          if (!fileName) {
+            // Cancelled.
+            dispatch(loadStop());
+            return;
+          }
+
+          let json;
+          try {
+            if (selectedFormat === VALUE_HAR) {
+              json = await importUtils.exportRequestsHAR(requests, exportPrivateEnvironments);
+            } else {
+              json = await importUtils.exportRequestsJSON(requests, exportPrivateEnvironments);
+            }
+          } catch (err) {
+            showError({
+              title: 'Export Failed',
+              error: err,
+              message: 'Export failed due to an unexpected error',
+            });
+            dispatch(loadStop());
+            return;
+          }
+
+          writeExportedFileToFileSystem(fileName, json, err => {
+            if (err) {
+              console.warn('Export failed', err);
+            }
+            dispatch(loadStop());
+          });
+        });
+      },
+    );
   };
 }
 

@@ -20,6 +20,7 @@ export type Node = {
 
 type Props = {
   childObjects: Array<Object>,
+  handleExportRequestsToFile: Function,
 };
 
 type State = {
@@ -45,18 +46,38 @@ class ExportRequestsModal extends PureComponent<Props, State> {
 
   show() {
     this.modal.show();
-    this.createNewTree();
+    this.createTree();
   }
 
   hide() {
     this.modal.hide();
   }
 
-  handleExport() {}
+  handleExport() {
+    const { treeRoot } = this.state;
+    if (treeRoot == null || treeRoot.selectedRequests === 0) {
+      return;
+    }
+    const exportedRequestIds = this.getSelectedRequestIds(treeRoot);
+    this.props.handleExportRequestsToFile(exportedRequestIds);
+    this.hide();
+  }
 
-  createNewTree() {
+  getSelectedRequestIds(node: Node): Array<string> {
+    if (node.doc.type === models.request.type && node.selectedRequests === node.totalRequests) {
+      return [node.doc._id];
+    }
+    const requestIds: Array<string> = [];
+    for (const child of node.children) {
+      const reqIds = this.getSelectedRequestIds(child);
+      requestIds.push(...reqIds);
+    }
+    return requestIds;
+  }
+
+  createTree() {
     const { childObjects } = this.props;
-    const children: Array<Node> = childObjects.map(child => this.createTree(child));
+    const children: Array<Node> = childObjects.map(child => this.createNode(child));
     const totalRequests = children
       .map(child => child.totalRequests)
       .reduce((acc, totalRequests) => acc + totalRequests, 0);
@@ -79,8 +100,8 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     });
   }
 
-  createTree(item: Object): Node {
-    const children: Array<Node> = item.children.map(child => this.createTree(child));
+  createNode(item: Object): Node {
+    const children: Array<Node> = item.children.map(child => this.createNode(child));
     let totalRequests = children
       .map(child => child.totalRequests)
       .reduce((acc, totalRequests) => acc + totalRequests, 0);

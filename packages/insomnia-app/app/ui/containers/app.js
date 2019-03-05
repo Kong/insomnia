@@ -762,7 +762,7 @@ class App extends PureComponent {
     await this._handleSetSidebarHidden(sidebarHidden);
   }
 
-  _handleExportRequestsToFile() {
+  _handleShowExportRequestsModal() {
     showModal(ExportRequestsModal);
   }
 
@@ -1019,7 +1019,7 @@ class App extends PureComponent {
               handleSetSidebarFilter={this._handleSetSidebarFilter}
               handleToggleMenuBar={this._handleToggleMenuBar}
               handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-              handleExportRequestsToFile={this._handleExportRequestsToFile}
+              handleShowExportRequestsModal={this._handleShowExportRequestsModal}
               isVariableUncovered={this.state.isVariableUncovered}
             />
           </ErrorBoundary>
@@ -1144,7 +1144,8 @@ function mapDispatchToProps(dispatch) {
     handleImportFileToWorkspace: global.importFile,
     handleImportUriToWorkspace: global.importUri,
     handleCommand: global.newCommand,
-    handleExportFile: global.exportFile,
+    handleExportFile: global.exportWorkspacesToFile,
+    handleExportRequestsToFile: global.exportRequestsToFile,
     handleMoveDoc: _moveDoc,
   };
 }

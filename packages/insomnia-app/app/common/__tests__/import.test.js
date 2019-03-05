@@ -3,7 +3,7 @@ import * as importUtil from '../import';
 import { getAppVersion } from '../constants';
 import { globalBeforeEach } from '../../__jest__/before-each';
 
-describe('exportHAR()', () => {
+describe('exportWorkspacesHAR()', () => {
   beforeEach(globalBeforeEach);
   it('exports a single workspace as an HTTP Archive', async () => {
     const wrk1 = await models.workspace.create({
@@ -52,7 +52,7 @@ describe('exportHAR()', () => {
     });
 
     const includePrivateDocs = true;
-    const json = await importUtil.exportHAR(wrk1, includePrivateDocs);
+    const json = await importUtil.exportWorkspacesHAR(wrk1, includePrivateDocs);
     const data = JSON.parse(json);
 
     expect(data).toMatchObject({
@@ -132,7 +132,7 @@ describe('exportHAR()', () => {
     });
 
     const includePrivateDocs = false;
-    const json = await importUtil.exportHAR(null, includePrivateDocs);
+    const json = await importUtil.exportWorkspacesHAR(null, includePrivateDocs);
     const data = JSON.parse(json);
 
     expect(data).toMatchObject({
@@ -156,7 +156,7 @@ describe('exportHAR()', () => {
   });
 });
 
-describe('exportJSON()', () => {
+describe('exportWorkspacesJSON()', () => {
   beforeEach(globalBeforeEach);
   it('exports all workspaces', async () => {
     const w = await models.workspace.create({ name: 'Workspace' });
@@ -176,7 +176,7 @@ describe('exportJSON()', () => {
       parentId: eBase._id,
     });
 
-    const json = await importUtil.exportJSON();
+    const json = await importUtil.exportWorkspacesJSON();
     const data = JSON.parse(json);
 
     expect(data._type).toBe('export');

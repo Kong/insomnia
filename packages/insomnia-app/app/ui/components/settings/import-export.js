@@ -23,7 +23,7 @@ class ImportExport extends PureComponent {
     const {
       handleImportFile,
       handleExportAll,
-      handleExportRequests,
+      handleShowExportRequestsModal,
       handleExportWorkspace,
     } = this.props;
 
@@ -50,7 +50,7 @@ class ImportExport extends PureComponent {
               <i className="fa fa-home" />
               Current Workspace
             </DropdownItem>
-            <DropdownItem onClick={handleExportRequests}>
+            <DropdownItem onClick={handleShowExportRequestsModal}>
               <i className="fa fa-home" />
               Current Workspace's Requests
             </DropdownItem>
@@ -85,7 +85,7 @@ ImportExport.propTypes = {
   handleImportFile: PropTypes.func.isRequired,
   handleImportUri: PropTypes.func.isRequired,
   handleExportAll: PropTypes.func.isRequired,
-  handleExportRequests: PropTypes.func.isRequired,
+  handleShowExportRequestsModal: PropTypes.func.isRequired,
   handleExportWorkspace: PropTypes.func.isRequired,
 };
 
