@@ -199,7 +199,7 @@ export async function push(resourceGroupId = null) {
   }
 
   if (!allDirtyResources.length) {
-    logger.debug('No changes to push');
+    // No changes to push
     return;
   }
 
@@ -337,7 +337,9 @@ export async function pull(resourceGroupId = null, createMissingResources = true
     blacklist: blacklistedResourceGroupIds,
   };
 
-  logger.debug(`Pulling with ${resources.length} resources`);
+  if (resources.length) {
+    logger.debug(`Pulling with ${resources.length} resources`);
+  }
 
   let responseBody;
   try {

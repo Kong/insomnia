@@ -5,47 +5,13 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import { FileSystemDriver, VCS, remote } from 'insomnia-sync';
+import { FileSystemDriver, VCS } from 'insomnia-sync';
 import type { Workspace } from '../../../models/workspace';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
-import TimeFromNow from '../time-from-now';
 import PromptButton from '../base/prompt-button';
 import * as session from '../../../sync/session';
-
-type VCSCommit = {
-  parent: string,
-  id: string,
-  timestamp: number,
-  message: string,
-  tree: {
-    [string]: {
-      name: string,
-      hash: string,
-    },
-  },
-};
-
-type VCSOperation = 'add' | 'modify' | 'delete';
-
-type VCSStageEntry = {
-  id: string,
-  hash: string,
-  name: string,
-  operation: VCSOperation,
-  content: string,
-};
-
-type VCSStage = {
-  [string]: VCSStageEntry,
-};
-
-type VCSStatus = {
-  stage: VCSStage,
-  unstaged: {
-    [string]: VCSStageEntry & { id: string },
-  },
-};
+import TimeFromNow from '../time-from-now';
 
 type Props = {
   workspace: Workspace,
@@ -55,11 +21,11 @@ type State = {
   branch: string,
   actionBranch: string,
   branches: Array<string>,
-  status: VCSStatus,
+  history: Array<Snapshot>,
+  status: Status,
   message: string,
   error: string,
   newBranchName: string,
-  commits: Array<VCSCommit>,
 };
 
 const WHITE_LIST = {
@@ -81,7 +47,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       actionBranch: '',
       branches: [],
       newBranchName: '',
-      commits: [],
+      history: [],
       status: {
         stage: {},
         unstaged: {},
@@ -91,15 +57,20 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     };
 
     const driver = new FileSystemDriver({ directory: '/Users/gschier/Desktop/vcs' });
-    this.vcs = new VCS('123', driver);
+    const author = session.getAccountId() || 'account_1';
+    this.vcs = new VCS(
+      // 'prj_e604382c34dc4399beb3860551db7ae5' // Dev,
+      'prj_15e703454c1841a79c88d5244fa0f2e5', // Staging,
+      driver,
+      author,
+      'https://api.staging.insomnia.rest/graphql/',
+      '9cb9c29ee36e74e5b0b8c68f4de9d80124176c5ba6e32440a70a6d63adae9d72', // Staging
+      // session.getCurrentSessionId(),
+    );
   }
 
   async componentDidMount() {
     await this.show();
-
-    const sessionId = session.getCurrentSessionId();
-    const location = `ws://localhost:8000/api/repos/ws`;
-    remote.test(location, sessionId);
   }
 
   _setModalRef(m: ?Modal) {
@@ -127,9 +98,10 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     this.setState({ actionBranch: e.currentTarget.value });
   }
 
-  async _handleCheckoutBranch(e: SyntheticEvent<HTMLFormElement>) {
+  async _handleFork(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
-    await this.vcs.checkout(this.state.newBranchName);
+    const { newBranchName } = this.state;
+    await this.vcs.fork(newBranchName);
     await this.updateStatus({ newBranchName: '' });
   }
 
@@ -193,19 +165,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     await this.updateStatus();
   }
 
-  async _handleCommit() {
-    const { message } = this.state;
-    try {
-      await this.vcs.commit(message);
-    } catch (err) {
-      this.setState({ error: err.message });
-      return;
-    }
-
-    await this.updateStatus({ message: '' });
-  }
-
-  async _handlePush() {
+  async _handlePushChanges() {
     try {
       await this.vcs.push();
     } catch (err) {
@@ -213,7 +173,19 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    await this.updateStatus();
+    await this.updateStatus({ error: '' });
+  }
+
+  async _handleTakeSnapshot() {
+    try {
+      const { message } = this.state;
+      await this.vcs.takeSnapshot(message);
+    } catch (err) {
+      this.setState({ error: err.message });
+      return;
+    }
+
+    await this.updateStatus({ message: '', error: '' });
   }
 
   async updateStatus(newState?: Object) {
@@ -223,21 +195,21 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
 
     for (const doc of docs) {
       items.push({
-        id: doc._id,
+        key: doc._id,
         name: (doc: any).name || 'No Name',
         content: doc,
       });
     }
 
     const status = await this.vcs.status(items);
-    const commits = await this.vcs.getHistory();
-    const branch = await this.vcs.getBranch();
-    const branches = await this.vcs.listBranches();
+    const branch = await this.vcs.getBranchName();
+    const branches = await this.vcs.getBranchNames();
+    const history = await this.vcs.getBranchHistory(branch);
     this.setState({
       status,
-      commits,
       branch,
       branches,
+      history: history.sort((a, b) => (a.created < b.created ? 1 : -1)),
       error: '',
       ...newState,
     });
@@ -248,12 +220,6 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   }
 
   async show() {
-    // Make sure we're on a branch
-    const onBranch = await this.vcs.isOnBranch();
-    if (!onBranch) {
-      await this.vcs.checkout('master');
-    }
-
     this.modal && this.modal.show();
     await this.updateStatus();
   }
@@ -263,9 +229,9 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       actionBranch,
       branch,
       branches,
+      history,
       newBranchName,
       status,
-      commits,
       message,
       error,
     } = this.state;
@@ -313,7 +279,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
               <i className="fa fa-code-fork" />
             </PromptButton>
           </div>
-          <form onSubmit={this._handleCheckoutBranch}>
+          <form onSubmit={this._handleFork}>
             <div className="form-row">
               <div className="form-control form-control--outlined">
                 <input
@@ -339,11 +305,11 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
                 placeholder="My commit message"
               />
             </div>
-            <button className="btn btn--clicky" onClick={this._handleCommit}>
-              Commit
+            <button className="btn btn--clicky space-left" onClick={this._handleTakeSnapshot}>
+              Take Snapshot
             </button>
-            <button className="btn btn--clicky space-left" onClick={this._handlePush}>
-              Push
+            <button className="btn btn--clicky space-left" onClick={this._handlePushChanges}>
+              Push Changes
             </button>
           </div>
           {error && <div className="text-danger">{error}</div>}
@@ -359,18 +325,18 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
           <ul>
             {Object.keys(status.stage)
               .sort()
-              .map(id => (
-                <li key={`${id}::${status.stage[id].hash}`}>
+              .map(key => (
+                <li key={key}>
                   <label>
                     <input
                       className="space-right"
                       type="checkbox"
                       checked={true}
-                      name={id}
+                      name={key}
                       onChange={this._handleUnstage}
                     />
-                    <code className="txt-sm pad-xxs">{status.stage[id].operation}</code>{' '}
-                    {status.stage[id].name}
+                    <code className="txt-sm pad-xxs">{status.stage[key].operation}</code>{' '}
+                    {status.stage[key].name}
                   </label>
                 </li>
               ))}
@@ -388,7 +354,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
             {Object.keys(status.unstaged)
               .sort()
               .map(id => (
-                <li key={`${id}::${status.unstaged[id].hash}`}>
+                <li key={`${id}::${status.unstaged[id].blob}`}>
                   <label>
                     <input
                       className="space-right"
@@ -404,23 +370,25 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
               ))}
           </ul>
           <br />
-          <h2>Commits</h2>
+          <h2>History</h2>
           <table className="table--fancy table--striped">
             <thead>
               <tr>
                 <th className="text-left">Hash</th>
                 <th className="text-left">Time</th>
                 <th className="text-left">Message</th>
+                <th className="text-left">Count</th>
               </tr>
             </thead>
             <tbody>
-              {commits.map(commit => (
-                <tr key={commit.id}>
-                  <td className="monospace txt-sm">{commit.id}</td>
+              {history.map(snapshot => (
+                <tr key={snapshot.id}>
+                  <td className="monospace txt-sm">{snapshot.id}</td>
                   <td>
-                    <TimeFromNow timestamp={commit.timestamp} intervalSeconds={30} />
+                    <TimeFromNow timestamp={snapshot.created} intervalSeconds={30} />
                   </td>
-                  <td>{commit.message}</td>
+                  <td>{snapshot.name}</td>
+                  <td>{snapshot.state.length}</td>
                 </tr>
               ))}
             </tbody>

@@ -24,4 +24,4 @@ node_modules/
 .DS_Store
 *test-plugins
 .vscode
-packages/insomnia-sync
+graphql.config.json

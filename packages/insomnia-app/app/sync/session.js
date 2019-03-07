@@ -165,7 +165,7 @@ export function getCurrentSessionId() {
   if (window) {
     return window.localStorage.getItem('currentSessionId');
   } else {
-    return false;
+    return '';
   }
 }
 
