@@ -67,20 +67,34 @@ export default class FileSystemDriver implements BaseDriver {
   }
 
   clear(): Promise<void> {
-    const names = fs.readdirSync(this._directory);
+    return new Promise((resolve, reject) => {
+      fs.readdir(this._directory, (err, names) => {
+        if (err) {
+          return reject(err);
+        }
 
-    for (const name of names) {
-      fs.unlinkSync(this._getKeyPath(name));
-    }
+        for (const name of names) {
+          fs.unlinkSync(this._getKeyPath(name));
+        }
 
-    return Promise.resolve();
+        resolve();
+      });
+    });
   }
 
   async keys(prefix: string): Promise<Array<string>> {
     const next = dir => {
-      return new Promise(async resolve => {
+      return new Promise(async (resolve, reject) => {
         let keys: Array<string> = [];
-        const names = fs.readdirSync(dir);
+        let names = [];
+        try {
+          names = fs.readdirSync(dir);
+        } catch (err) {
+          if (err.code !== 'ENOENT') {
+            reject(err);
+          }
+        }
+
         for (const name of names) {
           const p = path.join(dir, name);
           if (fs.statSync(p).isDirectory()) {

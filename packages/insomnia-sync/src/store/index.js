@@ -77,10 +77,6 @@ export default class Store {
       value = await hook.read(ext, value);
     }
 
-    try {
-      return JSON.parse(value.toString('utf8'));
-    } catch (err) {
-      return null;
-    }
+    return JSON.parse(value.toString('utf8'));
   }
 }

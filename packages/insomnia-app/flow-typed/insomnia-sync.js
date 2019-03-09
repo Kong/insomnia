@@ -20,6 +20,7 @@ declare type Snapshot = {
 type StageEntry = {
   key: string,
   name: string,
+  blob: string,
   operation: Operation,
   content: string,
 };
@@ -45,14 +46,22 @@ declare class VCS {
   ): VCS;
   checkout(branchName: string): Promise<void>;
   fork(newBranchName: string): Promise<void>;
-  stage(item: StageEntry): Promise<void>;
-  unstage(item: StageEntry): Promise<void>;
+  stage(items: Array<StageEntry>): Promise<void>;
+  unstage(items: Array<StageEntry>): Promise<void>;
   status(items: Array<{ key: string, name: string, content: Object }>): Promise<void>;
+  merge(otherBranch: string): Promise<void>;
+  delta(
+    items: Array<{ key: string, name: string, content: Object }>,
+  ): Promise<{
+    added: Array<Object>,
+    updated: Array<Object>,
+    deleted: Array<string>,
+  }>;
   push(): Promise<void>;
   takeSnapshot(message: string): Promise<void>;
-  getBranchName(): Promise<string>;
+  getBranch(): Promise<string>;
   getBranchNames(): Promise<Array<string>>;
-  getBranchHistory(branchName: string): Promise<Array<Snapshot>>;
+  getHistory(): Promise<Array<Snapshot>>;
   removeBranch(branchName: string): Promise<void>;
 }
 

@@ -540,7 +540,7 @@ describe('VCS', () => {
       await v.stage(status.unstaged['foo']);
       const { commit, tree } = await v.commit('Add foo');
 
-      const foo = await v.getBlob(tree['foo'].hash);
+      const foo = await v._getBlob(tree['foo'].hash);
       expect(foo).toBe('bar');
     });
   });
