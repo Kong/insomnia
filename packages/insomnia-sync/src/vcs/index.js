@@ -3,69 +3,22 @@
 import type { BaseDriver } from '../store/drivers/base';
 import Store from '../store';
 import crypto from 'crypto';
-import { deterministicStringify } from '../lib/deterministicStringify';
 import compress from '../store/hooks/compress';
-
-type Project = {
-  // TODO
-};
-
-type DocumentKey = string;
-type BlobId = string;
-
-type Head = {|
-  branch: string,
-|};
-
-type SnapshotStateEntry = {|
-  key: DocumentKey,
-  blob: BlobId,
-  name: string,
-|};
-
-type Snapshot = {|
-  id: string,
-  created: Date,
-  parent: string,
-  author: string,
-  name: string,
-  description: string,
-  state: Array<SnapshotStateEntry>,
-|};
-
-type Branch = {|
-  name: string,
-  created: Date,
-  modified: Date,
-  snapshots: Array<string>,
-|};
-
-type Operation = 'add' | 'modify' | 'delete';
-
-type StageEntry = {|
-  key: string,
-  operation: Operation,
-  name: string,
-  blob: BlobId,
-  content: Object | null,
-|};
-
-type Stage = {
-  [DocumentKey]: StageEntry,
-};
-
-type StatusCandidate = {|
-  key: DocumentKey,
-  name: string,
-  content: Object,
-|};
-
-type Status = {|
-  stage: Stage,
-  unstaged: {
-    [DocumentKey]: StageEntry,
-  },
-|};
+import * as paths from './paths';
+import { jsonHash } from '../lib/jsonHash';
+import type {
+  Branch,
+  DocumentKey,
+  Head,
+  Project,
+  Snapshot,
+  SnapshotState,
+  Stage,
+  StageEntry,
+  Status,
+  StatusCandidate,
+} from '../types';
+import { combinedMapKeys, generateCandidateMap, generateStateMap } from './snapshots';
 
 const EMPTY_HASH = crypto
   .createHash('sha1')
@@ -97,101 +50,78 @@ export default class VCS {
     const stage: Stage = await this.getStage();
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
-    const snapshotState = snapshot ? snapshot.state : [];
 
-    const status: Status = {
-      stage,
-      unstaged: {},
-    };
+    const unstaged: { [DocumentKey]: StageEntry } = {};
 
-    const stateMap = {};
-    const candidatesMap = {};
+    const stateMap = generateStateMap(snapshot);
 
-    for (const entry of snapshotState) {
-      stateMap[entry.key] = entry;
-    }
-
-    for (const candidate of candidates) {
-      candidatesMap[candidate.key] = candidate;
-    }
-
-    for (const candidate of candidates) {
-      const blobId = _hashContent(candidate.content);
+    for (const { key, name, content } of candidates) {
+      const blob = jsonHash(content);
 
       // Already staged
-      const { key, name } = candidate;
-      if (stage[key] && stage[key].blob === blobId) {
+      if (stage[key] && stage[key].blob === blob) {
         continue;
       }
 
-      const stateEntry = stateMap[key];
-
-      if (stateEntry && stateEntry.blob === blobId) {
+      // Unchanged so don't care
+      if (stateMap[key] && stateMap[key].blob === blob) {
         continue;
       }
 
-      let operation;
-      if (stateEntry) {
-        operation = 'modify';
+      const alreadyExisted = stateMap.hasOwnProperty(key);
+      if (alreadyExisted) {
+        unstaged[key] = { key, name, blob, content, modified: true };
       } else {
-        operation = 'add';
+        unstaged[key] = { key, name, blob, content, added: true };
       }
-
-      status.unstaged[key] = {
-        key,
-        name,
-        operation,
-        blob: blobId,
-        content: candidate.content,
-      };
     }
 
     // Find deleted items
-    for (const stateEntry of snapshotState) {
-      const item = candidatesMap[stateEntry.key];
-      if (item) {
-        // Was provided
+    for (const key of Object.keys(stateMap)) {
+      const isAlreadyStaged = stage.hasOwnProperty(key);
+      if (isAlreadyStaged) {
         continue;
       }
 
-      // Already staged, so don't add to unstaged
-      const { key } = stateEntry;
-      if (stage[key]) {
+      const wasNotDeleted = candidates.findIndex(c => c.key === key) >= 0;
+      if (wasNotDeleted) {
         continue;
       }
 
-      status.unstaged[key] = {
-        key,
-        operation: 'delete',
-        blob: stateEntry.blob,
-        name: stateEntry.name,
-        content: null,
-      };
+      const { name } = stateMap[key];
+      unstaged[key] = { key, name, deleted: true };
     }
+
+    const status: Status = {
+      stage,
+      unstaged,
+      key: '',
+    };
+
+    status.key = jsonHash(status);
 
     return status;
   }
 
   async getStage(): Promise<Stage> {
-    const stage = await this._store.getItem(_pathStage());
+    const stage = await this._store.getItem(paths.stage());
     return stage || {};
   }
 
   async stage(candidates: Array<StageEntry>): Promise<Stage> {
     const stage: Stage = await this.getStage();
 
-    const promises = [];
+    const blobsToStore: { [string]: Object } = {};
     for (const candidate of candidates) {
       stage[candidate.key] = candidate;
 
-      // Only store blobs if content exists
-      // TODO: Make this less weird
-      if (candidate.content !== null) {
-        promises.push(this.storeBlob(candidate.blob, candidate.content));
+      // Only store blobs if we're not deleting it
+      if (candidate.added || candidate.modified) {
+        blobsToStore[candidate.blob] = candidate.content;
       }
     }
 
-    await Promise.all(promises);
+    await this._storeBlobs(blobsToStore);
 
     // Store the stage
     await this._storeStage(stage);
@@ -210,12 +140,23 @@ export default class VCS {
     return stage;
   }
 
-  async _getBlob(id: string): Promise<Object | null> {
-    if (!id || id === EMPTY_HASH) {
-      return null;
+  async _getBlob(id: string): Promise<Object> {
+    const blob = await this._store.getItem(paths.blob(this._project, id));
+    if (blob === null) {
+      throw new Error(`Failed to retrieve blob id=${id}`);
     }
 
-    return this._store.getItem(_pathProjectBlob(this._project, id));
+    return blob;
+  }
+
+  async _getBlobs(ids: Array<string>): Promise<Array<Object>> {
+    const promises = [];
+    for (const id of ids) {
+      const p = paths.blob(this._project, id);
+      promises.push(this._store.getItem(p));
+    }
+
+    return Promise.all(promises);
   }
 
   async getBlobRaw(id: string): Promise<Buffer | null> {
@@ -223,15 +164,24 @@ export default class VCS {
       return null;
     }
 
-    return this._store.getItemRaw(_pathProjectBlob(this._project, id));
+    return this._store.getItemRaw(paths.blob(this._project, id));
   }
 
-  async storeBlob(id: string, content: Object | null): Promise<void> {
+  async _storeBlob(id: string, content: Object | null): Promise<void> {
     if (!id || id === EMPTY_HASH) {
       return;
     }
 
-    return this._store.setItem(_pathProjectBlob(this._project, id), content);
+    return this._store.setItem(paths.blob(this._project, id), content);
+  }
+
+  async _storeBlobs(map: { [string]: Object }): Promise<void> {
+    const promises = [];
+    for (const id of Object.keys(map)) {
+      promises.push(this._storeBlob(id, map[id]));
+    }
+
+    await Promise.all(promises);
   }
 
   async fork(newBranchName: string): Promise<void> {
@@ -239,26 +189,31 @@ export default class VCS {
       throw new Error('Branch already exists by name ' + newBranchName);
     }
 
-    const branch = await this._getCurrentBranch();
-
     const newBranch: Branch = {
       name: newBranchName,
       created: new Date(),
       modified: new Date(),
-      snapshots: branch.snapshots,
+      snapshots: (await this._getCurrentBranch()).snapshots,
     };
 
     await this._storeBranch(newBranch);
-    await this.checkout(newBranch.name);
+
+    return newBranch;
   }
 
-  /**
-   * Creates a new branch and switches to it. Will return a list of delta operations so
-   * the caller can update their state to match.
-   */
+  async removeBranch(branchName: string): Promise<void> {
+    const branchToDelete = await this._assertBranch(branchName);
+    const currentBranch = await this._getCurrentBranch();
+    if (branchToDelete.name === currentBranch.name) {
+      throw new Error('Cannot delete currently-active branch');
+    }
+
+    await this._removeBranch(branchToDelete);
+  }
+
   async checkout(branchName: string): Promise<void> {
-    const newBranch = await this._getOrCreateBranch(branchName);
-    await this._storeHead({ branch: newBranch.name });
+    const branch = await this._assertBranch(branchName);
+    await this._storeHead({ branch: branch.name });
   }
 
   async delta(
@@ -270,28 +225,22 @@ export default class VCS {
   }> {
     const currentBranch = await this._getCurrentBranch();
     const currentLatestSnapshot = await this._getLatestSnapshot(currentBranch.name);
-    const currentLatestState = currentLatestSnapshot ? currentLatestSnapshot.state : [];
 
-    const allKeys = {};
-    const candidateMap: { [DocumentKey]: StatusCandidate } = {};
-    const currentLatestStateMap: { [DocumentKey]: SnapshotStateEntry } = {};
-    for (const candidate of candidates) {
-      allKeys[candidate.key] = true;
-      candidateMap[candidate.key] = candidate;
-    }
+    const candidateMap = generateCandidateMap(candidates);
+    const currentStateMap = generateStateMap(currentLatestSnapshot);
 
-    for (const entry of currentLatestState) {
-      allKeys[entry.key] = true;
-      currentLatestStateMap[entry.key] = entry;
-    }
+    const result = {
+      deleted: [],
+      added: [],
+      updated: [],
+    };
 
-    const deleted = [];
-    const updatedPromises = [];
-    const addedPromises = [];
+    const updatedBlobIds = [];
+    const addedBlobIds = [];
 
-    for (const key of Object.keys(allKeys)) {
+    for (const key of combinedMapKeys(candidateMap, currentStateMap)) {
       const candidate = candidateMap[key];
-      const entry = currentLatestStateMap[key];
+      const entry = currentStateMap[key];
 
       if (!candidate && !entry) {
         throw new Error('Should never happen');
@@ -299,28 +248,26 @@ export default class VCS {
 
       // In history but not in candidates, so add
       if (!candidate) {
-        addedPromises.push(this._getBlob(entry.blob));
+        addedBlobIds.push(entry.blob);
         continue;
       }
 
       // Not in history so delete
       if (!entry) {
-        console.log('ADD DELETED', { key, currentLatestSnapshot, currentLatestStateMap });
-        deleted.push(key);
+        result.deleted.push(key);
         continue;
       }
 
-      const blobId = candidate ? _hashContent(candidate.content) : null;
-      if (entry.blob !== blobId) {
-        updatedPromises.push(this._getBlob(entry.blob));
+      const blobId: string | null = candidate ? jsonHash(candidate.content) : null;
+      if (blobId !== null && entry.blob !== blobId) {
+        updatedBlobIds.push(entry.blob);
       }
     }
 
-    return {
-      deleted,
-      added: await Promise.all(addedPromises),
-      updated: await Promise.all(updatedPromises),
-    };
+    result.updated = await this._getBlobs(updatedBlobIds);
+    result.added = await this._getBlobs(addedBlobIds);
+
+    return result;
   }
 
   async getHistory(): Promise<Array<Snapshot>> {
@@ -339,40 +286,30 @@ export default class VCS {
   }
 
   async getBranch(): Promise<string> {
-    return (await this._getCurrentBranch()).name;
+    const branch = await this._getCurrentBranch();
+    return branch.name;
   }
 
-  async getBranchNames(): Promise<Array<string>> {
-    const branches = await this.getBranches();
-    const branchNames = branches.map(b => b.name);
-    branchNames.sort();
-    return branchNames;
-  }
-
-  async getBranches(): Promise<Array<Branch>> {
-    const paths = await this._store.keys(_pathProjectBranches(this._project));
+  async getBranches(): Promise<Array<string>> {
     const branches = [];
-    for (const p of paths) {
+    for (const p of await this._store.keys(paths.branches(this._project))) {
       const b = await this._store.getItem(p);
       if (b === null) {
         // Should never happen
         throw new Error(`Failed to get branch path=${p}`);
       }
 
-      branches.push(b);
+      branches.push(b.name);
     }
 
     return branches;
   }
 
   async merge(otherBranchName: string): Promise<void> {
-    const otherBranch = await this._getBranch(otherBranchName);
-    if (otherBranch === null) {
-      throw new Error(`Cannot find branch to merge name=${otherBranchName}`);
-    }
+    const otherBranch = await this._assertBranch(otherBranchName);
 
-    const otherLatestSnapshot = await this._getLatestSnapshot(otherBranchName);
-    if (otherLatestSnapshot === null) {
+    const otherSnapshot = await this._getLatestSnapshot(otherBranch.name);
+    if (otherSnapshot === null) {
       throw new Error('No snapshots found to merge');
     }
 
@@ -401,13 +338,13 @@ export default class VCS {
     // Check for fast-forward //
     // ~~~~~~~~~~~~~~~~~~~~~~ //
 
-    const latestSnapshot = await this._getLatestSnapshot(branch.name);
-    if (otherLatestSnapshot && otherLatestSnapshot.id === rootSnapshot.id) {
+    const currentSnapshot = await this._getLatestSnapshot(branch.name);
+    if (otherSnapshot && otherSnapshot.id === rootSnapshot.id) {
       // Other branch has a history that is a prefix of the current one
       throw new Error('Entire branch history is already part of this one');
     }
 
-    if (!latestSnapshot || rootSnapshot.id === latestSnapshot.id) {
+    if (!currentSnapshot || rootSnapshot.id === currentSnapshot.id) {
       branch.snapshots = [...otherBranch.snapshots];
       await this._storeBranch(branch);
       console.log('[sync] Performing fast-forward merge');
@@ -418,33 +355,18 @@ export default class VCS {
     // Obtain necessary things to perform 3-way merge //
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-    console.log('Performing 3-way merge');
-    const allKeys: { [DocumentKey]: boolean } = {};
-    const otherStateMap: { [DocumentKey]: SnapshotStateEntry } = {};
-    const rootStateMap: { [DocumentKey]: SnapshotStateEntry } = {};
-    const currentStateMap: { [DocumentKey]: SnapshotStateEntry } = {};
-
-    for (const entry of latestSnapshot.state) {
-      currentStateMap[entry.key] = entry;
-      allKeys[entry.key] = true;
-    }
-
-    for (const entry of otherLatestSnapshot.state) {
-      otherStateMap[entry.key] = entry;
-      allKeys[entry.key] = true;
-    }
-
-    for (const entry of rootSnapshot.state) {
-      rootStateMap[entry.key] = entry;
-      allKeys[entry.key] = true;
-    }
+    console.log('[sync] Performing 3-way merge');
+    const otherStateMap = generateStateMap(otherSnapshot);
+    const rootStateMap = generateStateMap(rootSnapshot);
+    const currentStateMap = generateStateMap(currentSnapshot);
+    const allKeys = combinedMapKeys(otherStateMap, rootStateMap, currentStateMap);
 
     // ~~~~~~~~~~~~~~~~~~~ //
     // Perform 3-way merge //
     // ~~~~~~~~~~~~~~~~~~~ //
 
-    const newState: Array<SnapshotStateEntry> = [];
-    for (const key of Object.keys(allKeys)) {
+    const newState: SnapshotState = [];
+    for (const key of allKeys) {
       const otherEntry = otherStateMap[key];
       const currentEntry = currentStateMap[key];
       const rootEntry = rootStateMap[key];
@@ -513,8 +435,8 @@ export default class VCS {
     }
 
     const name = `Merged branch ${otherBranch.name}`;
-    await this._createSnapshotFromState(branch, latestSnapshot, newState, name);
-    // TODO: Ensure this algorithm accouts for unsaved changes
+    await this._createSnapshotFromState(branch, currentSnapshot, newState, name);
+    // TODO: Ensure this algorithm accounts for unsaved changes
   }
 
   async pull(): Promise<void> {
@@ -535,36 +457,34 @@ export default class VCS {
       throw new Error('No changes to save');
     }
 
-    const state: Array<SnapshotStateEntry> = [];
+    const newState: SnapshotState = [];
 
     // Add everything from the old state to the new state (except deleted)
     const parentState = parent ? parent.state : [];
     for (const entry of parentState) {
-      const stageEntry = stage[entry.key];
-      if (stageEntry && stageEntry.operation === 'delete') {
-        continue;
+      if (!stage[entry.key] || !stage[entry.key].deleted) {
+        newState.push(entry);
       }
-
-      state.push(entry);
     }
 
     // Add the rest of the staged items
     for (const key of Object.keys(stage)) {
-      const { operation, name, blob } = stage[key];
-      if (operation === 'delete') {
+      const entry = stage[key];
+      if (entry.deleted) {
         continue;
       }
 
-      state.push({ key, name, blob });
+      const { name, blob } = entry;
+      newState.push({ key, name, blob });
     }
 
-    await this._createSnapshotFromState(branch, parent, state, name);
+    await this._createSnapshotFromState(branch, parent, newState, name);
   }
 
   async _createSnapshotFromState(
     branch: Branch,
     parent: Snapshot | null,
-    state: Array<SnapshotStateEntry>,
+    state: SnapshotState,
     name: string,
   ): Promise<void> {
     const parentId: string = parent ? parent.id : EMPTY_HASH;
@@ -580,7 +500,6 @@ export default class VCS {
       author: this._author,
       description: '',
     };
-    console.log('SNAPSHOT', snapshot);
 
     // Update the branch history
     branch.modified = new Date();
@@ -591,7 +510,7 @@ export default class VCS {
     await this._clearStage();
   }
 
-  async queryBlobsMissing(state: Array<SnapshotStateEntry>): Promise<Array<string>> {
+  async queryBlobsMissing(state: SnapshotState): Promise<Array<string>> {
     const next = async (ids: Array<string>) => {
       const resp = await window.fetch(this._location + '?missing', {
         method: 'POST',
@@ -798,11 +717,11 @@ export default class VCS {
   }
 
   async _getProject(): Promise<Project | null> {
-    return this._store.getItem(_pathProject(this._project));
+    return this._store.getItem(paths.project(this._project));
   }
 
   async _getHead(): Promise<Head> {
-    const head = await this._store.getItem(_pathHead());
+    const head = await this._store.getItem(paths.head());
     if (head === null) {
       await this._storeHead({ branch: 'master' });
       return this._getHead();
@@ -816,12 +735,25 @@ export default class VCS {
     return this._getOrCreateBranch(head.branch);
   }
 
+  async _assertBranch(branchName: string): Promise<Branch> {
+    const branch = await this._getBranch(branchName);
+    if (branch === null) {
+      throw new Error(`Branch does not exist with name ${branchName}`);
+    }
+
+    return branch;
+  }
+
   async _getBranch(name: string): Promise<Branch | null> {
-    const p = _pathProjectBranch(this._project, name);
+    const p = paths.branch(this._project, name);
     return this._store.getItem(p);
   }
 
   async _getOrCreateBranch(name: string): Promise<Branch> {
+    if (!name) {
+      throw new Error('No branch name specified for get-or-create operation');
+    }
+
     const branch = await this._getBranch(name);
 
     if (branch === null) {
@@ -839,7 +771,7 @@ export default class VCS {
   }
 
   async _getSnapshot(id: string): Promise<Snapshot | null> {
-    const snapshot = await this._store.getItem(_pathProjectSnapshot(this._project, id));
+    const snapshot = await this._store.getItem(paths.snapshot(this._project, id));
     if (snapshot && typeof snapshot.created === 'string') {
       snapshot.created = new Date(snapshot.created);
     }
@@ -855,80 +787,32 @@ export default class VCS {
   }
 
   async _storeSnapshot(snapshot: Snapshot): Promise<void> {
-    return this._store.setItem(_pathProjectSnapshot(this._project, snapshot.id), snapshot);
+    return this._store.setItem(paths.snapshot(this._project, snapshot.id), snapshot);
   }
 
   async _storeBranch(branch: Branch): Promise<void> {
-    return this._store.setItem(_pathProjectBranch(this._project, branch.name), branch);
+    return this._store.setItem(paths.branch(this._project, branch.name), branch);
+  }
+
+  async _removeBranch(branch: Branch): Promise<void> {
+    return this._store.removeItem(paths.branch(this._project, branch.name));
   }
 
   async _storeHead(head: Head): Promise<void> {
-    await this._store.setItem(_pathHead(), head);
+    await this._store.setItem(paths.head(), head);
   }
 
   async _storeStage(stage: Stage): Promise<void> {
-    await this._store.setItem(_pathStage(), stage);
+    await this._store.setItem(paths.stage(), stage);
   }
 
   async _clearStage(): Promise<void> {
-    await this._store.removeItem(_pathStage());
+    await this._store.removeItem(paths.stage());
   }
 }
 
-function _pathStage(): string {
-  return '/stage';
-}
-
-function _pathHead(): string {
-  return '/head';
-}
-
-function _pathProjectBase(projectId: string): string {
-  return `/projects/${projectId}/`;
-}
-
-function _pathProject(projectId: string): string {
-  return `${_pathProjectBase(projectId)}`;
-}
-
-function _pathProjectBlobs(projectId: string): string {
-  return `${_pathProjectBase(projectId)}blobs/`;
-}
-
-function _pathProjectBlob(projectId: string, blobId: string): string {
-  const subPath = `${blobId.slice(0, 2)}/${blobId.slice(2)}`;
-  return `${_pathProjectBlobs(projectId)}${subPath}`;
-}
-
-function _pathProjectSnapshots(projectId: string): string {
-  return `${_pathProjectBase(projectId)}snapshots/`;
-}
-
-function _pathProjectSnapshot(projectId: string, snapshotId: string): string {
-  return `${_pathProjectSnapshots(projectId)}${snapshotId}`;
-}
-
-function _pathProjectBranches(projectId: string): string {
-  return `${_pathProjectBase(projectId)}branches/`;
-}
-
-function _pathProjectBranch(projectId: string, branchName: string): string {
-  return `${_pathProjectBranches(projectId)}${branchName}`;
-}
-
-function _hashContent(content: any): string {
-  return crypto
-    .createHash('sha1')
-    .update(deterministicStringify(content))
-    .digest('hex');
-}
-
 /** Generate snapshot ID from hashing parent, project, and state together */
-function _generateSnapshotID(
-  parentId: string,
-  projectId: string,
-  state: Array<SnapshotStateEntry>,
-): string {
+function _generateSnapshotID(parentId: string, projectId: string, state: SnapshotState): string {
   const hash = crypto
     .createHash('sha1')
     .update(projectId)

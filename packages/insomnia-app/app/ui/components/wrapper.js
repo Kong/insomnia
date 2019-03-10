@@ -641,6 +641,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             workspaces={workspaces}
             environments={environments}
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
+            enableSyncBeta={settings.enableSyncBeta}
           />
         </ErrorBoundary>
 

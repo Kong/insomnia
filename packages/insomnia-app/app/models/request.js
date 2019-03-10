@@ -246,7 +246,6 @@ export function findByParentId(parentId: string): Promise<Array<Request>> {
 }
 
 export function update(request: Request, patch: Object): Promise<Request> {
-  console.log('UPDATE', request, patch);
   return db.docUpdate(request, patch);
 }
 

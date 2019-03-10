@@ -34,6 +34,9 @@ type BaseSettings = {
   fontInterface: string | null,
   fontSize: number,
   fontVariantLigatures: boolean,
+
+  // Feature flags
+  enableSyncBeta: boolean,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -75,6 +78,7 @@ export function init(): BaseSettings {
     fontInterface: null,
     fontSize: 13,
     fontVariantLigatures: false,
+    enableSyncBeta: false,
   };
 }
 

@@ -5,9 +5,10 @@ import classnames from 'classnames';
 import EnvironmentsDropdown from '../dropdowns/environments-dropdown';
 import SidebarFilter from './sidebar-filter';
 import SidebarChildren from './sidebar-children';
-import SyncButton from '../dropdowns/sync-dropdown';
+import SyncDropdown from '../dropdowns/sync-dropdown';
 import WorkspaceDropdown from '../dropdowns/workspace-dropdown';
 import { SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS } from '../../../common/constants';
+import SyncLegacyDropdown from '../dropdowns/sync-legacy-dropdown';
 
 @autobind
 class Sidebar extends PureComponent {
@@ -55,6 +56,7 @@ class Sidebar extends PureComponent {
       handleActivateRequest,
       activeRequest,
       environmentHighlightColorStyle,
+      enableSyncBeta,
     } = this.props;
 
     return (
@@ -123,7 +125,15 @@ class Sidebar extends PureComponent {
           filter={filter || ''}
         />
 
-        <SyncButton className="sidebar__footer" key={workspace._id} workspace={workspace} />
+        {enableSyncBeta ? (
+          <SyncDropdown className="sidebar__footer" key={workspace._id} workspace={workspace} />
+        ) : (
+          <SyncLegacyDropdown
+            className="sidebar__footer"
+            key={workspace._id}
+            workspace={workspace}
+          />
+        )}
       </aside>
     );
   }
@@ -159,6 +169,7 @@ Sidebar.propTypes = {
   unseenWorkspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
   environmentHighlightColorStyle: PropTypes.string.isRequired,
+  enableSyncBeta: PropTypes.bool.isRequired,
 
   // Optional
   filter: PropTypes.string,

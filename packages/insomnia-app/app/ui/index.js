@@ -51,7 +51,12 @@ document.body.setAttribute('data-platform', process.platform);
   }
 
   // Do things that can wait
-  process.nextTick(initSync);
+  const { enableSyncBeta } = await models.settings.getOrCreate();
+  if (enableSyncBeta) {
+    console.log('[app] Enabling sync beta');
+  } else {
+    process.nextTick(initSync);
+  }
 })();
 
 // Export some useful things for dev

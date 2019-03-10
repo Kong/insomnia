@@ -96,6 +96,11 @@ export default class FileSystemDriver implements BaseDriver {
         }
 
         for (const name of names) {
+          if (name.indexOf('.') === 0) {
+            // Skip any non-vcs files
+            continue;
+          }
+
           const p = path.join(dir, name);
           if (fs.statSync(p).isDirectory()) {
             const more = await next(p);

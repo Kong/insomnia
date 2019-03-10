@@ -13,6 +13,7 @@ import {
 import type { Settings } from '../../../models/settings';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { setFont } from '../../../plugins/misc';
+import * as session from '../../../sync/session';
 
 type Props = {
   settings: Settings,
@@ -527,6 +528,24 @@ class General extends React.PureComponent<Props, State> {
         </div>
 
         <br />
+
+        {session.isLoggedIn() && (
+          <React.Fragment>
+            <hr />
+            <div className="form-control form-control--thin">
+              <label className="inline-block">
+                Enable sync beta{' '}
+                <HelpTooltip>Enable the new sync beta features (requires restart)</HelpTooltip>
+                <input
+                  type="checkbox"
+                  name="enableSyncBeta"
+                  checked={settings.enableSyncBeta}
+                  onChange={this._handleUpdateSetting}
+                />
+              </label>
+            </div>
+          </React.Fragment>
+        )}
       </div>
     );
   }

@@ -5,14 +5,14 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import { FileSystemDriver, VCS } from 'insomnia-sync';
+import { VCS } from 'insomnia-sync';
 import type { Workspace } from '../../../models/workspace';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import PromptButton from '../base/prompt-button';
-import * as session from '../../../sync/session';
 import TimeFromNow from '../time-from-now';
 import type { BaseModel } from '../../../models';
+import * as syncTypes from 'insomnia-sync/src/types';
 
 type Props = {
   workspace: Workspace,
@@ -22,8 +22,8 @@ type State = {
   branch: string,
   actionBranch: string,
   branches: Array<string>,
-  history: Array<Snapshot>,
-  status: Status,
+  history: Array<syncTypes.Snapshot>,
+  status: syncTypes.Status,
   message: string,
   error: string,
   newBranchName: string,
@@ -52,26 +52,11 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       status: {
         stage: {},
         unstaged: {},
+        key: '',
       },
       error: '',
       message: '',
     };
-
-    const driver = new FileSystemDriver({ directory: '/Users/gschier/Desktop/vcs' });
-    const author = session.getAccountId() || 'account_1';
-    this.vcs = new VCS(
-      'prj_15e703454c1841a79c88d5244fa0f2e5',
-      driver,
-      author,
-      // 'https://api.staging.insomnia.rest/graphql/',
-      'http://localhost:8000/graphql/',
-      '96fe04e87febade285bb5a1a410bcc6e5f742627e9639c67a4045a5fb9980019', // Development
-      // '9cb9c29ee36e74e5b0b8c68f4de9d80124176c5ba6e32440a70a6d63adae9d72', // Staging
-    );
-  }
-
-  async componentDidMount() {
-    await this.show();
   }
 
   _setModalRef(m: ?Modal) {
@@ -94,17 +79,6 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     this.setState({ newBranchName: e.currentTarget.value });
   }
 
-  async _handleChangeBranch(e: SyntheticEvent<HTMLSelectElement>) {
-    await this.vcs.checkout(e.currentTarget.value);
-
-    // Set branch right away so UI updates (because the rest takes a while)
-    this.setState({ branch: await this.vcs.getBranch() });
-
-    await this.syncDatabase();
-
-    await this.updateStatus();
-  }
-
   async _handleChangeActionBranch(e: SyntheticEvent<HTMLSelectElement>) {
     this.setState({ actionBranch: e.currentTarget.value });
   }
@@ -113,6 +87,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     e.preventDefault();
     const { newBranchName } = this.state;
     await this.vcs.fork(newBranchName);
+    await this.vcs.checkout(newBranchName);
     await this.updateStatus({ newBranchName: '' });
   }
 
@@ -122,8 +97,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     try {
       await this.vcs.removeBranch(actionBranch);
     } catch (err) {
-      // Failed, probably because it's the current branch
-      console.log('[vcs] Failed to remove branch', err);
+      this.setState({ error: err.message });
       return;
     }
 
@@ -182,17 +156,6 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     await this.updateStatus();
   }
 
-  async _handlePushChanges() {
-    try {
-      await this.vcs.push();
-    } catch (err) {
-      this.setState({ error: err.message });
-      return;
-    }
-
-    await this.updateStatus({ error: '' });
-  }
-
   async _handleTakeSnapshot() {
     try {
       const { message } = this.state;
@@ -231,23 +194,19 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     db.bufferChanges();
     const delta = await this.vcs.delta(items);
 
-    console.log('DELTA', delta);
     const { deleted, updated, added } = delta;
 
     const promises = [];
     for (const doc: BaseModel of updated) {
-      console.log('TRY UPDATE', doc);
       promises.push(db.update(doc));
     }
 
     for (const doc: BaseModel of added) {
-      console.log('TRY CREATE', doc);
       promises.push(db.insert(doc));
     }
 
     for (const id of deleted) {
       const doc = itemsMap[id];
-      console.log('TRY DELETE', doc);
       promises.push(db.unsafeRemove(doc));
     }
 
@@ -256,18 +215,11 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   }
 
   async updateStatus(newState?: Object) {
-    console.time('items');
     const items = await this.generateStatusItems();
-    console.timeEnd('items');
-
-    console.time('status');
-    const [status, branch, branches, history] = await Promise.all([
-      this.vcs.status(items),
-      this.vcs.getBranch(),
-      this.vcs.getBranchNames(),
-      this.vcs.getHistory(),
-    ]);
-    console.timeEnd('status');
+    const status = await this.vcs.status(items);
+    const branch = await this.vcs.getBranch();
+    const branches = await this.vcs.getBranches();
+    const history = await this.vcs.getHistory();
 
     this.setState({
       status,
@@ -283,9 +235,25 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async show() {
+  async show(options: { vcs: VCS }) {
+    this.vcs = options.vcs;
     this.modal && this.modal.show();
     await this.updateStatus();
+  }
+
+  static renderOperation(entry: syncTypes.StageEntry) {
+    let name;
+    if (entry.added) {
+      name = 'Added';
+    } else if (entry.modified) {
+      name = 'Modified';
+    } else if (entry.deleted) {
+      name = 'Deleted';
+    } else {
+      name = 'Unknown Operation';
+    }
+
+    return <code className="txt-sm pad-xxs">{name}</code>;
   }
 
   render() {
@@ -314,20 +282,9 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
           )}
           <div className="form-row">
             <div className="form-control form-control--outlined">
-              <select value={branch} onChange={this._handleChangeBranch}>
-                {branches.map(b => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-control form-control--outlined">
-              <select value={actionBranch} onChange={this._handleChangeActionBranch}>
+              <select value={actionBranch || ''} onChange={this._handleChangeActionBranch}>
                 <option value="">-- Select Branch --</option>
-                {branches.map(b => (
+                {branches.filter(b => b !== branch).map(b => (
                   <option key={b} value={b}>
                     {b}
                   </option>
@@ -380,9 +337,6 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
             <button className="btn btn--clicky space-left" onClick={this._handleTakeSnapshot}>
               Take Snapshot
             </button>
-            <button className="btn btn--clicky space-left" onClick={this._handlePushChanges}>
-              Push Changes
-            </button>
           </div>
           <div>
             <button
@@ -406,8 +360,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
                       name={key}
                       onChange={this._handleUnstage}
                     />
-                    <code className="txt-sm pad-xxs">{status.stage[key].operation}</code>{' '}
-                    {status.stage[key].name}
+                    {SyncStagingModal.renderOperation(status.stage[key])} {status.stage[key].name}
                   </label>
                 </li>
               ))}
@@ -421,11 +374,11 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
             </button>
             <h2>Changes</h2>
           </div>
-          <ul>
+          <ul key={status.key}>
             {Object.keys(status.unstaged)
               .sort()
               .map(id => (
-                <li key={`${id}::${status.unstaged[id].blob}`}>
+                <li key={id}>
                   <label>
                     <input
                       className="space-right"
@@ -434,7 +387,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
                       name={id}
                       onChange={this._handleStage}
                     />
-                    <code className="small pad-xxs">{status.unstaged[id].operation}</code>{' '}
+                    {SyncStagingModal.renderOperation(status.unstaged[id])}{' '}
                     {status.unstaged[id].name}
                   </label>
                 </li>

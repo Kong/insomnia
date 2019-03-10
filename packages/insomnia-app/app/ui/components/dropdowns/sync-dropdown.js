@@ -1,14 +1,24 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
+import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import { showModal } from '../modals';
-import * as syncStorage from '../../../sync/storage';
-import * as session from '../../../sync/session';
-import * as sync from '../../../sync';
-import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
-import SetupSyncModal from '../modals/setup-sync-modal';
 import type { Workspace } from '../../../models/workspace';
+import { showModal } from '../modals';
+import SyncStagingModal from '../modals/sync-staging-modal';
+import { VCS, FileSystemDriver } from 'insomnia-sync';
+import * as syncTypes from 'insomnia-sync/src/types';
+import * as session from '../../../sync/session';
+import * as db from '../../../common/database';
+import * as models from '../../../models';
+import type { BaseModel } from '../../../models';
+
+const MODEL_WHITELIST = {
+  [models.workspace.type]: true,
+  [models.request.type]: true,
+  [models.requestGroup.type]: true,
+  [models.environment.type]: true,
+};
 
 type Props = {
   workspace: Workspace,
@@ -18,201 +28,184 @@ type Props = {
 };
 
 type State = {
-  loggedIn: boolean | null,
-  loading: boolean,
-  resourceGroupId: string | null,
-  syncMode: string | null,
-  syncPercent: number,
-  workspaceName: string,
+  currentBranch: string,
+  localBranches: Array<string>,
 };
 
 @autobind
 class SyncDropdown extends React.PureComponent<Props, State> {
-  _hasPrompted: boolean;
-  _isMounted: boolean;
+  vcs: VCS;
 
   constructor(props: Props) {
     super(props);
-
-    this._hasPrompted = false;
-    this._isMounted = false;
-
+    this.setupVCS();
     this.state = {
-      loggedIn: null,
-      loading: false,
-      resourceGroupId: null,
-      syncMode: null,
-      syncPercent: 0,
-      workspaceName: '',
+      localBranches: [],
+      currentBranch: '',
     };
   }
 
-  _handleShowShareSettings() {
-    showModal(WorkspaceShareSettingsModal, { workspace: this.props.workspace });
+  setupVCS() {
+    const driver = new FileSystemDriver({ directory: '/Users/gschier/Desktop/vcs' });
+    const author = session.getAccountId() || 'account_1';
+    this.vcs = new VCS(
+      'prj_15e703454c1841a79c88d5244fa0f2e5',
+      driver,
+      author,
+      'http://localhost:8000/graphql/',
+      session.getCurrentSessionId(),
+    );
   }
 
-  async _handleSyncResourceGroupId() {
-    const { resourceGroupId } = this.state;
+  async refreshMainAttributes() {
+    const localBranches = await this.vcs.getBranches();
+    const currentBranch = await this.vcs.getBranch();
 
-    // Set loading state
-    this.setState({ loading: true });
-
-    await sync.getOrCreateConfig(resourceGroupId);
-    await sync.pull(resourceGroupId);
-    await sync.push(resourceGroupId);
-
-    await this._reloadData();
-
-    // Unset loading state
-    this.setState({ loading: false });
-  }
-
-  async _reloadData() {
-    const loggedIn = session.isLoggedIn();
-
-    if (loggedIn !== this.state.loggedIn) {
-      this.setState({ loggedIn });
-    }
-
-    if (!loggedIn) {
-      return;
-    }
-
-    // Get or create any related sync data
-    const { workspace } = this.props;
-    const { resourceGroupId } = await sync.getOrCreateResourceForDoc(workspace);
-    const config = await sync.getOrCreateConfig(resourceGroupId);
-
-    // Analyze it
-    const dirty = await syncStorage.findDirtyResourcesForResourceGroup(resourceGroupId);
-    const all = await syncStorage.findResourcesForResourceGroup(resourceGroupId);
-    const numClean = all.length - dirty.length;
-    const syncPercent = all.length === 0 ? 100 : parseInt((numClean / all.length) * 1000) / 10;
-
-    if (this._isMounted) {
-      this.setState({
-        resourceGroupId,
-        syncPercent,
-        syncMode: config.syncMode,
-        workspaceName: workspace.name,
-      });
-    }
-  }
-
-  async _handleShowSyncModePrompt() {
-    showModal(SetupSyncModal, {
-      onSelectSyncMode: async syncMode => {
-        await this._reloadData();
-      },
+    this.setState({
+      localBranches,
+      currentBranch,
     });
   }
 
   componentDidMount() {
-    this._isMounted = true;
-    syncStorage.onChange(this._reloadData);
-    this._reloadData();
+    this.refreshMainAttributes().catch(err => {
+      if (err) {
+        console.log('[sync_menu] Error refreshing sync state', err);
+      }
+    });
   }
 
-  componentWillUnmount() {
-    syncStorage.offChange(this._reloadData);
-    this._isMounted = false;
-  }
+  async generateStatusItems(): Promise<Array<{ key: string, name: string, content: Object }>> {
+    const { workspace } = this.props;
 
-  componentDidUpdate() {
-    const { resourceGroupId, syncMode } = this.state;
+    const items = [];
+    const allDocs = await db.withDescendants(workspace);
+    const docs = allDocs.filter(d => MODEL_WHITELIST[d.type] && !(d: any).isPrivate);
 
-    if (!resourceGroupId) {
-      return;
+    for (const doc of docs) {
+      items.push({
+        key: doc._id,
+        name: (doc: any).name || 'No Name',
+        content: doc,
+      });
     }
 
-    // Sync has not yet been configured for this workspace, so prompt the user to do so
-    const isModeUnset = !syncMode || syncMode === syncStorage.SYNC_MODE_UNSET;
-    if (isModeUnset && !this._hasPrompted) {
-      this._hasPrompted = true;
-      this._handleShowSyncModePrompt();
+    return items;
+  }
+
+  async syncDatabase() {
+    const items = await this.generateStatusItems();
+    const itemsMap = {};
+    for (const item of items) {
+      itemsMap[item.key] = item.content;
+    }
+
+    db.bufferChanges();
+    const delta = await this.vcs.delta(items);
+
+    const { deleted, updated, added } = delta;
+
+    const promises = [];
+    for (const doc: BaseModel of updated) {
+      promises.push(db.update(doc));
+    }
+
+    for (const doc: BaseModel of added) {
+      promises.push(db.insert(doc));
+    }
+
+    for (const id of deleted) {
+      const doc = itemsMap[id];
+      promises.push(db.unsafeRemove(doc));
+    }
+
+    await Promise.all(promises);
+    await db.flushChanges();
+  }
+
+  _handleShowStagingModal() {
+    showModal(SyncStagingModal, { vcs: this.vcs });
+  }
+
+  async _handlePush() {
+    try {
+      await this.vcs.push();
+    } catch (err) {
+      console.log('[sync] Failed to push', err);
     }
   }
 
-  _getSyncDescription(syncMode: string | null, syncPercentage: number) {
-    let el = null;
-    if (syncMode === syncStorage.SYNC_MODE_NEVER) {
-      el = <span>Sync Disabled</span>;
-    } else if (syncPercentage === 100) {
-      el = <span>Sync Up To Date</span>;
-    } else if (syncMode === syncStorage.SYNC_MODE_OFF) {
-      el = (
-        <span>
-          <i className="fa fa-pause-circle-o" /> Sync Required
-        </span>
+  async _handleOpen() {
+    await this.refreshMainAttributes();
+  }
+
+  async _handleSwitchBranch(branch: string) {
+    await this.vcs.checkout(branch);
+    await this.syncDatabase();
+    this.setState({ currentBranch: branch });
+  }
+
+  renderBranch(branch: string) {
+    const { currentBranch } = this.state;
+
+    const icon =
+      branch === currentBranch ? (
+        <i className="fa fa-tag" />
+      ) : (
+        <i className="fa fa-tag ultra-faint" />
       );
-    } else if (syncMode === syncStorage.SYNC_MODE_ON) {
-      el = <span>Sync Pending</span>;
-    } else if (!syncMode || syncMode === syncStorage.SYNC_MODE_UNSET) {
-      el = (
-        <span>
-          <i className="fa fa-exclamation-circle" /> Configure Sync
-        </span>
-      );
-    }
 
-    return el;
+    const isCurrentBranch = branch === currentBranch;
+    return (
+      <DropdownItem
+        key={branch}
+        onClick={isCurrentBranch ? null : () => this._handleSwitchBranch(branch)}
+        className={classnames({ bold: isCurrentBranch })}
+        title={isCurrentBranch ? null : `Switch to "${branch}"`}>
+        {icon}
+        {branch}
+      </DropdownItem>
+    );
+  }
+
+  renderButton() {
+    const { currentBranch } = this.state;
+    if (currentBranch !== null) {
+      return (
+        <React.Fragment>
+          <i className="fa fa-code-fork" /> {currentBranch}
+        </React.Fragment>
+      );
+    } else {
+      return <React.Fragment>Sync</React.Fragment>;
+    }
   }
 
   render() {
     const { className } = this.props;
-    const { resourceGroupId, loading, loggedIn } = this.state;
+    const { localBranches, currentBranch } = this.state;
 
-    // Don't show the sync menu unless we're logged in
-    if (!loggedIn) {
-      return null;
-    }
+    return (
+      <div className={className}>
+        <Dropdown wide className="wide tall" onOpen={this._handleOpen}>
+          <DropdownButton className="btn btn--compact wide">{this.renderButton()}</DropdownButton>
 
-    if (!resourceGroupId) {
-      return (
-        <div className={className}>
-          <button className="btn btn--compact wide" disabled>
-            Initializing Sync...
-          </button>
-        </div>
-      );
-    } else {
-      const { syncMode, syncPercent } = this.state;
-      return (
-        <div className={className}>
-          <Dropdown wide className="wide tall">
-            <DropdownButton className="btn btn--compact wide">
-              {this._getSyncDescription(syncMode, syncPercent)}
-            </DropdownButton>
-            <DropdownDivider>Workspace Synced {syncPercent}%</DropdownDivider>
+          <DropdownDivider>Branch: {currentBranch}</DropdownDivider>
+          <DropdownItem onClick={this._handlePush}>
+            <i className="fa fa-upload" />
+            Push Snapshots
+          </DropdownItem>
 
-            <DropdownItem onClick={this._handleShowSyncModePrompt}>
-              <i className="fa fa-wrench" />
-              Change Sync Mode
-            </DropdownItem>
+          <DropdownItem onClick={this._handleShowStagingModal}>
+            <i className="fa fa-cube" />
+            Create Snapshot
+          </DropdownItem>
 
-            {/* SYNCED */}
-
-            {syncMode !== syncStorage.SYNC_MODE_NEVER ? (
-              <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick>
-                {loading ? (
-                  <i className="fa fa-refresh fa-spin" />
-                ) : (
-                  <i className="fa fa-cloud-upload" />
-                )}
-                Sync Now
-              </DropdownItem>
-            ) : null}
-
-            {syncMode !== syncStorage.SYNC_MODE_NEVER ? (
-              <DropdownItem onClick={this._handleShowShareSettings}>
-                <i className="fa fa-users" />
-                Share Settings
-              </DropdownItem>
-            ) : null}
-          </Dropdown>
-        </div>
-      );
-    }
+          <DropdownDivider>Branches</DropdownDivider>
+          {localBranches.map(this.renderBranch)}
+        </Dropdown>
+      </div>
+    );
   }
 }
 

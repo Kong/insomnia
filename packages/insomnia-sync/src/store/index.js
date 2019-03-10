@@ -23,7 +23,13 @@ export default class Store {
 
   async setItem(key: string, value: JSONValue): Promise<void> {
     const ext = path.extname(key);
-    const serializedValue = await this._serialize(ext, value);
+    let serializedValue;
+    try {
+      serializedValue = await this._serialize(ext, value);
+    } catch (err) {
+      throw new Error(`Failed to serialize key=${key} err=${err}`);
+    }
+
     return this._driver.setItem(key, serializedValue);
   }
 
@@ -35,7 +41,15 @@ export default class Store {
 
     const ext = path.extname(key);
 
-    return this._deserialize(ext, rawValue);
+    let value;
+    try {
+      // Without the `await` here, the catch won't get called
+      value = await this._deserialize(ext, rawValue);
+    } catch (err) {
+      throw new Error(`Failed to deserialize key=${key} err=${err}`);
+    }
+
+    return value;
   }
 
   async getItemRaw(key: string): Promise<Buffer | null> {
