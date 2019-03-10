@@ -7,7 +7,6 @@ import type { Workspace } from '../../../models/workspace';
 import { showModal } from '../modals';
 import SyncStagingModal from '../modals/sync-staging-modal';
 import { VCS, FileSystemDriver } from 'insomnia-sync';
-import * as syncTypes from 'insomnia-sync/src/types';
 import * as session from '../../../sync/session';
 import * as db from '../../../common/database';
 import * as models from '../../../models';

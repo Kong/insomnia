@@ -8,26 +8,36 @@ describe('VCS', () => {
   });
 
   describe('status()', () => {
-    it('returns status with not commits', async () => {
+    it('returns status with no commits', async () => {
       const v = new VCS('wrk_1', new MemoryDriver());
       await v.checkout('master');
 
-      const status = await v.status([{ id: 'foo', content: 'bar' }, { id: 'baz', content: 'qux' }]);
+      const status = await v.status([
+        { key: 'foo', name: 'Foo', content: 'bar' },
+        {
+          key: 'baz',
+          name: 'Baz',
+          content: 'qux',
+        },
+      ]);
 
       expect(status).toEqual({
+        key: 'df38f4b880dda9d746d376437c37cb8279027699',
         stage: {},
         unstaged: {
           foo: {
-            operation: 'add',
-            id: 'foo',
+            added: true,
+            key: 'foo',
             content: 'bar',
-            hash: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+            blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+            name: 'Foo',
           },
           baz: {
-            operation: 'add',
-            id: 'baz',
+            added: true,
+            key: 'baz',
             content: 'qux',
-            hash: '297880f41344b3d6712a26c3af39874aee73e68a',
+            blob: '297880f41344b3d6712a26c3af39874aee73e68a',
+            name: 'Baz',
           },
         },
       });
@@ -38,96 +48,125 @@ describe('VCS', () => {
       await v.checkout('master');
 
       const status1 = await v.status([
-        { id: 'a', name: 'A', content: 'aaa' },
-        { id: 'b', name: 'B', content: 'bbb' },
-        { id: 'c', name: 'C', content: 'ccc' },
+        { key: 'a', name: 'A', content: 'aaa' },
+        { key: 'b', name: 'B', content: 'bbb' },
+        { key: 'c', name: 'C', content: 'ccc' },
       ]);
       expect(Object.keys(status1.unstaged)).toEqual(['a', 'b', 'c']);
 
-      await v.stage(status1.unstaged['a']);
-      await v.stage(status1.unstaged['b']);
-      await v.stage(status1.unstaged['c']);
-      const { tree } = await v.commit('Add a/b/c');
-      expect(Object.keys(tree).sort()).toEqual(['a', 'b', 'c']);
+      await v.stage([status1.unstaged['a'], status1.unstaged['b'], status1.unstaged['c']]);
+
+      await v.takeSnapshot('Add a/b/c');
+      const history = await v.getHistory();
+      expect(history.length).toBe(1);
+      expect(history).toEqual([
+        {
+          created: expect.any(Date),
+          description: '',
+          id: 'de8e451b54dc0643f7407a01ca4f9aa3b316ceef',
+          name: 'Add a/b/c',
+          parent: '0000000000000000000000000000000000000000',
+          state: [
+            {
+              blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+              key: 'a',
+              name: 'A',
+            },
+            {
+              blob: 'a1c5176848e4fcd97e93e66970820321261ff105',
+              key: 'b',
+              name: 'B',
+            },
+            {
+              blob: '621e19938969bfbedb2b7d52d6e3becda92d4dd3',
+              key: 'c',
+              name: 'C',
+            },
+          ],
+        },
+      ]);
 
       // Should get every operation type
       const status = await v.status([
-        { id: 'notA', name: 'Not A', content: 'aaa' },
-        { id: 'b', name: 'B', content: 'bbb' },
-        { id: 'c', name: 'C', content: 'modified' },
-        { id: 'd', name: 'D', content: 'ddd' },
+        { key: 'notA', name: 'Not A', content: 'aaa' },
+        { key: 'b', name: 'B', content: 'bbb' },
+        { key: 'c', name: 'C', content: 'modified' },
+        { key: 'd', name: 'D', content: 'ddd' },
       ]);
+
       expect(status).toEqual({
+        key: '07e0837f56f314519214438a428773055f1e89c2',
         stage: {},
         unstaged: {
           a: {
-            operation: 'delete',
-            hash: 'a25088df90102215f8c5d2316b88780eb8837719',
-            id: 'a',
+            deleted: true,
+            key: 'a',
             name: 'A',
-            content: '',
           },
           notA: {
-            operation: 'add',
-            hash: 'a25088df90102215f8c5d2316b88780eb8837719',
-            id: 'notA',
+            added: true,
+            blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+            key: 'notA',
             name: 'Not A',
             content: 'aaa',
           },
           c: {
-            operation: 'modify',
-            hash: '852c13f844dbde131c16e0075e73482d715c1db2',
-            id: 'c',
+            modified: true,
+            blob: '852c13f844dbde131c16e0075e73482d715c1db2',
+            key: 'c',
             name: 'C',
             content: 'modified',
           },
           d: {
-            operation: 'add',
-            hash: 'c277a65b373a73686743876215d52f72d0991a24',
-            id: 'd',
+            added: true,
+            blob: 'c277a65b373a73686743876215d52f72d0991a24',
+            key: 'd',
             name: 'D',
             content: 'ddd',
           },
         },
       });
 
-      await v.stage(status.unstaged['a']);
-      await v.stage(status.unstaged['notA']);
-      await v.stage(status.unstaged['c']);
-      await v.stage(status.unstaged['d']);
-      const status2 = await v.status([
-        { id: 'notA', name: 'Not A', content: 'aaa' },
-        { id: 'b', name: 'B', content: 'bbb' },
-        { id: 'c', name: 'C', content: 'modified' },
-        { id: 'd', name: 'D', content: 'ddd' },
+      await v.stage([
+        status.unstaged['a'],
+        status.unstaged['notA'],
+        status.unstaged['c'],
+        status.unstaged['d'],
       ]);
+
+      const status2 = await v.status([
+        { key: 'notA', name: 'Not A', content: 'aaa' },
+        { key: 'b', name: 'B', content: 'bbb' },
+        { key: 'c', name: 'C', content: 'modified' },
+        { key: 'd', name: 'D', content: 'ddd' },
+      ]);
+
       expect(status2).toEqual({
+        key: 'effd8aee048be3de0d8706dcf7970162354ee017',
         stage: {
           a: {
-            operation: 'delete',
-            hash: 'a25088df90102215f8c5d2316b88780eb8837719',
-            id: 'a',
+            deleted: true,
+            key: 'a',
             name: 'A',
-            content: '',
           },
           notA: {
-            operation: 'add',
-            hash: 'a25088df90102215f8c5d2316b88780eb8837719',
-            id: 'notA',
+            added: true,
+            blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+            key: 'notA',
             name: 'Not A',
             content: 'aaa',
           },
           c: {
-            operation: 'modify',
-            hash: '852c13f844dbde131c16e0075e73482d715c1db2',
-            id: 'c',
+            modified: true,
+            blob: '852c13f844dbde131c16e0075e73482d715c1db2',
+            key: 'c',
             name: 'C',
             content: 'modified',
           },
           d: {
-            operation: 'add',
-            hash: 'c277a65b373a73686743876215d52f72d0991a24',
-            id: 'd',
+            added: true,
+            blob: 'c277a65b373a73686743876215d52f72d0991a24',
+            key: 'd',
             name: 'D',
             content: 'ddd',
           },
@@ -141,38 +180,40 @@ describe('VCS', () => {
       await v.checkout('master');
 
       const status = await v.status([
-        { id: 'a', name: 'A', content: 'aaa' },
-        { id: 'b', name: 'B', content: 'bbb' },
+        { key: 'a', name: 'A', content: 'aaa' },
+        { key: 'b', name: 'B', content: 'bbb' },
       ]);
-      await v.stage(status.unstaged['a']);
+      await v.stage([status.unstaged['a']]);
 
       const status2 = await v.status([
-        { id: 'a', name: 'A', content: 'modified' },
-        { id: 'b', name: 'B', content: 'bbb' },
+        { key: 'a', name: 'A', content: 'modified' },
+        { key: 'b', name: 'B', content: 'bbb' },
       ]);
+
       expect(status2).toEqual({
+        key: '7325dc3d7fe8420e11d79abb74baafe5433579a1',
         stage: {
           a: {
-            operation: 'add',
-            hash: 'a25088df90102215f8c5d2316b88780eb8837719',
+            added: true,
+            blob: 'a25088df90102215f8c5d2316b88780eb8837719',
             name: 'A',
-            id: 'a',
+            key: 'a',
             content: 'aaa',
           },
         },
         unstaged: {
           a: {
-            operation: 'add',
-            hash: '852c13f844dbde131c16e0075e73482d715c1db2',
-            id: 'a',
+            added: true,
+            blob: '852c13f844dbde131c16e0075e73482d715c1db2',
+            key: 'a',
             name: 'A',
             content: 'modified',
           },
           b: {
-            operation: 'add',
-            hash: 'a1c5176848e4fcd97e93e66970820321261ff105',
+            added: true,
+            blob: 'a1c5176848e4fcd97e93e66970820321261ff105',
             name: 'B',
-            id: 'b',
+            key: 'b',
             content: 'bbb',
           },
         },
@@ -183,12 +224,16 @@ describe('VCS', () => {
       const v = new VCS('wrk_1', new MemoryDriver());
       await v.checkout('master');
 
-      const status = await v.status([{ id: 'foo', name: 'Foo', content: 'bar' }]);
-      await v.stage(status.unstaged['foo']);
-      await v.commit('Add foo');
+      const status = await v.status([{ key: 'foo', name: 'Foo', content: 'bar' }]);
+      await v.stage([status.unstaged['foo']]);
+      await v.takeSnapshot('Add foo');
 
-      const status2 = await v.status([{ id: 'foo', name: 'Foo', content: 'bar' }]);
-      expect(status2).toEqual({ stage: {}, unstaged: {} });
+      const status2 = await v.status([{ key: 'foo', name: 'Foo', content: 'bar' }]);
+      expect(status2).toEqual({
+        key: 'a879eff7f977bb847932749776643a491bec00c7',
+        stage: {},
+        unstaged: {},
+      });
     });
   });
 
@@ -198,151 +243,132 @@ describe('VCS', () => {
       await v.checkout('master');
 
       const status = await v.status([
-        { id: 'foo', name: 'Foo', content: 'bar' },
-        { id: 'baz', name: 'Baz', content: 'qux' },
+        { key: 'foo', name: 'Foo', content: 'bar' },
+        { key: 'baz', name: 'Baz', content: 'qux' },
       ]);
 
-      const stage = await v.stage(status.unstaged['foo']);
+      const stage = await v.stage([status.unstaged['foo']]);
       expect(stage).toEqual({
         foo: {
-          id: 'foo',
+          key: 'foo',
           name: 'Foo',
           content: 'bar',
-          hash: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
-          operation: 'add',
+          blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+          added: true,
         },
       });
 
       const status2 = await v.status([
-        { id: 'foo', name: 'Foo', content: 'bar' },
-        { id: 'baz', name: 'Baz', content: 'qux' },
+        { key: 'foo', name: 'Foo', content: 'bar' },
+        { key: 'baz', name: 'Baz', content: 'qux' },
       ]);
       expect(status2).toEqual({
+        key: '65f99ae937aca2ed7947a13be349f390eb32fe41',
         stage: {
           foo: {
             name: 'Foo',
-            id: 'foo',
+            key: 'foo',
             content: 'bar',
-            hash: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
-            operation: 'add',
+            blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+            added: true,
           },
         },
         unstaged: {
           baz: {
-            id: 'baz',
+            key: 'baz',
             name: 'Baz',
             content: 'qux',
-            hash: '297880f41344b3d6712a26c3af39874aee73e68a',
-            operation: 'add',
+            blob: '297880f41344b3d6712a26c3af39874aee73e68a',
+            added: true,
           },
         },
       });
     });
   });
 
-  describe('commit()', () => {
+  describe('takeSnapshot()', () => {
     it('commits basic entity', async () => {
       const v = new VCS('wrk_1', new MemoryDriver());
       await v.checkout('master');
 
-      const status = await v.status([{ id: 'foo', name: 'Foo', content: 'bar' }]);
-      await v.stage(status.unstaged['foo']);
-      const { commit, tree } = await v.commit('Add foo');
+      const status = await v.status([{ key: 'foo', name: 'Foo', content: 'bar' }]);
+      await v.stage([status.unstaged['foo']]);
+      await v.takeSnapshot('Add foo');
 
       const history = await v.getHistory();
-      expect(history[1]).toEqual({
-        id: 'f548a2f5e500a7feeedcee332e7239e04cb38687',
-        author: 'acct_123',
-        message: 'Initial commit',
-        parent: '0000000000000000000000000000000000000000',
-        timestamp: 1000000000000,
-        tree: '0000000000000000000000000000000000000000',
-      });
-
-      expect(commit).toEqual({
-        id: 'c2c3c9dfbef32e6e2c5291bb011c4cc70d10f679',
-        author: 'acct_123',
-        message: 'Add foo',
-        parent: 'f548a2f5e500a7feeedcee332e7239e04cb38687',
-        timestamp: 1000000000001,
-        tree: '197aa2df26bffbc250c615c0463c0ee9fbc3e117',
-      });
-
-      expect(tree).toEqual({
-        foo: {
-          name: 'Foo',
-          hash: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+      expect(history).toEqual([
+        {
+          id: '3cf40b61d7ed271819aa8defd6212bf63aee6eae',
+          created: expect.any(Date),
+          name: 'Add foo',
+          description: '',
+          parent: '0000000000000000000000000000000000000000',
+          state: [
+            {
+              blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+              key: 'foo',
+              name: 'Foo',
+            },
+          ],
         },
-      });
+      ]);
     });
 
     it('commits deleted entity', async () => {
       const v = new VCS('wrk_1', new MemoryDriver());
       await v.checkout('master');
 
-      const status = await v.status([{ id: 'foo', name: 'Foo', content: 'bar' }]);
-      await v.stage(status.unstaged['foo']);
-      const { commit, tree } = await v.commit('Add foo');
+      const status = await v.status([{ key: 'foo', name: 'Foo', content: 'bar' }]);
+      await v.stage([status.unstaged['foo']]);
+      await v.takeSnapshot('Add foo');
 
       const history = await v.getHistory();
-      expect(history[1]).toEqual({
-        id: 'f548a2f5e500a7feeedcee332e7239e04cb38687',
-        author: 'acct_123',
-        message: 'Initial commit',
-        parent: '0000000000000000000000000000000000000000',
-        timestamp: 1000000000000,
-        tree: '0000000000000000000000000000000000000000',
-      });
-
-      expect(commit).toEqual({
-        id: 'c2c3c9dfbef32e6e2c5291bb011c4cc70d10f679',
-        author: 'acct_123',
-        message: 'Add foo',
-        parent: 'f548a2f5e500a7feeedcee332e7239e04cb38687',
-        timestamp: 1000000000001,
-        tree: '197aa2df26bffbc250c615c0463c0ee9fbc3e117',
-      });
-
-      expect(tree).toEqual({
-        foo: {
-          name: 'Foo',
-          hash: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+      expect(history).toEqual([
+        {
+          id: '3cf40b61d7ed271819aa8defd6212bf63aee6eae',
+          created: expect.any(Date),
+          name: 'Add foo',
+          description: '',
+          parent: '0000000000000000000000000000000000000000',
+          state: [
+            {
+              blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+              key: 'foo',
+              name: 'Foo',
+            },
+          ],
         },
-      });
+      ]);
 
       const status2 = await v.status([]);
-      await v.stage(status2.unstaged['foo']);
-      const { commit: commit2, tree: tree2 } = await v.commit('Delete foo');
+      await v.stage([status2.unstaged['foo']]);
+      await v.takeSnapshot('Delete foo');
+      const history2 = await v.getHistory();
 
-      expect(commit2).toEqual({
-        id: '0986e841d010685a430931e198e336bfb6d49129',
-        author: 'acct_123',
-        message: 'Delete foo',
-        parent: commit.id,
-        timestamp: 1000000000002,
-        tree: 'bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f',
-      });
-
-      expect(tree2).toEqual({});
-    });
-  });
-
-  describe('getHistory()', () => {
-    it('sorts correctly by date DESC', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout('master');
-
-      const status1 = await v.status([{ id: 'foo', name: 'Foo', content: 'bar' }]);
-      await v.stage(status1.unstaged['foo']);
-      const { commit: commit1 } = await v.commit('Add foo');
-
-      const status2 = await v.status([{ id: 'foo', name: 'Foo', content: 'bar 2' }]);
-      await v.stage(status2.unstaged['foo']);
-      const { commit: commit2 } = await v.commit('Modify foo');
-
-      const history = await v.getHistory();
-      expect(history[0].id).toBe(commit2.id);
-      expect(history[1].id).toBe(commit1.id);
+      expect(history2).toEqual([
+        {
+          id: '3cf40b61d7ed271819aa8defd6212bf63aee6eae',
+          created: expect.any(Date),
+          name: 'Add foo',
+          description: '',
+          parent: '0000000000000000000000000000000000000000',
+          state: [
+            {
+              blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+              key: 'foo',
+              name: 'Foo',
+            },
+          ],
+        },
+        {
+          id: 'ce9293f9915adb9763837e3fff7730d45b2e0660',
+          created: expect.any(Date),
+          name: 'Delete foo',
+          description: '',
+          parent: '3cf40b61d7ed271819aa8defd6212bf63aee6eae',
+          state: [],
+        },
+      ]);
     });
   });
 
@@ -355,7 +381,7 @@ describe('VCS', () => {
       await v.checkout('branch-2');
 
       const branches = await v.getBranches();
-      expect(branches).toEqual(['branch-1', 'branch-2', 'master']);
+      expect(branches).toEqual(['master', 'branch-1', 'branch-2']);
     });
   });
 
@@ -393,9 +419,9 @@ describe('VCS', () => {
       await v.checkout('master');
 
       // Add something to master
-      const status1 = await v.status([{ id: 'foo', name: 'Foo', content: 'bar' }]);
-      await v.stage(status1.unstaged['foo']);
-      await v.commit('Add foo');
+      const status1 = await v.status([{ key: 'foo', name: 'Foo', content: 'bar' }]);
+      await v.stage([status1.unstaged['foo']]);
+      await v.takeSnapshot('Add foo');
 
       // Checkout branch
       await v.checkout('new-branch');
@@ -408,42 +434,45 @@ describe('VCS', () => {
     });
   });
 
-  describe('checkout()', () => {
-    it('creates a new branch', async () => {
+  describe('fork()', () => {
+    it('forks to a new branch', async () => {
       const v = new VCS('wrk_1', new MemoryDriver());
       await v.checkout('master');
 
       // Add something to master
-      const status1 = await v.status([{ id: 'foo', name: 'Foo', content: 'bar' }]);
-      await v.stage(status1.unstaged['foo']);
-      await v.commit('Add foo');
+      const status1 = await v.status([{ key: 'foo', name: 'Foo', content: 'bar' }]);
+      await v.stage([status1.unstaged['foo']]);
+      await v.takeSnapshot('Add foo');
 
       // Checkout branch
+      await v.fork('new-branch');
       await v.checkout('new-branch');
       const history = await v.getHistory();
       expect(await v.getBranch()).toBe('new-branch');
       expect(history).toEqual([
         {
-          author: 'acct_123',
-          id: '534ab31d04dc96b9f40a608955c5a5d3ee82f886',
+          created: expect.any(Date),
+          id: '3cf40b61d7ed271819aa8defd6212bf63aee6eae',
           parent: '0000000000000000000000000000000000000000',
-          message: 'Create branch from master',
-          timestamp: 1000000000002,
-          tree: '197aa2df26bffbc250c615c0463c0ee9fbc3e117',
+          name: 'Add foo',
+          description: '',
+          state: [
+            {
+              blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+              key: 'foo',
+              name: 'Foo',
+            },
+          ],
         },
       ]);
     });
   });
 
-  // TODO: This is a
-  //   multiline to-do
-  // Woo!
-
   const name = 'merge()';
   describe(name, () => {
-    it('does not merge if trees are the same', async () => {
-      throw new Error('Fix me');
-    });
+    // it('does not merge if trees are the same', async () => {
+    //   throw new Error('Fix me');
+    // });
 
     it('does something', async () => {
       const v = new VCS('wrk_1', new MemoryDriver());
@@ -451,50 +480,67 @@ describe('VCS', () => {
 
       // Add a file to master
       expect(await v.getBranch()).toBe('master');
-      const status1 = await v.status([{ id: 'a', name: 'A', content: 'aaa' }]);
-      await v.stage(status1.unstaged['a']);
-      await v.commit('Add A');
+      const status1 = await v.status([{ key: 'a', name: 'A', content: 'aaa' }]);
+      await v.stage([status1.unstaged['a']]);
+      await v.takeSnapshot('Add A');
       expect(await v.getHistory()).toEqual([
         {
-          author: 'acct_123',
-          id: '0baa0a746ac4fd75199adc181989b98194e09a3c',
-          parent: 'f548a2f5e500a7feeedcee332e7239e04cb38687',
-          message: 'Add A',
-          timestamp: 1000000000001,
-          tree: 'f2456325eec34054c836787d49b51b4e4cb1237b',
-        },
-        {
-          author: 'acct_123',
-          id: 'f548a2f5e500a7feeedcee332e7239e04cb38687',
+          id: '108e6d689aac1553b096f0161567902125246ce1',
+          created: expect.any(Date),
           parent: '0000000000000000000000000000000000000000',
-          message: 'Initial commit',
-          timestamp: 1000000000000,
-          tree: '0000000000000000000000000000000000000000',
+          name: 'Add A',
+          description: '',
+          state: [
+            {
+              blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+              key: 'a',
+              name: 'A',
+            },
+          ],
         },
       ]);
 
       // Checkout new branch and add file
+      await v.fork('new-branch');
       await v.checkout('new-branch');
       expect(await v.getBranch()).toBe('new-branch');
-      const status2 = await v.status([{ id: 'b', name: 'B', content: 'bbb' }]);
-      await v.stage(status2.unstaged['b']);
-      await v.commit('Add B');
+
+      const status2 = await v.status([{ key: 'b', name: 'B', content: 'bbb' }]);
+      await v.stage([status2.unstaged['b']]);
+      await v.takeSnapshot('Add B');
       expect(await v.getHistory()).toEqual([
         {
-          author: 'acct_123',
-          id: 'e608dab8e4761234dcb5dcbe2b71a4bc54bf55e4',
-          parent: '61d65017125915f4adf1307e851b70d82a8c0d5c',
-          message: 'Add B',
-          timestamp: 1000000000003,
-          tree: '64f6bd5979919970e524ff433daa4ff65c8e92a3',
+          id: '108e6d689aac1553b096f0161567902125246ce1',
+          created: expect.any(Date),
+          parent: '0000000000000000000000000000000000000000',
+          name: 'Add A',
+          description: '',
+          state: [
+            {
+              blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+              key: 'a',
+              name: 'A',
+            },
+          ],
         },
         {
-          author: 'acct_123',
-          id: '61d65017125915f4adf1307e851b70d82a8c0d5c',
-          parent: '0000000000000000000000000000000000000000',
-          message: 'Create branch from master',
-          timestamp: 1000000000002,
-          tree: 'f2456325eec34054c836787d49b51b4e4cb1237b',
+          id: 'cc7592fa3a19f2864d14b3b5dc2aae4616d038c7',
+          created: expect.any(Date),
+          parent: '108e6d689aac1553b096f0161567902125246ce1',
+          name: 'Add B',
+          description: '',
+          state: [
+            {
+              blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+              key: 'a',
+              name: 'A',
+            },
+            {
+              blob: 'a1c5176848e4fcd97e93e66970820321261ff105',
+              key: 'b',
+              name: 'B',
+            },
+          ],
         },
       ]);
 
@@ -504,44 +550,39 @@ describe('VCS', () => {
       await v.merge('new-branch');
       expect(await v.getHistory()).toEqual([
         {
-          author: 'acct_123',
-          id: '702939bf3881024814d73b06a5b6ded56a8ad2cd',
-          parent: '0baa0a746ac4fd75199adc181989b98194e09a3c',
-          message: 'Merge new-branch',
-          timestamp: 1000000000004,
-          tree: '64f6bd5979919970e524ff433daa4ff65c8e92a3',
-        },
-        {
-          author: 'acct_123',
-          id: '0baa0a746ac4fd75199adc181989b98194e09a3c',
-          parent: 'f548a2f5e500a7feeedcee332e7239e04cb38687',
-          message: 'Add A',
-          timestamp: 1000000000001,
-          tree: 'f2456325eec34054c836787d49b51b4e4cb1237b',
-        },
-        {
-          author: 'acct_123',
-          id: 'f548a2f5e500a7feeedcee332e7239e04cb38687',
+          id: '108e6d689aac1553b096f0161567902125246ce1',
+          created: expect.any(Date),
           parent: '0000000000000000000000000000000000000000',
-          message: 'Initial commit',
-          timestamp: 1000000000000,
-          tree: '0000000000000000000000000000000000000000',
+          name: 'Add A',
+          description: '',
+          state: [
+            {
+              blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+              key: 'a',
+              name: 'A',
+            },
+          ],
+        },
+        {
+          id: 'cc7592fa3a19f2864d14b3b5dc2aae4616d038c7',
+          created: expect.any(Date),
+          parent: '108e6d689aac1553b096f0161567902125246ce1',
+          name: 'Add B',
+          description: '',
+          state: [
+            {
+              blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+              key: 'a',
+              name: 'A',
+            },
+            {
+              blob: 'a1c5176848e4fcd97e93e66970820321261ff105',
+              key: 'b',
+              name: 'B',
+            },
+          ],
         },
       ]);
-    });
-  });
-
-  describe('integration examples', () => {
-    it('stores entities after commit', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout('master');
-
-      const status = await v.status([{ id: 'foo', name: 'Foo', content: 'bar' }]);
-      await v.stage(status.unstaged['foo']);
-      const { commit, tree } = await v.commit('Add foo');
-
-      const foo = await v._getBlob(tree['foo'].hash);
-      expect(foo).toBe('bar');
     });
   });
 });

@@ -140,50 +140,6 @@ export default class VCS {
     return stage;
   }
 
-  async _getBlob(id: string): Promise<Object> {
-    const blob = await this._store.getItem(paths.blob(this._project, id));
-    if (blob === null) {
-      throw new Error(`Failed to retrieve blob id=${id}`);
-    }
-
-    return blob;
-  }
-
-  async _getBlobs(ids: Array<string>): Promise<Array<Object>> {
-    const promises = [];
-    for (const id of ids) {
-      const p = paths.blob(this._project, id);
-      promises.push(this._store.getItem(p));
-    }
-
-    return Promise.all(promises);
-  }
-
-  async getBlobRaw(id: string): Promise<Buffer | null> {
-    if (!id || id === EMPTY_HASH) {
-      return null;
-    }
-
-    return this._store.getItemRaw(paths.blob(this._project, id));
-  }
-
-  async _storeBlob(id: string, content: Object | null): Promise<void> {
-    if (!id || id === EMPTY_HASH) {
-      return;
-    }
-
-    return this._store.setItem(paths.blob(this._project, id), content);
-  }
-
-  async _storeBlobs(map: { [string]: Object }): Promise<void> {
-    const promises = [];
-    for (const id of Object.keys(map)) {
-      promises.push(this._storeBlob(id, map[id]));
-    }
-
-    await Promise.all(promises);
-  }
-
   async fork(newBranchName: string): Promise<void> {
     if (await this._getBranch(newBranchName)) {
       throw new Error('Branch already exists by name ' + newBranchName);
@@ -197,8 +153,6 @@ export default class VCS {
     };
 
     await this._storeBranch(newBranch);
-
-    return newBranch;
   }
 
   async removeBranch(branchName: string): Promise<void> {
@@ -212,7 +166,7 @@ export default class VCS {
   }
 
   async checkout(branchName: string): Promise<void> {
-    const branch = await this._assertBranch(branchName);
+    const branch = await this._getOrCreateBranch(branchName);
     await this._storeHead({ branch: branch.name });
   }
 
@@ -628,7 +582,7 @@ export default class VCS {
     const next = async (ids: Array<string>) => {
       const blobs = [];
       for (const id of ids) {
-        const content = await this.getBlobRaw(id);
+        const content = await this._getBlobRaw(id);
         if (content === null) {
           throw new Error(`Failed to get blob id=${id}`);
         }
@@ -808,6 +762,50 @@ export default class VCS {
 
   async _clearStage(): Promise<void> {
     await this._store.removeItem(paths.stage());
+  }
+
+  async _getBlob(id: string): Promise<Object> {
+    const blob = await this._store.getItem(paths.blob(this._project, id));
+    if (blob === null) {
+      throw new Error(`Failed to retrieve blob id=${id}`);
+    }
+
+    return blob;
+  }
+
+  async _getBlobs(ids: Array<string>): Promise<Array<Object>> {
+    const promises = [];
+    for (const id of ids) {
+      const p = paths.blob(this._project, id);
+      promises.push(this._store.getItem(p));
+    }
+
+    return Promise.all(promises);
+  }
+
+  async _storeBlob(id: string, content: Object | null): Promise<void> {
+    if (!id || id === EMPTY_HASH) {
+      return;
+    }
+
+    return this._store.setItem(paths.blob(this._project, id), content);
+  }
+
+  async _storeBlobs(map: { [string]: Object }): Promise<void> {
+    const promises = [];
+    for (const id of Object.keys(map)) {
+      promises.push(this._storeBlob(id, map[id]));
+    }
+
+    await Promise.all(promises);
+  }
+
+  async _getBlobRaw(id: string): Promise<Buffer | null> {
+    if (!id || id === EMPTY_HASH) {
+      return null;
+    }
+
+    return this._store.getItemRaw(paths.blob(this._project, id));
   }
 }
 
