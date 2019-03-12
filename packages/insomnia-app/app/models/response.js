@@ -123,7 +123,7 @@ export async function getLatestForRequest(requestId: string): Promise<Response |
   return response || null;
 }
 
-export async function create(patch: Object = {}) {
+export async function create(patch: Object = {}, maxResponses: number = 20) {
   if (!patch.parentId) {
     throw new Error('New Response missing `parentId`');
   }

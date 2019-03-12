@@ -472,12 +472,12 @@ export default class VCS {
         body: JSON.stringify(
           {
             query: `
-          query ($projectId: ID!, $ids: [ID!]!) {
-            blobsMissing(project: $projectId, ids: $ids) {
-              missing 
-            }
-          }
-        `,
+              query ($projectId: ID!, $ids: [ID!]!) {
+                blobsMissing(project: $projectId, ids: $ids) {
+                  missing 
+                }
+              }
+            `,
             variables: {
               ids,
               projectId: this._project,
@@ -518,15 +518,15 @@ export default class VCS {
       body: JSON.stringify(
         {
           query: `
-          query ($projectId: ID!, $branch: String!) {
-            branch(project: $projectId, name: $branch) {
-              created
-              modified
-              name
-              snapshots
+            query ($projectId: ID!, $branch: String!) {
+              branch(project: $projectId, name: $branch) {
+                created
+                modified
+                name
+                snapshots
+              }
             }
-          }
-        `,
+          `,
           variables: {
             projectId: this._project,
             branch: branchName,
@@ -553,12 +553,12 @@ export default class VCS {
       body: JSON.stringify(
         {
           query: `
-          mutation ($projectId: ID!, $snapshot: SnapshotInput!, $branchName: String!) {
-            snapshotCreate(project: $projectId, snapshot: $snapshot, branch: $branchName) {
-              id
+            mutation ($projectId: ID!, $snapshot: SnapshotInput!, $branchName: String!) {
+              snapshotCreate(project: $projectId, snapshot: $snapshot, branch: $branchName) {
+                id
+              }
             }
-          }
-        `,
+          `,
           variables: {
             branchName: branch.name,
             projectId: this._project,
@@ -579,15 +579,11 @@ export default class VCS {
   }
 
   async queryPushBlobs(allIds: Array<string>): Promise<void> {
-    const next = async (ids: Array<string>) => {
-      const blobs = [];
-      for (const id of ids) {
-        const content = await this._getBlobRaw(id);
-        if (content === null) {
-          throw new Error(`Failed to get blob id=${id}`);
-        }
-        blobs.push({ id, content: content.toString('base64') });
-      }
+    const next = async (items: Array<{ id: string, content: Buffer }>) => {
+      const encodedBlobs = items.map(i => ({
+        id: i.id,
+        content: i.content.toString('base64'),
+      }));
 
       const resp = await window.fetch(this._location + '?blobsCreate', {
         method: 'POST',
@@ -598,14 +594,14 @@ export default class VCS {
         body: JSON.stringify(
           {
             query: `
-          mutation ($projectId: ID!, $blobs: [BlobInput!]!) {
-            blobsCreate(project: $projectId, blobs: $blobs) {
-              count
-            }
-          }
-        `,
+              mutation ($projectId: ID!, $blobs: [BlobInput!]!) {
+                blobsCreate(project: $projectId, blobs: $blobs) {
+                  count
+                }
+              }
+            `,
             variables: {
-              blobs,
+              blobs: encodedBlobs,
               projectId: this._project,
             },
           },
@@ -622,19 +618,31 @@ export default class VCS {
       return data.blobsCreate.count;
     };
 
-    // Push each missing blob in batches
-    const batchSize = 20;
+    // Push each missing blob in batches of 2MB max
     let count = 0;
     let batch = [];
+    let batchSizeBytes = 0;
+    const maxBatchSize = 1024 * 1024 * 2; // 2 MB
     for (let i = 0; i < allIds.length; i++) {
-      batch.push(allIds[i]);
-      if (batch.length > batchSize || i === allIds.length - 1) {
+      const id = allIds[i];
+      const content = await this._getBlobRaw(id);
+      if (content === null) {
+        throw new Error(`Failed to get blob id=${id}`);
+      }
+
+      batch.push({ id, content });
+      batchSizeBytes += content.length;
+      const isLastId = i === allIds.length - 1;
+      if (batchSizeBytes > maxBatchSize || isLastId) {
         count += await next(batch);
+        const batchSizeMB = Math.round((batchSizeBytes / 1024 / 1024) * 100) / 100;
+        console.log(`[sync] Uploaded ${count}/${allIds.length} blobs in batch ${batchSizeMB}MB`);
         batch = [];
+        batchSizeBytes = 0;
       }
     }
 
-    console.log('[sync] Uploaded blobs', count);
+    console.log(`[sync] Finished uploading ${count}/${allIds.length} blobs`);
   }
 
   async push(): Promise<void> {

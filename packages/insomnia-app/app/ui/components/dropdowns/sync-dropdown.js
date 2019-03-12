@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import { join as pathJoin } from 'path';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
@@ -11,6 +12,7 @@ import * as session from '../../../sync/session';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import type { BaseModel } from '../../../models';
+import { getDataDirectory } from '../../../common/misc';
 
 const MODEL_WHITELIST = {
   [models.workspace.type]: true,
@@ -45,7 +47,8 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   setupVCS() {
-    const driver = new FileSystemDriver({ directory: '/Users/gschier/Desktop/vcs' });
+    const directory = pathJoin(getDataDirectory(), 'sync2');
+    const driver = new FileSystemDriver({ directory });
     const author = session.getAccountId() || 'account_1';
     this.vcs = new VCS(
       'prj_15e703454c1841a79c88d5244fa0f2e5',
@@ -57,7 +60,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async refreshMainAttributes() {
-    const localBranches = await this.vcs.getBranches();
+    const localBranches = (await this.vcs.getBranches()).sort();
     const currentBranch = await this.vcs.getBranch();
 
     this.setState({
@@ -148,11 +151,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const { currentBranch } = this.state;
 
     const icon =
-      branch === currentBranch ? (
-        <i className="fa fa-tag" />
-      ) : (
-        <i className="fa fa-tag ultra-faint" />
-      );
+      branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
 
     const isCurrentBranch = branch === currentBranch;
     return (
@@ -189,7 +188,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         <Dropdown wide className="wide tall" onOpen={this._handleOpen}>
           <DropdownButton className="btn btn--compact wide">{this.renderButton()}</DropdownButton>
 
-          <DropdownDivider>Branch: {currentBranch}</DropdownDivider>
+          <DropdownDivider>{currentBranch}</DropdownDivider>
           <DropdownItem onClick={this._handlePush}>
             <i className="fa fa-upload" />
             Push Snapshots
@@ -200,7 +199,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
             Create Snapshot
           </DropdownItem>
 
-          <DropdownDivider>Branches</DropdownDivider>
+          <DropdownDivider>Select Branch</DropdownDivider>
           {localBranches.map(this.renderBranch)}
         </Dropdown>
       </div>

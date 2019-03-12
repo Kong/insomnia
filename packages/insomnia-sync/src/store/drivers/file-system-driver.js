@@ -28,12 +28,21 @@ export default class FileSystemDriver implements BaseDriver {
 
   setItem(key: string, value: Buffer): Promise<void> {
     return new Promise((resolve, reject) => {
-      fs.writeFile(this._getKeyPath(key), value, 'utf8', err => {
+      const finalPath = this._getKeyPath(key);
+      const tmpPath = finalPath + '.tmp';
+
+      // This method implements atomic writes by first writing to a temporary
+      // file (non-atomic) then renaming the file to the final value (atomic)
+      fs.writeFile(tmpPath, value, 'utf8', err => {
         if (err) {
-          reject(err);
-        } else {
-          resolve();
+          return reject(err);
         }
+        fs.rename(tmpPath, finalPath, err => {
+          if (err) {
+            return reject(err);
+          }
+          resolve();
+        });
       });
     });
   }
