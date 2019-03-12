@@ -25,28 +25,42 @@ describe('store', () => {
       });
 
       it('clears all values', async () => {
-        const d = new Driver();
+        const s = new Store(new Driver());
 
-        await d.setItem('a', 'aaa');
-        await d.setItem('b', 'bbb');
-        await d.clear();
+        await s.setItem('a', 'aaa');
+        await s.setItem('b', 'bbb');
+        await s.clear();
 
-        expect(await d.hasItem('a')).toBe(false);
-        expect(await d.hasItem('b')).toBe(false);
+        expect(await s.hasItem('a')).toBe(false);
+        expect(await s.hasItem('b')).toBe(false);
+      });
+
+      it('stores buffers directly', async () => {
+        const s = new Store(new Driver());
+
+        await s.setItem('buff', Buffer.from(`{"hi": "there"}`, 'utf8'));
+        await s.setItem('json', { hi: 'there' });
+
+        expect(await s.getItem('buff')).toEqual({ hi: 'there' });
+        expect(await s.getItem('json')).toEqual({ hi: 'there' });
+
+        expect((await s._driver.getItem('buff')).toString('utf8')).toEqual(`{"hi": "there"}`);
+        expect((await s._driver.getItem('json')).toString('utf8')).toEqual(`{\n  "hi": "there"\n}`);
       });
     });
   }
-});
 
-describe('hooks', async () => {
-  const s = new Store(new MemoryDriver(), [
-    {
-      read: s => decodeURIComponent(s),
-      write: s => encodeURIComponent(s),
-    },
-  ]);
+  it('supports hooks', async () => {
+    const s = new Store(new MemoryDriver(), [
+      {
+        // Just some dumb hooks to test with
+        read: (ext, buff) => Buffer.from(buff.toString('utf8').replace('WORLD', 'World')),
+        write: (ext, buff) => Buffer.from(buff.toString('utf8').replace('World', 'WORLD')),
+      },
+    ]);
 
-  await s.setItem('foo', 'Hello World!');
-  expect(await s._driver.getItem('foo')).toBe('%22Hello%20World!%22');
-  expect(await s.getItem('foo')).toBe('Hello World!');
+    await s.setItem('foo', { Hello: 'World!' });
+    expect((await s._driver.getItem('foo')).toString('utf8')).toBe('{\n  "Hello": "WORLD!"\n}');
+    expect(await s.getItem('foo')).toEqual({ Hello: 'World!' });
+  });
 });

@@ -55,24 +55,24 @@ export default class VCS {
 
     const stateMap = generateStateMap(snapshot);
 
-    for (const { key, name, content } of candidates) {
-      const blob = jsonHash(content);
+    for (const { key, name, document } of candidates) {
+      const { hash: blobId, content: blobContent } = jsonHash(document);
 
       // Already staged
-      if (stage[key] && stage[key].blob === blob) {
+      if (stage[key] && stage[key].blobId === blobId) {
         continue;
       }
 
       // Unchanged so don't care
-      if (stateMap[key] && stateMap[key].blob === blob) {
+      if (stateMap[key] && stateMap[key].blob === blobId) {
         continue;
       }
 
       const alreadyExisted = stateMap.hasOwnProperty(key);
       if (alreadyExisted) {
-        unstaged[key] = { key, name, blob, content, modified: true };
+        unstaged[key] = { key, name, blobId, blobContent, modified: true };
       } else {
-        unstaged[key] = { key, name, blob, content, added: true };
+        unstaged[key] = { key, name, blobId, blobContent, added: true };
       }
     }
 
@@ -98,7 +98,7 @@ export default class VCS {
       key: '',
     };
 
-    status.key = jsonHash(status);
+    status.key = jsonHash(status).hash;
 
     return status;
   }
@@ -111,13 +111,13 @@ export default class VCS {
   async stage(candidates: Array<StageEntry>): Promise<Stage> {
     const stage: Stage = await this.getStage();
 
-    const blobsToStore: { [string]: Object } = {};
+    const blobsToStore: { [string]: string } = {};
     for (const candidate of candidates) {
       stage[candidate.key] = candidate;
 
       // Only store blobs if we're not deleting it
       if (candidate.added || candidate.modified) {
-        blobsToStore[candidate.blob] = candidate.content;
+        blobsToStore[candidate.blobId] = candidate.blobContent;
       }
     }
 
@@ -212,10 +212,14 @@ export default class VCS {
         continue;
       }
 
-      const blobId: string | null = candidate ? jsonHash(candidate.content) : null;
-      if (blobId !== null && entry.blob !== blobId) {
+      // It's updated
+      const { hash: blobId } = jsonHash(candidate.document);
+      if (entry.blob !== blobId) {
         updatedBlobIds.push(entry.blob);
+        continue;
       }
+
+      // It's the same, so nothing to do
     }
 
     result.updated = await this._getBlobs(updatedBlobIds);
@@ -428,7 +432,7 @@ export default class VCS {
         continue;
       }
 
-      const { name, blob } = entry;
+      const { name, blobId: blob } = entry;
       newState.push({ key, name, blob });
     }
 
@@ -799,10 +803,11 @@ export default class VCS {
     return this._store.setItem(paths.blob(this._project, id), content);
   }
 
-  async _storeBlobs(map: { [string]: Object }): Promise<void> {
+  async _storeBlobs(map: { [string]: string }): Promise<void> {
     const promises = [];
     for (const id of Object.keys(map)) {
-      promises.push(this._storeBlob(id, map[id]));
+      const buff = Buffer.from(map[id], 'utf8');
+      promises.push(this._storeBlob(id, buff));
     }
 
     await Promise.all(promises);

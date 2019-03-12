@@ -49,16 +49,16 @@ export type StageEntryAdd = {|
   added: true,
   key: string,
   name: string,
-  blob: string,
-  content: Object,
+  blobId: string,
+  blobContent: string,
 |};
 
 export type StageEntryModify = {|
   modified: true,
   key: string,
   name: string,
-  blob: string,
-  content: Object,
+  blobId: string,
+  blobContent: string,
 |};
 
 export type StageEntry = StageEntryDelete | StageEntryAdd | StageEntryModify;
@@ -70,7 +70,7 @@ export type Stage = {
 export type StatusCandidate = {|
   key: DocumentKey,
   name: string,
-  content: Object,
+  document: Object,
 |};
 
 export type StatusCandidateMap = { [DocumentKey]: StatusCandidate };

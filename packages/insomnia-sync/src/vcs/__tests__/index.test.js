@@ -1,6 +1,10 @@
 import VCS from '../';
 import MemoryDriver from '../../store/drivers/memory-driver';
 
+function newDoc(id) {
+  return { id };
+}
+
 describe('VCS', () => {
   beforeEach(() => {
     let ts = 1000000000000;
@@ -13,30 +17,34 @@ describe('VCS', () => {
       await v.checkout('master');
 
       const status = await v.status([
-        { key: 'foo', name: 'Foo', content: 'bar' },
+        {
+          key: 'foo',
+          name: 'Foo',
+          document: newDoc('bar'),
+        },
         {
           key: 'baz',
           name: 'Baz',
-          content: 'qux',
+          document: newDoc('qux'),
         },
       ]);
 
       expect(status).toEqual({
-        key: 'df38f4b880dda9d746d376437c37cb8279027699',
+        key: 'ae21cdccbf8c16d8d559b701c9604949b40d12ed',
         stage: {},
         unstaged: {
           foo: {
             added: true,
             key: 'foo',
-            content: 'bar',
-            blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+            blobContent: '{"id":"bar"}',
+            blobId: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
             name: 'Foo',
           },
           baz: {
             added: true,
             key: 'baz',
-            content: 'qux',
-            blob: '297880f41344b3d6712a26c3af39874aee73e68a',
+            blobContent: '{"id":"qux"}',
+            blobId: 'dc61fb5cb183286293dc7f0e8499b4e1e09eef05',
             name: 'Baz',
           },
         },
@@ -48,9 +56,9 @@ describe('VCS', () => {
       await v.checkout('master');
 
       const status1 = await v.status([
-        { key: 'a', name: 'A', content: 'aaa' },
-        { key: 'b', name: 'B', content: 'bbb' },
-        { key: 'c', name: 'C', content: 'ccc' },
+        { key: 'a', name: 'A', document: newDoc('aaa') },
+        { key: 'b', name: 'B', document: newDoc('bbb') },
+        { key: 'c', name: 'C', document: newDoc('ccc') },
       ]);
       expect(Object.keys(status1.unstaged)).toEqual(['a', 'b', 'c']);
 
@@ -63,22 +71,22 @@ describe('VCS', () => {
         {
           created: expect.any(Date),
           description: '',
-          id: 'de8e451b54dc0643f7407a01ca4f9aa3b316ceef',
+          id: '6761e77e27c6158f84f00212e2dfa5fa9ef16dd9',
           name: 'Add a/b/c',
           parent: '0000000000000000000000000000000000000000',
           state: [
             {
-              blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+              blob: '210be55f7998bb55805f9d65c5345103e7957929',
               key: 'a',
               name: 'A',
             },
             {
-              blob: 'a1c5176848e4fcd97e93e66970820321261ff105',
+              blob: '8ce1aded8fa999d1c5632ff993b56dd9aa1f4880',
               key: 'b',
               name: 'B',
             },
             {
-              blob: '621e19938969bfbedb2b7d52d6e3becda92d4dd3',
+              blob: 'ce29c03e80866a215004d55f160a9a7b510ceacb',
               key: 'c',
               name: 'C',
             },
@@ -88,14 +96,14 @@ describe('VCS', () => {
 
       // Should get every operation type
       const status = await v.status([
-        { key: 'notA', name: 'Not A', content: 'aaa' },
-        { key: 'b', name: 'B', content: 'bbb' },
-        { key: 'c', name: 'C', content: 'modified' },
-        { key: 'd', name: 'D', content: 'ddd' },
+        { key: 'notA', name: 'Not A', document: newDoc('aaa') },
+        { key: 'b', name: 'B', document: newDoc('bbb') },
+        { key: 'c', name: 'C', document: newDoc('modified') },
+        { key: 'd', name: 'D', document: newDoc('ddd') },
       ]);
 
       expect(status).toEqual({
-        key: '07e0837f56f314519214438a428773055f1e89c2',
+        key: 'e0e8f9c6a206a14def57c29cd0dd4d2aaa52826e',
         stage: {},
         unstaged: {
           a: {
@@ -105,24 +113,24 @@ describe('VCS', () => {
           },
           notA: {
             added: true,
-            blob: 'a25088df90102215f8c5d2316b88780eb8837719',
             key: 'notA',
             name: 'Not A',
-            content: 'aaa',
+            blobId: '210be55f7998bb55805f9d65c5345103e7957929',
+            blobContent: '{"id":"aaa"}',
           },
           c: {
             modified: true,
-            blob: '852c13f844dbde131c16e0075e73482d715c1db2',
             key: 'c',
             name: 'C',
-            content: 'modified',
+            blobId: 'c32090250612936632fa4a3127507aa0694ba375',
+            blobContent: '{"id":"modified"}',
           },
           d: {
             added: true,
-            blob: 'c277a65b373a73686743876215d52f72d0991a24',
             key: 'd',
             name: 'D',
-            content: 'ddd',
+            blobId: 'd4d10ce251d7184fa14587796aed6e06c549f7a4',
+            blobContent: '{"id":"ddd"}',
           },
         },
       });
@@ -135,14 +143,14 @@ describe('VCS', () => {
       ]);
 
       const status2 = await v.status([
-        { key: 'notA', name: 'Not A', content: 'aaa' },
-        { key: 'b', name: 'B', content: 'bbb' },
-        { key: 'c', name: 'C', content: 'modified' },
-        { key: 'd', name: 'D', content: 'ddd' },
+        { key: 'notA', name: 'Not A', document: newDoc('aaa') },
+        { key: 'b', name: 'B', document: newDoc('bbb') },
+        { key: 'c', name: 'C', document: newDoc('modified') },
+        { key: 'd', name: 'D', document: newDoc('ddd') },
       ]);
 
       expect(status2).toEqual({
-        key: 'effd8aee048be3de0d8706dcf7970162354ee017',
+        key: '4e1f4ec1cc18b24318c1a156de4b2d96a542ba62',
         stage: {
           a: {
             deleted: true,
@@ -151,24 +159,24 @@ describe('VCS', () => {
           },
           notA: {
             added: true,
-            blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+            blobId: '210be55f7998bb55805f9d65c5345103e7957929',
             key: 'notA',
             name: 'Not A',
-            content: 'aaa',
+            blobContent: '{"id":"aaa"}',
           },
           c: {
             modified: true,
-            blob: '852c13f844dbde131c16e0075e73482d715c1db2',
+            blobId: 'c32090250612936632fa4a3127507aa0694ba375',
             key: 'c',
             name: 'C',
-            content: 'modified',
+            blobContent: '{"id":"modified"}',
           },
           d: {
             added: true,
-            blob: 'c277a65b373a73686743876215d52f72d0991a24',
+            blobId: 'd4d10ce251d7184fa14587796aed6e06c549f7a4',
             key: 'd',
             name: 'D',
-            content: 'ddd',
+            blobContent: '{"id":"ddd"}',
           },
         },
         unstaged: {},
@@ -180,41 +188,41 @@ describe('VCS', () => {
       await v.checkout('master');
 
       const status = await v.status([
-        { key: 'a', name: 'A', content: 'aaa' },
-        { key: 'b', name: 'B', content: 'bbb' },
+        { key: 'a', name: 'A', document: newDoc('aaa') },
+        { key: 'b', name: 'B', document: newDoc('bbb') },
       ]);
       await v.stage([status.unstaged['a']]);
 
       const status2 = await v.status([
-        { key: 'a', name: 'A', content: 'modified' },
-        { key: 'b', name: 'B', content: 'bbb' },
+        { key: 'a', name: 'A', document: newDoc('modified') },
+        { key: 'b', name: 'B', document: newDoc('bbb') },
       ]);
 
       expect(status2).toEqual({
-        key: '7325dc3d7fe8420e11d79abb74baafe5433579a1',
+        key: 'e2669f9aae595e31e1010b3f67abf721d9da56ed',
         stage: {
           a: {
             added: true,
-            blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+            blobId: '210be55f7998bb55805f9d65c5345103e7957929',
             name: 'A',
             key: 'a',
-            content: 'aaa',
+            blobContent: '{"id":"aaa"}',
           },
         },
         unstaged: {
           a: {
             added: true,
-            blob: '852c13f844dbde131c16e0075e73482d715c1db2',
+            blobId: 'c32090250612936632fa4a3127507aa0694ba375',
             key: 'a',
             name: 'A',
-            content: 'modified',
+            blobContent: '{"id":"modified"}',
           },
           b: {
             added: true,
-            blob: 'a1c5176848e4fcd97e93e66970820321261ff105',
+            blobId: '8ce1aded8fa999d1c5632ff993b56dd9aa1f4880',
             name: 'B',
             key: 'b',
-            content: 'bbb',
+            blobContent: '{"id":"bbb"}',
           },
         },
       });
@@ -224,11 +232,11 @@ describe('VCS', () => {
       const v = new VCS('wrk_1', new MemoryDriver());
       await v.checkout('master');
 
-      const status = await v.status([{ key: 'foo', name: 'Foo', content: 'bar' }]);
+      const status = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }]);
       await v.stage([status.unstaged['foo']]);
       await v.takeSnapshot('Add foo');
 
-      const status2 = await v.status([{ key: 'foo', name: 'Foo', content: 'bar' }]);
+      const status2 = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }]);
       expect(status2).toEqual({
         key: 'a879eff7f977bb847932749776643a491bec00c7',
         stage: {},
@@ -243,8 +251,8 @@ describe('VCS', () => {
       await v.checkout('master');
 
       const status = await v.status([
-        { key: 'foo', name: 'Foo', content: 'bar' },
-        { key: 'baz', name: 'Baz', content: 'qux' },
+        { key: 'foo', name: 'Foo', document: newDoc('bar') },
+        { key: 'baz', name: 'Baz', document: newDoc('qux') },
       ]);
 
       const stage = await v.stage([status.unstaged['foo']]);
@@ -252,24 +260,24 @@ describe('VCS', () => {
         foo: {
           key: 'foo',
           name: 'Foo',
-          content: 'bar',
-          blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+          blobContent: '{"id":"bar"}',
+          blobId: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
           added: true,
         },
       });
 
       const status2 = await v.status([
-        { key: 'foo', name: 'Foo', content: 'bar' },
-        { key: 'baz', name: 'Baz', content: 'qux' },
+        { key: 'foo', name: 'Foo', document: newDoc('bar') },
+        { key: 'baz', name: 'Baz', document: newDoc('qux') },
       ]);
       expect(status2).toEqual({
-        key: '65f99ae937aca2ed7947a13be349f390eb32fe41',
+        key: '3b2409ae62d0550e3bfbeea4d063dc2bbca6cae5',
         stage: {
           foo: {
             name: 'Foo',
             key: 'foo',
-            content: 'bar',
-            blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+            blobContent: '{"id":"bar"}',
+            blobId: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
             added: true,
           },
         },
@@ -277,8 +285,8 @@ describe('VCS', () => {
           baz: {
             key: 'baz',
             name: 'Baz',
-            content: 'qux',
-            blob: '297880f41344b3d6712a26c3af39874aee73e68a',
+            blobContent: '{"id":"qux"}',
+            blobId: 'dc61fb5cb183286293dc7f0e8499b4e1e09eef05',
             added: true,
           },
         },
@@ -291,21 +299,21 @@ describe('VCS', () => {
       const v = new VCS('wrk_1', new MemoryDriver());
       await v.checkout('master');
 
-      const status = await v.status([{ key: 'foo', name: 'Foo', content: 'bar' }]);
+      const status = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }]);
       await v.stage([status.unstaged['foo']]);
       await v.takeSnapshot('Add foo');
 
       const history = await v.getHistory();
       expect(history).toEqual([
         {
-          id: '3cf40b61d7ed271819aa8defd6212bf63aee6eae',
+          id: '37d0db42b703ffcf6331dc4fc2d9233575edac2a',
           created: expect.any(Date),
           name: 'Add foo',
           description: '',
           parent: '0000000000000000000000000000000000000000',
           state: [
             {
-              blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+              blob: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
               key: 'foo',
               name: 'Foo',
             },
@@ -318,21 +326,21 @@ describe('VCS', () => {
       const v = new VCS('wrk_1', new MemoryDriver());
       await v.checkout('master');
 
-      const status = await v.status([{ key: 'foo', name: 'Foo', content: 'bar' }]);
+      const status = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }]);
       await v.stage([status.unstaged['foo']]);
       await v.takeSnapshot('Add foo');
 
       const history = await v.getHistory();
       expect(history).toEqual([
         {
-          id: '3cf40b61d7ed271819aa8defd6212bf63aee6eae',
+          id: '37d0db42b703ffcf6331dc4fc2d9233575edac2a',
           created: expect.any(Date),
           name: 'Add foo',
           description: '',
           parent: '0000000000000000000000000000000000000000',
           state: [
             {
-              blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+              blob: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
               key: 'foo',
               name: 'Foo',
             },
@@ -347,25 +355,25 @@ describe('VCS', () => {
 
       expect(history2).toEqual([
         {
-          id: '3cf40b61d7ed271819aa8defd6212bf63aee6eae',
+          id: '37d0db42b703ffcf6331dc4fc2d9233575edac2a',
           created: expect.any(Date),
           name: 'Add foo',
           description: '',
           parent: '0000000000000000000000000000000000000000',
           state: [
             {
-              blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+              blob: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
               key: 'foo',
               name: 'Foo',
             },
           ],
         },
         {
-          id: 'ce9293f9915adb9763837e3fff7730d45b2e0660',
+          id: '00345d33c3319c869a544e8e34496bf73df07e08',
           created: expect.any(Date),
           name: 'Delete foo',
           description: '',
-          parent: '3cf40b61d7ed271819aa8defd6212bf63aee6eae',
+          parent: '37d0db42b703ffcf6331dc4fc2d9233575edac2a',
           state: [],
         },
       ]);
@@ -419,7 +427,7 @@ describe('VCS', () => {
       await v.checkout('master');
 
       // Add something to master
-      const status1 = await v.status([{ key: 'foo', name: 'Foo', content: 'bar' }]);
+      const status1 = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }]);
       await v.stage([status1.unstaged['foo']]);
       await v.takeSnapshot('Add foo');
 
@@ -440,7 +448,7 @@ describe('VCS', () => {
       await v.checkout('master');
 
       // Add something to master
-      const status1 = await v.status([{ key: 'foo', name: 'Foo', content: 'bar' }]);
+      const status1 = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }]);
       await v.stage([status1.unstaged['foo']]);
       await v.takeSnapshot('Add foo');
 
@@ -452,13 +460,13 @@ describe('VCS', () => {
       expect(history).toEqual([
         {
           created: expect.any(Date),
-          id: '3cf40b61d7ed271819aa8defd6212bf63aee6eae',
+          id: '37d0db42b703ffcf6331dc4fc2d9233575edac2a',
           parent: '0000000000000000000000000000000000000000',
           name: 'Add foo',
           description: '',
           state: [
             {
-              blob: 'bdb2d8e7caa188ed5cb1b0295f65ce5e242b4324',
+              blob: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
               key: 'foo',
               name: 'Foo',
             },
@@ -480,19 +488,19 @@ describe('VCS', () => {
 
       // Add a file to master
       expect(await v.getBranch()).toBe('master');
-      const status1 = await v.status([{ key: 'a', name: 'A', content: 'aaa' }]);
+      const status1 = await v.status([{ key: 'a', name: 'A', document: newDoc('aaa') }]);
       await v.stage([status1.unstaged['a']]);
       await v.takeSnapshot('Add A');
       expect(await v.getHistory()).toEqual([
         {
-          id: '108e6d689aac1553b096f0161567902125246ce1',
+          id: 'fd2b39c128ecbb478d3b485a3de75317c824a207',
           created: expect.any(Date),
           parent: '0000000000000000000000000000000000000000',
           name: 'Add A',
           description: '',
           state: [
             {
-              blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+              blob: '210be55f7998bb55805f9d65c5345103e7957929',
               key: 'a',
               name: 'A',
             },
@@ -505,38 +513,38 @@ describe('VCS', () => {
       await v.checkout('new-branch');
       expect(await v.getBranch()).toBe('new-branch');
 
-      const status2 = await v.status([{ key: 'b', name: 'B', content: 'bbb' }]);
+      const status2 = await v.status([{ key: 'b', name: 'B', document: newDoc('bbb') }]);
       await v.stage([status2.unstaged['b']]);
       await v.takeSnapshot('Add B');
       expect(await v.getHistory()).toEqual([
         {
-          id: '108e6d689aac1553b096f0161567902125246ce1',
+          id: 'fd2b39c128ecbb478d3b485a3de75317c824a207',
           created: expect.any(Date),
           parent: '0000000000000000000000000000000000000000',
           name: 'Add A',
           description: '',
           state: [
             {
-              blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+              blob: '210be55f7998bb55805f9d65c5345103e7957929',
               key: 'a',
               name: 'A',
             },
           ],
         },
         {
-          id: 'cc7592fa3a19f2864d14b3b5dc2aae4616d038c7',
+          id: '73ca8b5e0f7e38b3ae07162d757282f232f9a75a',
           created: expect.any(Date),
-          parent: '108e6d689aac1553b096f0161567902125246ce1',
+          parent: 'fd2b39c128ecbb478d3b485a3de75317c824a207',
           name: 'Add B',
           description: '',
           state: [
             {
-              blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+              blob: '210be55f7998bb55805f9d65c5345103e7957929',
               key: 'a',
               name: 'A',
             },
             {
-              blob: 'a1c5176848e4fcd97e93e66970820321261ff105',
+              blob: '8ce1aded8fa999d1c5632ff993b56dd9aa1f4880',
               key: 'b',
               name: 'B',
             },
@@ -550,33 +558,33 @@ describe('VCS', () => {
       await v.merge('new-branch');
       expect(await v.getHistory()).toEqual([
         {
-          id: '108e6d689aac1553b096f0161567902125246ce1',
+          id: 'fd2b39c128ecbb478d3b485a3de75317c824a207',
           created: expect.any(Date),
           parent: '0000000000000000000000000000000000000000',
           name: 'Add A',
           description: '',
           state: [
             {
-              blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+              blob: '210be55f7998bb55805f9d65c5345103e7957929',
               key: 'a',
               name: 'A',
             },
           ],
         },
         {
-          id: 'cc7592fa3a19f2864d14b3b5dc2aae4616d038c7',
+          id: '73ca8b5e0f7e38b3ae07162d757282f232f9a75a',
           created: expect.any(Date),
-          parent: '108e6d689aac1553b096f0161567902125246ce1',
+          parent: 'fd2b39c128ecbb478d3b485a3de75317c824a207',
           name: 'Add B',
           description: '',
           state: [
             {
-              blob: 'a25088df90102215f8c5d2316b88780eb8837719',
+              blob: '210be55f7998bb55805f9d65c5345103e7957929',
               key: 'a',
               name: 'A',
             },
             {
-              blob: 'a1c5176848e4fcd97e93e66970820321261ff105',
+              blob: '8ce1aded8fa999d1c5632ff993b56dd9aa1f4880',
               key: 'b',
               name: 'B',
             },

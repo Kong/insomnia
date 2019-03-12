@@ -21,7 +21,7 @@ export default class Store {
     return this._driver.hasItem(key);
   }
 
-  async setItem(key: string, value: JSONValue): Promise<void> {
+  async setItem(key: string, value: JSONValue | Buffer): Promise<void> {
     const ext = path.extname(key);
     let serializedValue;
     try {
@@ -68,21 +68,21 @@ export default class Store {
     return this._driver.clear();
   }
 
-  async _serialize(ext: string, raw: any): Promise<Buffer> {
-    const strValue = JSON.stringify(raw, null, 2);
-    let value = Buffer.from(strValue, 'utf8');
+  async _serialize(ext: string, raw: JSONValue | Buffer): Promise<Buffer> {
+    let buff = raw instanceof Buffer ? raw : Buffer.from(JSON.stringify(raw, null, 2), 'utf8');
+
     for (const hook of this._hooks) {
       if (!hook.write) {
         continue;
       }
 
-      value = await hook.write(ext, value);
+      buff = await hook.write(ext, buff);
     }
 
-    return value;
+    return buff;
   }
 
-  async _deserialize(ext: string, value: Buffer): Promise<any | null> {
+  async _deserialize(ext: string, value: Buffer): Promise<JSONValue | null> {
     for (const hook of this._hooks) {
       if (!hook.read) {
         continue;

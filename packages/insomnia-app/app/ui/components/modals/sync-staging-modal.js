@@ -168,7 +168,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     await this.updateStatus({ message: '', error: '' });
   }
 
-  async generateStatusItems(): Promise<Array<{ key: string, name: string, content: Object }>> {
+  async generateStatusItems(): Promise<Array<syncTypes.StatusCandidate>> {
     const items = [];
     const allDocs = await db.withDescendants(this.props.workspace);
     const docs = allDocs.filter(d => WHITE_LIST[d.type] && !(d: any).isPrivate);
@@ -177,7 +177,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       items.push({
         key: doc._id,
         name: (doc: any).name || 'No Name',
-        content: doc,
+        document: doc,
       });
     }
 
@@ -188,7 +188,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     const items = await this.generateStatusItems();
     const itemsMap = {};
     for (const item of items) {
-      itemsMap[item.key] = item.content;
+      itemsMap[item.key] = item.document;
     }
 
     db.bufferChanges();
