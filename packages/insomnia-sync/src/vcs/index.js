@@ -470,34 +470,21 @@ export default class VCS {
 
   async queryBlobsMissing(state: SnapshotState): Promise<Array<string>> {
     const next = async (ids: Array<string>) => {
-      const resp = await window.fetch(this._location + '?missing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Session-ID': this._sessionId },
-        body: JSON.stringify(
-          {
-            query: `
-              query ($projectId: ID!, $ids: [ID!]!) {
-                blobsMissing(project: $projectId, ids: $ids) {
-                  missing 
-                }
-              }
-            `,
-            variables: {
-              ids,
-              projectId: this._project,
-            },
-          },
-          null,
-          2,
-        ),
-      });
-
-      const { data, errors } = await resp.json();
-      if (errors && errors.length) {
-        throw new Error('Failed to fetch blobs');
-      }
-
-      return data.blobsMissing.missing;
+      const { blobsMissing } = await this._runGraphQL(
+        `
+          query ($projectId: ID!, $ids: [ID!]!) {
+            blobsMissing(project: $projectId, ids: $ids) {
+              missing 
+            }
+          }
+        `,
+        {
+          ids,
+          projectId: this._project,
+        },
+        'missingBlobs',
+      );
+      return blobsMissing.missing;
     };
 
     const missingIds = [];
@@ -516,70 +503,45 @@ export default class VCS {
   }
 
   async queryBranch(branchName: string): Promise<Branch> {
-    const resp = await window.fetch(this._location + '?branch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Session-ID': this._sessionId },
-      body: JSON.stringify(
-        {
-          query: `
-            query ($projectId: ID!, $branch: String!) {
-              branch(project: $projectId, name: $branch) {
-                created
-                modified
-                name
-                snapshots
-              }
-            }
-          `,
-          variables: {
-            projectId: this._project,
-            branch: branchName,
-          },
-        },
-        null,
-        2,
-      ),
-    });
+    const { branch } = await this._runGraphQL(
+      `
+      query ($projectId: ID!, $branch: String!) {
+        branch(project: $projectId, name: $branch) {
+          created
+          modified
+          name
+          snapshots
+        }
+      }`,
+      {
+        projectId: this._project,
+        branch: branchName,
+      },
+      'branch',
+    );
 
-    const { data, errors } = await resp.json();
-    if (errors && errors.length) {
-      throw new Error('Failed to fetch branch');
-    }
-
-    return data.branch;
+    return branch;
   }
 
   async queryPushSnapshot(snapshot: Snapshot): Promise<void> {
     const branch = await this._getCurrentBranch();
-    const resp = await window.fetch(this._location + '?snapshotPush', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Session-ID': this._sessionId },
-      body: JSON.stringify(
-        {
-          query: `
-            mutation ($projectId: ID!, $snapshot: SnapshotInput!, $branchName: String!) {
-              snapshotCreate(project: $projectId, snapshot: $snapshot, branch: $branchName) {
-                id
-              }
-            }
-          `,
-          variables: {
-            branchName: branch.name,
-            projectId: this._project,
-            snapshot,
-          },
-        },
-        null,
-        2,
-      ),
-    });
+    const { snapshotCreate } = await this._runGraphQL(
+      `
+        mutation ($projectId: ID!, $snapshot: SnapshotInput!, $branchName: String!) {
+          snapshotCreate(project: $projectId, snapshot: $snapshot, branch: $branchName) {
+            id
+          }
+        }
+      `,
+      {
+        branchName: branch.name,
+        projectId: this._project,
+        snapshot,
+      },
+      'snapshotPush',
+    );
 
-    const { data, errors } = await resp.json();
-    if (errors && errors.length) {
-      throw new Error('Failed to push snapshot: ' + JSON.stringify(errors));
-    }
-
-    console.log('[sync] Pushed snapshot', data.snapshotCreate.id);
+    console.log('[sync] Pushed snapshot', snapshotCreate.id);
   }
 
   async queryPushBlobs(allIds: Array<string>): Promise<void> {
@@ -589,37 +551,22 @@ export default class VCS {
         content: i.content.toString('base64'),
       }));
 
-      const resp = await window.fetch(this._location + '?blobsCreate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-ID': this._sessionId,
+      const { blobsCreate } = await this._runGraphQL(
+        `
+          mutation ($projectId: ID!, $blobs: [BlobInput!]!) {
+            blobsCreate(project: $projectId, blobs: $blobs) {
+              count
+            }
+          }
+        `,
+        {
+          blobs: encodedBlobs,
+          projectId: this._project,
         },
-        body: JSON.stringify(
-          {
-            query: `
-              mutation ($projectId: ID!, $blobs: [BlobInput!]!) {
-                blobsCreate(project: $projectId, blobs: $blobs) {
-                  count
-                }
-              }
-            `,
-            variables: {
-              blobs: encodedBlobs,
-              projectId: this._project,
-            },
-          },
-          null,
-          2,
-        ),
-      });
+        'blobsCreate',
+      );
 
-      const { data, errors } = await resp.json();
-      if (errors && errors.length) {
-        throw new Error('Failed to upload blob');
-      }
-
-      return data.blobsCreate.count;
+      return blobsCreate.count;
     };
 
     // Push each missing blob in batches of 2MB max
@@ -680,6 +627,21 @@ export default class VCS {
 
       await this.queryPushSnapshot(snapshot);
     }
+  }
+
+  async _runGraphQL(query: string, variables: { [string]: any }, name: string): Promise<Object> {
+    const resp = await window.fetch(this._location + '?' + name, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Session-ID': this._sessionId },
+      body: JSON.stringify({ query, variables }, null, 2),
+    });
+
+    const { data, errors } = await resp.json();
+    if (errors && errors.length) {
+      throw new Error(`Failed to query ${name}`);
+    }
+
+    return data;
   }
 
   async _getProject(): Promise<Project | null> {
