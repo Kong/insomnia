@@ -171,7 +171,7 @@ describe('app.export.*', () => {
       __export_format: 3,
       __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
       _type: 'export',
-      resources: [
+      resources: expect.arrayContaining([
         {
           _id: 'wrk_1',
           _type: 'workspace',
@@ -204,7 +204,7 @@ describe('app.export.*', () => {
           settingMaxTimelineDataSize: 1000,
           url: 'https://insomnia.rest',
         },
-      ],
+      ]),
     });
   });
 

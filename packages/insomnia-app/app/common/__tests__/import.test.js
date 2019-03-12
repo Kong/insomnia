@@ -3,9 +3,9 @@ import * as importUtil from '../import';
 import { getAppVersion } from '../constants';
 import { globalBeforeEach } from '../../__jest__/before-each';
 
-describe('exportWorkspacesHAR()', () => {
+describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(globalBeforeEach);
-  it('exports a single workspace as an HTTP Archive', async () => {
+  it('exports a single workspace and some requests only as an HTTP Archive', async () => {
     const wrk1 = await models.workspace.create({
       _id: 'wrk_1',
       name: 'Workspace 1',
@@ -155,28 +155,28 @@ describe('exportWorkspacesHAR()', () => {
 
     expect(data).toMatchObject({
       log: {
-        entries: [
-          {
-            request: {
+        entries: expect.arrayContaining([
+          expect.objectContaining({
+            request: expect.objectContaining({
               headers: [{ name: 'X-Environment', value: 'public1' }],
-            },
+            }),
             comment: 'Request 1',
-          },
-          {
-            request: {
+          }),
+          expect.objectContaining({
+            request: expect.objectContaining({
               headers: [{ name: 'X-Environment', value: 'base2' }],
-            },
+            }),
             comment: 'Request 2',
-          },
-        ],
+          }),
+        ]),
       },
     });
   });
 });
 
-describe('exportWorkspacesJSON()', () => {
+describe('exportWorkspacesJSON() and exportRequestsJSON()', () => {
   beforeEach(globalBeforeEach);
-  it('exports all workspaces', async () => {
+  it('exports all workspaces and some requests only', async () => {
     const w = await models.workspace.create({ name: 'Workspace' });
     const jar = await models.cookieJar.getOrCreateForParentId(w._id);
     const r1 = await models.request.create({

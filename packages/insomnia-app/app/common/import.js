@@ -192,43 +192,9 @@ export async function exportWorkspacesHAR(
   parentDoc: BaseModel | null = null,
   includePrivateDocs: boolean = false,
 ): Promise<string> {
-  let workspaces;
-  if (parentDoc) {
-    workspaces = [parentDoc];
-  } else {
-    workspaces = await models.workspace.all();
-  }
-
-  const workspaceEnvironmentLookup = {};
-  for (let workspace of workspaces) {
-    const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
-    let environmentId = workspaceMeta ? workspaceMeta.activeEnvironmentId : null;
-    const environment = await models.environment.getById(environmentId || 'n/a');
-    if (!environment || (environment.isPrivate && !includePrivateDocs)) {
-      environmentId = 'n/a';
-    }
-    workspaceEnvironmentLookup[workspace._id] = environmentId;
-  }
-
-  const requests = [];
-  for (let workspace of workspaces) {
-    const docs: Array<BaseModel> = await getDocWithDescendants(workspace, includePrivateDocs);
-    const workspaceRequests = docs
-      .filter(d => d.type === models.request.type)
-      .sort((a: Object, b: Object) => (a.metaSortKey < b.metaSortKey ? -1 : 1))
-      .map((request: BaseModel) => {
-        return {
-          requestId: request._id,
-          environmentId: workspaceEnvironmentLookup[workspace._id],
-        };
-      });
-
-    requests.push(...workspaceRequests);
-  }
-
-  const data = await har.exportHar(requests);
-
-  return JSON.stringify(data, null, '\t');
+  const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
+  const requests: Array<BaseModel> = docs.filter(doc => doc.type === models.request.type);
+  return exportRequestsHAR(requests, includePrivateDocs);
 }
 
 export async function exportRequestsHAR(
@@ -287,45 +253,9 @@ export async function exportWorkspacesJSON(
   parentDoc: BaseModel | null = null,
   includePrivateDocs: boolean = false,
 ): Promise<string> {
-  const data = {
-    _type: 'export',
-    __export_format: EXPORT_FORMAT,
-    __export_date: new Date(),
-    __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
-    resources: [],
-  };
-
   const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
-
-  data.resources = docs
-    .filter(
-      d =>
-        // Only export these model types
-        d.type === models.request.type ||
-        d.type === models.requestGroup.type ||
-        d.type === models.workspace.type ||
-        d.type === models.cookieJar.type ||
-        d.type === models.environment.type,
-    )
-    .map((d: Object) => {
-      if (d.type === models.workspace.type) {
-        d._type = EXPORT_TYPE_WORKSPACE;
-      } else if (d.type === models.cookieJar.type) {
-        d._type = EXPORT_TYPE_COOKIE_JAR;
-      } else if (d.type === models.environment.type) {
-        d._type = EXPORT_TYPE_ENVIRONMENT;
-      } else if (d.type === models.requestGroup.type) {
-        d._type = EXPORT_TYPE_REQUEST_GROUP;
-      } else if (d.type === models.request.type) {
-        d._type = EXPORT_TYPE_REQUEST;
-      }
-
-      // Delete the things we don't want to export
-      delete d.type;
-      return d;
-    });
-
-  return JSON.stringify(data, null, '\t');
+  const requests: Array<BaseModel> = docs.filter(doc => doc.type === models.request.type);
+  return exportRequestsJSON(requests, includePrivateDocs);
 }
 
 export async function exportRequestsJSON(
