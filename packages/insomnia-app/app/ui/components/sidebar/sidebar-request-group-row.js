@@ -55,6 +55,7 @@ class SidebarRequestGroupRow extends PureComponent {
       isDragging,
       isDraggingOver,
       workspace,
+      hotKeyRegistry,
     } = this.props;
 
     const { dragDirection } = this.state;
@@ -98,6 +99,7 @@ class SidebarRequestGroupRow extends PureComponent {
               handleMoveRequestGroup={handleMoveRequestGroup}
               workspace={workspace}
               requestGroup={requestGroup}
+              hotKeyRegistry={hotKeyRegistry}
               right
             />
           </div>
@@ -122,6 +124,7 @@ class SidebarRequestGroupRow extends PureComponent {
               workspace={workspace}
               requestCreate={handleCreateRequest}
               filter={filter}
+              hotKeyRegistry={hotKeyRegistry}
             />
           )}
         </ul>
@@ -146,6 +149,7 @@ SidebarRequestGroupRow.propTypes = {
   isCollapsed: PropTypes.bool.isRequired,
   workspace: PropTypes.object.isRequired,
   requestGroup: PropTypes.object.isRequired,
+  hotKeyRegistry: PropTypes.object.isRequired,
 
   // React DnD
   isDragging: PropTypes.bool,

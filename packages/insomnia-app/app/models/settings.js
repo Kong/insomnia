@@ -2,6 +2,7 @@
 import type { BaseModel } from './index';
 import * as db from '../common/database';
 import { UPDATE_CHANNEL_STABLE } from '../common/constants';
+import * as hotkeys from '../common/hotkeys';
 
 type BaseSettings = {
   showPasswords: boolean,
@@ -34,6 +35,7 @@ type BaseSettings = {
   fontInterface: string | null,
   fontSize: number,
   fontVariantLigatures: boolean,
+  hotKeyRegistry: hotkeys.HotKeyRegistry,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -75,6 +77,7 @@ export function init(): BaseSettings {
     fontInterface: null,
     fontSize: 13,
     fontVariantLigatures: false,
+    hotKeyRegistry: hotkeys.newDefaultRegistry(),
   };
 }
 

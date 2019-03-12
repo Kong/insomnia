@@ -8,7 +8,8 @@ import DropdownItem from './dropdown-item';
 import DropdownDivider from './dropdown-divider';
 import { fuzzyMatch } from '../../../../common/misc';
 import KeydownBinder from '../../keydown-binder';
-import * as hotkeys from '../../../../common/hotkeys';
+import { executeHotKey } from '../../../../common/hotkeys-listener';
+import { hotKeyRefs } from '../../../../common/hotkeys';
 
 const dropdownsContainer = document.querySelector('#dropdowns-container');
 
@@ -115,7 +116,7 @@ class Dropdown extends PureComponent {
 
     this._handleDropdownNavigation(e);
 
-    hotkeys.executeHotKey(e, hotkeys.CLOSE_DROPDOWN, () => {
+    executeHotKey(e, hotKeyRefs.CLOSE_DROPDOWN, () => {
       this.hide();
     });
   }

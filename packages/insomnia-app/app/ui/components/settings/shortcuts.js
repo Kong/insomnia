@@ -1,17 +1,23 @@
+// @flow
 import React, { PureComponent } from 'react';
 import autobind from 'autobind-decorator';
 import Hotkey from '../hotkey';
-import * as hotkeys from '../../../common/hotkeys';
+import type { HotKeyDefinition, HotKeyRegistry } from '../../../common/hotkeys';
+import { hotKeyRefs } from '../../../common/hotkeys';
+
+type Props = {
+  hotKeyRegistry: HotKeyRegistry,
+};
 
 @autobind
-class Shortcuts extends PureComponent {
-  renderHotkey(hotkey, i) {
+class Shortcuts extends PureComponent<Props> {
+  renderHotKey(def: HotKeyDefinition, i: number) {
     return (
       <tr key={i}>
-        <td>{hotkey.description}</td>
+        <td>{def.description}</td>
         <td className="text-right">
           <code>
-            <Hotkey hotkey={hotkey} />
+            <Hotkey keyBindings={this.props.hotKeyRegistry[def.id]} />
           </code>
         </td>
       </tr>
@@ -19,33 +25,38 @@ class Shortcuts extends PureComponent {
   }
 
   render() {
+    const hotKeyDefs: Array<HotKeyDefinition> = [
+      hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
+      hotKeyRefs.REQUEST_QUICK_SWITCH,
+      hotKeyRefs.REQUEST_SEND,
+      hotKeyRefs.REQUEST_SHOW_OPTIONS,
+      hotKeyRefs.REQUEST_SHOW_CREATE,
+      hotKeyRefs.REQUEST_SHOW_DELETE,
+      hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER,
+      hotKeyRefs.REQUEST_SHOW_DUPLICATE,
+      hotKeyRefs.SHOW_COOKIES_EDITOR,
+      hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
+      hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU,
+      hotKeyRefs.REQUEST_FOCUS_URL,
+      hotKeyRefs.RESPONSE_FOCUS,
+      hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU,
+      hotKeyRefs.SIDEBAR_TOGGLE,
+      hotKeyRefs.REQUEST_TOGGLE_HISTORY,
+      hotKeyRefs.SHOW_AUTOCOMPLETE,
+      hotKeyRefs.PREFERENCES_SHOW_GENERAL,
+      hotKeyRefs.WORKSPACE_SHOW_SETTINGS,
+      hotKeyRefs.REQUEST_SHOW_SETTINGS,
+      hotKeyRefs.TOGGLE_MAIN_MENU,
+      hotKeyRefs.PLUGIN_RELOAD,
+      hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES,
+    ];
     return (
       <div>
         <table className="table--fancy">
           <tbody>
-            {this.renderHotkey(hotkeys.SHOW_KEYBOARD_SHORTCUTS)}
-            {this.renderHotkey(hotkeys.SHOW_QUICK_SWITCHER)}
-            {this.renderHotkey(hotkeys.SEND_REQUEST)}
-            {this.renderHotkey(hotkeys.SHOW_SEND_OPTIONS)}
-            {this.renderHotkey(hotkeys.CREATE_REQUEST)}
-            {this.renderHotkey(hotkeys.DELETE_REQUEST)}
-            {this.renderHotkey(hotkeys.CREATE_FOLDER)}
-            {this.renderHotkey(hotkeys.DUPLICATE_REQUEST)}
-            {this.renderHotkey(hotkeys.SHOW_COOKIES)}
-            {this.renderHotkey(hotkeys.SHOW_ENVIRONMENTS)}
-            {this.renderHotkey(hotkeys.TOGGLE_ENVIRONMENTS_MENU)}
-            {this.renderHotkey(hotkeys.FOCUS_URL)}
-            {this.renderHotkey(hotkeys.FOCUS_RESPONSE)}
-            {this.renderHotkey(hotkeys.TOGGLE_METHOD_DROPDOWN)}
-            {this.renderHotkey(hotkeys.TOGGLE_SIDEBAR)}
-            {this.renderHotkey(hotkeys.TOGGLE_HISTORY_DROPDOWN)}
-            {this.renderHotkey(hotkeys.SHOW_AUTOCOMPLETE)}
-            {this.renderHotkey(hotkeys.SHOW_SETTINGS)}
-            {this.renderHotkey(hotkeys.SHOW_WORKSPACE_SETTINGS)}
-            {this.renderHotkey(hotkeys.SHOW_REQUEST_SETTINGS)}
-            {this.renderHotkey(hotkeys.TOGGLE_MAIN_MENU)}
-            {this.renderHotkey(hotkeys.RELOAD_PLUGINS)}
-            {this.renderHotkey(hotkeys.UNCOVER_VARIABLES)}
+            {hotKeyDefs.map((def: HotKeyDefinition, idx: number) => {
+              return this.renderHotKey(def, idx);
+            })}
           </tbody>
         </table>
       </div>
