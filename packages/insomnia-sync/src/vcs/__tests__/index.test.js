@@ -501,11 +501,13 @@ describe('VCS', () => {
       ]);
       await v.stage([status2.unstaged['b'], status2.unstaged['c']]);
       await v.takeSnapshot('Add C, modify B');
-      expect((await v.getHistory())[1].state).toEqual([
-        expect.objectContaining({ key: 'a' }),
-        expect.objectContaining({ key: 'b' }),
-        expect.objectContaining({ key: 'c' }),
-      ]);
+      expect((await v.getHistory())[1].state).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ key: 'a' }),
+          expect.objectContaining({ key: 'b' }),
+          expect.objectContaining({ key: 'c' }),
+        ]),
+      );
     });
 
     it('merges even if no common root', async () => {
