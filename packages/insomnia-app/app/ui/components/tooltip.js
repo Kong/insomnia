@@ -21,6 +21,7 @@ type State = {
 @autobind
 class Tooltip extends React.PureComponent<Props, State> {
   _showTimeout: TimeoutID;
+  _hideTimeout: TimeoutID;
 
   // TODO: Figure out what type these should be
   _tooltip: ?HTMLDivElement;
@@ -53,6 +54,8 @@ class Tooltip extends React.PureComponent<Props, State> {
   }
 
   _handleMouseEnter(e: MouseEvent): void {
+    clearTimeout(this._showTimeout);
+    clearTimeout(this._hideTimeout);
     this._showTimeout = setTimeout((): void => {
       const tooltip = this._tooltip;
       const bubble = this._bubble;
@@ -103,18 +106,21 @@ class Tooltip extends React.PureComponent<Props, State> {
 
   _handleMouseLeave(): void {
     clearTimeout(this._showTimeout);
-    this.setState({ visible: false });
+    clearTimeout(this._hideTimeout);
+    this._hideTimeout = setTimeout(() => {
+      this.setState({ visible: false });
 
-    const bubble = this._bubble;
-    if (!bubble) {
-      return;
-    }
+      const bubble = this._bubble;
+      if (!bubble) {
+        return;
+      }
 
-    // Reset positioning stuff
-    bubble.style.left = '';
-    bubble.style.top = '';
-    bubble.style.bottom = '';
-    bubble.style.right = '';
+      // Reset positioning stuff
+      bubble.style.left = '';
+      bubble.style.top = '';
+      bubble.style.bottom = '';
+      bubble.style.right = '';
+    }, this.props.delay || 100);
   }
 
   _getContainer(): HTMLElement {

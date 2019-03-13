@@ -478,9 +478,46 @@ describe('VCS', () => {
 
   const name = 'merge()';
   describe(name, () => {
-    // it('does not merge if trees are the same', async () => {
-    //   throw new Error('Fix me');
-    // });
+    it('performs fast-forward merge', async () => {
+      const v = new VCS('wrk_1', new MemoryDriver());
+      await v.checkout('master');
+      const status1 = await v.status([
+        { key: 'a', name: 'A', document: newDoc('aaa') },
+        { key: 'b', name: 'B', document: newDoc('bbb') },
+      ]);
+      await v.stage([status1.unstaged['a'], status1.unstaged['b']]);
+      await v.takeSnapshot('Add A and B');
+      expect((await v.getHistory())[0].state).toEqual([
+        expect.objectContaining({ key: 'a' }),
+        expect.objectContaining({ key: 'b' }),
+      ]);
+
+      await v.fork('feature-a');
+      await v.checkout('feature-a');
+      const status2 = await v.status([
+        { key: 'a', name: 'A', document: newDoc('aaa') },
+        { key: 'b', name: 'B', document: newDoc('bbbbbbb') },
+        { key: 'c', name: 'C', document: newDoc('ccc') },
+      ]);
+      await v.stage([status2.unstaged['b'], status2.unstaged['c']]);
+      await v.takeSnapshot('Add C, modify B');
+      expect((await v.getHistory())[1].state).toEqual([
+        expect.objectContaining({ key: 'a' }),
+        expect.objectContaining({ key: 'b' }),
+        expect.objectContaining({ key: 'c' }),
+      ]);
+    });
+
+    it('merges even if no common root', async () => {
+      const v = new VCS('wrk_1', new MemoryDriver());
+      await v.checkout('master');
+      const status1 = await v.status([
+        { key: 'a', name: 'A', document: newDoc('aaa') },
+        { key: 'b', name: 'B', document: newDoc('bbb') },
+      ]);
+      await v.stage([status1.unstaged['a'], status1.unstaged['b']]);
+      await v.takeSnapshot();
+    });
 
     it('does something', async () => {
       const v = new VCS('wrk_1', new MemoryDriver());

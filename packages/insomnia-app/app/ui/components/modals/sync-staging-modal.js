@@ -8,10 +8,9 @@ import ModalFooter from '../base/modal-footer';
 import { VCS } from 'insomnia-sync';
 import type { Workspace } from '../../../models/workspace';
 import * as db from '../../../common/database';
+import type { BaseModel } from '../../../models';
 import * as models from '../../../models';
 import PromptButton from '../base/prompt-button';
-import TimeFromNow from '../time-from-now';
-import type { BaseModel } from '../../../models';
 import * as syncTypes from 'insomnia-sync/src/types';
 
 type Props = {
@@ -22,7 +21,6 @@ type State = {
   branch: string,
   actionBranch: string,
   branches: Array<string>,
-  history: Array<syncTypes.Snapshot>,
   status: syncTypes.Status,
   message: string,
   error: string,
@@ -48,7 +46,6 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       actionBranch: '',
       branches: [],
       newBranchName: '',
-      history: [],
       status: {
         stage: {},
         unstaged: {},
@@ -219,13 +216,11 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     const status = await this.vcs.status(items);
     const branch = await this.vcs.getBranch();
     const branches = await this.vcs.getBranches();
-    const history = await this.vcs.getHistory();
 
     this.setState({
       status,
       branch,
       branches,
-      history: history.sort((a, b) => (a.created < b.created ? 1 : -1)),
       error: '',
       ...newState,
     });
@@ -257,16 +252,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const {
-      actionBranch,
-      branch,
-      branches,
-      history,
-      newBranchName,
-      status,
-      message,
-      error,
-    } = this.state;
+    const { actionBranch, branch, branches, newBranchName, status, message, error } = this.state;
 
     return (
       <Modal ref={this._setModalRef}>
@@ -393,30 +379,6 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
                 </li>
               ))}
           </ul>
-          <br />
-          <h2>History</h2>
-          <table className="table--fancy table--striped">
-            <thead>
-              <tr>
-                <th className="text-left">Hash</th>
-                <th className="text-left">Time</th>
-                <th className="text-left">Message</th>
-                <th className="text-left">Count</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map(snapshot => (
-                <tr key={snapshot.id}>
-                  <td className="monospace txt-sm">{snapshot.id}</td>
-                  <td>
-                    <TimeFromNow timestamp={snapshot.created} intervalSeconds={30} />
-                  </td>
-                  <td>{snapshot.name}</td>
-                  <td>{snapshot.state.length}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </ModalBody>
         <ModalFooter>
           <div>

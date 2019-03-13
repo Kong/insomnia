@@ -18,7 +18,12 @@ import type {
   Status,
   StatusCandidate,
 } from '../types';
-import { combinedMapKeys, generateCandidateMap, generateStateMap } from './snapshots';
+import {
+  combinedMapKeys,
+  generateCandidateMap,
+  generateSnapshotStateMap,
+  threeWayMerge,
+} from './snapshots';
 
 const EMPTY_HASH = crypto
   .createHash('sha1')
@@ -53,7 +58,7 @@ export default class VCS {
 
     const unstaged: { [DocumentKey]: StageEntry } = {};
 
-    const stateMap = generateStateMap(snapshot);
+    const stateMap = generateSnapshotStateMap(snapshot);
 
     for (const { key, name, document } of candidates) {
       const { hash: blobId, content: blobContent } = jsonHash(document);
@@ -177,11 +182,14 @@ export default class VCS {
     updated: Array<Object>,
     deleted: Array<string>,
   }> {
+    // TODO: Ensure a change in blob ID generation alg doesn't break things
+    // TODO: Ensure deleted blobs don't break things
+
     const currentBranch = await this._getCurrentBranch();
     const currentLatestSnapshot = await this._getLatestSnapshot(currentBranch.name);
 
     const candidateMap = generateCandidateMap(candidates);
-    const currentStateMap = generateStateMap(currentLatestSnapshot);
+    const currentStateMap = generateSnapshotStateMap(currentLatestSnapshot);
 
     const result = {
       deleted: [],
@@ -314,87 +322,17 @@ export default class VCS {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
     console.log('[sync] Performing 3-way merge');
-    const otherStateMap = generateStateMap(otherSnapshot);
-    const rootStateMap = generateStateMap(rootSnapshot);
-    const currentStateMap = generateStateMap(currentSnapshot);
-    const allKeys = combinedMapKeys(otherStateMap, rootStateMap, currentStateMap);
-
-    // ~~~~~~~~~~~~~~~~~~~ //
-    // Perform 3-way merge //
-    // ~~~~~~~~~~~~~~~~~~~ //
-
-    const newState: SnapshotState = [];
-    for (const key of allKeys) {
-      const otherEntry = otherStateMap[key];
-      const currentEntry = currentStateMap[key];
-      const rootEntry = rootStateMap[key];
-
-      const addedInCurrent = !rootEntry && currentEntry;
-      const modifiedInCurrent = rootEntry && currentEntry && currentEntry.key !== rootEntry.key;
-      const sameInCurrent = rootEntry && currentEntry && currentEntry.key === rootEntry.key;
-      const removedInCurrent = rootEntry && !currentEntry;
-
-      const addedInOther = !rootEntry && otherEntry;
-      const modifiedInOther = rootEntry && otherEntry && otherEntry.key !== rootEntry.key;
-      const sameInOther = rootEntry && otherEntry && otherEntry.key === rootEntry.key;
-      const removedInOther = rootEntry && !otherEntry;
-
-      if (addedInCurrent) {
-        if (addedInOther) {
-          // TODO: Check conflict
-        } else if (modifiedInOther) {
-          // Impossible state
-        } else if (removedInOther) {
-          // Impossible state
-        } else if (sameInOther) {
-          // Impossible state
-        } else if (!otherEntry) {
-          newState.push(currentEntry);
-        }
-      } else if (modifiedInCurrent) {
-        if (addedInOther) {
-          // Impossible state
-        } else if (modifiedInOther) {
-          // TODO: Check conflict
-        } else if (removedInOther) {
-          // TODO: Check conflict
-        } else if (sameInOther) {
-          newState.push(currentEntry);
-        } else if (!otherEntry) {
-          newState.push(currentEntry);
-        }
-      } else if (removedInCurrent) {
-        if (addedInOther) {
-          // Impossible state
-        } else if (modifiedInOther) {
-          // TODO: Check conflict
-        } else if (removedInOther) {
-          // Do nothing, it's removed
-        } else if (sameInOther) {
-          // Do nothing, it's removed
-        } else if (!otherEntry) {
-          // Do nothing, it's removed
-        }
-      } else if (sameInCurrent) {
-        if (addedInOther) {
-          newState.push(otherEntry);
-        } else if (modifiedInOther) {
-          newState.push(otherEntry);
-        } else if (removedInOther) {
-          // Do nothing, it's removed
-        } else if (sameInOther) {
-          newState.push(otherEntry);
-        } else if (!otherEntry) {
-          // Impossible state
-        }
-      } else if (!currentEntry) {
-        newState.push(otherEntry);
-      }
+    const { state: newState, conflicts } = threeWayMerge(
+      rootSnapshot.state,
+      currentSnapshot.state,
+      otherSnapshot.state,
+    );
+    if (conflicts.length) {
+      throw new Error('Conflicting keys! ' + conflicts.join(', '));
     }
 
     const name = `Merged branch ${otherBranch.name}`;
     await this._createSnapshotFromState(branch, currentSnapshot, newState, name);
-    // TODO: Ensure this algorithm accounts for unsaved changes
   }
 
   async pull(): Promise<void> {

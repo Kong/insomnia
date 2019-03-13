@@ -13,6 +13,9 @@ import * as db from '../../../common/database';
 import * as models from '../../../models';
 import type { BaseModel } from '../../../models';
 import { getDataDirectory } from '../../../common/misc';
+import HelpTooltip from '../help-tooltip';
+import Link from '../base/link';
+import SyncHistoryModal from '../modals/sync-history-modal';
 
 const MODEL_WHITELIST = {
   [models.workspace.type]: true,
@@ -129,6 +132,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     showModal(SyncStagingModal, { vcs: this.vcs });
   }
 
+  _handleShowHistoryModal() {
+    showModal(SyncHistoryModal, { vcs: this.vcs });
+  }
+
   async _handlePush() {
     try {
       await this.vcs.push();
@@ -188,15 +195,40 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         <Dropdown wide className="wide tall" onOpen={this._handleOpen}>
           <DropdownButton className="btn btn--compact wide">{this.renderButton()}</DropdownButton>
 
+          <DropdownDivider>
+            Version Control
+            <HelpTooltip>
+              Manage the history of a workspace{' '}
+              <Link href="https://insomnia.rest">
+                <span className="no-wrap">
+                  Help <i className="fa fa-external-link" />
+                </span>
+              </Link>
+            </HelpTooltip>
+          </DropdownDivider>
+          <DropdownItem>
+            <i className="fa fa-code-fork" />
+            New Branch
+          </DropdownItem>
+          <DropdownItem>
+            <i className="fa fa-cog" />
+            Configure
+          </DropdownItem>
+
           <DropdownDivider>{currentBranch}</DropdownDivider>
           <DropdownItem onClick={this._handlePush}>
             <i className="fa fa-upload" />
-            Push Snapshots
+            Push Changes
           </DropdownItem>
 
           <DropdownItem onClick={this._handleShowStagingModal}>
             <i className="fa fa-cube" />
             Create Snapshot
+          </DropdownItem>
+
+          <DropdownItem onClick={this._handleShowHistoryModal}>
+            <i className="fa fa-clock-o" />
+            View History
           </DropdownItem>
 
           <DropdownDivider>Select Branch</DropdownDivider>
