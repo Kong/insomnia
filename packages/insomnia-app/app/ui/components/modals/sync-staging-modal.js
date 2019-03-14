@@ -4,7 +4,6 @@ import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import ModalFooter from '../base/modal-footer';
 import { VCS } from 'insomnia-sync';
 import type { Workspace } from '../../../models/workspace';
 import * as db from '../../../common/database';
@@ -24,7 +23,6 @@ type State = {
   status: syncTypes.Status,
   message: string,
   error: string,
-  newBranchName: string,
 };
 
 const WHITE_LIST = {
@@ -45,7 +43,6 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       branch: '',
       actionBranch: '',
       branches: [],
-      newBranchName: '',
       status: {
         stage: {},
         unstaged: {},
@@ -72,20 +69,8 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     this.setState({ message: e.currentTarget.value });
   }
 
-  _handleBranchChange(e: SyntheticEvent<HTMLInputElement>) {
-    this.setState({ newBranchName: e.currentTarget.value });
-  }
-
   async _handleChangeActionBranch(e: SyntheticEvent<HTMLSelectElement>) {
     this.setState({ actionBranch: e.currentTarget.value });
-  }
-
-  async _handleFork(e: SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const { newBranchName } = this.state;
-    await this.vcs.fork(newBranchName);
-    await this.vcs.checkout(newBranchName);
-    await this.updateStatus({ newBranchName: '' });
   }
 
   async _handleRemoveBranch() {
@@ -103,16 +88,17 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
 
   async _handleMergeBranch() {
     const { actionBranch } = this.state;
+    const items = await this.generateStatusItems();
 
+    let delta;
     try {
-      await this.vcs.merge(actionBranch);
+      delta = await this.vcs.merge(items, actionBranch);
     } catch (err) {
       this.setState({ error: `Failed to merge: ${err.message}` });
       return;
     }
 
-    await this.syncDatabase();
-
+    await this.syncDatabase(delta);
     await this.updateStatus();
   }
 
@@ -181,7 +167,11 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     return items;
   }
 
-  async syncDatabase() {
+  async syncDatabase(delta?: {
+    add: Array<BaseModel>,
+    update: Array<BaseModel>,
+    remove: Array<BaseModel>,
+  }) {
     const items = await this.generateStatusItems();
     const itemsMap = {};
     for (const item of items) {
@@ -189,21 +179,20 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     }
 
     db.bufferChanges();
-    const delta = await this.vcs.delta(items);
+    delta = delta || (await this.vcs.delta(items));
 
-    const { deleted, updated, added } = delta;
+    const { remove, update, add } = delta;
 
     const promises = [];
-    for (const doc: BaseModel of updated) {
+    for (const doc: BaseModel of update) {
       promises.push(db.update(doc));
     }
 
-    for (const doc: BaseModel of added) {
+    for (const doc: BaseModel of add) {
       promises.push(db.insert(doc));
     }
 
-    for (const id of deleted) {
-      const doc = itemsMap[id];
+    for (const doc: BaseModel of remove) {
       promises.push(db.unsafeRemove(doc));
     }
 
@@ -252,7 +241,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { actionBranch, branch, branches, newBranchName, status, message, error } = this.state;
+    const { actionBranch, branch, branches, status, message, error } = this.state;
 
     return (
       <Modal ref={this._setModalRef}>
@@ -294,22 +283,6 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
               <i className="fa fa-code-fork" />
             </PromptButton>
           </div>
-          <form onSubmit={this._handleFork}>
-            <div className="form-row">
-              <div className="form-control form-control--outlined">
-                <input
-                  key={branch}
-                  type="text"
-                  placeholder="my-branch"
-                  onChange={this._handleBranchChange}
-                  defaultValue={newBranchName}
-                />
-              </div>
-              <button type="submit" className="btn btn--clicky width-auto">
-                Create Branch
-              </button>
-            </div>
-          </form>
           <div className="form-group">
             <div className="form-control form-control--outlined">
               <textarea
@@ -329,7 +302,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
               className="pull-right btn btn--clicky-small"
               disabled={Object.keys(status.stage).length === 0}
               onClick={this._handleUnstageAll}>
-              Remove All
+              Uncheck All
             </button>
             <h2>Added Changes</h2>
           </div>
@@ -356,7 +329,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
               className="pull-right btn btn--clicky-small"
               onClick={this._handleStageAll}
               disabled={Object.keys(status.unstaged).length === 0}>
-              Add All ({Object.keys(status.unstaged).length})
+              Select All ({Object.keys(status.unstaged).length})
             </button>
             <h2>Changes</h2>
           </div>
@@ -380,16 +353,6 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
               ))}
           </ul>
         </ModalBody>
-        <ModalFooter>
-          <div>
-            <button className="btn" onClick={this.hide}>
-              Cancel
-            </button>
-            <button className="btn" onClick={this._handleDone}>
-              Ok
-            </button>
-          </div>
-        </ModalFooter>
       </Modal>
     );
   }

@@ -1,15 +1,15 @@
 // @flow
 
-export function stage(): string {
-  return '/stage';
-}
-
-export function head(): string {
-  return '/head';
-}
-
 export function projectBase(projectId: string): string {
   return `/projects/${projectId}/`;
+}
+
+export function stage(projectId: string): string {
+  return `${projectBase(projectId)}stage`;
+}
+
+export function head(projectId: string): string {
+  return `${projectBase(projectId)}head`;
 }
 
 export function project(projectId: string): string {

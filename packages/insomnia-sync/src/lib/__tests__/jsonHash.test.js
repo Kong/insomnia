@@ -61,17 +61,11 @@ describe('jsonHash()', () => {
 
     const sNull1 = jsonHash(null);
     const sNull2 = jsonHash('null');
-    const sNull3 = jsonHash(undefined);
-    const sNull4 = jsonHash();
     expect(sNull1.hash).not.toBe(sNull2.hash);
     expect(sNull1.hash).toBe('2be88ca4242c76e8253ac62474851065032d6833');
     expect(sNull2.hash).toBe('8c1030365643f1f4b7f00e3d88c0a3c555522b60');
-    expect(sNull3.hash).toBe('da39a3ee5e6b4b0d3255bfef95601890afd80709');
-    expect(sNull4.hash).toBe('da39a3ee5e6b4b0d3255bfef95601890afd80709');
     expect(sNull1.content.toString('utf8')).toBe('null');
     expect(sNull2.content.toString('utf8')).toBe('"null"');
-    expect(sNull3.content.toString('utf8')).toBe('');
-    expect(sNull4.content.toString('utf8')).toBe('');
   });
 
   it('skips non-json types', () => {
@@ -89,5 +83,15 @@ describe('jsonHash()', () => {
     expect(sFunc2.hash).toBe('38b742facb1034438d82cf1e294d9e71051bf120');
     expect(sFunc1.content.toString('utf8')).toBe('{"a":[0]}');
     expect(sFunc2.content.toString('utf8')).toBe('{"a":[0]}');
+  });
+
+  it('fails on undefined', () => {
+    try {
+      jsonHash(undefined);
+      jsonHash();
+    } catch (err) {
+      return;
+    }
+    throw new Error('Expected jsonHash(undefined) to fail');
   });
 });

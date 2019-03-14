@@ -1,12 +1,16 @@
 // @flow
 import type {
+  Branch,
   DocumentKey,
   Snapshot,
   SnapshotState,
+  SnapshotStateEntry,
   SnapshotStateMap,
+  StageEntry,
   StatusCandidate,
   StatusCandidateMap,
 } from '../types';
+import { jsonHash } from '../lib/jsonHash';
 
 export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotStateMap {
   if (!snapshot) {
@@ -197,4 +201,157 @@ export function threeWayMerge(
     state: newState,
     conflicts: conflicts,
   };
+}
+
+export function stateDelta(
+  base: SnapshotState,
+  desired: SnapshotState,
+): {
+  add: Array<SnapshotStateEntry>,
+  update: Array<SnapshotStateEntry>,
+  remove: Array<SnapshotStateEntry>,
+} {
+  const result = {
+    add: [],
+    update: [],
+    remove: [],
+  };
+
+  const stateMapStart = generateStateMap(base);
+  const stateMapFinish = generateStateMap(desired);
+
+  for (const key of combinedMapKeys(stateMapStart, stateMapFinish)) {
+    const start = stateMapStart[key];
+    const finish = stateMapFinish[key];
+
+    if (!start && finish) {
+      result.add.push(finish);
+      continue;
+    }
+
+    if (start && !finish) {
+      result.remove.push(start);
+      continue;
+    }
+
+    if (start && finish && start.blob !== finish.blob) {
+      result.update.push(finish);
+      continue;
+    }
+  }
+
+  return result;
+}
+
+export function getStagable(
+  state: SnapshotState,
+  candidates: Array<StatusCandidate>,
+): Array<StageEntry> {
+  const stagable: Array<StageEntry> = [];
+
+  const stateMap = generateStateMap(state);
+  const candidateMap = generateCandidateMap(candidates);
+  for (const key of combinedMapKeys(stateMap, candidateMap)) {
+    const entry = stateMap[key];
+    const candidate = candidateMap[key];
+
+    if (!entry && candidate) {
+      const { name, document } = candidate;
+      const { hash: blobId, content: blobContent } = jsonHash(document);
+      stagable.push({ key, name, blobId, blobContent, added: true });
+      continue;
+    }
+
+    if (entry && !candidate) {
+      const { name, blob: blobId } = entry;
+      stagable.push({ key, name, blobId, deleted: true });
+      continue;
+    }
+
+    if (entry && candidate) {
+      const { document, name } = candidate;
+      const { hash: blobId, content: blobContent } = jsonHash(document);
+      if (entry.blob !== blobId) {
+        stagable.push({ key, name, blobId, blobContent, modified: true });
+      }
+      continue;
+    }
+  }
+
+  return stagable;
+}
+
+export function getRootSnapshot(a: Branch, b: Branch): string | null {
+  let rootSnapshotId = '';
+  for (let ai = a.snapshots.length - 1; ai >= 0; ai--) {
+    for (let bi = b.snapshots.length - 1; bi >= 0; bi--) {
+      if (a.snapshots[ai] === b.snapshots[bi]) {
+        return a.snapshots[ai];
+      }
+    }
+  }
+  return rootSnapshotId || null;
+}
+
+export function preMergeCheck(
+  trunkState: SnapshotState,
+  otherState: SnapshotState,
+  candidates: Array<StatusCandidate>,
+): {
+  conflicts: Array<StatusCandidate>,
+  dirty: Array<StatusCandidate>,
+} {
+  const result = {
+    conflicts: [],
+    dirty: [],
+  };
+
+  const trunkMap = generateStateMap(trunkState);
+  const otherMap = generateStateMap(otherState);
+
+  for (const candidate of candidates) {
+    const { key } = candidate;
+    const trunk = trunkMap[key];
+    const other = otherMap[key];
+
+    // Candidate is not in trunk or other (not yet in version control)
+    if (!trunk && !other) {
+      result.dirty.push(candidate);
+      continue;
+    }
+
+    const { hash: blobId } = jsonHash(candidate.document);
+
+    // Candidate is same as trunk (unchanged) so anything goes
+    if (trunk && trunk.blob === blobId) {
+      continue;
+    }
+
+    // Candidate is the same as trunk (nothing to do)
+    if (trunk && blobId === trunk.blob) {
+      continue;
+    }
+
+    // Candidate is the same as other (would update to same value)
+    if (other && blobId === other.blob) {
+      continue;
+    }
+
+    // Candidate is different but trunk and other are the same (preserve safe change)
+    if (
+      other &&
+      trunk &&
+      other.blob === trunk.blob &&
+      blobId !== other.blob &&
+      blobId !== trunk.blob
+    ) {
+      result.dirty.push(candidate);
+      continue;
+    }
+
+    // All other cases result in conflict
+    result.conflicts.push(candidate);
+  }
+
+  return result;
 }

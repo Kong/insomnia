@@ -19,11 +19,13 @@ import type {
   StatusCandidate,
 } from '../types';
 import {
-  combinedMapKeys,
   generateCandidateMap,
-  generateSnapshotStateMap,
+  getRootSnapshot,
+  getStagable,
+  preMergeCheck,
+  stateDelta,
   threeWayMerge,
-} from './snapshots';
+} from './util';
 
 const EMPTY_HASH = crypto
   .createHash('sha1')
@@ -52,77 +54,43 @@ export default class VCS {
   }
 
   async status(candidates: Array<StatusCandidate>): Promise<Status> {
-    const stage: Stage = await this.getStage();
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
+    const state = snapshot ? snapshot.state : [];
 
+    const stage: Stage = await this.getStage();
     const unstaged: { [DocumentKey]: StageEntry } = {};
+    for (const entry of getStagable(state, candidates)) {
+      const { key } = entry;
+      const stageEntry = stage[key];
 
-    const stateMap = generateSnapshotStateMap(snapshot);
-
-    for (const { key, name, document } of candidates) {
-      const { hash: blobId, content: blobContent } = jsonHash(document);
-
-      // Already staged
-      if (stage[key] && stage[key].blobId === blobId) {
-        continue;
-      }
-
-      // Unchanged so don't care
-      if (stateMap[key] && stateMap[key].blob === blobId) {
-        continue;
-      }
-
-      const alreadyExisted = stateMap.hasOwnProperty(key);
-      if (alreadyExisted) {
-        unstaged[key] = { key, name, blobId, blobContent, modified: true };
-      } else {
-        unstaged[key] = { key, name, blobId, blobContent, added: true };
+      if (!stageEntry || stageEntry.blobId !== entry.blobId) {
+        unstaged[key] = entry;
       }
     }
 
-    // Find deleted items
-    for (const key of Object.keys(stateMap)) {
-      const isAlreadyStaged = stage.hasOwnProperty(key);
-      if (isAlreadyStaged) {
-        continue;
-      }
-
-      const wasNotDeleted = candidates.findIndex(c => c.key === key) >= 0;
-      if (wasNotDeleted) {
-        continue;
-      }
-
-      const { name } = stateMap[key];
-      unstaged[key] = { key, name, deleted: true };
-    }
-
-    const status: Status = {
+    return {
       stage,
       unstaged,
-      key: '',
+      key: jsonHash({ stage, unstaged }).hash,
     };
-
-    status.key = jsonHash(status).hash;
-
-    return status;
   }
 
   async getStage(): Promise<Stage> {
-    const stage = await this._store.getItem(paths.stage());
+    const stage = await this._store.getItem(paths.stage(this._project));
     return stage || {};
   }
 
-  async stage(candidates: Array<StageEntry>): Promise<Stage> {
+  async stage(stageEntries: Array<StageEntry>): Promise<Stage> {
     const stage: Stage = await this.getStage();
 
     const blobsToStore: { [string]: string } = {};
-    for (const candidate of candidates) {
-      stage[candidate.key] = candidate;
+    for (const entry of stageEntries) {
+      stage[entry.key] = entry;
 
       // Only store blobs if we're not deleting it
-      if (candidate.added || candidate.modified) {
-        blobsToStore[candidate.blobId] = candidate.blobContent;
+      if (entry.added || entry.modified) {
+        blobsToStore[entry.blobId] = entry.blobContent;
       }
     }
 
@@ -133,16 +101,24 @@ export default class VCS {
     return stage;
   }
 
-  async unstage(candidates: Array<StatusCandidate>): Promise<Stage> {
+  async unstage(stageEntries: Array<StatusCandidate>): Promise<Stage> {
     const stage = await this.getStage();
 
-    for (const candidate of candidates) {
-      delete stage[candidate.key];
+    for (const entry of stageEntries) {
+      delete stage[entry.key];
     }
 
     // Store the stage
     await this._storeStage(stage);
     return stage;
+  }
+
+  validateBranchName(branchName: string): string {
+    if (!branchName.match(/^[a-zA-Z0-9][a-zA-Z0-9-_.]{3,}$/)) {
+      return 'Branch names can only contain letters, numbers, - and _';
+    }
+
+    return '';
   }
 
   async fork(newBranchName: string): Promise<void> {
@@ -170,70 +146,88 @@ export default class VCS {
     await this._removeBranch(branchToDelete);
   }
 
-  async checkout(branchName: string): Promise<void> {
-    const branch = await this._getOrCreateBranch(branchName);
-    await this._storeHead({ branch: branch.name });
-  }
-
-  async delta(
+  async checkout(
     candidates: Array<StatusCandidate>,
+    branchName: string,
   ): Promise<{
-    added: Array<Object>,
-    updated: Array<Object>,
-    deleted: Array<string>,
+    add: Array<Object>,
+    update: Array<Object>,
+    remove: Array<Object>,
   }> {
-    // TODO: Ensure a change in blob ID generation alg doesn't break things
-    // TODO: Ensure deleted blobs don't break things
+    const branchCurrent = await this._getCurrentBranch();
+    const latestSnapshotCurrent: Snapshot | null = await this._getLatestSnapshot(
+      branchCurrent.name,
+    );
+    const latestStateCurrent = latestSnapshotCurrent ? latestSnapshotCurrent.state : [];
 
-    const currentBranch = await this._getCurrentBranch();
-    const currentLatestSnapshot = await this._getLatestSnapshot(currentBranch.name);
+    const branchNext = await this._getOrCreateBranch(branchName);
+    const latestSnapshotNext: Snapshot | null = await this._getLatestSnapshot(branchNext.name);
+    const latestStateNext = latestSnapshotNext ? latestSnapshotNext.state : [];
 
-    const candidateMap = generateCandidateMap(candidates);
-    const currentStateMap = generateSnapshotStateMap(currentLatestSnapshot);
-
-    const result = {
-      deleted: [],
-      added: [],
-      updated: [],
-    };
-
-    const updatedBlobIds = [];
-    const addedBlobIds = [];
-
-    for (const key of combinedMapKeys(candidateMap, currentStateMap)) {
-      const candidate = candidateMap[key];
-      const entry = currentStateMap[key];
-
-      if (!candidate && !entry) {
-        throw new Error('Should never happen');
-      }
-
-      // In history but not in candidates, so add
-      if (!candidate) {
-        addedBlobIds.push(entry.blob);
-        continue;
-      }
-
-      // Not in history so delete
-      if (!entry) {
-        result.deleted.push(key);
-        continue;
-      }
-
-      // It's updated
-      const { hash: blobId } = jsonHash(candidate.document);
-      if (entry.blob !== blobId) {
-        updatedBlobIds.push(entry.blob);
-        continue;
-      }
-
-      // It's the same, so nothing to do
+    // Perform pre-checkout checks
+    const { conflicts, dirty } = preMergeCheck(latestStateCurrent, latestStateNext, candidates);
+    if (conflicts.length) {
+      throw new Error(
+        'Cannot checkout with current changes. Please create a snapshot before merging',
+      );
     }
 
-    result.updated = await this._getBlobs(updatedBlobIds);
-    result.added = await this._getBlobs(addedBlobIds);
+    await this._storeHead({ branch: branchNext.name });
 
-    return result;
+    const dirtyMap = generateCandidateMap(dirty);
+    const delta = stateDelta(latestStateCurrent, latestStateNext);
+
+    // Filter out things that should stay dirty
+    const add = delta.add.filter(e => !dirtyMap[e.key]);
+    const update = delta.update.filter(e => !dirtyMap[e.key]);
+    const remove = delta.remove.filter(e => !dirtyMap[e.key]);
+
+    // Remove all dirty items from the delta so we keep them around
+    return {
+      add: await this._getBlobs(add.map(e => e.blob)),
+      update: await this._getBlobs(update.map(e => e.blob)),
+      remove: await this._getBlobs(remove.map(e => e.blob)),
+    };
+  }
+
+  async revert(
+    candidates: Array<StatusCandidate>,
+  ): Promise<{
+    add: Array<Object>,
+    update: Array<Object>,
+    remove: Array<Object>,
+  }> {
+    const branchCurrent = await this._getCurrentBranch();
+    const latestSnapshotCurrent: Snapshot | null = await this._getLatestSnapshot(
+      branchCurrent.name,
+    );
+    const latestStateCurrent = latestSnapshotCurrent ? latestSnapshotCurrent.state : [];
+
+    const potentialNewState: SnapshotState = candidates.map(c => ({
+      key: c.key,
+      blob: jsonHash(c.document).hash,
+      name: c.name,
+    }));
+
+    const delta = stateDelta(potentialNewState, latestStateCurrent);
+
+    // We need to treat removals of candidates differently because they may not
+    // yet have been stored as blobs.
+    const remove = [];
+    for (const e of delta.remove) {
+      const c = candidates.find(c => c.key === e.key);
+      if (!c) {
+        // Should never happen
+        throw new Error('Failed to find removal in candidates');
+      }
+      remove.push(c.document);
+    }
+
+    return {
+      add: await this._getBlobs(delta.add.map(e => e.blob)),
+      update: await this._getBlobs(delta.update.map(e => e.blob)),
+      remove,
+    };
   }
 
   async getHistory(): Promise<Array<Snapshot>> {
@@ -271,68 +265,76 @@ export default class VCS {
     return branches;
   }
 
-  async merge(otherBranchName: string): Promise<void> {
-    const otherBranch = await this._assertBranch(otherBranchName);
+  async merge(
+    candidates: Array<StatusCandidate>,
+    otherBranchName: string,
+  ): Promise<{
+    add: Array<Object>,
+    update: Array<Object>,
+    remove: Array<Object>,
+  }> {
+    const branchOther = await this._assertBranch(otherBranchName);
 
-    const otherSnapshot = await this._getLatestSnapshot(otherBranch.name);
-    if (otherSnapshot === null) {
+    const latestSnapshotOther = await this._getLatestSnapshot(branchOther.name);
+    if (latestSnapshotOther === null) {
       throw new Error('No snapshots found to merge');
     }
 
-    const branch = await this._getCurrentBranch();
+    const branchTrunk = await this._getCurrentBranch();
+    const rootSnapshotId = getRootSnapshot(branchTrunk, branchOther);
+    const rootSnapshot: Snapshot | null = await this._getSnapshot(rootSnapshotId || 'n/a');
+    const latestSnapshotTrunk: Snapshot | null = await this._getLatestSnapshot(branchTrunk.name);
 
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-    // Locate the nearest shared snapshot //
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-
-    let rootSnapshotId = '';
-    for (let i = 0; i < Math.min(branch.snapshots.length, otherBranch.snapshots.length); i++) {
-      if (branch.snapshots[i] !== otherBranch.snapshots[i]) {
-        break;
-      }
-
-      rootSnapshotId = branch.snapshots[i];
+    // Other branch has a history that is a prefix of the current one
+    if (latestSnapshotOther.id === rootSnapshotId) {
+      throw new Error('Already up to date');
     }
 
-    const rootSnapshot = await this._getSnapshot(rootSnapshotId);
-    if (rootSnapshot === null) {
-      // TODO: Handle this case better
-      throw new Error('Branches do not share a history');
+    // Perform 3-way merge
+    const rootState = rootSnapshot ? rootSnapshot.state : [];
+    const latestStateTrunk = latestSnapshotTrunk ? latestSnapshotTrunk.state : [];
+    const latestStateOther = latestSnapshotOther.state;
+
+    // Perform pre-merge checks
+    const { conflicts: preConflicts, dirty } = preMergeCheck(
+      latestStateTrunk,
+      latestStateOther,
+      candidates,
+    );
+
+    if (preConflicts.length) {
+      console.log('[vcs] Merge failed', preConflicts);
+      throw new Error('Cannot merge with current changes. Please create a snapshot before merging');
     }
-
-    // ~~~~~~~~~~~~~~~~~~~~~~ //
-    // Check for fast-forward //
-    // ~~~~~~~~~~~~~~~~~~~~~~ //
-
-    const currentSnapshot = await this._getLatestSnapshot(branch.name);
-    if (otherSnapshot && otherSnapshot.id === rootSnapshot.id) {
-      // Other branch has a history that is a prefix of the current one
-      throw new Error('Entire branch history is already part of this one');
-    }
-
-    if (!currentSnapshot || rootSnapshot.id === currentSnapshot.id) {
-      branch.snapshots = [...otherBranch.snapshots];
-      await this._storeBranch(branch);
-      console.log('[sync] Performing fast-forward merge');
-      return;
-    }
-
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-    // Obtain necessary things to perform 3-way merge //
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
     console.log('[sync] Performing 3-way merge');
-    const { state: newState, conflicts } = threeWayMerge(
-      rootSnapshot.state,
-      currentSnapshot.state,
-      otherSnapshot.state,
+    const { state, conflicts: mergeConflicts } = threeWayMerge(
+      rootState,
+      latestStateTrunk,
+      latestStateOther,
     );
-    if (conflicts.length) {
-      throw new Error('Conflicting keys! ' + conflicts.join(', '));
+
+    if (mergeConflicts.length) {
+      throw new Error('Conflicting keys! ' + mergeConflicts.join(', '));
     }
 
-    const name = `Merged branch ${otherBranch.name}`;
-    await this._createSnapshotFromState(branch, currentSnapshot, newState, name);
+    const name = `Merged branch ${branchOther.name}`;
+    const newSnapshot = await this._createSnapshotFromState(
+      branchTrunk,
+      latestSnapshotTrunk,
+      state,
+      name,
+    );
+
+    const dirtyMap = generateCandidateMap(dirty);
+    const { add, update, remove } = stateDelta(latestStateTrunk, newSnapshot.state);
+
+    // Remove all dirty items from the delta so we keep them around
+    return {
+      add: await this._getBlobs(add.filter(e => !dirtyMap[e.key]).map(e => e.key)),
+      update: await this._getBlobs(update.filter(e => !dirtyMap[e.key]).map(e => e.key)),
+      remove: await this._getBlobs(remove.filter(e => !dirtyMap[e.key]).map(e => e.key)),
+    };
   }
 
   async pull(): Promise<void> {
@@ -382,7 +384,7 @@ export default class VCS {
     parent: Snapshot | null,
     state: SnapshotState,
     name: string,
-  ): Promise<void> {
+  ): Promise<Snapshot> {
     const parentId: string = parent ? parent.id : EMPTY_HASH;
 
     // Create the snapshot
@@ -404,6 +406,8 @@ export default class VCS {
     await this._storeBranch(branch);
     await this._storeSnapshot(snapshot);
     await this._clearStage();
+
+    return snapshot;
   }
 
   async queryBlobsMissing(state: SnapshotState): Promise<Array<string>> {
@@ -587,7 +591,7 @@ export default class VCS {
   }
 
   async _getHead(): Promise<Head> {
-    const head = await this._store.getItem(paths.head());
+    const head = await this._store.getItem(paths.head(this._project));
     if (head === null) {
       await this._storeHead({ branch: 'master' });
       return this._getHead();
@@ -657,7 +661,12 @@ export default class VCS {
   }
 
   async _storeBranch(branch: Branch): Promise<void> {
-    return this._store.setItem(paths.branch(this._project, branch.name), branch);
+    const errMsg = this.validateBranchName(branch.name);
+    if (errMsg) {
+      throw new Error(errMsg);
+    }
+
+    return this._store.setItem(paths.branch(this._project, branch.name.toLowerCase()), branch);
   }
 
   async _removeBranch(branch: Branch): Promise<void> {
@@ -665,15 +674,15 @@ export default class VCS {
   }
 
   async _storeHead(head: Head): Promise<void> {
-    await this._store.setItem(paths.head(), head);
+    await this._store.setItem(paths.head(this._project), head);
   }
 
   async _storeStage(stage: Stage): Promise<void> {
-    await this._store.setItem(paths.stage(), stage);
+    await this._store.setItem(paths.stage(this._project), stage);
   }
 
   async _clearStage(): Promise<void> {
-    await this._store.removeItem(paths.stage());
+    await this._store.removeItem(paths.stage(this._project));
   }
 
   async _getBlob(id: string): Promise<Object> {

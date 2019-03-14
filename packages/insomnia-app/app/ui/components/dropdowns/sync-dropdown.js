@@ -5,13 +5,13 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
-import { showModal } from '../modals';
+import { showModal, showPrompt } from '../modals';
 import SyncStagingModal from '../modals/sync-staging-modal';
-import { VCS, FileSystemDriver } from 'insomnia-sync';
+import { FileSystemDriver, VCS } from 'insomnia-sync';
 import * as session from '../../../sync/session';
 import * as db from '../../../common/database';
-import * as models from '../../../models';
 import type { BaseModel } from '../../../models';
+import * as models from '../../../models';
 import { getDataDirectory } from '../../../common/misc';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
@@ -42,7 +42,6 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
   constructor(props: Props) {
     super(props);
-    this.setupVCS();
     this.state = {
       localBranches: [],
       currentBranch: '',
@@ -50,11 +49,13 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   setupVCS() {
-    const directory = pathJoin(getDataDirectory(), 'sync2');
+    const { workspace } = this.props;
+    const directory = pathJoin(getDataDirectory(), 'version-control');
     const driver = new FileSystemDriver({ directory });
     const author = session.getAccountId() || 'account_1';
+
     this.vcs = new VCS(
-      'prj_15e703454c1841a79c88d5244fa0f2e5',
+      workspace._id,
       driver,
       author,
       'http://localhost:8000/graphql/',
@@ -72,7 +73,15 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     });
   }
 
+  componentDidUpdate(prevProps: Props) {
+    const { workspace } = this.props;
+    if (prevProps.workspace._id !== workspace._id) {
+      this.setupVCS();
+    }
+  }
+
   componentDidMount() {
+    this.setupVCS();
     this.refreshMainAttributes().catch(err => {
       if (err) {
         console.log('[sync_menu] Error refreshing sync state', err);
@@ -80,7 +89,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     });
   }
 
-  async generateStatusItems(): Promise<Array<{ key: string, name: string, content: Object }>> {
+  async generateStatusItems(): Promise<Array<{ key: string, name: string, document: Object }>> {
     const { workspace } = this.props;
 
     const items = [];
@@ -91,41 +100,52 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       items.push({
         key: doc._id,
         name: (doc: any).name || 'No Name',
-        content: doc,
+        document: doc,
       });
     }
 
     return items;
   }
 
-  async syncDatabase() {
-    const items = await this.generateStatusItems();
-    const itemsMap = {};
-    for (const item of items) {
-      itemsMap[item.key] = item.content;
+  async syncDatabase(delta: { add: Array<Object>, update: Array<Object>, remove: Array<Object> }) {
+    const { add, update, remove } = delta;
+    const flushId = await db.bufferChanges();
+
+    const promisesAdded = [];
+    const promisesUpdated = [];
+    const promisesDeleted = [];
+    for (const doc: BaseModel of update) {
+      promisesUpdated.push(db.update(doc));
     }
 
-    db.bufferChanges();
-    const delta = await this.vcs.delta(items);
-
-    const { deleted, updated, added } = delta;
-
-    const promises = [];
-    for (const doc: BaseModel of updated) {
-      promises.push(db.update(doc));
+    for (const doc: BaseModel of add) {
+      promisesAdded.push(db.insert(doc));
     }
 
-    for (const doc: BaseModel of added) {
-      promises.push(db.insert(doc));
+    for (const doc: BaseModel of remove) {
+      promisesDeleted.push(db.unsafeRemove(doc));
     }
 
-    for (const id of deleted) {
-      const doc = itemsMap[id];
-      promises.push(db.unsafeRemove(doc));
-    }
+    // Perform from least to most dangerous
+    await Promise.all(promisesAdded);
+    await Promise.all(promisesUpdated);
+    await Promise.all(promisesDeleted);
 
-    await Promise.all(promises);
-    await db.flushChanges();
+    await db.flushChanges(flushId);
+  }
+
+  _handleCreateBranch() {
+    showPrompt({
+      title: 'Branch Name',
+      submitName: 'Create Branch',
+      label: 'Name',
+      placeholder: 'my-branch-name',
+      validate: name => this.vcs.validateBranchName(name),
+      onComplete: async name => {
+        await this.vcs.fork(name);
+        await this._handleSwitchBranch(name);
+      },
+    });
   }
 
   _handleShowStagingModal() {
@@ -134,6 +154,12 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
   _handleShowHistoryModal() {
     showModal(SyncHistoryModal, { vcs: this.vcs });
+  }
+
+  async _handleRevertChanges() {
+    const items = await this.generateStatusItems();
+    const delta = await this.vcs.revert(items);
+    await this.syncDatabase(delta);
   }
 
   async _handlePush() {
@@ -149,8 +175,9 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleSwitchBranch(branch: string) {
-    await this.vcs.checkout(branch);
-    await this.syncDatabase();
+    const items = await this.generateStatusItems();
+    const delta = await this.vcs.checkout(items, branch);
+    await this.syncDatabase(delta);
     this.setState({ currentBranch: branch });
   }
 
@@ -196,17 +223,17 @@ class SyncDropdown extends React.PureComponent<Props, State> {
           <DropdownButton className="btn btn--compact wide">{this.renderButton()}</DropdownButton>
 
           <DropdownDivider>
-            Version Control
+            Version Control{' '}
             <HelpTooltip>
               Manage the history of a workspace{' '}
-              <Link href="https://insomnia.rest">
+              <Link href="https://support.insomnia.rest/article/67-version-control">
                 <span className="no-wrap">
                   Help <i className="fa fa-external-link" />
                 </span>
               </Link>
             </HelpTooltip>
           </DropdownDivider>
-          <DropdownItem>
+          <DropdownItem onClick={this._handleCreateBranch}>
             <i className="fa fa-code-fork" />
             New Branch
           </DropdownItem>
@@ -226,12 +253,17 @@ class SyncDropdown extends React.PureComponent<Props, State> {
             Create Snapshot
           </DropdownItem>
 
+          <DropdownItem onClick={this._handleRevertChanges}>
+            <i className="fa fa-undo" />
+            Revert Changes
+          </DropdownItem>
+
           <DropdownItem onClick={this._handleShowHistoryModal}>
             <i className="fa fa-clock-o" />
             View History
           </DropdownItem>
 
-          <DropdownDivider>Select Branch</DropdownDivider>
+          <DropdownDivider>Branches</DropdownDivider>
           {localBranches.map(this.renderBranch)}
         </Dropdown>
       </div>

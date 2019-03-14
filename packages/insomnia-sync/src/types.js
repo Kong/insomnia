@@ -43,6 +43,7 @@ export type StageEntryDelete = {|
   deleted: true,
   key: string,
   name: string,
+  blobId: string,
 |};
 
 export type StageEntryAdd = {|

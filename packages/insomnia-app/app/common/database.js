@@ -77,8 +77,12 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
   delete db._empty;
 
   electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
-    const result = await database[fnName](...args);
-    e.sender.send(replyChannel, result);
+    try {
+      const result = await database[fnName](...args);
+      e.sender.send(replyChannel, null, result);
+    } catch (err) {
+      e.sender.send(replyChannel, { message: err.message, stack: err.stack });
+    }
   });
 
   // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to
@@ -345,7 +349,13 @@ export const insert = (database.insert = async function<T: BaseModel>(
   if (db._empty) return _send('insert', ...arguments);
 
   return new Promise(async (resolve, reject) => {
-    const docWithDefaults = await models.initModel(doc.type, doc);
+    let docWithDefaults;
+    try {
+      docWithDefaults = await models.initModel(doc.type, doc);
+    } catch (err) {
+      return reject(err);
+    }
+
     db[doc.type].insert(docWithDefaults, (err, newDoc) => {
       if (err) {
         return reject(err);
@@ -366,7 +376,13 @@ export const update = (database.update = async function<T: BaseModel>(
   if (db._empty) return _send('update', ...arguments);
 
   return new Promise(async (resolve, reject) => {
-    const docWithDefaults = await models.initModel(doc.type, doc);
+    let docWithDefaults;
+    try {
+      docWithDefaults = await models.initModel(doc.type, doc);
+    } catch (err) {
+      return reject(err);
+    }
+
     db[doc.type].update({ _id: docWithDefaults._id }, docWithDefaults, err => {
       if (err) {
         return reject(err);
@@ -595,8 +611,12 @@ async function _send<T>(fnName: string, ...args: Array<any>): Promise<T> {
   return new Promise((resolve, reject) => {
     const replyChannel = `db.fn.reply:${uuid.v4()}`;
     electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);
-    electron.ipcRenderer.once(replyChannel, (e, result) => {
-      resolve(result);
+    electron.ipcRenderer.once(replyChannel, (e, err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
     });
   });
 }
