@@ -6,6 +6,7 @@ import * as models from '../../../models/index';
 import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
+import type { HotKeyRegistry } from '../../../common/hotkeys';
 
 type Child = {
   doc: Request | RequestGroup,
@@ -29,6 +30,7 @@ type Props = {
   childObjects: Array<Child>,
   workspace: Workspace,
   filter: string,
+  hotKeyRegistry: HotKeyRegistry,
 
   // Optional
   activeRequest?: Request,
@@ -50,6 +52,7 @@ class SidebarChildren extends React.PureComponent<Props> {
       handleActivateRequest,
       activeRequest,
       workspace,
+      hotKeyRegistry,
     } = this.props;
 
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
@@ -73,6 +76,7 @@ class SidebarChildren extends React.PureComponent<Props> {
             isActive={child.doc._id === activeRequestId}
             request={child.doc}
             workspace={workspace}
+            hotKeyRegistry={hotKeyRegistry}
           />
         );
       }
@@ -113,6 +117,7 @@ class SidebarChildren extends React.PureComponent<Props> {
           numChildren={child.children.length}
           workspace={workspace}
           requestGroup={requestGroup}
+          hotKeyRegistry={hotKeyRegistry}
           children={children}
         />
       );

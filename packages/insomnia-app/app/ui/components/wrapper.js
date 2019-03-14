@@ -644,6 +644,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             environments={environments}
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             enableSyncBeta={settings.enableSyncBeta}
+            hotKeyRegistry={settings.hotKeyRegistry}
           />
         </ErrorBoundary>
 
@@ -708,6 +709,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
             editorLineWrapping={settings.editorLineWrapping}
+            hotKeyRegistry={settings.hotKeyRegistry}
             previewMode={responsePreviewMode}
             filter={responseFilter}
             filterHistory={responseFilterHistory}

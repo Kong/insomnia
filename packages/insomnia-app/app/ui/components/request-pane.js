@@ -29,8 +29,8 @@ import { showModal } from './modals/index';
 import RequestSettingsModal from './modals/request-settings-modal';
 import MarkdownPreview from './markdown-preview';
 import type { Settings } from '../../models/settings';
-import * as hotkeys from '../../common/hotkeys';
 import ErrorBoundary from './error-boundary';
+import { hotKeyRefs } from '../../common/hotkeys';
 
 type Props = {
   // Functions
@@ -171,6 +171,8 @@ class RequestPane extends React.PureComponent<Props> {
     const paneHeaderClasses = 'pane__header theme--pane__header';
     const paneBodyClasses = 'pane__body theme--pane__body';
 
+    const hotKeyRegistry = settings.hotKeyRegistry;
+
     if (!request) {
       return (
         <section className={paneClasses}>
@@ -183,7 +185,7 @@ class RequestPane extends React.PureComponent<Props> {
                     <td>New Request</td>
                     <td className="text-right">
                       <code>
-                        <Hotkey hotkey={hotkeys.CREATE_REQUEST} />
+                        <Hotkey keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]} />
                       </code>
                     </td>
                   </tr>
@@ -191,7 +193,7 @@ class RequestPane extends React.PureComponent<Props> {
                     <td>Switch Requests</td>
                     <td className="text-right">
                       <code>
-                        <Hotkey hotkey={hotkeys.SHOW_QUICK_SWITCHER} />
+                        <Hotkey keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_QUICK_SWITCH.id]} />
                       </code>
                     </td>
                   </tr>
@@ -199,7 +201,9 @@ class RequestPane extends React.PureComponent<Props> {
                     <td>Edit Environments</td>
                     <td className="text-right">
                       <code>
-                        <Hotkey hotkey={hotkeys.SHOW_ENVIRONMENTS} />
+                        <Hotkey
+                          keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]}
+                        />
                       </code>
                     </td>
                   </tr>
@@ -251,6 +255,7 @@ class RequestPane extends React.PureComponent<Props> {
               isVariableUncovered={isVariableUncovered}
               handleGetRenderContext={handleGetRenderContext}
               request={request}
+              hotKeyRegistry={settings.hotKeyRegistry}
             />
           </ErrorBoundary>
         </header>

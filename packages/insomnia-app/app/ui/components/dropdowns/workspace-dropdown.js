@@ -17,9 +17,9 @@ import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-moda
 import * as session from '../../../sync/session';
 import LoginModal from '../modals/login-modal';
 import Tooltip from '../tooltip';
-import * as hotkeys from '../../../common/hotkeys';
 import KeydownBinder from '../keydown-binder';
-import SyncStagingModal from '../modals/sync-staging-modal';
+import { hotKeyRefs } from '../../../common/hotkeys';
+import { executeHotKey } from '../../../common/hotkeys-listener';
 
 @autobind
 class WorkspaceDropdown extends PureComponent {
@@ -92,7 +92,7 @@ class WorkspaceDropdown extends PureComponent {
   }
 
   _handleKeydown(e) {
-    hotkeys.executeHotKey(e, hotkeys.TOGGLE_MAIN_MENU, () => {
+    executeHotKey(e, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
   }
@@ -104,6 +104,7 @@ class WorkspaceDropdown extends PureComponent {
       activeWorkspace,
       unseenWorkspaces,
       isLoading,
+      hotKeyRegistry,
       ...other
     } = this.props;
 
@@ -146,7 +147,7 @@ class WorkspaceDropdown extends PureComponent {
           <DropdownDivider>{activeWorkspace.name}</DropdownDivider>
           <DropdownItem onClick={this._handleShowWorkspaceSettings}>
             <i className="fa fa-wrench" /> Workspace Settings
-            <DropdownHint hotkey={hotkeys.SHOW_WORKSPACE_SETTINGS} />
+            <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
           </DropdownItem>
 
           <DropdownItem onClick={this._handleShowShareSettings}>
@@ -177,7 +178,7 @@ class WorkspaceDropdown extends PureComponent {
 
           <DropdownItem onClick={this._handleShowSettings}>
             <i className="fa fa-cog" /> Preferences
-            <DropdownHint hotkey={hotkeys.SHOW_SETTINGS} />
+            <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.PREFERENCES_SHOW_GENERAL.id]} />
           </DropdownItem>
           <DropdownItem onClick={this._handleShowExport}>
             <i className="fa fa-share" /> Import/Export
@@ -201,10 +202,6 @@ class WorkspaceDropdown extends PureComponent {
               <i className="fa fa-star surprise fa-outline" />
             </DropdownItem>
           )}
-
-          <DropdownItem key="foo" onClick={() => showModal(SyncStagingModal)}>
-            <i className="fa fa-git" /> Stage Commit
-          </DropdownItem>
         </Dropdown>
       </KeydownBinder>
     );
@@ -220,6 +217,7 @@ WorkspaceDropdown.propTypes = {
   workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   unseenWorkspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   activeWorkspace: PropTypes.object.isRequired,
+  hotKeyRegistry: PropTypes.object.isRequired,
 
   // Optional
   className: PropTypes.string,

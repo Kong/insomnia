@@ -2,6 +2,7 @@
 import type { BaseModel } from './index';
 import * as db from '../common/database';
 import { UPDATE_CHANNEL_STABLE } from '../common/constants';
+import * as hotkeys from '../common/hotkeys';
 
 type BaseSettings = {
   showPasswords: boolean,
@@ -37,6 +38,7 @@ type BaseSettings = {
 
   // Feature flags
   enableSyncBeta: boolean,
+  hotKeyRegistry: hotkeys.HotKeyRegistry,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -79,6 +81,7 @@ export function init(): BaseSettings {
     fontSize: 13,
     fontVariantLigatures: false,
     enableSyncBeta: false,
+    hotKeyRegistry: hotkeys.newDefaultRegistry(),
   };
 }
 

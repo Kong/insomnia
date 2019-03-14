@@ -56,6 +56,7 @@ class Sidebar extends PureComponent {
       handleActivateRequest,
       activeRequest,
       environmentHighlightColorStyle,
+      hotKeyRegistry,
       enableSyncBeta,
     } = this.props;
 
@@ -79,6 +80,7 @@ class Sidebar extends PureComponent {
           activeWorkspace={workspace}
           workspaces={workspaces}
           unseenWorkspaces={unseenWorkspaces}
+          hotKeyRegistry={hotKeyRegistry}
           handleExportFile={handleExportFile}
           handleImportFile={handleImportFile}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
@@ -92,6 +94,7 @@ class Sidebar extends PureComponent {
             environments={environments}
             workspace={workspace}
             environmentHighlightColorStyle={environmentHighlightColorStyle}
+            hotKeyRegistry={hotKeyRegistry}
           />
           <button className="btn btn--super-compact" onClick={showCookiesModal}>
             <div className="sidebar__menu__thing">
@@ -106,6 +109,7 @@ class Sidebar extends PureComponent {
           requestCreate={this._handleCreateRequestInWorkspace}
           requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
           filter={filter || ''}
+          hotKeyRegistry={hotKeyRegistry}
         />
 
         <SidebarChildren
@@ -123,6 +127,7 @@ class Sidebar extends PureComponent {
           workspace={workspace}
           activeRequest={activeRequest}
           filter={filter || ''}
+          hotKeyRegistry={hotKeyRegistry}
         />
 
         {enableSyncBeta ? (
@@ -169,6 +174,7 @@ Sidebar.propTypes = {
   unseenWorkspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
   environmentHighlightColorStyle: PropTypes.string.isRequired,
+  hotKeyRegistry: PropTypes.object.isRequired,
   enableSyncBeta: PropTypes.bool.isRequired,
 
   // Optional
