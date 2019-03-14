@@ -395,9 +395,7 @@ class App extends PureComponent {
     await this._updateActiveWorkspaceMeta({ activeEnvironmentId });
 
     // Give it time to update and re-render
-    setTimeout(() => {
-      this._wrapper._forceRequestPaneRefresh();
-    }, 100);
+    setTimeout(() => this._wrapper._forceRequestPaneRefresh(), 300);
   }
 
   _handleSetSidebarWidth(sidebarWidth) {
@@ -830,7 +828,7 @@ class App extends PureComponent {
       }
 
       if (needsRefresh) {
-        this._wrapper._forceRequestPaneRefresh();
+        setTimeout(() => this._wrapper._forceRequestPaneRefresh(), 300);
       }
     });
 

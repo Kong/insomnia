@@ -115,15 +115,15 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const promisesUpdated = [];
     const promisesDeleted = [];
     for (const doc: BaseModel of update) {
-      promisesUpdated.push(db.update(doc));
+      promisesUpdated.push(db.update(doc, true));
     }
 
     for (const doc: BaseModel of add) {
-      promisesAdded.push(db.insert(doc));
+      promisesAdded.push(db.insert(doc, true));
     }
 
     for (const doc: BaseModel of remove) {
-      promisesDeleted.push(db.unsafeRemove(doc));
+      promisesDeleted.push(db.unsafeRemove(doc, true));
     }
 
     // Perform from least to most dangerous
