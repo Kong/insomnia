@@ -5,7 +5,7 @@
   "__export_source": "insomnia.importers:v0.1.0",
   "resources": [
     {
-      "_id": "wrk_123abc",
+      "_id": "wrk_123abc-v4",
       "parentId": null,
       "modified": 1477939910686,
       "created": 1474340560460,

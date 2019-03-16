@@ -1,5 +1,5 @@
 // @flow
-import { exportHAR, exportJSON, importRaw, importUri } from '../../common/import';
+import { exportHAR, exportYAML, importRaw, importUri } from '../../common/import';
 
 export function init(): { import: Object, export: Object } {
   return {
@@ -14,7 +14,7 @@ export function init(): { import: Object, export: Object } {
     export: {
       async insomnia(options: { includePrivate?: boolean } = {}): Promise<string> {
         options = options || {};
-        return exportJSON(null, options.includePrivate);
+        return exportYAML(null, options.includePrivate);
       },
       async har(options: { includePrivate?: boolean } = {}): Promise<string> {
         return exportHAR(null, options.includePrivate);
