@@ -12,6 +12,8 @@ type Props = {
   // Optional
   className?: string,
   delay?: number,
+  selectable?: boolean,
+  wide?: boolean,
 };
 
 type State = {
@@ -154,12 +156,14 @@ class Tooltip extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { children, message, className } = this.props;
+    const { children, message, className, selectable, wide } = this.props;
     const { visible } = this.state;
 
     const tooltipClasses = classnames(className, 'tooltip');
     const bubbleClasses = classnames('tooltip__bubble theme--tooltip', {
       'tooltip__bubble--visible': visible,
+      'tooltip__bubble--wide': wide,
+      selectable: selectable,
     });
 
     return (

@@ -111,15 +111,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const { add, update, remove } = delta;
     const flushId = await db.bufferChanges();
 
-    const promisesAdded = [];
-    const promisesUpdated = [];
+    const promisesUpserted = [];
     const promisesDeleted = [];
-    for (const doc: BaseModel of update) {
-      promisesUpdated.push(db.update(doc, true));
-    }
-
-    for (const doc: BaseModel of add) {
-      promisesAdded.push(db.insert(doc, true));
+    for (const doc: BaseModel of [...update, ...add]) {
+      promisesUpserted.push(db.upsert(doc, true));
     }
 
     for (const doc: BaseModel of remove) {
@@ -127,8 +122,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     }
 
     // Perform from least to most dangerous
-    await Promise.all(promisesAdded);
-    await Promise.all(promisesUpdated);
+    await Promise.all(promisesUpserted);
     await Promise.all(promisesDeleted);
 
     await db.flushChanges(flushId);
@@ -152,6 +146,15 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     showModal(SyncStagingModal, { vcs: this.vcs });
   }
 
+  async _handlePullChanges() {
+    const branch = await this.vcs.fetch();
+
+    const items = await this.generateStatusItems();
+    const delta = await this.vcs.merge(items, branch.name);
+    await this.syncDatabase(delta);
+    await this.vcs.removeBranch(branch.name);
+  }
+
   _handleShowHistoryModal() {
     showModal(SyncHistoryModal, { vcs: this.vcs });
   }
@@ -160,14 +163,6 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const items = await this.generateStatusItems();
     const delta = await this.vcs.revert(items);
     await this.syncDatabase(delta);
-  }
-
-  async _handlePush() {
-    try {
-      await this.vcs.push();
-    } catch (err) {
-      console.log('[sync] Failed to push', err);
-    }
   }
 
   async _handleOpen() {
@@ -237,25 +232,17 @@ class SyncDropdown extends React.PureComponent<Props, State> {
             <i className="fa fa-code-fork" />
             New Branch
           </DropdownItem>
-          <DropdownItem>
-            <i className="fa fa-cog" />
-            Configure
-          </DropdownItem>
 
           <DropdownDivider>{currentBranch}</DropdownDivider>
-          <DropdownItem onClick={this._handlePush}>
-            <i className="fa fa-upload" />
+
+          <DropdownItem onClick={this._handleShowStagingModal}>
+            <i className="fa fa-cloud-upload" />
             Push Changes
           </DropdownItem>
 
-          <DropdownItem onClick={this._handleShowStagingModal}>
-            <i className="fa fa-cube" />
-            Create Snapshot
-          </DropdownItem>
-
-          <DropdownItem onClick={this._handleRevertChanges}>
-            <i className="fa fa-undo" />
-            Revert Changes
+          <DropdownItem onClick={this._handlePullChanges}>
+            <i className="fa fa-cloud-download" />
+            Pull Changes
           </DropdownItem>
 
           <DropdownItem onClick={this._handleShowHistoryModal}>

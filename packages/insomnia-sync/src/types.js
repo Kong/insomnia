@@ -2,7 +2,8 @@
 
 export type Project = {
   id: string,
-  // TODO: Add the rest
+  name: string,
+  rootDocumentId: string,
 };
 
 export type DocumentKey = string;

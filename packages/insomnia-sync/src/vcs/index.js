@@ -303,7 +303,7 @@ export default class VCS {
     );
 
     if (preConflicts.length) {
-      console.log('[vcs] Merge failed', preConflicts);
+      console.log('[sync] Merge failed', preConflicts);
       throw new Error('Cannot merge with current changes. Please create a snapshot before merging');
     }
 
@@ -326,23 +326,67 @@ export default class VCS {
       name,
     );
 
-    const dirtyMap = generateCandidateMap(dirty);
+    const candidateMap = generateCandidateMap(dirty);
     const { add, update, remove } = stateDelta(latestStateTrunk, newSnapshot.state);
+    // TODO: Use candidates here to check if additions are actually updates
+    //  It doesn't seem to deal with items that are not yet in version control but are
+    //  in the list of candidates. I think a nice solution might be to consolodate `add`
+    //  and `update` into a single property and just upsert instead.
 
     // Remove all dirty items from the delta so we keep them around
     return {
-      add: await this._getBlobs(add.filter(e => !dirtyMap[e.key]).map(e => e.key)),
-      update: await this._getBlobs(update.filter(e => !dirtyMap[e.key]).map(e => e.key)),
-      remove: await this._getBlobs(remove.filter(e => !dirtyMap[e.key]).map(e => e.key)),
+      add: await this._getBlobs(add.filter(e => !candidateMap[e.key]).map(e => e.blob)),
+      update: await this._getBlobs(update.filter(e => !candidateMap[e.key]).map(e => e.blob)),
+      remove: await this._getBlobs(remove.filter(e => !candidateMap[e.key]).map(e => e.blob)),
     };
   }
 
-  async pull(): Promise<void> {
-    // TODO: Ask server for it's history of current branch
-    // TODO: Compare history with local one
-    // TODO: If server has more, pull down and save entities
-    // TODO: ERROR: Handle case where our HEAD is different from server
-    //    - Will need to perform a merge
+  async fetch(): Promise<Branch> {
+    const localBranch = await this._getCurrentBranch();
+    const branch = await this.queryBranch(localBranch.name);
+
+    // TODO: Ensure remote branch is superset
+    let blobsToFetch = new Set();
+    for (const snapshotId of branch.snapshots) {
+      const localSnapshot = await this._getSnapshot(snapshotId);
+
+      // We already have the snapshot, so skip it
+      if (localSnapshot) {
+        continue;
+      }
+
+      const snapshot = await this.querySnapshot(snapshotId);
+      // for (const { blob } of snapshot.state) {
+      for (let i = 0; i < snapshot.state.length; i++) {
+        const entry = snapshot.state[i];
+
+        const hasBlob = await this._hasBlob(entry.blob);
+        if (!hasBlob) {
+          blobsToFetch.add(entry.blob);
+        }
+
+        if (blobsToFetch.size > 10 || i === snapshot.state.length - 1) {
+          const ids = Array.from(blobsToFetch);
+          const blobs = await this.queryBlobs(ids);
+          console.log('STORE BLBOS', blobs);
+          await this._storeBlobsBuffer(blobs);
+          blobsToFetch.clear();
+        }
+      }
+
+      // Store the snapshot
+      await this._storeSnapshot(snapshot);
+    }
+
+    const originBranch: Branch = {
+      name: 'origin.' + branch.name,
+      created: branch.created,
+      modified: branch.modified,
+      snapshots: branch.snapshots,
+    };
+
+    await this._storeBranch(originBranch);
+    return originBranch;
   }
 
   async takeSnapshot(name: string): Promise<void> {
@@ -465,6 +509,59 @@ export default class VCS {
     return branch;
   }
 
+  async queryBlobs(ids: Array<string>): Promise<{ [string]: Buffer }> {
+    const { blobs } = await this._runGraphQL(
+      `
+      query ($ids: [ID!]!, $projectId: ID!) {
+        blobs(ids: $ids, project: $projectId) {
+          id
+          content
+        }
+      }`,
+      {
+        ids,
+        projectId: this._project,
+      },
+      'blobs',
+    );
+
+    const result = {};
+    for (const blob of blobs) {
+      console.log('HELLO', blob);
+      result[blob.id] = Buffer.from(blob.content, 'base64');
+    }
+
+    return result;
+  }
+
+  async querySnapshot(id: string): Promise<Snapshot> {
+    const { snapshot } = await this._runGraphQL(
+      `
+      query ($id: ID!, $projectId: ID!) {
+        snapshot(id: $id, project: $projectId) {
+          id
+          parent
+          created
+          author
+          name
+          description
+          state {
+            blob
+            key
+            name
+          }
+        }
+      }`,
+      {
+        id,
+        projectId: this._project,
+      },
+      'project',
+    );
+
+    return snapshot;
+  }
+
   async queryPushSnapshot(snapshot: Snapshot): Promise<void> {
     const branch = await this._getCurrentBranch();
     const { snapshotCreate } = await this._runGraphQL(
@@ -538,7 +635,36 @@ export default class VCS {
     console.log(`[sync] Finished uploading ${count}/${allIds.length} blobs`);
   }
 
-  async push(): Promise<void> {
+  async queryCreateProject(workspaceId: string, workspaceName: string): Promise<Project> {
+    const { projectCreate } = await this._runGraphQL(
+      `
+        mutation ($rootDocumentId: ID!, $name: String!, $id: ID!) {
+          projectCreate(name: $name, id: $id, rootDocumentId: $rootDocumentId) {
+            id
+            name
+            rootDocumentId
+          }
+        }
+      `,
+      {
+        id: this._project,
+        rootDocumentId: workspaceId,
+        name: workspaceName,
+      },
+      'createProject',
+    );
+
+    return projectCreate;
+  }
+
+  async push(workspace: { name: string, _id: string }): Promise<void> {
+    let project = await this._getProject();
+
+    if (project === null) {
+      project = await this.queryCreateProject(workspace._id, workspace.name);
+    }
+
+    await this._storeProject(project);
     const branch = await this._getCurrentBranch();
 
     // Check branch history to make sure there are no conflicts
@@ -588,6 +714,10 @@ export default class VCS {
 
   async _getProject(): Promise<Project | null> {
     return this._store.getItem(paths.project(this._project));
+  }
+
+  async _storeProject(project: Project): Promise<void> {
+    return this._store.setItem(paths.project(this._project), project);
   }
 
   async _getHead(): Promise<Head> {
@@ -705,10 +835,6 @@ export default class VCS {
   }
 
   async _storeBlob(id: string, content: Object | null): Promise<void> {
-    if (!id || id === EMPTY_HASH) {
-      return;
-    }
-
     return this._store.setItem(paths.blob(this._project, id), content);
   }
 
@@ -722,12 +848,22 @@ export default class VCS {
     await Promise.all(promises);
   }
 
-  async _getBlobRaw(id: string): Promise<Buffer | null> {
-    if (!id || id === EMPTY_HASH) {
-      return null;
+  async _storeBlobsBuffer(map: { [string]: Buffer }): Promise<void> {
+    const promises = [];
+    for (const id of Object.keys(map)) {
+      const p = paths.blob(this._project, id);
+      promises.push(this._store.setItemRaw(p, map[id]));
     }
 
+    await Promise.all(promises);
+  }
+
+  async _getBlobRaw(id: string): Promise<Buffer | null> {
     return this._store.getItemRaw(paths.blob(this._project, id));
+  }
+
+  async _hasBlob(id: string): Promise<boolean> {
+    return this._store.hasItem(paths.blob(this._project, id));
   }
 }
 

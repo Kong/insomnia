@@ -8,6 +8,7 @@ import { VCS } from 'insomnia-sync';
 import type { Workspace } from '../../../models/workspace';
 import TimeFromNow from '../time-from-now';
 import * as syncTypes from 'insomnia-sync/src/types';
+import Tooltip from '../tooltip';
 
 type Props = {
   workspace: Workspace,
@@ -72,21 +73,24 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
           <table className="table--fancy table--striped">
             <thead>
               <tr>
-                <th className="text-left">Hash</th>
-                <th className="text-left">Time</th>
-                <th className="text-left">Objects</th>
                 <th className="text-left">Message</th>
+                <th className="text-left">Time</th>
+                <th className="text-right">Objects</th>
               </tr>
             </thead>
             <tbody>
               {history.map(snapshot => (
                 <tr key={snapshot.id}>
-                  <td className="monospace txt-sm selectable">{snapshot.id}</td>
+                  <td>
+                    {snapshot.name}{' '}
+                    <Tooltip message={snapshot.id} selectable position="right" wide>
+                      <i className="fa fa-info-circle" />
+                    </Tooltip>
+                  </td>
                   <td>
                     <TimeFromNow timestamp={snapshot.created} intervalSeconds={30} />
                   </td>
-                  <td>{snapshot.state.length}</td>
-                  <td>{snapshot.name}</td>
+                  <td className="text-right">{snapshot.state.length}</td>
                 </tr>
               ))}
             </tbody>

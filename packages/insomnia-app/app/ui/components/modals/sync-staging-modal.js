@@ -148,6 +148,14 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       return;
     }
 
+    try {
+      const { workspace } = this.props;
+      await this.vcs.push(workspace);
+    } catch (err) {
+      this.setState({ error: err.message });
+      return;
+    }
+
     await this.updateStatus({ message: '', error: '' });
   }
 
@@ -245,7 +253,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
 
     return (
       <Modal ref={this._setModalRef}>
-        <ModalHeader>Stage Files</ModalHeader>
+        <ModalHeader>Sync Changes</ModalHeader>
         <ModalBody className="wide pad">
           {error && (
             <p className="notice error margin-bottom-sm no-margin-top">
@@ -294,7 +302,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
               />
             </div>
             <button className="btn btn--clicky space-left" onClick={this._handleTakeSnapshot}>
-              Take Snapshot
+              Sync Changes
             </button>
           </div>
           <div>

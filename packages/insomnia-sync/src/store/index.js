@@ -33,6 +33,10 @@ export default class Store {
     return this._driver.setItem(key, serializedValue);
   }
 
+  async setItemRaw(key: string, value: Buffer): Promise<void> {
+    return this._driver.setItem(key, value);
+  }
+
   async getItem(key: string): Promise<JSONValue | null> {
     const rawValue = await this.getItemRaw(key);
     if (rawValue === null) {
@@ -46,6 +50,7 @@ export default class Store {
       // Without the `await` here, the catch won't get called
       value = await this._deserialize(ext, rawValue);
     } catch (err) {
+      console.log('Failed to deserialize', rawValue.toString('base64'));
       throw new Error(`Failed to deserialize key=${key} err=${err}`);
     }
 
