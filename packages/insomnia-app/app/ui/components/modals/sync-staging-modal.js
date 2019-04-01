@@ -36,6 +36,7 @@ const WHITE_LIST = {
 class SyncStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   vcs: VCS;
+  onPush: () => any;
 
   constructor(props: Props) {
     super(props);
@@ -157,6 +158,10 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     }
 
     await this.updateStatus({ message: '', error: '' });
+
+    if (this.onPush) {
+      this.onPush();
+    }
   }
 
   async generateStatusItems(): Promise<Array<syncTypes.StatusCandidate>> {
@@ -175,29 +180,21 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     return items;
   }
 
-  async syncDatabase(delta?: {
-    add: Array<BaseModel>,
-    update: Array<BaseModel>,
-    remove: Array<BaseModel>,
-  }) {
+  async syncDatabase(delta?: { upsert: Array<BaseModel>, remove: Array<BaseModel> }) {
     const items = await this.generateStatusItems();
     const itemsMap = {};
     for (const item of items) {
       itemsMap[item.key] = item.document;
     }
 
-    db.bufferChanges();
+    const flushId = await db.bufferChanges();
     delta = delta || (await this.vcs.delta(items));
 
-    const { remove, update, add } = delta;
+    const { remove, upsert } = delta;
 
     const promises = [];
-    for (const doc: BaseModel of update) {
-      promises.push(db.update(doc));
-    }
-
-    for (const doc: BaseModel of add) {
-      promises.push(db.insert(doc));
+    for (const doc: BaseModel of upsert) {
+      promises.push(db.upsert(doc));
     }
 
     for (const doc: BaseModel of remove) {
@@ -205,7 +202,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     }
 
     await Promise.all(promises);
-    await db.flushChanges();
+    await db.flushChanges(flushId);
   }
 
   async updateStatus(newState?: Object) {
@@ -227,8 +224,9 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async show(options: { vcs: VCS }) {
+  async show(options: { vcs: VCS, onPush: () => any }) {
     this.vcs = options.vcs;
+    this.onPush = options.onPush;
     this.modal && this.modal.show();
     await this.updateStatus();
   }
@@ -279,7 +277,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
               onClick={this._handleRemoveBranch}
               disabled={!actionBranch || actionBranch === branch}
               addIcon
-              confirmMessage=" ">
+              confirmMessage="">
               <i className="fa fa-trash-o" />
             </PromptButton>
             <PromptButton
@@ -287,7 +285,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
               onClick={this._handleMergeBranch}
               disabled={!actionBranch || actionBranch === branch}
               addIcon
-              confirmMessage=" ">
+              confirmMessage="">
               <i className="fa fa-code-fork" />
             </PromptButton>
           </div>

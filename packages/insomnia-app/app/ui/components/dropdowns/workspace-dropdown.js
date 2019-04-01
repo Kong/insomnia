@@ -14,7 +14,7 @@ import { showModal, showPrompt } from '../modals/index';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
-import * as session from '../../../sync/session';
+import { session } from 'insomnia-account';
 import LoginModal from '../modals/login-modal';
 import Tooltip from '../tooltip';
 import KeydownBinder from '../keydown-binder';

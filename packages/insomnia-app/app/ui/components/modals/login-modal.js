@@ -5,7 +5,7 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import * as session from '../../../sync/session';
+import { session } from 'insomnia-account';
 import * as sync from '../../../sync';
 
 @autobind

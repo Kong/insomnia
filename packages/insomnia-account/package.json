@@ -1,0 +1,17 @@
+{
+  "name": "insomnia-account",
+  "version": "0.0.1",
+  "author": "Gregory Schier <gschier1990@gmail.com>",
+  "description": "Account utilities for Insomnia",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "hkdf": "0.0.2",
+    "node-forge": "^0.8.2",
+    "srp-js": "^0.2.1",
+    "whatwg-fetch": "^3.0.0"
+  }
+}

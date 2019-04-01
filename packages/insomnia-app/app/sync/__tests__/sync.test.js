@@ -1,9 +1,9 @@
 import * as sync from '../index';
-import * as session from '../session';
+import * as session from '../../../../insomnia-account/src/session';
 import * as models from '../../models';
 import * as db from '../../common/database';
 import * as syncStorage from '../storage';
-import * as crypt from '../crypt';
+import { crypt } from 'insomnia-account';
 import { globalBeforeEach } from '../../__jest__/before-each';
 
 describe('Test push/pull behaviour', () => {

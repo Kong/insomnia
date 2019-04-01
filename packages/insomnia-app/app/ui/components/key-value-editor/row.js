@@ -376,7 +376,7 @@ class KeyValueEditorRow extends PureComponent {
               <PromptButton
                 key={Math.random()}
                 tabIndex={-1}
-                confirmMessage=" "
+                confirmMessage=""
                 addIcon
                 onClick={this._handleDelete}
                 title="Delete item">

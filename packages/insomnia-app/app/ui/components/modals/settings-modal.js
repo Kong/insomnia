@@ -16,7 +16,7 @@ import Theme from '../settings/theme';
 import * as models from '../../../models/index';
 import { Curl } from 'insomnia-libcurl';
 import { getAppName, getAppVersion } from '../../../common/constants';
-import * as session from '../../../sync/session';
+import { session } from 'insomnia-account';
 import Tooltip from '../tooltip';
 import { setTheme } from '../../../plugins/misc';
 

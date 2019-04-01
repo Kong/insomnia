@@ -1,11 +1,19 @@
 import * as db from '../common/database';
 import * as models from '../models';
-import * as crypt from './crypt';
-import * as session from './session';
+import { crypt, session } from 'insomnia-account';
 import * as store from './storage';
 import * as misc from '../common/misc';
 import Logger from './logger';
 import * as zlib from 'zlib';
+import {
+  syncCreateResourceGroup,
+  syncFixDupes,
+  syncGetResourceGroup,
+  syncPull,
+  syncPush,
+  syncResetData,
+} from './network';
+import { isLoggedIn } from 'insomnia-account/src/session';
 
 export const START_DELAY = 1e3;
 export const PULL_PERIOD = 15e3;
@@ -48,7 +56,7 @@ export async function init() {
 
     for (const [event, doc, fromSync] of sortedChanges) {
       const notOnWhitelist = !WHITE_LIST[doc.type];
-      const notLoggedIn = !session.isLoggedIn();
+      const notLoggedIn = !isLoggedIn();
 
       if (doc.isPrivate) {
         logger.debug(`Skip private doc change ${doc._id}`);
@@ -138,7 +146,7 @@ export function doInitialSync() {
  * even periodically) and can be removed once the bug stops persisting.
  */
 export async function fixDuplicateResourceGroups() {
-  if (!session.isLoggedIn()) {
+  if (!isLoggedIn()) {
     return;
   }
 
@@ -154,7 +162,7 @@ export async function fixDuplicateResourceGroups() {
 
     // Fix duplicates
     const ids = resources.map(r => r.resourceGroupId);
-    const { deleteResourceGroupIds } = await session.syncFixDupes(ids);
+    const { deleteResourceGroupIds } = await syncFixDupes(ids);
 
     for (const idToDelete of deleteResourceGroupIds) {
       await store.removeResourceGroup(idToDelete);
@@ -187,7 +195,7 @@ export async function writePendingChanges() {
 }
 
 export async function push(resourceGroupId = null) {
-  if (!session.isLoggedIn()) {
+  if (!isLoggedIn()) {
     return;
   }
 
@@ -223,7 +231,7 @@ export async function push(resourceGroupId = null) {
 
   let responseBody;
   try {
-    responseBody = await session.syncPush(dirtyResources);
+    responseBody = await syncPush(dirtyResources);
   } catch (e) {
     logger.error('Failed to push changes', e);
     return;
@@ -298,7 +306,7 @@ export async function push(resourceGroupId = null) {
 }
 
 export async function pull(resourceGroupId = null, createMissingResources = true) {
-  if (!session.isLoggedIn()) {
+  if (!isLoggedIn()) {
     return;
   }
 
@@ -343,7 +351,7 @@ export async function pull(resourceGroupId = null, createMissingResources = true
 
   let responseBody;
   try {
-    responseBody = await session.syncPull(body);
+    responseBody = await syncPull(body);
   } catch (e) {
     logger.error('Failed to sync changes', e, body);
     return;
@@ -537,7 +545,7 @@ export async function resetLocalData() {
 }
 
 export async function resetRemoteData() {
-  await session.syncResetData();
+  await syncResetData();
 }
 
 // ~~~~~~~ //
@@ -589,7 +597,7 @@ export async function fetchResourceGroup(resourceGroupId, invalidateCache = fals
 
     if (!resourceGroup) {
       try {
-        resourceGroup = await session.syncGetResourceGroup(resourceGroupId);
+        resourceGroup = await syncGetResourceGroup(resourceGroupId);
       } catch (e) {
         if (e.statusCode === 404) {
           await store.removeResourceGroup(resourceGroupId);
@@ -718,7 +726,7 @@ export async function createResourceGroup(parentId, name) {
   // Create the new ResourceGroup
   let resourceGroup;
   try {
-    resourceGroup = await session.syncCreateResourceGroup(parentId, name, encRGSymmetricJWK);
+    resourceGroup = await syncCreateResourceGroup(parentId, name, encRGSymmetricJWK);
   } catch (e) {
     logger.error(`Failed to create ResourceGroup: ${e}`);
     throw e;

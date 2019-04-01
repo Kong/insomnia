@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import autobind from 'autobind-decorator';
-import * as session from '../../../sync/session';
+import { session } from 'insomnia-account';
 import * as sync from '../../../sync/index';
 import Link from '../base/link';
 import LoginModal from '../modals/login-modal';

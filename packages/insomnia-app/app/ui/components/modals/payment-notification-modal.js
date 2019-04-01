@@ -5,7 +5,7 @@ import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import * as session from '../../../sync/session';
+import { session } from 'insomnia-account';
 import * as sync from '../../../sync/index';
 
 let hidePaymentNotificationUntilNextLaunch = false;

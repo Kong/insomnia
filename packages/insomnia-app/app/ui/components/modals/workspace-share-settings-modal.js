@@ -7,10 +7,10 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import * as session from '../../../sync/session';
+import { session } from 'insomnia-account';
 import * as sync from '../../../sync/index';
-import { showPrompt } from './index';
 import PromptButton from '../base/prompt-button';
+import { shareWithTeam } from '../../../sync/network';
 
 @autobind
 class WorkspaceShareSettingsModal extends PureComponent {
@@ -49,25 +49,16 @@ class WorkspaceShareSettingsModal extends PureComponent {
     }
   }
 
-  _handleShareWithTeam(team) {
-    showPrompt({
-      title: 'Share Workspace',
-      label: 'Confirm password to share workspace',
-      placeholder: '•••••••••••••••••',
-      submitName: 'Share with Team',
-      inputType: 'password',
-      onComplete: async passphrase => {
-        const { resourceGroup } = this.state;
-        this._resetState({ loading: true });
+  async _handleShareWithTeam(team) {
+    const { resourceGroup } = this.state;
+    this._resetState({ loading: true });
 
-        try {
-          await session.shareWithTeam(resourceGroup.id, team.id, passphrase);
-          await this._load();
-        } catch (err) {
-          this._resetState({ error: err.message, loading: false });
-        }
-      },
-    });
+    try {
+      await shareWithTeam(resourceGroup.id, team.id);
+      await this._load();
+    } catch (err) {
+      this._resetState({ error: err.message, loading: false });
+    }
   }
 
   async _load() {

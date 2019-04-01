@@ -7,8 +7,10 @@ import ModalHeader from '../base/modal-header';
 import { VCS } from 'insomnia-sync';
 import type { Workspace } from '../../../models/workspace';
 import TimeFromNow from '../time-from-now';
-import * as syncTypes from 'insomnia-sync/src/types';
 import Tooltip from '../tooltip';
+import type { Snapshot } from 'insomnia-sync/src/types';
+import PromptButton from '../base/prompt-button';
+import HelpTooltip from '../help-tooltip';
 
 type Props = {
   workspace: Workspace,
@@ -16,13 +18,14 @@ type Props = {
 
 type State = {
   branch: string,
-  history: Array<syncTypes.Snapshot>,
+  history: Array<Snapshot>,
 };
 
 @autobind
 class SyncHistoryModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   vcs: VCS;
+  handleRollback: Snapshot => Promise<void>;
 
   constructor(props: Props) {
     super(props);
@@ -36,8 +39,9 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
     this.modal = m;
   }
 
-  _handleDone() {
-    this.hide();
+  async _handleClickRollback(snapshot: Snapshot) {
+    await this.handleRollback(snapshot);
+    await this.refreshState();
   }
 
   async refreshState(newState?: Object) {
@@ -55,9 +59,10 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async show(options: { vcs: VCS }) {
+  async show(options: { vcs: VCS, handleRollback: Snapshot => Promise<void> }) {
     this.vcs = options.vcs;
     this.modal && this.modal.show();
+    this.handleRollback = options.handleRollback;
     await this.refreshState();
   }
 
@@ -76,21 +81,35 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
                 <th className="text-left">Message</th>
                 <th className="text-left">Time</th>
                 <th className="text-right">Objects</th>
+                <th className="text-right">
+                  Rollback
+                  <HelpTooltip>
+                    Rolling back will clear any unsynced changes and update the local app data to
+                    match the desired snapshot. This operation leaves modifications in an un-synced
+                    state, as if you had made the modifications manually.
+                  </HelpTooltip>
+                </th>
               </tr>
             </thead>
             <tbody>
               {history.map(snapshot => (
                 <tr key={snapshot.id}>
                   <td>
-                    {snapshot.name}{' '}
-                    <Tooltip message={snapshot.id} selectable position="right" wide>
-                      <i className="fa fa-info-circle" />
+                    <Tooltip message={snapshot.id} selectable wide delay={500}>
+                      {snapshot.name}{' '}
                     </Tooltip>
                   </td>
                   <td>
                     <TimeFromNow timestamp={snapshot.created} intervalSeconds={30} />
                   </td>
                   <td className="text-right">{snapshot.state.length}</td>
+                  <td className="text-right">
+                    <PromptButton
+                      className="btn btn--micro btn--outlined"
+                      onClick={() => this._handleClickRollback(snapshot)}>
+                      Rollback
+                    </PromptButton>
+                  </td>
                 </tr>
               ))}
             </tbody>

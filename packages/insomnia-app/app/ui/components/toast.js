@@ -5,10 +5,11 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import GravatarImg from './gravatar-img';
 import Link from './base/link';
-import * as fetch from '../../common/fetch';
+import { fetch } from 'insomnia-account';
 import * as models from '../../models/index';
 import * as constants from '../../common/constants';
 import * as db from '../../common/database';
+import { getCurrentSessionId } from 'insomnia-account/src/session';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
@@ -90,7 +91,7 @@ class Toast extends React.PureComponent<Props, State> {
         updateChannel: !settings.updateChannel,
       };
 
-      notification = await fetch.post(`/notification`, data);
+      notification = await fetch.post(`/notification`, data, getCurrentSessionId());
     } catch (err) {
       console.warn('[toast] Failed to fetch user notifications', err);
     }

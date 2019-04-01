@@ -122,7 +122,7 @@ class Tooltip extends React.PureComponent<Props, State> {
       bubble.style.top = '';
       bubble.style.bottom = '';
       bubble.style.right = '';
-    }, this.props.delay || 100);
+    }, 100);
   }
 
   _getContainer(): HTMLElement {

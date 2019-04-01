@@ -4,7 +4,7 @@ import autobind from 'autobind-decorator';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showModal } from '../modals';
 import * as syncStorage from '../../../sync/storage';
-import * as session from '../../../sync/session';
+import { session } from 'insomnia-account';
 import * as sync from '../../../sync';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import SetupSyncModal from '../modals/setup-sync-modal';

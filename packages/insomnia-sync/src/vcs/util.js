@@ -203,6 +203,43 @@ export function threeWayMerge(
   };
 }
 
+export function compareBranches(a: Branch, b: Branch): { ahead: number, behind: number } {
+  const latestA = a.snapshots[a.snapshots.length - 1] || null;
+  const latestB = b.snapshots[b.snapshots.length - 1] || null;
+
+  const result = {
+    ahead: 0,
+    behind: 0,
+  };
+
+  if (latestA === latestB) {
+    return result;
+  }
+
+  if (latestA === null) {
+    result.behind = b.snapshots.length;
+    return result;
+  }
+
+  if (latestB === null) {
+    result.ahead = a.snapshots.length;
+    return result;
+  }
+
+  const root = getRootSnapshot(a, b);
+  if (root === null) {
+    return result;
+  }
+
+  const indexOfRootInA = a.snapshots.indexOf(root);
+  const indexOfRootInB = b.snapshots.indexOf(root);
+
+  result.ahead = a.snapshots.length - indexOfRootInA - 1;
+  result.behind = b.snapshots.length - indexOfRootInB - 1;
+
+  return result;
+}
+
 export function stateDelta(
   base: SnapshotState,
   desired: SnapshotState,

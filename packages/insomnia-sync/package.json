@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "bson": "^4.0.1",
+    "insomnia-account": "^0.0.1",
     "mkdirp": "^0.5.1",
     "ws": "^6.1.3"
   }

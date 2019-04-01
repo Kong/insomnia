@@ -1,5 +1,6 @@
 import {
   combinedMapKeys,
+  compareBranches,
   generateCandidateMap,
   generateSnapshotStateMap,
   getRootSnapshot,
@@ -523,6 +524,89 @@ describe('util', () => {
       expect(preMergeCheck(trunk, other, cands)).toEqual({
         conflicts: [],
         dirty: [DC1],
+      });
+    });
+  });
+
+  describe('compareBranches()', () => {
+    it('empty states are the same', () => {
+      const a = newBranch([]);
+      const b = newBranch([]);
+      expect(compareBranches(a, b)).toEqual({
+        ahead: 0,
+        behind: 0,
+      });
+    });
+
+    it('works with other empty', () => {
+      const a = newBranch([]);
+      const b = newBranch(['1']);
+      expect(compareBranches(a, b)).toEqual({
+        ahead: 0,
+        behind: 1,
+      });
+    });
+
+    it('works with one empty', () => {
+      const a = newBranch(['1']);
+      const b = newBranch([]);
+      expect(compareBranches(a, b)).toEqual({
+        ahead: 1,
+        behind: 0,
+      });
+    });
+
+    it('same states are the same', () => {
+      const a = newBranch(['1']);
+      const b = newBranch(['1']);
+      expect(compareBranches(a, b)).toEqual({
+        ahead: 0,
+        behind: 0,
+      });
+    });
+
+    it('same final states are the same', () => {
+      const a = newBranch(['1', '2']);
+      const b = newBranch(['0', '2']);
+      expect(compareBranches(a, b)).toEqual({
+        ahead: 0,
+        behind: 0,
+      });
+    });
+
+    it('subset of B is ahead', () => {
+      const a = newBranch(['1', '2', '3']);
+      const b = newBranch(['0', '2']);
+      expect(compareBranches(a, b)).toEqual({
+        ahead: 1,
+        behind: 0,
+      });
+    });
+
+    it('subset of A is behind', () => {
+      const a = newBranch(['1', '2']);
+      const b = newBranch(['0', '2', '3']);
+      expect(compareBranches(a, b)).toEqual({
+        ahead: 0,
+        behind: 1,
+      });
+    });
+
+    it('states have diverged', () => {
+      const a = newBranch(['1', '2', '3', '5']);
+      const b = newBranch(['0', '2', '3', '4']);
+      expect(compareBranches(a, b)).toEqual({
+        ahead: 1,
+        behind: 1,
+      });
+    });
+
+    it('states have diverged scenario 2', () => {
+      const a = newBranch(['1', '2', '3', '5', '9']);
+      const b = newBranch(['0', '2', '3', '4', '8', '11']);
+      expect(compareBranches(a, b)).toEqual({
+        ahead: 2,
+        behind: 3,
       });
     });
   });

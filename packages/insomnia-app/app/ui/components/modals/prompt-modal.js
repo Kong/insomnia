@@ -184,7 +184,7 @@ class PromptModal extends React.PureComponent<Props, State> {
         </Button>
         <PromptButton
           addIcon
-          confirmMessage=" "
+          confirmMessage=""
           className="tall space-left icon"
           onClick={this._handleDeleteHint}
           value={hint}>

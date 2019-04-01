@@ -13,7 +13,7 @@ import {
 import type { Settings } from '../../../models/settings';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { setFont } from '../../../plugins/misc';
-import * as session from '../../../sync/session';
+import { session } from 'insomnia-account';
 
 type Props = {
   settings: Settings,

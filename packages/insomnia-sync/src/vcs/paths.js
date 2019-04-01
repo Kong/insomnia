@@ -1,7 +1,11 @@
 // @flow
 
+export function projects(): string {
+  return `/projects/`;
+}
+
 export function projectBase(projectId: string): string {
-  return `/projects/${projectId}/`;
+  return `${projects()}${projectId}/`;
 }
 
 export function stage(projectId: string): string {

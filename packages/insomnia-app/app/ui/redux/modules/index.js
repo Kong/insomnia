@@ -4,7 +4,8 @@ import configureStore from '../create';
 import * as global from './global';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
-import * as fetch from '../../../common/fetch';
+import { fetch } from 'insomnia-account';
+import { API_BASE_URL, getClientString } from '../../../common/constants';
 
 export async function init() {
   const store = configureStore();
@@ -21,6 +22,7 @@ export async function init() {
   db.onChange(addChanges);
 
   // Bind to fetch commands
+  fetch.setup(getClientString(), API_BASE_URL);
   fetch.onCommand(newCommand);
 
   store.dispatch(global.init());
