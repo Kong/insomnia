@@ -182,10 +182,8 @@ module.exports.decryptAESToBuffer = function(jwkOrKey, encryptedResult) {
   decipher.update(forge.util.createBuffer(forge.util.hexToBytes(encryptedResult.d)));
 
   if (decipher.finish()) {
-    console.log('HELLO', forge.util.bytesToHex(decipher.output));
     return Buffer.from(forge.util.bytesToHex(decipher.output), 'hex');
   } else {
-    console.log('HELLO', decipher);
     throw new Error('Failed to decrypt data');
   }
 };

@@ -5,6 +5,13 @@ function newDoc(id) {
   return { id };
 }
 
+async function vcs(branch) {
+  const v = new VCS(new MemoryDriver());
+  await v.switchProject('workspace_1', 'Test Workspace');
+  await v.checkout([], branch);
+  return v;
+}
+
 describe('VCS', () => {
   beforeEach(() => {
     let ts = 1000000000000;
@@ -13,9 +20,7 @@ describe('VCS', () => {
 
   describe('status()', () => {
     it('returns status with no commits', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
-
+      const v = await vcs('master');
       const status = await v.status([
         {
           key: 'foo',
@@ -52,8 +57,7 @@ describe('VCS', () => {
     });
 
     it('returns add/modify/delete operations', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
 
       const status1 = await v.status([
         { key: 'a', name: 'A', document: newDoc('aaa') },
@@ -71,7 +75,8 @@ describe('VCS', () => {
         {
           created: expect.any(Date),
           description: '',
-          id: '6761e77e27c6158f84f00212e2dfa5fa9ef16dd9',
+          author: '',
+          id: 'f6107736c37de37da4604a08bf25f5348ab579a4',
           name: 'Add a/b/c',
           parent: '0000000000000000000000000000000000000000',
           state: [
@@ -186,8 +191,7 @@ describe('VCS', () => {
     });
 
     it('can appear both staged and unstaged', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
 
       const status = await v.status([
         { key: 'a', name: 'A', document: newDoc('aaa') },
@@ -231,8 +235,7 @@ describe('VCS', () => {
     });
 
     it('should not show committed entities', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
 
       const status = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }]);
       await v.stage([status.unstaged['foo']]);
@@ -249,8 +252,7 @@ describe('VCS', () => {
 
   describe('stage()', () => {
     it('stages entity', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
 
       const status = await v.status([
         { key: 'foo', name: 'Foo', document: newDoc('bar') },
@@ -298,8 +300,7 @@ describe('VCS', () => {
 
   describe('takeSnapshot()', () => {
     it('commits basic entity', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
 
       const status = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }]);
       await v.stage([status.unstaged['foo']]);
@@ -308,7 +309,8 @@ describe('VCS', () => {
       const history = await v.getHistory();
       expect(history).toEqual([
         {
-          id: '37d0db42b703ffcf6331dc4fc2d9233575edac2a',
+          id: 'ffb97dd3bef3ed166d7c7ddc8ce7e340b2bde3b9',
+          author: '',
           created: expect.any(Date),
           name: 'Add foo',
           description: '',
@@ -325,8 +327,7 @@ describe('VCS', () => {
     });
 
     it('commits deleted entity', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
 
       const status = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }]);
       await v.stage([status.unstaged['foo']]);
@@ -335,7 +336,8 @@ describe('VCS', () => {
       const history = await v.getHistory();
       expect(history).toEqual([
         {
-          id: '37d0db42b703ffcf6331dc4fc2d9233575edac2a',
+          id: 'ffb97dd3bef3ed166d7c7ddc8ce7e340b2bde3b9',
+          author: '',
           created: expect.any(Date),
           name: 'Add foo',
           description: '',
@@ -357,7 +359,8 @@ describe('VCS', () => {
 
       expect(history2).toEqual([
         {
-          id: '37d0db42b703ffcf6331dc4fc2d9233575edac2a',
+          id: 'ffb97dd3bef3ed166d7c7ddc8ce7e340b2bde3b9',
+          author: '',
           created: expect.any(Date),
           name: 'Add foo',
           description: '',
@@ -371,11 +374,12 @@ describe('VCS', () => {
           ],
         },
         {
-          id: '00345d33c3319c869a544e8e34496bf73df07e08',
+          id: '7ce6512d079136b57ba41502fbef96882a790fda',
+          author: '',
           created: expect.any(Date),
           name: 'Delete foo',
           description: '',
-          parent: '37d0db42b703ffcf6331dc4fc2d9233575edac2a',
+          parent: 'ffb97dd3bef3ed166d7c7ddc8ce7e340b2bde3b9',
           state: [],
         },
       ]);
@@ -384,8 +388,7 @@ describe('VCS', () => {
 
   describe('getBranches()', () => {
     it('lists branches', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
 
       await v.checkout([], 'branch-1');
       await v.checkout([], 'branch-2');
@@ -397,8 +400,7 @@ describe('VCS', () => {
 
   describe('removeBranch()', () => {
     it('cannot remove empty branch', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
 
       let didError = false;
       try {
@@ -411,8 +413,7 @@ describe('VCS', () => {
     });
 
     it('cannot remove current branch', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
 
       let didError = false;
       try {
@@ -425,8 +426,7 @@ describe('VCS', () => {
     });
 
     it('remove branch', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
 
       // Add something to master
       const status1 = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }]);
@@ -446,8 +446,7 @@ describe('VCS', () => {
 
   describe('fork()', () => {
     it('forks to a new branch', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
 
       // Add something to master
       const status1 = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }]);
@@ -462,7 +461,8 @@ describe('VCS', () => {
       expect(history).toEqual([
         {
           created: expect.any(Date),
-          id: '37d0db42b703ffcf6331dc4fc2d9233575edac2a',
+          id: 'ffb97dd3bef3ed166d7c7ddc8ce7e340b2bde3b9',
+          author: '',
           parent: '0000000000000000000000000000000000000000',
           name: 'Add foo',
           description: '',
@@ -481,8 +481,8 @@ describe('VCS', () => {
   const name = 'merge()';
   describe(name, () => {
     it('performs fast-forward merge', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
+
       const status1 = await v.status([
         { key: 'a', name: 'A', document: newDoc('aaa') },
         { key: 'b', name: 'B', document: newDoc('bbb') },
@@ -513,8 +513,8 @@ describe('VCS', () => {
     });
 
     it('merges even if no common root', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
+
       const status1 = await v.status([
         { key: 'a', name: 'A', document: newDoc('aaa') },
         { key: 'b', name: 'B', document: newDoc('bbb') },
@@ -524,8 +524,7 @@ describe('VCS', () => {
     });
 
     it('does something', async () => {
-      const v = new VCS('wrk_1', new MemoryDriver());
-      await v.checkout([], 'master');
+      const v = await vcs('master');
 
       // Add a file to master
       expect(await v.getBranch()).toBe('master');
@@ -534,7 +533,8 @@ describe('VCS', () => {
       await v.takeSnapshot('Add A');
       expect(await v.getHistory()).toEqual([
         {
-          id: 'fd2b39c128ecbb478d3b485a3de75317c824a207',
+          id: '3d82ed6065fbf70d2aeba97a7e6013a6b8dca41c',
+          author: '',
           created: expect.any(Date),
           parent: '0000000000000000000000000000000000000000',
           name: 'Add A',
@@ -559,7 +559,8 @@ describe('VCS', () => {
       await v.takeSnapshot('Add B');
       expect(await v.getHistory()).toEqual([
         {
-          id: 'fd2b39c128ecbb478d3b485a3de75317c824a207',
+          id: '3d82ed6065fbf70d2aeba97a7e6013a6b8dca41c',
+          author: '',
           created: expect.any(Date),
           parent: '0000000000000000000000000000000000000000',
           name: 'Add A',
@@ -573,9 +574,10 @@ describe('VCS', () => {
           ],
         },
         {
-          id: '73ca8b5e0f7e38b3ae07162d757282f232f9a75a',
+          id: 'c6054a0455f01464f2c219e1af432a8817da3f32',
+          author: '',
           created: expect.any(Date),
-          parent: 'fd2b39c128ecbb478d3b485a3de75317c824a207',
+          parent: '3d82ed6065fbf70d2aeba97a7e6013a6b8dca41c',
           name: 'Add B',
           description: '',
           state: [
@@ -599,7 +601,8 @@ describe('VCS', () => {
       await v.merge([], 'new-branch');
       expect(await v.getHistory()).toEqual([
         {
-          id: 'fd2b39c128ecbb478d3b485a3de75317c824a207',
+          id: '3d82ed6065fbf70d2aeba97a7e6013a6b8dca41c',
+          author: '',
           created: expect.any(Date),
           parent: '0000000000000000000000000000000000000000',
           name: 'Add A',
@@ -613,10 +616,11 @@ describe('VCS', () => {
           ],
         },
         {
-          id: '73ca8b5e0f7e38b3ae07162d757282f232f9a75a',
+          id: 'c6054a0455f01464f2c219e1af432a8817da3f32',
+          author: '',
           created: expect.any(Date),
-          parent: 'fd2b39c128ecbb478d3b485a3de75317c824a207',
-          name: 'Merged branch new-branch',
+          parent: '3d82ed6065fbf70d2aeba97a7e6013a6b8dca41c',
+          name: 'Add B',
           description: '',
           state: [
             {

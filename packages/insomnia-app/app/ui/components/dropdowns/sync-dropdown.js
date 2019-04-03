@@ -18,6 +18,7 @@ import Link from '../base/link';
 import SyncHistoryModal from '../modals/sync-history-modal';
 import type { Snapshot, Status } from 'insomnia-sync/src/types';
 import Tooltip from '../tooltip';
+import SyncShareModal from '../modals/sync-share-modal';
 
 const MODEL_WHITELIST = {
   [models.workspace.type]: true,
@@ -115,7 +116,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       .catch(err => console.log('[sync_menu] Error refreshing sync state', err))
       .finally(() => this.setState({ initializing: false }));
 
-    this.checkInterval = setInterval(this.refreshMainAttributes, 10000);
+    this.checkInterval = setInterval(this.refreshMainAttributes, 1000 * 60);
   }
 
   componentWillUnmount() {
@@ -180,6 +181,21 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       vcs: this.vcs,
       onPush: async () => {
         await this.refreshMainAttributes();
+      },
+    });
+  }
+
+  async _handleShowSharingModal() {
+    const teams = await this.vcs._queryTeams();
+    const projectTeams = await this.vcs._queryProjectTeams();
+    showModal(SyncShareModal, {
+      teams,
+      team: projectTeams[0] || null,
+      handleShare: async team => {
+        await this.vcs.shareWithTeam(team.id);
+      },
+      handleUnShare: async () => {
+        await this.vcs.unShareWithTeam();
       },
     });
   }
@@ -289,9 +305,15 @@ class SyncDropdown extends React.PureComponent<Props, State> {
               </Link>
             </HelpTooltip>
           </DropdownDivider>
+
           <DropdownItem onClick={this._handleCreateBranch}>
             <i className="fa fa-code-fork" />
             New Branch
+          </DropdownItem>
+
+          <DropdownItem onClick={this._handleShowSharingModal}>
+            <i className="fa fa-share" />
+            Share
           </DropdownItem>
 
           <DropdownDivider>{currentBranch}</DropdownDivider>

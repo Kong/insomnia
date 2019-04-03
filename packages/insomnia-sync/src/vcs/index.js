@@ -32,6 +32,7 @@ import {
   decryptAESToBuffer,
   decryptRSAWithJWK,
   encryptAESBuffer,
+  encryptRSAWithJWK,
 } from 'insomnia-account/src/crypt';
 
 const EMPTY_HASH = crypto
@@ -68,6 +69,7 @@ export default class VCS {
     this._project = project;
 
     console.log(`[sync] Activate project ${project.id}`);
+
     return project;
   }
 
@@ -302,8 +304,6 @@ export default class VCS {
   }
 
   async takeSnapshot(name: string): Promise<void> {
-    await this._getOrCreateRemoteProject();
-
     const branch: Branch = await this._getCurrentBranch();
     const parent: Snapshot | null = await this._getLatestSnapshot(branch.name);
     const stage: Stage = await this.getStage();
@@ -368,6 +368,25 @@ export default class VCS {
     await this._removeBranch(tmpBranch);
 
     return delta;
+  }
+
+  async shareWithTeam(teamId: string): Promise<void> {
+    const { memberKeys, projectKey } = await this._queryProjectShareInstructions(teamId);
+    const { privateKey } = this._assertSession();
+    const symmetricKey = decryptRSAWithJWK(privateKey, projectKey.encSymmetricKey);
+
+    const keys = [];
+    for (const { accountId, publicKey } of memberKeys) {
+      const encSymmetricKey = encryptRSAWithJWK(JSON.parse(publicKey), symmetricKey);
+      keys.push({ accountId, encSymmetricKey });
+    }
+
+    console.log('SHARING', keys);
+    await this._queryProjectShare(teamId, keys);
+  }
+
+  async unShareWithTeam(): Promise<void> {
+    await this._queryProjectUnShare();
   }
 
   async _getOrCreateRemoteProject(): Promise<Project> {
@@ -539,8 +558,10 @@ export default class VCS {
     state: SnapshotState,
     name: string,
   ): Promise<Snapshot> {
-    const { accountId } = this._assertSession();
     const parentId: string = parent ? parent.id : EMPTY_HASH;
+
+    // NOTE: Empty author will be filled in by server once these are pushed
+    const author = this._session ? this._session.accountId : '';
 
     // Create the snapshot
     const id = _generateSnapshotID(parentId, this._projectId(), state);
@@ -548,9 +569,9 @@ export default class VCS {
       id,
       name,
       state,
+      author,
       parent: parentId,
       created: new Date(),
-      author: accountId,
       description: '',
     };
 
@@ -567,7 +588,7 @@ export default class VCS {
 
   async _runGraphQL(query: string, variables: { [string]: any }, name: string): Promise<Object> {
     const { sessionId } = this._assertSession();
-    const { data, errors } = await fetch.post('/graphql/?' + name, { query, variables }, sessionId);
+    const { data, errors } = await fetch.post('/graphql?' + name, { query, variables }, sessionId);
 
     if (errors && errors.length) {
       throw new Error(`Failed to query ${name}`);
@@ -660,6 +681,14 @@ export default class VCS {
   }
 
   async _queryPushSnapshot(snapshot: Snapshot): Promise<void> {
+    const { accountId } = this._assertSession();
+
+    // This bit of logic fills in any missing author IDs from times where
+    // the user created snapshots while not logged in
+    if (snapshot.author === '') {
+      snapshot.author = accountId;
+    }
+
     const branch = await this._getCurrentBranch();
     const { snapshotCreate } = await this._runGraphQL(
       `
@@ -775,10 +804,101 @@ export default class VCS {
       {
         projectId: this._projectId(),
       },
-      'project',
+      'projectKey',
     );
 
     return projectKey.encSymmetricKey;
+  }
+
+  async _queryTeams(): Promise<{ id: string, name: string }> {
+    const { teams } = await this._runGraphQL(
+      `
+        query {
+          teams {
+            id
+            name
+          }
+        }
+      `,
+      {},
+      'teams',
+    );
+
+    return teams;
+  }
+
+  async _queryProjectUnShare(): Promise<void> {
+    await this._runGraphQL(
+      `
+        mutation ($id: ID!) {
+          projectUnShare(id: $id) {
+            id
+          }
+        }
+      `,
+      {
+        id: this._projectId(),
+      },
+      'projectUnShare',
+    );
+  }
+
+  async _queryProjectShare(
+    teamId: string,
+    keys: Array<{ accountId: string, encSymmetricKey: string }>,
+  ): Promise<void> {
+    await this._runGraphQL(
+      `
+        mutation ($id: ID!, $teamId: ID!, $keys: [ProjectShareKeyInput!]!) {
+          projectShare(teamId: $teamId, id: $id, keys: $keys) {
+            id
+          }
+        }
+      `,
+      {
+        keys,
+        teamId,
+        id: this._projectId(),
+      },
+      'projectShare',
+    );
+  }
+
+  async _queryProjectShareInstructions(
+    teamId: string,
+  ): Promise<{
+    teamId: string,
+    projectKey: {
+      encSymmetricKey: string,
+    },
+    memberKeys: Array<{
+      accountId: string,
+      publicKey: string,
+    }>,
+  }> {
+    const { projectShareInstructions } = await this._runGraphQL(
+      `
+        query ($id: ID!, $teamId: ID!) {
+          projectShareInstructions(teamId: $teamId, id: $id) {
+            teamId
+            projectKey {
+              encSymmetricKey
+            }
+            memberKeys {
+              accountId
+              publicKey
+            }
+          }
+        }
+      `,
+      {
+        id: this._projectId(),
+        teamId: teamId,
+      },
+      'projectShareInstructions',
+    );
+
+    return projectShareInstructions;
   }
 
   async _queryProject(): Promise<Project> {
@@ -799,6 +919,27 @@ export default class VCS {
     );
 
     return project;
+  }
+
+  async _queryProjectTeams(): Promise<{ id: string, name: string }> {
+    const { project } = await this._runGraphQL(
+      `
+        query ($id: ID!) {
+          project(id: $id) {
+            teams {
+              id
+              name
+            }
+          }
+        }
+      `,
+      {
+        id: this._projectId(),
+      },
+      'project.teams',
+    );
+
+    return project.teams;
   }
 
   async _queryCreateProject(workspaceId: string, workspaceName: string): Promise<Project> {
@@ -933,20 +1074,21 @@ export default class VCS {
       throw new Error('No name supplied for project');
     }
 
+    // First, try finding the project
     const projects = await this._allProjects();
     const matchedProjects = projects.filter(p => p.rootDocumentId === rootDocumentId);
-
     if (matchedProjects.length > 1) {
+      // TODO: Handle this case
       throw new Error('More than one project matched query');
     }
 
     let project: Project | null = matchedProjects[0];
-    const { accountId } = this._assertSession();
+    const accountId = this._session ? this._session.accountId : Date.now() + '';
 
     if (!project) {
       const hash = crypto
         .createHash('sha1')
-        .update(accountId || Math.random() + '')
+        .update(accountId)
         .update(rootDocumentId)
         .digest('hex');
       const id = `prj_${hash}`;

@@ -33,25 +33,25 @@ async function _fetch(method, path, obj, sessionId, compressBody = false) {
 
   const config = {
     method: method,
-    headers: new window.Headers(),
+    headers: {},
   };
 
   // Set some client information
   if (_userAgent) {
-    config.headers.set('X-Insomnia-Client', _userAgent);
+    config.headers['X-Insomnia-Client'] = _userAgent;
   }
 
   if (obj && compressBody) {
     config.body = zlib.gzipSync(JSON.stringify(obj));
-    config.headers.set('Content-Type', 'application/json');
-    config.headers.set('Content-Encoding', 'gzip');
+    config.headers['Content-Type'] = 'application/json';
+    config.headers['Content-Encoding'] = 'gzip';
   } else if (obj) {
     config.body = JSON.stringify(obj);
-    config.headers.set('Content-Type', 'application/json');
+    config.headers['Content-Type'] = 'application/json';
   }
 
   if (sessionId) {
-    config.headers.set('X-Session-Id', sessionId);
+    config.headers['X-Session-Id'] = sessionId;
   }
 
   const response = await window.fetch(_getUrl(path), config);
