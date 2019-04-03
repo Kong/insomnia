@@ -78,11 +78,6 @@ async function _isInsomniaPlugin(lookupName: string): Promise<Object> {
         },
       },
       (err, stdout, stderr) => {
-        if (err) {
-          reject(new Error(`${lookupName} npm error: ${err.message}`));
-          return;
-        }
-
         if (stderr) {
           reject(new Error(`Yarn error ${stderr.toString('utf8')}`));
           return;
@@ -91,8 +86,12 @@ async function _isInsomniaPlugin(lookupName: string): Promise<Object> {
         let yarnOutput;
         try {
           yarnOutput = JSON.parse(stdout.toString('utf8'));
-        } catch (err) {
-          reject(new Error(`Yarn response not JSON: ${err.message}`));
+        } catch (ex) {
+          if (err) {
+            reject(new Error(`${lookupName} npm error: ${err.message}`));
+          } else {
+            reject(new Error(`Yarn response not JSON: ${ex.message}`));
+          }
           return;
         }
 
@@ -149,7 +148,7 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
         },
       },
       (err, stdout, stderr) => {
-        if (err) {
+        if (err && !stdout.toString('utf8').includes('success')) {
           reject(new Error(`${lookupName} install error: ${err.message}`));
           return;
         }
