@@ -338,7 +338,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _getOperations() {
+  _getOperations(): Array<any> {
     if (!this._documentAST) {
       return [];
     }

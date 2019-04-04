@@ -84,13 +84,13 @@ async function _isInsomniaPlugin(lookupName: string): Promise<Object> {
         }
 
         if (stderr) {
-          reject(new Error(`Yarn error ${stderr.toString('utf8')}`));
+          reject(new Error(`Yarn error ${stderr.toString()}`));
           return;
         }
 
         let yarnOutput;
         try {
-          yarnOutput = JSON.parse(stdout.toString('utf8'));
+          yarnOutput = JSON.parse(stdout.toString());
         } catch (err) {
           reject(new Error(`Yarn response not JSON: ${err.message}`));
           return;
@@ -155,7 +155,7 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
         }
 
         if (stderr) {
-          reject(new Error(`Yarn error ${stderr.toString('utf8')}`));
+          reject(new Error(`Yarn error ${stderr.toString()}`));
           return;
         }
 

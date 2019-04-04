@@ -4,7 +4,7 @@ import autobind from 'autobind-decorator';
 import moment from 'moment';
 
 type Props = {
-  timestamp: number,
+  timestamp: number | Date | string,
   intervalSeconds?: number,
 };
 

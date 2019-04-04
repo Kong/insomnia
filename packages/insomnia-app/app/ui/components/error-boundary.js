@@ -68,7 +68,7 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
 }
 
 class ErrorBoundary extends React.PureComponent<Props> {
-  render() {
+  render(): React.Node {
     const { children, ...extraProps } = this.props;
 
     if (!children) {

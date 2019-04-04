@@ -357,7 +357,7 @@ export function remove(request: Request): Promise<void> {
   return db.remove(request);
 }
 
-export function all() {
+export async function all(): Promise<Array<Request>> {
   return db.all(type);
 }
 

@@ -510,11 +510,11 @@ class TagEditor extends React.PureComponent<Props, State> {
       argInput = this.renderArgString(strValue, placeholder);
     } else if (argDefinition.type === 'enum') {
       const { options } = argDefinition;
-      argInput = this.renderArgEnum(strValue, options);
+      argInput = this.renderArgEnum(strValue, options || []);
     } else if (argDefinition.type === 'file') {
       argInput = this.renderArgFile(
         strValue,
-        argDefinition.itemTypes,
+        argDefinition.itemTypes || [],
         argIndex,
         argDefinition.extensions,
       );

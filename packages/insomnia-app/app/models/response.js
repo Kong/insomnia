@@ -97,7 +97,7 @@ export function getById(id: string) {
   return db.get(type, id);
 }
 
-export function all() {
+export async function all(): Promise<Array<Response>> {
   return db.all(type);
 }
 
