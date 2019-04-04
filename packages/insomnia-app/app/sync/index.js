@@ -13,7 +13,6 @@ import {
   syncPush,
   syncResetData,
 } from './network';
-import { isLoggedIn } from 'insomnia-account/src/session';
 
 export const START_DELAY = 1e3;
 export const PULL_PERIOD = 15e3;
@@ -56,7 +55,7 @@ export async function init() {
 
     for (const [event, doc, fromSync] of sortedChanges) {
       const notOnWhitelist = !WHITE_LIST[doc.type];
-      const notLoggedIn = !isLoggedIn();
+      const notLoggedIn = !session.isLoggedIn();
 
       if (doc.isPrivate) {
         logger.debug(`Skip private doc change ${doc._id}`);
@@ -146,7 +145,7 @@ export function doInitialSync() {
  * even periodically) and can be removed once the bug stops persisting.
  */
 export async function fixDuplicateResourceGroups() {
-  if (!isLoggedIn()) {
+  if (!session.isLoggedIn()) {
     return;
   }
 
@@ -195,7 +194,7 @@ export async function writePendingChanges() {
 }
 
 export async function push(resourceGroupId = null) {
-  if (!isLoggedIn()) {
+  if (!session.isLoggedIn()) {
     return;
   }
 

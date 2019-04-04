@@ -28,12 +28,6 @@ import {
   stateDelta,
   threeWayMerge,
 } from './util';
-import {
-  decryptAESToBuffer,
-  decryptRSAWithJWK,
-  encryptAESBuffer,
-  encryptRSAWithJWK,
-} from 'insomnia-account/src/crypt';
 
 const EMPTY_HASH = crypto
   .createHash('sha1')
@@ -371,11 +365,11 @@ export default class VCS {
   async shareWithTeam(teamId: string): Promise<void> {
     const { memberKeys, projectKey } = await this._queryProjectShareInstructions(teamId);
     const { privateKey } = this._assertSession();
-    const symmetricKey = decryptRSAWithJWK(privateKey, projectKey.encSymmetricKey);
+    const symmetricKey = crypt.decryptRSAWithJWK(privateKey, projectKey.encSymmetricKey);
 
     const keys = [];
     for (const { accountId, publicKey } of memberKeys) {
-      const encSymmetricKey = encryptRSAWithJWK(JSON.parse(publicKey), symmetricKey);
+      const encSymmetricKey = crypt.encryptRSAWithJWK(JSON.parse(publicKey), symmetricKey);
       keys.push({ accountId, encSymmetricKey });
     }
 
@@ -728,7 +722,7 @@ export default class VCS {
     const result = {};
     for (const blob of blobs) {
       const encryptedResult = JSON.parse(blob.content);
-      const content = decryptAESToBuffer(symmetricKey, encryptedResult);
+      const content = crypt.decryptAESToBuffer(symmetricKey, encryptedResult);
       result[blob.id] = Buffer.from(content, 'base64');
     }
 
@@ -774,7 +768,7 @@ export default class VCS {
         throw new Error(`Failed to get blob id=${id}`);
       }
 
-      const encryptedResult = encryptAESBuffer(symmetricKey, content);
+      const encryptedResult = crypt.encryptAESBuffer(symmetricKey, content);
       batch.push({ id, content: JSON.stringify(encryptedResult, null, 2) });
 
       batchSizeBytes += content.length;
@@ -980,7 +974,7 @@ export default class VCS {
   async _getProjectSymmetricKey(): Promise<Object> {
     const { privateKey } = this._assertSession();
     const encSymmetricKey = await this._queryProjectKey();
-    const symmetricKeyStr = decryptRSAWithJWK(privateKey, encSymmetricKey);
+    const symmetricKeyStr = crypt.decryptRSAWithJWK(privateKey, encSymmetricKey);
     return JSON.parse(symmetricKeyStr);
   }
 
