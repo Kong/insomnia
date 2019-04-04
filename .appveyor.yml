@@ -16,11 +16,11 @@ environment:
 install:
   - SET "PATH=%PATH%;C:\Program Files\Git\mingw64\libexec\git-core" # For weird git bug
   - ps: Install-Product node $env:NODEJS_VERSION $env:Platform
-  - ps: node --version
-  - ps: npm --version
-  - ps: npm config set msvs_version 2015
-  - ps: npm run bootstrap
-  - ps: npm test
+  - node --version
+  - npm --version
+  - npm config set msvs_version 2015
+  - npm run bootstrap
+  - npm test
 
 cache:
   - '%USERPROFILE%\.electron -> packages/insomnia-app/package.json'
