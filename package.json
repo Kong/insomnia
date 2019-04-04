@@ -8,7 +8,7 @@
     "url": "https://github.com/getinsomnia/insomnia"
   },
   "scripts": {
-    "bootstrap": "rimraf node_modules/fsevents && npm install && lerna bootstrap && lerna run bootstrap",
+    "bootstrap": "npm install && lerna bootstrap && lerna run bootstrap",
     "publish": "lerna publish",
     "clean": "lerna clean --yes && rimraf node_modules",
     "test": "lerna run test --stream",
