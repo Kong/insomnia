@@ -36,6 +36,7 @@
     "indent": "off",
     "no-var": "error",
     "no-duplicate-imports": "off",
+    "flowtype/space-after-type-colon": "off",
     "react/jsx-uses-react": "error",
     "react/jsx-uses-vars": "error",
     "space-before-function-paren": [
