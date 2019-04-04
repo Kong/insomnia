@@ -722,8 +722,7 @@ export default class VCS {
     const result = {};
     for (const blob of blobs) {
       const encryptedResult = JSON.parse(blob.content);
-      const content = crypt.decryptAESToBuffer(symmetricKey, encryptedResult);
-      result[blob.id] = Buffer.from(content, 'base64');
+      result[blob.id] = crypt.decryptAESToBuffer(symmetricKey, encryptedResult);
     }
 
     return result;

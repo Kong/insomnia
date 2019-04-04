@@ -305,7 +305,7 @@ export async function push(resourceGroupId = null) {
 }
 
 export async function pull(resourceGroupId = null, createMissingResources = true) {
-  if (!isLoggedIn()) {
+  if (!session.isLoggedIn()) {
     return;
   }
 

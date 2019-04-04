@@ -21,6 +21,9 @@ declare module 'insomnia-account' {
     crypt: {
       generateAES256Key: () => Object,
       encryptRSAWithJWK: (key: Object, plaintext: string) => string,
+      decryptRSAWithJWK: (privateKey: Object, thing: string) => string,
+      decryptAESToBuffer: (symmetricKey: Object, encrypted: Object) => Buffer,
+      encryptAESBuffer: (symmetricKey: Object, input: Buffer) => Object,
     },
   };
 }
