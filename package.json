@@ -35,7 +35,7 @@
     "babel-preset-react": "^6.23.0",
     "husky": "^1.0.0-rc.9",
     "jest": "^23.6.0",
-    "lerna": "^3.4.3",
+    "lerna": "^3.13.1",
     "prettier": "^1.13.6",
     "pretty-quick": "^1.6.0",
     "rimraf": "^2.6.2"

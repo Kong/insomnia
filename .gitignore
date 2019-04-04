@@ -25,3 +25,4 @@ node_modules/
 *test-plugins
 .vscode
 graphql.config.json
+.cache
