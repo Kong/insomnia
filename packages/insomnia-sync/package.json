@@ -13,6 +13,7 @@
     "name": "uuid"
   },
   "scripts": {
+    "bootstrap": "npm run build",
     "test": "jest --silent",
     "build": "rimraf lib && babel src --out-dir dist --ignore __tests__",
     "start": "babel --watch src --out-dir dist --ignore __tests__"
