@@ -547,6 +547,33 @@ describe('util', () => {
       });
     });
 
+    it('works with both null', () => {
+      const a = null;
+      const b = null;
+      expect(compareBranches(a, b)).toEqual({
+        ahead: 0,
+        behind: 0,
+      });
+    });
+
+    it('works with null', () => {
+      const a = null;
+      const b = newBranch(['1']);
+      expect(compareBranches(a, b)).toEqual({
+        ahead: 0,
+        behind: 1,
+      });
+    });
+
+    it('works with other null', () => {
+      const a = newBranch(['1']);
+      const b = null;
+      expect(compareBranches(a, b)).toEqual({
+        ahead: 1,
+        behind: 0,
+      });
+    });
+
     it('works with one empty', () => {
       const a = newBranch(['1']);
       const b = newBranch([]);

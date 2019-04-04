@@ -7,12 +7,13 @@ import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import ModalFooter from '../base/modal-footer';
 import PromptButton from '../base/prompt-button';
 import type { Workspace } from '../../../models/workspace';
+import { VCS } from 'insomnia-sync';
 
 type Props = {
   workspace: Workspace,
+  vcs: VCS,
 };
 
 type Team = { id: string, name: string };
@@ -152,11 +153,6 @@ class SyncShareModal extends React.PureComponent<Props, State> {
             </Link>
           </div>
         </ModalBody>
-        <ModalFooter key="footer">
-          <button type="button" className="btn" onClick={this.hide}>
-            Done
-          </button>
-        </ModalFooter>
       </Modal>
     );
   }

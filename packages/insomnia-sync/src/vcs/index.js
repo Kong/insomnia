@@ -6,7 +6,7 @@ import crypto from 'crypto';
 import compress from '../store/hooks/compress';
 import * as paths from './paths';
 import { jsonHash } from '../lib/jsonHash';
-import { crypt, fetch, session } from 'insomnia-account';
+import { crypt, fetch } from 'insomnia-account';
 import type {
   Branch,
   DocumentKey,
@@ -133,7 +133,7 @@ export default class VCS {
     return stage;
   }
 
-  validateBranchName(branchName: string): string {
+  static validateBranchName(branchName: string): string {
     if (!branchName.match(/^[a-zA-Z0-9][a-zA-Z0-9-_.]{3,}$/)) {
       return 'Branch names can only contain letters, numbers, - and _';
     }
@@ -142,8 +142,6 @@ export default class VCS {
   }
 
   async compareRemoteBranch(): Promise<{ ahead: number, behind: number }> {
-    await this._getOrCreateRemoteProject();
-
     const localBranch = await this._getCurrentBranch();
     const remoteBranch = await this._queryBranch(localBranch.name);
     return compareBranches(localBranch, remoteBranch);
@@ -381,7 +379,6 @@ export default class VCS {
       keys.push({ accountId, encSymmetricKey });
     }
 
-    console.log('SHARING', keys);
     await this._queryProjectShare(teamId, keys);
   }
 
@@ -406,9 +403,10 @@ export default class VCS {
 
     // Check branch history to make sure there are no conflicts
     let lastMatchingIndex = 0;
-    const remoteBranch = await this._queryBranch(branch.name);
-    for (; lastMatchingIndex < remoteBranch.snapshots.length; lastMatchingIndex++) {
-      if (remoteBranch.snapshots[lastMatchingIndex] !== branch.snapshots[lastMatchingIndex]) {
+    const remoteBranch: Branch | null = await this._queryBranch(branch.name);
+    const remoteBranchSnapshots = remoteBranch ? remoteBranch.snapshots : [];
+    for (; lastMatchingIndex < remoteBranchSnapshots.length; lastMatchingIndex++) {
+      if (remoteBranchSnapshots[lastMatchingIndex] !== branch.snapshots[lastMatchingIndex]) {
         throw new Error('Remote history conflict!');
       }
     }
@@ -435,11 +433,12 @@ export default class VCS {
   }
 
   async _fetch(localBranchName: string, remoteBranchName: string): Promise<Branch> {
-    const remoteBranch: Branch = await this._queryBranch(remoteBranchName);
+    const remoteBranch: Branch | null = await this._queryBranch(remoteBranchName);
+    const remoteBranchSnapshots = remoteBranch ? remoteBranch.snapshots : [];
 
     // Fetch snapshots and blobs from remote branch
     let blobsToFetch = new Set();
-    for (const snapshotId of remoteBranch.snapshots) {
+    for (const snapshotId of remoteBranchSnapshots) {
       const localSnapshot = await this._getSnapshot(snapshotId);
 
       // We already have the snapshot, so skip it
@@ -631,7 +630,7 @@ export default class VCS {
     return missingIds;
   }
 
-  async _queryBranch(branchName: string): Promise<Branch> {
+  async _queryBranch(branchName: string): Promise<Branch | null> {
     const { branch } = await this._runGraphQL(
       `
       query ($projectId: ID!, $branch: String!) {
@@ -901,7 +900,7 @@ export default class VCS {
     return projectShareInstructions;
   }
 
-  async _queryProject(): Promise<Project> {
+  async _queryProject(): Promise<Project | null> {
     const { project } = await this._runGraphQL(
       `
         query ($id: ID!) {
@@ -943,15 +942,14 @@ export default class VCS {
   }
 
   async _queryCreateProject(workspaceId: string, workspaceName: string): Promise<Project> {
-    this._assertSession();
+    const { publicKey } = this._assertSession();
 
     // Generate symmetric key for ResourceGroup
     const symmetricKey = await crypt.generateAES256Key();
     const symmetricKeyStr = JSON.stringify(symmetricKey);
 
     // Encrypt the symmetric key with Account public key
-    const publicKeyJWK = session.getPublicKey();
-    const encSymmetricKey = crypt.encryptRSAWithJWK(publicKeyJWK, symmetricKeyStr);
+    const encSymmetricKey = crypt.encryptRSAWithJWK(publicKey, symmetricKeyStr);
 
     const { projectCreate } = await this._runGraphQL(
       `
@@ -1137,7 +1135,7 @@ export default class VCS {
   }
 
   async _storeBranch(branch: Branch): Promise<void> {
-    const errMsg = this.validateBranchName(branch.name);
+    const errMsg = VCS.validateBranchName(branch.name);
     if (errMsg) {
       throw new Error(errMsg);
     }

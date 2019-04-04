@@ -14,6 +14,7 @@ import HelpTooltip from '../help-tooltip';
 
 type Props = {
   workspace: Workspace,
+  vcs: VCS,
 };
 
 type State = {
@@ -24,7 +25,6 @@ type State = {
 @autobind
 class SyncHistoryModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
-  vcs: VCS;
   handleRollback: Snapshot => Promise<void>;
 
   constructor(props: Props) {
@@ -45,8 +45,9 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
   }
 
   async refreshState(newState?: Object) {
-    const branch = await this.vcs.getBranch();
-    const history = await this.vcs.getHistory();
+    const { vcs } = this.props;
+    const branch = await vcs.getBranch();
+    const history = await vcs.getHistory();
 
     this.setState({
       branch,
@@ -60,7 +61,6 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
   }
 
   async show(options: { vcs: VCS, handleRollback: Snapshot => Promise<void> }) {
-    this.vcs = options.vcs;
     this.modal && this.modal.show();
     this.handleRollback = options.handleRollback;
     await this.refreshState();

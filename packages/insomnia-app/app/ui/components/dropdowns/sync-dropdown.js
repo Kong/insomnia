@@ -1,18 +1,16 @@
 // @flow
 import * as React from 'react';
-import { join as pathJoin } from 'path';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
 import { showModal, showPrompt } from '../modals';
 import SyncStagingModal from '../modals/sync-staging-modal';
-import { FileSystemDriver, VCS } from 'insomnia-sync';
+import { VCS } from 'insomnia-sync';
 import { session } from 'insomnia-account';
 import * as db from '../../../common/database';
 import type { BaseModel } from '../../../models';
 import * as models from '../../../models';
-import { getDataDirectory } from '../../../common/misc';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import SyncHistoryModal from '../modals/sync-history-modal';
@@ -29,6 +27,7 @@ const MODEL_WHITELIST = {
 
 type Props = {
   workspace: Workspace,
+  vcs: VCS,
 
   // Optional
   className?: string,
@@ -45,7 +44,6 @@ type State = {
 
 @autobind
 class SyncDropdown extends React.PureComponent<Props, State> {
-  vcs: VCS;
   checkInterval: IntervalID;
 
   constructor(props: Props) {
@@ -64,31 +62,14 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     };
   }
 
-  async setupVCS() {
-    const { workspace } = this.props;
-    const directory = pathJoin(getDataDirectory(), 'version-control');
-    const driver = new FileSystemDriver({ directory });
-    this.vcs = new VCS(driver);
-
-    if (session.isLoggedIn()) {
-      await this.vcs.setSession({
-        accountId: session.getAccountId(),
-        sessionId: session.getCurrentSessionId(),
-        privateKey: session.getPrivateKey(),
-        publicKey: session.getPublicKey(),
-      });
-    }
-
-    await this.vcs.switchProject(workspace._id, workspace.name);
-  }
-
   async refreshMainAttributes() {
-    const localBranches = (await this.vcs.getBranches()).sort();
-    const currentBranch = await this.vcs.getBranch();
+    const { vcs } = this.props;
+    const localBranches = (await vcs.getBranches()).sort();
+    const currentBranch = await vcs.getBranch();
 
-    const { ahead, behind } = await this.vcs.compareRemoteBranch();
+    const { ahead, behind } = await vcs.compareRemoteBranch();
     const items = await this.generateStatusItems();
-    const status = await this.vcs.status(items);
+    const status = await vcs.status(items);
 
     this.setState({
       ahead,
@@ -99,20 +80,9 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     });
   }
 
-  componentDidUpdate(prevProps: Props) {
-    const { workspace } = this.props;
-    if (prevProps.workspace._id !== workspace._id) {
-      this.vcs
-        .switchProject(workspace._id, workspace.name)
-        .catch(err => console.log('[sync_menu] Error switching sync project', err))
-        .finally(() => this.setState({ initializing: false }));
-    }
-  }
-
   componentDidMount() {
     this.setState({ initializing: true });
-    this.setupVCS()
-      .then(this.refreshMainAttributes)
+    this.refreshMainAttributes()
       .catch(err => console.log('[sync_menu] Error refreshing sync state', err))
       .finally(() => this.setState({ initializing: false }));
 
@@ -168,9 +138,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       submitName: 'Create Branch',
       label: 'Name',
       placeholder: 'my-branch-name',
-      validate: name => this.vcs.validateBranchName(name),
+      validate: VCS.validateBranchName,
       onComplete: async name => {
-        await this.vcs.fork(name);
+        const { vcs } = this.props;
+        await vcs.fork(name);
         await this._handleSwitchBranch(name);
       },
     });
@@ -178,7 +149,6 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
   _handleShowStagingModal() {
     showModal(SyncStagingModal, {
-      vcs: this.vcs,
       onPush: async () => {
         await this.refreshMainAttributes();
       },
@@ -186,35 +156,37 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleShowSharingModal() {
-    const teams = await this.vcs._queryTeams();
-    const projectTeams = await this.vcs._queryProjectTeams();
+    const { vcs } = this.props;
+    const teams = await vcs._queryTeams();
+    const projectTeams = await vcs._queryProjectTeams();
     showModal(SyncShareModal, {
       teams,
       team: projectTeams[0] || null,
       handleShare: async team => {
-        await this.vcs.shareWithTeam(team.id);
+        await vcs.shareWithTeam(team.id);
       },
       handleUnShare: async () => {
-        await this.vcs.unShareWithTeam();
+        await vcs.unShareWithTeam();
       },
     });
   }
 
   async _handlePullChanges() {
+    const { vcs } = this.props;
     const items = await this.generateStatusItems();
-    const delta = await this.vcs.pull(items);
+    const delta = await vcs.pull(items);
     await SyncDropdown.syncDatabase(delta);
   }
 
   async _handleRollback(snapshot: Snapshot) {
+    const { vcs } = this.props;
     const items = await this.generateStatusItems();
-    const delta = await this.vcs.rollback(snapshot.id, items);
+    const delta = await vcs.rollback(snapshot.id, items);
     await SyncDropdown.syncDatabase(delta);
   }
 
   _handleShowHistoryModal() {
     showModal(SyncHistoryModal, {
-      vcs: this.vcs,
       handleRollback: this._handleRollback,
     });
   }
@@ -224,8 +196,9 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleSwitchBranch(branch: string) {
+    const { vcs } = this.props;
     const items = await this.generateStatusItems();
-    const delta = await this.vcs.checkout(items, branch);
+    const delta = await vcs.checkout(items, branch);
     await SyncDropdown.syncDatabase(delta);
     this.setState({ currentBranch: branch });
   }

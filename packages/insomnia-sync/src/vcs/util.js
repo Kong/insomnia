@@ -203,9 +203,14 @@ export function threeWayMerge(
   };
 }
 
-export function compareBranches(a: Branch, b: Branch): { ahead: number, behind: number } {
-  const latestA = a.snapshots[a.snapshots.length - 1] || null;
-  const latestB = b.snapshots[b.snapshots.length - 1] || null;
+export function compareBranches(
+  a: Branch | null,
+  b: Branch | null,
+): { ahead: number, behind: number } {
+  const snapshotsA = a ? a.snapshots : [];
+  const snapshotsB = b ? b.snapshots : [];
+  const latestA = snapshotsA[snapshotsA.length - 1] || null;
+  const latestB = snapshotsB[snapshotsB.length - 1] || null;
 
   const result = {
     ahead: 0,
@@ -217,12 +222,12 @@ export function compareBranches(a: Branch, b: Branch): { ahead: number, behind: 
   }
 
   if (latestA === null) {
-    result.behind = b.snapshots.length;
+    result.behind = snapshotsB.length;
     return result;
   }
 
   if (latestB === null) {
-    result.ahead = a.snapshots.length;
+    result.ahead = snapshotsA.length;
     return result;
   }
 
@@ -231,11 +236,11 @@ export function compareBranches(a: Branch, b: Branch): { ahead: number, behind: 
     return result;
   }
 
-  const indexOfRootInA = a.snapshots.indexOf(root);
-  const indexOfRootInB = b.snapshots.indexOf(root);
+  const indexOfRootInA = snapshotsA.indexOf(root);
+  const indexOfRootInB = snapshotsB.indexOf(root);
 
-  result.ahead = a.snapshots.length - indexOfRootInA - 1;
-  result.behind = b.snapshots.length - indexOfRootInB - 1;
+  result.ahead = snapshotsA.length - indexOfRootInA - 1;
+  result.behind = snapshotsB.length - indexOfRootInB - 1;
 
   return result;
 }
@@ -318,12 +323,15 @@ export function getStagable(
   return stagable;
 }
 
-export function getRootSnapshot(a: Branch, b: Branch): string | null {
+export function getRootSnapshot(a: Branch | null, b: Branch | null): string | null {
+  const snapshotsA = a ? a.snapshots : [];
+  const snapshotsB = b ? b.snapshots : [];
+
   let rootSnapshotId = '';
-  for (let ai = a.snapshots.length - 1; ai >= 0; ai--) {
-    for (let bi = b.snapshots.length - 1; bi >= 0; bi--) {
-      if (a.snapshots[ai] === b.snapshots[bi]) {
-        return a.snapshots[ai];
+  for (let ai = snapshotsA.length - 1; ai >= 0; ai--) {
+    for (let bi = snapshotsB.length - 1; bi >= 0; bi--) {
+      if (snapshotsA[ai] === snapshotsB[bi]) {
+        return snapshotsA[ai];
       }
     }
   }

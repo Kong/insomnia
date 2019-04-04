@@ -58,6 +58,7 @@ class Sidebar extends PureComponent {
       environmentHighlightColorStyle,
       hotKeyRegistry,
       enableSyncBeta,
+      vcs,
     } = this.props;
 
     return (
@@ -130,9 +131,10 @@ class Sidebar extends PureComponent {
           hotKeyRegistry={hotKeyRegistry}
         />
 
-        {enableSyncBeta ? (
-          <SyncDropdown className="sidebar__footer" key={workspace._id} workspace={workspace} />
-        ) : (
+        {enableSyncBeta &&
+          vcs && <SyncDropdown className="sidebar__footer" workspace={workspace} vcs={vcs} />}
+
+        {!enableSyncBeta && (
           <SyncLegacyDropdown
             className="sidebar__footer"
             key={workspace._id}

@@ -54,6 +54,7 @@ import type { Environment } from '../../models/environment';
 import ErrorBoundary from './error-boundary';
 import type { ClientCertificate } from '../../models/client-certificate';
 import MoveRequestGroupModal from './modals/move-request-group-modal';
+import { VCS } from 'insomnia-sync';
 
 type Props = {
   // Helper Functions
@@ -118,6 +119,7 @@ type Props = {
   activeEnvironment: Environment | null,
   activeWorkspaceClientCertificates: Array<ClientCertificate>,
   isVariableUncovered: boolean,
+  vcs: VCS | null,
 
   // Optional
   oAuth2Token: ?OAuth2Token,
@@ -416,6 +418,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       workspaces,
       unseenWorkspaces,
       isVariableUncovered,
+      vcs,
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
@@ -559,9 +562,13 @@ class Wrapper extends React.PureComponent<Props, State> {
 
           <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
 
-          <SyncStagingModal ref={registerModal} workspace={activeWorkspace} />
-          <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} />
-          <SyncShareModal ref={registerModal} workspace={activeWorkspace} />
+          {vcs && (
+            <React.Fragment>
+              <SyncStagingModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
+              <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
+              <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
+            </React.Fragment>
+          )}
 
           <WorkspaceEnvironmentsEditModal
             ref={registerModal}
@@ -647,6 +654,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             enableSyncBeta={settings.enableSyncBeta}
             hotKeyRegistry={settings.hotKeyRegistry}
+            vcs={vcs}
           />
         </ErrorBoundary>
 

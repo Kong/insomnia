@@ -14,6 +14,7 @@ import * as syncTypes from 'insomnia-sync/src/types';
 
 type Props = {
   workspace: Workspace,
+  vcs: VCS,
 };
 
 type State = {
@@ -35,7 +36,6 @@ const WHITE_LIST = {
 @autobind
 class SyncStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
-  vcs: VCS;
   onPush: () => any;
 
   constructor(props: Props) {
@@ -75,10 +75,11 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   }
 
   async _handleRemoveBranch() {
+    const { vcs } = this.props;
     const { actionBranch } = this.state;
 
     try {
-      await this.vcs.removeBranch(actionBranch);
+      await vcs.removeBranch(actionBranch);
     } catch (err) {
       this.setState({ error: err.message });
       return;
@@ -88,12 +89,13 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   }
 
   async _handleMergeBranch() {
+    const { vcs } = this.props;
     const { actionBranch } = this.state;
     const items = await this.generateStatusItems();
 
     let delta;
     try {
-      delta = await this.vcs.merge(items, actionBranch);
+      delta = await vcs.merge(items, actionBranch);
     } catch (err) {
       this.setState({ error: `Failed to merge: ${err.message}` });
       return;
@@ -104,13 +106,15 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   }
 
   async _handleStage(e: SyntheticEvent<HTMLInputElement>) {
+    const { vcs } = this.props;
     const id = e.currentTarget.name;
     const statusItem = this.state.status.unstaged[id];
-    await this.vcs.stage([statusItem]);
+    await vcs.stage([statusItem]);
     await this.updateStatus();
   }
 
   async _handleStageAll() {
+    const { vcs } = this.props;
     const { unstaged } = this.state.status;
 
     const items = [];
@@ -118,32 +122,35 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       items.push(unstaged[id]);
     }
 
-    await this.vcs.stage(items);
+    await vcs.stage(items);
     await this.updateStatus();
   }
 
   async _handleUnstageAll() {
+    const { vcs } = this.props;
     const { stage } = this.state.status;
     const items = [];
     for (const id of Object.keys(stage)) {
       items.push(stage[id]);
     }
 
-    await this.vcs.unstage(items);
+    await vcs.unstage(items);
     await this.updateStatus();
   }
 
   async _handleUnstage(e: SyntheticEvent<HTMLInputElement>) {
+    const { vcs } = this.props;
     const id = e.currentTarget.name;
     const statusItem = this.state.status.stage[id];
-    await this.vcs.unstage([statusItem]);
+    await vcs.unstage([statusItem]);
     await this.updateStatus();
   }
 
   async _handleTakeSnapshot() {
+    const { vcs } = this.props;
+    const { message } = this.state;
     try {
-      const { message } = this.state;
-      await this.vcs.takeSnapshot(message);
+      await vcs.takeSnapshot(message);
     } catch (err) {
       this.setState({ error: err.message });
       return;
@@ -151,7 +158,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
 
     try {
       const { workspace } = this.props;
-      await this.vcs.push(workspace);
+      await vcs.push(workspace);
     } catch (err) {
       this.setState({ error: err.message });
       return;
@@ -181,6 +188,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   }
 
   async syncDatabase(delta?: { upsert: Array<BaseModel>, remove: Array<BaseModel> }) {
+    const { vcs } = this.props;
     const items = await this.generateStatusItems();
     const itemsMap = {};
     for (const item of items) {
@@ -188,7 +196,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     }
 
     const flushId = await db.bufferChanges();
-    delta = delta || (await this.vcs.delta(items));
+    delta = delta || (await vcs.delta(items));
 
     const { remove, upsert } = delta;
 
@@ -206,10 +214,11 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   }
 
   async updateStatus(newState?: Object) {
+    const { vcs } = this.props;
     const items = await this.generateStatusItems();
-    const status = await this.vcs.status(items);
-    const branch = await this.vcs.getBranch();
-    const branches = await this.vcs.getBranches();
+    const status = await vcs.status(items);
+    const branch = await vcs.getBranch();
+    const branches = await vcs.getBranches();
 
     this.setState({
       status,
@@ -225,7 +234,6 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   }
 
   async show(options: { vcs: VCS, onPush: () => any }) {
-    this.vcs = options.vcs;
     this.onPush = options.onPush;
     this.modal && this.modal.show();
     await this.updateStatus();

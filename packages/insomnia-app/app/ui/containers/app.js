@@ -51,7 +51,7 @@ import WorkspaceSettingsModal from '../components/modals/workspace-settings-moda
 import RequestSettingsModal from '../components/modals/request-settings-modal';
 import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
 import * as network from '../../network/network';
-import { debounce, getContentDispositionHeader } from '../../common/misc';
+import { debounce, getContentDispositionHeader, getDataDirectory } from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
@@ -68,6 +68,8 @@ import AskModal from '../components/modals/ask-modal';
 import { updateMimeType } from '../../models/request';
 import MoveRequestGroupModal from '../components/modals/move-request-group-modal';
 import * as themes from '../../plugins/misc';
+import { FileSystemDriver, VCS } from 'insomnia-sync';
+import { session } from 'insomnia-account';
 
 @autobind
 class App extends PureComponent {
@@ -83,6 +85,7 @@ class App extends PureComponent {
       paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
       paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT,
       isVariableUncovered: props.isVariableUncovered || false,
+      vcs: null,
     };
 
     this._isMigratingChildren = false;
@@ -783,8 +786,33 @@ class App extends PureComponent {
     document.title = title;
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     this._updateDocumentTitle();
+  }
+
+  async _updateVCS(activeWorkspace) {
+    // Get the vcs and set it to null in the state while we update it
+    let vcs = this.state.vcs;
+    this.setState({ vcs: null });
+
+    if (!vcs) {
+      const directory = path.join(getDataDirectory(), 'version-control');
+      const driver = new FileSystemDriver({ directory });
+      vcs = new VCS(driver);
+    }
+
+    if (session.isLoggedIn()) {
+      vcs.setSession({
+        accountId: session.getAccountId(),
+        sessionId: session.getCurrentSessionId(),
+        privateKey: session.getPrivateKey(),
+        publicKey: session.getPublicKey(),
+      });
+    }
+
+    await vcs.switchProject(activeWorkspace._id, activeWorkspace.name);
+
+    this.setState({ vcs });
   }
 
   async componentDidMount() {
@@ -795,6 +823,9 @@ class App extends PureComponent {
 
     // Update title
     this._updateDocumentTitle();
+
+    // Update VCS
+    this._updateVCS(this.props.activeWorkspace);
 
     db.onChange(async changes => {
       let needsRefresh = false;
@@ -953,6 +984,12 @@ class App extends PureComponent {
 
   componentWillReceiveProps(nextProps) {
     this._ensureWorkspaceChildren(nextProps);
+
+    // Update VCS if needed
+    const { activeWorkspace } = this.props;
+    if (nextProps.activeWorkspace._id !== activeWorkspace._id) {
+      this._updateVCS(nextProps.activeWorkspace);
+    }
   }
 
   componentWillMount() {
@@ -1013,6 +1050,7 @@ class App extends PureComponent {
               handleToggleMenuBar={this._handleToggleMenuBar}
               handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
               isVariableUncovered={this.state.isVariableUncovered}
+              vcs={this.state.vcs}
             />
           </ErrorBoundary>
 
