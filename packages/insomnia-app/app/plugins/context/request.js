@@ -131,7 +131,7 @@ export function init(
       }
     },
 
-    setAuthentication(name: string, value: string): void {
+    setAuthenticationParameter(name: string, value: string): void {
       Object.assign(renderedRequest.authentication, {
         [name]: value,
       });
@@ -162,7 +162,7 @@ export function init(
     delete request.setParameter;
     delete request.addParameter;
     delete request.addParameter;
-    delete request.setAuthentication;
+    delete request.setAuthenticationParameter;
   }
 
   return { request };

@@ -43,7 +43,7 @@ describe('init()', () => {
       'hasParameter',
       'removeHeader',
       'removeParameter',
-      'setAuthentication',
+      'setAuthenticationParameter',
       'setBodyText',
       'setCookie',
       'setHeader',
@@ -215,8 +215,8 @@ describe('request.*', () => {
 
     const result = plugin.init(request, CONTEXT);
 
-    result.request.setAuthentication('foo', 'bar');
-    result.request.setAuthentication('foo', 'baz');
+    result.request.setAuthenticationParameter('foo', 'bar');
+    result.request.setAuthenticationParameter('foo', 'baz');
     expect(result.request.getAuthentication()).toEqual({ foo: 'baz' });
     expect(request.authentication).toEqual({ foo: 'baz' });
   });
