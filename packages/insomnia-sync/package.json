@@ -17,19 +17,8 @@
     "build": "rimraf lib && babel src --out-dir dist --ignore __tests__",
     "start": "babel --watch src --out-dir dist --ignore __tests__"
   },
-  "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
-    "babel-preset-env": "^1.7.0",
-    "babel-preset-flow": "^6.23.0",
-    "flow-bin": "^0.82.0",
-    "jest": "^23.6.0",
-    "rimraf": "^2.6.2"
-  },
   "dependencies": {
-    "bson": "^4.0.1",
     "insomnia-account": "^0.0.2",
-    "mkdirp": "^0.5.1",
-    "ws": "^6.1.3"
+    "mkdirp": "^0.5.1"
   }
 }
