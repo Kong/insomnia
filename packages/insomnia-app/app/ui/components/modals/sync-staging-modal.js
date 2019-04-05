@@ -4,13 +4,12 @@ import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import { VCS } from 'insomnia-sync';
+import { VCS, types as syncTypes } from 'insomnia-sync';
 import type { Workspace } from '../../../models/workspace';
 import * as db from '../../../common/database';
 import type { BaseModel } from '../../../models';
 import * as models from '../../../models';
 import PromptButton from '../base/prompt-button';
-import * as syncTypes from 'insomnia-sync/src/types';
 
 type Props = {
   workspace: Workspace,

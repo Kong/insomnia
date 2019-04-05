@@ -6,7 +6,7 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base
 import type { Workspace } from '../../../models/workspace';
 import { showModal, showPrompt } from '../modals';
 import SyncStagingModal from '../modals/sync-staging-modal';
-import { VCS } from 'insomnia-sync';
+import { VCS, types as syncTypes } from 'insomnia-sync';
 import { session } from 'insomnia-account';
 import * as db from '../../../common/database';
 import type { BaseModel } from '../../../models';
@@ -14,7 +14,6 @@ import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import SyncHistoryModal from '../modals/sync-history-modal';
-import type { Snapshot, Status } from 'insomnia-sync/src/types';
 import Tooltip from '../tooltip';
 import SyncShareModal from '../modals/sync-share-modal';
 
@@ -38,7 +37,7 @@ type State = {
   localBranches: Array<string>,
   ahead: number,
   behind: number,
-  status: Status,
+  status: syncTypes.Status,
   initializing: boolean,
 };
 
@@ -178,7 +177,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     await SyncDropdown.syncDatabase(delta);
   }
 
-  async _handleRollback(snapshot: Snapshot) {
+  async _handleRollback(snapshot: syncTypes.Snapshot) {
     const { vcs } = this.props;
     const items = await this.generateStatusItems();
     const delta = await vcs.rollback(snapshot.id, items);
