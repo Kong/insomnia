@@ -69,6 +69,12 @@ export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[\wàâäèéêëîïôóœ
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
 export const PLUGIN_PATH = path.join(getDataDirectory(), 'plugins');
 
+// Available editor key maps
+export const EDITOR_KEY_MAP_DEFAULT = 'default';
+export const EDITOR_KEY_MAP_EMACS = 'emacs';
+export const EDITOR_KEY_MAP_SUBLIME = 'sublime';
+export const EDITOR_KEY_MAP_VIM = 'vim';
+
 // Hotkeys
 export const MNEMONIC_SYM = isMac() ? '' : '&';
 export const CTRL_SYM = isMac() ? '⌃' : 'Ctrl';
