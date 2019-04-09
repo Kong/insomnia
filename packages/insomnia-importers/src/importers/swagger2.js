@@ -77,14 +77,6 @@ async function parseDocument(rawData) {
   } catch (err) {
     return null;
   }
-
-  function unthrowableParseJson(rawData) {
-    try {
-      return JSON.parse(rawData);
-    } catch (err) {
-      return null;
-    }
-  }
 }
 
 /**
