@@ -44,15 +44,23 @@ type SessionData = {|
 
 export default class VCS {
   _store: Store;
+  _driver: BaseDriver;
   _project: Project | null;
   _session: null | SessionData;
 
   constructor(driver: BaseDriver) {
     this._store = new Store(driver, [compress]);
+    this._driver = driver;
 
     // To be set later
     this._project = null;
     this._session = null;
+  }
+
+  newInstance(): VCS {
+    const newVCS: VCS = (Object.assign({}, this): any);
+    Object.setPrototypeOf(newVCS, VCS.prototype);
+    return newVCS;
   }
 
   setSession(data: SessionData | null): void {
@@ -460,11 +468,13 @@ export default class VCS {
 
   async _fetch(localBranchName: string, remoteBranchName: string): Promise<Branch> {
     const remoteBranch: Branch | null = await this._queryBranch(remoteBranchName);
-    const remoteBranchSnapshots = remoteBranch ? remoteBranch.snapshots : [];
+    if (!remoteBranch) {
+      throw new Error(`The remote branch "${remoteBranchName}" does not exist`);
+    }
 
     // Fetch snapshots and blobs from remote branch
     let blobsToFetch = new Set();
-    for (const snapshotId of remoteBranchSnapshots) {
+    for (const snapshotId of remoteBranch.snapshots) {
       const localSnapshot = await this._getSnapshot(snapshotId);
 
       // We already have the snapshot, so skip it
@@ -493,7 +503,14 @@ export default class VCS {
       await this._storeSnapshot(snapshot);
     }
 
-    const branch: Branch = Object.assign(({}: any), remoteBranch, {
+    const branchDefaults = {
+      name: '',
+      created: new Date(),
+      modified: new Date(),
+      snapshots: [],
+    };
+
+    const branch: Branch = Object.assign(branchDefaults, remoteBranch, {
       name: localBranchName,
     });
 

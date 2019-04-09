@@ -10,7 +10,7 @@ import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
 import { getAppVersion } from '../../../common/constants';
-import { showModal, showPrompt } from '../modals/index';
+import { showAlert, showModal, showPrompt } from '../modals';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
@@ -101,34 +101,34 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       pullingWorkspaces: { ...state.pullingWorkspaces, [w.id]: true },
     }));
 
-    const currentProject = await vcs.currentProject();
-
     try {
       const workspace = await models.workspace.getById(w.id);
       if (workspace) {
         // Shouldn't have gotten here. Just switch to it and continue
         return;
       }
-      await vcs.switchProject(w.id, w.name);
-      await vcs.pull([]);
-      const documents = await vcs.allDocuments();
+
+      // Clone old VCS so we don't mess anything up while working on other projects
+      const newVCS = vcs.newInstance();
+      await newVCS.switchProject(w.id, w.name);
+      await newVCS.pull([]); // There won't be any existing docs since it's a new pull
+      const documents = await newVCS.allDocuments();
       const flushId = await db.bufferChanges();
       for (const doc of documents) {
         await db.upsert(doc);
       }
       await db.flushChanges(flushId);
     } catch (err) {
-      console.log('Failed to pull workspace', err);
+      this._dropdown && this._dropdown.hide();
+      showAlert({
+        title: 'Pull Error',
+        message: `Failed to pull workspace. ${err.message}`,
+      });
     }
-
-    // This is kind of sketchy but we need to make sure we switch back to the old
-    // project no matter what!
-    await vcs.switchProject(currentProject.rootDocumentId, currentProject.name);
 
     this.setState(state => ({
       pullingWorkspaces: { ...state.pullingWorkspaces, [w.id]: false },
     }));
-    // await this._loadRemoteWorkspaces();
   }
 
   _setDropdownRef(n: ?Dropdown) {
