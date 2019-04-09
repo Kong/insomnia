@@ -1,4 +1,5 @@
 const SwaggerParser = require('swagger-parser');
+const utils = require('../utils');
 
 const SUPPORTED_SWAGGER_VERSION = '2.0';
 const MIMETYPE_JSON = 'application/json';
@@ -67,7 +68,7 @@ module.exports.convert = async function(rawData) {
  */
 async function parseDocument(rawData) {
   try {
-    const api = unthrowableParseJson(rawData) || SwaggerParser.YAML.parse(rawData);
+    const api = utils.unthrowableParseJson(rawData) || SwaggerParser.YAML.parse(rawData);
     if (!api) {
       return null;
     }
