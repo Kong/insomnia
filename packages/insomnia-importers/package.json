@@ -19,5 +19,8 @@
     "commander": "^2.9.0",
     "shell-quote": "^1.6.1",
     "swagger-parser": "^4.0.1"
+  },
+  "devDependencies": {
+    "jest": "^24.7.1"
   }
 }
