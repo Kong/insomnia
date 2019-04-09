@@ -9,7 +9,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 import type { Workspace } from '../../../models/workspace';
-import { VCS } from 'insomnia-sync';
+import VCS from '../../../sync/vcs';
 
 type Props = {
   workspace: Workspace,
@@ -28,8 +28,6 @@ type State = {
 @autobind
 class SyncShareModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
-  handleShare: (team: Team) => Promise<void>;
-  handleUnShare: () => Promise<void>;
 
   constructor(props: Props) {
     super(props);
@@ -46,13 +44,14 @@ class SyncShareModal extends React.PureComponent<Props, State> {
   }
 
   async _handleChangeTeam(team: Team) {
+    const { vcs } = this.props;
     this.setState({ loading: true });
 
     try {
-      if (team && this.handleShare) {
-        await this.handleShare(team);
-      } else if (!team && this.handleUnShare) {
-        await this.handleUnShare();
+      if (team) {
+        await vcs.shareWithTeam(team.id);
+      } else {
+        await vcs.unShareWithTeam();
       }
     } catch (err) {
       this.setState({
@@ -68,21 +67,18 @@ class SyncShareModal extends React.PureComponent<Props, State> {
     });
   }
 
-  async show(options: {
-    teams: Array<Team>,
-    team: Team | null,
-    handleShare: (team: Team) => Promise<void>,
-    handleUnShare: () => Promise<void>,
-  }) {
+  async show() {
+    const { vcs } = this.props;
+    this.setState({ loading: true });
     this.modal && this.modal.show();
 
-    this.handleShare = options.handleShare;
-    this.handleUnShare = options.handleUnShare;
+    const [teams, projectTeams] = await Promise.all([vcs.teams(), vcs.projectTeams()]);
 
     this.setState({
-      teams: options.teams,
-      selectedTeam: options.team,
+      teams,
+      selectedTeam: projectTeams[0] || null,
       error: '',
+      loading: false,
     });
   }
 
@@ -98,7 +94,7 @@ class SyncShareModal extends React.PureComponent<Props, State> {
         <ModalHeader key="header">Share Workspace</ModalHeader>
         <ModalBody key="body" className="pad text-center" noScroll>
           <p>
-            Share <strong>{workspace.name}</strong> with your team members.
+            Collaborate on <strong>{workspace.name}</strong> with your team.
           </p>
           <div className="form-control pad">
             {error ? <div className="danger">Oops: {error}</div> : null}

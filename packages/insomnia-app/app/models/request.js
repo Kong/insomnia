@@ -32,6 +32,7 @@ export const name = 'Request';
 export const type = 'Request';
 export const prefix = 'req';
 export const canDuplicate = true;
+export const canSync = true;
 
 export type RequestAuthentication = Object;
 

@@ -1,5 +1,10 @@
 // @flow
 
+export type Team = {
+  id: string,
+  name: string,
+};
+
 export type Project = {
   id: string,
   name: string,

@@ -8,9 +8,9 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import { session } from 'insomnia-account';
-import * as sync from '../../../sync/index';
+import * as sync from '../../../sync-legacy/index';
 import PromptButton from '../base/prompt-button';
-import { shareWithTeam } from '../../../sync/network';
+import { shareWithTeam } from '../../../sync-legacy/network';
 
 @autobind
 class WorkspaceShareSettingsModal extends PureComponent {

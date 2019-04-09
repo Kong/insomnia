@@ -32,14 +32,15 @@ import SelectModal from './modals/select-modal';
 import RequestCreateModal from './modals/request-create-modal';
 import RequestPane from './request-pane';
 import RequestSwitcherModal from './modals/request-switcher-modal';
-import SetupSyncModal from './modals/setup-sync-modal';
 import SettingsModal from './modals/settings-modal';
 import FilterHelpModal from './modals/filter-help-modal';
 import ResponsePane from './response-pane';
 import RequestSettingsModal from './modals/request-settings-modal';
+import SetupSyncModal from './modals/setup-sync-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
 import SyncHistoryModal from './modals/sync-history-modal';
 import SyncShareModal from './modals/sync-share-modal';
+import SyncBranchesModal from './modals/sync-branches-modal';
 import RequestRenderErrorModal from './modals/request-render-error-modal';
 import Sidebar from './sidebar/sidebar';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
@@ -54,7 +55,7 @@ import type { Environment } from '../../models/environment';
 import ErrorBoundary from './error-boundary';
 import type { ClientCertificate } from '../../models/client-certificate';
 import MoveRequestGroupModal from './modals/move-request-group-modal';
-import { VCS } from 'insomnia-sync';
+import VCS from '../../sync/vcs';
 
 type Props = {
   // Helper Functions
@@ -567,6 +568,7 @@ class Wrapper extends React.PureComponent<Props, State> {
               <SyncStagingModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
               <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
               <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
+              <SyncBranchesModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
             </React.Fragment>
           )}
 

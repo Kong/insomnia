@@ -47,6 +47,7 @@ export const name = 'Settings';
 export const type = 'Settings';
 export const prefix = 'set';
 export const canDuplicate = false;
+export const canSync = false;
 
 export function init(): BaseSettings {
   return {

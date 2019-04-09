@@ -1,4 +1,5 @@
 // @flow
+import crypto from 'crypto';
 import * as db from '../common/database';
 import type { BaseModel } from './index';
 
@@ -6,6 +7,7 @@ export const name = 'Cookie Jar';
 export const type = 'CookieJar';
 export const prefix = 'jar';
 export const canDuplicate = true;
+export const canSync = false;
 
 export type Cookie = {
   id: string,
@@ -55,7 +57,16 @@ export async function create(patch: Object = {}) {
 export async function getOrCreateForParentId(parentId: string) {
   const cookieJars = await db.find(type, { parentId });
   if (cookieJars.length === 0) {
-    return create({ parentId });
+    return create({
+      parentId,
+
+      // Deterministic ID. It helps reduce sync complexity since we won't have to
+      // de-duplicate environments.
+      _id: `${prefix}_${crypto
+        .createHash('sha1')
+        .update(parentId)
+        .digest('hex')}`,
+    });
   } else {
     return cookieJars[0];
   }

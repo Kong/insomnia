@@ -4,9 +4,8 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
-import { showModal, showPrompt } from '../modals';
+import { showModal } from '../modals';
 import SyncStagingModal from '../modals/sync-staging-modal';
-import { VCS, types as syncTypes } from 'insomnia-sync';
 import { session } from 'insomnia-account';
 import * as db from '../../../common/database';
 import type { BaseModel } from '../../../models';
@@ -16,13 +15,9 @@ import Link from '../base/link';
 import SyncHistoryModal from '../modals/sync-history-modal';
 import Tooltip from '../tooltip';
 import SyncShareModal from '../modals/sync-share-modal';
-
-const MODEL_WHITELIST = {
-  [models.workspace.type]: true,
-  [models.request.type]: true,
-  [models.requestGroup.type]: true,
-  [models.environment.type]: true,
-};
+import SyncBranchesModal from '../modals/sync-branches-modal';
+import VCS from '../../../sync/vcs';
+import type { Snapshot, Status, StatusCandidate } from '../../../sync/types';
 
 type Props = {
   workspace: Workspace,
@@ -37,8 +32,9 @@ type State = {
   localBranches: Array<string>,
   ahead: number,
   behind: number,
-  status: syncTypes.Status,
+  status: Status,
   initializing: boolean,
+  historyCount: number,
 };
 
 @autobind
@@ -52,6 +48,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       currentBranch: '',
       ahead: 0,
       behind: 0,
+      historyCount: 0,
       initializing: true,
       status: {
         key: 'n/a',
@@ -65,17 +62,23 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const { vcs } = this.props;
     const localBranches = (await vcs.getBranches()).sort();
     const currentBranch = await vcs.getBranch();
+    const historyCount = await vcs.getHistoryCount();
 
-    const { ahead, behind } = await vcs.compareRemoteBranch();
+    this.setState({
+      historyCount,
+      localBranches,
+      currentBranch,
+    });
+
+    // Slow stuff next
     const items = await this.generateStatusItems();
     const status = await vcs.status(items);
+    const { ahead, behind } = await vcs.compareRemoteBranch();
 
     this.setState({
       ahead,
       behind,
       status,
-      localBranches,
-      currentBranch,
     });
   }
 
@@ -92,12 +95,12 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     clearInterval(this.checkInterval);
   }
 
-  async generateStatusItems(): Promise<Array<{ key: string, name: string, document: Object }>> {
+  async generateStatusItems(): Promise<Array<StatusCandidate>> {
     const { workspace } = this.props;
 
     const items = [];
     const allDocs = await db.withDescendants(workspace);
-    const docs = allDocs.filter(d => MODEL_WHITELIST[d.type] && !(d: any).isPrivate);
+    const docs = allDocs.filter(models.canSync);
 
     for (const doc of docs) {
       items.push({
@@ -131,19 +134,8 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     await db.flushChanges(flushId);
   }
 
-  _handleCreateBranch() {
-    showPrompt({
-      title: 'Branch Name',
-      submitName: 'Create Branch',
-      label: 'Name',
-      placeholder: 'my-branch-name',
-      validate: VCS.validateBranchName,
-      onComplete: async name => {
-        const { vcs } = this.props;
-        await vcs.fork(name);
-        await this._handleSwitchBranch(name);
-      },
-    });
+  static _handleCreateBranch() {
+    showModal(SyncBranchesModal);
   }
 
   _handleShowStagingModal() {
@@ -154,20 +146,8 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     });
   }
 
-  async _handleShowSharingModal() {
-    const { vcs } = this.props;
-    const teams = await vcs._queryTeams();
-    const projectTeams = await vcs._queryProjectTeams();
-    showModal(SyncShareModal, {
-      teams,
-      team: projectTeams[0] || null,
-      handleShare: async team => {
-        await vcs.shareWithTeam(team.id);
-      },
-      handleUnShare: async () => {
-        await vcs.unShareWithTeam();
-      },
-    });
+  static _handleShowSharingModal() {
+    showModal(SyncShareModal);
   }
 
   async _handlePullChanges() {
@@ -177,7 +157,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     await SyncDropdown.syncDatabase(delta);
   }
 
-  async _handleRollback(snapshot: syncTypes.Snapshot) {
+  async _handleRollback(snapshot: Snapshot) {
     const { vcs } = this.props;
     const items = await this.generateStatusItems();
     const delta = await vcs.rollback(snapshot.id, items);
@@ -253,7 +233,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     }
 
     const { className } = this.props;
-    const { localBranches, currentBranch, ahead, behind, status } = this.state;
+    const { localBranches, currentBranch, ahead, behind, status, historyCount } = this.state;
 
     const canCreateSnapshot =
       Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
@@ -267,46 +247,49 @@ class SyncDropdown extends React.PureComponent<Props, State> {
           <DropdownButton className="btn btn--compact wide">{this.renderButton()}</DropdownButton>
 
           <DropdownDivider>
-            Version Control{' '}
+            Cloud Sync{' '}
             <HelpTooltip>
-              Manage the history of a workspace{' '}
+              Sync and collaborate on your workspaces{' '}
               <Link href="https://support.insomnia.rest/article/67-version-control">
                 <span className="no-wrap">
-                  Help <i className="fa fa-external-link" />
+                  <br />
+                  Documentation <i className="fa fa-external-link" />
                 </span>
               </Link>
             </HelpTooltip>
           </DropdownDivider>
 
-          <DropdownItem onClick={this._handleCreateBranch}>
+          <DropdownItem onClick={SyncDropdown._handleCreateBranch}>
             <i className="fa fa-code-fork" />
-            New Branch
+            Branches
           </DropdownItem>
 
-          <DropdownItem onClick={this._handleShowSharingModal}>
-            <i className="fa fa-share" />
-            Share
-          </DropdownItem>
-
-          <DropdownDivider>{currentBranch}</DropdownDivider>
-
-          <DropdownItem onClick={this._handleShowStagingModal} disabled={aheadPlusDirty === 0}>
-            <i className="fa fa-cloud-upload" />
-            Push {aheadPlusDirty} Snapshot{aheadPlusDirty !== 1 ? 's' : ''}
-          </DropdownItem>
-
-          <DropdownItem onClick={this._handlePullChanges} disabled={behind === 0}>
-            <i className="fa fa-cloud-download" />
-            Pull {behind} Snapshot{behind !== 1 ? 's' : ''}
-          </DropdownItem>
-
-          <DropdownItem onClick={this._handleShowHistoryModal}>
-            <i className="fa fa-clock-o" />
-            View History
+          <DropdownItem onClick={SyncDropdown._handleShowSharingModal}>
+            <i className="fa fa-users" />
+            Share Workspace
           </DropdownItem>
 
           <DropdownDivider>Branches</DropdownDivider>
           {visibleBranches.map(this.renderBranch)}
+
+          <DropdownDivider>{currentBranch}</DropdownDivider>
+
+          {historyCount > 0 && (
+            <DropdownItem onClick={this._handleShowHistoryModal}>
+              <i className="fa fa-clock-o" />
+              View History
+            </DropdownItem>
+          )}
+
+          <DropdownItem onClick={this._handleShowStagingModal} disabled={aheadPlusDirty === 0}>
+            <i className="fa fa-cloud-upload" />
+            Push Changes
+          </DropdownItem>
+
+          <DropdownItem onClick={this._handlePullChanges} disabled={behind === 0}>
+            <i className="fa fa-cloud-download" />
+            Pull Changes
+          </DropdownItem>
         </Dropdown>
       </div>
     );

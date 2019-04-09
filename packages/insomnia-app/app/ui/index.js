@@ -7,7 +7,7 @@ import App from './containers/app';
 import * as models from '../models';
 import * as db from '../common/database';
 import { init as initStore } from './redux/modules';
-import { init as initSync } from '../sync';
+import { init as initSync } from '../sync-legacy';
 import { init as initPlugins } from '../plugins';
 import DNDBackend from './dnd-backend';
 import './css/index.less';

@@ -26,3 +26,5 @@ node_modules/
 .vscode
 graphql.config.json
 .cache
+.graphqlconfig
+schema.graphql

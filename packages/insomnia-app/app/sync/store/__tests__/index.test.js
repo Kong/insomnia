@@ -1,4 +1,4 @@
-import Store from '../';
+import Store from '../index';
 import MemoryDriver from '../drivers/memory-driver';
 
 describe('store', () => {

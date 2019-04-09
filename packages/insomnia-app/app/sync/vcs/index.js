@@ -18,6 +18,7 @@ import type {
   StageEntry,
   Status,
   StatusCandidate,
+  Team,
 } from '../types';
 import {
   compareBranches,
@@ -58,6 +59,10 @@ export default class VCS {
     this._session = data;
   }
 
+  async currentProject(): Promise<Project> {
+    return this._assertProject();
+  }
+
   async switchProject(rootDocumentId: string, name: string): Promise<Project> {
     const project = await this._getOrCreateProject(rootDocumentId, name);
     this._project = project;
@@ -65,6 +70,18 @@ export default class VCS {
     console.log(`[sync] Activate project ${project.id}`);
 
     return project;
+  }
+
+  async teams(): Promise<Array<Team>> {
+    return this._queryTeams();
+  }
+
+  async projectTeams(): Promise<Array<Team>> {
+    return this._queryProjectTeams();
+  }
+
+  async remoteProjects(): Promise<Array<Project>> {
+    return this._queryProjects();
   }
 
   async status(candidates: Array<StatusCandidate>): Promise<Status> {
@@ -115,7 +132,7 @@ export default class VCS {
     return stage;
   }
 
-  async unstage(stageEntries: Array<StatusCandidate>): Promise<Stage> {
+  async unstage(stageEntries: Array<StageEntry>): Promise<Stage> {
     const stage = await this.getStage();
 
     for (const entry of stageEntries) {
@@ -209,6 +226,16 @@ export default class VCS {
     };
   }
 
+  async allDocuments(): Promise<Object> {
+    const branch = await this._getCurrentBranch();
+    const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
+    if (!snapshot) {
+      throw new Error('Failed to get latest snapshot for all documents');
+    }
+
+    return this._getBlobs(snapshot.state.map(s => s.blob));
+  }
+
   async rollback(
     snapshotId: string,
     candidates: Array<StatusCandidate>,
@@ -246,6 +273,11 @@ export default class VCS {
       upsert: await this._getBlobs(upsert.map(e => e.blob)),
       remove,
     };
+  }
+
+  async getHistoryCount(): Promise<number> {
+    const branch = await this._getCurrentBranch();
+    return branch.snapshots.length;
   }
 
   async getHistory(): Promise<Array<Snapshot>> {
@@ -302,7 +334,7 @@ export default class VCS {
 
     // Ensure there is something on the stage
     if (Object.keys(stage).length === 0) {
-      throw new Error('No changes to save');
+      throw new Error('Snapshot does not have any changes');
     }
 
     const newState: SnapshotState = [];
@@ -441,7 +473,6 @@ export default class VCS {
       }
 
       const snapshot = await this._querySnapshot(snapshotId);
-      // for (const { blob } of snapshot.state) {
       for (let i = 0; i < snapshot.state.length; i++) {
         const entry = snapshot.state[i];
 
@@ -496,11 +527,6 @@ export default class VCS {
       latestStateOther,
       candidates,
     );
-
-    // Other branch has a history that is a prefix of the current one
-    if (latestSnapshotOther && latestSnapshotOther.id === rootSnapshotId) {
-      throw new Error('Already up to date');
-    }
 
     if (rootSnapshot && (!latestSnapshotTrunk || rootSnapshot.id === latestSnapshotTrunk.id)) {
       console.log('[sync] Performing fast-forward merge');
@@ -802,7 +828,7 @@ export default class VCS {
     return projectKey.encSymmetricKey;
   }
 
-  async _queryTeams(): Promise<{ id: string, name: string }> {
+  async _queryTeams(): Promise<Array<Team>> {
     const { teams } = await this._runGraphQL(
       `
         query {
@@ -893,6 +919,24 @@ export default class VCS {
     return projectShareInstructions;
   }
 
+  async _queryProjects(): Promise<Array<Project>> {
+    const { projects } = await this._runGraphQL(
+      `
+        query {
+          projects {
+            id
+            name
+            rootDocumentId
+          }
+        }
+      `,
+      {},
+      'projects',
+    );
+
+    return projects;
+  }
+
   async _queryProject(): Promise<Project | null> {
     const { project } = await this._runGraphQL(
       `
@@ -913,9 +957,10 @@ export default class VCS {
     return project;
   }
 
-  async _queryProjectTeams(): Promise<{ id: string, name: string }> {
-    const { project } = await this._runGraphQL(
-      `
+  async _queryProjectTeams(): Promise<Array<Team>> {
+    const run = async () => {
+      const { project } = await this._runGraphQL(
+        `
         query ($id: ID!) {
           project(id: $id) {
             teams {
@@ -925,11 +970,21 @@ export default class VCS {
           }
         }
       `,
-      {
-        id: this._projectId(),
-      },
-      'project.teams',
-    );
+        {
+          id: this._projectId(),
+        },
+        'project.teams',
+      );
+      return project;
+    };
+
+    let project = await run();
+
+    // Retry once if project doesn't exist yet
+    if (project === null) {
+      await this._getOrCreateRemoteProject();
+      project = await run();
+    }
 
     return project.teams;
   }

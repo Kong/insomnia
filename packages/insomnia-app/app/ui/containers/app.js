@@ -68,8 +68,9 @@ import AskModal from '../components/modals/ask-modal';
 import { updateMimeType } from '../../models/request';
 import MoveRequestGroupModal from '../components/modals/move-request-group-modal';
 import * as themes from '../../plugins/misc';
-import { FileSystemDriver, VCS } from 'insomnia-sync';
 import { session } from 'insomnia-account';
+import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
+import VCS from '../../sync/vcs';
 
 @autobind
 class App extends PureComponent {
@@ -963,22 +964,11 @@ class App extends PureComponent {
     // Prevent rendering of everything
     this._isMigratingChildren = true;
 
-    await db.bufferChanges();
-    if (baseEnvironments.length === 0) {
-      await models.environment.create({ parentId: activeWorkspace._id });
-      console.log(`[app] Created missing base environment for ${activeWorkspace.name}`);
-    }
+    const flushId = await db.bufferChanges();
+    await models.environment.getOrCreateForWorkspace(activeWorkspace);
+    await models.cookieJar.getOrCreateForParentId(activeWorkspace._id);
+    await db.flushChanges(flushId);
 
-    if (!activeCookieJar) {
-      await models.cookieJar.create({
-        parentId: this.props.activeWorkspace._id,
-      });
-      console.log(`[app] Created missing cookie jar for ${activeWorkspace.name}`);
-    }
-
-    await db.flushChanges();
-
-    // Flush "transaction"
     this._isMigratingChildren = false;
   }
 

@@ -6,7 +6,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import { session } from 'insomnia-account';
-import * as sync from '../../../sync';
+import * as sync from '../../../sync-legacy';
 
 @autobind
 class LoginModal extends PureComponent {

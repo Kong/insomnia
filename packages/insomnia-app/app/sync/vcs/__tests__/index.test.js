@@ -1,4 +1,4 @@
-import VCS from '../';
+import VCS from '../index';
 import MemoryDriver from '../../store/drivers/memory-driver';
 
 function newDoc(id) {

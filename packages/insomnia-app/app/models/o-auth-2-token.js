@@ -24,6 +24,7 @@ export const name = 'OAuth 2.0 Token';
 export const type = 'OAuth2Token';
 export const prefix = 'oa2';
 export const canDuplicate = false;
+export const canSync = false;
 
 export function init(): BaseOAuth2Token {
   return {

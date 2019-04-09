@@ -4,12 +4,13 @@ import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import { VCS, types as syncTypes } from 'insomnia-sync';
 import type { Workspace } from '../../../models/workspace';
 import TimeFromNow from '../time-from-now';
 import Tooltip from '../tooltip';
 import PromptButton from '../base/prompt-button';
 import HelpTooltip from '../help-tooltip';
+import type { Snapshot } from '../../../sync/types';
+import VCS from '../../../sync/vcs';
 
 type Props = {
   workspace: Workspace,
@@ -18,13 +19,13 @@ type Props = {
 
 type State = {
   branch: string,
-  history: Array<syncTypes.Snapshot>,
+  history: Array<Snapshot>,
 };
 
 @autobind
 class SyncHistoryModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
-  handleRollback: syncTypes.Snapshot => Promise<void>;
+  handleRollback: Snapshot => Promise<void>;
 
   constructor(props: Props) {
     super(props);
@@ -38,7 +39,7 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
     this.modal = m;
   }
 
-  async _handleClickRollback(snapshot: syncTypes.Snapshot) {
+  async _handleClickRollback(snapshot: Snapshot) {
     await this.handleRollback(snapshot);
     await this.refreshState();
   }
@@ -59,7 +60,7 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async show(options: { vcs: VCS, handleRollback: syncTypes.Snapshot => Promise<void> }) {
+  async show(options: { handleRollback: Snapshot => Promise<void> }) {
     this.modal && this.modal.show();
     this.handleRollback = options.handleRollback;
     await this.refreshState();
@@ -69,7 +70,7 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
     const { branch, history } = this.state;
 
     return (
-      <Modal ref={this._setModalRef}>
+      <Modal ref={this._setModalRef} tall>
         <ModalHeader>
           Branch History: <i>{branch}</i>
         </ModalHeader>
@@ -95,7 +96,7 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
                 <tr key={snapshot.id}>
                   <td>
                     <Tooltip message={snapshot.id} selectable wide delay={500}>
-                      {snapshot.name}{' '}
+                      {snapshot.name}
                     </Tooltip>
                   </td>
                   <td>

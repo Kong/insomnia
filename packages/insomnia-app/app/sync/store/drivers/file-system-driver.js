@@ -29,7 +29,10 @@ export default class FileSystemDriver implements BaseDriver {
   setItem(key: string, value: Buffer): Promise<void> {
     return new Promise((resolve, reject) => {
       const finalPath = this._getKeyPath(key);
-      const tmpPath = finalPath + '.tmp';
+
+      // Temp path contains randomness to avoid race-condition collisions. This
+      // doesn't actually avoid race conditions but at least it won't fail.
+      const tmpPath = `${finalPath}.${Math.random()}.tmp`;
 
       // This method implements atomic writes by first writing to a temporary
       // file (non-atomic) then renaming the file to the final value (atomic)

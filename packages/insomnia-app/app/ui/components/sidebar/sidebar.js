@@ -40,8 +40,6 @@ class Sidebar extends PureComponent {
       environments,
       activeEnvironment,
       handleSetActiveWorkspace,
-      handleImportFile,
-      handleExportFile,
       handleChangeFilter,
       isLoading,
       handleCreateRequest,
@@ -82,10 +80,10 @@ class Sidebar extends PureComponent {
           workspaces={workspaces}
           unseenWorkspaces={unseenWorkspaces}
           hotKeyRegistry={hotKeyRegistry}
-          handleExportFile={handleExportFile}
-          handleImportFile={handleImportFile}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
+          enableSyncBeta={enableSyncBeta}
           isLoading={isLoading}
+          vcs={vcs}
         />
 
         <div className="sidebar__menu">
@@ -151,8 +149,6 @@ Sidebar.propTypes = {
   handleActivateRequest: PropTypes.func.isRequired,
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
   handleChangeFilter: PropTypes.func.isRequired,
-  handleImportFile: PropTypes.func.isRequired,
-  handleExportFile: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
   handleSetActiveEnvironment: PropTypes.func.isRequired,
   moveDoc: PropTypes.func.isRequired,
