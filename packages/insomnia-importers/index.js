@@ -1,15 +1,15 @@
 const utils = require('./src/utils');
 
 const importers = [
-  require('./src/importers/insomnia-1'),
-  require('./src/importers/insomnia-2'),
-  require('./src/importers/insomnia-3'),
-  require('./src/importers/postman'),
-  require('./src/importers/postman-env'),
-  require('./src/importers/har'),
-  require('./src/importers/curl'),
-  require('./src/importers/swagger2'),
-  require('./src/importers/swagger3'),
+  // require('./src/importers/insomnia-1'),
+  // require('./src/importers/insomnia-2'),
+  // require('./src/importers/insomnia-3'),
+  // require('./src/importers/postman'),
+  // require('./src/importers/postman-env'),
+  // require('./src/importers/har'),
+  // require('./src/importers/curl'),
+  // require('./src/importers/swagger2'),
+  require('./src/importers/openapi3'),
 ];
 
 module.exports.convert = async function(contents) {
