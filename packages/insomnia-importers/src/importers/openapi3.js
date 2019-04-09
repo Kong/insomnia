@@ -18,6 +18,10 @@ module.exports.name = 'OpenAPI 3.0';
 module.exports.description = 'Importer for OpenAPI 3.0 specification (json/yaml)';
 
 module.exports.convert = async function(rawData) {
+  // Reset
+  requestCount = 1;
+  requestGroupCount = 1;
+
   // Validate
   const api = await parseDocument(rawData);
   if (!api || !SUPPORTED_OPENAPI_VERSION.test(api.openapi)) {
@@ -74,14 +78,12 @@ async function parseDocument(rawData) {
   try {
     const api = utils.unthrowableParseJson(rawData) || SwaggerParser.YAML.parse(rawData);
     if (!api) {
-      console.log('oh')
       return null;
     }
 
     // Await here so we catch any exceptions
     return await SwaggerParser.validate(api);
   } catch (err) {
-    console.log('ack!', err)
     return null;
   }
 }
@@ -221,21 +223,24 @@ function prepareHeaders(endpointSchema) {
  * @return {Object} insomnia request's body definition
  */
 function prepareBody(endpointSchema) {
+  // request
   const requestBody = endpointSchema.requestBody || {};
   const content = requestBody.content || {};
   const mimeTypes = Object.keys(content);
+
   const isAvailable = m => mimeTypes.includes(m);
   const supportedMimeType = SUPPORTED_MIME_TYPES.find(isAvailable);
 
-  if (supportedMimeType === MIMETYPE_JSON && content != null) {
+  if (supportedMimeType === MIMETYPE_JSON) {
     const bodyParameter = content[supportedMimeType];
-    if (!bodyParameter) {
+
+    if (bodyParameter == null) {
       return {
         mimeType: MIMETYPE_JSON,
       };
     }
 
-    const example = bodyParameter ? generateParameterExample(bodyParameter.schema) : undefined;
+    const example = generateParameterExample(bodyParameter.schema);
     const text = JSON.stringify(example, null, 2);
     return {
       mimeType: MIMETYPE_JSON,
