@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import { DragDropContext } from 'react-dnd';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import { clipboard, ipcRenderer, remote } from 'electron';
@@ -983,18 +984,21 @@ class App extends PureComponent {
       return null;
     }
 
+    const { activeWorkspace } = this.props;
+    const { paneWidth, paneHeight, sidebarWidth, isVariableUncovered, vcs } = this.state;
+
     return (
       <KeydownBinder
         onKeydown={this._handleKeyDown}
-        key={this.props.activeWorkspace ? this.props.activeWorkspace._id : 'n/a'}>
+        key={activeWorkspace ? activeWorkspace._id : 'n/a'}>
         <div className="app">
           <ErrorBoundary showAlert>
             <Wrapper
               {...this.props}
               ref={this._setWrapperRef}
-              paneWidth={this.state.paneWidth}
-              paneHeight={this.state.paneHeight}
-              sidebarWidth={this.state.sidebarWidth}
+              paneWidth={paneWidth}
+              paneHeight={paneHeight}
+              sidebarWidth={sidebarWidth}
               handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
               handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
               handleActivateRequest={this._handleSetActiveRequest}
@@ -1030,8 +1034,8 @@ class App extends PureComponent {
               handleSetSidebarFilter={this._handleSetSidebarFilter}
               handleToggleMenuBar={this._handleToggleMenuBar}
               handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-              isVariableUncovered={this.state.isVariableUncovered}
-              vcs={this.state.vcs}
+              isVariableUncovered={isVariableUncovered}
+              vcs={vcs}
             />
           </ErrorBoundary>
 

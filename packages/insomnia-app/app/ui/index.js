@@ -1,18 +1,18 @@
 import * as React from 'react';
 import ReactDOM from 'react-dom';
-import { AppContainer } from 'react-hot-loader';
 import { Provider } from 'react-redux';
-import { DragDropContext } from 'react-dnd';
 import App from './containers/app';
 import * as models from '../models';
 import * as db from '../common/database';
 import { init as initStore } from './redux/modules';
 import { init as initSync } from '../sync-legacy';
 import { init as initPlugins } from '../plugins';
-import DNDBackend from './dnd-backend';
 import './css/index.less';
 import { isDevelopment } from '../common/constants';
-import { setTheme, setFont } from '../plugins/misc';
+import { setFont, setTheme } from '../plugins/misc';
+import { AppContainer } from 'react-hot-loader';
+import { DragDropContext } from 'react-dnd';
+import DNDBackend from './dnd-backend';
 
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
@@ -29,24 +29,24 @@ document.body.setAttribute('data-platform', process.platform);
   const store = await initStore();
 
   const context = DragDropContext(DNDBackend);
-  const DndComponent = context(App);
   const render = Component => {
+    const DnDComponent = context(Component);
     ReactDOM.render(
       <AppContainer>
         <Provider store={store}>
-          <Component />
+          <DnDComponent />
         </Provider>
       </AppContainer>,
       document.getElementById('root'),
     );
   };
 
-  render(DndComponent);
+  render(App);
 
   // Hot Module Replacement API
   if (module.hot) {
     module.hot.accept('./containers/app', () => {
-      render(DndComponent);
+      render(App);
     });
   }
 

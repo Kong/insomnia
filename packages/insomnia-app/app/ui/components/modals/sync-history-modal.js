@@ -84,9 +84,8 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
                 <th className="text-right">
                   Rollback
                   <HelpTooltip>
-                    Rolling back will clear any unsynced changes and update the local app data to
-                    match the desired snapshot. This operation leaves modifications in an un-synced
-                    state, as if you had made the modifications manually.
+                    Rolling back will revert the workspace to that state but will not create any new
+                    snapshots or modify the history.
                   </HelpTooltip>
                 </th>
               </tr>

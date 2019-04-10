@@ -1,4 +1,4 @@
-import HTML5Backend from 'react-dnd-html5-backend/lib/HTML5Backend';
+import HTML5Backend from 'react-dnd-html5-backend';
 
 class DNDBackend extends HTML5Backend {
   handleTopDragEndCapture(e) {

@@ -474,9 +474,9 @@ const dragTarget = {
   },
   hover(props, monitor, component) {
     if (isAbove(monitor, component)) {
-      component.decoratedComponentInstance.setDragDirection(1);
+      component.setDragDirection(1);
     } else {
-      component.decoratedComponentInstance.setDragDirection(-1);
+      component.setDragDirection(-1);
     }
   },
 };
@@ -500,11 +500,11 @@ const source = DragSource('KEY_VALUE_EDITOR', dragSource, sourceCollect)(KeyValu
 const target = DropTarget('KEY_VALUE_EDITOR', dragTarget, targetCollect)(source);
 
 target.prototype.focusNameEnd = function() {
-  this.handler.component.decoratedComponentInstance.focusNameEnd();
+  this.handler.component.focusNameEnd();
 };
 
 target.prototype.focusValueEnd = function() {
-  this.handler.component.decoratedComponentInstance.focusValueEnd();
+  this.handler.component.focusValueEnd();
 };
 
 export default target;

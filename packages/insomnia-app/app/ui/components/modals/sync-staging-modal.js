@@ -27,6 +27,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _onSnapshot: ?() => void;
   _handlePush: ?() => void;
+  textarea: ?HTMLTextAreaElement;
 
   constructor(props: Props) {
     super(props);
@@ -43,6 +44,10 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
 
   _setModalRef(m: ?Modal) {
     this.modal = m;
+  }
+
+  _setTextAreaRef(m: ?HTMLTextAreaElement) {
+    this.textarea = m;
   }
 
   _handleClearError() {
@@ -194,6 +199,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
               <label>
                 Snapshot Name
                 <textarea
+                  ref={this._setTextAreaRef}
                   cols="30"
                   rows="3"
                   onChange={this._handleMessageChange}
