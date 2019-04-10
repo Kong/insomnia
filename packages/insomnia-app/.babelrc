@@ -21,15 +21,15 @@
     "test": {
       "presets": [
         [
-          "env",
+          "@babel/preset-env",
           {
             "targets": {
-              "node": "8.4"
+              "node": "10"
             }
           }
         ],
         // We need to add this again because it has to run before es2015
-        "flow"
+        "@babel/preset-flow"
       ]
     }
   }

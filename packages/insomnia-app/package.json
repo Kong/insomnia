@@ -40,7 +40,8 @@
     ],
     "moduleNameMapper": {
       "\\.(css|less|png)$": "<rootDir>/__mocks__/dummy.js",
-      "^worker-loader!": "<rootDir>/__mocks__/dummy.js"
+      "^worker-loader!": "<rootDir>/__mocks__/dummy.js",
+      "react-dom": "@hot-loader/react-dom"
     },
     "testMatch": [
       "**/__tests__/**/*.test.js?(x)"
@@ -96,6 +97,7 @@
     "zprint-clj"
   ],
   "dependencies": {
+    "@hot-loader/react-dom": "^16.8.6",
     "autobind-decorator": "^2.4.0",
     "aws4": "^1.6.0",
     "classnames": "^2.2.5",
@@ -166,7 +168,6 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.4.0",
-    "@hot-loader/react-dom": "^16.8.6",
     "concurrently": "^3.5.0",
     "cross-env": "^2.0.0",
     "css-loader": "^2.1.1",

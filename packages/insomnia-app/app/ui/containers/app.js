@@ -1,6 +1,5 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { DragDropContext } from 'react-dnd';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import { clipboard, ipcRenderer, remote } from 'electron';
