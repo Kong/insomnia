@@ -54,9 +54,9 @@ export const selectRequestsAndRequestGroups = createSelector(selectEntitiesLists
 export const selectCollapsedRequestGroups = createSelector(selectEntitiesLists, entities => {
   const collapsed = {};
 
-  // Default all to collapsed
+  // Default all to expanded
   for (const requestGroup of entities.requestGroups) {
-    collapsed[requestGroup._id] = true;
+    collapsed[requestGroup._id] = false;
   }
 
   // Update those that have metadata (not all do)

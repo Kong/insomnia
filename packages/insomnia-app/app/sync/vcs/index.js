@@ -6,7 +6,7 @@ import crypto from 'crypto';
 import compress from '../store/hooks/compress';
 import * as paths from './paths';
 import { jsonHash } from '../lib/jsonHash';
-import { crypt, fetch } from 'insomnia-account';
+import { crypt, fetch, session } from 'insomnia-account';
 import type {
   Branch,
   DocumentKey,
@@ -46,7 +46,6 @@ export default class VCS {
   _store: Store;
   _driver: BaseDriver;
   _project: Project | null;
-  _session: null | SessionData;
 
   constructor(driver: BaseDriver) {
     this._store = new Store(driver, [compress]);
@@ -54,7 +53,6 @@ export default class VCS {
 
     // To be set later
     this._project = null;
-    this._session = null;
   }
 
   newInstance(): VCS {
@@ -63,12 +61,12 @@ export default class VCS {
     return newVCS;
   }
 
-  setSession(data: SessionData | null): void {
-    this._session = data;
-  }
-
   async currentProject(): Promise<Project> {
     return this._assertProject();
+  }
+
+  unsetProject(): void {
+    this._project = null;
   }
 
   async switchProject(rootDocumentId: string, name: string): Promise<Project> {
@@ -379,11 +377,11 @@ export default class VCS {
 
     const localBranch = await this._getCurrentBranch();
     const tmpBranch = await this._fetch(localBranch.name + '.hidden', localBranch.name);
-    const message = `Synced latest changes from ${localBranch.name}`;
 
     // NOTE: Unlike Git, we merge into the tmp branch and overwrite the local one. This is
     //   so the remote history is preserved when after the pull. In particular, this is
     //   important if a remote and local branch both exist but do not share a common history.
+    const message = `Synced latest changes from ${localBranch.name}`;
     const delta = await this._merge(candidates, tmpBranch.name, localBranch.name, message);
 
     const tmpBranchUpdated = await this._getBranch(tmpBranch.name);
@@ -545,7 +543,13 @@ export default class VCS {
       candidates,
     );
 
-    if (rootSnapshot && (!latestSnapshotTrunk || rootSnapshot.id === latestSnapshotTrunk.id)) {
+    // Other branch has a history that is a prefix of the current one
+    if (latestSnapshotOther && latestSnapshotOther.id === rootSnapshotId) {
+      console.log('[sync] Nothing to merge');
+    } else if (
+      rootSnapshot &&
+      (!latestSnapshotTrunk || rootSnapshot.id === latestSnapshotTrunk.id)
+    ) {
       console.log('[sync] Performing fast-forward merge');
       branchTrunk.snapshots = branchOther.snapshots;
       await this._storeBranch(branchTrunk);
@@ -596,16 +600,13 @@ export default class VCS {
   ): Promise<Snapshot> {
     const parentId: string = parent ? parent.id : EMPTY_HASH;
 
-    // NOTE: Empty author will be filled in by server once these are pushed
-    const author = this._session ? this._session.accountId : '';
-
     // Create the snapshot
     const id = _generateSnapshotID(parentId, this._projectId(), state);
     const snapshot: Snapshot = {
       id,
       name,
       state,
-      author,
+      author: '', // Will be set when pushed
       parent: parentId,
       created: new Date(),
       description: '',
@@ -1078,11 +1079,16 @@ export default class VCS {
   }
 
   _assertSession(): SessionData {
-    if (!this._session) {
-      throw new Error('No session found');
+    if (!session.isLoggedIn()) {
+      throw new Error('Not logged in');
     }
 
-    return this._session;
+    return {
+      accountId: session.getAccountId(),
+      sessionId: session.getCurrentSessionId(),
+      privateKey: session.getPrivateKey(),
+      publicKey: session.getPublicKey(),
+    };
   }
 
   async _assertBranch(branchName: string): Promise<Branch> {
@@ -1146,7 +1152,7 @@ export default class VCS {
     }
 
     let project: Project | null = matchedProjects[0];
-    const accountId = this._session ? this._session.accountId : Date.now() + '';
+    const accountId = session.isLoggedIn() ? session.getAccountId() : Date.now() + '';
 
     if (!project) {
       const hash = crypto

@@ -45,12 +45,11 @@ class LoginModal extends PureComponent {
       await session.login(email, password);
 
       // Clear all existing sync data that might be there and enable sync
-      process.nextTick(async () => {
-        await sync.resetLocalData();
-        await sync.doInitialSync();
-      });
-
-      this.setState({ step: 2, loading: false });
+      await sync.resetLocalData();
+      await sync.doInitialSync();
+      setTimeout(async () => {
+        this.setState({ step: 2, loading: false });
+      }, 1000);
     } catch (e) {
       this.setState({ error: e.message, loading: false });
     }

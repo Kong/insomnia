@@ -206,7 +206,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
 
     return (
       <Modal ref={this._setModalRef}>
-        <ModalHeader>Push Changes</ModalHeader>
+        <ModalHeader>Create Snapshot</ModalHeader>
         <ModalBody className="wide pad">
           {error && (
             <p className="notice error margin-bottom-sm no-margin-top">

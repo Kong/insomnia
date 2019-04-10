@@ -68,7 +68,6 @@ import AskModal from '../components/modals/ask-modal';
 import { updateMimeType } from '../../models/request';
 import MoveRequestGroupModal from '../components/modals/move-request-group-modal';
 import * as themes from '../../plugins/misc';
-import { session } from 'insomnia-account';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import VCS from '../../sync/vcs';
 
@@ -787,7 +786,7 @@ class App extends PureComponent {
     document.title = title;
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate() {
     this._updateDocumentTitle();
   }
 
@@ -800,15 +799,6 @@ class App extends PureComponent {
       const directory = path.join(getDataDirectory(), 'version-control');
       const driver = new FileSystemDriver({ directory });
       vcs = new VCS(driver);
-    }
-
-    if (session.isLoggedIn()) {
-      vcs.setSession({
-        accountId: session.getAccountId(),
-        sessionId: session.getCurrentSessionId(),
-        privateKey: session.getPrivateKey(),
-        publicKey: session.getPublicKey(),
-      });
     }
 
     await vcs.switchProject(activeWorkspace._id, activeWorkspace.name);

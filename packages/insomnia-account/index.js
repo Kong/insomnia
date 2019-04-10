@@ -1,9 +1,3 @@
-const crypt = require('./src/crypt');
-const session = require('./src/session');
-const fetch = require('./src/fetch');
-
-module.exports = {
-  crypt,
-  session,
-  fetch,
-};
+module.exports.crypt = require('./src/crypt');
+module.exports.session = require('./src/session');
+module.exports.fetch = require('./src/fetch');

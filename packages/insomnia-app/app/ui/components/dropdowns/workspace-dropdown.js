@@ -112,9 +112,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       const newVCS = vcs.newInstance();
       await newVCS.switchProject(w.id, w.name);
       await newVCS.pull([]); // There won't be any existing docs since it's a new pull
-      const documents = await newVCS.allDocuments();
+
       const flushId = await db.bufferChanges();
-      for (const doc of documents) {
+      for (const doc of await newVCS.allDocuments()) {
         await db.upsert(doc);
       }
       await db.flushChanges(flushId);
@@ -176,6 +176,17 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     executeHotKey(e, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    // Reload workspaces if we just got a new VCS instance
+    if (this.props.vcs && !prevProps.vcs) {
+      this._loadRemoteWorkspaces();
+    }
+  }
+
+  componentDidMount() {
+    this._loadRemoteWorkspaces();
   }
 
   render() {
