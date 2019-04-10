@@ -168,8 +168,6 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   render() {
     const { status, message, error } = this.state;
 
-    const canCreateSnapshot = !!message.trim();
-
     const allKeys = [...Object.keys(status.stage), ...Object.keys(status.unstaged)];
 
     return (

@@ -3,7 +3,6 @@ import * as paths from '../paths';
 describe('paths', () => {
   it('successes', async () => {
     expect(paths.projectBase('p1')).toBe('/projects/p1/');
-    expect(paths.stage('p1')).toBe('/projects/p1/stage');
     expect(paths.head('p1')).toBe('/projects/p1/head');
     expect(paths.project('p1')).toBe('/projects/p1/meta');
     expect(paths.blobs('p1')).toBe('/projects/p1/blobs/');

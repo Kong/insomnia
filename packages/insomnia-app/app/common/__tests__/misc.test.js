@@ -171,11 +171,3 @@ describe('fuzzyMatchAll()', () => {
     expect(misc.fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])).toEqual(null);
   });
 });
-
-describe('shortenHex()', () => {
-  it('shortens a hex value', () => {
-    expect(misc.shortenHex('3ba2cf1f67c3754181409316a40d9948e98535f9')).toBe(
-      '8vyZehx7wA6vgReqCtpcdWqUF61',
-    );
-  });
-});

@@ -8,10 +8,10 @@
     "url": "https://github.com/getinsomnia/insomnia"
   },
   "scripts": {
-    "bootstrap": "npm install && lerna bootstrap && lerna run bootstrap",
+    "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap",
     "publish": "lerna publish",
     "clean": "lerna clean --yes && rimraf node_modules",
-    "test": "lerna run test --stream",
+    "test": "lerna run --stream --parallel test",
     "app-start": "lerna run start --stream --parallel --bail",
     "app-build": "lerna run build --stream --parallel --bail",
     "app-package": "lerna run package --stream --parallel --bail",

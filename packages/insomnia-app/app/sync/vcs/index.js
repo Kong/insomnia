@@ -1,6 +1,7 @@
 // @flow
 
 import type { BaseDriver } from '../store/drivers/base';
+import clone from 'clone';
 import Store from '../store';
 import crypto from 'crypto';
 import compress from '../store/hooks/compress';
@@ -91,7 +92,8 @@ export default class VCS {
     return this._queryProjects();
   }
 
-  async status(candidates: Array<StatusCandidate>, stage: Stage): Promise<Status> {
+  async status(candidates: Array<StatusCandidate>, baseStage: Stage): Promise<Status> {
+    const stage = clone(baseStage);
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
     const state = snapshot ? snapshot.state : [];
@@ -1258,5 +1260,5 @@ function _generateSnapshotID(parentId: string, projectId: string, state: Snapsho
     hash.update(entry.blob);
   }
 
-  return hash.digest('hex').substring(0, 15);
+  return hash.digest('hex');
 }

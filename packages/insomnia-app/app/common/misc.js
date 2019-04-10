@@ -6,7 +6,6 @@ import uuid from 'uuid';
 import zlib from 'zlib';
 import { join as pathJoin } from 'path';
 import { DEBOUNCE_MILLIS } from './constants';
-import anyBase from 'any-base';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -101,7 +100,7 @@ export function getContentLengthHeader<T: Header>(headers: Array<T>): T | null {
  * @returns {string}
  */
 export function generateId(prefix: string): string {
-  const id = shortenHex(uuid.v4().replace(/-/g, ''));
+  const id = uuid.v4().replace(/-/g, '');
 
   if (prefix) {
     return `${prefix}_${id}`;
@@ -339,11 +338,4 @@ export async function waitForStreamToFinish(s: Readable | Writable): Promise<voi
 export function getDataDirectory(): string {
   const { app } = electron.remote || electron;
   return process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
-}
-
-export function shortenHex(hexString: string): string {
-  return anyBase(
-    '0123456789abcdef',
-    '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
-  )(hexString);
 }

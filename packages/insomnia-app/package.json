@@ -96,7 +96,6 @@
     "zprint-clj"
   ],
   "dependencies": {
-    "any-base": "^1.1.0",
     "autobind-decorator": "^2.1.0",
     "aws4": "^1.6.0",
     "classnames": "^2.2.5",
