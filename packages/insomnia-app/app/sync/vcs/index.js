@@ -29,6 +29,7 @@ import {
   stateDelta,
   threeWayMerge,
 } from './util';
+import { generateId } from '../../common/misc';
 
 const EMPTY_HASH = crypto
   .createHash('sha1')
@@ -90,12 +91,11 @@ export default class VCS {
     return this._queryProjects();
   }
 
-  async status(candidates: Array<StatusCandidate>): Promise<Status> {
+  async status(candidates: Array<StatusCandidate>, stage: Stage): Promise<Status> {
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
     const state = snapshot ? snapshot.state : [];
 
-    const stage: Stage = await this.getStage();
     const unstaged: { [DocumentKey]: StageEntry } = {};
     for (const entry of getStagable(state, candidates)) {
       const { key } = entry;
@@ -113,14 +113,7 @@ export default class VCS {
     };
   }
 
-  async getStage(): Promise<Stage> {
-    const stage = await this._store.getItem(paths.stage(this._projectId()));
-    return stage || {};
-  }
-
-  async stage(stageEntries: Array<StageEntry>): Promise<Stage> {
-    const stage: Stage = await this.getStage();
-
+  async stage(stage: Stage, stageEntries: Array<StageEntry>): Promise<Stage> {
     const blobsToStore: { [string]: string } = {};
     for (const entry of stageEntries) {
       stage[entry.key] = entry;
@@ -133,20 +126,14 @@ export default class VCS {
 
     await this._storeBlobs(blobsToStore);
 
-    // Store the stage
-    await this._storeStage(stage);
     return stage;
   }
 
-  async unstage(stageEntries: Array<StageEntry>): Promise<Stage> {
-    const stage = await this.getStage();
-
+  async unstage(stage: Stage, stageEntries: Array<StageEntry>): Promise<Stage> {
     for (const entry of stageEntries) {
       delete stage[entry.key];
     }
 
-    // Store the stage
-    await this._storeStage(stage);
     return stage;
   }
 
@@ -333,10 +320,9 @@ export default class VCS {
     return this._merge(candidates, branch.name, otherBranchName, snapshotMessage);
   }
 
-  async takeSnapshot(name: string): Promise<void> {
+  async takeSnapshot(stage: Stage, name: string): Promise<void> {
     const branch: Branch = await this._getCurrentBranch();
     const parent: Snapshot | null = await this._getLatestSnapshot(branch.name);
-    const stage: Stage = await this.getStage();
 
     // Ensure there is something on the stage
     if (Object.keys(stage).length === 0) {
@@ -618,7 +604,6 @@ export default class VCS {
 
     await this._storeBranch(branch);
     await this._storeSnapshot(snapshot);
-    await this._clearStage();
 
     return snapshot;
   }
@@ -1152,15 +1137,9 @@ export default class VCS {
     }
 
     let project: Project | null = matchedProjects[0];
-    const accountId = session.isLoggedIn() ? session.getAccountId() : Date.now() + '';
 
     if (!project) {
-      const hash = crypto
-        .createHash('sha1')
-        .update(accountId)
-        .update(rootDocumentId)
-        .digest('hex');
-      const id = `prj_${hash}`;
+      const id = generateId('prj');
       project = { id, name, rootDocumentId };
     }
 
@@ -1223,14 +1202,6 @@ export default class VCS {
     await this._store.setItem(paths.head(this._projectId()), head);
   }
 
-  async _storeStage(stage: Stage): Promise<void> {
-    await this._store.setItem(paths.stage(this._projectId()), stage);
-  }
-
-  async _clearStage(): Promise<void> {
-    await this._store.removeItem(paths.stage(this._projectId()));
-  }
-
   async _getBlobs(ids: Array<string>): Promise<Array<Object>> {
     const promises = [];
     for (const id of ids) {
@@ -1287,5 +1258,5 @@ function _generateSnapshotID(parentId: string, projectId: string, state: Snapsho
     hash.update(entry.blob);
   }
 
-  return hash.digest('hex');
+  return hash.digest('hex').substring(0, 15);
 }

@@ -8,10 +8,6 @@ export function projectBase(projectId: string): string {
   return `${projects()}${projectId}/`;
 }
 
-export function stage(projectId: string): string {
-  return `${projectBase(projectId)}stage`;
-}
-
 export function head(projectId: string): string {
   return `${projectBase(projectId)}head`;
 }

@@ -96,6 +96,7 @@
     "zprint-clj"
   ],
   "dependencies": {
+    "any-base": "^1.1.0",
     "autobind-decorator": "^2.1.0",
     "aws4": "^1.6.0",
     "classnames": "^2.2.5",
@@ -169,7 +170,7 @@
     "concurrently": "^3.5.0",
     "cross-env": "^2.0.0",
     "css-loader": "^0.28.11",
-    "electron": "^3.0.4",
+    "electron": "^4.1.4",
     "electron-builder": "^20.38.5",
     "electron-builder-lib": "^20.23.1",
     "electron-builder-squirrel-windows": "^20.38.5",

@@ -56,6 +56,7 @@ import ErrorBoundary from './error-boundary';
 import type { ClientCertificate } from '../../models/client-certificate';
 import MoveRequestGroupModal from './modals/move-request-group-modal';
 import VCS from '../../sync/vcs';
+import type { StatusCandidate } from '../../sync/types';
 
 type Props = {
   // Helper Functions
@@ -121,6 +122,7 @@ type Props = {
   activeWorkspaceClientCertificates: Array<ClientCertificate>,
   isVariableUncovered: boolean,
   vcs: VCS | null,
+  syncItems: Array<StatusCandidate>,
 
   // Optional
   oAuth2Token: ?OAuth2Token,
@@ -415,6 +417,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       sidebarFilter,
       sidebarHidden,
       sidebarWidth,
+      syncItems,
       workspaceChildren,
       workspaces,
       unseenWorkspaces,
@@ -565,7 +568,12 @@ class Wrapper extends React.PureComponent<Props, State> {
 
           {vcs && (
             <React.Fragment>
-              <SyncStagingModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
+              <SyncStagingModal
+                ref={registerModal}
+                workspace={activeWorkspace}
+                vcs={vcs}
+                syncItems={syncItems}
+              />
               <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
               <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
               <SyncBranchesModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
@@ -657,6 +665,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             enableSyncBeta={settings.enableSyncBeta}
             hotKeyRegistry={settings.hotKeyRegistry}
             vcs={vcs}
+            syncItems={syncItems}
           />
         </ErrorBoundary>
 

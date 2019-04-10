@@ -9,20 +9,20 @@ import SyncStagingModal from '../modals/sync-staging-modal';
 import { session } from 'insomnia-account';
 import * as db from '../../../common/database';
 import type { BaseModel } from '../../../models';
-import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import SyncHistoryModal from '../modals/sync-history-modal';
-import Tooltip from '../tooltip';
 import SyncShareModal from '../modals/sync-share-modal';
 import SyncBranchesModal from '../modals/sync-branches-modal';
 import VCS from '../../../sync/vcs';
 import type { Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import ErrorModal from '../modals/error-modal';
+import Tooltip from '../tooltip';
 
 type Props = {
   workspace: Workspace,
   vcs: VCS,
+  syncItems: Array<StatusCandidate>,
 
   // Optional
   className?: string,
@@ -31,8 +31,10 @@ type Props = {
 type State = {
   currentBranch: string,
   localBranches: Array<string>,
-  ahead: number,
-  behind: number,
+  compare: {
+    ahead: number,
+    behind: number,
+  },
   status: Status,
   initializing: boolean,
   historyCount: number,
@@ -49,8 +51,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     this.state = {
       localBranches: [],
       currentBranch: '',
-      ahead: 0,
-      behind: 0,
+      compare: {
+        ahead: 0,
+        behind: 0,
+      },
       historyCount: 0,
       initializing: true,
       loadingPull: false,
@@ -64,28 +68,28 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async refreshMainAttributes(extraState?: Object = {}) {
-    const { vcs } = this.props;
+    const { vcs, syncItems } = this.props;
     const localBranches = (await vcs.getBranches()).sort();
     const currentBranch = await vcs.getBranch();
     const historyCount = await vcs.getHistoryCount();
-    const items = await this.generateStatusItems();
-    const status = await vcs.status(items);
+    const status = await vcs.status(syncItems, {});
 
-    this.setState({
-      historyCount,
-      localBranches,
-      currentBranch,
-      status,
-      ...extraState,
-    });
-
-    // This one uses the network so do it separate in case it fails
+    // This one uses the network so be extra careful
+    let compare = this.state.compare;
     try {
-      const { ahead, behind } = await vcs.compareRemoteBranch();
-      this.setState({ ahead, behind });
+      compare = await vcs.compareRemoteBranch();
     } catch (err) {
       console.log('Failed to compare remote branches', err);
     }
+
+    this.setState({
+      compare,
+      status,
+      historyCount,
+      localBranches,
+      currentBranch,
+      ...extraState,
+    });
   }
 
   componentDidMount() {
@@ -101,13 +105,15 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     clearInterval(this.checkInterval);
   }
 
-  async generateStatusItems(): Promise<Array<StatusCandidate>> {
-    const allDocs = await db.withDescendants(this.props.workspace);
-    return allDocs.filter(models.canSync).map(doc => ({
-      key: doc._id,
-      name: (doc: any).name || 'No Name',
-      document: doc,
-    }));
+  componentDidUpdate(prevProps: Props) {
+    const { vcs, syncItems } = this.props;
+
+    // Update if new sync items
+    if (syncItems !== prevProps.syncItems) {
+      vcs.status(syncItems, {}).then(status => {
+        this.setState({ status });
+      });
+    }
   }
 
   static async syncDatabase(delta: { upsert: Array<Object>, remove: Array<Object> }) {
@@ -137,8 +143,11 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
   _handleShowStagingModal() {
     showModal(SyncStagingModal, {
-      onPush: async () => {
+      onSnapshot: async () => {
         await this.refreshMainAttributes();
+      },
+      handlePush: async () => {
+        await this._handlePushChanges();
       },
     });
   }
@@ -165,12 +174,11 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handlePullChanges() {
-    const { vcs } = this.props;
+    const { vcs, syncItems } = this.props;
 
     this.setState({ loadingPull: true });
     try {
-      const items = await this.generateStatusItems();
-      const delta = await vcs.pull(items);
+      const delta = await vcs.pull(syncItems);
       await SyncDropdown.syncDatabase(delta);
     } catch (err) {
       showModal(ErrorModal, {
@@ -183,9 +191,8 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleRollback(snapshot: Snapshot) {
-    const { vcs } = this.props;
-    const items = await this.generateStatusItems();
-    const delta = await vcs.rollback(snapshot.id, items);
+    const { vcs, syncItems } = this.props;
+    const delta = await vcs.rollback(snapshot.id, syncItems);
     await SyncDropdown.syncDatabase(delta);
   }
 
@@ -200,9 +207,8 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleSwitchBranch(branch: string) {
-    const { vcs } = this.props;
-    const items = await this.generateStatusItems();
-    const delta = await vcs.checkout(items, branch);
+    const { vcs, syncItems } = this.props;
+    const delta = await vcs.checkout(syncItems, branch);
     await SyncDropdown.syncDatabase(delta);
     this.setState({ currentBranch: branch });
   }
@@ -227,25 +233,72 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   renderButton() {
-    const { currentBranch, behind, initializing } = this.state;
+    const {
+      currentBranch,
+      compare: { ahead, behind },
+      initializing,
+      status,
+      loadingPull,
+      loadingPush,
+    } = this.state;
+    const canPush = ahead > 0;
+    const canPull = behind > 0;
+    const canCreateSnapshot =
+      Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
+
+    const loadIcon = <i className="fa fa-spin fa-refresh fa--fixed-width" />;
+
+    const pullToolTipMsg = canPull
+      ? `There ${behind === 1 ? 'is' : 'are'} ${behind} snapshot${behind === 1 ? '' : 's'} to pull`
+      : 'No changes to pull';
+
+    const pushToolTipMsg = canPush
+      ? `There ${ahead === 1 ? 'is' : 'are'} ${ahead} snapshot${ahead === 1 ? '' : 's'} to push`
+      : 'No changes to push';
+
+    const snapshotToolTipMsg = canCreateSnapshot ? 'Local changes made' : 'No local changes made';
+
     if (currentBranch !== null) {
       return (
-        <React.Fragment>
-          {initializing ? (
-            <React.Fragment>
-              <i className="fa fa-refresh fa-spin" /> Initializing
-            </React.Fragment>
-          ) : (
-            <React.Fragment>
-              <i className="fa fa-code-fork" /> {currentBranch}
-            </React.Fragment>
-          )}
-          {behind > 0 && (
-            <Tooltip message="There are remote changes available to pull">
-              <i className="fa fa-asterisk space-left" />
+        <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
+          <div className="ellipsis">
+            <i className="fa fa-code-fork space-right" />{' '}
+            {initializing ? 'Initializing...' : currentBranch}
+          </div>
+          <div className="space-left">
+            <Tooltip message={snapshotToolTipMsg} delay={800}>
+              <i
+                className={classnames('icon fa fa-cube fa--fixed-width', {
+                  'super-duper-faint': !canCreateSnapshot,
+                })}
+              />
             </Tooltip>
-          )}
-        </React.Fragment>
+
+            {loadingPull ? (
+              loadIcon
+            ) : (
+              <Tooltip message={pullToolTipMsg} delay={800}>
+                <i
+                  className={classnames('fa fa-cloud-download fa--fixed-width', {
+                    'super-duper-faint': !canPull,
+                  })}
+                />
+              </Tooltip>
+            )}
+
+            {loadingPush ? (
+              loadIcon
+            ) : (
+              <Tooltip message={pushToolTipMsg} delay={800}>
+                <i
+                  className={classnames('fa fa-cloud-upload fa--fixed-width', {
+                    'super-duper-faint': !canPush,
+                  })}
+                />
+              </Tooltip>
+            )}
+          </div>
+        </DropdownButton>
       );
     } else {
       return <React.Fragment>Sync</React.Fragment>;
@@ -261,12 +314,11 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const {
       localBranches,
       currentBranch,
-      ahead,
-      behind,
       status,
       historyCount,
       loadingPull,
       loadingPush,
+      compare: { ahead, behind },
     } = this.state;
 
     const canCreateSnapshot =
@@ -277,7 +329,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     return (
       <div className={className}>
         <Dropdown wide className="wide tall" onOpen={this._handleOpen}>
-          <DropdownButton className="btn btn--compact wide">{this.renderButton()}</DropdownButton>
+          {this.renderButton()}
 
           <DropdownDivider>
             Cloud Sync{' '}
@@ -314,27 +366,12 @@ class SyncDropdown extends React.PureComponent<Props, State> {
             </DropdownItem>
           )}
 
-          <DropdownItem
-            onClick={this._handlePushChanges}
-            disabled={ahead === 0 || loadingPush}
-            stayOpenAfterClick>
-            {loadingPush ? (
-              <React.Fragment>
-                <i className="fa fa-spin fa-refresh" /> Pushing Snapshots...
-              </React.Fragment>
-            ) : (
-              <React.Fragment>
-                <i className="fa fa-cloud-upload" /> Push {ahead || ''} Snapshot{ahead === 1
-                  ? ''
-                  : 's'}
-              </React.Fragment>
-            )}
+          <DropdownItem onClick={this._handleShowStagingModal} disabled={!canCreateSnapshot}>
+            <i className="fa fa-cube" />
+            Create Snapshot
           </DropdownItem>
 
-          <DropdownItem
-            onClick={this._handlePullChanges}
-            disabled={behind === 0 || loadingPull}
-            stayOpenAfterClick>
+          <DropdownItem onClick={this._handlePullChanges} disabled={behind === 0 || loadingPull}>
             {loadingPull ? (
               <React.Fragment>
                 <i className="fa fa-spin fa-refresh" /> Pulling Snapshots...
@@ -348,9 +385,18 @@ class SyncDropdown extends React.PureComponent<Props, State> {
             )}
           </DropdownItem>
 
-          <DropdownItem onClick={this._handleShowStagingModal} disabled={!canCreateSnapshot}>
-            <i className="fa fa-cube" />
-            Create Snapshot
+          <DropdownItem onClick={this._handlePushChanges} disabled={ahead === 0 || loadingPush}>
+            {loadingPush ? (
+              <React.Fragment>
+                <i className="fa fa-spin fa-refresh" /> Pushing Snapshots...
+              </React.Fragment>
+            ) : (
+              <React.Fragment>
+                <i className="fa fa-cloud-upload" /> Push {ahead || ''} Snapshot{ahead === 1
+                  ? ''
+                  : 's'}
+              </React.Fragment>
+            )}
           </DropdownItem>
         </Dropdown>
       </div>

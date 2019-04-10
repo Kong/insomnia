@@ -57,6 +57,7 @@ class Sidebar extends PureComponent {
       hotKeyRegistry,
       enableSyncBeta,
       vcs,
+      syncItems,
     } = this.props;
 
     return (
@@ -130,7 +131,14 @@ class Sidebar extends PureComponent {
         />
 
         {enableSyncBeta &&
-          vcs && <SyncDropdown className="sidebar__footer" workspace={workspace} vcs={vcs} />}
+          vcs && (
+            <SyncDropdown
+              className="sidebar__footer"
+              workspace={workspace}
+              vcs={vcs}
+              syncItems={syncItems}
+            />
+          )}
 
         {!enableSyncBeta && (
           <SyncLegacyDropdown
@@ -174,11 +182,13 @@ Sidebar.propTypes = {
   environmentHighlightColorStyle: PropTypes.string.isRequired,
   hotKeyRegistry: PropTypes.object.isRequired,
   enableSyncBeta: PropTypes.bool.isRequired,
+  syncItems: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional
   filter: PropTypes.string,
   activeRequest: PropTypes.object,
   activeEnvironment: PropTypes.object,
+  vcs: PropTypes.object,
 };
 
 export default Sidebar;

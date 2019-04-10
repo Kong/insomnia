@@ -56,7 +56,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
     const { branches } = this.state;
 
     return (
-      <Modal ref={this._setModalRef} tall>
+      <Modal ref={this._setModalRef}>
         <ModalHeader>Branches</ModalHeader>
         <ModalBody className="wide pad">
           <table className="table--fancy table--striped">

@@ -23,6 +23,7 @@ module.exports = {
     port: PORT,
     publicPath: '/',
     hot: true,
+    disableHostCheck: true,
   },
   plugins: [
     ...baseConfig.plugins,

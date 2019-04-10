@@ -42,6 +42,7 @@ import {
   selectActiveWorkspaceMeta,
   selectEntitiesLists,
   selectSidebarChildren,
+  selectSyncItems,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
 } from '../redux/selectors';
@@ -1113,6 +1114,9 @@ function mapStateToProps(state, props) {
   const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(state, props);
   const unseenWorkspaces = selectUnseenWorkspaces(state, props);
 
+  // Sync stuff
+  const syncItems = selectSyncItems(state, props);
+
   return Object.assign({}, state, {
     settings,
     workspaces,
@@ -1140,6 +1144,7 @@ function mapStateToProps(state, props) {
     environments,
     activeEnvironment,
     workspaceChildren,
+    syncItems,
   });
 }
 

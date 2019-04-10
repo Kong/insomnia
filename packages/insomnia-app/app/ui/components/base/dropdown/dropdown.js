@@ -147,7 +147,7 @@ class Dropdown extends PureComponent {
     this._dropdownList.style.minWidth = 'initial';
     this._dropdownList.style.maxWidth = 'initial';
 
-    const screenMargin = 5;
+    const screenMargin = 6;
 
     const { right, wide } = this.props;
     if (right || wide) {

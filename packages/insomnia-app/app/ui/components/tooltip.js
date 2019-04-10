@@ -159,6 +159,10 @@ class Tooltip extends React.PureComponent<Props, State> {
     const { children, message, className, selectable, wide } = this.props;
     const { visible } = this.state;
 
+    if (!message) {
+      return children;
+    }
+
     const tooltipClasses = classnames(className, 'tooltip');
     const bubbleClasses = classnames('tooltip__bubble theme--tooltip', {
       'tooltip__bubble--visible': visible,

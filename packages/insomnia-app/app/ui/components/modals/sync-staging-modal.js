@@ -6,14 +6,13 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import type { Workspace } from '../../../models/workspace';
-import * as db from '../../../common/database';
-import * as models from '../../../models';
 import VCS from '../../../sync/vcs';
-import type { StageEntry, Status, StatusCandidate } from '../../../sync/types';
+import type { Stage, StageEntry, Status, StatusCandidate } from '../../../sync/types';
 import HelpTooltip from '../help-tooltip';
 
 type Props = {
   workspace: Workspace,
+  syncItems: Array<StatusCandidate>,
   vcs: VCS,
 };
 
@@ -26,7 +25,8 @@ type State = {
 @autobind
 class SyncStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
-  onPush: () => any;
+  _onSnapshot: ?() => void;
+  _handlePush: ?() => void;
 
   constructor(props: Props) {
     super(props);
@@ -58,72 +58,66 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     const { status } = this.state;
     const id = e.currentTarget.name;
 
-    if (status.stage[id]) {
-      await vcs.unstage([status.stage[id]]);
-    } else {
-      await vcs.stage([status.unstaged[id]]);
-    }
+    const newStage = status.stage[id]
+      ? await vcs.unstage(status.stage, [status.stage[id]])
+      : await vcs.stage(status.stage, [status.unstaged[id]]);
 
-    await this.updateStatus();
+    await this.refreshState({}, newStage);
   }
 
   async _handleStageAll() {
     const { vcs } = this.props;
-    const { unstaged } = this.state.status;
+    const { status } = this.state;
 
     const items = [];
-    for (const id of Object.keys(unstaged)) {
-      items.push(unstaged[id]);
+    for (const id of Object.keys(status.unstaged)) {
+      items.push(status.unstaged[id]);
     }
 
-    await vcs.stage(items);
-    await this.updateStatus();
+    const stage = await vcs.stage(status.stage, items);
+    await this.refreshState({}, stage);
   }
 
   async _handleUnstageAll() {
     const { vcs } = this.props;
-    const { stage } = this.state.status;
+    const { status } = this.state;
     const items: Array<StageEntry> = [];
-    for (const id of Object.keys(stage)) {
-      items.push(stage[id]);
+    for (const id of Object.keys(status.stage)) {
+      items.push(status.stage[id]);
     }
 
-    await vcs.unstage(items);
-    await this.updateStatus();
+    const stage = await vcs.unstage(status.stage, items);
+    await this.refreshState({}, stage);
+  }
+
+  async _handleTakeSnapshotAndPush() {
+    await this._handleTakeSnapshot();
+    this._handlePush && this._handlePush();
   }
 
   async _handleTakeSnapshot() {
     const { vcs } = this.props;
-    const { message } = this.state;
+    const {
+      message,
+      status: { stage },
+    } = this.state;
     try {
-      await vcs.takeSnapshot(message);
+      await vcs.takeSnapshot(stage, message);
     } catch (err) {
       this.setState({ error: err.message });
       return;
     }
 
-    await this.updateStatus({ message: '', error: '' });
-
-    if (this.onPush) {
-      this.onPush();
-    }
+    this._onSnapshot && this._onSnapshot();
+    await this.refreshState({ message: '', error: '' });
+    this.hide();
   }
 
-  async generateStatusItems(): Promise<Array<StatusCandidate>> {
-    const allDocs = await db.withDescendants(this.props.workspace);
-    return allDocs.filter(models.canSync).map(doc => ({
-      key: doc._id,
-      name: (doc: any).name || 'No Name',
-      document: doc,
-    }));
-  }
-
-  async updateStatus(newState?: Object) {
-    const { vcs } = this.props;
-    const items = await this.generateStatusItems();
-    const status = await vcs.status(items);
+  async refreshState(newState?: Object = {}, newStage?: Stage = {}) {
+    const { vcs, syncItems } = this.props;
     const branch = await vcs.getBranch();
     const branches = await vcs.getBranches();
+    const status = await vcs.status(syncItems, newStage);
 
     this.setState({
       status,
@@ -138,10 +132,22 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async show(options: { vcs: VCS, onPush: () => any }) {
-    this.onPush = options.onPush;
+  async show(options: { onSnapshot?: () => any, handlePush: () => any }) {
+    const { vcs, syncItems } = this.props;
+
     this.modal && this.modal.show();
-    await this.updateStatus();
+    this._onSnapshot = options.onSnapshot;
+    this._handlePush = options.handlePush;
+
+    // Add everything to stage by default except new items
+    const status: Status = await vcs.status(syncItems, {});
+    const toStage = [];
+    for (const key of Object.keys(status.unstaged)) {
+      toStage.push(status.unstaged[key]);
+    }
+
+    const stage = await vcs.stage(status.stage, toStage);
+    await this.refreshState({}, stage);
   }
 
   static renderOperation(entry: StageEntry) {
@@ -234,7 +240,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
 
               return (
                 <li key={key}>
-                  <label>
+                  <label className="wide">
                     <input
                       className="space-right"
                       type="checkbox"
@@ -250,12 +256,14 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
           </ul>
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left italic txt-sm tall">
-            * Note: snapshots only exist locally until pushed to Insomnia Sync
+          <div>
+            <button className="btn" onClick={this._handleTakeSnapshot}>
+              Create
+            </button>
+            <button className="btn" onClick={this._handleTakeSnapshotAndPush}>
+              Create and Push
+            </button>
           </div>
-          <button className="btn" onClick={this._handleTakeSnapshot} disabled={!canCreateSnapshot}>
-            Create Snapshot
-          </button>
         </ModalFooter>
       </Modal>
     );

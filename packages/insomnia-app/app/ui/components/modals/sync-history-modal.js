@@ -70,7 +70,7 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
     const { branch, history } = this.state;
 
     return (
-      <Modal ref={this._setModalRef} tall>
+      <Modal ref={this._setModalRef}>
         <ModalHeader>
           Branch History: <i>{branch}</i>
         </ModalHeader>
