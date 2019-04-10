@@ -54,7 +54,13 @@ async function _fetch(method, path, obj, sessionId, compressBody = false) {
     config.headers['X-Session-Id'] = sessionId;
   }
 
-  const response = await window.fetch(_getUrl(path), config);
+  let response;
+  const url = _getUrl(path);
+  try {
+    response = await window.fetch(url, config);
+  } catch (err) {
+    throw new Error(`Failed to fetch '${url}'`);
+  }
   const uri = response.headers.get('x-insomnia-command');
   uri && _notifyCommandListeners(uri);
 

@@ -68,24 +68,24 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const localBranches = (await vcs.getBranches()).sort();
     const currentBranch = await vcs.getBranch();
     const historyCount = await vcs.getHistoryCount();
+    const items = await this.generateStatusItems();
+    const status = await vcs.status(items);
 
     this.setState({
       historyCount,
       localBranches,
       currentBranch,
-    });
-
-    // Slow stuff next
-    const items = await this.generateStatusItems();
-    const status = await vcs.status(items);
-    const { ahead, behind } = await vcs.compareRemoteBranch();
-
-    this.setState({
-      ...extraState,
-      ahead,
-      behind,
       status,
+      ...extraState,
     });
+
+    // This one uses the network so do it separate in case it fails
+    try {
+      const { ahead, behind } = await vcs.compareRemoteBranch();
+      this.setState({ ahead, behind });
+    } catch (err) {
+      console.log('Failed to compare remote branches', err);
+    }
   }
 
   componentDidMount() {
@@ -102,21 +102,12 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async generateStatusItems(): Promise<Array<StatusCandidate>> {
-    const { workspace } = this.props;
-
-    const items = [];
-    const allDocs = await db.withDescendants(workspace);
-    const docs = allDocs.filter(models.canSync);
-
-    for (const doc of docs) {
-      items.push({
-        key: doc._id,
-        name: (doc: any).name || 'No Name',
-        document: doc,
-      });
-    }
-
-    return items;
+    const allDocs = await db.withDescendants(this.props.workspace);
+    return allDocs.filter(models.canSync).map(doc => ({
+      key: doc._id,
+      name: (doc: any).name || 'No Name',
+      document: doc,
+    }));
   }
 
   static async syncDatabase(delta: { upsert: Array<Object>, remove: Array<Object> }) {
