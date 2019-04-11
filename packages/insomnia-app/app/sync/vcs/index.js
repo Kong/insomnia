@@ -383,7 +383,7 @@ export default class VCS {
       newState.push({ key, name, blob });
     }
 
-    await this._createSnapshotFromState(branch, parent, newState, name);
+    await this._createSnapshotFromState(branch, newState, name);
   }
 
   async pull(
@@ -395,23 +395,20 @@ export default class VCS {
     await this._getOrCreateRemoteProject();
 
     const localBranch = await this._getCurrentBranch();
-    const tmpBranch = await this._fetch(localBranch.name + '.hidden', localBranch.name);
+    const tmpBranchForRemote = await this._fetch(localBranch.name + '.hidden', localBranch.name);
 
+    // Merge branch and ensure that we use the remote's history when merging
     const message = `Synced latest changes from ${localBranch.name}`;
-    const delta = await this._merge(candidates, localBranch.name, tmpBranch.name, message);
+    const delta = await this._merge(
+      candidates,
+      localBranch.name,
+      tmpBranchForRemote.name,
+      message,
+      true,
+    );
 
-    const tmpBranchUpdated = await this._getBranch(tmpBranch.name);
-    if (!tmpBranchUpdated) {
-      // Should never happen
-      throw new Error(`Failed to get temporary branch ${tmpBranch.name}`);
-    }
-
-    const branch: Branch = Object.assign(({}: any), tmpBranchUpdated, {
-      name: localBranch.name,
-    });
-
-    await this._storeBranch(branch);
-    await this._removeBranch(tmpBranch);
+    // Remove tmp branch
+    await this._removeBranch(tmpBranchForRemote);
 
     return delta;
   }
@@ -540,6 +537,7 @@ export default class VCS {
     trunkBranchName: string,
     otherBranchName: string,
     snapshotMessage?: string,
+    useOtherBranchHistory?: boolean,
   ): Promise<{
     upsert: Array<Object>,
     remove: Array<Object>,
@@ -594,12 +592,13 @@ export default class VCS {
         throw new Error('Conflicting keys! ' + mergeConflicts.join(', '));
       }
 
-      // TODO: Figure this one out!
-      // Note, we're replacing trunk's state with other's
-      // branchTrunk.snapshots = branchOther.snapshots;
+      // Sometimes we want to merge into trunk but keep the other branche's history
+      if (useOtherBranchHistory) {
+        branchTrunk.snapshots = branchOther.snapshots;
+      }
 
-      const name = snapshotMessage || `Merged branch ${branchOther.name}`;
-      await this._createSnapshotFromState(branchTrunk, latestSnapshotTrunk, state, name);
+      const snapshotName = snapshotMessage || `Merged branch ${branchOther.name}`;
+      await this._createSnapshotFromState(branchTrunk, state, snapshotName);
     }
 
     const newLatestSnapshot = await this._getLatestSnapshot(branchTrunk.name);
@@ -618,11 +617,12 @@ export default class VCS {
 
   async _createSnapshotFromState(
     branch: Branch,
-    parent: Snapshot | null,
     state: SnapshotState,
     name: string,
   ): Promise<Snapshot> {
-    const parentId: string = parent ? parent.id : EMPTY_HASH;
+    const parentId = branch.snapshots.length
+      ? branch.snapshots[branch.snapshots.length - 1]
+      : EMPTY_HASH;
 
     // Create the snapshot
     const id = _generateSnapshotID(parentId, this._projectId(), state);
@@ -642,6 +642,7 @@ export default class VCS {
 
     await this._storeBranch(branch);
     await this._storeSnapshot(snapshot);
+    console.log(`[sync] Created snapshot '${name}' on ${branch.name}`);
 
     return snapshot;
   }
