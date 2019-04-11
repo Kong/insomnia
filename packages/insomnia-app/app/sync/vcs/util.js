@@ -404,7 +404,7 @@ export function preMergeCheck(
 }
 
 export function hashDocument(doc: Object): { content: string, hash: string } {
-  if (doc === undefined) {
+  if (!doc) {
     throw new Error('Cannot hash undefined value');
   }
 

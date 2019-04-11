@@ -7,10 +7,10 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import { session } from 'insomnia-account';
 import * as sync from '../../../sync-legacy/index';
 import PromptButton from '../base/prompt-button';
-import { shareWithTeam } from '../../../sync-legacy/network';
+import { shareWithTeam, unshareWithAllTeams } from '../../../sync-legacy/network';
+import * as session from '../../../account/session';
 
 @autobind
 class WorkspaceShareSettingsModal extends PureComponent {
@@ -19,7 +19,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
     this.state = {};
   }
 
-  _handleSubmit(e) {
+  static _handleSubmit(e) {
     e.preventDefault();
   }
 
@@ -41,7 +41,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
     this._resetState({ loading: true });
 
     try {
-      await session.unshareWithAllTeams(resourceGroup.id);
+      await unshareWithAllTeams(resourceGroup.id);
       await this._load();
     } catch (err) {
       console.warn('Failed to unshare workspace', err);
@@ -118,7 +118,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
     const { teams, resourceGroup, error, loading } = this.state;
     const { workspace } = this.props;
     return (
-      <form onSubmit={this._handleSubmit}>
+      <form onSubmit={WorkspaceShareSettingsModal._handleSubmit}>
         <Modal ref={this._setModalRef}>
           <ModalHeader key="header">Share Workspace</ModalHeader>
           <ModalBody key="body" className="pad text-center" noScroll>

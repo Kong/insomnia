@@ -6,7 +6,6 @@ import Store from '../store';
 import crypto from 'crypto';
 import compress from '../store/hooks/compress';
 import * as paths from './paths';
-import { crypt, fetch, session } from 'insomnia-account';
 import type {
   Branch,
   DocumentKey,
@@ -31,6 +30,9 @@ import {
   threeWayMerge,
 } from './util';
 import { chunkArray, generateId } from '../../common/misc';
+import * as crypt from '../../account/crypt';
+import * as session from '../../account/session';
+import * as fetch from '../../account/fetch';
 
 const EMPTY_HASH = crypto
   .createHash('sha1')

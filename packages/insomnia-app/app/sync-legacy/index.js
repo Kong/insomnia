@@ -1,6 +1,5 @@
 import * as db from '../common/database';
 import * as models from '../models';
-import { crypt, session } from 'insomnia-account';
 import * as store from './storage';
 import * as misc from '../common/misc';
 import Logger from './logger';
@@ -13,6 +12,8 @@ import {
   syncPush,
   syncResetData,
 } from './network';
+import * as crypt from '../account/crypt';
+import * as session from '../account/session';
 
 export const START_DELAY = 1e3;
 export const PULL_PERIOD = 15e3;

@@ -1,4 +1,4 @@
-import { delay } from '../../insomnia-app/app/common/misc';
+import { delay } from '../common/misc';
 import { parse as urlParse } from 'url';
 import zlib from 'zlib';
 

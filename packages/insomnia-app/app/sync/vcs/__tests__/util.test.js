@@ -720,12 +720,8 @@ describe('util', () => {
       expect(sDate1.content.toString('utf8')).toBe('"2018-11-02T17:00:19.555Z"');
       expect(sDate2.content.toString('utf8')).toBe('"2018-11-02T17:00:19.555Z"');
 
-      const sNull1 = hashDocument(null);
       const sNull2 = hashDocument('null');
-      expect(sNull1.hash).not.toBe(sNull2.hash);
-      expect(sNull1.hash).toBe('2be88ca4242c76e8253ac62474851065032d6833');
       expect(sNull2.hash).toBe('8c1030365643f1f4b7f00e3d88c0a3c555522b60');
-      expect(sNull1.content.toString('utf8')).toBe('null');
       expect(sNull2.content.toString('utf8')).toBe('"null"');
     });
 

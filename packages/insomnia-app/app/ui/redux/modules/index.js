@@ -4,8 +4,9 @@ import configureStore from '../create';
 import * as global from './global';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
-import { fetch, session } from 'insomnia-account';
 import { API_BASE_URL, getClientString } from '../../../common/constants';
+import { isLoggedIn, onLoginLogout } from '../../../account/session';
+import * as fetch from '../../../account/fetch';
 
 export async function init() {
   const store = configureStore();
@@ -22,8 +23,8 @@ export async function init() {
   db.onChange(addChanges);
 
   // Initialize login state
-  loginStateChange(session.isLoggedIn());
-  session.onLoginLogout(loggedIn => {
+  loginStateChange(isLoggedIn());
+  onLoginLogout(loggedIn => {
     loginStateChange(loggedIn);
   });
 

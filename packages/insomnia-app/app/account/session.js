@@ -94,7 +94,7 @@ export async function login(rawEmail, rawPassphrase) {
   const symmetricKeyStr = await crypt.decryptAES(derivedSymmetricKey, JSON.parse(encSymmetricKey));
 
   // Store the information for later
-  _setSessionData(
+  setSessionData(
     sessionId,
     accountId,
     firstName,
@@ -157,20 +157,8 @@ export async function logout() {
   _callCallbacks();
 }
 
-export async function listTeams() {
-  return fetch.get('/api/teams', getCurrentSessionId());
-}
-
-export async function endTrial() {
-  await fetch.put('/api/billing/end-trial', getCurrentSessionId());
-}
-
-// ~~~~~~~~~~~~~~~~ //
-// Helper Functions //
-// ~~~~~~~~~~~~~~~~ //
-
 /** Set data for the new session and store it encrypted with the sessionId */
-function _setSessionData(
+export function setSessionData(
   sessionId,
   accountId,
   firstName,
@@ -196,6 +184,18 @@ function _setSessionData(
   // NOTE: We're setting this last because the stuff above might fail
   window.localStorage.setItem('currentSessionId', sessionId);
 }
+
+export async function listTeams() {
+  return fetch.get('/api/teams', getCurrentSessionId());
+}
+
+export async function endTrial() {
+  await fetch.put('/api/billing/end-trial', getCurrentSessionId());
+}
+
+// ~~~~~~~~~~~~~~~~ //
+// Helper Functions //
+// ~~~~~~~~~~~~~~~~ //
 
 function _whoami(sessionId = null) {
   return fetch.get('/auth/whoami', sessionId || getCurrentSessionId());

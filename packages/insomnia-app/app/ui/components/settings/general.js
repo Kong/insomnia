@@ -14,7 +14,7 @@ import {
 import type { Settings } from '../../../models/settings';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { setFont } from '../../../plugins/misc';
-import { session } from 'insomnia-account';
+import * as session from '../../../account/session';
 
 type Props = {
   settings: Settings,

@@ -1,4 +1,6 @@
-import { fetch, crypt, session } from 'insomnia-account';
+import * as fetch from '../account/fetch';
+import * as session from '../account/session';
+import * as crypt from '../account/crypt';
 
 export async function syncCreateResourceGroup(parentResourceId, name, encSymmetricKey) {
   return fetch.post(

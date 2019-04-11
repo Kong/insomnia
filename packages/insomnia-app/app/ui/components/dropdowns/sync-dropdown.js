@@ -6,7 +6,6 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base
 import type { Workspace } from '../../../models/workspace';
 import { showModal } from '../modals';
 import SyncStagingModal from '../modals/sync-staging-modal';
-import { session } from 'insomnia-account';
 import { batchModifyDocs } from '../../../common/database';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
@@ -18,6 +17,7 @@ import type { Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import ErrorModal from '../modals/error-modal';
 import Tooltip from '../tooltip';
 import LoginModal from '../modals/login-modal';
+import * as session from '../../../account/session';
 
 type Props = {
   workspace: Workspace,

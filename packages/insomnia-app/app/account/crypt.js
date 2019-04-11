@@ -1,6 +1,6 @@
-const HKDF = require('hkdf');
-const srp = require('srp-js');
-const forge = require('node-forge');
+import HKDF from 'hkdf';
+import srp from 'srp-js';
+import forge from 'node-forge';
 
 const DEFAULT_BYTE_LENGTH = 32;
 const DEFAULT_PBKDF2_ITERATIONS = 1e5; // 100,000
@@ -12,10 +12,10 @@ const DEFAULT_PBKDF2_ITERATIONS = 1e5; // 100,000
  * @param email
  * @param salt
  */
-module.exports.deriveKey = async function(pass, email, salt) {
+export async function deriveKey(pass, email, salt) {
   const combinedSalt = await _hkdfSalt(salt, email);
   return _pbkdf2Passphrase(pass, combinedSalt);
-};
+}
 
 /**
  * Encrypt with RSA256 public key
@@ -24,7 +24,7 @@ module.exports.deriveKey = async function(pass, email, salt) {
  * @param plaintext
  * @return String
  */
-module.exports.encryptRSAWithJWK = function(publicKeyJWK, plaintext) {
+export function encryptRSAWithJWK(publicKeyJWK, plaintext) {
   if (publicKeyJWK.alg !== 'RSA-OAEP-256') {
     throw new Error('Public key algorithm was not RSA-OAEP-256');
   } else if (publicKeyJWK.kty !== 'RSA') {
@@ -43,9 +43,9 @@ module.exports.encryptRSAWithJWK = function(publicKeyJWK, plaintext) {
     md: forge.md.sha256.create(),
   });
   return forge.util.bytesToHex(encrypted);
-};
+}
 
-module.exports.decryptRSAWithJWK = function(privateJWK, encryptedBlob) {
+export function decryptRSAWithJWK(privateJWK, encryptedBlob) {
   const n = _b64UrlToBigInt(privateJWK.n);
   const e = _b64UrlToBigInt(privateJWK.e);
   const d = _b64UrlToBigInt(privateJWK.d);
@@ -62,7 +62,7 @@ module.exports.decryptRSAWithJWK = function(privateJWK, encryptedBlob) {
   });
 
   return decodeURIComponent(decrypted);
-};
+}
 
 /**
  * Encrypt data using symmetric key
@@ -72,7 +72,7 @@ module.exports.decryptRSAWithJWK = function(privateJWK, encryptedBlob) {
  * @param additionalData any additional public data to attach
  * @returns {{iv, t, d, ad}}
  */
-module.exports.encryptAESBuffer = function(jwkOrKey, buff, additionalData = '') {
+export function encryptAESBuffer(jwkOrKey, buff, additionalData = '') {
   // TODO: Add assertion checks for JWK
   const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
   const key = forge.util.hexToBytes(rawKey);
@@ -90,7 +90,7 @@ module.exports.encryptAESBuffer = function(jwkOrKey, buff, additionalData = '') 
     ad: forge.util.bytesToHex(additionalData),
     d: forge.util.bytesToHex(cipher.output),
   };
-};
+}
 
 /**
  * Encrypt data using symmetric key
@@ -100,7 +100,7 @@ module.exports.encryptAESBuffer = function(jwkOrKey, buff, additionalData = '') 
  * @param additionalData any additional public data to attach
  * @returns {{iv, t, d, ad}}
  */
-module.exports.encryptAES = function(jwkOrKey, plaintext, additionalData = '') {
+export function encryptAES(jwkOrKey, plaintext, additionalData = '') {
   // TODO: Add assertion checks for JWK
   const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
   const key = forge.util.hexToBytes(rawKey);
@@ -121,7 +121,7 @@ module.exports.encryptAES = function(jwkOrKey, plaintext, additionalData = '') {
     ad: forge.util.bytesToHex(additionalData),
     d: forge.util.bytesToHex(cipher.output),
   };
-};
+}
 
 /**
  * Decrypt AES using a key
@@ -130,7 +130,7 @@ module.exports.encryptAES = function(jwkOrKey, plaintext, additionalData = '') {
  * @param encryptedResult encryption data
  * @returns String
  */
-module.exports.decryptAES = function(jwkOrKey, encryptedResult) {
+export function decryptAES(jwkOrKey, encryptedResult) {
   // TODO: Add assertion checks for JWK
   const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
   const key = forge.util.hexToBytes(rawKey);
@@ -154,7 +154,7 @@ module.exports.decryptAES = function(jwkOrKey, encryptedResult) {
   } else {
     throw new Error('Failed to decrypt data');
   }
-};
+}
 
 /**
  * Decrypts AES using a key to buffer
@@ -162,7 +162,7 @@ module.exports.decryptAES = function(jwkOrKey, encryptedResult) {
  * @param encryptedResult
  * @returns {string}
  */
-module.exports.decryptAESToBuffer = function(jwkOrKey, encryptedResult) {
+export function decryptAESToBuffer(jwkOrKey, encryptedResult) {
   // TODO: Add assertion checks for JWK
   const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
   const key = forge.util.hexToBytes(rawKey);
@@ -186,14 +186,14 @@ module.exports.decryptAESToBuffer = function(jwkOrKey, encryptedResult) {
   } else {
     throw new Error('Failed to decrypt data');
   }
-};
+}
 
 /**
  * Generate a random key
  *
  * @returns {Promise}
  */
-module.exports.srpGenKey = function() {
+export function srpGenKey() {
   return new Promise((resolve, reject) => {
     srp.genKey((err, secret1Buffer) => {
       if (err) {
@@ -203,12 +203,12 @@ module.exports.srpGenKey = function() {
       }
     });
   });
-};
+}
 
 /**
  * Generate a random AES256 key for use with symmetric encryption
  */
-module.exports.generateAES256Key = async function() {
+export async function generateAES256Key() {
   const c = window.crypto;
   const subtle = c ? c.subtle || c.webkitSubtle : null;
 
@@ -230,14 +230,14 @@ module.exports.generateAES256Key = async function() {
       k: _hexToB64Url(key),
     };
   }
-};
+}
 
 /**
  * Generate RSA keypair JWK with 2048 bits and exponent 0x10001
  *
  * @returns Object
  */
-module.exports.generateKeyPairJWK = async function() {
+export async function generateKeyPairJWK() {
   // NOTE: Safari has crypto.webkitSubtle, but it does not support RSA-OAEP-SHA256
   const subtle = window.crypto && window.crypto.subtle;
 
@@ -288,7 +288,7 @@ module.exports.generateKeyPairJWK = async function() {
 
     return { privateKey, publicKey };
   }
-};
+}
 
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
@@ -301,7 +301,7 @@ module.exports.generateKeyPairJWK = async function() {
  * @param rawEmail
  * @returns {Promise}
  */
-function _hkdfSalt(rawSalt, rawEmail) {
+async function _hkdfSalt(rawSalt, rawEmail) {
   return new Promise(resolve => {
     const hkdf = new HKDF('sha256', rawSalt, rawEmail);
     hkdf.derive('', DEFAULT_BYTE_LENGTH, buffer => resolve(buffer.toString('hex')));

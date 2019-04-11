@@ -4,11 +4,11 @@ import autobind from 'autobind-decorator';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showModal } from '../modals';
 import * as syncStorage from '../../../sync-legacy/storage';
-import { session } from 'insomnia-account';
 import * as sync from '../../../sync-legacy';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import SetupSyncModal from '../modals/setup-sync-modal';
 import type { Workspace } from '../../../models/workspace';
+import * as session from '../../../account/session';
 
 type Props = {
   workspace: Workspace,
