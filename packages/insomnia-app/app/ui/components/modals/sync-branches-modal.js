@@ -190,15 +190,13 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
                       {name === 'master' && <i className="fa fa-lock space-left faint" />}
                     </td>
                     <td className="text-right">
-                      {name !== 'master' && (
-                        <PromptButton
-                          className="btn btn--micro btn--outlined space-left"
-                          doneMessage="Deleted"
-                          disabled={name === currentBranch}
-                          onClick={() => this._handleDelete(name)}>
-                          Delete Locally
-                        </PromptButton>
-                      )}
+                      <PromptButton
+                        className="btn btn--micro btn--outlined space-left"
+                        doneMessage="Deleted"
+                        disabled={name === currentBranch || name === 'master'}
+                        onClick={() => this._handleDelete(name)}>
+                        Delete
+                      </PromptButton>
                       <button
                         className="btn btn--micro btn--outlined space-left"
                         disabled={name === currentBranch}
@@ -246,7 +244,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
                           onPull={this.refreshState}
                           disabled={name === currentBranch}
                           vcs={vcs}>
-                          Pull
+                          Fetch
                         </SyncPullButton>
                       </td>
                     </tr>

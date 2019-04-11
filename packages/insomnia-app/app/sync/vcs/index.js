@@ -560,12 +560,13 @@ export default class VCS {
       candidates,
     );
 
-    const shouldDoNothing = latestSnapshotOther && latestSnapshotOther.id === rootSnapshotId;
+    const shouldDoNothing1 = latestSnapshotOther && latestSnapshotOther.id === rootSnapshotId;
+    const shouldDoNothing2 = branchOther.snapshots.length === 0;
     const shouldFastForward1 =
       rootSnapshot && (!latestSnapshotTrunk || rootSnapshot.id === latestSnapshotTrunk.id);
     const shouldFastForward2 = branchTrunk.snapshots.length === 0;
 
-    if (shouldDoNothing) {
+    if (shouldDoNothing1 || shouldDoNothing2) {
       console.log('[sync] Nothing to merge');
     } else if (shouldFastForward1 || shouldFastForward2) {
       console.log('[sync] Performing fast-forward merge');

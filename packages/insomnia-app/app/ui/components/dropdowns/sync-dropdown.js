@@ -97,7 +97,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       .catch(err => console.log('[sync_menu] Error refreshing sync state', err))
       .finally(() => this.setState({ initializing: false }));
 
-    this.checkInterval = setInterval(this.refreshMainAttributes, 1000 * 60);
+    this.checkInterval = setInterval(this.refreshMainAttributes, 1000 * 60 * 5);
   }
 
   componentWillUnmount() {
@@ -332,7 +332,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
             Branches
           </DropdownItem>
 
-          <DropdownDivider>Branches</DropdownDivider>
+          <DropdownDivider>Local Branches</DropdownDivider>
           {visibleBranches.map(this.renderBranch)}
 
           <DropdownDivider>{currentBranch}</DropdownDivider>
