@@ -110,18 +110,46 @@ table.table--fancy {
     padding: @padding-sm;
   }
 
-  &.table--compact td,
-  th {
+  &.table--compact td {
     padding: @padding-xs;
   }
 
   th {
     text-align: left;
-    padding-bottom: @padding-sm;
   }
 
   &.table--striped tbody tr:nth-child(odd) {
     background: @hl-xs;
+  }
+
+  &.table--outlined {
+    th {
+      background: @hl-xxs;
+    }
+
+    &,
+    td {
+      border: 1px solid @hl-sm;
+    }
+
+    tr.table--no-outline-row td {
+      border-left: 0;
+      border-right: 0;
+    }
+
+    & {
+      border-radius: @radius-md;
+      border-collapse: unset;
+    }
+
+    td {
+      border-left: 0;
+      border-bottom: 0;
+
+      &:last-child {
+        border-right: 0;
+      }
+    }
   }
 }
 

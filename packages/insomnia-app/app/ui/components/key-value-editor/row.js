@@ -500,11 +500,11 @@ const source = DragSource('KEY_VALUE_EDITOR', dragSource, sourceCollect)(KeyValu
 const target = DropTarget('KEY_VALUE_EDITOR', dragTarget, targetCollect)(source);
 
 target.prototype.focusNameEnd = function() {
-  this.handler.component.focusNameEnd();
+  this.decoratedRef.current.decoratedRef.current.focusNameEnd();
 };
 
 target.prototype.focusValueEnd = function() {
-  this.handler.component.focusValueEnd();
+  this.decoratedRef.current.decoratedRef.current.focusNameEnd();
 };
 
 export default target;

@@ -574,9 +574,14 @@ class Wrapper extends React.PureComponent<Props, State> {
                 vcs={vcs}
                 syncItems={syncItems}
               />
+              <SyncBranchesModal
+                ref={registerModal}
+                workspace={activeWorkspace}
+                vcs={vcs}
+                syncItems={syncItems}
+              />
               <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
               <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
-              <SyncBranchesModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
             </React.Fragment>
           )}
 

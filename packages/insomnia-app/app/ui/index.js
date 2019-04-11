@@ -45,9 +45,9 @@ document.body.setAttribute('data-platform', process.platform);
 
   // Hot Module Replacement API
   if (module.hot) {
-    module.hot.accept('./containers/app', () => {
-      render(App);
-    });
+    // module.hot.accept('./containers/app', () => {
+    //   render(App);
+    // });
   }
 
   // Do things that can wait

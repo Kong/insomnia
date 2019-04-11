@@ -82,7 +82,7 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
                 <th className="text-left">Time</th>
                 <th className="text-right">Objects</th>
                 <th className="text-right">
-                  Rollback
+                  Load State
                   <HelpTooltip>
                     Rolling back will revert the workspace to that state but will not create any new
                     snapshots or modify the history.
@@ -106,7 +106,7 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
                     <PromptButton
                       className="btn btn--micro btn--outlined"
                       onClick={() => this._handleClickRollback(snapshot)}>
-                      Rollback
+                      Load
                     </PromptButton>
                   </td>
                 </tr>

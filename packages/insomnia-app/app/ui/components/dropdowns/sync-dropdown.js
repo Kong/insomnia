@@ -7,8 +7,7 @@ import type { Workspace } from '../../../models/workspace';
 import { showModal } from '../modals';
 import SyncStagingModal from '../modals/sync-staging-modal';
 import { session } from 'insomnia-account';
-import * as db from '../../../common/database';
-import type { BaseModel } from '../../../models';
+import { batchModifyDocs } from '../../../common/database';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import SyncHistoryModal from '../modals/sync-history-modal';
@@ -116,28 +115,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     }
   }
 
-  static async syncDatabase(delta: { upsert: Array<Object>, remove: Array<Object> }) {
-    const { upsert, remove } = delta;
-    const flushId = await db.bufferChanges();
-
-    const promisesUpserted = [];
-    const promisesDeleted = [];
-    for (const doc: BaseModel of upsert) {
-      promisesUpserted.push(db.upsert(doc, true));
-    }
-
-    for (const doc: BaseModel of remove) {
-      promisesDeleted.push(db.unsafeRemove(doc, true));
-    }
-
-    // Perform from least to most dangerous
-    await Promise.all(promisesUpserted);
-    await Promise.all(promisesDeleted);
-
-    await db.flushChanges(flushId);
-  }
-
-  static _handleCreateBranch() {
+  static _handleShowBranchesModal() {
     showModal(SyncBranchesModal);
   }
 
@@ -179,7 +157,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     this.setState({ loadingPull: true });
     try {
       const delta = await vcs.pull(syncItems);
-      await SyncDropdown.syncDatabase(delta);
+      await batchModifyDocs(delta);
     } catch (err) {
       showModal(ErrorModal, {
         title: 'Pull Error',
@@ -193,7 +171,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   async _handleRollback(snapshot: Snapshot) {
     const { vcs, syncItems } = this.props;
     const delta = await vcs.rollback(snapshot.id, syncItems);
-    await SyncDropdown.syncDatabase(delta);
+    await batchModifyDocs(delta);
   }
 
   _handleShowHistoryModal() {
@@ -209,8 +187,8 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   async _handleSwitchBranch(branch: string) {
     const { vcs, syncItems } = this.props;
     const delta = await vcs.checkout(syncItems, branch);
-    await SyncDropdown.syncDatabase(delta);
-    this.setState({ currentBranch: branch });
+    await batchModifyDocs(delta);
+    await this.refreshMainAttributes();
   }
 
   renderBranch(branch: string) {
@@ -344,14 +322,14 @@ class SyncDropdown extends React.PureComponent<Props, State> {
             </HelpTooltip>
           </DropdownDivider>
 
-          <DropdownItem onClick={SyncDropdown._handleCreateBranch}>
-            <i className="fa fa-code-fork" />
-            Branches
-          </DropdownItem>
-
           <DropdownItem onClick={SyncDropdown._handleShowSharingModal}>
             <i className="fa fa-users" />
             Share Settings
+          </DropdownItem>
+
+          <DropdownItem onClick={SyncDropdown._handleShowBranchesModal}>
+            <i className="fa fa-code-fork" />
+            Branches
           </DropdownItem>
 
           <DropdownDivider>Branches</DropdownDivider>
@@ -378,9 +356,8 @@ class SyncDropdown extends React.PureComponent<Props, State> {
               </React.Fragment>
             ) : (
               <React.Fragment>
-                <i className="fa fa-cloud-upload" /> Pull {behind || ''} Snapshot{behind === 1
-                  ? ''
-                  : 's'}
+                <i className="fa fa-cloud-upload" /> Pull {behind || ''} Snapshot
+                {behind === 1 ? '' : 's'}
               </React.Fragment>
             )}
           </DropdownItem>
@@ -392,9 +369,8 @@ class SyncDropdown extends React.PureComponent<Props, State> {
               </React.Fragment>
             ) : (
               <React.Fragment>
-                <i className="fa fa-cloud-upload" /> Push {ahead || ''} Snapshot{ahead === 1
-                  ? ''
-                  : 's'}
+                <i className="fa fa-cloud-upload" /> Push {ahead || ''} Snapshot
+                {ahead === 1 ? '' : 's'}
               </React.Fragment>
             )}
           </DropdownItem>

@@ -449,6 +449,31 @@ export const removeWhere = (database.removeWhere = async function(
   await database.flushChanges(flushId);
 });
 
+export const batchModifyDocs = (database.batchModifyDocs = async function(operations: {
+  upsert: Array<Object>,
+  remove: Array<Object>,
+}): Promise<void> {
+  if (db._empty) return _send('batchModifyDocs', ...arguments);
+
+  const flushId = await bufferChanges();
+
+  const promisesUpserted = [];
+  const promisesDeleted = [];
+  for (const doc: BaseModel of operations.upsert) {
+    promisesUpserted.push(upsert(doc, true));
+  }
+
+  for (const doc: BaseModel of operations.remove) {
+    promisesDeleted.push(unsafeRemove(doc, true));
+  }
+
+  // Perform from least to most dangerous
+  await Promise.all(promisesUpserted);
+  await Promise.all(promisesDeleted);
+
+  await flushChanges(flushId);
+});
+
 // ~~~~~~~~~~~~~~~~~~~ //
 // DEFAULT MODEL STUFF //
 // ~~~~~~~~~~~~~~~~~~~ //

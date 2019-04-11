@@ -30,7 +30,7 @@ import {
   stateDelta,
   threeWayMerge,
 } from './util';
-import { generateId } from '../../common/misc';
+import { chunkArray, generateId } from '../../common/misc';
 
 const EMPTY_HASH = crypto
   .createHash('sha1')
@@ -71,9 +71,15 @@ export default class VCS {
     this._project = null;
   }
 
+  async setProject(project: Project): Promise<void> {
+    this._project = project;
+    console.log(`[sync] Activate project ${project.id}`);
+    await this._storeProject(project);
+  }
+
   async switchProject(rootDocumentId: string, name: string): Promise<Project> {
     const project = await this._getOrCreateProject(rootDocumentId, name);
-    this._project = project;
+    await this.setProject(project);
 
     console.log(`[sync] Activate project ${project.id}`);
 
@@ -154,6 +160,11 @@ export default class VCS {
   }
 
   async fork(newBranchName: string): Promise<void> {
+    const errMsg = VCS.validateBranchName(newBranchName);
+    if (errMsg) {
+      throw new Error(errMsg);
+    }
+
     if (await this._getBranch(newBranchName)) {
       throw new Error('Branch already exists by name ' + newBranchName);
     }
@@ -168,9 +179,20 @@ export default class VCS {
     await this._storeBranch(newBranch);
   }
 
+  async removeRemoteBranch(branchName: string): Promise<void> {
+    if (branchName === 'master') {
+      throw new Error('Cannot delete master branch');
+    }
+  }
+
   async removeBranch(branchName: string): Promise<void> {
     const branchToDelete = await this._assertBranch(branchName);
     const currentBranch = await this._getCurrentBranch();
+
+    if (branchToDelete.name === 'master') {
+      throw new Error('Cannot delete master branch');
+    }
+
     if (branchToDelete.name === currentBranch.name) {
       throw new Error('Cannot delete currently-active branch');
     }
@@ -293,6 +315,11 @@ export default class VCS {
   async getBranch(): Promise<string> {
     const branch = await this._getCurrentBranch();
     return branch.name;
+  }
+
+  async getRemoteBranches(): Promise<Array<string>> {
+    const branches = await this._queryBranches();
+    return branches.map(b => b.name);
   }
 
   async getBranches(): Promise<Array<string>> {
@@ -437,19 +464,22 @@ export default class VCS {
       throw new Error('Nothing to push');
     }
 
-    // Push each remaining snapshot
+    // Gather a list of snapshot state entries to push
+    const allBlobIds = new Set();
+    const snapshots = [];
     for (const id of snapshotIdsToPush) {
-      const snapshot = await this._getSnapshot(id);
-      if (snapshot === null) {
-        throw new Error(`Failed to get snapshot id=${id}`);
+      const snapshot = await this._assertSnapshot(id);
+      snapshots.push(snapshot);
+
+      for (const entry of snapshot.state) {
+        allBlobIds.add(entry.blob);
       }
-
-      // Figure out which blobs the backend is missing
-      const missingIds = await this._queryBlobsMissing(snapshot.state);
-      await this._queryPushBlobs(missingIds);
-
-      await this._queryPushSnapshot(snapshot);
     }
+
+    // Figure out which blobs the backend is missing
+    const missingIds = await this._queryBlobsMissing(Array.from(allBlobIds));
+    await this._queryPushBlobs(missingIds);
+    await this._queryPushSnapshots(snapshots);
   }
 
   async _fetch(localBranchName: string, remoteBranchName: string): Promise<Branch> {
@@ -459,35 +489,34 @@ export default class VCS {
     }
 
     // Fetch snapshots and blobs from remote branch
-    let blobsToFetch = new Set();
+    let snapshotsToFetch: Array<string> = [];
     for (const snapshotId of remoteBranch.snapshots) {
       const localSnapshot = await this._getSnapshot(snapshotId);
-
-      // We already have the snapshot, so skip it
-      if (localSnapshot) {
-        continue;
+      if (!localSnapshot) {
+        snapshotsToFetch.push(snapshotId);
       }
+    }
 
-      const snapshot = await this._querySnapshot(snapshotId);
+    // Find blobs to fetch
+    const blobsToFetch = new Set();
+    const snapshots = await this._querySnapshots(snapshotsToFetch);
+    for (const snapshot of snapshots) {
       for (let i = 0; i < snapshot.state.length; i++) {
         const entry = snapshot.state[i];
-
         const hasBlob = await this._hasBlob(entry.blob);
         if (!hasBlob) {
           blobsToFetch.add(entry.blob);
         }
-
-        if (blobsToFetch.size > 10 || i === snapshot.state.length - 1) {
-          const ids = Array.from(blobsToFetch);
-          const blobs = await this._queryBlobs(ids);
-          await this._storeBlobsBuffer(blobs);
-          blobsToFetch.clear();
-        }
       }
-
-      // Store the snapshot
-      await this._storeSnapshot(snapshot);
     }
+
+    // Store the blobs
+    const ids = Array.from(blobsToFetch);
+    const blobs = await this._queryBlobs(ids);
+    await this._storeBlobsBuffer(blobs);
+
+    // Store the snapshots
+    await this._storeSnapshots(snapshots);
 
     const branchDefaults = {
       name: '',
@@ -531,13 +560,14 @@ export default class VCS {
       candidates,
     );
 
-    // Other branch has a history that is a prefix of the current one
-    if (latestSnapshotOther && latestSnapshotOther.id === rootSnapshotId) {
+    const shouldDoNothing = latestSnapshotOther && latestSnapshotOther.id === rootSnapshotId;
+    const shouldFastForward1 =
+      rootSnapshot && (!latestSnapshotTrunk || rootSnapshot.id === latestSnapshotTrunk.id);
+    const shouldFastForward2 = branchTrunk.snapshots.length === 0;
+
+    if (shouldDoNothing) {
       console.log('[sync] Nothing to merge');
-    } else if (
-      rootSnapshot &&
-      (!latestSnapshotTrunk || rootSnapshot.id === latestSnapshotTrunk.id)
-    ) {
+    } else if (shouldFastForward1 || shouldFastForward2) {
       console.log('[sync] Performing fast-forward merge');
       branchTrunk.snapshots = branchOther.snapshots;
       await this._storeBranch(branchTrunk);
@@ -621,8 +651,9 @@ export default class VCS {
     return data;
   }
 
-  async _queryBlobsMissing(state: SnapshotState): Promise<Array<string>> {
-    const next = async (ids: Array<string>) => {
+  async _queryBlobsMissing(allIds: Array<string>): Promise<Array<string>> {
+    let missingIds = [];
+    for (const ids of chunkArray(allIds, 100)) {
       const { blobsMissing } = await this._runGraphQL(
         `
           query ($projectId: ID!, $ids: [ID!]!) {
@@ -637,22 +668,30 @@ export default class VCS {
         },
         'missingBlobs',
       );
-      return blobsMissing.missing;
-    };
-
-    const missingIds = [];
-    const pageSize = 500;
-    const pages = Math.ceil(state.length / pageSize);
-    for (let i = 0; i < pages; i++) {
-      const start = i * pageSize;
-      const end = start + pageSize;
-      const nextIds = state.slice(start, end).map(entry => entry.blob);
-      for (const id of await next(nextIds)) {
-        missingIds.push(id);
-      }
+      missingIds = [...missingIds, ...blobsMissing.missing];
     }
 
     return missingIds;
+  }
+
+  async _queryBranches(): Promise<Array<Branch>> {
+    const { branches } = await this._runGraphQL(
+      `
+      query ($projectId: ID!) {
+        branches(project: $projectId) {
+          created
+          modified
+          name
+          snapshots
+        }
+      }`,
+      {
+        projectId: this._projectId(),
+      },
+      'branches',
+    );
+
+    return branches;
   }
 
   async _queryBranch(branchName: string): Promise<Branch | null> {
@@ -676,84 +715,95 @@ export default class VCS {
     return branch;
   }
 
-  async _querySnapshot(id: string): Promise<Snapshot> {
-    const { snapshot } = await this._runGraphQL(
-      `
-      query ($id: ID!, $projectId: ID!) {
-        snapshot(id: $id, project: $projectId) {
-          id
-          parent
-          created
-          author
-          name
-          description
-          state {
-            blob
-            key
+  async _querySnapshots(allIds: Array<string>): Promise<Array<Snapshot>> {
+    let allSnapshots = [];
+    for (const ids of chunkArray(allIds, 20)) {
+      const { snapshots } = await this._runGraphQL(
+        `
+        query ($ids: [ID!]!, $projectId: ID!) {
+          snapshots(ids: $ids, project: $projectId) {
+            id
+            parent
+            created
+            author
             name
+            description
+            state {
+              blob
+              key
+              name
+            }
           }
-        }
-      }`,
-      {
-        id,
-        projectId: this._projectId(),
-      },
-      'project',
-    );
-
-    return snapshot;
-  }
-
-  async _queryPushSnapshot(snapshot: Snapshot): Promise<void> {
-    const { accountId } = this._assertSession();
-
-    // This bit of logic fills in any missing author IDs from times where
-    // the user created snapshots while not logged in
-    if (snapshot.author === '') {
-      snapshot.author = accountId;
+        }`,
+        {
+          ids,
+          projectId: this._projectId(),
+        },
+        'snapshots',
+      );
+      allSnapshots = [...allSnapshots, ...snapshots];
     }
 
-    const branch = await this._getCurrentBranch();
-    const { snapshotCreate } = await this._runGraphQL(
-      `
-        mutation ($projectId: ID!, $snapshot: SnapshotInput!, $branchName: String!) {
-          snapshotCreate(project: $projectId, snapshot: $snapshot, branch: $branchName) {
+    return allSnapshots;
+  }
+
+  async _queryPushSnapshots(allSnapshots: Array<Snapshot>): Promise<void> {
+    const { accountId } = this._assertSession();
+
+    for (const snapshots of chunkArray(allSnapshots, 50)) {
+      // This bit of logic fills in any missing author IDs from times where
+      // the user created snapshots while not logged in
+      for (const snapshot of snapshots) {
+        if (snapshot.author === '') {
+          snapshot.author = accountId;
+        }
+      }
+
+      const branch = await this._getCurrentBranch();
+      const { snapshotCreate } = await this._runGraphQL(
+        `
+        mutation ($projectId: ID!, $snapshots: [SnapshotInput!]!, $branchName: String!) {
+          snapshotsCreate(project: $projectId, snapshots: $snapshots, branch: $branchName) {
             id
           }
         }
       `,
-      {
-        branchName: branch.name,
-        projectId: this._projectId(),
-        snapshot,
-      },
-      'snapshotPush',
-    );
+        {
+          branchName: branch.name,
+          projectId: this._projectId(),
+          snapshots,
+        },
+        'snapshotsPush',
+      );
 
-    console.log('[sync] Pushed snapshot', snapshotCreate.id);
+      console.log('[sync] Pushed snapshots', snapshotCreate);
+    }
   }
 
-  async _queryBlobs(ids: Array<string>): Promise<{ [string]: Buffer }> {
+  async _queryBlobs(allIds: Array<string>): Promise<{ [string]: Buffer }> {
     const symmetricKey = await this._getProjectSymmetricKey();
-    const { blobs } = await this._runGraphQL(
-      `
+    const result = {};
+
+    for (const ids of chunkArray(allIds, 30)) {
+      const { blobs } = await this._runGraphQL(
+        `
       query ($ids: [ID!]!, $projectId: ID!) {
         blobs(ids: $ids, project: $projectId) {
           id
           content
         }
       }`,
-      {
-        ids,
-        projectId: this._projectId(),
-      },
-      'blobs',
-    );
+        {
+          ids,
+          projectId: this._projectId(),
+        },
+        'blobs',
+      );
 
-    const result = {};
-    for (const blob of blobs) {
-      const encryptedResult = JSON.parse(blob.content);
-      result[blob.id] = crypt.decryptAESToBuffer(symmetricKey, encryptedResult);
+      for (const blob of blobs) {
+        const encryptedResult = JSON.parse(blob.content);
+        result[blob.id] = crypt.decryptAESToBuffer(symmetricKey, encryptedResult);
+      }
     }
 
     return result;
@@ -1166,6 +1216,19 @@ export default class VCS {
     return projects;
   }
 
+  async _assertSnapshot(id: string): Promise<Snapshot> {
+    const snapshot = await this._store.getItem(paths.snapshot(this._projectId(), id));
+    if (snapshot && typeof snapshot.created === 'string') {
+      snapshot.created = new Date(snapshot.created);
+    }
+
+    if (!snapshot) {
+      throw new Error(`Failed to find snapshot id=${id}`);
+    }
+
+    return snapshot;
+  }
+
   async _getSnapshot(id: string): Promise<Snapshot | null> {
     const snapshot = await this._store.getItem(paths.snapshot(this._projectId(), id));
     if (snapshot && typeof snapshot.created === 'string') {
@@ -1184,6 +1247,16 @@ export default class VCS {
 
   async _storeSnapshot(snapshot: Snapshot): Promise<void> {
     return this._store.setItem(paths.snapshot(this._projectId(), snapshot.id), snapshot);
+  }
+
+  async _storeSnapshots(snapshots: Array<Snapshot>): Promise<void> {
+    const promises = [];
+    for (const snapshot of snapshots) {
+      const p = paths.snapshot(this._projectId(), snapshot.id);
+      promises.push(this._store.setItem(p, snapshot));
+    }
+
+    await Promise.all(promises);
   }
 
   async _storeBranch(branch: Branch): Promise<void> {

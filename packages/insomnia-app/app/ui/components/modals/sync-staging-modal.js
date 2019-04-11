@@ -153,6 +153,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
 
     const stage = await vcs.stage(status.stage, toStage);
     await this.refreshState({}, stage);
+    this.textarea && this.textarea.focus();
   }
 
   static renderOperation(entry: StageEntry) {

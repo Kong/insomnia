@@ -26,6 +26,7 @@ import SyncShareModal from '../modals/sync-share-modal';
 import * as db from '../../../common/database';
 import VCS from '../../../sync/vcs';
 import HelpTooltip from '../help-tooltip';
+import type { Project } from '../../../sync/types';
 
 type Props = {
   isLoading: boolean,
@@ -42,8 +43,8 @@ type Props = {
 };
 
 type State = {
-  remoteWorkspaces: Array<{ id: string, name: string }>,
-  pullingWorkspaces: { [string]: boolean },
+  remoteProjects: Array<Project>,
+  pullingProjects: { [string]: boolean },
 };
 
 @autobind
@@ -53,8 +54,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      remoteWorkspaces: [],
-      pullingWorkspaces: {},
+      remoteProjects: [],
+      pullingProjects: {},
     };
   }
 
@@ -82,35 +83,33 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       return;
     }
 
-    const projects = await vcs.remoteProjects();
-    this.setState({
-      remoteWorkspaces: projects.map(p => ({
-        id: p.rootDocumentId,
-        name: p.name,
-      })),
-    });
+    const remoteProjects = await vcs.remoteProjects();
+    this.setState({ remoteProjects });
   }
 
-  async _handlePullRemoteWorkspace(w: { id: string, name: string }) {
+  async _handlePullRemoteWorkspace(project: Project) {
     const { vcs } = this.props;
     if (!vcs) {
       throw new Error('VCS is not defined');
     }
 
     this.setState(state => ({
-      pullingWorkspaces: { ...state.pullingWorkspaces, [w.id]: true },
+      pullingProjects: { ...state.pullingProjects, [project.id]: true },
     }));
 
+    const newVCS = vcs.newInstance();
+    const oldBranch = await newVCS.getBranch();
+
     try {
-      const workspace = await models.workspace.getById(w.id);
+      const workspace = await models.workspace.getById(project.rootDocumentId);
       if (workspace) {
         // Shouldn't have gotten here. Just switch to it and continue
         return;
       }
 
       // Clone old VCS so we don't mess anything up while working on other projects
-      const newVCS = vcs.newInstance();
-      await newVCS.switchProject(w.id, w.name);
+      await newVCS.setProject(project);
+      await newVCS.checkout([], 'master');
       await newVCS.pull([]); // There won't be any existing docs since it's a new pull
 
       const flushId = await db.bufferChanges();
@@ -124,10 +123,15 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
         title: 'Pull Error',
         message: `Failed to pull workspace. ${err.message}`,
       });
+    } finally {
+      // We actually need to checkout the old branch again because the VCS
+      // stores it on the filesystem. We should probably have a way to not
+      // have to do this hack
+      await newVCS.checkout([], oldBranch);
     }
 
     this.setState(state => ({
-      pullingWorkspaces: { ...state.pullingWorkspaces, [w.id]: false },
+      pullingProjects: { ...state.pullingProjects, [project.id]: false },
     }));
   }
 
@@ -202,10 +206,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       ...other
     } = this.props;
 
-    const { remoteWorkspaces, pullingWorkspaces } = this.state;
+    const { remoteProjects, pullingProjects } = this.state;
 
-    const missingRemoteWorkspaces = remoteWorkspaces.filter(
-      ({ id }) => !workspaces.find(w => w._id === id),
+    const missingRemoteProjects = remoteProjects.filter(
+      ({ rootDocumentId }) => !workspaces.find(w => w._id === rootDocumentId),
     );
 
     const nonActiveWorkspaces = workspaces
@@ -216,7 +220,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
     const unseenWorkspacesMessage = (
       <div>
-        The following workspaces were added<br />
+        The following workspaces were added
+        <br />
         {addedWorkspaceNames}
       </div>
     );
@@ -274,7 +279,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             <i className="fa fa-empty" /> Create Workspace
           </DropdownItem>
 
-          {missingRemoteWorkspaces.length > 0 && (
+          {missingRemoteProjects.length > 0 && (
             <DropdownDivider>
               Remote Workspaces{' '}
               <HelpTooltip>
@@ -284,17 +289,17 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             </DropdownDivider>
           )}
 
-          {missingRemoteWorkspaces.map(w => (
+          {missingRemoteProjects.map(p => (
             <DropdownItem
-              key={`remote.${w.id}`}
+              key={p.id}
               stayOpenAfterClick
-              onClick={() => this._handlePullRemoteWorkspace(w)}>
-              {pullingWorkspaces[w.id] ? (
+              onClick={() => this._handlePullRemoteWorkspace(p)}>
+              {pullingProjects[p.id] ? (
                 <i className="fa fa-refresh fa-spin" />
               ) : (
                 <i className="fa fa-cloud-download" />
               )}
-              Pull <strong>{w.name}</strong>
+              Pull <strong>{p.name}</strong>
             </DropdownItem>
           ))}
 
