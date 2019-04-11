@@ -4,7 +4,7 @@ import configureStore from '../create';
 import * as global from './global';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
-import { fetch } from 'insomnia-account';
+import { fetch, session } from 'insomnia-account';
 import { API_BASE_URL, getClientString } from '../../../common/constants';
 
 export async function init() {
@@ -12,7 +12,7 @@ export async function init() {
 
   // Do things that must happen before initial render
   const { addChanges, addChangesSync } = bindActionCreators(entities, store.dispatch);
-  const { newCommand } = bindActionCreators(global, store.dispatch);
+  const { newCommand, loginStateChange } = bindActionCreators(global, store.dispatch);
 
   const allDocs = await getAllDocs();
 
@@ -20,6 +20,12 @@ export async function init() {
   const changes = allDocs.map(doc => [db.CHANGE_UPDATE, doc]);
   addChangesSync(changes);
   db.onChange(addChanges);
+
+  // Initialize login state
+  loginStateChange(session.isLoggedIn());
+  session.onLoginLogout(loggedIn => {
+    loginStateChange(loggedIn);
+  });
 
   // Bind to fetch commands
   fetch.setup(getClientString(), API_BASE_URL);

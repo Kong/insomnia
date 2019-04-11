@@ -75,7 +75,7 @@ class Modal extends PureComponent {
     this._node = n;
   }
 
-  show() {
+  show(options) {
     const { freshState } = this.props;
     const { forceRefreshCounter } = this.state;
 
@@ -88,6 +88,9 @@ class Modal extends PureComponent {
     if (this.props.dontFocus) {
       return;
     }
+
+    // Allow instance-based onHide method
+    this.onHide = options ? options.onHide : null;
 
     setTimeout(() => this._node && this._node.focus());
   }
@@ -107,6 +110,7 @@ class Modal extends PureComponent {
   hide() {
     this.setState({ open: false });
     this.props.onHide && this.props.onHide();
+    this.onHide && this.onHide();
   }
 
   render() {

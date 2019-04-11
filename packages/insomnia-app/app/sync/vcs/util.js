@@ -1,4 +1,7 @@
 // @flow
+import clone from 'clone';
+import crypto from 'crypto';
+import { deterministicStringify } from '../lib/deterministicStringify';
 import type {
   Branch,
   DocumentKey,
@@ -10,7 +13,6 @@ import type {
   StatusCandidate,
   StatusCandidateMap,
 } from '../types';
-import { jsonHash } from '../lib/jsonHash';
 
 export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotStateMap {
   if (!snapshot) {
@@ -299,7 +301,7 @@ export function getStagable(
 
     if (!entry && candidate) {
       const { name, document } = candidate;
-      const { hash: blobId, content: blobContent } = jsonHash(document);
+      const { hash: blobId, content: blobContent } = hashDocument(document);
       stagable.push({ key, name, blobId, blobContent, added: true });
       continue;
     }
@@ -312,7 +314,7 @@ export function getStagable(
 
     if (entry && candidate) {
       const { document, name } = candidate;
-      const { hash: blobId, content: blobContent } = jsonHash(document);
+      const { hash: blobId, content: blobContent } = hashDocument(document);
       if (entry.blob !== blobId) {
         stagable.push({ key, name, blobId, blobContent, modified: true });
       }
@@ -365,7 +367,7 @@ export function preMergeCheck(
       continue;
     }
 
-    const { hash: blobId } = jsonHash(candidate.document);
+    const { hash: blobId } = hashDocument(candidate.document);
 
     // Candidate is same as trunk (unchanged) so anything goes
     if (trunk && trunk.blob === blobId) {
@@ -399,4 +401,22 @@ export function preMergeCheck(
   }
 
   return result;
+}
+
+export function hashDocument(doc: Object): { content: string, hash: string } {
+  if (doc === undefined) {
+    throw new Error('Cannot hash undefined value');
+  }
+
+  // Remove fields we don't care about for sync purposes
+  const newDoc = clone(doc);
+  delete newDoc.modified;
+
+  const content = deterministicStringify(newDoc);
+  const hash = crypto
+    .createHash('sha1')
+    .update(content)
+    .digest('hex');
+
+  return { hash, content };
 }

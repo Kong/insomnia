@@ -39,7 +39,19 @@ let _writeChangesInterval = null;
 let _pendingDBChanges = {};
 let _isInitialized = false;
 
+// Used to mark whether or not the new sync system is enabled
+let _disabledForSession = false;
+
+export function disableForSession() {
+  _disabledForSession = true;
+}
+
 export async function init() {
+  if (_disabledForSession) {
+    logger.debug('Legacy sync is disabled for current session');
+    return;
+  }
+
   if (_isInitialized) {
     logger.debug('Already enabled');
     return;
@@ -49,8 +61,8 @@ export async function init() {
   _isInitialized = true;
   db.onChange(async changes => {
     // To help prevent bugs, put Workspaces first
-    const sortedChanges = changes.sort(
-      ([event, doc, fromSync]) => (doc.type === models.workspace.type ? 1 : -1),
+    const sortedChanges = changes.sort(([event, doc, fromSync]) =>
+      doc.type === models.workspace.type ? 1 : -1,
     );
 
     for (const [event, doc, fromSync] of sortedChanges) {
@@ -194,6 +206,11 @@ export async function writePendingChanges() {
 }
 
 export async function push(resourceGroupId = null) {
+  if (_disabledForSession) {
+    logger.debug('Legacy sync is disabled for current session');
+    return;
+  }
+
   if (!session.isLoggedIn()) {
     return;
   }
@@ -305,6 +322,11 @@ export async function push(resourceGroupId = null) {
 }
 
 export async function pull(resourceGroupId = null, createMissingResources = true) {
+  if (_disabledForSession) {
+    logger.debug('Legacy sync is disabled for current session');
+    return;
+  }
+
   if (!session.isLoggedIn()) {
     return;
   }
@@ -811,8 +833,8 @@ export async function getOrCreateAllActiveResources(resourceGroupId = null) {
   }
 
   // Make sure Workspace is first, because the loop below depends on it
-  const modelTypes = Object.keys(WHITE_LIST).sort(
-    (a, b) => (a.type === models.workspace.type ? 1 : -1),
+  const modelTypes = Object.keys(WHITE_LIST).sort((a, b) =>
+    a.type === models.workspace.type ? 1 : -1,
   );
 
   let created = 0;

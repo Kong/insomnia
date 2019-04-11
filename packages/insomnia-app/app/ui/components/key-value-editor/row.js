@@ -504,7 +504,7 @@ target.prototype.focusNameEnd = function() {
 };
 
 target.prototype.focusValueEnd = function() {
-  this.decoratedRef.current.decoratedRef.current.focusNameEnd();
+  this.decoratedRef.current.decoratedRef.current.focusValueEnd();
 };
 
 export default target;

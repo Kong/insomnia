@@ -6,7 +6,6 @@ import Store from '../store';
 import crypto from 'crypto';
 import compress from '../store/hooks/compress';
 import * as paths from './paths';
-import { jsonHash } from '../lib/jsonHash';
 import { crypt, fetch, session } from 'insomnia-account';
 import type {
   Branch,
@@ -26,6 +25,7 @@ import {
   generateCandidateMap,
   getRootSnapshot,
   getStagable,
+  hashDocument,
   preMergeCheck,
   stateDelta,
   threeWayMerge,
@@ -117,7 +117,7 @@ export default class VCS {
     return {
       stage,
       unstaged,
-      key: jsonHash({ stage, unstaged }).hash,
+      key: hashDocument({ stage, unstaged }).hash,
     };
   }
 
@@ -183,6 +183,8 @@ export default class VCS {
     if (branchName === 'master') {
       throw new Error('Cannot delete master branch');
     }
+
+    await this._queryRemoveBranch(branchName);
   }
 
   async removeBranch(branchName: string): Promise<void> {
@@ -267,7 +269,7 @@ export default class VCS {
 
     const potentialNewState: SnapshotState = candidates.map(c => ({
       key: c.key,
-      blob: jsonHash(c.document).hash,
+      blob: hashDocument(c.document).hash,
       name: c.name,
     }));
 
@@ -360,12 +362,14 @@ export default class VCS {
 
     const newState: SnapshotState = [];
 
-    // Add everything from the old state to the new state (except deleted)
-    const parentState = parent ? parent.state : [];
-    for (const entry of parentState) {
-      if (!stage[entry.key] || !stage[entry.key].deleted) {
-        newState.push(entry);
+    // Add everything from the old state
+    for (const entry of parent ? parent.state : []) {
+      // Don't add anything that's in the stage (this covers deleted things too :])
+      if (stage[entry.key]) {
+        continue;
       }
+
+      newState.push(entry);
     }
 
     // Add the rest of the staged items
@@ -393,11 +397,8 @@ export default class VCS {
     const localBranch = await this._getCurrentBranch();
     const tmpBranch = await this._fetch(localBranch.name + '.hidden', localBranch.name);
 
-    // NOTE: Unlike Git, we merge into the tmp branch and overwrite the local one. This is
-    //   so the remote history is preserved when after the pull. In particular, this is
-    //   important if a remote and local branch both exist but do not share a common history.
     const message = `Synced latest changes from ${localBranch.name}`;
-    const delta = await this._merge(candidates, tmpBranch.name, localBranch.name, message);
+    const delta = await this._merge(candidates, localBranch.name, tmpBranch.name, message);
 
     const tmpBranchUpdated = await this._getBranch(tmpBranch.name);
     if (!tmpBranchUpdated) {
@@ -593,6 +594,10 @@ export default class VCS {
         throw new Error('Conflicting keys! ' + mergeConflicts.join(', '));
       }
 
+      // TODO: Figure this one out!
+      // Note, we're replacing trunk's state with other's
+      // branchTrunk.snapshots = branchOther.snapshots;
+
       const name = snapshotMessage || `Merged branch ${branchOther.name}`;
       await this._createSnapshotFromState(branchTrunk, latestSnapshotTrunk, state, name);
     }
@@ -695,6 +700,20 @@ export default class VCS {
     return branches;
   }
 
+  async _queryRemoveBranch(branchName: string): Promise<void> {
+    await this._runGraphQL(
+      `
+      mutation ($projectId: ID!, $branch: String!) {
+        branchRemove(project: $projectId, name: $branch) 
+      }`,
+      {
+        projectId: this._projectId(),
+        branch: branchName,
+      },
+      'removeBranch',
+    );
+  }
+
   async _queryBranch(branchName: string): Promise<Branch | null> {
     const { branch } = await this._runGraphQL(
       `
@@ -751,7 +770,7 @@ export default class VCS {
   async _queryPushSnapshots(allSnapshots: Array<Snapshot>): Promise<void> {
     const { accountId } = this._assertSession();
 
-    for (const snapshots of chunkArray(allSnapshots, 50)) {
+    for (const snapshots of chunkArray(allSnapshots, 20)) {
       // This bit of logic fills in any missing author IDs from times where
       // the user created snapshots while not logged in
       for (const snapshot of snapshots) {
@@ -761,7 +780,7 @@ export default class VCS {
       }
 
       const branch = await this._getCurrentBranch();
-      const { snapshotCreate } = await this._runGraphQL(
+      const { snapshotsCreate } = await this._runGraphQL(
         `
         mutation ($projectId: ID!, $snapshots: [SnapshotInput!]!, $branchName: String!) {
           snapshotsCreate(project: $projectId, snapshots: $snapshots, branch: $branchName) {
@@ -777,7 +796,7 @@ export default class VCS {
         'snapshotsPush',
       );
 
-      console.log('[sync] Pushed snapshots', snapshotCreate);
+      console.log('[sync] Pushed snapshots', snapshotsCreate.map(s => s.id).join(', '));
     }
   }
 

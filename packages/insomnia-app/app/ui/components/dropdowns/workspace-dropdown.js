@@ -27,6 +27,8 @@ import * as db from '../../../common/database';
 import VCS from '../../../sync/vcs';
 import HelpTooltip from '../help-tooltip';
 import type { Project } from '../../../sync/types';
+import * as sync from '../../../sync-legacy/index';
+import PromptButton from '../base/prompt-button';
 
 type Props = {
   isLoading: boolean,
@@ -139,8 +141,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     this._dropdown = n;
   }
 
-  static _handleShowLogin() {
-    showModal(LoginModal);
+  static async _handleLogout() {
+    await sync.logout();
   }
 
   static _handleShowExport() {
@@ -315,8 +317,15 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
           {/* Not Logged In */}
 
-          {!session.isLoggedIn() && (
-            <DropdownItem key="login" onClick={WorkspaceDropdown._handleShowLogin}>
+          {session.isLoggedIn() ? (
+            <DropdownItem
+              key="login"
+              onClick={WorkspaceDropdown._handleLogout}
+              buttonClass={PromptButton}>
+              <i className="fa fa-sign-out" /> Logout
+            </DropdownItem>
+          ) : (
+            <DropdownItem key="login" onClick={() => showModal(LoginModal)}>
               <i className="fa fa-sign-in" /> Log In
             </DropdownItem>
           )}

@@ -17,6 +17,7 @@ import VCS from '../../../sync/vcs';
 import type { Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import ErrorModal from '../modals/error-modal';
 import Tooltip from '../tooltip';
+import LoginModal from '../modals/login-modal';
 
 type Props = {
   workspace: Workspace,
@@ -44,6 +45,7 @@ type State = {
 @autobind
 class SyncDropdown extends React.PureComponent<Props, State> {
   checkInterval: IntervalID;
+  refreshOnNextSyncItems = false;
 
   constructor(props: Props) {
     super(props);
@@ -73,22 +75,23 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const historyCount = await vcs.getHistoryCount();
     const status = await vcs.status(syncItems, {});
 
-    // This one uses the network so be extra careful
-    let compare = this.state.compare;
-    try {
-      compare = await vcs.compareRemoteBranch();
-    } catch (err) {
-      console.log('Failed to compare remote branches', err);
-    }
-
     this.setState({
-      compare,
       status,
       historyCount,
       localBranches,
       currentBranch,
       ...extraState,
     });
+
+    // Do the remote stuff
+    if (session.isLoggedIn()) {
+      try {
+        const compare = await vcs.compareRemoteBranch();
+        this.setState({ compare });
+      } catch (err) {
+        console.log('Failed to compare remote branches', err.message);
+      }
+    }
   }
 
   componentDidMount() {
@@ -112,11 +115,18 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       vcs.status(syncItems, {}).then(status => {
         this.setState({ status });
       });
+
+      if (this.refreshOnNextSyncItems) {
+        this.refreshMainAttributes();
+        this.refreshOnNextSyncItems = false;
+      }
     }
   }
 
-  static _handleShowBranchesModal() {
-    showModal(SyncBranchesModal);
+  _handleShowBranchesModal() {
+    showModal(SyncBranchesModal, {
+      onHide: this.refreshMainAttributes,
+    });
   }
 
   _handleShowStagingModal() {
@@ -132,6 +142,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
   static _handleShowSharingModal() {
     showModal(SyncShareModal);
+  }
+
+  static _handleShowLoginModal() {
+    showModal(LoginModal);
   }
 
   async _handlePushChanges() {
@@ -158,6 +172,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     try {
       const delta = await vcs.pull(syncItems);
       await batchModifyDocs(delta);
+      this.refreshOnNextSyncItems = true;
     } catch (err) {
       showModal(ErrorModal, {
         title: 'Pull Error',
@@ -165,13 +180,14 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         message: 'Failed to pull snapshots from remote',
       });
     }
-    await this.refreshMainAttributes({ loadingPull: false });
+    this.setState({ loadingPull: false });
   }
 
   async _handleRollback(snapshot: Snapshot) {
     const { vcs, syncItems } = this.props;
     const delta = await vcs.rollback(snapshot.id, syncItems);
     await batchModifyDocs(delta);
+    this.refreshOnNextSyncItems = true;
   }
 
   _handleShowHistoryModal() {
@@ -188,7 +204,12 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const { vcs, syncItems } = this.props;
     const delta = await vcs.checkout(syncItems, branch);
     await batchModifyDocs(delta);
-    await this.refreshMainAttributes();
+
+    // We can't refresh now because we won't yet have the new syncItems
+    this.refreshOnNextSyncItems = true;
+
+    // Still need to do this in case sync items don't change
+    this.setState({ currentBranch: branch });
   }
 
   renderBranch(branch: string) {
@@ -252,28 +273,33 @@ class SyncDropdown extends React.PureComponent<Props, State> {
               />
             </Tooltip>
 
-            {loadingPull ? (
-              loadIcon
-            ) : (
-              <Tooltip message={pullToolTipMsg} delay={800}>
-                <i
-                  className={classnames('fa fa-cloud-download fa--fixed-width', {
-                    'super-duper-faint': !canPull,
-                  })}
-                />
-              </Tooltip>
-            )}
+            {/* Only show cloud icons if logged in */}
+            {session.isLoggedIn() && (
+              <React.Fragment>
+                {loadingPull ? (
+                  loadIcon
+                ) : (
+                  <Tooltip message={pullToolTipMsg} delay={800}>
+                    <i
+                      className={classnames('fa fa-cloud-download fa--fixed-width', {
+                        'super-duper-faint': !canPull,
+                      })}
+                    />
+                  </Tooltip>
+                )}
 
-            {loadingPush ? (
-              loadIcon
-            ) : (
-              <Tooltip message={pushToolTipMsg} delay={800}>
-                <i
-                  className={classnames('fa fa-cloud-upload fa--fixed-width', {
-                    'super-duper-faint': !canPush,
-                  })}
-                />
-              </Tooltip>
+                {loadingPush ? (
+                  loadIcon
+                ) : (
+                  <Tooltip message={pushToolTipMsg} delay={800}>
+                    <i
+                      className={classnames('fa fa-cloud-upload fa--fixed-width', {
+                        'super-duper-faint': !canPush,
+                      })}
+                    />
+                  </Tooltip>
+                )}
+              </React.Fragment>
             )}
           </div>
         </DropdownButton>
@@ -284,9 +310,9 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   render() {
-    if (!session.isLoggedIn()) {
-      return null;
-    }
+    // if (!session.isLoggedIn()) {
+    //   return null;
+    // }
 
     const { className } = this.props;
     const {
@@ -306,13 +332,13 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
     return (
       <div className={className}>
-        <Dropdown wide className="wide tall" onOpen={this._handleOpen}>
+        <Dropdown className="wide tall" onOpen={this._handleOpen}>
           {this.renderButton()}
 
           <DropdownDivider>
-            Cloud Sync{' '}
+            Insomnia Sync{' '}
             <HelpTooltip>
-              Sync and collaborate on your workspaces{' '}
+              Sync and collaborate on workspaces{' '}
               <Link href="https://support.insomnia.rest/article/67-version-control">
                 <span className="no-wrap">
                   <br />
@@ -322,12 +348,18 @@ class SyncDropdown extends React.PureComponent<Props, State> {
             </HelpTooltip>
           </DropdownDivider>
 
+          {!session.isLoggedIn() && (
+            <DropdownItem onClick={SyncDropdown._handleShowLoginModal}>
+              <i className="fa fa-sign-in" /> Log In
+            </DropdownItem>
+          )}
+
           <DropdownItem onClick={SyncDropdown._handleShowSharingModal}>
             <i className="fa fa-users" />
             Share Settings
           </DropdownItem>
 
-          <DropdownItem onClick={SyncDropdown._handleShowBranchesModal}>
+          <DropdownItem onClick={this._handleShowBranchesModal}>
             <i className="fa fa-code-fork" />
             Branches
           </DropdownItem>

@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import * as fontManager from 'font-manager';
+import * as electron from 'electron';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
 import {
@@ -63,6 +64,13 @@ class General extends React.PureComponent<Props, State> {
   async _handleToggleMenuBar(e: SyntheticEvent<HTMLInputElement>) {
     const settings = await this._handleUpdateSetting(e);
     this.props.handleToggleMenuBar(settings.autoHideMenuBar);
+  }
+
+  async _handleToggleSyncBeta(e: SyntheticEvent<HTMLInputElement>) {
+    await this._handleUpdateSetting(e);
+    const { app } = electron.remote || electron;
+    app.relaunch();
+    app.exit();
   }
 
   async _handleFontLigatureChange(el: SyntheticEvent<HTMLInputElement>) {
@@ -287,11 +295,13 @@ class General extends React.PureComponent<Props, State> {
                 value={settings.fontMonospace || '__NULL__'}
                 onChange={this._handleFontChange}>
                 <option value="__NULL__">-- System Default --</option>
-                {fonts.filter(i => i.monospace).map((item, index) => (
-                  <option key={index} value={item.family}>
-                    {item.family}
-                  </option>
-                ))}
+                {fonts
+                  .filter(i => i.monospace)
+                  .map((item, index) => (
+                    <option key={index} value={item.family}>
+                      {item.family}
+                    </option>
+                  ))}
               </select>
             </label>
           </div>
@@ -534,13 +544,13 @@ class General extends React.PureComponent<Props, State> {
             <hr />
             <div className="form-control form-control--thin">
               <label className="inline-block">
-                Enable sync beta{' '}
-                <HelpTooltip>Enable the new sync beta features (requires restart)</HelpTooltip>
+                Enable sync beta (will restart app){' '}
+                <HelpTooltip>Enable the new sync beta features</HelpTooltip>
                 <input
                   type="checkbox"
                   name="enableSyncBeta"
                   checked={settings.enableSyncBeta}
-                  onChange={this._handleUpdateSetting}
+                  onChange={this._handleToggleSyncBeta}
                 />
               </label>
             </div>

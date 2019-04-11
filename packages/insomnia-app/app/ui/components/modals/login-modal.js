@@ -14,7 +14,6 @@ class LoginModal extends PureComponent {
     super(props);
 
     this.state = {
-      step: 1,
       loading: false,
       error: '',
       title: '',
@@ -47,9 +46,7 @@ class LoginModal extends PureComponent {
       // Clear all existing sync data that might be there and enable sync
       await sync.resetLocalData();
       await sync.doInitialSync();
-      setTimeout(async () => {
-        this.setState({ step: 2, loading: false });
-      }, 1000);
+      this.hide();
     } catch (e) {
       this.setState({ error: e.message, loading: false });
     }
@@ -57,7 +54,7 @@ class LoginModal extends PureComponent {
 
   show(options = {}) {
     const { title, message } = options;
-    this.setState({ step: 1, error: '', loading: false, title, message });
+    this.setState({ error: '', loading: false, title, message });
     this.modal.show();
     setTimeout(() => this._emailInput.focus(), 100);
   }
@@ -67,69 +64,46 @@ class LoginModal extends PureComponent {
   }
 
   render() {
-    const { step, title, message, loading, error } = this.state;
-    let inner;
-    if (step === 1) {
-      inner = [
-        <ModalHeader key="header">{title || 'Login to Your Account'}</ModalHeader>,
-        <ModalBody key="body" className="pad">
-          {message ? <p className="notice info">{message}</p> : null}
-          <div className="form-control form-control--outlined no-pad-top">
-            <label>
-              Email
-              <input
-                type="email"
-                required="required"
-                placeholder="me@mydomain.com"
-                ref={this._setEmailInputRef}
-              />
-            </label>
-          </div>
-          <div className="form-control form-control--outlined">
-            <label>
-              Password
-              <input
-                type="password"
-                required="required"
-                placeholder="•••••••••••••••••"
-                ref={this._setPasswordInputRef}
-              />
-            </label>
-          </div>
-          {error ? <div className="danger pad-top">** {error}</div> : null}
-        </ModalBody>,
-        <ModalFooter key="footer">
-          <div className="margin-left">
-            Don't have an account yet? <Link href="https://insomnia.rest/app/">Signup</Link>
-          </div>
-          <button type="submit" className="btn">
-            {loading ? <i className="fa fa-spin fa-refresh margin-right-sm" /> : null}
-            Login
-          </button>
-        </ModalFooter>,
-      ];
-    } else {
-      inner = [
-        <ModalHeader key="header">Login Success</ModalHeader>,
-        <ModalBody key="body" className="pad no-pad-top">
-          <h1>Enjoy your stay!</h1>
-          <p>
-            If you have any questions or concerns, send you email to{' '}
-            <Link href="https://insomnia.rest/support/">support@insomnia.rest</Link>
-          </p>
-        </ModalBody>,
-        <ModalFooter key="footer">
-          <button type="button" className="btn" onClick={this.hide}>
-            Close
-          </button>
-        </ModalFooter>,
-      ];
-    }
-
+    const { title, message, loading, error } = this.state;
     return (
       <form onSubmit={this._handleLogin}>
         <Modal ref={this._setModalRef} {...this.props}>
-          {inner}
+          <ModalHeader>{title || 'Login to Your Account'}</ModalHeader>
+          <ModalBody className="pad">
+            {message ? <p className="notice info">{message}</p> : null}
+            <div className="form-control form-control--outlined no-pad-top">
+              <label>
+                Email
+                <input
+                  type="email"
+                  required="required"
+                  placeholder="me@mydomain.com"
+                  ref={this._setEmailInputRef}
+                />
+              </label>
+            </div>
+            <div className="form-control form-control--outlined">
+              <label>
+                Password
+                <input
+                  type="password"
+                  required="required"
+                  placeholder="•••••••••••••••••"
+                  ref={this._setPasswordInputRef}
+                />
+              </label>
+            </div>
+            {error ? <div className="danger pad-top">** {error}</div> : null}
+          </ModalBody>
+          <ModalFooter>
+            <div className="margin-left">
+              Don't have an account yet? <Link href="https://insomnia.rest/app/">Signup</Link>
+            </div>
+            <button type="submit" className="btn">
+              {loading ? <i className="fa fa-spin fa-refresh margin-right-sm" /> : null}
+              Login
+            </button>
+          </ModalFooter>
         </Modal>
       </form>
     );

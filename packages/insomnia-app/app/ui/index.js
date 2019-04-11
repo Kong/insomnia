@@ -5,7 +5,7 @@ import App from './containers/app';
 import * as models from '../models';
 import * as db from '../common/database';
 import { init as initStore } from './redux/modules';
-import { init as initSync } from '../sync-legacy';
+import * as legacySync from '../sync-legacy';
 import { init as initPlugins } from '../plugins';
 import './css/index.less';
 import { isDevelopment } from '../common/constants';
@@ -54,8 +54,9 @@ document.body.setAttribute('data-platform', process.platform);
   const { enableSyncBeta } = await models.settings.getOrCreate();
   if (enableSyncBeta) {
     console.log('[app] Enabling sync beta');
+    legacySync.disableForSession();
   } else {
-    process.nextTick(initSync);
+    process.nextTick(legacySync.init);
   }
 })();
 

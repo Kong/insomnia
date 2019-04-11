@@ -1,9 +1,25 @@
-const srp = require('srp-js');
-const crypt = require('./crypt');
-const fetch = require('./fetch');
+import * as srp from 'srp-js';
+import * as crypt from './crypt';
+import * as fetch from './fetch';
+
+const loginCallbacks = [];
+
+function _callCallbacks() {
+  const loggedIn = isLoggedIn();
+  console.log('[session] Sync state changed loggedIn=' + loggedIn);
+  for (const cb of loginCallbacks) {
+    if (typeof cb === 'function') {
+      cb(loggedIn);
+    }
+  }
+}
+
+export function onLoginLogout(callback) {
+  loginCallbacks.push(callback);
+}
 
 /** Create a new session for the user */
-module.exports.login = async function(rawEmail, rawPassphrase) {
+export async function login(rawEmail, rawPassphrase) {
   // ~~~~~~~~~~~~~~~ //
   // Sanitize Inputs //
   // ~~~~~~~~~~~~~~~ //
@@ -78,7 +94,7 @@ module.exports.login = async function(rawEmail, rawPassphrase) {
   const symmetricKeyStr = await crypt.decryptAES(derivedSymmetricKey, JSON.parse(encSymmetricKey));
 
   // Store the information for later
-  module.exports.setSessionData(
+  _setSessionData(
     sessionId,
     accountId,
     firstName,
@@ -88,40 +104,73 @@ module.exports.login = async function(rawEmail, rawPassphrase) {
     JSON.parse(publicKey),
     JSON.parse(encPrivateKey),
   );
-};
 
-module.exports.getPublicKey = function() {
+  _callCallbacks();
+}
+
+export function getPublicKey() {
   return _getSessionData().publicKey;
-};
+}
 
-module.exports.getPrivateKey = function() {
+export function getPrivateKey() {
   const { symmetricKey, encPrivateKey } = _getSessionData();
   const privateKeyStr = crypt.decryptAES(symmetricKey, encPrivateKey);
   return JSON.parse(privateKeyStr);
-};
+}
 
-module.exports.getCurrentSessionId = function() {
+export function getCurrentSessionId() {
   if (window) {
     return window.localStorage.getItem('currentSessionId');
   } else {
     return '';
   }
-};
+}
 
-module.exports.getAccountId = function() {
+export function getAccountId() {
   return _getSessionData().accountId;
-};
+}
 
-module.exports.getEmail = function() {
+export function getEmail() {
   return _getSessionData().email;
-};
+}
 
-module.exports.getFirstName = function() {
+export function getFirstName() {
   return _getSessionData().firstName;
-};
+}
+
+/** Check if we (think) we have a session */
+export function isLoggedIn() {
+  return !!getCurrentSessionId();
+}
+
+/** Log out and delete session data */
+export async function logout() {
+  try {
+    await fetch.post('/auth/logout', null, getCurrentSessionId());
+  } catch (e) {
+    // Not a huge deal if this fails, but we don't want it to prevent the
+    // user from signing out.
+    console.warn('Failed to logout', e);
+  }
+
+  _unsetSessionData();
+  _callCallbacks();
+}
+
+export async function listTeams() {
+  return fetch.get('/api/teams', getCurrentSessionId());
+}
+
+export async function endTrial() {
+  await fetch.put('/api/billing/end-trial', getCurrentSessionId());
+}
+
+// ~~~~~~~~~~~~~~~~ //
+// Helper Functions //
+// ~~~~~~~~~~~~~~~~ //
 
 /** Set data for the new session and store it encrypted with the sessionId */
-module.exports.setSessionData = function(
+function _setSessionData(
   sessionId,
   accountId,
   firstName,
@@ -146,44 +195,14 @@ module.exports.setSessionData = function(
 
   // NOTE: We're setting this last because the stuff above might fail
   window.localStorage.setItem('currentSessionId', sessionId);
-};
-
-/** Check if we (think) we have a session */
-module.exports.isLoggedIn = function() {
-  return module.exports.getCurrentSessionId();
-};
-
-/** Log out and delete session data */
-module.exports.logout = async function() {
-  try {
-    await fetch.post('/auth/logout', null, module.exports.getCurrentSessionId());
-  } catch (e) {
-    // Not a huge deal if this fails, but we don't want it to prevent the
-    // user from signing out.
-    console.warn('Failed to logout', e);
-  }
-
-  _unsetSessionData();
-};
-
-module.exports.listTeams = async function() {
-  return fetch.get('/api/teams', module.exports.getCurrentSessionId());
-};
-
-module.exports.endTrial = async function() {
-  await fetch.put('/api/billing/end-trial', module.exports.getCurrentSessionId());
-};
-
-// ~~~~~~~~~~~~~~~~ //
-// Helper Functions //
-// ~~~~~~~~~~~~~~~~ //
+}
 
 function _whoami(sessionId = null) {
-  return fetch.get('/auth/whoami', sessionId || module.exports.getCurrentSessionId());
+  return fetch.get('/auth/whoami', sessionId || getCurrentSessionId());
 }
 
 function _getSessionData() {
-  const sessionId = module.exports.getCurrentSessionId();
+  const sessionId = getCurrentSessionId();
   if (!sessionId || !window) {
     return {};
   }
@@ -193,7 +212,7 @@ function _getSessionData() {
 }
 
 function _unsetSessionData() {
-  const sessionId = module.exports.getCurrentSessionId();
+  const sessionId = getCurrentSessionId();
   window.localStorage.removeItem(_getSessionKey(sessionId));
   window.localStorage.removeItem(`currentSessionId`);
 }

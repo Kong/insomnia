@@ -87,6 +87,7 @@ class App extends PureComponent {
       paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT,
       isVariableUncovered: props.isVariableUncovered || false,
       vcs: null,
+      forceRefreshCounter: 0,
     };
 
     this._isMigratingChildren = false;
@@ -787,8 +788,15 @@ class App extends PureComponent {
     document.title = title;
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     this._updateDocumentTitle();
+
+    // Force app refresh if login state changes
+    if (prevProps.isLoggedIn !== this.props.isLoggedIn) {
+      this.setState(state => ({
+        forceRefreshCounter: state.forceRefreshCounter + 1,
+      }));
+    }
   }
 
   async _updateVCS(activeWorkspace) {
@@ -984,13 +992,21 @@ class App extends PureComponent {
     }
 
     const { activeWorkspace } = this.props;
-    const { paneWidth, paneHeight, sidebarWidth, isVariableUncovered, vcs } = this.state;
+
+    const {
+      paneWidth,
+      paneHeight,
+      sidebarWidth,
+      isVariableUncovered,
+      vcs,
+      forceRefreshCounter,
+    } = this.state;
+
+    const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace._id}`;
 
     return (
-      <KeydownBinder
-        onKeydown={this._handleKeyDown}
-        key={activeWorkspace ? activeWorkspace._id : 'n/a'}>
-        <div className="app">
+      <KeydownBinder onKeydown={this._handleKeyDown}>
+        <div className="app" key={uniquenessKey}>
           <ErrorBoundary showAlert>
             <Wrapper
               {...this.props}
@@ -1057,6 +1073,7 @@ App.propTypes = {
   paneHeight: PropTypes.number.isRequired,
   handleCommand: PropTypes.func.isRequired,
   settings: PropTypes.object.isRequired,
+  isLoggedIn: PropTypes.bool.isRequired,
   activeWorkspace: PropTypes.shape({
     _id: PropTypes.string.isRequired,
   }).isRequired,
@@ -1072,7 +1089,7 @@ App.propTypes = {
 function mapStateToProps(state, props) {
   const { entities, global } = state;
 
-  const { isLoading, loadingRequestIds } = global;
+  const { isLoading, loadingRequestIds, isLoggedIn } = global;
 
   // Entities
   const entitiesLists = selectEntitiesLists(state, props);
@@ -1121,6 +1138,7 @@ function mapStateToProps(state, props) {
   const syncItems = selectSyncItems(state, props);
 
   return Object.assign({}, state, {
+    isLoggedIn,
     settings,
     workspaces,
     unseenWorkspaces,

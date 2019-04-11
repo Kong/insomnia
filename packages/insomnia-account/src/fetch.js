@@ -1,32 +1,33 @@
-const { parse: urlParse } = require('url');
-const zlib = require('zlib');
+import { delay } from '../../insomnia-app/app/common/misc';
+import { parse as urlParse } from 'url';
+import zlib from 'zlib';
 
 let _userAgent = '';
 let _baseUrl = '';
 let _commandListeners = [];
 
-module.exports.setup = function(userAgent, baseUrl) {
+export function setup(userAgent, baseUrl) {
   _userAgent = userAgent;
   _baseUrl = baseUrl;
-};
+}
 
-module.exports.onCommand = function(callback) {
+export function onCommand(callback) {
   _commandListeners.push(callback);
-};
+}
 
-module.exports.post = async function(path, obj, sessionId, compressBody = false) {
+export async function post(path, obj, sessionId, compressBody = false) {
   return _fetch('POST', path, obj, sessionId, compressBody);
-};
+}
 
-module.exports.put = async function(path, obj, sessionId, compressBody = false) {
+export async function put(path, obj, sessionId, compressBody = false) {
   return _fetch('PUT', path, obj, sessionId, compressBody);
-};
+}
 
-module.exports.get = async function(path, sessionId) {
+export async function get(path, sessionId) {
   return _fetch('GET', path, null, sessionId);
-};
+}
 
-async function _fetch(method, path, obj, sessionId, compressBody = false) {
+async function _fetch(method, path, obj, sessionId, compressBody = false, retries = 0) {
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
@@ -58,6 +59,13 @@ async function _fetch(method, path, obj, sessionId, compressBody = false) {
   const url = _getUrl(path);
   try {
     response = await window.fetch(url, config);
+
+    // Exponential backoff for 502 errors
+    if (response.status === 502 && retries < 5) {
+      retries++;
+      await delay(retries * 200);
+      return this._fetch(method, path, obj, sessionId, compressBody, retries);
+    }
   } catch (err) {
     throw new Error(`Failed to fetch '${url}'`);
   }

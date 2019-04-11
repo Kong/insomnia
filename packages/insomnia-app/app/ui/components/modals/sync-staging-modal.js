@@ -22,6 +22,16 @@ type State = {
   error: string,
 };
 
+const _initialState: State = {
+  status: {
+    stage: {},
+    unstaged: {},
+    key: '',
+  },
+  error: '',
+  message: '',
+};
+
 @autobind
 class SyncStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
@@ -29,18 +39,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   _handlePush: ?() => void;
   textarea: ?HTMLTextAreaElement;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      status: {
-        stage: {},
-        unstaged: {},
-        key: '',
-      },
-      error: '',
-      message: '',
-    };
-  }
+  state = _initialState;
 
   _setModalRef(m: ?Modal) {
     this.modal = m;
@@ -143,6 +142,9 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.show();
     this._onSnapshot = options.onSnapshot;
     this._handlePush = options.handlePush;
+
+    // Reset state
+    this.setState(_initialState);
 
     // Add everything to stage by default except new items
     const status: Status = await vcs.status(syncItems, {});

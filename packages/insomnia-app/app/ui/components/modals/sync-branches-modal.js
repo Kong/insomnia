@@ -109,17 +109,18 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
     try {
       const currentBranch = await vcs.getBranch();
       const branches = (await vcs.getBranches()).sort();
-      const remoteBranches = (await vcs.getRemoteBranches())
-        .filter(b => !branches.includes(b))
-        .sort();
 
       this.setState({
         branches,
         currentBranch,
-        remoteBranches,
         error: '',
         ...newState,
       });
+
+      const remoteBranches = (await vcs.getRemoteBranches())
+        .filter(b => !branches.includes(b))
+        .sort();
+      this.setState({ remoteBranches });
     } catch (err) {
       this.setState({ error: err.message });
     }
@@ -129,8 +130,8 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async show() {
-    this.modal && this.modal.show();
+  async show(options: { onHide: Function }) {
+    this.modal && this.modal.show({ onHide: options.onHide });
     await this.refreshState();
   }
 
@@ -154,7 +155,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
             <div className="form-row">
               <div className="form-control form-control--outlined">
                 <label>
-                  Branch Name
+                  New Branch Name
                   <input
                     type="text"
                     onChange={this._updateNewBranchName}
@@ -165,7 +166,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
               </div>
               <div className="form-control form-control--no-label width-auto">
                 <button type="submit" className="btn btn--clicky" disabled={!newBranchName}>
-                  Create Branch
+                  Create
                 </button>
               </div>
             </div>
@@ -216,9 +217,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
                 <thead>
                   <tr>
                     <th className="text-left">Remote Branches</th>
-                    <th className="text-right" style={{ width: '10rem' }}>
-                      &nbsp;
-                    </th>
+                    <th className="text-right">&nbsp;</th>
                   </tr>
                 </thead>
                 <tbody>
