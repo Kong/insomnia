@@ -305,10 +305,9 @@ export async function exportLatestPostmanCollection(
         d.type === models.request.type,
     )
     .map((d: Object) => {
-      if (
-        d.type === models.request.type
-      ) {
-        const { name, method, headers, url, body } = d;
+      if (d.type === models.request.type) {
+        const { name, type, method, headers, url, body } = d;
+
         const formattedHeaders = headers.map(header => ({
           key: header.name,
           name: header.name,
@@ -318,6 +317,7 @@ export async function exportLatestPostmanCollection(
         d._type = EXPORT_TYPE_REQUEST;
 
         d = {
+          type,
           name,
           request: Object.assign({}, request, {
             method,
