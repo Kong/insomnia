@@ -188,6 +188,7 @@ export function exportFile(workspaceId = null) {
 
     const VALUE_JSON = 'json';
     const VALUE_HAR = 'har';
+    const VALUE_POSTMAN_LATEST = 'postman2.1';
 
     showModal(SelectModal, {
       title: 'Select Export Type',
@@ -197,6 +198,7 @@ export function exportFile(workspaceId = null) {
           value: VALUE_JSON,
         },
         { name: 'HAR – HTTP Archive Format', value: VALUE_HAR },
+        { name: 'POSTMAN 2.1', value: VALUE_POSTMAN_LATEST },
       ],
       message: 'Which format would you like to export as?',
       onCancel: () => {
@@ -258,6 +260,11 @@ export function exportFile(workspaceId = null) {
           try {
             if (selectedFormat === VALUE_HAR) {
               json = await importUtils.exportHAR(workspace, exportPrivateEnvironments);
+            } else if (selectedFormat === VALUE_POSTMAN_LATEST) {
+              json = await importUtils.exportLatestPostmanCollection(
+                workspace,
+                exportPrivateEnvironments,
+              );
             } else {
               json = await importUtils.exportJSON(workspace, exportPrivateEnvironments);
             }

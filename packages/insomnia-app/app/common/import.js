@@ -276,6 +276,66 @@ export async function exportJSON(
   return JSON.stringify(data, null, '\t');
 }
 
+export async function exportLatestPostmanCollection(
+  parentDoc: BaseModel | null = null,
+  includePrivateDocs: boolean = false,
+): Promise<string> {
+  const data = {
+    info: {
+      name: '',
+      schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
+    },
+    item: [],
+  };
+
+  const request = {
+    method: '',
+    header: [],
+    body: {},
+    url: {},
+    response: [],
+  };
+
+  const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
+
+  data.item = docs
+    .filter(
+      d =>
+        // Only export these model types
+        d.type === models.request.type,
+    )
+    .map((d: Object) => {
+      if (
+        d.type === models.request.type
+      ) {
+        const { name, method, headers, url, body } = d;
+        const formattedHeaders = headers.map(header => ({
+          key: header.name,
+          name: header.name,
+          value: header.value,
+        }));
+
+        d._type = EXPORT_TYPE_REQUEST;
+
+        d = {
+          name,
+          request: Object.assign({}, request, {
+            method,
+            header: formattedHeaders,
+            url,
+            body: { mode: 'raw', raw: body.text },
+          }),
+        };
+      }
+
+      // Delete the things we don't want to export
+      delete d.type;
+      return d;
+    });
+
+  return JSON.stringify(data, null, '\t');
+}
+
 async function getDocWithDescendants(
   parentDoc: BaseModel | null = null,
   includePrivateDocs: boolean = false,
