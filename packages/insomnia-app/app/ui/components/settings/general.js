@@ -9,6 +9,10 @@ import {
   isWindows,
   UPDATE_CHANNEL_BETA,
   UPDATE_CHANNEL_STABLE,
+  EDITOR_KEY_MAP_DEFAULT,
+  EDITOR_KEY_MAP_EMACS,
+  EDITOR_KEY_MAP_SUBLIME,
+  EDITOR_KEY_MAP_VIM,
 } from '../../../common/constants';
 import type { Settings } from '../../../models/settings';
 import CheckForUpdatesButton from '../check-for-updates-button';
@@ -331,10 +335,10 @@ class General extends React.PureComponent<Props, State> {
                 defaultValue={settings.editorKeyMap}
                 name="editorKeyMap"
                 onChange={this._handleUpdateSetting}>
-                <option value="default">Default</option>
-                <option value="vim">Vim</option>
-                <option value="emacs">Emacs</option>
-                <option value="sublime">Sublime</option>
+                <option value={EDITOR_KEY_MAP_DEFAULT}>Default</option>
+                <option value={EDITOR_KEY_MAP_VIM}>Vim</option>
+                <option value={EDITOR_KEY_MAP_EMACS}>Emacs</option>
+                <option value={EDITOR_KEY_MAP_SUBLIME}>Sublime</option>
               </select>
             </label>
           </div>
