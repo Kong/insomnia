@@ -65,8 +65,8 @@ export default class Store {
     return this._driver.removeItem(key);
   }
 
-  async keys(prefix: string): Promise<Array<string>> {
-    return this._driver.keys(prefix);
+  async keys(prefix: string, recursive: boolean = true): Promise<Array<string>> {
+    return this._driver.keys(prefix, recursive);
   }
 
   async clear(): Promise<void> {

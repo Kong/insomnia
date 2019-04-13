@@ -94,8 +94,11 @@ export default class FileSystemDriver implements BaseDriver {
     });
   }
 
-  async keys(prefix: string): Promise<Array<string>> {
+  async keys(prefix: string, recursive: boolean): Promise<Array<string>> {
+    let recursionLevel = 0;
     const next = dir => {
+      recursionLevel++;
+
       return new Promise(async (resolve, reject) => {
         let keys: Array<string> = [];
         let names = [];
@@ -114,10 +117,11 @@ export default class FileSystemDriver implements BaseDriver {
           }
 
           const p = path.join(dir, name);
-          if (fs.statSync(p).isDirectory()) {
+          const isDir = fs.statSync(p).isDirectory();
+          if (isDir && (recursive || recursionLevel === 1)) {
             const more = await next(p);
             keys = [...keys, ...more];
-          } else {
+          } else if (!isDir) {
             keys.push(p);
           }
         }

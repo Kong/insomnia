@@ -65,26 +65,17 @@ export default class VCS {
     return newVCS;
   }
 
-  async currentProject(): Promise<Project> {
-    return this._assertProject();
-  }
-
-  unsetProject(): void {
-    this._project = null;
-  }
-
   async setProject(project: Project): Promise<void> {
     this._project = project;
     console.log(`[sync] Activate project ${project.id}`);
+
+    // Store it because it might not be yet
     await this._storeProject(project);
   }
 
   async switchProject(rootDocumentId: string, name: string): Promise<Project> {
     const project = await this._getOrCreateProject(rootDocumentId, name);
     await this.setProject(project);
-
-    console.log(`[sync] Activate project ${project.id}`);
-
     return project;
   }
 
@@ -98,6 +89,21 @@ export default class VCS {
 
   async remoteProjects(): Promise<Array<Project>> {
     return this._queryProjects();
+  }
+
+  async blobFromLastSnapshot(key: string): Promise<Object | null> {
+    const branch = await this._getCurrentBranch();
+    const snapshot = await this._getLatestSnapshot(branch.name);
+    if (!snapshot) {
+      return null;
+    }
+
+    const entry = snapshot.state.find(e => e.key === key);
+    if (!entry) {
+      return null;
+    }
+
+    return this._getBlob(entry.blob);
   }
 
   async status(candidates: Array<StatusCandidate>, baseStage: Stage): Promise<Status> {
@@ -356,6 +362,10 @@ export default class VCS {
   async takeSnapshot(stage: Stage, name: string): Promise<void> {
     const branch: Branch = await this._getCurrentBranch();
     const parent: Snapshot | null = await this._getLatestSnapshot(branch.name);
+
+    if (!name) {
+      throw new Error('Snapshot must have a name');
+    }
 
     // Ensure there is something on the stage
     if (Object.keys(stage).length === 0) {
@@ -660,27 +670,23 @@ export default class VCS {
     return data;
   }
 
-  async _queryBlobsMissing(allIds: Array<string>): Promise<Array<string>> {
-    let missingIds = [];
-    for (const ids of chunkArray(allIds, 100)) {
-      const { blobsMissing } = await this._runGraphQL(
-        `
+  async _queryBlobsMissing(ids: Array<string>): Promise<Array<string>> {
+    const { blobsMissing } = await this._runGraphQL(
+      `
           query ($projectId: ID!, $ids: [ID!]!) {
             blobsMissing(project: $projectId, ids: $ids) {
               missing 
             }
           }
         `,
-        {
-          ids,
-          projectId: this._projectId(),
-        },
-        'missingBlobs',
-      );
-      missingIds = [...missingIds, ...blobsMissing.missing];
-    }
+      {
+        ids,
+        projectId: this._projectId(),
+      },
+      'missingBlobs',
+    );
 
-    return missingIds;
+    return blobsMissing.missing;
   }
 
   async _queryBranches(): Promise<Array<Branch>> {
@@ -700,7 +706,8 @@ export default class VCS {
       'branches',
     );
 
-    return branches;
+    // TODO: Fix server returning null instead of empty list
+    return branches || [];
   }
 
   async _queryRemoveBranch(branchName: string): Promise<void> {
@@ -864,6 +871,7 @@ export default class VCS {
     let batch = [];
     let batchSizeBytes = 0;
     const maxBatchSize = 1024 * 1024 * 2; // 2 MB
+    const maxBatchCount = 200;
     for (let i = 0; i < allIds.length; i++) {
       const id = allIds[i];
       const content = await this._getBlobRaw(id);
@@ -876,7 +884,7 @@ export default class VCS {
 
       batchSizeBytes += content.length;
       const isLastId = i === allIds.length - 1;
-      if (batchSizeBytes > maxBatchSize || isLastId) {
+      if (batchSizeBytes > maxBatchSize || isLastId || batch.length >= maxBatchCount) {
         count += await next(batch);
         const batchSizeMB = Math.round((batchSizeBytes / 1024) * 100) / 100;
         console.log(`[sync] Uploaded ${count}/${allIds.length} blobs in batch ${batchSizeMB} KB`);
@@ -1208,6 +1216,11 @@ export default class VCS {
     const matchedProjects = projects.filter(p => p.rootDocumentId === rootDocumentId);
     if (matchedProjects.length > 1) {
       // TODO: Handle this case
+      console.log('[sync] Multiple projects matched for root', {
+        projects,
+        matchedProjects,
+        rootDocumentId,
+      });
       throw new Error('More than one project matched query');
     }
 
@@ -1225,15 +1238,21 @@ export default class VCS {
 
   async _allProjects(): Promise<Array<Project>> {
     const projects = [];
-    const keys = await this._store.keys(paths.projects());
+    const basePath = paths.projects();
+    const keys = await this._store.keys(basePath, false);
     for (const key of keys) {
-      const p: Project | null = await this._store.getItem(key);
-      if (p === null) {
+      const o: Object | null = await this._store.getItem(key);
+      if (o === null) {
         // Should never happen
-        throw new Error(`Failed to get project path=${key}`);
+        throw new Error(`Failed to get item by path ${key}`);
       }
 
-      projects.push(p);
+      // Rough check if it's a project
+      if (!o.name || !o.id) {
+        continue;
+      }
+
+      projects.push(o);
     }
 
     return projects;
@@ -1300,11 +1319,15 @@ export default class VCS {
     await this._store.setItem(paths.head(this._projectId()), head);
   }
 
+  async _getBlob(id: string): Promise<Object | null> {
+    const p = paths.blob(this._projectId(), id);
+    return this._store.getItem(p);
+  }
+
   async _getBlobs(ids: Array<string>): Promise<Array<Object>> {
     const promises = [];
     for (const id of ids) {
-      const p = paths.blob(this._projectId(), id);
-      promises.push(this._store.getItem(p));
+      promises.push(this._getBlob(id));
     }
 
     return Promise.all(promises);

@@ -35,13 +35,23 @@ export default class MemoryDriver implements BaseDriver {
     this._init();
   }
 
-  async keys(prefix: string): Promise<Array<string>> {
+  async keys(prefix: string, recursive: boolean): Promise<Array<string>> {
     const keys = [];
+    const baseLevels = prefix.split('/').length;
 
     for (const key of Object.keys(this._db)) {
-      if (key.indexOf(prefix) === 0) {
-        keys.push(key);
+      if (key.indexOf(prefix) !== 0) {
+        continue;
       }
+
+      const levels = key.split('/').length;
+      const isOnSameLevel = levels === baseLevels;
+
+      if (!recursive && !isOnSameLevel) {
+        continue;
+      }
+
+      keys.push(key);
     }
 
     return keys;

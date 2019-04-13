@@ -52,6 +52,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
       await batchModifyDocs(delta);
       await this.refreshState();
     } catch (err) {
+      console.log('Failed to checkout', err.stack);
       this.setState({ error: err.message });
     }
   }
@@ -62,6 +63,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
       await vcs.removeRemoteBranch(branch);
       await this.refreshState();
     } catch (err) {
+      console.log('Failed to remote delete', err.stack);
       this.setState({ error: err.message });
     }
   }
@@ -72,6 +74,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
       await vcs.removeBranch(branch);
       await this.refreshState();
     } catch (err) {
+      console.log('Failed to delete', err.stack);
       this.setState({ error: err.message });
     }
   }
@@ -92,6 +95,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
       // Clear branch name and refresh things
       await this.refreshState({ newBranchName: '', error: '' });
     } catch (err) {
+      console.log('Failed to create', err.stack);
       this.setState({ error: err.message });
     }
   }
@@ -122,6 +126,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
         .sort();
       this.setState({ remoteBranches });
     } catch (err) {
+      console.log('Failed to refresh', err.stack);
       this.setState({ error: err.message });
     }
   }

@@ -99,9 +99,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       pullingProjects: { ...state.pullingProjects, [project.id]: true },
     }));
 
-    const newVCS = vcs.newInstance();
-    const oldBranch = await newVCS.getBranch();
-
     try {
       const workspace = await models.workspace.getById(project.rootDocumentId);
       if (workspace) {
@@ -110,6 +107,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       }
 
       // Clone old VCS so we don't mess anything up while working on other projects
+      const newVCS = vcs.newInstance();
       await newVCS.setProject(project);
       await newVCS.checkout([], 'master');
       await newVCS.pull([]); // There won't be any existing docs since it's a new pull
@@ -125,11 +123,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
         title: 'Pull Error',
         message: `Failed to pull workspace. ${err.message}`,
       });
-    } finally {
-      // We actually need to checkout the old branch again because the VCS
-      // stores it on the filesystem. We should probably have a way to not
-      // have to do this hack
-      await newVCS.checkout([], oldBranch);
     }
 
     this.setState(state => ({

@@ -8,7 +8,8 @@ import ModalFooter from '../base/modal-footer';
 import type { Workspace } from '../../../models/workspace';
 import VCS from '../../../sync/vcs';
 import type { Stage, StageEntry, Status, StatusCandidate } from '../../../sync/types';
-import HelpTooltip from '../help-tooltip';
+import * as models from '../../../models';
+import Tooltip from '../tooltip';
 
 type Props = {
   workspace: Workspace,
@@ -20,6 +21,15 @@ type State = {
   status: Status,
   message: string,
   error: string,
+  branch: string,
+  lookupMap: {
+    [string]: {
+      entry: StageEntry,
+      type: string,
+      checked: boolean,
+      operation: string,
+    },
+  },
 };
 
 const _initialState: State = {
@@ -28,18 +38,25 @@ const _initialState: State = {
     unstaged: {},
     key: '',
   },
+  branch: '',
   error: '',
   message: '',
+  lookupMap: {},
 };
 
 @autobind
 class SyncStagingModal extends React.PureComponent<Props, State> {
+  toggleAllInputRef: ?HTMLInputElement;
   modal: ?Modal;
   _onSnapshot: ?() => void;
   _handlePush: ?() => void;
   textarea: ?HTMLTextAreaElement;
 
   state = _initialState;
+
+  _setToggleAllRef(el: ?HTMLInputElement) {
+    this.toggleAllInputRef = el;
+  }
 
   _setModalRef(m: ?Modal) {
     this.modal = m;
@@ -66,32 +83,32 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       ? await vcs.unstage(status.stage, [status.stage[id]])
       : await vcs.stage(status.stage, [status.unstaged[id]]);
 
-    await this.refreshState({}, newStage);
+    await this.refreshMainAttributes({}, newStage);
   }
 
-  async _handleStageAll() {
+  async _handleAllToggle() {
     const { vcs } = this.props;
     const { status } = this.state;
 
-    const items = [];
-    for (const id of Object.keys(status.unstaged)) {
-      items.push(status.unstaged[id]);
+    // const numStaged = Object.keys(status.stage).length;
+    const numStaged = Object.keys(status.stage).length;
+
+    let stage;
+    if (numStaged === 0) {
+      const entries: Array<StageEntry> = [];
+      for (const k of Object.keys(status.unstaged)) {
+        entries.push(status.unstaged[k]);
+      }
+      stage = await vcs.stage(status.stage, entries);
+    } else {
+      const entries: Array<StageEntry> = [];
+      for (const k of Object.keys(status.stage)) {
+        entries.push(status.stage[k]);
+      }
+      stage = await vcs.unstage(status.stage, entries);
     }
 
-    const stage = await vcs.stage(status.stage, items);
-    await this.refreshState({}, stage);
-  }
-
-  async _handleUnstageAll() {
-    const { vcs } = this.props;
-    const { status } = this.state;
-    const items: Array<StageEntry> = [];
-    for (const id of Object.keys(status.stage)) {
-      items.push(status.stage[id]);
-    }
-
-    const stage = await vcs.unstage(status.stage, items);
-    await this.refreshState({}, stage);
+    await this.refreshMainAttributes({}, stage);
   }
 
   async _handleTakeSnapshotAndPush() {
@@ -113,23 +130,47 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     }
 
     this._onSnapshot && this._onSnapshot();
-    await this.refreshState({ message: '', error: '' });
+    await this.refreshMainAttributes({ message: '', error: '' });
     this.hide();
   }
 
-  async refreshState(newState?: Object = {}, newStage?: Stage = {}) {
+  async refreshMainAttributes(newState?: Object = {}, newStage?: Stage = {}) {
     const { vcs, syncItems } = this.props;
     const branch = await vcs.getBranch();
-    const branches = await vcs.getBranches();
     const status = await vcs.status(syncItems, newStage);
+
+    const lookupMap = {};
+    const allKeys = [...Object.keys(status.stage), ...Object.keys(status.unstaged)];
+    for (const key of allKeys) {
+      const item = syncItems.find(si => si.key === key);
+      const doc = (item && item.document) || (await vcs.blobFromLastSnapshot(key));
+      const entry = status.stage[key] || status.unstaged[key];
+
+      if (!entry || !doc) {
+        continue;
+      }
+
+      lookupMap[key] = {
+        entry: entry,
+        type: models.getModelName(doc.type),
+        checked: !!status.stage[key],
+      };
+    }
 
     this.setState({
       status,
       branch,
-      branches,
+      lookupMap,
       error: '',
       ...newState,
     });
+
+    // Update indeterminite status of checkbox
+    const numUnstaged = Object.keys(status.unstaged).length;
+    const numStaged = Object.keys(status.stage).length;
+    if (this.toggleAllInputRef) {
+      this.toggleAllInputRef.indeterminate = numUnstaged !== 0 && numStaged !== 0;
+    }
   }
 
   hide() {
@@ -154,39 +195,46 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     }
 
     const stage = await vcs.stage(status.stage, toStage);
-    await this.refreshState({}, stage);
+    await this.refreshMainAttributes({}, stage);
     this.textarea && this.textarea.focus();
   }
 
   static renderOperation(entry: StageEntry) {
-    let name;
     if (entry.added) {
-      name = 'Added';
+      return (
+        <Tooltip message="Added" delay={200}>
+          <i className="fa fa-plus-circle success" />
+        </Tooltip>
+      );
     } else if (entry.modified) {
-      name = 'Modified';
+      return (
+        <Tooltip message="Modified" delay={200}>
+          <i className="fa fa-circle faded" />
+        </Tooltip>
+      );
     } else if (entry.deleted) {
-      name = 'Deleted';
+      return (
+        <Tooltip message="Deleted" delay={200}>
+          <i className="fa fa-minus-circle danger" />
+        </Tooltip>
+      );
     } else {
-      name = 'Unknown Operation';
+      return (
+        <Tooltip message="Unknown Operation">
+          <i className="fa fa-question-circle info" />
+        </Tooltip>
+      );
     }
-
-    return <code className="txt-xs pad-xxs">{name}</code>;
   }
 
   render() {
-    const { status, message, error } = this.state;
+    const { status, message, error, lookupMap, branch } = this.state;
 
     const allKeys = [...Object.keys(status.stage), ...Object.keys(status.unstaged)];
 
     return (
       <Modal ref={this._setModalRef}>
-        <ModalHeader>
-          Create Workspace Snapshot{' '}
-          <HelpTooltip>
-            A snapshot saves the state of everything in the current workspace for use with Insomnia
-            Sync
-          </HelpTooltip>
-        </ModalHeader>
+        <ModalHeader>Create Snapshot</ModalHeader>
         <ModalBody className="wide pad">
           {error && (
             <p className="notice error margin-bottom-sm no-margin-top">
@@ -214,55 +262,64 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
             </div>
           </div>
 
-          <div>
-            <div className="pull-right">
-              <button
-                className="btn btn--clicky-small"
-                disabled={Object.keys(status.stage).length === 0}
-                onClick={this._handleUnstageAll}>
-                Unselect All
-              </button>
-              <button
-                className="space-left btn btn--clicky-small"
-                onClick={this._handleStageAll}
-                disabled={Object.keys(status.unstaged).length === 0}>
-                Select All
-              </button>
-            </div>
-            <h2>
-              Changes{' '}
-              <small>
-                ({Object.keys(status.stage).length}/{allKeys.length})
-              </small>
-            </h2>
-          </div>
-          <ul>
-            {allKeys.sort().map(key => {
-              const isStaged = status.stage.hasOwnProperty(key);
-              const statusItem = status.stage[key] || status.unstaged[key];
-              if (!statusItem) {
-                // Should never happen
-                throw new Error(`Failed to find item in stage or unstaged key=${key}`);
-              }
+          <h2>
+            Changes {Object.keys(status.stage).length}/{allKeys.length}
+          </h2>
 
-              return (
-                <li key={key}>
-                  <label className="wide">
-                    <input
-                      className="space-right"
-                      type="checkbox"
-                      checked={isStaged}
-                      name={key}
-                      onChange={this._handleStageToggle}
-                    />
-                    {SyncStagingModal.renderOperation(statusItem)} {statusItem.name}
+          <table className="table--fancy table--outlined">
+            <thead>
+              <tr>
+                <th>
+                  <label className="wide no-pad">
+                    <span className="txt-md">
+                      <input
+                        ref={this._setToggleAllRef}
+                        className="space-right"
+                        type="checkbox"
+                        checked={Object.keys(status.unstaged).length === 0}
+                        onChange={this._handleAllToggle}
+                      />
+                    </span>{' '}
+                    name
                   </label>
-                </li>
-              );
-            })}
-          </ul>
+                </th>
+                <th className="text-right">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allKeys.map(key => {
+                if (!lookupMap[key]) {
+                  return null;
+                }
+
+                const { entry, type, checked } = lookupMap[key];
+                return (
+                  <tr key={key} className="table--no-outline-row">
+                    <td>
+                      <label className="no-pad">
+                        <input
+                          className="space-right"
+                          type="checkbox"
+                          checked={checked}
+                          name={key}
+                          onChange={this._handleStageToggle}
+                        />{' '}
+                        {entry.name}
+                      </label>
+                    </td>
+                    <td className="text-right">
+                      {type} {SyncStagingModal.renderOperation(entry)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </ModalBody>
         <ModalFooter>
+          <div className="margin-left italic txt-sm tall">
+            <i className="fa fa-code-fork" /> {branch}
+          </div>
           <div>
             <button className="btn" onClick={this._handleTakeSnapshot}>
               Create
