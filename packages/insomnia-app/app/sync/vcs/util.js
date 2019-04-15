@@ -464,13 +464,14 @@ export function updateStateWithConflictResolutions(
       continue;
     }
 
-    // Chose to delete it, so don't add to state
-    if (choose === null) {
-      delete newStateMap[key];
+    // Add the conflict
+    if (choose !== null) {
+      newStateMap[key] = { ...stateEntry, blob: choose };
+      continue;
     }
 
-    // Add the conflict
-    newStateMap[key] = { ...stateEntry, blob: choose };
+    // Chose to delete it, so don't add to state
+    delete newStateMap[key];
   }
 
   return Object.keys(newStateMap).map(k => newStateMap[k]);

@@ -142,7 +142,16 @@ describe('util', () => {
       const other = [A3];
 
       expect(threeWayMerge(root, trunk, other)).toEqual({
-        conflicts: [A1.key],
+        conflicts: [
+          {
+            key: A2.key,
+            name: A2.name,
+            choose: A3.blob,
+            mineBlob: A2.blob,
+            theirsBlob: A3.blob,
+            message: 'both modified',
+          },
+        ],
         state: [A2],
       });
     });
@@ -164,7 +173,16 @@ describe('util', () => {
       const other = [A1, B2];
 
       expect(threeWayMerge(root, trunk, other)).toEqual({
-        conflicts: [B2.key],
+        conflicts: [
+          {
+            key: B1.key,
+            name: B1.name,
+            choose: B2.blob,
+            mineBlob: B1.blob,
+            theirsBlob: B2.blob,
+            message: 'both added',
+          },
+        ],
         state: [A1, B1],
       });
     });
@@ -175,7 +193,16 @@ describe('util', () => {
       const other = [A1];
 
       expect(threeWayMerge(root, trunk, other)).toEqual({
-        conflicts: [B2.key],
+        conflicts: [
+          {
+            key: B1.key,
+            name: B1.name,
+            choose: B2.blob,
+            mineBlob: B2.blob,
+            theirsBlob: null,
+            message: 'they deleted and you modified',
+          },
+        ],
         state: [A1, B2],
       });
     });
@@ -186,7 +213,16 @@ describe('util', () => {
       const other = [A1, B2];
 
       expect(threeWayMerge(root, trunk, other)).toEqual({
-        conflicts: [B2.key],
+        conflicts: [
+          {
+            key: B1.key,
+            name: B1.name,
+            choose: B2.blob,
+            mineBlob: null,
+            theirsBlob: B2.blob,
+            message: 'you deleted and they modified',
+          },
+        ],
         state: [A1, B2],
       });
     });
@@ -208,7 +244,16 @@ describe('util', () => {
       const other = [A2];
 
       expect(threeWayMerge(root, trunk, other)).toEqual({
-        conflicts: [A2.key],
+        conflicts: [
+          {
+            key: A1.key,
+            name: A1.name,
+            choose: A2.blob,
+            mineBlob: A1.blob,
+            theirsBlob: A2.blob,
+            message: 'both added',
+          },
+        ],
         state: [A1],
       });
     });
@@ -473,9 +518,7 @@ describe('util', () => {
         },
       ];
 
-      expect(updateStateWithConflictResolutions(state, conflicts)).toEqual(
-        expect.arrayContaining([A1, C1, E1, F1]),
-      );
+      expect(updateStateWithConflictResolutions(state, conflicts)).toEqual([A1, E1, F1, C1]);
     });
   });
 

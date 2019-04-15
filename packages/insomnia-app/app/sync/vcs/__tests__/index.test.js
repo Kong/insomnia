@@ -557,7 +557,7 @@ describe('VCS', () => {
         {},
       );
       const stage1 = await v.stage(status1.stage, [status1.unstaged['a'], status1.unstaged['b']]);
-      await v.takeSnapshot(stage1);
+      await v.takeSnapshot(stage1, 'message');
     });
 
     it('does something', async () => {

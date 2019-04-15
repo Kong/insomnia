@@ -41,10 +41,6 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
     };
   }
 
-  componentDidMount() {
-    this.show({ onHide: null });
-  }
-
   _setModalRef(m: ?Modal) {
     this.modal = m;
   }
