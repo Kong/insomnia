@@ -71,6 +71,7 @@ import MoveRequestGroupModal from '../components/modals/move-request-group-modal
 import * as themes from '../../plugins/misc';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import VCS from '../../sync/vcs';
+import SyncMergeModal from '../components/modals/sync-merge-modal';
 
 @autobind
 class App extends PureComponent {
@@ -256,11 +257,11 @@ class App extends PureComponent {
     });
   }
 
-  async _requestGroupDuplicate(requestGroup) {
+  static async _requestGroupDuplicate(requestGroup) {
     models.requestGroup.duplicate(requestGroup);
   }
 
-  async _requestGroupMove(requestGroup) {
+  static async _requestGroupMove(requestGroup) {
     showModal(MoveRequestGroupModal, { requestGroup });
   }
 
@@ -317,10 +318,8 @@ class App extends PureComponent {
    */
   async _handleRenderText(text, contextCacheKey = null) {
     if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
-      const context = this._fetchRenderContext();
-
       // NOTE: We're caching promises here to avoid race conditions
-      this._getRenderContextPromiseCache[contextCacheKey] = context;
+      this._getRenderContextPromiseCache[contextCacheKey] = this._fetchRenderContext();
     }
 
     // Set timeout to delete the key eventually
@@ -331,10 +330,10 @@ class App extends PureComponent {
   }
 
   _handleGenerateCodeForActiveRequest() {
-    this._handleGenerateCode(this.props.activeRequest);
+    App._handleGenerateCode(this.props.activeRequest);
   }
 
-  _handleGenerateCode(request) {
+  static _handleGenerateCode(request) {
     showModal(GenerateCodeModal, request);
   }
 
@@ -347,7 +346,7 @@ class App extends PureComponent {
     clipboard.writeText(cmd);
   }
 
-  async _updateRequestGroupMetaByParentId(requestGroupId, patch) {
+  static async _updateRequestGroupMetaByParentId(requestGroupId, patch) {
     const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
     if (requestGroupMeta) {
       await models.requestGroupMeta.update(requestGroupMeta, patch);
@@ -368,7 +367,7 @@ class App extends PureComponent {
     }
   }
 
-  async _updateRequestMetaByParentId(requestId, patch) {
+  static async _updateRequestMetaByParentId(requestId, patch) {
     const requestMeta = await models.requestMeta.getByParentId(requestId);
     if (requestMeta) {
       return models.requestMeta.update(requestMeta, patch);
@@ -378,7 +377,7 @@ class App extends PureComponent {
     }
   }
 
-  _updateIsVariableUncovered(paneWidth) {
+  _updateIsVariableUncovered() {
     this.setState({ isVariableUncovered: !this.state.isVariableUncovered });
   }
 
@@ -417,15 +416,15 @@ class App extends PureComponent {
   }
 
   _handleSetRequestGroupCollapsed(requestGroupId, collapsed) {
-    this._updateRequestGroupMetaByParentId(requestGroupId, { collapsed });
+    App._updateRequestGroupMetaByParentId(requestGroupId, { collapsed });
   }
 
   _handleSetResponsePreviewMode(requestId, previewMode) {
-    this._updateRequestMetaByParentId(requestId, { previewMode });
+    App._updateRequestMetaByParentId(requestId, { previewMode });
   }
 
   async _handleSetResponseFilter(requestId, responseFilter) {
-    await this._updateRequestMetaByParentId(requestId, { responseFilter });
+    await App._updateRequestMetaByParentId(requestId, { responseFilter });
 
     clearTimeout(this._responseFilterHistorySaveTimeout);
     this._responseFilterHistorySaveTimeout = setTimeout(async () => {
@@ -443,7 +442,7 @@ class App extends PureComponent {
       }
 
       responseFilterHistory.unshift(responseFilter);
-      await this._updateRequestMetaByParentId(requestId, {
+      await App._updateRequestMetaByParentId(requestId, {
         responseFilterHistory,
       });
     }, 2000);
@@ -565,7 +564,7 @@ class App extends PureComponent {
     }
 
     // Unset active response because we just made a new one
-    await this._updateRequestMetaByParentId(requestId, {
+    await App._updateRequestMetaByParentId(requestId, {
       activeResponseId: null,
     });
 
@@ -610,7 +609,7 @@ class App extends PureComponent {
     }
 
     // Unset active response because we just made a new one
-    await this._updateRequestMetaByParentId(requestId, {
+    await App._updateRequestMetaByParentId(requestId, {
       activeResponseId: null,
     });
 
@@ -620,7 +619,7 @@ class App extends PureComponent {
 
   async _handleSetActiveResponse(requestId, activeResponse = null) {
     const activeResponseId = activeResponse ? activeResponse._id : null;
-    await this._updateRequestMetaByParentId(requestId, { activeResponseId });
+    await App._updateRequestMetaByParentId(requestId, { activeResponseId });
 
     let response;
     if (activeResponseId) {
@@ -807,7 +806,14 @@ class App extends PureComponent {
     if (!vcs) {
       const directory = path.join(getDataDirectory(), 'version-control');
       const driver = new FileSystemDriver({ directory });
-      vcs = new VCS(driver);
+      vcs = new VCS(driver, async conflicts => {
+        return new Promise(resolve => {
+          showModal(SyncMergeModal, {
+            conflicts,
+            handleDone: conflicts => resolve(conflicts),
+          });
+        });
+      });
     }
 
     await vcs.switchProject(activeWorkspace._id, activeWorkspace.name);
@@ -1030,11 +1036,11 @@ class App extends PureComponent {
               handleRender={this._handleRenderText}
               handleGetRenderContext={this._handleGetRenderContext}
               handleDuplicateRequest={this._requestDuplicate}
-              handleDuplicateRequestGroup={this._requestGroupDuplicate}
-              handleMoveRequestGroup={this._requestGroupMove}
+              handleDuplicateRequestGroup={App._requestGroupDuplicate}
+              handleMoveRequestGroup={App._requestGroupMove}
               handleDuplicateWorkspace={this._workspaceDuplicate}
               handleCreateRequestGroup={this._requestGroupCreate}
-              handleGenerateCode={this._handleGenerateCode}
+              handleGenerateCode={App._handleGenerateCode}
               handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
               handleCopyAsCurl={this._handleCopyAsCurl}
               handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}

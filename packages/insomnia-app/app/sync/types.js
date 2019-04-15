@@ -70,6 +70,15 @@ export type StageEntryModify = {|
 
 export type StageEntry = StageEntryDelete | StageEntryAdd | StageEntryModify;
 
+export type MergeConflict = {|
+  name: string,
+  key: DocumentKey,
+  message: string,
+  mineBlob: BlobId | null,
+  theirsBlob: BlobId | null,
+  choose: BlobId | null,
+|};
+
 export type Stage = {
   [DocumentKey]: StageEntry,
 };

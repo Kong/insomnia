@@ -5,6 +5,7 @@ import { deterministicStringify } from '../lib/deterministicStringify';
 import type {
   Branch,
   DocumentKey,
+  MergeConflict,
   Snapshot,
   SnapshotState,
   SnapshotStateEntry,
@@ -59,14 +60,14 @@ export function threeWayMerge(
   root: SnapshotState,
   trunk: SnapshotState,
   other: SnapshotState,
-): { state: SnapshotState, conflicts: Array<DocumentKey> } {
+): { state: SnapshotState, conflicts: Array<MergeConflict> } {
   const stateRoot = generateStateMap(root);
   const stateTrunk = generateStateMap(trunk);
   const stateOther = generateStateMap(other);
   const allKeys = combinedMapKeys(stateRoot, stateTrunk, stateOther);
 
   const newState: SnapshotState = [];
-  const conflicts: Array<DocumentKey> = [];
+  const conflicts: Array<MergeConflict> = [];
 
   for (const key of allKeys) {
     const root = stateRoot[key] || null;
@@ -125,7 +126,14 @@ export function threeWayMerge(
     // Added in both
     if (root === null && trunk && other) {
       if (trunk.blob !== other.blob) {
-        conflicts.push(key);
+        conflicts.push({
+          key,
+          name: other.name,
+          message: 'both added',
+          mineBlob: trunk.blob,
+          theirsBlob: other.blob,
+          choose: other.blob,
+        });
       }
 
       newState.push(trunk || other);
@@ -154,7 +162,14 @@ export function threeWayMerge(
     // Modified in both
     if (root && trunk && other && root.blob !== trunk.blob && root.blob !== other.blob) {
       if (trunk.blob !== other.blob) {
-        conflicts.push(key);
+        conflicts.push({
+          key,
+          name: other.name,
+          message: 'both modified',
+          mineBlob: trunk.blob,
+          theirsBlob: other.blob,
+          choose: other.blob,
+        });
       }
 
       newState.push(trunk);
@@ -182,15 +197,29 @@ export function threeWayMerge(
     // (11/12)
     // Deleted in trunk and modified in other
     if (root && trunk === null && other && other.blob !== root.blob) {
-      conflicts.push(key);
+      conflicts.push({
+        key,
+        name: other.name,
+        message: 'you deleted and they modified',
+        mineBlob: null,
+        theirsBlob: other.blob,
+        choose: other.blob,
+      });
       newState.push(other);
       continue;
     }
 
     // (12/12)
-    // Deleted in other and modified in other
+    // Deleted in other and modified in trunk
     if (root && trunk && other === null && trunk.blob !== root.blob) {
-      conflicts.push(key);
+      conflicts.push({
+        key,
+        name: root.name,
+        message: 'they deleted and you modified',
+        mineBlob: trunk.blob,
+        theirsBlob: null,
+        choose: trunk.blob,
+      });
       newState.push(trunk);
       continue;
     }
@@ -419,4 +448,30 @@ export function hashDocument(doc: Object): { content: string, hash: string } {
     .digest('hex');
 
   return { hash, content };
+}
+
+export function updateStateWithConflictResolutions(
+  state: SnapshotState,
+  conflicts: Array<MergeConflict>,
+): SnapshotState {
+  const newStateMap = generateStateMap(state);
+  for (const { choose, key, name } of conflicts) {
+    const stateEntry = state.find(e => e.key === key);
+
+    // Not in the state, but we choose the conflict
+    if (!stateEntry && choose !== null) {
+      newStateMap[key] = { key, name, blob: choose };
+      continue;
+    }
+
+    // Chose to delete it, so don't add to state
+    if (choose === null) {
+      delete newStateMap[key];
+    }
+
+    // Add the conflict
+    newStateMap[key] = { ...stateEntry, blob: choose };
+  }
+
+  return Object.keys(newStateMap).map(k => newStateMap[k]);
 }

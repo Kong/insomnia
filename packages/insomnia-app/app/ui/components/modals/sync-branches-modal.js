@@ -41,6 +41,10 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
     };
   }
 
+  componentDidMount() {
+    this.show({ onHide: null });
+  }
+
   _setModalRef(m: ?Modal) {
     this.modal = m;
   }
@@ -53,6 +57,18 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
       await this.refreshState();
     } catch (err) {
       console.log('Failed to checkout', err.stack);
+      this.setState({ error: err.message });
+    }
+  }
+
+  async _handleMerge(branch: string) {
+    const { vcs, syncItems } = this.props;
+    const delta = await vcs.merge(syncItems, branch);
+    try {
+      await batchModifyDocs(delta);
+      await this.refreshState();
+    } catch (err) {
+      console.log('Failed to merge', err.stack);
       this.setState({ error: err.message });
     }
   }
@@ -93,7 +109,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
       await batchModifyDocs(delta);
 
       // Clear branch name and refresh things
-      await this.refreshState({ newBranchName: '', error: '' });
+      await this.refreshState({ newBranchName: '' });
     } catch (err) {
       console.log('Failed to create', err.stack);
       this.setState({ error: err.message });
@@ -196,6 +212,13 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
                       {name === 'master' && <i className="fa fa-lock space-left faint" />}
                     </td>
                     <td className="text-right">
+                      <PromptButton
+                        className="btn btn--micro btn--outlined space-left"
+                        doneMessage="Merged"
+                        disabled={name === currentBranch}
+                        onClick={() => this._handleMerge(name)}>
+                        Merge
+                      </PromptButton>
                       <PromptButton
                         className="btn btn--micro btn--outlined space-left"
                         doneMessage="Deleted"

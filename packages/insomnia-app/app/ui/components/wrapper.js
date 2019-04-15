@@ -38,6 +38,7 @@ import ResponsePane from './response-pane';
 import RequestSettingsModal from './modals/request-settings-modal';
 import SetupSyncModal from './modals/setup-sync-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
+import SyncMergeModal from './modals/sync-merge-modal';
 import SyncHistoryModal from './modals/sync-history-modal';
 import SyncShareModal from './modals/sync-share-modal';
 import SyncBranchesModal from './modals/sync-branches-modal';
@@ -576,6 +577,12 @@ class Wrapper extends React.PureComponent<Props, State> {
                 workspace={activeWorkspace}
                 vcs={vcs}
                 syncItems={syncItems}
+              />
+              <SyncMergeModal
+                ref={registerModal}
+                workspace={activeWorkspace}
+                syncItems={syncItems}
+                vcs={vcs}
               />
               <SyncBranchesModal
                 ref={registerModal}

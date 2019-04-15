@@ -9,6 +9,7 @@ import {
   preMergeCheck,
   stateDelta,
   threeWayMerge,
+  updateStateWithConflictResolutions,
 } from '../util';
 
 describe('util', () => {
@@ -430,6 +431,54 @@ describe('util', () => {
     });
   });
 
+  describe('updateStateWithConflictResolutions()', () => {
+    const A1 = { key: 'a', blob: '1932cc749f57a77ba4a231d62559c47ee931ee2c', name: '' };
+    const A2 = { key: 'a', blob: 'cf2ec18c2e686b4c966725f30050120d42d4b2e5', name: '' };
+    const B1 = { key: 'b', blob: '05ab2ec03c7e32eff27305b4a11c573a3843fa01', name: '' };
+    const C1 = { key: 'c', blob: 'db7d35b96291b823e674bf23ac59e6e116b1890e', name: '' };
+    const D1 = { key: 'd', blob: 'f23ac59e6e11db7d35b96291b823e674b6b1890e', name: '' };
+    const E1 = { key: 'e', blob: '1db7d35b96291f23ac59e6e1b823e674b6b1890e', name: '' };
+    const F1 = { key: 'f', blob: '6291b823e674b6b137172d35b9f23ac59e6e190e', name: '' };
+
+    it('does it', () => {
+      const state = [A1, B1, E1, F1];
+      const conflicts = [
+        {
+          key: A1.key,
+          name: A1.name,
+          mineBlob: A1.blob,
+          theirsBlob: A2.blob,
+          choose: A1.blob,
+        },
+        {
+          key: B1.key,
+          name: B1.name,
+          mineBlob: B1.blob,
+          theirsBlob: null,
+          choose: null,
+        },
+        {
+          key: C1.key,
+          name: C1.name,
+          mineBlob: null,
+          theirsBlob: C1.blob,
+          choose: C1.blob,
+        },
+        {
+          key: D1.key,
+          name: D1.name,
+          mineBlob: D1.blob,
+          theirsBlob: null,
+          choose: null,
+        },
+      ];
+
+      expect(updateStateWithConflictResolutions(state, conflicts)).toEqual(
+        expect.arrayContaining([A1, C1, E1, F1]),
+      );
+    });
+  });
+
   describe('preMergeCheck()', () => {
     const A1 = { key: 'a', blob: '1932cc749f57a77ba4a231d62559c47ee931ee2c', name: '' };
     const A2 = { key: 'a', blob: 'cf2ec18c2e686b4c966725f30050120d42d4b2e5', name: '' };
@@ -751,15 +800,15 @@ describe('util', () => {
       }
       throw new Error('Expected hashDocument(undefined) to fail');
     });
-  });
 
-  it('ignores object keys that do not matter', () => {
-    const result1 = hashDocument({ a: 'a', modified: 456 });
-    const result2 = hashDocument({ a: 'a', modified: 123 });
-    const result3 = hashDocument({ a: 'b', modified: 123 });
+    it('ignores object keys that do not matter', () => {
+      const result1 = hashDocument({ a: 'a', modified: 456 });
+      const result2 = hashDocument({ a: 'a', modified: 123 });
+      const result3 = hashDocument({ a: 'b', modified: 123 });
 
-    expect(result1.hash).toBe(result2.hash);
-    expect(result1.hash).not.toBe(result3.hash);
+      expect(result1.hash).toBe(result2.hash);
+      expect(result1.hash).not.toBe(result3.hash);
+    });
   });
 });
 

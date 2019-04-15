@@ -11,6 +11,7 @@ import type {
   Branch,
   DocumentKey,
   Head,
+  MergeConflict,
   Project,
   Snapshot,
   SnapshotState,
@@ -29,6 +30,7 @@ import {
   preMergeCheck,
   stateDelta,
   threeWayMerge,
+  updateStateWithConflictResolutions,
 } from './util';
 import { chunkArray, generateId } from '../../common/misc';
 import * as crypt from '../../account/crypt';
@@ -40,20 +42,17 @@ const EMPTY_HASH = crypto
   .digest('hex')
   .replace(/./g, '0');
 
-type SessionData = {|
-  accountId: string,
-  sessionId: string,
-  privateKey: Object,
-  publicKey: Object,
-|};
+type ConflictHandler = (conflicts: Array<MergeConflict>) => Promise<Array<MergeConflict>>;
 
 export default class VCS {
   _store: Store;
   _driver: BaseDriver;
   _project: Project | null;
+  _conflictHandler: ?ConflictHandler;
 
-  constructor(driver: BaseDriver) {
+  constructor(driver: BaseDriver, conflictHandler?: ConflictHandler) {
     this._store = new Store(driver, [compress]);
+    this._conflictHandler = conflictHandler;
     this._driver = driver;
 
     // To be set later
@@ -74,6 +73,14 @@ export default class VCS {
     await this._storeProject(project);
   }
 
+  async removeProjectsForRoot(rootDocumentId: string): Promise<void> {
+    const all = await this._allProjects();
+    const toRemove = all.filter(p => p.rootDocumentId === rootDocumentId);
+    for (const project of toRemove) {
+      await this._removeProject(project);
+    }
+  }
+
   async switchProject(rootDocumentId: string, name: string): Promise<Project> {
     const project = await this._getOrCreateProject(rootDocumentId, name);
     await this.setProject(project);
@@ -86,6 +93,10 @@ export default class VCS {
 
   async projectTeams(): Promise<Array<Team>> {
     return this._queryProjectTeams();
+  }
+
+  async localProjects(): Promise<Array<Project>> {
+    return this._allProjects();
   }
 
   async remoteProjects(): Promise<Array<Project>> {
@@ -252,6 +263,21 @@ export default class VCS {
       upsert: await this._getBlobs(upsert.map(e => e.blob)),
       remove: await this._getBlobs(remove.map(e => e.blob)),
     };
+  }
+
+  async handleAnyConflicts(
+    conflicts: Array<MergeConflict>,
+    errorMsg: string,
+  ): Promise<Array<MergeConflict>> {
+    if (conflicts.length === 0) {
+      return conflicts;
+    }
+
+    if (!this._conflictHandler) {
+      throw new Error(errorMsg);
+    }
+
+    return this._conflictHandler(conflicts);
   }
 
   async allDocuments(): Promise<Object> {
@@ -566,6 +592,11 @@ export default class VCS {
       candidates,
     );
 
+    if (preConflicts.length) {
+      console.log('[sync] Merge failed', preConflicts);
+      throw new Error('Cannot merge with current changes. Please create a snapshot before merging');
+    }
+
     const shouldDoNothing1 = latestSnapshotOther && latestSnapshotOther.id === rootSnapshotId;
     const shouldDoNothing2 = branchOther.snapshots.length === 0;
     const shouldFastForward1 =
@@ -581,25 +612,18 @@ export default class VCS {
     } else {
       const rootState = rootSnapshot ? rootSnapshot.state : [];
 
-      if (preConflicts.length) {
-        console.log('[sync] Merge failed', preConflicts);
-        throw new Error(
-          'Cannot merge with current changes. Please create a snapshot before merging',
-        );
-      }
-
       console.log('[sync] Performing 3-way merge');
-      const { state, conflicts: mergeConflicts } = threeWayMerge(
+      const { state: stateBeforeConflicts, conflicts: mergeConflicts } = threeWayMerge(
         rootState,
         latestStateTrunk,
         latestStateOther,
       );
 
-      if (mergeConflicts.length) {
-        throw new Error('Conflicting keys! ' + mergeConflicts.join(', '));
-      }
+      // Update state with conflict resolutions applied
+      const conflictResolutions = await this.handleAnyConflicts(mergeConflicts, '');
+      const state = updateStateWithConflictResolutions(stateBeforeConflicts, conflictResolutions);
 
-      // Sometimes we want to merge into trunk but keep the other branche's history
+      // Sometimes we want to merge into trunk but keep the other branch's history
       if (useOtherBranchHistory) {
         branchTrunk.snapshots = branchOther.snapshots;
       }
@@ -1145,7 +1169,12 @@ export default class VCS {
     return this._getOrCreateBranch(head.branch);
   }
 
-  _assertSession(): SessionData {
+  _assertSession(): {|
+    accountId: string,
+    sessionId: string,
+    privateKey: Object,
+    publicKey: Object,
+  |} {
     if (!session.isLoggedIn()) {
       throw new Error('Not logged in');
     }
@@ -1214,7 +1243,6 @@ export default class VCS {
     const projects = await this._allProjects();
     const matchedProjects = projects.filter(p => p.rootDocumentId === rootDocumentId);
     if (matchedProjects.length > 1) {
-      // TODO: Handle this case
       console.log('[sync] Multiple projects matched for root', {
         projects,
         matchedProjects,
@@ -1228,9 +1256,8 @@ export default class VCS {
     if (!project) {
       const id = generateId('prj');
       project = { id, name, rootDocumentId };
+      await this._storeProject(project);
     }
-
-    await this._storeProject(project);
 
     return project;
   }
@@ -1243,8 +1270,8 @@ export default class VCS {
       const id = path.basename(key);
       const p: Project | null = await this._getProjectById(id);
       if (p === null) {
-        // Should never happen
-        throw new Error(`Failed to get project by id '${id}'`);
+        // Folder exists but project meta file is gone
+        continue;
       }
 
       projects.push(p);
@@ -1308,6 +1335,10 @@ export default class VCS {
 
   async _removeBranch(branch: Branch): Promise<void> {
     return this._store.removeItem(paths.branch(this._projectId(), branch.name));
+  }
+
+  async _removeProject(project: Project): Promise<void> {
+    return this._store.removeItem(paths.project(project.id));
   }
 
   async _storeHead(head: Head): Promise<void> {

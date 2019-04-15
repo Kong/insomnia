@@ -46,6 +46,7 @@ type Props = {
 
 type State = {
   remoteProjects: Array<Project>,
+  localProjects: Array<Project>,
   pullingProjects: { [string]: boolean },
 };
 
@@ -57,6 +58,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     super(props);
     this.state = {
       remoteProjects: [],
+      localProjects: [],
       pullingProjects: {},
     };
   }
@@ -86,7 +88,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     }
 
     const remoteProjects = await vcs.remoteProjects();
-    this.setState({ remoteProjects });
+    const localProjects = await vcs.localProjects();
+    this.setState({ remoteProjects, localProjects });
   }
 
   async _handlePullRemoteWorkspace(project: Project) {
@@ -100,14 +103,15 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     }));
 
     try {
-      const workspace = await models.workspace.getById(project.rootDocumentId);
-      if (workspace) {
-        // Shouldn't have gotten here. Just switch to it and continue
-        return;
-      }
-
       // Clone old VCS so we don't mess anything up while working on other projects
       const newVCS = vcs.newInstance();
+
+      // Remove all projects for workspace first
+      console.log('TO REMOVE');
+      await newVCS.removeProjectsForRoot(project.rootDocumentId);
+      console.log('REMOVED');
+
+      // Set project, checkout master, and pull
       await newVCS.setProject(project);
       await newVCS.checkout([], 'master');
       await newVCS.pull([]); // There won't be any existing docs since it's a new pull
@@ -201,11 +205,17 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       ...other
     } = this.props;
 
-    const { remoteProjects, pullingProjects } = this.state;
+    const { remoteProjects, localProjects, pullingProjects } = this.state;
 
-    const missingRemoteProjects = remoteProjects.filter(
-      ({ rootDocumentId }) => !workspaces.find(w => w._id === rootDocumentId),
-    );
+    const missingRemoteProjects = remoteProjects.filter(({ id, rootDocumentId }) => {
+      const localProjectExists = localProjects.find(p => p.id === id);
+      const workspaceExists = workspaces.find(w => w._id === rootDocumentId);
+
+      // Mark as missing if:
+      //   - the project doesn't yet exists locally
+      //   - the project exists locally but somehow the workspace doesn't anymore
+      return !(workspaceExists && localProjectExists);
+    });
 
     const nonActiveWorkspaces = workspaces
       .filter(w => w._id !== activeWorkspace._id)
