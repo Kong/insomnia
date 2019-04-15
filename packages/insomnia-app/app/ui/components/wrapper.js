@@ -472,15 +472,18 @@ class Wrapper extends React.PureComponent<Props, State> {
             isVariableUncovered={isVariableUncovered}
           />
 
-          <CookiesModal
-            handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
-            handleRender={handleRender}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            ref={registerModal}
-            workspace={activeWorkspace}
-            cookieJar={activeCookieJar}
-            isVariableUncovered={isVariableUncovered}
-          />
+          {/* TODO: Figure out why cookieJar is sometimes null */}
+          {activeCookieJar ? (
+            <CookiesModal
+              handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
+              handleRender={handleRender}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              ref={registerModal}
+              workspace={activeWorkspace}
+              cookieJar={activeCookieJar}
+              isVariableUncovered={isVariableUncovered}
+            />
+          ) : null}
 
           <CookieModifyModal
             handleRender={handleRender}

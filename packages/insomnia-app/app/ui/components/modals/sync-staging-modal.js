@@ -49,7 +49,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   toggleAllInputRef: ?HTMLInputElement;
   modal: ?Modal;
   _onSnapshot: ?() => void;
-  _handlePush: ?() => void;
+  _handlePush: ?() => Promise<void>;
   textarea: ?HTMLTextAreaElement;
 
   state = _initialState;
@@ -112,26 +112,30 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
   }
 
   async _handleTakeSnapshotAndPush() {
-    await this._handleTakeSnapshot();
-    this._handlePush && this._handlePush();
+    const success = await this._handleTakeSnapshot();
+    if (success) {
+      this._handlePush && this._handlePush();
+    }
   }
 
-  async _handleTakeSnapshot() {
+  async _handleTakeSnapshot(): Promise<boolean> {
     const { vcs } = this.props;
     const {
       message,
       status: { stage },
     } = this.state;
+
     try {
       await vcs.takeSnapshot(stage, message);
     } catch (err) {
       this.setState({ error: err.message });
-      return;
+      return false;
     }
 
     this._onSnapshot && this._onSnapshot();
     await this.refreshMainAttributes({ message: '', error: '' });
     this.hide();
+    return true;
   }
 
   async refreshMainAttributes(newState?: Object = {}, newStage?: Stage = {}) {
@@ -177,7 +181,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async show(options: { onSnapshot?: () => any, handlePush: () => any }) {
+  async show(options: { onSnapshot?: () => any, handlePush: () => Promise<void> }) {
     const { vcs, syncItems } = this.props;
 
     this.modal && this.modal.show();
@@ -248,7 +252,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
           <div className="form-group">
             <div className="form-control form-control--outlined">
               <label>
-                Snapshot Name
+                Snapshot Message
                 <textarea
                   ref={this._setTextAreaRef}
                   cols="30"

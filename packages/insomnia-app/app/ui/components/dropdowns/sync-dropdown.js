@@ -19,6 +19,12 @@ import Tooltip from '../tooltip';
 import LoginModal from '../modals/login-modal';
 import * as session from '../../../account/session';
 
+// Stop refreshing if user hasn't been active in this long
+const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
+
+// Refresh dropdown periodically
+const REFRESH_PERIOD = 1000 * 10 * 1;
+
 type Props = {
   workspace: Workspace,
   vcs: VCS,
@@ -46,6 +52,7 @@ type State = {
 class SyncDropdown extends React.PureComponent<Props, State> {
   checkInterval: IntervalID;
   refreshOnNextSyncItems = false;
+  lastUserActivity = Date.now();
 
   constructor(props: Props) {
     super(props);
@@ -100,11 +107,19 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       .catch(err => console.log('[sync_menu] Error refreshing sync state', err))
       .finally(() => this.setState({ initializing: false }));
 
-    this.checkInterval = setInterval(this.refreshMainAttributes, 1000 * 60 * 5);
+    // Refresh but only if the user has been active in the last n minutes
+    this.checkInterval = setInterval(async () => {
+      if (Date.now() - this.lastUserActivity < REFRESH_USER_ACTIVITY) {
+        await this.refreshMainAttributes();
+      }
+    }, REFRESH_PERIOD);
+
+    document.addEventListener('mousemove', this._handleUserActivity);
   }
 
   componentWillUnmount() {
     clearInterval(this.checkInterval);
+    document.removeEventListener('mousemove', this._handleUserActivity);
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -121,6 +136,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         this.refreshOnNextSyncItems = false;
       }
     }
+  }
+
+  _handleUserActivity() {
+    this.lastUserActivity = Date.now();
   }
 
   _handleShowBranchesModal() {

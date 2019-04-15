@@ -1,6 +1,7 @@
 // @flow
 
 import type { BaseDriver } from '../store/drivers/base';
+import path from 'path';
 import clone from 'clone';
 import Store from '../store';
 import crypto from 'crypto';
@@ -364,7 +365,7 @@ export default class VCS {
     const parent: Snapshot | null = await this._getLatestSnapshot(branch.name);
 
     if (!name) {
-      throw new Error('Snapshot must have a name');
+      throw new Error('Snapshot must have a message');
     }
 
     // Ensure there is something on the stage
@@ -464,14 +465,14 @@ export default class VCS {
     const remoteBranchSnapshots = remoteBranch ? remoteBranch.snapshots : [];
     for (; lastMatchingIndex < remoteBranchSnapshots.length; lastMatchingIndex++) {
       if (remoteBranchSnapshots[lastMatchingIndex] !== branch.snapshots[lastMatchingIndex]) {
-        throw new Error('Remote history conflict!');
+        throw new Error('Remote history conflict. Please pull latest changes and try again');
       }
     }
 
     // Get the remaining snapshots to push
     const snapshotIdsToPush = branch.snapshots.slice(lastMatchingIndex);
     if (snapshotIdsToPush.length === 0) {
-      throw new Error('Nothing to push');
+      throw new Error('Already up to date');
     }
 
     // Gather a list of snapshot state entries to push
@@ -511,16 +512,17 @@ export default class VCS {
     const blobsToFetch = new Set();
     const snapshots = await this._querySnapshots(snapshotsToFetch);
     for (const snapshot of snapshots) {
-      for (let i = 0; i < snapshot.state.length; i++) {
-        const entry = snapshot.state[i];
-        const hasBlob = await this._hasBlob(entry.blob);
-        if (!hasBlob) {
-          blobsToFetch.add(entry.blob);
+      for (const { blob } of snapshot.state) {
+        const hasBlob = await this._hasBlob(blob);
+        if (hasBlob) {
+          continue;
         }
+
+        blobsToFetch.add(blob);
       }
     }
 
-    // Store the blobs
+    // Fetch and store the blobs
     const ids = Array.from(blobsToFetch);
     const blobs = await this._queryBlobs(ids);
     await this._storeBlobsBuffer(blobs);
@@ -528,17 +530,10 @@ export default class VCS {
     // Store the snapshots
     await this._storeSnapshots(snapshots);
 
-    const branchDefaults = {
-      name: '',
-      created: new Date(),
-      modified: new Date(),
-      snapshots: [],
-    };
-
-    const branch: Branch = Object.assign(branchDefaults, remoteBranch, {
-      name: localBranchName,
-    });
-
+    // Create the new branch and save it
+    const branch = clone(remoteBranch);
+    branch.created = branch.modified = new Date();
+    branch.name = localBranchName;
     await this._storeBranch(branch);
 
     return branch;
@@ -814,7 +809,7 @@ export default class VCS {
     const symmetricKey = await this._getProjectSymmetricKey();
     const result = {};
 
-    for (const ids of chunkArray(allIds, 30)) {
+    for (const ids of chunkArray(allIds, 50)) {
       const { blobs } = await this._runGraphQL(
         `
       query ($ids: [ID!]!, $projectId: ID!) {
@@ -1111,6 +1106,10 @@ export default class VCS {
     return this._store.getItem(paths.project(this._projectId()));
   }
 
+  async _getProjectById(id: string): Promise<Project | null> {
+    return this._store.getItem(paths.project(id));
+  }
+
   async _getProjectSymmetricKey(): Promise<Object> {
     const { privateKey } = this._assertSession();
     const encSymmetricKey = await this._queryProjectKey();
@@ -1241,18 +1240,14 @@ export default class VCS {
     const basePath = paths.projects();
     const keys = await this._store.keys(basePath, false);
     for (const key of keys) {
-      const o: Object | null = await this._store.getItem(key);
-      if (o === null) {
+      const id = path.basename(key);
+      const p: Project | null = await this._getProjectById(id);
+      if (p === null) {
         // Should never happen
-        throw new Error(`Failed to get item by path ${key}`);
+        throw new Error(`Failed to get project by id '${id}'`);
       }
 
-      // Rough check if it's a project
-      if (!o.name || !o.id) {
-        continue;
-      }
-
-      projects.push(o);
+      projects.push(p);
     }
 
     return projects;
