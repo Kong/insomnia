@@ -4,7 +4,7 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
-import { showModal } from '../modals';
+import { showAlert, showModal } from '../modals';
 import SyncStagingModal from '../modals/sync-staging-modal';
 import { batchModifyDocs } from '../../../common/database';
 import HelpTooltip from '../help-tooltip';
@@ -209,6 +209,21 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     this.refreshOnNextSyncItems = true;
   }
 
+  async _handleRevert() {
+    const { vcs, syncItems } = this.props;
+
+    try {
+      const delta = await vcs.rollbackToLatest(syncItems);
+      await batchModifyDocs(delta);
+    } catch (err) {
+      showModal(ErrorModal, {
+        title: 'Revert Error',
+        error: err,
+        message: 'Failed to revert changes',
+      });
+    }
+  }
+
   _handleShowHistoryModal() {
     showModal(SyncHistoryModal, {
       handleRollback: this._handleRollback,
@@ -221,8 +236,15 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
   async _handleSwitchBranch(branch: string) {
     const { vcs, syncItems } = this.props;
-    const delta = await vcs.checkout(syncItems, branch);
-    await batchModifyDocs(delta);
+    try {
+      const delta = await vcs.checkout(syncItems, branch);
+      await batchModifyDocs(delta);
+    } catch (err) {
+      showAlert({
+        title: 'Branch Switch Error',
+        message: err.message,
+      });
+    }
 
     // We can't refresh now because we won't yet have the new syncItems
     this.refreshOnNextSyncItems = true;
@@ -388,12 +410,15 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
           <DropdownDivider>{currentBranch}</DropdownDivider>
 
-          {historyCount > 0 && (
-            <DropdownItem onClick={this._handleShowHistoryModal}>
-              <i className="fa fa-clock-o" />
-              History
-            </DropdownItem>
-          )}
+          <DropdownItem onClick={this._handleShowHistoryModal} disabled={historyCount === 0}>
+            <i className="fa fa-clock-o" />
+            History
+          </DropdownItem>
+
+          <DropdownItem onClick={this._handleRevert} disabled={!canCreateSnapshot}>
+            <i className="fa fa-undo" />
+            Revert Changes
+          </DropdownItem>
 
           <DropdownItem onClick={this._handleShowStagingModal} disabled={!canCreateSnapshot}>
             <i className="fa fa-cube" />

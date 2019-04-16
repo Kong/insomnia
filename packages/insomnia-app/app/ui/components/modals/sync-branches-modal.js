@@ -267,7 +267,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
                           onPull={this.refreshState}
                           disabled={name === currentBranch}
                           vcs={vcs}>
-                          Checkout
+                          Fetch
                         </SyncPullButton>
                       </td>
                     </tr>

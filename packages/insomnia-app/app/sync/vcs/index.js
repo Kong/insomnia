@@ -242,9 +242,7 @@ export default class VCS {
     // Perform pre-checkout checks
     const { conflicts, dirty } = preMergeCheck(latestStateCurrent, latestStateNext, candidates);
     if (conflicts.length) {
-      throw new Error(
-        'Cannot checkout with current changes. Please create a snapshot before merging',
-      );
+      throw new Error('Please snapshot current changes before switching branches');
     }
 
     await this._storeHead({ branch: branchNext.name });
@@ -288,6 +286,21 @@ export default class VCS {
     }
 
     return this._getBlobs(snapshot.state.map(s => s.blob));
+  }
+
+  async rollbackToLatest(
+    candidates: Array<StatusCandidate>,
+  ): Promise<{
+    upsert: Array<Object>,
+    remove: Array<Object>,
+  }> {
+    const branch = await this._getCurrentBranch();
+    const latestSnapshot = await this._getLatestSnapshot(branch.name);
+    if (!latestSnapshot) {
+      throw new Error('No snapshots to rollback to');
+    }
+
+    return this.rollback(latestSnapshot.id, candidates);
   }
 
   async rollback(
@@ -594,7 +607,7 @@ export default class VCS {
 
     if (preConflicts.length) {
       console.log('[sync] Merge failed', preConflicts);
-      throw new Error('Cannot merge with current changes. Please create a snapshot before merging');
+      throw new Error('Please snapshot current changes before merging');
     }
 
     const shouldDoNothing1 = latestSnapshotOther && latestSnapshotOther.id === rootSnapshotId;
