@@ -82,23 +82,24 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const historyCount = await vcs.getHistoryCount();
     const status = await vcs.status(syncItems, {});
 
-    this.setState({
+    const newState = {
       status,
       historyCount,
       localBranches,
       currentBranch,
       ...extraState,
-    });
+    };
 
     // Do the remote stuff
     if (session.isLoggedIn()) {
       try {
-        const compare = await vcs.compareRemoteBranch();
-        this.setState({ compare });
+        newState.compare = await vcs.compareRemoteBranch();
       } catch (err) {
         console.log('Failed to compare remote branches', err.message);
       }
     }
+
+    this.setState(newState);
   }
 
   componentDidMount() {
@@ -351,9 +352,9 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   render() {
-    // if (!session.isLoggedIn()) {
-    //   return null;
-    // }
+    if (!session.isLoggedIn()) {
+      return null;
+    }
 
     const { className } = this.props;
     const {

@@ -59,6 +59,10 @@ export default class VCS {
     this._project = null;
   }
 
+  currentProjectId(): string | null {
+    return this._project ? this._project.id : null;
+  }
+
   newInstance(): VCS {
     const newVCS: VCS = (Object.assign({}, this): any);
     Object.setPrototypeOf(newVCS, VCS.prototype);

@@ -74,10 +74,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleDropdownOpen() {
-    this._loadRemoteWorkspaces();
+    this._refreshRemoteWorkspaces();
   }
 
-  async _loadRemoteWorkspaces() {
+  async _refreshRemoteWorkspaces() {
     const { vcs } = this.props;
     if (!vcs) {
       return;
@@ -107,9 +107,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       const newVCS = vcs.newInstance();
 
       // Remove all projects for workspace first
-      console.log('TO REMOVE');
       await newVCS.removeProjectsForRoot(project.rootDocumentId);
-      console.log('REMOVED');
 
       // Set project, checkout master, and pull
       await newVCS.setProject(project);
@@ -121,6 +119,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
         await db.upsert(doc);
       }
       await db.flushChanges(flushId);
+
+      // handleSetActiveWorkspace(project.rootDocumentId);
+      vcs.setProject(project);
+      await this._refreshRemoteWorkspaces();
     } catch (err) {
       this._dropdown && this._dropdown.hide();
       showAlert({
@@ -184,12 +186,12 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
   componentDidUpdate(prevProps: Props) {
     // Reload workspaces if we just got a new VCS instance
     if (this.props.vcs && !prevProps.vcs) {
-      this._loadRemoteWorkspaces();
+      this._refreshRemoteWorkspaces();
     }
   }
 
   componentDidMount() {
-    this._loadRemoteWorkspaces();
+    this._refreshRemoteWorkspaces();
   }
 
   render() {
