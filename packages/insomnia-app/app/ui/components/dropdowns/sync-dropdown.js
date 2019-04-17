@@ -23,7 +23,7 @@ import * as session from '../../../account/session';
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
 
 // Refresh dropdown periodically
-const REFRESH_PERIOD = 1000 * 10 * 1;
+const REFRESH_PERIOD = 1000 * 60 * 1;
 
 type Props = {
   workspace: Workspace,
@@ -416,7 +416,9 @@ class SyncDropdown extends React.PureComponent<Props, State> {
             History
           </DropdownItem>
 
-          <DropdownItem onClick={this._handleRevert} disabled={!canCreateSnapshot}>
+          <DropdownItem
+            onClick={this._handleRevert}
+            disabled={!canCreateSnapshot || historyCount === 0}>
             <i className="fa fa-undo" />
             Revert Changes
           </DropdownItem>

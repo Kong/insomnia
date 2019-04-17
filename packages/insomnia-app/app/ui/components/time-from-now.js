@@ -6,6 +6,7 @@ import moment from 'moment';
 type Props = {
   timestamp: number | Date | string,
   intervalSeconds?: number,
+  className?: string,
 };
 
 type State = {
@@ -40,7 +41,13 @@ class TimeFromNow extends React.PureComponent<Props, State> {
   }
 
   render() {
-    return <span title={moment(this.props.timestamp).toString()}>{this.state.text}</span>;
+    const { className, timestamp } = this.props;
+    const { text } = this.state;
+    return (
+      <span title={moment(timestamp).toString()} className={className}>
+        {text}
+      </span>
+    );
   }
 }
 

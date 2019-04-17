@@ -9,11 +9,11 @@ export function projectBase(projectId: string): string {
 }
 
 export function head(projectId: string): string {
-  return `${projectBase(projectId)}head`;
+  return `${projectBase(projectId)}head.json`;
 }
 
 export function project(projectId: string): string {
-  return `${projectBase(projectId)}meta`;
+  return `${projectBase(projectId)}meta.json`;
 }
 
 export function blobs(projectId: string): string {
@@ -30,7 +30,7 @@ export function snapshots(projectId: string): string {
 }
 
 export function snapshot(projectId: string, snapshotId: string): string {
-  return `${snapshots(projectId)}${snapshotId}`;
+  return `${snapshots(projectId)}${snapshotId}.json`;
 }
 
 export function branches(projectId: string): string {
@@ -38,5 +38,5 @@ export function branches(projectId: string): string {
 }
 
 export function branch(projectId: string, branchName: string): string {
-  return `${branches(projectId)}${branchName}`;
+  return `${branches(projectId)}${branchName}.json`;
 }

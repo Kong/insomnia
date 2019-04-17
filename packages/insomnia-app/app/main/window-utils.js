@@ -162,7 +162,7 @@ export function createWindow() {
       },
       {
         label: `Zoom ${MNEMONIC_SYM}In`,
-        accelerator: isMac() ? 'CmdOrCtrl+Plus' : 'CmdOrCtrl+=',
+        accelerator: 'CmdOrCtrl+=',
         click: () => {
           const w = BrowserWindow.getFocusedWindow();
           if (!w || !w.webContents) {

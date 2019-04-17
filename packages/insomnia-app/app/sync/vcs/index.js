@@ -377,18 +377,8 @@ export default class VCS {
   }
 
   async getBranches(): Promise<Array<string>> {
-    const branches = [];
-    for (const p of await this._store.keys(paths.branches(this._projectId()))) {
-      const b = await this._store.getItem(p);
-      if (b === null) {
-        // Should never happen
-        throw new Error(`Failed to get branch path=${p}`);
-      }
-
-      branches.push(b.name);
-    }
-
-    return branches;
+    const branches = await this._getBranches();
+    return branches.map(b => b.name);
   }
 
   async merge(
@@ -1161,7 +1151,7 @@ export default class VCS {
   async _assertProject(): Promise<Project> {
     const project = await this._getProject();
     if (project === null) {
-      throw new Error('Failed to get project id=' + this._projectId());
+      throw new Error('Failed to find local project id=' + this._projectId());
     }
 
     return project;
@@ -1221,9 +1211,26 @@ export default class VCS {
     return this._project.id;
   }
 
-  async _getBranch(name: string): Promise<Branch | null> {
-    const p = paths.branch(this._projectId(), name);
+  async _getBranch(name: string, projectId?: string): Promise<Branch | null> {
+    const pId = projectId || this._projectId();
+    const p = paths.branch(pId, name);
     return this._store.getItem(p);
+  }
+
+  async _getBranches(projectId?: string): Promise<Array<Branch>> {
+    const branches = [];
+    const pId = projectId || this._projectId();
+    for (const p of await this._store.keys(paths.branches(pId))) {
+      const b = await this._store.getItem(p);
+      if (b === null) {
+        // Should never happen
+        throw new Error(`Failed to get branch path=${p}`);
+      }
+
+      branches.push(b);
+    }
+
+    return branches;
   }
 
   async _getOrCreateBranch(name: string): Promise<Branch> {
@@ -1258,7 +1265,21 @@ export default class VCS {
 
     // First, try finding the project
     const projects = await this._allProjects();
-    const matchedProjects = projects.filter(p => p.rootDocumentId === rootDocumentId);
+    let matchedProjects = projects.filter(p => p.rootDocumentId === rootDocumentId);
+
+    // If there is more than one project for root, try pruning unused ones by branch activity
+    if (matchedProjects.length > 1) {
+      for (const p of matchedProjects) {
+        const branches = await this._getBranches(p.id);
+        if (!branches.find(b => b.snapshots.length > 0)) {
+          await this._removeProject(p);
+          matchedProjects = matchedProjects.filter(({ id }) => id !== p.id);
+          console.log(`[sync] Remove inactive project for root ${rootDocumentId}`);
+        }
+      }
+    }
+
+    // If there are still too many, error out
     if (matchedProjects.length > 1) {
       console.log('[sync] Multiple projects matched for root', {
         projects,
@@ -1268,8 +1289,9 @@ export default class VCS {
       throw new Error('More than one project matched query');
     }
 
-    let project: Project | null = matchedProjects[0];
+    let project: Project | null = matchedProjects[0] || null;
 
+    // If we still don't have a project, create one
     if (!project) {
       const id = generateId('prj');
       project = { id, name, rootDocumentId };

@@ -134,6 +134,7 @@ class Modal extends PureComponent {
     if (open) {
       styles.zIndex = zIndex;
     }
+    console.log('OPEN', open);
 
     return (
       <KeydownBinder stopMetaPropagation scoped onKeydown={this._handleKeyDown}>
@@ -142,6 +143,7 @@ class Modal extends PureComponent {
           tabIndex="-1"
           className={classes}
           style={styles}
+          aria-hidden={!open}
           onClick={this._handleClick}>
           <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
           <div className="modal__content__wrapper">

@@ -35,6 +35,7 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
 
   _handleOk() {
     this._handleDone(this.state.conflicts);
+    this.hide();
   }
 
   _handleToggleSelect(key: DocumentKey, e: SyntheticEvent<HTMLInputElement>) {

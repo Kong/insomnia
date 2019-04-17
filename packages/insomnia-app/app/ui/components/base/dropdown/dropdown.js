@@ -350,7 +350,11 @@ class Dropdown extends PureComponent {
       finalChildren = [
         dropdownButtons[0],
         ReactDOM.createPortal(
-          <div key="item" className={menuClasses} ref={this._addDropdownMenuRef}>
+          <div
+            key="item"
+            className={menuClasses}
+            ref={this._addDropdownMenuRef}
+            aria-hidden={!open}>
             <div className="dropdown__backdrop theme--transparent-overlay" />
             <div
               key={uniquenessKey}

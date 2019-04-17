@@ -98,7 +98,11 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
                     </Tooltip>
                   </td>
                   <td>
-                    <TimeFromNow timestamp={snapshot.created} intervalSeconds={30} />
+                    <TimeFromNow
+                      className="no-wrap"
+                      timestamp={snapshot.created}
+                      intervalSeconds={30}
+                    />
                   </td>
                   <td className="text-right">{snapshot.state.length}</td>
                   <td className="text-right">
