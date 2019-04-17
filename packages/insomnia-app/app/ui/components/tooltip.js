@@ -28,6 +28,7 @@ class Tooltip extends React.PureComponent<Props, State> {
   // TODO: Figure out what type these should be
   _tooltip: ?HTMLDivElement;
   _bubble: ?HTMLDivElement;
+  _id: string;
 
   constructor(props: any) {
     super(props);
@@ -41,6 +42,8 @@ class Tooltip extends React.PureComponent<Props, State> {
       maxHeight: null,
       visible: false,
     };
+
+    this._id = Math.random() + '';
   }
 
   _setTooltipRef(n: ?HTMLDivElement) {
@@ -174,9 +177,16 @@ class Tooltip extends React.PureComponent<Props, State> {
       <div
         className={tooltipClasses}
         ref={this._setTooltipRef}
+        id={this._id}
         onMouseEnter={this._handleMouseEnter}
         onMouseLeave={this._handleMouseLeave}>
-        <div className={bubbleClasses} onClick={this._handleStopClick} ref={this._setBubbleRef}>
+        <div
+          className={bubbleClasses}
+          onClick={this._handleStopClick}
+          role="tooltip"
+          aria-hidden={!visible}
+          aria-describedby={this._id}
+          ref={this._setBubbleRef}>
           {message}
         </div>
         {children}
