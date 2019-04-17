@@ -10,7 +10,8 @@ import { showModal } from '../modals/index';
 import FilterHelpModal from '../modals/filter-help-modal';
 import * as misc from '../../../common/misc';
 import prettify from 'insomnia-prettify';
-import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
+import { DEBOUNCE_MILLIS, EDITOR_KEY_MAP_VIM, isMac } from '../../../common/constants';
+import keyCodes from '../../../common/keycodes';
 import './base-imports';
 import { getTagDefinitions } from '../../../templating/index';
 import Dropdown from '../base/dropdown/dropdown';
@@ -287,6 +288,7 @@ class CodeEditor extends React.Component {
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorPaste);
     this.codeMirror.on('scroll', this._codemirrorScroll);
+    this.codeMirror.on('keyHandled', this._codemirrorKeyHandled);
 
     // Prevent these things if we're type === "password"
     this.codeMirror.on('copy', this._codemirrorPreventWhenTypePassword);
@@ -662,6 +664,18 @@ class CodeEditor extends React.Component {
 
   _codemirrorScroll() {
     this._persistState();
+  }
+
+  _codemirrorKeyHandled(codeMirror, keyName, event) {
+    const { keyMap } = this.props;
+    const { keyCode } = event;
+
+    const isVimKeyMap = keyMap === EDITOR_KEY_MAP_VIM;
+    const pressedEscape = keyCode === keyCodes.esc;
+
+    if (isVimKeyMap && pressedEscape) {
+      event.stopPropagation();
+    }
   }
 
   _codemirrorValueBeforeChange(doc, change) {

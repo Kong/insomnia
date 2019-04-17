@@ -6,9 +6,10 @@ import StatusTag from '../tags/status-tag';
 import URLTag from '../tags/url-tag';
 import PromptButton from '../base/prompt-button';
 import KeydownBinder from '../keydown-binder';
-import * as hotkeys from '../../../common/hotkeys';
 import TimeTag from '../tags/time-tag';
 import SizeTag from '../tags/size-tag';
+import { executeHotKey } from '../../../common/hotkeys-listener';
+import { hotKeyRefs } from '../../../common/hotkeys';
 
 @autobind
 class ResponseHistoryDropdown extends PureComponent {
@@ -29,7 +30,7 @@ class ResponseHistoryDropdown extends PureComponent {
   }
 
   _handleKeydown(e) {
-    hotkeys.executeHotKey(e, hotkeys.TOGGLE_HISTORY_DROPDOWN, () => {
+    executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
   }

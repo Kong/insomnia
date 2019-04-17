@@ -29,8 +29,8 @@ import { showModal } from './modals/index';
 import RequestSettingsModal from './modals/request-settings-modal';
 import MarkdownPreview from './markdown-preview';
 import type { Settings } from '../../models/settings';
-import * as hotkeys from '../../common/hotkeys';
 import ErrorBoundary from './error-boundary';
+import { hotKeyRefs } from '../../common/hotkeys';
 
 type Props = {
   // Functions
@@ -171,38 +171,42 @@ class RequestPane extends React.PureComponent<Props> {
     const paneHeaderClasses = 'pane__header theme--pane__header';
     const paneBodyClasses = 'pane__body theme--pane__body';
 
+    const hotKeyRegistry = settings.hotKeyRegistry;
+
     if (!request) {
       return (
         <section className={paneClasses}>
-          <header className={paneHeaderClasses}/>
+          <header className={paneHeaderClasses} />
           <div className={paneBodyClasses + ' pane__body--placeholder'}>
             <div>
               <table className="table--fancy">
                 <tbody>
-                <tr>
-                  <td>New Request</td>
-                  <td className="text-right">
-                    <code>
-                      <Hotkey hotkey={hotkeys.CREATE_REQUEST}/>
-                    </code>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Switch Requests</td>
-                  <td className="text-right">
-                    <code>
-                      <Hotkey hotkey={hotkeys.SHOW_QUICK_SWITCHER}/>
-                    </code>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Edit Environments</td>
-                  <td className="text-right">
-                    <code>
-                      <Hotkey hotkey={hotkeys.SHOW_ENVIRONMENTS}/>
-                    </code>
-                  </td>
-                </tr>
+                  <tr>
+                    <td>New Request</td>
+                    <td className="text-right">
+                      <code>
+                        <Hotkey keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]} />
+                      </code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Switch Requests</td>
+                    <td className="text-right">
+                      <code>
+                        <Hotkey keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_QUICK_SWITCH.id]} />
+                      </code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Edit Environments</td>
+                    <td className="text-right">
+                      <code>
+                        <Hotkey
+                          keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]}
+                        />
+                      </code>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
 
@@ -251,6 +255,7 @@ class RequestPane extends React.PureComponent<Props> {
               isVariableUncovered={isVariableUncovered}
               handleGetRenderContext={handleGetRenderContext}
               request={request}
+              hotKeyRegistry={settings.hotKeyRegistry}
             />
           </ErrorBoundary>
         </header>
@@ -266,7 +271,7 @@ class RequestPane extends React.PureComponent<Props> {
                   ? getContentTypeName(request.body.mimeType)
                   : 'Body'}
                 {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
-                <i className="fa fa-caret-down space-left"/>
+                <i className="fa fa-caret-down space-left" />
               </ContentTypeDropdown>
             </Tab>
             <Tab tabIndex="-1">
@@ -275,7 +280,7 @@ class RequestPane extends React.PureComponent<Props> {
                 request={request}
                 className="tall">
                 {getAuthTypeName(request.authentication.type) || 'Auth'}
-                <i className="fa fa-caret-down space-left"/>
+                <i className="fa fa-caret-down space-left" />
               </AuthDropdown>
             </Tab>
             <Tab tabIndex="-1">
@@ -295,7 +300,7 @@ class RequestPane extends React.PureComponent<Props> {
                 Docs
                 {request.description && (
                   <span className="bubble space-left">
-                    <i className="fa fa--skinny fa-check txt-xxs"/>
+                    <i className="fa fa--skinny fa-check txt-xxs" />
                   </span>
                 )}
               </button>
@@ -341,7 +346,7 @@ class RequestPane extends React.PureComponent<Props> {
                 <ErrorBoundary
                   key={uniqueKey}
                   errorClassName="tall wide vertically-align font-error pad text-center">
-                  <RenderedQueryString handleRender={handleRender} request={request}/>
+                  <RenderedQueryString handleRender={handleRender} request={request} />
                 </ErrorBoundary>
               </code>
             </div>
@@ -419,10 +424,10 @@ class RequestPane extends React.PureComponent<Props> {
               <div className="overflow-hidden editor vertically-center text-center">
                 <p className="pad text-sm text-center">
                   <span className="super-faint">
-                    <i className="fa fa-file-text-o" style={{ fontSize: '8rem', opacity: 0.3 }}/>
+                    <i className="fa fa-file-text-o" style={{ fontSize: '8rem', opacity: 0.3 }} />
                   </span>
-                  <br/>
-                  <br/>
+                  <br />
+                  <br />
                   <button
                     className="btn btn--clicky faint"
                     onClick={this._handleEditDescriptionAdd}>

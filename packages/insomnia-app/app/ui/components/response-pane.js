@@ -24,8 +24,9 @@ import { PREVIEW_MODE_SOURCE } from '../../common/constants';
 import { getSetCookieHeaders, nullFn } from '../../common/misc';
 import { cancelCurrentRequest } from '../../network/network';
 import Hotkey from './hotkey';
-import * as hotkeys from '../../common/hotkeys';
 import ErrorBoundary from './error-boundary';
+import type { HotKeyRegistry } from '../../common/hotkeys';
+import { hotKeyRefs } from '../../common/hotkeys';
 
 type Props = {
   // Functions
@@ -47,6 +48,7 @@ type Props = {
   editorLineWrapping: boolean,
   loadStartTime: number,
   responses: Array<Response>,
+  hotKeyRegistry: HotKeyRegistry,
 
   // Other
   request: ?Request,
@@ -170,6 +172,7 @@ class ResponsePane extends React.PureComponent<Props> {
       filter,
       filterHistory,
       showCookiesModal,
+      hotKeyRegistry,
     } = this.props;
 
     const paneClasses = 'response-pane theme--pane pane';
@@ -197,7 +200,7 @@ class ResponsePane extends React.PureComponent<Props> {
                     <td>Send Request</td>
                     <td className="text-right">
                       <code>
-                        <Hotkey hotkey={hotkeys.SEND_REQUEST} />
+                        <Hotkey keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]} />
                       </code>
                     </td>
                   </tr>
@@ -205,7 +208,7 @@ class ResponsePane extends React.PureComponent<Props> {
                     <td>Focus Url Bar</td>
                     <td className="text-right">
                       <code>
-                        <Hotkey hotkey={hotkeys.FOCUS_URL} />
+                        <Hotkey keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_FOCUS_URL.id]} />
                       </code>
                     </td>
                   </tr>
@@ -213,7 +216,7 @@ class ResponsePane extends React.PureComponent<Props> {
                     <td>Manage Cookies</td>
                     <td className="text-right">
                       <code>
-                        <Hotkey hotkey={hotkeys.SHOW_COOKIES} />
+                        <Hotkey keyBindings={hotKeyRegistry[hotKeyRefs.SHOW_COOKIES_EDITOR.id]} />
                       </code>
                     </td>
                   </tr>
@@ -221,7 +224,9 @@ class ResponsePane extends React.PureComponent<Props> {
                     <td>Edit Environments</td>
                     <td className="text-right">
                       <code>
-                        <Hotkey hotkey={hotkeys.SHOW_ENVIRONMENTS} />
+                        <Hotkey
+                          keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]}
+                        />
                       </code>
                     </td>
                   </tr>
