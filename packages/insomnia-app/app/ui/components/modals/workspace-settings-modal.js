@@ -237,7 +237,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
             </button>
             <PromptButton
               className="btn btn--super-compact width-auto"
-              confirmMessage=" "
+              confirmMessage=""
               addIcon
               onClick={() => WorkspaceSettingsModal._handleDeleteCertificate(certificate)}>
               <i className="fa fa-trash-o" />

@@ -11,17 +11,19 @@ import {
 } from '../base/dropdown';
 import { showModal } from '../modals/index';
 import Tooltip from '../tooltip';
-import * as hotkeys from '../../../common/hotkeys';
 import KeydownBinder from '../keydown-binder';
 import type { Workspace } from '../../../models/workspace';
 import type { Environment } from '../../../models/environment';
+import type { HotKeyRegistry } from '../../../common/hotkeys';
+import { hotKeyRefs } from '../../../common/hotkeys';
+import { executeHotKey } from '../../../common/hotkeys-listener';
 
 type Props = {
-  workspace: Workspace,
   handleChangeEnvironment: Function,
   workspace: Workspace,
   environments: Array<Environment>,
   environmentHighlightColorStyle: String,
+  hotKeyRegistry: HotKeyRegistry,
 
   // Optional
   className?: string,
@@ -57,7 +59,7 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
   }
 
   _handleKeydown(e: KeyboardEvent) {
-    hotkeys.executeHotKey(e, hotkeys.TOGGLE_ENVIRONMENTS_MENU, () => {
+    executeHotKey(e, hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
   }
@@ -69,6 +71,7 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
       environments,
       activeEnvironment,
       environmentHighlightColorStyle,
+      hotKeyRegistry,
       ...other
     } = this.props;
 
@@ -90,15 +93,14 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
         <Dropdown ref={this._setDropdownRef} {...other} className={className}>
           <DropdownButton className="btn btn--super-compact no-wrap">
             <div className="sidebar__menu__thing">
-              {!activeEnvironment &&
-                subEnvironments.length > 0 && (
-                  <Tooltip
-                    message="No environments active. Please select one to use."
-                    className="space-right"
-                    position="right">
-                    <i className="fa fa-exclamation-triangle notice" />
-                  </Tooltip>
-                )}
+              {!activeEnvironment && subEnvironments.length > 0 && (
+                <Tooltip
+                  message="No environments active. Please select one to use."
+                  className="space-right"
+                  position="right">
+                  <i className="fa fa-exclamation-triangle notice" />
+                </Tooltip>
+              )}
               <div className="sidebar__menu__thing__text">
                 {activeEnvironment &&
                 activeEnvironment.color &&
@@ -125,7 +127,7 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
 
           <DropdownItem onClick={this._handleShowEnvironmentModal}>
             <i className="fa fa-wrench" /> Manage Environments
-            <DropdownHint hotkey={hotkeys.SHOW_ENVIRONMENTS} />
+            <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]} />
           </DropdownItem>
         </Dropdown>
       </KeydownBinder>

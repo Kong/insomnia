@@ -150,27 +150,27 @@ export function createWindow() {
         label: `${MNEMONIC_SYM}Actual Size`,
         accelerator: 'CmdOrCtrl+0',
         click: () => {
-          const window = BrowserWindow.getFocusedWindow();
-          if (!window || !window.webContents) {
+          const w = BrowserWindow.getFocusedWindow();
+          if (!w || !w.webContents) {
             return;
           }
 
           const zoomFactor = 1;
-          window.webContents.setZoomFactor(zoomFactor);
+          w.webContents.setZoomFactor(zoomFactor);
           saveZoomFactor(zoomFactor);
         },
       },
       {
         label: `Zoom ${MNEMONIC_SYM}In`,
-        accelerator: isMac() ? 'CmdOrCtrl+Plus' : 'CmdOrCtrl+=',
+        accelerator: 'CmdOrCtrl+=',
         click: () => {
-          const window = BrowserWindow.getFocusedWindow();
-          if (!window || !window.webContents) {
+          const w = BrowserWindow.getFocusedWindow();
+          if (!w || !w.webContents) {
             return;
           }
 
           const zoomFactor = Math.min(1.8, getZoomFactor() + 0.05);
-          window.webContents.setZoomFactor(zoomFactor);
+          w.webContents.setZoomFactor(zoomFactor);
 
           saveZoomFactor(zoomFactor);
         },
@@ -179,13 +179,13 @@ export function createWindow() {
         label: `Zoom ${MNEMONIC_SYM}Out`,
         accelerator: 'CmdOrCtrl+-',
         click: () => {
-          const window = BrowserWindow.getFocusedWindow();
-          if (!window || !window.webContents) {
+          const w = BrowserWindow.getFocusedWindow();
+          if (!w || !w.webContents) {
             return;
           }
 
           const zoomFactor = Math.max(0.5, getZoomFactor() - 0.05);
-          window.webContents.setZoomFactor(zoomFactor);
+          w.webContents.setZoomFactor(zoomFactor);
           saveZoomFactor(zoomFactor);
         },
       },
@@ -193,12 +193,12 @@ export function createWindow() {
         label: `Toggle ${MNEMONIC_SYM}Sidebar`,
         accelerator: 'CmdOrCtrl+\\',
         click: () => {
-          const window = BrowserWindow.getFocusedWindow();
-          if (!window || !window.webContents) {
+          const w = BrowserWindow.getFocusedWindow();
+          if (!w || !w.webContents) {
             return;
           }
 
-          window.webContents.send('toggle-sidebar');
+          w.webContents.send('toggle-sidebar');
         },
       },
       {
@@ -231,16 +231,16 @@ export function createWindow() {
       {
         label: `${MNEMONIC_SYM}Keyboard Shortcuts`,
         accelerator: 'CmdOrCtrl+Shift+?',
-        click: (menuItem, window, e) => {
-          if (!window || !window.webContents) {
+        click: (menuItem, w, e) => {
+          if (!w || !w.webContents) {
             return;
           }
-          window.webContents.send('toggle-preferences-shortcuts');
+          w.webContents.send('toggle-preferences-shortcuts');
         },
       },
       {
         label: `Show App ${MNEMONIC_SYM}Data Folder`,
-        click: (menuItem, window, e) => {
+        click: (menuItem, w, e) => {
           const directory = misc.getDataDirectory();
           shell.showItemInFolder(directory);
         },
@@ -321,12 +321,12 @@ export function createWindow() {
         label: `${MNEMONIC_SYM}Reload Plugins`,
         accelerator: 'CmdOrCtrl+Shift+R',
         click: () => {
-          const window = BrowserWindow.getFocusedWindow();
-          if (!window || !window.webContents) {
+          const w = BrowserWindow.getFocusedWindow();
+          if (!w || !w.webContents) {
             return;
           }
 
-          window.webContents.send('reload-plugins');
+          w.webContents.send('reload-plugins');
         },
       },
     ],

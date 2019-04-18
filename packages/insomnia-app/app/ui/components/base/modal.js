@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import KeydownBinder from '../keydown-binder';
-import * as hotkeys from '../../../common/hotkeys';
+import { hotKeyRefs } from '../../../common/hotkeys';
+import { pressedHotKey } from '../../../common/hotkeys-listener';
 
 // Keep global z-index reference so that every modal will
 // appear over top of an existing one.
@@ -21,7 +22,7 @@ class Modal extends PureComponent {
     };
   }
 
-  _handleKeyDown(e) {
+  async _handleKeyDown(e) {
     if (!this.state.open) {
       return;
     }
@@ -32,7 +33,7 @@ class Modal extends PureComponent {
     }
 
     const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
-    const pressedEscape = hotkeys.pressedHotKey(e, hotkeys.CLOSE_MODAL);
+    const pressedEscape = await pressedHotKey(e, hotKeyRefs.CLOSE_MODAL);
     const pressedCloseButton = closeOnKeyCodes.find(c => c === e.keyCode);
 
     // Pressed escape
@@ -74,7 +75,7 @@ class Modal extends PureComponent {
     this._node = n;
   }
 
-  show() {
+  show(options) {
     const { freshState } = this.props;
     const { forceRefreshCounter } = this.state;
 
@@ -87,6 +88,9 @@ class Modal extends PureComponent {
     if (this.props.dontFocus) {
       return;
     }
+
+    // Allow instance-based onHide method
+    this.onHide = options ? options.onHide : null;
 
     setTimeout(() => this._node && this._node.focus());
   }
@@ -106,6 +110,7 @@ class Modal extends PureComponent {
   hide() {
     this.setState({ open: false });
     this.props.onHide && this.props.onHide();
+    this.onHide && this.onHide();
   }
 
   render() {
@@ -129,6 +134,7 @@ class Modal extends PureComponent {
     if (open) {
       styles.zIndex = zIndex;
     }
+    console.log('OPEN', open);
 
     return (
       <KeydownBinder stopMetaPropagation scoped onKeydown={this._handleKeyDown}>
@@ -137,6 +143,7 @@ class Modal extends PureComponent {
           tabIndex="-1"
           className={classes}
           style={styles}
+          aria-hidden={!open}
           onClick={this._handleClick}>
           <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
           <div className="modal__content__wrapper">

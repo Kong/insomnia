@@ -1,7 +1,7 @@
 // @flow
 import {
   exportWorkspacesHAR,
-  exportWorkspacesJSON,
+  exportWorkspacesData,
   importRaw,
   importUri,
 } from '../../common/import';
@@ -17,9 +17,11 @@ export function init(): { import: Object, export: Object } {
       },
     },
     export: {
-      async insomnia(options: { includePrivate?: boolean } = {}): Promise<string> {
+      async insomnia(
+        options: { includePrivate?: boolean, format?: 'json' | 'yaml' } = {},
+      ): Promise<string> {
         options = options || {};
-        return exportWorkspacesJSON(null, options.includePrivate);
+        return exportWorkspacesData(null, options.includePrivate, options.format || 'json');
       },
       async har(options: { includePrivate?: boolean } = {}): Promise<string> {
         return exportWorkspacesHAR(null, options.includePrivate);

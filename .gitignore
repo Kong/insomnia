@@ -24,3 +24,7 @@ node_modules/
 .DS_Store
 *test-plugins
 .vscode
+graphql.config.json
+.cache
+.graphqlconfig
+schema.graphql

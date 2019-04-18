@@ -2,6 +2,7 @@ import * as models from '../../models';
 import * as importUtil from '../import';
 import { getAppVersion } from '../constants';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import YAML from 'yaml';
 
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(globalBeforeEach);
@@ -174,7 +175,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   });
 });
 
-describe('exportWorkspacesJSON() and exportRequestsJSON()', () => {
+describe('export', () => {
   beforeEach(globalBeforeEach);
   it('exports all workspaces and some requests only', async () => {
     const w = await models.workspace.create({ name: 'Workspace' });
@@ -203,9 +204,15 @@ describe('exportWorkspacesJSON() and exportRequestsJSON()', () => {
     });
 
     // Test export whole workspace.
-    const exportedWorkspacesJson = await importUtil.exportWorkspacesJSON();
-    const exportWorkspacesData = JSON.parse(exportedWorkspacesJson);
-    expect(exportWorkspacesData).toMatchObject({
+    const exportedWorkspacesJson = await importUtil.exportWorkspacesData(null, false, 'json');
+    const exportedWorkspacesYaml = await importUtil.exportWorkspacesData(null, false, 'yaml');
+    const exportWorkspacesDataJson = JSON.parse(exportedWorkspacesJson);
+    const exportWorkspacesDataYaml = YAML.parse(exportedWorkspacesYaml);
+
+    // Ensure JSON is the same as YAML
+    expect(exportWorkspacesDataJson.resources).toEqual(exportWorkspacesDataYaml.resources);
+
+    expect(exportWorkspacesDataJson).toMatchObject({
       _type: 'export',
       __export_format: 3,
       __export_date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/),
@@ -220,7 +227,7 @@ describe('exportWorkspacesJSON() and exportRequestsJSON()', () => {
         expect.objectContaining({ _id: ePub._id }),
       ]),
     });
-    expect(exportWorkspacesData.resources.length).toBe(7);
+    expect(exportWorkspacesDataJson.resources.length).toBe(7);
 
     // Test export some requests only.
     const exportRequestsJson = await importUtil.exportRequestsJSON([r1]);

@@ -7,13 +7,13 @@ import * as models from '../models/index';
 import { getAppVersion } from './constants';
 import { showModal } from '../ui/components/modals/index';
 import AlertModal from '../ui/components/modals/alert-modal';
-import * as fetch from './fetch';
 import fs from 'fs';
 import type { Workspace } from '../models/workspace';
 import type { Environment } from '../models/environment';
 import { fnOrString, generateId } from './misc';
+import YAML from 'yaml';
 
-const EXPORT_FORMAT = 3;
+const EXPORT_FORMAT = 4;
 
 const EXPORT_TYPE_REQUEST = 'request';
 const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
@@ -35,7 +35,7 @@ const MODELS = {
 export async function importUri(workspaceId: string | null, uri: string): Promise<void> {
   let rawText;
   if (uri.match(/^(http|https):\/\//)) {
-    const response = await fetch.rawFetch(uri);
+    const response = await window.fetch(uri);
     rawText = await response.text();
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
@@ -249,18 +249,20 @@ export async function exportRequestsHAR(
   return JSON.stringify(data, null, '\t');
 }
 
-export async function exportWorkspacesJSON(
-  parentDoc: BaseModel | null = null,
-  includePrivateDocs: boolean = false,
+export async function exportWorkspacesData(
+  parentDoc: BaseModel | null,
+  includePrivateDocs: boolean,
+  format: 'json' | 'yaml',
 ): Promise<string> {
   const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
   const requests: Array<BaseModel> = docs.filter(doc => doc.type === models.request.type);
-  return exportRequestsJSON(requests, includePrivateDocs);
+  return exportRequestsData(requests, includePrivateDocs, format);
 }
 
-export async function exportRequestsJSON(
+export async function exportRequestsData(
   requests: Array<BaseModel>,
-  includePrivateDocs: boolean = false,
+  includePrivateDocs: boolean,
+  format: 'json' | 'yaml',
 ): Promise<string> {
   const data = {
     _type: 'export',
@@ -331,7 +333,13 @@ export async function exportRequestsJSON(
       return d;
     });
 
-  return JSON.stringify(data, null, '\t');
+  if (format.toLowerCase() === 'yaml') {
+    return YAML.stringify(data);
+  } else if (format.toLowerCase() === 'json') {
+    return JSON.stringify(data);
+  } else {
+    throw new Error(`Invalid export format ${format}. Must be "json" or "yaml"`);
+  }
 }
 
 async function getDocWithDescendants(

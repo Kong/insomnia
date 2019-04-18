@@ -6,6 +6,7 @@ export const name = 'PluginData';
 export const type = 'PluginData';
 export const prefix = 'plg';
 export const canDuplicate = false;
+export const canSync = false;
 
 type BasePluginData = {
   plugin: string,

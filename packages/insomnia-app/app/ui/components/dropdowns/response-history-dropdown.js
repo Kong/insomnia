@@ -6,9 +6,10 @@ import StatusTag from '../tags/status-tag';
 import URLTag from '../tags/url-tag';
 import PromptButton from '../base/prompt-button';
 import KeydownBinder from '../keydown-binder';
-import * as hotkeys from '../../../common/hotkeys';
 import TimeTag from '../tags/time-tag';
 import SizeTag from '../tags/size-tag';
+import { executeHotKey } from '../../../common/hotkeys-listener';
+import { hotKeyRefs } from '../../../common/hotkeys';
 
 @autobind
 class ResponseHistoryDropdown extends PureComponent {
@@ -29,7 +30,7 @@ class ResponseHistoryDropdown extends PureComponent {
   }
 
   _handleKeydown(e) {
-    hotkeys.executeHotKey(e, hotkeys.TOGGLE_HISTORY_DROPDOWN, () => {
+    executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
   }
@@ -39,7 +40,7 @@ class ResponseHistoryDropdown extends PureComponent {
   }
 
   renderDropdownItem(response, i) {
-    const { activeResponse } = this.props;
+    const { activeResponse, requestMethod } = this.props;
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
     const message =
@@ -58,7 +59,7 @@ class ResponseHistoryDropdown extends PureComponent {
           statusCode={response.statusCode}
           statusMessage={response.statusMessage || null}
         />
-        <URLTag small url={response.url} />
+        <URLTag small url={response.url} method={requestMethod} />
         <TimeTag milliseconds={response.elapsedTime} small />
         <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} small />
         {!response.requestVersionId && <i className="icon fa fa-info-circle" title={message} />}
@@ -115,6 +116,7 @@ ResponseHistoryDropdown.propTypes = {
   handleDeleteResponse: PropTypes.func.isRequired,
   onChange: PropTypes.func.isRequired,
   requestId: PropTypes.string.isRequired,
+  requestMethod: PropTypes.string.isRequired,
   responses: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional

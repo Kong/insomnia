@@ -1,11 +1,19 @@
 import * as db from '../common/database';
 import * as models from '../models';
-import * as crypt from './crypt';
-import * as session from './session';
 import * as store from './storage';
 import * as misc from '../common/misc';
 import Logger from './logger';
 import * as zlib from 'zlib';
+import {
+  syncCreateResourceGroup,
+  syncFixDupes,
+  syncGetResourceGroup,
+  syncPull,
+  syncPush,
+  syncResetData,
+} from './network';
+import * as crypt from '../account/crypt';
+import * as session from '../account/session';
 
 export const START_DELAY = 1e3;
 export const PULL_PERIOD = 15e3;
@@ -32,7 +40,19 @@ let _writeChangesInterval = null;
 let _pendingDBChanges = {};
 let _isInitialized = false;
 
+// Used to mark whether or not the new sync system is enabled
+let _disabledForSession = false;
+
+export function disableForSession() {
+  _disabledForSession = true;
+}
+
 export async function init() {
+  if (_disabledForSession) {
+    logger.debug('Legacy sync is disabled for current session');
+    return;
+  }
+
   if (_isInitialized) {
     logger.debug('Already enabled');
     return;
@@ -42,8 +62,8 @@ export async function init() {
   _isInitialized = true;
   db.onChange(async changes => {
     // To help prevent bugs, put Workspaces first
-    const sortedChanges = changes.sort(
-      ([event, doc, fromSync]) => (doc.type === models.workspace.type ? 1 : -1),
+    const sortedChanges = changes.sort(([event, doc, fromSync]) =>
+      doc.type === models.workspace.type ? 1 : -1,
     );
 
     for (const [event, doc, fromSync] of sortedChanges) {
@@ -154,7 +174,7 @@ export async function fixDuplicateResourceGroups() {
 
     // Fix duplicates
     const ids = resources.map(r => r.resourceGroupId);
-    const { deleteResourceGroupIds } = await session.syncFixDupes(ids);
+    const { deleteResourceGroupIds } = await syncFixDupes(ids);
 
     for (const idToDelete of deleteResourceGroupIds) {
       await store.removeResourceGroup(idToDelete);
@@ -187,6 +207,11 @@ export async function writePendingChanges() {
 }
 
 export async function push(resourceGroupId = null) {
+  if (_disabledForSession) {
+    logger.debug('Legacy sync is disabled for current session');
+    return;
+  }
+
   if (!session.isLoggedIn()) {
     return;
   }
@@ -199,7 +224,7 @@ export async function push(resourceGroupId = null) {
   }
 
   if (!allDirtyResources.length) {
-    logger.debug('No changes to push');
+    // No changes to push
     return;
   }
 
@@ -223,7 +248,7 @@ export async function push(resourceGroupId = null) {
 
   let responseBody;
   try {
-    responseBody = await session.syncPush(dirtyResources);
+    responseBody = await syncPush(dirtyResources);
   } catch (e) {
     logger.error('Failed to push changes', e);
     return;
@@ -298,6 +323,11 @@ export async function push(resourceGroupId = null) {
 }
 
 export async function pull(resourceGroupId = null, createMissingResources = true) {
+  if (_disabledForSession) {
+    logger.debug('Legacy sync is disabled for current session');
+    return;
+  }
+
   if (!session.isLoggedIn()) {
     return;
   }
@@ -337,11 +367,13 @@ export async function pull(resourceGroupId = null, createMissingResources = true
     blacklist: blacklistedResourceGroupIds,
   };
 
-  logger.debug(`Pulling with ${resources.length} resources`);
+  if (resources.length) {
+    logger.debug(`Pulling with ${resources.length} resources`);
+  }
 
   let responseBody;
   try {
-    responseBody = await session.syncPull(body);
+    responseBody = await syncPull(body);
   } catch (e) {
     logger.error('Failed to sync changes', e, body);
     return;
@@ -535,7 +567,7 @@ export async function resetLocalData() {
 }
 
 export async function resetRemoteData() {
-  await session.syncResetData();
+  await syncResetData();
 }
 
 // ~~~~~~~ //
@@ -587,7 +619,7 @@ export async function fetchResourceGroup(resourceGroupId, invalidateCache = fals
 
     if (!resourceGroup) {
       try {
-        resourceGroup = await session.syncGetResourceGroup(resourceGroupId);
+        resourceGroup = await syncGetResourceGroup(resourceGroupId);
       } catch (e) {
         if (e.statusCode === 404) {
           await store.removeResourceGroup(resourceGroupId);
@@ -716,7 +748,7 @@ export async function createResourceGroup(parentId, name) {
   // Create the new ResourceGroup
   let resourceGroup;
   try {
-    resourceGroup = await session.syncCreateResourceGroup(parentId, name, encRGSymmetricJWK);
+    resourceGroup = await syncCreateResourceGroup(parentId, name, encRGSymmetricJWK);
   } catch (e) {
     logger.error(`Failed to create ResourceGroup: ${e}`);
     throw e;
@@ -802,8 +834,8 @@ export async function getOrCreateAllActiveResources(resourceGroupId = null) {
   }
 
   // Make sure Workspace is first, because the loop below depends on it
-  const modelTypes = Object.keys(WHITE_LIST).sort(
-    (a, b) => (a.type === models.workspace.type ? 1 : -1),
+  const modelTypes = Object.keys(WHITE_LIST).sort((a, b) =>
+    a.type === models.workspace.type ? 1 : -1,
   );
 
   let created = 0;

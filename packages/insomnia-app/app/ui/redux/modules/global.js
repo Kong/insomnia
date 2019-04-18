@@ -17,11 +17,11 @@ import * as db from '../../../common/database';
 
 const LOCALSTORAGE_PREFIX = `insomnia::meta`;
 
+const LOGIN_STATE_CHANGE = 'global/login-state-change';
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
-const REQUEST_GROUP_TOGGLE_COLLAPSE = 'global/request-group-toggle';
 const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
@@ -63,10 +63,20 @@ function loadingRequestsReducer(state = {}, action) {
   }
 }
 
+function loginStateChangeReducer(state = false, action) {
+  switch (action.type) {
+    case LOGIN_STATE_CHANGE:
+      return action.loggedIn;
+    default:
+      return state;
+  }
+}
+
 export const reducer = combineReducers({
   isLoading: loadingReducer,
   loadingRequestIds: loadingRequestsReducer,
   activeWorkspaceId: activeWorkspaceReducer,
+  isLoggedIn: loginStateChangeReducer,
 });
 
 // ~~~~~~~ //
@@ -113,6 +123,10 @@ export function loadRequestStart(requestId) {
   return { type: LOAD_REQUEST_START, requestId, time: Date.now() };
 }
 
+export function loginStateChange(loggedIn) {
+  return { type: LOGIN_STATE_CHANGE, loggedIn };
+}
+
 export function loadRequestStop(requestId) {
   return { type: LOAD_REQUEST_STOP, requestId };
 }
@@ -123,13 +137,6 @@ export function setActiveWorkspace(workspaceId) {
     JSON.stringify(workspaceId),
   );
   return { type: SET_ACTIVE_WORKSPACE, workspaceId };
-}
-
-export function toggleRequestGroup(requestGroup) {
-  return {
-    type: REQUEST_GROUP_TOGGLE_COLLAPSE,
-    requestGroupId: requestGroup._id,
-  };
 }
 
 export function importFile(workspaceId) {
@@ -184,6 +191,7 @@ export function importUri(workspaceId, uri) {
 }
 
 const VALUE_JSON = 'json';
+const VALUE_YAML = 'yaml';
 const VALUE_HAR = 'har';
 
 function showSelectExportTypeModal(onCancel, onDone) {
@@ -191,8 +199,12 @@ function showSelectExportTypeModal(onCancel, onDone) {
     title: 'Select Export Type',
     options: [
       {
-        name: 'Insomnia – Sharable with other Insomnia users',
+        name: 'Insomnia v4 (JSON)',
         value: VALUE_JSON,
+      },
+      {
+        name: 'Insomnia v4 (YAML)',
+        value: VALUE_YAML,
       },
       { name: 'HAR – HTTP Archive Format', value: VALUE_HAR },
     ],
@@ -229,6 +241,8 @@ function showSaveExportedFileDialog(exportedFileNamePrefix, selectedFormat, onDo
         extensions: ['har', 'har.json', 'json'],
       },
     ];
+  } else if (selectedFormat === VALUE_YAML) {
+    options.filters = [{ name: 'Insomnia Export', extensions: ['yaml'] }];
   } else {
     options.filters = [{ name: 'Insomnia Export', extensions: ['json'] }];
   }
@@ -275,12 +289,25 @@ export function exportWorkspacesToFile(workspaceId = null) {
             return;
           }
 
-          let json;
+          let stringifiedExport;
           try {
             if (selectedFormat === VALUE_HAR) {
-              json = await importUtils.exportWorkspacesHAR(workspace, exportPrivateEnvironments);
+              stringifiedExport = await importUtils.exportWorkspacesHAR(
+                workspace,
+                exportPrivateEnvironments,
+              );
+            } else if (selectedFormat === VALUE_YAML) {
+              stringifiedExport = await importUtils.exportWorkspacesData(
+                workspace,
+                exportPrivateEnvironments,
+                'yaml',
+              );
             } else {
-              json = await importUtils.exportWorkspacesJSON(workspace, exportPrivateEnvironments);
+              stringifiedExport = await importUtils.exportWorkspacesData(
+                workspace,
+                exportPrivateEnvironments,
+                'dataStr',
+              );
             }
           } catch (err) {
             showError({
@@ -292,7 +319,7 @@ export function exportWorkspacesToFile(workspaceId = null) {
             return;
           }
 
-          writeExportedFileToFileSystem(fileName, json, err => {
+          writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
             if (err) {
               console.warn('Export failed', err);
             }
@@ -344,7 +371,7 @@ export function exportRequestsToFile(requestIds) {
           exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
         }
 
-        const fileNamePrefix = 'Insomnia-Requests';
+        const fileNamePrefix = 'Insomnia';
         showSaveExportedFileDialog(fileNamePrefix, selectedFormat, async fileName => {
           if (!fileName) {
             // Cancelled.
@@ -352,12 +379,25 @@ export function exportRequestsToFile(requestIds) {
             return;
           }
 
-          let json;
+          let stringifiedExport;
           try {
             if (selectedFormat === VALUE_HAR) {
-              json = await importUtils.exportRequestsHAR(requests, exportPrivateEnvironments);
+              stringifiedExport = await importUtils.exportRequestsHAR(
+                requests,
+                exportPrivateEnvironments,
+              );
+            } else if (selectedFormat === VALUE_YAML) {
+              stringifiedExport = await importUtils.exportRequestsData(
+                requests,
+                exportPrivateEnvironments,
+                'yaml',
+              );
             } else {
-              json = await importUtils.exportRequestsJSON(requests, exportPrivateEnvironments);
+              stringifiedExport = await importUtils.exportRequestsData(
+                requests,
+                exportPrivateEnvironments,
+                'json',
+              );
             }
           } catch (err) {
             showError({
@@ -369,7 +409,7 @@ export function exportRequestsToFile(requestIds) {
             return;
           }
 
-          writeExportedFileToFileSystem(fileName, json, err => {
+          writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
             if (err) {
               console.warn('Export failed', err);
             }

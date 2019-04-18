@@ -16,9 +16,9 @@ import Theme from '../settings/theme';
 import * as models from '../../../models/index';
 import { Curl } from 'insomnia-libcurl';
 import { getAppName, getAppVersion } from '../../../common/constants';
-import * as session from '../../../sync/session';
 import Tooltip from '../tooltip';
 import { setTheme } from '../../../plugins/misc';
+import * as session from '../../../account/session';
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
@@ -143,7 +143,7 @@ class SettingsModal extends PureComponent {
               <Theme handleChangeTheme={this._handleChangeTheme} activeTheme={settings.theme} />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <SettingsShortcuts />
+              <SettingsShortcuts hotKeyRegistry={settings.hotKeyRegistry} />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <Account />
