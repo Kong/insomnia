@@ -193,7 +193,7 @@ export function exportFile(workspaceId = null) {
   return dispatch => {
     dispatch(loadStart());
 
-    const VALUE_JSON = 'json';
+    const VALUE_YAML = 'yaml';
     const VALUE_HAR = 'har';
 
     showModal(SelectModal, {
@@ -201,7 +201,7 @@ export function exportFile(workspaceId = null) {
       options: [
         {
           name: 'Insomnia – Sharable with other Insomnia users',
-          value: VALUE_JSON,
+          value: VALUE_YAML,
         },
         { name: 'HAR – HTTP Archive Format', value: VALUE_HAR },
       ],
@@ -251,7 +251,7 @@ export function exportFile(workspaceId = null) {
             },
           ];
         } else {
-          options.filters = [{ name: 'Insomnia Export', extensions: ['json'] }];
+          options.filters = [{ name: 'Insomnia Export', extensions: ['yaml'] }];
         }
 
         electron.remote.dialog.showSaveDialog(options, async filename => {
@@ -266,7 +266,7 @@ export function exportFile(workspaceId = null) {
             if (selectedFormat === VALUE_HAR) {
               json = await importUtils.exportHAR(workspace, exportPrivateEnvironments);
             } else {
-              json = await importUtils.exportJSON(workspace, exportPrivateEnvironments);
+              json = await importUtils.exportYAML(workspace, exportPrivateEnvironments);
             }
           } catch (err) {
             showError({

@@ -11,8 +11,9 @@ import fs from 'fs';
 import type { Workspace } from '../models/workspace';
 import type { Environment } from '../models/environment';
 import { fnOrString, generateId } from './misc';
+import YAML from 'yaml';
 
-const EXPORT_FORMAT = 3;
+const EXPORT_FORMAT = 4;
 
 const EXPORT_TYPE_REQUEST = 'request';
 const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
@@ -230,7 +231,7 @@ export async function exportHAR(
   return JSON.stringify(data, null, '\t');
 }
 
-export async function exportJSON(
+export async function exportYAML(
   parentDoc: BaseModel | null = null,
   includePrivateDocs: boolean = false,
 ): Promise<string> {
@@ -272,7 +273,7 @@ export async function exportJSON(
       return d;
     });
 
-  return JSON.stringify(data, null, '\t');
+  return YAML.stringify(data);
 }
 
 async function getDocWithDescendants(
