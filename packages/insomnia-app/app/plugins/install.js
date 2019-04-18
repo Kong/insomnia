@@ -79,13 +79,13 @@ async function _isInsomniaPlugin(lookupName: string): Promise<Object> {
       },
       (err, stdout, stderr) => {
         if (stderr) {
-          reject(new Error(`Yarn error ${stderr.toString('utf8')}`));
+          reject(new Error(`Yarn error ${stderr.toString()}`));
           return;
         }
 
         let yarnOutput;
         try {
-          yarnOutput = JSON.parse(stdout.toString('utf8'));
+          yarnOutput = JSON.parse(stdout.toString());
         } catch (ex) {
           // Output is not JSON. Check if yarn/electron terminated with non-zero exit code.
           // In certain environments electron can exit with error even if output is OK.
@@ -154,13 +154,13 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
         // Check yarn/electron process exit code.
         // In certain environments electron can exit with error even if the command was perfomed sucesfully.
         // Checking for sucess message in output is a workaround for false errors.
-        if (err && !stdout.toString('utf8').includes('success')) {
+        if (err && !stdout.toString().includes('success')) {
           reject(new Error(`${lookupName} install error: ${err.message}`));
           return;
         }
 
         if (stderr) {
-          reject(new Error(`Yarn error ${stderr.toString('utf8')}`));
+          reject(new Error(`Yarn error ${stderr.toString()}`));
           return;
         }
 

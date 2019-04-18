@@ -1,218 +1,464 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
+import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import { showModal } from '../modals';
-import * as syncStorage from '../../../sync/storage';
-import * as session from '../../../sync/session';
-import * as sync from '../../../sync';
-import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
-import SetupSyncModal from '../modals/setup-sync-modal';
 import type { Workspace } from '../../../models/workspace';
+import { showAlert, showModal } from '../modals';
+import SyncStagingModal from '../modals/sync-staging-modal';
+import { batchModifyDocs } from '../../../common/database';
+import HelpTooltip from '../help-tooltip';
+import Link from '../base/link';
+import SyncHistoryModal from '../modals/sync-history-modal';
+import SyncShareModal from '../modals/sync-share-modal';
+import SyncBranchesModal from '../modals/sync-branches-modal';
+import VCS from '../../../sync/vcs';
+import type { Snapshot, Status, StatusCandidate } from '../../../sync/types';
+import ErrorModal from '../modals/error-modal';
+import Tooltip from '../tooltip';
+import LoginModal from '../modals/login-modal';
+import * as session from '../../../account/session';
+import PromptButton from '../base/prompt-button';
+
+// Stop refreshing if user hasn't been active in this long
+const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
+
+// Refresh dropdown periodically
+const REFRESH_PERIOD = 1000 * 60 * 1;
 
 type Props = {
   workspace: Workspace,
+  vcs: VCS,
+  syncItems: Array<StatusCandidate>,
 
   // Optional
   className?: string,
 };
 
 type State = {
-  loggedIn: boolean | null,
-  loading: boolean,
-  resourceGroupId: string | null,
-  syncMode: string | null,
-  syncPercent: number,
-  workspaceName: string,
+  currentBranch: string,
+  localBranches: Array<string>,
+  compare: {
+    ahead: number,
+    behind: number,
+  },
+  status: Status,
+  initializing: boolean,
+  historyCount: number,
+  loadingPull: boolean,
+  loadingPush: boolean,
 };
 
 @autobind
 class SyncDropdown extends React.PureComponent<Props, State> {
-  _hasPrompted: boolean;
-  _isMounted: boolean;
+  checkInterval: IntervalID;
+  refreshOnNextSyncItems = false;
+  lastUserActivity = Date.now();
 
   constructor(props: Props) {
     super(props);
-
-    this._hasPrompted = false;
-    this._isMounted = false;
-
     this.state = {
-      loggedIn: null,
-      loading: false,
-      resourceGroupId: null,
-      syncMode: null,
-      syncPercent: 0,
-      workspaceName: '',
+      localBranches: [],
+      currentBranch: '',
+      compare: {
+        ahead: 0,
+        behind: 0,
+      },
+      historyCount: 0,
+      initializing: true,
+      loadingPull: false,
+      loadingPush: false,
+      status: {
+        key: 'n/a',
+        stage: {},
+        unstaged: {},
+      },
     };
   }
 
-  _handleShowShareSettings() {
-    showModal(WorkspaceShareSettingsModal, { workspace: this.props.workspace });
-  }
+  async refreshMainAttributes(extraState?: Object = {}) {
+    const { vcs, syncItems } = this.props;
+    const localBranches = (await vcs.getBranches()).sort();
+    const currentBranch = await vcs.getBranch();
+    const historyCount = await vcs.getHistoryCount();
+    const status = await vcs.status(syncItems, {});
 
-  async _handleSyncResourceGroupId() {
-    const { resourceGroupId } = this.state;
+    const newState = {
+      status,
+      historyCount,
+      localBranches,
+      currentBranch,
+      ...extraState,
+    };
 
-    // Set loading state
-    this.setState({ loading: true });
-
-    await sync.getOrCreateConfig(resourceGroupId);
-    await sync.pull(resourceGroupId);
-    await sync.push(resourceGroupId);
-
-    await this._reloadData();
-
-    // Unset loading state
-    this.setState({ loading: false });
-  }
-
-  async _reloadData() {
-    const loggedIn = session.isLoggedIn();
-
-    if (loggedIn !== this.state.loggedIn) {
-      this.setState({ loggedIn });
+    // Do the remote stuff
+    if (session.isLoggedIn()) {
+      try {
+        newState.compare = await vcs.compareRemoteBranch();
+      } catch (err) {
+        console.log('Failed to compare remote branches', err.message);
+      }
     }
 
-    if (!loggedIn) {
-      return;
-    }
+    this.setState(newState);
+  }
 
-    // Get or create any related sync data
-    const { workspace } = this.props;
-    const { resourceGroupId } = await sync.getOrCreateResourceForDoc(workspace);
-    const config = await sync.getOrCreateConfig(resourceGroupId);
+  componentDidMount() {
+    this.setState({ initializing: true });
+    this.refreshMainAttributes()
+      .catch(err => console.log('[sync_menu] Error refreshing sync state', err))
+      .finally(() => this.setState({ initializing: false }));
 
-    // Analyze it
-    const dirty = await syncStorage.findDirtyResourcesForResourceGroup(resourceGroupId);
-    const all = await syncStorage.findResourcesForResourceGroup(resourceGroupId);
-    const numClean = all.length - dirty.length;
-    const syncPercent = all.length === 0 ? 100 : parseInt((numClean / all.length) * 1000) / 10;
+    // Refresh but only if the user has been active in the last n minutes
+    this.checkInterval = setInterval(async () => {
+      if (Date.now() - this.lastUserActivity < REFRESH_USER_ACTIVITY) {
+        await this.refreshMainAttributes();
+      }
+    }, REFRESH_PERIOD);
 
-    if (this._isMounted) {
-      this.setState({
-        resourceGroupId,
-        syncPercent,
-        syncMode: config.syncMode,
-        workspaceName: workspace.name,
+    document.addEventListener('mousemove', this._handleUserActivity);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.checkInterval);
+    document.removeEventListener('mousemove', this._handleUserActivity);
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    const { vcs, syncItems } = this.props;
+
+    // Update if new sync items
+    if (syncItems !== prevProps.syncItems) {
+      vcs.status(syncItems, {}).then(status => {
+        this.setState({ status });
       });
+
+      if (this.refreshOnNextSyncItems) {
+        this.refreshMainAttributes();
+        this.refreshOnNextSyncItems = false;
+      }
     }
   }
 
-  async _handleShowSyncModePrompt() {
-    showModal(SetupSyncModal, {
-      onSelectSyncMode: async syncMode => {
-        await this._reloadData();
+  _handleUserActivity() {
+    this.lastUserActivity = Date.now();
+  }
+
+  _handleShowBranchesModal() {
+    showModal(SyncBranchesModal, {
+      onHide: this.refreshMainAttributes,
+    });
+  }
+
+  _handleShowStagingModal() {
+    showModal(SyncStagingModal, {
+      onSnapshot: async () => {
+        await this.refreshMainAttributes();
+      },
+      handlePush: async () => {
+        await this._handlePushChanges();
       },
     });
   }
 
-  componentDidMount() {
-    this._isMounted = true;
-    syncStorage.onChange(this._reloadData);
-    this._reloadData();
+  static _handleShowSharingModal() {
+    showModal(SyncShareModal);
   }
 
-  componentWillUnmount() {
-    syncStorage.offChange(this._reloadData);
-    this._isMounted = false;
+  static _handleShowLoginModal() {
+    showModal(LoginModal);
   }
 
-  componentDidUpdate() {
-    const { resourceGroupId, syncMode } = this.state;
+  async _handlePushChanges() {
+    const { vcs } = this.props;
+    this.setState({ loadingPush: true });
 
-    if (!resourceGroupId) {
-      return;
+    try {
+      await vcs.push();
+    } catch (err) {
+      showModal(ErrorModal, {
+        title: 'Push Error',
+        error: err,
+        message: 'Failed to push snapshots to remote',
+      });
     }
 
-    // Sync has not yet been configured for this workspace, so prompt the user to do so
-    const isModeUnset = !syncMode || syncMode === syncStorage.SYNC_MODE_UNSET;
-    if (isModeUnset && !this._hasPrompted) {
-      this._hasPrompted = true;
-      this._handleShowSyncModePrompt();
+    await this.refreshMainAttributes({ loadingPush: false });
+  }
+
+  async _handlePullChanges() {
+    const { vcs, syncItems } = this.props;
+
+    this.setState({ loadingPull: true });
+    try {
+      const delta = await vcs.pull(syncItems);
+      await batchModifyDocs(delta);
+      this.refreshOnNextSyncItems = true;
+    } catch (err) {
+      showModal(ErrorModal, {
+        title: 'Pull Error',
+        error: err,
+        message: 'Failed to pull snapshots from remote',
+      });
+    }
+    this.setState({ loadingPull: false });
+  }
+
+  async _handleRollback(snapshot: Snapshot) {
+    const { vcs, syncItems } = this.props;
+    const delta = await vcs.rollback(snapshot.id, syncItems);
+    await batchModifyDocs(delta);
+    this.refreshOnNextSyncItems = true;
+  }
+
+  async _handleRevert() {
+    const { vcs, syncItems } = this.props;
+
+    try {
+      const delta = await vcs.rollbackToLatest(syncItems);
+      await batchModifyDocs(delta);
+    } catch (err) {
+      showModal(ErrorModal, {
+        title: 'Revert Error',
+        error: err,
+        message: 'Failed to revert changes',
+      });
     }
   }
 
-  _getSyncDescription(syncMode: string | null, syncPercentage: number) {
-    let el = null;
-    if (syncMode === syncStorage.SYNC_MODE_NEVER) {
-      el = <span>Sync Disabled</span>;
-    } else if (syncPercentage === 100) {
-      el = <span>Sync Up To Date</span>;
-    } else if (syncMode === syncStorage.SYNC_MODE_OFF) {
-      el = (
-        <span>
-          <i className="fa fa-pause-circle-o" /> Sync Required
-        </span>
+  _handleShowHistoryModal() {
+    showModal(SyncHistoryModal, {
+      handleRollback: this._handleRollback,
+    });
+  }
+
+  async _handleOpen() {
+    await this.refreshMainAttributes();
+  }
+
+  async _handleSwitchBranch(branch: string) {
+    const { vcs, syncItems } = this.props;
+    try {
+      const delta = await vcs.checkout(syncItems, branch);
+      await batchModifyDocs(delta);
+    } catch (err) {
+      showAlert({
+        title: 'Branch Switch Error',
+        message: err.message,
+      });
+    }
+
+    // We can't refresh now because we won't yet have the new syncItems
+    this.refreshOnNextSyncItems = true;
+
+    // Still need to do this in case sync items don't change
+    this.setState({ currentBranch: branch });
+  }
+
+  renderBranch(branch: string) {
+    const { currentBranch } = this.state;
+
+    const icon =
+      branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
+
+    const isCurrentBranch = branch === currentBranch;
+    return (
+      <DropdownItem
+        key={branch}
+        onClick={isCurrentBranch ? null : () => this._handleSwitchBranch(branch)}
+        className={classnames({ bold: isCurrentBranch })}
+        title={isCurrentBranch ? null : `Switch to "${branch}"`}>
+        {icon}
+        {branch}
+      </DropdownItem>
+    );
+  }
+
+  renderButton() {
+    const {
+      currentBranch,
+      compare: { ahead, behind },
+      initializing,
+      status,
+      loadingPull,
+      loadingPush,
+    } = this.state;
+    const canPush = ahead > 0;
+    const canPull = behind > 0;
+    const canCreateSnapshot =
+      Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
+
+    const loadIcon = <i className="fa fa-spin fa-refresh fa--fixed-width" />;
+
+    const pullToolTipMsg = canPull
+      ? `There ${behind === 1 ? 'is' : 'are'} ${behind} snapshot${behind === 1 ? '' : 's'} to pull`
+      : 'No changes to pull';
+
+    const pushToolTipMsg = canPush
+      ? `There ${ahead === 1 ? 'is' : 'are'} ${ahead} snapshot${ahead === 1 ? '' : 's'} to push`
+      : 'No changes to push';
+
+    const snapshotToolTipMsg = canCreateSnapshot ? 'Local changes made' : 'No local changes made';
+
+    if (currentBranch !== null) {
+      return (
+        <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
+          <div className="ellipsis">
+            <i className="fa fa-code-fork space-right" />{' '}
+            {initializing ? 'Initializing...' : currentBranch}
+          </div>
+          <div className="space-left">
+            <Tooltip message={snapshotToolTipMsg} delay={800}>
+              <i
+                className={classnames('icon fa fa-cube fa--fixed-width', {
+                  'super-duper-faint': !canCreateSnapshot,
+                })}
+              />
+            </Tooltip>
+
+            {/* Only show cloud icons if logged in */}
+            {session.isLoggedIn() && (
+              <React.Fragment>
+                {loadingPull ? (
+                  loadIcon
+                ) : (
+                  <Tooltip message={pullToolTipMsg} delay={800}>
+                    <i
+                      className={classnames('fa fa-cloud-download fa--fixed-width', {
+                        'super-duper-faint': !canPull,
+                      })}
+                    />
+                  </Tooltip>
+                )}
+
+                {loadingPush ? (
+                  loadIcon
+                ) : (
+                  <Tooltip message={pushToolTipMsg} delay={800}>
+                    <i
+                      className={classnames('fa fa-cloud-upload fa--fixed-width', {
+                        'super-duper-faint': !canPush,
+                      })}
+                    />
+                  </Tooltip>
+                )}
+              </React.Fragment>
+            )}
+          </div>
+        </DropdownButton>
       );
-    } else if (syncMode === syncStorage.SYNC_MODE_ON) {
-      el = <span>Sync Pending</span>;
-    } else if (!syncMode || syncMode === syncStorage.SYNC_MODE_UNSET) {
-      el = (
-        <span>
-          <i className="fa fa-exclamation-circle" /> Configure Sync
-        </span>
-      );
+    } else {
+      return <React.Fragment>Sync</React.Fragment>;
     }
-
-    return el;
   }
 
   render() {
-    const { className } = this.props;
-    const { resourceGroupId, loading, loggedIn } = this.state;
-
-    // Don't show the sync menu unless we're logged in
-    if (!loggedIn) {
+    if (!session.isLoggedIn()) {
       return null;
     }
 
-    if (!resourceGroupId) {
-      return (
-        <div className={className}>
-          <button className="btn btn--compact wide" disabled>
-            Initializing Sync...
-          </button>
-        </div>
-      );
-    } else {
-      const { syncMode, syncPercent } = this.state;
-      return (
-        <div className={className}>
-          <Dropdown wide className="wide tall">
-            <DropdownButton className="btn btn--compact wide">
-              {this._getSyncDescription(syncMode, syncPercent)}
-            </DropdownButton>
-            <DropdownDivider>Workspace Synced {syncPercent}%</DropdownDivider>
+    const { className } = this.props;
+    const {
+      localBranches,
+      currentBranch,
+      status,
+      historyCount,
+      loadingPull,
+      loadingPush,
+      compare: { ahead, behind },
+    } = this.state;
 
-            <DropdownItem onClick={this._handleShowSyncModePrompt}>
-              <i className="fa fa-wrench" />
-              Change Sync Mode
+    const canCreateSnapshot =
+      Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
+
+    const visibleBranches = localBranches.filter(b => !b.match(/\.hidden$/));
+
+    return (
+      <div className={className}>
+        <Dropdown className="wide tall" onOpen={this._handleOpen}>
+          {this.renderButton()}
+
+          <DropdownDivider>
+            Insomnia Sync{' '}
+            <HelpTooltip>
+              Sync and collaborate on workspaces{' '}
+              <Link href="https://support.insomnia.rest/article/67-version-control">
+                <span className="no-wrap">
+                  <br />
+                  Documentation <i className="fa fa-external-link" />
+                </span>
+              </Link>
+            </HelpTooltip>
+          </DropdownDivider>
+
+          {!session.isLoggedIn() && (
+            <DropdownItem onClick={SyncDropdown._handleShowLoginModal}>
+              <i className="fa fa-sign-in" /> Log In
             </DropdownItem>
+          )}
 
-            {/* SYNCED */}
+          <DropdownItem onClick={SyncDropdown._handleShowSharingModal}>
+            <i className="fa fa-users" />
+            Share Settings
+          </DropdownItem>
 
-            {syncMode !== syncStorage.SYNC_MODE_NEVER ? (
-              <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick>
-                {loading ? (
-                  <i className="fa fa-refresh fa-spin" />
-                ) : (
-                  <i className="fa fa-cloud-upload" />
-                )}
-                Sync Now
-              </DropdownItem>
-            ) : null}
+          <DropdownItem onClick={this._handleShowBranchesModal}>
+            <i className="fa fa-code-fork" />
+            Branches
+          </DropdownItem>
 
-            {syncMode !== syncStorage.SYNC_MODE_NEVER ? (
-              <DropdownItem onClick={this._handleShowShareSettings}>
-                <i className="fa fa-users" />
-                Share Settings
-              </DropdownItem>
-            ) : null}
-          </Dropdown>
-        </div>
-      );
-    }
+          <DropdownDivider>Local Branches</DropdownDivider>
+          {visibleBranches.map(this.renderBranch)}
+
+          <DropdownDivider>{currentBranch}</DropdownDivider>
+
+          <DropdownItem onClick={this._handleShowHistoryModal} disabled={historyCount === 0}>
+            <i className="fa fa-clock-o" />
+            History
+          </DropdownItem>
+
+          <DropdownItem
+            onClick={this._handleRevert}
+            buttonClass={PromptButton}
+            stayOpenAfterClick
+            disabled={!canCreateSnapshot || historyCount === 0}>
+            <i className="fa fa-undo" />
+            Revert Changes
+          </DropdownItem>
+
+          <DropdownItem onClick={this._handleShowStagingModal} disabled={!canCreateSnapshot}>
+            <i className="fa fa-cube" />
+            Create Snapshot
+          </DropdownItem>
+
+          <DropdownItem onClick={this._handlePullChanges} disabled={behind === 0 || loadingPull}>
+            {loadingPull ? (
+              <React.Fragment>
+                <i className="fa fa-spin fa-refresh" /> Pulling Snapshots...
+              </React.Fragment>
+            ) : (
+              <React.Fragment>
+                <i className="fa fa-cloud-upload" /> Pull {behind || ''} Snapshot
+                {behind === 1 ? '' : 's'}
+              </React.Fragment>
+            )}
+          </DropdownItem>
+
+          <DropdownItem onClick={this._handlePushChanges} disabled={ahead === 0 || loadingPush}>
+            {loadingPush ? (
+              <React.Fragment>
+                <i className="fa fa-spin fa-refresh" /> Pushing Snapshots...
+              </React.Fragment>
+            ) : (
+              <React.Fragment>
+                <i className="fa fa-cloud-upload" /> Push {ahead || ''} Snapshot
+                {ahead === 1 ? '' : 's'}
+              </React.Fragment>
+            )}
+          </DropdownItem>
+        </Dropdown>
+      </div>
+    );
   }
 }
 

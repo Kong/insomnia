@@ -236,6 +236,7 @@ class CodeEditor extends React.Component {
       return;
     }
 
+    window.codeMirror = this.codeMirror;
     editorStates[uniquenessKey] = {
       scroll: this.codeMirror.getScrollInfo(),
       selections: this.codeMirror.listSelections(),

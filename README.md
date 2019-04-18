@@ -1,4 +1,4 @@
-# Insomnia REST Client 
+# Insomnia REST Client
 
 [![Insomnia](https://img.shields.io/badge/maintainer-Insomnia-purple.svg?colorB=6e60cc)](https://insomnia.rest)
 [![Travis](https://api.travis-ci.org/getinsomnia/insomnia.svg)](https://travis-ci.org/getinsomnia/insomnia)
@@ -12,26 +12,26 @@ Insomnia is a cross-platform _REST client_, built on top of [Electron](http://el
 
 ## Download
 
-Insomnia is available for Mac, Windows, and Linux and can be downloaded 
+Insomnia is available for Mac, Windows, and Linux and can be downloaded
 from the website.
 
 **[https://insomnia.rest/download](https://insomnia.rest/download/)**
 
 ## Bugs and Feature Requests
 
-Have a bug or a feature request? First, read the 
-[issue guidelines](CONTRIBUTING.md#using-the-issue-tracker) and search for existing and 
+Have a bug or a feature request? First, read the
+[issue guidelines](CONTRIBUTING.md#using-the-issue-tracker) and search for existing and
 closed issues. If your problem or idea is not addressed yet, [please open a new issue](/issues).
 
-For more generic product questions and feedback, join the [Slack Team](https://chat.insomnia.rest) or email 
+For more generic product questions and feedback, join the [Slack Team](https://chat.insomnia.rest) or email
 [support@insomnia.rest](mailto:support@insomnia.rest)
 
 ## Contributing
 
-Please read through our [contributing guidelines](CONTRIBUTING.md) and [code of conduct](CODE_OF_CONDUCT.md). Included are directions 
+Please read through our [contributing guidelines](CONTRIBUTING.md) and [code of conduct](CODE_OF_CONDUCT.md). Included are directions
 for opening issues, coding standards, and notes on development.
 
-Editor preferences are available in the [editor config](.editorconfig) for easy use in 
+Editor preferences are available in the [editor config](.editorconfig) for easy use in
 common text editors. Read more and download plugins at [editorconfig.org](http://editorconfig.org).
 
 ## Developing

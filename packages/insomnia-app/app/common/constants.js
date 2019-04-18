@@ -92,6 +92,9 @@ export const UPDATE_CHANNEL_BETA = 'beta';
 export const UPDATE_URL_MAC = 'https://updates.insomnia.rest/builds/check/mac';
 export const UPDATE_URL_WINDOWS = 'https://updates.insomnia.rest/updates/win';
 
+// API
+export const API_BASE_URL = 'https://api.insomnia.rest';
+
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 45;
 export const MIN_SIDEBAR_REMS = 0.75;

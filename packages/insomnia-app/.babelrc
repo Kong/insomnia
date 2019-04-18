@@ -1,11 +1,16 @@
 {
   "presets": [
-    "react",
-    "flow"
+    "@babel/preset-react",
+    "@babel/preset-flow"
   ],
   "plugins": [
-    "transform-object-rest-spread",
-    "transform-decorators-legacy"
+    [
+      "@babel/plugin-proposal-decorators",
+      {
+        "legacy": true
+      }
+    ],
+    ["@babel/plugin-proposal-class-properties", { "loose" : true }]
   ],
   "env": {
     "development": {
@@ -16,13 +21,15 @@
     "test": {
       "presets": [
         [
-          "env", {
-          "targets": {
-            "node": "8.4"
+          "@babel/preset-env",
+          {
+            "targets": {
+              "node": "10"
+            }
           }
-        }
         ],
-        "flow" // We need to add this again because it has to run before es2015
+        // We need to add this again because it has to run before es2015
+        "@babel/preset-flow"
       ]
     }
   }

@@ -125,7 +125,7 @@ class CookiesModal extends PureComponent<Props, State> {
     this.setState({ filter, visibleCookieIndexes });
   }
 
-  _getVisibleCookies() {
+  _getVisibleCookies(): Array<Cookie> {
     const { cookieJar } = this.props;
     const { visibleCookieIndexes } = this.state;
 

@@ -6,6 +6,7 @@ export const name = 'Stats';
 export const type = 'Stats';
 export const prefix = 'sta';
 export const canDuplicate = false;
+export const canSync = false;
 
 type BaseStats = {
   currentLaunch: number | null,

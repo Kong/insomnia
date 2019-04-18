@@ -7,7 +7,6 @@ import * as models from '../models/index';
 import { getAppVersion } from './constants';
 import { showModal } from '../ui/components/modals/index';
 import AlertModal from '../ui/components/modals/alert-modal';
-import * as fetch from './fetch';
 import fs from 'fs';
 import type { Workspace } from '../models/workspace';
 import type { Environment } from '../models/environment';
@@ -35,7 +34,7 @@ const MODELS = {
 export async function importUri(workspaceId: string | null, uri: string): Promise<void> {
   let rawText;
   if (uri.match(/^(http|https):\/\//)) {
-    const response = await fetch.rawFetch(uri);
+    const response = await window.fetch(uri);
     rawText = await response.text();
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
