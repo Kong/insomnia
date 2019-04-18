@@ -20,7 +20,5 @@
     "shell-quote": "^1.6.1",
     "swagger-parser": "^6.0.5"
   },
-  "devDependencies": {
-    "jest": "^24.7.1"
-  }
+  "devDependencies": {}
 }

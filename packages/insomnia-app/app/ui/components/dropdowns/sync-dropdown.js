@@ -18,6 +18,7 @@ import ErrorModal from '../modals/error-modal';
 import Tooltip from '../tooltip';
 import LoginModal from '../modals/login-modal';
 import * as session from '../../../account/session';
+import PromptButton from '../base/prompt-button';
 
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
@@ -418,6 +419,8 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
           <DropdownItem
             onClick={this._handleRevert}
+            buttonClass={PromptButton}
+            stayOpenAfterClick
             disabled={!canCreateSnapshot || historyCount === 0}>
             <i className="fa fa-undo" />
             Revert Changes
