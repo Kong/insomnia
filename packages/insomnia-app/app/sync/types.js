@@ -36,6 +36,13 @@ export type Snapshot = {|
   name: string,
   description: string,
   state: Array<SnapshotStateEntry>,
+
+  // Only exists in Snapshots that are pulled from the server
+  authorAccount?: {
+    firstName: string,
+    lastName: string,
+    email: string,
+  },
 |};
 
 export type Branch = {|
