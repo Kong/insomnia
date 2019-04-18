@@ -130,8 +130,6 @@ export async function create(patch: Object = {}, maxResponses: number = 20) {
 
   const { parentId } = patch;
 
-  const settings = await models.settings.getOrCreate();
-
   // Create request version snapshot
   const request = await models.request.getById(parentId);
   const requestVersion = request ? await models.requestVersion.create(request) : null;
@@ -141,7 +139,7 @@ export async function create(patch: Object = {}, maxResponses: number = 20) {
   const allResponses = await db.findMostRecentlyModified(
     type,
     { parentId },
-    settings.maxHistoryResponses,
+    Math.max(1, maxResponses),
   );
   const recentIds = allResponses.map(r => r._id);
   await db.removeWhere(type, { parentId, _id: { $nin: recentIds } });

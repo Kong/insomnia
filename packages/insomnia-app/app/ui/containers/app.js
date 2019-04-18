@@ -493,6 +493,8 @@ class App extends PureComponent {
   }
 
   async _handleSendAndDownloadRequestWithEnvironment(requestId, environmentId, dir) {
+    const { settings, handleStartLoading, handleStopLoading } = this.props;
+
     const request = await models.request.getById(requestId);
     if (!request) {
       return;
@@ -506,7 +508,7 @@ class App extends PureComponent {
     }
 
     // Start loading
-    this.props.handleStartLoading(requestId);
+    handleStartLoading(requestId);
 
     try {
       const responsePatch = await network.send(requestId, environmentId);
@@ -541,12 +543,12 @@ class App extends PureComponent {
 
         readStream.on('end', async () => {
           responsePatch.error = `Saved to ${filename}`;
-          await models.response.create(responsePatch);
+          await models.response.create(responsePatch, settings.maxHistoryResponses);
         });
 
         readStream.on('error', async err => {
           console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
-          await models.response.create(responsePatch);
+          await models.response.create(responsePatch, settings.maxHistoryResponses);
         });
       }
     } catch (err) {
@@ -569,10 +571,11 @@ class App extends PureComponent {
     });
 
     // Stop loading
-    this.props.handleStopLoading(requestId);
+    handleStopLoading(requestId);
   }
 
   async _handleSendRequestWithEnvironment(requestId, environmentId) {
+    const { handleStartLoading, handleStopLoading, settings } = this.props;
     const request = await models.request.getById(requestId);
     if (!request) {
       return;
@@ -585,11 +588,11 @@ class App extends PureComponent {
       this._sendRequestTrackingKey = key;
     }
 
-    this.props.handleStartLoading(requestId);
+    handleStartLoading(requestId);
 
     try {
       const responsePatch = await network.send(requestId, environmentId);
-      await models.response.create(responsePatch);
+      await models.response.create(responsePatch, settings.maxHistoryResponses);
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, { request, error: err });
@@ -614,7 +617,7 @@ class App extends PureComponent {
     });
 
     // Stop loading
-    this.props.handleStopLoading(requestId);
+    handleStopLoading(requestId);
   }
 
   async _handleSetActiveResponse(requestId, activeResponse = null) {

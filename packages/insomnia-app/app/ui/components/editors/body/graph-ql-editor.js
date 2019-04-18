@@ -68,7 +68,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   _isMounted: boolean;
   _queryEditor: null | CodeMirror;
   _schemaFetchTimeout: TimeoutID;
-  _highlightTimeout: TimeoutID;
 
   constructor(props: Props) {
     super(props);
@@ -559,23 +558,22 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           />
         </div>
         <div className="graphql-editor__schema-error">
-          {!hideSchemaFetchErrors &&
-            schemaFetchError && (
-              <div className="notice error margin no-margin-top margin-bottom-sm">
-                <div className="pull-right">
-                  <Tooltip position="top" message="View introspection request/response timeline">
-                    <button className="icon icon--success" onClick={this._handleViewResponse}>
-                      <i className="fa fa-bug" />
-                    </button>
-                  </Tooltip>{' '}
-                  <button className="icon" onClick={this._hideSchemaFetchError}>
-                    <i className="fa fa-times" />
+          {!hideSchemaFetchErrors && schemaFetchError && (
+            <div className="notice error margin no-margin-top margin-bottom-sm">
+              <div className="pull-right">
+                <Tooltip position="top" message="View introspection request/response timeline">
+                  <button className="icon icon--success" onClick={this._handleViewResponse}>
+                    <i className="fa fa-bug" />
                   </button>
-                </div>
-                {schemaFetchError.message}
-                <br />
+                </Tooltip>{' '}
+                <button className="icon" onClick={this._hideSchemaFetchError}>
+                  <i className="fa fa-times" />
+                </button>
               </div>
-            )}
+              {schemaFetchError.message}
+              <br />
+            </div>
+          )}
         </div>
         <div className="graphql-editor__meta">
           {this.renderSchemaFetchMessage()}
@@ -584,7 +582,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
           Query Variables
           <HelpTooltip className="space-left">
-            Variables to use in GraphQL query <br />(JSON format)
+            Variables to use in GraphQL query <br />
+            (JSON format)
           </HelpTooltip>
           {variablesSyntaxError && (
             <span className="text-danger italic pull-right">{variablesSyntaxError}</span>

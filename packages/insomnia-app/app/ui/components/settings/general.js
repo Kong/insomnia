@@ -222,19 +222,6 @@ class General extends React.PureComponent<Props, State> {
           </label>
         </div>
 
-        <div className="form-control form-control--outlined">
-          <label className="inline-block">
-            Max history responses
-            <input
-              type="number"
-              name="maxHistoryResponses"
-              min={1}
-              defaultValue={settings.maxHistoryResponses}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
-
         <div className="form-row">
           <div className="form-control form-control--outlined pad-top-sm">
             <label>
@@ -370,14 +357,7 @@ class General extends React.PureComponent<Props, State> {
 
         <hr className="pad-top" />
 
-        <h2>
-          HTTP Network Proxy
-          <HelpTooltip
-            className="space-left txt-md"
-            style={{ maxWidth: '20rem', lineWrap: 'word' }}>
-            Enable global network proxy. Supports authentication via Basic Auth, digest, or NTLM
-          </HelpTooltip>
-        </h2>
+        <h2>Request Settings</h2>
 
         <div className="form-row">
           <div className="form-control form-control--outlined">
@@ -409,6 +389,22 @@ class General extends React.PureComponent<Props, State> {
               />
             </label>
           </div>
+        </div>
+
+        <div className="form-control form-control--outlined">
+          <label>
+            Response History Limit
+            <HelpTooltip className="space-left">
+              Number of responses to keep for each request
+            </HelpTooltip>
+            <input
+              type="number"
+              name="maxHistoryResponses"
+              min={1}
+              defaultValue={settings.maxHistoryResponses}
+              onChange={this._handleUpdateSetting}
+            />
+          </label>
         </div>
 
         <hr className="pad-top" />
