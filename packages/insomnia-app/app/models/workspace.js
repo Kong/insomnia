@@ -7,6 +7,7 @@ export const name = 'Workspace';
 export const type = 'Workspace';
 export const prefix = 'wrk';
 export const canDuplicate = true;
+export const canSync = true;
 
 type BaseWorkspace = {
   name: string,

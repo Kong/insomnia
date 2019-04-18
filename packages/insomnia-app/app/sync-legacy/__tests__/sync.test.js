@@ -1,10 +1,11 @@
 import * as sync from '../index';
-import * as session from '../session';
 import * as models from '../../models';
 import * as db from '../../common/database';
 import * as syncStorage from '../storage';
-import * as crypt from '../crypt';
+import * as network from '../network';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import * as session from '../../account/session';
+import * as crypt from '../../account/crypt';
 
 describe('Test push/pull behaviour', () => {
   beforeEach(async () => {
@@ -59,16 +60,16 @@ describe('Test push/pull behaviour', () => {
     await sync.push(resourceRequest.resourceGroupId); // Force push rg_1
     await sync.push(resourceRequest2.resourceGroupId); // Force push rg_2
 
-    expect(session.syncPush.mock.calls.length).toBe(3);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(2);
-    expect(session.syncPush.mock.calls[0][0][0].id).toBe('wrk_1');
-    expect(session.syncPush.mock.calls[0][0][1].id).toBe('req_1');
-    expect(session.syncPush.mock.calls[1][0].length).toBe(2);
-    expect(session.syncPush.mock.calls[1][0][0].id).toBe('wrk_1');
-    expect(session.syncPush.mock.calls[1][0][1].id).toBe('req_1');
-    expect(session.syncPush.mock.calls[2][0].length).toBe(2);
-    expect(session.syncPush.mock.calls[2][0][0].id).toBe('wrk_2');
-    expect(session.syncPush.mock.calls[2][0][1].id).toBe('req_2');
+    expect(network.syncPush.mock.calls.length).toBe(3);
+    expect(network.syncPush.mock.calls[0][0].length).toBe(2);
+    expect(network.syncPush.mock.calls[0][0][0].id).toBe('wrk_1');
+    expect(network.syncPush.mock.calls[0][0][1].id).toBe('req_1');
+    expect(network.syncPush.mock.calls[1][0].length).toBe(2);
+    expect(network.syncPush.mock.calls[1][0][0].id).toBe('wrk_1');
+    expect(network.syncPush.mock.calls[1][0][1].id).toBe('req_1');
+    expect(network.syncPush.mock.calls[2][0].length).toBe(2);
+    expect(network.syncPush.mock.calls[2][0][0].id).toBe('wrk_2');
+    expect(network.syncPush.mock.calls[2][0][1].id).toBe('req_2');
   });
 
   it('Updates dirty flag for push response', async () => {
@@ -78,7 +79,7 @@ describe('Test push/pull behaviour', () => {
       syncMode: syncStorage.SYNC_MODE_ON,
     });
 
-    session.syncPush.mockReturnValueOnce({
+    network.syncPush.mockReturnValueOnce({
       updated: [],
       created: [{ id: request._id, version: 'new-version' }],
       removed: [],
@@ -89,10 +90,10 @@ describe('Test push/pull behaviour', () => {
     await sync.push(resourceRequest.resourceGroupId);
     const resourceAfter = await syncStorage.getResourceByDocId(request._id);
 
-    expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(2);
-    expect(session.syncPush.mock.calls[0][0][0].id).toBe('wrk_1');
-    expect(session.syncPush.mock.calls[0][0][1].id).toBe('req_1');
+    expect(network.syncPush.mock.calls.length).toBe(1);
+    expect(network.syncPush.mock.calls[0][0].length).toBe(2);
+    expect(network.syncPush.mock.calls[0][0][0].id).toBe('wrk_1');
+    expect(network.syncPush.mock.calls[0][0][1].id).toBe('req_1');
     expect(resourceBefore.dirty).toBe(true);
     expect(resourceAfter.dirty).toBe(false);
   });
@@ -122,7 +123,7 @@ describe('Test push/pull behaviour', () => {
       encContent: await sync.encryptDoc(resourceBefore.resourceGroupId, requestNew),
     });
 
-    session.syncPull.mockReturnValueOnce({
+    network.syncPull.mockReturnValueOnce({
       updatedResources: [updatedResource],
       createdResources: [createdResourceNew],
       idsToPush: [],
@@ -165,7 +166,7 @@ describe('Test push/pull behaviour', () => {
       lastEdited: resourceRequest.lastEdited - 1000, // Same edited time
     });
 
-    session.syncPush.mockReturnValueOnce({
+    network.syncPush.mockReturnValueOnce({
       updated: [],
       created: [],
       removed: [],
@@ -180,8 +181,8 @@ describe('Test push/pull behaviour', () => {
     const requestAfter = await models.request.getById(requestClient._id);
 
     // Assert
-    expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(2);
+    expect(network.syncPush.mock.calls.length).toBe(1);
+    expect(network.syncPush.mock.calls[0][0].length).toBe(2);
     // Even when local wins, local resource gets the remove resource version
     expect(resourceAfter.version).toBe(resourceConflict.version);
     // Local resource gets marked as dirty so it's pushed right away
@@ -202,7 +203,7 @@ describe('Test push/pull behaviour', () => {
       lastEdited: resourceRequest.lastEdited, // Same edited time
     });
 
-    session.syncPush.mockReturnValueOnce({
+    network.syncPush.mockReturnValueOnce({
       updated: [],
       created: [],
       removed: [],
@@ -217,8 +218,8 @@ describe('Test push/pull behaviour', () => {
     const requestAfter = await models.request.getById(requestClient._id);
 
     // Assert
-    expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(2);
+    expect(network.syncPush.mock.calls.length).toBe(1);
+    expect(network.syncPush.mock.calls[0][0].length).toBe(2);
     // Even when local wins, local resource gets the remove resource version
     expect(resourceAfter.version).toBe(resourceConflict.version);
     // Local resource gets marked as dirty so it's pushed right away
@@ -239,7 +240,7 @@ describe('Test push/pull behaviour', () => {
       lastEdited: resourceRequest.lastEdited + 1000,
     });
 
-    session.syncPush.mockReturnValueOnce({
+    network.syncPush.mockReturnValueOnce({
       updated: [],
       created: [],
       removed: [],
@@ -254,8 +255,8 @@ describe('Test push/pull behaviour', () => {
     const requestAfter = await models.request.getById(requestClient._id);
 
     // Assert
-    expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(2);
+    expect(network.syncPush.mock.calls.length).toBe(1);
+    expect(network.syncPush.mock.calls[0][0].length).toBe(2);
     expect(resourceAfter.lastEdited).toBeGreaterThan(resourceRequest.lastEdited);
     expect(resourceAfter.version).toBe(resourceConflict.version);
     // Local resource gets marked as dirty so it's pushed right away
@@ -365,10 +366,10 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(_decryptResource(resource).url).toBe('https://google.com');
     expect(resource.removed).toBe(false);
 
-    expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(6);
+    expect(network.syncPush.mock.calls.length).toBe(1);
+    expect(network.syncPush.mock.calls[0][0].length).toBe(6);
 
-    expect(session.syncPull.mock.calls).toEqual([]);
+    expect(network.syncPull.mock.calls).toEqual([]);
   });
 
   it('Resources revived on DB change', async () => {
@@ -425,10 +426,10 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(_decryptResource(updatedResource).name).toBe('New Name');
     expect(resource.removed).toBe(false);
 
-    expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(5);
+    expect(network.syncPush.mock.calls.length).toBe(1);
+    expect(network.syncPush.mock.calls[0][0].length).toBe(5);
 
-    expect(session.syncPull.mock.calls).toEqual([]);
+    expect(network.syncPull.mock.calls).toEqual([]);
   });
 
   it('Resources removed on DB change', async () => {
@@ -448,10 +449,10 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(resource.removed).toBe(false);
     expect(updatedResource.removed).toBe(true);
 
-    expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(5);
+    expect(network.syncPush.mock.calls.length).toBe(1);
+    expect(network.syncPush.mock.calls[0][0].length).toBe(5);
 
-    expect(session.syncPull.mock.calls).toEqual([]);
+    expect(network.syncPull.mock.calls).toEqual([]);
   });
 });
 
@@ -508,7 +509,7 @@ async function _setSessionData() {
 async function _setupSessionMocks() {
   const resourceGroups = {};
 
-  session.syncCreateResourceGroup = jest.fn((parentId, name, _) => {
+  network.syncCreateResourceGroup = jest.fn((parentId, name, _) => {
     const id = `rg_${Object.keys(resourceGroups).length + 1}`;
 
     // Generate a public key and use a symmetric equal to it's Id for
@@ -530,7 +531,7 @@ async function _setupSessionMocks() {
     return resourceGroups[id];
   });
 
-  session.syncGetResourceGroup = jest.fn(id => {
+  network.syncGetResourceGroup = jest.fn(id => {
     if (resourceGroups[id]) {
       return resourceGroups[id];
     }
@@ -540,14 +541,14 @@ async function _setupSessionMocks() {
     throw err;
   });
 
-  session.syncPull = jest.fn(body => ({
+  network.syncPull = jest.fn(body => ({
     updatedResources: [],
     createdResources: [],
     idsToPush: [],
     idsToRemove: [],
   }));
 
-  session.syncPush = jest.fn(body => ({
+  network.syncPush = jest.fn(body => ({
     conflicts: [],
     updated: [],
     created: [],

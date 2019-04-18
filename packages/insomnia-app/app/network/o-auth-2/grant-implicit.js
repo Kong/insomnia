@@ -36,12 +36,17 @@ export default async function(
   const qs = buildQueryStringFromParams(params);
   const finalUrl = joinUrlAndQueryString(authorizationUrl, qs);
 
-  const redirectedTo = await authorizeUserInWindow(finalUrl, /(access_token=)/, /(error=)/);
+  const redirectedTo = await authorizeUserInWindow(
+    finalUrl,
+    /(access_token=|id_token=)/,
+    /(error=)/,
+  );
   const fragment = redirectedTo.split('#')[1];
 
   if (fragment) {
-    return responseToObject(fragment, [
+    const results = responseToObject(fragment, [
       c.P_ACCESS_TOKEN,
+      c.P_ID_TOKEN,
       c.P_TOKEN_TYPE,
       c.P_EXPIRES_IN,
       c.P_SCOPE,
@@ -50,6 +55,9 @@ export default async function(
       c.P_ERROR_DESCRIPTION,
       c.P_ERROR_URI,
     ]);
+    results[c.P_ACCESS_TOKEN] = results[c.P_ACCESS_TOKEN] || results[c.P_ID_TOKEN];
+    delete results[c.P_ID_TOKEN];
+    return results;
   } else {
     // Bad redirect
     return {};

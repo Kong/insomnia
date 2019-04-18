@@ -195,9 +195,9 @@ const dragTarget = {
   },
   hover(props, monitor, component) {
     if (isAbove(monitor, component)) {
-      component.decoratedComponentInstance.setDragDirection(1);
+      component.setDragDirection(1);
     } else {
-      component.decoratedComponentInstance.setDragDirection(-1);
+      component.setDragDirection(-1);
     }
   },
 };

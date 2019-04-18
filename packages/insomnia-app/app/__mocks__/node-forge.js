@@ -9,14 +9,10 @@ module.exports = {
   jsbn: forge.jsbn,
   util: forge.util,
   pkcs5: {
-    pbkdf2() {},
+    pbkdf2: forge.pkcs5.pbkdf2,
   },
   md: {
-    sha256: {
-      create() {
-        return 'TODO';
-      },
-    },
+    sha256: forge.md.sha256,
   },
   rsa: {
     setPublicKey() {

@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import classnames from 'classnames';
 import { REQUEST_TIME_TO_SHOW_COUNTER } from '../../common/constants';
 
 @autobind
@@ -25,8 +24,8 @@ class ResponseTimer extends PureComponent {
     this.setState({ elapsedTime });
   }
 
-  componentWillReceiveProps(nextProps) {
-    const { loadStartTime } = nextProps;
+  componentDidUpdate() {
+    const { loadStartTime } = this.props;
 
     if (loadStartTime <= 0) {
       clearInterval(this._interval);
@@ -44,11 +43,12 @@ class ResponseTimer extends PureComponent {
 
     const show = loadStartTime > 0;
 
+    if (!show) {
+      return null;
+    }
+
     return (
-      <div
-        className={classnames('overlay theme--transparent-overlay', {
-          'overlay--hidden': !show,
-        })}>
+      <div className="overlay theme--transparent-overlay" aria-hidden={!show}>
         {elapsedTime >= REQUEST_TIME_TO_SHOW_COUNTER ? (
           <h2>{elapsedTime.toFixed(1)} seconds...</h2>
         ) : (

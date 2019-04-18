@@ -1,6 +1,6 @@
 import HKDF from 'hkdf';
 import srp from 'srp-js';
-import * as forge from 'node-forge';
+import forge from 'node-forge';
 
 const DEFAULT_BYTE_LENGTH = 32;
 const DEFAULT_PBKDF2_ITERATIONS = 1e5; // 100,000
@@ -64,9 +64,32 @@ export function decryptRSAWithJWK(privateJWK, encryptedBlob) {
   return decodeURIComponent(decrypted);
 }
 
-export function recryptRSAWithJWK(privateJWK, publicJWK, encryptedBlob) {
-  const decrypted = decryptRSAWithJWK(privateJWK, encryptedBlob);
-  return encryptRSAWithJWK(publicJWK, decrypted);
+/**
+ * Encrypt data using symmetric key
+ *
+ * @param jwkOrKey JWK or string representing symmetric key
+ * @param buff data to encrypt
+ * @param additionalData any additional public data to attach
+ * @returns {{iv, t, d, ad}}
+ */
+export function encryptAESBuffer(jwkOrKey, buff, additionalData = '') {
+  // TODO: Add assertion checks for JWK
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
+  const key = forge.util.hexToBytes(rawKey);
+
+  const iv = forge.random.getBytesSync(12);
+  const cipher = forge.cipher.createCipher('AES-GCM', key);
+
+  cipher.start({ additionalData, iv, tagLength: 128 });
+  cipher.update(forge.util.createBuffer(buff));
+  cipher.finish();
+
+  return {
+    iv: forge.util.bytesToHex(iv),
+    t: forge.util.bytesToHex(cipher.mode.tag),
+    ad: forge.util.bytesToHex(additionalData),
+    d: forge.util.bytesToHex(cipher.output),
+  };
 }
 
 /**
@@ -95,8 +118,8 @@ export function encryptAES(jwkOrKey, plaintext, additionalData = '') {
   return {
     iv: forge.util.bytesToHex(iv),
     t: forge.util.bytesToHex(cipher.mode.tag),
-    d: forge.util.bytesToHex(cipher.output),
     ad: forge.util.bytesToHex(additionalData),
+    d: forge.util.bytesToHex(cipher.output),
   };
 }
 
@@ -104,10 +127,10 @@ export function encryptAES(jwkOrKey, plaintext, additionalData = '') {
  * Decrypt AES using a key
  *
  * @param jwkOrKey JWK or string representing symmetric key
- * @param message
+ * @param encryptedResult encryption data
  * @returns String
  */
-export function decryptAES(jwkOrKey, message) {
+export function decryptAES(jwkOrKey, encryptedResult) {
   // TODO: Add assertion checks for JWK
   const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
   const key = forge.util.hexToBytes(rawKey);
@@ -118,13 +141,13 @@ export function decryptAES(jwkOrKey, message) {
 
   const decipher = forge.cipher.createDecipher('AES-GCM', key);
   decipher.start({
-    iv: forge.util.hexToBytes(message.iv),
-    tagLength: message.t.length * 4,
-    tag: forge.util.hexToBytes(message.t),
-    additionalData: forge.util.hexToBytes(message.ad),
+    iv: forge.util.hexToBytes(encryptedResult.iv),
+    tagLength: encryptedResult.t.length * 4,
+    tag: forge.util.hexToBytes(encryptedResult.t),
+    additionalData: forge.util.hexToBytes(encryptedResult.ad),
   });
 
-  decipher.update(forge.util.createBuffer(forge.util.hexToBytes(message.d)));
+  decipher.update(forge.util.createBuffer(forge.util.hexToBytes(encryptedResult.d)));
 
   if (decipher.finish()) {
     return decodeURIComponent(decipher.output.toString());
@@ -134,21 +157,35 @@ export function decryptAES(jwkOrKey, message) {
 }
 
 /**
- * Generate a random salt in hex
- *
+ * Decrypts AES using a key to buffer
+ * @param jwkOrKey
+ * @param encryptedResult
  * @returns {string}
  */
-export function getRandomHex(bytes = DEFAULT_BYTE_LENGTH) {
-  return forge.util.bytesToHex(forge.random.getBytesSync(bytes));
-}
+export function decryptAESToBuffer(jwkOrKey, encryptedResult) {
+  // TODO: Add assertion checks for JWK
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
+  const key = forge.util.hexToBytes(rawKey);
 
-/**
- * Generate a random account Id
- *
- * @returns {string}
- */
-export function generateAccountId() {
-  return `act_${getRandomHex(DEFAULT_BYTE_LENGTH)}`;
+  // ~~~~~~~~~~~~~~~~~~~~ //
+  // Decrypt with AES-GCM //
+  // ~~~~~~~~~~~~~~~~~~~~ //
+
+  const decipher = forge.cipher.createDecipher('AES-GCM', key);
+  decipher.start({
+    iv: forge.util.hexToBytes(encryptedResult.iv),
+    tagLength: encryptedResult.t.length * 4,
+    tag: forge.util.hexToBytes(encryptedResult.t),
+    additionalData: forge.util.hexToBytes(encryptedResult.ad),
+  });
+
+  decipher.update(forge.util.createBuffer(forge.util.hexToBytes(encryptedResult.d)));
+
+  if (decipher.finish()) {
+    return Buffer.from(forge.util.bytesToHex(decipher.output), 'hex');
+  } else {
+    throw new Error('Failed to decrypt data');
+  }
 }
 
 /**
@@ -264,7 +301,7 @@ export async function generateKeyPairJWK() {
  * @param rawEmail
  * @returns {Promise}
  */
-function _hkdfSalt(rawSalt, rawEmail) {
+async function _hkdfSalt(rawSalt, rawEmail) {
   return new Promise(resolve => {
     const hkdf = new HKDF('sha256', rawSalt, rawEmail);
     hkdf.derive('', DEFAULT_BYTE_LENGTH, buffer => resolve(buffer.toString('hex')));

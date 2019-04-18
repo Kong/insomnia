@@ -1,37 +1,37 @@
 {
-	"_type": "export",
-	"__export_format": 3,
-	"__export_date": "2017-11-24T16:14:14.805Z",
-	"__export_source": "insomnia.desktop.app:v5.12.0-beta.3",
-	"resources": [
-		{
-			"_id": "wrk_imported_1",
-			"created": 888,
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2017-11-24T16:14:14.805Z",
+  "__export_source": "insomnia.desktop.app:v5.12.0-beta.3",
+  "resources": [
+    {
+      "_id": "wrk_imported_1",
+      "created": 888,
       "modified": 999,
-			"description": "",
-			"name": "New",
-			"parentId": null,
-			"_type": "workspace"
-		},
-		{
-			"_id": "req_imported_1",
-			"authentication": {},
-			"body": {},
+      "description": "",
+      "name": "New",
+      "parentId": null,
+      "_type": "workspace"
+    },
+    {
+      "_id": "req_imported_1",
+      "authentication": {},
+      "body": {},
       "created": 111,
       "modified": 222,
       "metaSortKey": 0,
-			"description": "",
-			"headers": [],
-			"method": "GET",
-			"name": "Test",
-			"parameters": [],
-			"parentId": "wrk_imported_1",
-			"settingDisableRenderRequestBody": false,
-			"settingEncodeUrl": true,
-			"settingSendCookies": true,
-			"settingStoreCookies": true,
-			"url": "https://insomnia.rest",
-			"_type": "request"
-		}
-	]
+      "description": "",
+      "headers": [],
+      "method": "GET",
+      "name": "Test",
+      "parameters": [],
+      "parentId": "wrk_imported_1",
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingSendCookies": true,
+      "settingStoreCookies": true,
+      "url": "https://insomnia.rest",
+      "_type": "request"
+    }
+  ]
 }

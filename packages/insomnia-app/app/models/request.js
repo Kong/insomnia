@@ -32,6 +32,7 @@ export const name = 'Request';
 export const type = 'Request';
 export const prefix = 'req';
 export const canDuplicate = true;
+export const canSync = true;
 
 export type RequestAuthentication = Object;
 
@@ -357,7 +358,7 @@ export function remove(request: Request): Promise<void> {
   return db.remove(request);
 }
 
-export function all() {
+export async function all(): Promise<Array<Request>> {
   return db.all(type);
 }
 

@@ -1,4 +1,5 @@
 // @flow
+import * as crypto from 'crypto';
 import * as db from '../common/database';
 import type { BaseModel } from './index';
 import type { Workspace } from './workspace';
@@ -7,6 +8,7 @@ export const name = 'Environment';
 export const type = 'Environment';
 export const prefix = 'env';
 export const canDuplicate = true;
+export const canSync = true;
 
 type BaseEnvironment = {
   name: string,
@@ -57,6 +59,13 @@ export async function getOrCreateForWorkspaceId(workspaceId: string): Promise<En
     return create({
       parentId: workspaceId,
       name: 'Base Environment',
+
+      // Deterministic base env ID. It helps reduce sync complexity since we won't have to
+      // de-duplicate environments.
+      _id: `${prefix}_${crypto
+        .createHash('sha1')
+        .update(workspaceId)
+        .digest('hex')}`,
     });
   }
 

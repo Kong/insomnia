@@ -2,10 +2,11 @@ import * as models from '../../models';
 import * as importUtil from '../import';
 import { getAppVersion } from '../constants';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import YAML from 'yaml';
 
-describe('exportHAR()', () => {
+describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(globalBeforeEach);
-  it('exports a single workspace as an HTTP Archive', async () => {
+  it('exports a single workspace and some requests only as an HTTP Archive', async () => {
     const wrk1 = await models.workspace.create({
       _id: 'wrk_1',
       name: 'Workspace 1',
@@ -52,10 +53,11 @@ describe('exportHAR()', () => {
     });
 
     const includePrivateDocs = true;
-    const json = await importUtil.exportHAR(wrk1, includePrivateDocs);
-    const data = JSON.parse(json);
 
-    expect(data).toMatchObject({
+    // Test export whole workspace.
+    const exportWorkspacesJson = await importUtil.exportWorkspacesHAR(wrk1, includePrivateDocs);
+    const exportWorkspacesData = JSON.parse(exportWorkspacesJson);
+    expect(exportWorkspacesData).toMatchObject({
       log: {
         entries: [
           {
@@ -70,7 +72,24 @@ describe('exportHAR()', () => {
         ],
       },
     });
-    expect(data.log.entries.length).toBe(2);
+    expect(exportWorkspacesData.log.entries.length).toBe(2);
+
+    // Test export some requests only.
+    const exportRequestsJson = await importUtil.exportRequestsHAR([req1], includePrivateDocs);
+    const exportRequestsData = JSON.parse(exportRequestsJson);
+    expect(exportRequestsData).toMatchObject({
+      log: {
+        entries: [
+          {
+            request: {
+              headers: [{ name: 'X-Environment', value: 'private1' }],
+            },
+            comment: req1.name,
+          },
+        ],
+      },
+    });
+    expect(exportRequestsData.log.entries.length).toBe(1);
   });
   it('exports all workspaces as an HTTP Archive', async () => {
     const wrk1 = await models.workspace.create({
@@ -132,38 +151,46 @@ describe('exportHAR()', () => {
     });
 
     const includePrivateDocs = false;
-    const json = await importUtil.exportHAR(null, includePrivateDocs);
+    const json = await importUtil.exportWorkspacesHAR(null, includePrivateDocs);
     const data = JSON.parse(json);
 
     expect(data).toMatchObject({
       log: {
-        entries: [
-          {
-            request: {
+        entries: expect.arrayContaining([
+          expect.objectContaining({
+            request: expect.objectContaining({
               headers: [{ name: 'X-Environment', value: 'public1' }],
-            },
+            }),
             comment: 'Request 1',
-          },
-          {
-            request: {
+          }),
+          expect.objectContaining({
+            request: expect.objectContaining({
               headers: [{ name: 'X-Environment', value: 'base2' }],
-            },
+            }),
             comment: 'Request 2',
-          },
-        ],
+          }),
+        ]),
       },
     });
   });
 });
 
-describe('exportJSON()', () => {
+describe('export', () => {
   beforeEach(globalBeforeEach);
-  it('exports all workspaces', async () => {
+  it('exports all workspaces and some requests only', async () => {
     const w = await models.workspace.create({ name: 'Workspace' });
     const jar = await models.cookieJar.getOrCreateForParentId(w._id);
     const r1 = await models.request.create({
-      name: 'Request',
+      name: 'Request 1',
       parentId: w._id,
+    });
+    const f2 = await models.requestGroup.create({
+      name: 'Folder 2',
+      parentId: w._id,
+    });
+    const r2 = await models.request.create({
+      name: 'Request 2',
+      parentId: f2._id,
     });
     const eBase = await models.environment.getOrCreateForWorkspace(w);
     const ePub = await models.environment.create({
@@ -176,18 +203,56 @@ describe('exportJSON()', () => {
       parentId: eBase._id,
     });
 
-    const json = await importUtil.exportJSON();
-    const data = JSON.parse(json);
+    // Test export whole workspace.
+    const exportedWorkspacesJson = await importUtil.exportWorkspacesData(null, false, 'json');
+    const exportedWorkspacesYaml = await importUtil.exportWorkspacesData(null, false, 'yaml');
+    const exportWorkspacesDataJson = JSON.parse(exportedWorkspacesJson);
+    const exportWorkspacesDataYaml = YAML.parse(exportedWorkspacesYaml);
 
-    expect(data._type).toBe('export');
-    expect(data.__export_format).toBe(3);
-    expect(data.__export_date).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/);
-    expect(data.__export_source).toBe(`insomnia.desktop.app:v${getAppVersion()}`);
-    expect(data.resources[0]._id).toBe(w._id);
-    expect(data.resources[1]._id).toBe(eBase._id);
-    expect(data.resources[2]._id).toBe(jar._id);
-    expect(data.resources[3]._id).toBe(r1._id);
-    expect(data.resources[4]._id).toBe(ePub._id);
-    expect(data.resources.length).toBe(5);
+    // Ensure JSON is the same as YAML
+    expect(exportWorkspacesDataJson.resources).toEqual(exportWorkspacesDataYaml.resources);
+
+    expect(exportWorkspacesDataJson).toMatchObject({
+      _type: 'export',
+      __export_format: 4,
+      __export_date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/),
+      __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
+      resources: expect.arrayContaining([
+        expect.objectContaining({ _id: w._id }),
+        expect.objectContaining({ _id: eBase._id }),
+        expect.objectContaining({ _id: jar._id }),
+        expect.objectContaining({ _id: r1._id }),
+        expect.objectContaining({ _id: f2._id }),
+        expect.objectContaining({ _id: r2._id }),
+        expect.objectContaining({ _id: ePub._id }),
+      ]),
+    });
+    expect(exportWorkspacesDataJson.resources.length).toBe(7);
+
+    // Test export some requests only.
+    const exportRequestsJson = await importUtil.exportRequestsData([r1], false, 'json');
+    const exportRequestsYaml = await importUtil.exportRequestsData([r1], false, 'yaml');
+    const exportRequestsDataJSON = JSON.parse(exportRequestsJson);
+    const exportRequestsDataYAML = YAML.parse(exportRequestsYaml);
+
+    expect(exportRequestsDataJSON).toMatchObject({
+      _type: 'export',
+      __export_format: 4,
+      __export_date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/),
+      __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
+      resources: expect.arrayContaining([
+        expect.objectContaining({ _id: w._id }),
+        expect.objectContaining({ _id: eBase._id }),
+        expect.objectContaining({ _id: jar._id }),
+        expect.objectContaining({ _id: r1._id }),
+        expect.objectContaining({ _id: ePub._id }),
+      ]),
+    });
+
+    expect(exportRequestsDataJSON.resources.length).toBe(5);
+    expect(exportRequestsDataYAML.resources.length).toBe(5);
+
+    // Ensure JSON and YAML are the same
+    expect(exportRequestsDataJSON.resources).toEqual(exportRequestsDataYAML.resources);
   });
 });

@@ -23,6 +23,7 @@ type BaseSettings = {
   autoHideMenuBar: boolean,
   theme: string,
   maxRedirects: number,
+  maxHistoryResponses: number,
   pluginPath: string,
   nunjucksPowerUserMode: boolean,
   deviceId: string | null,
@@ -35,6 +36,9 @@ type BaseSettings = {
   fontInterface: string | null,
   fontSize: number,
   fontVariantLigatures: boolean,
+
+  // Feature flags
+  enableSyncBeta: boolean,
   hotKeyRegistry: hotkeys.HotKeyRegistry,
 };
 
@@ -44,6 +48,7 @@ export const name = 'Settings';
 export const type = 'Settings';
 export const prefix = 'set';
 export const canDuplicate = false;
+export const canSync = false;
 
 export function init(): BaseSettings {
   return {
@@ -59,6 +64,7 @@ export function init(): BaseSettings {
     httpsProxy: '',
     noProxy: '',
     maxRedirects: -1,
+    maxHistoryResponses: 20,
     proxyEnabled: false,
     timeout: 0,
     validateSSL: true,
@@ -77,6 +83,7 @@ export function init(): BaseSettings {
     fontInterface: null,
     fontSize: 13,
     fontVariantLigatures: false,
+    enableSyncBeta: false,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
   };
 }

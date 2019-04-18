@@ -40,7 +40,7 @@ class ResponseHistoryDropdown extends PureComponent {
   }
 
   renderDropdownItem(response, i) {
-    const { activeResponse } = this.props;
+    const { activeResponse, requestMethod } = this.props;
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
     const message =
@@ -59,7 +59,7 @@ class ResponseHistoryDropdown extends PureComponent {
           statusCode={response.statusCode}
           statusMessage={response.statusMessage || null}
         />
-        <URLTag small url={response.url} />
+        <URLTag small url={response.url} method={requestMethod} />
         <TimeTag milliseconds={response.elapsedTime} small />
         <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} small />
         {!response.requestVersionId && <i className="icon fa fa-info-circle" title={message} />}
@@ -116,6 +116,7 @@ ResponseHistoryDropdown.propTypes = {
   handleDeleteResponse: PropTypes.func.isRequired,
   onChange: PropTypes.func.isRequired,
   requestId: PropTypes.string.isRequired,
+  requestMethod: PropTypes.string.isRequired,
   responses: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional

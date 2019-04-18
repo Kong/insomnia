@@ -43,4 +43,22 @@ describe('setDefaults()', () => {
       data: {},
     });
   });
+
+  describe('unthrowableParseJson', () => {
+    it('should parse happy json', () => {
+      const json = '{"foo": "bar"}';
+      const obj = utils.unthrowableParseJson(json);
+
+      expect(obj).toEqual({ foo: 'bar' });
+    });
+
+    it('should quietly fail on bad json', () => {
+      expect(() => {
+        const json = '{"foo": "bar';
+        const obj = utils.unthrowableParseJson(json);
+
+        expect(obj).toBeNull();
+      }).not.toThrow();
+    });
+  });
 });
