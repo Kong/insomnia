@@ -95,7 +95,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
         collapsed: false,
         children: children,
         totalRequests: totalRequests,
-        selectedRequests: 0,
+        selectedRequests: totalRequests, // Default select all
       },
     });
   }
@@ -113,7 +113,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
       collapsed: false,
       children: children,
       totalRequests: totalRequests,
-      selectedRequests: 0,
+      selectedRequests: totalRequests, // Default select all
     };
   }
 
@@ -189,7 +189,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     const isExportDisabled = treeRoot != null ? treeRoot.selectedRequests === 0 : false;
     return (
       <Modal ref={this.setModalRef} tall freshState {...this.props}>
-        <ModalHeader>Export Requests</ModalHeader>
+        <ModalHeader>Select Requests to Export</ModalHeader>
         <ModalBody>
           <div className="requests-tree">
             <Tree

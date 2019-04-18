@@ -258,10 +258,6 @@ class Wrapper extends React.PureComponent<Props, State> {
     this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri);
   }
 
-  _handleExportWorkspaceToFile(): void {
-    this.props.handleExportFile(this.props.activeWorkspace._id);
-  }
-
   _handleSetActiveResponse(responseId: string | null): void {
     if (!this.props.activeRequest) {
       console.warn('Tried to set active response when request not active');
@@ -540,7 +536,6 @@ class Wrapper extends React.PureComponent<Props, State> {
 
           <SettingsModal
             ref={registerModal}
-            handleExportWorkspaceToFile={this._handleExportWorkspaceToFile}
             handleShowExportRequestsModal={handleShowExportRequestsModal}
             handleExportAllToFile={handleExportFile}
             handleImportFile={this._handleImportFile}

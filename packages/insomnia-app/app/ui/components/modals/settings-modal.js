@@ -48,11 +48,6 @@ class SettingsModal extends PureComponent {
     this.modal.hide();
   }
 
-  _handleExportWorkspace() {
-    this.props.handleExportWorkspaceToFile();
-    this.modal.hide();
-  }
-
   _handleImportFile() {
     this.props.handleImportFile();
     this.modal.hide();
@@ -134,7 +129,6 @@ class SettingsModal extends PureComponent {
               <ImportExport
                 handleExportAll={this._handleExportAllToFile}
                 handleShowExportRequestsModal={this._handleShowExportRequestsModal}
-                handleExportWorkspace={this._handleExportWorkspace}
                 handleImportFile={this._handleImportFile}
                 handleImportUri={this._handleImportUri}
               />
@@ -163,7 +157,6 @@ class SettingsModal extends PureComponent {
 
 SettingsModal.propTypes = {
   // Functions
-  handleExportWorkspaceToFile: PropTypes.func.isRequired,
   handleShowExportRequestsModal: PropTypes.func.isRequired,
   handleExportAllToFile: PropTypes.func.isRequired,
   handleImportFile: PropTypes.func.isRequired,
