@@ -255,6 +255,7 @@ class ResponsePane extends React.PureComponent<Props> {
               activeResponse={response}
               responses={responses}
               requestId={request._id}
+              requestMethod={request.method}
               handleSetActiveResponse={handleSetActiveResponse}
               handleDeleteResponses={handleDeleteResponses}
               handleDeleteResponse={handleDeleteResponse}
