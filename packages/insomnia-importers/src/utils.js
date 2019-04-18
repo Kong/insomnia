@@ -54,3 +54,11 @@ module.exports.setDefaultsEnvironment = function(environment) {
 module.exports.getDateString = function() {
   return new Date().toISOString();
 };
+
+module.exports.unthrowableParseJson = function(rawData) {
+  try {
+    return JSON.parse(rawData);
+  } catch (err) {
+    return null;
+  }
+}

@@ -1,25 +1,30 @@
+'use strict'
+
 const SwaggerParser = require('swagger-parser');
+const URL = require('url').URL;
 const utils = require('../utils');
 
-const SUPPORTED_SWAGGER_VERSION = '2.0';
+const SUPPORTED_OPENAPI_VERSION = /^3\.\d+\.\d+$/; // 3.x.x
 const MIMETYPE_JSON = 'application/json';
-const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON];
+const MIMETYPE_LITERALLY_ANYTHING = '*/*';
+const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON, MIMETYPE_LITERALLY_ANYTHING];
 const WORKSPACE_ID = '__WORKSPACE_1__';
 
 let requestCount = 1;
 let requestGroupCount = 1;
 
-module.exports.id = 'swagger2';
-module.exports.name = 'Swagger 2.0';
-module.exports.description = 'Importer for Swagger 2.0 specification (json/yaml)';
+module.exports.id = 'openapi3';
+module.exports.name = 'OpenAPI 3.0';
+module.exports.description = 'Importer for OpenAPI 3.0 specification (json/yaml)';
 
 module.exports.convert = async function(rawData) {
+  // Reset
   requestCount = 1;
   requestGroupCount = 1;
 
   // Validate
   const api = await parseDocument(rawData);
-  if (!api || api.swagger !== SUPPORTED_SWAGGER_VERSION) {
+  if (!api || !SUPPORTED_OPENAPI_VERSION.test(api.openapi)) {
     return null;
   }
 
@@ -42,29 +47,32 @@ module.exports.convert = async function(rawData) {
     },
   };
 
-  const swaggerEnv = {
+  const servers = api.servers.map(s => new URL(s.url));
+  const defaultServer = servers[0] || new URL('http://example.com/');
+
+  const openapiEnv = {
     _type: 'environment',
     _id: '__ENV_2__',
     parentId: baseEnv._id,
-    name: 'Swagger env',
+    name: 'OpenAPI env',
     data: {
-      base_path: api.basePath || '',
-      scheme: (api.schemes || ['http'])[0],
-      host: api.host || '',
+      base_path: defaultServer.pathname || '',
+      scheme: defaultServer.protocol.replace(/:$/, '') || ['http'], // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
+      host: defaultServer.host || '',
     },
   };
 
   const endpoints = parseEndpoints(api);
 
-  return [workspace, baseEnv, swaggerEnv, ...endpoints];
-};
+  return [workspace, baseEnv, openapiEnv, ...endpoints];
+}
 
 /**
- * Parse string data into swagger 2.0 object (https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#swagger-object)
+ * Parse string data into openapi 3 object (https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md#oasObject)
  *
  * @param {string} rawData
  *
- * @returns {Object|null} Swagger 2.0 object
+ * @returns {Object|null} OpenAPI 3 object
  */
 async function parseDocument(rawData) {
   try {
@@ -81,15 +89,14 @@ async function parseDocument(rawData) {
 }
 
 /**
- * Create request definitions based on swagger document.
+ * Create request definitions based on openapi document.
  *
- * @param {Object} document - Swagger 2.0 valid object (https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#swagger-object)
+ * @param {Object} document - OpenAPI 3 valid object (https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md#oasObject)
  *
  * @returns {Object[]} array of insomnia endpoints definitions
  */
 function parseEndpoints(document) {
   const defaultParent = WORKSPACE_ID;
-  const globalMimeTypes = document.consumes;
 
   const paths = Object.keys(document.paths);
   const endpointsSchemas = paths
@@ -119,7 +126,7 @@ function parseEndpoints(document) {
         ? `${endpointSchema.operationId}${index > 0 ? index : ''}`
         : `__REQUEST_${requestCount++}__`;
       let parentId = folderLookup[tag] || defaultParent;
-      requests.push(importRequest(endpointSchema, globalMimeTypes, id, parentId));
+      requests.push(importRequest(endpointSchema, id, parentId));
     });
   });
 
@@ -130,7 +137,7 @@ function parseEndpoints(document) {
  * Return Insomnia folder / request group
  *
  *
- * @param {Object} item - swagger 2.0 endpoint schema
+ * @param {Object} item - OpenAPI 3 endpoint schema
  * @param {string} parentId - id of parent category
  * @returns {Object}
  */
@@ -148,13 +155,12 @@ function importFolderItem(item, parentId) {
  * Return Insomnia request
  *
  *
- * @param {Object} endpointSchema - swagger 2.0 endpoint schema
- * @param {string[]} globalMimeTypes - list of mimeTypes available in document globally (i.e. document.consumes)
+ * @param {Object} endpointSchema - OpenAPI 3 endpoint schema
  * @param {string} id - id to be given to current request
  * @param {string} parentId - id of parent category
  * @returns {Object}
  */
-function importRequest(endpointSchema, globalMimeTypes, id, parentId) {
+function importRequest(endpointSchema, id, parentId) {
   const name = endpointSchema.summary || `${endpointSchema.method} ${endpointSchema.path}`;
   return {
     _type: 'request',
@@ -163,7 +169,7 @@ function importRequest(endpointSchema, globalMimeTypes, id, parentId) {
     name,
     method: endpointSchema.method.toUpperCase(),
     url: '{{ base_url }}' + pathWithParamsAsVariables(endpointSchema.path),
-    body: prepareBody(endpointSchema, globalMimeTypes),
+    body: prepareBody(endpointSchema),
     headers: prepareHeaders(endpointSchema),
     parameters: prepareQueryParams(endpointSchema),
   };
@@ -184,7 +190,7 @@ function pathWithParamsAsVariables(path) {
 /**
  * Imports insomnia definitions of query parameters.
  *
- * @param {Object} endpointSchema - swagger 2.0 endpoint schema
+ * @param {Object} endpointSchema - OpenAPI 3 endpoint schema
  * @returns {Object[]} array of parameters definitions
  */
 function prepareQueryParams(endpointSchema) {
@@ -197,7 +203,7 @@ function prepareQueryParams(endpointSchema) {
 /**
  * Imports insomnia definitions of header parameters.
  *
- * @param {Object} endpointSchema - swagger 2.0 endpoint schema
+ * @param {Object} endpointSchema - OpenAPI 3 endpoint schema
  * @returns {Object[]} array of parameters definitions
  */
 function prepareHeaders(endpointSchema) {
@@ -212,35 +218,37 @@ function prepareHeaders(endpointSchema) {
  *
  * If multiple types are available, the one for which an example can be generated will be selected first (i.e. application/json)
  *
- * @param {Object} endpointSchema - swagger 2.0 endpoint schema
- * @param {string[]} globalMimeTypes - list of mimeTypes available in document globally (i.e. document.consumes)
+ * @param {Object} endpointSchema - OpenAPI 3 endpoint schema
  *
  * @return {Object} insomnia request's body definition
  */
-function prepareBody(endpointSchema, globalMimeTypes) {
-  const mimeTypes = endpointSchema.consumes || globalMimeTypes || [];
+function prepareBody(endpointSchema) {
+  // request
+  const requestBody = endpointSchema.requestBody || {};
+  const content = requestBody.content || {};
+  const mimeTypes = Object.keys(content);
+
   const isAvailable = m => mimeTypes.includes(m);
   const supportedMimeType = SUPPORTED_MIME_TYPES.find(isAvailable);
 
   if (supportedMimeType === MIMETYPE_JSON) {
-    const isSendInBody = p => p.in === 'body';
-    const parameters = endpointSchema.parameters || [];
-    const bodyParameter = parameters.find(isSendInBody);
-    if (!bodyParameter) {
+    const bodyParameter = content[supportedMimeType];
+
+    if (bodyParameter == null) {
       return {
-        mimeType: supportedMimeType,
+        mimeType: MIMETYPE_JSON,
       };
     }
 
-    const example = bodyParameter ? generateParameterExample(bodyParameter.schema) : undefined;
+    const example = generateParameterExample(bodyParameter.schema);
     const text = JSON.stringify(example, null, 2);
     return {
-      mimeType: supportedMimeType,
+      mimeType: MIMETYPE_JSON,
       text,
     };
   }
 
-  if (mimeTypes && mimeTypes.length) {
+  if (mimeTypes && mimeTypes.length && mimeTypes[0] !== MIMETYPE_LITERALLY_ANYTHING) {
     return {
       mimeType: mimeTypes[0] || undefined,
     };
@@ -250,18 +258,18 @@ function prepareBody(endpointSchema, globalMimeTypes) {
 }
 
 /**
- * Converts swagger schema of parametes into insomnia one.
+ * Converts openapi schema of parametes into insomnia one.
  *
- * @param {Object[]} parameters - array of swagger schemas of parameters
+ * @param {Object[]} parameters - array of OpenAPI schemas of parameters
  * @returns {Object[]} array of insomnia parameters definitions
  */
 function convertParameters(parameters) {
   return parameters.map(parameter => {
-    const { required, name } = parameter;
+    const { required, name, schema } = parameter;
     return {
       name,
       disabled: required !== true,
-      value: `${generateParameterExample(parameter)}`,
+      value: `${generateParameterExample(schema)}`,
     };
   });
 }
@@ -270,8 +278,8 @@ function convertParameters(parameters) {
  * Generate example value of parameter based on it's schema.
  * Returns example / default value of the parameter, if any of those are defined. If not, returns value based on parameter type.
  *
- * @param {string|Object} schema - Swagger 2.0 parameter definition object
- * (https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#parametersDefinitionsObject) or string with valid parameter type
+ * @param {string|Object} schema - OpenAPI 3 parameter definition object
+ * (https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md#parameterObject) or string with valid parameter type
  *
  * @returns {*}
  */

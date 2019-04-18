@@ -16,8 +16,11 @@
     "test": "jest --silent"
   },
   "dependencies": {
-    "commander": "^2.9.0",
+    "commander": "^2.20.0",
     "shell-quote": "^1.6.1",
-    "swagger-parser": "^4.0.1"
+    "swagger-parser": "^6.0.5"
+  },
+  "devDependencies": {
+    "jest": "^24.7.1"
   }
 }
