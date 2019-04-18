@@ -5,9 +5,10 @@ import classnames from 'classnames';
 import EnvironmentsDropdown from '../dropdowns/environments-dropdown';
 import SidebarFilter from './sidebar-filter';
 import SidebarChildren from './sidebar-children';
-import SyncButton from '../dropdowns/sync-dropdown';
+import SyncDropdown from '../dropdowns/sync-dropdown';
 import WorkspaceDropdown from '../dropdowns/workspace-dropdown';
 import { SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS } from '../../../common/constants';
+import SyncLegacyDropdown from '../dropdowns/sync-legacy-dropdown';
 
 @autobind
 class Sidebar extends PureComponent {
@@ -39,8 +40,6 @@ class Sidebar extends PureComponent {
       environments,
       activeEnvironment,
       handleSetActiveWorkspace,
-      handleImportFile,
-      handleExportFile,
       handleChangeFilter,
       isLoading,
       handleCreateRequest,
@@ -56,6 +55,9 @@ class Sidebar extends PureComponent {
       activeRequest,
       environmentHighlightColorStyle,
       hotKeyRegistry,
+      enableSyncBeta,
+      vcs,
+      syncItems,
     } = this.props;
 
     return (
@@ -79,10 +81,10 @@ class Sidebar extends PureComponent {
           workspaces={workspaces}
           unseenWorkspaces={unseenWorkspaces}
           hotKeyRegistry={hotKeyRegistry}
-          handleExportFile={handleExportFile}
-          handleImportFile={handleImportFile}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
+          enableSyncBeta={enableSyncBeta}
           isLoading={isLoading}
+          vcs={vcs}
         />
 
         <div className="sidebar__menu">
@@ -128,7 +130,23 @@ class Sidebar extends PureComponent {
           hotKeyRegistry={hotKeyRegistry}
         />
 
-        <SyncButton className="sidebar__footer" key={workspace._id} workspace={workspace} />
+        {enableSyncBeta &&
+          vcs && (
+            <SyncDropdown
+              className="sidebar__footer"
+              workspace={workspace}
+              vcs={vcs}
+              syncItems={syncItems}
+            />
+          )}
+
+        {!enableSyncBeta && (
+          <SyncLegacyDropdown
+            className="sidebar__footer"
+            key={workspace._id}
+            workspace={workspace}
+          />
+        )}
       </aside>
     );
   }
@@ -139,8 +157,6 @@ Sidebar.propTypes = {
   handleActivateRequest: PropTypes.func.isRequired,
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
   handleChangeFilter: PropTypes.func.isRequired,
-  handleImportFile: PropTypes.func.isRequired,
-  handleExportFile: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
   handleSetActiveEnvironment: PropTypes.func.isRequired,
   moveDoc: PropTypes.func.isRequired,
@@ -165,11 +181,14 @@ Sidebar.propTypes = {
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
   environmentHighlightColorStyle: PropTypes.string.isRequired,
   hotKeyRegistry: PropTypes.object.isRequired,
+  enableSyncBeta: PropTypes.bool.isRequired,
+  syncItems: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional
   filter: PropTypes.string,
   activeRequest: PropTypes.object,
   activeEnvironment: PropTypes.object,
+  vcs: PropTypes.object,
 };
 
 export default Sidebar;

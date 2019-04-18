@@ -5,13 +5,13 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import * as sync from '../../../sync';
+import * as sync from '../../../sync-legacy';
 import {
   SYNC_MODE_OFF,
   SYNC_MODE_ON,
   SYNC_MODE_NEVER,
   SYNC_MODE_UNSET,
-} from '../../../sync/storage';
+} from '../../../sync-legacy/storage';
 import type { Workspace } from '../../../models/workspace';
 import HelpTooltip from '../help-tooltip';
 

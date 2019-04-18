@@ -6,6 +6,7 @@ export const name = 'Request Version';
 export const type = 'RequestVersion';
 export const prefix = 'rvr';
 export const canDuplicate = false;
+export const canSync = false;
 
 const FIELDS_TO_IGNORE = [
   '_id',

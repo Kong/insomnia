@@ -8,13 +8,13 @@
     "url": "https://github.com/getinsomnia/insomnia"
   },
   "scripts": {
-    "bootstrap": "npm install && lerna bootstrap && lerna run bootstrap",
+    "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap",
     "publish": "lerna publish",
     "clean": "lerna clean --yes && rimraf node_modules",
-    "test": "lerna run test --stream",
-    "app-start": "lerna run start --stream --scope=insomnia-app",
-    "app-build": "lerna run build --stream --scope=insomnia-app",
-    "app-package": "lerna run package --stream --scope=insomnia-app",
+    "test": "lerna run --stream --parallel test",
+    "app-start": "lerna run start --stream --parallel --bail",
+    "app-build": "lerna run build --stream --parallel --bail",
+    "app-package": "lerna run package --stream --parallel --bail",
     "format-code": "prettier --write \"**/*.js\""
   },
   "husky": {
@@ -23,11 +23,22 @@
     }
   },
   "devDependencies": {
+    "@babel/cli": "^7.4.3",
+    "@babel/core": "^7.4.3",
+    "@babel/plugin-proposal-decorators": "^7.4.0",
+    "@babel/preset-env": "^7.4.3",
+    "@babel/preset-flow": "^7.0.0",
+    "@babel/preset-react": "^7.0.0",
+    "babel-eslint": "^8.2.3",
+    "babel-jest": "^22.4.3",
+    "babel-loader": "^8.0.5",
+    "flow-bin": "^0.96.0",
     "husky": "^1.0.0-rc.9",
-    "jest": "^23.6.0",
-    "lerna": "^3.4.3",
-    "prettier": "^1.13.6",
-    "pretty-quick": "^1.6.0",
-    "rimraf": "^2.6.2"
-  }
+    "jest": "^24.7.1",
+    "lerna": "^3.13.1",
+    "prettier": "^1.16.4",
+    "pretty-quick": "^1.10.0",
+    "rimraf": "^2.6.3"
+  },
+  "dependencies": {}
 }

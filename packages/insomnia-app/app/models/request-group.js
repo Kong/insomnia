@@ -6,6 +6,7 @@ export const name = 'Folder';
 export const type = 'RequestGroup';
 export const prefix = 'fld';
 export const canDuplicate = true;
+export const canSync = true;
 
 type BaseRequestGroup = {
   name: string,

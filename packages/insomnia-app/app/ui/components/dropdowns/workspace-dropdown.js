@@ -1,7 +1,7 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
-import * as classnames from 'classnames';
+import classnames from 'classnames';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
 import DropdownButton from '../base/dropdown/dropdown-button';
@@ -10,30 +10,57 @@ import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
 import { getAppVersion } from '../../../common/constants';
-import { showModal, showPrompt } from '../modals/index';
+import { showAlert, showModal, showPrompt } from '../modals';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
-import * as session from '../../../sync/session';
 import LoginModal from '../modals/login-modal';
 import Tooltip from '../tooltip';
 import KeydownBinder from '../keydown-binder';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
+import type { Workspace } from '../../../models/workspace';
+import type { HotKeyRegistry } from '../../../common/hotkeys';
+import SyncShareModal from '../modals/sync-share-modal';
+import * as db from '../../../common/database';
+import VCS from '../../../sync/vcs';
+import HelpTooltip from '../help-tooltip';
+import type { Project } from '../../../sync/types';
+import * as sync from '../../../sync-legacy/index';
+import PromptButton from '../base/prompt-button';
+import * as session from '../../../account/session';
+
+type Props = {
+  isLoading: boolean,
+  handleSetActiveWorkspace: (id: string) => void,
+  workspaces: Array<Workspace>,
+  unseenWorkspaces: Array<Workspace>,
+  activeWorkspace: Workspace,
+  hotKeyRegistry: HotKeyRegistry,
+  enableSyncBeta: boolean,
+  vcs: VCS | null,
+
+  // Optional
+  className?: string,
+};
+
+type State = {
+  remoteProjects: Array<Project>,
+  localProjects: Array<Project>,
+  pullingProjects: { [string]: boolean },
+};
 
 @autobind
-class WorkspaceDropdown extends PureComponent {
-  constructor(props) {
+class WorkspaceDropdown extends React.PureComponent<Props, State> {
+  _dropdown: ?Dropdown;
+
+  constructor(props: Props) {
     super(props);
     this.state = {
-      loggedIn: false,
+      remoteProjects: [],
+      localProjects: [],
+      pullingProjects: {},
     };
-  }
-
-  async _handleDropdownOpen() {
-    if (this.state.loggedIn !== session.isLoggedIn()) {
-      this.setState({ loggedIn: session.isLoggedIn() });
-    }
   }
 
   async _handleDropdownHide() {
@@ -46,36 +73,95 @@ class WorkspaceDropdown extends PureComponent {
     }
   }
 
-  _setDropdownRef(n) {
+  async _handleDropdownOpen() {
+    this._refreshRemoteWorkspaces();
+  }
+
+  async _refreshRemoteWorkspaces() {
+    const { vcs } = this.props;
+    if (!vcs) {
+      return;
+    }
+
+    if (!session.isLoggedIn()) {
+      return;
+    }
+
+    const remoteProjects = await vcs.remoteProjects();
+    const localProjects = await vcs.localProjects();
+    this.setState({ remoteProjects, localProjects });
+  }
+
+  async _handlePullRemoteWorkspace(project: Project) {
+    const { vcs } = this.props;
+    if (!vcs) {
+      throw new Error('VCS is not defined');
+    }
+
+    this.setState(state => ({
+      pullingProjects: { ...state.pullingProjects, [project.id]: true },
+    }));
+
+    try {
+      // Clone old VCS so we don't mess anything up while working on other projects
+      const newVCS = vcs.newInstance();
+
+      // Remove all projects for workspace first
+      await newVCS.removeProjectsForRoot(project.rootDocumentId);
+
+      // Set project, checkout master, and pull
+      await newVCS.setProject(project);
+      await newVCS.checkout([], 'master');
+      await newVCS.pull([]); // There won't be any existing docs since it's a new pull
+
+      const flushId = await db.bufferChanges();
+      for (const doc of await newVCS.allDocuments()) {
+        await db.upsert(doc);
+      }
+      await db.flushChanges(flushId);
+
+      // handleSetActiveWorkspace(project.rootDocumentId);
+      vcs.setProject(project);
+      await this._refreshRemoteWorkspaces();
+    } catch (err) {
+      this._dropdown && this._dropdown.hide();
+      showAlert({
+        title: 'Pull Error',
+        message: `Failed to pull workspace. ${err.message}`,
+      });
+    }
+
+    this.setState(state => ({
+      pullingProjects: { ...state.pullingProjects, [project.id]: false },
+    }));
+  }
+
+  _setDropdownRef(n: ?Dropdown) {
     this._dropdown = n;
   }
 
-  _handleShowLogin() {
-    showModal(LoginModal);
+  static async _handleLogout() {
+    await sync.logout();
   }
 
-  _handleShowExport() {
+  static _handleShowExport() {
     showModal(SettingsModal, TAB_INDEX_EXPORT);
   }
 
-  _handleShowSettings() {
+  static _handleShowSettings() {
     showModal(SettingsModal);
   }
 
-  _handleShowWorkspaceSettings() {
-    showModal(WorkspaceSettingsModal, {
-      workspace: this.props.activeWorkspace,
-    });
+  static _handleShowWorkspaceSettings() {
+    showModal(WorkspaceSettingsModal);
   }
 
   _handleShowShareSettings() {
-    showModal(WorkspaceShareSettingsModal, {
-      workspace: this.props.activeWorkspace,
-    });
-  }
-
-  _handleSwitchWorkspace(workspaceId) {
-    this.props.handleSetActiveWorkspace(workspaceId);
+    if (this.props.enableSyncBeta) {
+      showModal(SyncShareModal);
+    } else {
+      showModal(WorkspaceShareSettingsModal);
+    }
   }
 
   _handleWorkspaceCreate() {
@@ -91,10 +177,21 @@ class WorkspaceDropdown extends PureComponent {
     });
   }
 
-  _handleKeydown(e) {
+  _handleKeydown(e: KeyboardEvent) {
     executeHotKey(e, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    // Reload workspaces if we just got a new VCS instance
+    if (this.props.vcs && !prevProps.vcs) {
+      this._refreshRemoteWorkspaces();
+    }
+  }
+
+  componentDidMount() {
+    this._refreshRemoteWorkspaces();
   }
 
   render() {
@@ -105,8 +202,22 @@ class WorkspaceDropdown extends PureComponent {
       unseenWorkspaces,
       isLoading,
       hotKeyRegistry,
+      handleSetActiveWorkspace,
+      enableSyncBeta,
       ...other
     } = this.props;
+
+    const { remoteProjects, localProjects, pullingProjects } = this.state;
+
+    const missingRemoteProjects = remoteProjects.filter(({ id, rootDocumentId }) => {
+      const localProjectExists = localProjects.find(p => p.id === id);
+      const workspaceExists = workspaces.find(w => w._id === rootDocumentId);
+
+      // Mark as missing if:
+      //   - the project doesn't yet exists locally
+      //   - the project exists locally but somehow the workspace doesn't anymore
+      return !(workspaceExists && localProjectExists);
+    });
 
     const nonActiveWorkspaces = workspaces
       .filter(w => w._id !== activeWorkspace._id)
@@ -116,7 +227,8 @@ class WorkspaceDropdown extends PureComponent {
 
     const unseenWorkspacesMessage = (
       <div>
-        The following workspaces were added<br />
+        The following workspaces were added
+        <br />
         {addedWorkspaceNames}
       </div>
     );
@@ -145,7 +257,7 @@ class WorkspaceDropdown extends PureComponent {
             </h1>
           </DropdownButton>
           <DropdownDivider>{activeWorkspace.name}</DropdownDivider>
-          <DropdownItem onClick={this._handleShowWorkspaceSettings}>
+          <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
             <i className="fa fa-wrench" /> Workspace Settings
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
           </DropdownItem>
@@ -159,10 +271,10 @@ class WorkspaceDropdown extends PureComponent {
           {nonActiveWorkspaces.map(w => {
             const isUnseen = !!unseenWorkspaces.find(v => v._id === w._id);
             return (
-              <DropdownItem key={w._id} onClick={this._handleSwitchWorkspace} value={w._id}>
+              <DropdownItem key={w._id} onClick={handleSetActiveWorkspace} value={w._id}>
                 <i className="fa fa-random" /> To <strong>{w.name}</strong>
                 {isUnseen && (
-                  <Tooltip message="This workspace is new">
+                  <Tooltip message="You haven't seen this workspace before" position="top">
                     <i className="width-auto fa fa-asterisk surprise" />
                   </Tooltip>
                 )}
@@ -171,28 +283,59 @@ class WorkspaceDropdown extends PureComponent {
           })}
 
           <DropdownItem onClick={this._handleWorkspaceCreate}>
-            <i className="fa fa-empty" /> New Workspace
+            <i className="fa fa-empty" /> Create Workspace
           </DropdownItem>
+
+          {missingRemoteProjects.length > 0 && (
+            <DropdownDivider>
+              Remote Workspaces{' '}
+              <HelpTooltip>
+                These workspaces have been shared with you via Insomnia Sync and do not yet exist on
+                your machine.
+              </HelpTooltip>
+            </DropdownDivider>
+          )}
+
+          {missingRemoteProjects.map(p => (
+            <DropdownItem
+              key={p.id}
+              stayOpenAfterClick
+              onClick={() => this._handlePullRemoteWorkspace(p)}>
+              {pullingProjects[p.id] ? (
+                <i className="fa fa-refresh fa-spin" />
+              ) : (
+                <i className="fa fa-cloud-download" />
+              )}
+              Pull <strong>{p.name}</strong>
+            </DropdownItem>
+          ))}
 
           <DropdownDivider>Insomnia Version {getAppVersion()}</DropdownDivider>
 
-          <DropdownItem onClick={this._handleShowSettings}>
+          <DropdownItem onClick={WorkspaceDropdown._handleShowSettings}>
             <i className="fa fa-cog" /> Preferences
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.PREFERENCES_SHOW_GENERAL.id]} />
           </DropdownItem>
-          <DropdownItem onClick={this._handleShowExport}>
+          <DropdownItem onClick={WorkspaceDropdown._handleShowExport}>
             <i className="fa fa-share" /> Import/Export
           </DropdownItem>
 
           {/* Not Logged In */}
 
-          {!this.state.loggedIn && (
-            <DropdownItem key="login" onClick={this._handleShowLogin}>
+          {session.isLoggedIn() ? (
+            <DropdownItem
+              key="login"
+              onClick={WorkspaceDropdown._handleLogout}
+              buttonClass={PromptButton}>
+              <i className="fa fa-sign-out" /> Logout
+            </DropdownItem>
+          ) : (
+            <DropdownItem key="login" onClick={() => showModal(LoginModal)}>
               <i className="fa fa-sign-in" /> Log In
             </DropdownItem>
           )}
 
-          {!this.state.loggedIn && (
+          {!session.isLoggedIn() && (
             <DropdownItem
               key="invite"
               buttonClass={Link}
@@ -207,20 +350,5 @@ class WorkspaceDropdown extends PureComponent {
     );
   }
 }
-
-WorkspaceDropdown.propTypes = {
-  // Required
-  isLoading: PropTypes.bool.isRequired,
-  handleImportFile: PropTypes.func.isRequired,
-  handleExportFile: PropTypes.func.isRequired,
-  handleSetActiveWorkspace: PropTypes.func.isRequired,
-  workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
-  unseenWorkspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
-  activeWorkspace: PropTypes.object.isRequired,
-  hotKeyRegistry: PropTypes.object.isRequired,
-
-  // Optional
-  className: PropTypes.string,
-};
 
 export default WorkspaceDropdown;

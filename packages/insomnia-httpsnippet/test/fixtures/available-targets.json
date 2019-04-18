@@ -9,7 +9,8 @@
         "key": "curl",
         "title": "cURL",
         "link": "http://curl.haxx.se/",
-        "description": "cURL is a command line tool and library for transferring data with URL syntax"
+        "description":
+          "cURL is a command line tool and library for transferring data with URL syntax"
       },
       {
         "key": "httpie",
@@ -146,7 +147,8 @@
       {
         "key": "nsurlsession",
         "title": "NSURLSession",
-        "link": "https://developer.apple.com/library/mac/documentation/Foundation/Reference/NSURLSession_class/index.html",
+        "link":
+          "https://developer.apple.com/library/mac/documentation/Foundation/Reference/NSURLSession_class/index.html",
         "description": "Foundation's NSURLSession request"
       }
     ]
@@ -160,7 +162,8 @@
       {
         "key": "nsurlsession",
         "title": "NSURLSession",
-        "link": "https://developer.apple.com/library/mac/documentation/Foundation/Reference/NSURLSession_class/index.html",
+        "link":
+          "https://developer.apple.com/library/mac/documentation/Foundation/Reference/NSURLSession_class/index.html",
         "description": "Foundation's NSURLSession request"
       }
     ]

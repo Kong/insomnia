@@ -141,7 +141,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     }
 
     // Ensure all arguments exist
-    const defaultArgs = this._getDefaultTagData(activeTagDefinition).args;
+    const defaultArgs = TagEditor._getDefaultTagData(activeTagDefinition).args;
     for (let i = 0; i < defaultArgs.length; i++) {
       if (activeTagData.args[i]) {
         continue;
@@ -247,7 +247,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     }, 100);
   }
 
-  _getDefaultTagData(tagDefinition: NunjucksParsedTag): NunjucksParsedTag {
+  static _getDefaultTagData(tagDefinition: NunjucksParsedTag): NunjucksParsedTag {
     const defaultFill: string = templateUtils.getDefaultFill(
       tagDefinition.name,
       tagDefinition.args,
@@ -274,7 +274,7 @@ class TagEditor extends React.PureComponent<Props, State> {
 
     let activeTagData: NunjucksParsedTag | null = tagData;
     if (!activeTagData && tagDefinition) {
-      activeTagData = this._getDefaultTagData(tagDefinition);
+      activeTagData = TagEditor._getDefaultTagData(tagDefinition);
     } else if (!activeTagData && !tagDefinition && this.state.activeTagData) {
       activeTagData = {
         name: 'custom',
@@ -483,7 +483,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     if (argIndex < argDatas.length) {
       argData = argDatas[argIndex];
     } else if (this.state.activeTagDefinition) {
-      const defaultTagData = this._getDefaultTagData(this.state.activeTagDefinition);
+      const defaultTagData = TagEditor._getDefaultTagData(this.state.activeTagDefinition);
       argData = defaultTagData.args[argIndex];
     } else {
       return null;
@@ -510,11 +510,11 @@ class TagEditor extends React.PureComponent<Props, State> {
       argInput = this.renderArgString(strValue, placeholder);
     } else if (argDefinition.type === 'enum') {
       const { options } = argDefinition;
-      argInput = this.renderArgEnum(strValue, options);
+      argInput = this.renderArgEnum(strValue, options || []);
     } else if (argDefinition.type === 'file') {
       argInput = this.renderArgFile(
         strValue,
-        argDefinition.itemTypes,
+        argDefinition.itemTypes || [],
         argIndex,
         argDefinition.extensions,
       );

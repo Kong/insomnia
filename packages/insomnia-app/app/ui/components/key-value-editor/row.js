@@ -376,7 +376,7 @@ class KeyValueEditorRow extends PureComponent {
               <PromptButton
                 key={Math.random()}
                 tabIndex={-1}
-                confirmMessage=" "
+                confirmMessage=""
                 addIcon
                 onClick={this._handleDelete}
                 title="Delete item">
@@ -474,9 +474,9 @@ const dragTarget = {
   },
   hover(props, monitor, component) {
     if (isAbove(monitor, component)) {
-      component.decoratedComponentInstance.setDragDirection(1);
+      component.setDragDirection(1);
     } else {
-      component.decoratedComponentInstance.setDragDirection(-1);
+      component.setDragDirection(-1);
     }
   },
 };
@@ -500,11 +500,11 @@ const source = DragSource('KEY_VALUE_EDITOR', dragSource, sourceCollect)(KeyValu
 const target = DropTarget('KEY_VALUE_EDITOR', dragTarget, targetCollect)(source);
 
 target.prototype.focusNameEnd = function() {
-  this.handler.component.decoratedComponentInstance.focusNameEnd();
+  this.decoratedRef.current.decoratedRef.current.focusNameEnd();
 };
 
 target.prototype.focusValueEnd = function() {
-  this.handler.component.decoratedComponentInstance.focusValueEnd();
+  this.decoratedRef.current.decoratedRef.current.focusValueEnd();
 };
 
 export default target;
