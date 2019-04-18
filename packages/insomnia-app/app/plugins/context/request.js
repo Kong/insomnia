@@ -27,6 +27,9 @@ export function init(
     getMethod(): string {
       return renderedRequest.method;
     },
+    setUrl(url: string): void {
+      renderedRequest.url = url;
+    },
     setBodyText(text: string): void {
       renderedRequest.body.text = text;
     },
@@ -148,7 +151,7 @@ export function init(
   };
 
   if (readOnly) {
-    delete request.setBodyText;
+    delete request.setUrl;
     delete request.setBodyText;
     delete request.setCookie;
     delete request.settingSendCookies;
