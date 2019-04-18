@@ -8,7 +8,6 @@ import crypto from 'crypto';
 import path from 'path';
 import zlib from 'zlib';
 import mkdirp from 'mkdirp';
-import { MAX_RESPONSES } from '../common/constants';
 import * as db from '../common/database';
 import { getDataDirectory } from '../common/misc';
 
@@ -131,13 +130,19 @@ export async function create(patch: Object = {}, maxResponses: number = 20) {
 
   const { parentId } = patch;
 
+  const settings = await models.settings.getOrCreate();
+
   // Create request version snapshot
   const request = await models.request.getById(parentId);
   const requestVersion = request ? await models.requestVersion.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
 
   // Delete all other responses before creating the new one
-  const allResponses = await db.findMostRecentlyModified(type, { parentId }, MAX_RESPONSES);
+  const allResponses = await db.findMostRecentlyModified(
+    type,
+    { parentId },
+    settings.maxHistoryResponses,
+  );
   const recentIds = allResponses.map(r => r._id);
   await db.removeWhere(type, { parentId, _id: { $nin: recentIds } });
 

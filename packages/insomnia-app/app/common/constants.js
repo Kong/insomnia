@@ -57,7 +57,6 @@ export function getClientString() {
 // Global Stuff
 export const DB_PERSIST_INTERVAL = 1000 * 60 * 60 * 2; // Compact every couple hour
 export const DEBOUNCE_MILLIS = 100;
-export const MAX_RESPONSES = 20;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 export const GA_ID = 'UA-86416787-1';
 export const GA_LOCATION = 'https://desktop.insomnia.rest/';

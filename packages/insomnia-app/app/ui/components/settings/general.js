@@ -222,6 +222,19 @@ class General extends React.PureComponent<Props, State> {
           </label>
         </div>
 
+        <div className="form-control form-control--outlined">
+          <label className="inline-block">
+            Max history responses
+            <input
+              type="number"
+              name="maxHistoryResponses"
+              min={1}
+              defaultValue={settings.maxHistoryResponses}
+              onChange={this._handleUpdateSetting}
+            />
+          </label>
+        </div>
+
         <div className="form-row">
           <div className="form-control form-control--outlined pad-top-sm">
             <label>
