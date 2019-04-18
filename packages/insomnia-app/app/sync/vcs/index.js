@@ -782,6 +782,11 @@ export default class VCS {
             parent
             created
             author
+            authorAccount {
+              firstName
+              lastName
+              email
+            }
             name
             description
             state {
@@ -821,6 +826,21 @@ export default class VCS {
         mutation ($projectId: ID!, $snapshots: [SnapshotInput!]!, $branchName: String!) {
           snapshotsCreate(project: $projectId, snapshots: $snapshots, branch: $branchName) {
             id
+            parent
+            created
+            author
+            authorAccount {
+              firstName
+              lastName
+              email
+            }
+            name
+            description
+            state {
+              blob
+              key
+              name
+            }
           }
         }
       `,
@@ -831,6 +851,9 @@ export default class VCS {
         },
         'snapshotsPush',
       );
+
+      // Store them in case something has changed
+      await this._storeSnapshots(snapshotsCreate);
 
       console.log('[sync] Pushed snapshots', snapshotsCreate.map(s => s.id).join(', '));
     }

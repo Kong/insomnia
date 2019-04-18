@@ -11,6 +11,7 @@ import PromptButton from '../base/prompt-button';
 import HelpTooltip from '../help-tooltip';
 import type { Snapshot } from '../../../sync/types';
 import VCS from '../../../sync/vcs';
+import * as session from '../../../account/session';
 
 type Props = {
   workspace: Workspace,
@@ -66,6 +67,34 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
     await this.refreshState();
   }
 
+  static renderAuthorName(snapshot: Snapshot) {
+    let name = '';
+    let email = '';
+
+    if (snapshot.authorAccount) {
+      const { firstName, lastName } = snapshot.authorAccount;
+      name += `${firstName} ${lastName}`;
+      email = snapshot.authorAccount.email;
+    }
+
+    if (snapshot.author === session.getAccountId()) {
+      name += ' (you)';
+    }
+
+    if (name) {
+      return (
+        <React.Fragment>
+          {name}{' '}
+          <HelpTooltip info delay={500}>
+            {email}
+          </HelpTooltip>
+        </React.Fragment>
+      );
+    } else {
+      return '--';
+    }
+  }
+
   render() {
     const { branch, history } = this.state;
 
@@ -79,7 +108,8 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
             <thead>
               <tr>
                 <th className="text-left">Message</th>
-                <th className="text-left">Time</th>
+                <th className="text-left">When</th>
+                <th className="text-left">Author</th>
                 <th className="text-right">Objects</th>
                 <th className="text-right">
                   Restore
@@ -104,6 +134,7 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
                       intervalSeconds={30}
                     />
                   </td>
+                  <td className="text-left">{SyncHistoryModal.renderAuthorName(snapshot)}</td>
                   <td className="text-right">{snapshot.state.length}</td>
                   <td className="text-right">
                     <PromptButton

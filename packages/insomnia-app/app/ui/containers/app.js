@@ -855,24 +855,16 @@ class App extends PureComponent {
     this._updateDocumentTitle();
 
     // Update VCS
-    this._updateVCS(this.props.activeWorkspace);
+    await this._updateVCS(this.props.activeWorkspace);
 
     db.onChange(async changes => {
       let needsRefresh = false;
 
       for (const change of changes) {
-        const [
-          _, // eslint-disable-line no-unused-vars
-          doc,
-          fromSync,
-        ] = change;
+        const [type, doc, fromSync] = change;
 
+        const { vcs } = this.state;
         const { activeRequest } = this.props;
-
-        // No active request, so we don't need to force refresh anything
-        if (!activeRequest) {
-          return;
-        }
 
         // Force refresh if environment changes
         // TODO: Only do this for environments in this workspace (not easy because they're nested)
@@ -882,9 +874,14 @@ class App extends PureComponent {
         }
 
         // Force refresh if sync changes the active request
-        if (fromSync && doc._id === activeRequest._id) {
+        if (fromSync && activeRequest && doc._id === activeRequest._id) {
           needsRefresh = true;
           console.log('[App] Forcing update from request change', change);
+        }
+
+        // Delete VCS project if workspace deleted
+        if (vcs && doc.type === models.workspace.type && type === db.CHANGE_REMOVE) {
+          await vcs.removeProjectsForRoot(doc._id);
         }
       }
 

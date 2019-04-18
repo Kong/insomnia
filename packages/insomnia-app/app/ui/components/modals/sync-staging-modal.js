@@ -75,7 +75,9 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     const { status } = this.state;
     const id = e.currentTarget.name;
 
-    const newStage = status.stage[id]
+    const isStaged = !!status.stage[id];
+
+    const newStage = isStaged
       ? await vcs.unstage(status.stage, [status.stage[id]])
       : await vcs.stage(status.stage, [status.unstaged[id]]);
 
@@ -281,7 +283,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
               return (
                 <tr key={key} className="table--no-outline-row">
                   <td>
-                    <label className="no-pad">
+                    <label className="no-pad wide">
                       <input
                         className="space-right"
                         type="checkbox"
