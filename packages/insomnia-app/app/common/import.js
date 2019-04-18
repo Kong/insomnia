@@ -1,5 +1,6 @@
 // @flow
 import { convert } from 'insomnia-importers';
+import clone from 'clone';
 import * as db from './database';
 import * as har from './har';
 import type { BaseModel } from '../models/index';
@@ -276,7 +277,7 @@ export async function exportRequestsData(
   const workspaces: Array<BaseModel> = [];
   const mapTypeAndIdToDoc: Object = {};
   for (const req of requests) {
-    const ancestors: Array<BaseModel> = await db.withAncestors(req);
+    const ancestors: Array<BaseModel> = clone(await db.withAncestors(req));
     for (const ancestor of ancestors) {
       const key = ancestor.type + '___' + ancestor._id;
       if (mapTypeAndIdToDoc.hasOwnProperty(key)) {

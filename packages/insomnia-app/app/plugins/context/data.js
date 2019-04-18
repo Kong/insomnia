@@ -21,10 +21,10 @@ export function init(): { import: Object, export: Object } {
         options: { includePrivate?: boolean, format?: 'json' | 'yaml' } = {},
       ): Promise<string> {
         options = options || {};
-        return exportWorkspacesData(null, options.includePrivate, options.format || 'json');
+        return exportWorkspacesData(null, !!options.includePrivate, options.format || 'json');
       },
       async har(options: { includePrivate?: boolean } = {}): Promise<string> {
-        return exportWorkspacesHAR(null, options.includePrivate);
+        return exportWorkspacesHAR(null, !!options.includePrivate);
       },
     },
   };

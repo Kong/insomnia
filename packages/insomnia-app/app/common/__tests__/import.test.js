@@ -214,7 +214,7 @@ describe('export', () => {
 
     expect(exportWorkspacesDataJson).toMatchObject({
       _type: 'export',
-      __export_format: 3,
+      __export_format: 4,
       __export_date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/),
       __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
       resources: expect.arrayContaining([
@@ -230,11 +230,14 @@ describe('export', () => {
     expect(exportWorkspacesDataJson.resources.length).toBe(7);
 
     // Test export some requests only.
-    const exportRequestsJson = await importUtil.exportRequestsJSON([r1]);
-    const exportRequestsData = JSON.parse(exportRequestsJson);
-    expect(exportRequestsData).toMatchObject({
+    const exportRequestsJson = await importUtil.exportRequestsData([r1], false, 'json');
+    const exportRequestsYaml = await importUtil.exportRequestsData([r1], false, 'yaml');
+    const exportRequestsDataJSON = JSON.parse(exportRequestsJson);
+    const exportRequestsDataYAML = YAML.parse(exportRequestsYaml);
+
+    expect(exportRequestsDataJSON).toMatchObject({
       _type: 'export',
-      __export_format: 3,
+      __export_format: 4,
       __export_date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/),
       __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
       resources: expect.arrayContaining([
@@ -245,6 +248,11 @@ describe('export', () => {
         expect.objectContaining({ _id: ePub._id }),
       ]),
     });
-    expect(exportRequestsData.resources.length).toBe(5);
+
+    expect(exportRequestsDataJSON.resources.length).toBe(5);
+    expect(exportRequestsDataYAML.resources.length).toBe(5);
+
+    // Ensure JSON and YAML are the same
+    expect(exportRequestsDataJSON.resources).toEqual(exportRequestsDataYAML.resources);
   });
 });
