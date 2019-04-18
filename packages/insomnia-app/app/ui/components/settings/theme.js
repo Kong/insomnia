@@ -94,7 +94,7 @@ class Theme extends React.PureComponent<Props, State> {
     );
   }
 
-  renderThemeRows() {
+  renderThemeRows(): React.Node {
     const { themes } = this.state;
 
     const rows = [];

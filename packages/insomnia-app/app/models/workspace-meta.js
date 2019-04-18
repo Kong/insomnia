@@ -11,6 +11,7 @@ export const name = 'Workspace Meta';
 export const type = 'WorkspaceMeta';
 export const prefix = 'wrkm';
 export const canDuplicate = false;
+export const canSync = false;
 
 type BaseWorkspaceMeta = {
   activeRequestId: string | null,

@@ -49,6 +49,11 @@ class HawkAuth extends React.PureComponent<Props> {
     this._handleChangeProperty('ext', value);
   }
 
+  _handleChangePayloadValidation(): void {
+    const { request } = this.props;
+    this._handleChangeProperty('validatePayload', !request.authentication.validatePayload);
+  }
+
   renderHawkAuthenticationFields(): React.Node {
     const hawkAuthId = this.renderInputRow('Auth ID', 'id', this._handleChangeHawkAuthId);
 
@@ -66,7 +71,13 @@ class HawkAuth extends React.PureComponent<Props> {
 
     const ext = this.renderInputRow('Ext', 'ext', this._handleChangeExt);
 
-    return [hawkAuthId, hawkAuthKey, algorithm, ext];
+    const payloadValidation = this.renderButtonRow(
+      'Validate Payload',
+      'validatePayload',
+      this._handleChangePayloadValidation,
+    );
+
+    return [hawkAuthId, hawkAuthKey, algorithm, ext, payloadValidation];
   }
 
   renderSelectRow(
@@ -115,7 +126,7 @@ class HawkAuth extends React.PureComponent<Props> {
       isVariableUncovered,
     } = this.props;
 
-    const {authentication} = request;
+    const { authentication } = request;
 
     const id = label.replace(/ /g, '-');
     return (
@@ -140,6 +151,44 @@ class HawkAuth extends React.PureComponent<Props> {
               getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}
             />
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
+  renderButtonRow(label: string, property: string, onChange: Function): React.Element<*> {
+    const { request } = this.props;
+    const { authentication } = request;
+    const id = label.replace(/ /g, '-');
+    return (
+      <tr key={id}>
+        <td className="pad-right no-wrap valign-middle">
+          <label htmlFor={id} className="label--small no-pad">
+            {label}
+          </label>
+        </td>
+        <td className="wide">
+          <div
+            className={classnames('form-control form-control--underlined no-margin', {
+              'form-control--inactive': authentication.disabled,
+            })}>
+            <Button
+              className="btn btn--super-duper-compact"
+              id={id}
+              onClick={this._handleChangePayloadValidation}
+              value={authentication.validatePayload}
+              title={
+                authentication.validatePayload
+                  ? 'Enable payload validation'
+                  : 'Disable payload validation'
+              }>
+              {authentication.validatePayload ? (
+                <i className="fa fa-check-square-o" />
+              ) : (
+                <i className="fa fa-square-o" />
+              )}
+            </Button>
           </div>
         </td>
       </tr>

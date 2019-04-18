@@ -19,12 +19,6 @@ module.exports = {
         exclude: [/node_modules/, /__fixtures__/, /__tests__/],
       },
       {
-        // To make
-        test: /\.(js|flow)$/,
-        use: ['babel-loader'],
-        include: [/node_modules\/graphql-language-service-interface/],
-      },
-      {
         test: /\.(less|css)$/,
         use: [
           'style-loader',
@@ -46,6 +40,9 @@ module.exports = {
     ],
   },
   resolve: {
+    alias: {
+      'react-dom': '@hot-loader/react-dom',
+    },
     extensions: ['.js', '.json'],
     mainFields: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main'],
   },

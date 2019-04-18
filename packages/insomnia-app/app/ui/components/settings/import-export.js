@@ -20,20 +20,20 @@ class ImportExport extends PureComponent {
   }
 
   render() {
-    const { handleImportFile, handleExportAll, handleExportWorkspace } = this.props;
+    const { handleImportFile, handleExportAll, handleShowExportRequestsModal } = this.props;
 
     return (
       <div>
         <p className="no-margin-top">
-          Import format will be automatically detected (<strong>
-            Insomnia, Postman v2, HAR, Curl, Swagger
-          </strong>)
+          Import format will be automatically detected (
+          <strong>Insomnia, Postman v2, HAR, Curl, Swagger</strong>)
         </p>
         <p>
           Don't see your format here?{' '}
           <Link href="https://support.insomnia.rest/article/52-importing-and-exporting-data">
             Add Your Own
-          </Link>.
+          </Link>
+          .
         </p>
         <div className="pad-top">
           <Dropdown outline>
@@ -41,7 +41,7 @@ class ImportExport extends PureComponent {
               Export Data <i className="fa fa-caret-down" />
             </DropdownButton>
             <DropdownDivider>Choose Export Type</DropdownDivider>
-            <DropdownItem onClick={handleExportWorkspace}>
+            <DropdownItem onClick={handleShowExportRequestsModal}>
               <i className="fa fa-home" />
               Current Workspace
             </DropdownItem>
@@ -76,7 +76,7 @@ ImportExport.propTypes = {
   handleImportFile: PropTypes.func.isRequired,
   handleImportUri: PropTypes.func.isRequired,
   handleExportAll: PropTypes.func.isRequired,
-  handleExportWorkspace: PropTypes.func.isRequired,
+  handleShowExportRequestsModal: PropTypes.func.isRequired,
 };
 
 export default ImportExport;

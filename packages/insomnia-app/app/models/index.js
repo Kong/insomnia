@@ -61,8 +61,21 @@ export function all() {
   ];
 }
 
-export function types() {
+export function types(): Array<any> {
   return all().map(model => model.type);
+}
+
+export function canSync(d: BaseModel): boolean {
+  if ((d: any).isPrivate) {
+    return false;
+  }
+
+  const m = getModel(d.type);
+  if (!m) {
+    return false;
+  }
+
+  return m.canSync || false;
 }
 
 export function getModel(type: string): Object | null {

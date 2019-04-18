@@ -1,7 +1,18 @@
 // @flow
 
+import type { PluginArgumentEnumOption } from './extensions';
+
 export type NunjucksParsedTagArg = {
-  type: 'string' | 'number' | 'boolean' | 'number' | 'variable' | 'expression',
+  type:
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'number'
+    | 'variable'
+    | 'expression'
+    | 'enum'
+    | 'file'
+    | 'model',
   value: string | number | boolean,
   defaultValue?: string | number | boolean,
   forceVariable?: boolean,
@@ -11,6 +22,10 @@ export type NunjucksParsedTagArg = {
   quotedBy?: '"' | "'",
   validate?: (value: any) => string,
   hide?: (Array<NunjucksParsedTagArg>) => boolean,
+  model?: string,
+  options?: Array<PluginArgumentEnumOption>,
+  itemTypes?: Array<string>,
+  extensions?: Array<string>,
 };
 
 export type NunjucksParsedTag = {
@@ -172,7 +187,8 @@ export function getDefaultFill(name: string, args: Array<NunjucksParsedTagArg>):
     switch (argDefinition.type) {
       case 'enum':
         const { defaultValue, options } = argDefinition;
-        const value = defaultValue !== undefined ? defaultValue : options[0].value;
+        const fallback = options && options.length ? options[0].value : '';
+        const value = defaultValue !== undefined ? String(defaultValue) : String(fallback);
         return `'${value}'`;
       case 'number':
         return `${parseFloat(argDefinition.defaultValue) || 0}`;

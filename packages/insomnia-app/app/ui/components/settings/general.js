@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import * as fontManager from 'font-manager';
+import * as electron from 'electron';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
 import {
@@ -9,10 +10,15 @@ import {
   isWindows,
   UPDATE_CHANNEL_BETA,
   UPDATE_CHANNEL_STABLE,
+  EDITOR_KEY_MAP_DEFAULT,
+  EDITOR_KEY_MAP_EMACS,
+  EDITOR_KEY_MAP_SUBLIME,
+  EDITOR_KEY_MAP_VIM,
 } from '../../../common/constants';
 import type { Settings } from '../../../models/settings';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { setFont } from '../../../plugins/misc';
+import * as session from '../../../account/session';
 
 type Props = {
   settings: Settings,
@@ -62,6 +68,13 @@ class General extends React.PureComponent<Props, State> {
   async _handleToggleMenuBar(e: SyntheticEvent<HTMLInputElement>) {
     const settings = await this._handleUpdateSetting(e);
     this.props.handleToggleMenuBar(settings.autoHideMenuBar);
+  }
+
+  async _handleToggleSyncBeta(e: SyntheticEvent<HTMLInputElement>) {
+    await this._handleUpdateSetting(e);
+    const { app } = electron.remote || electron;
+    app.relaunch();
+    app.exit();
   }
 
   async _handleFontLigatureChange(el: SyntheticEvent<HTMLInputElement>) {
@@ -286,11 +299,13 @@ class General extends React.PureComponent<Props, State> {
                 value={settings.fontMonospace || '__NULL__'}
                 onChange={this._handleFontChange}>
                 <option value="__NULL__">-- System Default --</option>
-                {fonts.filter(i => i.monospace).map((item, index) => (
-                  <option key={index} value={item.family}>
-                    {item.family}
-                  </option>
-                ))}
+                {fonts
+                  .filter(i => i.monospace)
+                  .map((item, index) => (
+                    <option key={index} value={item.family}>
+                      {item.family}
+                    </option>
+                  ))}
               </select>
             </label>
           </div>
@@ -331,10 +346,10 @@ class General extends React.PureComponent<Props, State> {
                 defaultValue={settings.editorKeyMap}
                 name="editorKeyMap"
                 onChange={this._handleUpdateSetting}>
-                <option value="default">Default</option>
-                <option value="vim">Vim</option>
-                <option value="emacs">Emacs</option>
-                <option value="sublime">Sublime</option>
+                <option value={EDITOR_KEY_MAP_DEFAULT}>Default</option>
+                <option value={EDITOR_KEY_MAP_VIM}>Vim</option>
+                <option value={EDITOR_KEY_MAP_EMACS}>Emacs</option>
+                <option value={EDITOR_KEY_MAP_SUBLIME}>Sublime</option>
               </select>
             </label>
           </div>
@@ -342,14 +357,7 @@ class General extends React.PureComponent<Props, State> {
 
         <hr className="pad-top" />
 
-        <h2>
-          HTTP Network Proxy
-          <HelpTooltip
-            className="space-left txt-md"
-            style={{ maxWidth: '20rem', lineWrap: 'word' }}>
-            Enable global network proxy. Supports authentication via Basic Auth, digest, or NTLM
-          </HelpTooltip>
-        </h2>
+        <h2>Request Settings</h2>
 
         <div className="form-row">
           <div className="form-control form-control--outlined">
@@ -381,6 +389,22 @@ class General extends React.PureComponent<Props, State> {
               />
             </label>
           </div>
+        </div>
+
+        <div className="form-control form-control--outlined">
+          <label>
+            Response History Limit
+            <HelpTooltip className="space-left">
+              Number of responses to keep for each request
+            </HelpTooltip>
+            <input
+              type="number"
+              name="maxHistoryResponses"
+              min={1}
+              defaultValue={settings.maxHistoryResponses}
+              onChange={this._handleUpdateSetting}
+            />
+          </label>
         </div>
 
         <hr className="pad-top" />
@@ -527,6 +551,24 @@ class General extends React.PureComponent<Props, State> {
         </div>
 
         <br />
+
+        {session.isLoggedIn() && (
+          <React.Fragment>
+            <hr />
+            <div className="form-control form-control--thin">
+              <label className="inline-block">
+                Enable sync beta (will restart app){' '}
+                <HelpTooltip>Enable the new sync beta features</HelpTooltip>
+                <input
+                  type="checkbox"
+                  name="enableSyncBeta"
+                  checked={settings.enableSyncBeta}
+                  onChange={this._handleToggleSyncBeta}
+                />
+              </label>
+            </div>
+          </React.Fragment>
+        )}
       </div>
     );
   }

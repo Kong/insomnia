@@ -594,12 +594,7 @@ export async function _actuallySend(
         } else if (renderedRequest.authentication.type === AUTH_NETRC) {
           setOpt(Curl.option.NETRC, Curl.netrc.REQUIRED);
         } else {
-          const authHeader = await getAuthHeader(
-            renderedRequest._id,
-            finalUrl,
-            renderedRequest.method,
-            renderedRequest.authentication,
-          );
+          const authHeader = await getAuthHeader(renderedRequest, finalUrl);
 
           if (authHeader) {
             headers.push({
@@ -631,19 +626,21 @@ export async function _actuallySend(
       }
 
       // NOTE: This is last because headers might be modified multiple times
-      const headerStrings = headers.filter(h => h.name).map(h => {
-        const value = h.value || '';
-        if (value === '') {
-          // Curl needs a semicolon suffix to send empty header values
-          return `${h.name};`;
-        } else if (value === DISABLE_HEADER_VALUE) {
-          // Tell Curl NOT to send the header if value is null
-          return `${h.name}:`;
-        } else {
-          // Send normal header value
-          return `${h.name}: ${value}`;
-        }
-      });
+      const headerStrings = headers
+        .filter(h => h.name)
+        .map(h => {
+          const value = h.value || '';
+          if (value === '') {
+            // Curl needs a semicolon suffix to send empty header values
+            return `${h.name};`;
+          } else if (value === DISABLE_HEADER_VALUE) {
+            // Tell Curl NOT to send the header if value is null
+            return `${h.name}:`;
+          } else {
+            // Send normal header value
+            return `${h.name}: ${value}`;
+          }
+        });
       setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       let responseBodyBytes = 0;

@@ -1,11 +1,11 @@
 import React, { PureComponent } from 'react';
 import autobind from 'autobind-decorator';
-import * as session from '../../../sync/session';
-import * as sync from '../../../sync/index';
+import * as sync from '../../../sync-legacy/index';
 import Link from '../base/link';
 import LoginModal from '../modals/login-modal';
 import { hideAllModals, showModal } from '../modals/index';
 import PromptButton from '../base/prompt-button';
+import * as session from '../../../account/session';
 
 @autobind
 class Account extends PureComponent {
@@ -26,9 +26,12 @@ class Account extends PureComponent {
         <div className="notice pad surprise">
           <h1 className="no-margin-top">Try Insomnia Plus!</h1>
           <p>
-            &#128640; Sync your data across devices or with a team<br />
-            &#128640; Keep synced data safe with end-to-end encryption<br />
-            &#128640; Prioritized email support<br />
+            &#128640; Sync your data across devices or with a team
+            <br />
+            &#128640; Keep synced data safe with end-to-end encryption
+            <br />
+            &#128640; Prioritized email support
+            <br />
           </p>
           <br />
           <div className="pad">

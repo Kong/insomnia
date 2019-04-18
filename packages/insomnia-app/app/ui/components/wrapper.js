@@ -32,11 +32,16 @@ import SelectModal from './modals/select-modal';
 import RequestCreateModal from './modals/request-create-modal';
 import RequestPane from './request-pane';
 import RequestSwitcherModal from './modals/request-switcher-modal';
-import SetupSyncModal from './modals/setup-sync-modal';
 import SettingsModal from './modals/settings-modal';
 import FilterHelpModal from './modals/filter-help-modal';
 import ResponsePane from './response-pane';
 import RequestSettingsModal from './modals/request-settings-modal';
+import SetupSyncModal from './modals/setup-sync-modal';
+import SyncStagingModal from './modals/sync-staging-modal';
+import SyncMergeModal from './modals/sync-merge-modal';
+import SyncHistoryModal from './modals/sync-history-modal';
+import SyncShareModal from './modals/sync-share-modal';
+import SyncBranchesModal from './modals/sync-branches-modal';
 import RequestRenderErrorModal from './modals/request-render-error-modal';
 import Sidebar from './sidebar/sidebar';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
@@ -51,6 +56,10 @@ import type { Environment } from '../../models/environment';
 import ErrorBoundary from './error-boundary';
 import type { ClientCertificate } from '../../models/client-certificate';
 import MoveRequestGroupModal from './modals/move-request-group-modal';
+import AddKeyCombinationModal from './modals/add-key-combination-modal';
+import ExportRequestsModal from './modals/export-requests-modal';
+import VCS from '../../sync/vcs';
+import type { StatusCandidate } from '../../sync/types';
 
 type Props = {
   // Helper Functions
@@ -60,6 +69,8 @@ type Props = {
   handleImportFileToWorkspace: Function,
   handleImportUriToWorkspace: Function,
   handleExportFile: Function,
+  handleShowExportRequestsModal: Function,
+  handleExportRequestsToFile: Function,
   handleSetActiveWorkspace: Function,
   handleSetActiveEnvironment: Function,
   handleMoveDoc: Function,
@@ -115,6 +126,8 @@ type Props = {
   activeEnvironment: Environment | null,
   activeWorkspaceClientCertificates: Array<ClientCertificate>,
   isVariableUncovered: boolean,
+  vcs: VCS | null,
+  syncItems: Array<StatusCandidate>,
 
   // Optional
   oAuth2Token: ?OAuth2Token,
@@ -188,6 +201,11 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   static _handleUpdateRequestUrl(r: Request, url: string): Promise<Request> {
+    // Don't update if we don't need to
+    if (r.url === url) {
+      return Promise.resolve(r);
+    }
+
     return rUpdate(r, { url });
   }
 
@@ -241,10 +259,6 @@ class Wrapper extends React.PureComponent<Props, State> {
     this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri);
   }
 
-  _handleExportWorkspaceToFile(): void {
-    this.props.handleExportFile(this.props.activeWorkspace._id);
-  }
-
   _handleSetActiveResponse(responseId: string | null): void {
     if (!this.props.activeRequest) {
       console.warn('Tried to set active response when request not active');
@@ -270,13 +284,13 @@ class Wrapper extends React.PureComponent<Props, State> {
     showModal(RequestSettingsModal, { request: this.props.activeRequest });
   }
 
-  _handleDeleteResponses(): void {
+  async _handleDeleteResponses(): Promise<void> {
     if (!this.props.activeRequest) {
       console.warn('Tried to delete responses when request not active');
       return;
     }
 
-    models.response.removeForRequest(this.props.activeRequest._id);
+    await models.response.removeForRequest(this.props.activeRequest._id);
     this._handleSetActiveResponse(null);
   }
 
@@ -370,6 +384,8 @@ class Wrapper extends React.PureComponent<Props, State> {
       handleDuplicateRequestGroup,
       handleMoveRequestGroup,
       handleExportFile,
+      handleShowExportRequestsModal,
+      handleExportRequestsToFile,
       handleMoveDoc,
       handleResetDragPaneHorizontal,
       handleResetDragPaneVertical,
@@ -404,10 +420,12 @@ class Wrapper extends React.PureComponent<Props, State> {
       sidebarFilter,
       sidebarHidden,
       sidebarWidth,
+      syncItems,
       workspaceChildren,
       workspaces,
       unseenWorkspaces,
       isVariableUncovered,
+      vcs,
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
@@ -457,15 +475,18 @@ class Wrapper extends React.PureComponent<Props, State> {
             isVariableUncovered={isVariableUncovered}
           />
 
-          <CookiesModal
-            handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
-            handleRender={handleRender}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            ref={registerModal}
-            workspace={activeWorkspace}
-            cookieJar={activeCookieJar}
-            isVariableUncovered={isVariableUncovered}
-          />
+          {/* TODO: Figure out why cookieJar is sometimes null */}
+          {activeCookieJar ? (
+            <CookiesModal
+              handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
+              handleRender={handleRender}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              ref={registerModal}
+              workspace={activeWorkspace}
+              cookieJar={activeCookieJar}
+              isVariableUncovered={isVariableUncovered}
+            />
+          ) : null}
 
           <CookieModifyModal
             handleRender={handleRender}
@@ -516,7 +537,7 @@ class Wrapper extends React.PureComponent<Props, State> {
 
           <SettingsModal
             ref={registerModal}
-            handleExportWorkspaceToFile={this._handleExportWorkspaceToFile}
+            handleShowExportRequestsModal={handleShowExportRequestsModal}
             handleExportAllToFile={handleExportFile}
             handleImportFile={this._handleImportFile}
             handleImportUri={this._handleImportUri}
@@ -551,6 +572,31 @@ class Wrapper extends React.PureComponent<Props, State> {
 
           <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
 
+          {vcs && (
+            <React.Fragment>
+              <SyncStagingModal
+                ref={registerModal}
+                workspace={activeWorkspace}
+                vcs={vcs}
+                syncItems={syncItems}
+              />
+              <SyncMergeModal
+                ref={registerModal}
+                workspace={activeWorkspace}
+                syncItems={syncItems}
+                vcs={vcs}
+              />
+              <SyncBranchesModal
+                ref={registerModal}
+                workspace={activeWorkspace}
+                vcs={vcs}
+                syncItems={syncItems}
+              />
+              <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
+              <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
+            </React.Fragment>
+          )}
+
           <WorkspaceEnvironmentsEditModal
             ref={registerModal}
             onChange={models.workspace.update}
@@ -563,6 +609,13 @@ class Wrapper extends React.PureComponent<Props, State> {
             getRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
+          />
+
+          <AddKeyCombinationModal ref={registerModal} />
+          <ExportRequestsModal
+            ref={registerModal}
+            childObjects={sidebarChildren}
+            handleExportRequestsToFile={handleExportRequestsToFile}
           />
         </ErrorBoundary>
       </div>,
@@ -633,6 +686,10 @@ class Wrapper extends React.PureComponent<Props, State> {
             workspaces={workspaces}
             environments={environments}
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
+            enableSyncBeta={settings.enableSyncBeta}
+            hotKeyRegistry={settings.hotKeyRegistry}
+            vcs={vcs}
+            syncItems={syncItems}
           />
         </ErrorBoundary>
 
@@ -697,6 +754,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
             editorLineWrapping={settings.editorLineWrapping}
+            hotKeyRegistry={settings.hotKeyRegistry}
             previewMode={responsePreviewMode}
             filter={responseFilter}
             filterHistory={responseFilterHistory}

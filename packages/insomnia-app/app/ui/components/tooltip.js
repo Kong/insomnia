@@ -7,11 +7,13 @@ import ReactDOM from 'react-dom';
 type Props = {
   children: React.Node,
   message: React.Node,
-  position: 'bottom' | 'top' | 'right' | 'left',
+  position?: 'bottom' | 'top' | 'right' | 'left',
 
   // Optional
   className?: string,
   delay?: number,
+  selectable?: boolean,
+  wide?: boolean,
 };
 
 type State = {
@@ -21,10 +23,12 @@ type State = {
 @autobind
 class Tooltip extends React.PureComponent<Props, State> {
   _showTimeout: TimeoutID;
+  _hideTimeout: TimeoutID;
 
   // TODO: Figure out what type these should be
   _tooltip: ?HTMLDivElement;
   _bubble: ?HTMLDivElement;
+  _id: string;
 
   constructor(props: any) {
     super(props);
@@ -38,6 +42,8 @@ class Tooltip extends React.PureComponent<Props, State> {
       maxHeight: null,
       visible: false,
     };
+
+    this._id = Math.random() + '';
   }
 
   _setTooltipRef(n: ?HTMLDivElement) {
@@ -53,6 +59,8 @@ class Tooltip extends React.PureComponent<Props, State> {
   }
 
   _handleMouseEnter(e: MouseEvent): void {
+    clearTimeout(this._showTimeout);
+    clearTimeout(this._hideTimeout);
     this._showTimeout = setTimeout((): void => {
       const tooltip = this._tooltip;
       const bubble = this._bubble;
@@ -103,18 +111,21 @@ class Tooltip extends React.PureComponent<Props, State> {
 
   _handleMouseLeave(): void {
     clearTimeout(this._showTimeout);
-    this.setState({ visible: false });
+    clearTimeout(this._hideTimeout);
+    this._hideTimeout = setTimeout(() => {
+      this.setState({ visible: false });
 
-    const bubble = this._bubble;
-    if (!bubble) {
-      return;
-    }
+      const bubble = this._bubble;
+      if (!bubble) {
+        return;
+      }
 
-    // Reset positioning stuff
-    bubble.style.left = '';
-    bubble.style.top = '';
-    bubble.style.bottom = '';
-    bubble.style.right = '';
+      // Reset positioning stuff
+      bubble.style.left = '';
+      bubble.style.top = '';
+      bubble.style.bottom = '';
+      bubble.style.right = '';
+    }, 100);
   }
 
   _getContainer(): HTMLElement {
@@ -148,21 +159,34 @@ class Tooltip extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { children, message, className } = this.props;
+    const { children, message, className, selectable, wide } = this.props;
     const { visible } = this.state;
+
+    if (!message) {
+      return children;
+    }
 
     const tooltipClasses = classnames(className, 'tooltip');
     const bubbleClasses = classnames('tooltip__bubble theme--tooltip', {
       'tooltip__bubble--visible': visible,
+      'tooltip__bubble--wide': wide,
+      selectable: selectable,
     });
 
     return (
       <div
         className={tooltipClasses}
         ref={this._setTooltipRef}
+        id={this._id}
         onMouseEnter={this._handleMouseEnter}
         onMouseLeave={this._handleMouseLeave}>
-        <div className={bubbleClasses} onClick={this._handleStopClick} ref={this._setBubbleRef}>
+        <div
+          className={bubbleClasses}
+          onClick={this._handleStopClick}
+          role="tooltip"
+          aria-hidden={!visible}
+          aria-describedby={this._id}
+          ref={this._setBubbleRef}>
           {message}
         </div>
         {children}

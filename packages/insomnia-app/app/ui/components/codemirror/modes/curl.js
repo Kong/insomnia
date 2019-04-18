@@ -5,11 +5,11 @@ CodeMirror.defineSimpleMode('curl', {
   start: [
     // Regular key-value header tokens
     {
-      regex: /^(> )(.*:)(.*)$/,
+      regex: /^(> )([^:]*:)(.*)$/,
       token: ['curl-prefix curl-out', 'curl-out', 'curl-out curl-value'],
     },
     {
-      regex: /^(< )(.*:)(.*)$/,
+      regex: /^(< )([^:]*:)(.*)$/,
       token: ['curl-prefix curl-in', 'curl-in', 'curl-in curl-value'],
     },
 

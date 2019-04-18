@@ -108,20 +108,49 @@ table.table--fancy {
   td,
   th {
     padding: @padding-sm;
+    vertical-align: top;
   }
 
-  &.table--compact td,
-  th {
+  &.table--compact td {
     padding: @padding-xs;
   }
 
   th {
     text-align: left;
-    padding-bottom: @padding-sm;
   }
 
   &.table--striped tbody tr:nth-child(odd) {
     background: @hl-xs;
+  }
+
+  &.table--outlined {
+    th {
+      background: @hl-xxs;
+    }
+
+    &,
+    td {
+      border: 1px solid @hl-sm;
+    }
+
+    tr.table--no-outline-row td {
+      border-left: 0;
+      border-right: 0;
+    }
+
+    & {
+      border-radius: @radius-md;
+      border-collapse: unset;
+    }
+
+    td {
+      border-left: 0;
+      border-bottom: 0;
+
+      &:last-child {
+        border-right: 0;
+      }
+    }
   }
 }
 
@@ -201,6 +230,7 @@ p.notice {
 
 .notice.error {
   border-color: var(--color-danger);
+
   &::before {
     background-color: var(--color-danger);
   }
@@ -208,6 +238,7 @@ p.notice {
 
 .notice.warning {
   border-color: var(--color-warning);
+
   &::before {
     background-color: var(--color-warning);
   }
@@ -215,6 +246,7 @@ p.notice {
 
 .notice.info {
   border-color: var(--color-info);
+
   &::before {
     background-color: var(--color-info);
   }
@@ -222,6 +254,7 @@ p.notice {
 
 .notice.subtle {
   border-color: var(--hl-lg);
+
   &::before {
     opacity: 1;
     background-color: var(--hl-xxs);
@@ -230,13 +263,14 @@ p.notice {
 
 .notice.surprise {
   border-color: var(--color-surprise);
+
   &::before {
     background-color: var(--color-surprise);
   }
 }
 
 .text-center {
-  text-align: center;
+  text-align: center !important;
 }
 
 .text-right {
@@ -283,6 +317,10 @@ blockquote {
 
 .super-duper-faint {
   opacity: @opacity-subtle * 0.5;
+}
+
+.ultra-faint {
+  opacity: @opacity-subtle * 0.2;
 }
 
 .faded {
@@ -415,6 +453,10 @@ i.fa:not(.fa--skinny) {
   text-align: center;
 }
 
+i.fa.fa--fixed-width {
+  width: 1.6em;
+}
+
 .force-wrap {
   word-break: break-all;
   white-space: pre-wrap;
@@ -452,6 +494,16 @@ i.fa:not(.fa--skinny) {
 .pad-sm {
   box-sizing: border-box;
   padding: @padding-sm;
+}
+
+.pad-xs {
+  box-sizing: border-box;
+  padding: @padding-xs;
+}
+
+.pad-xxs {
+  box-sizing: border-box;
+  padding: @padding-xxs;
 }
 
 .pad-left {
@@ -698,6 +750,23 @@ strong {
 
 .hide-above-md {
   display: none;
+}
+
+.react-hot-loader-error-overlay > div {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 9999999;
+  max-height: none !important;
+
+  button {
+    border: 2px solid black;
+    margin: 0.2em;
+    font-size: 0.8em;
+    padding: 0.2em 0.5em;
+  }
 }
 
 @media (max-width: @breakpoint-lg) {

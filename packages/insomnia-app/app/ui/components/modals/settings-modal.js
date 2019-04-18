@@ -16,9 +16,9 @@ import Theme from '../settings/theme';
 import * as models from '../../../models/index';
 import { Curl } from 'insomnia-libcurl';
 import { getAppName, getAppVersion } from '../../../common/constants';
-import * as session from '../../../sync/session';
 import Tooltip from '../tooltip';
 import { setTheme } from '../../../plugins/misc';
+import * as session from '../../../account/session';
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
@@ -43,8 +43,8 @@ class SettingsModal extends PureComponent {
     this.modal.hide();
   }
 
-  _handleExportWorkspace() {
-    this.props.handleExportWorkspaceToFile();
+  _handleShowExportRequestsModal() {
+    this.props.handleShowExportRequestsModal();
     this.modal.hide();
   }
 
@@ -64,6 +64,10 @@ class SettingsModal extends PureComponent {
     if (persist) {
       models.settings.update(this.props.settings, { theme });
     }
+  }
+
+  async _handleUpdateKeyBindings(hotKeyRegistry) {
+    models.settings.update(this.props.settings, { hotKeyRegistry });
   }
 
   show(currentTabIndex = 0) {
@@ -128,7 +132,7 @@ class SettingsModal extends PureComponent {
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <ImportExport
                 handleExportAll={this._handleExportAllToFile}
-                handleExportWorkspace={this._handleExportWorkspace}
+                handleShowExportRequestsModal={this._handleShowExportRequestsModal}
                 handleImportFile={this._handleImportFile}
                 handleImportUri={this._handleImportUri}
               />
@@ -137,7 +141,10 @@ class SettingsModal extends PureComponent {
               <Theme handleChangeTheme={this._handleChangeTheme} activeTheme={settings.theme} />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <SettingsShortcuts />
+              <SettingsShortcuts
+                hotKeyRegistry={settings.hotKeyRegistry}
+                handleUpdateKeyBindings={this._handleUpdateKeyBindings}
+              />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <Account />
@@ -157,7 +164,7 @@ class SettingsModal extends PureComponent {
 
 SettingsModal.propTypes = {
   // Functions
-  handleExportWorkspaceToFile: PropTypes.func.isRequired,
+  handleShowExportRequestsModal: PropTypes.func.isRequired,
   handleExportAllToFile: PropTypes.func.isRequired,
   handleImportFile: PropTypes.func.isRequired,
   handleImportUri: PropTypes.func.isRequired,
