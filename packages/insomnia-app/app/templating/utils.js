@@ -32,6 +32,9 @@ export type NunjucksParsedTag = {
   name: string,
   args: Array<NunjucksParsedTagArg>,
   rawValue?: string,
+  displayName?: string,
+  description?: string,
+  disablePreview?: (Array<NunjucksParsedTagArg>) => boolean,
 };
 
 /**

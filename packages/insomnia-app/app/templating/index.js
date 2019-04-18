@@ -93,6 +93,7 @@ export async function getTagDefinitions(): Promise<Array<NunjucksParsedTag>> {
       name: ext.getTag(),
       displayName: ext.getName(),
       description: ext.getDescription(),
+      disablePreview: ext.getDisablePreview(),
       args: ext.getArgs(),
     }));
 }

@@ -48,6 +48,7 @@ describe('init()', () => {
       'setCookie',
       'setHeader',
       'setParameter',
+      'setUrl',
       'settingDisableRenderRequestBody',
       'settingEncodeUrl',
       'settingSendCookies',

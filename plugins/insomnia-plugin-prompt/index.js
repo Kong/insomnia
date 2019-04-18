@@ -17,6 +17,7 @@ module.exports.templateTags = [
     displayName: 'Prompt',
     name: 'prompt',
     description: 'prompt user for input',
+    disablePreview: args => args[4] && args[4].value === true,
     args: [
       {
         displayName: 'Title',

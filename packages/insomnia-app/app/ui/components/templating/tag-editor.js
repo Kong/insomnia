@@ -278,6 +278,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     } else if (!activeTagData && !tagDefinition && this.state.activeTagData) {
       activeTagData = {
         name: 'custom',
+        displayName: 'Custom',
         args: [],
         rawValue: templateUtils.unTokenizeTag(this.state.activeTagData),
       };
@@ -598,13 +599,20 @@ class TagEditor extends React.PureComponent<Props, State> {
       return null;
     }
 
+    let finalPreview = preview;
+    if (activeTagDefinition && activeTagDefinition.disablePreview) {
+      finalPreview = activeTagDefinition.disablePreview(activeTagData.args)
+        ? preview.replace(/./g, '*')
+        : preview;
+    }
+
     let previewElement;
     if (error) {
       previewElement = <textarea className="danger" value={error || 'Error'} readOnly rows={5} />;
     } else if (rendering) {
       previewElement = <textarea value="rendering..." readOnly rows={5} />;
     } else {
-      previewElement = <textarea value={preview || 'error'} readOnly rows={5} />;
+      previewElement = <textarea value={finalPreview || 'error'} readOnly rows={5} />;
     }
 
     return (
