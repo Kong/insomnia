@@ -194,14 +194,19 @@ export function exportFile(workspaceId = null) {
     dispatch(loadStart());
 
     const VALUE_JSON = 'json';
+    const VALUE_YAML = 'yaml';
     const VALUE_HAR = 'har';
 
     showModal(SelectModal, {
       title: 'Select Export Type',
       options: [
         {
-          name: 'Insomnia – Sharable with other Insomnia users',
+          name: 'Insomnia v4 (JSON)',
           value: VALUE_JSON,
+        },
+        {
+          name: 'Insomnia v4 (YAML)',
+          value: VALUE_YAML,
         },
         { name: 'HAR – HTTP Archive Format', value: VALUE_HAR },
       ],
@@ -250,6 +255,8 @@ export function exportFile(workspaceId = null) {
               extensions: ['har', 'har.json', 'json'],
             },
           ];
+        } else if (selectedFormat === VALUE_YAML) {
+          options.filters = [{ name: 'Insomnia Export', extensions: ['yaml'] }];
         } else {
           options.filters = [{ name: 'Insomnia Export', extensions: ['json'] }];
         }
@@ -261,12 +268,14 @@ export function exportFile(workspaceId = null) {
             return;
           }
 
-          let json;
+          let dataStr;
           try {
             if (selectedFormat === VALUE_HAR) {
-              json = await importUtils.exportHAR(workspace, exportPrivateEnvironments);
+              dataStr = await importUtils.exportHAR(workspace, exportPrivateEnvironments);
+            } else if (selectedFormat === VALUE_YAML) {
+              dataStr = await importUtils.exportData(workspace, exportPrivateEnvironments, 'yaml');
             } else {
-              json = await importUtils.exportJSON(workspace, exportPrivateEnvironments);
+              dataStr = await importUtils.exportData(workspace, exportPrivateEnvironments, 'json');
             }
           } catch (err) {
             showError({
@@ -281,7 +290,7 @@ export function exportFile(workspaceId = null) {
           // Remember last exported path
           window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
 
-          fs.writeFile(filename, json, {}, err => {
+          fs.writeFile(filename, dataStr, {}, err => {
             if (err) {
               console.warn('Export failed', err);
               return;

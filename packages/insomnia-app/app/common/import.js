@@ -11,8 +11,9 @@ import fs from 'fs';
 import type { Workspace } from '../models/workspace';
 import type { Environment } from '../models/environment';
 import { fnOrString, generateId } from './misc';
+import YAML from 'yaml';
 
-const EXPORT_FORMAT = 3;
+const EXPORT_FORMAT = 4;
 
 const EXPORT_TYPE_REQUEST = 'request';
 const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
@@ -230,9 +231,10 @@ export async function exportHAR(
   return JSON.stringify(data, null, '\t');
 }
 
-export async function exportJSON(
-  parentDoc: BaseModel | null = null,
-  includePrivateDocs: boolean = false,
+export async function exportData(
+  parentDoc: BaseModel | null,
+  includePrivateDocs: boolean,
+  format: 'json' | 'yaml',
 ): Promise<string> {
   const data = {
     _type: 'export',
@@ -272,7 +274,13 @@ export async function exportJSON(
       return d;
     });
 
-  return JSON.stringify(data, null, '\t');
+  if (format.toLowerCase() === 'yaml') {
+    return YAML.stringify(data);
+  } else if (format.toLowerCase() === 'json') {
+    return JSON.stringify(data);
+  } else {
+    throw new Error(`Invalid export format ${format}. Must be "json" or "yaml"`);
+  }
 }
 
 async function getDocWithDescendants(

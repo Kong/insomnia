@@ -18,7 +18,7 @@
   "dependencies": {
     "commander": "^2.20.0",
     "shell-quote": "^1.6.1",
+    "yaml": "^1.5.0",
     "swagger-parser": "^6.0.5"
-  },
-  "devDependencies": {}
+  }
 }

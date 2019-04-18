@@ -1,6 +1,6 @@
 {
   "_type": "export",
-  "__export_format": 3,
+  "__export_format": 4,
   "__export_date": "2018-01-09T23:32:54.091Z",
   "__export_source": "insomnia.importers:v0.1.0",
   "resources": [
@@ -9,8 +9,7 @@
       "_id": "__WORKSPACE_1__",
       "parentId": null,
       "name": "Swagger Petstore 1.0.0",
-      "description":
-        "This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters."
+      "description": "This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters."
     },
     {
       "parentId": "__WORKSPACE_1__",
@@ -62,8 +61,7 @@
       "url": "{{ base_url }}/pet",
       "body": {
         "mimeType": "application/json",
-        "text":
-          "{\n  \"id\": 0,\n  \"category\": {\n    \"id\": 0,\n    \"name\": \"string\"\n  },\n  \"name\": \"doggie\",\n  \"photoUrls\": [\n    \"string\"\n  ],\n  \"tags\": [\n    {\n      \"id\": 0,\n      \"name\": \"string\"\n    }\n  ],\n  \"status\": \"string\"\n}"
+        "text": "{\n  \"id\": 0,\n  \"category\": {\n    \"id\": 0,\n    \"name\": \"string\"\n  },\n  \"name\": \"doggie\",\n  \"photoUrls\": [\n    \"string\"\n  ],\n  \"tags\": [\n    {\n      \"id\": 0,\n      \"name\": \"string\"\n    }\n  ],\n  \"status\": \"string\"\n}"
       },
       "method": "POST",
       "parameters": [],
@@ -78,8 +76,7 @@
       "url": "{{ base_url }}/pet",
       "body": {
         "mimeType": "application/json",
-        "text":
-          "{\n  \"id\": 0,\n  \"category\": {\n    \"id\": 0,\n    \"name\": \"string\"\n  },\n  \"name\": \"doggie\",\n  \"photoUrls\": [\n    \"string\"\n  ],\n  \"tags\": [\n    {\n      \"id\": 0,\n      \"name\": \"string\"\n    }\n  ],\n  \"status\": \"string\"\n}"
+        "text": "{\n  \"id\": 0,\n  \"category\": {\n    \"id\": 0,\n    \"name\": \"string\"\n  },\n  \"name\": \"doggie\",\n  \"photoUrls\": [\n    \"string\"\n  ],\n  \"tags\": [\n    {\n      \"id\": 0,\n      \"name\": \"string\"\n    }\n  ],\n  \"status\": \"string\"\n}"
       },
       "method": "PUT",
       "parameters": [],

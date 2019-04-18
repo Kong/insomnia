@@ -168,7 +168,7 @@ describe('app.export.*', () => {
     exportedData.__export_date = '2017-11-24T18:09:18.480Z';
     expect(exportedData).toEqual({
       __export_date: '2017-11-24T18:09:18.480Z',
-      __export_format: 3,
+      __export_format: 4,
       __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
       _type: 'export',
       resources: [
