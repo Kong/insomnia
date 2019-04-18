@@ -18,6 +18,7 @@ type State = {
   submitName: ?string,
   selectText: ?boolean,
   upperCase: ?boolean,
+  validate: ?(string) => string,
   hint: ?string,
   label: ?string,
   placeholder: ?string,
@@ -26,6 +27,7 @@ type State = {
   onComplete: ?(string) => void,
   onCancel: ?() => void,
   onDeleteHint: ?(string) => void,
+  currentValue: string,
 };
 
 @autobind
@@ -42,6 +44,7 @@ class PromptModal extends React.PureComponent<Props, State> {
       submitName: '',
       selectText: false,
       upperCase: false,
+      validate: null,
       hint: '',
       label: '',
       placeholder: '',
@@ -50,6 +53,7 @@ class PromptModal extends React.PureComponent<Props, State> {
       onComplete: undefined,
       onCancel: undefined,
       onDeleteHint: undefined,
+      currentValue: '',
     };
   }
 
@@ -87,6 +91,15 @@ class PromptModal extends React.PureComponent<Props, State> {
     }
   }
 
+  _handleChange(e: SyntheticEvent<HTMLInputElement>) {
+    const { validate } = this.state;
+
+    if (validate) {
+      const errorMessage = validate(e.currentTarget.value);
+      e.currentTarget.setCustomValidity(errorMessage);
+    }
+  }
+
   hide() {
     this.modal && this.modal.hide();
   }
@@ -101,6 +114,7 @@ class PromptModal extends React.PureComponent<Props, State> {
     cancelable?: boolean,
     inputType?: string,
     placeholder?: string,
+    validate?: string => string,
     label?: string,
     hints?: Array<string>,
     onComplete?: string => void,
@@ -121,10 +135,12 @@ class PromptModal extends React.PureComponent<Props, State> {
       hints,
       onComplete,
       onCancel,
+      validate,
       onDeleteHint,
     } = options;
 
     this.setState({
+      currentValue: '',
       title,
       onCancel,
       onDeleteHint,
@@ -138,6 +154,7 @@ class PromptModal extends React.PureComponent<Props, State> {
       hint,
       inputType,
       label,
+      validate,
       hints: hints || [],
     });
 
@@ -167,7 +184,7 @@ class PromptModal extends React.PureComponent<Props, State> {
         </Button>
         <PromptButton
           addIcon
-          confirmMessage=" "
+          confirmMessage=""
           className="tall space-left icon"
           onClick={this._handleDeleteHint}
           value={hint}>
@@ -194,6 +211,7 @@ class PromptModal extends React.PureComponent<Props, State> {
     const input = (
       <input
         ref={this._setInputRef}
+        onChange={this._handleChange}
         id="prompt-input"
         type={inputType === 'decimal' ? 'number' : inputType || 'text'}
         step={inputType === 'decimal' ? '0.1' : null}

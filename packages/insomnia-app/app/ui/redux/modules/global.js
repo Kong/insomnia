@@ -16,11 +16,11 @@ import { showError, showModal } from '../../components/modals/index';
 
 const LOCALSTORAGE_PREFIX = `insomnia::meta`;
 
+const LOGIN_STATE_CHANGE = 'global/login-state-change';
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
-const REQUEST_GROUP_TOGGLE_COLLAPSE = 'global/request-group-toggle';
 const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
@@ -62,10 +62,20 @@ function loadingRequestsReducer(state = {}, action) {
   }
 }
 
+function loginStateChangeReducer(state = false, action) {
+  switch (action.type) {
+    case LOGIN_STATE_CHANGE:
+      return action.loggedIn;
+    default:
+      return state;
+  }
+}
+
 export const reducer = combineReducers({
   isLoading: loadingReducer,
   loadingRequestIds: loadingRequestsReducer,
   activeWorkspaceId: activeWorkspaceReducer,
+  isLoggedIn: loginStateChangeReducer,
 });
 
 // ~~~~~~~ //
@@ -112,6 +122,10 @@ export function loadRequestStart(requestId) {
   return { type: LOAD_REQUEST_START, requestId, time: Date.now() };
 }
 
+export function loginStateChange(loggedIn) {
+  return { type: LOGIN_STATE_CHANGE, loggedIn };
+}
+
 export function loadRequestStop(requestId) {
   return { type: LOAD_REQUEST_STOP, requestId };
 }
@@ -122,13 +136,6 @@ export function setActiveWorkspace(workspaceId) {
     JSON.stringify(workspaceId),
   );
   return { type: SET_ACTIVE_WORKSPACE, workspaceId };
-}
-
-export function toggleRequestGroup(requestGroup) {
-  return {
-    type: REQUEST_GROUP_TOGGLE_COLLAPSE,
-    requestGroupId: requestGroup._id,
-  };
 }
 
 export function importFile(workspaceId) {

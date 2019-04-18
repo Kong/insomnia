@@ -5,8 +5,8 @@ import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import * as session from '../../../sync/session';
-import * as sync from '../../../sync/index';
+import * as sync from '../../../sync-legacy/index';
+import { getFirstName } from '../../../account/session';
 
 let hidePaymentNotificationUntilNextLaunch = false;
 
@@ -45,7 +45,7 @@ class PaymentNotificationModal extends PureComponent {
         <ModalHeader>Insomnia Plus Trial Ended</ModalHeader>
         <ModalBody className="pad changelog">
           <div className="text-center pad">
-            <h1>Hi {session.getFirstName()},</h1>
+            <h1>Hi {getFirstName()},</h1>
             <p style={{ maxWidth: '30rem', margin: 'auto' }}>
               Your Insomnia Plus trial has come to an end. Please enter your billing info to
               continue using Plus features like encrypted data synchronization and backup.

@@ -40,5 +40,10 @@ export function hideAllModals() {
 }
 
 function _getModal(modalCls) {
-  return modals[modalCls.name];
+  const m = modals[modalCls.name];
+  if (!m) {
+    throw new Error('Modal was not registered with the app');
+  }
+
+  return m;
 }

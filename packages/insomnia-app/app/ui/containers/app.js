@@ -42,6 +42,7 @@ import {
   selectActiveWorkspaceMeta,
   selectEntitiesLists,
   selectSidebarChildren,
+  selectSyncItems,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
 } from '../redux/selectors';
@@ -51,7 +52,7 @@ import WorkspaceSettingsModal from '../components/modals/workspace-settings-moda
 import RequestSettingsModal from '../components/modals/request-settings-modal';
 import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
 import * as network from '../../network/network';
-import { debounce, getContentDispositionHeader } from '../../common/misc';
+import { debounce, getContentDispositionHeader, getDataDirectory } from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
@@ -68,6 +69,9 @@ import AskModal from '../components/modals/ask-modal';
 import { updateMimeType } from '../../models/request';
 import MoveRequestGroupModal from '../components/modals/move-request-group-modal';
 import * as themes from '../../plugins/misc';
+import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
+import VCS from '../../sync/vcs';
+import SyncMergeModal from '../components/modals/sync-merge-modal';
 
 @autobind
 class App extends PureComponent {
@@ -83,6 +87,8 @@ class App extends PureComponent {
       paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
       paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT,
       isVariableUncovered: props.isVariableUncovered || false,
+      vcs: null,
+      forceRefreshCounter: 0,
     };
 
     this._isMigratingChildren = false;
@@ -251,11 +257,11 @@ class App extends PureComponent {
     });
   }
 
-  async _requestGroupDuplicate(requestGroup) {
+  static async _requestGroupDuplicate(requestGroup) {
     models.requestGroup.duplicate(requestGroup);
   }
 
-  async _requestGroupMove(requestGroup) {
+  static async _requestGroupMove(requestGroup) {
     showModal(MoveRequestGroupModal, { requestGroup });
   }
 
@@ -312,10 +318,8 @@ class App extends PureComponent {
    */
   async _handleRenderText(text, contextCacheKey = null) {
     if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
-      const context = this._fetchRenderContext();
-
       // NOTE: We're caching promises here to avoid race conditions
-      this._getRenderContextPromiseCache[contextCacheKey] = context;
+      this._getRenderContextPromiseCache[contextCacheKey] = this._fetchRenderContext();
     }
 
     // Set timeout to delete the key eventually
@@ -326,10 +330,10 @@ class App extends PureComponent {
   }
 
   _handleGenerateCodeForActiveRequest() {
-    this._handleGenerateCode(this.props.activeRequest);
+    App._handleGenerateCode(this.props.activeRequest);
   }
 
-  _handleGenerateCode(request) {
+  static _handleGenerateCode(request) {
     showModal(GenerateCodeModal, request);
   }
 
@@ -342,7 +346,7 @@ class App extends PureComponent {
     clipboard.writeText(cmd);
   }
 
-  async _updateRequestGroupMetaByParentId(requestGroupId, patch) {
+  static async _updateRequestGroupMetaByParentId(requestGroupId, patch) {
     const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
     if (requestGroupMeta) {
       await models.requestGroupMeta.update(requestGroupMeta, patch);
@@ -363,7 +367,7 @@ class App extends PureComponent {
     }
   }
 
-  async _updateRequestMetaByParentId(requestId, patch) {
+  static async _updateRequestMetaByParentId(requestId, patch) {
     const requestMeta = await models.requestMeta.getByParentId(requestId);
     if (requestMeta) {
       return models.requestMeta.update(requestMeta, patch);
@@ -373,7 +377,7 @@ class App extends PureComponent {
     }
   }
 
-  _updateIsVariableUncovered(paneWidth) {
+  _updateIsVariableUncovered() {
     this.setState({ isVariableUncovered: !this.state.isVariableUncovered });
   }
 
@@ -395,9 +399,7 @@ class App extends PureComponent {
     await this._updateActiveWorkspaceMeta({ activeEnvironmentId });
 
     // Give it time to update and re-render
-    setTimeout(() => {
-      this._wrapper._forceRequestPaneRefresh();
-    }, 100);
+    setTimeout(() => this._wrapper._forceRequestPaneRefresh(), 300);
   }
 
   _handleSetSidebarWidth(sidebarWidth) {
@@ -414,15 +416,15 @@ class App extends PureComponent {
   }
 
   _handleSetRequestGroupCollapsed(requestGroupId, collapsed) {
-    this._updateRequestGroupMetaByParentId(requestGroupId, { collapsed });
+    App._updateRequestGroupMetaByParentId(requestGroupId, { collapsed });
   }
 
   _handleSetResponsePreviewMode(requestId, previewMode) {
-    this._updateRequestMetaByParentId(requestId, { previewMode });
+    App._updateRequestMetaByParentId(requestId, { previewMode });
   }
 
   async _handleSetResponseFilter(requestId, responseFilter) {
-    await this._updateRequestMetaByParentId(requestId, { responseFilter });
+    await App._updateRequestMetaByParentId(requestId, { responseFilter });
 
     clearTimeout(this._responseFilterHistorySaveTimeout);
     this._responseFilterHistorySaveTimeout = setTimeout(async () => {
@@ -440,7 +442,7 @@ class App extends PureComponent {
       }
 
       responseFilterHistory.unshift(responseFilter);
-      await this._updateRequestMetaByParentId(requestId, {
+      await App._updateRequestMetaByParentId(requestId, {
         responseFilterHistory,
       });
     }, 2000);
@@ -562,7 +564,7 @@ class App extends PureComponent {
     }
 
     // Unset active response because we just made a new one
-    await this._updateRequestMetaByParentId(requestId, {
+    await App._updateRequestMetaByParentId(requestId, {
       activeResponseId: null,
     });
 
@@ -607,7 +609,7 @@ class App extends PureComponent {
     }
 
     // Unset active response because we just made a new one
-    await this._updateRequestMetaByParentId(requestId, {
+    await App._updateRequestMetaByParentId(requestId, {
       activeResponseId: null,
     });
 
@@ -617,7 +619,7 @@ class App extends PureComponent {
 
   async _handleSetActiveResponse(requestId, activeResponse = null) {
     const activeResponseId = activeResponse ? activeResponse._id : null;
-    await this._updateRequestMetaByParentId(requestId, { activeResponseId });
+    await App._updateRequestMetaByParentId(requestId, { activeResponseId });
 
     let response;
     if (activeResponseId) {
@@ -785,8 +787,38 @@ class App extends PureComponent {
     document.title = title;
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     this._updateDocumentTitle();
+
+    // Force app refresh if login state changes
+    if (prevProps.isLoggedIn !== this.props.isLoggedIn) {
+      this.setState(state => ({
+        forceRefreshCounter: state.forceRefreshCounter + 1,
+      }));
+    }
+  }
+
+  async _updateVCS(activeWorkspace) {
+    // Get the vcs and set it to null in the state while we update it
+    let vcs = this.state.vcs;
+    this.setState({ vcs: null });
+
+    if (!vcs) {
+      const directory = path.join(getDataDirectory(), 'version-control');
+      const driver = new FileSystemDriver({ directory });
+      vcs = new VCS(driver, async conflicts => {
+        return new Promise(resolve => {
+          showModal(SyncMergeModal, {
+            conflicts,
+            handleDone: conflicts => resolve(conflicts),
+          });
+        });
+      });
+    }
+
+    await vcs.switchProject(activeWorkspace._id, activeWorkspace.name);
+
+    this.setState({ vcs });
   }
 
   async componentDidMount() {
@@ -797,6 +829,9 @@ class App extends PureComponent {
 
     // Update title
     this._updateDocumentTitle();
+
+    // Update VCS
+    this._updateVCS(this.props.activeWorkspace);
 
     db.onChange(async changes => {
       let needsRefresh = false;
@@ -830,7 +865,7 @@ class App extends PureComponent {
       }
 
       if (needsRefresh) {
-        this._wrapper._forceRequestPaneRefresh();
+        setTimeout(() => this._wrapper._forceRequestPaneRefresh(), 300);
       }
     });
 
@@ -934,27 +969,22 @@ class App extends PureComponent {
     // Prevent rendering of everything
     this._isMigratingChildren = true;
 
-    await db.bufferChanges();
-    if (baseEnvironments.length === 0) {
-      await models.environment.create({ parentId: activeWorkspace._id });
-      console.log(`[app] Created missing base environment for ${activeWorkspace.name}`);
-    }
+    const flushId = await db.bufferChanges();
+    await models.environment.getOrCreateForWorkspace(activeWorkspace);
+    await models.cookieJar.getOrCreateForParentId(activeWorkspace._id);
+    await db.flushChanges(flushId);
 
-    if (!activeCookieJar) {
-      await models.cookieJar.create({
-        parentId: this.props.activeWorkspace._id,
-      });
-      console.log(`[app] Created missing cookie jar for ${activeWorkspace.name}`);
-    }
-
-    await db.flushChanges();
-
-    // Flush "transaction"
     this._isMigratingChildren = false;
   }
 
   componentWillReceiveProps(nextProps) {
     this._ensureWorkspaceChildren(nextProps);
+
+    // Update VCS if needed
+    const { activeWorkspace } = this.props;
+    if (nextProps.activeWorkspace._id !== activeWorkspace._id) {
+      this._updateVCS(nextProps.activeWorkspace);
+    }
   }
 
   componentWillMount() {
@@ -967,18 +997,29 @@ class App extends PureComponent {
       return null;
     }
 
+    const { activeWorkspace } = this.props;
+
+    const {
+      paneWidth,
+      paneHeight,
+      sidebarWidth,
+      isVariableUncovered,
+      vcs,
+      forceRefreshCounter,
+    } = this.state;
+
+    const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace._id}`;
+
     return (
-      <KeydownBinder
-        onKeydown={this._handleKeyDown}
-        key={this.props.activeWorkspace ? this.props.activeWorkspace._id : 'n/a'}>
-        <div className="app">
+      <KeydownBinder onKeydown={this._handleKeyDown}>
+        <div className="app" key={uniquenessKey}>
           <ErrorBoundary showAlert>
             <Wrapper
               {...this.props}
               ref={this._setWrapperRef}
-              paneWidth={this.state.paneWidth}
-              paneHeight={this.state.paneHeight}
-              sidebarWidth={this.state.sidebarWidth}
+              paneWidth={paneWidth}
+              paneHeight={paneHeight}
+              sidebarWidth={sidebarWidth}
               handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
               handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
               handleActivateRequest={this._handleSetActiveRequest}
@@ -995,11 +1036,11 @@ class App extends PureComponent {
               handleRender={this._handleRenderText}
               handleGetRenderContext={this._handleGetRenderContext}
               handleDuplicateRequest={this._requestDuplicate}
-              handleDuplicateRequestGroup={this._requestGroupDuplicate}
-              handleMoveRequestGroup={this._requestGroupMove}
+              handleDuplicateRequestGroup={App._requestGroupDuplicate}
+              handleMoveRequestGroup={App._requestGroupMove}
               handleDuplicateWorkspace={this._workspaceDuplicate}
               handleCreateRequestGroup={this._requestGroupCreate}
-              handleGenerateCode={this._handleGenerateCode}
+              handleGenerateCode={App._handleGenerateCode}
               handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
               handleCopyAsCurl={this._handleCopyAsCurl}
               handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
@@ -1014,7 +1055,8 @@ class App extends PureComponent {
               handleSetSidebarFilter={this._handleSetSidebarFilter}
               handleToggleMenuBar={this._handleToggleMenuBar}
               handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-              isVariableUncovered={this.state.isVariableUncovered}
+              isVariableUncovered={isVariableUncovered}
+              vcs={vcs}
             />
           </ErrorBoundary>
 
@@ -1037,6 +1079,7 @@ App.propTypes = {
   paneHeight: PropTypes.number.isRequired,
   handleCommand: PropTypes.func.isRequired,
   settings: PropTypes.object.isRequired,
+  isLoggedIn: PropTypes.bool.isRequired,
   activeWorkspace: PropTypes.shape({
     _id: PropTypes.string.isRequired,
   }).isRequired,
@@ -1052,7 +1095,7 @@ App.propTypes = {
 function mapStateToProps(state, props) {
   const { entities, global } = state;
 
-  const { isLoading, loadingRequestIds } = global;
+  const { isLoading, loadingRequestIds, isLoggedIn } = global;
 
   // Entities
   const entitiesLists = selectEntitiesLists(state, props);
@@ -1097,7 +1140,11 @@ function mapStateToProps(state, props) {
   const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(state, props);
   const unseenWorkspaces = selectUnseenWorkspaces(state, props);
 
+  // Sync stuff
+  const syncItems = selectSyncItems(state, props);
+
   return Object.assign({}, state, {
+    isLoggedIn,
     settings,
     workspaces,
     unseenWorkspaces,
@@ -1124,6 +1171,7 @@ function mapStateToProps(state, props) {
     environments,
     activeEnvironment,
     workspaceChildren,
+    syncItems,
   });
 }
 

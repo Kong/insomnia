@@ -339,3 +339,12 @@ export function getDataDirectory(): string {
   const { app } = electron.remote || electron;
   return process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
 }
+
+export function chunkArray<T>(arr: Array<T>, chunkSize: number): Array<Array<T>> {
+  const chunks = [];
+  for (let i = 0, j = arr.length; i < j; i += chunkSize) {
+    chunks.push(arr.slice(i, i + chunkSize));
+  }
+
+  return chunks;
+}

@@ -88,7 +88,7 @@ class CookieList extends React.PureComponent<Props> {
                     <PromptButton
                       className="btn btn--super-compact btn--outlined"
                       addIcon
-                      confirmMessage=" "
+                      confirmMessage=""
                       onClick={e => this._handleDeleteCookie(cookie)}
                       title="Delete cookie">
                       <i className="fa fa-trash-o" />
