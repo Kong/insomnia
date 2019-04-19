@@ -601,7 +601,7 @@ export default class VCS {
 
     if (preConflicts.length) {
       console.log('[sync] Merge failed', preConflicts);
-      throw new Error('Please snapshot current changes before merging');
+      throw new Error('Please snapshot current changes or revert them before merging');
     }
 
     const shouldDoNothing1 = latestSnapshotOther && latestSnapshotOther.id === rootSnapshotId;

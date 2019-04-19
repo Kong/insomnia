@@ -119,9 +119,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
         await db.upsert(doc);
       }
       await db.flushChanges(flushId);
-
-      // handleSetActiveWorkspace(project.rootDocumentId);
-      vcs.setProject(project);
       await this._refreshRemoteWorkspaces();
     } catch (err) {
       this._dropdown && this._dropdown.hide();

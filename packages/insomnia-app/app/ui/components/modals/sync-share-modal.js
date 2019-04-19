@@ -72,8 +72,15 @@ class SyncShareModal extends React.PureComponent<Props, State> {
     this.setState({ loading: true });
     this.modal && this.modal.show();
 
-    const [teams, projectTeams] = await Promise.all([vcs.teams(), vcs.projectTeams()]);
+    let results;
+    try {
+      results = await Promise.all([vcs.teams(), vcs.projectTeams()]);
+    } catch (err) {
+      this.setState({ error: err.message, loading: false });
+      return;
+    }
 
+    const [teams, projectTeams] = results;
     this.setState({
       teams,
       selectedTeam: projectTeams[0] || null,
@@ -93,11 +100,11 @@ class SyncShareModal extends React.PureComponent<Props, State> {
       <Modal ref={this._setModalRef}>
         <ModalHeader key="header">Share Workspace</ModalHeader>
         <ModalBody key="body" className="pad text-center" noScroll>
+          {error && <p className="notice error margin-bottom-sm no-margin-top">{error}</p>}
           <p>
             Collaborate on <strong>{workspace.name}</strong> with your team.
           </p>
           <div className="form-control pad">
-            {error ? <div className="danger">Oops: {error}</div> : null}
             <Dropdown outline>
               <DropdownDivider>Teams</DropdownDivider>
               {selectedTeam ? (

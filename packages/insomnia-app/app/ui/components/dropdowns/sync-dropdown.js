@@ -178,8 +178,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     } catch (err) {
       showModal(ErrorModal, {
         title: 'Push Error',
-        error: err,
-        message: 'Failed to push snapshots to remote',
+        message: err.message,
       });
     }
 
@@ -197,8 +196,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     } catch (err) {
       showModal(ErrorModal, {
         title: 'Pull Error',
-        error: err,
-        message: 'Failed to pull snapshots from remote',
+        message: err.message,
       });
     }
     this.setState({ loadingPull: false });
@@ -220,8 +218,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     } catch (err) {
       showModal(ErrorModal, {
         title: 'Revert Error',
-        error: err,
-        message: 'Failed to revert changes',
+        message: err.message,
       });
     }
   }
