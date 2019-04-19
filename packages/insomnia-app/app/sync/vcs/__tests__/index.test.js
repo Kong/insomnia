@@ -1,5 +1,6 @@
 import VCS from '../index';
 import MemoryDriver from '../../store/drivers/memory-driver';
+import { describeChanges } from '../util';
 
 function newDoc(id) {
   return { id };
@@ -506,8 +507,7 @@ describe('VCS', () => {
     });
   });
 
-  const name = 'merge()';
-  describe(name, () => {
+  describe('merge()', () => {
     it('performs fast-forward merge', async () => {
       const v = await vcs('master');
 
@@ -673,6 +673,25 @@ describe('VCS', () => {
           ],
         },
       ]);
+    });
+  });
+  describe('describeChanges()', () => {
+    it('works with same object structure', async () => {
+      const a = { foo: 'bar', nested: { baz: 10 } };
+      const b = { foo: 'baz', nested: { baz: 11 } };
+      expect(describeChanges(a, b)).toEqual(['foo', 'nested']);
+    });
+
+    it('ignores modified key', () => {
+      const a = { foo: 'bar', nested: { baz: 10 }, modified: 10 };
+      const b = { foo: 'baz', nested: { baz: 11 }, modified: 12 };
+      expect(describeChanges(a, b)).toEqual(['foo', 'nested']);
+    });
+
+    it('skips invalid values', () => {
+      const a = null;
+      const b = { foo: 'baz', nested: { baz: 11 }, modified: 12 };
+      expect(describeChanges(a, b)).toEqual([]);
     });
   });
 });

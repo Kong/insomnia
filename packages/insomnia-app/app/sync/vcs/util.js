@@ -15,6 +15,9 @@ import type {
   StatusCandidateMap,
 } from '../types';
 
+// Keys for VCS to ignore when computing changes
+const IGNORED_KEYS = ['modified'];
+
 export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotStateMap {
   if (!snapshot) {
     return {};
@@ -439,7 +442,9 @@ export function hashDocument(doc: Object): { content: string, hash: string } {
 
   // Remove fields we don't care about for sync purposes
   const newDoc = clone(doc);
-  delete newDoc.modified;
+  for (const key of IGNORED_KEYS) {
+    delete newDoc[key];
+  }
 
   const content = deterministicStringify(newDoc);
   const hash = crypto
@@ -475,4 +480,32 @@ export function updateStateWithConflictResolutions(
   }
 
   return Object.keys(newStateMap).map(k => newStateMap[k]);
+}
+
+export function describeChanges(a: any, b: any): Array<string> {
+  const aT = Object.prototype.toString.call(a);
+  const bT = Object.prototype.toString.call(b);
+
+  if (aT !== '[object Object]' || bT !== '[object Object]') {
+    return [];
+  }
+
+  const changes = [];
+  for (const key of Object.keys(a)) {
+    if (IGNORED_KEYS.includes(key)) {
+      continue;
+    }
+
+    const aValue = a[key];
+    const bValue = b[key];
+
+    const aStr = deterministicStringify(aValue);
+    const bStr = deterministicStringify(bValue);
+
+    if (aStr !== bStr) {
+      changes.push(key);
+    }
+  }
+
+  return changes;
 }

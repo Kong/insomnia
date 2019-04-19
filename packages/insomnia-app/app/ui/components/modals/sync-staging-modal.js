@@ -11,6 +11,7 @@ import type { DocumentKey, Stage, StageEntry, Status, StatusCandidate } from '..
 import * as models from '../../../models';
 import Tooltip from '../tooltip';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
+import { describeChanges } from '../../../sync/vcs/util';
 
 type Props = {
   workspace: Workspace,
@@ -24,12 +25,12 @@ type State = {
   error: string,
   branch: string,
   lookupMap: {
-    [string]: {
+    [string]: {|
       entry: StageEntry,
+      changes: null | Array<string>,
       type: string,
       checked: boolean,
-      operation: string,
-    },
+    |},
   },
 };
 
@@ -146,14 +147,21 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     const allKeys = [...Object.keys(status.stage), ...Object.keys(status.unstaged)];
     for (const key of allKeys) {
       const item = syncItems.find(si => si.key === key);
-      const doc = (item && item.document) || (await vcs.blobFromLastSnapshot(key));
+      const oldDoc: Object | null = await vcs.blobFromLastSnapshot(key);
+      const doc = (item && item.document) || oldDoc;
       const entry = status.stage[key] || status.unstaged[key];
 
       if (!entry || !doc) {
         continue;
       }
 
+      let changes = null;
+      if (item && item.document && oldDoc) {
+        changes = describeChanges(item.document, oldDoc);
+      }
+
       lookupMap[key] = {
+        changes,
         entry: entry,
         type: models.getModelName(doc.type),
         checked: !!status.stage[key],
@@ -200,32 +208,31 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     this.textarea && this.textarea.focus();
   }
 
-  static renderOperation(entry: StageEntry) {
+  static renderOperation(entry: StageEntry, type: string, changes: Array<string>) {
+    let child = null;
+    let message = '';
+
     if (entry.added) {
-      return (
-        <Tooltip message="Added" delay={200}>
-          <i className="fa fa-plus-circle success" />
-        </Tooltip>
-      );
+      child = <i className="fa fa-plus-circle success" />;
+      message = 'Added';
     } else if (entry.modified) {
-      return (
-        <Tooltip message="Modified" delay={200}>
-          <i className="fa fa-circle faded" />
-        </Tooltip>
-      );
+      child = <i className="fa fa-circle faded" />;
+      message = `Modified (${changes.join(', ')})`;
     } else if (entry.deleted) {
-      return (
-        <Tooltip message="Deleted" delay={200}>
-          <i className="fa fa-minus-circle danger" />
-        </Tooltip>
-      );
+      child = <i className="fa fa-minus-circle danger" />;
+      message = 'Deleted';
     } else {
-      return (
-        <Tooltip message="Unknown Operation">
-          <i className="fa fa-question-circle info" />
-        </Tooltip>
-      );
+      child = <i className="fa fa-question-circle info" />;
+      message = 'Unknown';
     }
+
+    return (
+      <React.Fragment>
+        <Tooltip message={message}>
+          {child} {type}
+        </Tooltip>
+      </React.Fragment>
+    );
   }
 
   renderTable(keys: Array<DocumentKey>, title: React.Node) {
@@ -279,7 +286,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
                 return null;
               }
 
-              const { entry, type, checked } = lookupMap[key];
+              const { entry, type, checked, changes } = lookupMap[key];
               return (
                 <tr key={key} className="table--no-outline-row">
                   <td>
@@ -295,7 +302,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
                     </label>
                   </td>
                   <td className="text-right">
-                    {SyncStagingModal.renderOperation(entry)} {type}
+                    {SyncStagingModal.renderOperation(entry, type, changes || [])}
                   </td>
                 </tr>
               );
