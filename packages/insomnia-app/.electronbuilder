@@ -24,7 +24,6 @@
   },
   "mac": {
     "category": "public.app-category.developer-tools",
-    "darkModeSupport": true,
     "target": [
       "dmg",
       "zip"
