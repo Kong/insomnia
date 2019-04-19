@@ -59,10 +59,6 @@ export default class VCS {
     this._project = null;
   }
 
-  currentProjectId(): string | null {
-    return this._project ? this._project.id : null;
-  }
-
   newInstance(): VCS {
     const newVCS: VCS = (Object.assign({}, this): any);
     Object.setPrototypeOf(newVCS, VCS.prototype);
@@ -71,7 +67,7 @@ export default class VCS {
 
   async setProject(project: Project): Promise<void> {
     this._project = project;
-    console.log(`[sync] Activate project ${project.id}`);
+    console.log(`[sync] Activated project ${project.id}`);
 
     // Store it because it might not be yet
     await this._storeProject(project);
@@ -157,6 +153,7 @@ export default class VCS {
     }
 
     await this._storeBlobs(blobsToStore);
+    console.log(`[sync] Staged ${stageEntries.map(e => e.name).join(', ')}`);
 
     return stage;
   }
@@ -166,6 +163,7 @@ export default class VCS {
       delete stage[entry.key];
     }
 
+    console.log(`[sync] Unstaged ${stageEntries.map(e => e.name).join(', ')}`);
     return stage;
   }
 
@@ -184,6 +182,7 @@ export default class VCS {
   }
 
   async fork(newBranchName: string): Promise<void> {
+    const branch = await this._getCurrentBranch();
     const errMsg = VCS.validateBranchName(newBranchName);
     if (errMsg) {
       throw new Error(errMsg);
@@ -201,6 +200,8 @@ export default class VCS {
     };
 
     await this._storeBranch(newBranch);
+
+    console.log(`[sync] Forked ${branch.name} to ${newBranchName}`);
   }
 
   async removeRemoteBranch(branchName: string): Promise<void> {
@@ -209,6 +210,7 @@ export default class VCS {
     }
 
     await this._queryRemoveBranch(branchName);
+    console.log(`[sync] Deleted remote branch ${branchName}`);
   }
 
   async removeBranch(branchName: string): Promise<void> {
@@ -224,6 +226,7 @@ export default class VCS {
     }
 
     await this._removeBranch(branchToDelete);
+    console.log(`[sync] Deleted local branch ${branchName}`);
   }
 
   async checkout(
@@ -259,6 +262,7 @@ export default class VCS {
     const update = delta.update.filter(e => !dirtyMap[e.key]);
     const remove = delta.remove.filter(e => !dirtyMap[e.key]);
     const upsert = [...add, ...update];
+    console.log(`[sync] Switched to branch ${branchName}`);
 
     // Remove all dirty items from the delta so we keep them around
     return {
@@ -339,6 +343,8 @@ export default class VCS {
       remove.push(c.document);
     }
 
+    console.log(`[sync] Rolled back to ${snapshotId}`);
+
     const upsert = [...delta.update, ...delta.add];
     return {
       upsert: await this._getBlobs(upsert.map(e => e.blob)),
@@ -390,6 +396,7 @@ export default class VCS {
     remove: Array<Object>,
   }> {
     const branch = await this._getCurrentBranch();
+    console.log(`[sync] Merged branch ${otherBranchName} into ${branch.name}`);
     return this._merge(candidates, branch.name, otherBranchName, snapshotMessage);
   }
 
@@ -429,7 +436,8 @@ export default class VCS {
       newState.push({ key, name, blob });
     }
 
-    await this._createSnapshotFromState(branch, newState, name);
+    const snapshot = await this._createSnapshotFromState(branch, newState, name);
+    console.log(`[sync] Created snapshot ${snapshot.id} (${name})`);
   }
 
   async pull(
@@ -455,6 +463,7 @@ export default class VCS {
 
     // Remove tmp branch
     await this._removeBranch(tmpBranchForRemote);
+    console.log(`[sync] Pulled branch ${localBranch.name}`);
 
     return delta;
   }
@@ -471,10 +480,12 @@ export default class VCS {
     }
 
     await this._queryProjectShare(teamId, keys);
+    console.log(`[sync] Shared project ${this._projectId()} with ${teamId}`);
   }
 
   async unShareWithTeam(): Promise<void> {
     await this._queryProjectUnShare();
+    console.log(`[sync] Unshared project ${this._projectId()}`);
   }
 
   async _getOrCreateRemoteProject(): Promise<Project> {
@@ -847,7 +858,15 @@ export default class VCS {
         {
           branchName: branch.name,
           projectId: this._projectId(),
-          snapshots,
+          snapshots: snapshots.map(s => ({
+            created: s.created,
+            name: s.name,
+            description: s.description,
+            parent: s.parent,
+            id: s.id,
+            author: s.author,
+            state: s.state,
+          })),
         },
         'snapshotsPush',
       );
@@ -1153,6 +1172,8 @@ export default class VCS {
       'createProject',
     );
 
+    console.log(`[sync] Created remote project ${projectCreate.id} (${projectCreate.name})`);
+
     return projectCreate;
   }
 
@@ -1400,6 +1421,7 @@ export default class VCS {
   }
 
   async _removeProject(project: Project): Promise<void> {
+    console.log(`[sync] Remove local project ${project.id}`);
     return this._store.removeItem(paths.project(project.id));
   }
 
