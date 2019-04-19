@@ -14,5 +14,6 @@
   },
   "scripts": {
     "test": "node --version"
-  }
+  },
+  "dependencies": {}
 }

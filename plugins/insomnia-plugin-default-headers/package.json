@@ -12,5 +12,6 @@
   "insomnia": {
     "name": "default-headers",
     "description": "Add default headers to requests"
-  }
+  },
+  "dependencies": {}
 }
