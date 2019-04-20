@@ -203,10 +203,10 @@ function isOnExpandTag(monitor, component) {
   const pointer = monitor.getClientOffset();
 
   return (
-    rect.top <= pointer.y &&
-    pointer.y <= rect.bottom &&
     rect.left <= pointer.x &&
-    pointer.x <= rect.right
+    pointer.x <= rect.right &&
+    rect.top <= pointer.y &&
+    pointer.y <= rect.bottom
   );
 }
 
