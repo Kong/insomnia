@@ -89,7 +89,7 @@ class SidebarRequestGroupRow extends PureComponent {
             <div
               ref={this._setExpandTagRef}
               className={classnames('sidebar__expand', {
-                'sidebar__expand-hint': isDraggingOver,
+                'sidebar__expand-hint': isDraggingOver && isCollapsed,
               })}>
               <div className="tag tag--no-bg tag--small">
                 <span className="tag__inner">OPEN</span>
