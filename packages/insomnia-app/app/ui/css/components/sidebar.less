@@ -279,7 +279,7 @@
 
   .sidebar__clickable {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     height: 100%;
 
@@ -331,6 +331,20 @@
     .sidebar__list
     .sidebar__clickable {
     padding-left: calc(@padding-sm + @padding-md * 6);
+  }
+
+  // ~~~~~~~~~~~~~~~ //
+  // Sidebar Expand  //
+  // ~~~~~~~~~~~~~~~ //
+
+  .sidebar__expand {
+    display: none;
+    height: 100%;
+
+    &.sidebar__expand-hint {
+      display: flex;
+      align-items: center;
+    }
   }
 
   // ~~~~~~~~~~~~~~~ //
