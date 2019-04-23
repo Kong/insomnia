@@ -20,18 +20,25 @@ export const selectEntitiesLists = createSelector(
   },
 );
 
-export const selectEntitiesMasterList = createSelector(
-  state => state.entities,
+export const selectEntitiesChildrenMap = createSelector(
+  selectEntitiesLists,
   entities => {
-    const allEntities = [];
-
+    const parentLookupMap = {};
     for (const k of Object.keys(entities)) {
-      for (const id of Object.keys(entities[k])) {
-        allEntities.push(entities[k][id]);
+      for (const e of entities[k]) {
+        if (!e.parentId) {
+          continue;
+        }
+
+        if (parentLookupMap[e.parentId]) {
+          parentLookupMap[e.parentId].push(e);
+        } else {
+          parentLookupMap[e.parentId] = [e];
+        }
       }
     }
 
-    return allEntities;
+    return parentLookupMap;
   },
 );
 
@@ -61,11 +68,6 @@ export const selectActiveWorkspaceMeta = createSelector(
   },
 );
 
-export const selectRequestsAndRequestGroups = createSelector(
-  selectEntitiesLists,
-  entities => [...entities.requests, ...entities.requestGroups],
-);
-
 export const selectCollapsedRequestGroups = createSelector(
   selectEntitiesLists,
   entities => {
@@ -85,18 +87,38 @@ export const selectCollapsedRequestGroups = createSelector(
   },
 );
 
+export const selectActiveWorkspaceEntities = createSelector(
+  selectActiveWorkspace,
+  selectEntitiesChildrenMap,
+  (activeWorkspace, childrenMap) => {
+    const descendants = [activeWorkspace];
+    const addChildrenOf = parent => {
+      const children = childrenMap[parent._id] || [];
+      for (const child of children) {
+        descendants.push(child);
+        addChildrenOf(child);
+      }
+    };
+
+    // Kick off the recursion
+    addChildrenOf(activeWorkspace);
+
+    return descendants;
+  },
+);
+
 export const selectSidebarChildren = createSelector(
   selectCollapsedRequestGroups,
-  selectRequestsAndRequestGroups,
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
-  (collapsed, requestsAndRequestGroups, activeWorkspace, activeWorkspaceMeta) => {
+  selectEntitiesChildrenMap,
+  (collapsed, activeWorkspace, activeWorkspaceMeta, childrenMap) => {
     const sidebarFilter = activeWorkspaceMeta ? activeWorkspaceMeta.sidebarFilter : '';
 
     function next(parentId) {
-      const children = requestsAndRequestGroups
+      const children = (childrenMap[parentId] || [])
         .filter(doc => {
-          return doc.parentId === parentId;
+          return doc.type === models.request.type || doc.type === models.requestGroup.type;
         })
         .sort((a, b) => {
           if (a.metaSortKey === b.metaSortKey) {
@@ -152,24 +174,11 @@ export const selectSidebarChildren = createSelector(
 );
 
 export const selectWorkspaceRequestsAndRequestGroups = createSelector(
-  selectActiveWorkspace,
-  selectEntitiesLists,
-  (activeWorkspace, entities) => {
-    function getChildren(doc) {
-      const requests = entities.requests.filter(r => r.parentId === doc._id);
-      const requestGroups = entities.requestGroups.filter(rg => rg.parentId === doc._id);
-      const requestGroupChildren = [];
-
-      for (const requestGroup of requestGroups) {
-        for (const requestGroupChild of getChildren(requestGroup)) {
-          requestGroupChildren.push(requestGroupChild);
-        }
-      }
-
-      return [...requests, ...requestGroups, ...requestGroupChildren];
-    }
-
-    return getChildren(activeWorkspace);
+  selectActiveWorkspaceEntities,
+  entities => {
+    return entities.filter(
+      e => e.type === models.request.type || e.type === models.requestGroup.type,
+    );
   },
 );
 
@@ -243,30 +252,6 @@ export const selectActiveResponse = createSelector(
     }
 
     return responses[0] || null;
-  },
-);
-
-export const selectActiveWorkspaceEntities = createSelector(
-  selectActiveWorkspace,
-  selectEntitiesMasterList,
-  (activeWorkspace, allEntities) => {
-    const descendants = [activeWorkspace];
-    const addChildrenOf = parent => {
-      const children = allEntities.filter(d => d.parentId === parent._id);
-      if (children.length === 0) {
-        return;
-      }
-
-      for (const child of children) {
-        descendants.push(child);
-        addChildrenOf(child);
-      }
-    };
-
-    // Kick off the recursion
-    addChildrenOf(activeWorkspace);
-
-    return descendants;
   },
 );
 

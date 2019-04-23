@@ -9,6 +9,7 @@ import SyncDropdown from '../dropdowns/sync-dropdown';
 import WorkspaceDropdown from '../dropdowns/workspace-dropdown';
 import { SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS } from '../../../common/constants';
 import SyncLegacyDropdown from '../dropdowns/sync-legacy-dropdown';
+import { isLoggedIn } from '../../../account/session';
 
 @autobind
 class Sidebar extends PureComponent {
@@ -130,7 +131,7 @@ class Sidebar extends PureComponent {
           hotKeyRegistry={hotKeyRegistry}
         />
 
-        {enableSyncBeta && vcs && (
+        {enableSyncBeta && vcs && isLoggedIn() && (
           <SyncDropdown
             className="sidebar__footer"
             workspace={workspace}
