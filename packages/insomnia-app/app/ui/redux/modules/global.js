@@ -306,7 +306,7 @@ export function exportWorkspacesToFile(workspaceId = null) {
               stringifiedExport = await importUtils.exportWorkspacesData(
                 workspace,
                 exportPrivateEnvironments,
-                'dataStr',
+                'json',
               );
             }
           } catch (err) {
