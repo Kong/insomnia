@@ -55,8 +55,6 @@ let showAdvanced = false;
 
 @autobind
 class OAuth2Auth extends React.PureComponent<Props, State> {
-  _handleChangeProperty: Function;
-
   constructor(props: any) {
     super(props);
 
