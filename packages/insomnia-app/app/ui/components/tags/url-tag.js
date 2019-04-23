@@ -26,7 +26,7 @@ class URLTag extends React.PureComponent<Props> {
 
     return (
       <div className={classnames('tag', { 'tag--small': small }, className)}>
-        <Tooltip message={url} position="bottom">
+        <Tooltip wide message={url} position="bottom">
           <strong>{method || 'URL'}</strong> {shortUrl}
         </Tooltip>
       </div>

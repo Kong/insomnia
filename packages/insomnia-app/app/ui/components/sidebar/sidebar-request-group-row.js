@@ -22,6 +22,14 @@ class SidebarRequestGroupRow extends PureComponent {
     this._requestGroupActionsDropdown = n;
   }
 
+  _setExpandTagRef(n) {
+    this._expandTag = n;
+  }
+
+  getExpandTag() {
+    return this._expandTag;
+  }
+
   _handleCollapse() {
     const { requestGroup, handleSetRequestGroupCollapsed, isCollapsed } = this.props;
     handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
@@ -78,6 +86,15 @@ class SidebarRequestGroupRow extends PureComponent {
           <div className="sidebar__clickable">
             <i className={'sidebar__item__icon fa ' + folderIconClass} />
             <Highlight search={filter} text={requestGroup.name} />
+            <div
+              ref={this._setExpandTagRef}
+              className={classnames('sidebar__expand', {
+                'sidebar__expand-hint': isDraggingOver && isCollapsed,
+              })}>
+              <div className="tag tag--no-bg tag--small">
+                <span className="tag__inner">OPEN</span>
+              </div>
+            </div>
           </div>
         </button>,
       ),
@@ -181,6 +198,18 @@ function isAbove(monitor, component) {
   return hoveredTop > draggedTop;
 }
 
+function isOnExpandTag(monitor, component) {
+  const rect = component.getExpandTag().getBoundingClientRect();
+  const pointer = monitor.getClientOffset();
+
+  return (
+    rect.left <= pointer.x &&
+    pointer.x <= rect.right &&
+    rect.top <= pointer.y &&
+    pointer.y <= rect.bottom
+  );
+}
+
 const dragTarget = {
   drop(props, monitor, component) {
     const movingDoc = monitor.getItem().requestGroup || monitor.getItem().request;
@@ -194,7 +223,10 @@ const dragTarget = {
     }
   },
   hover(props, monitor, component) {
-    if (isAbove(monitor, component)) {
+    if (isOnExpandTag(monitor, component)) {
+      component.props.handleSetRequestGroupCollapsed(props.requestGroup._id, false);
+      component.setDragDirection(0);
+    } else if (isAbove(monitor, component)) {
       component.setDragDirection(1);
     } else {
       component.setDragDirection(-1);
