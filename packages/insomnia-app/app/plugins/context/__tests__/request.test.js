@@ -47,6 +47,7 @@ describe('init()', () => {
       'setBodyText',
       'setCookie',
       'setHeader',
+      'setMethod',
       'setParameter',
       'setUrl',
       'settingDisableRenderRequestBody',

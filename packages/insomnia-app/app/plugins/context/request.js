@@ -27,6 +27,9 @@ export function init(
     getMethod(): string {
       return renderedRequest.method;
     },
+    setMethod(method: string): void {
+      renderedRequest.method = method;
+    },
     setUrl(url: string): void {
       renderedRequest.url = url;
     },
@@ -133,13 +136,11 @@ export function init(
         renderedRequest.parameters.push({ name, value });
       }
     },
-
     setAuthenticationParameter(name: string, value: string): void {
       Object.assign(renderedRequest.authentication, {
         [name]: value,
       });
     },
-
     getAuthentication(): Object {
       return renderedRequest.authentication;
     },
@@ -152,6 +153,7 @@ export function init(
 
   if (readOnly) {
     delete request.setUrl;
+    delete request.setMethod;
     delete request.setBodyText;
     delete request.setCookie;
     delete request.settingSendCookies;
