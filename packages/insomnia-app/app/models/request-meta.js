@@ -5,6 +5,7 @@ export const name = 'Request Meta';
 export const type = 'RequestMeta';
 export const prefix = 'reqm';
 export const canDuplicate = false;
+export const canSync = false;
 
 export function init() {
   return {

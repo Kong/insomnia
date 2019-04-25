@@ -14,7 +14,12 @@ import {
   CONTENT_TYPE_GRAPHQL,
   getContentTypeFromHeaders,
 } from '../../../../common/constants';
-import type { Request, RequestBody, RequestBodyParameter, RequestHeader } from '../../../../models/request';
+import type {
+  Request,
+  RequestBody,
+  RequestBodyParameter,
+  RequestHeader,
+} from '../../../../models/request';
 import {
   newBodyFile,
   newBodyForm,

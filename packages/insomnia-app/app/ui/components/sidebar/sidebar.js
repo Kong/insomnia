@@ -5,9 +5,11 @@ import classnames from 'classnames';
 import EnvironmentsDropdown from '../dropdowns/environments-dropdown';
 import SidebarFilter from './sidebar-filter';
 import SidebarChildren from './sidebar-children';
-import SyncButton from '../dropdowns/sync-dropdown';
+import SyncDropdown from '../dropdowns/sync-dropdown';
 import WorkspaceDropdown from '../dropdowns/workspace-dropdown';
 import { SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS } from '../../../common/constants';
+import SyncLegacyDropdown from '../dropdowns/sync-legacy-dropdown';
+import { isLoggedIn } from '../../../account/session';
 
 @autobind
 class Sidebar extends PureComponent {
@@ -39,8 +41,6 @@ class Sidebar extends PureComponent {
       environments,
       activeEnvironment,
       handleSetActiveWorkspace,
-      handleImportFile,
-      handleExportFile,
       handleChangeFilter,
       isLoading,
       handleCreateRequest,
@@ -57,6 +57,10 @@ class Sidebar extends PureComponent {
       handleActivateRequest,
       activeRequest,
       environmentHighlightColorStyle,
+      hotKeyRegistry,
+      enableSyncBeta,
+      vcs,
+      syncItems,
     } = this.props;
 
     return (
@@ -79,10 +83,11 @@ class Sidebar extends PureComponent {
           activeWorkspace={workspace}
           workspaces={workspaces}
           unseenWorkspaces={unseenWorkspaces}
-          handleExportFile={handleExportFile}
-          handleImportFile={handleImportFile}
+          hotKeyRegistry={hotKeyRegistry}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
+          enableSyncBeta={enableSyncBeta}
           isLoading={isLoading}
+          vcs={vcs}
         />
 
         <div className="sidebar__menu">
@@ -92,6 +97,7 @@ class Sidebar extends PureComponent {
             environments={environments}
             workspace={workspace}
             environmentHighlightColorStyle={environmentHighlightColorStyle}
+            hotKeyRegistry={hotKeyRegistry}
           />
           <button className="btn btn--super-compact" onClick={showCookiesModal}>
             <div className="sidebar__menu__thing">
@@ -106,6 +112,7 @@ class Sidebar extends PureComponent {
           requestCreate={this._handleCreateRequestInWorkspace}
           requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
           filter={filter || ''}
+          hotKeyRegistry={hotKeyRegistry}
         />
 
         <SidebarChildren
@@ -125,9 +132,27 @@ class Sidebar extends PureComponent {
           workspace={workspace}
           activeRequest={activeRequest}
           filter={filter || ''}
+          hotKeyRegistry={hotKeyRegistry}
         />
 
-        <SyncButton className="sidebar__footer" key={workspace._id} workspace={workspace} />
+        {enableSyncBeta &&
+          vcs &&
+          isLoggedIn() && (
+            <SyncDropdown
+              className="sidebar__footer"
+              workspace={workspace}
+              vcs={vcs}
+              syncItems={syncItems}
+            />
+          )}
+
+        {!enableSyncBeta && (
+          <SyncLegacyDropdown
+            className="sidebar__footer"
+            key={workspace._id}
+            workspace={workspace}
+          />
+        )}
       </aside>
     );
   }
@@ -140,8 +165,6 @@ Sidebar.propTypes = {
   handleSetRequestPinned: PropTypes.func.isRequired,
   handleSetRequestGroupPinned: PropTypes.func.isRequired,
   handleChangeFilter: PropTypes.func.isRequired,
-  handleImportFile: PropTypes.func.isRequired,
-  handleExportFile: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
   handleSetActiveEnvironment: PropTypes.func.isRequired,
   moveDoc: PropTypes.func.isRequired,
@@ -165,11 +188,15 @@ Sidebar.propTypes = {
   unseenWorkspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
   environmentHighlightColorStyle: PropTypes.string.isRequired,
+  hotKeyRegistry: PropTypes.object.isRequired,
+  enableSyncBeta: PropTypes.bool.isRequired,
+  syncItems: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional
   filter: PropTypes.string,
   activeRequest: PropTypes.object,
   activeEnvironment: PropTypes.object,
+  vcs: PropTypes.object,
 };
 
 export default Sidebar;

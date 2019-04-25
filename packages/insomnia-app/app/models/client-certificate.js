@@ -6,6 +6,7 @@ export const name = 'Client Certificate';
 export const type = 'ClientCertificate';
 export const prefix = 'crt';
 export const canDuplicate = true;
+export const canSync = false;
 
 type BaseClientCertificate = {
   parentId: string,

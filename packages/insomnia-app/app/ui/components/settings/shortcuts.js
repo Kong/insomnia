@@ -1,51 +1,198 @@
+// @flow
 import React, { PureComponent } from 'react';
 import autobind from 'autobind-decorator';
 import Hotkey from '../hotkey';
-import * as hotkeys from '../../../common/hotkeys';
+import type { HotKeyDefinition, HotKeyRegistry, KeyCombination } from '../../../common/hotkeys';
+import {
+  areKeyBindingsSameAsDefault,
+  areSameKeyCombinations,
+  constructKeyCombinationDisplay,
+  getPlatformKeyCombinations,
+  hotKeyRefs,
+  newDefaultKeyBindings,
+  newDefaultRegistry,
+} from '../../../common/hotkeys';
+import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import { showModal } from '../modals';
+import AddKeyCombinationModal from '../modals/add-key-combination-modal';
+import PromptButton from '../base/prompt-button';
+
+type Props = {
+  hotKeyRegistry: HotKeyRegistry,
+  handleUpdateKeyBindings: Function,
+};
 
 @autobind
-class Shortcuts extends PureComponent {
-  renderHotkey(hotkey, i) {
+class Shortcuts extends PureComponent<Props> {
+  /**
+   * Checks whether the given key combination already existed.
+   * @param newKeyComb the key combination to be checked.
+   * @returns {boolean} true if already existed.
+   */
+  checkKeyCombinationDuplicate(newKeyComb: KeyCombination): boolean {
+    const { hotKeyRegistry } = this.props;
+    for (const hotKeyRefId in hotKeyRegistry) {
+      if (!hotKeyRegistry.hasOwnProperty(hotKeyRefId)) {
+        continue;
+      }
+      const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefId]);
+      for (const keyComb of keyCombs) {
+        if (areSameKeyCombinations(keyComb, newKeyComb)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Registers a new key combination under a hot key.
+   * @param hotKeyRefId the reference id of a hot key to be given the new key combination.
+   * @param keyComb the new key combination.
+   */
+  addKeyCombination(hotKeyRefId: string, keyComb: KeyCombination) {
+    const { hotKeyRegistry, handleUpdateKeyBindings } = this.props;
+    const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefId]);
+    keyCombs.push(keyComb);
+    handleUpdateKeyBindings(hotKeyRegistry);
+  }
+
+  handleAddKeyCombination(hotKeyRefId: string) {
+    showModal(
+      AddKeyCombinationModal,
+      hotKeyRefId,
+      this.checkKeyCombinationDuplicate,
+      this.addKeyCombination,
+    );
+  }
+
+  handleRemoveKeyCombination(toBeRemoved: Object) {
+    const { hotKeyRefId, keyComb } = toBeRemoved;
+    const { hotKeyRegistry, handleUpdateKeyBindings } = this.props;
+    const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefId]);
+    let toBeRemovedIndex = -1;
+    keyCombs.forEach((existingKeyComb, idx) => {
+      if (areSameKeyCombinations(existingKeyComb, keyComb)) {
+        toBeRemovedIndex = idx;
+      }
+    });
+    if (toBeRemovedIndex >= 0) {
+      keyCombs.splice(toBeRemovedIndex, 1);
+      handleUpdateKeyBindings(hotKeyRegistry);
+    }
+  }
+
+  handleResetKeyBindings(hotKeyRefId: string) {
+    const { hotKeyRegistry, handleUpdateKeyBindings } = this.props;
+    hotKeyRegistry[hotKeyRefId] = newDefaultKeyBindings(hotKeyRefId);
+    handleUpdateKeyBindings(hotKeyRegistry);
+  }
+
+  handleResetAllKeyBindings() {
+    const { handleUpdateKeyBindings } = this.props;
+    handleUpdateKeyBindings(newDefaultRegistry());
+  }
+
+  renderHotKey(def: HotKeyDefinition, i: number) {
+    const keyBindings = this.props.hotKeyRegistry[def.id];
+    const keyCombinations = getPlatformKeyCombinations(keyBindings);
+    const hasRemoveItems = keyCombinations.length > 0;
+    const hasResetItems = !areKeyBindingsSameAsDefault(def.id, keyBindings);
+
     return (
       <tr key={i}>
-        <td>{hotkey.description}</td>
+        <td>{def.description}</td>
         <td className="text-right">
-          <code>
-            <Hotkey hotkey={hotkey} />
-          </code>
+          {keyCombinations.map((keyComb: KeyCombination, idx: number) => {
+            return (
+              <code key={idx} className="margin-left-sm">
+                <Hotkey keyCombination={keyComb} />
+              </code>
+            );
+          })}
+        </td>
+        <td className="text-right options">
+          <Dropdown outline>
+            <DropdownButton className="btn btn--clicky-small">
+              <i className="fa fa-gear" />
+            </DropdownButton>
+            <DropdownItem value={def.id} onClick={this.handleAddKeyCombination}>
+              <i className="fa fa-plus-circle" />
+              Add keyboard shortcut
+            </DropdownItem>
+
+            {hasRemoveItems && <DropdownDivider>Remove existing</DropdownDivider>}
+            {/* Dropdown items to remove key combinations. */
+            keyCombinations.map((keyComb: KeyCombination) => {
+              const display = constructKeyCombinationDisplay(keyComb, false);
+              return (
+                <DropdownItem
+                  key={display}
+                  value={{ hotKeyRefId: def.id, keyComb: keyComb }}
+                  buttonClass={PromptButton}
+                  onClick={this.handleRemoveKeyCombination}>
+                  <i className="fa fa-trash-o" /> {display}
+                </DropdownItem>
+              );
+            })}
+
+            {hasResetItems && <DropdownDivider />}
+            {hasResetItems && (
+              <DropdownItem
+                value={def.id}
+                buttonClass={PromptButton}
+                onClick={this.handleResetKeyBindings}>
+                <i className="fa fa-empty" /> Reset keyboard shortcuts
+              </DropdownItem>
+            )}
+          </Dropdown>
         </td>
       </tr>
     );
   }
 
   render() {
+    const hotKeyDefs: Array<HotKeyDefinition> = [
+      hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
+      hotKeyRefs.REQUEST_QUICK_SWITCH,
+      hotKeyRefs.REQUEST_SEND,
+      hotKeyRefs.REQUEST_SHOW_OPTIONS,
+      hotKeyRefs.REQUEST_SHOW_CREATE,
+      hotKeyRefs.REQUEST_SHOW_DELETE,
+      hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER,
+      hotKeyRefs.REQUEST_SHOW_DUPLICATE,
+      hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR,
+      hotKeyRefs.SHOW_COOKIES_EDITOR,
+      hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
+      hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU,
+      hotKeyRefs.REQUEST_FOCUS_URL,
+      hotKeyRefs.RESPONSE_FOCUS,
+      hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU,
+      hotKeyRefs.SIDEBAR_TOGGLE,
+      hotKeyRefs.SIDEBAR_FOCUS_FILTER,
+      hotKeyRefs.REQUEST_TOGGLE_HISTORY,
+      hotKeyRefs.SHOW_AUTOCOMPLETE,
+      hotKeyRefs.PREFERENCES_SHOW_GENERAL,
+      hotKeyRefs.WORKSPACE_SHOW_SETTINGS,
+      hotKeyRefs.REQUEST_SHOW_SETTINGS,
+      hotKeyRefs.TOGGLE_MAIN_MENU,
+      hotKeyRefs.PLUGIN_RELOAD,
+      hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES,
+    ];
     return (
-      <div>
+      <div className="shortcuts">
+        <div className="row-spaced margin-bottom-xs">
+          <div>
+            <PromptButton className="btn btn--clicky" onClick={this.handleResetAllKeyBindings}>
+              Reset all
+            </PromptButton>
+          </div>
+        </div>
         <table className="table--fancy">
           <tbody>
-            {this.renderHotkey(hotkeys.SHOW_KEYBOARD_SHORTCUTS)}
-            {this.renderHotkey(hotkeys.SHOW_QUICK_SWITCHER)}
-            {this.renderHotkey(hotkeys.SEND_REQUEST)}
-            {this.renderHotkey(hotkeys.SHOW_SEND_OPTIONS)}
-            {this.renderHotkey(hotkeys.CREATE_REQUEST)}
-            {this.renderHotkey(hotkeys.DELETE_REQUEST)}
-            {this.renderHotkey(hotkeys.CREATE_FOLDER)}
-            {this.renderHotkey(hotkeys.DUPLICATE_REQUEST)}
-            {this.renderHotkey(hotkeys.SHOW_COOKIES)}
-            {this.renderHotkey(hotkeys.SHOW_ENVIRONMENTS)}
-            {this.renderHotkey(hotkeys.TOGGLE_ENVIRONMENTS_MENU)}
-            {this.renderHotkey(hotkeys.FOCUS_URL)}
-            {this.renderHotkey(hotkeys.FOCUS_RESPONSE)}
-            {this.renderHotkey(hotkeys.TOGGLE_METHOD_DROPDOWN)}
-            {this.renderHotkey(hotkeys.TOGGLE_SIDEBAR)}
-            {this.renderHotkey(hotkeys.TOGGLE_HISTORY_DROPDOWN)}
-            {this.renderHotkey(hotkeys.SHOW_AUTOCOMPLETE)}
-            {this.renderHotkey(hotkeys.SHOW_SETTINGS)}
-            {this.renderHotkey(hotkeys.SHOW_WORKSPACE_SETTINGS)}
-            {this.renderHotkey(hotkeys.SHOW_REQUEST_SETTINGS)}
-            {this.renderHotkey(hotkeys.TOGGLE_MAIN_MENU)}
-            {this.renderHotkey(hotkeys.RELOAD_PLUGINS)}
-            {this.renderHotkey(hotkeys.UNCOVER_VARIABLES)}
+            {hotKeyDefs.map((def: HotKeyDefinition, idx: number) => {
+              return this.renderHotKey(def, idx);
+            })}
           </tbody>
         </table>
       </div>

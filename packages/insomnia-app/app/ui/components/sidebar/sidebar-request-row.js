@@ -80,6 +80,7 @@ class SidebarRequestRow extends PureComponent {
       requestGroup,
       isActive,
       isPinned,
+      hotKeyRegistry,
     } = this.props;
 
     const { dragDirection } = this.state;
@@ -138,6 +139,7 @@ class SidebarRequestRow extends PureComponent {
                 request={request}
                 isPinned={isPinned}
                 requestGroup={requestGroup}
+                hotKeyRegistry={hotKeyRegistry}
               />
             </div>
           </div>
@@ -167,6 +169,7 @@ SidebarRequestRow.propTypes = {
   filter: PropTypes.string.isRequired,
   isActive: PropTypes.bool.isRequired,
   isPinned: PropTypes.bool.isRequired,
+  hotKeyRegistry: PropTypes.object.isRequired,
 
   // React DnD
   isDragging: PropTypes.bool,
@@ -209,9 +212,9 @@ const dragTarget = {
   },
   hover(props, monitor, component) {
     if (isAbove(monitor, component)) {
-      component.decoratedComponentInstance.setDragDirection(1);
+      component.setDragDirection(1);
     } else {
-      component.decoratedComponentInstance.setDragDirection(-1);
+      component.setDragDirection(-1);
     }
   },
 };

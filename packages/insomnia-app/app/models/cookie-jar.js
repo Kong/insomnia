@@ -1,4 +1,5 @@
 // @flow
+import crypto from 'crypto';
 import * as db from '../common/database';
 import type { BaseModel } from './index';
 
@@ -6,6 +7,7 @@ export const name = 'Cookie Jar';
 export const type = 'CookieJar';
 export const prefix = 'jar';
 export const canDuplicate = true;
+export const canSync = false;
 
 export type Cookie = {
   id: string,
@@ -44,7 +46,7 @@ export function migrate(doc: CookieJar): CookieJar {
   return doc;
 }
 
-export function create(patch: Object = {}) {
+export async function create(patch: Object = {}) {
   if (!patch.parentId) {
     throw new Error(`New CookieJar missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
@@ -55,21 +57,30 @@ export function create(patch: Object = {}) {
 export async function getOrCreateForParentId(parentId: string) {
   const cookieJars = await db.find(type, { parentId });
   if (cookieJars.length === 0) {
-    return create({ parentId });
+    return create({
+      parentId,
+
+      // Deterministic ID. It helps reduce sync complexity since we won't have to
+      // de-duplicate environments.
+      _id: `${prefix}_${crypto
+        .createHash('sha1')
+        .update(parentId)
+        .digest('hex')}`,
+    });
   } else {
     return cookieJars[0];
   }
 }
 
-export function all() {
+export async function all(): Promise<Array<BaseModel>> {
   return db.all(type);
 }
 
-export function getById(id: string) {
+export async function getById(id: string) {
   return db.get(type, id);
 }
 
-export function update(cookieJar: CookieJar, patch: Object = {}) {
+export async function update(cookieJar: CookieJar, patch: Object = {}) {
   return db.docUpdate(cookieJar, patch);
 }
 

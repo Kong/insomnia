@@ -17,7 +17,7 @@ if (require.main === module) {
       await buildTask.start();
       await module.exports.start();
     } catch (err) {
-      console.log('[package] ERROR: ', err.stack);
+      console.log('[package] ERROR:', err);
       process.exit(1);
     }
   });

@@ -1,5 +1,6 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/overlay';
+import * as models from '../../../../models';
 import { getDefaultFill } from '../../../../templating/utils';
 import { escapeHTML, escapeRegex } from '../../../../common/misc';
 
@@ -11,7 +12,6 @@ const COMPLETE_AFTER_WORD = /[\w.\][-]+/;
 const COMPLETE_AFTER_CURLIES = /[^{]*{[{%]\s*/;
 const COMPLETION_CLOSE_KEYS = /[}|-]/;
 const MAX_HINT_LOOK_BACK = 100;
-const HINT_DELAY_MILLIS = 700;
 const TYPE_VARIABLE = 'variable';
 const TYPE_TAG = 'tag';
 const TYPE_CONSTANT = 'constant';
@@ -126,7 +126,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
 
   let keydownDebounce = null;
 
-  cm.on('keydown', (cm, e) => {
+  cm.on('keydown', async (cm, e) => {
     // Close autocomplete on Escape if it's open
     if (cm.isHintDropdownActive() && e.key === 'Escape') {
       if (!cm.state.completionActive) {
@@ -146,9 +146,14 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     }
 
     clearTimeout(keydownDebounce);
-    keydownDebounce = setTimeout(() => {
-      completeIfInVariableName(cm);
-    }, HINT_DELAY_MILLIS);
+
+    const { autocompleteDelay } = await models.settings.getOrCreate();
+
+    if (autocompleteDelay > 0) {
+      keydownDebounce = setTimeout(() => {
+        completeIfInVariableName(cm);
+      }, autocompleteDelay);
+    }
   });
 
   // Clear timeout if we already closed the completion

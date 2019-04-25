@@ -69,12 +69,12 @@ class AuthDropdown extends React.PureComponent<Props> {
   }
 
   renderAuthType(type: string, nameOverride: string | null = null) {
-    const {authentication} = this.props.request;
+    const { authentication } = this.props.request;
     const currentType = authentication.type || AUTH_NONE;
 
     return (
       <DropdownItem onClick={this._handleTypeChange} value={type}>
-        {currentType === type ? <i className="fa fa-check"/> : <i className="fa fa-empty"/>}{' '}
+        {currentType === type ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}{' '}
         {nameOverride || getAuthTypeName(type, true)}
       </DropdownItem>
     );

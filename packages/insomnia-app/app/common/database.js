@@ -77,8 +77,12 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
   delete db._empty;
 
   electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
-    const result = await database[fnName](...args);
-    e.sender.send(replyChannel, result);
+    try {
+      const result = await database[fnName](...args);
+      e.sender.send(replyChannel, null, result);
+    } catch (err) {
+      e.sender.send(replyChannel, { message: err.message, stack: err.stack });
+    }
   });
 
   // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to
@@ -140,6 +144,7 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
 // ~~~~~~~~~~~~~~~~ //
 
 let bufferingChanges = false;
+let bufferChangesId = 1;
 let changeBuffer = [];
 let changeListeners = [];
 
@@ -151,13 +156,16 @@ export function offChange(callback: Function): void {
   changeListeners = changeListeners.filter(l => l !== callback);
 }
 
+/** buffers database changes and returns false if was already buffering */
 export const bufferChanges = (database.bufferChanges = async function(
   millis: number = 1000,
-): Promise<void> {
+): Promise<number> {
   if (db._empty) return _send('bufferChanges', ...arguments);
 
   bufferingChanges = true;
   setTimeout(database.flushChanges, millis);
+
+  return ++bufferChangesId;
 });
 
 export const flushChangesAsync = (database.flushChangesAsync = async function() {
@@ -166,8 +174,13 @@ export const flushChangesAsync = (database.flushChangesAsync = async function() 
   });
 });
 
-export const flushChanges = (database.flushChanges = async function() {
+export const flushChanges = (database.flushChanges = async function(id: number = 0) {
   if (db._empty) return _send('flushChanges', ...arguments);
+
+  // Only flush if ID is 0 or the current flush ID is the same as passed
+  if (id !== 0 && bufferChangesId !== id) {
+    return;
+  }
 
   bufferingChanges = false;
   const changes = [...changeBuffer];
@@ -336,7 +349,13 @@ export const insert = (database.insert = async function<T: BaseModel>(
   if (db._empty) return _send('insert', ...arguments);
 
   return new Promise(async (resolve, reject) => {
-    const docWithDefaults = await models.initModel(doc.type, doc);
+    let docWithDefaults;
+    try {
+      docWithDefaults = await models.initModel(doc.type, doc);
+    } catch (err) {
+      return reject(err);
+    }
+
     db[doc.type].insert(docWithDefaults, (err, newDoc) => {
       if (err) {
         return reject(err);
@@ -357,7 +376,13 @@ export const update = (database.update = async function<T: BaseModel>(
   if (db._empty) return _send('update', ...arguments);
 
   return new Promise(async (resolve, reject) => {
-    const docWithDefaults = await models.initModel(doc.type, doc);
+    let docWithDefaults;
+    try {
+      docWithDefaults = await models.initModel(doc.type, doc);
+    } catch (err) {
+      return reject(err);
+    }
+
     db[doc.type].update({ _id: docWithDefaults._id }, docWithDefaults, err => {
       if (err) {
         return reject(err);
@@ -377,7 +402,7 @@ export const remove = (database.remove = async function<T: BaseModel>(
 ): Promise<void> {
   if (db._empty) return _send('remove', ...arguments);
 
-  await database.bufferChanges();
+  const flushId = await database.bufferChanges();
 
   const docs = await database.withDescendants(doc);
   const docIds = docs.map(d => d._id);
@@ -388,7 +413,18 @@ export const remove = (database.remove = async function<T: BaseModel>(
 
   docs.map(d => notifyOfChange(CHANGE_REMOVE, d, fromSync));
 
-  await database.flushChanges();
+  await database.flushChanges(flushId);
+});
+
+/** Removes entries without removing their children */
+export const unsafeRemove = (database.unsafeRemove = async function<T: BaseModel>(
+  doc: T,
+  fromSync: boolean = false,
+): Promise<void> {
+  if (db._empty) return _send('unsafeRemove', ...arguments);
+
+  db[doc.type].remove({ _id: doc._id });
+  notifyOfChange(CHANGE_REMOVE, doc, fromSync);
 });
 
 export const removeWhere = (database.removeWhere = async function(
@@ -397,7 +433,7 @@ export const removeWhere = (database.removeWhere = async function(
 ): Promise<void> {
   if (db._empty) return _send('removeWhere', ...arguments);
 
-  await database.bufferChanges();
+  const flushId = await database.bufferChanges();
 
   for (const doc of await database.find(type, query)) {
     const docs = await database.withDescendants(doc);
@@ -410,7 +446,32 @@ export const removeWhere = (database.removeWhere = async function(
     docs.map(d => notifyOfChange(CHANGE_REMOVE, d, false));
   }
 
-  await database.flushChanges();
+  await database.flushChanges(flushId);
+});
+
+export const batchModifyDocs = (database.batchModifyDocs = async function(operations: {
+  upsert: Array<Object>,
+  remove: Array<Object>,
+}): Promise<void> {
+  if (db._empty) return _send('batchModifyDocs', ...arguments);
+
+  const flushId = await bufferChanges();
+
+  const promisesUpserted = [];
+  const promisesDeleted = [];
+  for (const doc: BaseModel of operations.upsert) {
+    promisesUpserted.push(upsert(doc, true));
+  }
+
+  for (const doc: BaseModel of operations.remove) {
+    promisesDeleted.push(unsafeRemove(doc, true));
+  }
+
+  // Perform from least to most dangerous
+  await Promise.all(promisesUpserted);
+  await Promise.all(promisesDeleted);
+
+  await flushChanges(flushId);
 });
 
 // ~~~~~~~~~~~~~~~~~~~ //
@@ -466,10 +527,14 @@ export const withDescendants = (database.withDescendants = async function(
         continue;
       }
 
+      const promises = [];
       for (const type of allTypes()) {
         // If the doc is null, we want to search for parentId === null
         const parentId = d ? d._id : null;
-        const more = await database.find(type, { parentId });
+        promises.push(database.find(type, { parentId }));
+      }
+
+      for (const more of await Promise.all(promises)) {
         foundDocs = [...foundDocs, ...more];
       }
     }
@@ -528,7 +593,7 @@ export const duplicate = (database.duplicate = async function<T: BaseModel>(
 ): Promise<T> {
   if (db._empty) return _send('duplicate', ...arguments);
 
-  await database.bufferChanges();
+  const flushId = await database.bufferChanges();
 
   async function next<T: BaseModel>(docToCopy: T, patch: Object): Promise<T> {
     // 1. Copy the doc
@@ -558,7 +623,7 @@ export const duplicate = (database.duplicate = async function<T: BaseModel>(
 
   const createdDoc = await next(originalDoc, patch);
 
-  await database.flushChanges();
+  await database.flushChanges(flushId);
 
   return createdDoc;
 });
@@ -571,8 +636,12 @@ async function _send<T>(fnName: string, ...args: Array<any>): Promise<T> {
   return new Promise((resolve, reject) => {
     const replyChannel = `db.fn.reply:${uuid.v4()}`;
     electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);
-    electron.ipcRenderer.once(replyChannel, (e, result) => {
-      resolve(result);
+    electron.ipcRenderer.once(replyChannel, (e, err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
     });
   });
 }

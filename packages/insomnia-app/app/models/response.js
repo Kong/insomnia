@@ -8,7 +8,6 @@ import crypto from 'crypto';
 import path from 'path';
 import zlib from 'zlib';
 import mkdirp from 'mkdirp';
-import { MAX_RESPONSES } from '../common/constants';
 import * as db from '../common/database';
 import { getDataDirectory } from '../common/misc';
 
@@ -16,6 +15,7 @@ export const name = 'Response';
 export const type = 'Response';
 export const prefix = 'res';
 export const canDuplicate = false;
+export const canSync = false;
 
 export type ResponseHeader = {
   name: string,
@@ -97,7 +97,7 @@ export function getById(id: string) {
   return db.get(type, id);
 }
 
-export function all() {
+export async function all(): Promise<Array<Response>> {
   return db.all(type);
 }
 
@@ -123,7 +123,7 @@ export async function getLatestForRequest(requestId: string): Promise<Response |
   return response || null;
 }
 
-export async function create(patch: Object = {}) {
+export async function create(patch: Object = {}, maxResponses: number = 20) {
   if (!patch.parentId) {
     throw new Error('New Response missing `parentId`');
   }
@@ -136,7 +136,11 @@ export async function create(patch: Object = {}) {
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
 
   // Delete all other responses before creating the new one
-  const allResponses = await db.findMostRecentlyModified(type, { parentId }, MAX_RESPONSES);
+  const allResponses = await db.findMostRecentlyModified(
+    type,
+    { parentId },
+    Math.max(1, maxResponses),
+  );
   const recentIds = allResponses.map(r => r._id);
   await db.removeWhere(type, { parentId, _id: { $nin: recentIds } });
 

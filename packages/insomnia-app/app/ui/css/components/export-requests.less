@@ -1,0 +1,118 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.requests-tree {
+  position: relative;
+
+  background-color: var(--color-bg);
+  color: var(--color-font);
+
+  width: 100%;
+  height: 100%;
+
+  .tree__list-root {
+    // Add some space above so it's not so squished
+    padding-top: @padding-xxs;
+    padding-bottom: @padding-md;
+    box-shadow: inset 0 2rem 2rem -2rem rgba(0, 0, 0, 0.03);
+
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    &:hover::-webkit-scrollbar {
+      display: block;
+    }
+  }
+
+  .tree__row {
+    position: relative;
+  }
+
+  // ~~~~~~~~~ //
+  // Tree Item //
+  // ~~~~~~~~~ //
+
+  .tree__item {
+    display: flex;
+    height: @line-height-xs;
+
+    & > button {
+      flex-grow: 1;
+      color: @hl;
+      padding-left: @padding-sm;
+    }
+
+    & > * {
+      height: 100%;
+    }
+
+    &.tree__item--big {
+      height: @line-height-sm;
+    }
+
+    &:focus,
+    &:hover {
+      background-color: @hl-xs;
+      transition: background-color 0ms;
+    }
+
+    .tag {
+      padding-left: 0;
+      text-align: left;
+      width: 3em;
+    }
+
+    .total-requests {
+      color: @hl-lg;
+      padding-left: @padding-xs;
+    }
+  }
+
+  .tree__item__icon {
+    padding-right: @padding-sm;
+  }
+
+  .tree__item__checkbox > * {
+    height: 100%;
+  }
+
+  // Padding for nested folders
+
+  .tree__list .tree__indent {
+    padding-left: @padding-sm;
+  }
+
+  .tree__list .tree__list .tree__indent {
+    padding-left: calc(@padding-sm + @padding-md * 1);
+  }
+
+  .tree__list .tree__list .tree__list .tree__indent {
+    padding-left: calc(@padding-sm + @padding-md * 2);
+  }
+
+  .tree__list .tree__list .tree__list .tree__list .tree__indent {
+    padding-left: calc(@padding-sm + @padding-md * 3);
+  }
+
+  .tree__list .tree__list .tree__list .tree__list .tree__list .tree__indent {
+    padding-left: calc(@padding-sm + @padding-md * 4);
+  }
+
+  .tree__list .tree__list .tree__list .tree__list .tree__list .tree__list .tree__indent {
+    padding-left: calc(@padding-sm + @padding-md * 5);
+  }
+
+  .tree__list
+    .tree__list
+    .tree__list
+    .tree__list
+    .tree__list
+    .tree__list
+    .tree__list
+    .tree__indent {
+    padding-left: calc(@padding-sm + @padding-md * 6);
+  }
+}

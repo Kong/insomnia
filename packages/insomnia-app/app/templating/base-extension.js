@@ -28,6 +28,10 @@ export default class BaseExtension {
     return this._ext.description || 'no description';
   }
 
+  getDisablePreview() {
+    return this._ext.disablePreview || (() => false);
+  }
+
   getArgs() {
     return this._ext.args || [];
   }

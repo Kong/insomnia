@@ -160,7 +160,7 @@ class AuthWrapper extends React.PureComponent<Props> {
         />
       );
     } else if (authentication.type === AUTH_NETRC) {
-      return <NetrcAuth/>;
+      return <NetrcAuth />;
     } else if (authentication.type === AUTH_ASAP) {
       return (
         <AsapAuth
@@ -176,9 +176,9 @@ class AuthWrapper extends React.PureComponent<Props> {
       return (
         <div className="vertically-center text-center">
           <p className="pad super-faint text-sm text-center">
-            <i className="fa fa-unlock-alt" style={{ fontSize: '8rem', opacity: 0.3 }}/>
-            <br/>
-            <br/>
+            <i className="fa fa-unlock-alt" style={{ fontSize: '8rem', opacity: 0.3 }} />
+            <br />
+            <br />
             Select an auth type from above
           </p>
         </div>
@@ -187,11 +187,7 @@ class AuthWrapper extends React.PureComponent<Props> {
   }
 
   render() {
-    return (
-      <div className="tall">
-        {this.renderEditor()}
-      </div>
-    );
+    return <div className="tall">{this.renderEditor()}</div>;
   }
 }
 

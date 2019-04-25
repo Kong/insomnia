@@ -14,9 +14,11 @@ import { showPrompt } from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
 import PromptButton from './base/prompt-button';
 import OneLineEditor from './codemirror/one-line-editor';
-import * as hotkeys from '../../common/hotkeys';
 import KeydownBinder from './keydown-binder';
 import type { Request } from '../../models/request';
+import type { HotKeyRegistry } from '../../common/hotkeys';
+import { hotKeyRefs } from '../../common/hotkeys';
+import { executeHotKey } from '../../common/hotkeys-listener';
 
 type Props = {
   handleAutocompleteUrls: Function,
@@ -32,12 +34,13 @@ type Props = {
   onUrlChange: (r: Request, url: string) => Promise<Request>,
   request: Request,
   uniquenessKey: string,
+  hotKeyRegistry: HotKeyRegistry,
 };
 
 type State = {
   currentInterval: number | null,
   currentTimeout: number | null,
-  downloadPath: string | null
+  downloadPath: string | null,
 };
 
 @autobind
@@ -78,11 +81,9 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     this._dropdown && this._dropdown.show();
   }
 
-  _handleFormSubmit(e?: SyntheticEvent<HTMLFormElement>) {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  _handleFormSubmit(e: SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    e.stopPropagation();
 
     this._handleSend();
   }
@@ -144,21 +145,21 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     this.setState({ downloadPath: null });
   }
 
-  _handleKeyDown(e: KeyboardEvent) {
+  async _handleKeyDown(e: KeyboardEvent) {
     if (!this._input) {
       return;
     }
 
-    hotkeys.executeHotKey(e, hotkeys.FOCUS_URL, () => {
+    executeHotKey(e, hotKeyRefs.REQUEST_FOCUS_URL, () => {
       this._input && this._input.focus();
       this._input && this._input.selectAll();
     });
 
-    hotkeys.executeHotKey(e, hotkeys.TOGGLE_METHOD_DROPDOWN, () => {
+    executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
       this._methodDropdown && this._methodDropdown.toggle();
     });
 
-    hotkeys.executeHotKey(e, hotkeys.SHOW_SEND_OPTIONS, () => {
+    executeHotKey(e, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
   }
@@ -235,13 +236,12 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
 
     // If we're pressing a meta key, let the dropdown open
     if (metaPressed) {
-      e.preventDefault(); // Don't submit the form
       return;
     }
 
     // If we're not pressing a meta key, cancel dropdown and send the request
     e.stopPropagation(); // Don't trigger the dropdown
-    this._handleFormSubmit();
+    this._handleSend();
   }
 
   componentWillReceiveProps(nextProps: Props) {
@@ -251,6 +251,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
   }
 
   renderSendButton() {
+    const { hotKeyRegistry } = this.props;
     const { currentInterval, currentTimeout, downloadPath } = this.state;
 
     let cancelButton = null;
@@ -284,23 +285,23 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
             className="urlbar__send-btn"
             onContextMenu={this._handleMetaClickSend}
             onClick={this._handleClickSend}
-            type="submit">
+            type="button">
             {downloadPath ? 'Download' : 'Send'}
           </DropdownButton>
           <DropdownDivider>Basic</DropdownDivider>
-          <DropdownItem type="submit">
-            <i className="fa fa-arrow-circle-o-right"/> Send Now
-            <DropdownHint hotkey={hotkeys.SEND_REQUEST}/>
+          <DropdownItem onClick={this._handleClickSend}>
+            <i className="fa fa-arrow-circle-o-right" /> Send Now
+            <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]} />
           </DropdownItem>
           <DropdownItem onClick={this._handleGenerateCode}>
-            <i className="fa fa-code"/> Generate Client Code
+            <i className="fa fa-code" /> Generate Client Code
           </DropdownItem>
           <DropdownDivider>Advanced</DropdownDivider>
           <DropdownItem onClick={this._handleSendAfterDelay}>
-            <i className="fa fa-clock-o"/> Send After Delay
+            <i className="fa fa-clock-o" /> Send After Delay
           </DropdownItem>
           <DropdownItem onClick={this._handleSendOnInterval}>
-            <i className="fa fa-repeat"/> Repeat on Interval
+            <i className="fa fa-repeat" /> Repeat on Interval
           </DropdownItem>
           {downloadPath ? (
             <DropdownItem
@@ -308,15 +309,15 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
               addIcon
               buttonClass={PromptButton}
               onClick={this._handleClearDownloadLocation}>
-              <i className="fa fa-stop-circle"/> Stop Auto-Download
+              <i className="fa fa-stop-circle" /> Stop Auto-Download
             </DropdownItem>
           ) : (
             <DropdownItem onClick={this._handleSetDownloadLocation}>
-              <i className="fa fa-download"/> Download After Send
+              <i className="fa fa-download" /> Download After Send
             </DropdownItem>
           )}
           <DropdownItem onClick={this._handleClickSendAndDownload}>
-            <i className="fa fa-download"/> Send And Download
+            <i className="fa fa-download" /> Send And Download
           </DropdownItem>
         </Dropdown>
       );
@@ -345,7 +346,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
             ref={this._setMethodDropdownRef}
             onChange={this._handleMethodChange}
             method={method}>
-            {method} <i className="fa fa-caret-down"/>
+            {method} <i className="fa fa-caret-down" />
           </MethodDropdown>
           <form onSubmit={this._handleFormSubmit}>
             <OneLineEditor

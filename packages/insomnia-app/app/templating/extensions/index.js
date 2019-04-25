@@ -79,6 +79,7 @@ export type PluginTemplateTag = {
   args: Array<PluginArgument>,
   name: string,
   displayName: DisplayName,
+  disablePreview: () => boolean,
   description: string,
   run: (context: PluginTemplateTagContext, ...arg: Array<any>) => Promise<any> | any,
   deprecated?: boolean,

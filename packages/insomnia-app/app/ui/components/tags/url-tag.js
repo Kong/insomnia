@@ -10,11 +10,12 @@ type Props = {
   small?: boolean,
   className?: string,
   maxLength?: number,
+  method?: string,
 };
 
 class URLTag extends React.PureComponent<Props> {
   render() {
-    const { url, small, className, maxLength } = this.props;
+    const { url, small, className, maxLength, method } = this.props;
 
     const max = maxLength || 30;
     let shortUrl = url;
@@ -25,8 +26,8 @@ class URLTag extends React.PureComponent<Props> {
 
     return (
       <div className={classnames('tag', { 'tag--small': small }, className)}>
-        <Tooltip message={url} position="bottom">
-          <strong>URL</strong> {shortUrl}
+        <Tooltip wide message={url} position="bottom">
+          <strong>{method || 'URL'}</strong> {shortUrl}
         </Tooltip>
       </div>
     );

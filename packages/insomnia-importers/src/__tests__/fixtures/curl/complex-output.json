@@ -1,6 +1,6 @@
 {
   "_type": "export",
-  "__export_format": 3,
+  "__export_format": 4,
   "__export_date": "2016-11-18T22:34:51.526Z",
   "__export_source": "insomnia.importers:v0.1.0",
   "resources": [
@@ -27,7 +27,8 @@
         },
         {
           "name": "Cookie",
-          "value": "foo=bar; NID=91=iOf1sU9Ovlns9Dzn2Ipz05syr2K4AlZ4Kgp84eRVLf3_6DgcNrkqpWg4lfUvCB5cNxD26t"
+          "value":
+            "foo=bar; NID=91=iOf1sU9Ovlns9Dzn2Ipz05syr2K4AlZ4Kgp84eRVLf3_6DgcNrkqpWg4lfUvCB5cNxD26t"
         },
         {
           "name": "another-header",

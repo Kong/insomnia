@@ -9,7 +9,6 @@ module.exports = {
   devtool: 'eval-source-map',
   mode: 'development',
   entry: [
-    'react-hot-loader/patch',
     `webpack-dev-server/client?http://localhost:${PORT}`,
     'webpack/hot/only-dev-server',
     ...baseConfig.entry,
@@ -23,6 +22,7 @@ module.exports = {
     port: PORT,
     publicPath: '/',
     hot: true,
+    disableHostCheck: true,
   },
   plugins: [
     ...baseConfig.plugins,

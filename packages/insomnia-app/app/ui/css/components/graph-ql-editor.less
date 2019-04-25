@@ -41,8 +41,10 @@
   }
 
   .graphql-editor__query .cm-gql-disabled {
-    opacity: 0.8;
-    filter: grayscale(0.8);
+    opacity: 0.7;
+
+    // Grayscale is really slow on high resolutions so disable it for now
+    //filter: grayscale(0.8);
   }
 
   .graphql-editor__schema-notice {

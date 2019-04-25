@@ -2,6 +2,7 @@
 import type { BaseModel } from './index';
 import * as db from '../common/database';
 import { UPDATE_CHANNEL_STABLE } from '../common/constants';
+import * as hotkeys from '../common/hotkeys';
 
 type BaseSettings = {
   showPasswords: boolean,
@@ -22,6 +23,7 @@ type BaseSettings = {
   autoHideMenuBar: boolean,
   theme: string,
   maxRedirects: number,
+  maxHistoryResponses: number,
   pluginPath: string,
   nunjucksPowerUserMode: boolean,
   deviceId: string | null,
@@ -29,10 +31,15 @@ type BaseSettings = {
   updateAutomatically: boolean,
   disableUpdateNotification: boolean,
   environmentHighlightColorStyle: string,
+  autocompleteDelay: number,
   fontMonospace: string | null,
   fontInterface: string | null,
   fontSize: number,
   fontVariantLigatures: boolean,
+
+  // Feature flags
+  enableSyncBeta: boolean,
+  hotKeyRegistry: hotkeys.HotKeyRegistry,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -41,6 +48,7 @@ export const name = 'Settings';
 export const type = 'Settings';
 export const prefix = 'set';
 export const canDuplicate = false;
+export const canSync = false;
 
 export function init(): BaseSettings {
   return {
@@ -56,6 +64,7 @@ export function init(): BaseSettings {
     httpsProxy: '',
     noProxy: '',
     maxRedirects: -1,
+    maxHistoryResponses: 20,
     proxyEnabled: false,
     timeout: 0,
     validateSSL: true,
@@ -69,10 +78,13 @@ export function init(): BaseSettings {
     updateAutomatically: true,
     disableUpdateNotification: false,
     environmentHighlightColorStyle: 'sidebar-indicator',
+    autocompleteDelay: 700,
     fontMonospace: null,
     fontInterface: null,
     fontSize: 13,
     fontVariantLigatures: false,
+    enableSyncBeta: false,
+    hotKeyRegistry: hotkeys.newDefaultRegistry(),
   };
 }
 

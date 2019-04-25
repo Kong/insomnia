@@ -97,53 +97,53 @@ class AWSAuth extends React.PureComponent<Props> {
       <div className="pad">
         <table>
           <tbody>
-          {this.renderRow('accessKeyId', 'Access Key ID', this._handleChangeAccessKeyId)}
-          {this.renderRow(
-            'secretAccessKey',
-            'Secret Access Key',
-            this._handleChangeSecretAccessKey,
-          )}
-          {this.renderRow(
-            'region',
-            'Region',
-            this._handleChangeRegion,
-            'will be calculated from hostname or host or use \'us-east-1\' if not given',
-          )}
-          {this.renderRow(
-            'service',
-            'Service',
-            this._handleChangeService,
-            'will be calculated from hostname or host if not given',
-          )}
-          {this.renderRow(
-            'sessionToken',
-            'Session Token',
-            this._handleChangeSessionToken,
-            'Optional token used for multi-factor authentication',
-          )}
-          <tr>
-            <td className="pad-right no-wrap valign-middle">
-              <label htmlFor="enabled" className="label--small no-pad">
-                Enabled
-              </label>
-            </td>
-            <td className="wide">
-              <div className="form-control form-control--underlined">
-                <Button
-                  className="btn btn--super-duper-compact"
-                  id="enabled"
-                  onClick={this._handleDisable}
-                  value={!authentication.disabled}
-                  title={authentication.disabled ? 'Enable item' : 'Disable item'}>
-                  {authentication.disabled ? (
-                    <i className="fa fa-square-o"/>
-                  ) : (
-                    <i className="fa fa-check-square-o"/>
-                  )}
-                </Button>
-              </div>
-            </td>
-          </tr>
+            {this.renderRow('accessKeyId', 'Access Key ID', this._handleChangeAccessKeyId)}
+            {this.renderRow(
+              'secretAccessKey',
+              'Secret Access Key',
+              this._handleChangeSecretAccessKey,
+            )}
+            {this.renderRow(
+              'region',
+              'Region',
+              this._handleChangeRegion,
+              "will be calculated from hostname or host or use 'us-east-1' if not given",
+            )}
+            {this.renderRow(
+              'service',
+              'Service',
+              this._handleChangeService,
+              'will be calculated from hostname or host if not given',
+            )}
+            {this.renderRow(
+              'sessionToken',
+              'Session Token',
+              this._handleChangeSessionToken,
+              'Optional token used for multi-factor authentication',
+            )}
+            <tr>
+              <td className="pad-right no-wrap valign-middle">
+                <label htmlFor="enabled" className="label--small no-pad">
+                  Enabled
+                </label>
+              </td>
+              <td className="wide">
+                <div className="form-control form-control--underlined">
+                  <Button
+                    className="btn btn--super-duper-compact"
+                    id="enabled"
+                    onClick={this._handleDisable}
+                    value={!authentication.disabled}
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+                    {authentication.disabled ? (
+                      <i className="fa fa-square-o" />
+                    ) : (
+                      <i className="fa fa-check-square-o" />
+                    )}
+                  </Button>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

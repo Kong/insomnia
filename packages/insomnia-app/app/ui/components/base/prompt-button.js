@@ -81,7 +81,10 @@ class PromptButton extends PureComponent {
 
     const { state } = this.state;
 
-    const finalConfirmMessage = (confirmMessage || 'Click to confirm').trim();
+    const finalConfirmMessage = (typeof confirmMessage === 'string'
+      ? confirmMessage
+      : 'Click to confirm'
+    ).trim();
     const finalDoneMessage = doneMessage || 'Done';
 
     let innerMsg;

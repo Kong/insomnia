@@ -64,6 +64,7 @@ deploy:
   - packages/insomnia-app/dist/**/*.dmg
   - packages/insomnia-app/dist/**/*.deb
   - packages/insomnia-app/dist/**/*.snap
+  - packages/insomnia-app/dist/**/*.rpm
   - packages/insomnia-app/dist/**/*.AppImage
   - packages/insomnia-app/dist/**/*.tar.gz
   on:

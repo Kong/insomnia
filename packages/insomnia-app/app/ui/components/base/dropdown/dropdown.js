@@ -8,7 +8,8 @@ import DropdownItem from './dropdown-item';
 import DropdownDivider from './dropdown-divider';
 import { fuzzyMatch } from '../../../../common/misc';
 import KeydownBinder from '../../keydown-binder';
-import * as hotkeys from '../../../../common/hotkeys';
+import { executeHotKey } from '../../../../common/hotkeys-listener';
+import { hotKeyRefs } from '../../../../common/hotkeys';
 
 const dropdownsContainer = document.querySelector('#dropdowns-container');
 
@@ -115,7 +116,7 @@ class Dropdown extends PureComponent {
 
     this._handleDropdownNavigation(e);
 
-    hotkeys.executeHotKey(e, hotkeys.CLOSE_DROPDOWN, () => {
+    executeHotKey(e, hotKeyRefs.CLOSE_DROPDOWN, () => {
       this.hide();
     });
   }
@@ -146,7 +147,7 @@ class Dropdown extends PureComponent {
     this._dropdownList.style.minWidth = 'initial';
     this._dropdownList.style.maxWidth = 'initial';
 
-    const screenMargin = 5;
+    const screenMargin = 6;
 
     const { right, wide } = this.props;
     if (right || wide) {
@@ -349,7 +350,11 @@ class Dropdown extends PureComponent {
       finalChildren = [
         dropdownButtons[0],
         ReactDOM.createPortal(
-          <div key="item" className={menuClasses} ref={this._addDropdownMenuRef}>
+          <div
+            key="item"
+            className={menuClasses}
+            ref={this._addDropdownMenuRef}
+            aria-hidden={!open}>
             <div className="dropdown__backdrop theme--transparent-overlay" />
             <div
               key={uniquenessKey}
