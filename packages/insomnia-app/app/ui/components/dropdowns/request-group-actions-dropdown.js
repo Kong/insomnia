@@ -85,7 +85,7 @@ class RequestGroupActionsDropdown extends PureComponent {
         </DropdownItem>
         <DropdownDivider />
         <DropdownItem onClick={this._handleSetRequestGroupPinned}>
-          <i className="fa fa-copy" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
+          <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
         </DropdownItem>
         <DropdownItem onClick={this._handleRequestGroupDuplicate}>
           <i className="fa fa-copy" /> Duplicate

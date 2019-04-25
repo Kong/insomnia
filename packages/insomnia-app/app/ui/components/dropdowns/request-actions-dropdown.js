@@ -57,7 +57,7 @@ class RequestActionsDropdown extends PureComponent {
           <i className="fa fa-caret-down" />
         </DropdownButton>
         <DropdownItem onClick={this._handleSetRequestPinned}>
-          <i className="fa fa-copy" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
+          <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
         </DropdownItem>
         <DropdownItem onClick={this._handleDuplicate}>
           <i className="fa fa-copy" /> Duplicate
