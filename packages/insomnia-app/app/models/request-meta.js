@@ -14,6 +14,7 @@ export function init() {
     responseFilterHistory: [],
     activeResponseId: null,
     savedRequestBody: {},
+    pinned: false,
   };
 }
 

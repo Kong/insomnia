@@ -48,10 +48,12 @@ class SidebarRequestGroupRow extends PureComponent {
       requestGroup,
       isCollapsed,
       isActive,
+      isPinned,
       handleCreateRequest,
       handleCreateRequestGroup,
       handleDuplicateRequestGroup,
       handleMoveRequestGroup,
+      handleSetRequestGroupPinned,
       isDragging,
       isDraggingOver,
       workspace,
@@ -93,11 +95,13 @@ class SidebarRequestGroupRow extends PureComponent {
             <RequestGroupActionsDropdown
               ref={this._setRequestGroupActionsDropdownRef}
               handleCreateRequest={handleCreateRequest}
+              handleSetRequestGroupPinned={handleSetRequestGroupPinned}
               handleCreateRequestGroup={handleCreateRequestGroup}
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}
               handleMoveRequestGroup={handleMoveRequestGroup}
               workspace={workspace}
               requestGroup={requestGroup}
+              isPinned={isPinned}
               right
             />
           </div>
@@ -133,6 +137,7 @@ class SidebarRequestGroupRow extends PureComponent {
 SidebarRequestGroupRow.propTypes = {
   // Functions
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
+  handleSetRequestGroupPinned: PropTypes.func.isRequired,
   handleDuplicateRequestGroup: PropTypes.func.isRequired,
   handleMoveRequestGroup: PropTypes.func.isRequired,
   moveDoc: PropTypes.func.isRequired,
@@ -146,6 +151,7 @@ SidebarRequestGroupRow.propTypes = {
   isCollapsed: PropTypes.bool.isRequired,
   workspace: PropTypes.object.isRequired,
   requestGroup: PropTypes.object.isRequired,
+  isPinned: PropTypes.bool.isRequired,
 
   // React DnD
   isDragging: PropTypes.bool,

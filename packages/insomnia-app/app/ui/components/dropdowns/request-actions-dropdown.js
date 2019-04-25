@@ -31,6 +31,10 @@ class RequestActionsDropdown extends PureComponent {
     this.props.handleCopyAsCurl(this.props.request);
   }
 
+  _handleSetRequestPinned() {
+    this.props.handleSetRequestPinned(this.props.request._id, !this.props.isPinned);
+  }
+
   _handleRemove() {
     const { request } = this.props;
     models.request.remove(request);
@@ -52,6 +56,9 @@ class RequestActionsDropdown extends PureComponent {
         <DropdownButton>
           <i className="fa fa-caret-down" />
         </DropdownButton>
+        <DropdownItem onClick={this._handleSetRequestPinned}>
+          <i className="fa fa-copy" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
+        </DropdownItem>
         <DropdownItem onClick={this._handleDuplicate}>
           <i className="fa fa-copy" /> Duplicate
           <DropdownHint hotkey={hotkeys.DUPLICATE_REQUEST} />
@@ -81,8 +88,10 @@ class RequestActionsDropdown extends PureComponent {
 RequestActionsDropdown.propTypes = {
   handleDuplicateRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
+  handleSetRequestPinned: PropTypes.func.isRequired,
   handleCopyAsCurl: PropTypes.func.isRequired,
   handleShowSettings: PropTypes.func.isRequired,
+  isPinned: PropTypes.bool,
   request: PropTypes.object.isRequired,
 };
 

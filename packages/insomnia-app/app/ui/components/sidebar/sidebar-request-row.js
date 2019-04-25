@@ -69,6 +69,7 @@ class SidebarRequestRow extends PureComponent {
     const {
       filter,
       handleDuplicateRequest,
+      handleSetRequestPinned,
       handleGenerateCode,
       handleCopyAsCurl,
       connectDragSource,
@@ -78,6 +79,7 @@ class SidebarRequestRow extends PureComponent {
       request,
       requestGroup,
       isActive,
+      isPinned,
     } = this.props;
 
     const { dragDirection } = this.state;
@@ -129,10 +131,12 @@ class SidebarRequestRow extends PureComponent {
                 right
                 ref={this._setRequestActionsDropdownRef}
                 handleDuplicateRequest={handleDuplicateRequest}
+                handleSetRequestPinned={handleSetRequestPinned}
                 handleGenerateCode={handleGenerateCode}
                 handleCopyAsCurl={handleCopyAsCurl}
                 handleShowSettings={this._handleShowRequestSettings}
                 request={request}
+                isPinned={isPinned}
                 requestGroup={requestGroup}
               />
             </div>
@@ -152,6 +156,7 @@ class SidebarRequestRow extends PureComponent {
 SidebarRequestRow.propTypes = {
   // Functions
   handleActivateRequest: PropTypes.func.isRequired,
+  handleSetRequestPinned: PropTypes.func.isRequired,
   handleDuplicateRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
   handleCopyAsCurl: PropTypes.func.isRequired,
@@ -161,6 +166,7 @@ SidebarRequestRow.propTypes = {
   // Other
   filter: PropTypes.string.isRequired,
   isActive: PropTypes.bool.isRequired,
+  isPinned: PropTypes.bool.isRequired,
 
   // React DnD
   isDragging: PropTypes.bool,

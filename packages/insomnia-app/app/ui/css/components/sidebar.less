@@ -4,7 +4,7 @@
 .sidebar {
   position: relative;
   display: grid;
-  grid-template-rows: @height-nav auto auto minmax(0, 1fr) auto;
+  grid-template-rows: @height-nav auto auto minmax(0, 0.5fr) minmax(0, 1fr) auto;
   grid-template-columns: 100%;
   z-index: 10;
 
@@ -190,6 +190,10 @@
 
   .sidebar__list--collapsed > * {
     display: none;
+  }
+
+  .sidebar__list--pinned {
+    padding-bottom: @padding-lg;
   }
 
   // ~~~~~~~~~~~ //

@@ -417,6 +417,14 @@ class App extends PureComponent {
     this._updateRequestGroupMetaByParentId(requestGroupId, { collapsed });
   }
 
+  _handleSetRequestGroupPinned(requestGroupId, pinned) {
+    this._updateRequestGroupMetaByParentId(requestGroupId, { pinned });
+  }
+
+  _handleSetRequestPinned(requestId, pinned) {
+    this._updateRequestMetaByParentId(requestId, { pinned });
+  }
+
   _handleSetResponsePreviewMode(requestId, previewMode) {
     this._updateRequestMetaByParentId(requestId, { previewMode });
   }
@@ -980,6 +988,8 @@ class App extends PureComponent {
               paneHeight={this.state.paneHeight}
               sidebarWidth={this.state.sidebarWidth}
               handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+              handleSetRequestPinned={this._handleSetRequestPinned}
+              handleSetRequestGroupPinned={this._handleSetRequestGroupPinned}
               handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
               handleActivateRequest={this._handleSetActiveRequest}
               handleSetRequestPaneRef={this._setRequestPaneRef}

@@ -67,12 +67,42 @@ export const selectCollapsedRequestGroups = createSelector(selectEntitiesLists, 
   return collapsed;
 });
 
+export const selectPinnedRequestsAndRequestGroups = createSelector(
+  selectEntitiesLists,
+  entities => {
+    const pinned = {};
+
+    // Default all to unpinned
+    for (const requestGroup of entities.requestGroups) {
+      pinned[requestGroup._id] = false;
+    }
+
+    // Update those that have metadata (not all do)
+    for (const meta of entities.requestGroupMetas) {
+      pinned[meta.parentId] = meta.pinned;
+    }
+
+    // Default all to unpinned
+    for (const request of entities.requests) {
+      pinned[request._id] = false;
+    }
+
+    // Update those that have metadata (not all do)
+    for (const meta of entities.requestMetas) {
+      pinned[meta.parentId] = meta.pinned;
+    }
+
+    return pinned;
+  },
+);
+
 export const selectSidebarChildren = createSelector(
   selectCollapsedRequestGroups,
+  selectPinnedRequestsAndRequestGroups,
   selectRequestsAndRequestGroups,
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
-  (collapsed, requestsAndRequestGroups, activeWorkspace, activeWorkspaceMeta) => {
+  (collapsed, pinned, requestsAndRequestGroups, activeWorkspace, activeWorkspaceMeta) => {
     const sidebarFilter = activeWorkspaceMeta ? activeWorkspaceMeta.sidebarFilter : '';
 
     function next(parentId) {
@@ -93,6 +123,7 @@ export const selectSidebarChildren = createSelector(
           doc: c,
           hidden: false,
           collapsed: !!collapsed[c._id],
+          pinned: !!pinned[c._id],
 
           // Don't add children of requests
           children: c.type === models.request.type ? [] : next(c._id),

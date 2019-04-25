@@ -12,6 +12,7 @@ type Child = {
   children: Array<Child>,
   collapsed: boolean,
   hidden: boolean,
+  pinned: Boolean,
 };
 
 type Props = {
@@ -19,6 +20,8 @@ type Props = {
   handleActivateRequest: Function,
   handleCreateRequest: Function,
   handleCreateRequestGroup: Function,
+  handleSetRequestPinned: Function,
+  handleSetRequestGroupPinned: Function,
   handleSetRequestGroupCollapsed: Function,
   handleDuplicateRequest: Function,
   handleDuplicateRequestGroup: Function,
@@ -40,6 +43,8 @@ class SidebarChildren extends React.PureComponent<Props> {
       filter,
       handleCreateRequest,
       handleCreateRequestGroup,
+      handleSetRequestPinned,
+      handleSetRequestGroupPinned,
       handleSetRequestGroupCollapsed,
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
@@ -66,11 +71,13 @@ class SidebarChildren extends React.PureComponent<Props> {
             filter={filter || ''}
             moveDoc={moveDoc}
             handleActivateRequest={handleActivateRequest}
+            handleSetRequestPinned={handleSetRequestPinned}
             handleDuplicateRequest={handleDuplicateRequest}
             handleGenerateCode={handleGenerateCode}
             handleCopyAsCurl={handleCopyAsCurl}
             requestCreate={handleCreateRequest}
             isActive={child.doc._id === activeRequestId}
+            isPinned={child.pinned}
             request={child.doc}
             workspace={workspace}
           />
@@ -105,9 +112,11 @@ class SidebarChildren extends React.PureComponent<Props> {
           moveDoc={moveDoc}
           handleActivateRequest={handleActivateRequest}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+          handleSetRequestGroupPinned={handleSetRequestGroupPinned}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           handleMoveRequestGroup={handleMoveRequestGroup}
           isCollapsed={child.collapsed}
+          isPinned={child.pinned}
           handleCreateRequest={handleCreateRequest}
           handleCreateRequestGroup={handleCreateRequestGroup}
           numChildren={child.children.length}
@@ -122,10 +131,21 @@ class SidebarChildren extends React.PureComponent<Props> {
   render() {
     const { childObjects } = this.props;
 
+    const pinnedChildren = childObjects.filter(c => c.pinned);
+    const unpinnedChildren = childObjects.filter(c => !c.pinned);
+
     return (
-      <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
-        {this._renderChildren(childObjects)}
-      </ul>
+      <React.Fragment>
+        {pinnedChildren &&
+          pinnedChildren.length > 0 && (
+            <ul className="sidebar__list sidebar__list-root theme--sidebar__list sidebar_list--pinned">
+              {this._renderChildren(pinnedChildren)}
+            </ul>
+          )}
+        <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
+          {this._renderChildren(unpinnedChildren)}
+        </ul>
+      </React.Fragment>
     );
   }
 }

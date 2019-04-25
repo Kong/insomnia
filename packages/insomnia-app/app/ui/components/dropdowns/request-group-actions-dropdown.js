@@ -56,6 +56,10 @@ class RequestGroupActionsDropdown extends PureComponent {
     showModal(EnvironmentEditModal, this.props.requestGroup);
   }
 
+  _handleSetRequestGroupPinned() {
+    this.props.handleSetRequestGroupPinned(this.props.requestGroup._id, !this.props.isPinned);
+  }
+
   show() {
     this._dropdown.show();
   }
@@ -80,6 +84,9 @@ class RequestGroupActionsDropdown extends PureComponent {
           <DropdownHint hotkey={hotkeys.CREATE_FOLDER} />
         </DropdownItem>
         <DropdownDivider />
+        <DropdownItem onClick={this._handleSetRequestGroupPinned}>
+          <i className="fa fa-copy" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
+        </DropdownItem>
         <DropdownItem onClick={this._handleRequestGroupDuplicate}>
           <i className="fa fa-copy" /> Duplicate
         </DropdownItem>
@@ -104,8 +111,10 @@ RequestGroupActionsDropdown.propTypes = {
   workspace: PropTypes.object.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
   handleCreateRequestGroup: PropTypes.func.isRequired,
+  handleSetRequestGroupPinned: PropTypes.func.isRequired,
   handleDuplicateRequestGroup: PropTypes.func.isRequired,
   handleMoveRequestGroup: PropTypes.func.isRequired,
+  isPinned: PropTypes.bool,
 
   // Optional
   requestGroup: PropTypes.object,
