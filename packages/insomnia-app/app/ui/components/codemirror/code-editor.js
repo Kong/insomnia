@@ -687,6 +687,11 @@ class CodeEditor extends React.Component {
         .replace(/\n/g, ' '); // Convert all whitespace to spaces
       change.update(change.from, change.to, [text]);
     }
+
+    // Don't allow non-breaking spaces because they break the GraphQL syntax
+    if (doc.options.mode === 'graphql' && change.text && change.text.length > 1) {
+      change.text = change.text.map(text => text.replace(/\u00A0/g, ' '));
+    }
   }
 
   _codemirrorPaste(cm, e) {
