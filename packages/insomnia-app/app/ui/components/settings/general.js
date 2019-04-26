@@ -299,11 +299,13 @@ class General extends React.PureComponent<Props, State> {
                 value={settings.fontMonospace || '__NULL__'}
                 onChange={this._handleFontChange}>
                 <option value="__NULL__">-- System Default --</option>
-                {fonts.filter(i => i.monospace).map((item, index) => (
-                  <option key={index} value={item.family}>
-                    {item.family}
-                  </option>
-                ))}
+                {fonts
+                  .filter(i => i.monospace)
+                  .map((item, index) => (
+                    <option key={index} value={item.family}>
+                      {item.family}
+                    </option>
+                  ))}
               </select>
             </label>
           </div>

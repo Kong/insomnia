@@ -585,8 +585,8 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
                   ? 'Refreshing...'
                   : 'Fetching...'
                 : tok
-                  ? 'Refresh Token'
-                  : 'Fetch Tokens'}
+                ? 'Refresh Token'
+                : 'Fetch Tokens'}
             </button>
           </div>
         </div>

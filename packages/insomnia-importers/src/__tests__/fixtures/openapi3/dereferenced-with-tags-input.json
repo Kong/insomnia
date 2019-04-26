@@ -2,8 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Swagger Petstore",
-    "description":
-      "This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.",
+    "description": "This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.",
     "termsOfService": "http://swagger.io/terms/",
     "contact": {
       "email": "apiteam@swagger.io"
@@ -578,8 +577,7 @@
       "get": {
         "tags": ["pet"],
         "summary": "Finds Pets by tags",
-        "description":
-          "Muliple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.",
+        "description": "Muliple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.",
         "operationId": "findPetsByTags",
         "parameters": [
           {
@@ -1248,8 +1246,7 @@
       "get": {
         "tags": ["store"],
         "summary": "Find purchase order by ID",
-        "description":
-          "For valid response try integer IDs with value >= 1 and <= 10. Other values will generated exceptions",
+        "description": "For valid response try integer IDs with value >= 1 and <= 10. Other values will generated exceptions",
         "operationId": "getOrderById",
         "parameters": [
           {
@@ -1348,8 +1345,7 @@
       "delete": {
         "tags": ["store"],
         "summary": "Delete purchase order by ID",
-        "description":
-          "For valid response try integer IDs with positive integer value. Negative or non-integer values will generate API errors",
+        "description": "For valid response try integer IDs with positive integer value. Negative or non-integer values will generate API errors",
         "operationId": "deleteOrder",
         "parameters": [
           {

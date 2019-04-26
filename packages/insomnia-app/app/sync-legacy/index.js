@@ -62,8 +62,8 @@ export async function init() {
   _isInitialized = true;
   db.onChange(async changes => {
     // To help prevent bugs, put Workspaces first
-    const sortedChanges = changes.sort(
-      ([event, doc, fromSync]) => (doc.type === models.workspace.type ? 1 : -1),
+    const sortedChanges = changes.sort(([event, doc, fromSync]) =>
+      doc.type === models.workspace.type ? 1 : -1,
     );
 
     for (const [event, doc, fromSync] of sortedChanges) {
@@ -834,8 +834,8 @@ export async function getOrCreateAllActiveResources(resourceGroupId = null) {
   }
 
   // Make sure Workspace is first, because the loop below depends on it
-  const modelTypes = Object.keys(WHITE_LIST).sort(
-    (a, b) => (a.type === models.workspace.type ? 1 : -1),
+  const modelTypes = Object.keys(WHITE_LIST).sort((a, b) =>
+    a.type === models.workspace.type ? 1 : -1,
   );
 
   let created = 0;

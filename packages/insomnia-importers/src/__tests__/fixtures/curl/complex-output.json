@@ -27,8 +27,7 @@
         },
         {
           "name": "Cookie",
-          "value":
-            "foo=bar; NID=91=iOf1sU9Ovlns9Dzn2Ipz05syr2K4AlZ4Kgp84eRVLf3_6DgcNrkqpWg4lfUvCB5cNxD26t"
+          "value": "foo=bar; NID=91=iOf1sU9Ovlns9Dzn2Ipz05syr2K4AlZ4Kgp84eRVLf3_6DgcNrkqpWg4lfUvCB5cNxD26t"
         },
         {
           "name": "another-header",

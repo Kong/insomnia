@@ -13,8 +13,7 @@
       "method": "POST",
       "body": {
         "mimeType": "",
-        "text":
-          "{\"key\":\"TEST\",\"websiteId\":2,\"storeId\":4,\"remove\":true,\"coupon\":{\"code\":\"erwrwer\"}}"
+        "text": "{\"key\":\"TEST\",\"websiteId\":2,\"storeId\":4,\"remove\":true,\"coupon\":{\"code\":\"erwrwer\"}}"
       },
       "parameters": [],
       "headers": [
@@ -32,8 +31,7 @@
         },
         {
           "name": "Cookie",
-          "value":
-            "CookieTestConsent={stamp:\\xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=='%2Cnecessary..."
+          "value": "CookieTestConsent={stamp:\\xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=='%2Cnecessary..."
         },
         {
           "name": "Connection",

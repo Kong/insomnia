@@ -43,8 +43,7 @@
         },
         {
           "name": "cookie",
-          "value":
-            "foo=bar; __cfduid=df7b43586f071c4aaa79dc8a9de0845771478571055; _ga=GA1.2.697086801.1478571058"
+          "value": "foo=bar; __cfduid=df7b43586f071c4aaa79dc8a9de0845771478571055; _ga=GA1.2.697086801.1478571058"
         }
       ],
       "authentication": {}
