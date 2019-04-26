@@ -28,6 +28,7 @@ const HOT_KEY_DEFS: Array<HotKeyDefinition> = [
   hotKeyRefs.REQUEST_SEND,
   hotKeyRefs.REQUEST_SHOW_OPTIONS,
   hotKeyRefs.REQUEST_SHOW_CREATE,
+  hotKeyRefs.REQUEST_QUICK_CREATE,
   hotKeyRefs.REQUEST_SHOW_DELETE,
   hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER,
   hotKeyRefs.REQUEST_SHOW_DUPLICATE,
