@@ -136,6 +136,8 @@ export const hotKeyRefs = {
 
   REQUEST_SHOW_CREATE: defineHotKey('request_showCreate', 'Create Request'),
 
+  REQUEST_QUICK_CREATE: defineHotKey('request_quickCreate', 'Create Request (Quick)'),
+
   REQUEST_SHOW_DELETE: defineHotKey('request_showDelete', 'Delete Request'),
 
   REQUEST_SHOW_CREATE_FOLDER: defineHotKey('request_showCreateFolder', 'Create Folder'),
@@ -264,6 +266,11 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.REQUEST_SHOW_CREATE.id]: keyBinds(
     keyComb(false, false, false, true, keyboardKeys.n.keyCode),
     keyComb(true, false, false, false, keyboardKeys.n.keyCode),
+  ),
+
+  [hotKeyRefs.REQUEST_QUICK_CREATE.id]: keyBinds(
+    keyComb(false, true, false, true, keyboardKeys.n.keyCode),
+    keyComb(true, true, false, false, keyboardKeys.n.keyCode),
   ),
 
   [hotKeyRefs.REQUEST_SHOW_DELETE.id]: keyBinds(
