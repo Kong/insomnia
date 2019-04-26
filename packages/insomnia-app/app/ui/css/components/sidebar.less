@@ -292,6 +292,10 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
+    &.sidebar__clickable--pinned {
+      grid-template-columns: auto auto minmax(0, 1fr) auto;
+    }
   }
 
   // Padding for nested folders
