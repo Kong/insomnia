@@ -118,7 +118,6 @@ class SidebarRequestRow extends PureComponent {
                 className={classnames('sidebar__clickable', {
                   'sidebar__clickable--pinned': isPinned,
                 })}>
-                {isPinned && <i className="sidebar__item__icon fa fa-thumb-tack" />}
                 <MethodTag method={request.method} />
                 <Editable
                   value={request.name}
@@ -129,6 +128,7 @@ class SidebarRequestRow extends PureComponent {
                     <Highlight search={filter} text={value} {...props} />
                   )}
                 />
+                {isPinned && <i className="sidebar__item__icon fa fa-thumb-tack" />}
               </div>
             </button>
             <div className="sidebar__actions">
