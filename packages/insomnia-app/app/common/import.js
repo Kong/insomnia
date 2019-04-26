@@ -6,7 +6,7 @@ import * as har from './har';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
 import { getAppVersion } from './constants';
-import { showModal } from '../ui/components/modals/index';
+import { showModal, showError } from '../ui/components/modals/index';
 import AlertModal from '../ui/components/modals/alert-modal';
 import fs from 'fs';
 import type { Workspace } from '../models/workspace';
@@ -49,7 +49,11 @@ export async function importUri(workspaceId: string | null, uri: string): Promis
   const { summary, error } = result;
 
   if (error) {
-    showModal(AlertModal, { title: 'Import Failed', message: error });
+    showError({
+      title: 'Failed to import',
+      error: error.message,
+      message: 'Import failed',
+    });
     return;
   }
 
@@ -76,17 +80,16 @@ export async function importRaw(
   generateNewIds: boolean = false,
 ): Promise<{
   source: string,
-  error: string | null,
+  error: Error | null,
   summary: { [string]: Array<BaseModel> },
 }> {
   let results;
   try {
     results = await convert(rawContent);
-  } catch (e) {
-    console.warn('Failed to import data', e);
+  } catch (err) {
     return {
       source: 'not found',
-      error: 'No importers found for file',
+      error: err,
       summary: {},
     };
   }

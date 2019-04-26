@@ -1,0 +1,47 @@
+{
+  "__export_date": "2019-04-26T04:04:46.087Z",
+  "__export_format": 4,
+  "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
+  "resources": [
+    {
+      "_id": "__WORKSPACE_1__",
+      "_type": "workspace",
+      "description": "",
+      "name": "docs v1",
+      "parentId": null
+    },
+    {
+      "_id": "__ENV_1__",
+      "_type": "environment",
+      "data": {
+        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+      },
+      "name": "Base environment",
+      "parentId": "__WORKSPACE_1__"
+    },
+    {
+      "_id": "__ENV_2__",
+      "_type": "environment",
+      "data": {
+        "base_path": "",
+        "host": "",
+        "scheme": "http"
+      },
+      "name": "Swagger env",
+      "parentId": "__ENV_1__"
+    },
+    {
+      "_id": "ApiId",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "Some list",
+      "parameters": [],
+      "parentId": "__WORKSPACE_1__",
+      "url": "{{ base_url }}/api/list"
+    }
+  ]
+}
