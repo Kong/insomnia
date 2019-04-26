@@ -147,7 +147,9 @@ class SidebarRequestRow extends PureComponent {
       );
     }
 
-    if (!this.state.isEditing) {
+    if (isPinned) {
+      return node;
+    } else if (!this.state.isEditing) {
       return connectDragSource(connectDropTarget(node));
     } else {
       return connectDropTarget(node);
