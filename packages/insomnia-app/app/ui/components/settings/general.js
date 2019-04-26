@@ -1,19 +1,19 @@
 // @flow
 import * as React from 'react';
-import * as fontManager from 'font-manager';
+import * as fontScanner from 'font-scanner';
 import * as electron from 'electron';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
 import {
+  EDITOR_KEY_MAP_DEFAULT,
+  EDITOR_KEY_MAP_EMACS,
+  EDITOR_KEY_MAP_SUBLIME,
+  EDITOR_KEY_MAP_VIM,
   isLinux,
   isMac,
   isWindows,
   UPDATE_CHANNEL_BETA,
   UPDATE_CHANNEL_STABLE,
-  EDITOR_KEY_MAP_DEFAULT,
-  EDITOR_KEY_MAP_EMACS,
-  EDITOR_KEY_MAP_SUBLIME,
-  EDITOR_KEY_MAP_VIM,
 } from '../../../common/constants';
 import type { Settings } from '../../../models/settings';
 import CheckForUpdatesButton from '../check-for-updates-button';
@@ -28,7 +28,7 @@ type Props = {
 };
 
 type State = {
-  fonts: [],
+  fonts: Array<{ family: string, monospace: boolean }> | null,
 };
 
 @autobind
@@ -36,18 +36,17 @@ class General extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      fonts: [],
+      fonts: null,
     };
   }
 
-  componentDidMount() {
-    fontManager.getAvailableFonts(allFonts => {
-      const fonts = allFonts
-        .filter(i => i.style.toLowerCase() === 'regular' && !i.italic)
-        .sort((a, b) => (a.family > b.family ? 1 : -1));
+  async componentDidMount() {
+    const allFonts = await fontScanner.getAvailableFonts();
+    const fonts = allFonts
+      .filter(i => i.style.toLowerCase() === 'regular' && !i.italic)
+      .sort((a, b) => (a.family > b.family ? 1 : -1));
 
-      this.setState({ fonts });
-    });
+    this.setState({ fonts });
   }
 
   async _handleUpdateSetting(e: SyntheticEvent<HTMLInputElement>): Promise<Settings> {
@@ -262,17 +261,23 @@ class General extends React.PureComponent<Props, State> {
           <div className="form-control form-control--outlined">
             <label>
               Interface Font
-              <select
-                name="fontInterface"
-                value={settings.fontInterface || '__NULL__'}
-                onChange={this._handleFontChange}>
-                <option value="__NULL__">-- System Default --</option>
-                {fonts.map((item, index) => (
-                  <option key={index} value={item.family}>
-                    {item.family}
-                  </option>
-                ))}
-              </select>
+              {fonts ? (
+                <select
+                  name="fontInterface"
+                  value={settings.fontInterface || '__NULL__'}
+                  onChange={this._handleFontChange}>
+                  <option value="__NULL__">-- System Default --</option>
+                  {fonts.map((item, index) => (
+                    <option key={index} value={item.family}>
+                      {item.family}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select disabled>
+                  <option value="__NULL__">-- Unsupported Platform --</option>
+                </select>
+              )}
             </label>
           </div>
           <div className="form-control form-control--outlined">
@@ -294,19 +299,25 @@ class General extends React.PureComponent<Props, State> {
           <div className="form-control form-control--outlined">
             <label>
               Text Editor Font
-              <select
-                name="fontMonospace"
-                value={settings.fontMonospace || '__NULL__'}
-                onChange={this._handleFontChange}>
-                <option value="__NULL__">-- System Default --</option>
-                {fonts
-                  .filter(i => i.monospace)
-                  .map((item, index) => (
-                    <option key={index} value={item.family}>
-                      {item.family}
-                    </option>
-                  ))}
-              </select>
+              {fonts ? (
+                <select
+                  name="fontMonospace"
+                  value={settings.fontMonospace || '__NULL__'}
+                  onChange={this._handleFontChange}>
+                  <option value="__NULL__">-- System Default --</option>
+                  {fonts
+                    .filter(i => i.monospace)
+                    .map((item, index) => (
+                      <option key={index} value={item.family}>
+                        {item.family}
+                      </option>
+                    ))}
+                </select>
+              ) : (
+                <select disabled>
+                  <option value="__NULL__">-- Unsupported Platform --</option>
+                </select>
+              )}
             </label>
           </div>
           <div className="form-control form-control--outlined">

@@ -1,5 +1,5 @@
 // @flow
 
-declare module 'font-manager' {
+declare module 'font-scanner' {
   declare module.exports: *;
 }
