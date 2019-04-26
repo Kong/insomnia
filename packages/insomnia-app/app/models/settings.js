@@ -89,6 +89,7 @@ export function init(): BaseSettings {
 }
 
 export function migrate(doc: Settings): Settings {
+  doc = migrateEnsureHotKeys(doc);
   return doc;
 }
 
@@ -116,4 +117,15 @@ export async function getOrCreate(patch: Object = {}): Promise<Settings> {
   } else {
     return results[0];
   }
+}
+
+/**
+ * Ensure map is updated when new hotkeys are added
+ */
+function migrateEnsureHotKeys(settings: Settings): Settings {
+  settings.hotKeyRegistry = {
+    ...hotkeys.newDefaultRegistry(),
+    ...settings.hotKeyRegistry,
+  };
+  return settings;
 }

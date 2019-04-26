@@ -158,6 +158,15 @@ class App extends PureComponent {
         },
       ],
       [
+        hotKeyRefs.REQUEST_QUICK_CREATE,
+        async () => {
+          const { activeRequest, activeWorkspace } = this.props;
+          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+          const request = await models.request.create({ parentId, name: 'New Request' });
+          await this._handleSetActiveRequest(request._id);
+        },
+      ],
+      [
         hotKeyRefs.REQUEST_SHOW_CREATE,
         () => {
           const { activeRequest, activeWorkspace } = this.props;
