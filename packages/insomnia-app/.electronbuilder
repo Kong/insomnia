@@ -27,7 +27,10 @@
     "target": [
       "dmg",
       "zip"
-    ]
+    ],
+    "extendInfo": {
+      "NSRequiresAquaSystemAppearance": false
+    }
   },
   "win": {
     "icon": "./build/icon.ico",
