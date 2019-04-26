@@ -210,12 +210,7 @@ function isOnExpandTag(monitor, component) {
   const rect = component.getExpandTag().getBoundingClientRect();
   const pointer = monitor.getClientOffset();
 
-  return (
-    rect.left <= pointer.x &&
-    pointer.x <= rect.right &&
-    rect.top <= pointer.y &&
-    pointer.y <= rect.bottom
-  );
+  return rect.left <= pointer.x && pointer.x <= rect.right;
 }
 
 const dragTarget = {
@@ -231,7 +226,7 @@ const dragTarget = {
     }
   },
   hover(props, monitor, component) {
-    if (isOnExpandTag(monitor, component)) {
+    if (props.isCollapsed && isOnExpandTag(monitor, component)) {
       component.props.handleSetRequestGroupCollapsed(props.requestGroup._id, false);
       component.setDragDirection(0);
     } else if (isAbove(monitor, component)) {
