@@ -534,11 +534,11 @@ class App extends PureComponent {
       const header = getContentDispositionHeader(headers);
       const nameFromHeader = header ? header.value : null;
 
-      if (!responsePatch.bodyPath) {
-        return;
-      }
-
-      if (responsePatch.statusCode >= 200 && responsePatch.statusCode < 300) {
+      if (
+        responsePatch.bodyPath &&
+        responsePatch.statusCode >= 200 &&
+        responsePatch.statusCode < 300
+      ) {
         const extension = mime.extension(responsePatch.contentType) || 'unknown';
         const name =
           nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
@@ -568,6 +568,9 @@ class App extends PureComponent {
           console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
           await models.response.create(responsePatch, settings.maxHistoryResponses);
         });
+      } else {
+        // Save the bad responses so failures are shown still
+        await models.response.create(responsePatch, settings.maxHistoryResponses);
       }
     } catch (err) {
       showAlert({
