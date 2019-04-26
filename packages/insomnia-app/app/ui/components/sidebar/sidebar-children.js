@@ -3,6 +3,7 @@ import * as React from 'react';
 import SidebarRequestRow from './sidebar-request-row';
 import SidebarRequestGroupRow from './sidebar-request-group-row';
 import * as models from '../../../models/index';
+import * as misc from '../../../common/misc';
 import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
@@ -40,7 +41,7 @@ type Props = {
 };
 
 class SidebarChildren extends React.PureComponent<Props> {
-  _renderChildren(children: Array<Child>): React.Node {
+  _renderChildren(children: Array<Child>, pinnable: boolean): React.Node {
     const {
       filter,
       handleCreateRequest,
@@ -74,13 +75,13 @@ class SidebarChildren extends React.PureComponent<Props> {
             filter={filter || ''}
             moveDoc={moveDoc}
             handleActivateRequest={handleActivateRequest}
-            handleSetRequestPinned={handleSetRequestPinned}
+            handleSetRequestPinned={pinnable ? handleSetRequestPinned : misc.nullFn}
             handleDuplicateRequest={handleDuplicateRequest}
             handleGenerateCode={handleGenerateCode}
             handleCopyAsCurl={handleCopyAsCurl}
             requestCreate={handleCreateRequest}
             isActive={child.doc._id === activeRequestId}
-            isPinned={child.pinned}
+            isPinned={pinnable && child.pinned}
             request={child.doc}
             workspace={workspace}
             hotKeyRegistry={hotKeyRegistry}
@@ -106,7 +107,7 @@ class SidebarChildren extends React.PureComponent<Props> {
       }
 
       const isActive = hasActiveChild(child.children);
-      const children = this._renderChildren(child.children);
+      const children = this._renderChildren(child.children, false); // False because only top level items can be pinned
 
       return (
         <SidebarRequestGroupRow
@@ -116,11 +117,11 @@ class SidebarChildren extends React.PureComponent<Props> {
           moveDoc={moveDoc}
           handleActivateRequest={handleActivateRequest}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-          handleSetRequestGroupPinned={handleSetRequestGroupPinned}
+          handleSetRequestGroupPinned={pinnable ? handleSetRequestGroupPinned : misc.nullFn}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           handleMoveRequestGroup={handleMoveRequestGroup}
           isCollapsed={child.collapsed}
-          isPinned={child.pinned}
+          isPinned={pinnable && child.pinned}
           handleCreateRequest={handleCreateRequest}
           handleCreateRequestGroup={handleCreateRequestGroup}
           numChildren={child.children.length}
@@ -141,15 +142,16 @@ class SidebarChildren extends React.PureComponent<Props> {
 
     return (
       <React.Fragment>
-        {pinnedChildren &&
-          pinnedChildren.length > 0 && (
-            <ul className="sidebar__list sidebar__list-root theme--sidebar__list sidebar_list--pinned">
-              {this._renderChildren(pinnedChildren)}
-            </ul>
-          )}
-        <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
-          {this._renderChildren(unpinnedChildren)}
-        </ul>
+        {pinnedChildren && pinnedChildren.length > 0 && (
+          <ul className="sidebar__list sidebar__list-root theme--sidebar__list sidebar_list--pinned">
+            {this._renderChildren(pinnedChildren, true)}
+          </ul>
+        )}
+        {unpinnedChildren && unpinnedChildren.length > 0 && (
+          <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
+            {this._renderChildren(unpinnedChildren, true)}
+          </ul>
+        )}
       </React.Fragment>
     );
   }

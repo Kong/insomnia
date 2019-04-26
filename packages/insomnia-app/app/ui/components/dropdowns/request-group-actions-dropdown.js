@@ -13,6 +13,7 @@ import EnvironmentEditModal from '../modals/environment-edit-modal';
 import * as models from '../../../models';
 import { showPrompt, showModal } from '../modals/index';
 import { hotKeyRefs } from '../../../common/hotkeys';
+import * as misc from '../../../common/misc';
 
 @autobind
 class RequestGroupActionsDropdown extends PureComponent {
@@ -57,7 +58,9 @@ class RequestGroupActionsDropdown extends PureComponent {
   }
 
   _handleSetRequestGroupPinned() {
-    this.props.handleSetRequestGroupPinned(this.props.requestGroup._id, !this.props.isPinned);
+    if (this.props.handleSetRequestGroupPinned !== misc.nullFn) {
+      this.props.handleSetRequestGroupPinned(this.props.requestGroup._id, !this.props.isPinned);
+    }
   }
 
   show() {
@@ -85,9 +88,11 @@ class RequestGroupActionsDropdown extends PureComponent {
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]} />
         </DropdownItem>
         <DropdownDivider />
-        <DropdownItem onClick={this._handleSetRequestGroupPinned}>
-          <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
-        </DropdownItem>
+        {this.props.handleSetRequestGroupPinned !== misc.nullFn && (
+          <DropdownItem onClick={this._handleSetRequestGroupPinned}>
+            <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
+          </DropdownItem>
+        )}
         <DropdownItem onClick={this._handleRequestGroupDuplicate}>
           <i className="fa fa-copy" /> Duplicate
         </DropdownItem>
@@ -113,12 +118,12 @@ RequestGroupActionsDropdown.propTypes = {
   hotKeyRegistry: PropTypes.object.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
   handleCreateRequestGroup: PropTypes.func.isRequired,
-  handleSetRequestGroupPinned: PropTypes.func.isRequired,
   handleDuplicateRequestGroup: PropTypes.func.isRequired,
   handleMoveRequestGroup: PropTypes.func.isRequired,
   isPinned: PropTypes.bool,
 
   // Optional
+  handleSetRequestGroupPinned: PropTypes.func,
   requestGroup: PropTypes.object,
 };
 

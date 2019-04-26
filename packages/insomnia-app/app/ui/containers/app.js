@@ -429,11 +429,11 @@ class App extends PureComponent {
   }
 
   _handleSetRequestGroupPinned(requestGroupId, pinned) {
-    this._updateRequestGroupMetaByParentId(requestGroupId, { pinned });
+    App._updateRequestGroupMetaByParentId(requestGroupId, { pinned });
   }
 
   _handleSetRequestPinned(requestId, pinned) {
-    this._updateRequestMetaByParentId(requestId, { pinned });
+    App._updateRequestMetaByParentId(requestId, { pinned });
   }
 
   _handleSetResponsePreviewMode(requestId, previewMode) {

@@ -138,6 +138,7 @@ class SidebarRequestGroupRow extends PureComponent {
               handleDuplicateRequest={misc.nullFn}
               handleGenerateCode={misc.nullFn}
               handleCopyAsCurl={misc.nullFn}
+              handleSetRequestPinned={misc.nullFn}
               moveDoc={moveDoc}
               isActive={false}
               request={null}
@@ -146,6 +147,7 @@ class SidebarRequestGroupRow extends PureComponent {
               requestCreate={handleCreateRequest}
               filter={filter}
               hotKeyRegistry={hotKeyRegistry}
+              isPinned={false}
             />
           )}
         </ul>
