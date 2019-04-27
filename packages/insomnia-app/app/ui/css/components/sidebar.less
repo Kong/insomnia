@@ -4,7 +4,7 @@
 .sidebar {
   position: relative;
   display: grid;
-  grid-template-rows: @height-nav auto auto 0.3fr minmax(0, 1fr) auto;
+  grid-template-rows: @height-nav auto auto fit-content(20%) minmax(0, 1fr) auto;
   grid-template-columns: 100%;
   z-index: 10;
 
@@ -186,14 +186,19 @@
     &:hover::-webkit-scrollbar {
       display: block;
     }
+
+    &.sidebar__list--pinned {
+      padding-bottom: 0px;
+      padding-top: 0px;
+
+      &::-webkit-scrollbar {
+        display: block;
+      }
+    }
   }
 
   .sidebar__list--collapsed > * {
     display: none;
-  }
-
-  .sidebar__list--pinned {
-    padding-bottom: @padding-lg;
   }
 
   // ~~~~~~~~~~~ //

@@ -143,7 +143,7 @@ class SidebarChildren extends React.PureComponent<Props> {
     return (
       <React.Fragment>
         {pinnedChildren && pinnedChildren.length > 0 && (
-          <ul className="sidebar__list sidebar__list-root theme--sidebar__list sidebar_list--pinned">
+          <ul className="sidebar__list sidebar__list-root theme--sidebar__list sidebar__list--pinned">
             {this._renderChildren(pinnedChildren, true)}
           </ul>
         )}
