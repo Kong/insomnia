@@ -352,7 +352,7 @@ class ResponsePane extends React.PureComponent<Props> {
           <TabPanel className="react-tabs__tab-panel">
             <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseTimelineViewer
-                timeline={response.timeline || []}
+                response={response}
                 editorLineWrapping={editorLineWrapping}
                 editorFontSize={editorFontSize}
                 editorIndentSize={editorIndentSize}

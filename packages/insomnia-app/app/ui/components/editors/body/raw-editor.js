@@ -25,46 +25,24 @@ class RawEditor extends PureComponent {
 
     return (
       <React.Fragment>
-        {isVariableUncovered && (
-          <CodeEditor
-            manualPrettify
-            uniquenessKey={uniquenessKey}
-            fontSize={fontSize}
-            indentSize={indentSize}
-            indentWithTabs={indentWithTabs}
-            keyMap={keyMap}
-            defaultValue={content}
-            className={className}
-            render={render}
-            getRenderContext={getRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-            onChange={onChange}
-            mode={contentType}
-            lineWrapping={lineWrapping}
-            placeholder="..."
-          />
-        )}
-        {!isVariableUncovered && (
-          <CodeEditor
-            manualPrettify
-            uniquenessKey={uniquenessKey}
-            fontSize={fontSize}
-            indentSize={indentSize}
-            indentWithTabs={indentWithTabs}
-            keyMap={keyMap}
-            defaultValue={content}
-            className={className}
-            render={render}
-            getRenderContext={getRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-            onChange={onChange}
-            mode={contentType}
-            lineWrapping={lineWrapping}
-            placeholder="..."
-          />
-        )}
+        <CodeEditor
+          manualPrettify
+          uniquenessKey={uniquenessKey}
+          fontSize={fontSize}
+          indentSize={indentSize}
+          indentWithTabs={indentWithTabs}
+          keyMap={keyMap}
+          defaultValue={content}
+          className={className}
+          render={render}
+          getRenderContext={getRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
+          isVariableUncovered={isVariableUncovered}
+          onChange={onChange}
+          mode={contentType}
+          lineWrapping={lineWrapping}
+          placeholder="..."
+        />
       </React.Fragment>
     );
   }

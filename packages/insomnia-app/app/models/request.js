@@ -85,7 +85,6 @@ type BaseRequest = {
   settingDisableRenderRequestBody: boolean,
   settingEncodeUrl: boolean,
   settingRebuildPath: boolean,
-  settingMaxTimelineDataSize: number,
 };
 
 export type Request = BaseModel & BaseRequest;
@@ -109,7 +108,6 @@ export function init(): BaseRequest {
     settingDisableRenderRequestBody: false,
     settingEncodeUrl: true,
     settingRebuildPath: true,
-    settingMaxTimelineDataSize: 1000,
   };
 }
 

@@ -37,8 +37,8 @@ type BaseResponse = {
   bytesContent: number,
   elapsedTime: number,
   headers: Array<ResponseHeader>,
-  timeline: Array<ResponseTimelineEntry>,
   bodyPath: string, // Actual bodies are stored on the filesystem
+  timelinePath: string, // Actual timelines are stored on the filesystem
   bodyCompression: 'zip' | null | '__NEEDS_MIGRATION__',
   error: string,
   requestVersionId: string | null,
@@ -61,7 +61,7 @@ export function init(): BaseResponse {
     bytesContent: -1, // -1 means that it was legacy and this property didn't exist yet
     elapsedTime: 0,
     headers: [],
-    timeline: [],
+    timelinePath: '', // Actual timelines are stored on the filesystem
     bodyPath: '', // Actual bodies are stored on the filesystem
     bodyCompression: '__NEEDS_MIGRATION__', // For legacy bodies
     error: '',
@@ -76,6 +76,7 @@ export function init(): BaseResponse {
 export async function migrate(doc: Object) {
   doc = await migrateBodyToFileSystem(doc);
   doc = await migrateBodyCompression(doc);
+  doc = await migrateTimelineToFileSystem(doc);
   return doc;
 }
 
@@ -86,11 +87,12 @@ export async function hookDatabaseInit() {
 }
 
 export function hookRemove(doc: Response) {
-  if (!doc.bodyPath) {
-    return;
-  }
-
-  fs.unlinkSync(doc.bodyPath);
+  fs.unlink(doc.bodyPath, () => {
+    console.log(`[response] Delete body ${doc.bodyPath}`);
+  });
+  fs.unlink(doc.timelinePath, () => {
+    console.log(`[response] Delete timeline ${doc.timelinePath}`);
+  });
 }
 
 export function getById(id: string) {
@@ -160,6 +162,10 @@ export function getBodyBuffer<T>(response: Object, readFailureValue: ?T): Buffer
   return getBodyBufferFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
 }
 
+export function getTimeline(response: Object): Array<ResponseTimelineEntry> {
+  return getTimelineFromPath(response.timelinePath || '');
+}
+
 function getBodyStreamFromPath<T>(
   bodyPath: string,
   compression: string | null,
@@ -208,11 +214,25 @@ function getBodyBufferFromPath<T>(
   }
 }
 
+function getTimelineFromPath(timelinePath: string): Array<ResponseTimelineEntry> {
+  // No body, so return empty Buffer
+  if (!timelinePath) {
+    return [];
+  }
+
+  try {
+    const rawBuffer = fs.readFileSync(timelinePath);
+    return JSON.parse(rawBuffer.toString());
+  } catch (err) {
+    console.warn('Failed to read response body', err.message);
+    return [];
+  }
+}
+
 async function migrateBodyToFileSystem(doc: Object) {
   if (doc.hasOwnProperty('body') && doc._id && !doc.bodyPath) {
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
-    const root = getDataDirectory();
-    const dir = path.join(root, 'responses');
+    const dir = path.join(getDataDirectory(), 'responses');
 
     mkdirp.sync(dir);
 
@@ -243,23 +263,46 @@ function migrateBodyCompression(doc: Object) {
   return doc;
 }
 
+async function migrateTimelineToFileSystem(doc: Object) {
+  if (doc.hasOwnProperty('timeline') && doc._id && !doc.timelinePath) {
+    const dir = path.join(getDataDirectory(), 'responses');
+
+    mkdirp.sync(dir);
+    const timelineStr = JSON.stringify(doc.timeline, null, '\t');
+    const fsPath = doc.bodyPath + '.timeline';
+
+    try {
+      fs.writeFileSync(fsPath, timelineStr);
+    } catch (err) {
+      console.warn('Failed to write response body to file', err.message);
+    }
+
+    return db.docUpdate(doc, { timelinePath: fsPath });
+  } else {
+    return doc;
+  }
+}
+
 export async function cleanDeletedResponses() {
   const responsesDir = path.join(getDataDirectory(), 'responses');
   mkdirp.sync(responsesDir);
 
-  let files = fs.readdirSync(responsesDir);
+  const files = fs.readdirSync(responsesDir);
   if (files.length === 0) {
     return;
   }
 
-  let whitelistFiles = (await db.all(type)).map(res => {
-    return res.bodyPath.slice(responsesDir.length + 1);
-  });
+  const whitelistFiles = [];
+  for (const r of await db.all(type)) {
+    whitelistFiles.push(r.bodyPath.slice(responsesDir.length + 1));
+    whitelistFiles.push(r.timelinePath.slice(responsesDir.length + 1));
+  }
 
-  for (let index = 0; index < files.length; index++) {
-    if (whitelistFiles.indexOf(files[index]) === -1) {
-      const bodyPath = path.join(responsesDir, files[index]);
-      fs.unlinkSync(bodyPath);
+  for (const filePath of files) {
+    if (whitelistFiles.indexOf(filePath) >= 0) {
+      continue;
     }
+
+    fs.unlinkSync(path.join(responsesDir, filePath));
   }
 }

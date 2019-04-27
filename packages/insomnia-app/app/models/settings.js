@@ -36,6 +36,7 @@ type BaseSettings = {
   fontInterface: string | null,
   fontSize: number,
   fontVariantLigatures: boolean,
+  maxTimelineDataSizeKB: number,
 
   // Feature flags
   enableSyncBeta: boolean,
@@ -83,6 +84,7 @@ export function init(): BaseSettings {
     fontInterface: null,
     fontSize: 13,
     fontVariantLigatures: false,
+    maxTimelineDataSizeKB: 10,
     enableSyncBeta: false,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
   };

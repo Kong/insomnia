@@ -112,32 +112,17 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
 
     return bulk ? (
       <div className="tall">
-        {isVariableUncovered && (
-          <CodeEditor
-            getRenderContext={handleGetRenderContext}
-            render={handleRender}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-            fontSize={editorFontSize}
-            indentSize={editorIndentSize}
-            lineWrapping={editorLineWrapping}
-            onChange={this._handleBulkUpdate}
-            defaultValue={this._getHeadersString()}
-          />
-        )}
-        {!isVariableUncovered && (
-          <CodeEditor
-            getRenderContext={handleGetRenderContext}
-            render={handleRender}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-            fontSize={editorFontSize}
-            indentSize={editorIndentSize}
-            lineWrapping={editorLineWrapping}
-            onChange={this._handleBulkUpdate}
-            defaultValue={this._getHeadersString()}
-          />
-        )}
+        <CodeEditor
+          getRenderContext={handleGetRenderContext}
+          render={handleRender}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
+          isVariableUncovered={isVariableUncovered}
+          fontSize={editorFontSize}
+          indentSize={editorIndentSize}
+          lineWrapping={editorLineWrapping}
+          onChange={this._handleBulkUpdate}
+          defaultValue={this._getHeadersString()}
+        />
       </div>
     ) : (
       <div className="pad-bottom scrollable-container">

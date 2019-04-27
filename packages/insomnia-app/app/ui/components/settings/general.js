@@ -19,6 +19,7 @@ import type { Settings } from '../../../models/settings';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { setFont } from '../../../plugins/misc';
 import * as session from '../../../account/session';
+import Tooltip from '../tooltip';
 
 type Props = {
   settings: Settings,
@@ -69,7 +70,7 @@ class General extends React.PureComponent<Props, State> {
     this.props.handleToggleMenuBar(settings.autoHideMenuBar);
   }
 
-  async _handleToggleSyncBeta(e: SyntheticEvent<HTMLInputElement>) {
+  async _handleUpdateSettingAndRestart(e: SyntheticEvent<HTMLInputElement>) {
     await this._handleUpdateSetting(e);
     const { app } = electron.remote || electron;
     app.relaunch();
@@ -91,140 +92,91 @@ class General extends React.PureComponent<Props, State> {
     setFont(settings);
   }
 
+  renderBooleanSetting(label: string, name: string, help: string, forceRestart?: boolean) {
+    const { settings } = this.props;
+
+    if (!settings.hasOwnProperty(name)) {
+      throw new Error(`Invalid boolean setting name ${name}`);
+    }
+
+    const onChange = forceRestart ? this._handleUpdateSettingAndRestart : this._handleUpdateSetting;
+
+    return (
+      <div className="form-control form-control--thin">
+        <label className="inline-block">
+          {label}
+          {help && (
+            <HelpTooltip className="space-left">
+              Configure the autocomplete popup delay in milliseconds (0 to disable)
+            </HelpTooltip>
+          )}
+          {forceRestart && (
+            <Tooltip message="Will restart app" className="space-left">
+              <i className="fa fa-refresh super-duper-faint" />
+            </Tooltip>
+          )}
+          <input type="checkbox" name={name} checked={settings[name]} onChange={onChange} />
+        </label>
+      </div>
+    );
+  }
+
+  renderTextSetting(label: string, name: string, help: string, props: Object) {
+    const { settings } = this.props;
+
+    if (!settings.hasOwnProperty(name)) {
+      throw new Error(`Invalid number setting name ${name}`);
+    }
+
+    return (
+      <div className="form-control form-control--outlined">
+        <label>
+          {label}
+          {help && (
+            <HelpTooltip className="space-left">
+              Configure the autocomplete popup delay in milliseconds (0 to disable)
+            </HelpTooltip>
+          )}
+          <input
+            type={props.type || 'text'}
+            name={name}
+            defaultValue={settings[name]}
+            {...props}
+            onChange={props.onChange || this._handleUpdateSetting}
+          />
+        </label>
+      </div>
+    );
+  }
+
+  renderNumberSetting(label: string, name: string, help: string, props: Object) {
+    return this.renderTextSetting(label, name, help, { ...props, type: 'number' });
+  }
+
   render() {
     const { settings } = this.props;
     const { fonts } = this.state;
     return (
       <div>
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Follow redirects automatically
-            <input
-              type="checkbox"
-              name="followRedirects"
-              checked={settings.followRedirects}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
-
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Validate SSL Certificates
-            <input
-              type="checkbox"
-              name="validateSSL"
-              checked={settings.validateSSL}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
-
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Show passwords in plain-text
-            <input
-              type="checkbox"
-              name="showPasswords"
-              checked={settings.showPasswords}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
-
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Use bulk header editor by default
-            <input
-              type="checkbox"
-              name="useBulkHeaderEditor"
-              checked={settings.useBulkHeaderEditor}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
-
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Always use vertical layout
-            <input
-              type="checkbox"
-              name="forceVerticalLayout"
-              checked={settings.forceVerticalLayout}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
-
-        {!isMac() && (
-          <div className="form-control form-control--thin">
-            <label className="inline-block">
-              Hide Menu Bar
-              <input
-                type="checkbox"
-                name="autoHideMenuBar"
-                checked={settings.autoHideMenuBar}
-                onChange={this._handleToggleMenuBar}
-              />
-            </label>
+        <div className="row-fill row-fill--top">
+          <div>
+            {this.renderBooleanSetting('Force bulk header editor', 'useBulkHeaderEditor', '')}
+            {this.renderBooleanSetting(
+              'Vertical request/response layout',
+              'forceVerticalLayout',
+              '',
+            )}
           </div>
-        )}
-
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Wrap Long Lines
-            <input
-              type="checkbox"
-              name="editorLineWrapping"
-              checked={settings.editorLineWrapping}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
+          <div>
+            {this.renderBooleanSetting('Reveal passwords', 'showPasswords', '')}
+            {!isMac() && this.renderBooleanSetting('Hide menu bar', 'autoHideMenuBar', '')}
+            {this.renderBooleanSetting('Raw template syntax', 'nunjucksPowerUserMode', '', true)}
+          </div>
         </div>
-
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Nunjucks Power User Mode{' '}
-            <HelpTooltip>
-              Disable tag editing interface in favor of raw Nunjucks syntax (requires restart)
-            </HelpTooltip>
-            <input
-              type="checkbox"
-              name="nunjucksPowerUserMode"
-              checked={settings.nunjucksPowerUserMode}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
-
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Indent With Tabs
-            <input
-              type="checkbox"
-              name="editorIndentWithTabs"
-              checked={settings.editorIndentWithTabs}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
-
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Font Ligatures
-            <input
-              type="checkbox"
-              name="fontVariantLigatures"
-              checked={settings.fontVariantLigatures}
-              onChange={this._handleFontLigatureChange}
-            />
-          </label>
-        </div>
-
-        <div className="form-row">
-          <div className="form-control form-control--outlined pad-top-sm">
+        <div className="row-fill row-fill--top pad-top-sm">
+          <div className="form-control form-control--outlined">
             <label>
-              Environment Highlight Color Style{' '}
+              Environment Highlight Style{' '}
               <HelpTooltip>Configures the appearance of environment's color indicator</HelpTooltip>
               <select
                 defaultValue={settings.environmentHighlightColorStyle}
@@ -239,25 +191,30 @@ class General extends React.PureComponent<Props, State> {
               </select>
             </label>
           </div>
-          <div className="form-control form-control--outlined pad-top-sm">
-            <label>
-              Autocomplete popup delay
-              <HelpTooltip className="space-left">
-                Configure the autocomplete popup delay in milliseconds (0 to disable)
-              </HelpTooltip>
-              <input
-                type="number"
-                name="autocompleteDelay"
-                min={0}
-                max={3000}
-                defaultValue={settings.autocompleteDelay}
-                onChange={this._handleUpdateSetting}
-              />
-            </label>
-          </div>
+          {this.renderNumberSetting(
+            'Autocomplete popup delay',
+            'autocompleteDelay',
+            'Configure the autocomplete popup delay in milliseconds (0 to disable)',
+            {
+              min: 0,
+              max: 3000,
+            },
+          )}
         </div>
 
-        <div className="form-row">
+        <hr className="pad-top" />
+
+        <h2>Font</h2>
+
+        <div className="row-fill row-fill--top">
+          <div>
+            {this.renderBooleanSetting('Indent with tabs', 'editorIndentWithTabs', '')}
+            {this.renderBooleanSetting('Wrap text editor lines', 'editorLineWrapping', '')}
+          </div>
+          <div>{this.renderBooleanSetting('Font ligatures', 'fontVariantLigatures', '')}</div>
+        </div>
+
+        <div className="form-row pad-top-sm">
           <div className="form-control form-control--outlined">
             <label>
               Interface Font
@@ -280,19 +237,11 @@ class General extends React.PureComponent<Props, State> {
               )}
             </label>
           </div>
-          <div className="form-control form-control--outlined">
-            <label>
-              Interface Font Size (px)
-              <input
-                type="number"
-                name="fontSize"
-                min={8}
-                max={20}
-                defaultValue={settings.fontSize}
-                onChange={this._handleFontSizeChange}
-              />
-            </label>
-          </div>
+          {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
+            min: 8,
+            max: 20,
+            onChange: this._handleFontSizeChange,
+          })}
         </div>
 
         <div className="form-row">
@@ -320,36 +269,17 @@ class General extends React.PureComponent<Props, State> {
               )}
             </label>
           </div>
-          <div className="form-control form-control--outlined">
-            <label>
-              Text Editor Font Size (px)
-              <input
-                type="number"
-                name="editorFontSize"
-                min={8}
-                max={20}
-                defaultValue={settings.editorFontSize}
-                onChange={this._handleUpdateSetting}
-              />
-            </label>
-          </div>
+          {this.renderNumberSetting('Editor Font Size (px)', 'editorFontSize', '', {
+            min: 8,
+            max: 20,
+          })}
         </div>
 
         <div className="form-row">
-          <div className="form-control form-control--outlined">
-            <label>
-              Text Editor Indent Size
-              <input
-                type="number"
-                name="editorIndentSize"
-                min={1}
-                max={16}
-                defaultValue={settings.editorIndentSize}
-                onChange={this._handleUpdateSetting}
-              />
-            </label>
-          </div>
-
+          {this.renderNumberSetting('Editor Indent Size', 'editorIndentSize', '', {
+            min: 1,
+            max: 16,
+          })}
           <div className="form-control form-control--outlined">
             <label>
               Text Editor Key Map
@@ -368,55 +298,24 @@ class General extends React.PureComponent<Props, State> {
 
         <hr className="pad-top" />
 
-        <h2>Request Settings</h2>
+        <h2>Network</h2>
 
-        <div className="form-row">
-          <div className="form-control form-control--outlined">
-            <label>
-              Maximum Redirects
-              <HelpTooltip className="space-left">(-1 for unlimited)</HelpTooltip>
-              <input
-                type="number"
-                name="maxRedirects"
-                min={-1}
-                defaultValue={settings.maxRedirects}
-                onChange={this._handleUpdateSetting}
-              />
-            </label>
-          </div>
+        {this.renderBooleanSetting('Validate certificates', 'validateSSL', '')}
+        {this.renderBooleanSetting('Follow redirects', 'followRedirects', '')}
 
-          <div className="form-control form-control--outlined">
-            <label>
-              Network Request Timeout
-              <HelpTooltip className="space-left">
-                Request timeout in milliseconds (0 for no timeout)
-              </HelpTooltip>
-              <input
-                type="number"
-                name="timeout"
-                min={-1}
-                defaultValue={settings.timeout}
-                onChange={this._handleUpdateSetting}
-              />
-            </label>
-          </div>
+        <div className="form-row pad-top-sm">
+          {this.renderNumberSetting('Maximum Redirects', 'maxRedirects', '-1 for unlimited', {
+            min: -1,
+          })}
+          {this.renderNumberSetting('Request Timeout', 'timeout', '-1 for infinite', { min: -1 })}
         </div>
 
-        <div className="form-control form-control--outlined">
-          <label>
-            Response History Limit
-            <HelpTooltip className="space-left">
-              Number of responses to keep for each request
-            </HelpTooltip>
-            <input
-              type="number"
-              name="maxHistoryResponses"
-              min={1}
-              defaultValue={settings.maxHistoryResponses}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
+        {this.renderNumberSetting(
+          'Response History Limit',
+          'maxHistoryResponses',
+          'Number of responses to keep for each request (-1 for infinity)',
+          { min: -1 },
+        )}
 
         <hr className="pad-top" />
 
@@ -429,61 +328,26 @@ class General extends React.PureComponent<Props, State> {
           </HelpTooltip>
         </h2>
 
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Enable Proxy
-            <input
-              type="checkbox"
-              name="proxyEnabled"
-              checked={settings.proxyEnabled}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
+        {this.renderBooleanSetting('Enable proxy', 'proxyEnabled', '')}
 
         <div className="form-row pad-top-sm">
-          <div className="form-control form-control--outlined">
-            <label>
-              HTTP Proxy
-              <input
-                type="text"
-                name="httpProxy"
-                disabled={!settings.proxyEnabled}
-                placeholder="localhost:8005"
-                defaultValue={settings.httpProxy}
-                onChange={this._handleUpdateSetting}
-              />
-            </label>
-          </div>
-          <div className="form-control form-control--outlined">
-            <label>
-              HTTPS Proxy
-              <input
-                placeholder="localhost:8005"
-                disabled={!settings.proxyEnabled}
-                name="httpsProxy"
-                type="text"
-                defaultValue={settings.httpsProxy}
-                onChange={this._handleUpdateSetting}
-              />
-            </label>
-          </div>
-          <div className="form-control form-control--outlined">
-            <label>
-              No Proxy{' '}
-              <HelpTooltip>
-                Comma-separated list of hostnames that do not require a proxy to be contacted
-              </HelpTooltip>
-              <input
-                placeholder="localhost,127.0.0.1"
-                disabled={!settings.proxyEnabled}
-                name="noProxy"
-                type="text"
-                defaultValue={settings.noProxy}
-                onChange={this._handleUpdateSetting}
-              />
-            </label>
-          </div>
+          {this.renderTextSetting('HTTP Proxy', 'httpProxy', '', {
+            placeholder: 'localhost:8005',
+            disabled: !settings.proxyEnabled,
+          })}
+          {this.renderTextSetting('HTTPS Proxy', 'httpsProxy', '', {
+            placeholder: 'localhost:8005',
+            disabled: !settings.proxyEnabled,
+          })}
+          {this.renderTextSetting(
+            'No Proxy',
+            'noProxy',
+            'Comma-separated list of hostnames that do not require a proxy to be contacted',
+            {
+              placeholder: 'localhost,127.0.0.1',
+              disabled: !settings.proxyEnabled,
+            },
+          )}
         </div>
 
         {(isWindows() || isMac()) && (
@@ -497,20 +361,11 @@ class General extends React.PureComponent<Props, State> {
               </div>
               <h2>Software Updates</h2>
             </div>
-            <div className="form-control form-control--thin">
-              <label className="inline-block">
-                Automatically download and install updates
-                <HelpTooltip className="space-left">
-                  If disabled, you will receive a notification when a new update is available
-                </HelpTooltip>
-                <input
-                  type="checkbox"
-                  name="updateAutomatically"
-                  checked={settings.updateAutomatically}
-                  onChange={this._handleUpdateSetting}
-                />
-              </label>
-            </div>
+            {this.renderBooleanSetting(
+              'Automatically download and install updates',
+              'updateAutomatically',
+              'If disabled, you will receive a notification when a new update is available',
+            )}
             <div className="form-control form-control--outlined pad-top-sm">
               <label>
                 Update Channel
@@ -530,54 +385,30 @@ class General extends React.PureComponent<Props, State> {
           <React.Fragment>
             <hr className="pad-top" />
             <h2>Software Updates</h2>
-            <div className="form-control form-control--thin">
-              <label className="inline-block">
-                Do not notify of new releases
-                <input
-                  type="checkbox"
-                  name="disableUpdateNotification"
-                  checked={settings.disableUpdateNotification}
-                  onChange={this._handleUpdateSetting}
-                />
-              </label>
-            </div>
+            {this.renderBooleanSetting(
+              'Do not notify of new releases',
+              'disableUpdateNotification',
+              '',
+            )}
           </React.Fragment>
         )}
 
         <hr className="pad-top" />
         <h2>Plugins</h2>
 
-        <div className="form-control form-control--outlined">
-          <label>
-            Additional Plugin Path{' '}
-            <HelpTooltip>Tell Insomnia to look for plugins in a different directory</HelpTooltip>
-            <input
-              placeholder="~/.insomnia:/other/path"
-              name="pluginPath"
-              type="text"
-              defaultValue={settings.pluginPath}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
-        </div>
+        {this.renderTextSetting(
+          'Additional Plugin Path',
+          'pluginPath',
+          'Tell Insomnia to look for plugins in a different directory',
+          { placeholder: '~/.insomnia:/other/path' },
+        )}
 
         <br />
 
         {session.isLoggedIn() && (
           <React.Fragment>
             <hr />
-            <div className="form-control form-control--thin">
-              <label className="inline-block">
-                Enable sync beta (will restart app){' '}
-                <HelpTooltip>Enable the new sync beta features</HelpTooltip>
-                <input
-                  type="checkbox"
-                  name="enableSyncBeta"
-                  checked={settings.enableSyncBeta}
-                  onChange={this._handleToggleSyncBeta}
-                />
-              </label>
-            </div>
+            {this.renderBooleanSetting('Enable version control beta', 'enableSyncBeta', '', true)}
           </React.Fragment>
         )}
       </div>

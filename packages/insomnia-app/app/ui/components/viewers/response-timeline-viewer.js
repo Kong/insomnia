@@ -2,10 +2,36 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { shell } from 'electron';
 import CodeEditor from '../codemirror/code-editor';
+import * as models from '../../../models';
 
 class ResponseTimelineViewer extends PureComponent {
-  _handleClickLink(link) {
+  state = {
+    timeline: [],
+    timelineKey: '',
+  };
+
+  static _handleClickLink(link) {
     shell.openExternal(link);
+  }
+
+  componentDidMount() {
+    this.refreshTimeline();
+  }
+
+  componentDidUpdate(prevProps) {
+    const { response } = this.props;
+    if (response._id !== prevProps.response._id) {
+      this.refreshTimeline();
+    }
+  }
+
+  async refreshTimeline() {
+    const { response } = this.props;
+    const timeline = await models.response.getTimeline(response);
+    this.setState({
+      timeline,
+      timelineKey: response._id,
+    });
   }
 
   renderRow(row, i, all) {
@@ -56,16 +82,18 @@ class ResponseTimelineViewer extends PureComponent {
   }
 
   render() {
-    const { timeline, editorFontSize, editorIndentSize, editorLineWrapping } = this.props;
+    const { editorFontSize, editorIndentSize, editorLineWrapping } = this.props;
+    const { timeline, timelineKey } = this.state;
     const rows = timeline
       .map(this.renderRow)
       .filter(r => r !== null)
       .join('\n');
     return (
       <CodeEditor
+        key={timelineKey}
         hideLineNumbers
         readOnly
-        onClickLink={this._handleClickLink}
+        onClickLink={ResponseTimelineViewer._handleClickLink}
         defaultValue={rows}
         fontSize={editorFontSize}
         indentSize={editorIndentSize}
@@ -78,7 +106,7 @@ class ResponseTimelineViewer extends PureComponent {
 }
 
 ResponseTimelineViewer.propTypes = {
-  timeline: PropTypes.array.isRequired,
+  response: PropTypes.object.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorIndentSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,

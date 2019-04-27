@@ -58,7 +58,7 @@ class ResponseDebugModal extends React.PureComponent<Props, State> {
                 editorFontSize={settings.editorFontSize}
                 editorIndentSize={settings.editorIndentSize}
                 editorLineWrapping={settings.editorLineWrapping}
-                timeline={response.timeline}
+                response={response}
               />
             ) : (
               <div>No response found</div>

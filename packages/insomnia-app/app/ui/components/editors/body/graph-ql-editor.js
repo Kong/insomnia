@@ -590,56 +590,29 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           )}
         </h2>
         <div className="graphql-editor__variables">
-          {isVariableUncovered && (
-            <CodeEditor
-              dynamicHeight
-              uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
-              debounceMillis={DEBOUNCE_MILLIS * 4}
-              manualPrettify={false}
-              fontSize={settings.editorFontSize}
-              indentSize={settings.editorIndentSize}
-              keyMap={settings.editorKeyMap}
-              defaultValue={variables}
-              className={className}
-              render={render}
-              getRenderContext={getRenderContext}
-              getAutocompleteConstants={() => Object.keys(variableTypes || {})}
-              lintOptions={{
-                variableToType: variableTypes,
-              }}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              isVariableUncovered={isVariableUncovered}
-              onChange={this._handleVariablesChange}
-              mode="graphql-variables"
-              lineWrapping={settings.editorLineWrapping}
-              placeholder=""
-            />
-          )}
-          {!isVariableUncovered && (
-            <CodeEditor
-              dynamicHeight
-              uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
-              debounceMillis={DEBOUNCE_MILLIS * 4}
-              manualPrettify={false}
-              fontSize={settings.editorFontSize}
-              indentSize={settings.editorIndentSize}
-              keyMap={settings.editorKeyMap}
-              defaultValue={variables}
-              className={className}
-              render={render}
-              getRenderContext={getRenderContext}
-              getAutocompleteConstants={() => Object.keys(variableTypes || {})}
-              lintOptions={{
-                variableToType: variableTypes,
-              }}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              isVariableUncovered={isVariableUncovered}
-              onChange={this._handleVariablesChange}
-              mode="graphql-variables"
-              lineWrapping={settings.editorLineWrapping}
-              placeholder=""
-            />
-          )}
+          <CodeEditor
+            dynamicHeight
+            uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
+            debounceMillis={DEBOUNCE_MILLIS * 4}
+            manualPrettify={false}
+            fontSize={settings.editorFontSize}
+            indentSize={settings.editorIndentSize}
+            keyMap={settings.editorKeyMap}
+            defaultValue={variables}
+            className={className}
+            render={render}
+            getRenderContext={getRenderContext}
+            getAutocompleteConstants={() => Object.keys(variableTypes || {})}
+            lintOptions={{
+              variableToType: variableTypes,
+            }}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
+            onChange={this._handleVariablesChange}
+            mode="graphql-variables"
+            lineWrapping={settings.editorLineWrapping}
+            placeholder=""
+          />
         </div>
         <div className="pane__footer">
           <button className="pull-right btn btn--compact" onClick={this._handlePrettify}>

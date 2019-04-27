@@ -6,6 +6,7 @@ import type { Settings } from '../models/settings';
 import type { RenderedRequest } from '../common/render';
 import { getRenderedRequestAndContext, RENDER_PURPOSE_SEND } from '../common/render';
 import mkdirp from 'mkdirp';
+import crypto from 'crypto';
 import clone from 'clone';
 import { parse as urlParse, resolve as urlResolve } from 'url';
 import { Curl } from 'insomnia-libcurl';
@@ -56,7 +57,7 @@ import { urlMatchesCertHost } from './url-matches-cert-host';
 import aws4 from 'aws4';
 import { buildMultipart } from './multipart';
 
-export type ResponsePatch = {
+export type ResponsePatch = {|
   statusMessage?: string,
   error?: string,
   url?: string,
@@ -73,8 +74,8 @@ export type ResponsePatch = {
   parentId?: string,
   settingStoreCookies?: boolean,
   settingSendCookies?: boolean,
-  timeline?: Array<ResponseTimelineEntry>,
-};
+  timelinePath?: string,
+|};
 
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
@@ -117,11 +118,13 @@ export async function _actuallySend(
       bodyPath: string | null,
       noPlugins: boolean = false,
     ): Promise<void> {
+      const timelinePath = await storeTimeline(timeline);
+
       const responsePatchBeforeHooks = Object.assign(
         ({
+          timelinePath,
           parentId: renderedRequest._id,
           bodyCompression: null, // Will default to .zip otherwise
-          timeline: timeline,
           bodyPath: bodyPath || '',
           settingSendCookies: renderedRequest.settingSendCookies,
           settingStoreCookies: renderedRequest.settingStoreCookies,
@@ -253,7 +256,7 @@ export async function _actuallySend(
         if (infoType === Curl.info.debug.DATA_OUT) {
           if (content.length === 0) {
             // Sometimes this happens, but I'm not sure why. Just ignore it.
-          } else if (content.length < renderedRequest.settingMaxTimelineDataSize) {
+          } else if (content.length / 1024 < settings.maxTimelineDataSizeKB) {
             addTimeline(name, content);
           } else {
             addTimeline(name, `(${describeByteSize(content.length)} hidden)`);
@@ -989,6 +992,26 @@ export function _getAwsAuthHeaders(
   return Object.keys(signature.headers)
     .filter(name => name !== 'content-type') // Don't add this because we already have it
     .map(name => ({ name, value: signature.headers[name] }));
+}
+
+function storeTimeline(timeline: Array<ResponseTimelineEntry>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const timelineStr = JSON.stringify(timeline, null, '\t');
+    const timelineHash = crypto
+      .createHash('sha1')
+      .update(timelineStr)
+      .digest('hex');
+    const responsesDir = pathJoin(getDataDirectory(), 'responses');
+    mkdirp.sync(responsesDir);
+    const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
+    fs.writeFile(timelinePath, timelineStr, err => {
+      if (err != null) {
+        reject(err);
+      } else {
+        resolve(timelinePath);
+      }
+    });
+  });
 }
 
 document.addEventListener('keydown', (e: KeyboardEvent) => {
