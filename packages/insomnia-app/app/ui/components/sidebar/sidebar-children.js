@@ -104,7 +104,7 @@ class SidebarChildren extends React.PureComponent<Props> {
       }
 
       const isActive = hasActiveChild(child.children);
-      const children = this._renderChildren(child.children); // False because only top level items can be pinned
+      const children = this._renderChildren(child.children);
 
       return (
         <SidebarRequestGroupRow
