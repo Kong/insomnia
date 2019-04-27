@@ -14,7 +14,7 @@ type Child = {
   children: Array<Child>,
   collapsed: boolean,
   hidden: boolean,
-  pinned: Boolean,
+  pinned: boolean,
 };
 
 type Props = {
