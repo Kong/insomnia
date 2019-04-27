@@ -85,10 +85,7 @@ class SidebarRequestGroupRow extends PureComponent {
     const button = connectDragSource(
       connectDropTarget(
         <button onClick={this._handleCollapse} onContextMenu={this._handleShowActions}>
-          <div
-            className={classnames('sidebar__clickable', {
-              'sidebar__clickable--pinned': isPinned,
-            })}>
+          <div className="sidebar__clickable">
             <i className={'sidebar__item__icon-right fa ' + folderIconClass} />
             <Highlight search={filter} text={requestGroup.name} />
             <div

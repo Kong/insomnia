@@ -292,7 +292,7 @@
 
   .sidebar__clickable {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
     align-items: center;
     height: 100%;
 
@@ -300,10 +300,6 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-    }
-
-    &.sidebar__clickable--pinned {
-      grid-template-columns: auto minmax(0, 1fr) auto auto;
     }
   }
 

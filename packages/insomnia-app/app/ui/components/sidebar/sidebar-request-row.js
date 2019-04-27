@@ -114,10 +114,7 @@ class SidebarRequestRow extends PureComponent {
               className="wide"
               onClick={this._handleRequestActivate}
               onContextMenu={this._handleShowRequestActions}>
-              <div
-                className={classnames('sidebar__clickable', {
-                  'sidebar__clickable--pinned': isPinned,
-                })}>
+              <div className="sidebar__clickable">
                 <MethodTag method={request.method} />
                 <Editable
                   value={request.name}
