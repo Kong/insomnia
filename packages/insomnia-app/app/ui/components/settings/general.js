@@ -105,11 +105,7 @@ class General extends React.PureComponent<Props, State> {
       <div className="form-control form-control--thin">
         <label className="inline-block">
           {label}
-          {help && (
-            <HelpTooltip className="space-left">
-              Configure the autocomplete popup delay in milliseconds (0 to disable)
-            </HelpTooltip>
-          )}
+          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
           {forceRestart && (
             <Tooltip message="Will restart app" className="space-left">
               <i className="fa fa-refresh super-duper-faint" />
@@ -132,11 +128,7 @@ class General extends React.PureComponent<Props, State> {
       <div className="form-control form-control--outlined">
         <label>
           {label}
-          {help && (
-            <HelpTooltip className="space-left">
-              Configure the autocomplete popup delay in milliseconds (0 to disable)
-            </HelpTooltip>
-          )}
+          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
           <input
             type={props.type || 'text'}
             name={name}
