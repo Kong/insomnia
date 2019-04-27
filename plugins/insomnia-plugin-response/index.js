@@ -54,19 +54,19 @@ module.exports.templateTags = [
         type: 'enum',
         options: [
           {
-            displayName: 'Always',
-            description: 'resend request when needed',
-            value: 'ALWAYS',
-          },
-          {
-            displayName: 'Sometimes',
-            description: 'resend when no response exists yet',
-            value: 'NO_HISTORY',
-          },
-          {
             displayName: 'Never',
             description: 'never resend request',
-            value: 'NEVER',
+            value: 'never',
+          },
+          {
+            displayName: 'No History',
+            description: 'resend when no responses present',
+            value: 'no-history',
+          },
+          {
+            displayName: 'Always',
+            description: 'resend request when needed',
+            value: 'always',
           },
         ],
       },
