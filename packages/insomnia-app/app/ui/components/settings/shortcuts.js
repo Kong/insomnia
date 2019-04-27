@@ -22,6 +22,35 @@ type Props = {
   handleUpdateKeyBindings: Function,
 };
 
+const HOT_KEY_DEFS: Array<HotKeyDefinition> = [
+  hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
+  hotKeyRefs.REQUEST_QUICK_SWITCH,
+  hotKeyRefs.REQUEST_SEND,
+  hotKeyRefs.REQUEST_SHOW_OPTIONS,
+  hotKeyRefs.REQUEST_SHOW_CREATE,
+  hotKeyRefs.REQUEST_QUICK_CREATE,
+  hotKeyRefs.REQUEST_SHOW_DELETE,
+  hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER,
+  hotKeyRefs.REQUEST_SHOW_DUPLICATE,
+  hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR,
+  hotKeyRefs.SHOW_COOKIES_EDITOR,
+  hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
+  hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU,
+  hotKeyRefs.REQUEST_FOCUS_URL,
+  hotKeyRefs.RESPONSE_FOCUS,
+  hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU,
+  hotKeyRefs.SIDEBAR_TOGGLE,
+  hotKeyRefs.SIDEBAR_FOCUS_FILTER,
+  hotKeyRefs.REQUEST_TOGGLE_HISTORY,
+  hotKeyRefs.SHOW_AUTOCOMPLETE,
+  hotKeyRefs.PREFERENCES_SHOW_GENERAL,
+  hotKeyRefs.WORKSPACE_SHOW_SETTINGS,
+  hotKeyRefs.REQUEST_SHOW_SETTINGS,
+  hotKeyRefs.TOGGLE_MAIN_MENU,
+  hotKeyRefs.PLUGIN_RELOAD,
+  hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES,
+];
+
 @autobind
 class Shortcuts extends PureComponent<Props> {
   /**
@@ -152,33 +181,6 @@ class Shortcuts extends PureComponent<Props> {
   }
 
   render() {
-    const hotKeyDefs: Array<HotKeyDefinition> = [
-      hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
-      hotKeyRefs.REQUEST_QUICK_SWITCH,
-      hotKeyRefs.REQUEST_SEND,
-      hotKeyRefs.REQUEST_SHOW_OPTIONS,
-      hotKeyRefs.REQUEST_SHOW_CREATE,
-      hotKeyRefs.REQUEST_SHOW_DELETE,
-      hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER,
-      hotKeyRefs.REQUEST_SHOW_DUPLICATE,
-      hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR,
-      hotKeyRefs.SHOW_COOKIES_EDITOR,
-      hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
-      hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU,
-      hotKeyRefs.REQUEST_FOCUS_URL,
-      hotKeyRefs.RESPONSE_FOCUS,
-      hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU,
-      hotKeyRefs.SIDEBAR_TOGGLE,
-      hotKeyRefs.SIDEBAR_FOCUS_FILTER,
-      hotKeyRefs.REQUEST_TOGGLE_HISTORY,
-      hotKeyRefs.SHOW_AUTOCOMPLETE,
-      hotKeyRefs.PREFERENCES_SHOW_GENERAL,
-      hotKeyRefs.WORKSPACE_SHOW_SETTINGS,
-      hotKeyRefs.REQUEST_SHOW_SETTINGS,
-      hotKeyRefs.TOGGLE_MAIN_MENU,
-      hotKeyRefs.PLUGIN_RELOAD,
-      hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES,
-    ];
     return (
       <div className="shortcuts">
         <div className="row-spaced margin-bottom-xs">
@@ -190,7 +192,7 @@ class Shortcuts extends PureComponent<Props> {
         </div>
         <table className="table--fancy">
           <tbody>
-            {hotKeyDefs.map((def: HotKeyDefinition, idx: number) => {
+            {HOT_KEY_DEFS.map((def: HotKeyDefinition, idx: number) => {
               return this.renderHotKey(def, idx);
             })}
           </tbody>
