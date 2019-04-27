@@ -48,9 +48,31 @@ module.exports.templateTags = [
           }
         },
       },
+      {
+        displayName: 'Trigger Behavior',
+        help: 'Configure when to resend the dependent request',
+        type: 'enum',
+        options: [
+          {
+            displayName: 'Always',
+            description: 'resend request when needed',
+            value: 'ALWAYS',
+          },
+          {
+            displayName: 'Sometimes',
+            description: 'resend when no response exists yet',
+            value: 'NO_HISTORY',
+          },
+          {
+            displayName: 'Never',
+            description: 'never resend request',
+            value: 'NEVER',
+          },
+        ],
+      },
     ],
 
-    async run(context, field, id, filter) {
+    async run(context, field, id, filter, resendBehavior) {
       filter = filter || '';
 
       if (!['body', 'header', 'raw'].includes(field)) {
@@ -66,7 +88,22 @@ module.exports.templateTags = [
         throw new Error(`Could not find request ${id}`);
       }
 
-      const response = await context.util.models.response.getLatestForRequestId(id);
+      let response = await context.util.models.response.getLatestForRequestId(id);
+
+      let shouldResend = false;
+      if (resendBehavior === 'ALWAYS') {
+        shouldResend = true;
+      } else if (resendBehavior === 'NO_HISTORY' && !response) {
+        shouldResend = true;
+      } else if (resendBehavior === 'NEVER') {
+        shouldResend = false;
+      }
+
+      // Resend dependent request if needed but only if we're rendering for a send
+      if (shouldResend && (!response || context.renderPurpose === 'send')) {
+        console.log('[response tag] Resending dependency');
+        response = await context.network.sendRequest(request);
+      }
 
       if (!response) {
         throw new Error('No responses for request');
