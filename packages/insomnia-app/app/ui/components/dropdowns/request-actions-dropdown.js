@@ -38,7 +38,7 @@ class RequestActionsDropdown extends PureComponent {
 
   _handleSetRequestPinned() {
     if (this._canPin()) {
-      this.props.handleSetRequestPinned(this.props.request._id, !this.props.isPinned);
+      this.props.handleSetRequestPinned(this.props.request, !this.props.isPinned);
     }
   }
 

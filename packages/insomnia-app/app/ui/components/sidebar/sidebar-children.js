@@ -75,13 +75,13 @@ class SidebarChildren extends React.PureComponent<Props> {
             filter={filter || ''}
             moveDoc={moveDoc}
             handleActivateRequest={handleActivateRequest}
-            handleSetRequestPinned={pinnable ? handleSetRequestPinned : misc.nullFn}
+            handleSetRequestPinned={handleSetRequestPinned}
             handleDuplicateRequest={handleDuplicateRequest}
             handleGenerateCode={handleGenerateCode}
             handleCopyAsCurl={handleCopyAsCurl}
             requestCreate={handleCreateRequest}
             isActive={child.doc._id === activeRequestId}
-            isPinned={pinnable && child.pinned}
+            isPinned={child.pinned}
             request={child.doc}
             workspace={workspace}
             hotKeyRegistry={hotKeyRegistry}
@@ -107,7 +107,7 @@ class SidebarChildren extends React.PureComponent<Props> {
       }
 
       const isActive = hasActiveChild(child.children);
-      const children = this._renderChildren(child.children, false); // False because only top level items can be pinned
+      const children = this._renderChildren(child.children, true); // False because only top level items can be pinned
 
       return (
         <SidebarRequestGroupRow
