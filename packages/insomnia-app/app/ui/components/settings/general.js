@@ -304,18 +304,26 @@ class General extends React.PureComponent<Props, State> {
         {this.renderBooleanSetting('Follow redirects', 'followRedirects', '')}
 
         <div className="form-row pad-top-sm">
-          {this.renderNumberSetting('Maximum Redirects', 'maxRedirects', '-1 for unlimited', {
+          {this.renderNumberSetting('Maximum Redirects', 'maxRedirects', '-1 for infinite', {
             min: -1,
           })}
           {this.renderNumberSetting('Request Timeout', 'timeout', '-1 for infinite', { min: -1 })}
         </div>
 
-        {this.renderNumberSetting(
-          'Response History Limit',
-          'maxHistoryResponses',
-          'Number of responses to keep for each request (-1 for infinity)',
-          { min: -1 },
-        )}
+        <div className="form-row pad-top-sm">
+          {this.renderNumberSetting(
+            'Response History Limit',
+            'maxHistoryResponses',
+            'Number of responses to keep for each request (-1 for infinity)',
+            { min: -1 },
+          )}
+          {this.renderNumberSetting(
+            'Max Timeline Chunk Size (KB)',
+            'maxTimelineDataSizeKB',
+            'Maximum size in kilobytes to show on timeline',
+            { min: 0 },
+          )}
+        </div>
 
         <hr className="pad-top" />
 

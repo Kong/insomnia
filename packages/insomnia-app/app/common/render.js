@@ -340,7 +340,6 @@ export async function getRenderedRequestAndContext(
       settingSendCookies: renderedRequest.settingSendCookies,
       settingStoreCookies: renderedRequest.settingStoreCookies,
       settingRebuildPath: renderedRequest.settingRebuildPath,
-      settingMaxTimelineDataSize: renderedRequest.settingMaxTimelineDataSize,
       type: renderedRequest.type,
       url: renderedRequest.url,
     },

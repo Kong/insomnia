@@ -104,7 +104,7 @@ class ResponsePane extends React.PureComponent<Props> {
     });
   }
 
-  _handleDownloadFullResponseBody() {
+  async _handleDownloadFullResponseBody() {
     const { response, request } = this.props;
 
     if (!response || !request) {
@@ -113,7 +113,8 @@ class ResponsePane extends React.PureComponent<Props> {
       return;
     }
 
-    const headers = response.timeline
+    const timeline = await models.response.getTimeline(response);
+    const headers = timeline
       .filter(v => v.name === 'HEADER_IN')
       .map(v => v.value)
       .join('');
