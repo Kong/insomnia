@@ -134,7 +134,7 @@ class SidebarChildren extends React.PureComponent<Props> {
     });
   }
 
-  _renderList(children: Array<Child>, pinned: boolean): React.Node {
+  _renderList(children: Array<Child>): React.Node {
     return (
       <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
         {this._renderChildren(children, true)}
@@ -151,9 +151,9 @@ class SidebarChildren extends React.PureComponent<Props> {
 
     return (
       <React.Fragment>
-        {this._renderList(pinnedChildren, true)}
+        {this._renderList(pinnedChildren)}
         {showSeparator && <div className="sidebar__list-separator" />}
-        {this._renderList(unpinnedChildren, false)}
+        {this._renderList(unpinnedChildren)}
       </React.Fragment>
     );
   }
