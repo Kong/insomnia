@@ -13,7 +13,6 @@ import EnvironmentEditModal from '../modals/environment-edit-modal';
 import * as models from '../../../models';
 import { showPrompt, showModal } from '../modals/index';
 import { hotKeyRefs } from '../../../common/hotkeys';
-import * as misc from '../../../common/misc';
 
 @autobind
 class RequestGroupActionsDropdown extends PureComponent {
@@ -57,16 +56,6 @@ class RequestGroupActionsDropdown extends PureComponent {
     showModal(EnvironmentEditModal, this.props.requestGroup);
   }
 
-  _canPin() {
-    return this.props.handleSetRequestGroupPinned !== misc.nullFn;
-  }
-
-  _handleSetRequestGroupPinned() {
-    if (this._canPin()) {
-      this.props.handleSetRequestGroupPinned(this.props.requestGroup._id, !this.props.isPinned);
-    }
-  }
-
   show() {
     this._dropdown.show();
   }
@@ -92,11 +81,6 @@ class RequestGroupActionsDropdown extends PureComponent {
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]} />
         </DropdownItem>
         <DropdownDivider />
-        {this._canPin() && (
-          <DropdownItem onClick={this._handleSetRequestGroupPinned}>
-            <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
-          </DropdownItem>
-        )}
         <DropdownItem onClick={this._handleRequestGroupDuplicate}>
           <i className="fa fa-copy" /> Duplicate
         </DropdownItem>
@@ -124,10 +108,8 @@ RequestGroupActionsDropdown.propTypes = {
   handleCreateRequestGroup: PropTypes.func.isRequired,
   handleDuplicateRequestGroup: PropTypes.func.isRequired,
   handleMoveRequestGroup: PropTypes.func.isRequired,
-  isPinned: PropTypes.bool,
 
   // Optional
-  handleSetRequestGroupPinned: PropTypes.func,
   requestGroup: PropTypes.object,
 };
 

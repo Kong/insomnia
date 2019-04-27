@@ -10,7 +10,6 @@ export function init() {
   return {
     parentId: null,
     collapsed: false,
-    pinned: false,
   };
 }
 

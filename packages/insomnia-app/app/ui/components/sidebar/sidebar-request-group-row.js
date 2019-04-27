@@ -56,12 +56,10 @@ class SidebarRequestGroupRow extends PureComponent {
       requestGroup,
       isCollapsed,
       isActive,
-      isPinned,
       handleCreateRequest,
       handleCreateRequestGroup,
       handleDuplicateRequestGroup,
       handleMoveRequestGroup,
-      handleSetRequestGroupPinned,
       isDragging,
       isDraggingOver,
       workspace,
@@ -97,7 +95,6 @@ class SidebarRequestGroupRow extends PureComponent {
                 <span className="tag__inner">OPEN</span>
               </div>
             </div>
-            {isPinned && <i className="sidebar__item__icon-x fa fa-thumb-tack" />}
           </div>
         </button>,
       ),
@@ -114,13 +111,11 @@ class SidebarRequestGroupRow extends PureComponent {
             <RequestGroupActionsDropdown
               ref={this._setRequestGroupActionsDropdownRef}
               handleCreateRequest={handleCreateRequest}
-              handleSetRequestGroupPinned={handleSetRequestGroupPinned}
               handleCreateRequestGroup={handleCreateRequestGroup}
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}
               handleMoveRequestGroup={handleMoveRequestGroup}
               workspace={workspace}
               requestGroup={requestGroup}
-              isPinned={isPinned}
               hotKeyRegistry={hotKeyRegistry}
               right
             />
@@ -160,7 +155,6 @@ class SidebarRequestGroupRow extends PureComponent {
 SidebarRequestGroupRow.propTypes = {
   // Functions
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
-  handleSetRequestGroupPinned: PropTypes.func.isRequired,
   handleDuplicateRequestGroup: PropTypes.func.isRequired,
   handleMoveRequestGroup: PropTypes.func.isRequired,
   moveDoc: PropTypes.func.isRequired,
@@ -174,7 +168,6 @@ SidebarRequestGroupRow.propTypes = {
   isCollapsed: PropTypes.bool.isRequired,
   workspace: PropTypes.object.isRequired,
   requestGroup: PropTypes.object.isRequired,
-  isPinned: PropTypes.bool.isRequired,
   hotKeyRegistry: PropTypes.object.isRequired,
 
   // React DnD

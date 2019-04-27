@@ -107,20 +107,10 @@ export const selectActiveWorkspaceEntities = createSelector(
   },
 );
 
-export const selectPinnedRequestsAndRequestGroups = createSelector(
+export const selectPinnedRequests = createSelector(
   selectEntitiesLists,
   entities => {
     const pinned = {};
-
-    // Default all to unpinned
-    for (const requestGroup of entities.requestGroups) {
-      pinned[requestGroup._id] = false;
-    }
-
-    // Update those that have metadata (not all do)
-    for (const meta of entities.requestGroupMetas) {
-      pinned[meta.parentId] = meta.pinned;
-    }
 
     // Default all to unpinned
     for (const request of entities.requests) {
@@ -138,7 +128,7 @@ export const selectPinnedRequestsAndRequestGroups = createSelector(
 
 export const selectSidebarChildren = createSelector(
   selectCollapsedRequestGroups,
-  selectPinnedRequestsAndRequestGroups,
+  selectPinnedRequests,
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
   selectEntitiesChildrenMap,

@@ -437,10 +437,6 @@ class App extends PureComponent {
     App._updateRequestGroupMetaByParentId(requestGroupId, { collapsed });
   }
 
-  _handleSetRequestGroupPinned(requestGroupId, pinned) {
-    App._updateRequestGroupMetaByParentId(requestGroupId, { pinned });
-  }
-
   async _handleSetRequestPinned(request, pinned) {
     App._updateRequestMetaByParentId(request._id, { pinned });
     models.request.update(request, { parentId: this.props.activeWorkspace._id });
@@ -1058,7 +1054,6 @@ class App extends PureComponent {
               sidebarWidth={sidebarWidth}
               handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
               handleSetRequestPinned={this._handleSetRequestPinned}
-              handleSetRequestGroupPinned={this._handleSetRequestGroupPinned}
               handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
               handleActivateRequest={this._handleSetActiveRequest}
               handleSetRequestPaneRef={this._setRequestPaneRef}

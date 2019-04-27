@@ -52,7 +52,6 @@ class Sidebar extends PureComponent {
       handleCreateRequestGroup,
       handleSetRequestGroupCollapsed,
       handleSetRequestPinned,
-      handleSetRequestGroupPinned,
       moveDoc,
       handleActivateRequest,
       activeRequest,
@@ -122,7 +121,6 @@ class Sidebar extends PureComponent {
           handleCreateRequestGroup={handleCreateRequestGroup}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           handleSetRequestPinned={handleSetRequestPinned}
-          handleSetRequestGroupPinned={handleSetRequestGroupPinned}
           handleDuplicateRequest={handleDuplicateRequest}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           handleMoveRequestGroup={handleMoveRequestGroup}
@@ -135,16 +133,14 @@ class Sidebar extends PureComponent {
           hotKeyRegistry={hotKeyRegistry}
         />
 
-        {enableSyncBeta &&
-          vcs &&
-          isLoggedIn() && (
-            <SyncDropdown
-              className="sidebar__footer"
-              workspace={workspace}
-              vcs={vcs}
-              syncItems={syncItems}
-            />
-          )}
+        {enableSyncBeta && vcs && isLoggedIn() && (
+          <SyncDropdown
+            className="sidebar__footer"
+            workspace={workspace}
+            vcs={vcs}
+            syncItems={syncItems}
+          />
+        )}
 
         {!enableSyncBeta && (
           <SyncLegacyDropdown
@@ -163,7 +159,6 @@ Sidebar.propTypes = {
   handleActivateRequest: PropTypes.func.isRequired,
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
   handleSetRequestPinned: PropTypes.func.isRequired,
-  handleSetRequestGroupPinned: PropTypes.func.isRequired,
   handleChangeFilter: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
   handleSetActiveEnvironment: PropTypes.func.isRequired,

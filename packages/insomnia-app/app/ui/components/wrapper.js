@@ -100,7 +100,6 @@ type Props = {
   handleResetDragPaneVertical: Function,
   handleSetRequestGroupCollapsed: Function,
   handleSetRequestPinned: Function,
-  handleSetRequestGroupPinned: Function,
   handleSendRequestWithEnvironment: Function,
   handleSendAndDownloadRequestWithEnvironment: Function,
   handleUpdateRequestMimeType: Function,
@@ -396,7 +395,6 @@ class Wrapper extends React.PureComponent<Props, State> {
       handleSetActiveWorkspace,
       handleSetRequestGroupCollapsed,
       handleSetRequestPinned,
-      handleSetRequestGroupPinned,
       handleSetRequestPaneRef,
       handleSetResponsePaneRef,
       handleSetSidebarRef,
@@ -677,7 +675,6 @@ class Wrapper extends React.PureComponent<Props, State> {
             moveDoc={handleMoveDoc}
             handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
             handleSetRequestPinned={handleSetRequestPinned}
-            handleSetRequestGroupPinned={handleSetRequestGroupPinned}
             activeRequest={activeRequest}
             activeEnvironment={activeEnvironment}
             handleCreateRequest={handleCreateRequest}
