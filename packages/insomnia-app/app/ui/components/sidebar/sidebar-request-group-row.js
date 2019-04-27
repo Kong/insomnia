@@ -89,7 +89,7 @@ class SidebarRequestGroupRow extends PureComponent {
             className={classnames('sidebar__clickable', {
               'sidebar__clickable--pinned': isPinned,
             })}>
-            <i className={'sidebar__item__icon fa ' + folderIconClass} />
+            <i className={'sidebar__item__icon-right fa ' + folderIconClass} />
             <Highlight search={filter} text={requestGroup.name} />
             <div
               ref={this._setExpandTagRef}
@@ -100,7 +100,7 @@ class SidebarRequestGroupRow extends PureComponent {
                 <span className="tag__inner">OPEN</span>
               </div>
             </div>
-            {isPinned && <i className="sidebar__item__icon fa fa-thumb-tack" />}
+            {isPinned && <i className="sidebar__item__icon-x fa fa-thumb-tack" />}
           </div>
         </button>,
       ),

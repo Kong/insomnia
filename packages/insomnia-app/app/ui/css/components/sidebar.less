@@ -4,7 +4,7 @@
 .sidebar {
   position: relative;
   display: grid;
-  grid-template-rows: @height-nav auto auto fit-content(20%) minmax(0, 1fr) auto;
+  grid-template-rows: @height-nav auto auto fit-content(20%) auto minmax(0, 1fr) auto;
   grid-template-columns: 100%;
   z-index: 10;
 
@@ -13,6 +13,10 @@
 
   width: 100%;
   height: 100%;
+
+  & > .sidebar__list:last-child {
+    padding-bottom: @padding-md;
+  }
 
   &.sidebar--collapsed > * > * {
     display: none;
@@ -61,7 +65,7 @@
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     box-sizing: border-box;
-    padding: 0 0 0 @padding-sm;
+    padding: 0 0 @padding-xxs @padding-sm;
 
     .btn {
       padding: 0 calc(@padding-md - @padding-xs);
@@ -172,9 +176,6 @@
   // ~~~~~~~~~~~~ //
 
   .sidebar__list-root {
-    // Add some space above so it's not so squished
-    padding-top: @padding-xxs;
-    padding-bottom: @padding-md;
     box-shadow: inset 0 2rem 2rem -2rem rgba(0, 0, 0, 0.03);
 
     overflow-y: auto;
@@ -186,16 +187,12 @@
     &:hover::-webkit-scrollbar {
       display: block;
     }
+  }
 
-    &.sidebar__list--pinned {
-      padding-bottom: 0px;
-      padding-top: 0px;
-      border-bottom: 2px solid rgba(255, 255, 255, 0.03);
-
-      &::-webkit-scrollbar {
-        display: block;
-      }
-    }
+  .sidebar__list-separator {
+    height: 2px;
+    background-color: var(--hl-sm);
+    margin: @padding-sm 0;
   }
 
   .sidebar__list--collapsed > * {
@@ -280,7 +277,13 @@
   }
 
   .sidebar__item__icon {
-    padding-right: @padding-sm;
+    &-right {
+      padding-right: @padding-sm;
+    }
+
+    &-x {
+      padding: 0 @padding-sm;
+    }
   }
 
   // ~~~~~~~~~~~~~~~~~ //
@@ -293,7 +296,7 @@
     align-items: center;
     height: 100%;
 
-    & > .editable {
+    & > span {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
