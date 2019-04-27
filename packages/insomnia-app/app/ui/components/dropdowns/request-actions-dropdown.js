@@ -32,8 +32,12 @@ class RequestActionsDropdown extends PureComponent {
     this.props.handleCopyAsCurl(this.props.request);
   }
 
+  _canPin() {
+    return this.props.handleSetRequestPinned !== misc.nullFn;
+  }
+
   _handleSetRequestPinned() {
-    if (this.props.handleSetRequestPinned !== misc.nullFn) {
+    if (this._canPin()) {
       this.props.handleSetRequestPinned(this.props.request._id, !this.props.isPinned);
     }
   }
@@ -60,7 +64,7 @@ class RequestActionsDropdown extends PureComponent {
         <DropdownButton>
           <i className="fa fa-caret-down" />
         </DropdownButton>
-        {this.props.handleSetRequestPinned !== misc.nullFn && (
+        {this._canPin() && (
           <DropdownItem onClick={this._handleSetRequestPinned}>
             <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
           </DropdownItem>

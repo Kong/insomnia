@@ -57,8 +57,12 @@ class RequestGroupActionsDropdown extends PureComponent {
     showModal(EnvironmentEditModal, this.props.requestGroup);
   }
 
+  _canPin() {
+    return this.props.handleSetRequestGroupPinned !== misc.nullFn;
+  }
+
   _handleSetRequestGroupPinned() {
-    if (this.props.handleSetRequestGroupPinned !== misc.nullFn) {
+    if (this._canPin()) {
       this.props.handleSetRequestGroupPinned(this.props.requestGroup._id, !this.props.isPinned);
     }
   }
@@ -88,7 +92,7 @@ class RequestGroupActionsDropdown extends PureComponent {
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]} />
         </DropdownItem>
         <DropdownDivider />
-        {this.props.handleSetRequestGroupPinned !== misc.nullFn && (
+        {this._canPin() && (
           <DropdownItem onClick={this._handleSetRequestGroupPinned}>
             <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
           </DropdownItem>
