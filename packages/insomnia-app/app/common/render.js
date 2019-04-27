@@ -193,7 +193,7 @@ export async function getRenderContext(
   request: Request,
   environmentId: string,
   ancestors: Array<BaseModel> | null = null,
-  purpose: string | null = null,
+  purpose: RenderPurpose | null = null,
 ): Promise<Object> {
   if (!ancestors) {
     ancestors = await db.withAncestors(request, [
@@ -218,7 +218,7 @@ export async function getRenderContext(
     keySource[key] = 'root';
   }
   if (subEnvironment) {
-    for (let key in subEnvironment.data || {}) {
+    for (const key of Object.keys(subEnvironment.data || {})) {
       if (subEnvironment.name) {
         keySource[key] = subEnvironment.name;
       }
@@ -232,7 +232,7 @@ export async function getRenderContext(
         ancestor.hasOwnProperty('environment') &&
         ancestor.hasOwnProperty('name')
       ) {
-        for (let key in ancestor.environment || {}) {
+        for (const key of Object.keys(ancestor.environment || {})) {
           keySource[key] = ancestor.name || '';
         }
       }
@@ -252,6 +252,8 @@ export async function getRenderContext(
 
   baseContext.getPurpose = () => purpose;
 
+  baseContext.getEnvironmentId = () => environmentId;
+
   // Generate the context we need to render
   return buildRenderContext(ancestors, rootEnvironment, subEnvironment, baseContext);
 }
@@ -259,7 +261,7 @@ export async function getRenderContext(
 export async function getRenderedRequestAndContext(
   request: Request,
   environmentId: string,
-  purpose?: string,
+  purpose?: RenderPurpose,
 ): Promise<{ request: RenderedRequest, context: Object }> {
   const ancestors = await db.withAncestors(request, [
     models.request.type,
@@ -315,7 +317,6 @@ export async function getRenderedRequestAndContext(
     context: renderContext,
     request: {
       // Add the yummy cookies
-      // TODO: Eventually get rid of RenderedRequest type and put these elsewhere
       cookieJar: renderedCookieJar,
       cookies: [],
       isPrivate: false,
@@ -349,7 +350,7 @@ export async function getRenderedRequestAndContext(
 export async function getRenderedRequest(
   request: Request,
   environmentId: string,
-  purpose?: string,
+  purpose?: RenderPurpose,
 ): Promise<RenderedRequest> {
   const result = await getRenderedRequestAndContext(request, environmentId, purpose);
   return result.request;
