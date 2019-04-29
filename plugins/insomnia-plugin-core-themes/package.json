@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-core-themes",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Insomnia core themes",
   "license": "MIT",
@@ -14,6 +14,5 @@
   },
   "scripts": {
     "test": "node --version"
-  },
-  "dependencies": {}
+  }
 }
