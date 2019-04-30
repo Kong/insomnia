@@ -44,7 +44,7 @@ class General extends React.PureComponent<Props, State> {
   async componentDidMount() {
     const allFonts = await fontScanner.getAvailableFonts();
     const fonts = allFonts
-      .filter(i => i.style.toLowerCase() === 'regular' && !i.italic)
+      .filter(i => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)
       .sort((a, b) => (a.family > b.family ? 1 : -1));
 
     this.setState({ fonts });
