@@ -204,7 +204,12 @@ function isOnExpandTag(monitor, component) {
   const rect = component.getExpandTag().getBoundingClientRect();
   const pointer = monitor.getClientOffset();
 
-  return rect.left <= pointer.x && pointer.x <= rect.right;
+  return (
+    rect.left <= pointer.x &&
+    pointer.x <= rect.right &&
+    rect.top <= pointer.y &&
+    pointer.y <= rect.bottom
+  );
 }
 
 const dragTarget = {
