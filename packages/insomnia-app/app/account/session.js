@@ -190,7 +190,7 @@ export async function listTeams() {
 }
 
 export async function endTrial() {
-  await fetch.put('/api/billing/end-trial', getCurrentSessionId());
+  await fetch.put('/api/billing/end-trial', null, getCurrentSessionId());
 }
 
 // ~~~~~~~~~~~~~~~~ //

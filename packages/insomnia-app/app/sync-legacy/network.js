@@ -27,7 +27,7 @@ export async function syncPush(body) {
 }
 
 export async function syncResetData() {
-  return fetch.post('/auth/reset', session.getCurrentSessionId());
+  return fetch.post('/auth/reset', null, session.getCurrentSessionId());
 }
 
 export async function syncFixDupes(resourceGroupIds) {
@@ -37,6 +37,7 @@ export async function syncFixDupes(resourceGroupIds) {
 export async function unshareWithAllTeams(resourceGroupId) {
   return fetch.put(
     `/api/resource_groups/${resourceGroupId}/unshare`,
+    null,
     session.getCurrentSessionId(),
   );
 }
