@@ -14,10 +14,11 @@ import type { Environment } from '../models/environment';
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
 
-export type RenderPurpose = 'send' | 'general';
+export type RenderPurpose = 'send' | 'general' | 'no-render';
 
 export const RENDER_PURPOSE_SEND: RenderPurpose = 'send';
 export const RENDER_PURPOSE_GENERAL: RenderPurpose = 'general';
+export const RENDER_PURPOSE_NO_RENDER: RenderPurpose = 'no-render';
 
 export type RenderedRequest = Request & {
   cookies: Array<{ name: string, value: string, disabled?: boolean }>,

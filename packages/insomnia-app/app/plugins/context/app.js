@@ -2,13 +2,17 @@
 import * as electron from 'electron';
 import { showAlert, showPrompt } from '../../ui/components/modals/index';
 import type { RenderPurpose } from '../../common/render';
-import { RENDER_PURPOSE_GENERAL, RENDER_PURPOSE_SEND } from '../../common/render';
+import {
+  RENDER_PURPOSE_GENERAL,
+  RENDER_PURPOSE_NO_RENDER,
+  RENDER_PURPOSE_SEND,
+} from '../../common/render';
 
 export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { app: Object } {
   return {
     app: {
       alert(title: string, message?: string): Promise<void> {
-        if (renderPurpose !== RENDER_PURPOSE_SEND) {
+        if (renderPurpose !== RENDER_PURPOSE_SEND && renderPurpose !== RENDER_PURPOSE_NO_RENDER) {
           return Promise.resolve();
         }
 

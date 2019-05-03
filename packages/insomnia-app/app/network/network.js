@@ -4,7 +4,11 @@ import type { Request, RequestHeader } from '../models/request';
 import type { Workspace } from '../models/workspace';
 import type { Settings } from '../models/settings';
 import type { RenderedRequest } from '../common/render';
-import { getRenderedRequestAndContext, RENDER_PURPOSE_SEND } from '../common/render';
+import {
+  getRenderedRequestAndContext,
+  RENDER_PURPOSE_NO_RENDER,
+  RENDER_PURPOSE_SEND,
+} from '../common/render';
 import mkdirp from 'mkdirp';
 import crypto from 'crypto';
 import clone from 'clone';
@@ -872,7 +876,7 @@ async function _applyRequestPluginHooks(
   const newRenderedRequest = clone(renderedRequest);
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
-      ...pluginContexts.app.init(),
+      ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
       ...pluginContexts.store.init(plugin),
       ...pluginContexts.request.init(newRenderedRequest, renderedContext),
     };
@@ -898,7 +902,7 @@ async function _applyResponsePluginHooks(
 
   for (const { plugin, hook } of await plugins.getResponseHooks()) {
     const context = {
-      ...pluginContexts.app.init(),
+      ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
       ...pluginContexts.store.init(plugin),
       ...pluginContexts.response.init(newResponse),
       ...pluginContexts.request.init(newRequest, renderContext, true),
