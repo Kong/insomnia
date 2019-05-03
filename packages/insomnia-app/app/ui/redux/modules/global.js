@@ -395,8 +395,8 @@ export function exportRequestsToFile(requestIds) {
                 'yaml',
               );
             } else if (selectedFormat === VALUE_POSTMAN_LATEST) {
-              json = await importUtils.exportLatestPostmanCollection(
-                workspace,
+              stringifiedExport = await importUtils.exportLatestPostmanCollection(
+                requests,
                 exportPrivateEnvironments,
               );
             } else {
