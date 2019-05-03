@@ -93,15 +93,14 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
         <Dropdown ref={this._setDropdownRef} {...other} className={className}>
           <DropdownButton className="btn btn--super-compact no-wrap">
             <div className="sidebar__menu__thing">
-              {!activeEnvironment &&
-                subEnvironments.length > 0 && (
-                  <Tooltip
-                    message="No environments active. Please select one to use."
-                    className="space-right"
-                    position="right">
-                    <i className="fa fa-exclamation-triangle notice" />
-                  </Tooltip>
-                )}
+              {!activeEnvironment && subEnvironments.length > 0 && (
+                <Tooltip
+                  message="No environments active. Please select one to use."
+                  className="space-right"
+                  position="right">
+                  <i className="fa fa-exclamation-triangle notice" />
+                </Tooltip>
+              )}
               <div className="sidebar__menu__thing__text">
                 {activeEnvironment &&
                 activeEnvironment.color &&

@@ -40,8 +40,6 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 
 @autobind
 class OAuth1Auth extends React.PureComponent<Props> {
-  _handleChangeProperty: Function;
-
   _handleEditPrivateKey() {
     const { handleRender, handleGetRenderContext, request } = this.props;
     const { privateKey } = request.authentication;

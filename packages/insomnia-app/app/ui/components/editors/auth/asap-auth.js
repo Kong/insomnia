@@ -127,11 +127,7 @@ class AsapAuth extends React.PureComponent<Props> {
   }
 
   _handleEditPrivateKey() {
-    const {
-      handleRender,
-      handleGetRenderContext,
-      request,
-    } = this.props;
+    const { handleRender, handleGetRenderContext, request } = this.props;
 
     const { authentication } = request;
 
@@ -171,7 +167,7 @@ class AsapAuth extends React.PureComponent<Props> {
               },
             )}>
             <button className="btn btn--clicky wide" onClick={this._handleEditPrivateKey}>
-              <i className="fa fa-edit space-right"/>
+              <i className="fa fa-edit space-right" />
               {authentication.privateKey ? 'Click to Edit' : 'Click to Add'}
             </button>
           </div>
@@ -188,30 +184,30 @@ class AsapAuth extends React.PureComponent<Props> {
       <div className="pad">
         <table>
           <tbody>
-          {fields}
-          <tr>
-            <td className="pad-right no-wrap valign-middle">
-              <label htmlFor="enabled" className="label--small no-pad">
-                Enabled
-              </label>
-            </td>
-            <td className="wide">
-              <div className="form-control form-control--underlined">
-                <Button
-                  className="btn btn--super-duper-compact"
-                  id="enabled"
-                  onClick={this._handleDisable}
-                  value={!authentication.disabled}
-                  title={authentication.disabled ? 'Enable item' : 'Disable item'}>
-                  {authentication.disabled ? (
-                    <i className="fa fa-square-o"/>
-                  ) : (
-                    <i className="fa fa-check-square-o"/>
-                  )}
-                </Button>
-              </div>
-            </td>
-          </tr>
+            {fields}
+            <tr>
+              <td className="pad-right no-wrap valign-middle">
+                <label htmlFor="enabled" className="label--small no-pad">
+                  Enabled
+                </label>
+              </td>
+              <td className="wide">
+                <div className="form-control form-control--underlined">
+                  <Button
+                    className="btn btn--super-duper-compact"
+                    id="enabled"
+                    onClick={this._handleDisable}
+                    value={!authentication.disabled}
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+                    {authentication.disabled ? (
+                      <i className="fa fa-square-o" />
+                    ) : (
+                      <i className="fa fa-check-square-o" />
+                    )}
+                  </Button>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

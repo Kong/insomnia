@@ -68,6 +68,7 @@ class RequestActionsDropdown extends PureComponent {
         </DropdownItem>
         <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon>
           <i className="fa fa-trash-o" /> Delete
+          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_DELETE.id]} />
         </DropdownItem>
 
         <DropdownDivider />

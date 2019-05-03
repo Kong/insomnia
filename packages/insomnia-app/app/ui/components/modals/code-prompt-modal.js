@@ -135,42 +135,22 @@ class CodePromptModal extends PureComponent {
           ) : (
             <div className="pad-sm pad-bottom tall">
               <div className="form-control form-control--outlined form-control--tall tall">
-                {isVariableUncovered && (
-                  <CodeEditor
-                    hideLineNumbers
-                    className="tall"
-                    defaultValue={defaultValue}
-                    placeholder={placeholder}
-                    onChange={this._handleChange}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
-                    isVariableUncovered={isVariableUncovered}
-                    getRenderContext={enableRender ? handleGetRenderContext : null}
-                    render={enableRender ? handleRender : null}
-                    mode={mode}
-                    keyMap={editorKeyMap}
-                    indentSize={editorIndentSize}
-                    fontSize={editorFontSize}
-                    lineWrapping={editorLineWrapping}
-                  />
-                )}
-                {!isVariableUncovered && (
-                  <CodeEditor
-                    hideLineNumbers
-                    className="tall"
-                    defaultValue={defaultValue}
-                    placeholder={placeholder}
-                    onChange={this._handleChange}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
-                    isVariableUncovered={isVariableUncovered}
-                    getRenderContext={enableRender ? handleGetRenderContext : null}
-                    render={enableRender ? handleRender : null}
-                    mode={mode}
-                    keyMap={editorKeyMap}
-                    indentSize={editorIndentSize}
-                    fontSize={editorFontSize}
-                    lineWrapping={editorLineWrapping}
-                  />
-                )}
+                <CodeEditor
+                  hideLineNumbers
+                  className="tall"
+                  defaultValue={defaultValue}
+                  placeholder={placeholder}
+                  onChange={this._handleChange}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  isVariableUncovered={isVariableUncovered}
+                  getRenderContext={enableRender ? handleGetRenderContext : null}
+                  render={enableRender ? handleRender : null}
+                  mode={mode}
+                  keyMap={editorKeyMap}
+                  indentSize={editorIndentSize}
+                  fontSize={editorFontSize}
+                  lineWrapping={editorLineWrapping}
+                />
               </div>
             </div>
           )}

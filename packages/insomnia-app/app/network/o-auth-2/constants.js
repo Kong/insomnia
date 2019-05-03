@@ -10,6 +10,7 @@ export const RESPONSE_TYPE_TOKEN = 'token';
 export const RESPONSE_TYPE_ID_TOKEN_TOKEN = 'id_token token';
 
 export const P_ACCESS_TOKEN = 'access_token';
+export const P_ID_TOKEN = 'id_token';
 export const P_CLIENT_ID = 'client_id';
 export const P_CLIENT_SECRET = 'client_secret';
 export const P_AUDIENCE = 'audience';

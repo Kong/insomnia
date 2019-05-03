@@ -1,37 +1,58 @@
 // @flow
 import * as React from 'react';
 import classnames from 'classnames';
-import { ALT_SYM, CTRL_SYM, isMac, joinHotKeys, META_SYM, SHIFT_SYM } from '../../common/constants';
-import type { KeyBindings } from '../../common/hotkeys';
-import * as hotkeys from '../../common/hotkeys';
+import { isMac } from '../../common/constants';
+import type { KeyBindings, KeyCombination } from '../../common/hotkeys';
+import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
 
 type Props = {
-  keyBindings: KeyBindings,
+  // One of these two must be given.
+  // If both is given, keyCombination will be used.
+  keyCombination?: KeyCombination,
+  keyBindings?: KeyBindings,
 
   // Optional
   className?: string,
+  // Show fallback message if keyCombination is not given,
+  // but keyBindings has no key combinations.
+  useFallbackMessage?: boolean,
 };
 
 class Hotkey extends React.PureComponent<Props> {
   render() {
-    const { keyBindings, className } = this.props;
+    const { keyCombination, keyBindings, className, useFallbackMessage } = this.props;
 
-    const keyComb = hotkeys.getPlatformKeyCombinations(keyBindings)[0];
-    const { ctrl, alt, shift, meta, keyCode } = keyComb;
-    const chars = [];
+    if (keyCombination == null && keyBindings == null) {
+      console.error(`Hotkey needs one of keyCombination or keyBindings!`);
+      return null;
+    }
 
-    alt && chars.push(ALT_SYM);
-    shift && chars.push(SHIFT_SYM);
-    ctrl && chars.push(CTRL_SYM);
-    meta && chars.push(META_SYM);
+    let keyComb = null;
+    if (keyCombination != null) {
+      keyComb = keyCombination;
+    } else if (keyBindings != null) {
+      const keyCombs = getPlatformKeyCombinations(keyBindings);
+      // Only take the first key combination if there is a mapping.
+      if (keyCombs.length > 0) {
+        keyComb = keyCombs[0];
+      }
+    }
 
-    chars.push(hotkeys.getChar(keyCode));
+    let display = '';
+    if (keyComb != null) {
+      display = constructKeyCombinationDisplay(keyComb, false);
+    }
 
-    return (
-      <span className={classnames(className, { 'font-normal': isMac() })}>
-        {joinHotKeys(chars)}
-      </span>
-    );
+    const isFallback = display.length === 0 && useFallbackMessage;
+    if (isFallback) {
+      display = 'Not defined';
+    }
+    const classes = {
+      'font-normal': isMac(),
+      italic: isFallback,
+    };
+
+    return <span className={classnames(className, classes)}>{display}</span>;
   }
 }
 

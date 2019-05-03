@@ -441,21 +441,25 @@ function getResponseContent(response: ResponseModel): HarContent {
 }
 
 function getResponseHeaders(response: ResponseModel): Array<HarHeader> {
-  return response.headers.filter(header => header.name).map(h => {
-    return {
-      name: h.name,
-      value: h.value,
-    };
-  });
+  return response.headers
+    .filter(header => header.name)
+    .map(h => {
+      return {
+        name: h.name,
+        value: h.value,
+      };
+    });
 }
 
 function getRequestHeaders(renderedRequest: RenderedRequest): Array<HarHeader> {
-  return renderedRequest.headers.filter(header => header.name).map(header => {
-    return {
-      name: header.name,
-      value: header.value,
-    };
-  });
+  return renderedRequest.headers
+    .filter(header => header.name)
+    .map(header => {
+      return {
+        name: header.name,
+        value: header.value,
+      };
+    });
 }
 
 function getRequestQueryString(renderedRequest: RenderedRequest): Array<HarQueryString> {

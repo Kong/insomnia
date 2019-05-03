@@ -104,7 +104,7 @@ class ResponsePane extends React.PureComponent<Props> {
     });
   }
 
-  _handleDownloadFullResponseBody() {
+  async _handleDownloadFullResponseBody() {
     const { response, request } = this.props;
 
     if (!response || !request) {
@@ -113,7 +113,8 @@ class ResponsePane extends React.PureComponent<Props> {
       return;
     }
 
-    const headers = response.timeline
+    const timeline = await models.response.getTimeline(response);
+    const headers = timeline
       .filter(v => v.name === 'HEADER_IN')
       .map(v => v.value)
       .join('');
@@ -200,7 +201,10 @@ class ResponsePane extends React.PureComponent<Props> {
                     <td>Send Request</td>
                     <td className="text-right">
                       <code>
-                        <Hotkey keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]} />
+                        <Hotkey
+                          keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]}
+                          useFallbackMessage
+                        />
                       </code>
                     </td>
                   </tr>
@@ -208,7 +212,10 @@ class ResponsePane extends React.PureComponent<Props> {
                     <td>Focus Url Bar</td>
                     <td className="text-right">
                       <code>
-                        <Hotkey keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_FOCUS_URL.id]} />
+                        <Hotkey
+                          keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_FOCUS_URL.id]}
+                          useFallbackMessage
+                        />
                       </code>
                     </td>
                   </tr>
@@ -216,7 +223,10 @@ class ResponsePane extends React.PureComponent<Props> {
                     <td>Manage Cookies</td>
                     <td className="text-right">
                       <code>
-                        <Hotkey keyBindings={hotKeyRegistry[hotKeyRefs.SHOW_COOKIES_EDITOR.id]} />
+                        <Hotkey
+                          keyBindings={hotKeyRegistry[hotKeyRefs.SHOW_COOKIES_EDITOR.id]}
+                          useFallbackMessage
+                        />
                       </code>
                     </td>
                   </tr>
@@ -226,6 +236,7 @@ class ResponsePane extends React.PureComponent<Props> {
                       <code>
                         <Hotkey
                           keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]}
+                          useFallbackMessage
                         />
                       </code>
                     </td>
@@ -255,6 +266,7 @@ class ResponsePane extends React.PureComponent<Props> {
               activeResponse={response}
               responses={responses}
               requestId={request._id}
+              requestMethod={request.method}
               handleSetActiveResponse={handleSetActiveResponse}
               handleDeleteResponses={handleDeleteResponses}
               handleDeleteResponse={handleDeleteResponse}
@@ -341,7 +353,7 @@ class ResponsePane extends React.PureComponent<Props> {
           <TabPanel className="react-tabs__tab-panel">
             <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseTimelineViewer
-                timeline={response.timeline || []}
+                response={response}
                 editorLineWrapping={editorLineWrapping}
                 editorFontSize={editorFontSize}
                 editorIndentSize={editorIndentSize}

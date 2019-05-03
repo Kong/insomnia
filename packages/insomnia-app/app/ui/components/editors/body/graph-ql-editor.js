@@ -68,7 +68,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   _isMounted: boolean;
   _queryEditor: null | CodeMirror;
   _schemaFetchTimeout: TimeoutID;
-  _highlightTimeout: TimeoutID;
 
   constructor(props: Props) {
     super(props);
@@ -338,7 +337,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _getOperations() {
+  _getOperations(): Array<any> {
     if (!this._documentAST) {
       return [];
     }
@@ -347,12 +346,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _handleBodyChange(query: string, variables: ?Object, operationName: ?string): void {
-    try {
-      this._documentAST = parse(query);
-    } catch (e) {
-      this._documentAST = null;
-    }
-
     const body: GraphQLBody = { query };
 
     if (variables) {
@@ -363,13 +356,27 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       body.operationName = operationName;
     }
 
+    const newContent = GraphQLEditor._graphQLToString(body);
+
+    // This method gets called a lot so make sure we only do something if the
+    // new body has actually changed.
+    if (this.props.content === newContent) {
+      return;
+    }
+
     this.setState({
       variablesSyntaxError: '',
       body,
     });
 
-    this.props.onChange(GraphQLEditor._graphQLToString(body));
+    this.props.onChange(newContent);
     this._highlightOperation(body.operationName || null);
+
+    try {
+      this._documentAST = parse(query);
+    } catch (e) {
+      this._documentAST = null;
+    }
   }
 
   _handleQueryChange(query: string): void {
@@ -551,23 +558,22 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           />
         </div>
         <div className="graphql-editor__schema-error">
-          {!hideSchemaFetchErrors &&
-            schemaFetchError && (
-              <div className="notice error margin no-margin-top margin-bottom-sm">
-                <div className="pull-right">
-                  <Tooltip position="top" message="View introspection request/response timeline">
-                    <button className="icon icon--success" onClick={this._handleViewResponse}>
-                      <i className="fa fa-bug" />
-                    </button>
-                  </Tooltip>{' '}
-                  <button className="icon" onClick={this._hideSchemaFetchError}>
-                    <i className="fa fa-times" />
+          {!hideSchemaFetchErrors && schemaFetchError && (
+            <div className="notice error margin no-margin-top margin-bottom-sm">
+              <div className="pull-right">
+                <Tooltip position="top" message="View introspection request/response timeline">
+                  <button className="icon icon--success" onClick={this._handleViewResponse}>
+                    <i className="fa fa-bug" />
                   </button>
-                </div>
-                {schemaFetchError.message}
-                <br />
+                </Tooltip>{' '}
+                <button className="icon" onClick={this._hideSchemaFetchError}>
+                  <i className="fa fa-times" />
+                </button>
               </div>
-            )}
+              {schemaFetchError.message}
+              <br />
+            </div>
+          )}
         </div>
         <div className="graphql-editor__meta">
           {this.renderSchemaFetchMessage()}
@@ -576,63 +582,37 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
           Query Variables
           <HelpTooltip className="space-left">
-            Variables to use in GraphQL query <br />(JSON format)
+            Variables to use in GraphQL query <br />
+            (JSON format)
           </HelpTooltip>
           {variablesSyntaxError && (
             <span className="text-danger italic pull-right">{variablesSyntaxError}</span>
           )}
         </h2>
         <div className="graphql-editor__variables">
-          {isVariableUncovered && (
-            <CodeEditor
-              dynamicHeight
-              uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
-              debounceMillis={DEBOUNCE_MILLIS * 4}
-              manualPrettify={false}
-              fontSize={settings.editorFontSize}
-              indentSize={settings.editorIndentSize}
-              keyMap={settings.editorKeyMap}
-              defaultValue={variables}
-              className={className}
-              render={render}
-              getRenderContext={getRenderContext}
-              getAutocompleteConstants={() => Object.keys(variableTypes || {})}
-              lintOptions={{
-                variableToType: variableTypes,
-              }}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              isVariableUncovered={isVariableUncovered}
-              onChange={this._handleVariablesChange}
-              mode="graphql-variables"
-              lineWrapping={settings.editorLineWrapping}
-              placeholder=""
-            />
-          )}
-          {!isVariableUncovered && (
-            <CodeEditor
-              dynamicHeight
-              uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
-              debounceMillis={DEBOUNCE_MILLIS * 4}
-              manualPrettify={false}
-              fontSize={settings.editorFontSize}
-              indentSize={settings.editorIndentSize}
-              keyMap={settings.editorKeyMap}
-              defaultValue={variables}
-              className={className}
-              render={render}
-              getRenderContext={getRenderContext}
-              getAutocompleteConstants={() => Object.keys(variableTypes || {})}
-              lintOptions={{
-                variableToType: variableTypes,
-              }}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              isVariableUncovered={isVariableUncovered}
-              onChange={this._handleVariablesChange}
-              mode="graphql-variables"
-              lineWrapping={settings.editorLineWrapping}
-              placeholder=""
-            />
-          )}
+          <CodeEditor
+            dynamicHeight
+            uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
+            debounceMillis={DEBOUNCE_MILLIS * 4}
+            manualPrettify={false}
+            fontSize={settings.editorFontSize}
+            indentSize={settings.editorIndentSize}
+            keyMap={settings.editorKeyMap}
+            defaultValue={variables}
+            className={className}
+            render={render}
+            getRenderContext={getRenderContext}
+            getAutocompleteConstants={() => Object.keys(variableTypes || {})}
+            lintOptions={{
+              variableToType: variableTypes,
+            }}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
+            onChange={this._handleVariablesChange}
+            mode="graphql-variables"
+            lineWrapping={settings.editorLineWrapping}
+            placeholder=""
+          />
         </div>
         <div className="pane__footer">
           <button className="pull-right btn btn--compact" onClick={this._handlePrettify}>

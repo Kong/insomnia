@@ -27,6 +27,8 @@ class Modal extends PureComponent {
       return;
     }
 
+    this.props.onKeyDown && this.props.onKeyDown(e);
+
     // Don't check for close keys if we don't want them
     if (this.props.noEscape) {
       return;
@@ -75,7 +77,7 @@ class Modal extends PureComponent {
     this._node = n;
   }
 
-  show() {
+  show(options) {
     const { freshState } = this.props;
     const { forceRefreshCounter } = this.state;
 
@@ -88,6 +90,9 @@ class Modal extends PureComponent {
     if (this.props.dontFocus) {
       return;
     }
+
+    // Allow instance-based onHide method
+    this.onHide = options ? options.onHide : null;
 
     setTimeout(() => this._node && this._node.focus());
   }
@@ -107,6 +112,7 @@ class Modal extends PureComponent {
   hide() {
     this.setState({ open: false });
     this.props.onHide && this.props.onHide();
+    this.onHide && this.onHide();
   }
 
   render() {
@@ -138,6 +144,7 @@ class Modal extends PureComponent {
           tabIndex="-1"
           className={classes}
           style={styles}
+          aria-hidden={!open}
           onClick={this._handleClick}>
           <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
           <div className="modal__content__wrapper">
@@ -159,6 +166,7 @@ Modal.propTypes = {
   closeOnKeyCodes: PropTypes.array,
   onHide: PropTypes.func,
   onCancel: PropTypes.func,
+  onKeyDown: PropTypes.func,
   freshState: PropTypes.bool,
   children: PropTypes.node,
   className: PropTypes.string,

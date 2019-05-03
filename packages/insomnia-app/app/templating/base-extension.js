@@ -28,6 +28,10 @@ export default class BaseExtension {
     return this._ext.description || 'no description';
   }
 
+  getDisablePreview() {
+    return this._ext.disablePreview || (() => false);
+  }
+
   getArgs() {
     return this._ext.args || [];
   }
@@ -66,6 +70,9 @@ export default class BaseExtension {
     // Pull out the purpose
     const renderPurpose = renderContext.getPurpose ? renderContext.getPurpose() : null;
 
+    // Pull out the environment ID
+    const environmentId = renderContext.getEnvironmentId ? renderContext.getEnvironmentId() : 'n/a';
+
     // Extract the rest of the args
     const args = runArgs.slice(0, runArgs.length - 1).filter(a => a !== EMPTY_ARG);
 
@@ -73,8 +80,10 @@ export default class BaseExtension {
     const helperContext = {
       ...pluginContexts.app.init(renderPurpose),
       ...pluginContexts.store.init(this._plugin),
+      ...pluginContexts.network.init(environmentId),
       context: renderContext,
       meta: renderMeta,
+      renderPurpose,
       util: {
         render: str => templating.render(str, { context: renderContext }),
         models: {

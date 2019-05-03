@@ -10,7 +10,8 @@ import { showModal } from '../modals/index';
 import FilterHelpModal from '../modals/filter-help-modal';
 import * as misc from '../../../common/misc';
 import prettify from 'insomnia-prettify';
-import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
+import { DEBOUNCE_MILLIS, EDITOR_KEY_MAP_VIM, isMac } from '../../../common/constants';
+import { keyboardKeys as keyCodes } from '../../../common/keyboard-keys';
 import './base-imports';
 import { getTagDefinitions } from '../../../templating/index';
 import Dropdown from '../base/dropdown/dropdown';
@@ -235,6 +236,7 @@ class CodeEditor extends React.Component {
       return;
     }
 
+    window.codeMirror = this.codeMirror;
     editorStates[uniquenessKey] = {
       scroll: this.codeMirror.getScrollInfo(),
       selections: this.codeMirror.listSelections(),
@@ -287,6 +289,7 @@ class CodeEditor extends React.Component {
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorPaste);
     this.codeMirror.on('scroll', this._codemirrorScroll);
+    this.codeMirror.on('keyHandled', this._codemirrorKeyHandled);
 
     // Prevent these things if we're type === "password"
     this.codeMirror.on('copy', this._codemirrorPreventWhenTypePassword);
@@ -664,6 +667,18 @@ class CodeEditor extends React.Component {
     this._persistState();
   }
 
+  _codemirrorKeyHandled(codeMirror, keyName, event) {
+    const { keyMap } = this.props;
+    const { keyCode } = event;
+
+    const isVimKeyMap = keyMap === EDITOR_KEY_MAP_VIM;
+    const pressedEscape = keyCode === keyCodes.esc.keyCode;
+
+    if (isVimKeyMap && pressedEscape) {
+      event.stopPropagation();
+    }
+  }
+
   _codemirrorValueBeforeChange(doc, change) {
     // If we're in single-line mode, merge all changed lines into one
     if (this.props.singleLine && change.text && change.text.length > 1) {
@@ -671,6 +686,11 @@ class CodeEditor extends React.Component {
         .join('') // join all changed lines into one
         .replace(/\n/g, ' '); // Convert all whitespace to spaces
       change.update(change.from, change.to, [text]);
+    }
+
+    // Don't allow non-breaking spaces because they break the GraphQL syntax
+    if (doc.options.mode === 'graphql' && change.text && change.text.length > 1) {
+      change.text = change.text.map(text => text.replace(/\u00A0/g, ' '));
     }
   }
 

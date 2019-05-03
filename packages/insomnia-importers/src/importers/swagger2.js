@@ -1,4 +1,5 @@
 const SwaggerParser = require('swagger-parser');
+const utils = require('../utils');
 
 const SUPPORTED_SWAGGER_VERSION = '2.0';
 const MIMETYPE_JSON = 'application/json';
@@ -17,9 +18,18 @@ module.exports.convert = async function(rawData) {
   requestGroupCount = 1;
 
   // Validate
-  const api = await parseDocument(rawData);
+  let api = await parseDocument(rawData);
   if (!api || api.swagger !== SUPPORTED_SWAGGER_VERSION) {
     return null;
+  }
+
+  // Await here so we catch any exceptions
+  try {
+    api = await SwaggerParser.validate(api);
+  } catch (err) {
+    // We already know it's a Swagger doc so we will try to import it anyway instead
+    // of bailing out here.
+    console.log('[swagger] Import file validation failed', err);
   }
 
   // Import
@@ -67,23 +77,9 @@ module.exports.convert = async function(rawData) {
  */
 async function parseDocument(rawData) {
   try {
-    const api = unthrowableParseJson(rawData) || SwaggerParser.YAML.parse(rawData);
-    if (!api) {
-      return null;
-    }
-
-    // Await here so we catch any exceptions
-    return await SwaggerParser.validate(api);
+    return utils.unthrowableParseJson(rawData) || SwaggerParser.YAML.parse(rawData);
   } catch (err) {
     return null;
-  }
-
-  function unthrowableParseJson(rawData) {
-    try {
-      return JSON.parse(rawData);
-    } catch (err) {
-      return null;
-    }
   }
 }
 
@@ -108,7 +104,7 @@ function parseEndpoints(document) {
         .filter(method => method !== 'parameters')
         .map(method => Object.assign({}, schemasPerMethod[method], { path, method }));
     })
-    .reduce((flat, arr) => flat.concat(arr), []); //flat single array
+    .reduce((flat, arr) => flat.concat(arr), []); // flat single array
 
   const tags = document.tags || [];
   const folders = tags.map(tag => {
@@ -120,7 +116,7 @@ function parseEndpoints(document) {
   const requests = [];
   endpointsSchemas.map(endpointSchema => {
     let { tags } = endpointSchema;
-    if (!tags || tags.length == 0) tags = [''];
+    if (!tags || tags.length === 0) tags = [''];
     tags.forEach((tag, index) => {
       let id = endpointSchema.operationId
         ? `${endpointSchema.operationId}${index > 0 ? index : ''}`
@@ -329,6 +325,11 @@ function generateParameterExample(schema) {
     }
 
     const factory = typeExamples[`${type}_${format}`] || typeExamples[type];
+
+    if (!factory) {
+      return null;
+    }
+
     return factory(schema);
   }
 }

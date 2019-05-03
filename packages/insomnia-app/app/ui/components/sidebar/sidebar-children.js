@@ -37,7 +37,7 @@ type Props = {
 };
 
 class SidebarChildren extends React.PureComponent<Props> {
-  _renderChildren(children: Array<Child>) {
+  _renderChildren(children: Array<Child>): React.Node {
     const {
       filter,
       handleCreateRequest,

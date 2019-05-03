@@ -23,6 +23,7 @@ type BaseSettings = {
   autoHideMenuBar: boolean,
   theme: string,
   maxRedirects: number,
+  maxHistoryResponses: number,
   pluginPath: string,
   nunjucksPowerUserMode: boolean,
   deviceId: string | null,
@@ -35,6 +36,10 @@ type BaseSettings = {
   fontInterface: string | null,
   fontSize: number,
   fontVariantLigatures: boolean,
+  maxTimelineDataSizeKB: number,
+
+  // Feature flags
+  enableSyncBeta: boolean,
   hotKeyRegistry: hotkeys.HotKeyRegistry,
 };
 
@@ -44,6 +49,7 @@ export const name = 'Settings';
 export const type = 'Settings';
 export const prefix = 'set';
 export const canDuplicate = false;
+export const canSync = false;
 
 export function init(): BaseSettings {
   return {
@@ -59,6 +65,7 @@ export function init(): BaseSettings {
     httpsProxy: '',
     noProxy: '',
     maxRedirects: -1,
+    maxHistoryResponses: 20,
     proxyEnabled: false,
     timeout: 0,
     validateSSL: true,
@@ -77,11 +84,14 @@ export function init(): BaseSettings {
     fontInterface: null,
     fontSize: 13,
     fontVariantLigatures: false,
+    maxTimelineDataSizeKB: 10,
+    enableSyncBeta: false,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
   };
 }
 
 export function migrate(doc: Settings): Settings {
+  doc = migrateEnsureHotKeys(doc);
   return doc;
 }
 
@@ -109,4 +119,15 @@ export async function getOrCreate(patch: Object = {}): Promise<Settings> {
   } else {
     return results[0];
   }
+}
+
+/**
+ * Ensure map is updated when new hotkeys are added
+ */
+function migrateEnsureHotKeys(settings: Settings): Settings {
+  settings.hotKeyRegistry = {
+    ...hotkeys.newDefaultRegistry(),
+    ...settings.hotKeyRegistry,
+  };
+  return settings;
 }

@@ -21,7 +21,22 @@ CodeMirror.defineExtension('makeLinksClickable', function(handleClick) {
     },
   });
 
-  this.getWrapperElement().addEventListener('click', e => {
+  const el = this.getWrapperElement();
+  let movedDuringClick = false;
+
+  el.addEventListener('mousemove', e => {
+    movedDuringClick = true;
+  });
+
+  el.addEventListener('mousedown', e => {
+    movedDuringClick = false;
+  });
+
+  el.addEventListener('mouseup', e => {
+    if (movedDuringClick) {
+      return;
+    }
+
     const cls = e.target.className;
     if (cls.indexOf('cm-clickable') >= 0) {
       handleClick(entities.decode(e.target.innerHTML));

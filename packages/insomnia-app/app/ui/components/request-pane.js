@@ -185,7 +185,10 @@ class RequestPane extends React.PureComponent<Props> {
                     <td>New Request</td>
                     <td className="text-right">
                       <code>
-                        <Hotkey keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]} />
+                        <Hotkey
+                          keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]}
+                          useFallbackMessage
+                        />
                       </code>
                     </td>
                   </tr>
@@ -193,7 +196,10 @@ class RequestPane extends React.PureComponent<Props> {
                     <td>Switch Requests</td>
                     <td className="text-right">
                       <code>
-                        <Hotkey keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_QUICK_SWITCH.id]} />
+                        <Hotkey
+                          keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_QUICK_SWITCH.id]}
+                          useFallbackMessage
+                        />
                       </code>
                     </td>
                   </tr>
@@ -203,6 +209,7 @@ class RequestPane extends React.PureComponent<Props> {
                       <code>
                         <Hotkey
                           keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]}
+                          useFallbackMessage
                         />
                       </code>
                     </td>

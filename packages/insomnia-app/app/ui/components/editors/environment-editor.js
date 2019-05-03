@@ -99,42 +99,22 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
     return (
       <div className="environment-editor">
-        {isVariableUncovered && (
-          <CodeEditor
-            ref={this._setEditorRef}
-            autoPrettify
-            fontSize={editorFontSize}
-            indentSize={editorIndentSize}
-            lineWrapping={lineWrapping}
-            keyMap={editorKeyMap}
-            onChange={this._handleChange}
-            defaultValue={JSON.stringify(environment)}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-            render={render}
-            getRenderContext={getRenderContext}
-            mode="application/json"
-            {...props}
-          />
-        )}
-        {!isVariableUncovered && (
-          <CodeEditor
-            ref={this._setEditorRef}
-            autoPrettify
-            fontSize={editorFontSize}
-            indentSize={editorIndentSize}
-            lineWrapping={lineWrapping}
-            keyMap={editorKeyMap}
-            onChange={this._handleChange}
-            defaultValue={JSON.stringify(environment)}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-            render={render}
-            getRenderContext={getRenderContext}
-            mode="application/json"
-            {...props}
-          />
-        )}
+        <CodeEditor
+          ref={this._setEditorRef}
+          autoPrettify
+          fontSize={editorFontSize}
+          indentSize={editorIndentSize}
+          lineWrapping={lineWrapping}
+          keyMap={editorKeyMap}
+          onChange={this._handleChange}
+          defaultValue={JSON.stringify(environment)}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
+          isVariableUncovered={isVariableUncovered}
+          render={render}
+          getRenderContext={getRenderContext}
+          mode="application/json"
+          {...props}
+        />
         {error && <p className="notice error margin">{error}</p>}
         {!error && warning && <p className="notice warning margin">{warning}</p>}
       </div>

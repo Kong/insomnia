@@ -171,3 +171,25 @@ describe('fuzzyMatchAll()', () => {
     expect(misc.fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])).toEqual(null);
   });
 });
+
+describe('chunkArray()', () => {
+  it('works with exact divisor', () => {
+    const chunks = misc.chunkArray([1, 2, 3, 4, 5, 6], 3);
+    expect(chunks).toEqual([[1, 2, 3], [4, 5, 6]]);
+  });
+
+  it('works with weird divisor', () => {
+    const chunks = misc.chunkArray([1, 2, 3, 4, 5, 6], 4);
+    expect(chunks).toEqual([[1, 2, 3, 4], [5, 6]]);
+  });
+
+  it('works with empty', () => {
+    const chunks = misc.chunkArray([], 4);
+    expect(chunks).toEqual([]);
+  });
+
+  it('works with less than one chunk', () => {
+    const chunks = misc.chunkArray([1, 2], 4);
+    expect(chunks).toEqual([[1, 2]]);
+  });
+});
