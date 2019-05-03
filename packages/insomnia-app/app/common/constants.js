@@ -264,7 +264,7 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   402: 'This response code is reserved for future use. Initial aim for creating this code was using it for digital payment systems however this is not used currently.',
   403: 'Client does not have access rights to the content so server is rejecting to give proper response.',
   404: 'Server can not find requested resource. This response code probably is most famous one due to its frequency to occur in web.',
-  405: 'The request method is known by the server but has been disabled and cannot be used. The two mandatory methods, GET and HEAD, must never be disabled and should not return this error code.',
+  405: 'The request method is known by the server but has been disabled and cannot be used.',
   406: "This response is sent when the web server, after performing server-driven content negotiation, doesn't find any content following the criteria given by the user agent.",
   407: 'This is similar to 401 but authentication is needed to be done by a proxy.',
   408: 'This response is sent on an idle connection by some servers, even without any previous request by the client. It means that the server would like to shut down this unused connection. This response is used much more since some browsers, like Chrome or IE9, use HTTP preconnection mechanisms to speed up surfing (see bug 881804, which tracks the future implementation of such a mechanism in Firefox). Also note that some servers merely shut down the connection without sending this message.',
