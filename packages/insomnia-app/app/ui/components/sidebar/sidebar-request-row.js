@@ -125,7 +125,7 @@ class SidebarRequestRow extends PureComponent {
                     <Highlight search={filter} text={value} {...props} />
                   )}
                 />
-                {isPinned && <i className="sidebar__item__icon-x fa fa-thumb-tack" />}
+                {isPinned && <i className="sidebar__item__icon-pin fa fa-thumb-tack" />}
               </div>
             </button>
             <div className="sidebar__actions">

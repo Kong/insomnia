@@ -285,8 +285,9 @@
       padding-right: @padding-sm;
     }
 
-    &-x {
+    &-pin {
       padding: 0 @padding-sm;
+      display: initial;
     }
   }
 
@@ -296,7 +297,7 @@
 
   .sidebar__clickable {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     height: 100%;
 
@@ -391,6 +392,10 @@
   .sidebar__item:hover .sidebar__actions > button,
   .sidebar__item:hover .sidebar__actions > .dropdown > button {
     display: initial;
+  }
+
+  .sidebar__item:hover .sidebar__item__icon-pin {
+    display: none;
   }
 
   // ~~~~~~~~~~~~~~ //
