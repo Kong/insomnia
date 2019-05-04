@@ -18,7 +18,7 @@ type Child = {
 
 export type SidebarChildObjects = {
   pinned: Array<Child>,
-  all: Array<child>,
+  all: Array<Child>,
 };
 
 type Props = {
