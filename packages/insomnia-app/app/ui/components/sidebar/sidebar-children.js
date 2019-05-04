@@ -44,7 +44,7 @@ type Props = {
 };
 
 class SidebarChildren extends React.PureComponent<Props> {
-  _renderChildren(children: Array<Child>): React.Node {
+  _renderChildren(children: Array<Child>, isInPinnedList: boolean): React.Node {
     const {
       filter,
       handleCreateRequest,
@@ -66,7 +66,7 @@ class SidebarChildren extends React.PureComponent<Props> {
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
 
     return children.map(child => {
-      if (child.hidden) {
+      if (!isInPinnedList && child.hidden) {
         return null;
       }
 
@@ -74,7 +74,7 @@ class SidebarChildren extends React.PureComponent<Props> {
         return (
           <SidebarRequestRow
             key={child.doc._id}
-            filter={filter || ''}
+            filter={isInPinnedList ? '' : filter || ''}
             moveDoc={moveDoc}
             handleActivateRequest={handleActivateRequest}
             handleSetRequestPinned={handleSetRequestPinned}
@@ -109,7 +109,7 @@ class SidebarChildren extends React.PureComponent<Props> {
       }
 
       const isActive = hasActiveChild(child.children);
-      const children = this._renderChildren(child.children);
+      const children = this._renderChildren(child.children, isInPinnedList);
 
       return (
         <SidebarRequestGroupRow
@@ -134,10 +134,10 @@ class SidebarChildren extends React.PureComponent<Props> {
     });
   }
 
-  _renderList(children: Array<Child>): React.Node {
+  _renderList(children: Array<Child>, pinnedList: boolean): React.Node {
     return (
       <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
-        {this._renderChildren(children)}
+        {this._renderChildren(children, pinnedList)}
       </ul>
     );
   }
@@ -149,9 +149,9 @@ class SidebarChildren extends React.PureComponent<Props> {
 
     return (
       <React.Fragment>
-        {this._renderList(childObjects.pinned)}
+        {this._renderList(childObjects.pinned, true)}
         <div className={`sidebar__list-separator${showSeparator ? '' : '--invisible'}`} />
-        {this._renderList(childObjects.all)}
+        {this._renderList(childObjects.all, false)}
       </React.Fragment>
     );
   }
