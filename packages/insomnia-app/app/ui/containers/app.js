@@ -439,7 +439,6 @@ class App extends PureComponent {
 
   async _handleSetRequestPinned(request, pinned) {
     App._updateRequestMetaByParentId(request._id, { pinned });
-    models.request.update(request, { parentId: this.props.activeWorkspace._id });
   }
 
   _handleSetResponsePreviewMode(requestId, previewMode) {
