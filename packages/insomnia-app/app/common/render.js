@@ -192,7 +192,7 @@ export async function render<T>(
 
 export async function getRenderContext(
   request: Request,
-  environmentId: string,
+  environmentId: string | null,
   ancestors: Array<BaseModel> | null = null,
   purpose: RenderPurpose | null = null,
 ): Promise<Object> {
@@ -212,7 +212,7 @@ export async function getRenderContext(
   const rootEnvironment = await models.environment.getOrCreateForWorkspaceId(
     workspace ? workspace._id : 'n/a',
   );
-  const subEnvironment = await models.environment.getById(environmentId);
+  const subEnvironment = await models.environment.getById(environmentId || 'n/a');
 
   let keySource = {};
   for (let key in (rootEnvironment || {}).data) {
@@ -261,7 +261,7 @@ export async function getRenderContext(
 
 export async function getRenderedRequestAndContext(
   request: Request,
-  environmentId: string,
+  environmentId: string | null,
   purpose?: RenderPurpose,
 ): Promise<{ request: RenderedRequest, context: Object }> {
   const ancestors = await db.withAncestors(request, [

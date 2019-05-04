@@ -805,7 +805,10 @@ export async function sendWithSettings(
   return _actuallySend(renderResult.request, renderResult.context, workspace, settings);
 }
 
-export async function send(requestId: string, environmentId: string): Promise<ResponsePatch> {
+export async function send(
+  requestId: string,
+  environmentId: string | null,
+): Promise<ResponsePatch> {
   // HACK: wait for all debounces to finish
   /*
    * TODO: Do this in a more robust way

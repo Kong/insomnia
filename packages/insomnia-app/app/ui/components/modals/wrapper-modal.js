@@ -9,6 +9,7 @@ type Props = {};
 type State = {
   title: string,
   body: React.Node,
+  bodyHTML: ?string,
   tall: boolean,
 };
 
@@ -22,6 +23,7 @@ class WrapperModal extends React.PureComponent<Props, State> {
     this.state = {
       title: '',
       body: null,
+      bodyHTML: null,
       tall: false,
     };
   }
@@ -31,10 +33,11 @@ class WrapperModal extends React.PureComponent<Props, State> {
   }
 
   show(options: Object = {}) {
-    const { title, body, tall } = options;
+    const { title, body, bodyHTML, tall } = options;
     this.setState({
       title,
       body,
+      bodyHTML,
       tall: !!tall,
     });
 
@@ -42,12 +45,17 @@ class WrapperModal extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { title, body, tall } = this.state;
+    const { title, body, bodyHTML, tall } = this.state;
+
+    let finalBody = body;
+    if (bodyHTML) {
+      finalBody = <div dangerouslySetInnerHTML={{ __html: bodyHTML }} className="tall wide pad" />;
+    }
 
     return (
       <Modal ref={this._setModalRef} tall={tall}>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
-        <ModalBody>{body}</ModalBody>
+        <ModalBody>{finalBody}</ModalBody>
       </Modal>
     );
   }

@@ -1,12 +1,13 @@
 // @flow
 import * as electron from 'electron';
-import { showAlert, showPrompt } from '../../ui/components/modals/index';
+import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
 import type { RenderPurpose } from '../../common/render';
 import {
   RENDER_PURPOSE_GENERAL,
   RENDER_PURPOSE_NO_RENDER,
   RENDER_PURPOSE_SEND,
 } from '../../common/render';
+import WrapperModal from '../../ui/components/modals/wrapper-modal';
 
 export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { app: Object } {
   return {
@@ -17,6 +18,9 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
         }
 
         return showAlert({ title, message });
+      },
+      showGenericModalDialog(title: string, options?: { html: string } = {}): Promise<void> {
+        return showModal(WrapperModal, { title, bodyHTML: options.html });
       },
       prompt(
         title: string,

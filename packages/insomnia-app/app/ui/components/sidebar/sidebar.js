@@ -129,6 +129,7 @@ class Sidebar extends PureComponent {
           activeRequest={activeRequest}
           filter={filter || ''}
           hotKeyRegistry={hotKeyRegistry}
+          activeEnvironment={activeEnvironment}
         />
 
         {enableSyncBeta && vcs && isLoggedIn() && (

@@ -4,7 +4,7 @@ import { send } from '../../network/network';
 import type { Request } from '../../models/request';
 import * as models from '../../models';
 
-export function init(activeEnvironmentId: string): { network: Object } {
+export function init(activeEnvironmentId: string | null): { network: Object } {
   const network = {
     async sendRequest(request: Request): Promise<Response> {
       const responsePatch = await send(request._id, activeEnvironmentId);

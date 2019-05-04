@@ -12,6 +12,7 @@ describe('init()', () => {
       'alert',
       'getPath',
       'prompt',
+      'showGenericModalDialog',
       'showSaveDialog',
     ]);
   });

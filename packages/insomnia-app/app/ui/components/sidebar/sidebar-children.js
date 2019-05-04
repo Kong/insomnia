@@ -7,6 +7,7 @@ import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
+import type { Environment } from '../../../models/environment';
 
 type Child = {
   doc: Request | RequestGroup,
@@ -31,6 +32,7 @@ type Props = {
   workspace: Workspace,
   filter: string,
   hotKeyRegistry: HotKeyRegistry,
+  activeEnvironment: Environment | null,
 
   // Optional
   activeRequest?: Request,
@@ -53,6 +55,7 @@ class SidebarChildren extends React.PureComponent<Props> {
       activeRequest,
       workspace,
       hotKeyRegistry,
+      activeEnvironment,
     } = this.props;
 
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
@@ -119,6 +122,7 @@ class SidebarChildren extends React.PureComponent<Props> {
           requestGroup={requestGroup}
           hotKeyRegistry={hotKeyRegistry}
           children={children}
+          activeEnvironment={activeEnvironment}
         />
       );
     });

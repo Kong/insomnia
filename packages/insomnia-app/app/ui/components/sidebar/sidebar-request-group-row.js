@@ -64,6 +64,7 @@ class SidebarRequestGroupRow extends PureComponent {
       isDraggingOver,
       workspace,
       hotKeyRegistry,
+      activeEnvironment,
     } = this.props;
 
     const { dragDirection } = this.state;
@@ -117,6 +118,7 @@ class SidebarRequestGroupRow extends PureComponent {
               workspace={workspace}
               requestGroup={requestGroup}
               hotKeyRegistry={hotKeyRegistry}
+              activeEnvironment={activeEnvironment}
               right
             />
           </div>
@@ -176,6 +178,7 @@ SidebarRequestGroupRow.propTypes = {
 
   // Optional
   children: PropTypes.node,
+  activeEnvironment: PropTypes.object,
 };
 
 /**
