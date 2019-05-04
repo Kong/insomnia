@@ -291,7 +291,7 @@ const defaultRegistry: HotKeyRegistry = {
   ),
 
   [hotKeyRefs.REQUEST_TOGGLE_PIN.id]: keyBinds(
-    keyComb(false, false, false, true, keyboardKeys.p.keyCode),
+    keyComb(false, false, true, true, keyboardKeys.p.keyCode),
     keyComb(true, false, true, false, keyboardKeys.p.keyCode),
   ),
 

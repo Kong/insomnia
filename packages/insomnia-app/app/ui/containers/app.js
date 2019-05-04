@@ -218,12 +218,17 @@ class App extends PureComponent {
       [
         hotKeyRefs.REQUEST_TOGGLE_PIN,
         async () => {
+          if (!this.props.activeRequest) {
+            return;
+          }
+
           const metas = Object.values(this.props.entities.requestMetas).filter(
             m => m.parentId === this.props.activeRequest._id,
           );
+
           await this._handleSetRequestPinned(
             this.props.activeRequest,
-            !(metas[0] && metas[0].pinned),
+            !(metas.length > 0 && metas[0].pinned),
           );
         },
       ],
