@@ -215,6 +215,18 @@ class App extends PureComponent {
           await this._requestDuplicate(this.props.activeRequest);
         },
       ],
+      [
+        hotKeyRefs.REQUEST_TOGGLE_PIN,
+        async () => {
+          const metas = Object.values(this.props.entities.requestMetas).filter(
+            m => m.parentId === this.props.activeRequest._id,
+          );
+          await this._handleSetRequestPinned(
+            this.props.activeRequest,
+            !(metas[0] && metas[0].pinned),
+          );
+        },
+      ],
       [hotKeyRefs.SIDEBAR_TOGGLE, this._handleToggleSidebar],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
       [

@@ -64,6 +64,7 @@ class RequestActionsDropdown extends PureComponent {
         </DropdownButton>
         <DropdownItem onClick={this._handleSetRequestPinned}>
           <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
+          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_TOGGLE_PIN.id]} />
         </DropdownItem>
         <DropdownItem onClick={this._handleDuplicate}>
           <i className="fa fa-copy" /> Duplicate
