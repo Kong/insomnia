@@ -144,6 +144,7 @@ class SidebarRequestGroupRow extends PureComponent {
               filter={filter}
               hotKeyRegistry={hotKeyRegistry}
               isPinned={false}
+              isDragAndDropEnabled={false}
             />
           )}
         </ul>

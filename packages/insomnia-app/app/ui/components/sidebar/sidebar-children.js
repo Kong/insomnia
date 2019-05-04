@@ -84,6 +84,7 @@ class SidebarChildren extends React.PureComponent<Props> {
             requestCreate={handleCreateRequest}
             isActive={child.doc._id === activeRequestId}
             isPinned={child.pinned}
+            isDragAndDropEnabled={!isInPinnedList}
             request={child.doc}
             workspace={workspace}
             hotKeyRegistry={hotKeyRegistry}
