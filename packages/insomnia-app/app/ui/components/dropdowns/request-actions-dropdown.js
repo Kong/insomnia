@@ -37,9 +37,7 @@ class RequestActionsDropdown extends PureComponent {
   }
 
   _handleSetRequestPinned() {
-    if (this._canPin()) {
-      this.props.handleSetRequestPinned(this.props.request, !this.props.isPinned);
-    }
+    this.props.handleSetRequestPinned(this.props.request, !this.props.isPinned);
   }
 
   _handleRemove() {
@@ -64,11 +62,9 @@ class RequestActionsDropdown extends PureComponent {
         <DropdownButton>
           <i className="fa fa-caret-down" />
         </DropdownButton>
-        {this._canPin() && (
-          <DropdownItem onClick={this._handleSetRequestPinned}>
-            <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
-          </DropdownItem>
-        )}
+        <DropdownItem onClick={this._handleSetRequestPinned}>
+          <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
+        </DropdownItem>
         <DropdownItem onClick={this._handleDuplicate}>
           <i className="fa fa-copy" /> Duplicate
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_DUPLICATE.id]} />
@@ -106,9 +102,7 @@ RequestActionsDropdown.propTypes = {
   isPinned: PropTypes.bool.isRequired,
   request: PropTypes.object.isRequired,
   hotKeyRegistry: PropTypes.object.isRequired,
-
-  // Optional
-  handleSetRequestPinned: PropTypes.func,
+  handleSetRequestPinned: PropTypes.func.isRequired,
 };
 
 export default RequestActionsDropdown;
