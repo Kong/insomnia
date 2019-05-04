@@ -16,6 +16,11 @@ type Child = {
   pinned: boolean,
 };
 
+export type SidebarChildObjects = {
+  pinned: Array<Child>,
+  all: Array<child>,
+};
+
 type Props = {
   // Required
   handleActivateRequest: Function,
@@ -29,7 +34,7 @@ type Props = {
   handleGenerateCode: Function,
   handleCopyAsCurl: Function,
   moveDoc: Function,
-  childObjects: Array<Child>,
+  childObjects: SidebarChildObjects,
   workspace: Workspace,
   filter: string,
   hotKeyRegistry: HotKeyRegistry,
@@ -140,15 +145,13 @@ class SidebarChildren extends React.PureComponent<Props> {
   render() {
     const { childObjects } = this.props;
 
-    const pinnedChildren = childObjects.filter(c => c.pinned);
-    const unpinnedChildren = childObjects.filter(c => !c.pinned);
-    const showSeparator = pinnedChildren.length > 0 && unpinnedChildren.length > 0;
+    const showSeparator = childObjects.pinned.length > 0;
 
     return (
       <React.Fragment>
-        {this._renderList(pinnedChildren)}
+        {this._renderList(childObjects.pinned)}
         <div className={`sidebar__list-separator${showSeparator ? '' : '--invisible'}`} />
-        {this._renderList(unpinnedChildren)}
+        {this._renderList(childObjects.all)}
       </React.Fragment>
     );
   }
