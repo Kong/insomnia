@@ -5,6 +5,7 @@
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![Twitter Follow](https://img.shields.io/twitter/follow/getinsomnia.svg?style=social&label=%40GetInsomnia%20on%20Twitter&style=plastic)](https://twitter.com/getinsomnia)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/getinsomnia/insomnia/master/LICENSE)
+[![Insomnia](https://snapcraft.io/insomnia/badge.svg)](https://snapcraft.io/insomnia)
 
 Insomnia is a cross-platform _REST client_, built on top of [Electron](http://electron.atom.io/).
 
