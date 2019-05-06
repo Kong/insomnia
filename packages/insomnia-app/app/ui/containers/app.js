@@ -222,14 +222,11 @@ class App extends PureComponent {
             return;
           }
 
-          const metas = Object.values(this.props.entities.requestMetas).filter(
+          const metas = Object.values(this.props.entities.requestMetas).find(
             m => m.parentId === this.props.activeRequest._id,
           );
 
-          await this._handleSetRequestPinned(
-            this.props.activeRequest,
-            !(metas.length > 0 && metas[0].pinned),
-          );
+          await this._handleSetRequestPinned(this.props.activeRequest, !(metas && metas.pinned));
         },
       ],
       [hotKeyRefs.SIDEBAR_TOGGLE, this._handleToggleSidebar],
