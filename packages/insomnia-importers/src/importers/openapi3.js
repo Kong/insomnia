@@ -330,6 +330,14 @@ function generateParameterExample(schema) {
     }
 
     const factory = typeExamples[`${type}_${format}`] || typeExamples[type];
+
+    if (!factory) {
+      throw new Error(
+        `Unsupported type=${type} format=${format}. ` +
+          `Supported are ${Object.keys(typeExamples.join(', '))}`,
+      );
+    }
+
     return factory(schema);
   }
 }
