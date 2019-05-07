@@ -91,11 +91,11 @@ module.exports.templateTags = [
       let response = await context.util.models.response.getLatestForRequestId(id);
 
       let shouldResend = false;
-      if (resendBehavior === 'ALWAYS') {
+      if (resendBehavior.toLowerCase() === 'always') {
         shouldResend = true;
-      } else if (resendBehavior === 'NO_HISTORY' && !response) {
+      } else if (resendBehavior.toLowerCase() === 'no-history' && !response) {
         shouldResend = true;
-      } else if (resendBehavior === 'NEVER') {
+      } else if (resendBehavior.toLowerCase() === 'never') {
         shouldResend = false;
       }
 
