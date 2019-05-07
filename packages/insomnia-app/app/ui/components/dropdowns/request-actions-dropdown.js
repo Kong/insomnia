@@ -62,23 +62,28 @@ class RequestActionsDropdown extends PureComponent {
         <DropdownButton>
           <i className="fa fa-caret-down" />
         </DropdownButton>
-        <DropdownItem onClick={this._handleSetRequestPinned}>
-          <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
-          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_TOGGLE_PIN.id]} />
-        </DropdownItem>
+
         <DropdownItem onClick={this._handleDuplicate}>
           <i className="fa fa-copy" /> Duplicate
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_DUPLICATE.id]} />
         </DropdownItem>
+
         <DropdownItem onClick={this._handleGenerateCode}>
           <i className="fa fa-code" /> Generate Code
           <DropdownHint
             keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR.id]}
           />
         </DropdownItem>
+
+        <DropdownItem onClick={this._handleSetRequestPinned}>
+          <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
+          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_TOGGLE_PIN.id]} />
+        </DropdownItem>
+
         <DropdownItem onClick={this._handleCopyAsCurl}>
           <i className="fa fa-copy" /> Copy as Curl
         </DropdownItem>
+
         <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon>
           <i className="fa fa-trash-o" /> Delete
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_DELETE.id]} />

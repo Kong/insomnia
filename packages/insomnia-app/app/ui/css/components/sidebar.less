@@ -48,6 +48,7 @@
     h1 {
       margin: 0;
     }
+
     h1,
     h1 * {
       font-size: @font-size-xl;
@@ -97,6 +98,7 @@
 
     // Make it scroll when too skinny
     overflow: auto;
+
     &::-webkit-scrollbar {
       display: none;
     }
@@ -235,7 +237,7 @@
 
   .sidebar__item {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     grid-template-rows: @line-height-xs;
 
     & > button {
@@ -277,17 +279,6 @@
       padding-left: 0;
       text-align: left;
       width: 3em;
-    }
-  }
-
-  .sidebar__item__icon {
-    &-right {
-      padding-right: @padding-sm;
-    }
-
-    &-pin {
-      padding: 0 @padding-sm;
-      display: initial;
     }
   }
 
@@ -392,6 +383,14 @@
   .sidebar__item:hover .sidebar__actions > button,
   .sidebar__item:hover .sidebar__actions > .dropdown > button {
     display: initial;
+  }
+
+  .sidebar__item__icon-pin {
+    display: flex;
+    align-items: center;
+    color: @hl-xl;
+    height: 100%;
+    padding: 0 @padding-sm;
   }
 
   .sidebar__item:hover .sidebar__item__icon-pin {
