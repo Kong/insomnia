@@ -14,6 +14,12 @@ type Child = {
   children: Array<Child>,
   collapsed: boolean,
   hidden: boolean,
+  pinned: boolean,
+};
+
+export type SidebarChildObjects = {
+  pinned: Array<Child>,
+  all: Array<Child>,
 };
 
 type Props = {
@@ -21,6 +27,7 @@ type Props = {
   handleActivateRequest: Function,
   handleCreateRequest: Function,
   handleCreateRequestGroup: Function,
+  handleSetRequestPinned: Function,
   handleSetRequestGroupCollapsed: Function,
   handleDuplicateRequest: Function,
   handleDuplicateRequestGroup: Function,
@@ -28,7 +35,7 @@ type Props = {
   handleGenerateCode: Function,
   handleCopyAsCurl: Function,
   moveDoc: Function,
-  childObjects: Array<Child>,
+  childObjects: SidebarChildObjects,
   workspace: Workspace,
   filter: string,
   hotKeyRegistry: HotKeyRegistry,
@@ -39,11 +46,12 @@ type Props = {
 };
 
 class SidebarChildren extends React.PureComponent<Props> {
-  _renderChildren(children: Array<Child>): React.Node {
+  _renderChildren(children: Array<Child>, isInPinnedList: boolean): React.Node {
     const {
       filter,
       handleCreateRequest,
       handleCreateRequestGroup,
+      handleSetRequestPinned,
       handleSetRequestGroupCollapsed,
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
@@ -61,7 +69,7 @@ class SidebarChildren extends React.PureComponent<Props> {
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
 
     return children.map(child => {
-      if (child.hidden) {
+      if (!isInPinnedList && child.hidden) {
         return null;
       }
 
@@ -69,14 +77,17 @@ class SidebarChildren extends React.PureComponent<Props> {
         return (
           <SidebarRequestRow
             key={child.doc._id}
-            filter={filter || ''}
+            filter={isInPinnedList ? '' : filter || ''}
             moveDoc={moveDoc}
             handleActivateRequest={handleActivateRequest}
+            handleSetRequestPinned={handleSetRequestPinned}
             handleDuplicateRequest={handleDuplicateRequest}
             handleGenerateCode={handleGenerateCode}
             handleCopyAsCurl={handleCopyAsCurl}
             requestCreate={handleCreateRequest}
             isActive={child.doc._id === activeRequestId}
+            isPinned={child.pinned}
+            isDragAndDropEnabled={!isInPinnedList}
             request={child.doc}
             workspace={workspace}
             hotKeyRegistry={hotKeyRegistry}
@@ -102,7 +113,7 @@ class SidebarChildren extends React.PureComponent<Props> {
       }
 
       const isActive = hasActiveChild(child.children);
-      const children = this._renderChildren(child.children);
+      const children = this._renderChildren(child.children, isInPinnedList);
 
       return (
         <SidebarRequestGroupRow
@@ -128,13 +139,25 @@ class SidebarChildren extends React.PureComponent<Props> {
     });
   }
 
+  _renderList(children: Array<Child>, pinnedList: boolean): React.Node {
+    return (
+      <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
+        {this._renderChildren(children, pinnedList)}
+      </ul>
+    );
+  }
+
   render() {
     const { childObjects } = this.props;
 
+    const showSeparator = childObjects.pinned.length > 0;
+
     return (
-      <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
-        {this._renderChildren(childObjects)}
-      </ul>
+      <React.Fragment>
+        {this._renderList(childObjects.pinned, true)}
+        <div className={`sidebar__list-separator${showSeparator ? '' : '--invisible'}`} />
+        {this._renderList(childObjects.all, false)}
+      </React.Fragment>
     );
   }
 }

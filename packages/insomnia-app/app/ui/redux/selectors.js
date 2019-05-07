@@ -107,15 +107,35 @@ export const selectActiveWorkspaceEntities = createSelector(
   },
 );
 
+export const selectPinnedRequests = createSelector(
+  selectEntitiesLists,
+  entities => {
+    const pinned = {};
+
+    // Default all to unpinned
+    for (const request of entities.requests) {
+      pinned[request._id] = false;
+    }
+
+    // Update those that have metadata (not all do)
+    for (const meta of entities.requestMetas) {
+      pinned[meta.parentId] = meta.pinned;
+    }
+
+    return pinned;
+  },
+);
+
 export const selectSidebarChildren = createSelector(
   selectCollapsedRequestGroups,
+  selectPinnedRequests,
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
   selectEntitiesChildrenMap,
-  (collapsed, activeWorkspace, activeWorkspaceMeta, childrenMap) => {
+  (collapsed, pinned, activeWorkspace, activeWorkspaceMeta, childrenMap) => {
     const sidebarFilter = activeWorkspaceMeta ? activeWorkspaceMeta.sidebarFilter : '';
 
-    function next(parentId) {
+    function next(parentId, pinnedChildren) {
       const children = (childrenMap[parentId] || [])
         .filter(doc => {
           return doc.type === models.request.type || doc.type === models.requestGroup.type;
@@ -129,14 +149,23 @@ export const selectSidebarChildren = createSelector(
         });
 
       if (children.length > 0) {
-        return children.map(c => ({
-          doc: c,
-          hidden: false,
-          collapsed: !!collapsed[c._id],
+        return children.map(c => {
+          const child = {
+            doc: c,
+            hidden: false,
+            collapsed: !!collapsed[c._id],
+            pinned: !!pinned[c._id],
+          };
+
+          if (child.pinned) {
+            pinnedChildren.push(child);
+          }
 
           // Don't add children of requests
-          children: c.type === models.request.type ? [] : next(c._id),
-        }));
+          child.children = c.type === models.request.type ? [] : next(c._id, pinnedChildren);
+
+          return child;
+        });
       } else {
         return children;
       }
@@ -168,8 +197,11 @@ export const selectSidebarChildren = createSelector(
       return children;
     }
 
-    const childrenTree = next(activeWorkspace._id, false);
-    return matchChildren(childrenTree);
+    let pinnedChildren = [];
+    const childrenTree = next(activeWorkspace._id, pinnedChildren);
+    const matchedChildren = matchChildren(childrenTree);
+
+    return { pinned: pinnedChildren, all: matchedChildren };
   },
 );
 

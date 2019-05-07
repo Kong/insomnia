@@ -10,6 +10,7 @@ import type {
   RequestHeader,
   RequestParameter,
 } from '../../models/request';
+import type { SidebarChildObjects } from './sidebar/sidebar-children';
 
 import * as React from 'react';
 import autobind from 'autobind-decorator';
@@ -99,6 +100,7 @@ type Props = {
   handleResetDragPaneHorizontal: Function,
   handleResetDragPaneVertical: Function,
   handleSetRequestGroupCollapsed: Function,
+  handleSetRequestPinned: Function,
   handleSendRequestWithEnvironment: Function,
   handleSendAndDownloadRequestWithEnvironment: Function,
   handleUpdateRequestMimeType: Function,
@@ -114,7 +116,7 @@ type Props = {
   sidebarWidth: number,
   sidebarHidden: boolean,
   sidebarFilter: string,
-  sidebarChildren: Array<Object>,
+  sidebarChildren: SidebarChildObjects,
   settings: Settings,
   workspaces: Array<Workspace>,
   unseenWorkspaces: Array<Workspace>,
@@ -393,6 +395,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       handleSetActiveEnvironment,
       handleSetActiveWorkspace,
       handleSetRequestGroupCollapsed,
+      handleSetRequestPinned,
       handleSetRequestPaneRef,
       handleSetResponsePaneRef,
       handleSetSidebarRef,
@@ -614,7 +617,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           <AddKeyCombinationModal ref={registerModal} />
           <ExportRequestsModal
             ref={registerModal}
-            childObjects={sidebarChildren}
+            childObjects={sidebarChildren.all}
             handleExportRequestsToFile={handleExportRequestsToFile}
           />
         </ErrorBoundary>
@@ -672,6 +675,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleSetActiveEnvironment={handleSetActiveEnvironment}
             moveDoc={handleMoveDoc}
             handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+            handleSetRequestPinned={handleSetRequestPinned}
             activeRequest={activeRequest}
             activeEnvironment={activeEnvironment}
             handleCreateRequest={handleCreateRequest}

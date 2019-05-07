@@ -11,6 +11,7 @@ import {
 } from '../base/dropdown/index';
 import * as models from '../../../models';
 import { hotKeyRefs } from '../../../common/hotkeys';
+import * as misc from '../../../common/misc';
 
 @autobind
 class RequestActionsDropdown extends PureComponent {
@@ -29,6 +30,14 @@ class RequestActionsDropdown extends PureComponent {
 
   _handleCopyAsCurl() {
     this.props.handleCopyAsCurl(this.props.request);
+  }
+
+  _canPin() {
+    return this.props.handleSetRequestPinned !== misc.nullFn;
+  }
+
+  _handleSetRequestPinned() {
+    this.props.handleSetRequestPinned(this.props.request, !this.props.isPinned);
   }
 
   _handleRemove() {
@@ -53,6 +62,10 @@ class RequestActionsDropdown extends PureComponent {
         <DropdownButton>
           <i className="fa fa-caret-down" />
         </DropdownButton>
+        <DropdownItem onClick={this._handleSetRequestPinned}>
+          <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
+          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_TOGGLE_PIN.id]} />
+        </DropdownItem>
         <DropdownItem onClick={this._handleDuplicate}>
           <i className="fa fa-copy" /> Duplicate
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_DUPLICATE.id]} />
@@ -87,8 +100,10 @@ RequestActionsDropdown.propTypes = {
   handleGenerateCode: PropTypes.func.isRequired,
   handleCopyAsCurl: PropTypes.func.isRequired,
   handleShowSettings: PropTypes.func.isRequired,
+  isPinned: PropTypes.bool.isRequired,
   request: PropTypes.object.isRequired,
   hotKeyRegistry: PropTypes.object.isRequired,
+  handleSetRequestPinned: PropTypes.func.isRequired,
 };
 
 export default RequestActionsDropdown;

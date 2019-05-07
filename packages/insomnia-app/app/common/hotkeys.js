@@ -144,6 +144,8 @@ export const hotKeyRefs = {
 
   REQUEST_SHOW_DUPLICATE: defineHotKey('request_showDuplicate', 'Duplicate Request'),
 
+  REQUEST_TOGGLE_PIN: defineHotKey('request_togglePin', 'Pin/Unpin Request'),
+
   CLOSE_DROPDOWN: defineHotKey('closeDropdown', 'Close Dropdown'),
 
   CLOSE_MODAL: defineHotKey('closeModal', 'Close Modal'),
@@ -286,6 +288,11 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.REQUEST_SHOW_DUPLICATE.id]: keyBinds(
     keyComb(false, false, false, true, keyboardKeys.d.keyCode),
     keyComb(true, false, false, false, keyboardKeys.d.keyCode),
+  ),
+
+  [hotKeyRefs.REQUEST_TOGGLE_PIN.id]: keyBinds(
+    keyComb(false, false, true, true, keyboardKeys.p.keyCode),
+    keyComb(true, false, true, false, keyboardKeys.p.keyCode),
   ),
 
   [hotKeyRefs.CLOSE_DROPDOWN.id]: keyBinds(

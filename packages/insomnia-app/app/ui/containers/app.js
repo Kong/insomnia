@@ -215,6 +215,20 @@ class App extends PureComponent {
           await this._requestDuplicate(this.props.activeRequest);
         },
       ],
+      [
+        hotKeyRefs.REQUEST_TOGGLE_PIN,
+        async () => {
+          if (!this.props.activeRequest) {
+            return;
+          }
+
+          const metas = Object.values(this.props.entities.requestMetas).find(
+            m => m.parentId === this.props.activeRequest._id,
+          );
+
+          await this._handleSetRequestPinned(this.props.activeRequest, !(metas && metas.pinned));
+        },
+      ],
       [hotKeyRefs.SIDEBAR_TOGGLE, this._handleToggleSidebar],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
       [
@@ -435,6 +449,10 @@ class App extends PureComponent {
 
   _handleSetRequestGroupCollapsed(requestGroupId, collapsed) {
     App._updateRequestGroupMetaByParentId(requestGroupId, { collapsed });
+  }
+
+  async _handleSetRequestPinned(request, pinned) {
+    App._updateRequestMetaByParentId(request._id, { pinned });
   }
 
   _handleSetResponsePreviewMode(requestId, previewMode) {
@@ -1048,6 +1066,7 @@ class App extends PureComponent {
               paneHeight={paneHeight}
               sidebarWidth={sidebarWidth}
               handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+              handleSetRequestPinned={this._handleSetRequestPinned}
               handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
               handleActivateRequest={this._handleSetActiveRequest}
               handleSetRequestPaneRef={this._setRequestPaneRef}
