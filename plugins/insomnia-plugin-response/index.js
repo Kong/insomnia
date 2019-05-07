@@ -74,6 +74,7 @@ module.exports.templateTags = [
 
     async run(context, field, id, filter, resendBehavior) {
       filter = filter || '';
+      resendBehavior = (resendBehavior || 'never').toLowerCase();
 
       if (!['body', 'header', 'raw'].includes(field)) {
         throw new Error(`Invalid response field ${field}`);
@@ -91,11 +92,11 @@ module.exports.templateTags = [
       let response = await context.util.models.response.getLatestForRequestId(id);
 
       let shouldResend = false;
-      if (resendBehavior.toLowerCase() === 'always') {
+      if (resendBehavior === 'always') {
         shouldResend = true;
-      } else if (resendBehavior.toLowerCase() === 'no-history' && !response) {
+      } else if (resendBehavior === 'no-history' && !response) {
         shouldResend = true;
-      } else if (resendBehavior.toLowerCase() === 'never') {
+      } else if (resendBehavior === 'never') {
         shouldResend = false;
       }
 
