@@ -4,7 +4,13 @@ module.exports.responseHooks = [
   async context => {
     const items = await context.store.all();
     const requestId = context.request.getId();
-    const toRemove = items.filter(v => v.key.indexOf(requestId) === 0);
+    const toRemove = items.filter(v => {
+      if (v.key && typeof v.key === 'string') {
+        return v.key.indexOf(requestId) === 0;
+      }
+
+      return false;
+    });
     // Delete cached values we prompt again on the next request
     for (const { key } of toRemove) {
       await context.store.removeItem(key);
