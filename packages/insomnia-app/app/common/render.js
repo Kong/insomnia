@@ -285,6 +285,10 @@ export async function getRenderedRequestAndContext(
     }
   } catch (err) {}
 
+  // Render description separately because it's lower priority
+  const description = request.description;
+  request.description = '';
+
   // Render all request properties
   const renderResult = await render(
     { _request: request, _cookieJar: cookieJar },
@@ -294,6 +298,7 @@ export async function getRenderedRequestAndContext(
 
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
+  renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
 
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);

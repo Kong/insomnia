@@ -515,3 +515,60 @@ describe('render()', () => {
     }
   });
 });
+
+describe('getRenderedRequest()', () => {
+  beforeEach(globalBeforeEach);
+  it('renders request', async () => {
+    const workspace = await models.workspace.create();
+    const environment = await models.environment.create({
+      parentId: workspace._id,
+      data: {
+        foo: 'bar',
+      },
+    });
+    const request = await models.request.create({
+      parentId: workspace._id,
+      name: 'hi {{ foo }}',
+      url: '{{ foo }}/bar',
+      parameters: [{ name: 'foo', value: '{{ foo }}' }],
+      description: 'hi {{ foo }}',
+    });
+
+    const rendered = await renderUtils.getRenderedRequest(request, environment._id);
+    expect(rendered).toEqual(
+      expect.objectContaining({
+        name: 'hi bar',
+        url: 'http://bar/bar',
+        parameters: [{ name: 'foo', value: 'bar' }],
+        description: 'hi bar',
+      }),
+    );
+  });
+
+  it('should still render with bad description', async () => {
+    const workspace = await models.workspace.create();
+    const environment = await models.environment.create({
+      parentId: workspace._id,
+      data: {
+        foo: 'bar',
+      },
+    });
+    const request = await models.request.create({
+      parentId: workspace._id,
+      name: 'hi {{ foo }}',
+      url: '{{ foo }}/bar',
+      parameters: [{ name: 'foo', value: '{{ foo }}' }],
+      description: 'hi {{ some error }}',
+    });
+
+    const rendered = await renderUtils.getRenderedRequest(request, environment._id);
+    expect(rendered).toEqual(
+      expect.objectContaining({
+        name: 'hi bar',
+        url: 'http://bar/bar',
+        parameters: [{ name: 'foo', value: 'bar' }],
+        description: 'hi {{ some error }}',
+      }),
+    );
+  });
+});
