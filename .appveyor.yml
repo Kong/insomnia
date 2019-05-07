@@ -6,6 +6,7 @@ test: off
 #    environment configuration    #
 #---------------------------------#
 
+shallow_clone: true
 platform: x64
 environment:
   NODEJS_VERSION: '10'
