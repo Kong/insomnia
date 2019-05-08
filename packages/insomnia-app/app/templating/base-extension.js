@@ -2,6 +2,7 @@ import * as models from '../models/index';
 import * as templating from './index';
 import * as pluginContexts from '../plugins/context';
 import * as db from '../common/database';
+import { decodeEncoding } from './utils';
 
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 
@@ -74,7 +75,10 @@ export default class BaseExtension {
     const environmentId = renderContext.getEnvironmentId ? renderContext.getEnvironmentId() : 'n/a';
 
     // Extract the rest of the args
-    const args = runArgs.slice(0, runArgs.length - 1).filter(a => a !== EMPTY_ARG);
+    const args = runArgs
+      .slice(0, runArgs.length - 1)
+      .filter(a => a !== EMPTY_ARG)
+      .map(decodeEncoding);
 
     // Define a helper context with utils
     const helperContext = {

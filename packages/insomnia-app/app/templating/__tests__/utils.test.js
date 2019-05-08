@@ -158,3 +158,24 @@ describe('unTokenizeTag()', () => {
     expect(result).toEqual(`{% name 'foo/bar/baz', 'foo' %}`);
   });
 });
+
+describe('encodeEncoding()', () => {
+  beforeEach(globalBeforeEach);
+  it('encodes things', () => {
+    expect(utils.encodeEncoding('hello', 'base64')).toBe('b64::aGVsbG8=::46b');
+    expect(utils.encodeEncoding(null, 'base64')).toBe(null);
+    expect(utils.encodeEncoding('hello', 'unknown')).toBe('hello');
+    expect(utils.encodeEncoding('hello')).toBe('hello');
+    expect(utils.encodeEncoding('hello', 'utf8')).toBe('hello');
+  });
+});
+
+describe('decodeEncoding()', () => {
+  beforeEach(globalBeforeEach);
+  it('encodes things', () => {
+    expect(utils.decodeEncoding('b64::aGVsbG8=::46b')).toBe('hello');
+    expect(utils.decodeEncoding('aGVsbG8=')).toBe('aGVsbG8=');
+    expect(utils.decodeEncoding('hello')).toBe('hello');
+    expect(utils.decodeEncoding(null)).toBe(null);
+  });
+});

@@ -13,6 +13,7 @@ export type NunjucksParsedTagArg = {
     | 'enum'
     | 'file'
     | 'model',
+  encoding?: 'base64',
   value: string | number | boolean,
   defaultValue?: string | number | boolean,
   forceVariable?: boolean,
@@ -207,4 +208,30 @@ export function getDefaultFill(name: string, args: Array<NunjucksParsedTagArg>):
   });
 
   return `${name} ${stringArgs.join(', ')}`;
+}
+
+export function encodeEncoding(value: string, encoding: 'base64'): string {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  if (encoding === 'base64') {
+    const encodedValue = Buffer.from(value, 'utf8').toString('base64');
+    return `b64::${encodedValue}::46b`;
+  }
+
+  return value;
+}
+
+export function decodeEncoding(value: string): string {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const results = value.match(/^b64::(.+)::46b$/);
+  if (results) {
+    return Buffer.from(results[1], 'base64').toString('utf8');
+  }
+
+  return value;
 }

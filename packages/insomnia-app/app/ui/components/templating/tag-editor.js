@@ -117,7 +117,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     this.setState({ allDocs, loadingDocs: false });
   }
 
-  _updateArg(
+  async _updateArg(
     argValue: string | number | boolean,
     argIndex: number,
     forceNewType: string | null = null,
@@ -167,7 +167,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       Object.assign((argData: any), { type: forceNewType }, patch);
     }
 
-    this._update(tagDefinitions, activeTagDefinition, tagData, false);
+    await this._update(tagDefinitions, activeTagDefinition, tagData, false);
   }
 
   async _handleChangeArgVariable(options: { argIndex: number, variable: boolean }) {
@@ -208,6 +208,15 @@ class TagEditor extends React.PureComponent<Props, State> {
       argIndex = typeof index === 'string' ? parseInt(index, 10) : -1;
     }
 
+    // Handle special types
+    if (e.currentTarget.getAttribute('data-encoding') === 'base64') {
+      return this._updateArg(
+        templateUtils.encodeEncoding(e.currentTarget.value, 'base64'),
+        argIndex,
+      );
+    }
+
+    // Handle normal types
     if (e.currentTarget.type === 'number') {
       return this._updateArg(parseFloat(e.currentTarget.value), argIndex);
     } else if (e.currentTarget.type === 'checkbox') {
@@ -342,13 +351,14 @@ class TagEditor extends React.PureComponent<Props, State> {
     );
   }
 
-  renderArgString(value: string, placeholder: string) {
+  renderArgString(value: string, placeholder: string, encoding: string) {
     return (
       <input
         type="text"
         defaultValue={value || ''}
         placeholder={placeholder}
         onChange={this._handleChange}
+        data-encoding={encoding || 'utf8'}
       />
     );
   }
@@ -499,7 +509,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       return null;
     }
 
-    const strValue = argData.value.toString();
+    const strValue = templateUtils.decodeEncoding(argData.value.toString());
     const isVariable = argData.type === 'variable';
     const argInputVariable = isVariable ? this.renderArgVariable(strValue) : null;
 
@@ -508,7 +518,8 @@ class TagEditor extends React.PureComponent<Props, State> {
     if (argDefinition.type === 'string') {
       const placeholder =
         typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
-      argInput = this.renderArgString(strValue, placeholder);
+      const encoding = argDefinition.encoding || 'utf8';
+      argInput = this.renderArgString(strValue, placeholder, encoding);
     } else if (argDefinition.type === 'enum') {
       const { options } = argDefinition;
       argInput = this.renderArgEnum(strValue, options || []);
