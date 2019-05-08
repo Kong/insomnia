@@ -80,6 +80,12 @@ export function createWindow() {
     showUnresponsiveModal();
   });
 
+  // Open generic links (<a .../>) in default browser
+  mainWindow.webContents.on('will-navigate', (e, url) => {
+    e.preventDefault();
+    electron.shell.openExternal(url);
+  });
+
   // Load the html of the app.
   const url = process.env.APP_RENDER_URL;
   const appUrl = url || `file://${app.getAppPath()}/renderer.html`;
