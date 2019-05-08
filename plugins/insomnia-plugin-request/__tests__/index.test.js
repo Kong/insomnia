@@ -2,7 +2,7 @@ const { jarFromCookies, cookiesFromJar } = require('insomnia-cookies');
 const tag = require('..').templateTags[0];
 
 describe('plugin', () => {
-  describe('RequestExtension cookie', async () => {
+  describe('RequestExtension cookie', () => {
     it('should get cookie by name', async () => {
       const jar = jarFromCookies([]);
       jar.setCookieSync(
@@ -25,7 +25,7 @@ describe('plugin', () => {
     });
   });
 
-  describe('RequestExtension url', async () => {
+  describe('RequestExtension url', () => {
     it('should get url', async () => {
       const requests = [
         {
@@ -55,7 +55,7 @@ describe('plugin', () => {
     });
   });
 
-  describe('RequestExtension header', async () => {
+  describe('RequestExtension header', () => {
     it('should get url', async () => {
       const requests = [
         {
@@ -71,7 +71,7 @@ describe('plugin', () => {
     });
   });
 
-  describe('RequestExtension parameter', async () => {
+  describe('RequestExtension parameter', () => {
     it('should get parameter', async () => {
       const requests = [
         {
