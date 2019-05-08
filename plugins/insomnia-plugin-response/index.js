@@ -36,6 +36,7 @@ module.exports.templateTags = [
       },
       {
         type: 'string',
+        encoding: 'base64',
         hide: args => args[0].value === 'raw',
         displayName: args => {
           switch (args[0].value) {
@@ -91,19 +92,28 @@ module.exports.templateTags = [
 
       let response = await context.util.models.response.getLatestForRequestId(id);
 
+      // Make sure we only send the request once per render so we don't have infinite recursion
+      const recursiveStorageKey = `request.${request._id}`;
+      if (await context.store.hasItem(recursiveStorageKey)) {
+        console.log('[response tag] Preventing recursive render');
+        return null;
+      }
+
       let shouldResend = false;
-      if (resendBehavior === 'always') {
-        shouldResend = true;
-      } else if (resendBehavior === 'no-history' && !response) {
-        shouldResend = true;
-      } else if (resendBehavior === 'never') {
+      if (resendBehavior === 'never') {
         shouldResend = false;
+      } else if (resendBehavior === 'no-history') {
+        shouldResend = !response;
+      } else if (resendBehavior === 'always') {
+        shouldResend = true;
       }
 
       // Resend dependent request if needed but only if we're rendering for a send
-      if (shouldResend && (!response || context.renderPurpose === 'send')) {
+      if (shouldResend && context.renderPurpose === 'send') {
         console.log('[response tag] Resending dependency');
+        await context.store.setItem(recursiveStorageKey, 'true');
         response = await context.network.sendRequest(request);
+        await context.store.removeItem(recursiveStorageKey);
       }
 
       if (!response) {
