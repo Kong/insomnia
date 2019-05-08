@@ -304,6 +304,12 @@ export function exportWorkspacesToFile(workspaceId = null) {
                 exportPrivateEnvironments,
                 'yaml',
               );
+            } else if (selectedFormat === VALUE_POSTMAN_LATEST) {
+              stringifiedExport = await importUtils.exportLatestPostmanCollection(
+                workspace,
+                exportPrivateEnvironments,
+                'json',
+              );
             } else {
               stringifiedExport = await importUtils.exportWorkspacesData(
                 workspace,
@@ -374,6 +380,44 @@ export function exportRequestsToFile(requestIds) {
         }
 
         const fileNamePrefix = 'Insomnia';
+        if (selectedFormat === VALUE_POSTMAN_LATEST) {
+          showSaveExportedFileDialog(fileNamePrefix, selectedFormat, async fileName => {
+            if (!fileName) {
+              // Cancelled.
+              dispatch(loadStop());
+              return;
+            }
+
+            let stringifiedExport;
+            try {
+              stringifiedExport = await importUtils.exportLatestPostmanEnvironmentCollection(
+                requests,
+                exportPrivateEnvironments,
+                'json',
+              );
+            } catch (err) {
+              showError({
+                title: 'Export Failed',
+                error: err,
+                message: 'Export failed due to an unexpected error',
+              });
+              dispatch(loadStop());
+              return;
+            }
+
+            writeExportedFileToFileSystem(
+              `${fileName}-environment-variables`,
+              stringifiedExport,
+              err => {
+                if (err) {
+                  console.warn('Export failed', err);
+                }
+                dispatch(loadStop());
+              },
+            );
+          });
+        }
+
         showSaveExportedFileDialog(fileNamePrefix, selectedFormat, async fileName => {
           if (!fileName) {
             // Cancelled.
@@ -388,6 +432,7 @@ export function exportRequestsToFile(requestIds) {
                 requests,
                 exportPrivateEnvironments,
               );
+              stringifiedEnvExport = null;
             } else if (selectedFormat === VALUE_YAML) {
               stringifiedExport = await importUtils.exportRequestsData(
                 requests,
@@ -398,6 +443,7 @@ export function exportRequestsToFile(requestIds) {
               stringifiedExport = await importUtils.exportLatestPostmanCollection(
                 requests,
                 exportPrivateEnvironments,
+                'json',
               );
             } else {
               stringifiedExport = await importUtils.exportRequestsData(

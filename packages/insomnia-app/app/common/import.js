@@ -346,9 +346,87 @@ export async function exportRequestsData(
   }
 }
 
+const filterBy = (d, includePrivateDocs) => {
+  // Only export these model types.
+  if (
+    !(
+      d.type === models.request.type ||
+      d.type === models.requestGroup.type ||
+      d.type === models.workspace.type ||
+      d.type === models.cookieJar.type ||
+      d.type === models.environment.type
+    )
+  ) {
+    return false;
+  }
+  // BaseModel doesn't have isPrivate, so cast it first.
+  return !(d: Object).isPrivate || includePrivateDocs;
+};
+
+export async function exportLatestPostmanEnvironmentCollection(
+  requests: Array<BaseModel>,
+  includePrivateDocs: boolean,
+  format: 'json' | 'yaml',
+): Promise<string> {
+  const data = {
+    id: '1234567890',
+    name: 'normal-export',
+    values: [],
+    _postman_variable_scope: 'environment',
+  };
+
+  const docs: Array<BaseModel> = [];
+  const workspaces: Array<BaseModel> = [];
+  const mapTypeAndIdToDoc: Object = {};
+  for (const req of requests) {
+    const ancestors: Array<BaseModel> = clone(await db.withAncestors(req));
+    for (const ancestor of ancestors) {
+      const key = ancestor.type + '___' + ancestor._id;
+      if (mapTypeAndIdToDoc.hasOwnProperty(key)) {
+        continue;
+      }
+      mapTypeAndIdToDoc[key] = ancestor;
+      docs.push(ancestor);
+      if (ancestor.type === models.workspace.type) {
+        workspaces.push(ancestor);
+      }
+    }
+  }
+
+  for (const workspace of workspaces) {
+    const descendants: Array<BaseModel> = (await db.withDescendants(workspace)).filter(d => {
+      // Only interested in these additional model types.
+      return d.type === models.cookieJar.type || d.type === models.environment.type;
+    });
+    docs.push(...descendants);
+  }
+
+  const filteredTypes = docs.filter(d => filterBy(d, includePrivateDocs));
+
+  const request = (key, value) => ({
+    key: key,
+    value: value,
+    type: 'text',
+    enabled: true,
+  });
+
+  const environmentVariables = filteredTypes
+    .filter(d => d.type === models.environment.type)
+    .map(d => d.data);
+
+  // Get the collection top most name properly
+  environmentVariables.map(values =>
+    Object.entries(values).forEach(k => data.values.push(request(k[0], k[1]))),
+  );
+
+  console.log(data);
+  return JSON.stringify(data, null, '\t');
+}
+
 export async function exportLatestPostmanCollection(
-  parentDoc: BaseModel | null = null,
-  includePrivateDocs: boolean = false,
+  requests: Array<BaseModel>,
+  includePrivateDocs: boolean,
+  format: 'json' | 'yaml',
 ): Promise<string> {
   const data = {
     info: {
@@ -358,6 +436,37 @@ export async function exportLatestPostmanCollection(
     item: [],
   };
 
+  const hasSubFolder: boolean = false;
+  const folders = [];
+
+  const docs: Array<BaseModel> = [];
+  const workspaces: Array<BaseModel> = [];
+  const mapTypeAndIdToDoc: Object = {};
+  for (const req of requests) {
+    const ancestors: Array<BaseModel> = clone(await db.withAncestors(req));
+    for (const ancestor of ancestors) {
+      const key = ancestor.type + '___' + ancestor._id;
+      if (mapTypeAndIdToDoc.hasOwnProperty(key)) {
+        continue;
+      }
+      mapTypeAndIdToDoc[key] = ancestor;
+      docs.push(ancestor);
+      if (ancestor.type === models.workspace.type) {
+        workspaces.push(ancestor);
+      }
+    }
+  }
+
+  for (const workspace of workspaces) {
+    const descendants: Array<BaseModel> = (await db.withDescendants(workspace)).filter(d => {
+      // Only interested in these additional model types.
+      return d.type === models.cookieJar.type || d.type === models.environment.type;
+    });
+    docs.push(...descendants);
+  }
+
+  const filteredTypes = docs.filter(d => filterBy(d, includePrivateDocs));
+
   const request = {
     method: '',
     header: [],
@@ -366,43 +475,42 @@ export async function exportLatestPostmanCollection(
     response: [],
   };
 
-  const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
+  // Get the collection top most name properly
+  data.info.name = filteredTypes
+    .filter(d => d.type === models.requestGroup.type && d.parentId.includes('wrk_'))
+    .map(d => d.name)[0];
 
-  data.item = docs
-    .filter(
-      d =>
-        // Only export these model types
-        d.type === models.request.type,
-    )
+  // Get all the requests properly
+  data.item = filteredTypes
+    .filter(d => d.type === models.request.type)
     .map((d: Object) => {
-      if (d.type === models.request.type) {
-        const { name, type, method, headers, url, body } = d;
+      const { name, type, method, headers, url, body } = d;
 
-        const formattedHeaders = headers.map(header => ({
-          key: header.name,
-          name: header.name,
-          value: header.value,
-        }));
+      const formattedHeaders = headers.map(header => ({
+        key: header.name,
+        name: header.name,
+        value: header.value,
+      }));
 
-        d._type = EXPORT_TYPE_REQUEST;
+      d._type = EXPORT_TYPE_REQUEST;
 
-        d = {
-          type,
-          name,
-          request: Object.assign({}, request, {
-            method,
-            header: formattedHeaders,
-            url,
-            body: { mode: 'raw', raw: body.text },
-          }),
-        };
-      }
+      d = {
+        type,
+        name,
+        request: Object.assign({}, request, {
+          method,
+          header: formattedHeaders,
+          url,
+          body: { mode: 'raw', raw: body.text },
+        }),
+      };
 
       // Delete the things we don't want to export
       delete d.type;
       return d;
     });
 
+  console.log(data);
   return JSON.stringify(data, null, '\t');
 }
 
