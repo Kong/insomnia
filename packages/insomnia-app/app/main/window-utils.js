@@ -82,6 +82,11 @@ export function createWindow() {
 
   // Open generic links (<a .../>) in default browser
   mainWindow.webContents.on('will-navigate', (e, url) => {
+    if (url === appUrl) {
+      return;
+    }
+
+    console.log('[app] Navigate to ' + url);
     e.preventDefault();
     electron.shell.openExternal(url);
   });
