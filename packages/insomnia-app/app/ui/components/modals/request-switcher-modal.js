@@ -18,13 +18,14 @@ import type { Workspace } from '../../../models/workspace';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import KeydownBinder from '../keydown-binder';
+import type { RequestMeta } from '../../../models/request-meta';
 
 type Props = {
   handleSetActiveWorkspace: (id: string) => void,
   activateRequest: (id: string) => void,
-  activeRequest: (id: string) => void,
-  workspaceId: string,
+  activeRequest: ?Request,
   workspaceChildren: Array<Request | RequestGroup>,
+  workspace: Workspace,
   workspaces: Array<Workspace>,
   requestMetas: Array<RequestMeta>,
 };
@@ -36,6 +37,7 @@ type State = {
   matchedWorkspaces: Array<Workspace>,
   activeIndex: number,
   maxRequests: number,
+  maxWorkspaces: number,
   disableInput: boolean,
   selectOnKeyup: boolean,
   title: string | null,
@@ -59,6 +61,9 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       activeIndex: -1,
       maxRequests: 20,
       maxWorkspaces: 20,
+      disableInput: false,
+      selectOnKeyup: false,
+      title: null,
     };
   }
 
@@ -205,7 +210,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
   }
 
   async _handleChangeValue(searchString: string) {
-    const { workspaceId, workspaceChildren, workspaces, requestMetas, activeRequest } = this.props;
+    const { workspace, workspaceChildren, workspaces, requestMetas, activeRequest } = this.props;
     const { maxRequests, maxWorkspaces } = this.state;
 
     const lastActiveMap = {};
@@ -240,7 +245,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     }
 
     const matchedWorkspaces = workspaces
-      .filter(w => w._id !== workspaceId)
+      .filter(w => w._id !== workspace._id)
       .filter(w => {
         const name = w.name.toLowerCase();
         const toMatch = searchString.toLowerCase();
@@ -255,19 +260,19 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     this.setState({
       searchString,
       activeIndex: indexOfFirstNonActiveRequest,
-      matchedRequests: matchedRequests.slice(0, maxRequests),
+      matchedRequests: (matchedRequests: Array<any>).slice(0, maxRequests),
       matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     });
   }
 
   async show(
-    options: {|
+    options: {
       maxRequests?: number,
       maxWorkspaces?: number,
       disableInput?: boolean,
       selectOnKeyup?: boolean,
       title?: string,
-    |} = {},
+    } = {},
   ) {
     if (this.modal && this.modal.isOpen()) {
       return;
@@ -306,7 +311,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
   }
 
   _handleKeydown(e: KeyboardEvent) {
-    this._keysPressed[e.keyCode] = true;
+    this._keysPressed[e.keyCode + ''] = true;
     executeHotKey(e, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
       this._setActiveIndex(this.state.activeIndex + 1);
     });
@@ -319,7 +324,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
   _handleKeyup(e: KeyboardEvent) {
     const { selectOnKeyup } = this.state;
 
-    delete this._keysPressed[e.keyCode];
+    delete this._keysPressed[e.keyCode + ''];
 
     if (selectOnKeyup && Object.keys(this._keysPressed).length === 0) {
       this._activateCurrentIndex();
@@ -344,9 +349,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       <KeydownBinder onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
         <Modal ref={this._setModalRef} dontFocus={!disableInput} onHide={this._handleHide}>
           <ModalHeader hideCloseButton>
-            {title ? (
-              title
-            ) : (
+            {title || (
               <React.Fragment>
                 <div className="pull-right txt-sm pad-right tall">
                   <span className="vertically-center">

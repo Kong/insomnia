@@ -61,6 +61,7 @@ import AddKeyCombinationModal from './modals/add-key-combination-modal';
 import ExportRequestsModal from './modals/export-requests-modal';
 import VCS from '../../sync/vcs';
 import type { StatusCandidate } from '../../sync/types';
+import type { RequestMeta } from '../../models/request-meta';
 
 type Props = {
   // Helper Functions
@@ -557,9 +558,9 @@ class Wrapper extends React.PureComponent<Props, State> {
 
           <RequestSwitcherModal
             ref={registerModal}
+            workspace={activeWorkspace}
             workspaces={workspaces}
             workspaceChildren={workspaceChildren}
-            workspaceId={activeWorkspace._id}
             activeRequest={activeRequest}
             activateRequest={handleActivateRequest}
             requestMetas={requestMetas}
