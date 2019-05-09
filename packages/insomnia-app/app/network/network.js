@@ -324,6 +324,7 @@ export async function _actuallySend(
       }
       addTimelineText('Preparing request to ' + finalUrl);
       addTimelineText(`Using ${Curl.getVersion()}`);
+      addTimelineText('Current time is ' + new Date().toISOString());
 
       // Set timeout
       if (settings.timeout > 0) {
