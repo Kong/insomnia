@@ -10,6 +10,7 @@ import TimeTag from '../tags/time-tag';
 import SizeTag from '../tags/size-tag';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../common/hotkeys';
+import TimeFromNow from '../time-from-now';
 
 @autobind
 class ResponseHistoryDropdown extends PureComponent {
@@ -86,12 +87,12 @@ class ResponseHistoryDropdown extends PureComponent {
           key={activeResponse ? activeResponse._id : 'n/a'}
           {...extraProps}>
           <DropdownButton className="btn btn--super-compact tall" title="Response history">
+            {activeResponse && <TimeFromNow timestamp={activeResponse.created} capitalize />}
             {!isLatestResponseActive ? (
-              <i className="fa fa-thumb-tack" />
+              <i className="fa fa-thumb-tack space-left" />
             ) : (
-              <i className="fa fa-clock-o" />
+              <i className="fa fa-caret-down space-left" />
             )}
-            <i className="fa fa-caret-down" />
           </DropdownButton>
           <DropdownDivider>Response History</DropdownDivider>
           <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteResponse}>
