@@ -47,7 +47,7 @@ export async function executeHotKey(
   e: KeyboardEvent,
   definition: HotKeyDefinition,
   callback: Function,
-): Promise<void> {
+): void {
   const settings = await models.settings.getOrCreate();
   if (_pressedHotKey(e, settings.hotKeyRegistry[definition.id])) {
     callback();

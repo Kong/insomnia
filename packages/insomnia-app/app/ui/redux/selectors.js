@@ -93,6 +93,11 @@ export const selectActiveWorkspaceEntities = createSelector(
   (activeWorkspace, childrenMap) => {
     const descendants = [activeWorkspace];
     const addChildrenOf = parent => {
+      // Don't add children of requests (eg. auth requests)
+      if (parent.type === models.request.type) {
+        return [];
+      }
+
       const children = childrenMap[parent._id] || [];
       for (const child of children) {
         descendants.push(child);

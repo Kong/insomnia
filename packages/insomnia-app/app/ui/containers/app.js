@@ -121,6 +121,18 @@ class App extends PureComponent {
         },
       ],
       [
+        hotKeyRefs.SHOW_RECENT_REQUESTS,
+        () => {
+          showModal(RequestSwitcherModal, {
+            disableInput: true,
+            maxRequests: 10,
+            maxWorkspaces: 0,
+            selectOnKeyup: true,
+            title: 'Recent Requests',
+          });
+        },
+      ],
+      [
         hotKeyRefs.WORKSPACE_SHOW_SETTINGS,
         () => {
           const { activeWorkspace } = this.props;
@@ -426,6 +438,7 @@ class App extends PureComponent {
 
   async _handleSetActiveRequest(activeRequestId) {
     await this._updateActiveWorkspaceMeta({ activeRequestId });
+    await App._updateRequestMetaByParentId(activeRequestId, { lastActive: Date.now() });
   }
 
   async _handleSetActiveEnvironment(activeEnvironmentId) {
@@ -1151,7 +1164,7 @@ function mapStateToProps(state, props) {
 
   // Entities
   const entitiesLists = selectEntitiesLists(state, props);
-  const { workspaces, environments, requests, requestGroups } = entitiesLists;
+  const { workspaces, environments, requests, requestGroups, requestMetas } = entitiesLists;
 
   const settings = entitiesLists.settings[0];
 
@@ -1202,6 +1215,7 @@ function mapStateToProps(state, props) {
     unseenWorkspaces,
     requestGroups,
     requests,
+    requestMetas,
     oAuth2Token,
     isLoading,
     loadStartTime,

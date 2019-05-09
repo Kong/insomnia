@@ -25,6 +25,7 @@ type Props = {
 const HOT_KEY_DEFS: Array<HotKeyDefinition> = [
   hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
   hotKeyRefs.REQUEST_QUICK_SWITCH,
+  hotKeyRefs.SHOW_RECENT_REQUESTS,
   hotKeyRefs.REQUEST_SEND,
   hotKeyRefs.REQUEST_SHOW_OPTIONS,
   hotKeyRefs.REQUEST_SHOW_CREATE,

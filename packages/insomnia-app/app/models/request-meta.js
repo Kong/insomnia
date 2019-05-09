@@ -16,6 +16,7 @@ export function init() {
     activeResponseId: null,
     savedRequestBody: {},
     pinned: false,
+    lastActive: 0,
   };
 }
 
