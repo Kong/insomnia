@@ -1,5 +1,5 @@
 // @flow
-import needsRestart from 'electron-squirrel-startup';
+import needsRestart from './main/squirrel-startup';
 import * as electron from 'electron';
 import * as errorHandling from './main/error-handling';
 import * as updates from './main/updates';
