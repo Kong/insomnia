@@ -64,16 +64,21 @@ export default async function(
     throw new Error(`[oauth2] No body returned from ${url}`);
   }
 
-  const results = responseToObject(bodyBuffer.toString(), [
-    c.P_ACCESS_TOKEN,
-    c.P_REFRESH_TOKEN,
-    c.P_EXPIRES_IN,
-    c.P_TOKEN_TYPE,
-    c.P_SCOPE,
-    c.P_ERROR,
-    c.P_ERROR_URI,
-    c.P_ERROR_DESCRIPTION,
-  ]);
-
-  return results;
+  return responseToObject(
+    bodyBuffer.toString(),
+    [
+      c.P_ACCESS_TOKEN,
+      c.P_REFRESH_TOKEN,
+      c.P_EXPIRES_IN,
+      c.P_TOKEN_TYPE,
+      c.P_SCOPE,
+      c.P_ERROR,
+      c.P_ERROR_URI,
+      c.P_ERROR_DESCRIPTION,
+    ],
+    {
+      // Refresh token is optional, so we'll default it to the existing value
+      [c.P_REFRESH_TOKEN]: refreshToken,
+    },
+  );
 }
