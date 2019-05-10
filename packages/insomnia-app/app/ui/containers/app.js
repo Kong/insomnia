@@ -129,6 +129,7 @@ class App extends PureComponent {
             maxWorkspaces: 0,
             selectOnKeyup: true,
             title: 'Recent Requests',
+            hideNeverActiveRequests: true,
 
             // Add an open delay so the dialog won't show for quick presses
             openDelay: 150,

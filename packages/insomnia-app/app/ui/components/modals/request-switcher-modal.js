@@ -41,6 +41,7 @@ type State = {
   maxWorkspaces: number,
   disableInput: boolean,
   selectOnKeyup: boolean,
+  hideNeverActiveRequests: boolean,
   title: string | null,
 };
 
@@ -63,6 +64,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       maxWorkspaces: 20,
       disableInput: false,
       selectOnKeyup: false,
+      hideNeverActiveRequests: false,
       title: null,
     };
   }
@@ -105,8 +107,8 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     this.setState({ activeIndex });
   }
 
-  _activateCurrentIndex() {
-    const { activeIndex, matchedRequests, matchedWorkspaces } = this.state;
+  async _activateCurrentIndex() {
+    const { activeIndex, matchedRequests, matchedWorkspaces, searchString } = this.state;
 
     if (activeIndex < matchedRequests.length) {
       // Activate the request if there is one
@@ -119,9 +121,11 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       if (workspace) {
         this._activateWorkspace(workspace);
       }
-    } else {
+    } else if (searchString) {
       // Create request if no match
-      this._createRequestFromSearch();
+      await this._createRequestFromSearch();
+    } else {
+      // Do nothing
     }
   }
 
@@ -211,7 +215,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
 
   async _handleChangeValue(searchString: string) {
     const { workspace, workspaceChildren, workspaces, requestMetas, activeRequest } = this.props;
-    const { maxRequests, maxWorkspaces } = this.state;
+    const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = this.state;
 
     const lastActiveMap = {};
     for (const meta of requestMetas) {
@@ -232,6 +236,10 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
 
         return bLA - aLA;
       });
+
+    if (hideNeverActiveRequests) {
+      matchedRequests = matchedRequests.filter(r => lastActiveMap[r._id]);
+    }
 
     if (searchString) {
       matchedRequests = matchedRequests
@@ -271,6 +279,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       maxWorkspaces?: number,
       disableInput?: boolean,
       selectOnKeyup?: boolean,
+      hideNeverActiveRequests?: boolean,
       title?: string,
       openDelay?: number,
     } = {},
@@ -283,6 +292,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       maxRequests: typeof options.maxRequests === 'number' ? options.maxRequests : 20,
       maxWorkspaces: typeof options.maxWorkspaces === 'number' ? options.maxWorkspaces : 20,
       disableInput: !!options.disableInput,
+      hideNeverActiveRequests: !!options.hideNeverActiveRequests,
       selectOnKeyup: !!options.selectOnKeyup,
       title: options.title || null,
     });
@@ -435,7 +445,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
               })}
             </ul>
 
-            {matchedRequests.length === 0 && matchedWorkspaces.length === 0 && (
+            {searchString && matchedRequests.length === 0 && matchedWorkspaces.length === 0 && (
               <div className="text-center pad-bottom">
                 <p>
                   No matches found for <strong>{searchString}</strong>
