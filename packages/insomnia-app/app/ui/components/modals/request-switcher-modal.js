@@ -15,46 +15,59 @@ import * as models from '../../../models';
 import type { RequestGroup } from '../../../models/request-group';
 import type { Request } from '../../../models/request';
 import type { Workspace } from '../../../models/workspace';
+import { hotKeyRefs } from '../../../common/hotkeys';
+import { executeHotKey } from '../../../common/hotkeys-listener';
+import KeydownBinder from '../keydown-binder';
+import type { RequestMeta } from '../../../models/request-meta';
 
 type Props = {
   handleSetActiveWorkspace: (id: string) => void,
   activateRequest: (id: string) => void,
-  workspaceId: string,
-  activeRequestParentId: string,
+  activeRequest: ?Request,
   workspaceChildren: Array<Request | RequestGroup>,
+  workspace: Workspace,
   workspaces: Array<Workspace>,
+  requestMetas: Array<RequestMeta>,
 };
 
 type State = {
   searchString: string,
-  requestGroups: Array<RequestGroup>,
-  requests: Array<Request>,
   workspaces: Array<Workspace>,
   matchedRequests: Array<Request>,
   matchedWorkspaces: Array<Workspace>,
   activeIndex: number,
+  maxRequests: number,
+  maxWorkspaces: number,
+  disableInput: boolean,
+  selectOnKeyup: boolean,
+  title: string | null,
 };
 
 @autobind
 class RequestSwitcherModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _input: ?HTMLInputElement;
+  _keysPressed: { [string]: boolean };
 
   constructor(props: Props) {
     super(props);
 
+    this._keysPressed = {};
     this.state = {
       searchString: '',
-      requestGroups: [],
-      requests: [],
       workspaces: [],
       matchedRequests: [],
       matchedWorkspaces: [],
       activeIndex: -1,
+      maxRequests: 20,
+      maxWorkspaces: 20,
+      disableInput: false,
+      selectOnKeyup: false,
+      title: null,
     };
   }
 
-  _handleKeydown(e: KeyboardEvent) {
+  _handleInputKeydown(e: KeyboardEvent) {
     const keyCode = e.keyCode;
 
     if (keyCode === 38 || (keyCode === 9 && e.shiftKey)) {
@@ -113,13 +126,14 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
   }
 
   async _createRequestFromSearch() {
-    const { activeRequestParentId } = this.props;
+    const { activeRequest, workspace } = this.props;
     const { searchString } = this.state;
 
     // Create the request if nothing matched
+    const parentId = activeRequest ? activeRequest.parentId : workspace._id;
     const patch = {
+      parentId,
       name: searchString,
-      parentId: activeRequestParentId,
     };
 
     const request = await models.request.create(patch);
@@ -196,27 +210,27 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
   }
 
   async _handleChangeValue(searchString: string) {
-    const { workspaceChildren, workspaces } = this.props;
-    const { workspaceId, activeRequestParentId } = this.props;
+    const { workspace, workspaceChildren, workspaces, requestMetas, activeRequest } = this.props;
+    const { maxRequests, maxWorkspaces } = this.state;
+
+    const lastActiveMap = {};
+    for (const meta of requestMetas) {
+      lastActiveMap[meta.parentId] = meta.lastActive;
+    }
 
     // OPTIMIZATION: This only filters if we have a filter
     let matchedRequests = workspaceChildren
       .filter(d => d.type === models.request.type)
       .sort((a, b) => {
-        if (a.parentId === b.parentId) {
-          // Sort Requests by name inside of the same parent
-          // TODO: Sort by quality of match (eg. start vs mid string, etc)
+        const aLA = lastActiveMap[a._id] || 0;
+        const bLA = lastActiveMap[b._id] || 0;
+
+        // If lastActive same, go by name
+        if (aLA === bLA) {
           return a.name > b.name ? 1 : -1;
-        } else {
-          // Sort RequestGroups by relevance if Request isn't in same parent
-          if (a.parentId === activeRequestParentId) {
-            return -1;
-          } else if (b.parentId === activeRequestParentId) {
-            return 1;
-          } else {
-            return a.parentId > b.parentId ? -1 : 1;
-          }
         }
+
+        return bLA - aLA;
       });
 
     if (searchString) {
@@ -230,33 +244,53 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
         .map(v => v.request);
     }
 
-    // Show 20 max
-    matchedRequests = matchedRequests.slice(0, 20);
+    const matchedWorkspaces = workspaces
+      .filter(w => w._id !== workspace._id)
+      .filter(w => {
+        const name = w.name.toLowerCase();
+        const toMatch = searchString.toLowerCase();
+        return name.indexOf(toMatch) !== -1;
+      });
 
-    const matchedWorkspaces = workspaces.filter(w => w._id !== workspaceId).filter(w => {
-      const name = w.name.toLowerCase();
-      const toMatch = searchString.toLowerCase();
-      return name.indexOf(toMatch) !== -1;
-    });
-
-    const activeIndex = searchString ? 0 : -1;
+    // Make sure we select the first item but we don't want to select the currently active
+    // one because that wouldn't make any sense.
+    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
+    const indexOfFirstNonActiveRequest = matchedRequests.findIndex(r => r._id !== activeRequestId);
 
     this.setState({
-      activeIndex,
       searchString,
-      matchedWorkspaces,
-
-      // Ugh. Force cast to make Flow happy
-      matchedRequests: ((matchedRequests: any): Array<Request>),
+      activeIndex: indexOfFirstNonActiveRequest,
+      matchedRequests: (matchedRequests: Array<any>).slice(0, maxRequests),
+      matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     });
   }
 
-  async show() {
+  async show(
+    options: {
+      maxRequests?: number,
+      maxWorkspaces?: number,
+      disableInput?: boolean,
+      selectOnKeyup?: boolean,
+      title?: string,
+    } = {},
+  ) {
+    if (this.modal && this.modal.isOpen()) {
+      return;
+    }
+
+    this.setState({
+      maxRequests: typeof options.maxRequests === 'number' ? options.maxRequests : 20,
+      maxWorkspaces: typeof options.maxWorkspaces === 'number' ? options.maxWorkspaces : 20,
+      disableInput: !!options.disableInput,
+      selectOnKeyup: !!options.selectOnKeyup,
+      title: options.title || null,
+    });
+
     await this._handleChangeValue('');
+
     this.modal && this.modal.show();
-    setTimeout(() => {
-      this._input && this._input.focus();
-    }, 100);
+
+    setTimeout(() => this._input && this._input.focus(), 100);
   }
 
   hide() {
@@ -271,95 +305,134 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     }
   }
 
+  _handleHide() {
+    // Safety net in case we miss a keyup or something.
+    this._keysPressed = {};
+  }
+
+  _handleKeydown(e: KeyboardEvent) {
+    this._keysPressed[e.keyCode + ''] = true;
+    executeHotKey(e, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
+      this._setActiveIndex(this.state.activeIndex + 1);
+    });
+
+    executeHotKey(e, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
+      this._setActiveIndex(this.state.activeIndex - 1);
+    });
+  }
+
+  _handleKeyup(e: KeyboardEvent) {
+    const { selectOnKeyup } = this.state;
+
+    delete this._keysPressed[e.keyCode + ''];
+
+    if (selectOnKeyup && Object.keys(this._keysPressed).length === 0) {
+      this._activateCurrentIndex();
+      this.hide();
+    }
+  }
+
   render() {
-    const { searchString, activeIndex, matchedRequests, matchedWorkspaces } = this.state;
+    const {
+      searchString,
+      activeIndex,
+      matchedRequests,
+      matchedWorkspaces,
+      disableInput,
+      title,
+    } = this.state;
 
     const { workspaceChildren } = this.props;
     const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
 
     return (
-      <Modal ref={this._setModalRef} dontFocus tall>
-        <ModalHeader hideCloseButton>
-          <div className="pull-right txt-sm pad-right tall">
-            <span className="vertically-center">
-              <div>
-                <span className="monospace">tab</span> or&nbsp;
-                <span className="monospace">↑↓</span> to navigate&nbsp;&nbsp;&nbsp;&nbsp;
-                <span className="monospace">↵</span> &nbsp;to select&nbsp;&nbsp;&nbsp;&nbsp;
-                <span className="monospace">esc</span> to dismiss
-              </div>
-            </span>
-          </div>
-          <div>Quick Switch</div>
-        </ModalHeader>
-        <ModalBody className="request-switcher">
-          <div className="pad" onKeyDown={this._handleKeydown}>
-            <div className="form-control form-control--outlined no-margin">
-              <input
-                type="text"
-                placeholder="Filter by name or folder"
-                ref={this._setInputRef}
-                value={searchString}
-                onChange={this._handleChange}
-              />
-            </div>
-          </div>
-          <ul>
-            {matchedRequests.map((r, i) => {
-              const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
-              const buttonClasses = classnames(
-                'btn btn--expandable-small wide text-left pad-bottom',
-                { focus: activeIndex === i },
-              );
-
-              return (
-                <li key={r._id}>
-                  <Button onClick={this._activateRequest} value={r} className={buttonClasses}>
+      <KeydownBinder onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
+        <Modal ref={this._setModalRef} dontFocus={!disableInput} onHide={this._handleHide}>
+          <ModalHeader hideCloseButton>
+            {title || (
+              <React.Fragment>
+                <div className="pull-right txt-sm pad-right tall">
+                  <span className="vertically-center">
                     <div>
-                      {requestGroup ? (
-                        <div className="pull-right faint italic">
-                          <Highlight search={searchString} text={this._groupOf(r).join(' / ')} />
-                          &nbsp;&nbsp;
-                          <i className="fa fa-folder-o" />
-                        </div>
-                      ) : null}
-                      <Highlight search={searchString} text={(r: any).name} />
+                      <span className="monospace">tab</span> or&nbsp;
+                      <span className="monospace">↑↓</span> to navigate&nbsp;&nbsp;&nbsp;&nbsp;
+                      <span className="monospace">↵</span> &nbsp;to select&nbsp;&nbsp;&nbsp;&nbsp;
+                      <span className="monospace">esc</span> to dismiss
                     </div>
-                    <div className="margin-left-xs faint">
-                      <MethodTag method={(r: any).method} />
-                      <Highlight search={searchString} text={(r: any).url} />
-                    </div>
-                  </Button>
-                </li>
-              );
-            })}
+                  </span>
+                </div>
+                <div>Quick Switch</div>
+              </React.Fragment>
+            )}
+          </ModalHeader>
+          <ModalBody className="request-switcher">
+            {!disableInput && (
+              <div className="pad" onKeyDown={this._handleInputKeydown}>
+                <div className="form-control form-control--outlined no-margin">
+                  <input
+                    type="text"
+                    placeholder="Filter by name or folder"
+                    ref={this._setInputRef}
+                    value={searchString}
+                    onChange={this._handleChange}
+                  />
+                </div>
+              </div>
+            )}
+            <ul>
+              {matchedRequests.map((r, i) => {
+                const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
+                const buttonClasses = classnames(
+                  'btn btn--expandable-small wide text-left pad-bottom',
+                  { focus: activeIndex === i },
+                );
 
-            {matchedRequests.length > 0 &&
-              matchedWorkspaces.length > 0 && (
+                return (
+                  <li key={r._id}>
+                    <Button onClick={this._activateRequest} value={r} className={buttonClasses}>
+                      <div>
+                        {requestGroup ? (
+                          <div className="pull-right faint italic">
+                            <Highlight search={searchString} text={this._groupOf(r).join(' / ')} />
+                            &nbsp;&nbsp;
+                            <i className="fa fa-folder-o" />
+                          </div>
+                        ) : null}
+                        <Highlight search={searchString} text={(r: any).name} />
+                      </div>
+                      <div className="margin-left-xs faint">
+                        <MethodTag method={(r: any).method} />
+                        <Highlight search={searchString} text={(r: any).url} />
+                      </div>
+                    </Button>
+                  </li>
+                );
+              })}
+
+              {matchedRequests.length > 0 && matchedWorkspaces.length > 0 && (
                 <li className="pad-left pad-right">
                   <hr />
                 </li>
               )}
 
-            {matchedWorkspaces.map((w, i) => {
-              const buttonClasses = classnames('btn btn--super-compact wide text-left', {
-                focus: activeIndex - matchedRequests.length === i,
-              });
+              {matchedWorkspaces.map((w, i) => {
+                const buttonClasses = classnames('btn btn--super-compact wide text-left', {
+                  focus: activeIndex - matchedRequests.length === i,
+                });
 
-              return (
-                <li key={w._id}>
-                  <Button onClick={this._activateWorkspace} value={w} className={buttonClasses}>
-                    <i className="fa fa-random" />
-                    &nbsp;&nbsp;&nbsp; Switch to <strong>{(w: any).name}</strong>
-                  </Button>
-                </li>
-              );
-            })}
-          </ul>
+                return (
+                  <li key={w._id}>
+                    <Button onClick={this._activateWorkspace} value={w} className={buttonClasses}>
+                      <i className="fa fa-random" />
+                      &nbsp;&nbsp;&nbsp; Switch to <strong>{(w: any).name}</strong>
+                    </Button>
+                  </li>
+                );
+              })}
+            </ul>
 
-          {matchedRequests.length === 0 &&
-            matchedWorkspaces.length === 0 && (
-              <div className="text-center">
+            {matchedRequests.length === 0 && matchedWorkspaces.length === 0 && (
+              <div className="text-center pad-bottom">
                 <p>
                   No matches found for <strong>{searchString}</strong>
                 </p>
@@ -372,8 +445,9 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
                 </button>
               </div>
             )}
-        </ModalBody>
-      </Modal>
+          </ModalBody>
+        </Modal>
+      </KeydownBinder>
     );
   }
 }
