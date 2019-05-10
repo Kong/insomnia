@@ -889,7 +889,7 @@ class App extends PureComponent {
       });
     }
 
-    await vcs.switchProject(activeWorkspace._id, activeWorkspace.name);
+    await vcs.switchProject(activeWorkspace._id);
 
     this.setState({ vcs });
   }

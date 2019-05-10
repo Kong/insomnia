@@ -6,19 +6,19 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base
 import type { Workspace } from '../../../models/workspace';
 import { showAlert, showModal } from '../modals';
 import SyncStagingModal from '../modals/sync-staging-modal';
-import { batchModifyDocs } from '../../../common/database';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import SyncHistoryModal from '../modals/sync-history-modal';
 import SyncShareModal from '../modals/sync-share-modal';
 import SyncBranchesModal from '../modals/sync-branches-modal';
 import VCS from '../../../sync/vcs';
-import type { Snapshot, Status, StatusCandidate } from '../../../sync/types';
+import type { Project, Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import ErrorModal from '../modals/error-modal';
 import Tooltip from '../tooltip';
 import LoginModal from '../modals/login-modal';
 import * as session from '../../../account/session';
 import PromptButton from '../base/prompt-button';
+import * as db from '../../../common/database';
 
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
@@ -46,7 +46,9 @@ type State = {
   initializing: boolean,
   historyCount: number,
   loadingPull: boolean,
+  loadingProjectPull: boolean,
   loadingPush: boolean,
+  remoteProjects: Array<Project>,
 };
 
 @autobind
@@ -68,16 +70,26 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       initializing: true,
       loadingPull: false,
       loadingPush: false,
+      loadingProjectPull: false,
       status: {
         key: 'n/a',
         stage: {},
         unstaged: {},
       },
+      remoteProjects: [],
     };
   }
 
   async refreshMainAttributes(extraState?: Object = {}) {
-    const { vcs, syncItems } = this.props;
+    const { vcs, syncItems, workspace } = this.props;
+
+    if (!vcs.hasProject()) {
+      const remoteProjects = await vcs.remoteProjects();
+      const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
+      this.setState({ remoteProjects: matchedProjects });
+      return;
+    }
+
     const localBranches = (await vcs.getBranches()).sort();
     const currentBranch = await vcs.getBranch();
     const historyCount = await vcs.getHistoryCount();
@@ -191,7 +203,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     this.setState({ loadingPull: true });
     try {
       const delta = await vcs.pull(syncItems);
-      await batchModifyDocs(delta);
+      await db.batchModifyDocs(delta);
       this.refreshOnNextSyncItems = true;
     } catch (err) {
       showModal(ErrorModal, {
@@ -205,7 +217,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   async _handleRollback(snapshot: Snapshot) {
     const { vcs, syncItems } = this.props;
     const delta = await vcs.rollback(snapshot.id, syncItems);
-    await batchModifyDocs(delta);
+    await db.batchModifyDocs(delta);
     this.refreshOnNextSyncItems = true;
   }
 
@@ -214,7 +226,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
     try {
       const delta = await vcs.rollbackToLatest(syncItems);
-      await batchModifyDocs(delta);
+      await db.batchModifyDocs(delta);
     } catch (err) {
       showModal(ErrorModal, {
         title: 'Revert Error',
@@ -233,11 +245,33 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     await this.refreshMainAttributes();
   }
 
+  async _handleEnableSync() {
+    const { vcs, workspace } = this.props;
+    await vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
+  }
+
+  async _handleSetProject(p: Project) {
+    const { vcs } = this.props;
+    this.setState({ loadingProjectPull: true });
+    await vcs.setProject(p);
+    await vcs.checkout([], 'master');
+
+    // Pull changes
+    await vcs.pull([]); // There won't be any existing docs since it's a new pull
+    const flushId = await db.bufferChanges();
+    for (const doc of await vcs.allDocuments()) {
+      await db.upsert(doc);
+    }
+    await db.flushChanges(flushId);
+
+    await this.refreshMainAttributes({ loadingProjectPull: false });
+  }
+
   async _handleSwitchBranch(branch: string) {
     const { vcs, syncItems } = this.props;
     try {
       const delta = await vcs.checkout(syncItems, branch);
-      await batchModifyDocs(delta);
+      await db.batchModifyDocs(delta);
     } catch (err) {
       showAlert({
         title: 'Branch Switch Error',
@@ -280,6 +314,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       loadingPull,
       loadingPush,
     } = this.state;
+
     const canPush = ahead > 0;
     const canPull = behind > 0;
     const canCreateSnapshot =
@@ -297,56 +332,56 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
     const snapshotToolTipMsg = canCreateSnapshot ? 'Local changes made' : 'No local changes made';
 
-    if (currentBranch !== null) {
-      return (
-        <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
-          <div className="ellipsis">
-            <i className="fa fa-code-fork space-right" />{' '}
-            {initializing ? 'Initializing...' : currentBranch}
-          </div>
-          <div className="space-left">
-            <Tooltip message={snapshotToolTipMsg} delay={800}>
-              <i
-                className={classnames('icon fa fa-cube fa--fixed-width', {
-                  'super-duper-faint': !canCreateSnapshot,
-                })}
-              />
-            </Tooltip>
-
-            {/* Only show cloud icons if logged in */}
-            {session.isLoggedIn() && (
-              <React.Fragment>
-                {loadingPull ? (
-                  loadIcon
-                ) : (
-                  <Tooltip message={pullToolTipMsg} delay={800}>
-                    <i
-                      className={classnames('fa fa-cloud-download fa--fixed-width', {
-                        'super-duper-faint': !canPull,
-                      })}
-                    />
-                  </Tooltip>
-                )}
-
-                {loadingPush ? (
-                  loadIcon
-                ) : (
-                  <Tooltip message={pushToolTipMsg} delay={800}>
-                    <i
-                      className={classnames('fa fa-cloud-upload fa--fixed-width', {
-                        'super-duper-faint': !canPush,
-                      })}
-                    />
-                  </Tooltip>
-                )}
-              </React.Fragment>
-            )}
-          </div>
-        </DropdownButton>
-      );
-    } else {
+    if (currentBranch === null) {
       return <React.Fragment>Sync</React.Fragment>;
     }
+
+    return (
+      <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
+        <div className="ellipsis">
+          <i className="fa fa-code-fork space-right" />{' '}
+          {initializing ? 'Initializing...' : currentBranch}
+        </div>
+        <div className="space-left">
+          <Tooltip message={snapshotToolTipMsg} delay={800}>
+            <i
+              className={classnames('icon fa fa-cube fa--fixed-width', {
+                'super-duper-faint': !canCreateSnapshot,
+              })}
+            />
+          </Tooltip>
+
+          {/* Only show cloud icons if logged in */}
+          {session.isLoggedIn() && (
+            <React.Fragment>
+              {loadingPull ? (
+                loadIcon
+              ) : (
+                <Tooltip message={pullToolTipMsg} delay={800}>
+                  <i
+                    className={classnames('fa fa-cloud-download fa--fixed-width', {
+                      'super-duper-faint': !canPull,
+                    })}
+                  />
+                </Tooltip>
+              )}
+
+              {loadingPush ? (
+                loadIcon
+              ) : (
+                <Tooltip message={pushToolTipMsg} delay={800}>
+                  <i
+                    className={classnames('fa fa-cloud-upload fa--fixed-width', {
+                      'super-duper-faint': !canPush,
+                    })}
+                  />
+                </Tooltip>
+              )}
+            </React.Fragment>
+          )}
+        </div>
+      </DropdownButton>
+    );
   }
 
   render() {
@@ -354,7 +389,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       return null;
     }
 
-    const { className } = this.props;
+    const { className, vcs } = this.props;
     const {
       localBranches,
       currentBranch,
@@ -362,6 +397,8 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       historyCount,
       loadingPull,
       loadingPush,
+      loadingProjectPull,
+      remoteProjects,
       compare: { ahead, behind },
     } = this.state;
 
@@ -370,23 +407,60 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
     const visibleBranches = localBranches.filter(b => !b.match(/\.hidden$/));
 
+    const syncMenuHeader = (
+      <DropdownDivider>
+        Insomnia Sync{' '}
+        <HelpTooltip>
+          Sync and collaborate on workspaces{' '}
+          <Link href="https://support.insomnia.rest/article/67-version-control">
+            <span className="no-wrap">
+              <br />
+              Documentation <i className="fa fa-external-link" />
+            </span>
+          </Link>
+        </HelpTooltip>
+      </DropdownDivider>
+    );
+
+    if (loadingProjectPull) {
+      return (
+        <div className={className}>
+          <button className="btn btn--compact wide">
+            <i className="fa fa-refresh fa-spin" /> Initializing
+          </button>
+        </div>
+      );
+    }
+
+    if (!vcs.hasProject()) {
+      return (
+        <div className={className}>
+          <Dropdown className="wide tall" onOpen={this._handleOpen}>
+            <DropdownButton className="btn btn--compact wide">
+              <i className="fa fa-code-fork " /> Setup Sync
+            </DropdownButton>
+            {syncMenuHeader}
+            {remoteProjects.length === 0 && (
+              <DropdownItem onClick={this._handleEnableSync}>
+                <i className="fa fa-plus-circle" /> Create Local Project
+              </DropdownItem>
+            )}
+            {remoteProjects.map(p => (
+              <DropdownItem key={p.id} onClick={() => this._handleSetProject(p)}>
+                <i className="fa fa-cloud-download" /> Pull <strong>{p.name}</strong>
+              </DropdownItem>
+            ))}
+          </Dropdown>
+        </div>
+      );
+    }
+
     return (
       <div className={className}>
         <Dropdown className="wide tall" onOpen={this._handleOpen}>
           {this.renderButton()}
 
-          <DropdownDivider>
-            Insomnia Sync{' '}
-            <HelpTooltip>
-              Sync and collaborate on workspaces{' '}
-              <Link href="https://support.insomnia.rest/article/67-version-control">
-                <span className="no-wrap">
-                  <br />
-                  Documentation <i className="fa fa-external-link" />
-                </span>
-              </Link>
-            </HelpTooltip>
-          </DropdownDivider>
+          {syncMenuHeader}
 
           {!session.isLoggedIn() && (
             <DropdownItem onClick={SyncDropdown._handleShowLoginModal}>

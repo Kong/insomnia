@@ -312,7 +312,6 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
   _handleKeydown(e: KeyboardEvent) {
     if (e.keyCode === keyboardKeys.esc.keyCode) {
       this.hide();
-      console.log('hide');
       return;
     }
 
