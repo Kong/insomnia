@@ -64,6 +64,7 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
         {
           autoload: true,
           filename: filePath,
+          corruptAlertThreshold: 0.9,
         },
         config,
       ),
