@@ -175,7 +175,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
 
     // Still has more parents
     if (currentGroupName) {
-      return [currentGroupName, ...this._groupOf(matchedGroups[0])];
+      return [...this._groupOf(matchedGroups[0]), currentGroupName];
     }
 
     // It's the child
