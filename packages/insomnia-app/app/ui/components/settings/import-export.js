@@ -65,6 +65,10 @@ class ImportExport extends PureComponent {
               From URL
             </DropdownItem>
           </Dropdown>
+          &nbsp;&nbsp;
+          <Link href="https://insomnia.rest/create-run-button/" className="btn btn--compact" button>
+            Create Run Button
+          </Link>
         </div>
         <p className="italic faint">* Tip: You can also paste Curl commands into the URL bar</p>
       </div>
