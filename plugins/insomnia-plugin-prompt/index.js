@@ -81,7 +81,11 @@ module.exports.templateTags = [
 
       // Only prompt when we're actually sending
       if (context.renderPurpose !== 'send') {
-        return cachedValue || '';
+        if (cachedValue !== null) {
+          return cachedValue;
+        } else {
+          return defaultValue || '';
+        }
       }
 
       const value = await context.app.prompt(title || 'Enter Value', {
