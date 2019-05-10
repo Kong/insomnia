@@ -13,8 +13,10 @@ export const canSync = true;
 type BaseEnvironment = {
   name: string,
   data: Object,
+  propertyMap: Object,
   color: string | null,
   metaSortKey: number,
+  sortProperties: boolean,
 
   // For sync control
   isPrivate: boolean,
@@ -26,9 +28,11 @@ export function init() {
   return {
     name: 'New Environment',
     data: {},
+    propertyMap: {},
     color: null,
     isPrivate: false,
     metaSortKey: Date.now(),
+    sortProperties: true,
   };
 }
 
