@@ -84,9 +84,9 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     });
   }
 
-  getValue(): EnvironmentInfo {
+  getValue(): EnvironmentInfo | null {
     if (this._editor) {
-      const data = orderedJSON.parse(this._editor.getValue(), '&');
+      const data = orderedJSON.parse(this._editor.getValue(), '&', `~|`);
 
       return {
         object: data.object,
