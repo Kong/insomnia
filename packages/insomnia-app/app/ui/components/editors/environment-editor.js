@@ -142,7 +142,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
         {!error && warning && <p className="notice warning margin-x margin-y-sm">{warning}</p>}
         <div className="form-control margin-x margin-y-sm">
           <label>
-            Maintain property order
+            Keep property order
             <input
               type="checkbox"
               checked={maintainOrder}
