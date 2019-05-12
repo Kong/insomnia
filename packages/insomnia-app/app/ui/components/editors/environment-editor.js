@@ -3,6 +3,7 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
+import HelpTooltip from '../help-tooltip';
 
 type Props = {
   environment: Object,
@@ -21,6 +22,7 @@ type Props = {
 type State = {
   error: string | null,
   warning: string | null,
+  maintainOrder: boolean,
 };
 
 @autobind
@@ -32,6 +34,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     this.state = {
       error: null,
       warning: null,
+      maintainOrder: props.propertyMap || false,
     };
   }
 
@@ -71,6 +74,10 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     this._editor = n;
   }
 
+  _updateMaintainOrderBoolean(checked: boolean) {
+    this.setState({ maintainOrder: !checked });
+  }
+
   getValue() {
     if (this._editor) {
       return orderedJSON.parse(this._editor.getValue(), '&');
@@ -98,7 +105,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
       ...props
     } = this.props;
 
-    const { error, warning } = this.state;
+    const { error, warning, maintainOrder } = this.state;
 
     return (
       <div className="environment-editor">
@@ -118,8 +125,21 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           mode="application/json"
           {...props}
         />
-        {error && <p className="notice error margin">{error}</p>}
-        {!error && warning && <p className="notice warning margin">{warning}</p>}
+        {error && <p className="notice error margin-x margin-y-sm">{error}</p>}
+        {!error && warning && <p className="notice warning margin-x margin-y-sm">{warning}</p>}
+        <div className="form-control margin-x margin-y-sm">
+          <label>
+            Maintain property order
+            <input
+              type="checkbox"
+              checked={maintainOrder}
+              onChange={this._updateMaintainOrderBoolean}
+            />
+            <HelpTooltip position="top" className="space-left">
+              If disabled, properties will automatically be switched to alphabetical order.
+            </HelpTooltip>
+          </label>
+        </div>
       </div>
     );
   }
