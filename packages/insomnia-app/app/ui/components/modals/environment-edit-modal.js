@@ -33,12 +33,10 @@ class EnvironmentEditModal extends PureComponent {
     let patch;
     try {
       const data = this._envEditor.getValue();
-      if (data && data.object) {
-        patch = {
-          environment: data.object,
-          propertyMap: data.map,
-        };
-      }
+      patch = {
+        environment: data && data.object,
+        propertyMap: data && data.propertyMap,
+      };
     } catch (err) {
       // Invalid JSON probably
       return;
@@ -82,6 +80,11 @@ class EnvironmentEditModal extends PureComponent {
 
     const { requestGroup, isValid } = this.state;
 
+    const environmentInfo = {
+      object: requestGroup ? requestGroup.environment : {},
+      propertyMap: requestGroup && requestGroup.propertyMap,
+    };
+
     return (
       <Modal ref={this._setModalRef} tall {...extraProps}>
         <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
@@ -93,8 +96,7 @@ class EnvironmentEditModal extends PureComponent {
             ref={this._setEditorRef}
             key={requestGroup ? requestGroup._id : 'n/a'}
             lineWrapping={lineWrapping}
-            environment={requestGroup ? requestGroup.environment : {}}
-            propertyMap={requestGroup && requestGroup.propertyMap}
+            environmentInfo={environmentInfo}
             didChange={this._didChange}
             render={render}
             getRenderContext={getRenderContext}

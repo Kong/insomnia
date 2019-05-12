@@ -5,9 +5,13 @@ import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
 import HelpTooltip from '../help-tooltip';
 
-type Props = {
-  environment: Object,
+export type EnvironmentInfo = {
+  object: Object,
   propertyMap: Object | null,
+};
+
+type Props = {
+  environmentInfo: EnvironmentInfo,
   didChange: Function,
   editorFontSize: number,
   editorIndentSize: number,
@@ -34,7 +38,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     this.state = {
       error: null,
       warning: null,
-      maintainOrder: props.propertyMap || false,
+      maintainOrder: props.environmentInfo.propertyMap || false,
     };
   }
 
@@ -75,12 +79,19 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
   }
 
   _updateMaintainOrderBoolean(checked: boolean) {
-    this.setState({ maintainOrder: !checked });
+    this.setState({ maintainOrder: !this.state.maintainOrder }, () => {
+      this.props.didChange();
+    });
   }
 
-  getValue() {
+  getValue(): EnvironmentInfo {
     if (this._editor) {
-      return orderedJSON.parse(this._editor.getValue(), '&');
+      const data = orderedJSON.parse(this._editor.getValue(), '&');
+
+      return {
+        object: data.object,
+        propertyMap: (this.state.maintainOrder && data.map) || null,
+      };
     } else {
       return null;
     }
@@ -92,8 +103,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
   render() {
     const {
-      environment,
-      propertyMap,
+      environmentInfo,
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
@@ -117,7 +127,10 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           lineWrapping={lineWrapping}
           keyMap={editorKeyMap}
           onChange={this._handleChange}
-          defaultValue={orderedJSON.stringify(environment, propertyMap)}
+          defaultValue={orderedJSON.stringify(
+            environmentInfo.object,
+            (maintainOrder && environmentInfo.propertyMap) || null,
+          )}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           render={render}

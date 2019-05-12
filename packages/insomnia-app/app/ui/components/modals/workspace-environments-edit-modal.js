@@ -346,12 +346,10 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     let patch;
     try {
       const data = this.environmentEditorRef.getValue();
-      if (data && data.object) {
-        patch = {
-          data: data.object,
-          propertyMap: data.map,
-        };
-      }
+      patch = {
+        data: data && data.object,
+        propertyMap: data && data.propertyMap,
+      };
     } catch (err) {
       // Invalid JSON probably
       return;
@@ -382,6 +380,11 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     const { subEnvironments, rootEnvironment, isValid } = this.state;
 
     const activeEnvironment = this._getActiveEnvironment();
+
+    const environmentInfo = {
+      object: activeEnvironment ? activeEnvironment.data : {},
+      propertyMap: activeEnvironment && activeEnvironment.propertyMap,
+    };
 
     return (
       <Modal ref={this._setModalRef} wide tall {...this.props}>
@@ -491,8 +494,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                 lineWrapping={lineWrapping}
                 ref={this._setEditorRef}
                 key={`${this.editorKey}::${activeEnvironment ? activeEnvironment._id : 'n/a'}`}
-                environment={activeEnvironment ? activeEnvironment.data : {}}
-                propertyMap={activeEnvironment && activeEnvironment.propertyMap}
+                environmentInfo={environmentInfo}
                 didChange={this._didChange}
                 render={render}
                 getRenderContext={getRenderContext}
