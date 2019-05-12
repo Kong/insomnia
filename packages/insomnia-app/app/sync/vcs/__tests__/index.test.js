@@ -8,7 +8,7 @@ function newDoc(id) {
 
 async function vcs(branch) {
   const v = new VCS(new MemoryDriver());
-  await v.switchProject('workspace_1', 'Test Workspace');
+  await v.switchAndCreateProjectIfNotExist('workspace_1', 'Test Workspace');
   await v.checkout([], branch);
   return v;
 }

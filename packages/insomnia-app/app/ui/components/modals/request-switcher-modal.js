@@ -19,6 +19,7 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import KeydownBinder from '../keydown-binder';
 import type { RequestMeta } from '../../../models/request-meta';
+import { keyboardKeys } from '../../../common/keyboard-keys';
 
 type Props = {
   handleSetActiveWorkspace: (id: string) => void,
@@ -40,6 +41,7 @@ type State = {
   maxWorkspaces: number,
   disableInput: boolean,
   selectOnKeyup: boolean,
+  hideNeverActiveRequests: boolean,
   title: string | null,
 };
 
@@ -47,12 +49,11 @@ type State = {
 class RequestSwitcherModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _input: ?HTMLInputElement;
-  _keysPressed: { [string]: boolean };
+  _openTimeout: TimeoutID;
 
   constructor(props: Props) {
     super(props);
 
-    this._keysPressed = {};
     this.state = {
       searchString: '',
       workspaces: [],
@@ -63,6 +64,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       maxWorkspaces: 20,
       disableInput: false,
       selectOnKeyup: false,
+      hideNeverActiveRequests: false,
       title: null,
     };
   }
@@ -105,8 +107,8 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     this.setState({ activeIndex });
   }
 
-  _activateCurrentIndex() {
-    const { activeIndex, matchedRequests, matchedWorkspaces } = this.state;
+  async _activateCurrentIndex() {
+    const { activeIndex, matchedRequests, matchedWorkspaces, searchString } = this.state;
 
     if (activeIndex < matchedRequests.length) {
       // Activate the request if there is one
@@ -119,9 +121,11 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       if (workspace) {
         this._activateWorkspace(workspace);
       }
-    } else {
+    } else if (searchString) {
       // Create request if no match
-      this._createRequestFromSearch();
+      await this._createRequestFromSearch();
+    } else {
+      // Do nothing
     }
   }
 
@@ -175,7 +179,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
 
     // Still has more parents
     if (currentGroupName) {
-      return [currentGroupName, ...this._groupOf(matchedGroups[0])];
+      return [...this._groupOf(matchedGroups[0]), currentGroupName];
     }
 
     // It's the child
@@ -211,7 +215,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
 
   async _handleChangeValue(searchString: string) {
     const { workspace, workspaceChildren, workspaces, requestMetas, activeRequest } = this.props;
-    const { maxRequests, maxWorkspaces } = this.state;
+    const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = this.state;
 
     const lastActiveMap = {};
     for (const meta of requestMetas) {
@@ -232,6 +236,10 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
 
         return bLA - aLA;
       });
+
+    if (hideNeverActiveRequests) {
+      matchedRequests = matchedRequests.filter(r => lastActiveMap[r._id]);
+    }
 
     if (searchString) {
       matchedRequests = matchedRequests
@@ -259,7 +267,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
 
     this.setState({
       searchString,
-      activeIndex: indexOfFirstNonActiveRequest,
+      activeIndex: indexOfFirstNonActiveRequest >= 0 ? indexOfFirstNonActiveRequest : 0,
       matchedRequests: (matchedRequests: Array<any>).slice(0, maxRequests),
       matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     });
@@ -271,7 +279,9 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       maxWorkspaces?: number,
       disableInput?: boolean,
       selectOnKeyup?: boolean,
+      hideNeverActiveRequests?: boolean,
       title?: string,
+      openDelay?: number,
     } = {},
   ) {
     if (this.modal && this.modal.isOpen()) {
@@ -282,18 +292,22 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       maxRequests: typeof options.maxRequests === 'number' ? options.maxRequests : 20,
       maxWorkspaces: typeof options.maxWorkspaces === 'number' ? options.maxWorkspaces : 20,
       disableInput: !!options.disableInput,
+      hideNeverActiveRequests: !!options.hideNeverActiveRequests,
       selectOnKeyup: !!options.selectOnKeyup,
       title: options.title || null,
     });
 
     await this._handleChangeValue('');
 
-    this.modal && this.modal.show();
+    this._openTimeout = setTimeout(() => {
+      this.modal && this.modal.show();
+    }, options.openDelay || 0);
 
     setTimeout(() => this._input && this._input.focus(), 100);
   }
 
   hide() {
+    clearTimeout(this._openTimeout);
     this.modal && this.modal.hide();
   }
 
@@ -305,13 +319,12 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     }
   }
 
-  _handleHide() {
-    // Safety net in case we miss a keyup or something.
-    this._keysPressed = {};
-  }
-
   _handleKeydown(e: KeyboardEvent) {
-    this._keysPressed[e.keyCode + ''] = true;
+    if (e.keyCode === keyboardKeys.esc.keyCode) {
+      this.hide();
+      return;
+    }
+
     executeHotKey(e, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
       this._setActiveIndex(this.state.activeIndex + 1);
     });
@@ -324,9 +337,10 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
   _handleKeyup(e: KeyboardEvent) {
     const { selectOnKeyup } = this.state;
 
-    delete this._keysPressed[e.keyCode + ''];
-
-    if (selectOnKeyup && Object.keys(this._keysPressed).length === 0) {
+    // Handle selection if unpresses all modifier keys. Ideally this would trigger once
+    // the user unpresses the hotkey that triggered this modal but we currently do not
+    // have the facilities to do that.
+    if (selectOnKeyup && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
       this._activateCurrentIndex();
       this.hide();
     }
@@ -347,7 +361,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
 
     return (
       <KeydownBinder onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
-        <Modal ref={this._setModalRef} dontFocus={!disableInput} onHide={this._handleHide}>
+        <Modal ref={this._setModalRef} dontFocus={!disableInput}>
           <ModalHeader hideCloseButton>
             {title || (
               <React.Fragment>
@@ -431,7 +445,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
               })}
             </ul>
 
-            {matchedRequests.length === 0 && matchedWorkspaces.length === 0 && (
+            {searchString && matchedRequests.length === 0 && matchedWorkspaces.length === 0 && (
               <div className="text-center pad-bottom">
                 <p>
                   No matches found for <strong>{searchString}</strong>
