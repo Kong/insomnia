@@ -16,7 +16,6 @@ type BaseEnvironment = {
   propertyMap: Object | null,
   color: string | null,
   metaSortKey: number,
-  sortProperties: boolean,
 
   // For sync control
   isPrivate: boolean,
@@ -32,7 +31,6 @@ export function init() {
     color: null,
     isPrivate: false,
     metaSortKey: Date.now(),
-    sortProperties: true,
   };
 }
 
