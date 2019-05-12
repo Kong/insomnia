@@ -448,39 +448,39 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
               </h1>
 
               {activeEnvironment && rootEnvironment !== activeEnvironment ? (
-                <Dropdown className="space-right" right>
-                  <DropdownButton className="btn btn--clicky">
-                    {activeEnvironment.color && (
-                      <i
-                        className="fa fa-circle space-right"
-                        style={{ color: activeEnvironment.color }}
-                      />
-                    )}
-                    Color <i className="fa fa-caret-down" />
-                  </DropdownButton>
+                <React.Fragment>
+                  <Dropdown className="space-right" right>
+                    <DropdownButton className="btn btn--clicky">
+                      {activeEnvironment.color && (
+                        <i
+                          className="fa fa-circle space-right"
+                          style={{ color: activeEnvironment.color }}
+                        />
+                      )}
+                      Color <i className="fa fa-caret-down" />
+                    </DropdownButton>
 
-                  <DropdownItem value={activeEnvironment} onClick={this._handleClickColorChange}>
-                    <i className="fa fa-circle" style={{ color: activeEnvironment.color }} />
-                    {activeEnvironment.color ? 'Change Color' : 'Assign Color'}
-                  </DropdownItem>
+                    <DropdownItem value={activeEnvironment} onClick={this._handleClickColorChange}>
+                      <i className="fa fa-circle" style={{ color: activeEnvironment.color }} />
+                      {activeEnvironment.color ? 'Change Color' : 'Assign Color'}
+                    </DropdownItem>
 
-                  <DropdownItem
+                    <DropdownItem
+                      value={activeEnvironment}
+                      onClick={this._handleUnsetColor}
+                      disabled={!activeEnvironment.color}>
+                      <i className="fa fa-minus-circle" />
+                      Unset Color
+                    </DropdownItem>
+                  </Dropdown>
+
+                  <PromptButton
                     value={activeEnvironment}
-                    onClick={this._handleUnsetColor}
-                    disabled={!activeEnvironment.color}>
-                    <i className="fa fa-minus-circle" />
-                    Unset Color
-                  </DropdownItem>
-                </Dropdown>
-              ) : null}
-
-              {activeEnvironment && rootEnvironment !== activeEnvironment ? (
-                <PromptButton
-                  value={activeEnvironment}
-                  onClick={this._handleDeleteEnvironment}
-                  className="btn btn--clicky">
-                  <i className="fa fa-trash-o" />
-                </PromptButton>
+                    onClick={this._handleDeleteEnvironment}
+                    className="btn btn--clicky">
+                    <i className="fa fa-trash-o" />
+                  </PromptButton>
+                </React.Fragment>
               ) : null}
             </div>
             <div className="env-modal__editor">
