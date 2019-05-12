@@ -2,9 +2,11 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
+import orderedJSON from 'json-order';
 
 type Props = {
   environment: Object,
+  propertyMap: Object | null,
   didChange: Function,
   editorFontSize: number,
   editorIndentSize: number,
@@ -71,9 +73,9 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
   getValue() {
     if (this._editor) {
-      return JSON.parse(this._editor.getValue());
+      return orderedJSON.parse(this._editor.getValue(), '&');
     } else {
-      return '';
+      return null;
     }
   }
 
@@ -84,6 +86,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
   render() {
     const {
       environment,
+      propertyMap,
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
@@ -107,7 +110,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           lineWrapping={lineWrapping}
           keyMap={editorKeyMap}
           onChange={this._handleChange}
-          defaultValue={JSON.stringify(environment)}
+          defaultValue={orderedJSON.stringify(environment, propertyMap)}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           render={render}

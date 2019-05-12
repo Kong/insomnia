@@ -20,6 +20,7 @@ import type { Environment } from '../../../models/environment';
 import * as db from '../../../common/database';
 import HelpTooltip from '../help-tooltip';
 import Tooltip from '../tooltip';
+import orderedJSON from 'json-order';
 
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
@@ -342,9 +343,15 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    let data;
+    let patch;
     try {
-      data = this.environmentEditorRef.getValue();
+      const data = this.environmentEditorRef.getValue();
+      if (data && data.object) {
+        patch = {
+          data: data.object,
+          propertyMap: data.map,
+        };
+      }
     } catch (err) {
       // Invalid JSON probably
       return;
@@ -355,7 +362,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     if (activeEnvironment) {
       clearTimeout(this.saveTimeout);
       this.saveTimeout = setTimeout(() => {
-        models.environment.update(activeEnvironment, { data });
+        models.environment.update(activeEnvironment, patch);
       }, DEBOUNCE_MILLIS * 4);
     }
   }
@@ -485,6 +492,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                 ref={this._setEditorRef}
                 key={`${this.editorKey}::${activeEnvironment ? activeEnvironment._id : 'n/a'}`}
                 environment={activeEnvironment ? activeEnvironment.data : {}}
+                propertyMap={activeEnvironment && activeEnvironment.propertyMap}
                 didChange={this._didChange}
                 render={render}
                 getRenderContext={getRenderContext}
