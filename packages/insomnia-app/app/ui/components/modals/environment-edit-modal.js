@@ -30,10 +30,22 @@ class EnvironmentEditModal extends PureComponent {
       return;
     }
 
-    const environment = this._envEditor.getValue();
+    let patch;
+    try {
+      const data = this._envEditor.getValue();
+      if (data && data.object) {
+        patch = {
+          environment: data.object,
+          propertyMap: data.map,
+        };
+      }
+    } catch (err) {
+      // Invalid JSON probably
+      return;
+    }
     const { requestGroup } = this.state;
 
-    this.props.onChange(Object.assign({}, requestGroup, { environment }));
+    this.props.onChange(Object.assign({}, requestGroup, patch));
   }
 
   _didChange() {
@@ -82,6 +94,7 @@ class EnvironmentEditModal extends PureComponent {
             key={requestGroup ? requestGroup._id : 'n/a'}
             lineWrapping={lineWrapping}
             environment={requestGroup ? requestGroup.environment : {}}
+            propertyMap={requestGroup && requestGroup.propertyMap}
             didChange={this._didChange}
             render={render}
             getRenderContext={getRenderContext}
