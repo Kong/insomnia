@@ -420,7 +420,7 @@ describe('Response tag', () => {
   });
 });
 
-function _genTestContext(requests, responses) {
+function _genTestContext(requests, responses, extraInfo) {
   requests = requests || [];
   responses = responses || [];
   const bodies = {};
@@ -430,6 +430,15 @@ function _genTestContext(requests, responses) {
   }
   const store = {};
   return {
+    context: {
+      getExtraInfo(key) {
+        if (extraInfo) {
+          return extraInfo[key] || null;
+        } else {
+          return null;
+        }
+      },
+    },
     store: {
       hasItem: key => store.hasOwnProperty(key),
       getItem: key => store[key],
