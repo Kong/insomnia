@@ -92,15 +92,10 @@ module.exports.templateTags = [
 
       let response = await context.util.models.response.getLatestForRequestId(id);
 
-      // Make sure we only send the request once per render so we don't have infinite recursion
-      const recursiveStorageKey = `request.${request._id}`;
-      if (await context.store.hasItem(recursiveStorageKey)) {
-        console.log('[response tag] Preventing recursive render');
-        return null;
-      }
-
       let shouldResend = false;
-      if (resendBehavior === 'never') {
+      if (context.context.getExtraInfo('fromResponseTag')) {
+        shouldResend = false;
+      } else if (resendBehavior === 'never') {
         shouldResend = false;
       } else if (resendBehavior === 'no-history') {
         shouldResend = !response;
@@ -108,19 +103,32 @@ module.exports.templateTags = [
         shouldResend = true;
       }
 
-      // Resend dependent request if needed but only if we're rendering for a send
+      // Make sure we only send the request once per render so we don't have infinite recursion
+      const fromResponseTag = context.context.getExtraInfo('fromResponseTag');
+      if (fromResponseTag) {
+        console.log('[response tag] Preventing recursive render');
+        shouldResend = false;
+      }
+
       if (shouldResend && context.renderPurpose === 'send') {
         console.log('[response tag] Resending dependency');
-        await context.store.setItem(recursiveStorageKey, 'true');
-        response = await context.network.sendRequest(request);
-        await context.store.removeItem(recursiveStorageKey);
+        response = await context.network.sendRequest(request, [
+          { name: 'fromResponseTag', value: true },
+        ]);
       }
 
       if (!response) {
+        console.log('[response tag] No response found');
         throw new Error('No responses for request');
       }
 
+      if (response.error) {
+        console.log('[response tag] Response error ' + response.error);
+        throw new Error('Failed to send dependent request ' + response.error);
+      }
+
       if (!response.statusCode) {
+        console.log('[response tag] Invalid status code ' + response.statusCode);
         throw new Error('No successful responses for request');
       }
 

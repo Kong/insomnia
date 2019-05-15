@@ -418,9 +418,110 @@ describe('Response tag', () => {
       expect(await tag.run(context, 'raw', 'req_1')).toBe('Hello World!');
     });
   });
+
+  describe('Dependency sending', () => {
+    it('sends when behavior=always and no responses', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'always')).toBe('Response res_1');
+    });
+
+    it('sends when behavior=always and some responses', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'text/plain',
+          _body: 'Hello World!',
+        },
+      ];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'always')).toBe('Response res_2');
+    });
+
+    it('sends when behavior=no-history and no responses', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'no-history')).toBe('Response res_1');
+    });
+
+    it('does not send when behavior=no-history and some responses', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [
+        {
+          _id: 'res_existing',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'text/plain',
+          _body: 'Response res_existing',
+        },
+      ];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'no-history')).toBe(
+        'Response res_existing',
+      );
+    });
+
+    it('does not send when behavior=never and no responses', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [];
+      const context = _genTestContext(requests, responses);
+
+      try {
+        expect(await tag.run(context, 'raw', 'req_1', '', 'never')).toBe('Response res_1');
+      } catch (err) {
+        expect(err.message).toBe('No responses for request');
+        return;
+      }
+
+      throw new Error('Running tag should have thrown exception');
+    });
+
+    it('does not send when behavior=never and some responses', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [
+        {
+          _id: 'res_existing',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'text/plain',
+          _body: 'Response res_existing',
+        },
+      ];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'never')).toBe('Response res_existing');
+    });
+
+    it('does not resend recursive', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+
+      const responses = [];
+
+      const context = _genTestContext(requests, responses, { fromResponseTag: true });
+
+      try {
+        await tag.run(context, 'raw', 'req_1', '', 'always');
+      } catch (err) {
+        expect(err.message).toBe('No responses for request');
+        return;
+      }
+
+      throw new Error('Running tag should have thrown exception');
+    });
+  });
 });
 
-function _genTestContext(requests, responses) {
+function _genTestContext(requests, responses, extraInfoRoot) {
+  let _extraInfo = extraInfoRoot || {};
   requests = requests || [];
   responses = responses || [];
   const bodies = {};
@@ -430,6 +531,32 @@ function _genTestContext(requests, responses) {
   }
   const store = {};
   return {
+    renderPurpose: 'send',
+    context: {
+      getExtraInfo(key) {
+        if (_extraInfo) {
+          return _extraInfo[key] || null;
+        } else {
+          return null;
+        }
+      },
+    },
+    network: {
+      sendRequest(request, extraInfo) {
+        _extraInfo = { ..._extraInfo, ...extraInfo };
+        const id = `res_${responses.length + 1}`;
+        const res = {
+          _id: id,
+          parentId: request._id,
+          statusCode: 200,
+          contentType: 'text/plain',
+        };
+
+        bodies[res._id] = `Response ${id}`;
+        responses.push(res);
+        return res;
+      },
+    },
     store: {
       hasItem: key => store.hasOwnProperty(key),
       getItem: key => store[key],
