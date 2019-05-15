@@ -96,9 +96,9 @@ export async function buildRenderContext(
   // Render the context with itself to fill in the rest.
   let finalRenderContext = renderContext;
 
-  // Render recursive references and tags.
   const keys = _getOrderedEnvironmentKeys(finalRenderContext);
 
+  // Render recursive references and tags.
   const skipNextTime = {};
   for (let i = 0; i < 3; i++) {
     for (const key of keys) {
