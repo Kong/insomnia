@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-cookie-jar",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "author": "Preston Alvarado <pjalva1@hotmail.com>",
   "description": "Insomnia cookie jar template tag",
   "license": "MIT",

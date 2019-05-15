@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-response",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Insomnia response template tag",
   "license": "MIT",
