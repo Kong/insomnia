@@ -8,7 +8,7 @@ function run(args, done) {
 }
 
 export function checkIfRestartNeeded() {
-  if (process.platform === 'win32') {
+  if (process.platform !== 'win32') {
     return false;
   }
 
