@@ -412,14 +412,13 @@ export async function exportLatestPostmanEnvironmentCollection(
 
   const environmentVariables = filteredTypes
     .filter(d => d.type === models.environment.type)
-    .map(d => d.data);
+    .map((d: Object) => d.data);
 
   // Get the collection top most name properly
   environmentVariables.map(values =>
     Object.entries(values).forEach(k => data.values.push(request(k[0], k[1]))),
   );
 
-  console.log(data);
   return JSON.stringify(data, null, '\t');
 }
 
@@ -436,10 +435,7 @@ export async function exportLatestPostmanCollection(
     item: [],
   };
 
-  const hasSubFolder: boolean = false;
-  const folders = [];
-
-  const docs: Array<BaseModel> = [];
+  const docs: Array<any> = [];
   const workspaces: Array<BaseModel> = [];
   const mapTypeAndIdToDoc: Object = {};
   for (const req of requests) {
@@ -510,7 +506,6 @@ export async function exportLatestPostmanCollection(
       return d;
     });
 
-  console.log(data);
   return JSON.stringify(data, null, '\t');
 }
 

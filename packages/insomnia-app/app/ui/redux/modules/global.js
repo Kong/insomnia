@@ -245,6 +245,13 @@ function showSaveExportedFileDialog(exportedFileNamePrefix, selectedFormat, onDo
     ];
   } else if (selectedFormat === VALUE_YAML) {
     options.filters = [{ name: 'Insomnia Export', extensions: ['yaml'] }];
+  } else if (selectedFormat === VALUE_POSTMAN_LATEST) {
+    options.filters = [
+      {
+        name: 'Postman Collection 2.1',
+        extensions: ['json', 'environment-variables.json'],
+      },
+    ];
   } else {
     options.filters = [{ name: 'Insomnia Export', extensions: ['json'] }];
   }
@@ -405,16 +412,12 @@ export function exportRequestsToFile(requestIds) {
               return;
             }
 
-            writeExportedFileToFileSystem(
-              `${fileName}-environment-variables`,
-              stringifiedExport,
-              err => {
-                if (err) {
-                  console.warn('Export failed', err);
-                }
-                dispatch(loadStop());
-              },
-            );
+            writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
+              if (err) {
+                console.warn('Export failed', err);
+              }
+              dispatch(loadStop());
+            });
           });
         }
 
@@ -432,7 +435,6 @@ export function exportRequestsToFile(requestIds) {
                 requests,
                 exportPrivateEnvironments,
               );
-              stringifiedEnvExport = null;
             } else if (selectedFormat === VALUE_YAML) {
               stringifiedExport = await importUtils.exportRequestsData(
                 requests,
