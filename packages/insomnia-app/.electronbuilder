@@ -39,6 +39,9 @@
       "zip"
     ]
   },
+  "squirrelWindows":{
+    "iconUrl": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true"
+  },
   "linux": {
     "executableName": "insomnia",
     "synopsis": "A simple, beautiful, and free REST API client",
