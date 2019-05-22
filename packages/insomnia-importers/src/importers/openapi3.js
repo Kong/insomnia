@@ -23,9 +23,15 @@ module.exports.convert = async function(rawData) {
   requestGroupCount = 1;
 
   // Validate
-  const api = await parseDocument(rawData);
+  let api = await parseDocument(rawData);
   if (!api || !SUPPORTED_OPENAPI_VERSION.test(api.openapi)) {
     return null;
+  }
+
+  try {
+    api = await SwaggerParser.validate(api);
+  } catch (err) {
+    console.log('[openapi3] Import file validation failed', err);
   }
 
   // Import
@@ -76,13 +82,7 @@ module.exports.convert = async function(rawData) {
  */
 async function parseDocument(rawData) {
   try {
-    const api = utils.unthrowableParseJson(rawData) || SwaggerParser.YAML.parse(rawData);
-    if (!api) {
-      return null;
-    }
-
-    // Await here so we catch any exceptions
-    return await SwaggerParser.validate(api);
+    return utils.unthrowableParseJson(rawData) || SwaggerParser.YAML.parse(rawData);
   } catch (err) {
     return null;
   }
@@ -120,7 +120,7 @@ function parseEndpoints(document) {
   const requests = [];
   endpointsSchemas.map(endpointSchema => {
     let { tags } = endpointSchema;
-    if (!tags || tags.length == 0) tags = [''];
+    if (!tags || tags.length === 0) tags = [''];
     tags.forEach((tag, index) => {
       let id = endpointSchema.operationId
         ? `${endpointSchema.operationId}${index > 0 ? index : ''}`
@@ -332,10 +332,7 @@ function generateParameterExample(schema) {
     const factory = typeExamples[`${type}_${format}`] || typeExamples[type];
 
     if (!factory) {
-      throw new Error(
-        `Unsupported type=${type} format=${format}. ` +
-          `Supported are ${Object.keys(typeExamples.join(', '))}`,
-      );
+      return null;
     }
 
     return factory(schema);
