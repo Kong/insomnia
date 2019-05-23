@@ -3,7 +3,6 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
-import HelpTooltip from '../help-tooltip';
 
 export type EnvironmentInfo = {
   object: Object,
@@ -26,7 +25,6 @@ type Props = {
 type State = {
   error: string | null,
   warning: string | null,
-  maintainOrder: boolean,
 };
 
 @autobind
@@ -38,7 +36,6 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     this.state = {
       error: null,
       warning: null,
-      maintainOrder: props.environmentInfo.propertyOrder || false,
     };
   }
 
@@ -78,27 +75,14 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     this._editor = n;
   }
 
-  _updateMaintainOrderBoolean(checked: boolean) {
-    this.setState({ maintainOrder: !this.state.maintainOrder }, () => {
-      this.props.didChange();
-    });
-  }
-
   getValue(): EnvironmentInfo | null {
     if (this._editor) {
-      if (this.state.maintainOrder) {
-        const data = orderedJSON.parse(this._editor.getValue(), '&', `~|`);
+      const data = orderedJSON.parse(this._editor.getValue(), '&', `~|`);
 
-        return {
-          object: data.object,
-          propertyOrder: data.map || null,
-        };
-      } else {
-        return {
-          object: JSON.parse(this._editor.getValue()),
-          propertyOrder: null,
-        };
-      }
+      return {
+        object: data.object,
+        propertyOrder: data.map || null,
+      };
     } else {
       return null;
     }
@@ -145,21 +129,8 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           mode="application/json"
           {...props}
         />
-        {error && <p className="notice error margin-x margin-y-sm">{error}</p>}
-        {!error && warning && <p className="notice warning margin-x margin-y-sm">{warning}</p>}
-        <div className="form-control margin-x margin-y-sm">
-          <label>
-            Keep property order
-            <input
-              type="checkbox"
-              checked={maintainOrder}
-              onChange={this._updateMaintainOrderBoolean}
-            />
-            <HelpTooltip position="top" className="space-left">
-              If disabled, properties will automatically be switched to alphabetical order.
-            </HelpTooltip>
-          </label>
-        </div>
+        {error && <p className="notice error">{error}</p>}
+        {!error && warning && <p className="notice warning">{warning}</p>}
       </div>
     );
   }
