@@ -106,7 +106,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
       ...props
     } = this.props;
 
-    const { error, warning, maintainOrder } = this.state;
+    const { error, warning } = this.state;
 
     return (
       <div className="environment-editor">
@@ -120,7 +120,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           onChange={this._handleChange}
           defaultValue={orderedJSON.stringify(
             environmentInfo.object,
-            (maintainOrder && environmentInfo.propertyOrder) || null,
+            environmentInfo.propertyOrder || null,
           )}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
