@@ -124,7 +124,7 @@ export function init(
     },
     setParameter(name: string, value: string): void {
       const parameters = misc.filterParameters(renderedRequest.parameters, name);
-      if (parameters.length == 1) {
+      if (parameters.length === 1) {
         parameters[0].value = value;
       } else if (parameters.length > 1) {
         this.removeParameter(name);
