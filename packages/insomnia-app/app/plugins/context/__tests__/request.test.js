@@ -97,7 +97,13 @@ describe('request.*', () => {
         { name: 'hello', value: 'world' },
         { name: 'Content-Type', value: 'application/json' },
       ],
-      parameters: [{ name: 'foo', value: 'bar' }, { name: 'message', value: 'Hello World!' }],
+      parameters: [
+        { name: 'foo', value: 'bar' },
+        { name: 'message', value: 'Hello World!' },
+        { name: 'multi', value: 'a' },
+        { name: 'multi', value: 'b' },
+        { name: 'multi', value: 'c' },
+      ],
     });
   });
 
@@ -118,6 +124,9 @@ describe('request.*', () => {
     expect(result.request.getParameters()).toEqual([
       { name: 'foo', value: 'bar' },
       { name: 'message', value: 'Hello World!' },
+      { name: 'multi', value: 'a' },
+      { name: 'multi', value: 'b' },
+      { name: 'multi', value: 'c' },
     ]);
 
     // getParameter()
@@ -125,18 +134,28 @@ describe('request.*', () => {
     expect(result.request.getParameter('FOO')).toBe(null);
     expect(result.request.getParameter('does-not-exist')).toBe(null);
     expect(result.request.hasParameter('foo')).toBe(true);
+    expect(result.request.hasParameter('does-not-exist')).toBe(false);
+    expect(result.request.getParameter('multi')).toBe('c');
 
-    // setHeader()
+    // setParameter()
     result.request.setParameter('foo', 'baz');
     expect(result.request.getParameter('foo')).toBe('baz');
+    result.request.setParameter('multi', 'd');
+    expect(result.request.getParameter('multi')).toBe('d');
 
-    // addHeader()
+    // addParameter()
     result.request.addParameter('foo', 'another');
     result.request.addParameter('something-else', 'yet another');
     expect(result.request.getParameter('foo')).toBe('baz');
     expect(result.request.getParameter('something-else')).toBe('yet another');
+    expect(result.request.getParameters()).toEqual([
+      { name: 'foo', value: 'baz' },
+      { name: 'message', value: 'Hello World!' },
+      { name: 'multi', value: 'd' },
+      { name: 'something-else', value: 'yet another' },
+    ]);
 
-    // removeHeader()
+    // removeParameter()
     result.request.removeParameter('foo');
     expect(result.request.getParameter('foo')).toBe(null);
     expect(result.request.hasParameter('foo')).toBe(false);

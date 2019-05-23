@@ -123,9 +123,12 @@ export function init(
       renderedRequest.parameters = renderedRequest.parameters.filter(p => !parameters.includes(p));
     },
     setParameter(name: string, value: string): void {
-      const parameter = misc.filterParameters(renderedRequest.parameters, name)[0];
-      if (parameter) {
-        parameter.value = value;
+      const parameters = misc.filterParameters(renderedRequest.parameters, name);
+      if (parameters.length == 1) {
+        parameters[0].value = value;
+      } else if (parameters.length > 1) {
+        this.removeParameter(name);
+        this.addParameter(name, value);
       } else {
         this.addParameter(name, value);
       }
