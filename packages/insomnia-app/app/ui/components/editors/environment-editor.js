@@ -129,8 +129,8 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           mode="application/json"
           {...props}
         />
-        {error && <p className="notice error">{error}</p>}
-        {!error && warning && <p className="notice warning">{warning}</p>}
+        {error && <p className="notice error margin">{error}</p>}
+        {!error && warning && <p className="notice warning margin">{warning}</p>}
       </div>
     );
   }

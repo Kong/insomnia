@@ -82,7 +82,7 @@ class EnvironmentEditModal extends PureComponent {
 
     const environmentInfo = {
       object: requestGroup ? requestGroup.environment : {},
-      objectPropertyOrder: requestGroup && requestGroup.environmentPropertyOrder,
+      propertyOrder: requestGroup && requestGroup.environmentPropertyOrder,
     };
 
     return (
