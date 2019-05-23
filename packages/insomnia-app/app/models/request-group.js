@@ -12,7 +12,7 @@ type BaseRequestGroup = {
   name: string,
   description: string,
   environment: Object,
-  propertyMap: Object | null,
+  environmentPropertyOrder: Object | null,
   metaSortKey: number,
 };
 
@@ -23,7 +23,7 @@ export function init() {
     name: 'New Folder',
     description: '',
     environment: {},
-    propertyMap: null,
+    environmentPropertyOrder: null,
     metaSortKey: -1 * Date.now(),
   };
 }

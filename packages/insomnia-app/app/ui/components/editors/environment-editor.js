@@ -7,7 +7,7 @@ import HelpTooltip from '../help-tooltip';
 
 export type EnvironmentInfo = {
   object: Object,
-  propertyMap: Object | null,
+  propertyOrder: Object | null,
 };
 
 type Props = {
@@ -38,7 +38,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     this.state = {
       error: null,
       warning: null,
-      maintainOrder: props.environmentInfo.propertyMap || false,
+      maintainOrder: props.environmentInfo.propertyOrder || false,
     };
   }
 
@@ -91,12 +91,12 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
         return {
           object: data.object,
-          propertyMap: data.map || null,
+          propertyOrder: data.map || null,
         };
       } else {
         return {
           object: JSON.parse(this._editor.getValue()),
-          propertyMap: null,
+          propertyOrder: null,
         };
       }
     } else {
@@ -136,7 +136,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           onChange={this._handleChange}
           defaultValue={orderedJSON.stringify(
             environmentInfo.object,
-            (maintainOrder && environmentInfo.propertyMap) || null,
+            (maintainOrder && environmentInfo.propertyOrder) || null,
           )}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}

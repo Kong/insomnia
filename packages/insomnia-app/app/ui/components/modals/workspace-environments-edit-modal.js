@@ -348,7 +348,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       const data = this.environmentEditorRef.getValue();
       patch = {
         data: data && data.object,
-        propertyMap: data && data.propertyMap,
+        dataPropertyOrder: data && data.propertyOrder,
       };
     } catch (err) {
       // Invalid JSON probably
@@ -383,7 +383,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
 
     const environmentInfo = {
       object: activeEnvironment ? activeEnvironment.data : {},
-      propertyMap: activeEnvironment && activeEnvironment.propertyMap,
+      propertyOrder: activeEnvironment && activeEnvironment.dataPropertyOrder,
     };
 
     return (

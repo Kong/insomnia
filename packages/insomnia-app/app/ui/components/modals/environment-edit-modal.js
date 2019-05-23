@@ -35,7 +35,7 @@ class EnvironmentEditModal extends PureComponent {
       const data = this._envEditor.getValue();
       patch = {
         environment: data && data.object,
-        propertyMap: data && data.propertyMap,
+        environmentPropertyOrder: data && data.propertyOrder,
       };
     } catch (err) {
       // Invalid JSON probably
@@ -82,7 +82,7 @@ class EnvironmentEditModal extends PureComponent {
 
     const environmentInfo = {
       object: requestGroup ? requestGroup.environment : {},
-      propertyMap: requestGroup && requestGroup.propertyMap,
+      objectPropertyOrder: requestGroup && requestGroup.environmentPropertyOrder,
     };
 
     return (
