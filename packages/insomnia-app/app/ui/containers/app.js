@@ -896,6 +896,8 @@ class App extends PureComponent {
   }
 
   async componentDidMount() {
+    showModal(SettingsModal, 4);
+
     // Bind mouse and key handlers
     document.addEventListener('mouseup', this._handleMouseUp);
     document.addEventListener('mousemove', this._handleMouseMove);
