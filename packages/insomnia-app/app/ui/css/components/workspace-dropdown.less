@@ -2,6 +2,10 @@
 @import '../constants/colors';
 
 .workspace-dropdown {
+  body[data-platform="darwin"]:not(.fullscreen) & {
+    padding-left: 60px;
+  }
+
   h1 {
     white-space: nowrap;
     overflow: hidden;

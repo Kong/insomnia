@@ -14,6 +14,10 @@
   width: 100%;
   height: 100%;
 
+  [data-platform="darwin"] & {
+    grid-template-rows: @height-nav-darwin auto auto fit-content(20%) auto minmax(0, 1fr) auto;
+  }
+
   & > .sidebar__list:last-child {
     padding-bottom: @padding-md;
   }

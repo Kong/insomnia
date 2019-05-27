@@ -45,6 +45,9 @@ export function createWindow() {
   const finalX = Math.min(maxX, x);
   const finalY = Math.min(maxX, y);
 
+  // Window frame
+  const titleBarStyle = isMac() ? 'hiddenInset' : 'default';
+
   mainWindow = new BrowserWindow({
     // Make sure we don't initialize the window outside the bounds
     x: finalX,
@@ -56,6 +59,7 @@ export function createWindow() {
     height: height || DEFAULT_HEIGHT,
     minHeight: MINIMUM_HEIGHT,
     minWidth: MINIMUM_WIDTH,
+    titleBarStyle: titleBarStyle,
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, 'static/icon.png'),
     webPreferences: {
@@ -75,6 +79,10 @@ export function createWindow() {
   mainWindow.on('unmaximize', e => saveBounds());
 
   mainWindow.on('move', e => saveBounds());
+
+  mainWindow.on('enter-full-screen', e => ipcFullScreen());
+
+  mainWindow.on('leave-full-screen', e => ipcFullScreen());
 
   mainWindow.on('unresponsive', e => {
     showUnresponsiveModal();
@@ -428,4 +436,12 @@ function initLocalStorage() {
 
 function initContextMenus() {
   require('electron-context-menu')({});
+}
+
+function ipcFullScreen() {
+  if (!mainWindow) {
+    return;
+  }
+
+  mainWindow.webContents.send('full-screen-changed', mainWindow.isFullScreen());
 }

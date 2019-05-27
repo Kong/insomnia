@@ -7,6 +7,10 @@
   grid-template-rows: @height-nav minmax(0, 1fr);
   grid-template-columns: 100%;
 
+  [data-platform="darwin"] & {
+    grid-template-rows: @height-nav-darwin minmax(0, 1fr);
+  }
+
   .pane__header {
     background: var(--color-bg);
     position: relative;

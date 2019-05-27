@@ -94,3 +94,17 @@ ipcRenderer.on('update-available', () => {
   // you relaunch too soon it doesn't work the first time.
   setTimeout(showUpdateNotification, 1000 * 10);
 });
+
+// Add helper class to body to check if full-screen
+ipcRenderer.on('full-screen-changed', (e, isFullScreen) => {
+  if (!document) {
+    return;
+  }
+
+  if (isFullScreen === true) {
+    document.body.classList.add('fullscreen');
+    return;
+  }
+
+  document.body.classList.remove('fullscreen');
+});
