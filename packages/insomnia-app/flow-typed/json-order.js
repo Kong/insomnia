@@ -7,7 +7,7 @@ declare module 'json-order' {
   };
 
   declare module.exports: {
-    orderedJson: {
+    orderedJSON: {
       parse: (jsonString: string, prefix?: string, separator?: string) => OrderedParseResult,
       stringify: (
         sourceObject: object,
