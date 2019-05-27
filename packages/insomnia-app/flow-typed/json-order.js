@@ -16,7 +16,5 @@ declare module 'json-order' {
     ) => string,
   };
 
-  declare module.exports: {
-    orderedJSON: typeof orderedJSON,
-  };
+  declare module.exports: orderedJSON;
 }
