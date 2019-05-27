@@ -20,7 +20,6 @@ import type { Environment } from '../../../models/environment';
 import * as db from '../../../common/database';
 import HelpTooltip from '../help-tooltip';
 import Tooltip from '../tooltip';
-import orderedJSON from 'json-order';
 
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
