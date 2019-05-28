@@ -380,8 +380,8 @@ class TagEditor extends React.PureComponent<Props, State> {
 
   renderArgFile(
     value: string,
-    itemTypes: Array<string>,
     argIndex: number,
+    itemTypes?: Array<string>,
     extensions?: Array<string>,
   ) {
     return (
@@ -526,8 +526,8 @@ class TagEditor extends React.PureComponent<Props, State> {
     } else if (argDefinition.type === 'file') {
       argInput = this.renderArgFile(
         strValue,
-        argDefinition.itemTypes || [],
         argIndex,
+        argDefinition.itemTypes,
         argDefinition.extensions,
       );
     } else if (argDefinition.type === 'model') {

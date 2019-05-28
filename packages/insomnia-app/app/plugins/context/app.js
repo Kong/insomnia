@@ -10,16 +10,22 @@ import {
 import WrapperModal from '../../ui/components/modals/wrapper-modal';
 
 export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { app: Object } {
+  const canShowDialogs =
+    renderPurpose === RENDER_PURPOSE_SEND || renderPurpose === RENDER_PURPOSE_NO_RENDER;
   return {
     app: {
       alert(title: string, message?: string): Promise<void> {
-        if (renderPurpose !== RENDER_PURPOSE_SEND && renderPurpose !== RENDER_PURPOSE_NO_RENDER) {
+        if (!canShowDialogs) {
           return Promise.resolve();
         }
 
         return showAlert({ title, message });
       },
       showGenericModalDialog(title: string, options?: { html: string } = {}): Promise<void> {
+        if (renderPurpose !== RENDER_PURPOSE_SEND && renderPurpose !== RENDER_PURPOSE_NO_RENDER) {
+          return Promise.resolve();
+        }
+
         return showModal(WrapperModal, { title, bodyHTML: options.html });
       },
       prompt(
@@ -33,7 +39,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
       ): Promise<string> {
         options = options || {};
 
-        if (renderPurpose !== RENDER_PURPOSE_SEND) {
+        if (!canShowDialogs) {
           return Promise.resolve(options.defaultValue || '');
         }
 
@@ -59,7 +65,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
         }
       },
       async showSaveDialog(options: { defaultPath?: string } = {}): Promise<string | null> {
-        if (renderPurpose !== RENDER_PURPOSE_SEND) {
+        if (!canShowDialogs) {
           return Promise.resolve(null);
         }
 
