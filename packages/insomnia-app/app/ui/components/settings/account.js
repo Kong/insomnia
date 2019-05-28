@@ -7,6 +7,7 @@ import LoginModal from '../modals/login-modal';
 import { hideAllModals, showModal } from '../modals/index';
 import PromptButton from '../base/prompt-button';
 import * as session from '../../../account/session';
+import HelpTooltip from '../help-tooltip';
 
 type Props = {};
 
@@ -16,6 +17,7 @@ type State = {
   password2: string,
   showChangePassword: boolean,
   codeSent: boolean,
+  error: string,
 };
 
 @autobind
@@ -26,10 +28,12 @@ class Account extends React.PureComponent<Props, State> {
     password2: '',
     codeSent: false,
     showChangePassword: false,
+    error: '',
   };
 
-  _handleShowChangePasswordForm(e: SyntheticEvent<HTMLInputElement>) {
+  async _handleShowChangePasswordForm(e: SyntheticEvent<HTMLInputElement>) {
     this.setState(state => ({ showChangePassword: !state.showChangePassword }));
+    await this._sendCode();
   }
 
   _handleChangeCode(e: SyntheticEvent<HTMLInputElement>) {
@@ -46,8 +50,27 @@ class Account extends React.PureComponent<Props, State> {
 
   async _handleSubmitPasswordChange(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
+    this.setState({ error: '' });
 
-    session.changePasswordAndEmail();
+    const { password, password2, code } = this.state;
+
+    let error = '';
+    if (password !== password2) {
+      error = 'Passwords did  not match';
+    } else if (!code) {
+      error = 'Code was not provided';
+    }
+
+    if (error) {
+      this.setState({ error });
+      return;
+    }
+
+    try {
+      await session.changePasswordWithToken(password, code);
+    } catch (err) {
+      this.setState({ error: err.message });
+    }
   }
 
   async _handleLogout() {
@@ -61,9 +84,20 @@ class Account extends React.PureComponent<Props, State> {
     showModal(LoginModal);
   }
 
-  _handleSendCode(e: SyntheticEvent<HTMLAnchorElement>) {
-    e.preventDefault();
+  async _sendCode() {
+    try {
+      await session.sendPasswordChangeCode();
+    } catch (err) {
+      this.setState({ error: err.message });
+      return;
+    }
+
     this.setState({ codeSent: true });
+  }
+
+  async _handleSendCode(e: SyntheticEvent<HTMLAnchorElement>) {
+    e.preventDefault();
+    await this._sendCode();
   }
 
   static renderUpgrade() {
@@ -103,7 +137,7 @@ class Account extends React.PureComponent<Props, State> {
   }
 
   renderAccount() {
-    const { code, password, password2, codeSent, showChangePassword } = this.state;
+    const { code, password, password2, codeSent, showChangePassword, error } = this.state;
     return (
       <React.Fragment>
         <div>
@@ -129,11 +163,11 @@ class Account extends React.PureComponent<Props, State> {
         {showChangePassword && (
           <form onSubmit={this._handleSubmitPasswordChange}>
             <hr />
+            {error && <p className="notice error">{error}</p>}
             <div className="form-control form-control--outlined">
               <label>
                 New Password
                 <input
-                  required
                   type="password"
                   placeholder="•••••••••••••••••"
                   onChange={this._handleChangePassword}
@@ -144,7 +178,6 @@ class Account extends React.PureComponent<Props, State> {
               <label>
                 Confirm Password
                 <input
-                  required
                   type="password"
                   placeholder="•••••••••••••••••"
                   onChange={this._handleChangePassword2}
@@ -153,27 +186,22 @@ class Account extends React.PureComponent<Props, State> {
             </div>
             <div className="form-control form-control--outlined">
               <label>
-                Confirmation Code
+                Confirmation Code{' '}
+                <HelpTooltip>A confirmation code has been sent to your email address</HelpTooltip>
                 <input
                   type="text"
                   defaultValue={code}
-                  placeholder="123456"
+                  placeholder="aa8b0d1ea9"
                   onChange={this._handleChangeCode}
                 />
               </label>
             </div>
             <div className="row row-spaced">
               <p className="txt-sm">
-                Don't have a code yet?{' '}
-                {codeSent ? (
-                  <Link href="#" onClick={this._handleSendCode} disabled>
-                    Sent!
-                  </Link>
-                ) : (
-                  <Link href="#" onClick={this._handleSendCode}>
-                    Send to {session.getEmail()}
-                  </Link>
-                )}
+                {codeSent ? 'A code was sent to your email' : 'Looking for your code?'}{' '}
+                <Link href="#" onClick={this._handleSendCode}>
+                  Send Another Code
+                </Link>
               </p>
               <div className="text-right">
                 <button

@@ -108,15 +108,14 @@ export async function login(rawEmail, rawPassphrase) {
   _callCallbacks();
 }
 
-export async function changePasswordAndEmail(rawNewPassphrase, rawNewEmail, resetCode) {
+export async function changePasswordWithToken(rawNewPassphrase, confirmationCode) {
   // Sanitize inputs
-  // const oldPassphrase = _sanitizePassphrase(rawOldPassphrase);
   const newPassphrase = _sanitizePassphrase(rawNewPassphrase);
-  const newEmail = _sanitizeEmail(rawNewEmail);
+  const newEmail = getEmail(); // Use the same one
 
   // Fetch some things
-  const { email: oldEmail, saltEnc, encSymmetricKey } = await _whoami();
-  const { saltKey, saltAuth } = await _getAuthSalts(oldEmail);
+  const { saltEnc, encSymmetricKey } = await _whoami();
+  const { saltKey, saltAuth } = await _getAuthSalts(newEmail);
 
   // Generate some secrets for the user base'd on password
   const newSecret = await crypt.deriveKey(newPassphrase, newEmail, saltEnc);
@@ -132,25 +131,24 @@ export async function changePasswordAndEmail(rawNewPassphrase, rawNewEmail, rese
     .toString('hex');
 
   // Re-encrypt existing keys with new secret
-  const oldSecret = _getSymetricKey();
-  const newEncSymmetricKeyJSON = crypt.recryptAES(
-    oldSecret,
-    newSecret,
-    JSON.parse(encSymmetricKey),
-  );
+  const newEncSymmetricKeyJSON = crypt.encryptAES(newSecret, _getSymmetricKey());
   const newEncSymmetricKey = JSON.stringify(newEncSymmetricKeyJSON);
 
   return fetch.post(
     `/auth/change-password`,
     {
-      code: resetCode,
-      newEmail: getEmail(),
+      code: confirmationCode,
+      newEmail: newEmail,
       encSymmetricKey: encSymmetricKey,
       newVerifier,
       newEncSymmetricKey,
     },
     getCurrentSessionId(),
   );
+}
+
+export function sendPasswordChangeCode() {
+  return fetch.post('/auth/send-password-code', null, getCurrentSessionId());
 }
 
 export function getPublicKey() {
@@ -250,9 +248,9 @@ export async function endTrial() {
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
 
-function _getSymetricKey() {
-  const { symmetricKey } = _getSessionData();
-  return JSON.parse(symmetricKey);
+function _getSymmetricKey() {
+  const sessionData = _getSessionData();
+  return sessionData.symmetricKey;
 }
 
 function _whoami(sessionId = null) {
@@ -260,7 +258,7 @@ function _whoami(sessionId = null) {
 }
 
 function _getAuthSalts(email) {
-  return fetch.post('/auth/login-s', { email });
+  return fetch.post('/auth/login-s', { email }, getCurrentSessionId());
 }
 
 function _getSessionData() {
