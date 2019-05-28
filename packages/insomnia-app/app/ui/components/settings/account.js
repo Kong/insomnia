@@ -18,6 +18,7 @@ type State = {
   showChangePassword: boolean,
   codeSent: boolean,
   error: string,
+  finishedResetting: boolean,
 };
 
 @autobind
@@ -29,11 +30,14 @@ class Account extends React.PureComponent<Props, State> {
     codeSent: false,
     showChangePassword: false,
     error: '',
+    finishedResetting: false,
   };
 
   async _handleShowChangePasswordForm(e: SyntheticEvent<HTMLInputElement>) {
-    this.setState(state => ({ showChangePassword: !state.showChangePassword }));
-    await this._sendCode();
+    this.setState(state => ({
+      showChangePassword: !state.showChangePassword,
+      finishedResetting: false,
+    }));
   }
 
   _handleChangeCode(e: SyntheticEvent<HTMLInputElement>) {
@@ -56,7 +60,7 @@ class Account extends React.PureComponent<Props, State> {
 
     let error = '';
     if (password !== password2) {
-      error = 'Passwords did  not match';
+      error = 'Passwords did not match';
     } else if (!code) {
       error = 'Code was not provided';
     }
@@ -70,7 +74,10 @@ class Account extends React.PureComponent<Props, State> {
       await session.changePasswordWithToken(password, code);
     } catch (err) {
       this.setState({ error: err.message });
+      return;
     }
+
+    this.setState({ error: '', finishedResetting: true, showChangePassword: false });
   }
 
   async _handleLogout() {
@@ -137,7 +144,16 @@ class Account extends React.PureComponent<Props, State> {
   }
 
   renderAccount() {
-    const { code, password, password2, codeSent, showChangePassword, error } = this.state;
+    const {
+      code,
+      password,
+      password2,
+      codeSent,
+      showChangePassword,
+      error,
+      finishedResetting,
+    } = this.state;
+
     return (
       <React.Fragment>
         <div>
@@ -160,8 +176,12 @@ class Account extends React.PureComponent<Props, State> {
           </button>
         </div>
 
+        {finishedResetting && (
+          <p className="notice surprise">Your password was changed successfully</p>
+        )}
+
         {showChangePassword && (
-          <form onSubmit={this._handleSubmitPasswordChange}>
+          <form onSubmit={this._handleSubmitPasswordChange} className="pad-top">
             <hr />
             {error && <p className="notice error">{error}</p>}
             <div className="form-control form-control--outlined">
@@ -196,19 +216,19 @@ class Account extends React.PureComponent<Props, State> {
                 />
               </label>
             </div>
-            <div className="row row-spaced">
-              <p className="txt-sm">
-                {codeSent ? 'A code was sent to your email' : 'Looking for your code?'}{' '}
+            <div className="row-spaced row--top">
+              <div>
+                {codeSent ? 'A code was sent to your email' : 'Looking for a code?'}{' '}
                 <Link href="#" onClick={this._handleSendCode}>
-                  Send Another Code
+                  Email Me a Code
                 </Link>
-              </p>
+              </div>
               <div className="text-right">
                 <button
                   type="submit"
                   className="btn btn--clicky"
                   disabled={!code || !password || password !== password2}>
-                  Submit
+                  Submit Change
                 </button>
               </div>
             </div>
