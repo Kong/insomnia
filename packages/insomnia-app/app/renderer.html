@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="en-US">
-<head>
-  <meta charset="utf-8">
-  <title>Insomnia</title>
-  <meta http-equiv="Content-Security-Policy"
-        content="default-src * insomnia://*; img-src blob: data: * insomnia://*; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src blob: data: mediastream: * insomnia://*;">
-</head>
-<body>
-<div id="root"></div>
-<div id="dropdowns-container" style="z-index:1000000;position:relative"></div>
-<script src="bundle.js" type="application/javascript"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Insomnia</title>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src * insomnia://*; img-src blob: data: * insomnia://*; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src blob: data: mediastream: * insomnia://*;"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="dropdowns-container" style="z-index:1000000;position:relative"></div>
+    <div id="environment-sort-container" class=".theme-sidebar"></div>
+    <script src="bundle.js" type="application/javascript"></script>
+  </body>
 </html>

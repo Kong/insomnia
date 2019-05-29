@@ -48,6 +48,9 @@ const SidebarListItem = SortableElement(
     const classes = classnames({
       'env-modal__sidebar-item': true,
       'env-modal__sidebar-item--active': activeEnvironment === environment,
+
+      // Specify theme because dragging will pull it out to <body>
+      'theme--dialog': true,
     });
 
     return (
@@ -215,7 +218,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     await this._load(workspace, rootEnvironment);
   }
 
-  async _handleChangeEnvironmentName(environment: Environment, name: string) {
+  async _updateEnvironment(environment: Environment, patch: Object, refresh: boolean = true) {
     const { workspace } = this.state;
 
     // NOTE: Fetch the environment first because it might not be up to date.
@@ -226,16 +229,21 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    await models.environment.update(realEnvironment, { name });
-    await this._load(workspace);
+    await models.environment.update(realEnvironment, patch);
+
+    if (refresh) {
+      await this._load(workspace);
+    }
+  }
+
+  async _handleChangeEnvironmentName(environment: Environment, name: string) {
+    await this._updateEnvironment(environment, { name });
   }
 
   _handleChangeEnvironmentColor(environment: Environment, color: string | null) {
     clearTimeout(this.colorChangeTimeout);
     this.colorChangeTimeout = setTimeout(async () => {
-      const { workspace } = this.state;
-      await models.environment.update(environment, { color });
-      await this._load(workspace);
+      await this._updateEnvironment(environment, { color });
     }, DEBOUNCE_MILLIS);
   }
 
@@ -301,7 +309,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     db.bufferChanges();
     for (let i = 0; i < newSubEnvironments.length; i++) {
       const environment = newSubEnvironments[i];
-      await models.environment.update(environment, { metaSortKey: i });
+      await this._updateEnvironment(environment, { metaSortKey: i }, false);
     }
     db.flushChanges();
   }
@@ -358,8 +366,8 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
 
     if (activeEnvironment) {
       clearTimeout(this.saveTimeout);
-      this.saveTimeout = setTimeout(() => {
-        models.environment.update(activeEnvironment, patch);
+      this.saveTimeout = setTimeout(async () => {
+        await this._updateEnvironment(activeEnvironment, patch);
       }, DEBOUNCE_MILLIS * 4);
     }
   }
