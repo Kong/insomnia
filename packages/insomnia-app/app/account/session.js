@@ -31,7 +31,7 @@ export async function login(rawEmail, rawPassphrase) {
   // Fetch Salt and Submit A To Server //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  const { saltKey, saltAuth } = await fetch.post('/auth/login-s', { email }, null);
+  const { saltKey, saltAuth } = await _getAuthSalts(email);
   const authSecret = await crypt.deriveKey(passphrase, email, saltKey);
   const secret1 = await crypt.srpGenKey();
   const c = new srp.Client(
@@ -108,6 +108,49 @@ export async function login(rawEmail, rawPassphrase) {
   _callCallbacks();
 }
 
+export async function changePasswordWithToken(rawNewPassphrase, confirmationCode) {
+  // Sanitize inputs
+  const newPassphrase = _sanitizePassphrase(rawNewPassphrase);
+  const newEmail = getEmail(); // Use the same one
+
+  // Fetch some things
+  const { saltEnc, encSymmetricKey } = await _whoami();
+  const { saltKey, saltAuth } = await _getAuthSalts(newEmail);
+
+  // Generate some secrets for the user base'd on password
+  const newSecret = await crypt.deriveKey(newPassphrase, newEmail, saltEnc);
+  const newAuthSecret = await crypt.deriveKey(newPassphrase, newEmail, saltKey);
+
+  const newVerifier = srp
+    .computeVerifier(
+      _getSrpParams(),
+      Buffer.from(saltAuth, 'hex'),
+      Buffer.from(newEmail, 'utf8'),
+      Buffer.from(newAuthSecret, 'hex'),
+    )
+    .toString('hex');
+
+  // Re-encrypt existing keys with new secret
+  const newEncSymmetricKeyJSON = crypt.encryptAES(newSecret, _getSymmetricKey());
+  const newEncSymmetricKey = JSON.stringify(newEncSymmetricKeyJSON);
+
+  return fetch.post(
+    `/auth/change-password`,
+    {
+      code: confirmationCode,
+      newEmail: newEmail,
+      encSymmetricKey: encSymmetricKey,
+      newVerifier,
+      newEncSymmetricKey,
+    },
+    getCurrentSessionId(),
+  );
+}
+
+export function sendPasswordChangeCode() {
+  return fetch.post('/auth/send-password-code', null, getCurrentSessionId());
+}
+
 export function getPublicKey() {
   return _getSessionData().publicKey;
 }
@@ -136,6 +179,14 @@ export function getEmail() {
 
 export function getFirstName() {
   return _getSessionData().firstName;
+}
+
+export function getLastName() {
+  return _getSessionData().firstName;
+}
+
+export function getFullName() {
+  return `${getFirstName()} ${getLastName()}`.trim();
 }
 
 /** Check if we (think) we have a session */
@@ -197,8 +248,17 @@ export async function endTrial() {
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
 
+function _getSymmetricKey() {
+  const sessionData = _getSessionData();
+  return sessionData.symmetricKey;
+}
+
 function _whoami(sessionId = null) {
   return fetch.get('/auth/whoami', sessionId || getCurrentSessionId());
+}
+
+function _getAuthSalts(email) {
+  return fetch.post('/auth/login-s', { email }, getCurrentSessionId());
 }
 
 function _getSessionData() {

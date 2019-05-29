@@ -1,4 +1,5 @@
-import React, { PureComponent } from 'react';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import * as sync from '../../../sync-legacy/index';
 import Link from '../base/link';
@@ -6,23 +7,109 @@ import LoginModal from '../modals/login-modal';
 import { hideAllModals, showModal } from '../modals/index';
 import PromptButton from '../base/prompt-button';
 import * as session from '../../../account/session';
+import HelpTooltip from '../help-tooltip';
+
+type Props = {};
+
+type State = {
+  code: string,
+  password: string,
+  password2: string,
+  showChangePassword: boolean,
+  codeSent: boolean,
+  error: string,
+  finishedResetting: boolean,
+};
 
 @autobind
-class Account extends PureComponent {
+class Account extends React.PureComponent<Props, State> {
+  state = {
+    code: '',
+    password: '',
+    password2: '',
+    codeSent: false,
+    showChangePassword: false,
+    error: '',
+    finishedResetting: false,
+  };
+
+  async _handleShowChangePasswordForm(e: SyntheticEvent<HTMLInputElement>) {
+    this.setState(state => ({
+      showChangePassword: !state.showChangePassword,
+      finishedResetting: false,
+    }));
+  }
+
+  _handleChangeCode(e: SyntheticEvent<HTMLInputElement>) {
+    this.setState({ code: e.currentTarget.value });
+  }
+
+  _handleChangePassword(e: SyntheticEvent<HTMLInputElement>) {
+    this.setState({ password: e.currentTarget.value });
+  }
+
+  _handleChangePassword2(e: SyntheticEvent<HTMLInputElement>) {
+    this.setState({ password2: e.currentTarget.value });
+  }
+
+  async _handleSubmitPasswordChange(e: SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    this.setState({ error: '' });
+
+    const { password, password2, code } = this.state;
+
+    let error = '';
+    if (password !== password2) {
+      error = 'Passwords did not match';
+    } else if (!code) {
+      error = 'Code was not provided';
+    }
+
+    if (error) {
+      this.setState({ error });
+      return;
+    }
+
+    try {
+      await session.changePasswordWithToken(password, code);
+    } catch (err) {
+      this.setState({ error: err.message });
+      return;
+    }
+
+    this.setState({ error: '', finishedResetting: true, showChangePassword: false });
+  }
+
   async _handleLogout() {
     await sync.logout();
     this.forceUpdate();
   }
 
-  _handleLogin(e) {
+  static _handleLogin(e: SyntheticEvent<HTMLButtonElement>) {
     e.preventDefault();
     hideAllModals();
     showModal(LoginModal);
   }
 
-  renderUpgrade() {
+  async _sendCode() {
+    try {
+      await session.sendPasswordChangeCode();
+    } catch (err) {
+      this.setState({ error: err.message });
+      return;
+    }
+
+    this.setState({ codeSent: true });
+  }
+
+  async _handleSendCode(e: SyntheticEvent<HTMLAnchorElement>) {
+    e.preventDefault();
+    await this._sendCode();
+  }
+
+  static renderUpgrade() {
     return (
-      <div>
+      <React.Fragment>
         <div className="notice pad surprise">
           <h1 className="no-margin-top">Try Insomnia Plus!</h1>
           <p>
@@ -48,34 +135,111 @@ class Account extends PureComponent {
         </div>
         <p>
           Or{' '}
-          <a href="#" onClick={this._handleLogin} className="theme--link">
+          <a href="#" onClick={Account._handleLogin} className="theme--link">
             Login
           </a>
         </p>
-      </div>
+      </React.Fragment>
     );
   }
 
   renderAccount() {
+    const {
+      code,
+      password,
+      password2,
+      codeSent,
+      showChangePassword,
+      error,
+      finishedResetting,
+    } = this.state;
+
     return (
-      <div>
-        <h2 className="no-margin-top">Welcome {session.getFirstName()}!</h2>
-        <p>
-          You are currently logged in as <code className="code--compact">{session.getEmail()}</code>
-        </p>
-        <br />
-        <Link button href="https://insomnia.rest/app/" className="btn btn--clicky">
-          Manage Account
-        </Link>
-        <PromptButton className="margin-left-sm btn btn--clicky" onClick={this._handleLogout}>
-          Sign Out
-        </PromptButton>
-      </div>
+      <React.Fragment>
+        <div>
+          <h2 className="no-margin-top">Welcome {session.getFirstName()}!</h2>
+          <p>
+            You are currently logged in as{' '}
+            <code className="code--compact">{session.getEmail()}</code>
+          </p>
+          <br />
+          <Link button href="https://insomnia.rest/app/" className="btn btn--clicky">
+            Manage Account
+          </Link>
+          <PromptButton className="space-left btn btn--clicky" onClick={this._handleLogout}>
+            Sign Out
+          </PromptButton>
+          <button
+            className="space-left btn btn--clicky"
+            onClick={this._handleShowChangePasswordForm}>
+            Change Password
+          </button>
+        </div>
+
+        {finishedResetting && (
+          <p className="notice surprise">Your password was changed successfully</p>
+        )}
+
+        {showChangePassword && (
+          <form onSubmit={this._handleSubmitPasswordChange} className="pad-top">
+            <hr />
+            {error && <p className="notice error">{error}</p>}
+            <div className="form-control form-control--outlined">
+              <label>
+                New Password
+                <input
+                  type="password"
+                  placeholder="•••••••••••••••••"
+                  onChange={this._handleChangePassword}
+                />
+              </label>
+            </div>
+            <div className="form-control form-control--outlined">
+              <label>
+                Confirm Password
+                <input
+                  type="password"
+                  placeholder="•••••••••••••••••"
+                  onChange={this._handleChangePassword2}
+                />
+              </label>
+            </div>
+            <div className="form-control form-control--outlined">
+              <label>
+                Confirmation Code{' '}
+                <HelpTooltip>A confirmation code has been sent to your email address</HelpTooltip>
+                <input
+                  type="text"
+                  defaultValue={code}
+                  placeholder="aa8b0d1ea9"
+                  onChange={this._handleChangeCode}
+                />
+              </label>
+            </div>
+            <div className="row-spaced row--top">
+              <div>
+                {codeSent ? 'A code was sent to your email' : 'Looking for a code?'}{' '}
+                <Link href="#" onClick={this._handleSendCode}>
+                  Email Me a Code
+                </Link>
+              </div>
+              <div className="text-right">
+                <button
+                  type="submit"
+                  className="btn btn--clicky"
+                  disabled={!code || !password || password !== password2}>
+                  Submit Change
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+      </React.Fragment>
     );
   }
 
   render() {
-    return session.isLoggedIn() ? this.renderAccount() : this.renderUpgrade();
+    return session.isLoggedIn() ? this.renderAccount() : Account.renderUpgrade();
   }
 }
 
