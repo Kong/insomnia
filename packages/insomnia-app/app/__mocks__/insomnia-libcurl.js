@@ -113,27 +113,27 @@ Curl.info = {
   SIZE_DOWNLOAD: 'SIZE_DOWNLOAD',
   TOTAL_TIME: 'TOTAL_TIME',
   debug: {
-    DATA_IN: 'DATA_IN',
-    DATA_OUT: 'DATA_OUT',
-    SSL_DATA_IN: 'SSL_DATA_IN',
-    SSL_DATA_OUT: 'SSL_DATA_OUT',
-    TEXT: 'TEXT',
+    DataIn: 'DataIn',
+    DataOut: 'DataOut',
+    SsslDataIn: 'SslDataIn',
+    SslDataOut: 'SslDataOut',
+    Text: 'Text',
   },
 };
 
 Curl.auth = {
-  ANY: 'ANY',
+  Any: 'Any',
 };
 
 Curl.netrc = {
-  IGNORED: 0,
-  OPTIONAL: 1,
-  REQUIRED: 2,
+  Ignored: 0,
+  Optional: 1,
+  Required: 2,
 };
 
 Curl.feature = {
-  NO_HEADER_PARSING: 'NO_HEADER_PARSING',
-  NO_DATA_PARSING: 'NO_DATA_PARSING',
+  NoHeaderParsing: 'NoHeaderParsing',
+  NoDataParsing: 'NoDataParsing',
 };
 
 Curl.option = {

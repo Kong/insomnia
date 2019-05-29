@@ -83,8 +83,8 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        NoHeaderParsing: true,
+        NoDataParsing: true,
       },
       options: {
         COOKIELIST: [
@@ -148,8 +148,8 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        NoHeaderParsing: true,
+        NoDataParsing: true,
       },
       options: {
         POST: 1,
@@ -238,8 +238,8 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        NoHeaderParsing: true,
+        NoDataParsing: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -294,8 +294,8 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        NoHeaderParsing: true,
+        NoDataParsing: true,
       },
       options: {
         POST: 1,
@@ -360,8 +360,8 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        NoHeaderParsing: true,
+        NoDataParsing: true,
       },
       options: {
         POST: 1,
@@ -425,8 +425,8 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        NoHeaderParsing: true,
+        NoDataParsing: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -469,8 +469,8 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        NoHeaderParsing: true,
+        NoDataParsing: true,
       },
       options: {
         NOBODY: 1,
@@ -512,8 +512,8 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        NoHeaderParsing: true,
+        NoDataParsing: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -556,8 +556,8 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        NoHeaderParsing: true,
+        NoDataParsing: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
