@@ -73,7 +73,7 @@ export async function login(rawEmail, rawPassphrase) {
   c.checkM2(Buffer.from(srpM2, 'hex'));
 
   // ~~~~~~~~~~~~~~~~~~~~~~ //
-  // Initialize the Session : Object//
+  // Initialize the Session //
   // ~~~~~~~~~~~~~~~~~~~~~~ //
 
   // Compute K (used for session ID)
