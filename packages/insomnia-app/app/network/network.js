@@ -87,12 +87,24 @@ const MAX_DELAY_TIME = 1000;
 // Special header value that will prevent the header being sent
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
 
+// Because node-libcurl changed some names that we used in the timeline
+const LIBCURL_DEBUG_MIGRATION_MAP = {
+  HeaderIn: 'HEADER_IN',
+  DataIn: 'DATA_IN',
+  SslDataIn: 'SSL_DATA_IN',
+  HeaderOut: 'HEADER_OUT',
+  DataOut: 'DATA_OUT',
+  SslDataOut: 'SSL_DATA_OUT',
+  Text: 'TEXT',
+  '': '',
+};
+
 let cancelRequestFunction = null;
 let lastUserInteraction = Date.now();
 
-export function cancelCurrentRequest() {
+export async function cancelCurrentRequest() {
   if (typeof cancelRequestFunction === 'function') {
-    cancelRequestFunction();
+    await cancelRequestFunction();
   }
 }
 
@@ -149,7 +161,7 @@ export async function _actuallySend(
           renderContext,
         );
       } catch (err) {
-        handleError(
+        await handleError(
           new Error(`[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`),
         );
         return;
@@ -159,8 +171,8 @@ export async function _actuallySend(
     }
 
     /** Helper function to respond with an error */
-    function handleError(err: Error): void {
-      respond(
+    async function handleError(err: Error): Promise<void> {
+      await respond(
         {
           url: renderedRequest.url,
           parentId: renderedRequest._id,
@@ -195,8 +207,8 @@ export async function _actuallySend(
 
     try {
       // Setup the cancellation logic
-      cancelRequestFunction = () => {
-        respond(
+      cancelRequestFunction = async () => {
+        await respond(
           {
             elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
             bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
@@ -217,8 +229,8 @@ export async function _actuallySend(
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
-      enable(Curl.feature.NO_HEADER_PARSING);
-      enable(Curl.feature.NO_DATA_PARSING);
+      enable(Curl.feature.NoHeaderParsing);
+      enable(Curl.feature.NoDataParsing);
 
       // Set maximum amount of redirects allowed
       // NOTE: Setting this to -1 breaks some versions of libcurl
@@ -250,14 +262,17 @@ export async function _actuallySend(
 
       // Setup debug handler
       setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, content: string) => {
-        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType) || '';
+        const rawName =
+          Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType) || '';
+        const name = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
 
-        if (infoType === Curl.info.debug.SSL_DATA_IN || infoType === Curl.info.debug.SSL_DATA_OUT) {
+        // Ignore these because we can't read most of it (binary) anyway
+        if (infoType === Curl.info.debug.SslDataIn || infoType === Curl.info.debug.SslDataOut) {
           return 0;
         }
 
         // Ignore the possibly large data messages
-        if (infoType === Curl.info.debug.DATA_OUT) {
+        if (infoType === Curl.info.debug.DataOut) {
           if (content.length === 0) {
             // Sometimes this happens, but I'm not sure why. Just ignore it.
           } else if (content.length / 1024 < settings.maxTimelineDataSizeKB) {
@@ -268,17 +283,17 @@ export async function _actuallySend(
           return 0;
         }
 
-        if (infoType === Curl.info.debug.DATA_IN) {
+        if (infoType === Curl.info.debug.DataIn) {
           addTimelineText(`Received ${describeByteSize(content.length)} chunk`);
           return 0;
         }
 
         // Don't show cookie setting because this will display every domain in the jar
-        if (infoType === Curl.info.debug.TEXT && content.indexOf('Added cookie') === 0) {
+        if (infoType === Curl.info.debug.Text && content.indexOf('Added cookie') === 0) {
           return 0;
         }
 
-        addTimeline(name, content);
+        addTimeline(name, content.toString());
 
         return 0; // Must be here
       });
@@ -317,10 +332,10 @@ export async function _actuallySend(
         const protocol = (match && match[1]) || '';
         const socketPath = (match && match[2]) || '';
         const socketUrl = (match && match[3]) || '';
-        curl.setUrl(`${protocol}//${socketUrl}`);
+        setOpt(Curl.option.URL, `${protocol}//${socketUrl}`);
         setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
       } else {
-        curl.setUrl(finalUrl);
+        setOpt(Curl.option.URL, finalUrl);
       }
       addTimelineText('Preparing request to ' + finalUrl);
       addTimelineText(`Using ${Curl.getVersion()}`);
@@ -373,7 +388,7 @@ export async function _actuallySend(
       if (renderedRequest.settingSendCookies) {
         // Tell Curl to store cookies that it receives. This is only important if we receive
         // a cookie on a redirect that needs to be sent on the next request in the chain.
-        curl.setOpt(Curl.option.COOKIEFILE, '');
+        setOpt(Curl.option.COOKIEFILE, '');
 
         const cookies = renderedRequest.cookieJar.cookies || [];
         for (const cookie of cookies) {
@@ -418,7 +433,7 @@ export async function _actuallySend(
         addTimelineText(`Enable network proxy for ${protocol || ''}`);
         if (proxy) {
           setOpt(Curl.option.PROXY, proxy);
-          setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
+          setOpt(Curl.option.PROXYAUTH, Curl.auth.Any);
         }
         if (noProxy) {
           setOpt(Curl.option.NOPROXY, noProxy);
@@ -560,17 +575,17 @@ export async function _actuallySend(
       if (!hasAuthHeader(headers) && !renderedRequest.authentication.disabled) {
         if (renderedRequest.authentication.type === AUTH_BASIC) {
           const { username, password } = renderedRequest.authentication;
-          setOpt(Curl.option.HTTPAUTH, Curl.auth.BASIC);
+          setOpt(Curl.option.HTTPAUTH, Curl.auth.Basic);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_DIGEST) {
           const { username, password } = renderedRequest.authentication;
-          setOpt(Curl.option.HTTPAUTH, Curl.auth.DIGEST);
+          setOpt(Curl.option.HTTPAUTH, Curl.auth.Digest);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_NTLM) {
           const { username, password } = renderedRequest.authentication;
-          setOpt(Curl.option.HTTPAUTH, Curl.auth.NTLM);
+          setOpt(Curl.option.HTTPAUTH, Curl.auth.Ntlm);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
@@ -600,7 +615,7 @@ export async function _actuallySend(
             headers.push(header);
           }
         } else if (renderedRequest.authentication.type === AUTH_NETRC) {
-          setOpt(Curl.option.NETRC, Curl.netrc.REQUIRED);
+          setOpt(Curl.option.NETRC, Curl.netrc.Required);
         } else {
           const authHeader = await getAuthHeader(renderedRequest, finalUrl);
 
@@ -743,10 +758,10 @@ export async function _actuallySend(
         // Make sure the response body has been fully written first
         await waitForStreamToFinish(responseBodyWriteStream);
 
-        respond(responsePatch, responseBodyPath);
+        await respond(responsePatch, responseBodyPath);
       });
 
-      curl.on('error', function(err, code) {
+      curl.on('error', async (err, code) => {
         let error = err + '';
         let statusMessage = 'Error';
 
@@ -755,12 +770,13 @@ export async function _actuallySend(
           statusMessage = 'Abort';
         }
 
-        respond({ statusMessage, error }, null, true);
+        await respond({ statusMessage, error }, null, true);
       });
 
       curl.perform();
     } catch (err) {
-      handleError(err);
+      console.log('[network] Error', err);
+      await handleError(err);
     }
   });
 }

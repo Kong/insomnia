@@ -1,4 +1,4 @@
-const nodeLibcurl = require('insomnia-node-libcurl');
+const nodeLibcurl = require('node-libcurl');
 
 class Curl {
   constructor() {
@@ -13,21 +13,7 @@ class Curl {
       throw new Error(`Cannot setOpt for unknown option ${option}`);
     }
 
-    // Throw on deprecated options
-    const disabledOpts = {
-      [nodeLibcurl.Curl.option.URL]: this.setUrl,
-    };
-    if (disabledOpts[option]) {
-      const name = Curl.optName(option);
-      const newName = disabledOpts[option].name;
-      throw new Error(`setOpt(${name}) is deprecated. Please use ${newName}() instead`);
-    }
-
     this._handle.setOpt(option, value);
-  }
-
-  setUrl(url) {
-    this._handle.setOpt(Curl.option.URL, url);
   }
 
   static getVersion() {
@@ -79,11 +65,12 @@ class Curl {
   }
 }
 
-Curl.feature = nodeLibcurl.Curl.feature;
+Curl.feature = nodeLibcurl.CurlFeature;
 Curl.option = nodeLibcurl.Curl.option;
-Curl.auth = nodeLibcurl.Curl.auth;
-Curl.code = nodeLibcurl.Curl.code;
-Curl.netrc = nodeLibcurl.Curl.netrc;
+Curl.auth = nodeLibcurl.CurlAuth;
+Curl.code = nodeLibcurl.CurlCode;
+Curl.netrc = nodeLibcurl.CurlNetrc;
 Curl.info = nodeLibcurl.Curl.info;
+Curl.info.debug = nodeLibcurl.CurlInfoDebug;
 
 module.exports = Curl;

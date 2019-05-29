@@ -2,11 +2,11 @@
 
 declare class Curl {
   static getVersion: () => string;
-  static feature: {
-    NO_HEADER_PARSING: number,
-    NO_DATA_PARSING: number,
-  };
-  static option: {
+  static feature: {|
+    NoHeaderParsing: number,
+    NoDataParsing: number,
+  |};
+  static option: {|
     ACCEPT_ENCODING: number,
     CAINFO: number,
     COOKIE: number,
@@ -48,50 +48,56 @@ declare class Curl {
     VERBOSE: number,
     WRITEFUNCTION: number,
     XFERINFOFUNCTION: number,
-  };
+  |};
 
-  static auth: {
-    NTLM: string,
-    DIGEST: string,
-    BASIC: string,
-    ANY: string,
-  };
+  static auth: {|
+    None: number,
+    Bearer: number,
+    Ntlm: number,
+    Digest: number,
+    Basic: number,
+    Any: number,
+  |};
 
-  static code: {
+  static code: {|
     CURLE_ABORTED_BY_CALLBACK: string,
-  };
+  |};
 
-  static netrc: {
-    IGNORED: number,
-    OPTIONAL: number,
-    REQUIRED: number,
-  };
+  static netrc: {|
+    Ignored: number,
+    Optional: number,
+    Required: number,
+  |};
 
-  static info: {
+  static info: {|
+    APPCONNECT_TIME: string,
+    CONNECT_TIME: string,
     EFFECTIVE_URL: string,
+    HEADER_SIZE: string,
+    HTTP_CONNECTCODE: string,
+    HTTP_VERSION: string,
+    REDIRECT_COUNT: string,
+    REDIRECT_TIME: string,
+    REDIRECT_TIME: string,
     SIZE_DOWNLOAD: string,
     TOTAL_TIME: string,
     debug: {
-      SSL_DATA_IN: string,
-      SSL_DATA_OUT: string,
-      DATA_OUT: string,
-      DATA_IN: string,
-      TEXT: string,
+      HeaderIn: string,
+      HeaderOut: string,
+      SslDataIn: string,
+      SslDataOut: string,
+      DataOut: string,
+      DataIn: string,
+      Text: string,
     },
-  };
+  |};
 
-  setOpt: (option: number, ...args: Array<any>) => void;
-  enable: (option: number, ...args: Array<any>) => void;
-  getInfo: (option: string, ...args: Array<any>) => any;
+  setOpt: (option: number, arg: any) => void;
+  enable: (option: number) => void;
+  getInfo: (option: string) => any;
   perform: () => void;
   close: () => void;
   on: (event: string, callback: Function) => void;
-
-  // ~~~~~~~~~~~ //
-  // New Methods //
-  // ~~~~~~~~~~~ //
-
-  setUrl: (url: string) => void;
 }
 
 declare module 'insomnia-libcurl' {
