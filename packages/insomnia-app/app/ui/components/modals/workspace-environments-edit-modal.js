@@ -342,9 +342,13 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    let data;
+    let patch;
     try {
-      data = this.environmentEditorRef.getValue();
+      const data = this.environmentEditorRef.getValue();
+      patch = {
+        data: data && data.object,
+        dataPropertyOrder: data && data.propertyOrder,
+      };
     } catch (err) {
       // Invalid JSON probably
       return;
@@ -355,7 +359,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     if (activeEnvironment) {
       clearTimeout(this.saveTimeout);
       this.saveTimeout = setTimeout(() => {
-        models.environment.update(activeEnvironment, { data });
+        models.environment.update(activeEnvironment, patch);
       }, DEBOUNCE_MILLIS * 4);
     }
   }
@@ -375,6 +379,11 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     const { subEnvironments, rootEnvironment, isValid } = this.state;
 
     const activeEnvironment = this._getActiveEnvironment();
+
+    const environmentInfo = {
+      object: activeEnvironment ? activeEnvironment.data : {},
+      propertyOrder: activeEnvironment && activeEnvironment.dataPropertyOrder,
+    };
 
     return (
       <Modal ref={this._setModalRef} wide tall {...this.props}>
@@ -441,39 +450,39 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
               </h1>
 
               {activeEnvironment && rootEnvironment !== activeEnvironment ? (
-                <Dropdown className="space-right" right>
-                  <DropdownButton className="btn btn--clicky">
-                    {activeEnvironment.color && (
-                      <i
-                        className="fa fa-circle space-right"
-                        style={{ color: activeEnvironment.color }}
-                      />
-                    )}
-                    Color <i className="fa fa-caret-down" />
-                  </DropdownButton>
+                <React.Fragment>
+                  <Dropdown className="space-right" right>
+                    <DropdownButton className="btn btn--clicky">
+                      {activeEnvironment.color && (
+                        <i
+                          className="fa fa-circle space-right"
+                          style={{ color: activeEnvironment.color }}
+                        />
+                      )}
+                      Color <i className="fa fa-caret-down" />
+                    </DropdownButton>
 
-                  <DropdownItem value={activeEnvironment} onClick={this._handleClickColorChange}>
-                    <i className="fa fa-circle" style={{ color: activeEnvironment.color }} />
-                    {activeEnvironment.color ? 'Change Color' : 'Assign Color'}
-                  </DropdownItem>
+                    <DropdownItem value={activeEnvironment} onClick={this._handleClickColorChange}>
+                      <i className="fa fa-circle" style={{ color: activeEnvironment.color }} />
+                      {activeEnvironment.color ? 'Change Color' : 'Assign Color'}
+                    </DropdownItem>
 
-                  <DropdownItem
+                    <DropdownItem
+                      value={activeEnvironment}
+                      onClick={this._handleUnsetColor}
+                      disabled={!activeEnvironment.color}>
+                      <i className="fa fa-minus-circle" />
+                      Unset Color
+                    </DropdownItem>
+                  </Dropdown>
+
+                  <PromptButton
                     value={activeEnvironment}
-                    onClick={this._handleUnsetColor}
-                    disabled={!activeEnvironment.color}>
-                    <i className="fa fa-minus-circle" />
-                    Unset Color
-                  </DropdownItem>
-                </Dropdown>
-              ) : null}
-
-              {activeEnvironment && rootEnvironment !== activeEnvironment ? (
-                <PromptButton
-                  value={activeEnvironment}
-                  onClick={this._handleDeleteEnvironment}
-                  className="btn btn--clicky">
-                  <i className="fa fa-trash-o" />
-                </PromptButton>
+                    onClick={this._handleDeleteEnvironment}
+                    className="btn btn--clicky">
+                    <i className="fa fa-trash-o" />
+                  </PromptButton>
+                </React.Fragment>
               ) : null}
             </div>
             <div className="env-modal__editor">
@@ -484,7 +493,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                 lineWrapping={lineWrapping}
                 ref={this._setEditorRef}
                 key={`${this.editorKey}::${activeEnvironment ? activeEnvironment._id : 'n/a'}`}
-                environment={activeEnvironment ? activeEnvironment.data : {}}
+                environmentInfo={environmentInfo}
                 didChange={this._didChange}
                 render={render}
                 getRenderContext={getRenderContext}
