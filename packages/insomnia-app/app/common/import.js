@@ -24,6 +24,7 @@ const EXPORT_TYPE_ENVIRONMENT = 'environment';
 
 // If we come across an ID of this form, we will replace it with a new one
 const REPLACE_ID_REGEX = /^__\w+_\d+__$/;
+const REPLACE_HANDLEBARS_REGEX = /^/g; //;
 
 const MODELS = {
   [EXPORT_TYPE_REQUEST]: models.request,
