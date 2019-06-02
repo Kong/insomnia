@@ -10,6 +10,7 @@ type Props = {|
   onClick?: Function,
   className?: string,
   children?: React.Node,
+  disabled?: boolean,
 |};
 
 @autobind
@@ -31,6 +32,7 @@ class Link extends React.PureComponent<Props> {
       href,
       children,
       className,
+      disabled,
       ...other
     } = this.props;
     return button ? (
@@ -42,6 +44,7 @@ class Link extends React.PureComponent<Props> {
         href={href}
         onClick={this._handleClick}
         className={(className || '') + ' theme--link'}
+        disabled={disabled}
         {...other}>
         {children}
       </a>

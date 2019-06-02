@@ -64,6 +64,7 @@ class SidebarRequestGroupRow extends PureComponent {
       isDraggingOver,
       workspace,
       hotKeyRegistry,
+      activeEnvironment,
     } = this.props;
 
     const { dragDirection } = this.state;
@@ -84,7 +85,14 @@ class SidebarRequestGroupRow extends PureComponent {
       connectDropTarget(
         <button onClick={this._handleCollapse} onContextMenu={this._handleShowActions}>
           <div className="sidebar__clickable">
-            <i className={'sidebar__item__icon fa ' + folderIconClass} />
+            <i
+              className={classnames(
+                'sidebar__item__icon-right',
+                'fa',
+                'space-right',
+                folderIconClass,
+              )}
+            />
             <Highlight search={filter} text={requestGroup.name} />
             <div
               ref={this._setExpandTagRef}
@@ -117,6 +125,7 @@ class SidebarRequestGroupRow extends PureComponent {
               workspace={workspace}
               requestGroup={requestGroup}
               hotKeyRegistry={hotKeyRegistry}
+              activeEnvironment={activeEnvironment}
               right
             />
           </div>
@@ -134,6 +143,7 @@ class SidebarRequestGroupRow extends PureComponent {
               handleDuplicateRequest={misc.nullFn}
               handleGenerateCode={misc.nullFn}
               handleCopyAsCurl={misc.nullFn}
+              handleSetRequestPinned={misc.nullFn}
               moveDoc={moveDoc}
               isActive={false}
               request={null}
@@ -142,6 +152,7 @@ class SidebarRequestGroupRow extends PureComponent {
               requestCreate={handleCreateRequest}
               filter={filter}
               hotKeyRegistry={hotKeyRegistry}
+              isPinned={false}
             />
           )}
         </ul>
@@ -176,6 +187,7 @@ SidebarRequestGroupRow.propTypes = {
 
   // Optional
   children: PropTypes.node,
+  activeEnvironment: PropTypes.object,
 };
 
 /**
@@ -223,7 +235,7 @@ const dragTarget = {
     }
   },
   hover(props, monitor, component) {
-    if (isOnExpandTag(monitor, component)) {
+    if (props.isCollapsed && isOnExpandTag(monitor, component)) {
       component.props.handleSetRequestGroupCollapsed(props.requestGroup._id, false);
       component.setDragDirection(0);
     } else if (isAbove(monitor, component)) {

@@ -10,6 +10,7 @@ import type {
   RequestHeader,
   RequestParameter,
 } from '../../models/request';
+import type { SidebarChildObjects } from './sidebar/sidebar-children';
 
 import * as React from 'react';
 import autobind from 'autobind-decorator';
@@ -60,6 +61,7 @@ import AddKeyCombinationModal from './modals/add-key-combination-modal';
 import ExportRequestsModal from './modals/export-requests-modal';
 import VCS from '../../sync/vcs';
 import type { StatusCandidate } from '../../sync/types';
+import type { RequestMeta } from '../../models/request-meta';
 
 type Props = {
   // Helper Functions
@@ -99,6 +101,7 @@ type Props = {
   handleResetDragPaneHorizontal: Function,
   handleResetDragPaneVertical: Function,
   handleSetRequestGroupCollapsed: Function,
+  handleSetRequestPinned: Function,
   handleSendRequestWithEnvironment: Function,
   handleSendAndDownloadRequestWithEnvironment: Function,
   handleUpdateRequestMimeType: Function,
@@ -114,9 +117,11 @@ type Props = {
   sidebarWidth: number,
   sidebarHidden: boolean,
   sidebarFilter: string,
-  sidebarChildren: Array<Object>,
+  sidebarChildren: SidebarChildObjects,
   settings: Settings,
   workspaces: Array<Workspace>,
+  requestMetas: Array<RequestMeta>,
+  requests: Array<Request>,
   unseenWorkspaces: Array<Workspace>,
   workspaceChildren: Array<Object>,
   environments: Array<Object>,
@@ -126,6 +131,7 @@ type Props = {
   activeEnvironment: Environment | null,
   activeWorkspaceClientCertificates: Array<ClientCertificate>,
   isVariableUncovered: boolean,
+  headerEditorKey: string,
   vcs: VCS | null,
   syncItems: Array<StatusCandidate>,
 
@@ -368,25 +374,30 @@ class Wrapper extends React.PureComponent<Props, State> {
 
   render() {
     const {
+      activeCookieJar,
       activeEnvironment,
       activeRequest,
-      activeWorkspace,
-      activeCookieJar,
       activeRequestResponses,
       activeResponse,
+      activeWorkspace,
       activeWorkspaceClientCertificates,
       environments,
       handleActivateRequest,
+      handleCopyAsCurl,
       handleCreateRequest,
       handleCreateRequestForWorkspace,
       handleCreateRequestGroup,
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
-      handleMoveRequestGroup,
+      handleDuplicateWorkspace,
       handleExportFile,
-      handleShowExportRequestsModal,
       handleExportRequestsToFile,
+      handleGenerateCode,
+      handleGenerateCodeForActiveRequest,
+      handleGetRenderContext,
       handleMoveDoc,
+      handleMoveRequestGroup,
+      handleRender,
       handleResetDragPaneHorizontal,
       handleResetDragPaneVertical,
       handleResetDragSidebar,
@@ -394,38 +405,36 @@ class Wrapper extends React.PureComponent<Props, State> {
       handleSetActiveWorkspace,
       handleSetRequestGroupCollapsed,
       handleSetRequestPaneRef,
+      handleSetRequestPinned,
       handleSetResponsePaneRef,
+      handleSetSidebarFilter,
       handleSetSidebarRef,
+      handleShowExportRequestsModal,
       handleStartDragPaneHorizontal,
       handleStartDragPaneVertical,
-      handleSetSidebarFilter,
       handleToggleMenuBar,
-      handleRender,
-      handleGetRenderContext,
-      handleDuplicateWorkspace,
-      handleGenerateCodeForActiveRequest,
-      handleGenerateCode,
-      handleCopyAsCurl,
       handleUpdateRequestMimeType,
+      headerEditorKey,
       isLoading,
+      isVariableUncovered,
       loadStartTime,
-      paneWidth,
+      oAuth2Token,
       paneHeight,
+      paneWidth,
+      requestMetas,
       responseFilter,
       responseFilterHistory,
       responsePreviewMode,
-      oAuth2Token,
       settings,
       sidebarChildren,
       sidebarFilter,
       sidebarHidden,
       sidebarWidth,
       syncItems,
+      unseenWorkspaces,
+      vcs,
       workspaceChildren,
       workspaces,
-      unseenWorkspaces,
-      isVariableUncovered,
-      vcs,
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
@@ -549,11 +558,12 @@ class Wrapper extends React.PureComponent<Props, State> {
 
           <RequestSwitcherModal
             ref={registerModal}
+            workspace={activeWorkspace}
             workspaces={workspaces}
             workspaceChildren={workspaceChildren}
-            workspaceId={activeWorkspace._id}
-            activeRequestParentId={activeRequest ? activeRequest.parentId : activeWorkspace._id}
+            activeRequest={activeRequest}
             activateRequest={handleActivateRequest}
+            requestMetas={requestMetas}
             handleSetActiveWorkspace={handleSetActiveWorkspace}
           />
 
@@ -614,7 +624,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           <AddKeyCombinationModal ref={registerModal} />
           <ExportRequestsModal
             ref={registerModal}
-            childObjects={sidebarChildren}
+            childObjects={sidebarChildren.all}
             handleExportRequestsToFile={handleExportRequestsToFile}
           />
         </ErrorBoundary>
@@ -672,6 +682,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleSetActiveEnvironment={handleSetActiveEnvironment}
             moveDoc={handleMoveDoc}
             handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+            handleSetRequestPinned={handleSetRequestPinned}
             activeRequest={activeRequest}
             activeEnvironment={activeEnvironment}
             handleCreateRequest={handleCreateRequest}
@@ -727,6 +738,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
+            headerEditorKey={headerEditorKey}
           />
         </ErrorBoundary>
 

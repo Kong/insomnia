@@ -51,6 +51,7 @@ class Sidebar extends PureComponent {
       handleCopyAsCurl,
       handleCreateRequestGroup,
       handleSetRequestGroupCollapsed,
+      handleSetRequestPinned,
       moveDoc,
       handleActivateRequest,
       activeRequest,
@@ -119,6 +120,7 @@ class Sidebar extends PureComponent {
           handleCreateRequest={handleCreateRequest}
           handleCreateRequestGroup={handleCreateRequestGroup}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+          handleSetRequestPinned={handleSetRequestPinned}
           handleDuplicateRequest={handleDuplicateRequest}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           handleMoveRequestGroup={handleMoveRequestGroup}
@@ -129,6 +131,7 @@ class Sidebar extends PureComponent {
           activeRequest={activeRequest}
           filter={filter || ''}
           hotKeyRegistry={hotKeyRegistry}
+          activeEnvironment={activeEnvironment}
         />
 
         {enableSyncBeta && vcs && isLoggedIn() && (
@@ -156,6 +159,7 @@ Sidebar.propTypes = {
   // Functions
   handleActivateRequest: PropTypes.func.isRequired,
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
+  handleSetRequestPinned: PropTypes.func.isRequired,
   handleChangeFilter: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
   handleSetActiveEnvironment: PropTypes.func.isRequired,
@@ -175,7 +179,7 @@ Sidebar.propTypes = {
   width: PropTypes.number.isRequired,
   isLoading: PropTypes.bool.isRequired,
   workspace: PropTypes.object.isRequired,
-  childObjects: PropTypes.arrayOf(PropTypes.object).isRequired,
+  childObjects: PropTypes.object.isRequired,
   workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   unseenWorkspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,

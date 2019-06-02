@@ -14,10 +14,14 @@ import type { Environment } from '../models/environment';
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
 
-export type RenderPurpose = 'send' | 'general';
+export type RenderPurpose = 'send' | 'general' | 'no-render';
 
 export const RENDER_PURPOSE_SEND: RenderPurpose = 'send';
 export const RENDER_PURPOSE_GENERAL: RenderPurpose = 'general';
+export const RENDER_PURPOSE_NO_RENDER: RenderPurpose = 'no-render';
+
+/** Key/value pairs to be provided to the render context */
+export type ExtraRenderInfo = Array<{ name: string, value: any }>;
 
 export type RenderedRequest = Request & {
   cookies: Array<{ name: string, value: string, disabled?: boolean }>,
@@ -92,17 +96,35 @@ export async function buildRenderContext(
   // Render the context with itself to fill in the rest.
   let finalRenderContext = renderContext;
 
-  // Render recursive references.
   const keys = _getOrderedEnvironmentKeys(finalRenderContext);
+
+  // Render recursive references and tags.
+  const skipNextTime = {};
   for (let i = 0; i < 3; i++) {
     for (const key of keys) {
-      finalRenderContext[key] = await render(
+      // Skip rendering keys that stayed the same multiple times. This is here because
+      // a render failure will leave the tag as-is and thus the next iteration of the
+      // loop will try to re-render it again. We don't want to keep erroring on these
+      // because renders are expensive and potentially not idempotent.
+      if (skipNextTime[key]) {
+        continue;
+      }
+
+      const renderResult = await render(
         finalRenderContext[key],
         finalRenderContext,
         null,
         KEEP_ON_ERROR,
         'Environment',
       );
+
+      // Result didn't change, so skip
+      if (renderResult === finalRenderContext[key]) {
+        skipNextTime[key] = true;
+        continue;
+      }
+
+      finalRenderContext[key] = renderResult;
     }
   }
 
@@ -191,9 +213,10 @@ export async function render<T>(
 
 export async function getRenderContext(
   request: Request,
-  environmentId: string,
+  environmentId: string | null,
   ancestors: Array<BaseModel> | null = null,
   purpose: RenderPurpose | null = null,
+  extraInfo: ExtraRenderInfo | null = null,
 ): Promise<Object> {
   if (!ancestors) {
     ancestors = await db.withAncestors(request, [
@@ -211,12 +234,13 @@ export async function getRenderContext(
   const rootEnvironment = await models.environment.getOrCreateForWorkspaceId(
     workspace ? workspace._id : 'n/a',
   );
-  const subEnvironment = await models.environment.getById(environmentId);
+  const subEnvironment = await models.environment.getById(environmentId || 'n/a');
 
   let keySource = {};
   for (let key in (rootEnvironment || {}).data) {
     keySource[key] = 'root';
   }
+
   if (subEnvironment) {
     for (const key of Object.keys(subEnvironment.data || {})) {
       if (subEnvironment.name) {
@@ -224,6 +248,7 @@ export async function getRenderContext(
       }
     }
   }
+
   if (ancestors) {
     for (let idx = 0; idx < ancestors.length; idx++) {
       let ancestor: any = ancestors[idx] || {};
@@ -251,6 +276,14 @@ export async function getRenderContext(
   });
 
   baseContext.getPurpose = () => purpose;
+  baseContext.getExtraInfo = (key: string) => {
+    if (!Array.isArray(extraInfo)) {
+      return null;
+    }
+
+    const p = extraInfo.find(v => v.name === key);
+    return p ? p.value : null;
+  };
 
   baseContext.getEnvironmentId = () => environmentId;
 
@@ -260,8 +293,9 @@ export async function getRenderContext(
 
 export async function getRenderedRequestAndContext(
   request: Request,
-  environmentId: string,
+  environmentId: string | null,
   purpose?: RenderPurpose,
+  extraInfo?: ExtraRenderInfo,
 ): Promise<{ request: RenderedRequest, context: Object }> {
   const ancestors = await db.withAncestors(request, [
     models.request.type,
@@ -272,7 +306,13 @@ export async function getRenderedRequestAndContext(
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
 
-  const renderContext = await getRenderContext(request, environmentId, ancestors, purpose);
+  const renderContext = await getRenderContext(
+    request,
+    environmentId,
+    ancestors,
+    purpose,
+    extraInfo || null,
+  );
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
   // https://github.com/getinsomnia/insomnia/issues/895
@@ -284,6 +324,10 @@ export async function getRenderedRequestAndContext(
     }
   } catch (err) {}
 
+  // Render description separately because it's lower priority
+  const description = request.description;
+  request.description = '';
+
   // Render all request properties
   const renderResult = await render(
     { _request: request, _cookieJar: cookieJar },
@@ -293,6 +337,7 @@ export async function getRenderedRequestAndContext(
 
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
+  renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
 
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);

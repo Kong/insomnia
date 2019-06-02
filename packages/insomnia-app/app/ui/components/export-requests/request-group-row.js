@@ -64,7 +64,7 @@ class RequestGroupRow extends React.PureComponent<Props> {
             />
           </div>
           <button onClick={this.handleCollapse}>
-            <i className={'tree__item__icon fa ' + folderIconClass} />
+            <i className={classnames('tree__item__icon', 'fa', folderIconClass)} />
             {requestGroup.name}
             <span className="total-requests">{totalRequests} requests</span>
           </button>

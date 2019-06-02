@@ -3,8 +3,12 @@ import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
 import type { Request, RequestHeader } from '../models/request';
 import type { Workspace } from '../models/workspace';
 import type { Settings } from '../models/settings';
-import type { RenderedRequest } from '../common/render';
-import { getRenderedRequestAndContext, RENDER_PURPOSE_SEND } from '../common/render';
+import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
+import {
+  getRenderedRequestAndContext,
+  RENDER_PURPOSE_NO_RENDER,
+  RENDER_PURPOSE_SEND,
+} from '../common/render';
 import mkdirp from 'mkdirp';
 import crypto from 'crypto';
 import clone from 'clone';
@@ -29,6 +33,7 @@ import {
   delay,
   describeByteSize,
   getContentTypeHeader,
+  getDataDirectory,
   getHostHeader,
   getLocationHeader,
   getSetCookieHeaders,
@@ -38,7 +43,6 @@ import {
   hasContentTypeHeader,
   hasUserAgentHeader,
   waitForStreamToFinish,
-  getDataDirectory,
 } from '../common/misc';
 import {
   buildQueryStringFromParams,
@@ -320,6 +324,7 @@ export async function _actuallySend(
       }
       addTimelineText('Preparing request to ' + finalUrl);
       addTimelineText(`Using ${Curl.getVersion()}`);
+      addTimelineText('Current time is ' + new Date().toISOString());
 
       // Set timeout
       if (settings.timeout > 0) {
@@ -801,7 +806,13 @@ export async function sendWithSettings(
   return _actuallySend(renderResult.request, renderResult.context, workspace, settings);
 }
 
-export async function send(requestId: string, environmentId: string): Promise<ResponsePatch> {
+export async function send(
+  requestId: string,
+  environmentId: string | null,
+  extraInfo?: ExtraRenderInfo,
+): Promise<ResponsePatch> {
+  console.log(`[network] Sending req=${requestId}`);
+
   // HACK: wait for all debounces to finish
   /*
    * TODO: Do this in a more robust way
@@ -833,6 +844,7 @@ export async function send(requestId: string, environmentId: string): Promise<Re
     request,
     environmentId,
     RENDER_PURPOSE_SEND,
+    extraInfo,
   );
 
   const renderedRequestBeforePlugins = renderResult.request;
@@ -862,7 +874,20 @@ export async function send(requestId: string, environmentId: string): Promise<Re
     };
   }
 
-  return _actuallySend(renderedRequest, renderedContextBeforePlugins, workspace, settings);
+  const response = await _actuallySend(
+    renderedRequest,
+    renderedContextBeforePlugins,
+    workspace,
+    settings,
+  );
+
+  console.log(
+    response.error
+      ? `[network] Response failed req=${requestId} err=${response.error || 'n/a'}`
+      : `[network] Response succeeded req=${requestId} status=${response.statusCode || '?'}`,
+  );
+
+  return response;
 }
 
 async function _applyRequestPluginHooks(
@@ -872,7 +897,7 @@ async function _applyRequestPluginHooks(
   const newRenderedRequest = clone(renderedRequest);
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
-      ...pluginContexts.app.init(),
+      ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
       ...pluginContexts.store.init(plugin),
       ...pluginContexts.request.init(newRenderedRequest, renderedContext),
     };
@@ -898,7 +923,7 @@ async function _applyResponsePluginHooks(
 
   for (const { plugin, hook } of await plugins.getResponseHooks()) {
     const context = {
-      ...pluginContexts.app.init(),
+      ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
       ...pluginContexts.store.init(plugin),
       ...pluginContexts.response.init(newResponse),
       ...pluginContexts.request.init(newRequest, renderContext, true),

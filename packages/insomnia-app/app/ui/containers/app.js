@@ -90,6 +90,7 @@ class App extends PureComponent {
       isVariableUncovered: props.isVariableUncovered || false,
       vcs: null,
       forceRefreshCounter: 0,
+      forceRefreshHeaderCounter: 0,
     };
 
     this._isMigratingChildren = false;
@@ -117,6 +118,22 @@ class App extends PureComponent {
         hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
         () => {
           showModal(SettingsModal, TAB_INDEX_SHORTCUTS);
+        },
+      ],
+      [
+        hotKeyRefs.SHOW_RECENT_REQUESTS,
+        () => {
+          showModal(RequestSwitcherModal, {
+            disableInput: true,
+            maxRequests: 10,
+            maxWorkspaces: 0,
+            selectOnKeyup: true,
+            title: 'Recent Requests',
+            hideNeverActiveRequests: true,
+
+            // Add an open delay so the dialog won't show for quick presses
+            openDelay: 150,
+          });
         },
       ],
       [
@@ -213,6 +230,20 @@ class App extends PureComponent {
         hotKeyRefs.REQUEST_SHOW_DUPLICATE,
         async () => {
           await this._requestDuplicate(this.props.activeRequest);
+        },
+      ],
+      [
+        hotKeyRefs.REQUEST_TOGGLE_PIN,
+        async () => {
+          if (!this.props.activeRequest) {
+            return;
+          }
+
+          const metas = Object.values(this.props.entities.requestMetas).find(
+            m => m.parentId === this.props.activeRequest._id,
+          );
+
+          await this._handleSetRequestPinned(this.props.activeRequest, !(metas && metas.pinned));
         },
       ],
       [hotKeyRefs.SIDEBAR_TOGGLE, this._handleToggleSidebar],
@@ -411,6 +442,7 @@ class App extends PureComponent {
 
   async _handleSetActiveRequest(activeRequestId) {
     await this._updateActiveWorkspaceMeta({ activeRequestId });
+    await App._updateRequestMetaByParentId(activeRequestId, { lastActive: Date.now() });
   }
 
   async _handleSetActiveEnvironment(activeEnvironmentId) {
@@ -435,6 +467,10 @@ class App extends PureComponent {
 
   _handleSetRequestGroupCollapsed(requestGroupId, collapsed) {
     App._updateRequestGroupMetaByParentId(requestGroupId, { collapsed });
+  }
+
+  async _handleSetRequestPinned(request, pinned) {
+    App._updateRequestMetaByParentId(request._id, { pinned });
   }
 
   _handleSetResponsePreviewMode(requestId, previewMode) {
@@ -490,7 +526,9 @@ class App extends PureComponent {
 
     // Force it to update, because other editor components (header editor)
     // needs to change. Need to wait a delay so the next render can finish
-    setTimeout(this._wrapper._forceRequestPaneRefresh, 300);
+    setTimeout(() => {
+      this.setState({ forceRefreshHeaderCounter: this.state.forceRefreshHeaderCounter + 1 });
+    }, 500);
 
     return newRequest;
   }
@@ -852,7 +890,7 @@ class App extends PureComponent {
       });
     }
 
-    await vcs.switchProject(activeWorkspace._id, activeWorkspace.name);
+    await vcs.switchProject(activeWorkspace._id);
 
     this.setState({ vcs });
   }
@@ -1033,6 +1071,7 @@ class App extends PureComponent {
       isVariableUncovered,
       vcs,
       forceRefreshCounter,
+      forceRefreshHeaderCounter,
     } = this.state;
 
     const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace._id}`;
@@ -1048,6 +1087,7 @@ class App extends PureComponent {
               paneHeight={paneHeight}
               sidebarWidth={sidebarWidth}
               handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+              handleSetRequestPinned={this._handleSetRequestPinned}
               handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
               handleActivateRequest={this._handleSetActiveRequest}
               handleSetRequestPaneRef={this._setRequestPaneRef}
@@ -1084,6 +1124,7 @@ class App extends PureComponent {
               handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
               handleShowExportRequestsModal={this._handleShowExportRequestsModal}
               isVariableUncovered={isVariableUncovered}
+              headerEditorKey={forceRefreshHeaderCounter + ''}
               vcs={vcs}
             />
           </ErrorBoundary>
@@ -1127,7 +1168,7 @@ function mapStateToProps(state, props) {
 
   // Entities
   const entitiesLists = selectEntitiesLists(state, props);
-  const { workspaces, environments, requests, requestGroups } = entitiesLists;
+  const { workspaces, environments, requests, requestGroups, requestMetas } = entitiesLists;
 
   const settings = entitiesLists.settings[0];
 
@@ -1178,6 +1219,7 @@ function mapStateToProps(state, props) {
     unseenWorkspaces,
     requestGroups,
     requests,
+    requestMetas,
     oAuth2Token,
     isLoading,
     loadStartTime,

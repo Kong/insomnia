@@ -36,6 +36,7 @@ module.exports.templateTags = [
       },
       {
         type: 'string',
+        encoding: 'base64',
         hide: args => args[0].value === 'raw',
         displayName: args => {
           switch (args[0].value) {
@@ -74,6 +75,7 @@ module.exports.templateTags = [
 
     async run(context, field, id, filter, resendBehavior) {
       filter = filter || '';
+      resendBehavior = (resendBehavior || 'never').toLowerCase();
 
       if (!['body', 'header', 'raw'].includes(field)) {
         throw new Error(`Invalid response field ${field}`);
@@ -91,25 +93,42 @@ module.exports.templateTags = [
       let response = await context.util.models.response.getLatestForRequestId(id);
 
       let shouldResend = false;
-      if (resendBehavior === 'ALWAYS') {
+      if (context.context.getExtraInfo('fromResponseTag')) {
+        shouldResend = false;
+      } else if (resendBehavior === 'never') {
+        shouldResend = false;
+      } else if (resendBehavior === 'no-history') {
+        shouldResend = !response;
+      } else if (resendBehavior === 'always') {
         shouldResend = true;
-      } else if (resendBehavior === 'NO_HISTORY' && !response) {
-        shouldResend = true;
-      } else if (resendBehavior === 'NEVER') {
+      }
+
+      // Make sure we only send the request once per render so we don't have infinite recursion
+      const fromResponseTag = context.context.getExtraInfo('fromResponseTag');
+      if (fromResponseTag) {
+        console.log('[response tag] Preventing recursive render');
         shouldResend = false;
       }
 
-      // Resend dependent request if needed but only if we're rendering for a send
-      if (shouldResend && (!response || context.renderPurpose === 'send')) {
+      if (shouldResend && context.renderPurpose === 'send') {
         console.log('[response tag] Resending dependency');
-        response = await context.network.sendRequest(request);
+        response = await context.network.sendRequest(request, [
+          { name: 'fromResponseTag', value: true },
+        ]);
       }
 
       if (!response) {
+        console.log('[response tag] No response found');
         throw new Error('No responses for request');
       }
 
+      if (response.error) {
+        console.log('[response tag] Response error ' + response.error);
+        throw new Error('Failed to send dependent request ' + response.error);
+      }
+
       if (!response.statusCode) {
+        console.log('[response tag] Invalid status code ' + response.statusCode);
         throw new Error('No successful responses for request');
       }
 

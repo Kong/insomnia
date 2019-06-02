@@ -491,7 +491,8 @@ export function describeChanges(a: any, b: any): Array<string> {
   }
 
   const changes = [];
-  for (const key of Object.keys(a)) {
+  const allKeys = [...Object.keys({ ...a, ...b })];
+  for (const key of allKeys) {
     if (IGNORED_KEYS.includes(key)) {
       continue;
     }
@@ -501,6 +502,16 @@ export function describeChanges(a: any, b: any): Array<string> {
 
     const aStr = deterministicStringify(aValue);
     const bStr = deterministicStringify(bValue);
+
+    if (aValue === undefined && bValue !== undefined) {
+      changes.push(`+${key}`);
+      continue;
+    }
+
+    if (aValue !== undefined && bValue === undefined) {
+      changes.push(`-${key}`);
+      continue;
+    }
 
     if (aStr !== bStr) {
       changes.push(key);

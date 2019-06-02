@@ -4,7 +4,7 @@ import querystring from 'querystring';
 
 const AUTH_WINDOW_SESSION_ID = uuid.v4();
 
-export function responseToObject(body, keys) {
+export function responseToObject(body, keys, defaults = {}) {
   let data = null;
   try {
     data = JSON.parse(body);
@@ -12,13 +12,26 @@ export function responseToObject(body, keys) {
 
   if (!data) {
     try {
+      // NOTE: parse does not return a JS Object, so
+      //   we cannot use hasOwnProperty on it
       data = querystring.parse(body);
     } catch (err) {}
   }
 
+  // Shouldn't happen but we'll check anyway
+  if (!data) {
+    data = {};
+  }
+
   let results = {};
   for (const key of keys) {
-    results[key] = data[key] !== undefined ? data[key] : null;
+    if (data[key] !== undefined) {
+      results[key] = data[key];
+    } else if (defaults && defaults.hasOwnProperty(key)) {
+      results[key] = defaults[key];
+    } else {
+      results[key] = null;
+    }
   }
 
   return results;

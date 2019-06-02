@@ -102,6 +102,13 @@ export const hotKeyRefs = {
 
   REQUEST_QUICK_SWITCH: defineHotKey('request_quickSwitch', 'Switch Requests'),
 
+  SHOW_RECENT_REQUESTS: defineHotKey('request_showRecent', 'Show Recent Requests'),
+
+  SHOW_RECENT_REQUESTS_PREVIOUS: defineHotKey(
+    'request_showRecentPrevious',
+    'Show Recent Requests (Previous)',
+  ),
+
   PLUGIN_RELOAD: defineHotKey('plugin_reload', 'Reload Plugins'),
 
   SHOW_AUTOCOMPLETE: defineHotKey('showAutocomplete', 'Show Autocomplete'),
@@ -143,6 +150,8 @@ export const hotKeyRefs = {
   REQUEST_SHOW_CREATE_FOLDER: defineHotKey('request_showCreateFolder', 'Create Folder'),
 
   REQUEST_SHOW_DUPLICATE: defineHotKey('request_showDuplicate', 'Duplicate Request'),
+
+  REQUEST_TOGGLE_PIN: defineHotKey('request_togglePin', 'Pin/Unpin Request'),
 
   CLOSE_DROPDOWN: defineHotKey('closeDropdown', 'Close Dropdown'),
 
@@ -188,6 +197,16 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.REQUEST_QUICK_SWITCH.id]: keyBinds(
     keyComb(false, false, false, true, keyboardKeys.p.keyCode),
     keyComb(true, false, false, false, keyboardKeys.p.keyCode),
+  ),
+
+  [hotKeyRefs.SHOW_RECENT_REQUESTS.id]: keyBinds(
+    keyComb(true, false, false, false, keyboardKeys.tab.keyCode),
+    keyComb(true, false, false, false, keyboardKeys.tab.keyCode),
+  ),
+
+  [hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS.id]: keyBinds(
+    keyComb(true, false, true, false, keyboardKeys.tab.keyCode),
+    keyComb(true, false, true, false, keyboardKeys.tab.keyCode),
   ),
 
   [hotKeyRefs.PLUGIN_RELOAD.id]: keyBinds(
@@ -286,6 +305,11 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.REQUEST_SHOW_DUPLICATE.id]: keyBinds(
     keyComb(false, false, false, true, keyboardKeys.d.keyCode),
     keyComb(true, false, false, false, keyboardKeys.d.keyCode),
+  ),
+
+  [hotKeyRefs.REQUEST_TOGGLE_PIN.id]: keyBinds(
+    keyComb(false, false, true, true, keyboardKeys.p.keyCode),
+    keyComb(true, false, true, false, keyboardKeys.p.keyCode),
   ),
 
   [hotKeyRefs.CLOSE_DROPDOWN.id]: keyBinds(

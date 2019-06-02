@@ -9,6 +9,7 @@ import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-moda
 import SetupSyncModal from '../modals/setup-sync-modal';
 import type { Workspace } from '../../../models/workspace';
 import * as session from '../../../account/session';
+import { clickLink } from '../../../common/misc';
 
 type Props = {
   workspace: Workspace,
@@ -97,6 +98,10 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
         workspaceName: workspace.name,
       });
     }
+  }
+
+  static _handleShowSyncBetaPrompt() {
+    clickLink('https://support.insomnia.rest/article/67-version-control');
   }
 
   async _handleShowSyncModePrompt() {
@@ -209,6 +214,16 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
                 Share Settings
               </DropdownItem>
             ) : null}
+
+            {syncMode === syncStorage.SYNC_MODE_OFF && [
+              // NOTE: We can't use <React.Fragment> here because the nesting breaks
+              //  the <Dropdown> component's child detection
+              <DropdownDivider key="divider" />,
+              <DropdownItem key="beta" onClick={SyncLegacyDropdown._handleShowSyncBetaPrompt}>
+                <i className="fa fa-star" />
+                Try New Sync Beta
+              </DropdownItem>,
+            ]}
           </Dropdown>
         </div>
       );

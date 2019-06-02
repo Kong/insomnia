@@ -43,13 +43,19 @@ export async function pressedHotKey(
  * @param callback to be called if the hotkey has been activated.
  * @returns {Promise<void>}
  */
-export async function executeHotKey(
+export function executeHotKey(
   e: KeyboardEvent,
   definition: HotKeyDefinition,
   callback: Function,
-): Promise<void> {
-  const settings = await models.settings.getOrCreate();
-  if (_pressedHotKey(e, settings.hotKeyRegistry[definition.id])) {
-    callback();
-  }
+): void {
+  models.settings.getOrCreate().then(
+    settings => {
+      if (_pressedHotKey(e, settings.hotKeyRegistry[definition.id])) {
+        callback();
+      }
+    },
+    err => {
+      throw err;
+    },
+  );
 }

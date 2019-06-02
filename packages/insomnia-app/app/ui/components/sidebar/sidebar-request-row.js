@@ -69,6 +69,7 @@ class SidebarRequestRow extends PureComponent {
     const {
       filter,
       handleDuplicateRequest,
+      handleSetRequestPinned,
       handleGenerateCode,
       handleCopyAsCurl,
       connectDragSource,
@@ -78,6 +79,8 @@ class SidebarRequestRow extends PureComponent {
       request,
       requestGroup,
       isActive,
+      isPinned,
+      disableDragAndDrop,
       hotKeyRegistry,
     } = this.props;
 
@@ -130,20 +133,29 @@ class SidebarRequestRow extends PureComponent {
                 right
                 ref={this._setRequestActionsDropdownRef}
                 handleDuplicateRequest={handleDuplicateRequest}
+                handleSetRequestPinned={handleSetRequestPinned}
                 handleGenerateCode={handleGenerateCode}
                 handleCopyAsCurl={handleCopyAsCurl}
                 handleShowSettings={this._handleShowRequestSettings}
                 request={request}
+                isPinned={isPinned}
                 requestGroup={requestGroup}
                 hotKeyRegistry={hotKeyRegistry}
               />
             </div>
+            {isPinned && (
+              <div className="sidebar__item__icon-pin">
+                <i className="fa fa-thumb-tack" />
+              </div>
+            )}
           </div>
         </li>
       );
     }
 
-    if (!this.state.isEditing) {
+    if (disableDragAndDrop) {
+      return node;
+    } else if (!this.state.isEditing) {
       return connectDragSource(connectDropTarget(node));
     } else {
       return connectDropTarget(node);
@@ -154,6 +166,7 @@ class SidebarRequestRow extends PureComponent {
 SidebarRequestRow.propTypes = {
   // Functions
   handleActivateRequest: PropTypes.func.isRequired,
+  handleSetRequestPinned: PropTypes.func.isRequired,
   handleDuplicateRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
   handleCopyAsCurl: PropTypes.func.isRequired,
@@ -163,6 +176,7 @@ SidebarRequestRow.propTypes = {
   // Other
   filter: PropTypes.string.isRequired,
   isActive: PropTypes.bool.isRequired,
+  isPinned: PropTypes.bool.isRequired,
   hotKeyRegistry: PropTypes.object.isRequired,
 
   // React DnD
@@ -174,6 +188,7 @@ SidebarRequestRow.propTypes = {
   // Optional
   requestGroup: PropTypes.object,
   request: PropTypes.object,
+  disableDragAndDrop: PropTypes.bool,
 };
 
 const dragSource = {

@@ -11,6 +11,8 @@ import 'codemirror/mode/python/python';
 import 'codemirror/mode/ruby/ruby';
 import 'codemirror/mode/swift/swift';
 import 'codemirror/mode/clojure/clojure';
+import 'codemirror/mode/http/http';
+import 'codemirror/mode/powershell/powershell';
 
 import 'codemirror/addon/display/autorefresh';
 import 'codemirror/addon/dialog/dialog';

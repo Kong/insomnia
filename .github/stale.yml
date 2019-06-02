@@ -5,8 +5,9 @@ exemptLabels:
   - Accepted
   - Help Wanted
   - Needs Discussion
-  - Blocked
-  - Bug
+  - Accepted 👌
+  - Next Release 🚀
+  - Needs Discussion 🗣
 staleLabel: Stale
 markComment: >
   This issue has been automatically marked as stale because it has not had
