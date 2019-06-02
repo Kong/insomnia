@@ -35,12 +35,13 @@ type Props = {
   request: Request,
   uniquenessKey: string,
   hotKeyRegistry: HotKeyRegistry,
+  downloadPath: string | null,
+  handleSetDownloadPath: (filepath?: string) => void,
 };
 
 type State = {
   currentInterval: number | null,
   currentTimeout: number | null,
-  downloadPath: string | null,
 };
 
 @autobind
@@ -58,7 +59,6 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     this.state = {
       currentInterval: null,
       currentTimeout: null,
-      downloadPath: null,
     };
 
     this._lastPastedText = null;
@@ -137,12 +137,12 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
         return;
       }
 
-      this.setState({ downloadPath: paths[0] });
+      this.props.handleSetDownloadPath(paths[0]);
     });
   }
 
   _handleClearDownloadLocation() {
-    this.setState({ downloadPath: null });
+    this.props.handleSetDownloadPath(null);
   }
 
   async _handleKeyDown(e: KeyboardEvent) {
@@ -170,7 +170,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
 
     this._handleStopTimeout();
 
-    const { downloadPath } = this.state;
+    const { downloadPath } = this.props;
     if (downloadPath) {
       this.props.handleSendAndDownload(downloadPath);
     } else {
@@ -251,8 +251,8 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
   }
 
   renderSendButton() {
-    const { hotKeyRegistry } = this.props;
-    const { currentInterval, currentTimeout, downloadPath } = this.state;
+    const { hotKeyRegistry, downloadPath } = this.props;
+    const { currentInterval, currentTimeout } = this.state;
 
     let cancelButton = null;
     if (currentInterval) {
