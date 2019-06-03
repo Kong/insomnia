@@ -18,6 +18,7 @@ type BaseRequestMeta = {
   savedRequestBody: Object,
   pinned: boolean,
   lastActive: number,
+  downloadPath: string | null,
 };
 
 export type RequestMeta = BaseModel & BaseRequestMeta;
@@ -32,6 +33,7 @@ export function init() {
     savedRequestBody: {},
     pinned: false,
     lastActive: 0,
+    downloadPath: null,
   };
 }
 
