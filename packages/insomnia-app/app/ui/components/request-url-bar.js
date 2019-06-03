@@ -28,6 +28,7 @@ type Props = {
   handleRender: string => Promise<string>,
   handleSend: () => void,
   handleSendAndDownload: (filepath?: string) => Promise<void>,
+  handleUpdateDownloadPath: Function,
   isVariableUncovered: boolean,
   nunjucksPowerUserMode: boolean,
   onMethodChange: (r: Request, method: string) => Promise<Request>,
@@ -36,7 +37,6 @@ type Props = {
   uniquenessKey: string,
   hotKeyRegistry: HotKeyRegistry,
   downloadPath: string | null,
-  handleSetDownloadPath: (filepath?: string) => void,
 };
 
 type State = {
@@ -137,12 +137,12 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
         return;
       }
 
-      this.props.handleSetDownloadPath(paths[0]);
+      this.props.handleUpdateDownloadPath(paths[0]);
     });
   }
 
   _handleClearDownloadLocation() {
-    this.props.handleSetDownloadPath(null);
+    this.props.handleUpdateDownloadPath(null);
   }
 
   async _handleKeyDown(e: KeyboardEvent) {

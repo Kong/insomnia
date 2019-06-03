@@ -477,6 +477,10 @@ class App extends PureComponent {
     App._updateRequestMetaByParentId(requestId, { previewMode });
   }
 
+  _handleUpdateDownloadPath(requestId, downloadPath) {
+    App._updateRequestMetaByParentId(requestId, { downloadPath });
+  }
+
   async _handleSetResponseFilter(requestId, responseFilter) {
     await App._updateRequestMetaByParentId(requestId, { responseFilter });
 
@@ -1123,6 +1127,7 @@ class App extends PureComponent {
               handleToggleMenuBar={this._handleToggleMenuBar}
               handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
               handleShowExportRequestsModal={this._handleShowExportRequestsModal}
+              handleUpdateDownloadPath={this._handleUpdateDownloadPath}
               isVariableUncovered={isVariableUncovered}
               headerEditorKey={forceRefreshHeaderCounter + ''}
               vcs={vcs}
@@ -1188,6 +1193,7 @@ function mapStateToProps(state, props) {
   const responsePreviewMode = requestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const responseFilter = requestMeta.responseFilter || '';
   const responseFilterHistory = requestMeta.responseFilterHistory || [];
+  const responseDownloadPath = requestMeta.downloadPath || null;
 
   // Cookie Jar
   const activeCookieJar = selectActiveCookieJar(state, props);
@@ -1242,6 +1248,7 @@ function mapStateToProps(state, props) {
     activeEnvironment,
     workspaceChildren,
     syncItems,
+    responseDownloadPath,
   });
 }
 
