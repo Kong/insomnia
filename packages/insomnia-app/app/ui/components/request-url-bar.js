@@ -126,6 +126,8 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
   }
 
   _handleSetDownloadLocation() {
+    const { request } = this.props;
+
     const options = {
       title: 'Select Download Location',
       buttonLabel: 'Select',
@@ -137,12 +139,14 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
         return;
       }
 
-      this.props.handleUpdateDownloadPath(paths[0]);
+      this.props.handleUpdateDownloadPath(request._id, paths[0]);
     });
   }
 
   _handleClearDownloadLocation() {
-    this.props.handleUpdateDownloadPath(null);
+    const { request } = this.props;
+
+    this.props.handleUpdateDownloadPath(request._id, null);
   }
 
   async _handleKeyDown(e: KeyboardEvent) {
