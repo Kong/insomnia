@@ -768,7 +768,6 @@ class Wrapper extends React.PureComponent<Props, State> {
             request={activeRequest}
             responses={activeRequestResponses}
             response={activeResponse}
-            downloadPath={responseDownloadPath}
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
@@ -785,7 +784,6 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleDeleteResponses={this._handleDeleteResponses}
             handleDeleteResponse={this._handleDeleteResponse}
             handleSetFilter={this._handleSetResponseFilter}
-            handleUpdateDownloadPath={handleUpdateDownloadPath}
           />
         </ErrorBoundary>
       </div>,
