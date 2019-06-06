@@ -28,6 +28,7 @@ type Props = {
   handleRender: string => Promise<string>,
   handleSend: () => void,
   handleSendAndDownload: (filepath?: string) => Promise<void>,
+  handleUpdateDownloadPath: Function,
   isVariableUncovered: boolean,
   nunjucksPowerUserMode: boolean,
   onMethodChange: (r: Request, method: string) => Promise<Request>,
@@ -35,12 +36,12 @@ type Props = {
   request: Request,
   uniquenessKey: string,
   hotKeyRegistry: HotKeyRegistry,
+  downloadPath: string | null,
 };
 
 type State = {
   currentInterval: number | null,
   currentTimeout: number | null,
-  downloadPath: string | null,
 };
 
 @autobind
@@ -58,7 +59,6 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     this.state = {
       currentInterval: null,
       currentTimeout: null,
-      downloadPath: null,
     };
 
     this._lastPastedText = null;
@@ -126,6 +126,8 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
   }
 
   _handleSetDownloadLocation() {
+    const { request } = this.props;
+
     const options = {
       title: 'Select Download Location',
       buttonLabel: 'Select',
@@ -137,12 +139,14 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
         return;
       }
 
-      this.setState({ downloadPath: paths[0] });
+      this.props.handleUpdateDownloadPath(request._id, paths[0]);
     });
   }
 
   _handleClearDownloadLocation() {
-    this.setState({ downloadPath: null });
+    const { request } = this.props;
+
+    this.props.handleUpdateDownloadPath(request._id, null);
   }
 
   async _handleKeyDown(e: KeyboardEvent) {
@@ -170,7 +174,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
 
     this._handleStopTimeout();
 
-    const { downloadPath } = this.state;
+    const { downloadPath } = this.props;
     if (downloadPath) {
       this.props.handleSendAndDownload(downloadPath);
     } else {
@@ -251,8 +255,8 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
   }
 
   renderSendButton() {
-    const { hotKeyRegistry } = this.props;
-    const { currentInterval, currentTimeout, downloadPath } = this.state;
+    const { hotKeyRegistry, downloadPath } = this.props;
+    const { currentInterval, currentTimeout } = this.state;
 
     let cancelButton = null;
     if (currentInterval) {
