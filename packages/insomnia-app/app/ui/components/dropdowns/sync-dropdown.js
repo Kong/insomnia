@@ -141,9 +141,11 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
     // Update if new sync items
     if (syncItems !== prevProps.syncItems) {
-      vcs.status(syncItems, {}).then(status => {
-        this.setState({ status });
-      });
+      if (vcs.hasProject()) {
+        vcs.status(syncItems, {}).then(status => {
+          this.setState({ status });
+        });
+      }
 
       if (this.refreshOnNextSyncItems) {
         this.refreshMainAttributes();
