@@ -1,12 +1,22 @@
+// @flow
 import deepEqual from 'deep-equal';
 import * as models from './index';
 import * as db from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';
+import type { BaseModel } from './index';
+import type { Request } from './request';
+
 export const name = 'Request Version';
 export const type = 'RequestVersion';
 export const prefix = 'rvr';
 export const canDuplicate = false;
 export const canSync = false;
+
+type BaseRequestVersion = {
+  compressedRequest: string | null,
+};
+
+export type RequestVersion = BaseModel & BaseRequestVersion;
 
 const FIELDS_TO_IGNORE = [
   '_id',
@@ -25,27 +35,29 @@ export function init() {
   };
 }
 
-export function migrate(doc) {
+export function migrate(doc: RequestVersion): RequestVersion {
   return doc;
 }
 
-export function getById(id) {
+export function getById(id: string): Promise<RequestVersion | null> {
   return db.get(type, id);
 }
 
-export async function create(request) {
+export async function create(request: Request): Promise<RequestVersion> {
   if (!request.type === models.request.type) {
     throw new Error(`New ${type} was not given a valid ${models.request.type} instance`);
   }
 
   const parentId = request._id;
-  const latestRequestVersion = await getLatestByParentId(parentId);
+  const latestRequestVersion: RequestVersion | null = await getLatestByParentId(parentId);
+
   const latestRequest = latestRequestVersion
     ? decompressObject(latestRequestVersion.compressedRequest)
     : null;
 
   const hasChanged = _diffRequests(latestRequest, request);
-  if (hasChanged) {
+  console.log('HAS CHANGED', { latestRequestVersion, request });
+  if (hasChanged || !latestRequestVersion) {
     // Create a new version if the request has been modified
     const compressedRequest = compressObject(request);
     return db.docCreate(type, { parentId, compressedRequest });
@@ -55,11 +67,11 @@ export async function create(request) {
   }
 }
 
-export function getLatestByParentId(parentId) {
+export function getLatestByParentId(parentId: string): Promise<RequestVersion | null> {
   return db.getMostRecentlyModified(type, { parentId });
 }
 
-export async function restore(requestVersionId) {
+export async function restore(requestVersionId: string): Promise<Request | null> {
   const requestVersion = await getById(requestVersionId);
 
   // Older responses won't have versions saved with them
@@ -68,7 +80,11 @@ export async function restore(requestVersionId) {
   }
 
   const requestPatch = decompressObject(requestVersion.compressedRequest);
-  const originalRequest = await models.request.getById(requestPatch._id);
+  const originalRequest: Request | null = await models.request.getById(requestPatch._id);
+
+  if (!originalRequest) {
+    return null;
+  }
 
   // Only restore fields that aren't blacklisted
   for (const field of FIELDS_TO_IGNORE) {
@@ -78,7 +94,7 @@ export async function restore(requestVersionId) {
   return models.request.update(originalRequest, requestPatch);
 }
 
-function _diffRequests(rOld, rNew) {
+function _diffRequests(rOld: Request | null, rNew: Request): boolean {
   if (!rOld) {
     return true;
   }

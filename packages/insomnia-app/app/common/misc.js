@@ -194,7 +194,11 @@ export function compressObject(obj: any): string {
   return compressed.toString('base64');
 }
 
-export function decompressObject(input: string): any {
+export function decompressObject(input: string | null): any {
+  if (typeof input !== 'string') {
+    return null;
+  }
+
   const jsonBuffer = zlib.gunzipSync(Buffer.from(input, 'base64'));
   return JSON.parse(jsonBuffer.toString('utf8'));
 }

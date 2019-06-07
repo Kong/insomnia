@@ -48,18 +48,19 @@ export const reducer = combineReducers({
 async function getAllDocs() {
   // Restore docs in parent->child->grandchild order
   const allDocs = [
-    ...(await models.settings.all()),
-    ...(await models.workspace.all()),
-    ...(await models.workspaceMeta.all()),
-    ...(await models.environment.all()),
-    ...(await models.cookieJar.all()),
-    ...(await models.requestGroup.all()),
-    ...(await models.requestGroupMeta.all()),
-    ...(await models.request.all()),
-    ...(await models.requestMeta.all()),
-    ...(await models.response.all()),
-    ...(await models.oAuth2Token.all()),
-    ...(await models.clientCertificate.all()),
+    ...(await db.all(models.settings.type)),
+    ...(await db.all(models.workspace.type)),
+    ...(await db.all(models.workspaceMeta.type)),
+    ...(await db.all(models.environment.type)),
+    ...(await db.all(models.cookieJar.type)),
+    ...(await db.all(models.requestGroup.type)),
+    ...(await db.all(models.requestGroupMeta.type)),
+    ...(await db.all(models.request.type)),
+    ...(await db.all(models.requestMeta.type)),
+    ...(await db.all(models.requestVersion.type)),
+    ...(await db.all(models.response.type)),
+    ...(await db.all(models.oAuth2Token.type)),
+    ...(await db.all(models.clientCertificate.type)),
   ];
 
   return allDocs;

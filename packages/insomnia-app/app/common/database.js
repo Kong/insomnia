@@ -217,21 +217,21 @@ async function notifyOfChange(event: string, doc: BaseModel, fromSync: boolean):
 // Helpers //
 // ~~~~~~~ //
 
-export const getMostRecentlyModified = (database.getMostRecentlyModified = async function(
+export const getMostRecentlyModified = (database.getMostRecentlyModified = async function<T>(
   type: string,
   query: Object = {},
-): Promise<BaseModel | null> {
+): Promise<T | null> {
   if (db._empty) return _send('getMostRecentlyModified', ...arguments);
 
   const docs = await database.findMostRecentlyModified(type, query, 1);
   return docs.length ? docs[0] : null;
 });
 
-export const findMostRecentlyModified = (database.findMostRecentlyModified = async function(
+export const findMostRecentlyModified = (database.findMostRecentlyModified = async function<T>(
   type: string,
   query: Object = {},
   limit: number | null = null,
-): Promise<Array<BaseModel>> {
+): Promise<Array<T>> {
   if (db._empty) return _send('findMostRecentlyModified', ...arguments);
 
   return new Promise(resolve => {

@@ -1,5 +1,5 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import StatusTag from '../tags/status-tag';
@@ -11,10 +11,25 @@ import SizeTag from '../tags/size-tag';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import TimeFromNow from '../time-from-now';
+import type { Response } from '../../../models/response';
+import type { RequestVersion } from '../../../models/request-version';
+import { decompressObject } from '../../../common/misc';
+
+type Props = {
+  handleSetActiveResponse: Response => Promise<void>,
+  handleDeleteResponses: (requestId: string) => Promise<void>,
+  handleDeleteResponse: Response => Promise<void>,
+  requestId: string,
+  responses: Array<Response>,
+  requestVersions: Array<RequestVersion>,
+  activeResponse: Response,
+};
 
 @autobind
-class ResponseHistoryDropdown extends PureComponent {
-  _setDropdownRef(n) {
+class ResponseHistoryDropdown extends React.PureComponent<Props> {
+  _dropdown: ?Dropdown;
+
+  _setDropdownRef(n: ?Dropdown) {
     this._dropdown = n;
   }
 
@@ -26,27 +41,26 @@ class ResponseHistoryDropdown extends PureComponent {
     this.props.handleDeleteResponse(this.props.activeResponse);
   }
 
-  _handleSetActiveResponse(response) {
+  _handleSetActiveResponse(response: Response) {
     this.props.handleSetActiveResponse(response);
   }
 
-  _handleKeydown(e) {
+  _handleKeydown(e: KeyboardEvent) {
     executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
   }
 
-  componentWillUnmount() {
-    clearTimeout(this._interval);
-  }
+  renderDropdownItem(response: Response, i: number) {
+    const { activeResponse, requestVersions } = this.props;
 
-  renderDropdownItem(response, i) {
-    const { activeResponse, requestMethod } = this.props;
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
     const message =
       'Request will not be restored with this response because ' +
       'it was created before this ability was added';
+    const requestVersion = requestVersions.find(v => v._id === response.requestVersionId);
+    const request = requestVersion ? decompressObject(requestVersion.compressedRequest) : null;
 
     return (
       <DropdownItem
@@ -58,9 +72,9 @@ class ResponseHistoryDropdown extends PureComponent {
         <StatusTag
           small
           statusCode={response.statusCode}
-          statusMessage={response.statusMessage || null}
+          statusMessage={response.statusMessage || undefined}
         />
-        <URLTag small url={response.url} method={requestMethod} />
+        <URLTag small url={response.url} method={request ? request.method : ''} />
         <TimeTag milliseconds={response.elapsedTime} small />
         <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} small />
         {!response.requestVersionId && <i className="icon fa fa-info-circle" title={message} />}
@@ -110,18 +124,5 @@ class ResponseHistoryDropdown extends PureComponent {
     );
   }
 }
-
-ResponseHistoryDropdown.propTypes = {
-  handleSetActiveResponse: PropTypes.func.isRequired,
-  handleDeleteResponses: PropTypes.func.isRequired,
-  handleDeleteResponse: PropTypes.func.isRequired,
-  onChange: PropTypes.func.isRequired,
-  requestId: PropTypes.string.isRequired,
-  requestMethod: PropTypes.string.isRequired,
-  responses: PropTypes.arrayOf(PropTypes.object).isRequired,
-
-  // Optional
-  activeResponse: PropTypes.object,
-};
 
 export default ResponseHistoryDropdown;
