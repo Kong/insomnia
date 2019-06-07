@@ -21,7 +21,7 @@ import ResponseHeadersViewer from './viewers/response-headers-viewer';
 import ResponseCookiesViewer from './viewers/response-cookies-viewer';
 import * as models from '../../models';
 import { PREVIEW_MODE_SOURCE } from '../../common/constants';
-import { getSetCookieHeaders, nullFn } from '../../common/misc';
+import { getSetCookieHeaders } from '../../common/misc';
 import { cancelCurrentRequest } from '../../network/network';
 import Hotkey from './hotkey';
 import ErrorBoundary from './error-boundary';
