@@ -274,7 +274,7 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   412: 'The client has indicated preconditions in its headers which the server does not meet.',
   413: 'Request entity is larger than limits defined by the server; the server might close the connection or return a Retry-After header field.',
   414: 'The URI requested by the client is longer than the server is willing to interpret.',
-  415: 'The server is rejecting the request because the media format of the requested data is not supported by the server.',
+  415: 'The media format of the requested data is not supported by the server, so the server is rejecting the request.',
   416: "The range specified by the Range header field in the request can't be fulfilled; it's possible that the range is outside the size of the target URI's data.",
   417: "This response code means the expectation indicated by the Expect request header field can't be met by the server.",
   418: 'Any attempt to brew coffee with a teapot should result in the error code "418 I\'m a teapot". The resulting entity body MAY be short and stout.',
