@@ -21,12 +21,13 @@ import ResponseHeadersViewer from './viewers/response-headers-viewer';
 import ResponseCookiesViewer from './viewers/response-cookies-viewer';
 import * as models from '../../models';
 import { PREVIEW_MODE_SOURCE } from '../../common/constants';
-import { getSetCookieHeaders, nullFn } from '../../common/misc';
+import { getSetCookieHeaders } from '../../common/misc';
 import { cancelCurrentRequest } from '../../network/network';
 import Hotkey from './hotkey';
 import ErrorBoundary from './error-boundary';
 import type { HotKeyRegistry } from '../../common/hotkeys';
 import { hotKeyRefs } from '../../common/hotkeys';
+import type { RequestVersion } from '../../models/request-version';
 
 type Props = {
   // Functions
@@ -51,6 +52,7 @@ type Props = {
   hotKeyRegistry: HotKeyRegistry,
 
   // Other
+  requestVersions: Array<RequestVersion>,
   request: ?Request,
   response: ?Response,
 };
@@ -157,6 +159,7 @@ class ResponsePane extends React.PureComponent<Props> {
     const {
       request,
       responses,
+      requestVersions,
       response,
       previewMode,
       handleShowRequestSettings,
@@ -265,12 +268,11 @@ class ResponsePane extends React.PureComponent<Props> {
             <ResponseHistoryDropdown
               activeResponse={response}
               responses={responses}
+              requestVersions={requestVersions}
               requestId={request._id}
-              requestMethod={request.method}
               handleSetActiveResponse={handleSetActiveResponse}
               handleDeleteResponses={handleDeleteResponses}
               handleDeleteResponse={handleDeleteResponse}
-              onChange={nullFn}
               className="tall pane__header__right"
               right
             />

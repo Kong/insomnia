@@ -35,7 +35,7 @@
     "flow-bin": "^0.96.0",
     "husky": "^1.0.0-rc.9",
     "jest": "^24.7.1",
-    "lerna": "^3.13.4",
+    "lerna": "^3.14.1",
     "prettier": "^1.16.4",
     "pretty-quick": "^1.10.0",
     "rimraf": "^2.6.3"

@@ -62,6 +62,7 @@ import ExportRequestsModal from './modals/export-requests-modal';
 import VCS from '../../sync/vcs';
 import type { StatusCandidate } from '../../sync/types';
 import type { RequestMeta } from '../../models/request-meta';
+import type { RequestVersion } from '../../models/request-version';
 
 type Props = {
   // Helper Functions
@@ -124,6 +125,7 @@ type Props = {
   workspaces: Array<Workspace>,
   requestMetas: Array<RequestMeta>,
   requests: Array<Request>,
+  requestVersions: Array<RequestVersion>,
   unseenWorkspaces: Array<Workspace>,
   workspaceChildren: Array<Object>,
   environments: Array<Object>,
@@ -425,6 +427,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       paneHeight,
       paneWidth,
       requestMetas,
+      requestVersions,
       responseFilter,
       responseFilterHistory,
       responsePreviewMode,
@@ -766,6 +769,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           <ResponsePane
             ref={handleSetResponsePaneRef}
             request={activeRequest}
+            requestVersions={requestVersions}
             responses={activeRequestResponses}
             response={activeResponse}
             editorFontSize={settings.editorFontSize}

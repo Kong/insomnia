@@ -1173,7 +1173,14 @@ function mapStateToProps(state, props) {
 
   // Entities
   const entitiesLists = selectEntitiesLists(state, props);
-  const { workspaces, environments, requests, requestGroups, requestMetas } = entitiesLists;
+  const {
+    workspaces,
+    environments,
+    requests,
+    requestGroups,
+    requestMetas,
+    requestVersions,
+  } = entitiesLists;
 
   const settings = entitiesLists.settings[0];
 
@@ -1219,36 +1226,37 @@ function mapStateToProps(state, props) {
   const syncItems = selectSyncItems(state, props);
 
   return Object.assign({}, state, {
-    isLoggedIn,
-    settings,
-    workspaces,
-    unseenWorkspaces,
-    requestGroups,
-    requests,
-    requestMetas,
-    oAuth2Token,
-    isLoading,
-    loadStartTime,
-    activeWorkspace,
-    activeWorkspaceClientCertificates,
+    activeCookieJar,
+    activeEnvironment,
     activeRequest,
     activeRequestResponses,
     activeResponse,
-    activeCookieJar,
-    sidebarHidden,
-    sidebarFilter,
-    sidebarWidth,
-    paneWidth,
+    activeWorkspace,
+    activeWorkspaceClientCertificates,
+    environments,
+    isLoading,
+    isLoggedIn,
+    loadStartTime,
+    oAuth2Token,
     paneHeight,
-    responsePreviewMode,
+    paneWidth,
+    requestGroups,
+    requestMetas,
+    requestVersions,
+    requests,
+    responseDownloadPath,
     responseFilter,
     responseFilterHistory,
+    responsePreviewMode,
+    settings,
     sidebarChildren,
-    environments,
-    activeEnvironment,
-    workspaceChildren,
+    sidebarFilter,
+    sidebarHidden,
+    sidebarWidth,
     syncItems,
-    responseDownloadPath,
+    unseenWorkspaces,
+    workspaceChildren,
+    workspaces,
   });
 }
 
