@@ -230,7 +230,7 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   // 100s
 
   100: 'This interim response indicates that everything so far is OK and that the client should continue with the request or ignore it if it is already finished.',
-  101: 'This code is sent in response to an Upgrade: request header by the client, and indicates that the protocol the server is switching too. It was introduced to allow migration to an incompatible protocol version, and is not in common use.',
+  101: 'This code is sent in response to an Upgrade: request header by the client and indicates the protocol the server is switching to. It was introduced to allow migration to an incompatible protocol version, and it is not in common use.',
 
   // 200s
 
@@ -252,27 +252,27 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   302: 'This response code means that URI of requested resource has been changed temporarily. New changes in the URI might be made in the future. Therefore, this same URI should be used by the client in future requests.',
   303: 'Server sent this response to directing client to get requested resource to another URI with an GET request.',
   304: 'This is used for caching purposes. It is telling to client that response has not been modified. So, client can continue to use same cached version of response.',
-  305: 'This means requested response must be accessed by a proxy. This response code is not largely supported because security reasons.',
-  306: 'This response code is no longer used, it is just reserved currently. It was used in a previous version of the HTTP 1.1 specification.',
+  305: 'This means requested response must be accessed by a proxy. This response code is not largely supported because of security reasons.',
+  306: 'This response code is no longer used and is just reserved currently. It was used in a previous version of the HTTP 1.1 specification.',
   307: 'Server sent this response to directing client to get requested resource to another URI with same method that used prior request. This has the same semantic than the 302 Found HTTP response code, with the exception that the user agent must not change the HTTP method used: if a POST was used in the first request, a POST must be used in the second request.',
   308: 'This means that the resource is now permanently located at another URI, specified by the Location: HTTP Response header. This has the same semantics as the 301 Moved Permanently HTTP response code, with the exception that the user agent must not change the HTTP method used: if a POST was used in the first request, a POST must be used in the second request.',
 
   // 400s
 
-  400: 'This response means that server could not understand the request due to invalid syntax.',
-  401: 'Authentication is needed to get requested response. This is similar to 403, but in this case, authentication is possible.',
-  402: 'This response code is reserved for future use. Initial aim for creating this code was using it for digital payment systems however this is not used currently.',
-  403: 'Client does not have access rights to the content so server is rejecting to give proper response.',
-  404: 'Server can not find requested resource. This response code probably is most famous one due to its frequency to occur in web.',
+  400: 'This response means that the server could not understand the request due to invalid syntax.',
+  401: 'Authentication is needed to get the requested response. This is similar to 403, but is different in that authentication is possible.',
+  402: 'This response code is reserved for future use. Initial aim for creating this code was using it for digital payment systems, but it is not used currently.',
+  403: 'Client does not have access rights to the content, so the server is rejecting to give proper response.',
+  404: 'Server cannot find requested resource. This response code is probably the most famous one due to how frequently it occurs on the web.',
   405: 'The request method is known by the server but has been disabled and cannot be used.',
   406: "This response is sent when the web server, after performing server-driven content negotiation, doesn't find any content following the criteria given by the user agent.",
   407: 'This is similar to 401 but authentication is needed to be done by a proxy.',
-  408: 'This response is sent on an idle connection by some servers, even without any previous request by the client. It means that the server would like to shut down this unused connection. This response is used much more since some browsers, like Chrome or IE9, use HTTP preconnection mechanisms to speed up surfing (see bug 881804, which tracks the future implementation of such a mechanism in Firefox). Also note that some servers merely shut down the connection without sending this message.',
-  409: 'This response would be sent when a request conflict with current state of server.',
-  410: 'This response would be sent when requested content has been deleted from server.',
+  408: 'This response is sent on an idle connection by some servers, even without any previous request by the client. It means that the server would like to shut down this unused connection. This response is used much more since some browsers, like Chrome or IE9, use HTTP pre-connection mechanisms to speed up surfing (see bug 881804, which tracks the future implementation of such a mechanism in Firefox). Also, note that some servers merely shut down the connection without sending this message.',
+  409: 'This response is sent when a request conflicts with the current state of the server.',
+  410: 'This response is sent when the requested content has been deleted from the server.',
   411: 'Server rejected the request because the Content-Length header field is not defined and the server requires it.',
   412: 'The client has indicated preconditions in its headers which the server does not meet.',
-  413: 'Request entity is larger than limits defined by server; the server might close the connection or return an Retry-After header field.',
+  413: 'Request entity is larger than limits defined by the server; the server might close the connection or return a Retry-After header field.',
   414: 'The URI requested by the client is longer than the server is willing to interpret.',
   415: 'The media format of the requested data is not supported by the server, so the server is rejecting the request.',
   416: "The range specified by the Range header field in the request can't be fulfilled; it's possible that the range is outside the size of the target URI's data.",
