@@ -59,7 +59,7 @@ export function createWindow() {
     height: height || DEFAULT_HEIGHT,
     minHeight: MINIMUM_HEIGHT,
     minWidth: MINIMUM_WIDTH,
-    titleBarStyle: titleBarStyle,
+    titleBarStyle,
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, 'static/icon.png'),
     webPreferences: {
