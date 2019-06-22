@@ -293,9 +293,11 @@ function generateParameterExample(schema) {
       const example = {};
       const { properties } = schema;
 
-      Object.keys(properties).forEach(propertyName => {
-        example[propertyName] = generateParameterExample(properties[propertyName]);
-      });
+      if (properties) {
+        Object.keys(properties).forEach(propertyName => {
+          example[propertyName] = generateParameterExample(properties[propertyName]);
+        });
+      }
 
       return example;
     },
