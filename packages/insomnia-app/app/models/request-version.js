@@ -112,3 +112,7 @@ function _diffRequests(rOld: Request | null, rNew: Request): boolean {
 
   return false;
 }
+
+export function all(): Promise<Array<RequestVersion>> {
+  return db.all(type);
+}
