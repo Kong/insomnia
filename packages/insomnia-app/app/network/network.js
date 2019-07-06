@@ -12,6 +12,7 @@ import {
 import mkdirp from 'mkdirp';
 import crypto from 'crypto';
 import clone from 'clone';
+import certFinder from 'find-root-ca-cert';
 import { parse as urlParse, resolve as urlResolve } from 'url';
 import { Curl } from 'insomnia-libcurl';
 import { join as pathJoin } from 'path';
@@ -353,7 +354,11 @@ export async function _actuallySend(
 
       // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
       // certificates form the OS.
-      if (process.platform !== 'darwin') {
+      if (process.platform === 'linux') {
+        const fullCAPath = certFinder.findCABundle();
+        setOpt(Curl.option.CAINFO, fullCAPath);
+        console.info('[net] Set CA to', fullCAPath);
+      } else if (process.platform !== 'darwin') {
         const baseCAPath = getTempDir();
         const fullCAPath = pathJoin(baseCAPath, CACerts.filename);
 
