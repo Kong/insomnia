@@ -1,23 +1,5 @@
 const crypto = require('crypto');
 
-module.exports.responseHooks = [
-  async context => {
-    const items = await context.store.all();
-    const requestId = context.request.getId();
-    const toRemove = items.filter(v => {
-      if (v.key && typeof v.key === 'string') {
-        return v.key.indexOf(requestId) === 0;
-      }
-
-      return false;
-    });
-    // Delete cached values we prompt again on the next request
-    for (const { key } of toRemove) {
-      await context.store.removeItem(key);
-    }
-  },
-];
-
 module.exports.templateTags = [
   {
     displayName: 'Prompt',
@@ -57,6 +39,15 @@ module.exports.templateTags = [
         help: 'If this is enabled, the value when input will be masked like a password field.',
         defaultValue: false,
       },
+      {
+        displayName: 'Save Last Value',
+        type: 'boolean',
+        help:
+          'If this is enabled, the value will be stored in memory and the next time this prompt' +
+          'shows, the input field will be pre-filled with this value. This option is ignored ' +
+          'when the storage key is set.',
+        defaultValue: true
+      }
     ],
     async run(context, title, label, defaultValue, explicitStorageKey, maskText) {
       if (!title) {
@@ -74,9 +65,16 @@ module.exports.templateTags = [
       const storageKey = explicitStorageKey || `${context.meta.requestId}.${titleHash}`;
       const cachedValue = await context.store.getItem(storageKey);
 
-      if (cachedValue) {
+      // Directly return cached value if using explicitly defined storage key
+      if (explicitStorageKey && cachedValue) {
         console.log(`[prompt] Used cached value under ${storageKey}`);
         return cachedValue;
+      }
+
+      // Use cached value as default value
+      if (cachedValue) {
+        defaultValue = cachedValue;
+        console.log(`[prompt] Used cached value under ${storageKey}`);
       }
 
       // Only prompt when we're actually sending
