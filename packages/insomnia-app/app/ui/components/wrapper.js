@@ -63,6 +63,7 @@ import VCS from '../../sync/vcs';
 import type { StatusCandidate } from '../../sync/types';
 import type { RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
+import ActivityBar from './activity-bar/activity-bar';
 
 type Props = {
   // Helper Functions
@@ -446,25 +447,25 @@ class Wrapper extends React.PureComponent<Props, State> {
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
 
-    const columns = `${realSidebarWidth}rem 0 minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 -
-      paneWidth}fr)`;
+    const columns = `auto ${realSidebarWidth}rem 0 minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 -
+    paneWidth}fr)`;
     const rows = `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
 
     return [
       <div key="modals" className="modals">
         <ErrorBoundary showAlert>
-          <AlertModal ref={registerModal} />
-          <ErrorModal ref={registerModal} />
-          <PromptModal ref={registerModal} />
+          <AlertModal ref={registerModal}/>
+          <ErrorModal ref={registerModal}/>
+          <PromptModal ref={registerModal}/>
 
-          <WrapperModal ref={registerModal} />
-          <LoginModal ref={registerModal} />
-          <AskModal ref={registerModal} />
-          <SelectModal ref={registerModal} />
-          <RequestCreateModal ref={registerModal} />
-          <PaymentNotificationModal ref={registerModal} />
-          <FilterHelpModal ref={registerModal} />
-          <RequestRenderErrorModal ref={registerModal} />
+          <WrapperModal ref={registerModal}/>
+          <LoginModal ref={registerModal}/>
+          <AskModal ref={registerModal}/>
+          <SelectModal ref={registerModal}/>
+          <RequestCreateModal ref={registerModal}/>
+          <PaymentNotificationModal ref={registerModal}/>
+          <FilterHelpModal ref={registerModal}/>
+          <RequestRenderErrorModal ref={registerModal}/>
 
           <CodePromptModal
             ref={registerModal}
@@ -522,7 +523,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             workspace={activeWorkspace}
           />
 
-          <MoveRequestGroupModal ref={registerModal} workspaces={workspaces} />
+          <MoveRequestGroupModal ref={registerModal} workspaces={workspaces}/>
 
           <WorkspaceSettingsModal
             ref={registerModal}
@@ -541,7 +542,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             isVariableUncovered={isVariableUncovered}
           />
 
-          <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />
+          <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace}/>
 
           <GenerateCodeModal
             ref={registerModal}
@@ -561,7 +562,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             settings={settings}
           />
 
-          <ResponseDebugModal ref={registerModal} settings={settings} />
+          <ResponseDebugModal ref={registerModal} settings={settings}/>
 
           <RequestSwitcherModal
             ref={registerModal}
@@ -587,7 +588,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             isVariableUncovered={isVariableUncovered}
           />
 
-          <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
+          <SetupSyncModal ref={registerModal} workspace={activeWorkspace}/>
 
           {vcs && (
             <React.Fragment>
@@ -609,8 +610,8 @@ class Wrapper extends React.PureComponent<Props, State> {
                 vcs={vcs}
                 syncItems={syncItems}
               />
-              <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
-              <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
+              <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs}/>
+              <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs}/>
             </React.Fragment>
           )}
 
@@ -628,7 +629,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             isVariableUncovered={isVariableUncovered}
           />
 
-          <AddKeyCombinationModal ref={registerModal} />
+          <AddKeyCombinationModal ref={registerModal}/>
           <ExportRequestsModal
             ref={registerModal}
             childObjects={sidebarChildren.all}
@@ -672,6 +673,9 @@ class Wrapper extends React.PureComponent<Props, State> {
               : null,
         }}>
         <ErrorBoundary showAlert>
+          <ActivityBar/>
+        </ErrorBoundary>
+        <ErrorBoundary showAlert>
           <Sidebar
             ref={handleSetSidebarRef}
             showEnvironmentsModal={this._handleShowEnvironmentsModal}
@@ -712,7 +716,7 @@ class Wrapper extends React.PureComponent<Props, State> {
         </ErrorBoundary>
 
         <div className="drag drag--sidebar">
-          <div onDoubleClick={handleResetDragSidebar} onMouseDown={this._handleStartDragSidebar} />
+          <div onDoubleClick={handleResetDragSidebar} onMouseDown={this._handleStartDragSidebar}/>
         </div>
 
         <ErrorBoundary showAlert>

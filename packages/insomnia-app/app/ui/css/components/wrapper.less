@@ -13,8 +13,14 @@
   height: 100%;
   width: 100%;
 
-  .sidebar {
+  .activity-bar {
     grid-column-start: 1;
+    grid-row-start: 1;
+    grid-row-end: span 3;
+  }
+
+  .sidebar {
+    grid-column-start: 2;
     grid-row-start: 1;
     grid-row-end: span 3;
     min-width: 0;
@@ -44,7 +50,7 @@
 
   .request-pane {
     min-width: 0;
-    grid-column-start: 3;
+    grid-column-start: 4;
     grid-row-start: 1;
     grid-row-end: span 3;
     background: inherit;
@@ -52,7 +58,7 @@
 
   .response-pane {
     min-width: 0;
-    grid-column-start: 5;
+    grid-column-start: 6;
     grid-row-start: 1;
     grid-row-end: span 3;
     background: inherit;
@@ -61,14 +67,14 @@
 
 .wrapper--vertical {
   .request-pane {
-    grid-column-start: 3;
+    grid-column-start: 4;
     grid-column-end: span 3;
     grid-row-start: 1;
     grid-row-end: span 1;
   }
 
   .response-pane {
-    grid-column-start: 3;
+    grid-column-start: 4;
     grid-column-end: span 3;
     grid-row-start: 3;
     grid-row-end: span 1;
@@ -81,7 +87,7 @@
 
   .drag--pane-vertical {
     display: block !important;
-    grid-column-start: 3;
+    grid-column-start: 4;
     grid-column-end: span 3;
     grid-row-start: 2;
     grid-row-end: span 1;
