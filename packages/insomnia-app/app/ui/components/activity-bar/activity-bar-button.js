@@ -11,8 +11,8 @@ type Props = {|
 |};
 
 const ACTIVITY_MAP_ICONS: {[GlobalActivity]: string} = {
-  spec: 'fa-code',
-  test: 'fa-cloud',
+  spec: 'fa-file-text',
+  test: 'fa-flask',
 };
 
 @autobind

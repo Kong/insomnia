@@ -1,4 +1,4 @@
-export default `
+export default `\
 openapi: 3.0.0
 servers:
   - url: 'http://petstore.swagger.io/v2'
@@ -703,5 +703,4 @@ components:
       in: header
   links: {}
   callbacks: {}
-security: []
-`;
+security: []`;

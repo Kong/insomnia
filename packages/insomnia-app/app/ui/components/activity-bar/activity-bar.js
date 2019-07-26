@@ -8,6 +8,7 @@ export type GlobalActivity = 'spec' | 'test';
 type Props = {|
   activity: GlobalActivity,
   setActivity: (GlobalActivity) => void,
+  showSettings: () => void,
 |};
 
 const ACTIVITIES = [ 'spec', 'test' ];
@@ -15,20 +16,24 @@ const ACTIVITIES = [ 'spec', 'test' ];
 @autobind
 class ActivityBar extends React.PureComponent<Props> {
   render() {
-    const { activity, setActivity } = this.props;
+    const { activity, showSettings, setActivity } = this.props;
     return (
-      <nav className="activity-bar theme--sidebar">
-        <ul>
-          {ACTIVITIES.map(a => (
-            <ActivityBarButton
-              key={a}
-              activity={a}
-              activeActivity={activity}
-              setActivity={setActivity}
-            />
-          ))}
-        </ul>
-      </nav>
+      <ul className="activity-bar theme--sidebar">
+        {ACTIVITIES.map(a => (
+          <ActivityBarButton
+            key={a}
+            activity={a}
+            activeActivity={activity}
+            setActivity={setActivity}
+          />
+        ))}
+        <span className="activity-bar__spacer"/>
+        <li className="activity-bar__item activity-bar__item--bottom">
+          <button onClick={showSettings}>
+            <i className="fa fa-cog"/>
+          </button>
+        </li>
+      </ul>
     );
   }
 }

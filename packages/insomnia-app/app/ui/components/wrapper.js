@@ -3,13 +3,7 @@ import type { Settings } from '../../models/settings';
 import type { Response } from '../../models/response';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { Workspace } from '../../models/workspace';
-import type {
-  Request,
-  RequestAuthentication,
-  RequestBody,
-  RequestHeader,
-  RequestParameter,
-} from '../../models/request';
+import type { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter} from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 
 import * as React from 'react';
@@ -63,8 +57,8 @@ import VCS from '../../sync/vcs';
 import type { StatusCandidate } from '../../sync/types';
 import type { RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
-import ActivityBar from './activity-bar/activity-bar';
 import type { GlobalActivity } from './activity-bar/activity-bar';
+import ActivityBar from './activity-bar/activity-bar';
 import SpecEditor from './spec-editor/spec-editor';
 
 type Props = {
@@ -76,6 +70,7 @@ type Props = {
   handleImportUriToWorkspace: Function,
   handleExportFile: Function,
   handleShowExportRequestsModal: Function,
+  handleShowSettingsModal: Function,
   handleExportRequestsToFile: Function,
   handleSetActiveWorkspace: Function,
   handleSetActiveEnvironment: Function,
@@ -421,6 +416,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       handleSetSidebarFilter,
       handleSetSidebarRef,
       handleShowExportRequestsModal,
+      handleShowSettingsModal,
       handleStartDragPaneHorizontal,
       handleStartDragPaneVertical,
       handleToggleMenuBar,
@@ -680,6 +676,7 @@ class Wrapper extends React.PureComponent<Props, State> {
         }}>
         <ErrorBoundary showAlert>
           <ActivityBar
+            showSettings={handleShowSettingsModal}
             activity={activity}
             setActivity={handleSetActiveActivity}
           />
@@ -807,7 +804,12 @@ class Wrapper extends React.PureComponent<Props, State> {
             </ErrorBoundary>
           </React.Fragment>
         ) : (
-          <SpecEditor/>
+          <SpecEditor
+            editorFontSize={settings.editorFontSize}
+            editorIndentSize={settings.editorIndentSize}
+            editorKeyMap={settings.editorKeyMap}
+            lineWrapping={settings.editorLineWrapping}
+          />
         )}
       </div>,
     ];
