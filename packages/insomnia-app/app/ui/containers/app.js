@@ -1157,6 +1157,7 @@ App.propTypes = {
   activeWorkspace: PropTypes.shape({
     _id: PropTypes.string.isRequired,
   }).isRequired,
+  handleSetActiveActivity: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
 
   // Optional
@@ -1169,7 +1170,7 @@ App.propTypes = {
 function mapStateToProps(state, props) {
   const { entities, global } = state;
 
-  const { isLoading, loadingRequestIds, isLoggedIn } = global;
+  const { activeActivity, isLoading, loadingRequestIds, isLoggedIn } = global;
 
   // Entities
   const entitiesLists = selectEntitiesLists(state, props);
@@ -1226,6 +1227,7 @@ function mapStateToProps(state, props) {
   const syncItems = selectSyncItems(state, props);
 
   return Object.assign({}, state, {
+    activity: activeActivity,
     activeCookieJar,
     activeEnvironment,
     activeRequest,
@@ -1267,6 +1269,7 @@ function mapDispatchToProps(dispatch) {
     handleStartLoading: global.loadRequestStart,
     handleStopLoading: global.loadRequestStop,
 
+    handleSetActiveActivity: global.setActiveActivity,
     handleSetActiveWorkspace: global.setActiveWorkspace,
     handleImportFileToWorkspace: global.importFile,
     handleImportUriToWorkspace: global.importUri,

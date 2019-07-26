@@ -23,6 +23,7 @@ const LOAD_STOP = 'global/load-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
 const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
+const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
@@ -31,6 +32,15 @@ const COMMAND_IMPORT_URI = 'app/import';
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
+
+function activeActivityReducer(state = null, action) {
+  switch (action.type) {
+    case SET_ACTIVE_ACTIVITY:
+      return action.activity;
+    default:
+      return state;
+  }
+}
 
 function activeWorkspaceReducer(state = null, action) {
   switch (action.type) {
@@ -76,6 +86,7 @@ export const reducer = combineReducers({
   isLoading: loadingReducer,
   loadingRequestIds: loadingRequestsReducer,
   activeWorkspaceId: activeWorkspaceReducer,
+  activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
 });
 
@@ -129,6 +140,14 @@ export function loginStateChange(loggedIn) {
 
 export function loadRequestStop(requestId) {
   return { type: LOAD_REQUEST_STOP, requestId };
+}
+
+export function setActiveActivity(activity) {
+  window.localStorage.setItem(
+    `${LOCALSTORAGE_PREFIX}::activity`,
+    JSON.stringify(activity),
+  );
+  return { type: SET_ACTIVE_ACTIVITY, activity };
 }
 
 export function setActiveWorkspace(workspaceId) {

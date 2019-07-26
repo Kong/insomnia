@@ -1,3 +1,16 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
 .activity-bar {
   display: block;
+  background: var(--color-bg);
+  border-right: 1px solid @hl-md;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: @height-nav;
+    width: @height-nav;
+  }
 }
