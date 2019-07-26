@@ -28,8 +28,8 @@ class ActivityBar extends React.PureComponent<Props> {
           />
         ))}
         <span className="activity-bar__spacer"/>
-        <li className="activity-bar__item activity-bar__item--bottom">
-          <button onClick={showSettings}>
+        <li>
+          <button onClick={showSettings} className="activity-bar__item activity-bar__item--bottom">
             <i className="fa fa-cog"/>
           </button>
         </li>
