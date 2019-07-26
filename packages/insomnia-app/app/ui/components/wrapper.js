@@ -3,7 +3,7 @@ import type { Settings } from '../../models/settings';
 import type { Response } from '../../models/response';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { Workspace } from '../../models/workspace';
-import type { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter} from '../../models/request';
+import type { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 
 import * as React from 'react';

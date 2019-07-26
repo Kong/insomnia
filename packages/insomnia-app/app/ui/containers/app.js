@@ -176,7 +176,7 @@ class App extends PureComponent {
       ],
       [
         hotKeyRefs.REQUEST_QUICK_CREATE,
-        async() => {
+        async () => {
           const { activeRequest, activeWorkspace } = this.props;
           const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
           const request = await models.request.create({ parentId, name: 'New Request' });
@@ -222,19 +222,19 @@ class App extends PureComponent {
       ],
       [
         hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR,
-        async() => {
+        async () => {
           showModal(GenerateCodeModal, this.props.activeRequest);
         },
       ],
       [
         hotKeyRefs.REQUEST_SHOW_DUPLICATE,
-        async() => {
+        async () => {
           await this._requestDuplicate(this.props.activeRequest);
         },
       ],
       [
         hotKeyRefs.REQUEST_TOGGLE_PIN,
-        async() => {
+        async () => {
           if (!this.props.activeRequest) {
             return;
           }
@@ -250,7 +250,7 @@ class App extends PureComponent {
       [ hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins ],
       [
         hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES,
-        async() => {
+        async () => {
           await this._updateIsVariableUncovered();
         },
       ],
@@ -485,7 +485,7 @@ class App extends PureComponent {
     await App._updateRequestMetaByParentId(requestId, { responseFilter });
 
     clearTimeout(this._responseFilterHistorySaveTimeout);
-    this._responseFilterHistorySaveTimeout = setTimeout(async() => {
+    this._responseFilterHistorySaveTimeout = setTimeout(async () => {
       const meta = await models.requestMeta.getByParentId(requestId);
       const responseFilterHistory = meta.responseFilterHistory.slice(0, 10);
 
@@ -601,7 +601,7 @@ class App extends PureComponent {
 
         readStream.pipe(to);
 
-        readStream.on('end', async() => {
+        readStream.on('end', async () => {
           responsePatch.error = `Saved to ${filename}`;
           await models.response.create(responsePatch, settings.maxHistoryResponses);
         });
