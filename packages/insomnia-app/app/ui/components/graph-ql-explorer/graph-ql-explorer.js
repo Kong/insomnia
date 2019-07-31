@@ -180,7 +180,7 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
     const schemaName = schema ? 'Schema' : null;
 
     return (
-      <div className="graphql-explorer">
+      <div className="graphql-explorer theme--dialog">
         <div className="graphql-explorer__header">
           {this.renderHistoryItem()}
           <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>

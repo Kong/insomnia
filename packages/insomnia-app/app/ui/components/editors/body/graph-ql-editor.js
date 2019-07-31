@@ -5,6 +5,7 @@ import * as ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { parse, print, typeFromAST } from 'graphql';
+import type { GraphQLSchema, GraphQLType, GraphQLField, GraphQLArgument } from 'graphql';
 import { introspectionQuery } from 'graphql/utilities/introspectionQuery';
 import { buildClientSchema } from 'graphql/utilities/buildClientSchema';
 import type { CodeMirror, TextMarker } from 'codemirror';
@@ -56,7 +57,7 @@ type Props = {
 
 type State = {
   body: GraphQLBody,
-  schema: Object | null,
+  schema: GraphQLSchema | null,
   schemaFetchError: {
     message: string,
     response: ResponsePatch | null,
@@ -66,7 +67,11 @@ type State = {
   hideSchemaFetchErrors: boolean,
   variablesSyntaxError: string,
   automaticFetch: boolean,
-  activeReference: Object | null,
+  activeReference: null | {
+    type: GraphQLType | null,
+    argument: GraphQLArgument | null,
+    field: GraphQLField<any, any> | null,
+  },
 };
 
 @autobind

@@ -10,9 +10,10 @@
   top: 0;
   bottom: 0;
   width: 400px;
+  max-width: 100%;
   z-index: 100;
   background: var(--color-bg);
-  box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.4);
 
   .markdown-preview__content *:first-child {
     margin-top: @padding-sm;
@@ -31,7 +32,6 @@
     box-sizing: border-box;
     height: @height-nav;
     line-height: @line-height-md;
-    background-color: var(--color-bg);
     color: var(--color-font);
     display: flex;
     justify-content: space-between;
