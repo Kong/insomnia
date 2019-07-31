@@ -1,13 +1,12 @@
 [ignore]
 .*/node_modules/.*
 .*/__fixtures__/.*
+!<PROJECT_ROOT>/node_modules/graphql
+!<PROJECT_ROOT>/node_modules/iterall
 
 [include]
-../../plugins
-../../packages
 
 [libs]
-flow-typed/
 
 [options]
 esproposal.decorators=ignore

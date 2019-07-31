@@ -32,7 +32,7 @@
     "babel-eslint": "^8.2.3",
     "babel-jest": "^24.7.1",
     "babel-loader": "^8.0.5",
-    "flow-bin": "^0.96.0",
+    "flow-bin": "^0.104.0",
     "husky": "^1.0.0-rc.9",
     "jest": "^24.7.1",
     "lerna": "^3.14.1",
