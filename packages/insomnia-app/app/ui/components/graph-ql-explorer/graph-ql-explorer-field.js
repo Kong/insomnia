@@ -38,7 +38,7 @@ class GraphQLExplorerField extends React.PureComponent<Props> {
         <ul className="graphql-explorer__defs">
           {field.args.map(a => (
             <li key={a.name}>
-              <span className="success">{a.name}</span>:{' '}
+              <span className="info">{a.name}</span>:{' '}
               <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={a.type} />
               {a.description && <MarkdownPreview markdown={a.description} />}
             </li>

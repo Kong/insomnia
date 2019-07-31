@@ -53,7 +53,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
                   (
                   {args.map(a => (
                     <div key={a.name} className="graphql-explorer__defs__arg">
-                      <span className="surprise">{a.name}</span>:{' '}
+                      <span className="info">{a.name}</span>:{' '}
                       <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={a.type} />
                     </div>
                   ))}
