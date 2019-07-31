@@ -585,18 +585,20 @@ class CodeEditor extends React.Component {
     // Strip of charset if there is one
     const cm = this.codeMirror;
     Object.keys(options).map(key => {
-      // These can be infinitely recursive so deepEqual will break
+      let shouldSetOption = false;
+
       if (key === 'jump' || key === 'info' || key === 'lint' || key === 'hintOptions') {
+        // Use stringify here because these could be infinitely recursive due to GraphQL
+        // schemas
+        shouldSetOption = JSON.stringify(options[key]) !== JSON.stringify(cm.options[key]);
+      } else if (!deepEqual(options[key], cm.options[key])) {
+        // Don't set the option if it hasn't changed
+        shouldSetOption = true;
+      }
+
+      if (shouldSetOption) {
         cm.setOption(key, options[key]);
-        return;
       }
-
-      // Don't set the option if it hasn't changed
-      if (deepEqual(options[key], cm.options[key])) {
-        return;
-      }
-
-      cm.setOption(key, options[key]);
     });
   }
 

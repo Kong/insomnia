@@ -27,8 +27,9 @@ class MarkdownPreview extends PureComponent {
         try {
           const { handleRender } = this.props;
           const rendered = handleRender ? await handleRender(markdown) : markdown;
+          const compiled = markdownToHTML(rendered);
           this.setState({
-            compiled: markdownToHTML(rendered),
+            compiled,
             renderError: '',
           });
         } catch (err) {

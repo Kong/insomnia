@@ -76,7 +76,9 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
                 {fieldLink}
                 {argLinks}: {typeLink}
                 {description && (
-                  <div className="graphql-explorer__defs__description">{description}</div>
+                  <div className="graphql-explorer__defs__description">
+                    <MarkdownPreview markdown={description} />
+                  </div>
                 )}
               </li>
             );

@@ -4,8 +4,8 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
+import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { parse, print, typeFromAST } from 'graphql';
-import type { GraphQLSchema, GraphQLType, GraphQLField, GraphQLArgument } from 'graphql';
 import { introspectionQuery } from 'graphql/utilities/introspectionQuery';
 import { buildClientSchema } from 'graphql/utilities/buildClientSchema';
 import type { CodeMirror, TextMarker } from 'codemirror';
@@ -505,6 +505,11 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     return message;
   }
 
+  static renderMarkdown(text: string) {
+    const html = markdownToHTML(text);
+    return `<div class="markdown-preview__content">${html}</div>`;
+  }
+
   render() {
     const {
       content,
@@ -533,7 +538,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     const variableTypes = this._buildVariableTypes(schema);
 
-    // Create portal for GraphQL Exporer
+    // Create portal for GraphQL Explorer
     const graphQLExplorerPortal = ReactDOM.createPortal(
       <GraphqlExplorer
         schema={schema}
@@ -579,10 +584,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             }}
             infoOptions={{
               schema: schema || null,
-              renderDescription: text => {
-                const html = markdownToHTML(text);
-                return `<div class="markdown-preview__content">${html}</div>`;
-              },
+              renderDescription: GraphQLEditor.renderMarkdown,
               onClick: this._handleClickReference,
             }}
             jumpOptions={{
