@@ -67,6 +67,7 @@ type State = {
   hideSchemaFetchErrors: boolean,
   variablesSyntaxError: string,
   automaticFetch: boolean,
+  explorerVisible: boolean,
   activeReference: null | {
     type: GraphQLType | null,
     argument: GraphQLArgument | null,
@@ -106,6 +107,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       hideSchemaFetchErrors: false,
       variablesSyntaxError: '',
       activeReference: null,
+      explorerVisible: false,
       automaticFetch,
     };
   }
@@ -157,12 +159,12 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _handleCloseExplorer() {
-    this.setState({ activeReference: null });
+    this.setState({ explorerVisible: false });
   }
 
   _handleClickReference(reference: Object, e: MouseEvent) {
     e.preventDefault();
-    this.setState({ activeReference: reference });
+    this.setState({ explorerVisible: true, activeReference: reference });
   }
 
   _handleQueryFocus() {
@@ -338,10 +340,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _handleShowDocumentation() {
-    const { schema } = this.state;
-
     this.setState({
-      activeReference: { schema },
+      explorerVisible: true,
     });
   }
 
@@ -524,6 +524,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       schemaIsFetching,
       automaticFetch,
       activeReference,
+      explorerVisible,
     } = this.state;
 
     const { query, variables: variablesObject } = GraphQLEditor._stringToGraphQL(content);
@@ -536,6 +537,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     const graphQLExplorerPortal = ReactDOM.createPortal(
       <GraphqlExplorer
         schema={schema}
+        visible={explorerVisible}
         reference={activeReference}
         handleClose={this._handleCloseExplorer}
       />,

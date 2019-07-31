@@ -9,6 +9,7 @@ import GraphQLExplorerSchema from './graph-ql-explorer-schema';
 type Props = {
   handleClose: () => void,
   schema: GraphQLSchema | null,
+  visible: boolean,
   reference: null | {
     type: GraphQLType | null,
     argument: GraphQLArgument | null,
@@ -146,9 +147,9 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { schema, reference, handleClose } = this.props;
+    const { schema, handleClose, visible } = this.props;
 
-    if (!reference) {
+    if (!visible) {
       return null;
     }
 
