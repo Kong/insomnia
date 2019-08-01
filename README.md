@@ -5,4 +5,4 @@
 
 Studio is a spec-first API development app built in top of [Insomnia](https://github.com/getinsomnia/insomnia).
 
-![Insomnia REST Client Screenshot](https://raw.githubusercontent.com/kong/studio/develop/screenshots/main.png)
+![Kong Studio Screenshot](https://raw.githubusercontent.com/kong/studio/develop/screenshots/main.png)
