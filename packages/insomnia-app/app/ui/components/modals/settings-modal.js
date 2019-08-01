@@ -59,7 +59,7 @@ class SettingsModal extends PureComponent {
   }
 
   async _handleChangeTheme(theme, persist = true) {
-    setTheme(theme);
+    await setTheme(theme);
 
     if (persist) {
       models.settings.update(this.props.settings, { theme });
@@ -71,6 +71,10 @@ class SettingsModal extends PureComponent {
   }
 
   show(currentTabIndex = 0) {
+    if (typeof currentTabIndex !== 'number') {
+      currentTabIndex = 0;
+    }
+
     this.setState({ currentTabIndex });
     this.modal.show();
   }
