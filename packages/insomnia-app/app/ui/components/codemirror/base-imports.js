@@ -13,6 +13,7 @@ import 'codemirror/mode/swift/swift';
 import 'codemirror/mode/clojure/clojure';
 import 'codemirror/mode/http/http';
 import 'codemirror/mode/powershell/powershell';
+import 'codemirror/mode/yaml/yaml';
 
 import 'codemirror/addon/display/autorefresh';
 import 'codemirror/addon/dialog/dialog';

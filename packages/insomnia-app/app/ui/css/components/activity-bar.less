@@ -1,0 +1,36 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.activity-bar {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  border-right: 1px solid @hl-md;
+
+  &__spacer {
+    flex: 1;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: @height-nav;
+    width: @height-nav;
+    opacity: 0.6;
+
+    i {
+      color: var(--color-font);
+    }
+
+    // Set active opacity
+    &:hover {
+      background-color: var(--hl-sm);
+      opacity: 0.8;
+    }
+
+    &--active {
+      opacity: 1;
+    }
+  }
+}

@@ -1,0 +1,32 @@
+@import '../constants/dimensions';
+
+.spec-editor {
+  display: grid;
+  width: 100%;
+  height: 100%;
+
+  grid-template-areas: 'header' 'body';
+  grid-template-rows: @height-nav 1fr;
+  grid-template-columns: 1fr;
+
+  &__header {
+    grid-area: header;
+    background: var(--color-bg);
+    color: var(--color-font);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 @padding-md;
+    border-bottom: 1px solid var(--hl-md);
+
+    h1 {
+      margin: 0;
+    }
+  }
+
+  &__body {
+    grid-area: body;
+    background: var(--color-bg);
+    color: var(--color-font);
+  }
+}

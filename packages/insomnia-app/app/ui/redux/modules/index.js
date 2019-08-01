@@ -18,7 +18,7 @@ export async function init() {
   const allDocs = await getAllDocs();
 
   // Link DB changes to entities reducer/actions
-  const changes = allDocs.map(doc => [db.CHANGE_UPDATE, doc]);
+  const changes = allDocs.map(doc => [ db.CHANGE_UPDATE, doc ]);
   addChangesSync(changes);
   db.onChange(addChanges);
 
@@ -32,7 +32,9 @@ export async function init() {
   fetch.setup(getClientString(), API_BASE_URL);
   fetch.onCommand(newCommand);
 
-  store.dispatch(global.init());
+  for (const action of global.init()) {
+    store.dispatch(action);
+  }
 
   return store;
 }

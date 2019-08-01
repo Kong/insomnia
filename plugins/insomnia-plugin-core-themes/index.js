@@ -11,5 +11,6 @@ module.exports.themes = [
   require('./themes/solarized-light'),
   require('./themes/solarized'),
   require('./themes/solarized-dark'),
+  require('./themes/studio-light'),
   require('./themes/high-contrast-light'),
 ];

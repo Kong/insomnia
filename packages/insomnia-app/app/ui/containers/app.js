@@ -111,13 +111,13 @@ class App extends PureComponent {
       [
         hotKeyRefs.PREFERENCES_SHOW_GENERAL,
         () => {
-          showModal(SettingsModal);
+          App._handleShowSettingsModal();
         },
       ],
       [
         hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
         () => {
-          showModal(SettingsModal, TAB_INDEX_SHORTCUTS);
+          App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
         },
       ],
       [
@@ -159,7 +159,7 @@ class App extends PureComponent {
           showModal(RequestSwitcherModal);
         },
       ],
-      [hotKeyRefs.REQUEST_SEND, this._handleSendShortcut],
+      [ hotKeyRefs.REQUEST_SEND, this._handleSendShortcut ],
       [
         hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
         () => {
@@ -246,8 +246,8 @@ class App extends PureComponent {
           await this._handleSetRequestPinned(this.props.activeRequest, !(metas && metas.pinned));
         },
       ],
-      [hotKeyRefs.SIDEBAR_TOGGLE, this._handleToggleSidebar],
-      [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
+      [ hotKeyRefs.SIDEBAR_TOGGLE, this._handleToggleSidebar ],
+      [ hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins ],
       [
         hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES,
         async () => {
@@ -810,7 +810,7 @@ class App extends PureComponent {
   }
 
   _handleKeyDown(e) {
-    for (const [definition, callback] of this._globalKeyMap) {
+    for (const [ definition, callback ] of this._globalKeyMap) {
       executeHotKey(e, definition, callback);
     }
   }
@@ -831,6 +831,10 @@ class App extends PureComponent {
 
   _handleShowExportRequestsModal() {
     showModal(ExportRequestsModal);
+  }
+
+  static _handleShowSettingsModal(tabIndex) {
+    showModal(SettingsModal, tabIndex);
   }
 
   _setWrapperRef(n) {
@@ -915,7 +919,7 @@ class App extends PureComponent {
       let needsRefresh = false;
 
       for (const change of changes) {
-        const [type, doc, fromSync] = change;
+        const [ type, doc, fromSync ] = change;
 
         const { vcs } = this.state;
         const { activeRequest } = this.props;
@@ -945,13 +949,13 @@ class App extends PureComponent {
     });
 
     ipcRenderer.on('toggle-preferences', () => {
-      showModal(SettingsModal);
+      App._handleShowSettingsModal();
     });
 
     ipcRenderer.on('reload-plugins', this._handleReloadPlugins);
 
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
-      showModal(SettingsModal, TAB_INDEX_SHORTCUTS);
+      App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
     });
 
     ipcRenderer.on('run-command', (e, commandUri) => {
@@ -1127,6 +1131,7 @@ class App extends PureComponent {
               handleToggleMenuBar={this._handleToggleMenuBar}
               handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
               handleShowExportRequestsModal={this._handleShowExportRequestsModal}
+              handleShowSettingsModal={App._handleShowSettingsModal}
               handleUpdateDownloadPath={this._handleUpdateDownloadPath}
               isVariableUncovered={isVariableUncovered}
               headerEditorKey={forceRefreshHeaderCounter + ''}
@@ -1135,11 +1140,11 @@ class App extends PureComponent {
           </ErrorBoundary>
 
           <ErrorBoundary showAlert>
-            <Toast />
+            <Toast/>
           </ErrorBoundary>
 
           {/* Block all mouse activity by showing an overlay while dragging */}
-          {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
+          {this.state.showDragOverlay ? <div className="blocker-overlay"/> : null}
         </div>
       </KeydownBinder>
     );
@@ -1157,6 +1162,7 @@ App.propTypes = {
   activeWorkspace: PropTypes.shape({
     _id: PropTypes.string.isRequired,
   }).isRequired,
+  handleSetActiveActivity: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
 
   // Optional
@@ -1169,7 +1175,7 @@ App.propTypes = {
 function mapStateToProps(state, props) {
   const { entities, global } = state;
 
-  const { isLoading, loadingRequestIds, isLoggedIn } = global;
+  const { activeActivity, isLoading, loadingRequestIds, isLoggedIn } = global;
 
   // Entities
   const entitiesLists = selectEntitiesLists(state, props);
@@ -1226,6 +1232,7 @@ function mapStateToProps(state, props) {
   const syncItems = selectSyncItems(state, props);
 
   return Object.assign({}, state, {
+    activity: activeActivity,
     activeCookieJar,
     activeEnvironment,
     activeRequest,
@@ -1267,6 +1274,7 @@ function mapDispatchToProps(dispatch) {
     handleStartLoading: global.loadRequestStart,
     handleStopLoading: global.loadRequestStop,
 
+    handleSetActiveActivity: global.setActiveActivity,
     handleSetActiveWorkspace: global.setActiveWorkspace,
     handleImportFileToWorkspace: global.importFile,
     handleImportUriToWorkspace: global.importUri,
