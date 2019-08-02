@@ -1,0 +1,13 @@
+.idea/
+.github/
+docker/
+screenshots/
+**/*.min.js
+packages/insomnia-app/build/
+packages/insomnia-app/dist/
+**/coverage/
+**/node_modules/
+**/webpack/
+**/bin/
+**/__fixtures__/
+**/flow-typed/

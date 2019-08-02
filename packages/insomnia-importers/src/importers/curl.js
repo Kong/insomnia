@@ -71,7 +71,7 @@ function importArgs(args) {
   // Start at 1 so we can skip the ^curl part
   for (let i = 1; i < args.length; i++) {
     const arg = args[i];
-    if (arg.match(/^-{1,2}[\w\-]+/)) {
+    if (arg.match(/^-{1,2}[\w-]+/)) {
       const isSingleDash = arg[0] === '-' && arg[1] !== '-';
       let name = arg.replace(/^-{1,2}/, '');
 

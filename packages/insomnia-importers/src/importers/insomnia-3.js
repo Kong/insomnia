@@ -1,7 +1,5 @@
 'use strict';
 
-const utils = require('../utils');
-
 module.exports.id = 'insomnia-3';
 module.exports.name = 'Insomnia v3';
 module.exports.description = 'Insomnia export format 3';
