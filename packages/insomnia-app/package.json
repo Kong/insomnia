@@ -164,7 +164,7 @@
     "vkbeautify": "^0.99.1",
     "whatwg-fetch": "^2.0.1",
     "yaml": "^1.5.0",
-    "zprint-clj": "^0.2.0"
+    "zprint-clj": "0.2.0"
   },
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.4.0",
