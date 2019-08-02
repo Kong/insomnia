@@ -11,6 +11,7 @@ import type {
   RequestParameter,
 } from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
+import SidebarChildren from './sidebar/sidebar-children';
 
 import * as React from 'react';
 import autobind from 'autobind-decorator';
@@ -67,6 +68,8 @@ import type { GlobalActivity } from './activity-bar/activity-bar';
 import ActivityBar from './activity-bar/activity-bar';
 import SpecEditor from './spec-editor/spec-editor';
 import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
+import EnvironmentsDropdown from './dropdowns/environments-dropdown';
+import SidebarFilter from './sidebar/sidebar-filter';
 
 type Props = {
   // Helper Functions
@@ -147,9 +150,9 @@ type Props = {
   syncItems: Array<StatusCandidate>,
 
   // Optional
-  oAuth2Token: ?OAuth2Token,
-  activeRequest: ?Request,
-  activeResponse: ?Response,
+  oAuth2Token: OAuth2Token | null,
+  activeRequest: Request | null,
+  activeResponse: Response | null,
 };
 
 type State = {
@@ -379,13 +382,106 @@ class Wrapper extends React.PureComponent<Props, State> {
     this.props.handleSetResponseFilter(activeRequestId, filter);
   }
 
+  _handleCreateRequestInWorkspace() {
+    const { activeWorkspace, handleCreateRequest } = this.props;
+    handleCreateRequest(activeWorkspace._id);
+  }
+
+  _handleCreateRequestGroupInWorkspace() {
+    const { activeWorkspace, handleCreateRequestGroup } = this.props;
+    handleCreateRequestGroup(activeWorkspace._id);
+  }
+
+  _handleChangeEnvironment(id: string) {
+    const { handleSetActiveEnvironment } = this.props;
+    handleSetActiveEnvironment(id);
+  }
+
   _forceRequestPaneRefresh(): void {
     this.setState({ forceRefreshKey: Date.now() });
   }
 
-  render() {
+  renderSidebarBody(): React.Node {
     const {
       activity,
+      activeCookieJar,
+      activeEnvironment,
+      activeRequest,
+      activeWorkspace,
+      environments,
+      handleActivateRequest,
+      handleCopyAsCurl,
+      handleCreateRequest,
+      handleCreateRequestGroup,
+      handleDuplicateRequest,
+      handleDuplicateRequestGroup,
+      handleGenerateCode,
+      handleMoveDoc,
+      handleMoveRequestGroup,
+      handleSetRequestGroupCollapsed,
+      handleSetRequestPinned,
+      handleSetSidebarFilter,
+      settings,
+      sidebarChildren,
+      sidebarFilter,
+      sidebarWidth,
+      sidebarHidden,
+    } = this.props;
+
+    return (
+      <React.Fragment>
+        <div className="sidebar__menu">
+          <EnvironmentsDropdown
+            handleChangeEnvironment={this._handleChangeEnvironment}
+            activeEnvironment={activeEnvironment}
+            environments={environments}
+            workspace={activeWorkspace}
+            environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
+            hotKeyRegistry={settings.hotKeyRegistry}
+          />
+          <button className="btn btn--super-compact" onClick={this._handleShowCookiesModal}>
+            <div className="sidebar__menu__thing">
+              <span>Cookies</span>
+            </div>
+          </button>
+        </div>
+
+        <SidebarFilter
+          key={`${activeWorkspace._id}::filter`}
+          onChange={handleSetSidebarFilter}
+          requestCreate={this._handleCreateRequestInWorkspace}
+          requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
+          filter={sidebarFilter || ''}
+          hotKeyRegistry={settings.hotKeyRegistry}
+        />
+
+        <SidebarChildren
+          childObjects={sidebarChildren}
+          handleActivateRequest={handleActivateRequest}
+          handleCreateRequest={handleCreateRequest}
+          handleCreateRequestGroup={handleCreateRequestGroup}
+          handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+          handleSetRequestPinned={handleSetRequestPinned}
+          handleDuplicateRequest={handleDuplicateRequest}
+          handleDuplicateRequestGroup={handleDuplicateRequestGroup}
+          handleMoveRequestGroup={handleMoveRequestGroup}
+          handleGenerateCode={handleGenerateCode}
+          handleCopyAsCurl={handleCopyAsCurl}
+          moveDoc={handleMoveDoc}
+          hidden={sidebarHidden}
+          width={sidebarWidth}
+          workspace={activeWorkspace}
+          activeRequest={activeRequest}
+          filter={sidebarFilter || ''}
+          hotKeyRegistry={settings.hotKeyRegistry}
+          activeEnvironment={activeEnvironment}
+        />
+      </React.Fragment>
+    );
+  }
+
+  render() {
+    const {
       activeCookieJar,
       activeEnvironment,
       activeRequest,
@@ -393,22 +489,13 @@ class Wrapper extends React.PureComponent<Props, State> {
       activeResponse,
       activeWorkspace,
       activeWorkspaceClientCertificates,
-      environments,
       handleActivateRequest,
-      handleCopyAsCurl,
-      handleCreateRequest,
       handleCreateRequestForWorkspace,
-      handleCreateRequestGroup,
-      handleDuplicateRequest,
-      handleDuplicateRequestGroup,
       handleDuplicateWorkspace,
       handleExportFile,
       handleExportRequestsToFile,
-      handleGenerateCode,
       handleGenerateCodeForActiveRequest,
       handleGetRenderContext,
-      handleMoveDoc,
-      handleMoveRequestGroup,
       handleRender,
       handleResetDragPaneHorizontal,
       handleResetDragPaneVertical,
@@ -416,19 +503,16 @@ class Wrapper extends React.PureComponent<Props, State> {
       handleSetActiveActivity,
       handleSetActiveEnvironment,
       handleSetActiveWorkspace,
-      handleSetRequestGroupCollapsed,
       handleSetRequestPaneRef,
-      handleSetRequestPinned,
       handleSetResponsePaneRef,
-      handleSetSidebarFilter,
       handleSetSidebarRef,
       handleShowExportRequestsModal,
       handleShowSettingsModal,
       handleStartDragPaneHorizontal,
       handleStartDragPaneVertical,
       handleToggleMenuBar,
-      handleUpdateRequestMimeType,
       handleUpdateDownloadPath,
+      handleUpdateRequestMimeType,
       headerEditorKey,
       isLoading,
       isVariableUncovered,
@@ -438,13 +522,12 @@ class Wrapper extends React.PureComponent<Props, State> {
       paneWidth,
       requestMetas,
       requestVersions,
+      responseDownloadPath,
       responseFilter,
       responseFilterHistory,
       responsePreviewMode,
-      responseDownloadPath,
       settings,
       sidebarChildren,
-      sidebarFilter,
       sidebarHidden,
       sidebarWidth,
       syncItems,
@@ -687,6 +770,26 @@ class Wrapper extends React.PureComponent<Props, State> {
             activity={activity}
             setActivity={handleSetActiveActivity}
           />
+
+          <Sidebar
+            ref={handleSetSidebarRef}
+            activeEnvironment={activeEnvironment}
+            enableSyncBeta={settings.enableSyncBeta}
+            environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
+            handleSetActiveEnvironment={handleSetActiveEnvironment}
+            handleSetActiveWorkspace={handleSetActiveWorkspace}
+            hidden={sidebarHidden || false}
+            hotKeyRegistry={settings.hotKeyRegistry}
+            isLoading={isLoading}
+            showEnvironmentsModal={this._handleShowEnvironmentsModal}
+            syncItems={syncItems}
+            unseenWorkspaces={unseenWorkspaces}
+            vcs={vcs}
+            width={sidebarWidth}
+            workspace={activeWorkspace}
+            workspaces={workspaces}>
+            {this.renderSidebarBody()}
+          </Sidebar>
         </ErrorBoundary>
         {activity === 'test' ? (
           <React.Fragment>
