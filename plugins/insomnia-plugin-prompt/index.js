@@ -40,16 +40,15 @@ module.exports.templateTags = [
         defaultValue: false,
       },
       {
-        displayName: 'Save Last Value',
+        displayName: 'Default to Last Value',
         type: 'boolean',
         help:
-          'If this is enabled, the value will be stored in memory and the next time this prompt' +
-          'shows, the input field will be pre-filled with this value. This option is ignored ' +
-          'when the storage key is set.',
-        defaultValue: true
-      }
+          'If this is enabled, the input field will be pre-filled with this value. This option is ' +
+          'ignored when the storage key is set.',
+        defaultValue: true,
+      },
     ],
-    async run(context, title, label, defaultValue, explicitStorageKey, maskText) {
+    async run(context, title, label, defaultValue, explicitStorageKey, maskText, saveLastValue) {
       if (!title) {
         throw new Error('Title attribute is required for prompt tag');
       }
@@ -72,7 +71,7 @@ module.exports.templateTags = [
       }
 
       // Use cached value as default value
-      if (cachedValue) {
+      if (cachedValue && saveLastValue) {
         defaultValue = cachedValue;
         console.log(`[prompt] Used cached value under ${storageKey}`);
       }
