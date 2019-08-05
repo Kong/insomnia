@@ -82,35 +82,34 @@ class BodyEditor extends React.PureComponent<Props> {
 
     const newBody = newBodyFile(path);
 
-    onChange(request, newBody).then(request => {
-      let contentTypeHeader = getContentTypeHeader(headers);
+    const newRequest = await onChange(request, newBody);
+    let contentTypeHeader = getContentTypeHeader(headers);
 
-      if (!contentTypeHeader) {
-        contentTypeHeader = { name: 'Content-Type', value: CONTENT_TYPE_FILE };
-        headers.push(contentTypeHeader);
-      }
+    if (!contentTypeHeader) {
+      contentTypeHeader = { name: 'Content-Type', value: CONTENT_TYPE_FILE };
+      headers.push(contentTypeHeader);
+    }
 
-      // Update Content-Type header if the user wants
-      const contentType = contentTypeHeader.value;
-      const newContentType = mimes.lookup(path) || CONTENT_TYPE_FILE;
-      if (contentType !== newContentType && path) {
-        contentTypeHeader.value = newContentType;
-        showModal(AskModal, {
-          title: 'Change Content-Type',
-          message: (
-            <p>
-              Do you want set the <span className="monospace">Content-Type</span> header to{' '}
-              <span className="monospace">{newContentType}</span>?
-            </p>
-          ),
-          onDone: saidYes => {
-            if (saidYes) {
-              onChangeHeaders(request, headers);
-            }
-          },
-        });
-      }
-    });
+    // Update Content-Type header if the user wants
+    const contentType = contentTypeHeader.value;
+    const newContentType = mimes.lookup(path) || CONTENT_TYPE_FILE;
+    if (contentType !== newContentType && path) {
+      contentTypeHeader.value = newContentType;
+      showModal(AskModal, {
+        title: 'Change Content-Type',
+        message: (
+          <p>
+            Do you want set the <span className="monospace">Content-Type</span> header to{' '}
+            <span className="monospace">{newContentType}</span>?
+          </p>
+        ),
+        onDone: saidYes => {
+          if (saidYes) {
+            onChangeHeaders(newRequest, headers);
+          }
+        },
+      });
+    }
   }
 
   render() {
