@@ -580,7 +580,10 @@ class TagEditor extends React.PureComponent<Props, State> {
           </label>
         </div>
         {isVariableAllowed ? (
-          <div className="form-control form-control--outlined form-control--no-label width-auto">
+          <div
+            className={classnames('form-control form-control--outlined width-auto', {
+              'form-control--no-label': argDefinition.type !== 'boolean',
+            })}>
             <Dropdown right>
               <DropdownButton className="btn btn--clicky">
                 <i className="fa fa-gear" />
