@@ -319,7 +319,11 @@ function generateParameterExample(schema) {
   }
 
   if (schema instanceof Object) {
-    const { type, format, example, default: defaultValue } = schema;
+    const { type, format, example, readOnly, default: defaultValue } = schema;
+
+    if (readOnly) {
+      return undefined;
+    }
 
     if (example) {
       return example;
