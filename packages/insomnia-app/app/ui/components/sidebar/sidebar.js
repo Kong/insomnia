@@ -1,65 +1,55 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
+import type { HotKeyRegistry } from '../../../common/hotkeys';
+import type { Workspace } from '../../../models/workspace';
+import type { Environment } from '../../../models/environment';
 import classnames from 'classnames';
-import EnvironmentsDropdown from '../dropdowns/environments-dropdown';
-import SidebarFilter from './sidebar-filter';
-import SidebarChildren from './sidebar-children';
-import SyncDropdown from '../dropdowns/sync-dropdown';
+import { COLLAPSE_SIDEBAR_REMS, SIDEBAR_SKINNY_REMS } from '../../../common/constants';
 import WorkspaceDropdown from '../dropdowns/workspace-dropdown';
-import { SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS } from '../../../common/constants';
+import VCS from '../../../sync/vcs';
+import SyncDropdown from '../dropdowns/sync-dropdown';
 import SyncLegacyDropdown from '../dropdowns/sync-legacy-dropdown';
+import type { StatusCandidate } from '../../../sync/types';
 import { isLoggedIn } from '../../../account/session';
 
+type Props = {|
+  activeEnvironment: Environment | null,
+  children: React.Node,
+  enableSyncBeta: boolean,
+  environmentHighlightColorStyle: string,
+  handleSetActiveEnvironment: Function,
+  handleSetActiveWorkspace: Function,
+  hidden: boolean,
+  hotKeyRegistry: HotKeyRegistry,
+  isLoading: boolean,
+  showEnvironmentsModal: Function,
+  syncItems: Array<StatusCandidate>,
+  unseenWorkspaces: Array<Workspace>,
+  vcs: VCS | null,
+  width: number,
+  workspace: Workspace,
+  workspaces: Array<Workspace>,
+|};
+
 @autobind
-class Sidebar extends PureComponent {
-  _handleChangeEnvironment(id) {
-    const { handleSetActiveEnvironment } = this.props;
-    handleSetActiveEnvironment(id);
-  }
-
-  _handleCreateRequestInWorkspace() {
-    const { workspace, handleCreateRequest } = this.props;
-    handleCreateRequest(workspace._id);
-  }
-
-  _handleCreateRequestGroupInWorkspace() {
-    const { workspace, handleCreateRequestGroup } = this.props;
-    handleCreateRequestGroup(workspace._id);
-  }
-
+class Sidebar extends React.PureComponent<Props> {
   render() {
     const {
-      showCookiesModal,
-      filter,
-      childObjects,
+      activeEnvironment,
+      children,
+      enableSyncBeta,
+      environmentHighlightColorStyle,
+      handleSetActiveWorkspace,
       hidden,
+      hotKeyRegistry,
+      isLoading,
+      syncItems,
+      unseenWorkspaces,
+      vcs,
       width,
       workspace,
       workspaces,
-      unseenWorkspaces,
-      environments,
-      activeEnvironment,
-      handleSetActiveWorkspace,
-      handleChangeFilter,
-      isLoading,
-      handleCreateRequest,
-      handleDuplicateRequest,
-      handleDuplicateRequestGroup,
-      handleMoveRequestGroup,
-      handleGenerateCode,
-      handleCopyAsCurl,
-      handleCreateRequestGroup,
-      handleSetRequestGroupCollapsed,
-      handleSetRequestPinned,
-      moveDoc,
-      handleActivateRequest,
-      activeRequest,
-      environmentHighlightColorStyle,
-      hotKeyRegistry,
-      enableSyncBeta,
-      vcs,
-      syncItems,
     } = this.props;
 
     return (
@@ -89,50 +79,7 @@ class Sidebar extends PureComponent {
           vcs={vcs}
         />
 
-        <div className="sidebar__menu">
-          <EnvironmentsDropdown
-            handleChangeEnvironment={this._handleChangeEnvironment}
-            activeEnvironment={activeEnvironment}
-            environments={environments}
-            workspace={workspace}
-            environmentHighlightColorStyle={environmentHighlightColorStyle}
-            hotKeyRegistry={hotKeyRegistry}
-          />
-          <button className="btn btn--super-compact" onClick={showCookiesModal}>
-            <div className="sidebar__menu__thing">
-              <span>Cookies</span>
-            </div>
-          </button>
-        </div>
-
-        <SidebarFilter
-          key={`${workspace._id}::filter`}
-          onChange={handleChangeFilter}
-          requestCreate={this._handleCreateRequestInWorkspace}
-          requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
-          filter={filter || ''}
-          hotKeyRegistry={hotKeyRegistry}
-        />
-
-        <SidebarChildren
-          childObjects={childObjects}
-          handleActivateRequest={handleActivateRequest}
-          handleCreateRequest={handleCreateRequest}
-          handleCreateRequestGroup={handleCreateRequestGroup}
-          handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-          handleSetRequestPinned={handleSetRequestPinned}
-          handleDuplicateRequest={handleDuplicateRequest}
-          handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-          handleMoveRequestGroup={handleMoveRequestGroup}
-          handleGenerateCode={handleGenerateCode}
-          handleCopyAsCurl={handleCopyAsCurl}
-          moveDoc={moveDoc}
-          workspace={workspace}
-          activeRequest={activeRequest}
-          filter={filter || ''}
-          hotKeyRegistry={hotKeyRegistry}
-          activeEnvironment={activeEnvironment}
-        />
+        {children}
 
         {enableSyncBeta && vcs && isLoggedIn() && (
           <SyncDropdown
@@ -154,45 +101,5 @@ class Sidebar extends PureComponent {
     );
   }
 }
-
-Sidebar.propTypes = {
-  // Functions
-  handleActivateRequest: PropTypes.func.isRequired,
-  handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
-  handleSetRequestPinned: PropTypes.func.isRequired,
-  handleChangeFilter: PropTypes.func.isRequired,
-  handleSetActiveWorkspace: PropTypes.func.isRequired,
-  handleSetActiveEnvironment: PropTypes.func.isRequired,
-  moveDoc: PropTypes.func.isRequired,
-  handleCreateRequest: PropTypes.func.isRequired,
-  handleCreateRequestGroup: PropTypes.func.isRequired,
-  handleDuplicateRequest: PropTypes.func.isRequired,
-  handleDuplicateRequestGroup: PropTypes.func.isRequired,
-  handleMoveRequestGroup: PropTypes.func.isRequired,
-  handleGenerateCode: PropTypes.func.isRequired,
-  handleCopyAsCurl: PropTypes.func.isRequired,
-  showEnvironmentsModal: PropTypes.func.isRequired,
-  showCookiesModal: PropTypes.func.isRequired,
-
-  // Other
-  hidden: PropTypes.bool.isRequired,
-  width: PropTypes.number.isRequired,
-  isLoading: PropTypes.bool.isRequired,
-  workspace: PropTypes.object.isRequired,
-  childObjects: PropTypes.object.isRequired,
-  workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
-  unseenWorkspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
-  environments: PropTypes.arrayOf(PropTypes.object).isRequired,
-  environmentHighlightColorStyle: PropTypes.string.isRequired,
-  hotKeyRegistry: PropTypes.object.isRequired,
-  enableSyncBeta: PropTypes.bool.isRequired,
-  syncItems: PropTypes.arrayOf(PropTypes.object).isRequired,
-
-  // Optional
-  filter: PropTypes.string,
-  activeRequest: PropTypes.object,
-  activeEnvironment: PropTypes.object,
-  vcs: PropTypes.object,
-};
 
 export default Sidebar;

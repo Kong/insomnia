@@ -6,7 +6,6 @@ module.exports.description = 'Importer for Postman collections';
 
 let requestCount = 1;
 let requestGroupCount = 1;
-let currentSchema = '';
 
 const POSTMAN_SCHEMA_V2_0 = 'https://schema.getpostman.com/json/collection/v2.0.0/collection.json';
 const POSTMAN_SCHEMA_V2_1 = 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json';
@@ -45,10 +44,9 @@ function importCollection(collection, schema) {
 
 function importVariable(items) {
   let variable = {};
-  if (items.length == 0) {
+  if (items.length === 0) {
     return null;
   } else {
-    items;
     for (let idx = 0; idx < items.length; idx++) {
       variable[items[idx].key] = items[idx].value;
     }

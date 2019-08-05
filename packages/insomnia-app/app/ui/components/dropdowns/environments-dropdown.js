@@ -22,7 +22,7 @@ type Props = {
   handleChangeEnvironment: Function,
   workspace: Workspace,
   environments: Array<Environment>,
-  environmentHighlightColorStyle: String,
+  environmentHighlightColorStyle: string,
   hotKeyRegistry: HotKeyRegistry,
 
   // Optional

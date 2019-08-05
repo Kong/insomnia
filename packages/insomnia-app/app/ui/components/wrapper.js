@@ -11,6 +11,7 @@ import type {
   RequestParameter,
 } from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
+import SidebarChildren from './sidebar/sidebar-children';
 
 import * as React from 'react';
 import autobind from 'autobind-decorator';
@@ -63,6 +64,8 @@ import VCS from '../../sync/vcs';
 import type { StatusCandidate } from '../../sync/types';
 import type { RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
+import EnvironmentsDropdown from './dropdowns/environments-dropdown';
+import SidebarFilter from './sidebar/sidebar-filter';
 
 type Props = {
   // Helper Functions
@@ -140,9 +143,9 @@ type Props = {
   syncItems: Array<StatusCandidate>,
 
   // Optional
-  oAuth2Token: ?OAuth2Token,
-  activeRequest: ?Request,
-  activeResponse: ?Response,
+  oAuth2Token: OAuth2Token | null,
+  activeRequest: Request | null,
+  activeResponse: Response | null,
 };
 
 type State = {
@@ -372,8 +375,100 @@ class Wrapper extends React.PureComponent<Props, State> {
     this.props.handleSetResponseFilter(activeRequestId, filter);
   }
 
+  _handleCreateRequestInWorkspace() {
+    const { activeWorkspace, handleCreateRequest } = this.props;
+    handleCreateRequest(activeWorkspace._id);
+  }
+
+  _handleCreateRequestGroupInWorkspace() {
+    const { activeWorkspace, handleCreateRequestGroup } = this.props;
+    handleCreateRequestGroup(activeWorkspace._id);
+  }
+
+  _handleChangeEnvironment(id: string) {
+    const { handleSetActiveEnvironment } = this.props;
+    handleSetActiveEnvironment(id);
+  }
+
   _forceRequestPaneRefresh(): void {
     this.setState({ forceRefreshKey: Date.now() });
+  }
+
+  renderSidebarBody(): React.Node {
+    const {
+      activeEnvironment,
+      activeRequest,
+      activeWorkspace,
+      environments,
+      handleActivateRequest,
+      handleCopyAsCurl,
+      handleCreateRequest,
+      handleCreateRequestGroup,
+      handleDuplicateRequest,
+      handleDuplicateRequestGroup,
+      handleGenerateCode,
+      handleMoveDoc,
+      handleMoveRequestGroup,
+      handleSetRequestGroupCollapsed,
+      handleSetRequestPinned,
+      handleSetSidebarFilter,
+      settings,
+      sidebarChildren,
+      sidebarFilter,
+      sidebarWidth,
+      sidebarHidden,
+    } = this.props;
+
+    return (
+      <React.Fragment>
+        <div className="sidebar__menu">
+          <EnvironmentsDropdown
+            handleChangeEnvironment={this._handleChangeEnvironment}
+            activeEnvironment={activeEnvironment}
+            environments={environments}
+            workspace={activeWorkspace}
+            environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
+            hotKeyRegistry={settings.hotKeyRegistry}
+          />
+          <button className="btn btn--super-compact" onClick={this._handleShowCookiesModal}>
+            <div className="sidebar__menu__thing">
+              <span>Cookies</span>
+            </div>
+          </button>
+        </div>
+
+        <SidebarFilter
+          key={`${activeWorkspace._id}::filter`}
+          onChange={handleSetSidebarFilter}
+          requestCreate={this._handleCreateRequestInWorkspace}
+          requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
+          filter={sidebarFilter || ''}
+          hotKeyRegistry={settings.hotKeyRegistry}
+        />
+
+        <SidebarChildren
+          childObjects={sidebarChildren}
+          handleActivateRequest={handleActivateRequest}
+          handleCreateRequest={handleCreateRequest}
+          handleCreateRequestGroup={handleCreateRequestGroup}
+          handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+          handleSetRequestPinned={handleSetRequestPinned}
+          handleDuplicateRequest={handleDuplicateRequest}
+          handleDuplicateRequestGroup={handleDuplicateRequestGroup}
+          handleMoveRequestGroup={handleMoveRequestGroup}
+          handleGenerateCode={handleGenerateCode}
+          handleCopyAsCurl={handleCopyAsCurl}
+          moveDoc={handleMoveDoc}
+          hidden={sidebarHidden}
+          width={sidebarWidth}
+          workspace={activeWorkspace}
+          activeRequest={activeRequest}
+          filter={sidebarFilter || ''}
+          hotKeyRegistry={settings.hotKeyRegistry}
+          activeEnvironment={activeEnvironment}
+        />
+      </React.Fragment>
+    );
   }
 
   render() {
@@ -385,40 +480,28 @@ class Wrapper extends React.PureComponent<Props, State> {
       activeResponse,
       activeWorkspace,
       activeWorkspaceClientCertificates,
-      environments,
       handleActivateRequest,
-      handleCopyAsCurl,
-      handleCreateRequest,
       handleCreateRequestForWorkspace,
-      handleCreateRequestGroup,
-      handleDuplicateRequest,
-      handleDuplicateRequestGroup,
       handleDuplicateWorkspace,
       handleExportFile,
       handleExportRequestsToFile,
-      handleGenerateCode,
       handleGenerateCodeForActiveRequest,
       handleGetRenderContext,
-      handleMoveDoc,
-      handleMoveRequestGroup,
       handleRender,
       handleResetDragPaneHorizontal,
       handleResetDragPaneVertical,
       handleResetDragSidebar,
       handleSetActiveEnvironment,
       handleSetActiveWorkspace,
-      handleSetRequestGroupCollapsed,
       handleSetRequestPaneRef,
-      handleSetRequestPinned,
       handleSetResponsePaneRef,
-      handleSetSidebarFilter,
       handleSetSidebarRef,
       handleShowExportRequestsModal,
       handleStartDragPaneHorizontal,
       handleStartDragPaneVertical,
       handleToggleMenuBar,
-      handleUpdateRequestMimeType,
       handleUpdateDownloadPath,
+      handleUpdateRequestMimeType,
       headerEditorKey,
       isLoading,
       isVariableUncovered,
@@ -428,13 +511,12 @@ class Wrapper extends React.PureComponent<Props, State> {
       paneWidth,
       requestMetas,
       requestVersions,
+      responseDownloadPath,
       responseFilter,
       responseFilterHistory,
       responsePreviewMode,
-      responseDownloadPath,
       settings,
       sidebarChildren,
-      sidebarFilter,
       sidebarHidden,
       sidebarWidth,
       syncItems,
@@ -674,41 +756,23 @@ class Wrapper extends React.PureComponent<Props, State> {
         <ErrorBoundary showAlert>
           <Sidebar
             ref={handleSetSidebarRef}
-            showEnvironmentsModal={this._handleShowEnvironmentsModal}
-            showCookiesModal={this._handleShowCookiesModal}
-            handleActivateRequest={handleActivateRequest}
-            handleChangeFilter={handleSetSidebarFilter}
-            handleImportFile={this._handleImportFile}
-            handleExportFile={handleExportFile}
-            handleSetActiveWorkspace={handleSetActiveWorkspace}
-            handleDuplicateRequest={handleDuplicateRequest}
-            handleGenerateCode={handleGenerateCode}
-            handleCopyAsCurl={handleCopyAsCurl}
-            handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-            handleMoveRequestGroup={handleMoveRequestGroup}
-            handleSetActiveEnvironment={handleSetActiveEnvironment}
-            moveDoc={handleMoveDoc}
-            handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-            handleSetRequestPinned={handleSetRequestPinned}
-            activeRequest={activeRequest}
             activeEnvironment={activeEnvironment}
-            handleCreateRequest={handleCreateRequest}
-            handleCreateRequestGroup={handleCreateRequestGroup}
-            filter={sidebarFilter || ''}
-            hidden={sidebarHidden || false}
-            workspace={activeWorkspace}
-            unseenWorkspaces={unseenWorkspaces}
-            childObjects={sidebarChildren}
-            width={sidebarWidth}
-            isLoading={isLoading}
-            workspaces={workspaces}
-            environments={environments}
-            environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             enableSyncBeta={settings.enableSyncBeta}
+            environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
+            handleSetActiveEnvironment={handleSetActiveEnvironment}
+            handleSetActiveWorkspace={handleSetActiveWorkspace}
+            hidden={sidebarHidden || false}
             hotKeyRegistry={settings.hotKeyRegistry}
-            vcs={vcs}
+            isLoading={isLoading}
+            showEnvironmentsModal={this._handleShowEnvironmentsModal}
             syncItems={syncItems}
-          />
+            unseenWorkspaces={unseenWorkspaces}
+            vcs={vcs}
+            width={sidebarWidth}
+            workspace={activeWorkspace}
+            workspaces={workspaces}>
+            {this.renderSidebarBody()}
+          </Sidebar>
         </ErrorBoundary>
 
         <div className="drag drag--sidebar">

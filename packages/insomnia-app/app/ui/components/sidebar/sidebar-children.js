@@ -42,7 +42,7 @@ type Props = {
   activeEnvironment: Environment | null,
 
   // Optional
-  activeRequest?: Request,
+  activeRequest: ?Request,
 };
 
 class SidebarChildren extends React.PureComponent<Props> {

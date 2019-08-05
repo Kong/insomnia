@@ -108,7 +108,7 @@ function parseEndpoints(document) {
         .filter(method => method !== 'parameters')
         .map(method => Object.assign({}, schemasPerMethod[method], { path, method }));
     })
-    .reduce((flat, arr) => flat.concat(arr), []); //flat single array
+    .reduce((flat, arr) => flat.concat(arr), []); // flat single array
 
   const tags = document.tags || [];
   const folders = tags.map(tag => {
@@ -319,7 +319,11 @@ function generateParameterExample(schema) {
   }
 
   if (schema instanceof Object) {
-    const { type, format, example, default: defaultValue } = schema;
+    const { type, format, example, readOnly, default: defaultValue } = schema;
+
+    if (readOnly) {
+      return undefined;
+    }
 
     if (example) {
       return example;
