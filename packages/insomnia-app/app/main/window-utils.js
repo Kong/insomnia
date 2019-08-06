@@ -206,6 +206,18 @@ export function createWindow() {
         },
       },
       {
+        label: 'Toggle Sidebar',
+        accelerator: 'CmdOrCtrl+\\',
+        click: () => {
+          const w = BrowserWindow.getFocusedWindow();
+          if (!w || !w.webContents) {
+            return;
+          }
+
+          w.webContents.send('toggle-sidebar');
+        },
+      },
+      {
         label: `Toggle ${MNEMONIC_SYM}DevTools`,
         click: () => mainWindow.toggleDevTools(),
       },

@@ -80,6 +80,9 @@ class BodyEditor extends React.PureComponent<Props> {
     const { onChange, onChangeHeaders, request } = this.props;
     const headers = clone(request.headers);
 
+    const newBody = newBodyFile(path);
+
+    const newRequest = await onChange(request, newBody);
     let contentTypeHeader = getContentTypeHeader(headers);
 
     if (!contentTypeHeader) {
@@ -90,7 +93,7 @@ class BodyEditor extends React.PureComponent<Props> {
     // Update Content-Type header if the user wants
     const contentType = contentTypeHeader.value;
     const newContentType = mimes.lookup(path) || CONTENT_TYPE_FILE;
-    if (contentType !== newContentType) {
+    if (contentType !== newContentType && path) {
       contentTypeHeader.value = newContentType;
       showModal(AskModal, {
         title: 'Change Content-Type',
@@ -102,15 +105,11 @@ class BodyEditor extends React.PureComponent<Props> {
         ),
         onDone: saidYes => {
           if (saidYes) {
-            onChangeHeaders(request, headers);
+            onChangeHeaders(newRequest, headers);
           }
         },
       });
     }
-
-    const newBody = newBodyFile(path);
-
-    onChange(request, newBody);
   }
 
   render() {

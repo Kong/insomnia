@@ -41,7 +41,6 @@ const HOT_KEY_DEFS: Array<HotKeyDefinition> = [
   hotKeyRefs.REQUEST_FOCUS_URL,
   hotKeyRefs.RESPONSE_FOCUS,
   hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU,
-  hotKeyRefs.SIDEBAR_TOGGLE,
   hotKeyRefs.SIDEBAR_FOCUS_FILTER,
   hotKeyRefs.REQUEST_TOGGLE_HISTORY,
   hotKeyRefs.SHOW_AUTOCOMPLETE,

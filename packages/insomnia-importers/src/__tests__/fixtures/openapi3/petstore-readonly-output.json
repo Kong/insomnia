@@ -1,0 +1,80 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2018-01-09T23:33:12.799Z",
+  "__export_source": "insomnia.importers:v0.1.0",
+  "resources": [
+    {
+      "_type": "workspace",
+      "_id": "__WORKSPACE_1__",
+      "parentId": null,
+      "name": "Swagger Petstore 1.0.0",
+      "description": ""
+    },
+    {
+      "parentId": "__WORKSPACE_1__",
+      "name": "Base environment",
+      "data": {
+        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+      },
+      "_type": "environment",
+      "_id": "__ENV_1__"
+    },
+    {
+      "parentId": "__ENV_1__",
+      "name": "OpenAPI env",
+      "data": {
+        "base_path": "/v1",
+        "scheme": "http",
+        "host": "petstore.swagger.io"
+      },
+      "_type": "environment",
+      "_id": "__ENV_2__"
+    },
+    {
+      "parentId": "__WORKSPACE_1__",
+      "name": "List all pets",
+      "url": "{{ base_url }}/pets",
+      "body": {},
+      "method": "GET",
+      "parameters": [
+        {
+          "name": "limit",
+          "disabled": true,
+          "value": "0"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "listPets"
+    },
+    {
+      "parentId": "__WORKSPACE_1__",
+      "name": "Create a pet",
+      "url": "{{ base_url }}/pets",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"string\",\n  \"tag\": \"string\"\n}"
+      },
+      "method": "POST",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "createPets"
+    },
+    {
+      "parentId": "__WORKSPACE_1__",
+      "name": "Info for a specific pet",
+      "url": "{{ base_url }}/pets/{{ petId }}",
+      "body": {},
+      "method": "GET",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "showPetById"
+    }
+  ]
+}

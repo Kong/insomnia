@@ -98,8 +98,6 @@ export const hotKeyRefs = {
 
   TOGGLE_MAIN_MENU: defineHotKey('toggleMainMenu', 'Toggle Main Menu'),
 
-  SIDEBAR_TOGGLE: defineHotKey('sidebar_toggle', 'Toggle Sidebar'),
-
   REQUEST_QUICK_SWITCH: defineHotKey('request_quickSwitch', 'Switch Requests'),
 
   SHOW_RECENT_REQUESTS: defineHotKey('request_showRecent', 'Show Recent Requests'),
@@ -187,11 +185,6 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.TOGGLE_MAIN_MENU.id]: keyBinds(
     keyComb(false, true, false, true, keyboardKeys.comma.keyCode),
     keyComb(true, true, false, false, keyboardKeys.comma.keyCode),
-  ),
-
-  [hotKeyRefs.SIDEBAR_TOGGLE.id]: keyBinds(
-    keyComb(false, false, false, true, keyboardKeys.backslash.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.backslash.keyCode),
   ),
 
   [hotKeyRefs.REQUEST_QUICK_SWITCH.id]: keyBinds(
