@@ -6,7 +6,7 @@
     "name": "insomnia",
     "productName": "Insomnia",
     "longName": "Insomnia REST Client",
-    "version": "6.6.1",
+    "version": "6.6.2",
     "main": "main.min.js"
   },
   "licence": "MIT",
@@ -135,7 +135,7 @@
     "insomnia-xpath": "^1.0.14",
     "json-order": "^1.0.9",
     "jsonlint": "^1.6.3",
-    "jsonpath": "^0.2.12",
+    "jsonpath": "^1.0.2",
     "jwt-authentication": "^0.4.0",
     "marked": "^0.3.9",
     "mime-types": "^2.1.18",
