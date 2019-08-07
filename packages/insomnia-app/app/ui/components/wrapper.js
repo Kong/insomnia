@@ -403,8 +403,6 @@ class Wrapper extends React.PureComponent<Props, State> {
 
   renderSidebarBody(): React.Node {
     const {
-      activity,
-      activeCookieJar,
       activeEnvironment,
       activeRequest,
       activeWorkspace,
@@ -482,6 +480,7 @@ class Wrapper extends React.PureComponent<Props, State> {
 
   render() {
     const {
+      activity,
       activeCookieJar,
       activeEnvironment,
       activeRequest,
@@ -793,53 +792,6 @@ class Wrapper extends React.PureComponent<Props, State> {
         </ErrorBoundary>
         {activity === 'test' ? (
           <React.Fragment>
-            <ErrorBoundary showAlert>
-              <Sidebar
-                ref={handleSetSidebarRef}
-                showEnvironmentsModal={this._handleShowEnvironmentsModal}
-                showCookiesModal={this._handleShowCookiesModal}
-                handleActivateRequest={handleActivateRequest}
-                handleChangeFilter={handleSetSidebarFilter}
-                handleImportFile={this._handleImportFile}
-                handleExportFile={handleExportFile}
-                handleSetActiveWorkspace={handleSetActiveWorkspace}
-                handleDuplicateRequest={handleDuplicateRequest}
-                handleGenerateCode={handleGenerateCode}
-                handleCopyAsCurl={handleCopyAsCurl}
-                handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-                handleMoveRequestGroup={handleMoveRequestGroup}
-                handleSetActiveEnvironment={handleSetActiveEnvironment}
-                moveDoc={handleMoveDoc}
-                handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-                handleSetRequestPinned={handleSetRequestPinned}
-                activeRequest={activeRequest}
-                activeEnvironment={activeEnvironment}
-                handleCreateRequest={handleCreateRequest}
-                handleCreateRequestGroup={handleCreateRequestGroup}
-                filter={sidebarFilter || ''}
-                hidden={sidebarHidden || false}
-                workspace={activeWorkspace}
-                unseenWorkspaces={unseenWorkspaces}
-                childObjects={sidebarChildren}
-                width={sidebarWidth}
-                isLoading={isLoading}
-                workspaces={workspaces}
-                environments={environments}
-                environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
-                enableSyncBeta={settings.enableSyncBeta}
-                hotKeyRegistry={settings.hotKeyRegistry}
-                vcs={vcs}
-                syncItems={syncItems}
-              />
-            </ErrorBoundary>
-
-            <div className="drag drag--sidebar">
-              <div
-                onDoubleClick={handleResetDragSidebar}
-                onMouseDown={this._handleStartDragSidebar}
-              />
-            </div>
-
             <ErrorBoundary showAlert>
               <RequestPane
                 ref={handleSetRequestPaneRef}
