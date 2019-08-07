@@ -18,7 +18,7 @@ export async function init() {
   const allDocs = await getAllDocs();
 
   // Link DB changes to entities reducer/actions
-  const changes = allDocs.map(doc => [ db.CHANGE_UPDATE, doc ]);
+  const changes = allDocs.map(doc => [db.CHANGE_UPDATE, doc]);
   addChangesSync(changes);
   db.onChange(addChanges);
 
@@ -63,6 +63,7 @@ async function getAllDocs() {
     ...(await models.response.all()),
     ...(await models.oAuth2Token.all()),
     ...(await models.clientCertificate.all()),
+    ...(await models.apiSpec.all()),
   ];
 
   return allDocs;

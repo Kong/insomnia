@@ -1,5 +1,6 @@
 // @flow
 import { convert } from 'insomnia-importers';
+import { id as openApiImporterId } from 'insomnia-importers/src/importers/openapi3';
 import clone from 'clone';
 import * as db from './database';
 import * as har from './har';
@@ -94,7 +95,7 @@ export async function importRaw(
     };
   }
 
-  const { data } = results;
+  const { data, type } = results;
 
   let workspace: Workspace | null = await models.workspace.getById(workspaceId || 'n/a');
 
@@ -181,6 +182,12 @@ export async function importRaw(
     }
 
     importedDocs[newDoc.type].push(newDoc);
+  }
+
+  // Store spec under workspace if it's OpenAPI
+  if (type.id === openApiImporterId && importedDocs[models.workspace.type].length === 1) {
+    const workspace = importedDocs[models.workspace.type][0];
+    await models.apiSpec.getOrCreateForParentId(workspace._id, { contents: rawContent });
   }
 
   await db.flushChanges();

@@ -70,6 +70,7 @@ import SpecEditor from './spec-editor/spec-editor';
 import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import SidebarFilter from './sidebar/sidebar-filter';
+import type { ApiSpec } from '../../models/api-spec';
 
 type Props = {
   // Helper Functions
@@ -139,6 +140,7 @@ type Props = {
   unseenWorkspaces: Array<Workspace>,
   workspaceChildren: Array<Object>,
   environments: Array<Object>,
+  activeApiSpec: ApiSpec,
   activeRequestResponses: Array<Response>,
   activeWorkspace: Workspace,
   activeCookieJar: CookieJar,
@@ -192,6 +194,10 @@ class Wrapper extends React.PureComponent<Props, State> {
 
   _handleForceUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>): Promise<Request> {
     return this._handleForceUpdateRequest(r, { headers });
+  }
+
+  async _handleUpdateApiSpec(s: ApiSpec) {
+    await models.apiSpec.update(s);
   }
 
   static _handleUpdateRequestBody(r: Request, body: RequestBody): Promise<Request> {
@@ -401,7 +407,20 @@ class Wrapper extends React.PureComponent<Props, State> {
     this.setState({ forceRefreshKey: Date.now() });
   }
 
+  renderSpecEditorSidebarBody(): React.Node {
+    const { activeApiSpec } = this.props;
+    return (
+      <ErrorBoundary showAlert>
+        <SpecEditorSidebar apiSpec={activeApiSpec} />
+      </ErrorBoundary>
+    );
+  }
+
   renderSidebarBody(): React.Node {
+    if (this.props.activity !== 'test') {
+      return this.renderSpecEditorSidebarBody();
+    }
+
     const {
       activeEnvironment,
       activeRequest,
@@ -481,6 +500,7 @@ class Wrapper extends React.PureComponent<Props, State> {
   render() {
     const {
       activity,
+      activeApiSpec,
       activeCookieJar,
       activeEnvironment,
       activeRequest,
@@ -790,6 +810,11 @@ class Wrapper extends React.PureComponent<Props, State> {
             {this.renderSidebarBody()}
           </Sidebar>
         </ErrorBoundary>
+
+        <div className="drag drag--sidebar">
+          <div onDoubleClick={handleResetDragSidebar} onMouseDown={this._handleStartDragSidebar} />
+        </div>
+
         {activity === 'test' ? (
           <React.Fragment>
             <ErrorBoundary showAlert>
@@ -869,38 +894,17 @@ class Wrapper extends React.PureComponent<Props, State> {
             </ErrorBoundary>
           </React.Fragment>
         ) : (
-          <React.Fragment>
-            <ErrorBoundary showAlert>
-              <SpecEditorSidebar
-                ref={handleSetSidebarRef}
-                handleSetActiveWorkspace={handleSetActiveWorkspace}
-                unseenWorkspaces={unseenWorkspaces}
-                workspace={activeWorkspace}
-                isLoading={isLoading}
-                workspaces={workspaces}
-                activeEnvironment={activeEnvironment}
-                enableSyncBeta={settings.enableSyncBeta}
-                hotKeyRegistry={settings.hotKeyRegistry}
-                vcs={vcs}
-                environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
-                hidden={sidebarHidden || false}
-                width={sidebarWidth}
-              />
-            </ErrorBoundary>
-
-            <div className="drag drag--sidebar">
-              <div
-                onDoubleClick={handleResetDragSidebar}
-                onMouseDown={this._handleStartDragSidebar}
-              />
-            </div>
+          <ErrorBoundary showAlert>
             <SpecEditor
+              workspace={activeWorkspace}
+              apiSpec={activeApiSpec}
               editorFontSize={settings.editorFontSize}
               editorIndentSize={settings.editorIndentSize}
               editorKeyMap={settings.editorKeyMap}
               lineWrapping={settings.editorLineWrapping}
+              onChange={this._handleUpdateApiSpec}
             />
-          </React.Fragment>
+          </ErrorBoundary>
         )}
       </div>,
     ];

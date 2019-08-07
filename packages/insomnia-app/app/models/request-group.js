@@ -18,7 +18,7 @@ type BaseRequestGroup = {
 
 export type RequestGroup = BaseModel & BaseRequestGroup;
 
-export function init() {
+export function init(): BaseRequestGroup {
   return {
     name: 'New Folder',
     description: '',

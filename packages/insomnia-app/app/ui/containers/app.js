@@ -159,7 +159,7 @@ class App extends PureComponent {
           showModal(RequestSwitcherModal);
         },
       ],
-      [ hotKeyRefs.REQUEST_SEND, this._handleSendShortcut ],
+      [hotKeyRefs.REQUEST_SEND, this._handleSendShortcut],
       [
         hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
         () => {
@@ -246,8 +246,8 @@ class App extends PureComponent {
           await this._handleSetRequestPinned(this.props.activeRequest, !(metas && metas.pinned));
         },
       ],
-      [ hotKeyRefs.SIDEBAR_TOGGLE, this._handleToggleSidebar ],
-      [ hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins ],
+      [hotKeyRefs.SIDEBAR_TOGGLE, this._handleToggleSidebar],
+      [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
       [
         hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES,
         async () => {
@@ -810,7 +810,7 @@ class App extends PureComponent {
   }
 
   _handleKeyDown(e) {
-    for (const [ definition, callback ] of this._globalKeyMap) {
+    for (const [definition, callback] of this._globalKeyMap) {
       executeHotKey(e, definition, callback);
     }
   }
@@ -919,7 +919,7 @@ class App extends PureComponent {
       let needsRefresh = false;
 
       for (const change of changes) {
-        const [ type, doc, fromSync ] = change;
+        const [type, doc, fromSync] = change;
 
         const { vcs } = this.state;
         const { activeRequest } = this.props;
@@ -1045,6 +1045,7 @@ class App extends PureComponent {
     const flushId = await db.bufferChanges();
     await models.environment.getOrCreateForWorkspace(activeWorkspace);
     await models.cookieJar.getOrCreateForParentId(activeWorkspace._id);
+    await models.apiSpec.getOrCreateForParentId(activeWorkspace._id);
     await db.flushChanges(flushId);
 
     this._isMigratingChildren = false;
@@ -1140,11 +1141,11 @@ class App extends PureComponent {
           </ErrorBoundary>
 
           <ErrorBoundary showAlert>
-            <Toast/>
+            <Toast />
           </ErrorBoundary>
 
           {/* Block all mouse activity by showing an overlay while dragging */}
-          {this.state.showDragOverlay ? <div className="blocker-overlay"/> : null}
+          {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
         </div>
       </KeydownBinder>
     );
@@ -1186,6 +1187,7 @@ function mapStateToProps(state, props) {
     requestGroups,
     requestMetas,
     requestVersions,
+    apiSpecs,
   } = entitiesLists;
 
   const settings = entitiesLists.settings[0];
@@ -1231,8 +1233,12 @@ function mapStateToProps(state, props) {
   // Sync stuff
   const syncItems = selectSyncItems(state, props);
 
+  // Api spec stuff
+  const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace._id);
+
   return Object.assign({}, state, {
     activity: activeActivity,
+    activeApiSpec,
     activeCookieJar,
     activeEnvironment,
     activeRequest,
