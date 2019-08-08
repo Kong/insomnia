@@ -131,7 +131,8 @@ export async function changePasswordWithToken(rawNewPassphrase, confirmationCode
     .toString('hex');
 
   // Re-encrypt existing keys with new secret
-  const newEncSymmetricKeyJSON = crypt.encryptAES(newSecret, _getSymmetricKey());
+  const symmetricKey = JSON.stringify(_getSymmetricKey());
+  const newEncSymmetricKeyJSON = crypt.encryptAES(newSecret, symmetricKey);
   const newEncSymmetricKey = JSON.stringify(newEncSymmetricKeyJSON);
 
   return fetch.post(
