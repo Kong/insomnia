@@ -1026,11 +1026,11 @@ class App extends PureComponent {
   }
 
   async _ensureWorkspaceChildren(props) {
-    const { activeWorkspace, activeCookieJar, environments } = props;
+    const { activeWorkspace, activeCookieJar, environments, activeApiSpec } = props;
     const baseEnvironments = environments.filter(e => e.parentId === activeWorkspace._id);
 
     // Nothing to do
-    if (baseEnvironments.length && activeCookieJar) {
+    if (baseEnvironments.length && activeCookieJar && activeApiSpec) {
       return;
     }
 
