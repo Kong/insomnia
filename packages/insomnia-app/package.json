@@ -31,7 +31,7 @@
     "bootstrap": "rimraf node_modules/fsevents && rimraf node_modules/graphql-language-service-interface/dist/*.flow && electron-rebuild -f -w insomnia-libcurl"
   },
   "dev": {
-    "dev-server-port": 3333
+    "dev-server-port": 3334
   },
   "jest": {
     "setupFiles": [

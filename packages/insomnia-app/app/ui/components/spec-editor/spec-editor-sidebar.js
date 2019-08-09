@@ -22,8 +22,13 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
   }
 
   _refreshSpec(apiSpec: ApiSpec) {
-    const spec =
-      apiSpec.type === 'json' ? JSON.parse(apiSpec.contents) : YAML.parse(apiSpec.contents);
+    let spec;
+    try {
+      spec = apiSpec.type === 'json' ? JSON.parse(apiSpec.contents) : YAML.parse(apiSpec.contents);
+    } catch (err) {
+      console.log('[spec-sidebar] Failed to parse', err);
+      return;
+    }
 
     this.setState({ parsedSpec: spec });
   }
