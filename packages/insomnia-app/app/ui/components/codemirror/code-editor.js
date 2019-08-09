@@ -90,10 +90,6 @@ class CodeEditor extends React.Component {
     }
   }
 
-  componentDidMount() {
-    this._restoreState();
-  }
-
   componentWillReceiveProps(nextProps) {
     this._uniquenessKey = nextProps.uniquenessKey;
     this._previousUniquenessKey = this.props.uniquenessKey;
@@ -236,7 +232,6 @@ class CodeEditor extends React.Component {
       return;
     }
 
-    window.codeMirror = this.codeMirror;
     editorStates[uniquenessKey] = {
       scroll: this.codeMirror.getScrollInfo(),
       selections: this.codeMirror.listSelections(),
@@ -334,6 +329,9 @@ class CodeEditor extends React.Component {
       setTimeout(() => {
         this.codeMirror.refresh();
       }, 100);
+
+      // Restore the state
+      this._restoreState();
     };
 
     // Do this a bit later for big values so we don't block the render process
