@@ -780,8 +780,9 @@ class App extends PureComponent {
         this.setState({ showDragOverlay: true });
       }
 
-      const currentPixelWidth = ReactDOM.findDOMNode(this._sidebar).offsetWidth;
-      const ratio = e.clientX / currentPixelWidth;
+      const sidebar = ReactDOM.findDOMNode(this._sidebar);
+      const currentPixelWidth = sidebar.offsetWidth;
+      const ratio = (e.clientX - sidebar.offsetLeft) / currentPixelWidth;
       const width = this.state.sidebarWidth * ratio;
 
       let sidebarWidth = Math.min(width, MAX_SIDEBAR_REMS);
