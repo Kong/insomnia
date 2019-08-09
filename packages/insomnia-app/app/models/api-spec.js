@@ -9,6 +9,7 @@ export const canDuplicate = true;
 export const canSync = true;
 
 type BaseApiSpec = {
+  name: string,
   contentType: 'json' | 'yaml',
   contents: string,
 };
@@ -17,6 +18,7 @@ export type ApiSpec = BaseModel & BaseApiSpec;
 
 export function init(): BaseApiSpec {
   return {
+    name: 'API Spec',
     contents: '',
     contentType: 'yaml',
   };
