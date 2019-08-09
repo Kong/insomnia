@@ -246,7 +246,6 @@ class App extends PureComponent {
           await this._handleSetRequestPinned(this.props.activeRequest, !(metas && metas.pinned));
         },
       ],
-      [hotKeyRefs.SIDEBAR_TOGGLE, this._handleToggleSidebar],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
       [
         hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES,

@@ -8,6 +8,7 @@ import {
   CONTENT_TYPE_FORM_URLENCODED,
   CONTENT_TYPE_GRAPHQL,
   CONTENT_TYPE_JSON,
+  CONTENT_TYPE_YAML,
   CONTENT_TYPE_OTHER,
   CONTENT_TYPE_XML,
   CONTENT_TYPE_EDN,
@@ -107,6 +108,7 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
         </DropdownDivider>
         {this._renderDropdownItem(CONTENT_TYPE_JSON)}
         {this._renderDropdownItem(CONTENT_TYPE_XML)}
+        {this._renderDropdownItem(CONTENT_TYPE_YAML)}
         {this._renderDropdownItem(CONTENT_TYPE_EDN)}
         {this._renderDropdownItem(CONTENT_TYPE_OTHER)}
         <DropdownDivider>

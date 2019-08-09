@@ -36,6 +36,7 @@ class SpecEditor extends React.PureComponent<Props> {
         </div>
         <div className="spec-editor__body theme--pane__body">
           <CodeEditor
+            manualPrettify
             fontSize={editorFontSize}
             indentSize={editorIndentSize}
             lineWrapping={lineWrapping}

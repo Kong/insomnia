@@ -26,7 +26,7 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     try {
       spec = apiSpec.type === 'json' ? JSON.parse(apiSpec.contents) : YAML.parse(apiSpec.contents);
     } catch (err) {
-      console.log('[spec-sidebar] Failed to parse', err);
+      console.log('[spec-sidebar] Failed to parse', err.message);
       return;
     }
 

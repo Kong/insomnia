@@ -20,6 +20,7 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import { query as queryXPath } from 'insomnia-xpath';
 import deepEqual from 'deep-equal';
 import zprint from 'zprint-clj';
+import YAML from 'yaml';
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -360,6 +361,14 @@ class CodeEditor extends React.Component {
     return mode.indexOf('json') !== -1;
   }
 
+  static _isYAML(mode) {
+    if (!mode) {
+      return false;
+    }
+
+    return mode.indexOf('yaml') !== -1;
+  }
+
   static _isXML(mode) {
     if (!mode) {
       return false;
@@ -408,6 +417,14 @@ class CodeEditor extends React.Component {
       return prettify.json(jsonString, this._indentChars(), this.props.autoPrettify);
     } catch (e) {
       // That's Ok, just leave it
+      return code;
+    }
+  }
+
+  _prettifyYAML(code) {
+    try {
+      return YAML.stringify(YAML.parse(code), null, this._indentChars());
+    } catch (e) {
       return code;
     }
   }
@@ -477,7 +494,7 @@ class CodeEditor extends React.Component {
     }
 
     // NOTE: YAML is not valid when indented with Tabs
-    const isYaml = rawMode.includes('yaml');
+    const isYaml = typeof rawMode === 'string' ? rawMode.includes('yaml') : false;
     const actuallyIndentWithTabs = indentWithTabs && !isYaml;
 
     let options = {
@@ -764,6 +781,8 @@ class CodeEditor extends React.Component {
         code = this._prettifyXML(code);
       } else if (CodeEditor._isEDN(this.props.mode)) {
         code = CodeEditor._prettifyEDN(code);
+      } else if (CodeEditor._isYAML(this.props.mode)) {
+        code = this._prettifyYAML(code);
       } else {
         code = this._prettifyJSON(code);
       }
@@ -794,7 +813,12 @@ class CodeEditor extends React.Component {
 
   _canPrettify() {
     const { mode } = this.props;
-    return CodeEditor._isJSON(mode) || CodeEditor._isXML(mode) || CodeEditor._isEDN(mode);
+    return (
+      CodeEditor._isJSON(mode) ||
+      CodeEditor._isXML(mode) ||
+      CodeEditor._isEDN(mode) ||
+      CodeEditor._isYAML(mode)
+    );
   }
 
   _showFilterHelp() {
