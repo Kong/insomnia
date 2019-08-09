@@ -37,20 +37,20 @@ type ThemeInner = {
   ...ThemeBlock,
   rawCss?: string,
   styles: ?{
-    overlay?: ThemeBlock,
+    dialog?: ThemeBlock,
+    dialogFooter?: ThemeBlock,
+    dialogHeader?: ThemeBlock,
     dropdown?: ThemeBlock,
-    tooltip?: ThemeBlock,
+    editor?: ThemeBlock,
+    link?: ThemeBlock,
+    overlay?: ThemeBlock,
+    pane?: ThemeBlock,
+    paneHeader?: ThemeBlock,
     sidebar?: ThemeBlock,
     sidebarHeader?: ThemeBlock,
     sidebarList?: ThemeBlock,
-    sidebarActions?: ThemeBlock,
-    pane?: ThemeBlock,
-    paneHeader?: ThemeBlock,
-    dialog?: ThemeBlock,
-    dialogHeader?: ThemeBlock,
-    dialogFooter?: ThemeBlock,
+    tooltip?: ThemeBlock,
     transparentOverlay?: ThemeBlock,
-    link?: ThemeBlock,
   },
 };
 
@@ -107,6 +107,9 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
 
     // Link
     css += wrapStyles(n, '.theme--link', getThemeBlockCSS(styles.link));
+
+    // Code Editors
+    css += wrapStyles(n, '.theme--editor', getThemeBlockCSS(styles.editor));
 
     // HACK: Dialog styles for CodeMirror dialogs too
     css += wrapStyles(n, '.CodeMirror-info', getThemeBlockCSS(styles.dialog));
