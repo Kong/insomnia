@@ -298,14 +298,12 @@ class CodeEditor extends React.Component {
 
     this.codeMirror.setCursor({ line: -1, ch: -1 });
 
-    if (!this.codeMirror.getOption('indentWithTabs')) {
-      this.codeMirror.setOption('extraKeys', {
-        Tab: cm => {
-          const spaces = this._indentChars();
-          cm.replaceSelection(spaces);
-        },
-      });
-    }
+    this.codeMirror.setOption('extraKeys', {
+      Tab: cm => {
+        const spaces = this._indentChars();
+        cm.replaceSelection(spaces);
+      },
+    });
 
     // Set editor options
     this._codemirrorSetOptions();
