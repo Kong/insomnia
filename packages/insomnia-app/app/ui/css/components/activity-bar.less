@@ -17,20 +17,20 @@
     justify-content: center;
     height: @height-nav;
     width: @height-nav;
-    opacity: 0.6;
 
     i {
-      color: var(--color-font);
+      color: var(--hl);
+      font-size: @font-size-lg;
     }
 
     // Set active opacity
     &:hover {
       background-color: var(--hl-sm);
-      opacity: 0.8;
+      color: var(--color-font);
     }
 
-    &--active {
-      opacity: 1;
+    &--active i {
+      color: var(--color-font);
     }
   }
 }
