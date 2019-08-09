@@ -20,7 +20,6 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import { query as queryXPath } from 'insomnia-xpath';
 import deepEqual from 'deep-equal';
 import zprint from 'zprint-clj';
-import YAML from 'yaml';
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -421,14 +420,6 @@ class CodeEditor extends React.Component {
     }
   }
 
-  _prettifyYAML(code) {
-    try {
-      return YAML.stringify(YAML.parse(code), null, this._indentChars());
-    } catch (e) {
-      return code;
-    }
-  }
-
   static _prettifyEDN(code) {
     try {
       return zprint(code, null);
@@ -781,8 +772,6 @@ class CodeEditor extends React.Component {
         code = this._prettifyXML(code);
       } else if (CodeEditor._isEDN(this.props.mode)) {
         code = CodeEditor._prettifyEDN(code);
-      } else if (CodeEditor._isYAML(this.props.mode)) {
-        code = this._prettifyYAML(code);
       } else {
         code = this._prettifyJSON(code);
       }
@@ -813,12 +802,7 @@ class CodeEditor extends React.Component {
 
   _canPrettify() {
     const { mode } = this.props;
-    return (
-      CodeEditor._isJSON(mode) ||
-      CodeEditor._isXML(mode) ||
-      CodeEditor._isEDN(mode) ||
-      CodeEditor._isYAML(mode)
-    );
+    return CodeEditor._isJSON(mode) || CodeEditor._isXML(mode) || CodeEditor._isEDN(mode);
   }
 
   _showFilterHelp() {
@@ -891,8 +875,6 @@ class CodeEditor extends React.Component {
         contentTypeName = 'JSON';
       } else if (CodeEditor._isXML(mode)) {
         contentTypeName = 'XML';
-      } else if (CodeEditor._isYAML(mode)) {
-        contentTypeName = 'YAML';
       } else if (CodeEditor._isEDN(mode)) {
         contentTypeName = 'EDN';
       }
