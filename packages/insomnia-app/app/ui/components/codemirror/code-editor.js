@@ -476,6 +476,10 @@ class CodeEditor extends React.Component {
       mode = CodeEditor._normalizeMode(rawMode);
     }
 
+    // NOTE: YAML is not valid when indented with Tabs
+    const isYaml = rawMode.includes('yaml');
+    const actuallyIndentWithTabs = indentWithTabs && !isYaml;
+
     let options = {
       readOnly: !!readOnly,
       placeholder: placeholder || '',
@@ -487,7 +491,7 @@ class CodeEditor extends React.Component {
       lineNumbers: !hideGutters && !hideLineNumbers,
       foldGutter: !hideGutters && !hideLineNumbers,
       lineWrapping: lineWrapping,
-      indentWithTabs: indentWithTabs,
+      indentWithTabs: actuallyIndentWithTabs,
       matchBrackets: !noMatchBrackets,
       lint: !noLint && !readOnly,
       gutters: [],
