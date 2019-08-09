@@ -56,7 +56,6 @@ export async function create(request: Request): Promise<RequestVersion> {
     : null;
 
   const hasChanged = _diffRequests(latestRequest, request);
-  console.log('HAS CHANGED', { latestRequestVersion, request });
   if (hasChanged || !latestRequestVersion) {
     // Create a new version if the request has been modified
     const compressedRequest = compressObject(request);
