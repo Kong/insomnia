@@ -6,13 +6,13 @@
   "resources": [
     {
       "_type": "workspace",
-      "_id": "__WORKSPACE_1__",
+      "_id": "__WORKSPACE_ID__",
       "parentId": null,
       "name": "Swagger Petstore 1.0.0",
       "description": "This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters."
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Base environment",
       "data": {
         "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
@@ -37,7 +37,7 @@
       "description": "Everything about your Pets",
       "environment": {},
       "name": "pet",
-      "parentId": "__WORKSPACE_1__"
+      "parentId": "__WORKSPACE_ID__"
     },
     {
       "_id": "__GRP_2__",
@@ -45,7 +45,7 @@
       "description": "Access to Petstore orders",
       "environment": {},
       "name": "store",
-      "parentId": "__WORKSPACE_1__"
+      "parentId": "__WORKSPACE_ID__"
     },
     {
       "_id": "__GRP_3__",
@@ -53,7 +53,7 @@
       "description": "Operations about user",
       "environment": {},
       "name": "user",
-      "parentId": "__WORKSPACE_1__"
+      "parentId": "__WORKSPACE_ID__"
     },
     {
       "parentId": "__GRP_1__",

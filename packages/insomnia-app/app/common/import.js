@@ -122,12 +122,8 @@ export async function importRaw(
 
   generatedIds['__BASE_ENVIRONMENT_ID__'] = async () => {
     if (!baseEnvironment) {
-      if (!workspace) {
-        workspace = await models.workspace.create({
-          name: 'Imported Workspace',
-        });
-      }
-      baseEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
+      const parentId = await fnOrString(generatedIds['__WORKSPACE_ID__']);
+      baseEnvironment = await models.environment.getOrCreateForWorkspaceId(parentId);
     }
     return baseEnvironment._id;
   };

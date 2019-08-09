@@ -8,7 +8,7 @@ const SUPPORTED_OPENAPI_VERSION = /^3\.\d+\.\d+$/; // 3.x.x
 const MIMETYPE_JSON = 'application/json';
 const MIMETYPE_LITERALLY_ANYTHING = '*/*';
 const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON, MIMETYPE_LITERALLY_ANYTHING];
-const WORKSPACE_ID = '__WORKSPACE_1__';
+const WORKSPACE_ID = '__WORKSPACE_ID__';
 
 let requestCount = 1;
 let requestGroupCount = 1;
@@ -46,7 +46,7 @@ module.exports.convert = async function(rawData) {
   const baseEnv = {
     _type: 'environment',
     _id: '__ENV_1__',
-    parentId: '__WORKSPACE_1__',
+    parentId: WORKSPACE_ID,
     name: 'Base environment',
     data: {
       base_url: '{{ scheme }}://{{ host }}{{ base_path }}',

@@ -4,7 +4,7 @@ const utils = require('../utils');
 const SUPPORTED_SWAGGER_VERSION = '2.0';
 const MIMETYPE_JSON = 'application/json';
 const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON];
-const WORKSPACE_ID = '__WORKSPACE_1__';
+const WORKSPACE_ID = '__WORKSPACE_ID__';
 
 let requestCount = 1;
 let requestGroupCount = 1;
@@ -44,7 +44,7 @@ module.exports.convert = async function(rawData) {
   const baseEnv = {
     _type: 'environment',
     _id: '__ENV_1__',
-    parentId: '__WORKSPACE_1__',
+    parentId: WORKSPACE_ID,
     name: 'Base environment',
     data: {
       base_url: '{{ scheme }}://{{ host }}{{ base_path }}',
