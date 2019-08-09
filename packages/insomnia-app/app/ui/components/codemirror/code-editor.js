@@ -891,6 +891,8 @@ class CodeEditor extends React.Component {
         contentTypeName = 'JSON';
       } else if (CodeEditor._isXML(mode)) {
         contentTypeName = 'XML';
+      } else if (CodeEditor._isYAML(mode)) {
+        contentTypeName = 'YAML';
       } else if (CodeEditor._isEDN(mode)) {
         contentTypeName = 'EDN';
       }
