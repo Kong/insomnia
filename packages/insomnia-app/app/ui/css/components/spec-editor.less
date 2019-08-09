@@ -9,6 +9,8 @@
   grid-template-rows: @height-nav 1fr;
   grid-template-columns: 1fr;
 
+  border-left: 1px solid var(--hl-md);
+
   &__header {
     grid-area: header;
     background: var(--color-bg);
@@ -17,6 +19,7 @@
     flex-direction: row;
     align-items: center;
     padding: 0 @padding-md;
+    border-top: 1px solid var(--hl-md);
     border-bottom: 1px solid var(--hl-md);
 
     h1 {
