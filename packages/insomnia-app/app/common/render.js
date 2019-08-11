@@ -55,9 +55,11 @@ export async function buildRenderContext(
   // from top-most parent to bottom-most child
   // Do an Object.assign, but render each property as it overwrites. This
   // way we can keep same-name variables from the parent context.
-  const renderContext = baseContext;
-  for (const envObject: Object of envObjects) {
-    const keys = _getOrderedEnvironmentKeys(envObject);
+  let renderContext = baseContext;
+
+  // Made the rendering into a recursive function to handle nested Objects
+  async function renderSubContext(subObject: Object, subContext: Object): Promise<any> {
+    const keys = _getOrderedEnvironmentKeys(subObject);
     for (const key of keys) {
       /*
        * If we're overwriting a string, try to render it first using the same key from the base
@@ -70,27 +72,37 @@ export async function buildRenderContext(
        * A regular Object.assign would yield { base_url: '{{ base_url }}/foo' } and the
        * original base_url of google.com would be lost.
        */
-      if (typeof renderContext[key] === 'string') {
-        const isSelfRecursive = envObject[key].match(`{{ ?${key}[ |][^}]*}}`);
+      if (typeof subContext[key] === 'string') {
+        const isSelfRecursive = subObject[key].match(`{{ ?${key}[ |][^}]*}}`);
 
         if (isSelfRecursive) {
           // If we're overwriting a variable that contains itself, make sure we
           // render it first
-          renderContext[key] = await render(
-            envObject[key],
-            renderContext, // Only render with key being overwritten
+          subContext[key] = await render(
+            subObject[key],
+            subContext, // Only render with key being overwritten
             null,
             KEEP_ON_ERROR,
             'Environment',
           );
         } else {
           // Otherwise it's just a regular replacement
-          renderContext[key] = envObject[key];
+          subContext[key] = subObject[key];
         }
+      } else if (typeof subContext[key] === 'object') {
+        // Context is of type object, Call this function recursively to handle nested objects.
+        subContext[key] = renderSubContext(subObject[key], subContext[key]);
       } else {
-        renderContext[key] = envObject[key];
+        // Context type is undefined, add the Object to the Context.
+        subContext[key] = subObject[key];
       }
     }
+    return subContext;
+  }
+
+  for (const envObject: Object of envObjects) {
+    // For every environment render the Objects
+    renderContext = await renderSubContext(envObject, renderContext);
   }
 
   // Render the context with itself to fill in the rest.
@@ -127,7 +139,6 @@ export async function buildRenderContext(
       finalRenderContext[key] = renderResult;
     }
   }
-
   return finalRenderContext;
 }
 
