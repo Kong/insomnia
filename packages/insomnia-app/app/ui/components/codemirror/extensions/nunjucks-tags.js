@@ -276,11 +276,7 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
       title = await render(str);
       const context = await renderContext();
       const con = context.context.getKeysContext();
-      // Check if property is nested, if so strip to topmost Parent property
-      const propSource = cleanedStr.includes('.')
-        ? cleanedStr.substring(0, cleanedStr.indexOf('.'))
-        : cleanedStr;
-      title = '{' + con.keyContext[propSource] + '}: ' + title;
+      title = '{' + con.keyContext[cleanedStr] + '}: ' + title;
       innerHTML = isVariableUncovered ? title : cleanedStr;
     }
     dataError = 'off';
