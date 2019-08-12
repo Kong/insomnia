@@ -6,13 +6,13 @@
   "resources": [
     {
       "_type": "workspace",
-      "_id": "__WORKSPACE_1__",
+      "_id": "__WORKSPACE_ID__",
       "parentId": null,
       "name": "Swagger Petstore 1.0.0",
       "description": ""
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Base environment",
       "data": {
         "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
@@ -37,7 +37,7 @@
       "description": "Everything about your Pets",
       "environment": {},
       "name": "pets",
-      "parentId": "__WORKSPACE_1__"
+      "parentId": "__WORKSPACE_ID__"
     },
     {
       "parentId": "__GRP_1__",

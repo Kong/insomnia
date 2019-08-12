@@ -5,7 +5,7 @@
   "_type": "export",
   "resources": [
     {
-      "_id": "__WORKSPACE_1__",
+      "_id": "__WORKSPACE_ID__",
       "_type": "workspace",
       "description": "",
       "name": "docs v1",
@@ -18,7 +18,7 @@
         "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
       },
       "name": "Base environment",
-      "parentId": "__WORKSPACE_1__"
+      "parentId": "__WORKSPACE_ID__"
     },
     {
       "_id": "__ENV_2__",
@@ -40,7 +40,7 @@
       "method": "GET",
       "name": "Some list",
       "parameters": [],
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "url": "{{ base_url }}/api/list"
     }
   ]

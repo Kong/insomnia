@@ -6,13 +6,13 @@
   "resources": [
     {
       "_type": "workspace",
-      "_id": "__WORKSPACE_1__",
+      "_id": "__WORKSPACE_ID__",
       "parentId": null,
       "name": "Swagger Petstore 1.0.0",
       "description": "This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters."
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Base environment",
       "data": {
         "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
@@ -32,7 +32,7 @@
       "_id": "__ENV_2__"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Add a new pet to the store",
       "url": "{{ base_url }}/pet",
       "body": {
@@ -47,7 +47,7 @@
       "_id": "addPet"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Update an existing pet",
       "url": "{{ base_url }}/pet",
       "body": {
@@ -62,7 +62,7 @@
       "_id": "updatePet"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Finds Pets by status",
       "url": "{{ base_url }}/pet/findByStatus",
       "body": {},
@@ -80,7 +80,7 @@
       "_id": "findPetsByStatus"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Finds Pets by tags",
       "url": "{{ base_url }}/pet/findByTags",
       "body": {},
@@ -98,7 +98,7 @@
       "_id": "findPetsByTags"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Find pet by ID",
       "url": "{{ base_url }}/pet/{{ petId }}",
       "body": {},
@@ -110,7 +110,7 @@
       "_id": "getPetById"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Updates a pet in the store with form data",
       "url": "{{ base_url }}/pet/{{ petId }}",
       "body": {
@@ -124,7 +124,7 @@
       "_id": "updatePetWithForm"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Deletes a pet",
       "url": "{{ base_url }}/pet/{{ petId }}",
       "body": {},
@@ -142,7 +142,7 @@
       "_id": "deletePet"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "uploads an image",
       "url": "{{ base_url }}/pet/{{ petId }}/uploadImage",
       "body": {
@@ -156,7 +156,7 @@
       "_id": "uploadFile"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Returns pet inventories by status",
       "url": "{{ base_url }}/store/inventory",
       "body": {},
@@ -168,7 +168,7 @@
       "_id": "getInventory"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Place an order for a pet",
       "url": "{{ base_url }}/store/order",
       "body": {},
@@ -180,7 +180,7 @@
       "_id": "placeOrder"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Find purchase order by ID",
       "url": "{{ base_url }}/store/order/{{ orderId }}",
       "body": {},
@@ -192,7 +192,7 @@
       "_id": "getOrderById"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Delete purchase order by ID",
       "url": "{{ base_url }}/store/order/{{ orderId }}",
       "body": {},
@@ -204,7 +204,7 @@
       "_id": "deleteOrder"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Create user",
       "url": "{{ base_url }}/user",
       "body": {},
@@ -216,7 +216,7 @@
       "_id": "createUser"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Creates list of users with given input array",
       "url": "{{ base_url }}/user/createWithArray",
       "body": {},
@@ -228,7 +228,7 @@
       "_id": "createUsersWithArrayInput"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Creates list of users with given input array",
       "url": "{{ base_url }}/user/createWithList",
       "body": {},
@@ -240,7 +240,7 @@
       "_id": "createUsersWithListInput"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Logs user into the system",
       "url": "{{ base_url }}/user/login",
       "body": {},
@@ -263,7 +263,7 @@
       "_id": "loginUser"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Logs out current logged in user session",
       "url": "{{ base_url }}/user/logout",
       "body": {},
@@ -275,7 +275,7 @@
       "_id": "logoutUser"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Get user by user name",
       "url": "{{ base_url }}/user/{{ username }}",
       "body": {},
@@ -287,7 +287,7 @@
       "_id": "getUserByName"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Updated user",
       "url": "{{ base_url }}/user/{{ username }}",
       "body": {},
@@ -299,7 +299,7 @@
       "_id": "updateUser"
     },
     {
-      "parentId": "__WORKSPACE_1__",
+      "parentId": "__WORKSPACE_ID__",
       "name": "Delete user",
       "url": "{{ base_url }}/user/{{ username }}",
       "body": {},
