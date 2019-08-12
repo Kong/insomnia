@@ -13,6 +13,8 @@ class AskModal extends PureComponent {
     this.state = {
       title: '',
       message: '',
+      yesText: 'Yes',
+      noText: 'No',
     };
   }
 
@@ -41,11 +43,16 @@ class AskModal extends PureComponent {
   }
 
   show(options = {}) {
-    const { title, message, onDone } = options;
+    const { title, message, onDone, yesText, noText } = options;
 
     this._doneCallback = onDone;
 
-    this.setState({ title, message });
+    this.setState({
+      title: title || 'Confirm',
+      message: message || 'No message provided',
+      yesText: yesText || 'Yes',
+      noText: noText || 'No',
+    });
 
     this.modal.show();
 
@@ -59,7 +66,7 @@ class AskModal extends PureComponent {
   }
 
   render() {
-    const { message, title } = this.state;
+    const { message, title, yesText, noText } = this.state;
 
     return (
       <Modal noEscape ref={this._setModalRef} closeOnKeyCodes={[13]}>
@@ -68,10 +75,10 @@ class AskModal extends PureComponent {
         <ModalFooter>
           <div>
             <button className="btn" onClick={this._handleNo}>
-              No
+              {noText}
             </button>
             <button ref={this._setYesButtonRef} className="btn" onClick={this._handleYes}>
-              Yes
+              {yesText}
             </button>
           </div>
         </ModalFooter>

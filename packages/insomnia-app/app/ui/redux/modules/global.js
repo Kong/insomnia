@@ -132,10 +132,8 @@ export function loadRequestStop(requestId) {
 }
 
 export function setActiveWorkspace(workspaceId) {
-  window.localStorage.setItem(
-    `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`,
-    JSON.stringify(workspaceId),
-  );
+  const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
+  window.localStorage.setItem(key, JSON.stringify(workspaceId));
   return { type: SET_ACTIVE_WORKSPACE, workspaceId };
 }
 
@@ -163,15 +161,21 @@ export function importFile(workspaceId) {
       }
 
       // Let's import all the paths!
+      let importedWorkspaces = [];
       for (const p of paths) {
         try {
           const uri = `file://${p}`;
-          await importUtils.importUri(workspaceId, uri);
+          const result = await importUtils.importUri(askToImportIntoWorkspace(workspaceId), uri);
+          importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
         } catch (err) {
           showModal(AlertModal, { title: 'Import Failed', message: err + '' });
         } finally {
           dispatch(loadStop());
         }
+      }
+
+      if (importedWorkspaces.length === 1) {
+        dispatch(setActiveWorkspace(importedWorkspaces[0]._id));
       }
     });
   };
@@ -180,12 +184,19 @@ export function importFile(workspaceId) {
 export function importUri(workspaceId, uri) {
   return async dispatch => {
     dispatch(loadStart());
+
+    let importedWorkspaces = [];
     try {
-      await importUtils.importUri(workspaceId, uri);
+      const result = await importUtils.importUri(askToImportIntoWorkspace(workspaceId), uri);
+      importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
     } catch (err) {
       showModal(AlertModal, { title: 'Import Failed', message: err + '' });
     } finally {
       dispatch(loadStop());
+    }
+
+    if (importedWorkspaces.length === 1) {
+      dispatch(setActiveWorkspace(importedWorkspaces[0]._id));
     }
   };
 }
@@ -433,4 +444,24 @@ export function init() {
   }
 
   return setActiveWorkspace(workspaceId);
+}
+
+// ~~~~~~~ //
+// HELPERS //
+// ~~~~~~~ //
+
+function askToImportIntoWorkspace(workspaceId) {
+  return function() {
+    return new Promise(resolve => {
+      showModal(AskModal, {
+        title: 'Import',
+        message: 'Do you wand to import into the current workspace or a new one?',
+        yesText: 'Current',
+        noText: 'New Workspace',
+        onDone: yes => {
+          resolve(yes ? workspaceId : null);
+        },
+      });
+    });
+  };
 }

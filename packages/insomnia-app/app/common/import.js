@@ -37,7 +37,11 @@ const MODELS = {
 export async function importUri(
   getWorkspaceId: () => Promise<string | null>,
   uri: string,
-): Promise<void> {
+): Promise<{
+  source: string,
+  error: Error | null,
+  summary: { [string]: Array<BaseModel> },
+}> {
   let rawText;
   if (uri.match(/^(http|https):\/\//)) {
     const response = await window.fetch(uri);
@@ -58,7 +62,7 @@ export async function importUri(
       error: error.message,
       message: 'Import failed',
     });
-    return;
+    return result;
   }
 
   let statements = Object.keys(summary)
@@ -76,6 +80,8 @@ export async function importUri(
     message = `You imported ${statements.join(', ')}!`;
   }
   showModal(AlertModal, { title: 'Import Succeeded', message });
+
+  return result;
 }
 
 export async function importRaw(
