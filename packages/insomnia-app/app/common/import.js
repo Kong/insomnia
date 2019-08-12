@@ -6,13 +6,14 @@ import * as har from './har';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
 import { getAppVersion } from './constants';
-import { showModal, showError } from '../ui/components/modals/index';
+import { showError, showModal } from '../ui/components/modals/index';
 import AlertModal from '../ui/components/modals/alert-modal';
 import fs from 'fs';
-import type { Workspace } from '../models/workspace';
-import type { Environment } from '../models/environment';
 import { fnOrString, generateId } from './misc';
 import YAML from 'yaml';
+
+const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
+const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
 
 const EXPORT_FORMAT = 4;
 
@@ -33,7 +34,10 @@ const MODELS = {
   [EXPORT_TYPE_ENVIRONMENT]: models.environment,
 };
 
-export async function importUri(workspaceId: string | null, uri: string): Promise<void> {
+export async function importUri(
+  getWorkspaceId: () => Promise<string | null>,
+  uri: string,
+): Promise<void> {
   let rawText;
   if (uri.match(/^(http|https):\/\//)) {
     const response = await window.fetch(uri);
@@ -45,7 +49,7 @@ export async function importUri(workspaceId: string | null, uri: string): Promis
     throw new Error(`Invalid import URI ${uri}`);
   }
 
-  const result = await importRaw(workspaceId, rawText);
+  const result = await importRaw(getWorkspaceId, rawText);
   const { summary, error } = result;
 
   if (error) {
@@ -75,7 +79,7 @@ export async function importUri(workspaceId: string | null, uri: string): Promis
 }
 
 export async function importRaw(
-  workspaceId: string | null,
+  getWorkspaceId: () => Promise<string | null>,
   rawContent: string,
   generateNewIds: boolean = false,
 ): Promise<{
@@ -96,13 +100,6 @@ export async function importRaw(
 
   const { data } = results;
 
-  let workspace: Workspace | null = await models.workspace.getById(workspaceId || 'n/a');
-
-  // Fetch the base environment in case we need it
-  let baseEnvironment: Environment | null = await models.environment.getOrCreateForWorkspaceId(
-    workspaceId || 'n/a',
-  );
-
   // Generate all the ids we may need
   const generatedIds: { [string]: string | Function } = {};
   for (const r of data.resources) {
@@ -111,20 +108,32 @@ export async function importRaw(
     }
   }
 
-  // Always replace these "constants"
-  generatedIds['__WORKSPACE_ID__'] = async () => {
-    if (!workspace) {
+  // Contains the ID of the workspace to be used with the import
+  generatedIds[WORKSPACE_ID_KEY] = async () => {
+    const workspaceId = await getWorkspaceId();
+
+    // First try getting the workspace to overwrite
+    let workspace = await models.workspace.getById(workspaceId || 'n/a');
+
+    // If none provided, create a new workspace
+    if (workspace === null) {
       workspace = await models.workspace.create({ name: 'Imported Workspace' });
     }
+
+    // Update this fn so it doesn't run again
+    generatedIds[WORKSPACE_ID_KEY] = workspace._id;
 
     return workspace._id;
   };
 
-  generatedIds['__BASE_ENVIRONMENT_ID__'] = async () => {
-    if (!baseEnvironment) {
-      const parentId = await fnOrString(generatedIds['__WORKSPACE_ID__']);
-      baseEnvironment = await models.environment.getOrCreateForWorkspaceId(parentId);
-    }
+  // Contains the ID of the base environment to be used with the import
+  generatedIds[BASE_ENVIRONMENT_ID_KEY] = async () => {
+    const parentId = await fnOrString(generatedIds[WORKSPACE_ID_KEY]);
+    const baseEnvironment = await models.environment.getOrCreateForWorkspaceId(parentId);
+
+    // Update this fn so it doesn't run again
+    generatedIds[BASE_ENVIRONMENT_ID_KEY] = baseEnvironment._id;
+
     return baseEnvironment._id;
   };
 
@@ -143,7 +152,7 @@ export async function importRaw(
 
     // Replace null parentIds with current workspace
     if (!resource.parentId && resource._type !== EXPORT_TYPE_WORKSPACE) {
-      resource.parentId = '__WORKSPACE_ID__';
+      resource.parentId = WORKSPACE_ID_KEY;
     }
 
     // Replace _id if we need to
