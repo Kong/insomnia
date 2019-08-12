@@ -237,18 +237,27 @@ export async function getRenderContext(
   const subEnvironment = await models.environment.getById(environmentId || 'n/a');
 
   let keySource = {};
-  for (let key in (rootEnvironment || {}).data) {
-    keySource[key] = 'root';
-  }
-
-  if (subEnvironment) {
-    for (const key of Object.keys(subEnvironment.data || {})) {
-      if (subEnvironment.name) {
-        keySource[key] = subEnvironment.name;
+  // Function that recursively gets keys
+  function getKeySource(subObject, inKey, inValue) {
+    for (let key in subObject) {
+      if (typeof subObject[key] === 'string') {
+        keySource[inKey + key] = inValue;
+      } else if (typeof subObject[key] === 'object') {
+        getKeySource(subObject[key], inKey + key + '.', inValue);
       }
     }
+    return keySource;
   }
 
+  // Get Keys from root environment
+  getKeySource((rootEnvironment || {}).data, '', 'root');
+
+  // Get Keys from sub environment
+  if (subEnvironment) {
+    getKeySource(subEnvironment.data || {}, '', subEnvironment.name || '');
+  }
+
+  // Get Keys from ancestors
   if (ancestors) {
     for (let idx = 0; idx < ancestors.length; idx++) {
       let ancestor: any = ancestors[idx] || {};
@@ -257,9 +266,7 @@ export async function getRenderContext(
         ancestor.hasOwnProperty('environment') &&
         ancestor.hasOwnProperty('name')
       ) {
-        for (const key of Object.keys(ancestor.environment || {})) {
-          keySource[key] = ancestor.name || '';
-        }
+        getKeySource(ancestor.environment || {}, '', ancestor.name || '');
       }
     }
   }
