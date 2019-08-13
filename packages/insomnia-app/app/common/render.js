@@ -72,7 +72,7 @@ export async function buildRenderContext(
        * A regular Object.assign would yield { base_url: '{{ base_url }}/foo' } and the
        * original base_url of google.com would be lost.
        */
-      if (typeof subContext[key] === 'string') {
+      if (Object.prototype.toString.call(subContext[key]) === '[object String]') {
         const isSelfRecursive = subObject[key].match(`{{ ?${key}[ |][^}]*}}`);
 
         if (isSelfRecursive) {
@@ -89,11 +89,11 @@ export async function buildRenderContext(
           // Otherwise it's just a regular replacement
           subContext[key] = subObject[key];
         }
-      } else if (typeof subContext[key] === 'object') {
-        // Context is of type object, Call this function recursively to handle nested objects.
+      } else if (Object.prototype.toString.call(subContext[key]) === '[object Object]') {
+        // Context is of Type object, Call this function recursively to handle nested objects.
         subContext[key] = renderSubContext(subObject[key], subContext[key]);
       } else {
-        // Context type is undefined, add the Object to the Context.
+        // For all other Types, add the Object to the Context.
         subContext[key] = subObject[key];
       }
     }
