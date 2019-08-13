@@ -237,13 +237,15 @@ export async function getRenderContext(
   const subEnvironment = await models.environment.getById(environmentId || 'n/a');
 
   let keySource = {};
-  // Function that recursively gets keys
-  function getKeySource(subObject, inKey, inValue) {
-    for (let key in subObject) {
-      if (typeof subObject[key] === 'string') {
-        keySource[inKey + key] = inValue;
-      } else if (typeof subObject[key] === 'object') {
-        getKeySource(subObject[key], inKey + key + '.', inValue);
+  // Function that gets Keys and stores their Source location
+  function getKeySource(subObject, inKey, inSource) {
+    for (const key of Object.keys(subObject)) {
+      if (Object.prototype.toString.call(subObject[key]) === '[object Object]') {
+        // Type is an Object, keep on going, recursively building the full key path
+        getKeySource(subObject[key], inKey + key + '.', inSource);
+      } else {
+        // For all other types, store the full Key and Source in keySource
+        keySource[inKey + key] = inSource;
       }
     }
     return keySource;
@@ -257,7 +259,7 @@ export async function getRenderContext(
     getKeySource(subEnvironment.data || {}, '', subEnvironment.name || '');
   }
 
-  // Get Keys from ancestors
+  // Get Keys from ancestors (e.g. Folders)
   if (ancestors) {
     for (let idx = 0; idx < ancestors.length; idx++) {
       let ancestor: any = ancestors[idx] || {};
