@@ -243,6 +243,11 @@ export async function getRenderContext(
       if (Object.prototype.toString.call(subObject[key]) === '[object Object]') {
         // Type is an Object, keep on going, recursively building the full key path
         getKeySource(subObject[key], inKey + key + '.', inSource);
+      } else if (Object.prototype.toString.call(subObject[key]) === '[object Array]') {
+        // Type is an Array, Loop and store the full Key and Source in keySource
+        for (let i = 0, length = subObject[key].length; i < length; i++) {
+          keySource[inKey + key + '[' + i + ']'] = inSource;
+        }
       } else {
         // For all other types, store the full Key and Source in keySource
         keySource[inKey + key] = inSource;
