@@ -1,5 +1,7 @@
 'use strict';
 
+const crypto = require('crypto');
+
 const SwaggerParser = require('swagger-parser');
 const URL = require('url').URL;
 const utils = require('../utils');
@@ -10,8 +12,7 @@ const MIMETYPE_LITERALLY_ANYTHING = '*/*';
 const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON, MIMETYPE_LITERALLY_ANYTHING];
 const WORKSPACE_ID = '__WORKSPACE_ID__';
 
-let requestCount = 1;
-let requestGroupCount = 1;
+let requestCounts = {};
 
 module.exports.id = 'openapi3';
 module.exports.name = 'OpenAPI 3.0';
@@ -19,8 +20,7 @@ module.exports.description = 'Importer for OpenAPI 3.0 specification (json/yaml)
 
 module.exports.convert = async function(rawData) {
   // Reset
-  requestCount = 1;
-  requestGroupCount = 1;
+  requestCounts = {};
 
   // Validate
   let api = await parseDocument(rawData);
@@ -45,7 +45,7 @@ module.exports.convert = async function(rawData) {
 
   const baseEnv = {
     _type: 'environment',
-    _id: '__ENV_1__',
+    _id: '__BASE_ENVIRONMENT_ID__',
     parentId: WORKSPACE_ID,
     name: 'Base environment',
     data: {
@@ -58,7 +58,7 @@ module.exports.convert = async function(rawData) {
 
   const openapiEnv = {
     _type: 'environment',
-    _id: '__ENV_2__',
+    _id: `env___BASE_ENVIRONMENT_ID___sub`,
     parentId: baseEnv._id,
     name: 'OpenAPI env',
     data: {
@@ -108,7 +108,11 @@ function parseEndpoints(document) {
         .filter(method => method !== 'parameters')
         .map(method => Object.assign({}, schemasPerMethod[method], { path, method }));
     })
-    .reduce((flat, arr) => flat.concat(arr), []); // flat single array
+    .reduce(
+      // flat single array
+      (flat, arr) => flat.concat(arr),
+      [],
+    );
 
   const tags = document.tags || [];
   const folders = tags.map(tag => {
@@ -120,14 +124,15 @@ function parseEndpoints(document) {
   const requests = [];
   endpointsSchemas.map(endpointSchema => {
     let { tags } = endpointSchema;
-    if (!tags || tags.length === 0) tags = [''];
-    tags.forEach((tag, index) => {
-      let id = endpointSchema.operationId
-        ? `${endpointSchema.operationId}${index > 0 ? index : ''}`
-        : `__REQUEST_${requestCount++}__`;
-      let parentId = folderLookup[tag] || defaultParent;
-      requests.push(importRequest(endpointSchema, id, parentId));
-    });
+
+    if (!tags || tags.length === 0) {
+      tags = [''];
+    }
+
+    for (const tag of tags) {
+      const parentId = folderLookup[tag] || defaultParent;
+      requests.push(importRequest(endpointSchema, parentId));
+    }
   });
 
   return [...folders, ...requests];
@@ -142,9 +147,14 @@ function parseEndpoints(document) {
  * @returns {Object}
  */
 function importFolderItem(item, parentId) {
+  const hash = crypto
+    .createHash('sha1')
+    .update(item.name)
+    .digest('hex')
+    .slice(0, 8);
   return {
     parentId,
-    _id: `__GRP_${requestGroupCount++}__`,
+    _id: `fld___WORKSPACE_ID__${hash}`,
     _type: 'request_group',
     name: item.name || `Folder {requestGroupCount}`,
     description: item.description || '',
@@ -156,12 +166,13 @@ function importFolderItem(item, parentId) {
  *
  *
  * @param {Object} endpointSchema - OpenAPI 3 endpoint schema
- * @param {string} id - id to be given to current request
  * @param {string} parentId - id of parent category
  * @returns {Object}
  */
-function importRequest(endpointSchema, id, parentId) {
-  const name = endpointSchema.summary || `${endpointSchema.method} ${endpointSchema.path}`;
+function importRequest(endpointSchema, parentId) {
+  const name = endpointSchema.summary || endpointSchema.path;
+  const id = generateUniqueRequestId(endpointSchema);
+
   return {
     _type: 'request',
     _id: id,
@@ -341,4 +352,32 @@ function generateParameterExample(schema) {
 
     return factory(schema);
   }
+}
+
+/**
+ * Generates a unique and deterministic request ID based on the endpoint schema
+ *
+ * @param endpointSchema
+ */
+function generateUniqueRequestId(endpointSchema) {
+  // `operationId` is unique already, so we can just use that, combined with the ID
+  // of the workspace to get something globally unique
+  const uniqueKey = endpointSchema.operationId
+    ? `${endpointSchema.operationId}`
+    : `[${endpointSchema.method}]${endpointSchema.path}`;
+
+  const hash = crypto
+    .createHash('sha1')
+    .update(uniqueKey)
+    .digest('hex')
+    .slice(0, 8);
+
+  // Suffix the ID with a counter in case we try creating two with the same hash
+  if (requestCounts.hasOwnProperty(hash)) {
+    requestCounts[hash]++;
+  } else {
+    requestCounts[hash] = 0;
+  }
+
+  return `req_${WORKSPACE_ID}${hash}${requestCounts[hash] || ''}`;
 }
