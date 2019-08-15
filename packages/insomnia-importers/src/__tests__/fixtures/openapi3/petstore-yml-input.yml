@@ -12,7 +12,6 @@ paths:
       tags:
         - pets
       summary: List all pets
-      operationId: listPets
       parameters:
         - name: limit
           in: query

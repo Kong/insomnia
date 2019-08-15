@@ -24,7 +24,7 @@ const EXPORT_TYPE_COOKIE_JAR = 'cookie_jar';
 const EXPORT_TYPE_ENVIRONMENT = 'environment';
 
 // If we come across an ID of this form, we will replace it with a new one
-const REPLACE_ID_REGEX = /^__\w+_\d+__$/;
+const REPLACE_ID_REGEX = /__\w+_\d+__/g;
 
 const MODELS = {
   [EXPORT_TYPE_REQUEST]: models.request,
@@ -87,7 +87,6 @@ export async function importUri(
 export async function importRaw(
   getWorkspaceId: () => Promise<string | null>,
   rawContent: string,
-  generateNewIds: boolean = false,
 ): Promise<{
   source: string,
   error: Error | null,
@@ -109,8 +108,8 @@ export async function importRaw(
   // Generate all the ids we may need
   const generatedIds: { [string]: string | Function } = {};
   for (const r of data.resources) {
-    if (generateNewIds || r._id.match(REPLACE_ID_REGEX)) {
-      generatedIds[r._id] = generateId(MODELS[r._type].prefix);
+    for (const key of r._id.match(REPLACE_ID_REGEX) || []) {
+      generatedIds[key] = generateId(MODELS[r._type].prefix);
     }
   }
 
@@ -161,14 +160,17 @@ export async function importRaw(
       resource.parentId = WORKSPACE_ID_KEY;
     }
 
-    // Replace _id if we need to
-    if (generatedIds[resource._id]) {
-      resource._id = await fnOrString(generatedIds[resource._id]);
-    }
+    // Replace ID placeholders (eg. __WORKSPACE_ID__) with generated values
+    for (const key of Object.keys(generatedIds)) {
+      const { parentId, _id } = resource;
 
-    // Replace newly generated IDs if they exist
-    if (generatedIds[resource.parentId]) {
-      resource.parentId = await fnOrString(generatedIds[resource.parentId]);
+      if (parentId && parentId.includes(key)) {
+        resource.parentId = parentId.replace(key, await fnOrString(generatedIds[key]));
+      }
+
+      if (_id && _id.includes(key)) {
+        resource._id = _id.replace(key, await fnOrString(generatedIds[key]));
+      }
     }
 
     const model: Object = MODELS[resource._type];
