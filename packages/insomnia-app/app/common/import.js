@@ -163,9 +163,14 @@ export async function importRaw(
     // Replace ID placeholders (eg. __WORKSPACE_ID__) with generated values
     for (const key of Object.keys(generatedIds)) {
       const { parentId, _id } = resource;
-      const id = await fnOrString(generatedIds[key]);
-      resource.parentId = parentId ? parentId.replace(key, id) : parentId;
-      resource._id = _id ? _id.replace(key, id) : _id;
+
+      if (parentId && parentId.includes(key)) {
+        resource.parentId = parentId.replace(key, await fnOrString(generatedIds[key]));
+      }
+
+      if (_id && _id.includes(key)) {
+        resource._id = _id.replace(key, await fnOrString(generatedIds[key]));
+      }
     }
 
     const model: Object = MODELS[resource._type];
