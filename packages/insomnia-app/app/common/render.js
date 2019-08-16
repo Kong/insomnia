@@ -237,18 +237,34 @@ export async function getRenderContext(
   const subEnvironment = await models.environment.getById(environmentId || 'n/a');
 
   let keySource = {};
-  for (let key in (rootEnvironment || {}).data) {
-    keySource[key] = 'root';
-  }
-
-  if (subEnvironment) {
-    for (const key of Object.keys(subEnvironment.data || {})) {
-      if (subEnvironment.name) {
-        keySource[key] = subEnvironment.name;
+  // Function that gets Keys and stores their Source location
+  function getKeySource(subObject, inKey, inSource) {
+    for (const key of Object.keys(subObject)) {
+      if (Object.prototype.toString.call(subObject[key]) === '[object Object]') {
+        // Type is an Object, keep on going, recursively building the full key path
+        getKeySource(subObject[key], inKey + key + '.', inSource);
+      } else if (Object.prototype.toString.call(subObject[key]) === '[object Array]') {
+        // Type is an Array, Loop and store the full Key and Source in keySource
+        for (let i = 0, length = subObject[key].length; i < length; i++) {
+          keySource[inKey + key + '[' + i + ']'] = inSource;
+        }
+      } else {
+        // For all other types, store the full Key and Source in keySource
+        keySource[inKey + key] = inSource;
       }
     }
+    return keySource;
   }
 
+  // Get Keys from root environment
+  getKeySource((rootEnvironment || {}).data, '', 'root');
+
+  // Get Keys from sub environment
+  if (subEnvironment) {
+    getKeySource(subEnvironment.data || {}, '', subEnvironment.name || '');
+  }
+
+  // Get Keys from ancestors (e.g. Folders)
   if (ancestors) {
     for (let idx = 0; idx < ancestors.length; idx++) {
       let ancestor: any = ancestors[idx] || {};
@@ -257,9 +273,7 @@ export async function getRenderContext(
         ancestor.hasOwnProperty('environment') &&
         ancestor.hasOwnProperty('name')
       ) {
-        for (const key of Object.keys(ancestor.environment || {})) {
-          keySource[key] = ancestor.name || '';
-        }
+        getKeySource(ancestor.environment || {}, '', ancestor.name || '');
       }
     }
   }
