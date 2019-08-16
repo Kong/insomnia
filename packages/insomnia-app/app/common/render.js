@@ -236,24 +236,26 @@ export async function getRenderContext(
   );
   const subEnvironment = await models.environment.getById(environmentId || 'n/a');
 
-  let keySource = {};
+  const keySource = {};
+
   // Function that gets Keys and stores their Source location
   function getKeySource(subObject, inKey, inSource) {
-    for (const key of Object.keys(subObject)) {
-      if (Object.prototype.toString.call(subObject[key]) === '[object Object]') {
-        // Type is an Object, keep on going, recursively building the full key path
-        getKeySource(subObject[key], inKey + key + '.', inSource);
-      } else if (Object.prototype.toString.call(subObject[key]) === '[object Array]') {
-        // Type is an Array, Loop and store the full Key and Source in keySource
-        for (let i = 0, length = subObject[key].length; i < length; i++) {
-          keySource[inKey + key + '[' + i + ']'] = inSource;
-        }
-      } else {
-        // For all other types, store the full Key and Source in keySource
-        keySource[inKey + key] = inSource;
+    // Add key to map if it's not root
+    if (inKey) {
+      keySource[inKey] = inSource;
+    }
+
+    // Recurse down for Objects and Arrays
+    const typeStr = Object.prototype.toString.call(subObject);
+    if (typeStr === '[object Object]') {
+      for (const key of Object.keys(subObject)) {
+        getKeySource(subObject[key], inKey ? `${inKey}.${key}` : key, inSource);
+      }
+    } else if (typeStr === '[object Array]') {
+      for (let i = 0; i < subObject.length; i++) {
+        getKeySource(subObject[i], `${inKey}[${i}]`, inSource);
       }
     }
-    return keySource;
   }
 
   // Get Keys from root environment
