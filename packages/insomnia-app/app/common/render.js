@@ -236,19 +236,37 @@ export async function getRenderContext(
   );
   const subEnvironment = await models.environment.getById(environmentId || 'n/a');
 
-  let keySource = {};
-  for (let key in (rootEnvironment || {}).data) {
-    keySource[key] = 'root';
-  }
+  const keySource = {};
 
-  if (subEnvironment) {
-    for (const key of Object.keys(subEnvironment.data || {})) {
-      if (subEnvironment.name) {
-        keySource[key] = subEnvironment.name;
+  // Function that gets Keys and stores their Source location
+  function getKeySource(subObject, inKey, inSource) {
+    // Add key to map if it's not root
+    if (inKey) {
+      keySource[inKey] = inSource;
+    }
+
+    // Recurse down for Objects and Arrays
+    const typeStr = Object.prototype.toString.call(subObject);
+    if (typeStr === '[object Object]') {
+      for (const key of Object.keys(subObject)) {
+        getKeySource(subObject[key], inKey ? `${inKey}.${key}` : key, inSource);
+      }
+    } else if (typeStr === '[object Array]') {
+      for (let i = 0; i < subObject.length; i++) {
+        getKeySource(subObject[i], `${inKey}[${i}]`, inSource);
       }
     }
   }
 
+  // Get Keys from root environment
+  getKeySource((rootEnvironment || {}).data, '', 'root');
+
+  // Get Keys from sub environment
+  if (subEnvironment) {
+    getKeySource(subEnvironment.data || {}, '', subEnvironment.name || '');
+  }
+
+  // Get Keys from ancestors (e.g. Folders)
   if (ancestors) {
     for (let idx = 0; idx < ancestors.length; idx++) {
       let ancestor: any = ancestors[idx] || {};
@@ -257,9 +275,7 @@ export async function getRenderContext(
         ancestor.hasOwnProperty('environment') &&
         ancestor.hasOwnProperty('name')
       ) {
-        for (const key of Object.keys(ancestor.environment || {})) {
-          keySource[key] = ancestor.name || '';
-        }
+        getKeySource(ancestor.environment || {}, '', ancestor.name || '');
       }
     }
   }
