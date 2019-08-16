@@ -1,314 +1,314 @@
 {
-  "_type": "export",
+  "__export_date": "2019-08-15T19:31:41.712Z",
   "__export_format": 4,
-  "__export_date": "2018-01-09T23:32:46.908Z",
   "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
   "resources": [
     {
-      "_type": "workspace",
       "_id": "__WORKSPACE_ID__",
-      "parentId": null,
+      "_type": "workspace",
+      "description": "This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.",
       "name": "Swagger Petstore 1.0.0",
-      "description": "This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters."
+      "parentId": null
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Base environment",
+      "_id": "__BASE_ENVIRONMENT_ID__",
+      "_type": "environment",
       "data": {
         "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
       },
-      "_type": "environment",
-      "_id": "__ENV_1__"
+      "name": "Base environment",
+      "parentId": "__WORKSPACE_ID__"
     },
     {
-      "parentId": "__ENV_1__",
-      "name": "OpenAPI env",
+      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_type": "environment",
       "data": {
         "base_path": "/v2",
-        "scheme": "http",
-        "host": "petstore.swagger.io"
+        "host": "petstore.swagger.io",
+        "scheme": "http"
       },
-      "_type": "environment",
-      "_id": "__ENV_2__"
+      "name": "OpenAPI env",
+      "parentId": "__BASE_ENVIRONMENT_ID__"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Add a new pet to the store",
-      "url": "{{ base_url }}/pet",
+      "_id": "req___WORKSPACE_ID__23acbe44",
+      "_type": "request",
+      "authentication": {},
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"id\": 0,\n  \"category\": {\n    \"id\": 0,\n    \"name\": \"string\"\n  },\n  \"name\": \"doggie\",\n  \"photoUrls\": [\n    \"string\"\n  ],\n  \"tags\": [\n    {\n      \"id\": 0,\n      \"name\": \"string\"\n    }\n  ],\n  \"status\": \"string\"\n}"
       },
+      "headers": [],
       "method": "POST",
+      "name": "Add a new pet to the store",
       "parameters": [],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "addPet"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/pet"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Update an existing pet",
-      "url": "{{ base_url }}/pet",
+      "_id": "req___WORKSPACE_ID__74a7a059",
+      "_type": "request",
+      "authentication": {},
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"id\": 0,\n  \"category\": {\n    \"id\": 0,\n    \"name\": \"string\"\n  },\n  \"name\": \"doggie\",\n  \"photoUrls\": [\n    \"string\"\n  ],\n  \"tags\": [\n    {\n      \"id\": 0,\n      \"name\": \"string\"\n    }\n  ],\n  \"status\": \"string\"\n}"
       },
-      "method": "PUT",
-      "parameters": [],
       "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "updatePet"
+      "method": "PUT",
+      "name": "Update an existing pet",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/pet"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Finds Pets by status",
-      "url": "{{ base_url }}/pet/findByStatus",
+      "_id": "req___WORKSPACE_ID__80ab0d08",
+      "_type": "request",
+      "authentication": {},
       "body": {},
+      "headers": [],
       "method": "GET",
+      "name": "Finds Pets by status",
       "parameters": [
         {
-          "name": "status",
           "disabled": false,
+          "name": "status",
           "value": "available"
         }
       ],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "findPetsByStatus"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/pet/findByStatus"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Finds Pets by tags",
-      "url": "{{ base_url }}/pet/findByTags",
+      "_id": "req___WORKSPACE_ID__42a17980",
+      "_type": "request",
+      "authentication": {},
       "body": {},
+      "headers": [],
       "method": "GET",
+      "name": "Finds Pets by tags",
       "parameters": [
         {
-          "name": "tags",
           "disabled": false,
+          "name": "tags",
           "value": "string"
         }
       ],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "findPetsByTags"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/pet/findByTags"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Find pet by ID",
-      "url": "{{ base_url }}/pet/{{ petId }}",
+      "_id": "req___WORKSPACE_ID__3d1a51d3",
+      "_type": "request",
+      "authentication": {},
       "body": {},
-      "method": "GET",
-      "parameters": [],
       "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "getPetById"
+      "method": "GET",
+      "name": "Find pet by ID",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/pet/{{ petId }}"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Updates a pet in the store with form data",
-      "url": "{{ base_url }}/pet/{{ petId }}",
+      "_id": "req___WORKSPACE_ID__a4608701",
+      "_type": "request",
+      "authentication": {},
       "body": {
         "mimeType": "application/x-www-form-urlencoded"
       },
-      "method": "POST",
-      "parameters": [],
       "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "updatePetWithForm"
+      "method": "POST",
+      "name": "Updates a pet in the store with form data",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/pet/{{ petId }}"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Deletes a pet",
-      "url": "{{ base_url }}/pet/{{ petId }}",
+      "_id": "req___WORKSPACE_ID__e804bd05",
+      "_type": "request",
+      "authentication": {},
       "body": {},
-      "method": "DELETE",
-      "parameters": [],
       "headers": [
         {
-          "name": "api_key",
           "disabled": true,
+          "name": "api_key",
           "value": "string"
         }
       ],
-      "authentication": {},
-      "_type": "request",
-      "_id": "deletePet"
+      "method": "DELETE",
+      "name": "Deletes a pet",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/pet/{{ petId }}"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "uploads an image",
-      "url": "{{ base_url }}/pet/{{ petId }}/uploadImage",
+      "_id": "req___WORKSPACE_ID__8081fb6f",
+      "_type": "request",
+      "authentication": {},
       "body": {
         "mimeType": "multipart/form-data"
       },
-      "method": "POST",
-      "parameters": [],
       "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "uploadFile"
+      "method": "POST",
+      "name": "uploads an image",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/pet/{{ petId }}/uploadImage"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "_id": "req___WORKSPACE_ID__443ac9e7",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "GET",
       "name": "Returns pet inventories by status",
-      "url": "{{ base_url }}/store/inventory",
-      "body": {},
-      "method": "GET",
       "parameters": [],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "getInventory"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/store/inventory"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "_id": "req___WORKSPACE_ID__e24a4f9e",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "POST",
       "name": "Place an order for a pet",
-      "url": "{{ base_url }}/store/order",
-      "body": {},
-      "method": "POST",
       "parameters": [],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "placeOrder"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/store/order"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "_id": "req___WORKSPACE_ID__f021bcd3",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "GET",
       "name": "Find purchase order by ID",
-      "url": "{{ base_url }}/store/order/{{ orderId }}",
-      "body": {},
-      "method": "GET",
       "parameters": [],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "getOrderById"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/store/order/{{ orderId }}"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Delete purchase order by ID",
-      "url": "{{ base_url }}/store/order/{{ orderId }}",
+      "_id": "req___WORKSPACE_ID__15e47538",
+      "_type": "request",
+      "authentication": {},
       "body": {},
+      "headers": [],
       "method": "DELETE",
+      "name": "Delete purchase order by ID",
       "parameters": [],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "deleteOrder"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/store/order/{{ orderId }}"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "_id": "req___WORKSPACE_ID__fe3d55d0",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "POST",
       "name": "Create user",
-      "url": "{{ base_url }}/user",
-      "body": {},
-      "method": "POST",
       "parameters": [],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "createUser"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/user"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "_id": "req___WORKSPACE_ID__4cb83333",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "POST",
       "name": "Creates list of users with given input array",
-      "url": "{{ base_url }}/user/createWithArray",
-      "body": {},
-      "method": "POST",
       "parameters": [],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "createUsersWithArrayInput"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/user/createWithArray"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "_id": "req___WORKSPACE_ID__e94a615f",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "POST",
       "name": "Creates list of users with given input array",
-      "url": "{{ base_url }}/user/createWithList",
-      "body": {},
-      "method": "POST",
       "parameters": [],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "createUsersWithListInput"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/user/createWithList"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Logs user into the system",
-      "url": "{{ base_url }}/user/login",
+      "_id": "req___WORKSPACE_ID__00ac9da2",
+      "_type": "request",
+      "authentication": {},
       "body": {},
+      "headers": [],
       "method": "GET",
+      "name": "Logs user into the system",
       "parameters": [
         {
-          "name": "username",
           "disabled": false,
+          "name": "username",
           "value": "string"
         },
         {
-          "name": "password",
           "disabled": false,
+          "name": "password",
           "value": "string"
         }
       ],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "loginUser"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/user/login"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "_id": "req___WORKSPACE_ID__740025cb",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "GET",
       "name": "Logs out current logged in user session",
-      "url": "{{ base_url }}/user/logout",
-      "body": {},
-      "method": "GET",
       "parameters": [],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "logoutUser"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/user/logout"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "_id": "req___WORKSPACE_ID__74f1d1d1",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "GET",
       "name": "Get user by user name",
-      "url": "{{ base_url }}/user/{{ username }}",
-      "body": {},
-      "method": "GET",
       "parameters": [],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "getUserByName"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/user/{{ username }}"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Updated user",
-      "url": "{{ base_url }}/user/{{ username }}",
+      "_id": "req___WORKSPACE_ID__6d74493f",
+      "_type": "request",
+      "authentication": {},
       "body": {},
+      "headers": [],
       "method": "PUT",
+      "name": "Updated user",
       "parameters": [],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "updateUser"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/user/{{ username }}"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Delete user",
-      "url": "{{ base_url }}/user/{{ username }}",
-      "body": {},
-      "method": "DELETE",
-      "parameters": [],
-      "headers": [],
-      "authentication": {},
+      "_id": "req___WORKSPACE_ID__38e8e88f",
       "_type": "request",
-      "_id": "deleteUser"
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "DELETE",
+      "name": "Delete user",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/user/{{ username }}"
     }
   ]
 }

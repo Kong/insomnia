@@ -18,11 +18,21 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 0 @padding-md;
     border-top: 1px solid var(--hl-md);
     border-bottom: 1px solid var(--hl-md);
 
+    &__buttons {
+      margin-left: auto;
+      & > button {
+        align-self: stretch;
+        height: 100%;
+        background: none;
+        border: none !important;
+      }
+    }
+
     h1 {
+      padding: 0 @padding-md;
       margin: 0;
     }
   }

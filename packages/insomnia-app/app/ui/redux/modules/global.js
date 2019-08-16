@@ -143,10 +143,7 @@ export function loadRequestStop(requestId) {
 }
 
 export function setActiveActivity(activity) {
-  window.localStorage.setItem(
-    `${LOCALSTORAGE_PREFIX}::activity`,
-    JSON.stringify(activity),
-  );
+  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
   return { type: SET_ACTIVE_ACTIVITY, activity };
 }
 
@@ -163,11 +160,11 @@ export function importFile(workspaceId) {
     const options = {
       title: 'Import Insomnia Data',
       buttonLabel: 'Import',
-      properties: [ 'openFile' ],
+      properties: ['openFile'],
       filters: [
         {
           name: 'Insomnia Import',
-          extensions: [ '', 'sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell', 'yaml', 'yml' ],
+          extensions: ['', 'sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell', 'yaml', 'yml'],
         },
       ],
     };
@@ -268,13 +265,13 @@ function showSaveExportedFileDialog(exportedFileNamePrefix, selectedFormat, onDo
     options.filters = [
       {
         name: 'HTTP Archive 1.2',
-        extensions: [ 'har', 'har.json', 'json' ],
+        extensions: ['har', 'har.json', 'json'],
       },
     ];
   } else if (selectedFormat === VALUE_YAML) {
-    options.filters = [ { name: 'Insomnia Export', extensions: [ 'yaml' ] } ];
+    options.filters = [{ name: 'Insomnia Export', extensions: ['yaml'] }];
   } else {
-    options.filters = [ { name: 'Insomnia Export', extensions: [ 'json' ] } ];
+    options.filters = [{ name: 'Insomnia Export', extensions: ['json'] }];
   }
 
   electron.remote.dialog.showSaveDialog(options, onDone);
@@ -299,7 +296,7 @@ export function exportWorkspacesToFile(workspaceId = null) {
         let environments;
         if (workspace) {
           const parentEnv = await models.environment.getOrCreateForWorkspace(workspace);
-          environments = [ parentEnv, ...(await models.environment.findByParentId(parentEnv._id)) ];
+          environments = [parentEnv, ...(await models.environment.findByParentId(parentEnv._id))];
         } else {
           environments = await models.environment.all();
         }
@@ -451,7 +448,7 @@ export function exportRequestsToFile(requestIds) {
   };
 }
 
-export function init(dispatch) {
+export function init() {
   let workspaceId = null;
   let activity = null;
 
@@ -471,10 +468,7 @@ export function init(dispatch) {
     // Nothing here...
   }
 
-  return [
-    setActiveWorkspace(workspaceId),
-    setActiveActivity(activity),
-  ];
+  return [setActiveWorkspace(workspaceId), setActiveActivity(activity)];
 }
 
 // ~~~~~~~ //

@@ -24,6 +24,10 @@ class AlertModal extends PureComponent {
   _handleOk() {
     this.hide();
     this._okCallback();
+
+    if (typeof this._okCallback2 === 'function') {
+      this._okCallback2();
+    }
   }
 
   hide() {
@@ -39,7 +43,7 @@ class AlertModal extends PureComponent {
   }
 
   show(options = {}) {
-    const { title, message, addCancel } = options;
+    const { title, message, addCancel, onConfirm } = options;
     this.setState({ title, message, addCancel });
 
     this.modal.show();
@@ -48,6 +52,8 @@ class AlertModal extends PureComponent {
     setTimeout(() => {
       this._cancel && this._cancel.focus();
     }, 100);
+
+    this._okCallback2 = onConfirm;
 
     return new Promise(resolve => {
       this._okCallback = resolve;

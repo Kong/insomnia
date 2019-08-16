@@ -240,16 +240,16 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
   let dataIgnore = '';
   let dataError = '';
 
-  try {
-    const str = text.replace(/\\/g, '');
-    const tagMatch = str.match(/{% *([^ ]+) *.*%}/);
-    const cleanedStr = str
-      .replace(/^{%/, '')
-      .replace(/%}$/, '')
-      .replace(/^{{/, '')
-      .replace(/}}$/, '')
-      .trim();
+  const str = text.replace(/\\/g, '');
+  const tagMatch = str.match(/{% *([^ ]+) *.*%}/);
+  const cleanedStr = str
+    .replace(/^{%/, '')
+    .replace(/%}$/, '')
+    .replace(/^{{/, '')
+    .replace(/}}$/, '')
+    .trim();
 
+  try {
     if (tagMatch) {
       const tagData = tokenizeTag(str);
       const tagDefinition = (await getTagDefinitions()).find(d => d.name === tagData.name);
@@ -281,9 +281,7 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
     }
     dataError = 'off';
   } catch (err) {
-    const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
-    let message = fullMessage;
-    title = message;
+    title = err.message.replace(/\[.+,.+]\s*/, '');
     dataError = 'on';
   }
 
@@ -291,7 +289,7 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
   el.setAttribute('data-ignore', dataIgnore);
   if (dataError === 'on') {
     el.setAttribute('data-error', dataError);
-    el.innerHTML = '<label><i class="fa fa-exclamation-triangle"></i></label>' + innerHTML;
+    el.innerHTML = '<label><i class="fa fa-exclamation-triangle"></i></label>' + cleanedStr;
   } else {
     el.innerHTML = '<label></label>' + innerHTML;
   }
