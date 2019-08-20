@@ -9,11 +9,14 @@ import * as models from '../../../models/index';
 import type { Response } from '../../../models/response';
 import type { Settings } from '../../../models/settings';
 
-type Props = { settings: Settings };
+type Props = {|
+  settings: Settings,
+|};
 
-type State = {
+type State = {|
   response: Response | null,
-};
+  title: string | null,
+|};
 
 @autobind
 class ResponseDebugModal extends React.PureComponent<Props, State> {
@@ -24,6 +27,7 @@ class ResponseDebugModal extends React.PureComponent<Props, State> {
 
     this.state = {
       response: null,
+      title: '',
     };
   }
 
@@ -35,24 +39,28 @@ class ResponseDebugModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async show(options: { responseId?: string, response?: Response }) {
+  async show(options: { responseId?: string, response?: Response, title?: string }) {
     const response = options.response
       ? options.response
       : await models.response.getById(options.responseId || 'n/a');
 
-    this.setState({ response });
+    this.setState({
+      response,
+      title: options.title || null,
+    });
+
     this.modal && this.modal.show();
   }
 
   render() {
     const { settings } = this.props;
-    const { response } = this.state;
+    const { response, title } = this.state;
 
     return (
       <Modal ref={this._setModalRef} tall>
-        <ModalHeader>OAuth 2 Response</ModalHeader>
+        <ModalHeader>{title || 'Response Timeline'}</ModalHeader>
         <ModalBody>
-          <div style={{ display: 'grid' }} className="tall pad-top">
+          <div style={{ display: 'grid' }} className="tall">
             {response ? (
               <ResponseTimelineViewer
                 editorFontSize={settings.editorFontSize}
