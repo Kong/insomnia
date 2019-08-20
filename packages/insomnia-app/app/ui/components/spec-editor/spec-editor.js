@@ -4,6 +4,7 @@ import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
 import type { Workspace } from '../../../models/workspace';
 import type { ApiSpec } from '../../../models/api-spec';
+import { importRaw } from '../../../common/import';
 
 type Props = {|
   apiSpec: ApiSpec,
@@ -17,6 +18,14 @@ type Props = {|
 
 @autobind
 class SpecEditor extends React.PureComponent<Props> {
+  async _handleReImport() {
+    const { workspace, apiSpec } = this.props;
+    await importRaw(
+      () => Promise.resolve(workspace._id), // Always import into current workspace
+      apiSpec.contents,
+    );
+  }
+
   async _handleOnChange(v: string) {
     const { apiSpec, onChange } = this.props;
 
@@ -33,6 +42,11 @@ class SpecEditor extends React.PureComponent<Props> {
       <div className="spec-editor theme--pane">
         <div className="spec-editor__header theme--pane__header">
           <h1>Edit API Specification</h1>
+          <nav className="spec-editor__header__buttons">
+            <button className="btn" onClick={this._handleReImport}>
+              Re-Import
+            </button>
+          </nav>
         </div>
         <div className="spec-editor__body theme--pane__body">
           <CodeEditor
@@ -44,6 +58,7 @@ class SpecEditor extends React.PureComponent<Props> {
             mode={apiSpec.contentType === 'json' ? 'application/json' : 'text/yaml'}
             defaultValue={apiSpec.contents}
             onChange={this._handleOnChange}
+            uniquenessKey={apiSpec._id}
           />
         </div>
       </div>
