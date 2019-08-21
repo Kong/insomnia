@@ -3,22 +3,33 @@ name: CI
 on: [push]
 
 jobs:
-  test:
-    name: Test ${{ matrix.os }} node v${{ matrix.node_version }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        node_version: [10]
-        os: [macOS-latest, windows-latest]
-        # os: [ubuntu-latest, windows-latest, macOS-latest]
+  Windows:
+    name: Windows
+    runs-on: windows-latest
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Use Node ${{ matrix.node_version }}
+      - name: Install NodeJS
         uses: actions/setup-node@v1
         with:
-          version: ${{ matrix.node_version }}
-      - name: Install deps and test
+          version: 10
+      - name: NPM install and test
+        run: |
+          node --version
+          npm config set msvs_version 2015
+          npm run bootstrap
+          npm test
+  Mac:
+    name: Mac
+    runs-on: macOS-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v1
+      - name: Install NodeJS
+        uses: actions/setup-node@v1
+        with:
+          version: 10
+      - name: NPM install and test
         run: |
           node --version
           npm run bootstrap
