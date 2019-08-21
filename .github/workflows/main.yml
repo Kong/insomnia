@@ -15,7 +15,6 @@ jobs:
           version: 10
       - name: NPM install and test
         run: |
-          node --version
           npm config set msvs_version 2015
           npm run bootstrap
           npm test
@@ -31,6 +30,5 @@ jobs:
           version: 10
       - name: NPM install and test
         run: |
-          node --version
           npm run bootstrap
           npm test
