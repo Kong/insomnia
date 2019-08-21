@@ -43,10 +43,9 @@ jobs:
         uses: actions/setup-node@v1
         with:
           version: 10
-      - name: Install packages
+      - name: Install OS packages
         run: |
           sudo apt-get update
-          sudo apt-get upgrade -y
           sudo apt-get install -y libcurl4-openssl-dev
       - name: Bootstrap packages
         run: npm run bootstrap
