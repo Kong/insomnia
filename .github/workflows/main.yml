@@ -45,9 +45,9 @@ jobs:
           version: 10
       - name: Install packages
         run: |
-          apt-get update
-          apt-get upgrade -y
-          apt-get install -y libcurl4-openssl-dev
+          sudo apt-get update
+          sudo apt-get upgrade -y
+          sudo apt-get install -y libcurl4-openssl-dev
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Run tests
