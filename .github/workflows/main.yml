@@ -14,13 +14,12 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Use Node.js ${{ matrix.node_version }}
+      - name: Use Node ${{ matrix.node_version }}
         uses: actions/setup-node@v1
         with:
           version: ${{ matrix.node_version }}
       - name: Install deps and test
         run: |
           node --version
-          npm --version
           npm run bootstrap
           npm test
