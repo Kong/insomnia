@@ -13,9 +13,10 @@ jobs:
         uses: actions/setup-node@v1
         with:
           version: 10
+      - name: Configure NPM
+        run: npm config set msvs_version 2015
       - name: NPM install and test
         run: |
-          npm config set msvs_version 2015
           npm run bootstrap
           npm test
   Mac:
