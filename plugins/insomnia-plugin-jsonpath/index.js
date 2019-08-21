@@ -12,6 +12,7 @@ module.exports.templateTags = [
       },
       {
         displayName: 'JSONPath Filter',
+        encoding: 'base64', // So it doesn't cause syntax errors
         type: 'string',
       },
     ],

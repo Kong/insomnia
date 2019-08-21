@@ -227,7 +227,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     const { response } = schemaFetchError;
 
     showModal(ResponseDebugModal, {
-      title: 'Introspection Request',
+      title: 'GraphQL Introspection Response',
       response: response,
     });
   }
@@ -345,8 +345,12 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     });
   }
 
-  async _handleRefreshSchema(): Promise<void> {
-    await this._fetchAndSetSchema(this.props.request);
+  _handleRefreshSchema() {
+    // First, "forget" preference to hide errors so they always show
+    // again after a refresh
+    this.setState({ hideSchemaFetchErrors: false }, async () => {
+      await this._fetchAndSetSchema(this.props.request);
+    });
   }
 
   async _handleToggleAutomaticFetching(): Promise<void> {

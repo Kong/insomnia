@@ -487,3 +487,29 @@ export function constructKeyCombinationDisplay(
   }
   return joint;
 }
+
+/**
+ * Construct the display string for a key combination
+ *
+ * @param hotKeyDef
+ * @param hotKeyRegistry
+ * @param mustUsePlus
+ * @returns {string} – key combination as string or empty string if not found
+ */
+export function getHotKeyDisplay(
+  hotKeyDef: HotKeyDefinition,
+  hotKeyRegistry: HotKeyRegistry,
+  mustUsePlus: boolean,
+) {
+  const hotKey: ?KeyBindings = hotKeyRegistry[hotKeyDef.id];
+  if (!hotKey) {
+    return '';
+  }
+
+  const keyCombs: Array<KeyCombination> = getPlatformKeyCombinations(hotKey);
+  if (keyCombs.length === 0) {
+    return '';
+  }
+
+  return constructKeyCombinationDisplay(keyCombs[0], mustUsePlus);
+}
