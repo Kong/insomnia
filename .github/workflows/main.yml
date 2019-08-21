@@ -4,18 +4,26 @@ on: [push]
 
 jobs:
   test:
-    name: Test on node ${{ matrix.node_version }} and ${{ matrix.os }}
+    name: Test on ${{ matrix.os }} node v${{ matrix.node_version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         node_version: [10]
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [macOS-latest]
+        # os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
-    - uses: actions/checkout@v1
+    - name: Checkout branch
+      uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node_version }}
       uses: actions/setup-node@v1
       with:
         version: ${{ matrix.node_version }}
+    - name: Install Ubuntu dependencies
+      if: matrix.os == 'ubuntu-latest'
+      run: echo "I'm on Ubuntu"
+    - name: Install macOS dependencies
+      if: matrix.os == 'macOS-latest'
+      run: echo "I'm on Mac"
     - name: Install deps and test
       run: |
         node --version
