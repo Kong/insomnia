@@ -35,15 +35,24 @@ export function createWindow() {
   const { x, y, width, height } = bounds;
 
   // Make sure we don't place the window outside of the visible space
-  let maxX = 0;
-  let maxY = 0;
+  let maxX = Number.MIN_VALUE;
+  let maxY = Number.MIN_VALUE;
+  let minX = Number.MAX_VALUE;
+  let minY = Number.MAX_VALUE;
+
   for (const d of electron.screen.getAllDisplays()) {
     // Set the maximum placement location to 50 pixels short of the end
     maxX = Math.max(maxX, d.bounds.x + d.bounds.width - 50);
     maxY = Math.max(maxY, d.bounds.y + d.bounds.height - 50);
+
+    // Set the minimum placement location 50 pixels from the start
+    minX = Math.min(minX, d.bounds.x + 50);
+    minY = Math.min(minY, d.bounds.y + 50);
   }
-  const finalX = Math.min(maxX, x);
-  const finalY = Math.min(maxX, y);
+
+  // Clamp screen position between min and max
+  const finalX = Math.max(minX, Math.min(maxX, x));
+  const finalY = Math.max(maxY, Math.min(maxX, y));
 
   mainWindow = new BrowserWindow({
     // Make sure we don't initialize the window outside the bounds
