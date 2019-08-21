@@ -788,6 +788,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             showSettings={handleShowSettingsModal}
             activity={activity}
             setActivity={handleSetActiveActivity}
+            hotKeyRegistry={settings.hotKeyRegistry}
           />
 
           <Sidebar
