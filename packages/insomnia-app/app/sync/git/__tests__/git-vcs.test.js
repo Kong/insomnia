@@ -18,6 +18,10 @@ describe('Git-VCS', () => {
         }
       }
 
+      getTimezoneOffset() {
+        return 0;
+      }
+
       static now() {
         return new Date().getTime();
       }
@@ -88,16 +92,16 @@ describe('Git-VCS', () => {
             email: 'karen@example.com',
             name: 'Karen Brown',
             timestamp: 1000000000,
-            timezoneOffset: 420,
+            timezoneOffset: 0,
           },
           committer: {
             email: 'karen@example.com',
             name: 'Karen Brown',
             timestamp: 1000000000,
-            timezoneOffset: 420,
+            timezoneOffset: 0,
           },
           message: 'First commit!\n',
-          oid: '1cbd843cc8bcd60d35f6f94f21c011c0731fe9d2',
+          oid: '3f2c080f624720a716893fb17f221a49fc7f70f5',
           parent: [],
           tree: '95d3aa5f7462c052c821f8fe976c506c94946d68',
         },
