@@ -2,6 +2,10 @@
 import * as git from 'isomorphic-git';
 import fs from 'fs';
 import path from 'path';
+import * as db from '../../common/database';
+import type { BaseModel } from '../../models';
+import * as models from '../../models';
+import { deterministicStringify } from '../lib/deterministicStringify';
 
 export default class GitVCS {
   _dir: string;
@@ -152,6 +156,174 @@ type FSDir = {|
 |};
 
 type FSEntry = FSDir | FSFile | FSLink;
+
+/**
+ * An isometric-git FS plugin that can route to various plugins depending on
+ * what the filePath is.
+ *
+ * @param defaultFS – default plugin
+ * @param otherFS – map of path prefixes to plugins
+ * @returns {{promises: *}}
+ */
+export function routableFSPlugin(defaultFS: Object, otherFS: { [string]: Object }) {
+  const execMethod = (method: string, filePath: string, ...args: Array<any>) => {
+    for (const prefix of Object.keys(otherFS)) {
+      if (filePath.indexOf(prefix) === 0) {
+        return otherFS[prefix].promises[method](filePath, ...args);
+      }
+    }
+
+    // Fallback to default if no prefix matched
+    return defaultFS.promises[method](filePath, ...args);
+  };
+
+  const methods = {};
+
+  methods.readFile = execMethod.bind(methods, 'readFile');
+  methods.writeFile = execMethod.bind(methods, 'writeFile');
+  methods.unlink = execMethod.bind(methods, 'unlink');
+  methods.readdir = execMethod.bind(methods, 'readdir');
+  methods.mkdir = execMethod.bind(methods, 'mkdir');
+  methods.rmdir = execMethod.bind(methods, 'rmdir');
+  methods.stat = execMethod.bind(methods, 'stat');
+  methods.lstat = execMethod.bind(methods, 'lstat');
+  methods.readlink = execMethod.bind(methods, 'readlink');
+  methods.symlink = execMethod.bind(methods, 'symlink');
+
+  return {
+    promises: methods,
+  };
+}
+
+export class NeDBPlugin {
+  static createPlugin() {
+    return {
+      promises: new NeDBPlugin(),
+    };
+  }
+
+  async _modelFromPath(filePath: string): Promise<BaseModel> {
+    const segments = filePath.split('/').filter(p => p !== '');
+    const modelType = segments[0];
+    const modelId = segments[1];
+    const model = models.getModel(modelType);
+
+    if (!model) {
+      throw new Error(`Model not exist ${filePath}`);
+    }
+
+    const doc = await db.get(modelType, modelId);
+
+    if (!doc) {
+      throw new Error(`Doc not found ${filePath}`);
+    }
+
+    return doc;
+  }
+
+  async readFile(
+    filePath: string,
+    options: buffer$Encoding | { encoding?: buffer$Encoding },
+  ): Promise<Buffer | string> {
+    options = options || {};
+    if (typeof options === 'string') {
+      options = { encoding: options };
+    }
+
+    const doc = await this._modelFromPath(filePath);
+    const raw = Buffer.from(deterministicStringify(doc), 'utf8');
+
+    if (options.encoding) {
+      return raw.toString(options.encoding);
+    } else {
+      return raw;
+    }
+  }
+
+  async writeFile(filePath: string, data: Buffer | string, ...x: Array<any>): Promise<void> {
+    throw new Error('NeDBPlugin is not writable');
+  }
+
+  async unlink(filePath: string, ...x: Array<any>): Promise<void> {
+    throw new Error('NeDBPlugin is not writable');
+  }
+
+  async readdir(filePath: string, ...x: Array<any>): Promise<Array<string>> {
+    if (filePath === '/') {
+      return models.types();
+    }
+
+    const segments = filePath.split('/').filter(p => p !== '');
+    const modelType = segments[0];
+    const modelId = segments[1];
+    const model = models.getModel(modelType);
+
+    if (modelId) {
+      throw new Error(`Not a directory ${filePath}`);
+    }
+
+    if (!model) {
+      throw new Error(`Model not exist ${filePath}`);
+    }
+
+    return (await db.all(modelType)).map(doc => doc._id);
+  }
+
+  async mkdir(filePath: string, ...x: Array<any>) {
+    throw new Error('NeDBPlugin is not writable');
+  }
+
+  async rmdir(filePath: string, ...x: Array<any>) {
+    throw new Error('NeDBPlugin is not writable');
+  }
+
+  async stat(filePath: string, ...x: Array<any>): Promise<Stat> {
+    const segments = filePath.split('/').filter(p => p !== '');
+    const modelType = segments[0];
+    const modelId = segments[1];
+    const model = models.getModel(modelType);
+
+    if (!model) {
+      throw new Error(`Invalid model ${filePath}`);
+    }
+
+    if (!modelId && model) {
+      return new Stat({
+        type: 'dir',
+        mode: 0o777,
+        size: 0,
+        ino: 0,
+        mtimeMs: 0,
+      });
+    }
+
+    const doc = await db.get(modelType, modelId);
+    if (!doc) {
+      throw new Error(`Doc not found ${filePath}`);
+    }
+
+    const raw = Buffer.from(deterministicStringify(doc), 'utf8');
+    return new Stat({
+      type: 'file',
+      mode: 0o777,
+      size: raw.length,
+      ino: doc._id,
+      mtimeMs: doc.modified,
+    });
+  }
+
+  async lstat(filePath: string, ...x: Array<any>) {
+    return this.stat(filePath, ...x);
+  }
+
+  async readlink(filePath: string, ...x: Array<any>) {
+    throw new Error('NeDBPlugin is not writable');
+  }
+
+  async symlink(targetPath: string, filePath: string, ...x: Array<any>) {
+    throw new Error('NeDBPlugin is not writable');
+  }
+}
 
 export class MemPlugin {
   __fs: FSEntry;

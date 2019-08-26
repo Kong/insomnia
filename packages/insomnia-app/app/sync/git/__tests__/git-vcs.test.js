@@ -1,4 +1,6 @@
-import GitVCS, { MemPlugin } from '../git-vcs';
+import GitVCS, { MemPlugin, NeDBPlugin, routableFSPlugin } from '../git-vcs';
+import { globalBeforeEach } from '../../../__jest__/before-each';
+import * as models from '../../../models';
 
 const AUTHOR = {
   name: 'Karen Brown',
@@ -6,29 +8,7 @@ const AUTHOR = {
 };
 
 describe('Git-VCS', () => {
-  beforeEach(() => {
-    let ts = 1000000000000;
-
-    class fakeDate extends Date {
-      constructor(arg) {
-        if (!arg) {
-          return new Date(ts++);
-        } else {
-          super(arg);
-        }
-      }
-
-      getTimezoneOffset() {
-        return 0;
-      }
-
-      static now() {
-        return new Date().getTime();
-      }
-    }
-
-    global.Date = fakeDate;
-  });
+  beforeEach(setupDateMocks);
 
   describe('status', () => {
     it('does the thing', async () => {
@@ -66,11 +46,9 @@ describe('Git-VCS', () => {
       expect(await vcs.status()).toEqual([['bar.txt', 0, 2, 0], ['foo.txt', 0, 2, 0]]);
 
       await vcs.add('foo.txt');
-
       expect(await vcs.status()).toEqual([['bar.txt', 0, 2, 0], ['foo.txt', 0, 2, 2]]);
 
       await vcs.remove('foo.txt');
-
       expect(await vcs.status()).toEqual([['bar.txt', 0, 2, 0], ['foo.txt', 0, 2, 0]]);
     });
 
@@ -133,10 +111,7 @@ describe('Git-VCS', () => {
 });
 
 describe('MemPlugin', () => {
-  beforeEach(() => {
-    let ts = 1000000000000;
-    Date.now = jest.fn(() => ts++);
-  });
+  beforeEach(setupDateMocks);
 
   describe('readfile()', () => {
     it('fails to read', async () => {
@@ -378,4 +353,157 @@ async function assertAsyncError(promise, code) {
   }
 
   throw new Error(`Promise did not throw`);
+}
+
+describe('routableFSPlugin', () => {
+  it('routes .git and other files to separate places', async () => {
+    const pGit = MemPlugin.createPlugin();
+    const pDir = MemPlugin.createPlugin();
+
+    const p = routableFSPlugin(pDir, { '/.git': pGit }).promises;
+
+    await p.mkdir('/.git');
+    await p.mkdir('/other');
+
+    await p.writeFile('/other/a.txt', 'a');
+    await p.writeFile('/.git/b.txt', 'b');
+
+    expect(await pGit.promises.readdir('/.git')).toEqual(['b.txt']);
+    expect(await pDir.promises.readdir('/other')).toEqual(['a.txt']);
+
+    // Kind of an edge case, but reading the root dir will not list the .git folder
+    expect(await pDir.promises.readdir('/')).toEqual(['other']);
+
+    expect((await p.readFile('/other/a.txt')).toString()).toBe('a');
+    expect((await p.readFile('/.git/b.txt')).toString()).toBe('b');
+  });
+});
+
+describe('NeDBPlugin', () => {
+  beforeEach(async () => {
+    await globalBeforeEach();
+
+    setupDateMocks();
+
+    // Create some sample models
+    await models.workspace.create({ _id: 'wrk_1' });
+    await models.request.create({ _id: 'req_1', parentId: 'wrk_1' });
+  });
+
+  describe('readdir()', () => {
+    it('reads model IDs from model type folders', async () => {
+      const pNeDB = new NeDBPlugin();
+
+      expect(await pNeDB.readdir('/Workspace')).toEqual(['wrk_1']);
+      expect(await pNeDB.readdir('/Request')).toEqual(['req_1']);
+    });
+  });
+
+  describe('readFile()', () => {
+    it('reads file from model/id folders', async () => {
+      const pNeDB = new NeDBPlugin();
+
+      expect(JSON.parse(await pNeDB.readFile(`/Workspace/wrk_1`))).toEqual(
+        expect.objectContaining({ _id: 'wrk_1', parentId: null }),
+      );
+
+      expect(JSON.parse(await pNeDB.readFile(`/Request/req_1`))).toEqual(
+        expect.objectContaining({ _id: 'req_1', parentId: 'wrk_1' }),
+      );
+    });
+  });
+
+  describe('stat()', () => {
+    it('stats a dir', async () => {
+      const pNeDB = new NeDBPlugin();
+
+      expect(await pNeDB.stat('/Workspace')).toEqual({
+        type: 'dir',
+        dev: 1,
+        gid: 1,
+        uid: 1,
+        mode: 0o777,
+        size: 0,
+        ino: 0,
+        ctimeMs: 0,
+        mtimeMs: 0,
+      });
+
+      expect(await pNeDB.stat('/Workspace/wrk_1')).toEqual({
+        type: 'file',
+        dev: 1,
+        gid: 1,
+        uid: 1,
+        mode: 0o777,
+        size: 139,
+        ino: 'wrk_1',
+        ctimeMs: expect.any(Number),
+        mtimeMs: expect.any(Number),
+      });
+    });
+  });
+
+  describe('git ops', () => {
+    it('status/add/commit/log', async () => {
+      const pGit = MemPlugin.createPlugin();
+      const pDir = NeDBPlugin.createPlugin();
+
+      const vcs = new GitVCS();
+      await vcs.init('/', routableFSPlugin(pDir, { '/.git': pGit }));
+
+      expect(await vcs.status()).toEqual([
+        ['Request/req_1', 0, 2, 0],
+        ['Workspace/wrk_1', 0, 2, 0],
+      ]);
+
+      await vcs.add('Request/req_1');
+      await vcs.commit('add request', AUTHOR);
+
+      expect(await vcs.log()).toEqual([
+        expect.objectContaining({
+          message: 'add request\n',
+          oid: 'c8dd0a0589280160e8da0660bf27b33f340f036c',
+          parent: [],
+          tree: '768c1404f46e0841485b0898e586d7df160b427f',
+        }),
+      ]);
+
+      expect(await vcs.status()).toEqual([
+        ['Request/req_1', 1, 1, 1],
+        ['Workspace/wrk_1', 0, 2, 0],
+      ]);
+
+      // Update request and ensure Git finds the change
+      const request = await models.request.getById('req_1');
+      await models.request.update(request, { name: 'New Name' });
+      expect(await vcs.status()).toEqual([
+        ['Request/req_1', 1, 2, 1],
+        ['Workspace/wrk_1', 0, 2, 0],
+      ]);
+    });
+  });
+});
+
+function setupDateMocks() {
+  let ts = 1000000000000;
+
+  class fakeDate extends Date {
+    constructor(arg) {
+      if (!arg) {
+        return new Date(ts++);
+      } else {
+        super(arg);
+      }
+    }
+
+    getTimezoneOffset() {
+      return 0;
+    }
+
+    static now() {
+      return new Date().getTime();
+    }
+  }
+
+  global.Date = fakeDate;
 }
