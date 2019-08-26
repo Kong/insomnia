@@ -133,6 +133,7 @@
     "insomnia-prettify": "^0.1.11",
     "insomnia-url": "^0.1.10",
     "insomnia-xpath": "^1.0.14",
+    "isomorphic-git": "^0.64.4",
     "json-order": "^1.0.9",
     "jsonlint": "^1.6.3",
     "jsonpath": "^1.0.2",
