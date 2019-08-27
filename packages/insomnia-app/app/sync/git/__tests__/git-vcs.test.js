@@ -395,38 +395,16 @@ describe('NeDBPlugin', () => {
     it('reads model IDs from model type folders', async () => {
       const pNeDB = new NeDBPlugin();
 
-      expect(await pNeDB.readdir('/Workspace')).toEqual(['wrk_1', 'wrk_1.json']);
+      expect(await pNeDB.readdir('/')).toEqual(['wrk_1']);
 
-      expect(await pNeDB.readdir('/Workspace/wrk_1')).toEqual([
-        'ApiSpec',
-        'Environment',
-        'Request',
-        'RequestGroup',
-        'Workspace',
-      ]);
+      const contents = ['ApiSpec', 'Environment', 'Request', 'RequestGroup', 'Workspace'];
 
-      expect(await pNeDB.readdir('/Workspace/wrk_1/Request')).toEqual([
-        'req_1',
-        'req_1.json',
-        'req_2',
-        'req_2.json',
-      ]);
+      expect(await pNeDB.readdir('/wrk_1')).toEqual(contents);
+      expect(await pNeDB.readdir('/wrk_1/')).toEqual(contents);
+      expect(await pNeDB.readdir('///wrk_1//')).toEqual(contents);
 
-      expect(await pNeDB.readdir('/Workspace/wrk_1/Request/req_1')).toEqual([
-        'ApiSpec',
-        'Environment',
-        'Request',
-        'RequestGroup',
-        'Workspace',
-      ]);
-
-      expect(await pNeDB.readdir('/Workspace/wrk_1/Request/req_2')).toEqual([
-        'ApiSpec',
-        'Environment',
-        'Request',
-        'RequestGroup',
-        'Workspace',
-      ]);
+      expect(await pNeDB.readdir('/wrk_1/Request')).toEqual(['req_1', 'req_2']);
+      expect(await pNeDB.readdir('/wrk_1/Workspace')).toEqual(['wrk_1']);
     });
   });
 
@@ -434,11 +412,11 @@ describe('NeDBPlugin', () => {
     it('reads file from model/id folders', async () => {
       const pNeDB = new NeDBPlugin();
 
-      expect(JSON.parse(await pNeDB.readFile(`/Workspace/wrk_1.json`))).toEqual(
+      expect(JSON.parse(await pNeDB.readFile('/wrk_1/Workspace/wrk_1'))).toEqual(
         expect.objectContaining({ _id: 'wrk_1', parentId: null }),
       );
 
-      expect(JSON.parse(await pNeDB.readFile(`/Workspace/wrk_1/Request/req_1.json`))).toEqual(
+      expect(JSON.parse(await pNeDB.readFile('/wrk_1/Request/req_1'))).toEqual(
         expect.objectContaining({ _id: 'req_1', parentId: 'wrk_1' }),
       );
     });
@@ -446,7 +424,7 @@ describe('NeDBPlugin', () => {
     it('does it', async () => {
       const pNeDB = new NeDBPlugin();
 
-      expect(JSON.parse(await pNeDB.readFile(`/Workspace/wrk_1.json`))).toEqual(
+      expect(JSON.parse(await pNeDB.readFile(`/wrk_1/Workspace/wrk_1`))).toEqual(
         expect.objectContaining({ _id: 'wrk_1', parentId: null }),
       );
     });
@@ -456,29 +434,15 @@ describe('NeDBPlugin', () => {
     it('stats a dir', async () => {
       const pNeDB = new NeDBPlugin();
 
-      expect(await pNeDB.stat('/Workspace')).toEqual({
-        type: 'dir',
-        dev: 1,
-        gid: 1,
-        uid: 1,
-        mode: 0o777,
-        size: 0,
-        ino: 0,
-        ctimeMs: 0,
-        mtimeMs: 0,
-      });
-
-      expect(await pNeDB.stat('/Workspace/wrk_1')).toEqual({
-        type: 'file',
-        dev: 1,
-        gid: 1,
-        uid: 1,
-        mode: 0o777,
-        size: 139,
-        ino: 'wrk_1',
-        ctimeMs: expect.any(Number),
-        mtimeMs: expect.any(Number),
-      });
+      expect(await pNeDB.stat('/')).toEqual(expect.objectContaining({ type: 'dir' }));
+      expect(await pNeDB.stat('/wrk_1')).toEqual(expect.objectContaining({ type: 'dir' }));
+      expect(await pNeDB.stat('/wrk_1/Workspace/wrk_1')).toEqual(
+        expect.objectContaining({ type: 'file' }),
+      );
+      expect(await pNeDB.stat('/wrk_1/Request')).toEqual(expect.objectContaining({ type: 'dir' }));
+      expect(await pNeDB.stat('/wrk_1/Request/req_2')).toEqual(
+        expect.objectContaining({ type: 'file' }),
+      );
     });
   });
 
@@ -491,32 +455,35 @@ describe('NeDBPlugin', () => {
       await vcs.init('/', routableFSPlugin(pDir, { '/.git': pGit }));
 
       expect(await vcs.status()).toEqual([
-        ['Request/req_1', 0, 2, 0],
-        ['Workspace/wrk_1', 0, 2, 0],
+        ['wrk_1/Request/req_1', 0, 2, 0],
+        ['wrk_1/Request/req_2', 0, 2, 0],
+        ['wrk_1/Workspace/wrk_1', 0, 2, 0],
       ]);
 
-      await vcs.add('Request/req_1');
+      await vcs.add('wrk_1/Request/req_1');
       await vcs.commit('add request', AUTHOR);
 
       expect(await vcs.log()).toEqual([
         expect.objectContaining({
           message: 'add request\n',
-          oid: 'c8dd0a0589280160e8da0660bf27b33f340f036c',
-          tree: '768c1404f46e0841485b0898e586d7df160b427f',
+          oid: expect.any(String),
+          tree: expect.any(String),
         }),
       ]);
 
       expect(await vcs.status()).toEqual([
-        ['Request/req_1', 1, 1, 1],
-        ['Workspace/wrk_1', 0, 2, 0],
+        ['wrk_1/Request/req_1', 1, 1, 1],
+        ['wrk_1/Request/req_2', 0, 2, 0],
+        ['wrk_1/Workspace/wrk_1', 0, 2, 0],
       ]);
 
       // Update request and ensure Git finds the change
       const request = await models.request.getById('req_1');
       await models.request.update(request, { name: 'New Name' });
       expect(await vcs.status()).toEqual([
-        ['Request/req_1', 1, 2, 1],
-        ['Workspace/wrk_1', 0, 2, 0],
+        ['wrk_1/Request/req_1', 1, 2, 1],
+        ['wrk_1/Request/req_2', 0, 2, 0],
+        ['wrk_1/Workspace/wrk_1', 0, 2, 0],
       ]);
     });
   });

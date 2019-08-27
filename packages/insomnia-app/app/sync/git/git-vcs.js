@@ -3,7 +3,6 @@ import * as git from 'isomorphic-git';
 import fs from 'fs';
 import path from 'path';
 import * as db from '../../common/database';
-import type { BaseModel } from '../../models';
 import * as models from '../../models';
 import { deterministicStringify } from '../lib/deterministicStringify';
 
@@ -204,57 +203,31 @@ export class NeDBPlugin {
     };
   }
 
-  async _modelFromPath(filePath: string): Promise<BaseModel> {
-    const segments = filePath.split('/').filter(p => p !== '');
-    const modelType = segments[0];
-    const modelId = segments[1];
-    const model = models.getModel(modelType);
-
-    if (!model) {
-      throw new Error(`Model not exist ${filePath}`);
-    }
-
-    const doc = await db.get(modelType, modelId);
-
-    if (!doc) {
-      throw new Error(`Doc not found ${filePath}`);
-    }
-
-    return doc;
-  }
-
   async readFile(
     filePath: string,
-    options: buffer$Encoding | { encoding?: buffer$Encoding },
+    options?: buffer$Encoding | { encoding?: buffer$Encoding },
   ): Promise<Buffer | string> {
+    filePath = path.resolve(filePath);
     options = options || {};
     if (typeof options === 'string') {
       options = { encoding: options };
     }
 
-    const segments = filePath.split('/').filter(p => p !== '');
-    let latestDocs = [];
-    for (let i = 0; i < segments.length; i += 2) {
-      const [modelType, modelId] = segments;
-      console.log('SEARCHING', modelType, modelId);
-
-      const model = models.getModel(modelType);
-
-      if (modelId) {
-        throw new Error(`Not a directory ${filePath}`);
-      }
-
-      if (!model) {
-        throw new Error(`Model not exist ${filePath}`);
-      }
-
-      latestDocs = await db.all(modelType);
-      console.log('LATEST DOCS', latestDocs);
+    const modelMatch = filePath.match(/^\/([^/])+\/([^/]+)\/([^/]+)\/?$/);
+    if (!modelMatch) {
+      throw new Error('Cannot readfile on directory ' + filePath);
     }
 
-    // return latestDocs.map(doc => `${doc._id}.json`);
+    // const workspaceId = modelMatch[1];
+    const type = modelMatch[2];
+    const id = modelMatch[3];
 
-    const doc = await this._modelFromPath(filePath);
+    const doc = await db.get(type, id);
+
+    if (!doc) {
+      throw new Error(`Cannot find doc ${filePath}`);
+    }
+
     const raw = Buffer.from(deterministicStringify(doc), 'utf8');
 
     if (options.encoding) {
@@ -273,6 +246,8 @@ export class NeDBPlugin {
   }
 
   async readdir(filePath: string, ...x: Array<any>): Promise<Array<string>> {
+    filePath = path.normalize(filePath);
+
     const MODELS = [
       models.workspace.type,
       models.environment.type,
@@ -281,62 +256,24 @@ export class NeDBPlugin {
       models.apiSpec.type,
     ];
 
-    if (filePath === '/') {
-      return MODELS;
+    const rootMatch = filePath.match(/^\/$/);
+    const workspaceMatch = filePath.match(/^\/([^/]+)\/?$/);
+    const modelMatch = filePath.match(/^\/([^/]+)\/([^/]+)\/?$/);
+
+    let docs = [];
+    let otherFolders = [];
+    if (rootMatch) {
+      docs = await db.all(models.workspace.type);
+    } else if (workspaceMatch) {
+      otherFolders = MODELS;
+    } else if (modelMatch) {
+      const workspace = await db.get(models.workspace.type, modelMatch[1]);
+      const children = await db.withDescendants(workspace);
+      docs = children.filter(d => d.type === modelMatch[2]);
     }
 
-    const segments = filePath.split('/');
-
-    let latestItems = [];
-    // console.log('\n\n---------------------------', segments);
-    for (let i = 0; i < segments.length; i += 2) {
-      latestItems = [];
-      const parentId = segments[i];
-      const modelType = segments[i + 1];
-      const modelId = segments[i + 2];
-      // console.log('SEARCHING', { parentId, modelType, modelId });
-
-      if (!modelType) {
-        latestItems = MODELS;
-        continue;
-      }
-
-      const model = models.getModel(modelType);
-
-      if (!model) {
-        throw new Error(`Model not exist ${filePath}`);
-      }
-
-      if (modelId && modelId.match(/\.json$/)) {
-        throw new Error(`Not a directory ${filePath}`);
-      }
-
-      if (modelId) {
-        latestItems = [`${modelId}.json`, ...MODELS];
-      } else {
-        for (const doc of await db.find(modelType, { parentId: parentId || null })) {
-          latestItems.push(doc._id + '.json');
-          latestItems.push(doc._id);
-        }
-      }
-
-      // console.log('LATEST DOCS', latestItems);
-    }
-
-    return latestItems.sort();
-
-    // const toReturn = MODELS;
-    // for (const doc of latestDocs) {
-    //   // Add doc first
-    //   toReturn.push(`${doc._id}.json`);
-    //
-    //   for (const type of MODELS) {
-    //     toReturn.push(type);
-    //   }
-    // }
-    //
-    // return toReturn;
-    // return [];
+    const ids = docs.map(d => d._id);
+    return [...ids, ...otherFolders].sort();
   }
 
   async mkdir(filePath: string, ...x: Array<any>) {
@@ -348,16 +285,36 @@ export class NeDBPlugin {
   }
 
   async stat(filePath: string, ...x: Array<any>): Promise<Stat> {
-    const segments = filePath.split('/').filter(p => p !== '');
-    const modelType = segments[0];
-    const modelId = segments[1];
-    const model = models.getModel(modelType);
+    filePath = path.normalize(filePath);
 
-    if (!model) {
-      throw new Error(`Invalid model ${filePath}`);
+    let fileBuff: Buffer | string | null = null;
+    let dir: Array<string> | null = null;
+    try {
+      fileBuff = await this.readFile(filePath);
+    } catch (err) {}
+
+    if (fileBuff === null) {
+      try {
+        dir = await this.readdir(filePath);
+      } catch (err) {
+        // Nothing
+      }
     }
 
-    if (!modelId && model) {
+    if (!fileBuff && !dir) {
+      throw new Error(`Not found ${filePath}`);
+    }
+
+    if (fileBuff) {
+      const doc = JSON.parse(fileBuff.toString());
+      return new Stat({
+        type: 'file',
+        mode: 0o777,
+        size: fileBuff.length,
+        ino: doc._id,
+        mtimeMs: doc.modified,
+      });
+    } else {
       return new Stat({
         type: 'dir',
         mode: 0o777,
@@ -366,20 +323,6 @@ export class NeDBPlugin {
         mtimeMs: 0,
       });
     }
-
-    const doc = await db.get(modelType, modelId);
-    if (!doc) {
-      throw new Error(`Doc not found ${filePath}`);
-    }
-
-    const raw = Buffer.from(deterministicStringify(doc), 'utf8');
-    return new Stat({
-      type: 'file',
-      mode: 0o777,
-      size: raw.length,
-      ino: doc._id,
-      mtimeMs: doc.modified,
-    });
   }
 
   async lstat(filePath: string, ...x: Array<any>) {
