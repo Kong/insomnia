@@ -12,6 +12,7 @@ import SyncDropdown from '../dropdowns/sync-dropdown';
 import SyncLegacyDropdown from '../dropdowns/sync-legacy-dropdown';
 import type { StatusCandidate } from '../../../sync/types';
 import { isLoggedIn } from '../../../account/session';
+import GitSyncDropdown from '../dropdowns/git-sync-dropdown';
 
 type Props = {|
   activeEnvironment: Environment | null,
@@ -81,7 +82,9 @@ class Sidebar extends React.PureComponent<Props> {
 
         {children}
 
-        {enableSyncBeta && vcs && isLoggedIn() && (
+        <GitSyncDropdown workspace={workspace} className="sidebar__footer" />
+
+        {false && enableSyncBeta && vcs && isLoggedIn() && (
           <SyncDropdown
             className="sidebar__footer"
             workspace={workspace}
@@ -90,7 +93,7 @@ class Sidebar extends React.PureComponent<Props> {
           />
         )}
 
-        {!enableSyncBeta && (
+        {false && !enableSyncBeta && (
           <SyncLegacyDropdown
             className="sidebar__footer"
             key={workspace._id}

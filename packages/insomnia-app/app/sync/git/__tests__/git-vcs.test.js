@@ -388,14 +388,45 @@ describe('NeDBPlugin', () => {
     // Create some sample models
     await models.workspace.create({ _id: 'wrk_1' });
     await models.request.create({ _id: 'req_1', parentId: 'wrk_1' });
+    await models.request.create({ _id: 'req_2', parentId: 'wrk_1' });
   });
 
   describe('readdir()', () => {
     it('reads model IDs from model type folders', async () => {
       const pNeDB = new NeDBPlugin();
 
-      expect(await pNeDB.readdir('/Workspace')).toEqual(['wrk_1']);
-      expect(await pNeDB.readdir('/Request')).toEqual(['req_1']);
+      expect(await pNeDB.readdir('/Workspace')).toEqual(['wrk_1', 'wrk_1.json']);
+
+      expect(await pNeDB.readdir('/Workspace/wrk_1')).toEqual([
+        'ApiSpec',
+        'Environment',
+        'Request',
+        'RequestGroup',
+        'Workspace',
+      ]);
+
+      expect(await pNeDB.readdir('/Workspace/wrk_1/Request')).toEqual([
+        'req_1',
+        'req_1.json',
+        'req_2',
+        'req_2.json',
+      ]);
+
+      expect(await pNeDB.readdir('/Workspace/wrk_1/Request/req_1')).toEqual([
+        'ApiSpec',
+        'Environment',
+        'Request',
+        'RequestGroup',
+        'Workspace',
+      ]);
+
+      expect(await pNeDB.readdir('/Workspace/wrk_1/Request/req_2')).toEqual([
+        'ApiSpec',
+        'Environment',
+        'Request',
+        'RequestGroup',
+        'Workspace',
+      ]);
     });
   });
 
@@ -403,12 +434,20 @@ describe('NeDBPlugin', () => {
     it('reads file from model/id folders', async () => {
       const pNeDB = new NeDBPlugin();
 
-      expect(JSON.parse(await pNeDB.readFile(`/Workspace/wrk_1`))).toEqual(
+      expect(JSON.parse(await pNeDB.readFile(`/Workspace/wrk_1.json`))).toEqual(
         expect.objectContaining({ _id: 'wrk_1', parentId: null }),
       );
 
-      expect(JSON.parse(await pNeDB.readFile(`/Request/req_1`))).toEqual(
+      expect(JSON.parse(await pNeDB.readFile(`/Workspace/wrk_1/Request/req_1.json`))).toEqual(
         expect.objectContaining({ _id: 'req_1', parentId: 'wrk_1' }),
+      );
+    });
+
+    it('does it', async () => {
+      const pNeDB = new NeDBPlugin();
+
+      expect(JSON.parse(await pNeDB.readFile(`/Workspace/wrk_1.json`))).toEqual(
+        expect.objectContaining({ _id: 'wrk_1', parentId: null }),
       );
     });
   });
@@ -463,7 +502,6 @@ describe('NeDBPlugin', () => {
         expect.objectContaining({
           message: 'add request\n',
           oid: 'c8dd0a0589280160e8da0660bf27b33f340f036c',
-          parent: [],
           tree: '768c1404f46e0841485b0898e586d7df160b427f',
         }),
       ]);

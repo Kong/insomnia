@@ -9,52 +9,54 @@ import { deterministicStringify } from '../lib/deterministicStringify';
 
 export default class GitVCS {
   _dir: string;
+  _gitdir: ?string;
   _git: Object;
 
-  async init(directory: string, fsPlugin: Object) {
+  async init(directory: string, fsPlugin: Object, gitDirectory?: string) {
     this._dir = directory;
     git.plugins.set('fs', fsPlugin);
-    await git.init({ dir: directory });
+    await git.init({ dir: directory, gitdir: gitDirectory });
     this._git = git;
+    this._gitdir = gitDirectory;
   }
 
   async listFiles(): Promise<Array<string>> {
     console.log('[git] List files');
-    return git.listFiles({ dir: this._dir });
+    return git.listFiles({ dir: this._dir, gitdir: this._gitdir });
   }
 
   async status(): Promise<Array<[string, number, number]>> {
     console.log('[git] Status');
-    return git.statusMatrix({ dir: this._dir });
+    return git.statusMatrix({ dir: this._dir, gitdir: this._gitdir });
   }
 
   async add(relPath: string): Promise<void> {
     console.log('[git] Add', relPath);
-    return git.add({ dir: this._dir, filepath: relPath });
+    return git.add({ dir: this._dir, gitdir: this._gitdir, filepath: relPath });
   }
 
   async remove(relPath: string): Promise<void> {
     console.log('[git] Remove', relPath);
-    return git.remove({ dir: this._dir, filepath: relPath });
+    return git.remove({ dir: this._dir, gitdir: this._gitdir, filepath: relPath });
   }
 
   async commit(message: string, author: { name: string, email: string }): Promise<string> {
     console.log('[git] Commit', message);
-    return git.commit({ dir: this._dir, message, author });
+    return git.commit({ dir: this._dir, gitdir: this._gitdir, message, author });
   }
 
   async log(depth: number = 5): Promise<string> {
     console.log('[git] Log', depth);
-    return git.log({ dir: this._dir, depth: depth });
+    return git.log({ dir: this._dir, gitdir: this._gitdir, depth: depth });
   }
 
   async checkout(branch: string): Promise<void> {
     console.log('[git] Checkout', branch);
     try {
-      return await git.checkout({ dir: this._dir, ref: branch });
+      return await git.checkout({ dir: this._dir, gitdir: this._gitdir, ref: branch });
     } catch (err) {
       // Create if doesn't exist
-      return git.branch({ dir: this._dir, ref: branch, checkout: true });
+      return git.branch({ dir: this._dir, gitdir: this._gitdir, ref: branch, checkout: true });
     }
   }
 }
@@ -230,6 +232,28 @@ export class NeDBPlugin {
       options = { encoding: options };
     }
 
+    const segments = filePath.split('/').filter(p => p !== '');
+    let latestDocs = [];
+    for (let i = 0; i < segments.length; i += 2) {
+      const [modelType, modelId] = segments;
+      console.log('SEARCHING', modelType, modelId);
+
+      const model = models.getModel(modelType);
+
+      if (modelId) {
+        throw new Error(`Not a directory ${filePath}`);
+      }
+
+      if (!model) {
+        throw new Error(`Model not exist ${filePath}`);
+      }
+
+      latestDocs = await db.all(modelType);
+      console.log('LATEST DOCS', latestDocs);
+    }
+
+    // return latestDocs.map(doc => `${doc._id}.json`);
+
     const doc = await this._modelFromPath(filePath);
     const raw = Buffer.from(deterministicStringify(doc), 'utf8');
 
@@ -249,24 +273,70 @@ export class NeDBPlugin {
   }
 
   async readdir(filePath: string, ...x: Array<any>): Promise<Array<string>> {
+    const MODELS = [
+      models.workspace.type,
+      models.environment.type,
+      models.requestGroup.type,
+      models.request.type,
+      models.apiSpec.type,
+    ];
+
     if (filePath === '/') {
-      return models.types();
+      return MODELS;
     }
 
-    const segments = filePath.split('/').filter(p => p !== '');
-    const modelType = segments[0];
-    const modelId = segments[1];
-    const model = models.getModel(modelType);
+    const segments = filePath.split('/');
 
-    if (modelId) {
-      throw new Error(`Not a directory ${filePath}`);
+    let latestItems = [];
+    // console.log('\n\n---------------------------', segments);
+    for (let i = 0; i < segments.length; i += 2) {
+      latestItems = [];
+      const parentId = segments[i];
+      const modelType = segments[i + 1];
+      const modelId = segments[i + 2];
+      // console.log('SEARCHING', { parentId, modelType, modelId });
+
+      if (!modelType) {
+        latestItems = MODELS;
+        continue;
+      }
+
+      const model = models.getModel(modelType);
+
+      if (!model) {
+        throw new Error(`Model not exist ${filePath}`);
+      }
+
+      if (modelId && modelId.match(/\.json$/)) {
+        throw new Error(`Not a directory ${filePath}`);
+      }
+
+      if (modelId) {
+        latestItems = [`${modelId}.json`, ...MODELS];
+      } else {
+        for (const doc of await db.find(modelType, { parentId: parentId || null })) {
+          latestItems.push(doc._id + '.json');
+          latestItems.push(doc._id);
+        }
+      }
+
+      // console.log('LATEST DOCS', latestItems);
     }
 
-    if (!model) {
-      throw new Error(`Model not exist ${filePath}`);
-    }
+    return latestItems.sort();
 
-    return (await db.all(modelType)).map(doc => doc._id);
+    // const toReturn = MODELS;
+    // for (const doc of latestDocs) {
+    //   // Add doc first
+    //   toReturn.push(`${doc._id}.json`);
+    //
+    //   for (const type of MODELS) {
+    //     toReturn.push(type);
+    //   }
+    // }
+    //
+    // return toReturn;
+    // return [];
   }
 
   async mkdir(filePath: string, ...x: Array<any>) {
