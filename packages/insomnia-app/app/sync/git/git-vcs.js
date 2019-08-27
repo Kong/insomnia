@@ -197,9 +197,18 @@ export function routableFSPlugin(defaultFS: Object, otherFS: { [string]: Object 
 }
 
 export class NeDBPlugin {
-  static createPlugin() {
+  _workspaceId: string;
+
+  constructor(workspaceId: string) {
+    if (!workspaceId) {
+      throw new Error('Cannot use NeDBPlugin without workspace ID');
+    }
+    this._workspaceId = workspaceId;
+  }
+
+  static createPlugin(workspaceId: string) {
     return {
-      promises: new NeDBPlugin(),
+      promises: new NeDBPlugin(workspaceId),
     };
   }
 
@@ -213,19 +222,27 @@ export class NeDBPlugin {
       options = { encoding: options };
     }
 
-    const modelMatch = filePath.match(/^\/([^/])+\/([^/]+)\/([^/]+)\/?$/);
-    if (!modelMatch) {
-      throw new Error('Cannot readfile on directory ' + filePath);
+    const match = filePath.match(/^\/([^/]+)\/([^/]+)\/?$/);
+
+    if (!match) {
+      throw new Error(`Cannot read from directory or missing ${filePath}`);
     }
 
     // const workspaceId = modelMatch[1];
-    const type = modelMatch[2];
-    const id = modelMatch[3];
+    const type = match[1];
+    const id = match[2];
 
     const doc = await db.get(type, id);
 
     if (!doc) {
       throw new Error(`Cannot find doc ${filePath}`);
+    }
+
+    if (doc.type !== models.workspace.type) {
+      const ancestors = await db.withAncestors(doc);
+      if (!ancestors.find(d => d.type === models.workspace.type)) {
+        throw new Error(`Not found under workspace ${filePath}`);
+      }
     }
 
     const raw = Buffer.from(deterministicStringify(doc), 'utf8');
@@ -257,19 +274,16 @@ export class NeDBPlugin {
     ];
 
     const rootMatch = filePath.match(/^\/$/);
-    const workspaceMatch = filePath.match(/^\/([^/]+)\/?$/);
-    const modelMatch = filePath.match(/^\/([^/]+)\/([^/]+)\/?$/);
+    const modelMatch = filePath.match(/^\/([^/]+)\/?$/);
 
     let docs = [];
     let otherFolders = [];
     if (rootMatch) {
-      docs = await db.all(models.workspace.type);
-    } else if (workspaceMatch) {
       otherFolders = MODELS;
     } else if (modelMatch) {
-      const workspace = await db.get(models.workspace.type, modelMatch[1]);
+      const workspace = await db.get(models.workspace.type, this._workspaceId);
       const children = await db.withDescendants(workspace);
-      docs = children.filter(d => d.type === modelMatch[2]);
+      docs = children.filter(d => d.type === modelMatch[1]);
     }
 
     const ids = docs.map(d => d._id);

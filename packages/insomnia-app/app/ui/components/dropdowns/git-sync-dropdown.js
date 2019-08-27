@@ -40,12 +40,15 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   _handleOpen() {}
 
   async _handleCommit() {
-    console.log('COMMIT?', await this.vcs.status());
+    console.log('Status', await this.vcs.status());
   }
 
   async componentDidMount() {
+    const { workspace } = this.props;
     const gitDir = '/Users/greg.schier/Desktop/git';
-    const fsPlugin = routableFSPlugin(NeDBPlugin.createPlugin(), { [gitDir]: fs });
+    const fsPlugin = routableFSPlugin(NeDBPlugin.createPlugin(workspace._id), {
+      [gitDir]: fs,
+    });
     await this.vcs.init('/', fsPlugin, gitDir);
     this.setState({ initializing: false });
   }
