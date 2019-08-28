@@ -1,4 +1,4 @@
-import GitVCS, { FSPlugin, MemPlugin, NeDBPlugin, routableFSPlugin } from '../git-vcs';
+import GitVCS, { MemPlugin, NeDBPlugin, routableFSPlugin } from '../git-vcs';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
 
@@ -402,8 +402,8 @@ describe('NeDBPlugin', () => {
         'RequestGroup',
         'Workspace',
       ]);
-      expect(await pNeDB.readdir('/Request')).toEqual(['req_1', 'req_2']);
-      expect(await pNeDB.readdir('/Workspace')).toEqual(['wrk_1']);
+      expect(await pNeDB.readdir('/Request')).toEqual(['req_1.json', 'req_2.json']);
+      expect(await pNeDB.readdir('/Workspace')).toEqual(['wrk_1.json']);
     });
   });
 
@@ -411,11 +411,11 @@ describe('NeDBPlugin', () => {
     it('reads file from model/id folders', async () => {
       const pNeDB = new NeDBPlugin('wrk_1');
 
-      expect(JSON.parse(await pNeDB.readFile('/Workspace/wrk_1'))).toEqual(
+      expect(JSON.parse(await pNeDB.readFile('/Workspace/wrk_1.json'))).toEqual(
         expect.objectContaining({ _id: 'wrk_1', parentId: null }),
       );
 
-      expect(JSON.parse(await pNeDB.readFile('/Request/req_1'))).toEqual(
+      expect(JSON.parse(await pNeDB.readFile('/Request/req_1.json'))).toEqual(
         expect.objectContaining({ _id: 'req_1', parentId: 'wrk_1' }),
       );
     });
@@ -426,30 +426,31 @@ describe('NeDBPlugin', () => {
       const pNeDB = new NeDBPlugin('wrk_1');
 
       expect(await pNeDB.stat('/')).toEqual(expect.objectContaining({ type: 'dir' }));
-      expect(await pNeDB.stat('/Workspace/wrk_1')).toEqual(
+      expect(await pNeDB.stat('/Workspace/wrk_1.json')).toEqual(
         expect.objectContaining({ type: 'file' }),
       );
       expect(await pNeDB.stat('/Request')).toEqual(expect.objectContaining({ type: 'dir' }));
-      expect(await pNeDB.stat('/Request/req_2')).toEqual(expect.objectContaining({ type: 'file' }));
+      expect(await pNeDB.stat('/Request/req_2.json')).toEqual(
+        expect.objectContaining({ type: 'file' }),
+      );
     });
   });
 
   describe('git ops', () => {
     it('status/add/commit/log', async () => {
-      const pGit = FSPlugin.createPlugin('/Users/greg.schier/Desktop/test');
-      // const pGit = MemPlugin.createPlugin();
+      const pGit = MemPlugin.createPlugin();
       const pDir = NeDBPlugin.createPlugin('wrk_1');
 
       const vcs = new GitVCS();
       await vcs.init('/', routableFSPlugin(pDir, { '/.git': pGit }));
 
       expect(await vcs.status()).toEqual([
-        ['Request/req_1', 0, 2, 0],
-        ['Request/req_2', 0, 2, 0],
-        ['Workspace/wrk_1', 0, 2, 0],
+        ['Request/req_1.json', 0, 2, 0],
+        ['Request/req_2.json', 0, 2, 0],
+        ['Workspace/wrk_1.json', 0, 2, 0],
       ]);
 
-      await vcs.add('Request/req_1');
+      await vcs.add('Request/req_1.json');
       await vcs.commit('add request', AUTHOR);
 
       expect(await vcs.log()).toEqual([
@@ -461,18 +462,18 @@ describe('NeDBPlugin', () => {
       ]);
 
       expect(await vcs.status()).toEqual([
-        ['Request/req_1', 1, 1, 1],
-        ['Request/req_2', 0, 2, 0],
-        ['Workspace/wrk_1', 0, 2, 0],
+        ['Request/req_1.json', 1, 1, 1],
+        ['Request/req_2.json', 0, 2, 0],
+        ['Workspace/wrk_1.json', 0, 2, 0],
       ]);
 
       // Update request and ensure Git finds the change
       const request = await models.request.getById('req_1');
       await models.request.update(request, { name: 'New Name' });
       expect(await vcs.status()).toEqual([
-        ['Request/req_1', 1, 2, 1],
-        ['Request/req_2', 0, 2, 0],
-        ['Workspace/wrk_1', 0, 2, 0],
+        ['Request/req_1.json', 1, 2, 1],
+        ['Request/req_2.json', 0, 2, 0],
+        ['Workspace/wrk_1.json', 0, 2, 0],
       ]);
     });
   });

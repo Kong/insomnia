@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import * as db from '../../common/database';
 import * as models from '../../models';
-import { deterministicStringify } from '../lib/deterministicStringify';
+import stringifyJSON from 'json-stable-stringify';
 
 export default class GitVCS {
   _dir: string;
@@ -24,28 +24,39 @@ export default class GitVCS {
     return git.listFiles({ dir: this._dir, gitdir: this._gitdir });
   }
 
-  async status(): Promise<Array<[string, number, number]>> {
+  async status(): Promise<Array<[string, number, number, number]>> {
     console.log('[git] Status');
     return git.statusMatrix({ dir: this._dir, gitdir: this._gitdir });
   }
 
   async add(relPath: string): Promise<void> {
-    console.log('[git] Add', { relPath });
+    console.log(`[git] Add ${relPath}`);
     return git.add({ dir: this._dir, gitdir: this._gitdir, filepath: relPath });
   }
 
   async remove(relPath: string): Promise<void> {
-    console.log('[git] Remove', { relPath });
+    console.log(`[git] Remove relPath=${relPath}`);
     return git.remove({ dir: this._dir, gitdir: this._gitdir, filepath: relPath });
   }
 
   async commit(message: string, author: { name: string, email: string }): Promise<string> {
-    console.log('[git] Commit', { message });
+    console.log(`[git] Commit "${message}"`);
     return git.commit({ dir: this._dir, gitdir: this._gitdir, message, author });
   }
 
-  async log(depth: number = 5): Promise<string> {
-    console.log('[git] Log', { depth });
+  async push(): Promise<Object> {
+    console.log('[git] Push');
+    return git.push({
+      force: true,
+      dir: this._dir,
+      gitdir: this._gitdir,
+      url: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+      token: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    });
+  }
+
+  async log(depth: number = 5): Promise<Array<Object>> {
+    console.log(`[git] Log depth=${depth}`);
     return git.log({ dir: this._dir, gitdir: this._gitdir, depth: depth });
   }
 
@@ -63,12 +74,12 @@ export default class GitVCS {
 export class FSPlugin {
   _basePath: string;
 
-  constructor(basePath: string) {
+  constructor(basePath?: string = '/') {
     this._basePath = basePath;
     console.log(`[FSPlugin] Created in ${basePath}`);
   }
 
-  static createPlugin(basePath: string) {
+  static createPlugin(basePath?: string = '/') {
     return {
       promises: new FSPlugin(basePath),
     };
@@ -223,7 +234,7 @@ export class NeDBPlugin {
       options = { encoding: options };
     }
 
-    const match = filePath.match(/^\/([^/]+)\/([^/]+)\/?$/);
+    const match = filePath.match(/^\/([^/]+)\/([^/]+)\.json$/);
 
     if (!match) {
       throw new Error(`Cannot read from directory or missing ${filePath}`);
@@ -246,7 +257,7 @@ export class NeDBPlugin {
       }
     }
 
-    const raw = Buffer.from(deterministicStringify(doc), 'utf8');
+    const raw = Buffer.from(stringifyJSON(doc, { space: '  ' }), 'utf8');
 
     if (options.encoding) {
       return raw.toString(options.encoding);
@@ -287,7 +298,7 @@ export class NeDBPlugin {
       docs = children.filter(d => d.type === modelMatch[1]);
     }
 
-    const ids = docs.map(d => d._id);
+    const ids = docs.map(d => `${d._id}.json`);
     return [...ids, ...otherFolders].sort();
   }
 

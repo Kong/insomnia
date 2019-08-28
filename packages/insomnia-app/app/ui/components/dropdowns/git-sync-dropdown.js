@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import mkdirp from 'mkdirp';
+import path from 'path';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
@@ -9,9 +10,8 @@ import Tooltip from '../tooltip';
 import * as session from '../../../account/session';
 import GitVCS, { FSPlugin, NeDBPlugin, routableFSPlugin } from '../../../sync/git/git-vcs';
 import { showAlert, showPrompt } from '../modals';
-import ModalBody from '../base/modal-body';
-import HelpTooltip from '../help-tooltip';
 import TimeFromNow from '../time-from-now';
+import { getDataDirectory } from '../../../common/misc';
 
 type Props = {
   workspace: Workspace,
@@ -38,6 +38,11 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   _handleOpen() {}
+
+  async _handlePush() {
+    await this.vcs.push();
+    console.log('PUsh complete');
+  }
 
   async _handleLog() {
     const log = await this.vcs.log();
@@ -74,7 +79,6 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
   async _handleCommit() {
     const status = await this.vcs.status();
-    console.log('Status 1', { status });
 
     let count = 0;
     for (const [name, head, workdir, stage] of status) {
@@ -101,8 +105,8 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
       label: 'Commit message',
       onComplete: async message => {
         await this.vcs.commit(message, {
-          name: 'Jane Guy',
-          email: 'greg@example.com',
+          name: 'Gregory Schier',
+          email: 'xxxxxxxxxxxxxxxxxxxxx',
         });
       },
     });
@@ -110,18 +114,19 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
   async componentDidMount() {
     const { workspace } = this.props;
-    const gitDir = `/Users/greg.schier/Desktop/${workspace._id}`;
+    const dataDir = getDataDirectory();
+    const gitDir = path.join(dataDir, `version-control/git/${workspace._id}.git`);
 
     // Create directory
     mkdirp.sync(gitDir);
 
     // Create FS plugin
-    const pGit = FSPlugin.createPlugin(gitDir);
     const pDir = NeDBPlugin.createPlugin(workspace._id);
-    const fsPlugin = routableFSPlugin(pDir, { '/.git': pGit });
+    const pGit = FSPlugin.createPlugin();
+    const fsPlugin = routableFSPlugin(pDir, { [gitDir]: pGit });
 
     // Init VCS
-    await this.vcs.init('/', fsPlugin);
+    await this.vcs.init('/', fsPlugin, gitDir);
 
     // Test it out
     const log = await this.vcs.log();
@@ -201,6 +206,11 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           <DropdownItem onClick={this._handleLog}>
             <React.Fragment>
               <i className="fa fa-line-chart" /> Show Log
+            </React.Fragment>
+          </DropdownItem>
+          <DropdownItem onClick={this._handlePush}>
+            <React.Fragment>
+              <i className="fa fa-cloud-upload" /> Push
             </React.Fragment>
           </DropdownItem>
         </Dropdown>
