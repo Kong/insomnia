@@ -1,13 +1,17 @@
 // @flow
 import * as React from 'react';
-import fs from 'fs';
+import mkdirp from 'mkdirp';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
 import Tooltip from '../tooltip';
 import * as session from '../../../account/session';
-import GitVCS, { NeDBPlugin, routableFSPlugin } from '../../../sync/git/git-vcs';
+import GitVCS, { FSPlugin, NeDBPlugin, routableFSPlugin } from '../../../sync/git/git-vcs';
+import { showAlert, showPrompt } from '../modals';
+import ModalBody from '../base/modal-body';
+import HelpTooltip from '../help-tooltip';
+import TimeFromNow from '../time-from-now';
 
 type Props = {
   workspace: Workspace,
@@ -22,9 +26,6 @@ type State = {
 
 @autobind
 class GitSyncDropdown extends React.PureComponent<Props, State> {
-  checkInterval: IntervalID;
-  refreshOnNextSyncItems = false;
-  lastUserActivity = Date.now();
   vcs: GitVCS;
 
   constructor(props: Props) {
@@ -34,22 +35,101 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     };
 
     this.vcs = new GitVCS();
-    this.vcs.init('/', '');
   }
 
   _handleOpen() {}
 
+  async _handleLog() {
+    const log = await this.vcs.log();
+    showAlert({
+      title: 'Git Log',
+      message: (
+        <table className="table--fancy table--striped">
+          <thead>
+            <tr>
+              <th className="text-left">Message</th>
+              <th className="text-left">When</th>
+              <th className="text-left">Author</th>
+            </tr>
+          </thead>
+          <tbody>
+            {log.map(({ author, message, oid }) => (
+              <tr key={oid}>
+                <td>{message}</td>
+                <td>
+                  <TimeFromNow
+                    className="no-wrap"
+                    timestamp={author.timestamp * 1000}
+                    intervalSeconds={30}
+                  />
+                </td>
+                <td>{author.email}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ),
+    });
+  }
+
   async _handleCommit() {
-    console.log('Status', await this.vcs.status());
+    const status = await this.vcs.status();
+    console.log('Status 1', { status });
+
+    let count = 0;
+    for (const [name, head, workdir, stage] of status) {
+      if (head === 1 && workdir === 1 && stage === 1) {
+        // Nothing changed
+        continue;
+      }
+
+      await this.vcs.add(name);
+      count++;
+    }
+
+    if (count === 0) {
+      showAlert({
+        title: 'Git Error',
+        message: 'Nothing changed',
+      });
+
+      return;
+    }
+
+    showPrompt({
+      title: 'Commit',
+      label: 'Commit message',
+      onComplete: async message => {
+        await this.vcs.commit(message, {
+          name: 'Jane Guy',
+          email: 'greg@example.com',
+        });
+      },
+    });
   }
 
   async componentDidMount() {
     const { workspace } = this.props;
-    const gitDir = '/Users/greg.schier/Desktop/git';
-    const fsPlugin = routableFSPlugin(NeDBPlugin.createPlugin(workspace._id), {
-      [gitDir]: fs,
-    });
-    await this.vcs.init('/', fsPlugin, gitDir);
+    const gitDir = `/Users/greg.schier/Desktop/${workspace._id}`;
+
+    // Create directory
+    mkdirp.sync(gitDir);
+
+    // Create FS plugin
+    const pGit = FSPlugin.createPlugin(gitDir);
+    const pDir = NeDBPlugin.createPlugin(workspace._id);
+    const fsPlugin = routableFSPlugin(pDir, { '/.git': pGit });
+
+    // Init VCS
+    await this.vcs.init('/', fsPlugin);
+
+    // Test it out
+    const log = await this.vcs.log();
+    console.log('Log', log);
+
+    const status = await this.vcs.status();
+    console.log('Status', status);
+
     this.setState({ initializing: false });
   }
 
@@ -115,7 +195,12 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           {syncMenuHeader}
           <DropdownItem onClick={this._handleCommit}>
             <React.Fragment>
-              <i className="fa fa-save" /> Commit
+              <i className="fa fa-save" /> Commit Changes
+            </React.Fragment>
+          </DropdownItem>
+          <DropdownItem onClick={this._handleLog}>
+            <React.Fragment>
+              <i className="fa fa-line-chart" /> Show Log
             </React.Fragment>
           </DropdownItem>
         </Dropdown>

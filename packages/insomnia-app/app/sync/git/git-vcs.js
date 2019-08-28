@@ -30,27 +30,27 @@ export default class GitVCS {
   }
 
   async add(relPath: string): Promise<void> {
-    console.log('[git] Add', relPath);
+    console.log('[git] Add', { relPath });
     return git.add({ dir: this._dir, gitdir: this._gitdir, filepath: relPath });
   }
 
   async remove(relPath: string): Promise<void> {
-    console.log('[git] Remove', relPath);
+    console.log('[git] Remove', { relPath });
     return git.remove({ dir: this._dir, gitdir: this._gitdir, filepath: relPath });
   }
 
   async commit(message: string, author: { name: string, email: string }): Promise<string> {
-    console.log('[git] Commit', message);
+    console.log('[git] Commit', { message });
     return git.commit({ dir: this._dir, gitdir: this._gitdir, message, author });
   }
 
   async log(depth: number = 5): Promise<string> {
-    console.log('[git] Log', depth);
+    console.log('[git] Log', { depth });
     return git.log({ dir: this._dir, gitdir: this._gitdir, depth: depth });
   }
 
   async checkout(branch: string): Promise<void> {
-    console.log('[git] Checkout', branch);
+    console.log('[git] Checkout', { branch });
     try {
       return await git.checkout({ dir: this._dir, gitdir: this._gitdir, ref: branch });
     } catch (err) {
@@ -74,58 +74,57 @@ export class FSPlugin {
     };
   }
 
-  readFile(filePath: string, ...x: Array<any>): Promise<Buffer | string> {
-    filePath = this._joinPath(filePath);
-    return fs.promises.readFile(filePath, ...x);
+  async readFile(filePath: string, ...x: Array<any>): Promise<Buffer | string> {
+    return this._callbackAsPromise(fs.readFile, filePath, ...x);
   }
 
-  writeFile(filePath: string, data: Buffer | string, ...x: Array<any>) {
-    filePath = this._joinPath(filePath);
-    return fs.promises.writeFile(filePath, data, ...x);
+  async writeFile(filePath: string, data: Buffer | string, ...x: Array<any>) {
+    return this._callbackAsPromise(fs.writeFile, filePath, data, ...x);
   }
 
-  unlink(filePath: string, ...x: Array<any>) {
-    filePath = this._joinPath(filePath);
-    return fs.promises.unlink(filePath, ...x);
+  async unlink(filePath: string, ...x: Array<any>) {
+    return this._callbackAsPromise(fs.unlink, filePath, ...x);
   }
 
-  readdir(filePath: string, ...x: Array<any>) {
-    filePath = this._joinPath(filePath);
-    return fs.promises.readdir(filePath, ...x);
+  async readdir(filePath: string, ...x: Array<any>) {
+    return this._callbackAsPromise(fs.readdir, filePath, ...x);
   }
 
-  mkdir(filePath: string, ...x: Array<any>) {
-    filePath = this._joinPath(filePath);
-    return fs.promises.mkdir(filePath, ...x);
+  async mkdir(filePath: string, ...x: Array<any>) {
+    return this._callbackAsPromise(fs.mkdir, filePath, ...x);
   }
 
-  rmdir(filePath: string, ...x: Array<any>) {
-    filePath = this._joinPath(filePath);
-    return fs.promises.rmdir(filePath, ...x);
+  async rmdir(filePath: string, ...x: Array<any>) {
+    return this._callbackAsPromise(fs.rmdir, filePath, ...x);
   }
 
-  stat(filePath: string, ...x: Array<any>) {
-    filePath = this._joinPath(filePath);
-    return (fs.promises: any).stat(filePath, ...x);
+  async stat(filePath: string, ...x: Array<any>) {
+    return this._callbackAsPromise(fs.stat, filePath, ...x);
   }
 
-  lstat(filePath: string, ...x: Array<any>) {
-    filePath = this._joinPath(filePath);
-    return (fs.promises: any).lstat(filePath, ...x);
+  async lstat(filePath: string, ...x: Array<any>) {
+    return this._callbackAsPromise(fs.lstat, filePath, ...x);
   }
 
-  readlink(filePath: string, ...x: Array<any>) {
-    filePath = this._joinPath(filePath);
-    return (fs.promises: any).readlink(filePath, ...x);
+  async readlink(filePath: string, ...x: Array<any>) {
+    return this._callbackAsPromise(fs.readlink, filePath, ...x);
   }
 
-  symlink(targetPath: string, filePath: string, ...x: Array<any>) {
-    filePath = this._joinPath(filePath);
-    return (fs.promises: any).symlink(targetPath, filePath, ...x);
+  async symlink(targetPath: string, filePath: string, ...x: Array<any>) {
+    return this._callbackAsPromise(fs.symlink, filePath, ...x);
   }
 
-  _joinPath(filePath: string) {
-    return path.join(this._basePath, filePath);
+  _callbackAsPromise<T>(fn: Function, filePath: string, ...args: Array<any>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      filePath = path.join(this._basePath, path.normalize(filePath));
+      const callback = args.find(arg => typeof arg === 'function');
+      const newArgs = args.filter(arg => arg !== callback);
+
+      fn(filePath, ...newArgs, (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
   }
 }
 
@@ -168,6 +167,8 @@ type FSEntry = FSDir | FSFile | FSLink;
  */
 export function routableFSPlugin(defaultFS: Object, otherFS: { [string]: Object }) {
   const execMethod = (method: string, filePath: string, ...args: Array<any>) => {
+    filePath = path.normalize(filePath);
+
     for (const prefix of Object.keys(otherFS)) {
       if (filePath.indexOf(prefix) === 0) {
         return otherFS[prefix].promises[method](filePath, ...args);

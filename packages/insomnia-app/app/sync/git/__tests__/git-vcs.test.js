@@ -1,4 +1,4 @@
-import GitVCS, { MemPlugin, NeDBPlugin, routableFSPlugin } from '../git-vcs';
+import GitVCS, { FSPlugin, MemPlugin, NeDBPlugin, routableFSPlugin } from '../git-vcs';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
 
@@ -436,7 +436,8 @@ describe('NeDBPlugin', () => {
 
   describe('git ops', () => {
     it('status/add/commit/log', async () => {
-      const pGit = MemPlugin.createPlugin();
+      const pGit = FSPlugin.createPlugin('/Users/greg.schier/Desktop/test');
+      // const pGit = MemPlugin.createPlugin();
       const pDir = NeDBPlugin.createPlugin('wrk_1');
 
       const vcs = new GitVCS();
