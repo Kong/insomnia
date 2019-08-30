@@ -6,67 +6,134 @@ import * as db from '../../common/database';
 import * as models from '../../models';
 import stringifyJSON from 'json-stable-stringify';
 
+export type GitRemoteConfig = {|
+  remote: string,
+  url: string,
+|};
+
+export type GitLogEntry = {|
+  oid: string,
+  message: string,
+  author: {
+    name: string,
+    email: string,
+    timestamp: number,
+  },
+|};
+
+export type GitStatusEntry = [string, number, number, number];
+
 export default class GitVCS {
-  _dir: string;
-  _gitdir: ?string;
   _git: Object;
 
+  _baseOpts: { dir: string, gitdir?: string };
+
   async init(directory: string, fsPlugin: Object, gitDirectory?: string) {
-    this._dir = directory;
-    git.plugins.set('fs', fsPlugin);
-    await git.init({ dir: directory, gitdir: gitDirectory });
+    // Default gitDirectory to <directory>/.git
+    gitDirectory = gitDirectory || path.join(directory, '.git');
+
     this._git = git;
-    this._gitdir = gitDirectory;
+    git.plugins.set('fs', fsPlugin);
+
+    this._baseOpts = { dir: directory, gitdir: gitDirectory };
+    if (!fs.existsSync(path.join(gitDirectory, 'config'))) {
+      console.log('[git] Initialized repo in ' + gitDirectory);
+      await git.init({ ...this._baseOpts });
+    } else {
+      console.log('[git] Opened repo in ' + gitDirectory);
+    }
+  }
+
+  async getGitDirectory() {
+    return this._baseOpts.gitdir;
   }
 
   async listFiles(): Promise<Array<string>> {
     console.log('[git] List files');
-    return git.listFiles({ dir: this._dir, gitdir: this._gitdir });
+    return git.listFiles({ ...this._baseOpts });
   }
 
-  async status(): Promise<Array<[string, number, number, number]>> {
+  async branch(): Promise<string | null> {
+    const branch = await git.currentBranch({ ...this._baseOpts });
+    return branch || null;
+  }
+
+  async status(): Promise<Array<GitStatusEntry>> {
     console.log('[git] Status');
-    return git.statusMatrix({ dir: this._dir, gitdir: this._gitdir });
+    return git.statusMatrix({ ...this._baseOpts });
   }
 
   async add(relPath: string): Promise<void> {
     console.log(`[git] Add ${relPath}`);
-    return git.add({ dir: this._dir, gitdir: this._gitdir, filepath: relPath });
+    return git.add({ ...this._baseOpts, filepath: relPath });
   }
 
   async remove(relPath: string): Promise<void> {
     console.log(`[git] Remove relPath=${relPath}`);
-    return git.remove({ dir: this._dir, gitdir: this._gitdir, filepath: relPath });
+    return git.remove({ ...this._baseOpts, filepath: relPath });
+  }
+
+  async addRemote(name: string, url: string): Promise<GitRemoteConfig> {
+    console.log(`[git] Add Remote name=${name} url=${url}`);
+    await git.addRemote({ ...this._baseOpts, remote: name, url });
+    const config = await this.getRemote(name);
+
+    if (config === null) {
+      // Should never happen but it's here to make Flow happy
+      throw new Error('Remote not found ' + name);
+    }
+
+    return config;
+  }
+
+  async listRemotes(): Promise<Array<GitRemoteConfig>> {
+    return git.listRemotes({ ...this._baseOpts });
+  }
+
+  async getRemote(name: string): Promise<GitRemoteConfig | null> {
+    const remotes = await this.listRemotes();
+    return remotes.find(r => r.remote === name) || null;
   }
 
   async commit(message: string, author: { name: string, email: string }): Promise<string> {
     console.log(`[git] Commit "${message}"`);
-    return git.commit({ dir: this._dir, gitdir: this._gitdir, message, author });
+    return git.commit({ ...this._baseOpts, message, author });
   }
 
-  async push(): Promise<Object> {
-    console.log('[git] Push');
-    return git.push({
-      force: true,
-      dir: this._dir,
-      gitdir: this._gitdir,
-      url: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-      token: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    });
+  async push(remote: string, token: string | null): Promise<Object> {
+    console.log(`[git] Push remote=${remote} token=${(token || '').replace(/./g, '*')}`);
+    return git.push({ ...this._baseOpts, remote, token, force: true });
   }
 
-  async log(depth: number = 5): Promise<Array<Object>> {
+  async log(depth: number = 5): Promise<Array<GitLogEntry> | null> {
     console.log(`[git] Log depth=${depth}`);
-    return git.log({ dir: this._dir, gitdir: this._gitdir, depth: depth });
+    let err = null;
+    let log = null;
+
+    try {
+      log = await git.log({ ...this._baseOpts, depth: depth });
+    } catch (e) {
+      err = e;
+    }
+
+    if (err && err.code === 'ResolveRefError') {
+      return null;
+    }
+
+    if (err) {
+      throw err;
+    } else {
+      return log;
+    }
   }
 
   async checkout(branch: string): Promise<void> {
     console.log('[git] Checkout', { branch });
     try {
-      return await git.checkout({ dir: this._dir, gitdir: this._gitdir, ref: branch });
+      return await git.checkout({ ...this._baseOpts, ref: branch });
     } catch (err) {
       // Create if doesn't exist
-      return git.branch({ dir: this._dir, gitdir: this._gitdir, ref: branch, checkout: true });
+      return git.branch({ ...this._baseOpts, ref: branch, checkout: true });
     }
   }
 }
@@ -182,11 +249,13 @@ export function routableFSPlugin(defaultFS: Object, otherFS: { [string]: Object 
 
     for (const prefix of Object.keys(otherFS)) {
       if (filePath.indexOf(prefix) === 0) {
+        // console.log('FS', filePath, method);
         return otherFS[prefix].promises[method](filePath, ...args);
       }
     }
 
     // Fallback to default if no prefix matched
+    // console.log('NeDB', filePath, method);
     return defaultFS.promises[method](filePath, ...args);
   };
 

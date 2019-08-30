@@ -52,6 +52,13 @@ describe('Git-VCS', () => {
       expect(await vcs.status()).toEqual([['bar.txt', 0, 2, 0], ['foo.txt', 0, 2, 0]]);
     });
 
+    it('fails to log without first commit', async () => {
+      const fs = MemPlugin.createPlugin();
+      const vcs = new GitVCS();
+      await vcs.init('/', fs);
+      expect(await vcs.log()).toBe(null);
+    });
+
     it('commit file', async () => {
       const fs = MemPlugin.createPlugin();
       await fs.promises.writeFile('/foo.txt', 'foo');

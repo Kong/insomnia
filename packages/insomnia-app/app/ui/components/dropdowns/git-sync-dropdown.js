@@ -3,26 +3,33 @@ import * as React from 'react';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import autobind from 'autobind-decorator';
+import electron from 'electron';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
 import Tooltip from '../tooltip';
 import * as session from '../../../account/session';
+import type { GitLogEntry, GitRemoteConfig, GitStatusEntry } from '../../../sync/git/git-vcs';
 import GitVCS, { FSPlugin, NeDBPlugin, routableFSPlugin } from '../../../sync/git/git-vcs';
 import { showAlert, showPrompt } from '../modals';
 import TimeFromNow from '../time-from-now';
 import { getDataDirectory } from '../../../common/misc';
 
-type Props = {
+const { shell } = electron;
+
+type Props = {|
   workspace: Workspace,
 
   // Optional
   className?: string,
-};
+|};
 
-type State = {
+type State = {|
   initializing: boolean,
-};
+  loadingPush: boolean,
+  log: Array<GitLogEntry>,
+  status: Array<GitStatusEntry>,
+|};
 
 @autobind
 class GitSyncDropdown extends React.PureComponent<Props, State> {
@@ -32,23 +39,96 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     super(props);
     this.state = {
       initializing: false,
+      loadingPush: false,
+      log: [],
+      status: [],
     };
 
     this.vcs = new GitVCS();
   }
 
-  _handleOpen() {}
+  async _refreshState(otherState?: Object) {
+    this.setState({
+      ...(otherState || {}),
+      status: await this.vcs.status(),
+      log: (await this.vcs.log()) || [],
+    });
+  }
+
+  async _handleOpen() {
+    await this._refreshState();
+  }
+
+  async _getOrCreateRemote(name: string): Promise<GitRemoteConfig | null> {
+    const remote = await this.vcs.getRemote('origin');
+
+    if (remote) {
+      return remote;
+    }
+
+    return new Promise(resolve => {
+      showPrompt({
+        title: 'Add Remote',
+        label: 'HTTP URL of remote',
+        onCancel: () => {
+          resolve(null);
+        },
+        onComplete: async url => {
+          resolve(await this.vcs.addRemote(name, url));
+        },
+      });
+    });
+  }
+
+  async _promptForToken(label: string) {
+    return new Promise(resolve => {
+      showPrompt({
+        title: `${label} Token`,
+        label: 'Application token for auth',
+        onCancel: () => {
+          resolve(null);
+        },
+        onComplete: url => {
+          resolve(url);
+        },
+      });
+    });
+  }
 
   async _handlePush() {
-    await this.vcs.push();
-    console.log('PUsh complete');
+    this.setState({ loadingPush: true });
+
+    const remoteConfig = await this._getOrCreateRemote('origin');
+
+    // User canceled prompt?
+    if (remoteConfig === null) {
+      this.setState({ loadingPush: false });
+      return;
+    }
+
+    const { url, remote } = remoteConfig;
+
+    let token = null;
+    if (url.indexOf('https://github.com') === 0) {
+      token = await this._promptForToken('GitHub');
+    }
+
+    try {
+      await this.vcs.push(remote, token);
+    } catch (err) {
+      showAlert({ title: 'Push Error', message: 'Failed to push ' + err.message });
+    }
+
+    this.setState({ loadingPush: false });
   }
 
   async _handleLog() {
-    const log = await this.vcs.log();
+    const branch = await this.vcs.branch();
+    const { log } = this.state;
+
     showAlert({
       title: 'Git Log',
-      message: (
+      message: log ? (
         <table className="table--fancy table--striped">
           <thead>
             <tr>
@@ -60,7 +140,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           <tbody>
             {log.map(({ author, message, oid }) => (
               <tr key={oid}>
-                <td>{message}</td>
+                <td>add{message}</td>
                 <td>
                   <TimeFromNow
                     className="no-wrap"
@@ -73,6 +153,10 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
             ))}
           </tbody>
         </table>
+      ) : (
+        <React.Fragment>
+          No history yet for branch <code>{branch}</code>
+        </React.Fragment>
       ),
     });
   }
@@ -112,6 +196,10 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     });
   }
 
+  async _handleShowGitDirectory() {
+    shell.showItemInFolder(await this.vcs.getGitDirectory());
+  }
+
   async componentDidMount() {
     const { workspace } = this.props;
     const dataDir = getDataDirectory();
@@ -127,18 +215,12 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
     // Init VCS
     await this.vcs.init('/', fsPlugin, gitDir);
-
-    // Test it out
-    const log = await this.vcs.log();
-    console.log('Log', log);
-
-    const status = await this.vcs.status();
-    console.log('Status', status);
-
-    this.setState({ initializing: false });
+    this._refreshState({ initializing: false });
   }
 
   renderButton() {
+    const { loadingPush } = this.state;
+
     const initializing = false;
     const currentBranch = 'master';
     const snapshotToolTipMsg = 'TO-DO';
@@ -147,6 +229,8 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     const canCreateSnapshot = true;
     const canPull = true;
     const canPush = true;
+
+    const loadingIcon = <i className="fa fa-spin fa-refresh fa--fixed-width" />;
 
     return (
       <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
@@ -174,13 +258,17 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
                 />
               </Tooltip>
 
-              <Tooltip message={pushToolTipMsg} delay={800}>
-                <i
-                  className={classnames('fa fa-cloud-upload fa--fixed-width', {
-                    'super-duper-faint': !canPush,
-                  })}
-                />
-              </Tooltip>
+              {loadingPush ? (
+                loadingIcon
+              ) : (
+                <Tooltip message={pushToolTipMsg} delay={800}>
+                  <i
+                    className={classnames('fa fa-cloud-upload fa--fixed-width', {
+                      'super-duper-faint': !canPush,
+                    })}
+                  />
+                </Tooltip>
+              )}
             </React.Fragment>
           )}
         </div>
@@ -190,6 +278,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
   render() {
     const { className } = this.props;
+    const { log } = this.state;
 
     const syncMenuHeader = <DropdownDivider>Git </DropdownDivider>;
 
@@ -199,19 +288,16 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           {this.renderButton()}
           {syncMenuHeader}
           <DropdownItem onClick={this._handleCommit}>
-            <React.Fragment>
-              <i className="fa fa-save" /> Commit Changes
-            </React.Fragment>
+            <i className="fa fa-cube" /> Commit Changes
           </DropdownItem>
-          <DropdownItem onClick={this._handleLog}>
-            <React.Fragment>
-              <i className="fa fa-line-chart" /> Show Log
-            </React.Fragment>
+          <DropdownItem onClick={this._handleLog} disabled={log.length === 0}>
+            <i className="fa fa-clock-o" /> History
           </DropdownItem>
           <DropdownItem onClick={this._handlePush}>
-            <React.Fragment>
-              <i className="fa fa-cloud-upload" /> Push
-            </React.Fragment>
+            <i className="fa fa-cloud-upload" /> Push
+          </DropdownItem>
+          <DropdownItem onClick={this._handleShowGitDirectory}>
+            <i className="fa fa-folder-o" /> Reveal Git Directory
           </DropdownItem>
         </Dropdown>
       </div>
