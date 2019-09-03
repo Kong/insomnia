@@ -55,7 +55,7 @@ class SpecEditor extends React.PureComponent<Props> {
             indentSize={editorIndentSize}
             lineWrapping={lineWrapping}
             keyMap={editorKeyMap}
-            mode={apiSpec.contentType === 'json' ? 'application/json' : 'text/yaml'}
+            mode="openapi"
             defaultValue={apiSpec.contents}
             onChange={this._handleOnChange}
             uniquenessKey={apiSpec._id}
