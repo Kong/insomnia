@@ -13,6 +13,7 @@ import SyncLegacyDropdown from '../dropdowns/sync-legacy-dropdown';
 import type { StatusCandidate } from '../../../sync/types';
 import { isLoggedIn } from '../../../account/session';
 import GitSyncDropdown from '../dropdowns/git-sync-dropdown';
+import GitVCS from '../../../sync/git/git-vcs';
 
 type Props = {|
   activeEnvironment: Environment | null,
@@ -28,6 +29,7 @@ type Props = {|
   syncItems: Array<StatusCandidate>,
   unseenWorkspaces: Array<Workspace>,
   vcs: VCS | null,
+  gitVCS: GitVCS | null,
   width: number,
   workspace: Workspace,
   workspaces: Array<Workspace>,
@@ -48,6 +50,7 @@ class Sidebar extends React.PureComponent<Props> {
       syncItems,
       unseenWorkspaces,
       vcs,
+      gitVCS,
       width,
       workspace,
       workspaces,
@@ -82,9 +85,11 @@ class Sidebar extends React.PureComponent<Props> {
 
         {children}
 
-        <GitSyncDropdown workspace={workspace} className="sidebar__footer" />
+        {gitVCS && (
+          <GitSyncDropdown workspace={workspace} className="sidebar__footer" vcs={gitVCS} />
+        )}
 
-        {false && enableSyncBeta && vcs && isLoggedIn() && (
+        {enableSyncBeta && vcs && isLoggedIn() && (
           <SyncDropdown
             className="sidebar__footer"
             workspace={workspace}
@@ -93,7 +98,7 @@ class Sidebar extends React.PureComponent<Props> {
           />
         )}
 
-        {false && !enableSyncBeta && (
+        {!enableSyncBeta && (
           <SyncLegacyDropdown
             className="sidebar__footer"
             key={workspace._id}

@@ -6,6 +6,11 @@ import * as db from '../../common/database';
 import * as models from '../../models';
 import stringifyJSON from 'json-stable-stringify';
 
+export type GitAuthor = {|
+  name: string,
+  email: string,
+|};
+
 export type GitRemoteConfig = {|
   remote: string,
   url: string,
@@ -14,9 +19,7 @@ export type GitRemoteConfig = {|
 export type GitLogEntry = {|
   oid: string,
   message: string,
-  author: {
-    name: string,
-    email: string,
+  author: GitAuthor & {
     timestamp: number,
   },
 |};
@@ -36,11 +39,12 @@ export default class GitVCS {
     git.plugins.set('fs', fsPlugin);
 
     this._baseOpts = { dir: directory, gitdir: gitDirectory };
-    if (!fs.existsSync(path.join(gitDirectory, 'config'))) {
-      console.log('[git] Initialized repo in ' + gitDirectory);
-      await git.init({ ...this._baseOpts });
+
+    if (await this._repoExists()) {
+      console.log(`[git] Opened repo for ${gitDirectory}`);
     } else {
-      console.log('[git] Opened repo in ' + gitDirectory);
+      console.log(`[git] Initialized repo in ${gitDirectory}`);
+      await git.init({ ...this._baseOpts });
     }
   }
 
@@ -53,14 +57,18 @@ export default class GitVCS {
     return git.listFiles({ ...this._baseOpts });
   }
 
-  async branch(): Promise<string | null> {
+  async branch(): Promise<string> {
     const branch = await git.currentBranch({ ...this._baseOpts });
-    return branch || null;
+    if (typeof branch !== 'string') {
+      throw new Error('No active branch');
+    }
+
+    return branch;
   }
 
-  async status(): Promise<Array<GitStatusEntry>> {
+  async status(path?: string): Promise<Array<GitStatusEntry>> {
     console.log('[git] Status');
-    return git.statusMatrix({ ...this._baseOpts });
+    return git.statusMatrix({ ...this._baseOpts, pattern: path });
   }
 
   async add(relPath: string): Promise<void> {
@@ -75,7 +83,7 @@ export default class GitVCS {
 
   async addRemote(name: string, url: string): Promise<GitRemoteConfig> {
     console.log(`[git] Add Remote name=${name} url=${url}`);
-    await git.addRemote({ ...this._baseOpts, remote: name, url });
+    await git.addRemote({ ...this._baseOpts, remote: name, url, force: true });
     const config = await this.getRemote(name);
 
     if (config === null) {
@@ -90,17 +98,31 @@ export default class GitVCS {
     return git.listRemotes({ ...this._baseOpts });
   }
 
+  async getAuthor(): Promise<GitAuthor> {
+    const name = await git.config({ ...this._baseOpts, path: 'user.name' });
+    const email = await git.config({ ...this._baseOpts, path: 'user.email' });
+    return {
+      name: name || '',
+      email: email || '',
+    };
+  }
+
+  async setAuthor(name: string, email: string): Promise<void> {
+    await git.config({ ...this._baseOpts, path: 'user.name', value: name });
+    await git.config({ ...this._baseOpts, path: 'user.email', value: email });
+  }
+
   async getRemote(name: string): Promise<GitRemoteConfig | null> {
     const remotes = await this.listRemotes();
     return remotes.find(r => r.remote === name) || null;
   }
 
-  async commit(message: string, author: { name: string, email: string }): Promise<string> {
+  async commit(message: string, author?: GitAuthor): Promise<string> {
     console.log(`[git] Commit "${message}"`);
     return git.commit({ ...this._baseOpts, message, author });
   }
 
-  async push(remote: string, token: string | null): Promise<Object> {
+  async push(remote: string, token?: string | null): Promise<Object> {
     console.log(`[git] Push remote=${remote} token=${(token || '').replace(/./g, '*')}`);
     return git.push({ ...this._baseOpts, remote, token, force: true });
   }
@@ -135,6 +157,42 @@ export default class GitVCS {
       // Create if doesn't exist
       return git.branch({ ...this._baseOpts, ref: branch, checkout: true });
     }
+  }
+
+  async readObjFromTree(treeOid: string, objPath: string): Object | null {
+    const tree: Object | null = await this._readObject(treeOid);
+    if (!tree) {
+      return null;
+    }
+
+    const entry = tree.entries.find(e => e.path === objPath);
+    if (!entry) {
+      console.log(`[git] Entry not found ${objPath}`);
+      return null;
+    }
+
+    return this._readObject(entry.oid, 'utf8');
+  }
+
+  async _readObject<T>(oid: string, encoding?: 'utf8'): Promise<T | null> {
+    let gitObj = null;
+    try {
+      gitObj = await git.readObject({ ...this._baseOpts, oid, encoding });
+    } catch (err) {
+      return null;
+    }
+
+    return gitObj.object;
+  }
+
+  async _repoExists() {
+    try {
+      await git.config({ ...this._baseOpts, path: '' });
+    } catch (err) {
+      return false;
+    }
+
+    return true;
   }
 }
 

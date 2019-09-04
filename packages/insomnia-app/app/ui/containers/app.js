@@ -73,6 +73,7 @@ import ExportRequestsModal from '../components/modals/export-requests-modal';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import VCS from '../../sync/vcs';
 import SyncMergeModal from '../components/modals/sync-merge-modal';
+import GitVCS, { FSPlugin, NeDBPlugin, routableFSPlugin } from '../../sync/git/git-vcs';
 
 @autobind
 class App extends PureComponent {
@@ -89,6 +90,7 @@ class App extends PureComponent {
       paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT,
       isVariableUncovered: props.isVariableUncovered || false,
       vcs: null,
+      gitVCS: null,
       forceRefreshCounter: 0,
       forceRefreshHeaderCounter: 0,
     };
@@ -880,6 +882,27 @@ class App extends PureComponent {
     }
   }
 
+  async _updateGitVCS(activeWorkspace) {
+    // Get the vcs and set it to null in the state while we update it
+    let gitVCS = this.state.gitVCS;
+    this.setState({ gitVCS: null });
+
+    if (!gitVCS) {
+      gitVCS = new GitVCS();
+    }
+
+    // Create FS plugin
+    const gitDir = path.join(getDataDirectory(), `version-control/git/${activeWorkspace._id}.git`);
+    const pDir = NeDBPlugin.createPlugin(activeWorkspace._id);
+    const pGit = FSPlugin.createPlugin();
+    const fsPlugin = routableFSPlugin(pDir, { [gitDir]: pGit });
+
+    // Init VCS
+    await gitVCS.init('/', fsPlugin, gitDir);
+
+    this.setState({ gitVCS });
+  }
+
   async _updateVCS(activeWorkspace) {
     // Get the vcs and set it to null in the state while we update it
     let vcs = this.state.vcs;
@@ -914,6 +937,7 @@ class App extends PureComponent {
 
     // Update VCS
     await this._updateVCS(this.props.activeWorkspace);
+    await this._updateGitVCS(this.props.activeWorkspace);
 
     db.onChange(async changes => {
       let needsRefresh = false;
@@ -1058,6 +1082,7 @@ class App extends PureComponent {
     const { activeWorkspace } = this.props;
     if (nextProps.activeWorkspace._id !== activeWorkspace._id) {
       this._updateVCS(nextProps.activeWorkspace);
+      this._updateGitVCS(nextProps.activeWorkspace);
     }
   }
 
@@ -1078,6 +1103,7 @@ class App extends PureComponent {
       paneHeight,
       sidebarWidth,
       isVariableUncovered,
+      gitVCS,
       vcs,
       forceRefreshCounter,
       forceRefreshHeaderCounter,
@@ -1137,6 +1163,7 @@ class App extends PureComponent {
               isVariableUncovered={isVariableUncovered}
               headerEditorKey={forceRefreshHeaderCounter + ''}
               vcs={vcs}
+              gitVCS={gitVCS}
             />
           </ErrorBoundary>
 

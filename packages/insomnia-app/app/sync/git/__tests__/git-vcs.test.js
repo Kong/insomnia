@@ -115,6 +115,30 @@ describe('Git-VCS', () => {
       expect((await vcs.log()).length).toBe(1);
     });
   });
+
+  describe('readObjectFromTree()', () => {
+    it('reads an object from tree', async () => {
+      const fs = MemPlugin.createPlugin();
+      await fs.promises.writeFile('/foo.txt', 'foo');
+
+      const vcs = new GitVCS();
+      await vcs.init('/', fs);
+      await vcs.add('foo.txt');
+      await vcs.commit('First', AUTHOR);
+
+      await fs.promises.writeFile('/foo.txt', 'foo bar');
+      await vcs.add('foo.txt');
+      await vcs.commit('Second', AUTHOR);
+
+      const log = await vcs.log();
+      expect(await vcs.readObjFromTree(log[0].tree, 'foo.txt')).toBe('foo bar');
+      expect(await vcs.readObjFromTree(log[1].tree, 'foo.txt')).toBe('foo');
+
+      // Some extra checks
+      expect(await vcs.readObjFromTree(log[1].tree, 'missing')).toBe(null);
+      expect(await vcs.readObjFromTree('missing', 'missing')).toBe(null);
+    });
+  });
 });
 
 describe('MemPlugin', () => {

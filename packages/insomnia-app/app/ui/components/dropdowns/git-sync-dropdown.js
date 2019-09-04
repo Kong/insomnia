@@ -1,24 +1,23 @@
 // @flow
 import * as React from 'react';
-import mkdirp from 'mkdirp';
-import path from 'path';
 import autobind from 'autobind-decorator';
 import electron from 'electron';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
 import Tooltip from '../tooltip';
-import * as session from '../../../account/session';
 import type { GitLogEntry, GitRemoteConfig, GitStatusEntry } from '../../../sync/git/git-vcs';
-import GitVCS, { FSPlugin, NeDBPlugin, routableFSPlugin } from '../../../sync/git/git-vcs';
-import { showAlert, showPrompt } from '../modals';
+import GitVCS from '../../../sync/git/git-vcs';
+import { showAlert, showModal, showPrompt } from '../modals';
 import TimeFromNow from '../time-from-now';
-import { getDataDirectory } from '../../../common/misc';
+import GitConfigModal from '../modals/git-config-modal';
+import GitStagingModal from '../modals/git-staging-modal';
 
 const { shell } = electron;
 
 type Props = {|
   workspace: Workspace,
+  vcs: GitVCS,
 
   // Optional
   className?: string,
@@ -33,8 +32,6 @@ type State = {|
 
 @autobind
 class GitSyncDropdown extends React.PureComponent<Props, State> {
-  vcs: GitVCS;
-
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -43,15 +40,14 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
       log: [],
       status: [],
     };
-
-    this.vcs = new GitVCS();
   }
 
   async _refreshState(otherState?: Object) {
+    const { vcs } = this.props;
     this.setState({
       ...(otherState || {}),
-      status: await this.vcs.status(),
-      log: (await this.vcs.log()) || [],
+      status: await vcs.status(),
+      log: (await vcs.log()) || [],
     });
   }
 
@@ -60,7 +56,8 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _getOrCreateRemote(name: string): Promise<GitRemoteConfig | null> {
-    const remote = await this.vcs.getRemote('origin');
+    const { vcs } = this.props;
+    const remote = await vcs.getRemote('origin');
 
     if (remote) {
       return remote;
@@ -74,7 +71,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           resolve(null);
         },
         onComplete: async url => {
-          resolve(await this.vcs.addRemote(name, url));
+          resolve(await vcs.addRemote(name, url));
         },
       });
     });
@@ -95,7 +92,13 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     });
   }
 
+  async _handlePull() {
+    showAlert({ title: 'To-Do' });
+  }
+
   async _handlePush() {
+    const { vcs } = this.props;
+
     this.setState({ loadingPush: true });
 
     const remoteConfig = await this._getOrCreateRemote('origin');
@@ -108,22 +111,30 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
     const { url, remote } = remoteConfig;
 
-    let token = null;
+    let token;
     if (url.indexOf('https://github.com') === 0) {
       token = await this._promptForToken('GitHub');
     }
 
     try {
-      await this.vcs.push(remote, token);
+      await vcs.push(remote, token);
     } catch (err) {
-      showAlert({ title: 'Push Error', message: 'Failed to push ' + err.message });
+      showAlert({
+        title: 'Push Error',
+        message: `Failed to push ${err.message}`,
+      });
     }
 
     this.setState({ loadingPush: false });
   }
 
+  async _handleConfig() {
+    showModal(GitConfigModal, {});
+  }
+
   async _handleLog() {
-    const branch = await this.vcs.branch();
+    const { vcs } = this.props;
+    const branch = await vcs.branch();
     const { log } = this.state;
 
     showAlert({
@@ -162,60 +173,49 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleCommit() {
-    const status = await this.vcs.status();
-
-    let count = 0;
-    for (const [name, head, workdir, stage] of status) {
-      if (head === 1 && workdir === 1 && stage === 1) {
-        // Nothing changed
-        continue;
-      }
-
-      await this.vcs.add(name);
-      count++;
-    }
-
-    if (count === 0) {
-      showAlert({
-        title: 'Git Error',
-        message: 'Nothing changed',
-      });
-
-      return;
-    }
-
-    showPrompt({
-      title: 'Commit',
-      label: 'Commit message',
-      onComplete: async message => {
-        await this.vcs.commit(message, {
-          name: 'Gregory Schier',
-          email: 'xxxxxxxxxxxxxxxxxxxxx',
-        });
-      },
-    });
+    showModal(GitStagingModal, {});
+    // const { vcs } = this.props;
+    // const status = await vcs.status();
+    //
+    // let count = 0;
+    // for (const [name, head, workdir, stage] of status) {
+    //   if (head === 1 && workdir === 1 && stage === 1) {
+    //     // Nothing changed
+    //     continue;
+    //   }
+    //
+    //   await vcs.add(name);
+    //   count++;
+    // }
+    //
+    // if (count === 0) {
+    //   showAlert({
+    //     title: 'Git Error',
+    //     message: 'Nothing changed',
+    //   });
+    //
+    //   return;
+    // }
+    //
+    // showPrompt({
+    //   title: 'Commit',
+    //   label: 'Commit message',
+    //   onComplete: async message => {
+    //     await vcs.commit(message, {
+    //       name: 'Gregory Schier',
+    //       email: 'xxxxxxxxxxxxxxxxxxxxx',
+    //     });
+    //   },
+    // });
   }
 
   async _handleShowGitDirectory() {
-    shell.showItemInFolder(await this.vcs.getGitDirectory());
+    const { vcs } = this.props;
+    shell.showItemInFolder(await vcs.getGitDirectory());
   }
 
-  async componentDidMount() {
-    const { workspace } = this.props;
-    const dataDir = getDataDirectory();
-    const gitDir = path.join(dataDir, `version-control/git/${workspace._id}.git`);
-
-    // Create directory
-    mkdirp.sync(gitDir);
-
-    // Create FS plugin
-    const pDir = NeDBPlugin.createPlugin(workspace._id);
-    const pGit = FSPlugin.createPlugin();
-    const fsPlugin = routableFSPlugin(pDir, { [gitDir]: pGit });
-
-    // Init VCS
-    await this.vcs.init('/', fsPlugin, gitDir);
-    this._refreshState({ initializing: false });
+  componentDidMount() {
+    this._refreshState();
   }
 
   renderButton() {
@@ -248,29 +248,27 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           </Tooltip>
 
           {/* Only show cloud icons if logged in */}
-          {session.isLoggedIn() && (
-            <React.Fragment>
-              <Tooltip message={pullToolTipMsg} delay={800}>
+          <React.Fragment>
+            <Tooltip message={pullToolTipMsg} delay={800}>
+              <i
+                className={classnames('fa fa-cloud-download fa--fixed-width', {
+                  'super-duper-faint': !canPull,
+                })}
+              />
+            </Tooltip>
+
+            {loadingPush ? (
+              loadingIcon
+            ) : (
+              <Tooltip message={pushToolTipMsg} delay={800}>
                 <i
-                  className={classnames('fa fa-cloud-download fa--fixed-width', {
-                    'super-duper-faint': !canPull,
+                  className={classnames('fa fa-cloud-upload fa--fixed-width', {
+                    'super-duper-faint': !canPush,
                   })}
                 />
               </Tooltip>
-
-              {loadingPush ? (
-                loadingIcon
-              ) : (
-                <Tooltip message={pushToolTipMsg} delay={800}>
-                  <i
-                    className={classnames('fa fa-cloud-upload fa--fixed-width', {
-                      'super-duper-faint': !canPush,
-                    })}
-                  />
-                </Tooltip>
-              )}
-            </React.Fragment>
-          )}
+            )}
+          </React.Fragment>
         </div>
       </DropdownButton>
     );
@@ -280,21 +278,30 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     const { className } = this.props;
     const { log } = this.state;
 
-    const syncMenuHeader = <DropdownDivider>Git </DropdownDivider>;
-
     return (
       <div className={className}>
         <Dropdown className="wide tall" onOpen={this._handleOpen}>
           {this.renderButton()}
-          {syncMenuHeader}
+
+          <DropdownDivider>Git Project</DropdownDivider>
+
           <DropdownItem onClick={this._handleCommit}>
-            <i className="fa fa-cube" /> Commit Changes
+            <i className="fa fa-check" /> Commit Changes
           </DropdownItem>
           <DropdownItem onClick={this._handleLog} disabled={log.length === 0}>
             <i className="fa fa-clock-o" /> History
           </DropdownItem>
           <DropdownItem onClick={this._handlePush}>
             <i className="fa fa-cloud-upload" /> Push
+          </DropdownItem>
+          <DropdownItem onClick={this._handlePull}>
+            <i className="fa fa-cloud-download" /> Pull
+          </DropdownItem>
+
+          <DropdownDivider>Settings</DropdownDivider>
+
+          <DropdownItem onClick={this._handleConfig}>
+            <i className="fa fa-wrench" /> Git Config
           </DropdownItem>
           <DropdownItem onClick={this._handleShowGitDirectory}>
             <i className="fa fa-folder-o" /> Reveal Git Directory

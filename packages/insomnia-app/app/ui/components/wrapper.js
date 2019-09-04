@@ -40,6 +40,8 @@ import ResponsePane from './response-pane';
 import RequestSettingsModal from './modals/request-settings-modal';
 import SetupSyncModal from './modals/setup-sync-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
+import GitStagingModal from './modals/git-staging-modal';
+import GitConfigModal from './modals/git-config-modal';
 import SyncMergeModal from './modals/sync-merge-modal';
 import SyncHistoryModal from './modals/sync-history-modal';
 import SyncShareModal from './modals/sync-share-modal';
@@ -71,6 +73,7 @@ import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import SidebarFilter from './sidebar/sidebar-filter';
 import type { ApiSpec } from '../../models/api-spec';
+import GitVCS from '../../sync/git/git-vcs';
 
 type Props = {
   // Helper Functions
@@ -149,6 +152,7 @@ type Props = {
   isVariableUncovered: boolean,
   headerEditorKey: string,
   vcs: VCS | null,
+  gitVCS: GitVCS | null,
   syncItems: Array<StatusCandidate>,
 
   // Optional
@@ -552,6 +556,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       syncItems,
       unseenWorkspaces,
       vcs,
+      gitVCS,
       workspaceChildren,
       workspaces,
     } = this.props;
@@ -701,6 +706,14 @@ class Wrapper extends React.PureComponent<Props, State> {
 
           <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
 
+          {gitVCS && (
+            <React.Fragment>
+              <GitConfigModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
+
+              <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
+            </React.Fragment>
+          )}
+
           {vcs && (
             <React.Fragment>
               <SyncStagingModal
@@ -805,6 +818,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             syncItems={syncItems}
             unseenWorkspaces={unseenWorkspaces}
             vcs={vcs}
+            gitVCS={gitVCS}
             width={sidebarWidth}
             workspace={activeWorkspace}
             workspaces={workspaces}>
