@@ -127,6 +127,12 @@ export default class GitVCS {
     return git.push({ ...this._baseOpts, remote, token, force: true });
   }
 
+  async pull(remote: string, token?: string | null): Promise<void> {
+    console.log(`[git] Pull remote=${remote} token=${(token || '').replace(/./g, '*')}`);
+
+    return git.pull({ ...this._baseOpts, remote, token, singleBranch: true });
+  }
+
   async log(depth: number = 5): Promise<Array<GitLogEntry> | null> {
     console.log(`[git] Log depth=${depth}`);
     let err = null;
@@ -307,13 +313,13 @@ export function routableFSPlugin(defaultFS: Object, otherFS: { [string]: Object 
 
     for (const prefix of Object.keys(otherFS)) {
       if (filePath.indexOf(prefix) === 0) {
-        // console.log('FS', filePath, method);
+        // console.log('FS', method, filePath);
         return otherFS[prefix].promises[method](filePath, ...args);
       }
     }
 
     // Fallback to default if no prefix matched
-    // console.log('NeDB', filePath, method);
+    // console.log('NeDB', method, filePath);
     return defaultFS.promises[method](filePath, ...args);
   };
 
@@ -355,21 +361,18 @@ export class NeDBPlugin {
     filePath: string,
     options?: buffer$Encoding | { encoding?: buffer$Encoding },
   ): Promise<Buffer | string> {
-    filePath = path.resolve(filePath);
+    filePath = path.normalize(filePath);
+
     options = options || {};
     if (typeof options === 'string') {
       options = { encoding: options };
     }
 
-    const match = filePath.match(/^\/([^/]+)\/([^/]+)\.json$/);
+    const { type, id } = this._parsePath(filePath);
 
-    if (!match) {
+    if (id === null || type === null) {
       throw new Error(`Cannot read from directory or missing ${filePath}`);
     }
-
-    // const workspaceId = modelMatch[1];
-    const type = match[1];
-    const id = match[2];
 
     const doc = await db.get(type, id);
 
@@ -394,11 +397,36 @@ export class NeDBPlugin {
   }
 
   async writeFile(filePath: string, data: Buffer | string, ...x: Array<any>): Promise<void> {
-    throw new Error('NeDBPlugin is not writable');
+    filePath = path.normalize(filePath);
+    const { id, type } = this._parsePath(filePath);
+    const doc = JSON.parse(data.toString());
+
+    if (id !== doc._id) {
+      throw new Error(`Doc _id does not match file path ${doc._id} != ${id || 'null'}`);
+    }
+
+    if (type !== doc.type) {
+      throw new Error(`Doc type does not match file path ${doc.type} != ${type || 'null'}`);
+    }
+
+    await db.upsert(doc, true);
   }
 
   async unlink(filePath: string, ...x: Array<any>): Promise<void> {
-    throw new Error('NeDBPlugin is not writable');
+    filePath = path.normalize(filePath);
+    const { id, type } = this._parsePath(filePath);
+
+    if (!id || !type) {
+      throw new Error(`Cannot unlink file ${filePath}`);
+    }
+
+    const doc = await db.get(type, id);
+
+    if (!doc) {
+      return;
+    }
+
+    await db.unsafeRemove(doc, true);
   }
 
   async readdir(filePath: string, ...x: Array<any>): Promise<Array<string>> {
@@ -412,17 +440,18 @@ export class NeDBPlugin {
       models.apiSpec.type,
     ];
 
-    const rootMatch = filePath.match(/^\/$/);
-    const modelMatch = filePath.match(/^\/([^/]+)\/?$/);
+    const { type, id } = this._parsePath(filePath);
 
     let docs = [];
     let otherFolders = [];
-    if (rootMatch) {
+    if (id === null && type === null) {
       otherFolders = MODELS;
-    } else if (modelMatch) {
+    } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
       const children = await db.withDescendants(workspace);
-      docs = children.filter(d => d.type === modelMatch[1]);
+      docs = children.filter(d => d.type === type);
+    } else {
+      throw new Error(`file path is not a directory ${filePath}`);
     }
 
     const ids = docs.map(d => `${d._id}.json`);
@@ -488,6 +517,19 @@ export class NeDBPlugin {
 
   async symlink(targetPath: string, filePath: string, ...x: Array<any>) {
     throw new Error('NeDBPlugin is not writable');
+  }
+
+  _parsePath(filePath: string): { type: string | null, id: string | null } {
+    filePath = path.normalize(filePath);
+
+    const [type, idRaw] = filePath.split(/\//g).filter(s => s !== '');
+
+    const id = typeof idRaw === 'string' ? idRaw.replace(/\.json$/, '') : idRaw;
+
+    return {
+      type: type || null,
+      id: id || null,
+    };
   }
 }
 

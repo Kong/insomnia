@@ -8,10 +8,11 @@ import type { Workspace } from '../../../models/workspace';
 import Tooltip from '../tooltip';
 import type { GitLogEntry, GitRemoteConfig, GitStatusEntry } from '../../../sync/git/git-vcs';
 import GitVCS from '../../../sync/git/git-vcs';
-import { showAlert, showModal, showPrompt } from '../modals';
+import { showAlert, showError, showModal, showPrompt } from '../modals';
 import TimeFromNow from '../time-from-now';
 import GitConfigModal from '../modals/git-config-modal';
 import GitStagingModal from '../modals/git-staging-modal';
+import * as db from '../../../common/database';
 
 const { shell } = electron;
 
@@ -26,8 +27,10 @@ type Props = {|
 type State = {|
   initializing: boolean,
   loadingPush: boolean,
+  loadingPull: boolean,
   log: Array<GitLogEntry>,
   status: Array<GitStatusEntry>,
+  branch: string,
 |};
 
 @autobind
@@ -37,8 +40,10 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     this.state = {
       initializing: false,
       loadingPush: false,
+      loadingPull: false,
       log: [],
       status: [],
+      branch: '',
     };
   }
 
@@ -48,6 +53,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
       ...(otherState || {}),
       status: await vcs.status(),
       log: (await vcs.log()) || [],
+      branch: await vcs.branch(),
     });
   }
 
@@ -77,11 +83,16 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     });
   }
 
-  async _promptForToken(label: string) {
+  async _promptForToken(url: string): Promise<string | null> {
+    if (url.indexOf('https://github.com') < 0) {
+      return null;
+    }
+
     return new Promise(resolve => {
       showPrompt({
-        title: `${label} Token`,
+        title: `Github Token`,
         label: 'Application token for auth',
+        defaultValue: 'cba27dac5ee374a5676f17a3d1682e427e80f7bf',
         onCancel: () => {
           resolve(null);
         },
@@ -93,7 +104,30 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handlePull() {
-    showAlert({ title: 'To-Do' });
+    this.setState({ loadingPull: true });
+    const { vcs } = this.props;
+
+    const remoteConfig = await this._getOrCreateRemote('origin');
+
+    // User canceled prompt?
+    if (remoteConfig === null) {
+      this.setState({ loadingPush: false });
+      return;
+    }
+
+    const { url, remote } = remoteConfig;
+
+    const token = await this._promptForToken(url);
+
+    const bufferId = await db.bufferChanges();
+    try {
+      await vcs.pull(remote, token);
+    } catch (err) {
+      showError({ title: 'Pull Error', error: err });
+    }
+    await db.flushChanges(bufferId);
+
+    this.setState({ loadingPull: false });
   }
 
   async _handlePush() {
@@ -111,19 +145,16 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
     const { url, remote } = remoteConfig;
 
-    let token;
-    if (url.indexOf('https://github.com') === 0) {
-      token = await this._promptForToken('GitHub');
-    }
+    const token = await this._promptForToken(url);
 
+    const bufferId = await db.bufferChanges();
     try {
       await vcs.push(remote, token);
     } catch (err) {
-      showAlert({
-        title: 'Push Error',
-        message: `Failed to push ${err.message}`,
-      });
+      showError({ title: 'Push Error', error: err });
     }
+
+    await db.flushChanges(bufferId);
 
     this.setState({ loadingPush: false });
   }
@@ -133,9 +164,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleLog() {
-    const { vcs } = this.props;
-    const branch = await vcs.branch();
-    const { log } = this.state;
+    const { log, branch } = this.state;
 
     showAlert({
       title: 'Git Log',
@@ -151,7 +180,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           <tbody>
             {log.map(({ author, message, oid }) => (
               <tr key={oid}>
-                <td>add{message}</td>
+                <td>{message}</td>
                 <td>
                   <TimeFromNow
                     className="no-wrap"
@@ -159,7 +188,11 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
                     intervalSeconds={30}
                   />
                 </td>
-                <td>{author.email}</td>
+                <td>
+                  <Tooltip message={`${author.name} <${author.email}>`} delay={800}>
+                    {author.name}
+                  </Tooltip>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -286,16 +319,16 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           <DropdownDivider>Git Project</DropdownDivider>
 
           <DropdownItem onClick={this._handleCommit}>
-            <i className="fa fa-check" /> Commit Changes
-          </DropdownItem>
-          <DropdownItem onClick={this._handleLog} disabled={log.length === 0}>
-            <i className="fa fa-clock-o" /> History
+            <i className="fa fa-check" /> Commit
           </DropdownItem>
           <DropdownItem onClick={this._handlePush}>
             <i className="fa fa-cloud-upload" /> Push
           </DropdownItem>
           <DropdownItem onClick={this._handlePull}>
             <i className="fa fa-cloud-download" /> Pull
+          </DropdownItem>
+          <DropdownItem onClick={this._handleLog} disabled={log.length === 0}>
+            <i className="fa fa-clock-o" /> History ({log.length})
           </DropdownItem>
 
           <DropdownDivider>Settings</DropdownDivider>
