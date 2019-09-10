@@ -6,7 +6,6 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import type { Workspace } from '../../../models/workspace';
 import GitVCS from '../../../sync/git/git-vcs';
-import type { GitStatusEntry } from '../../../sync/git/git-vcs';
 import { withDescendants } from '../../../common/database';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import ModalFooter from '../base/modal-footer';
@@ -16,31 +15,30 @@ type Props = {|
   vcs: GitVCS,
 |};
 
+type Item = {|
+  path: string,
+  type: string,
+  name: string,
+  status: string,
+  staged: boolean,
+|};
+
 type State = {|
   branch: string,
   message: string,
-  status: {
-    allChecked: boolean,
-    noneChecked: boolean,
-    entries: Array<GitStatusEntry>,
-  },
-  statusNames: { [string]: string },
+  items: Array<Item>,
 |};
 
 const INITIAL_STATE = {
   branch: '',
   message: '',
-  status: {
-    allChecked: true,
-    noneChecked: false,
-    entries: [],
-  },
-  statusNames: {},
+  items: [],
 };
 
 @autobind
 class GitStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
+  statusNames: { [string]: string };
 
   constructor(props: Props) {
     super(props);
@@ -51,32 +49,26 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     this.modal = ref;
   }
 
-  async _refreshState() {
-    const { vcs, workspace } = this.props;
-
-    const branch = await vcs.branch();
-    const status = await vcs.status();
-
-    const docs = await withDescendants(workspace);
-    const statusNames = {};
-    for (const doc of docs) {
-      statusNames[doc._id] = (doc: any).name || '';
-    }
-
-    this.setState({
-      branch,
-      status: this._getStatus(status),
-      statusNames,
-    });
-  }
-
   async _handleMessageChange(e: SyntheticEvent<HTMLTextAreaElement>) {
     this.setState({ message: e.currentTarget.value });
   }
 
   async _handleCommit(e: SyntheticEvent<HTMLButtonElement>) {
     const { vcs } = this.props;
-    const { message } = this.state;
+    const { items, message } = this.state;
+
+    // Set the stage
+    for (const item of items) {
+      if (!item.staged) {
+        continue;
+      }
+
+      if (item.status.includes('deleted')) {
+        await vcs.remove(item.path);
+      } else {
+        await vcs.add(item.path);
+      }
+    }
 
     await vcs.commit(message);
 
@@ -87,123 +79,100 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     await this._toggleAll();
   }
 
-  async _toggleAll(forceAdd?: boolean) {
-    const { vcs } = this.props;
-    const { status } = this.state;
+  async _toggleAll(forceAdd?: boolean = false) {
+    const items = [...this.state.items];
 
-    const doStage = !status.allChecked;
+    const allStaged = items.every(i => i.staged);
+    const doStage = !allStaged;
 
-    for (const [gitPath, head, workdir, stage] of status.entries) {
-      const unmodified = head * workdir * stage === 1;
-
-      if (unmodified) {
-        continue;
-      }
-
-      if (doStage || forceAdd) {
-        await vcs.add(gitPath);
-      } else {
-        await vcs.remove(gitPath);
-      }
+    for (const item of items) {
+      item.staged = doStage || forceAdd;
     }
 
-    await this._refreshState();
+    this.setState({ items });
   }
 
   async _handleToggleOne(e: SyntheticEvent<HTMLInputElement>) {
-    const { vcs } = this.props;
-    const { status } = this.state;
+    const items = [...this.state.items];
 
     const gitPath = e.currentTarget.name;
 
-    // This may seem backwards but that's because the toggle has already flipped
-    if (e.currentTarget.checked) {
-      await vcs.add(gitPath);
-    } else {
-      await vcs.remove(gitPath);
-    }
-
-    const newEntries = [];
-    for (const entry of status.entries) {
-      if (entry[0] !== gitPath) {
-        newEntries.push(entry);
-      } else {
-        const newEntry = await vcs.status(entry[0]);
-        newEntries.push(newEntry[0]);
+    for (const item of items) {
+      if (item.path === gitPath) {
+        item.staged = !item.staged;
       }
     }
 
-    this.setState({ status: this._getStatus(newEntries) });
+    this.setState({ items });
   }
 
-  _getStatus(
-    status: Array<GitStatusEntry>,
-  ): {
-    allChecked: boolean,
-    noneChecked: boolean,
-    entries: Array<GitStatusEntry>,
-  } {
-    return {
-      allChecked: status.every(s => s[3] >= s[2]),
-      noneChecked: status.every(s => s[3] < s[2]),
-      entries: status,
-    };
+  async _refreshStatusNames() {
+    const { workspace } = this.props;
+    const docs = await withDescendants(workspace);
+    this.statusNames = {};
+    for (const doc of docs) {
+      this.statusNames[doc._id] = (doc: any).name || '';
+    }
   }
 
   async show(options: {}) {
+    const { vcs, workspace } = this.props;
+
     this.modal && this.modal.show();
 
+    // Reset state
     this.setState(INITIAL_STATE);
-    await this._refreshState();
-    await this._toggleAll(true);
-  }
 
-  describeChange(
-    head: number,
-    workdir: number,
-    stage: number,
-  ): {
-    description: string,
-    staged: boolean,
-    unmodified: boolean,
-  } {
-    const change = {
-      description: '',
-      staged: false,
-      unmodified: false,
-    };
-
-    if (head * workdir * stage === 1) {
-      change.unmodified = true;
-      change.description = 'Unmodified';
+    // Cache status names
+    const docs = await withDescendants(workspace);
+    this.statusNames = {};
+    for (const doc of docs) {
+      this.statusNames[`${doc.type}/${doc._id}.json`] = (doc: any).name || '';
     }
 
-    if (workdir < head) {
-      change.description = 'Deleted';
-    } else if (workdir > head && head === 0) {
-      change.description = 'New';
-    } else if (workdir > head && head > 0) {
-      change.description = 'Modified';
+    // Create status items
+    const items = [];
+    const status = await vcs.status();
+    const log = (await vcs.log()) || [];
+    console.log('LOG', this.statusNames);
+    for (const s of status.entries) {
+      if (!this.statusNames[s.path] && log.length > 0) {
+        const docJSON = await vcs.readObjFromTree(log[0].tree, s.path);
+        if (!docJSON) {
+          continue;
+        }
+
+        try {
+          const doc = JSON.parse(docJSON);
+          this.statusNames[s.path] = (doc: any).name || '';
+        } catch (err) {
+          // Nothing here
+        }
+      }
+
+      items.push({
+        path: s.path,
+        status: s.status,
+        type: s.path.split('/')[0] || 'Unknown',
+        name: 'n/a',
+        staged: true,
+      });
     }
 
-    change.staged = stage >= workdir;
-
-    return change;
+    const branch = await vcs.branch();
+    this.setState({
+      items,
+      branch,
+    });
   }
 
-  renderStatusEntry(entry: GitStatusEntry) {
-    const { statusNames } = this.state;
+  renderItem(item: Item) {
+    const { path: gitPath, status, staged, type } = item;
 
-    const [gitPath, headStatus, workdirStatus, stageStatus] = entry;
-
-    const [type, name] = gitPath.split('/');
-    const id = name.replace(/\.json$/, '');
-    const docName = statusNames[id] || 'n/a';
-
-    const change = this.describeChange(headStatus, workdirStatus, stageStatus);
+    const docName = this.statusNames[gitPath] || 'n/a';
 
     // Nothing to render if it wasn't changed
-    if (change.unmodified) {
+    if (status === 'unmodified') {
       return null;
     }
 
@@ -214,21 +183,24 @@ class GitStagingModal extends React.PureComponent<Props, State> {
             <input
               className="space-right"
               type="checkbox"
-              checked={change.staged}
+              checked={staged}
               name={gitPath}
               onChange={this._handleToggleOne}
             />{' '}
             {docName}
           </label>
         </td>
-        <td className="text-right">{change.description}</td>
+        <td className="text-right">{status.replace('*', '')}</td>
         <td className="text-right">{type}</td>
       </tr>
     );
   }
 
   render() {
-    const { status, message, branch } = this.state;
+    const { items, message, branch } = this.state;
+
+    const allStaged = items.every(i => i.staged);
+    const allUnstaged = items.every(i => !i.staged);
 
     return (
       <Modal ref={this._setModalRef}>
@@ -254,9 +226,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
                         <IndeterminateCheckbox
                           className="space-right"
                           type="checkbox"
-                          checked={status.allChecked}
+                          checked={allStaged}
                           onChange={this._handleToggleAll}
-                          indeterminate={!status.allChecked && !status.noneChecked}
+                          indeterminate={!allStaged && !allUnstaged}
                         />
                       </span>{' '}
                       name
@@ -266,7 +238,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
                   <th className="text-right">Description</th>
                 </tr>
               </thead>
-              <tbody>{status.entries.map(entry => this.renderStatusEntry(entry))}</tbody>
+              <tbody>{items.map(this.renderItem)}</tbody>
             </table>
           </div>
         </ModalBody>

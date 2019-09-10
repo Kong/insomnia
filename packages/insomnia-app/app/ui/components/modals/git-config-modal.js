@@ -6,9 +6,12 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import type { Workspace } from '../../../models/workspace';
 import type { GitAuthor, GitRemoteConfig } from '../../../sync/git/git-vcs';
-import GitVCS, { FSPlugin, NeDBPlugin, routableFSPlugin } from '../../../sync/git/git-vcs';
+import GitVCS from '../../../sync/git/git-vcs';
 import { getDataDirectory } from '../../../common/misc';
 import path from 'path';
+import NeDBPlugin from '../../../sync/git/ne-db-plugin';
+import FSPlugin from '../../../sync/git/fs-plugin';
+import { routableFSPlugin } from '../../../sync/git/routable-fs-plugin';
 
 type Props = {|
   workspace: Workspace,

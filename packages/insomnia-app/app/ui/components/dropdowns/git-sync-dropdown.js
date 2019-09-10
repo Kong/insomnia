@@ -6,7 +6,7 @@ import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
 import Tooltip from '../tooltip';
-import type { GitLogEntry, GitRemoteConfig, GitStatusEntry } from '../../../sync/git/git-vcs';
+import type { GitLogEntry, GitRemoteConfig, GitStatus } from '../../../sync/git/git-vcs';
 import GitVCS from '../../../sync/git/git-vcs';
 import { showAlert, showError, showModal, showPrompt } from '../modals';
 import TimeFromNow from '../time-from-now';
@@ -29,7 +29,7 @@ type State = {|
   loadingPush: boolean,
   loadingPull: boolean,
   log: Array<GitLogEntry>,
-  status: Array<GitStatusEntry>,
+  status: GitStatus,
   branch: string,
 |};
 
@@ -42,7 +42,12 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
       loadingPush: false,
       loadingPull: false,
       log: [],
-      status: [],
+      status: {
+        hasChanges: false,
+        allStaged: false,
+        allUnstaged: true,
+        entries: [],
+      },
       branch: '',
     };
   }
@@ -207,39 +212,6 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
   async _handleCommit() {
     showModal(GitStagingModal, {});
-    // const { vcs } = this.props;
-    // const status = await vcs.status();
-    //
-    // let count = 0;
-    // for (const [name, head, workdir, stage] of status) {
-    //   if (head === 1 && workdir === 1 && stage === 1) {
-    //     // Nothing changed
-    //     continue;
-    //   }
-    //
-    //   await vcs.add(name);
-    //   count++;
-    // }
-    //
-    // if (count === 0) {
-    //   showAlert({
-    //     title: 'Git Error',
-    //     message: 'Nothing changed',
-    //   });
-    //
-    //   return;
-    // }
-    //
-    // showPrompt({
-    //   title: 'Commit',
-    //   label: 'Commit message',
-    //   onComplete: async message => {
-    //     await vcs.commit(message, {
-    //       name: 'Gregory Schier',
-    //       email: 'xxxxxxxxxxxxxxxxxxxxx',
-    //     });
-    //   },
-    // });
   }
 
   async _handleShowGitDirectory() {
@@ -252,14 +224,14 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   renderButton() {
-    const { loadingPush } = this.state;
+    const { loadingPush, status } = this.state;
 
     const initializing = false;
     const currentBranch = 'master';
     const snapshotToolTipMsg = 'TO-DO';
     const pushToolTipMsg = 'TO-DO';
     const pullToolTipMsg = 'TO-DO';
-    const canCreateSnapshot = true;
+    const canCommit = status.hasChanges;
     const canPull = true;
     const canPush = true;
 
@@ -274,8 +246,8 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
         <div className="space-left">
           <Tooltip message={snapshotToolTipMsg} delay={800}>
             <i
-              className={classnames('icon fa fa-cube fa--fixed-width', {
-                'super-duper-faint': !canCreateSnapshot,
+              className={classnames('icon fa fa-check fa--fixed-width', {
+                'super-duper-faint': !canCommit,
               })}
             />
           </Tooltip>
@@ -309,7 +281,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
   render() {
     const { className } = this.props;
-    const { log } = this.state;
+    const { log, status } = this.state;
 
     return (
       <div className={className}>
@@ -318,7 +290,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
           <DropdownDivider>Git Project</DropdownDivider>
 
-          <DropdownItem onClick={this._handleCommit}>
+          <DropdownItem onClick={this._handleCommit} disabled={!status.hasChanges}>
             <i className="fa fa-check" /> Commit
           </DropdownItem>
           <DropdownItem onClick={this._handlePush}>

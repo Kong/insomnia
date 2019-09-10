@@ -73,7 +73,10 @@ import ExportRequestsModal from '../components/modals/export-requests-modal';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import VCS from '../../sync/vcs';
 import SyncMergeModal from '../components/modals/sync-merge-modal';
-import GitVCS, { FSPlugin, NeDBPlugin, routableFSPlugin } from '../../sync/git/git-vcs';
+import GitVCS from '../../sync/git/git-vcs';
+import NeDBPlugin from '../../sync/git/ne-db-plugin';
+import FSPlugin from '../../sync/git/fs-plugin';
+import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 
 @autobind
 class App extends PureComponent {
