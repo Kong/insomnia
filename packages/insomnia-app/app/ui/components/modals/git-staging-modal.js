@@ -9,6 +9,7 @@ import GitVCS from '../../../sync/git/git-vcs';
 import { withDescendants } from '../../../common/database';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import ModalFooter from '../base/modal-footer';
+import Tooltip from '../tooltip';
 
 type Props = {|
   workspace: Workspace,
@@ -26,27 +27,36 @@ type Item = {|
 type State = {|
   branch: string,
   message: string,
-  items: Array<Item>,
+  items: {
+    [string]: Item,
+  },
 |};
 
 const INITIAL_STATE = {
   branch: '',
   message: '',
-  items: [],
+  items: {},
 };
 
 @autobind
 class GitStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   statusNames: { [string]: string };
+  textarea: ?HTMLTextAreaElement;
+  onCommit: null | (() => void);
 
   constructor(props: Props) {
     super(props);
     this.state = INITIAL_STATE;
+    this.onCommit = null;
   }
 
   _setModalRef(ref: ?Modal) {
     this.modal = ref;
+  }
+
+  _setTextareaRef(ref: ?Modal) {
+    this.textarea = ref;
   }
 
   async _handleMessageChange(e: SyntheticEvent<HTMLTextAreaElement>) {
@@ -58,7 +68,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     const { items, message } = this.state;
 
     // Set the stage
-    for (const item of items) {
+    for (const p of Object.keys(items)) {
+      const item = items[p];
+
       if (!item.staged) {
         continue;
       }
@@ -73,50 +85,43 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     await vcs.commit(message);
 
     this.modal && this.modal.hide();
+
+    if (typeof this.onCommit === 'function') {
+      this.onCommit();
+    }
   }
 
-  async _handleToggleAll(e: SyntheticEvent<HTMLInputElement>) {
-    await this._toggleAll();
-  }
-
-  async _toggleAll(forceAdd?: boolean = false) {
-    const items = [...this.state.items];
-
+  async _toggleAll(items: Array<Item>, forceAdd?: boolean = false) {
     const allStaged = items.every(i => i.staged);
     const doStage = !allStaged;
 
-    for (const item of items) {
-      item.staged = doStage || forceAdd;
+    const newItems = { ...this.state.items };
+
+    for (const { path: p } of items) {
+      newItems[p].staged = doStage || forceAdd;
     }
 
-    this.setState({ items });
+    this.setState({ items: newItems });
   }
 
   async _handleToggleOne(e: SyntheticEvent<HTMLInputElement>) {
-    const items = [...this.state.items];
+    const newItems = { ...this.state.items };
 
     const gitPath = e.currentTarget.name;
 
-    for (const item of items) {
-      if (item.path === gitPath) {
-        item.staged = !item.staged;
-      }
+    if (!newItems[gitPath]) {
+      return;
     }
 
-    this.setState({ items });
+    newItems[gitPath].staged = !newItems[gitPath].staged;
+
+    this.setState({ items: newItems });
   }
 
-  async _refreshStatusNames() {
-    const { workspace } = this.props;
-    const docs = await withDescendants(workspace);
-    this.statusNames = {};
-    for (const doc of docs) {
-      this.statusNames[doc._id] = (doc: any).name || '';
-    }
-  }
-
-  async show(options: {}) {
+  async show(options: { onCommit?: () => void }) {
     const { vcs, workspace } = this.props;
+
+    this.onCommit = options.onCommit || null;
 
     this.modal && this.modal.show();
 
@@ -131,11 +136,14 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     }
 
     // Create status items
-    const items = [];
+    const items = {};
     const status = await vcs.status();
     const log = (await vcs.log()) || [];
-    console.log('LOG', this.statusNames);
     for (const s of status.entries) {
+      if (s.status === 'unmodified') {
+        continue;
+      }
+
       if (!this.statusNames[s.path] && log.length > 0) {
         const docJSON = await vcs.readObjFromTree(log[0].tree, s.path);
         if (!docJSON) {
@@ -150,31 +158,58 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         }
       }
 
-      items.push({
+      items[s.path] = {
         path: s.path,
         status: s.status,
         type: s.path.split('/')[0] || 'Unknown',
         name: 'n/a',
-        staged: true,
-      });
+        staged: !s.status.includes('added'),
+      };
     }
 
     const branch = await vcs.branch();
-    this.setState({
-      items,
-      branch,
-    });
+    this.setState(
+      {
+        items,
+        branch,
+      },
+      () => {
+        this.textarea && this.textarea.focus();
+      },
+    );
+  }
+
+  renderOperation(item: Item) {
+    let child = null;
+    let message = '';
+
+    if (item.status.includes('added')) {
+      child = <i className="fa fa-plus-circle success" />;
+      message = 'Added';
+    } else if (item.status.includes('modified')) {
+      child = <i className="fa fa-circle faded" />;
+      message = 'Modified';
+    } else if (item.status.includes('deleted')) {
+      child = <i className="fa fa-minus-circle danger" />;
+      message = 'Deleted';
+    } else {
+      child = <i className="fa fa-question-circle info" />;
+      message = 'Unknown';
+    }
+
+    return (
+      <React.Fragment>
+        <Tooltip message={message}>
+          {child} {item.type}
+        </Tooltip>
+      </React.Fragment>
+    );
   }
 
   renderItem(item: Item) {
-    const { path: gitPath, status, staged, type } = item;
+    const { path: gitPath, staged } = item;
 
     const docName = this.statusNames[gitPath] || 'n/a';
-
-    // Nothing to render if it wasn't changed
-    if (status === 'unmodified') {
-      return null;
-    }
 
     return (
       <tr key={gitPath} className="table--no-outline-row">
@@ -190,17 +225,54 @@ class GitStagingModal extends React.PureComponent<Props, State> {
             {docName}
           </label>
         </td>
-        <td className="text-right">{status.replace('*', '')}</td>
-        <td className="text-right">{type}</td>
+        <td className="text-right">{this.renderOperation(item)}</td>
       </tr>
+    );
+  }
+
+  renderTable(title: string, items: Array<Item>) {
+    if (items.length === 0) {
+      return null;
+    }
+
+    const allStaged = items.every(i => i.staged);
+    const allUnstaged = items.every(i => !i.staged);
+
+    return (
+      <div className="pad-top">
+        <strong>{title}</strong>
+        <table className="table--fancy table--outlined margin-top-sm">
+          <thead>
+            <tr className="table--no-outline-row">
+              <th>
+                <label className="wide no-pad">
+                  <span className="txt-md">
+                    <IndeterminateCheckbox
+                      className="space-right"
+                      type="checkbox"
+                      checked={allStaged}
+                      onChange={() => this._toggleAll(items, !allStaged)}
+                      indeterminate={!allStaged && !allUnstaged}
+                    />
+                  </span>{' '}
+                  name
+                </label>
+              </th>
+              <th className="text-right">Description</th>
+            </tr>
+          </thead>
+          <tbody>{items.map(this.renderItem)}</tbody>
+        </table>
+      </div>
     );
   }
 
   render() {
     const { items, message, branch } = this.state;
 
-    const allStaged = items.every(i => i.staged);
-    const allUnstaged = items.every(i => !i.staged);
+    const itemsList = Object.keys(items).map(k => items[k]);
+    const addedItems = itemsList.filter(i => i.status.includes('added'));
+    const nonAddedItems = itemsList.filter(i => !i.status.includes('added'));
 
     return (
       <Modal ref={this._setModalRef}>
@@ -208,6 +280,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         <ModalBody className="wide pad">
           <div className="form-control form-control--outlined">
             <textarea
+              ref={this._setTextareaRef}
               rows="3"
               required
               placeholder="A descriptive message to describe changes made"
@@ -215,32 +288,8 @@ class GitStagingModal extends React.PureComponent<Props, State> {
               onChange={this._handleMessageChange}
             />
           </div>
-          <div className="pad-top">
-            <strong>Changes</strong>
-            <table className="table--fancy table--outlined margin-top-sm">
-              <thead>
-                <tr className="table--no-outline-row">
-                  <th>
-                    <label className="wide no-pad">
-                      <span className="txt-md">
-                        <IndeterminateCheckbox
-                          className="space-right"
-                          type="checkbox"
-                          checked={allStaged}
-                          onChange={this._handleToggleAll}
-                          indeterminate={!allStaged && !allUnstaged}
-                        />
-                      </span>{' '}
-                      name
-                    </label>
-                  </th>
-                  <th className="text-right ">Changes</th>
-                  <th className="text-right">Description</th>
-                </tr>
-              </thead>
-              <tbody>{items.map(this.renderItem)}</tbody>
-            </table>
-          </div>
+          {this.renderTable('Modified Objects', nonAddedItems)}
+          {this.renderTable('Unversioned Objects', addedItems)}
         </ModalBody>
         <ModalFooter>
           <div className="margin-left italic txt-sm tall">

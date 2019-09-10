@@ -1,4 +1,4 @@
-import { setupDateMocks } from './util';
+import { assertAsyncError, setupDateMocks } from './util';
 import { MemPlugin } from '../mem-plugin';
 
 describe('MemPlugin', () => {
@@ -231,17 +231,3 @@ describe('MemPlugin', () => {
     });
   });
 });
-
-async function assertAsyncError(promise, code) {
-  try {
-    await promise;
-  } catch (err) {
-    expect(err.message).toMatch(new RegExp(`^${code}.+`));
-    expect(err.code).toBe(code);
-    expect(typeof err.syscall).toBe('string');
-    expect(typeof err.path).toBe('string');
-    return;
-  }
-
-  throw new Error(`Promise did not throw`);
-}

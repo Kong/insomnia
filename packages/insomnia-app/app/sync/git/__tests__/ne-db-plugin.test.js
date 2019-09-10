@@ -1,6 +1,6 @@
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
-import { setupDateMocks } from './util';
+import { assertAsyncError, setupDateMocks } from './util';
 import NeDBPlugin from '../ne-db-plugin';
 
 describe('NeDBPlugin', () => {
@@ -13,6 +13,9 @@ describe('NeDBPlugin', () => {
     await models.workspace.create({ _id: 'wrk_1' });
     await models.request.create({ _id: 'req_1', parentId: 'wrk_1' });
     await models.request.create({ _id: 'req_2', parentId: 'wrk_1' });
+
+    // Shouldn't list private docs
+    await models.request.create({ id: 'req_x', isPrivate: true, parentId: 'wrk_1' });
   });
 
   describe('readdir()', () => {
@@ -42,6 +45,8 @@ describe('NeDBPlugin', () => {
       expect(JSON.parse(await pNeDB.readFile('/Request/req_1.json'))).toEqual(
         expect.objectContaining({ _id: 'req_1', parentId: 'wrk_1' }),
       );
+
+      await assertAsyncError(pNeDB.readFile('/Request/req_x.json'));
     });
   });
 

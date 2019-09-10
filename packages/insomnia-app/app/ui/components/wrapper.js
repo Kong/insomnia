@@ -709,7 +709,6 @@ class Wrapper extends React.PureComponent<Props, State> {
           {gitVCS && (
             <React.Fragment>
               <GitConfigModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
-
               <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
             </React.Fragment>
           )}

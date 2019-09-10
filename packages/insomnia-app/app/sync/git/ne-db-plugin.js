@@ -40,7 +40,7 @@ export default class NeDBPlugin {
 
     const doc = await db.get(type, id);
 
-    if (!doc) {
+    if (!doc || (doc: any).isPrivate) {
       throw new Error(`Cannot find doc ${filePath}`);
     }
 
@@ -113,7 +113,7 @@ export default class NeDBPlugin {
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
       const children = await db.withDescendants(workspace);
-      docs = children.filter(d => d.type === type);
+      docs = children.filter(d => d.type === type && !(d: any).isPrivate);
     } else {
       throw new Error(`file path is not a directory ${filePath}`);
     }

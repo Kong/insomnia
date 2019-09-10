@@ -211,7 +211,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleCommit() {
-    showModal(GitStagingModal, {});
+    showModal(GitStagingModal, { onCommit: this._refreshState });
   }
 
   async _handleShowGitDirectory() {
