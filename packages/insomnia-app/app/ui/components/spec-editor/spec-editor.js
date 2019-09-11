@@ -18,6 +18,12 @@ type Props = {|
 
 @autobind
 class SpecEditor extends React.PureComponent<Props> {
+  editor: ?CodeEditor;
+
+  _setEditorRef(n: ?CodeEditor) {
+    this.editor = n;
+  }
+
   async _handleReImport() {
     const { workspace, apiSpec } = this.props;
     await importRaw(
@@ -33,6 +39,12 @@ class SpecEditor extends React.PureComponent<Props> {
       ...apiSpec,
       contents: v,
     });
+  }
+
+  jumpToLine(line: number) {
+    if (this.editor) {
+      this.editor.setCursor(0, line);
+    }
   }
 
   render() {
@@ -51,6 +63,7 @@ class SpecEditor extends React.PureComponent<Props> {
         <div className="spec-editor__body theme--pane__body">
           <CodeEditor
             manualPrettify
+            ref={this._setEditorRef}
             fontSize={editorFontSize}
             indentSize={editorIndentSize}
             lineWrapping={lineWrapping}

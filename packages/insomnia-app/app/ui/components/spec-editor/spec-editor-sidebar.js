@@ -3,9 +3,45 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import YAML from 'yaml';
 import type { ApiSpec } from '../../../models/api-spec';
+import * as Tree from 'react-animated-tree';
+
+const parentTree = {
+  position: 'relative',
+  padding: '10px 0px 0px 15px',
+  color: 'white',
+  fill: 'white',
+  width: '90%',
+};
+
+const childTree = {
+  position: 'relative',
+  padding: '0px 0px 0px 0px',
+  color: 'white',
+  fill: 'white',
+  width: '90%',
+};
+
+const styleGet = {
+  fill: '#B799F4',
+  color: '#B799F4',
+  fontWeight: 'bold',
+};
+
+const stylePost = {
+  fill: '#59CA93',
+  color: '#59CA93',
+  fontWeight: 'bold',
+};
+
+const styleDelete = {
+  fill: '#F8686D',
+  color: '#F8686D',
+  fontWeight: 'bold',
+};
 
 type Props = {|
   apiSpec: ApiSpec,
+  handleJumpToLine: (line: number) => void,
 |};
 
 type State = {|
@@ -31,6 +67,11 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     }
 
     this.setState({ parsedSpec: spec });
+  }
+
+  _handleScrollEditor() {
+    const { handleJumpToLine } = this.props;
+    handleJumpToLine(10);
   }
 
   componentWillReceiveProps(nextProps: Props) {
@@ -60,7 +101,35 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
 
     return (
       <React.Fragment>
-        <div className="pad">{title}</div>
+        <Tree content="openapi" style={parentTree} />
+        <Tree content="info" style={parentTree} canHide onClick={this._handleScrollEditor} />
+        <Tree content="servers" style={parentTree} />
+        <Tree content="paths" style={parentTree}>
+          <Tree content="pets">
+            <Tree content="get" style={styleGet} />
+            <Tree content="post" style={stylePost} />
+          </Tree>
+          <Tree content="pets/{id}">
+            <Tree content="get" style={styleGet} />
+            <Tree content="delete" style={styleDelete} />
+          </Tree>
+        </Tree>
+        <Tree content="components" style={parentTree}>
+          <Tree content="links">
+            <Tree content="someLink" style={childTree} />
+            <Tree content="someOtherLink" style={childTree} />
+          </Tree>
+          <Tree content="schemas">
+            <Tree content="Pet" style={childTree} />
+            <Tree content="NewPet" style={childTree} />
+            <Tree content="Error" style={childTree} />
+          </Tree>
+        </Tree>
+        {/*
+          <button onClick={this._handleScrollEditor} className="btn btn--clicky-small">
+          Scroll to 10
+          </button>
+          */}
       </React.Fragment>
     );
   }
