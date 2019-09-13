@@ -1,20 +1,21 @@
 'use strict';
 const convert = require('xml-js');
+const postman = require('./postman');
+const soapConverter = require('soap-converter');
 
 module.exports.id = 'wsdl';
 module.exports.name = 'WSDL';
 module.exports.description = 'Importer for WSDL files';
 
-let requestCount = 1;
-
-module.exports.convert = function(rawData) {
-  requestCount = 1;
-
+module.exports.convert = async function(data) {
   try {
-    let jsonString = convert.xml2json(rawData, { compact: true, spaces: 4 });
-    let data = JSON.parse(jsonString);
-    if (data['wsdl:definitions']) {
-      let converted = parseWsdl(data);
+    if (data.indexOf('wsdl:definition') !== -1) {
+      let postmanData = await convertWsdlToPostman(
+        '<?xml version="1.0" encoding="UTF-8" ?>' + data,
+      );
+      postmanData.info.schema += 'collection.json';
+      let postmanjson = JSON.stringify(postmanData);
+      let converted = postman.convert(postmanjson);
       return converted;
     }
   } catch (e) {
@@ -23,60 +24,91 @@ module.exports.convert = function(rawData) {
 
   return null;
 };
+const { get } = require('lodash');
 
-function parseWsdl(data) {
-  let exportObj = {
-    _type: 'export',
-    __export_format: 4,
-    __export_date: '2018-01-09T23:32:46.908Z',
-    __export_source: 'insomnia.importers:v0.1.0',
-  };
-  let port = data['wsdl:definitions']['wsdl:service']['wsdl:port'];
-  port = port.length > 0 ? port[0] : port;
-  port = port['soap:address']._attributes.location;
-
-  let group = {
-    parentId: '__WORKSPACE_ID__',
-    _id: '__GROUP_1__',
-    _type: 'request_group',
-    environment: {
-      base_url: port,
+function convertToPostman(items) {
+  const out = {
+    info: {
+      name: get(items[0], 'info.title'),
+      schema: 'https://schema.getpostman.com/json/collection/v2.0.0/', // required
     },
-    name: data['wsdl:definitions']['wsdl:service']._attributes.name,
   };
 
-  return [group, ...importItems(data, group._id)];
-}
+  out.item = items.map(i => {
+    const item = [];
+    const url = get(i, 'x-ibm-configuration.assembly.execute.0.proxy.target-url');
+    for (const k in i.paths) {
+      // eslint-disable-line
+      const methods = i.paths[k];
 
-function importItems(data, folderId) {
-  let operations = data['wsdl:definitions']['wsdl:portType']['wsdl:operation'];
-  operations = operations.length > 0 ? operations : [operations];
-  return operations.map(op => {
-    let requestName = op._attributes.name;
-    let requestBody = generateSampleBody(requestName, data);
+      for (const method in methods) {
+        // eslint-disable-line
+        const api = methods[method];
+        const paths = get(api, 'parameters.0.schema.$ref').split('/');
+        paths.shift();
+        paths.push('example');
+        const example = get(i, paths.join('.'));
+
+        item.push({
+          name: api.operationId,
+          description: api.description,
+          request: {
+            url,
+            method,
+            header: [
+              {
+                key: 'SOAPAction',
+                value: get(api, 'x-ibm-soap.soap-action'),
+                disabled: false,
+              },
+              {
+                key: 'Content-Type',
+                value: get(i, 'consumes.0'),
+                disabled: false,
+              },
+              {
+                key: 'Accept',
+                value: get(i, 'produces.0'),
+                disabled: false,
+              },
+            ],
+            body: {
+              mode: 'raw',
+              raw: example,
+            },
+          },
+        });
+      }
+    }
 
     return {
-      parentId: folderId,
-      name: requestName,
-      url: '{{ base_url }}',
-      body: {
-        mimeType: 'application/xml',
-        text: `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/"><soapenv:Header/><soapenv:Body>${requestBody}</soapenv:Body></soapenv:Envelope>`,
-      },
-      headers: [
-        {
-          // insomnia supports only application/xml as a mimeType, but lets default to text/xml
-          name: 'Content-Type',
-          value: 'text/xml',
-        },
-      ],
-      method: 'POST',
-      _type: 'request',
-      _id: `__REQUEST_${requestCount++}__`,
+      name: get(i, 'info.title'),
+      item,
     };
   });
+
+  return out;
 }
 
-function generateSampleBody(operationName, data) {
-  return `<tem:${operationName}></tem:${operationName}>`;
+const debug = require('debug')('soap-converter:index');
+const apiWSDL = require('apiconnect-wsdl');
+
+async function convertWsdlToPostman(input) {
+  debug('convert', input);
+
+  const wsdls = await apiWSDL.getJsonForWSDL(input);
+  const serviceData = apiWSDL.getWSDLServices(wsdls);
+
+  const items = [];
+  // Loop through all services
+  for (const item in serviceData.services) {
+    // eslint-disable-line
+    const svcName = serviceData.services[item].service;
+    const wsdlId = serviceData.services[item].filename;
+    const wsdlEntry = apiWSDL.findWSDLForServiceName(wsdls, svcName);
+    const swagger = apiWSDL.getSwaggerForService(wsdlEntry, svcName, wsdlId);
+
+    items.push(swagger);
+  }
+  return convertToPostman(items);
 }
