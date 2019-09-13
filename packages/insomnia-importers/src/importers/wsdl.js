@@ -1,5 +1,5 @@
 'use strict';
-var convert = require('xml-js');
+const convert = require('xml-js');
 
 module.exports.id = 'wsdl';
 module.exports.name = 'WSDL';
@@ -31,51 +31,52 @@ function parseWsdl(data) {
     __export_date: '2018-01-09T23:32:46.908Z',
     __export_source: 'insomnia.importers:v0.1.0',
   };
+  let port = data['wsdl:definitions']['wsdl:service']['wsdl:port'];
+  port = port.length > 0 ? port[0] : port;
+  port = port['soap:address']._attributes.location;
+
   let group = {
     parentId: '__WORKSPACE_ID__',
     _id: '__GROUP_1__',
     _type: 'request_group',
     environment: {
-      base_url:
-        data['wsdl:definitions']['wsdl:service']['wsdl:port'][0]['soap:address']._attributes
-          .location,
+      base_url: port,
     },
     name: data['wsdl:definitions']['wsdl:service']._attributes.name,
-    description: '',
   };
 
-  exportObj.resources = [group, ...importItems(data, group._id)];
-  return exportObj;
+  return [group, ...importItems(data, group._id)];
 }
+
 function importItems(data, folderId) {
   let operations = data['wsdl:definitions']['wsdl:portType']['wsdl:operation'];
-  let requests = operations.map(op => {
+  operations = operations.length > 0 ? operations : [operations];
+  return operations.map(op => {
     let requestName = op._attributes.name;
+    let requestBody = generateSampleBody(requestName, data);
 
-    return { name: requestName };
-  });
-
-  return requests.map(rq => {
     return {
       parentId: folderId,
-      name: rq.name,
+      name: requestName,
       url: '{{ base_url }}',
       body: {
-        mimeType: 'application/xml', // insomnia supports only application/xml so to be compatible we set a header with text/xml
-        text:
-          '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <tem:Add>\r\n         <tem:intA>5</tem:intA>\r\n         <tem:intB>10</tem:intB>\r\n      </tem:Add>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>',
+        mimeType: 'application/xml',
+        text: `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/"><soapenv:Header/><soapenv:Body>${requestBody}</soapenv:Body></soapenv:Envelope>`,
       },
       headers: [
         {
+          // insomnia supports only application/xml as a mimeType, but lets default to text/xml
           name: 'Content-Type',
           value: 'text/xml',
         },
       ],
       method: 'POST',
-      parameters: [],
-      authentication: {},
       _type: 'request',
       _id: `__REQUEST_${requestCount++}__`,
     };
   });
+}
+
+function generateSampleBody(operationName, data) {
+  return `<tem:${operationName}></tem:${operationName}>`;
 }

@@ -27,6 +27,8 @@
           "value": "text/xml"
         }
       ],
+      "authentication": {},
+      "parameters": [],
       "method": "POST",
       "_type": "request",
       "_id": "__REQUEST_1__"
