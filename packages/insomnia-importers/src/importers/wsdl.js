@@ -1,7 +1,6 @@
 'use strict';
-const convert = require('xml-js');
 const postman = require('./postman');
-const soapConverter = require('soap-converter');
+const apiWSDL = require('apiconnect-wsdl');
 
 module.exports.id = 'wsdl';
 module.exports.name = 'WSDL';
@@ -90,12 +89,7 @@ function convertToPostman(items) {
   return out;
 }
 
-const debug = require('debug')('soap-converter:index');
-const apiWSDL = require('apiconnect-wsdl');
-
 async function convertWsdlToPostman(input) {
-  debug('convert', input);
-
   const wsdls = await apiWSDL.getJsonForWSDL(input);
   const serviceData = apiWSDL.getWSDLServices(wsdls);
 
