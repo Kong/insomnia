@@ -413,9 +413,9 @@ class Wrapper extends React.PureComponent<Props, State> {
     this.specEditor = n;
   }
 
-  _handleJumpToLine(line: number) {
+  _handleJumpToLine(val: string, value: string | Object) {
     if (this.specEditor) {
-      this.specEditor.jumpToLine(line);
+      this.specEditor.jumpToLine(val, value);
     }
   }
 

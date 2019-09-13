@@ -41,7 +41,7 @@ const styleDelete = {
 
 type Props = {|
   apiSpec: ApiSpec,
-  handleJumpToLine: (line: number) => void,
+  handleJumpToLine: (vale: string, value: string | Object) => void,
 |};
 
 type State = {|
@@ -69,9 +69,10 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     this.setState({ parsedSpec: spec });
   }
 
-  _handleScrollEditor() {
+  _handleScrollEditor(key, value) {
     const { handleJumpToLine } = this.props;
-    handleJumpToLine(10);
+    console.log(key, value);
+    handleJumpToLine(key, value);
   }
 
   componentWillReceiveProps(nextProps: Props) {
@@ -89,47 +90,44 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
       // Not loaded yet
       return 'Loading...';
     }
+    const treeStyles = {
+      color: 'white',
+      fill: 'white',
+      width: '100%',
+    };
 
-    let title = (
-      <React.Fragment>
-        Missing <code>info.title</code>
-      </React.Fragment>
-    );
-    if (parsedSpec.info && parsedSpec.info.title) {
-      title = parsedSpec.info.title;
-    }
+    const parse = v => {
+      if (typeof v === 'string' || typeof v === 'number' || v === null) {
+        // return <Tree content={v} style={{color: '#63b1de'}} canHide onClick={(e) => handleClick(v)}/>
+      } else {
+        if (v instanceof Array) {
+          return v.length > 0
+            ? v.map((value, i) => (
+                <Tree content={i} canHide onClick={e => this._handleScrollEditor(i, value)}>
+                  {parse(value)}
+                </Tree>
+              ))
+            : null;
+        }
+        if (typeof v === 'object') {
+          return Object.entries(v).map(([key, value]) => (
+            <Tree
+              content={key}
+              style={treeStyles}
+              canHide
+              onClick={e => this._handleScrollEditor(key, value)}>
+              {parse(value)}
+            </Tree>
+          ));
+        }
+      }
+    };
 
+    console.log(typeof parsedSpec); // Object
+    console.dir(parsedSpec);
     return (
       <React.Fragment>
-        <Tree content="openapi" style={parentTree} />
-        <Tree content="info" style={parentTree} canHide onClick={this._handleScrollEditor} />
-        <Tree content="servers" style={parentTree} />
-        <Tree content="paths" style={parentTree}>
-          <Tree content="pets">
-            <Tree content="get" style={styleGet} />
-            <Tree content="post" style={stylePost} />
-          </Tree>
-          <Tree content="pets/{id}">
-            <Tree content="get" style={styleGet} />
-            <Tree content="delete" style={styleDelete} />
-          </Tree>
-        </Tree>
-        <Tree content="components" style={parentTree}>
-          <Tree content="links">
-            <Tree content="someLink" style={childTree} />
-            <Tree content="someOtherLink" style={childTree} />
-          </Tree>
-          <Tree content="schemas">
-            <Tree content="Pet" style={childTree} />
-            <Tree content="NewPet" style={childTree} />
-            <Tree content="Error" style={childTree} />
-          </Tree>
-        </Tree>
-        {/*
-          <button onClick={this._handleScrollEditor} className="btn btn--clicky-small">
-          Scroll to 10
-          </button>
-          */}
+        <div>{this.state.parsedSpec ? parse(this.state.parsedSpec) : ''}</div>
       </React.Fragment>
     );
   }

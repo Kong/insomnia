@@ -20,6 +20,8 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import { query as queryXPath } from 'insomnia-xpath';
 import deepEqual from 'deep-equal';
 import zprint from 'zprint-clj';
+require('codemirror/addon/search/searchcursor.js');
+require('codemirror/addon/search/search.js');
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -183,6 +185,60 @@ class CodeEditor extends React.Component {
       }
       const doc = this.codeMirror.getDoc();
       doc.setCursor(doc.lineCount(), 0);
+    }
+  }
+  search(val, value) {
+    let match = false;
+    let cursor;
+    if (typeof value === 'string' || typeof value === 'number') {
+      cursor = this.codeMirror.getSearchCursor(val + ': ' + value);
+      while (cursor.findNext()) {
+        this.codeMirror.setSelection(cursor.from(), cursor.to());
+        match = true;
+        return;
+      }
+      if (!match) {
+        cursor = this.codeMirror.getSearchCursor(val + ': ' + `"${value}"`);
+        while (cursor.findNext()) {
+          this.codeMirror.setSelection(cursor.from(), cursor.to());
+          match = true;
+          return;
+        }
+      }
+    }
+    if (typeof value === 'object') {
+      cursor = this.codeMirror.getSearchCursor(
+        val +
+          ':\n' +
+          JSON.stringify(value)
+            .replace('{', ' ')
+            .replace(/"/g, ' ')
+            .slice(0, 5),
+      );
+
+      while (cursor.findNext()) {
+        this.codeMirror.setSelection(cursor.from(), cursor.to());
+        match = true;
+        return;
+      }
+      if (!match) {
+        cursor = this.codeMirror.getSearchCursor(' ' + val + ':\n');
+
+        while (cursor.findNext()) {
+          this.codeMirror.setSelection(cursor.from(), cursor.to());
+          match = true;
+          return;
+        }
+      }
+      if (!match) {
+        cursor = this.codeMirror.getSearchCursor(val + ':\n');
+
+        while (cursor.findNext()) {
+          this.codeMirror.setSelection(cursor.from(), cursor.to());
+          match = true;
+          return;
+        }
+      }
     }
   }
 

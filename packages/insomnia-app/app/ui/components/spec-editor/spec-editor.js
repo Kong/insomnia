@@ -41,10 +41,11 @@ class SpecEditor extends React.PureComponent<Props> {
     });
   }
 
-  jumpToLine(line: number) {
+  jumpToLine(val: string, value: string | Object) {
     if (this.editor) {
-      this.editor.setCursor(0, line);
+      this.editor.setCursor(0, 0);
     }
+    this.editor.search(val, value);
   }
 
   render() {
