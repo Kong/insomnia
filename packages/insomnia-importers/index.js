@@ -11,6 +11,7 @@ const importers = [
   require('./src/importers/curl'),
   require('./src/importers/swagger2'),
   require('./src/importers/openapi3'),
+  require('./src/importers/wsdl'),
 ];
 
 module.exports.convert = async function(contents) {
