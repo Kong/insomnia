@@ -15,6 +15,7 @@ export default async function(
   username: string,
   password: string,
   scope: string = '',
+  audience: string = '',
 ): Promise<Object> {
   const params = [
     { name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_PASSWORD },
@@ -24,6 +25,7 @@ export default async function(
 
   // Add optional params
   scope && params.push({ name: c.P_SCOPE, value: scope });
+  audience && params.push({ name: c.P_AUDIENCE, value: audience });
 
   const headers = [
     { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
@@ -73,6 +75,7 @@ export default async function(
     c.P_EXPIRES_IN,
     c.P_REFRESH_TOKEN,
     c.P_SCOPE,
+    c.P_AUDIENCE,
     c.P_ERROR,
     c.P_ERROR_URI,
     c.P_ERROR_DESCRIPTION,

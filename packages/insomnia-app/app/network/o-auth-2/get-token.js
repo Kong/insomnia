@@ -138,6 +138,7 @@ async function _getOAuth2PasswordHeader(
     authentication.username,
     authentication.password,
     authentication.scope,
+    authentication.audience,
   );
 
   return _updateOAuth2Token(requestId, results);
