@@ -13,11 +13,8 @@ export function routableFSPlugin(defaultFS: Object, otherFS: { [string]: Object 
   const execMethod = (method: string, filePath: string, ...args: Array<any>) => {
     filePath = path.normalize(filePath);
 
-    for (const p of Object.keys(otherFS)) {
-      const prefix = path.normalize(p);
-
-      if (filePath.indexOf(prefix) === 0) {
-        // console.log('FS', method, filePath);
+    for (const prefix of Object.keys(otherFS)) {
+      if (filePath.indexOf(path.normalize(prefix)) === 0) {
         return otherFS[prefix].promises[method](filePath, ...args);
       }
     }
