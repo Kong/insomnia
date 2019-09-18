@@ -149,7 +149,7 @@ class General extends React.PureComponent<Props, State> {
     const { settings } = this.props;
     const { fonts } = this.state;
     return (
-      <div>
+      <div className="pad-bottom">
         <div className="row-fill row-fill--top">
           <div>
             {this.renderBooleanSetting('Force bulk header editor', 'useBulkHeaderEditor', '')}
@@ -195,7 +195,6 @@ class General extends React.PureComponent<Props, State> {
         </div>
 
         <hr className="pad-top" />
-
         <h2>Font</h2>
 
         <div className="row-fill row-fill--top">
@@ -411,6 +410,29 @@ class General extends React.PureComponent<Props, State> {
             {this.renderBooleanSetting('Enable version control beta', 'enableSyncBeta', '', true)}
           </React.Fragment>
         )}
+
+        <hr className="pad-top" />
+        <h2>Data Sharing</h2>
+        <div className="form-control form-control--thin">
+          <label className="inline-block">
+            Send Usage Statistics{' '}
+            <input
+              type="checkbox"
+              name="enableAnalytics"
+              checked={settings.enableAnalytics}
+              onChange={this._handleUpdateSetting}
+            />
+          </label>
+          <p className="txt-sm faint">
+            Help Kong improve its products by sending anonymous data about features and plugins
+            used, hardware and software configuration, statistics on number of requests, workspaces,
+            etc.
+          </p>
+          <p className="txt-sm faint">
+            Please note that this will not include personal data or any sensitive information, such
+            as request data, names, etc.
+          </p>
+        </div>
       </div>
     );
   }

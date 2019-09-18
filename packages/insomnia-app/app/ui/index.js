@@ -14,6 +14,7 @@ import { setFont, setTheme } from '../plugins/misc';
 import { AppContainer } from 'react-hot-loader';
 import { DragDropContext } from 'react-dnd';
 import DNDBackend from './dnd-backend';
+import { trackEvent, trackPageView } from '../common/analytics';
 
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
@@ -45,6 +46,9 @@ document.title = packageJson.app.longName;
 
   render(App);
 
+  // Track the page view
+  trackPageView();
+
   // Hot Module Replacement API
   if (module.hot) {
     // module.hot.accept('./containers/app', () => {
@@ -72,10 +76,12 @@ if (isDevelopment()) {
 if (window && !isDevelopment()) {
   window.addEventListener('error', e => {
     console.error('Uncaught Error', e);
+    trackEvent('Error', 'Uncaught Error');
   });
 
   window.addEventListener('unhandledRejection', e => {
     console.error('Unhandled Promise', e);
+    trackEvent('Error', 'Uncaught Promise');
   });
 }
 

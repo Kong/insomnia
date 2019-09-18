@@ -69,7 +69,11 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
         if (v instanceof Array) {
           return v.length > 0
             ? v.map((value, i) => (
-                <Tree content={i} canHide onClick={e => this._handleScrollEditor(i + '', value)}>
+                <Tree
+                  key={i}
+                  content={i}
+                  canHide
+                  onClick={e => this._handleScrollEditor(i + '', value)}>
                   {parse(value)}
                 </Tree>
               ))
@@ -78,6 +82,7 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
         if (typeof v === 'object') {
           return Object.entries(v).map(([key, value]) => (
             <Tree
+              key={key}
               content={key}
               style={treeStyles}
               canHide

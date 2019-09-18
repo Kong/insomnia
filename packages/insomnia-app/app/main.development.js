@@ -9,6 +9,7 @@ import * as database from './common/database';
 import { CHANGELOG_BASE_URL, getAppVersion, isDevelopment, isMac } from './common/constants';
 import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';
+import { trackNonInteractiveEvent } from './common/analytics';
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -126,6 +127,14 @@ async function _trackStats() {
   // Update Stats Object
   const firstLaunch = stats.launches === 1;
   const justUpdated = !firstLaunch && stats.currentVersion !== stats.lastVersion;
+
+  if (firstLaunch) {
+    trackNonInteractiveEvent('General', 'First Launch', stats.currentVersion);
+  } else if (justUpdated) {
+    trackNonInteractiveEvent('General', 'Updated', stats.currentVersion);
+  } else {
+    trackNonInteractiveEvent('General', 'Launched', stats.currentVersion);
+  }
 
   ipcMain.once('window-ready', () => {
     const { currentVersion } = stats;
