@@ -176,7 +176,7 @@ export class MemPlugin {
       this._assertDir(path.dirname(dirPath));
     }
 
-    const pathSegments = dirPath.split('/').filter(s => s !== '');
+    const pathSegments = dirPath.split(path.sep).filter(s => s !== '');
 
     // Recurse over all subpaths, ensure they are all directories,
     // create them if they don't exist
@@ -260,7 +260,7 @@ export class MemPlugin {
 
   _find(filePath: string): FSEntry | null {
     let current = this.__fs;
-    const pathSegments = filePath.split('/').filter(s => s !== '');
+    const pathSegments = filePath.split(path.sep).filter(s => s !== '');
     for (const expectedName of pathSegments) {
       const e = (current.children || []).find(c => c.name === expectedName);
 
