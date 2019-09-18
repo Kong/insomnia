@@ -215,7 +215,7 @@ export async function _actuallySend(
       // Set all the basic options
       setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
-      setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
+      setOpt(Curl.option.NOPROGRESS, true); // True so curl doesn't print progress
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
       enable(Curl.feature.NO_HEADER_PARSING);
       enable(Curl.feature.NO_DATA_PARSING);
@@ -285,26 +285,6 @@ export async function _actuallySend(
 
       // Set the headers (to be modified as we go)
       const headers = clone(renderedRequest.headers);
-
-      let lastPercent = 0;
-      // NOTE: This option was added in 7.32.0 so make it optional
-      setOpt(
-        Curl.option.XFERINFOFUNCTION,
-        (dltotal, dlnow, ultotal, ulnow) => {
-          if (dltotal === 0) {
-            return 0;
-          }
-
-          const percent = Math.round((dlnow / dltotal) * 100);
-          if (percent !== lastPercent) {
-            // console.log(`[network] Request downloaded ${percent}%`);
-            lastPercent = percent;
-          }
-
-          return 0;
-        },
-        true,
-      );
 
       // Set the URL, including the query parameters
       const qs = buildQueryStringFromParams(renderedRequest.parameters);
@@ -711,7 +691,7 @@ export async function _actuallySend(
         // Update cookie jar if we need to and if we found any cookies
         if (renderedRequest.settingStoreCookies && setCookieStrings.length) {
           const cookies = await cookiesFromJar(jar);
-          models.cookieJar.update(renderedRequest.cookieJar, { cookies });
+          await models.cookieJar.update(renderedRequest.cookieJar, { cookies });
         }
 
         // Print informational message
@@ -743,7 +723,8 @@ export async function _actuallySend(
         // Make sure the response body has been fully written first
         await waitForStreamToFinish(responseBodyWriteStream);
 
-        respond(responsePatch, responseBodyPath);
+        // Send response
+        await respond(responsePatch, responseBodyPath);
       });
 
       curl.on('error', function(err, code) {

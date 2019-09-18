@@ -1,5 +1,5 @@
 {
-  "appId": "com.insomnia.app",
+  "appId": "__APP_ID__",
   "publish": false,
   "extraResources": [
     {
@@ -40,11 +40,11 @@
     ]
   },
   "squirrelWindows":{
-    "iconUrl": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true"
+    "iconUrl": "__ICON_URL__"
   },
   "linux": {
-    "executableName": "insomnia",
-    "synopsis": "A simple, beautiful, and free REST API client",
+    "executableName": "__EXECUTABLE_NAME__",
+    "synopsis": "__SYNOPSIS__",
     "category": "Development",
     "target": [
       "AppImage",
