@@ -4,10 +4,28 @@
   "name": "insomnia-app",
   "app": {
     "name": "insomnia",
+    "executableName": "insomnia",
+    "appId": "com.insomnia.app",
     "productName": "Insomnia",
     "longName": "Insomnia REST Client",
+    "synopsis": "A simple, beautiful, and free REST API client",
+    "icon": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
+    "theme": "default",
     "version": "6.6.2",
-    "main": "main.min.js"
+    "main": "main.min.js",
+    "plugins": [
+      "insomnia-plugin-base64",
+      "insomnia-plugin-hash",
+      "insomnia-plugin-file",
+      "insomnia-plugin-now",
+      "insomnia-plugin-uuid",
+      "insomnia-plugin-prompt",
+      "insomnia-plugin-request",
+      "insomnia-plugin-response",
+      "insomnia-plugin-jsonpath",
+      "insomnia-plugin-cookie-jar",
+      "insomnia-plugin-core-themes"
+    ]
   },
   "licence": "MIT",
   "homepage": "https://insomnia.rest/",

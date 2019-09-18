@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as packageJson from '../../package.json';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import App from './containers/app';
@@ -16,6 +17,7 @@ import DNDBackend from './dnd-backend';
 
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
+document.title = packageJson.app.longName;
 
 (async function() {
   await db.initClient();

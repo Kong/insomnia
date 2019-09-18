@@ -2,6 +2,6 @@
 
 declare module 'mkdirp' {
   declare module.exports: {
-    sync: (path: string) => void,
+    sync: (path: string) => string | null,
   };
 }
