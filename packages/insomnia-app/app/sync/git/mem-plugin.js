@@ -45,7 +45,7 @@ export class MemPlugin {
     this.__ino = 0;
     this.__fs = {
       type: 'dir',
-      path: path.sep,
+      path: path.normalize('/'),
       name: '',
       children: [],
       ino: this.__ino,
@@ -190,7 +190,7 @@ export class MemPlugin {
 
     // Recurse over all sub paths, ensure they are all directories,
     // create them if they don't exist
-    let currentPath = '';
+    let currentPath = '/';
     for (const pathSegment of pathSegments) {
       const dirEntry = this._assertDir(currentPath);
       const nextPath = path.join(currentPath, pathSegment);
