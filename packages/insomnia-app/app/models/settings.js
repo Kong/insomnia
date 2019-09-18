@@ -42,6 +42,9 @@ type BaseSettings = {
   // Feature flags
   enableSyncBeta: boolean,
   hotKeyRegistry: hotkeys.HotKeyRegistry,
+
+  // Studio stuff
+  enableAnalytics: boolean | null,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -88,6 +91,9 @@ export function init(): BaseSettings {
     maxTimelineDataSizeKB: 10,
     enableSyncBeta: false,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
+
+    // Studio stuff
+    enableAnalytics: null,
   };
 }
 
