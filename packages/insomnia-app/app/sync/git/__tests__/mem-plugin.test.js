@@ -101,28 +101,12 @@ describe('MemPlugin', () => {
     it('errors on file', async () => {
       const p = new MemPlugin();
       await p.writeFile('/foo.txt', 'Bar!');
-
-      let message = false;
-      try {
-        await p.readdir('/foo.txt');
-      } catch (e) {
-        message = e.message;
-      }
-
-      expect(message).toBe(`ENOTDIR: not a directory, scandir '/foo.txt'`);
+      await assertAsyncError(p.readdir('/foo.txt'), 'ENOTDIR');
     });
 
     it('errors on missing directory', async () => {
       const p = new MemPlugin();
-
-      let message = false;
-      try {
-        await p.readdir('/invalid');
-      } catch (e) {
-        message = e.message;
-      }
-
-      expect(message).toBe(`ENOENT: no such file or directory, scandir '/invalid'`);
+      await assertAsyncError(p.readdir('/invalid'), 'ENOENT');
     });
   });
 

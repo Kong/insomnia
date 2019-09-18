@@ -45,7 +45,7 @@ export class MemPlugin {
     this.__ino = 0;
     this.__fs = {
       type: 'dir',
-      path: '/',
+      path: path.sep,
       name: '',
       children: [],
       ino: this.__ino,
@@ -188,12 +188,12 @@ export class MemPlugin {
 
     const pathSegments = dirPath.split(path.sep).filter(s => s !== '');
 
-    // Recurse over all subpaths, ensure they are all directories,
+    // Recurse over all sub paths, ensure they are all directories,
     // create them if they don't exist
     let currentPath = '';
     for (const pathSegment of pathSegments) {
       const dirEntry = this._assertDir(currentPath);
-      const nextPath = currentPath + '/' + pathSegment;
+      const nextPath = path.join(currentPath, pathSegment);
 
       // Create dir if it doesn't exist yet
       if (!dirEntry.children.find(e => e.name === pathSegment)) {
@@ -275,6 +275,8 @@ export class MemPlugin {
   }
 
   _find(filePath: string): FSEntry | null {
+    filePath = path.normalize(filePath);
+
     let current = this.__fs;
     const pathSegments = filePath.split(path.sep).filter(s => s !== '');
     for (const expectedName of pathSegments) {
