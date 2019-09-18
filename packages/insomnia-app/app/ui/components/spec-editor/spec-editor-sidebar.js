@@ -6,6 +6,7 @@ import type { ApiSpec } from '../../../models/api-spec';
 
 type Props = {|
   apiSpec: ApiSpec,
+  handleJumpToLine: (line: number) => void,
 |};
 
 type State = {|
@@ -31,6 +32,11 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     }
 
     this.setState({ parsedSpec: spec });
+  }
+
+  _handleScrollEditor() {
+    const { handleJumpToLine } = this.props;
+    handleJumpToLine(10);
   }
 
   componentWillReceiveProps(nextProps: Props) {
@@ -61,6 +67,9 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     return (
       <React.Fragment>
         <div className="pad">{title}</div>
+        <button onClick={this._handleScrollEditor} className="btn btn--clicky-small">
+          Scroll to 10
+        </button>
       </React.Fragment>
     );
   }

@@ -177,6 +177,8 @@ const sUpdate = models.settings.update;
 
 @autobind
 class Wrapper extends React.PureComponent<Props, State> {
+  specEditor: ?SpecEditor;
+
   constructor(props: any) {
     super(props);
     this.state = {
@@ -411,11 +413,21 @@ class Wrapper extends React.PureComponent<Props, State> {
     this.setState({ forceRefreshKey: Date.now() });
   }
 
+  _setSpecEditorRef(n: ?SpecEditor) {
+    this.specEditor = n;
+  }
+
+  _handleJumpToLine(line: number) {
+    if (this.specEditor) {
+      this.specEditor.jumpToLine(line);
+    }
+  }
+
   renderSpecEditorSidebarBody(): React.Node {
     const { activeApiSpec } = this.props;
     return (
       <ErrorBoundary showAlert>
-        <SpecEditorSidebar apiSpec={activeApiSpec} />
+        <SpecEditorSidebar apiSpec={activeApiSpec} handleJumpToLine={this._handleJumpToLine} />
       </ErrorBoundary>
     );
   }
@@ -910,6 +922,7 @@ class Wrapper extends React.PureComponent<Props, State> {
         ) : (
           <ErrorBoundary showAlert>
             <SpecEditor
+              ref={this._setSpecEditorRef}
               workspace={activeWorkspace}
               apiSpec={activeApiSpec}
               editorFontSize={settings.editorFontSize}
