@@ -3,10 +3,11 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import YAML from 'yaml';
 import type { ApiSpec } from '../../../models/api-spec';
+import * as Tree from 'react-animated-tree';
 
 type Props = {|
   apiSpec: ApiSpec,
-  handleJumpToLine: (line: number) => void,
+  handleJumpToLine: (value: string, value: string | Object) => void,
 |};
 
 type State = {|
@@ -34,9 +35,10 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     this.setState({ parsedSpec: spec });
   }
 
-  _handleScrollEditor() {
+  _handleScrollEditor(key: string, value: string) {
     const { handleJumpToLine } = this.props;
-    handleJumpToLine(10);
+    console.log(key, value);
+    handleJumpToLine(key, value);
   }
 
   componentWillReceiveProps(nextProps: Props) {
@@ -54,22 +56,44 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
       // Not loaded yet
       return 'Loading...';
     }
+    const treeStyles = {
+      color: 'white',
+      fill: 'white',
+      width: '100%',
+    };
 
-    let title = (
-      <React.Fragment>
-        Missing <code>info.title</code>
-      </React.Fragment>
-    );
-    if (parsedSpec.info && parsedSpec.info.title) {
-      title = parsedSpec.info.title;
-    }
+    const parse = v => {
+      if (typeof v === 'string' || typeof v === 'number' || v === null) {
+        // return <Tree content={v} style={{color: '#63b1de'}} canHide onClick={(e) => handleClick(v)}/>
+      } else {
+        if (v instanceof Array) {
+          return v.length > 0
+            ? v.map((value, i) => (
+                <Tree content={i} canHide onClick={e => this._handleScrollEditor(i + '', value)}>
+                  {parse(value)}
+                </Tree>
+              ))
+            : null;
+        }
+        if (typeof v === 'object') {
+          return Object.entries(v).map(([key, value]) => (
+            <Tree
+              content={key}
+              style={treeStyles}
+              canHide
+              onClick={e => this._handleScrollEditor(key, value)}>
+              {parse(value)}
+            </Tree>
+          ));
+        }
+      }
+    };
 
+    console.log(typeof parsedSpec); // Object
+    console.dir(parsedSpec);
     return (
       <React.Fragment>
-        <div className="pad">{title}</div>
-        <button onClick={this._handleScrollEditor} className="btn btn--clicky-small">
-          Scroll to 10
-        </button>
+        <div>{this.state.parsedSpec ? parse(this.state.parsedSpec) : ''}</div>
       </React.Fragment>
     );
   }

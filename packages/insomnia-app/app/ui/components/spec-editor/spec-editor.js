@@ -41,10 +41,11 @@ class SpecEditor extends React.PureComponent<Props> {
     });
   }
 
-  jumpToLine(line: number) {
+  jumpToLine(val: string, value: string | Object) {
     if (this.editor) {
-      this.editor.setCursor(0, line);
+      this.editor.setCursor(0, 0);
     }
+    this.editor.search(val, value);
   }
 
   render() {
@@ -68,7 +69,7 @@ class SpecEditor extends React.PureComponent<Props> {
             indentSize={editorIndentSize}
             lineWrapping={lineWrapping}
             keyMap={editorKeyMap}
-            mode={apiSpec.contentType === 'json' ? 'application/json' : 'text/yaml'}
+            mode="openapi"
             defaultValue={apiSpec.contents}
             onChange={this._handleOnChange}
             uniquenessKey={apiSpec._id}
