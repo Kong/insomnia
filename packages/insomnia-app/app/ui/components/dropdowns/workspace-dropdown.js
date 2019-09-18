@@ -11,23 +11,20 @@ import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
 import { getAppVersion } from '../../../common/constants';
 import { showAlert, showModal, showPrompt } from '../modals';
-import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
-import LoginModal from '../modals/login-modal';
 import Tooltip from '../tooltip';
 import KeydownBinder from '../keydown-binder';
+import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Workspace } from '../../../models/workspace';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
 import SyncShareModal from '../modals/sync-share-modal';
 import * as db from '../../../common/database';
 import VCS from '../../../sync/vcs';
 import HelpTooltip from '../help-tooltip';
 import type { Project } from '../../../sync/types';
 import * as sync from '../../../sync-legacy/index';
-import PromptButton from '../base/prompt-button';
 import * as session from '../../../account/session';
 
 type Props = {
@@ -259,10 +256,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
           </DropdownItem>
 
-          <DropdownItem onClick={this._handleShowShareSettings}>
-            <i className="fa fa-globe" /> Share <strong>{activeWorkspace.name}</strong>
-          </DropdownItem>
-
           <DropdownDivider>Switch Workspace</DropdownDivider>
 
           {nonActiveWorkspaces.map(w => {
@@ -316,32 +309,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
           <DropdownItem onClick={WorkspaceDropdown._handleShowExport}>
             <i className="fa fa-share" /> Import/Export
           </DropdownItem>
-
-          {/* Not Logged In */}
-
-          {session.isLoggedIn() ? (
-            <DropdownItem
-              key="login"
-              onClick={WorkspaceDropdown._handleLogout}
-              buttonClass={PromptButton}>
-              <i className="fa fa-sign-out" /> Logout
-            </DropdownItem>
-          ) : (
-            <DropdownItem key="login" onClick={() => showModal(LoginModal)}>
-              <i className="fa fa-sign-in" /> Log In
-            </DropdownItem>
-          )}
-
-          {!session.isLoggedIn() && (
-            <DropdownItem
-              key="invite"
-              buttonClass={Link}
-              href="https://insomnia.rest/pricing/"
-              button>
-              <i className="fa fa-users" /> Upgrade to Plus
-              <i className="fa fa-star surprise fa-outline" />
-            </DropdownItem>
-          )}
         </Dropdown>
       </KeydownBinder>
     );
