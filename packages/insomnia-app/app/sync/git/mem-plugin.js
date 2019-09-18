@@ -54,6 +54,8 @@ export class MemPlugin {
   }
 
   async tree(baseDir: string = '/') {
+    baseDir = path.normalize(baseDir);
+
     const next = async (dir: string, toPrint: string): Promise<string> => {
       const entry = this._find(dir);
 
@@ -84,6 +86,8 @@ export class MemPlugin {
     filePath: string,
     options: buffer$Encoding | { encoding?: buffer$Encoding },
   ): Promise<Buffer | string> {
+    filePath = path.normalize(filePath);
+
     if (typeof options === 'string') {
       options = { encoding: options };
     }
@@ -104,6 +108,8 @@ export class MemPlugin {
     data: Buffer | string,
     options: buffer$Encoding | { encoding?: buffer$Encoding, flag?: string },
   ): Promise<void> {
+    filePath = path.normalize(filePath);
+
     if (typeof options === 'string') {
       options = { encoding: options };
     }
@@ -157,10 +163,12 @@ export class MemPlugin {
   }
 
   async unlink(filePath: string, ...x: Array<any>): Promise<void> {
+    filePath = path.normalize(filePath);
     this._remove(this._assertFile(filePath));
   }
 
   async readdir(basePath: string, ...x: Array<any>): Promise<Array<string>> {
+    basePath = path.normalize(basePath);
     const entry = this._assertDir(basePath);
 
     const names = entry.children.map(c => c.name);
@@ -169,6 +177,8 @@ export class MemPlugin {
   }
 
   async mkdir(dirPath: string, options?: { recursive?: boolean }): Promise<void> {
+    dirPath = path.normalize(dirPath);
+
     const doRecursive = (options || {}).recursive || false;
 
     // If not recursive, ensure parent exists
@@ -202,6 +212,8 @@ export class MemPlugin {
   }
 
   async rmdir(dirPath: string, ...x: Array<any>) {
+    dirPath = path.normalize(dirPath);
+
     const dirEntry = this._assertDir(dirPath);
 
     if (dirEntry.children.length > 0) {
@@ -217,20 +229,24 @@ export class MemPlugin {
   }
 
   async stat(filePath: string, ...x: Array<any>): Promise<Stat> {
+    filePath = path.normalize(filePath);
     return this._statEntry(this._assertExists(filePath));
   }
 
   async lstat(filePath: string, ...x: Array<any>) {
+    filePath = path.normalize(filePath);
     const linkEntry = this._assertExists(filePath);
     return this._statEntry(this._resolveLinks(linkEntry));
   }
 
   async readlink(filePath: string, ...x: Array<any>) {
+    filePath = path.normalize(filePath);
     const linkEntry = this._assertSymlink(filePath);
     return linkEntry.linkTo;
   }
 
   async symlink(target: string, filePath: string, ...x: Array<any>) {
+    filePath = path.normalize(filePath);
     // Make sure we don't already have one there
     // TODO: Check what to do in this case (might be wrong)
     this._assertDoesNotExist(filePath);
