@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-now",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Insomnia now template tag",
   "license": "MIT",

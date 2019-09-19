@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-base64",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Insomnia base64 template tag",
   "license": "MIT",
