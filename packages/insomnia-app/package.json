@@ -6,7 +6,7 @@
     "name": "studio",
     "executableName": "studio",
     "appId": "com.konghq.studio",
-    "productName": "Studio",
+    "productName": "Kong Studio",
     "longName": "Kong Studio",
     "synopsis": "Desktop application for spec-first API development",
     "icon": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
