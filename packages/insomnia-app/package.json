@@ -118,6 +118,7 @@
   ],
   "dependencies": {
     "@hot-loader/react-dom": "^16.8.6",
+    "@stoplight/spectral": "^4.1.1",
     "autobind-decorator": "^2.4.0",
     "aws4": "^1.6.0",
     "classnames": "^2.2.5",
@@ -169,7 +170,6 @@
     "node-forge": "^0.8.2",
     "nunjucks": "^3.0.0",
     "oauth-1.0a": "^2.2.2",
-    "openapi-linter": "^1.0.1",
     "papaparse": "^4.3.6",
     "pdfjs-dist": "^2.0.489",
     "prop-types": "^15.6.1",

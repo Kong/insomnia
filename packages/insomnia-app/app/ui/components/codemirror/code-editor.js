@@ -20,8 +20,6 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import { query as queryXPath } from 'insomnia-xpath';
 import deepEqual from 'deep-equal';
 import zprint from 'zprint-clj';
-require('codemirror/addon/search/searchcursor.js');
-require('codemirror/addon/search/search.js');
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
