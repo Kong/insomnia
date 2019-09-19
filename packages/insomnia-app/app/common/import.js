@@ -183,11 +183,11 @@ export async function importRaw(
     // TODO: Support this in a better way
     if (
       model.type === models.request.type &&
-      typeof resource.url === 'string' &&
-      resource.url.includes('graphql') &&
       resource.body &&
-      resource.body.text &&
-      resource.body.text.includes('"query"')
+      typeof resource.body.text === 'string' &&
+      typeof resource.url === 'string' &&
+      resource.body.text.includes('"query"') &&
+      resource.url.includes('graphql')
     ) {
       resource.body.mimeType = CONTENT_TYPE_GRAPHQL;
     }

@@ -953,6 +953,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             src="http://localhost:8080/default/services"
             className="monitor-webview"
             nodeintegration={false}
+          />
         )}
 
         {activity === null && (
