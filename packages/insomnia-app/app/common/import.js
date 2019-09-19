@@ -5,7 +5,7 @@ import * as db from './database';
 import * as har from './har';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
-import { getAppVersion } from './constants';
+import { CONTENT_TYPE_GRAPHQL, getAppVersion } from './constants';
 import { showError, showModal } from '../ui/components/modals/index';
 import AlertModal from '../ui/components/modals/alert-modal';
 import fs from 'fs';
@@ -177,6 +177,19 @@ export async function importRaw(
     if (!model) {
       console.warn('Unknown doc type for import', resource._type);
       continue;
+    }
+
+    // Hack to switch to GraphQL based on finding `graphql` in the URL path
+    // TODO: Support this in a better way
+    if (
+      model.type === models.request.type &&
+      typeof resource.url === 'string' &&
+      resource.url.includes('graphql') &&
+      resource.body &&
+      resource.body.text &&
+      resource.body.text.includes('"query"')
+    ) {
+      resource.body.mimeType = CONTENT_TYPE_GRAPHQL;
     }
 
     const existingDoc = await model.getById(resource._id);
