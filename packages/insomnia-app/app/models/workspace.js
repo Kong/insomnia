@@ -1,5 +1,6 @@
 // @flow
 import type { BaseModel } from './index';
+import * as packageJson from '../../package.json';
 import * as db from '../common/database';
 import * as models from './index';
 
@@ -39,7 +40,7 @@ export async function all(): Promise<Array<Workspace>> {
   const workspaces = await db.all(type);
 
   if (workspaces.length === 0) {
-    await create({ name: 'Insomnia' });
+    await create({ name: packageJson.app.productName });
     return all();
   } else {
     return workspaces;

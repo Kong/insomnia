@@ -37,7 +37,6 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
 
   _handleScrollEditor(key: string, value: string) {
     const { handleJumpToLine } = this.props;
-    console.log(key, value);
     handleJumpToLine(key, value);
   }
 
@@ -73,7 +72,6 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
                   key={i}
                   content={i}
                   canHide
-                  type={'array'}
                   onClick={e => this._handleScrollEditor(i + '', value)}>
                   {parse(value)}
                 </Tree>
@@ -87,7 +85,6 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
               content={key}
               style={treeStyles}
               canHide
-              type={'foo'}
               onClick={e => this._handleScrollEditor(key, value)}>
               {parse(value)}
             </Tree>
@@ -96,8 +93,6 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
       }
     };
 
-    console.log(typeof parsedSpec); // Object
-    console.dir(parsedSpec);
     return (
       <div className="pad-left-sm">{this.state.parsedSpec ? parse(this.state.parsedSpec) : ''}</div>
     );

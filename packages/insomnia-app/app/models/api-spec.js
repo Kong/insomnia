@@ -41,6 +41,14 @@ export async function getOrCreateForParentId(
   return spec;
 }
 
+export async function updateOrCreateForParentId(
+  workspaceId: string,
+  patch: Object = {},
+): Promise<ApiSpec> {
+  const spec = await getOrCreateForParentId(workspaceId);
+  return db.docUpdate(spec, patch);
+}
+
 export async function all(): Promise<Array<ApiSpec>> {
   return db.all(type);
 }

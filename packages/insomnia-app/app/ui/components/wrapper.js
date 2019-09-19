@@ -74,6 +74,7 @@ import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import SidebarFilter from './sidebar/sidebar-filter';
 import type { ApiSpec } from '../../models/api-spec';
 import GitVCS from '../../sync/git/git-vcs';
+import Onboarding from './onboarding';
 
 type Props = {
   // Helper Functions
@@ -433,84 +434,86 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   renderSidebarBody(): React.Node {
-    if (this.props.activity !== 'test') {
+    if (this.props.activity === 'spec') {
       return this.renderSpecEditorSidebarBody();
-    }
+    } else if (this.props.activity === 'test') {
+      const {
+        activeEnvironment,
+        activeRequest,
+        activeWorkspace,
+        environments,
+        handleActivateRequest,
+        handleCopyAsCurl,
+        handleCreateRequest,
+        handleCreateRequestGroup,
+        handleDuplicateRequest,
+        handleDuplicateRequestGroup,
+        handleGenerateCode,
+        handleMoveDoc,
+        handleMoveRequestGroup,
+        handleSetRequestGroupCollapsed,
+        handleSetRequestPinned,
+        handleSetSidebarFilter,
+        settings,
+        sidebarChildren,
+        sidebarFilter,
+        sidebarWidth,
+        sidebarHidden,
+      } = this.props;
 
-    const {
-      activeEnvironment,
-      activeRequest,
-      activeWorkspace,
-      environments,
-      handleActivateRequest,
-      handleCopyAsCurl,
-      handleCreateRequest,
-      handleCreateRequestGroup,
-      handleDuplicateRequest,
-      handleDuplicateRequestGroup,
-      handleGenerateCode,
-      handleMoveDoc,
-      handleMoveRequestGroup,
-      handleSetRequestGroupCollapsed,
-      handleSetRequestPinned,
-      handleSetSidebarFilter,
-      settings,
-      sidebarChildren,
-      sidebarFilter,
-      sidebarWidth,
-      sidebarHidden,
-    } = this.props;
+      return (
+        <React.Fragment>
+          <div className="sidebar__menu">
+            <EnvironmentsDropdown
+              handleChangeEnvironment={this._handleChangeEnvironment}
+              activeEnvironment={activeEnvironment}
+              environments={environments}
+              workspace={activeWorkspace}
+              environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
+              hotKeyRegistry={settings.hotKeyRegistry}
+            />
+            <button className="btn btn--super-compact" onClick={this._handleShowCookiesModal}>
+              <div className="sidebar__menu__thing">
+                <span>Cookies</span>
+              </div>
+            </button>
+          </div>
 
-    return (
-      <React.Fragment>
-        <div className="sidebar__menu">
-          <EnvironmentsDropdown
-            handleChangeEnvironment={this._handleChangeEnvironment}
-            activeEnvironment={activeEnvironment}
-            environments={environments}
-            workspace={activeWorkspace}
-            environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
+          <SidebarFilter
+            key={`${activeWorkspace._id}::filter`}
+            onChange={handleSetSidebarFilter}
+            requestCreate={this._handleCreateRequestInWorkspace}
+            requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
+            filter={sidebarFilter || ''}
             hotKeyRegistry={settings.hotKeyRegistry}
           />
-          <button className="btn btn--super-compact" onClick={this._handleShowCookiesModal}>
-            <div className="sidebar__menu__thing">
-              <span>Cookies</span>
-            </div>
-          </button>
-        </div>
 
-        <SidebarFilter
-          key={`${activeWorkspace._id}::filter`}
-          onChange={handleSetSidebarFilter}
-          requestCreate={this._handleCreateRequestInWorkspace}
-          requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
-          filter={sidebarFilter || ''}
-          hotKeyRegistry={settings.hotKeyRegistry}
-        />
-
-        <SidebarChildren
-          childObjects={sidebarChildren}
-          handleActivateRequest={handleActivateRequest}
-          handleCreateRequest={handleCreateRequest}
-          handleCreateRequestGroup={handleCreateRequestGroup}
-          handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-          handleSetRequestPinned={handleSetRequestPinned}
-          handleDuplicateRequest={handleDuplicateRequest}
-          handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-          handleMoveRequestGroup={handleMoveRequestGroup}
-          handleGenerateCode={handleGenerateCode}
-          handleCopyAsCurl={handleCopyAsCurl}
-          moveDoc={handleMoveDoc}
-          hidden={sidebarHidden}
-          width={sidebarWidth}
-          workspace={activeWorkspace}
-          activeRequest={activeRequest}
-          filter={sidebarFilter || ''}
-          hotKeyRegistry={settings.hotKeyRegistry}
-          activeEnvironment={activeEnvironment}
-        />
-      </React.Fragment>
-    );
+          <SidebarChildren
+            childObjects={sidebarChildren}
+            handleActivateRequest={handleActivateRequest}
+            handleCreateRequest={handleCreateRequest}
+            handleCreateRequestGroup={handleCreateRequestGroup}
+            handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+            handleSetRequestPinned={handleSetRequestPinned}
+            handleDuplicateRequest={handleDuplicateRequest}
+            handleDuplicateRequestGroup={handleDuplicateRequestGroup}
+            handleMoveRequestGroup={handleMoveRequestGroup}
+            handleGenerateCode={handleGenerateCode}
+            handleCopyAsCurl={handleCopyAsCurl}
+            moveDoc={handleMoveDoc}
+            hidden={sidebarHidden}
+            width={sidebarWidth}
+            workspace={activeWorkspace}
+            activeRequest={activeRequest}
+            filter={sidebarFilter || ''}
+            hotKeyRegistry={settings.hotKeyRegistry}
+            activeEnvironment={activeEnvironment}
+          />
+        </React.Fragment>
+      );
+    } else {
+      return null;
+    }
   }
 
   render() {
@@ -578,6 +581,8 @@ class Wrapper extends React.PureComponent<Props, State> {
     const columns = `auto ${realSidebarWidth}rem 0 minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 -
       paneWidth}fr)`;
     const rows = `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
+
+    const sidebarBody = this.renderSidebarBody();
 
     return [
       <div key="modals" className="modals">
@@ -807,14 +812,16 @@ class Wrapper extends React.PureComponent<Props, State> {
               ? '5px solid ' + activeEnvironment.color
               : null,
         }}>
-        <ActivityBar
-          showSettings={handleShowSettingsModal}
-          activity={activity}
-          setActivity={handleSetActiveActivity}
-          hotKeyRegistry={settings.hotKeyRegistry}
-        />
+        {activity && (
+          <ActivityBar
+            showSettings={handleShowSettingsModal}
+            activity={activity}
+            setActivity={handleSetActiveActivity}
+            hotKeyRegistry={settings.hotKeyRegistry}
+          />
+        )}
 
-        {activity !== 'monitor' && (
+        {sidebarBody && (
           <ErrorBoundary showAlert>
             <Sidebar
               ref={handleSetSidebarRef}
@@ -834,7 +841,7 @@ class Wrapper extends React.PureComponent<Props, State> {
               width={sidebarWidth}
               workspace={activeWorkspace}
               workspaces={workspaces}>
-              {this.renderSidebarBody()}
+              {sidebarBody}
             </Sidebar>
 
             <div className="drag drag--sidebar">
@@ -942,7 +949,15 @@ class Wrapper extends React.PureComponent<Props, State> {
         )}
 
         {activity === 'monitor' && (
-          <webview src="https://konghq.com" className="monitor-webview" nodeintegration={false} />
+          <webview src="https://konghq.com" className="monitor-webview" nodeintegration="false" />
+        )}
+
+        {activity === null && (
+          <Onboarding
+            handleImportFile={this._handleImportFile}
+            handleImportUri={this._handleImportUri}
+            handleSetActivity={handleSetActiveActivity}
+          />
         )}
       </div>,
     ];

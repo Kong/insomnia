@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
+import mkdirp from 'mkdirp';
 import fs from 'fs';
 import { clipboard, ipcRenderer, remote } from 'electron';
 import { parse as urlParse } from 'url';
@@ -901,6 +902,7 @@ class App extends PureComponent {
     const fsPlugin = routableFSPlugin(pDir, { [gitDir]: pGit });
 
     // Init VCS
+    mkdirp.sync(gitDir);
     await gitVCS.init('/', fsPlugin, gitDir);
 
     this.setState({ gitVCS });

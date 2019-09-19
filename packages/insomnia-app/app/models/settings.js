@@ -93,7 +93,7 @@ export function init(): BaseSettings {
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
 
     // Studio stuff
-    enableAnalytics: null,
+    enableAnalytics: true,
   };
 }
 

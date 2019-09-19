@@ -1,4 +1,5 @@
 import electron from 'electron';
+import rimraf from 'rimraf';
 import path from 'path';
 import { Curl } from 'insomnia-libcurl';
 import fs from 'fs';
@@ -280,6 +281,40 @@ export function createWindow() {
     ],
   };
 
+  const demoMenu = {
+    label: 'Summit Demo',
+    id: 'demo',
+    submenu: [
+      {
+        label: 'Delete app data',
+        click: async () => {
+          const dir = misc.getDataDirectory();
+          const response = await dialog.showMessageBox({
+            type: 'question',
+            title: `Delete Data Directory`,
+            message: `Do you want to delete ${dir}?`,
+            buttons: ['Delete', 'Cancel'],
+            cancelId: 1,
+          });
+
+          if (response === 1) {
+            return;
+          }
+
+          rimraf(misc.getDataDirectory(), err => {
+            if (err) {
+              console.log('Failed to delete app data directory', err);
+              return;
+            }
+
+            app.relaunch();
+            app.exit();
+          });
+        },
+      },
+    ],
+  };
+
   if (!isMac()) {
     helpMenu.submenu.unshift({
       label: `${MNEMONIC_SYM}About`,
@@ -364,6 +399,7 @@ export function createWindow() {
   template.push(windowMenu);
   template.push(toolsMenu);
   template.push(helpMenu);
+  template.push(demoMenu);
 
   if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {
     template.push(developerMenu);
