@@ -93,6 +93,9 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
       }
     };
 
+    // Temp for deploy demo
+    window.currentSpec = parsedSpec;
+
     return (
       <div className="pad-left-sm">{this.state.parsedSpec ? parse(this.state.parsedSpec) : ''}</div>
     );

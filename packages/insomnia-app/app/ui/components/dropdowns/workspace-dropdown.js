@@ -26,6 +26,7 @@ import HelpTooltip from '../help-tooltip';
 import type { Project } from '../../../sync/types';
 import * as sync from '../../../sync-legacy/index';
 import * as session from '../../../account/session';
+import axios from 'axios';
 
 type Props = {
   isLoading: boolean,
@@ -177,6 +178,20 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     });
   }
 
+  _handleSpecDeployment() {
+    axios({
+      method: 'post',
+      url: 'http://localhost:8001/default/oas-config/v2',
+      data: window.currentSpec,
+    })
+      .then(function(response) {
+        console.log('Deployment: ' + response);
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
+  }
+
   componentDidUpdate(prevProps: Props) {
     // Reload workspaces if we just got a new VCS instance
     if (this.props.vcs && !prevProps.vcs) {
@@ -255,7 +270,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             <i className="fa fa-wrench" /> Workspace Settings
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
           </DropdownItem>
-
+          <DropdownItem onClick={this._handleSpecDeployment}>
+            <i className="fa fa-cloud-upload" /> Deploy to <strong>Kong</strong>
+          </DropdownItem>
           <DropdownDivider>Switch Workspace</DropdownDivider>
 
           {nonActiveWorkspaces.map(w => {
