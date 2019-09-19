@@ -160,6 +160,7 @@ export const hotKeyRefs: { [string]: HotKeyDefinition } = {
   // Studio-specific
   SHOW_SPEC_EDITOR: defineHotKey('activity_specEditor', 'Show Spec Activity'),
   SHOW_TEST: defineHotKey('activity_test', 'Show Test Activity'),
+  SHOW_MONITOR: defineHotKey('activity_monitor', 'Show Monitor Activity'),
 };
 
 /**
@@ -332,6 +333,11 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.SHOW_TEST.id]: keyBinds(
     keyComb(false, false, true, true, keyboardKeys.t.keyCode),
     keyComb(true, false, true, false, keyboardKeys.t.keyCode),
+  ),
+
+  [hotKeyRefs.SHOW_MONITOR.id]: keyBinds(
+    keyComb(false, false, true, true, keyboardKeys.m.keyCode),
+    keyComb(true, false, true, false, keyboardKeys.m.keyCode),
   ),
 };
 

@@ -22,6 +22,7 @@ type Props = {|
 const ACTIVITY_MAP_ICONS: { [GlobalActivity]: string } = {
   spec: 'fa-file-text',
   test: 'fa-flask',
+  monitor: 'fa-tachometer',
 };
 
 @autobind

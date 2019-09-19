@@ -807,41 +807,46 @@ class Wrapper extends React.PureComponent<Props, State> {
               ? '5px solid ' + activeEnvironment.color
               : null,
         }}>
-        <ErrorBoundary showAlert>
-          <ActivityBar
-            showSettings={handleShowSettingsModal}
-            activity={activity}
-            setActivity={handleSetActiveActivity}
-            hotKeyRegistry={settings.hotKeyRegistry}
-          />
+        <ActivityBar
+          showSettings={handleShowSettingsModal}
+          activity={activity}
+          setActivity={handleSetActiveActivity}
+          hotKeyRegistry={settings.hotKeyRegistry}
+        />
 
-          <Sidebar
-            ref={handleSetSidebarRef}
-            activeEnvironment={activeEnvironment}
-            enableSyncBeta={settings.enableSyncBeta}
-            environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
-            handleSetActiveEnvironment={handleSetActiveEnvironment}
-            handleSetActiveWorkspace={handleSetActiveWorkspace}
-            hidden={sidebarHidden || false}
-            hotKeyRegistry={settings.hotKeyRegistry}
-            isLoading={isLoading}
-            showEnvironmentsModal={this._handleShowEnvironmentsModal}
-            syncItems={syncItems}
-            unseenWorkspaces={unseenWorkspaces}
-            vcs={vcs}
-            gitVCS={gitVCS}
-            width={sidebarWidth}
-            workspace={activeWorkspace}
-            workspaces={workspaces}>
-            {this.renderSidebarBody()}
-          </Sidebar>
-        </ErrorBoundary>
+        {activity !== 'monitor' && (
+          <ErrorBoundary showAlert>
+            <Sidebar
+              ref={handleSetSidebarRef}
+              activeEnvironment={activeEnvironment}
+              enableSyncBeta={settings.enableSyncBeta}
+              environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
+              handleSetActiveEnvironment={handleSetActiveEnvironment}
+              handleSetActiveWorkspace={handleSetActiveWorkspace}
+              hidden={sidebarHidden || false}
+              hotKeyRegistry={settings.hotKeyRegistry}
+              isLoading={isLoading}
+              showEnvironmentsModal={this._handleShowEnvironmentsModal}
+              syncItems={syncItems}
+              unseenWorkspaces={unseenWorkspaces}
+              vcs={vcs}
+              gitVCS={gitVCS}
+              width={sidebarWidth}
+              workspace={activeWorkspace}
+              workspaces={workspaces}>
+              {this.renderSidebarBody()}
+            </Sidebar>
 
-        <div className="drag drag--sidebar">
-          <div onDoubleClick={handleResetDragSidebar} onMouseDown={this._handleStartDragSidebar} />
-        </div>
+            <div className="drag drag--sidebar">
+              <div
+                onDoubleClick={handleResetDragSidebar}
+                onMouseDown={this._handleStartDragSidebar}
+              />
+            </div>
+          </ErrorBoundary>
+        )}
 
-        {activity === 'test' ? (
+        {activity === 'test' && (
           <React.Fragment>
             <ErrorBoundary showAlert>
               <RequestPane
@@ -919,7 +924,9 @@ class Wrapper extends React.PureComponent<Props, State> {
               />
             </ErrorBoundary>
           </React.Fragment>
-        ) : (
+        )}
+
+        {activity === 'spec' && (
           <ErrorBoundary showAlert>
             <SpecEditor
               ref={this._setSpecEditorRef}
@@ -932,6 +939,10 @@ class Wrapper extends React.PureComponent<Props, State> {
               onChange={this._handleUpdateApiSpec}
             />
           </ErrorBoundary>
+        )}
+
+        {activity === 'monitor' && (
+          <webview src="https://konghq.com" className="monitor-webview" nodeintegration={false} />
         )}
       </div>,
     ];

@@ -73,6 +73,7 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
                   key={i}
                   content={i}
                   canHide
+                  type={'array'}
                   onClick={e => this._handleScrollEditor(i + '', value)}>
                   {parse(value)}
                 </Tree>
@@ -86,6 +87,7 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
               content={key}
               style={treeStyles}
               canHide
+              type={'foo'}
               onClick={e => this._handleScrollEditor(key, value)}>
               {parse(value)}
             </Tree>
