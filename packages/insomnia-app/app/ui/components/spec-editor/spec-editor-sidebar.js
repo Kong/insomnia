@@ -97,9 +97,7 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     console.log(typeof parsedSpec); // Object
     console.dir(parsedSpec);
     return (
-      <React.Fragment>
-        <div>{this.state.parsedSpec ? parse(this.state.parsedSpec) : ''}</div>
-      </React.Fragment>
+      <div className="pad-left-sm">{this.state.parsedSpec ? parse(this.state.parsedSpec) : ''}</div>
     );
   }
 }
