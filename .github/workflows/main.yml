@@ -1,4 +1,4 @@
-name: CI
+name: Main
 
 on: [push]
 
@@ -12,13 +12,18 @@ jobs:
       - name: Install NodeJS
         uses: actions/setup-node@v1
         with:
-          version: 10
+          node-version: 10
       - name: Configure Visual Studio version
         run: npm config set msvs_version 2017
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Run tests
         run: npm test
+      - name: Release app
+        if: startsWith(github.event.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run app-release
   Mac:
     name: Mac
     runs-on: macOS-latest
@@ -28,26 +33,38 @@ jobs:
       - name: Install NodeJS
         uses: actions/setup-node@v1
         with:
-          version: 10
+          node-version: 10
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Run tests
         run: npm test
-  Linux:
-    name: Ubuntu
-    runs-on: ubuntu-16.04
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v1
-      - name: Install NodeJS
-        uses: actions/setup-node@v1
-        with:
-          version: 10
-      - name: Install OS packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev
-      - name: Bootstrap packages
-        run: npm run bootstrap
-      - name: Run tests
-        run: npm test
+      - name: Release app
+        if: startsWith(github.event.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run app-release
+#  Linux:
+#    name: Ubuntu
+#    runs-on: ubuntu-16.04
+#    steps:
+#      - name: Checkout branch
+#        uses: actions/checkout@v1
+#      - name: Install NodeJS
+#        uses: actions/setup-node@v1
+#        with:
+#          node-version: 10
+#      - name: Install OS packages
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y libcurl4-openssl-dev
+#      - name: Bootstrap packages
+#        run: npm run bootstrap
+#      #      - name: Run tests
+#      #        run: npm test
+#      - name: Package app
+#        run: npm run app-package
+#      - name: Upload artifacts
+#        uses: actions/upload-artifact@master
+#        with:
+#          name: release
+#          path: packages/insomnia-app/dist

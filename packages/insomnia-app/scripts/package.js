@@ -48,8 +48,6 @@ async function pkg(relConfigPath) {
     .replace('__EXECUTABLE_NAME__', packageJson.app.executableName)
     .replace('__SYNOPSIS__', packageJson.app.synopsis);
 
-  console.log(`[package] Using electron-builder config\n${rawConfig}`);
-
   const config = JSON.parse(rawConfig);
   const targetPlatform = PLATFORM_MAP[process.platform];
 

@@ -11,7 +11,7 @@
     "synopsis": "Desktop application for spec-first API development",
     "icon": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
     "theme": "studio-light",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "main": "main.min.js",
     "plugins": [
       "kong-studio-themes",
@@ -47,6 +47,7 @@
     "start": "concurrently --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "build": "node ./scripts/build.js",
     "package": "node ./scripts/package.js",
+    "release": "node ./scripts/release.js",
     "bootstrap": "rimraf node_modules/fsevents && rimraf node_modules/graphql-language-service-interface/dist/*.flow && electron-rebuild -f -w insomnia-libcurl"
   },
   "dev": {
@@ -195,6 +196,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.4.0",
+    "@octokit/rest": "^16.30.1",
     "concurrently": "^3.5.0",
     "cross-env": "^2.0.0",
     "css-loader": "^2.1.1",
@@ -203,6 +205,7 @@
     "electron-builder-lib": "^20.20.4",
     "electron-builder-squirrel-windows": "^20.20.4",
     "electron-rebuild": "^1.8.4",
+    "fast-glob": "^3.0.4",
     "file-loader": "^3.0.1",
     "less": "^3.8.1",
     "less-loader": "^4.1.0",
