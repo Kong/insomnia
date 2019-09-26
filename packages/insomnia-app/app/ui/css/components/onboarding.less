@@ -3,5 +3,76 @@
 @import '../constants/fonts';
 
 .onboarding {
+  position: fixed;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: var(--color-bg);
+  display: flex;
+
+  &__background {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: -1;
+    background-color: var(--color-bg);
+  }
+
+  &__content {
+    position: relative;
+    text-align: center;
+    background: var(--color-bg);
+    margin: auto;
+    border-radius: @radius-md;
+
+    .img-container {
+      top: -3.5rem;
+      position: absolute;
+      width: 100%;
+      height: 7rem;
+      text-align: center;
+
+      img {
+        width: 7.5rem;
+        height: 7.5rem;
+        display: inline-block;
+        border-radius: 50%;
+        background-color: var(--color-bg);
+      }
+    }
+
+    &__header {
+      padding: 4.5rem @padding-lg @padding-lg;
+      border-bottom: 1px solid var(--hl-sm);
+
+      h1 {
+        color: var(--color-info);
+        font-size: @font-size-xxxl;
+        margin-bottom: @padding-sm;
+      }
+
+      h2 {
+        color: var(--hl);
+        font-size: @font-size-lg;
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+    }
+
+    &__body {
+      display: flex;
+      flex-direction: column;
+      padding: @padding-lg;
+      color: var(--color-font);
+
+      button {
+        margin-top: @padding-md;
+        border-color: var(--color-info) !important;
+        color: var(--color-info);
+        width: 100%;
+      }
+    }
+  }
 }

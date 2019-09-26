@@ -284,12 +284,12 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   // Other Helpers
-  _handleImportFile(): void {
-    this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
+  _handleImportFile(forceToWorkspace?: boolean): void {
+    this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
   }
 
-  _handleImportUri(uri: string): void {
-    this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri);
+  _handleImportUri(uri: string, forceToWorkspace?: boolean): void {
+    this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri, forceToWorkspace);
   }
 
   _handleSetActiveResponse(responseId: string | null): void {
@@ -584,377 +584,379 @@ class Wrapper extends React.PureComponent<Props, State> {
 
     const sidebarBody = this.renderSidebarBody();
 
-    return [
-      <div key="modals" className="modals">
-        <ErrorBoundary showAlert>
-          <AlertModal ref={registerModal} />
-          <ErrorModal ref={registerModal} />
-          <PromptModal ref={registerModal} />
+    return (
+      <React.Fragment>
+        <div key="modals" className="modals">
+          <ErrorBoundary showAlert>
+            <AlertModal ref={registerModal} />
+            <ErrorModal ref={registerModal} />
+            <PromptModal ref={registerModal} />
 
-          <WrapperModal ref={registerModal} />
-          <LoginModal ref={registerModal} />
-          <AskModal ref={registerModal} />
-          <SelectModal ref={registerModal} />
-          <RequestCreateModal ref={registerModal} />
-          <PaymentNotificationModal ref={registerModal} />
-          <FilterHelpModal ref={registerModal} />
-          <RequestRenderErrorModal ref={registerModal} />
+            <WrapperModal ref={registerModal} />
+            <LoginModal ref={registerModal} />
+            <AskModal ref={registerModal} />
+            <SelectModal ref={registerModal} />
+            <RequestCreateModal ref={registerModal} />
+            <PaymentNotificationModal ref={registerModal} />
+            <FilterHelpModal ref={registerModal} />
+            <RequestRenderErrorModal ref={registerModal} />
 
-          <CodePromptModal
-            ref={registerModal}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            editorLineWrapping={settings.editorLineWrapping}
-            isVariableUncovered={isVariableUncovered}
-          />
-
-          <RequestSettingsModal
-            ref={registerModal}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            editorLineWrapping={settings.editorLineWrapping}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            workspaces={workspaces}
-            isVariableUncovered={isVariableUncovered}
-          />
-
-          {/* TODO: Figure out why cookieJar is sometimes null */}
-          {activeCookieJar ? (
-            <CookiesModal
-              handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
-              handleRender={handleRender}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            <CodePromptModal
               ref={registerModal}
-              workspace={activeWorkspace}
-              cookieJar={activeCookieJar}
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+              editorLineWrapping={settings.editorLineWrapping}
               isVariableUncovered={isVariableUncovered}
             />
-          ) : null}
 
-          <CookieModifyModal
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            ref={registerModal}
-            cookieJar={activeCookieJar}
-            workspace={activeWorkspace}
-            isVariableUncovered={isVariableUncovered}
-          />
+            <RequestSettingsModal
+              ref={registerModal}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+              editorLineWrapping={settings.editorLineWrapping}
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              workspaces={workspaces}
+              isVariableUncovered={isVariableUncovered}
+            />
 
-          <NunjucksModal
-            uniqueKey={`key::${this.state.forceRefreshKey}`}
-            ref={registerModal}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            workspace={activeWorkspace}
-          />
-
-          <MoveRequestGroupModal ref={registerModal} workspaces={workspaces} />
-
-          <WorkspaceSettingsModal
-            ref={registerModal}
-            clientCertificates={activeWorkspaceClientCertificates}
-            workspace={activeWorkspace}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            editorLineWrapping={settings.editorLineWrapping}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
-            handleDuplicateWorkspace={handleDuplicateWorkspace}
-            handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
-            isVariableUncovered={isVariableUncovered}
-          />
-
-          <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />
-
-          <GenerateCodeModal
-            ref={registerModal}
-            environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-          />
-
-          <SettingsModal
-            ref={registerModal}
-            handleShowExportRequestsModal={handleShowExportRequestsModal}
-            handleExportAllToFile={handleExportFile}
-            handleImportFile={this._handleImportFile}
-            handleImportUri={this._handleImportUri}
-            handleToggleMenuBar={handleToggleMenuBar}
-            settings={settings}
-          />
-
-          <ResponseDebugModal ref={registerModal} settings={settings} />
-
-          <RequestSwitcherModal
-            ref={registerModal}
-            workspace={activeWorkspace}
-            workspaces={workspaces}
-            workspaceChildren={workspaceChildren}
-            activeRequest={activeRequest}
-            activateRequest={handleActivateRequest}
-            requestMetas={requestMetas}
-            handleSetActiveWorkspace={handleSetActiveWorkspace}
-          />
-
-          <EnvironmentEditModal
-            ref={registerModal}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            lineWrapping={settings.editorLineWrapping}
-            onChange={models.requestGroup.update}
-            render={handleRender}
-            getRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-          />
-
-          <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
-
-          {gitVCS && (
-            <React.Fragment>
-              <GitConfigModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
-              <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
-            </React.Fragment>
-          )}
-
-          {vcs && (
-            <React.Fragment>
-              <SyncStagingModal
-                ref={registerModal}
-                workspace={activeWorkspace}
-                vcs={vcs}
-                syncItems={syncItems}
-              />
-              <SyncMergeModal
-                ref={registerModal}
-                workspace={activeWorkspace}
-                syncItems={syncItems}
-                vcs={vcs}
-              />
-              <SyncBranchesModal
-                ref={registerModal}
-                workspace={activeWorkspace}
-                vcs={vcs}
-                syncItems={syncItems}
-              />
-              <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
-              <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
-            </React.Fragment>
-          )}
-
-          <WorkspaceEnvironmentsEditModal
-            ref={registerModal}
-            onChange={models.workspace.update}
-            lineWrapping={settings.editorLineWrapping}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
-            render={handleRender}
-            getRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-          />
-
-          <AddKeyCombinationModal ref={registerModal} />
-          <ExportRequestsModal
-            ref={registerModal}
-            childObjects={sidebarChildren.all}
-            handleExportRequestsToFile={handleExportRequestsToFile}
-          />
-        </ErrorBoundary>
-      </div>,
-      <div
-        key="wrapper"
-        id="wrapper"
-        className={classnames('wrapper', {
-          'wrapper--vertical': settings.forceVerticalLayout,
-        })}
-        style={{
-          gridTemplateColumns: columns,
-          gridTemplateRows: rows,
-          boxSizing: 'border-box',
-          borderTop:
-            activeEnvironment &&
-            activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'window-top'
-              ? '5px solid ' + activeEnvironment.color
-              : null,
-          borderBottom:
-            activeEnvironment &&
-            activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'window-bottom'
-              ? '5px solid ' + activeEnvironment.color
-              : null,
-          borderLeft:
-            activeEnvironment &&
-            activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'window-left'
-              ? '5px solid ' + activeEnvironment.color
-              : null,
-          borderRight:
-            activeEnvironment &&
-            activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'window-right'
-              ? '5px solid ' + activeEnvironment.color
-              : null,
-        }}>
-        {activity && (
-          <ActivityBar
-            showSettings={handleShowSettingsModal}
-            activity={activity}
-            setActivity={handleSetActiveActivity}
-            hotKeyRegistry={settings.hotKeyRegistry}
-          />
-        )}
-
-        {sidebarBody && (
-          <ErrorBoundary showAlert>
-            <Sidebar
-              ref={handleSetSidebarRef}
-              activeEnvironment={activeEnvironment}
-              enableSyncBeta={settings.enableSyncBeta}
-              environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
-              handleSetActiveEnvironment={handleSetActiveEnvironment}
-              handleSetActiveWorkspace={handleSetActiveWorkspace}
-              hidden={sidebarHidden || false}
-              hotKeyRegistry={settings.hotKeyRegistry}
-              isLoading={isLoading}
-              showEnvironmentsModal={this._handleShowEnvironmentsModal}
-              syncItems={syncItems}
-              unseenWorkspaces={unseenWorkspaces}
-              vcs={vcs}
-              gitVCS={gitVCS}
-              width={sidebarWidth}
-              workspace={activeWorkspace}
-              workspaces={workspaces}>
-              {sidebarBody}
-            </Sidebar>
-
-            <div className="drag drag--sidebar">
-              <div
-                onDoubleClick={handleResetDragSidebar}
-                onMouseDown={this._handleStartDragSidebar}
-              />
-            </div>
-          </ErrorBoundary>
-        )}
-
-        {activity === 'test' && (
-          <React.Fragment>
-            <ErrorBoundary showAlert>
-              <RequestPane
-                ref={handleSetRequestPaneRef}
-                handleImportFile={this._handleImportFile}
-                request={activeRequest}
-                workspace={activeWorkspace}
-                downloadPath={responseDownloadPath}
-                settings={settings}
-                environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                oAuth2Token={oAuth2Token}
-                forceUpdateRequest={this._handleForceUpdateRequest}
-                handleCreateRequest={handleCreateRequestForWorkspace}
-                handleGenerateCode={handleGenerateCodeForActiveRequest}
-                handleImport={this._handleImport}
+            {/* TODO: Figure out why cookieJar is sometimes null */}
+            {activeCookieJar ? (
+              <CookiesModal
+                handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
                 handleRender={handleRender}
-                handleGetRenderContext={handleGetRenderContext}
-                handleUpdateDownloadPath={handleUpdateDownloadPath}
-                updateRequestBody={Wrapper._handleUpdateRequestBody}
-                forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
-                updateRequestUrl={Wrapper._handleUpdateRequestUrl}
-                updateRequestMethod={Wrapper._handleUpdateRequestMethod}
-                updateRequestParameters={Wrapper._handleUpdateRequestParameters}
-                updateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
-                updateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
-                updateRequestMimeType={handleUpdateRequestMimeType}
-                updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
-                updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
-                forceRefreshCounter={this.state.forceRefreshKey}
-                handleSend={this._handleSendRequestWithActiveEnvironment}
-                handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
                 nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                ref={registerModal}
+                workspace={activeWorkspace}
+                cookieJar={activeCookieJar}
                 isVariableUncovered={isVariableUncovered}
-                headerEditorKey={headerEditorKey}
               />
-            </ErrorBoundary>
+            ) : null}
 
-            <div className="drag drag--pane-horizontal">
-              <div
-                onMouseDown={handleStartDragPaneHorizontal}
-                onDoubleClick={handleResetDragPaneHorizontal}
-              />
-            </div>
-
-            <div className="drag drag--pane-vertical">
-              <div
-                onMouseDown={handleStartDragPaneVertical}
-                onDoubleClick={handleResetDragPaneVertical}
-              />
-            </div>
-
-            <ErrorBoundary showAlert>
-              <ResponsePane
-                ref={handleSetResponsePaneRef}
-                request={activeRequest}
-                requestVersions={requestVersions}
-                responses={activeRequestResponses}
-                response={activeResponse}
-                editorFontSize={settings.editorFontSize}
-                editorIndentSize={settings.editorIndentSize}
-                editorKeyMap={settings.editorKeyMap}
-                editorLineWrapping={settings.editorLineWrapping}
-                hotKeyRegistry={settings.hotKeyRegistry}
-                previewMode={responsePreviewMode}
-                filter={responseFilter}
-                filterHistory={responseFilterHistory}
-                loadStartTime={loadStartTime}
-                showCookiesModal={this._handleShowCookiesModal}
-                handleShowRequestSettings={this._handleShowRequestSettingsModal}
-                handleSetActiveResponse={this._handleSetActiveResponse}
-                handleSetPreviewMode={this._handleSetPreviewMode}
-                handleDeleteResponses={this._handleDeleteResponses}
-                handleDeleteResponse={this._handleDeleteResponse}
-                handleSetFilter={this._handleSetResponseFilter}
-              />
-            </ErrorBoundary>
-          </React.Fragment>
-        )}
-
-        {activity === 'spec' && (
-          <ErrorBoundary showAlert>
-            <SpecEditor
-              ref={this._setSpecEditorRef}
+            <CookieModifyModal
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              ref={registerModal}
+              cookieJar={activeCookieJar}
               workspace={activeWorkspace}
-              apiSpec={activeApiSpec}
+              isVariableUncovered={isVariableUncovered}
+            />
+
+            <NunjucksModal
+              uniqueKey={`key::${this.state.forceRefreshKey}`}
+              ref={registerModal}
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              workspace={activeWorkspace}
+            />
+
+            <MoveRequestGroupModal ref={registerModal} workspaces={workspaces} />
+
+            <WorkspaceSettingsModal
+              ref={registerModal}
+              clientCertificates={activeWorkspaceClientCertificates}
+              workspace={activeWorkspace}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+              editorLineWrapping={settings.editorLineWrapping}
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
+              handleDuplicateWorkspace={handleDuplicateWorkspace}
+              handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
+              isVariableUncovered={isVariableUncovered}
+            />
+
+            <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />
+
+            <GenerateCodeModal
+              ref={registerModal}
+              environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+            />
+
+            <SettingsModal
+              ref={registerModal}
+              handleShowExportRequestsModal={handleShowExportRequestsModal}
+              handleExportAllToFile={handleExportFile}
+              handleImportFile={this._handleImportFile}
+              handleImportUri={this._handleImportUri}
+              handleToggleMenuBar={handleToggleMenuBar}
+              settings={settings}
+            />
+
+            <ResponseDebugModal ref={registerModal} settings={settings} />
+
+            <RequestSwitcherModal
+              ref={registerModal}
+              workspace={activeWorkspace}
+              workspaces={workspaces}
+              workspaceChildren={workspaceChildren}
+              activeRequest={activeRequest}
+              activateRequest={handleActivateRequest}
+              requestMetas={requestMetas}
+              handleSetActiveWorkspace={handleSetActiveWorkspace}
+            />
+
+            <EnvironmentEditModal
+              ref={registerModal}
               editorFontSize={settings.editorFontSize}
               editorIndentSize={settings.editorIndentSize}
               editorKeyMap={settings.editorKeyMap}
               lineWrapping={settings.editorLineWrapping}
-              onChange={this._handleUpdateApiSpec}
+              onChange={models.requestGroup.update}
+              render={handleRender}
+              getRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
+            />
+
+            <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
+
+            {gitVCS && (
+              <React.Fragment>
+                <GitConfigModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
+                <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
+              </React.Fragment>
+            )}
+
+            {vcs && (
+              <React.Fragment>
+                <SyncStagingModal
+                  ref={registerModal}
+                  workspace={activeWorkspace}
+                  vcs={vcs}
+                  syncItems={syncItems}
+                />
+                <SyncMergeModal
+                  ref={registerModal}
+                  workspace={activeWorkspace}
+                  syncItems={syncItems}
+                  vcs={vcs}
+                />
+                <SyncBranchesModal
+                  ref={registerModal}
+                  workspace={activeWorkspace}
+                  vcs={vcs}
+                  syncItems={syncItems}
+                />
+                <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
+                <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
+              </React.Fragment>
+            )}
+
+            <WorkspaceEnvironmentsEditModal
+              ref={registerModal}
+              onChange={models.workspace.update}
+              lineWrapping={settings.editorLineWrapping}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+              activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
+              render={handleRender}
+              getRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
+            />
+
+            <AddKeyCombinationModal ref={registerModal} />
+            <ExportRequestsModal
+              ref={registerModal}
+              childObjects={sidebarChildren.all}
+              handleExportRequestsToFile={handleExportRequestsToFile}
             />
           </ErrorBoundary>
-        )}
+        </div>
+        <div
+          key="wrapper"
+          id="wrapper"
+          className={classnames('wrapper', {
+            'wrapper--vertical': settings.forceVerticalLayout,
+          })}
+          style={{
+            gridTemplateColumns: columns,
+            gridTemplateRows: rows,
+            boxSizing: 'border-box',
+            borderTop:
+              activeEnvironment &&
+              activeEnvironment.color &&
+              settings.environmentHighlightColorStyle === 'window-top'
+                ? '5px solid ' + activeEnvironment.color
+                : null,
+            borderBottom:
+              activeEnvironment &&
+              activeEnvironment.color &&
+              settings.environmentHighlightColorStyle === 'window-bottom'
+                ? '5px solid ' + activeEnvironment.color
+                : null,
+            borderLeft:
+              activeEnvironment &&
+              activeEnvironment.color &&
+              settings.environmentHighlightColorStyle === 'window-left'
+                ? '5px solid ' + activeEnvironment.color
+                : null,
+            borderRight:
+              activeEnvironment &&
+              activeEnvironment.color &&
+              settings.environmentHighlightColorStyle === 'window-right'
+                ? '5px solid ' + activeEnvironment.color
+                : null,
+          }}>
+          {activity && (
+            <ActivityBar
+              showSettings={handleShowSettingsModal}
+              activity={activity}
+              setActivity={handleSetActiveActivity}
+              hotKeyRegistry={settings.hotKeyRegistry}
+            />
+          )}
 
-        {activity === 'monitor' && (
-          <webview
-            src="http://localhost:8080/default/services"
-            className="monitor-webview"
-            nodeintegration={false}
-          />
-        )}
+          {sidebarBody && (
+            <ErrorBoundary showAlert>
+              <Sidebar
+                ref={handleSetSidebarRef}
+                activeEnvironment={activeEnvironment}
+                enableSyncBeta={settings.enableSyncBeta}
+                environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
+                handleSetActiveEnvironment={handleSetActiveEnvironment}
+                handleSetActiveWorkspace={handleSetActiveWorkspace}
+                hidden={sidebarHidden || false}
+                hotKeyRegistry={settings.hotKeyRegistry}
+                isLoading={isLoading}
+                showEnvironmentsModal={this._handleShowEnvironmentsModal}
+                syncItems={syncItems}
+                unseenWorkspaces={unseenWorkspaces}
+                vcs={vcs}
+                gitVCS={gitVCS}
+                width={sidebarWidth}
+                workspace={activeWorkspace}
+                workspaces={workspaces}>
+                {sidebarBody}
+              </Sidebar>
+
+              <div className="drag drag--sidebar">
+                <div
+                  onDoubleClick={handleResetDragSidebar}
+                  onMouseDown={this._handleStartDragSidebar}
+                />
+              </div>
+            </ErrorBoundary>
+          )}
+
+          {activity === 'test' && (
+            <React.Fragment>
+              <ErrorBoundary showAlert>
+                <RequestPane
+                  ref={handleSetRequestPaneRef}
+                  handleImportFile={this._handleImportFile}
+                  request={activeRequest}
+                  workspace={activeWorkspace}
+                  downloadPath={responseDownloadPath}
+                  settings={settings}
+                  environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                  oAuth2Token={oAuth2Token}
+                  forceUpdateRequest={this._handleForceUpdateRequest}
+                  handleCreateRequest={handleCreateRequestForWorkspace}
+                  handleGenerateCode={handleGenerateCodeForActiveRequest}
+                  handleImport={this._handleImport}
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
+                  handleUpdateDownloadPath={handleUpdateDownloadPath}
+                  updateRequestBody={Wrapper._handleUpdateRequestBody}
+                  forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
+                  updateRequestUrl={Wrapper._handleUpdateRequestUrl}
+                  updateRequestMethod={Wrapper._handleUpdateRequestMethod}
+                  updateRequestParameters={Wrapper._handleUpdateRequestParameters}
+                  updateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
+                  updateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
+                  updateRequestMimeType={handleUpdateRequestMimeType}
+                  updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
+                  updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
+                  forceRefreshCounter={this.state.forceRefreshKey}
+                  handleSend={this._handleSendRequestWithActiveEnvironment}
+                  handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
+                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                  isVariableUncovered={isVariableUncovered}
+                  headerEditorKey={headerEditorKey}
+                />
+              </ErrorBoundary>
+
+              <div className="drag drag--pane-horizontal">
+                <div
+                  onMouseDown={handleStartDragPaneHorizontal}
+                  onDoubleClick={handleResetDragPaneHorizontal}
+                />
+              </div>
+
+              <div className="drag drag--pane-vertical">
+                <div
+                  onMouseDown={handleStartDragPaneVertical}
+                  onDoubleClick={handleResetDragPaneVertical}
+                />
+              </div>
+
+              <ErrorBoundary showAlert>
+                <ResponsePane
+                  ref={handleSetResponsePaneRef}
+                  request={activeRequest}
+                  requestVersions={requestVersions}
+                  responses={activeRequestResponses}
+                  response={activeResponse}
+                  editorFontSize={settings.editorFontSize}
+                  editorIndentSize={settings.editorIndentSize}
+                  editorKeyMap={settings.editorKeyMap}
+                  editorLineWrapping={settings.editorLineWrapping}
+                  hotKeyRegistry={settings.hotKeyRegistry}
+                  previewMode={responsePreviewMode}
+                  filter={responseFilter}
+                  filterHistory={responseFilterHistory}
+                  loadStartTime={loadStartTime}
+                  showCookiesModal={this._handleShowCookiesModal}
+                  handleShowRequestSettings={this._handleShowRequestSettingsModal}
+                  handleSetActiveResponse={this._handleSetActiveResponse}
+                  handleSetPreviewMode={this._handleSetPreviewMode}
+                  handleDeleteResponses={this._handleDeleteResponses}
+                  handleDeleteResponse={this._handleDeleteResponse}
+                  handleSetFilter={this._handleSetResponseFilter}
+                />
+              </ErrorBoundary>
+            </React.Fragment>
+          )}
+
+          {activity === 'spec' && (
+            <ErrorBoundary showAlert>
+              <SpecEditor
+                ref={this._setSpecEditorRef}
+                workspace={activeWorkspace}
+                apiSpec={activeApiSpec}
+                editorFontSize={settings.editorFontSize}
+                editorIndentSize={settings.editorIndentSize}
+                editorKeyMap={settings.editorKeyMap}
+                lineWrapping={settings.editorLineWrapping}
+                onChange={this._handleUpdateApiSpec}
+              />
+            </ErrorBoundary>
+          )}
+
+          {activity === 'monitor' && (
+            <webview
+              src="http://localhost:8080/default/services"
+              className="monitor-webview"
+              nodeintegration={false}
+            />
+          )}
+        </div>
 
         {activity === null && (
           <Onboarding
@@ -963,8 +965,8 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleSetActivity={handleSetActiveActivity}
           />
         )}
-      </div>,
-    ];
+      </React.Fragment>
+    );
   }
 }
 

@@ -10,7 +10,7 @@ module.exports = {
       notice: '#bb9700',
       warning: '#d6803e',
       danger: '#da5b56',
-      info: '#005f9d',
+      info: '#003052',
       surprise: '#8467c3',
     },
     styles: {
@@ -34,7 +34,7 @@ module.exports = {
           default: '#fff',
         },
         background: {
-          default: '#0f578a',
+          default: '#003052',
           success: '#74d49c',
           notice: '#ffdb02',
           warning: '#ffac49',
@@ -50,6 +50,11 @@ module.exports = {
           md: 'rgba(140, 209, 255, 0.3)',
           lg: 'rgba(140, 209, 255, 0.5)',
           xl: 'rgba(140, 209, 255, 0.8)',
+        },
+      },
+      dialog: {
+        background: {
+          info: '#005B9E',
         },
       },
       paneHeader: {

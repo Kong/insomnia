@@ -153,7 +153,7 @@ export function setActiveWorkspace(workspaceId) {
   return { type: SET_ACTIVE_WORKSPACE, workspaceId };
 }
 
-export function importFile(workspaceId) {
+export function importFile(workspaceId, forceToWorkspace) {
   return async dispatch => {
     dispatch(loadStart());
 
@@ -181,7 +181,10 @@ export function importFile(workspaceId) {
       for (const p of paths) {
         try {
           const uri = `file://${p}`;
-          const result = await importUtils.importUri(askToImportIntoWorkspace(workspaceId), uri);
+          const result = await importUtils.importUri(
+            askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+            uri,
+          );
           importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
         } catch (err) {
           showModal(AlertModal, { title: 'Import Failed', message: err + '' });
@@ -197,13 +200,16 @@ export function importFile(workspaceId) {
   };
 }
 
-export function importUri(workspaceId, uri) {
+export function importUri(workspaceId, uri, forceToWorkspace) {
   return async dispatch => {
     dispatch(loadStart());
 
     let importedWorkspaces = [];
     try {
-      const result = await importUtils.importUri(askToImportIntoWorkspace(workspaceId), uri);
+      const result = await importUtils.importUri(
+        askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+        uri,
+      );
       importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
     } catch (err) {
       showModal(AlertModal, { title: 'Import Failed', message: err + '' });
@@ -475,8 +481,12 @@ export function init() {
 // HELPERS //
 // ~~~~~~~ //
 
-function askToImportIntoWorkspace(workspaceId) {
+function askToImportIntoWorkspace(workspaceId, forceToWorkspace) {
   return function() {
+    if (forceToWorkspace) {
+      return workspaceId;
+    }
+
     return new Promise(resolve => {
       showModal(AskModal, {
         title: 'Import',

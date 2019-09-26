@@ -9,8 +9,8 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
-import { getAppVersion } from '../../../common/constants';
-import { showAlert, showModal, showPrompt } from '../modals';
+import { getAppName, getAppVersion } from '../../../common/constants';
+import { showAlert, showError, showModal, showPrompt } from '../modals';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import Tooltip from '../tooltip';
@@ -26,7 +26,6 @@ import HelpTooltip from '../help-tooltip';
 import type { Project } from '../../../sync/types';
 import * as sync from '../../../sync-legacy/index';
 import * as session from '../../../account/session';
-import axios from 'axios';
 
 type Props = {
   isLoading: boolean,
@@ -178,18 +177,23 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     });
   }
 
-  _handleSpecDeployment() {
-    axios({
-      method: 'post',
-      url: 'http://localhost:8001/default/oas-config/v2',
-      data: window.currentSpec,
-    })
-      .then(function(response) {
-        console.log('Deployment: ' + response);
-      })
-      .catch(function(error) {
-        console.log(error);
+  async _handleSpecDeployment() {
+    let resp;
+    try {
+      resp = await window.fetch('http://localhost:8001/default/oas-config/v2', {
+        method: 'post',
+        body: window.currentSpec,
       });
+    } catch (err) {
+      showError({
+        title: 'Deploy Failed',
+        error: err,
+        message: 'Deploy to kong failed',
+      });
+      return;
+    }
+
+    console.log('Deployment', await resp.json());
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -317,7 +321,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             </DropdownItem>
           ))}
 
-          <DropdownDivider>Insomnia Version {getAppVersion()}</DropdownDivider>
+          <DropdownDivider>
+            {getAppName()} v{getAppVersion()}
+          </DropdownDivider>
 
           <DropdownItem onClick={WorkspaceDropdown._handleShowSettings}>
             <i className="fa fa-cog" /> Preferences

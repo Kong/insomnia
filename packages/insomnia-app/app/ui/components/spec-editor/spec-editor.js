@@ -57,7 +57,7 @@ class SpecEditor extends React.PureComponent<Props> {
           <h1>Edit API Specification</h1>
           <nav className="spec-editor__header__buttons">
             <button className="btn" onClick={this._handleReImport}>
-              Re-Import
+              Test Changes
             </button>
           </nav>
         </div>
