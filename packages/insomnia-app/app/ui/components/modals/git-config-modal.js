@@ -130,11 +130,11 @@ class GitConfigModal extends React.PureComponent<Props, State> {
         </div>
         <div className="form-control form-control--outlined">
           <label>
-            URL
+            URL (https)
             <input
               required
               type="url"
-              placeholder="https://github.com/user/repo"
+              placeholder="https://github.com/user/repo.git"
               defaultValue={r.url}
               data-remote={r.remote}
               onChange={this._handleRemoteChange}

@@ -182,7 +182,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     try {
       resp = await window.fetch('http://localhost:8001/default/oas-config/v2', {
         method: 'post',
-        body: window.currentSpec,
+        body: JSON.stringify(window.currentSpec, null, 2),
       });
     } catch (err) {
       showError({

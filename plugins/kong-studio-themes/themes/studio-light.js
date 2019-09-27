@@ -34,7 +34,7 @@ module.exports = {
           default: '#fff',
         },
         background: {
-          default: '#143c63',
+          default: '#003C66',
           success: '#74d49c',
           notice: '#ffdb02',
           warning: '#ffac49',
@@ -57,7 +57,7 @@ module.exports = {
           default: '#fff',
         },
         background: {
-          default: '#0f304f',
+          default: '#003052',
         },
         highlight: {
           default: 'rgba(133, 157, 176)',
