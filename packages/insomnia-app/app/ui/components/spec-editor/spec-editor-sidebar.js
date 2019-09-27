@@ -79,7 +79,7 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
               <SpecEditorSidebarItem
                 key={key}
                 name={key}
-                onClick={() => this._handleScrollEditor(key, value)}>
+                onClick={() => this._handleScrollEditor(key, (value: any))}>
                 {parse(value)}
               </SpecEditorSidebarItem>
             ))}
