@@ -56,42 +56,37 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
       return null;
     }
 
-    const parse = v => {
-      if (typeof v === 'string' || typeof v === 'number' || v === null) {
-        // return <Tree content={v} style={{color: '#63b1de'}} canHide onClick={(e) => handleClick(v)}/>
-      } else {
-        if (Array.isArray(v) && v.length > 0) {
-          return (
-            <ul>
-              {v.map((value, i) => (
-                <SpecEditorSidebarItem
-                  key={i}
-                  name={i + ''}
-                  onClick={e => this._handleScrollEditor(i + '', value)}>
-                  {parse(value)}
-                </SpecEditorSidebarItem>
-              ))}
-            </ul>
-          );
-        }
+    const parse = (v: any) => {
+      const t = Object.prototype.toString.call(v);
 
-        if (typeof v === 'object') {
-          return (
-            <ul>
-              {Object.entries(v).map(([key, value]) => (
-                <SpecEditorSidebarItem
-                  key={key}
-                  name={key}
-                  onClick={e => this._handleScrollEditor(key, value + '')}>
-                  {parse(value)}
-                </SpecEditorSidebarItem>
-              ))}
-            </ul>
-          );
-        }
-
-        return null;
+      if (t === '[object Array]') {
+        return (
+          <ul>
+            {v.map((value, i) => (
+              <SpecEditorSidebarItem
+                key={i}
+                name={i + ''}
+                onClick={() => this._handleScrollEditor(i + '', value)}>
+                {parse(value)}
+              </SpecEditorSidebarItem>
+            ))}
+          </ul>
+        );
+      } else if (t === '[object Object]') {
+        return (
+          <ul>
+            {Object.entries(v).map(([key, value]) => (
+              <SpecEditorSidebarItem
+                key={key}
+                name={key}
+                onClick={() => this._handleScrollEditor(key, value)}>
+                {parse(value)}
+              </SpecEditorSidebarItem>
+            ))}
+          </ul>
+        );
       }
+      return null;
     };
 
     // Temp for deploy demo

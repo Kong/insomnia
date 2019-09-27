@@ -183,6 +183,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       resp = await window.fetch('http://localhost:8001/default/oas-config/v2', {
         method: 'post',
         body: JSON.stringify(window.currentSpec, null, 2),
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
     } catch (err) {
       showError({
@@ -196,7 +199,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     if (!resp.ok) {
       showError({
         title: 'Deploy Failed',
-        error: new Error('Status code ' + resp.statusCode),
+        error: new Error('Status code ' + resp.status),
         message: 'Deploy to kong failed',
       });
       return;
