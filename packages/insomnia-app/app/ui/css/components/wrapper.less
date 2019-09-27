@@ -72,6 +72,19 @@
   }
 
   .monitor-webview {
+    &::after {
+      display: block;
+      text-align: center;
+      margin-top: 50vh;
+      content: attr(src);
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      color: var(--hl-lg);
+    }
+    position: relative;
     grid-column-start: 2;
     grid-column-end: span 5;
     grid-row-start: 1;

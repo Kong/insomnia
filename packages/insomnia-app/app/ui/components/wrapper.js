@@ -954,7 +954,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             <webview
               src="http://localhost:8080/default/services"
               className="monitor-webview"
-              nodeintegration={false}
+              nodeintegration="false"
             />
           )}
         </div>
