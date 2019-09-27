@@ -937,6 +937,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           {activity === 'spec' && (
             <ErrorBoundary showAlert>
               <SpecEditor
+                key={this.state.forceRefreshKey}
                 ref={this._setSpecEditorRef}
                 workspace={activeWorkspace}
                 apiSpec={activeApiSpec}

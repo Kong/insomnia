@@ -103,7 +103,7 @@ export async function importRaw(
     };
   }
 
-  const { data, type } = results;
+  const { data } = results;
 
   // Generate all the ids we may need
   const generatedIds: { [string]: string | Function } = {};
@@ -210,13 +210,13 @@ export async function importRaw(
   }
 
   // Store spec under workspace if it's OpenAPI
-  if (type.id === 'openapi3' && importedDocs[models.workspace.type].length === 1) {
-    const workspace = importedDocs[models.workspace.type][0];
-
-    await models.apiSpec.updateOrCreateForParentId(workspace._id, {
+  for (const workspace of importedDocs[models.workspace.type]) {
+    const spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
       contents: rawContent,
       contentType: 'yaml',
     });
+
+    importedDocs[spec.type].push(spec);
   }
 
   await db.flushChanges();
