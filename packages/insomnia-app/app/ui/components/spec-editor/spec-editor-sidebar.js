@@ -3,7 +3,7 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import YAML from 'yaml';
 import type { ApiSpec } from '../../../models/api-spec';
-import * as Tree from 'react-animated-tree';
+import SpecEditorSidebarItem from './spec-editor-sidebar-item';
 
 type Props = {|
   apiSpec: ApiSpec,
@@ -51,45 +51,46 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
   render() {
     const { parsedSpec } = this.state;
 
+    // Not loaded yet
     if (!parsedSpec) {
-      // Not loaded yet
-      return 'Loading...';
+      return null;
     }
-    const treeStyles = {
-      color: 'white',
-      fill: 'white',
-      width: '100%',
-    };
 
     const parse = v => {
       if (typeof v === 'string' || typeof v === 'number' || v === null) {
         // return <Tree content={v} style={{color: '#63b1de'}} canHide onClick={(e) => handleClick(v)}/>
       } else {
-        if (v instanceof Array) {
-          return v.length > 0
-            ? v.map((value, i) => (
-                <Tree
+        if (Array.isArray(v) && v.length > 0) {
+          return (
+            <ul>
+              {v.map((value, i) => (
+                <SpecEditorSidebarItem
                   key={i}
-                  content={i}
-                  canHide
+                  name={i + ''}
                   onClick={e => this._handleScrollEditor(i + '', value)}>
                   {parse(value)}
-                </Tree>
-              ))
-            : null;
+                </SpecEditorSidebarItem>
+              ))}
+            </ul>
+          );
         }
+
         if (typeof v === 'object') {
-          return Object.entries(v).map(([key, value]) => (
-            <Tree
-              key={key}
-              content={key}
-              style={treeStyles}
-              canHide
-              onClick={e => this._handleScrollEditor(key, value)}>
-              {parse(value)}
-            </Tree>
-          ));
+          return (
+            <ul>
+              {Object.entries(v).map(([key, value]) => (
+                <SpecEditorSidebarItem
+                  key={key}
+                  name={key}
+                  onClick={e => this._handleScrollEditor(key, value + '')}>
+                  {parse(value)}
+                </SpecEditorSidebarItem>
+              ))}
+            </ul>
+          );
         }
+
+        return null;
       }
     };
 
@@ -97,7 +98,9 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     window.currentSpec = parsedSpec;
 
     return (
-      <div className="pad-left-sm">{this.state.parsedSpec ? parse(this.state.parsedSpec) : ''}</div>
+      <div className="spec-editor-sidebar">
+        {this.state.parsedSpec ? parse(this.state.parsedSpec) : ''}
+      </div>
     );
   }
 }

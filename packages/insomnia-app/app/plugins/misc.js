@@ -37,6 +37,7 @@ type ThemeInner = {
   ...ThemeBlock,
   rawCss?: string,
   styles: ?{
+    activityBar?: ThemeBlock,
     dialog?: ThemeBlock,
     dialogFooter?: ThemeBlock,
     dialogHeader?: ThemeBlock,
@@ -75,6 +76,9 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
 
   if (renderedTheme.styles) {
     const styles = renderedTheme.styles;
+
+    // Activity Bar
+    css += wrapStyles(n, '.theme--activity-bar', getThemeBlockCSS(styles.activityBar));
 
     // Dropdown Menus
     css += wrapStyles(n, '.theme--dropdown__menu', getThemeBlockCSS(styles.dialog));

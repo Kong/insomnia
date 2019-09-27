@@ -37,7 +37,7 @@ class ActivityBar extends React.PureComponent<Props> {
   render() {
     const { activity, showSettings, setActivity, hotKeyRegistry } = this.props;
     return (
-      <ul className="activity-bar theme--sidebar">
+      <ul className="activity-bar theme--activity-bar">
         {ACTIVITIES.map(a => (
           <ActivityBarButton
             key={a.key}

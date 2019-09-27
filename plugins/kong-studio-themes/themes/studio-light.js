@@ -34,7 +34,7 @@ module.exports = {
           default: '#fff',
         },
         background: {
-          default: '#003052',
+          default: '#143c63',
           success: '#74d49c',
           notice: '#ffdb02',
           warning: '#ffac49',
@@ -43,13 +43,30 @@ module.exports = {
           info: '#75ddff',
         },
         highlight: {
-          default: 'rgb(140, 209, 255)',
-          xxs: 'rgba(140, 209, 255, 0.05)',
-          xs: 'rgba(140, 209, 255, 0.1)',
-          sm: 'rgba(140, 209, 255, 0.2)',
-          md: 'rgba(140, 209, 255, 0.3)',
-          lg: 'rgba(140, 209, 255, 0.5)',
-          xl: 'rgba(140, 209, 255, 0.8)',
+          default: 'rgba(133, 157, 176)',
+          xxs: 'rgba(133, 157, 176, 0.05)',
+          xs: 'rgba(133, 157, 176, 0.1)',
+          sm: 'rgba(133, 157, 176, 0.2)',
+          md: 'rgba(133, 157, 176, 0.3)',
+          lg: 'rgba(133, 157, 176, 0.5)',
+          xl: 'rgba(133, 157, 176, 0.8)',
+        },
+      },
+      activityBar: {
+        foreground: {
+          default: '#fff',
+        },
+        background: {
+          default: '#0f304f',
+        },
+        highlight: {
+          default: 'rgba(133, 157, 176)',
+          xxs: 'rgba(133, 157, 176, 0.05)',
+          xs: 'rgba(133, 157, 176, 0.1)',
+          sm: 'rgba(133, 157, 176, 0.2)',
+          md: 'rgba(133, 157, 176, 0.3)',
+          lg: 'rgba(133, 157, 176, 0.5)',
+          xl: 'rgba(133, 157, 176, 0.8)',
         },
       },
       dialog: {

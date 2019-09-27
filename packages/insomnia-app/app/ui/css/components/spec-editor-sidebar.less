@@ -1,0 +1,31 @@
+@import '../constants/dimensions';
+
+.spec-editor-sidebar {
+  padding: @padding-sm;
+
+  li ul {
+    border-left: 1px dotted var(--hl-lg);
+  }
+
+  li {
+    display: block;
+    width: 100%;
+  }
+
+  li > button {
+    display: inline-block;
+    height: @line-height-xxxs;
+
+    i {
+      width: calc(@padding-md * 1.3);
+      color: var(--hl);
+      font-size: @font-size-lg;
+      padding: @padding-xs;
+    }
+  }
+
+  ul ul {
+    margin-left: calc(@padding-md);
+    padding-left: @padding-sm;
+  }
+}
