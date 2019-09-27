@@ -193,6 +193,15 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       return;
     }
 
+    if (!resp.ok) {
+      showError({
+        title: 'Deploy Failed',
+        error: new Error('Status code ' + resp.statusCode),
+        message: 'Deploy to kong failed',
+      });
+      return;
+    }
+
     console.log('Deployment', await resp.json());
   }
 
