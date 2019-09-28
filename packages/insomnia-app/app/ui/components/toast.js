@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import * as electron from 'electron';
+import iconSrc from '../images/logo.png';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import GravatarImg from './gravatar-img';
@@ -18,7 +19,7 @@ export type ToastNotification = {
   url: string,
   cta: string,
   message: string,
-  email: string,
+  email?: string,
 };
 
 type Props = {};
@@ -173,7 +174,7 @@ class Toast extends React.PureComponent<Props, State> {
           'toast--show': visible,
         })}>
         <div className="toast__image">
-          <GravatarImg email={notification.email || 'gschier1990@gmail.com'} size={100} />
+          <GravatarImg email={notification.email} size={100} fallback={iconSrc} />
         </div>
         <div className="toast__content">
           <p className="toast__message">{notification ? notification.message : 'Unknown'}</p>

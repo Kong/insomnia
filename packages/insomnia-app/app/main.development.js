@@ -148,7 +148,6 @@ async function _trackStats() {
       url: `${CHANGELOG_BASE_URL}/${currentVersion}/`,
       cta: "See What's New",
       message: `Updated to ${currentVersion}`,
-      email: 'support@insomnia.rest',
     };
 
     // Wait a bit before showing the user because the app just launched.
