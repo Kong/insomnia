@@ -10,7 +10,7 @@ import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
 import { getAppName, getAppVersion } from '../../../common/constants';
-import { showAlert, showError, showModal, showPrompt } from '../modals';
+import { showAlert, showModal, showPrompt } from '../modals';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import Tooltip from '../tooltip';
@@ -30,6 +30,7 @@ import * as session from '../../../account/session';
 type Props = {
   isLoading: boolean,
   handleSetActiveWorkspace: (id: string) => void,
+  handleDeploySpec: () => void,
   workspaces: Array<Workspace>,
   unseenWorkspaces: Array<Workspace>,
   activeWorkspace: Workspace,
@@ -177,37 +178,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     });
   }
 
-  async _handleSpecDeployment() {
-    let resp;
-    try {
-      resp = await window.fetch('http://localhost:8001/default/oas-config/v2', {
-        method: 'post',
-        body: JSON.stringify(window.currentSpec, null, 2),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    } catch (err) {
-      showError({
-        title: 'Deploy Failed',
-        error: err,
-        message: 'Deploy to kong failed',
-      });
-      return;
-    }
-
-    if (!resp.ok) {
-      showError({
-        title: 'Deploy Failed',
-        error: new Error('Status code ' + resp.status),
-        message: 'Deploy to kong failed',
-      });
-      return;
-    }
-
-    console.log('Deployment', await resp.json());
-  }
-
   componentDidUpdate(prevProps: Props) {
     // Reload workspaces if we just got a new VCS instance
     if (this.props.vcs && !prevProps.vcs) {
@@ -228,6 +198,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       isLoading,
       hotKeyRegistry,
       handleSetActiveWorkspace,
+      handleDeploySpec,
       enableSyncBeta,
       ...other
     } = this.props;
@@ -286,7 +257,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             <i className="fa fa-wrench" /> Workspace Settings
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
           </DropdownItem>
-          <DropdownItem onClick={this._handleSpecDeployment}>
+          <DropdownItem onClick={handleDeploySpec}>
             <i className="fa fa-cloud-upload" /> Deploy to <strong>Kong</strong>
           </DropdownItem>
           <DropdownDivider>Switch Workspace</DropdownDivider>

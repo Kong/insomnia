@@ -16,7 +16,7 @@ import SidebarChildren from './sidebar/sidebar-children';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import { registerModal, showModal } from './modals/index';
+import { registerModal, showError, showModal, showAlert } from './modals/index';
 import AlertModal from './modals/alert-modal';
 import WrapperModal from './modals/wrapper-modal';
 import ErrorModal from './modals/error-modal';
@@ -75,6 +75,8 @@ import SidebarFilter from './sidebar/sidebar-filter';
 import type { ApiSpec } from '../../models/api-spec';
 import GitVCS from '../../sync/git/git-vcs';
 import Onboarding from './onboarding';
+import YAML from 'yaml';
+import { importRaw } from '../../common/import';
 
 type Props = {
   // Helper Functions
@@ -272,6 +274,92 @@ class Wrapper extends React.PureComponent<Props, State> {
     }
 
     return null;
+  }
+
+  _handleTestSpec() {
+    showAlert({
+      title: 'Test Spec',
+      okLabel: 'Generate Requests',
+      message:
+        'Testing this spec will overwrite all requests in the test activity.' +
+        ' Do you want to proceed?',
+      onConfirm: async () => {
+        const { activeWorkspace, activeApiSpec, handleSetActiveActivity } = this.props;
+        await importRaw(
+          () => Promise.resolve(activeWorkspace._id), // Always import into current workspace
+          activeApiSpec.contents,
+        );
+        handleSetActiveActivity('test');
+      },
+    });
+  }
+
+  _handleDeploySpec() {
+    showAlert({
+      title: 'Deploy to Kong',
+      okLabel: 'Deploy Spec',
+      message:
+        'Deploying this spec to Kong is going to add all the services ' +
+        'and routes to Kong. Do you want to proceed?',
+      onConfirm: async () => {
+        const { activeApiSpec, handleSetActiveActivity } = this.props;
+
+        let spec;
+        try {
+          spec =
+            activeApiSpec.type === 'json'
+              ? JSON.parse(activeApiSpec.contents)
+              : YAML.parse(activeApiSpec.contents);
+        } catch (err) {
+          console.log('[spec-sidebar] Failed to parse', err.message);
+          return;
+        }
+
+        let resp;
+        try {
+          resp = await window.fetch('http://localhost:8001/default/oas-config/v2', {
+            method: 'post',
+            body: JSON.stringify(spec, null, 2),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+        } catch (err) {
+          showError({
+            title: 'Deploy Failed',
+            error: err,
+            message: 'Deploy to kong failed',
+          });
+          return;
+        }
+
+        if (!resp.ok) {
+          showError({
+            title: 'Deploy Failed',
+            error: new Error('Status code ' + resp.status),
+            message: 'Deploy to kong failed',
+          });
+          return;
+        }
+
+        console.log('Deployment', await resp.json());
+        handleSetActiveActivity('monitor');
+      },
+    });
+    // showModal(WrapperModal, {
+    //   title: 'Deploy to Kong',
+    //   body: (
+    //     <React.Fragment>
+    //       <p>
+    //         Deploying this spec to Kong is going to add all the services
+    //         and routes to Kong. Do you want to proceed?
+    //       </p>
+    //       <button className="btn btn--clicky">
+    //         Deploy Spec
+    //       </button>
+    //     </React.Fragment>
+    //   ),
+    // });
   }
 
   // Settings updaters
@@ -831,6 +919,7 @@ class Wrapper extends React.PureComponent<Props, State> {
                 environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
                 handleSetActiveEnvironment={handleSetActiveEnvironment}
                 handleSetActiveWorkspace={handleSetActiveWorkspace}
+                handleDeploySpec={this._handleDeploySpec}
                 hidden={sidebarHidden || false}
                 hotKeyRegistry={settings.hotKeyRegistry}
                 isLoading={isLoading}
@@ -946,13 +1035,15 @@ class Wrapper extends React.PureComponent<Props, State> {
                 editorKeyMap={settings.editorKeyMap}
                 lineWrapping={settings.editorLineWrapping}
                 onChange={this._handleUpdateApiSpec}
+                handleDeploy={this._handleDeploySpec}
+                handleTest={this._handleTestSpec}
               />
             </ErrorBoundary>
           )}
 
           {activity === 'monitor' && (
             <webview
-              src="http://localhost:8001/default/services"
+              src={settings.kongManagerUrl}
               className="monitor-webview"
               nodeintegration="false"
             />

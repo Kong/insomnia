@@ -89,9 +89,6 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
       return null;
     };
 
-    // Temp for deploy demo
-    window.currentSpec = parsedSpec;
-
     return (
       <div className="spec-editor-sidebar">
         {this.state.parsedSpec ? parse(this.state.parsedSpec) : ''}

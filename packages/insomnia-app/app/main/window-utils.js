@@ -287,29 +287,11 @@ export function createWindow() {
     submenu: [
       {
         label: 'Manager URL',
-        click: async () => {
-          const dir = misc.getDataDirectory();
-          const response = await dialog.showMessageBox({
-            type: 'question',
-            title: `Delete Data Directory`,
-            message: `Do you want to delete ${dir}?`,
-            buttons: ['Delete', 'Cancel'],
-            cancelId: 1,
-          });
-
-          if (response === 1) {
+        click: (menuItem, w, e) => {
+          if (!w || !w.webContents) {
             return;
           }
-
-          rimraf(misc.getDataDirectory(), err => {
-            if (err) {
-              console.log('Failed to delete app data directory', err);
-              return;
-            }
-
-            app.relaunch();
-            app.exit();
-          });
+          w.webContents.send('kong-manager-prompt');
         },
       },
       {

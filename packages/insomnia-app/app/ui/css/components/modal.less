@@ -42,6 +42,10 @@
     width: @modal-width-wide;
   }
 
+  &.modal--skinny .modal__content__wrapper {
+    width: @modal-width-skinny;
+  }
+
   .modal__content {
     display: grid;
     grid-template-columns: 100%;
@@ -106,7 +110,7 @@
   }
 
   .modal__footer {
-    border-top: 1px solid @hl-md;
+    border-top: 1px solid @hl-sm;
     background-color: var(--color-bg);
     color: var(--color-font);
     display: flex;

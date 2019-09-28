@@ -22,6 +22,7 @@ type Props = {|
   environmentHighlightColorStyle: string,
   handleSetActiveEnvironment: Function,
   handleSetActiveWorkspace: Function,
+  handleDeploySpec: () => void,
   hidden: boolean,
   hotKeyRegistry: HotKeyRegistry,
   isLoading: boolean,
@@ -44,6 +45,7 @@ class Sidebar extends React.PureComponent<Props> {
       enableSyncBeta,
       environmentHighlightColorStyle,
       handleSetActiveWorkspace,
+      handleDeploySpec,
       hidden,
       hotKeyRegistry,
       isLoading,
@@ -78,6 +80,7 @@ class Sidebar extends React.PureComponent<Props> {
           unseenWorkspaces={unseenWorkspaces}
           hotKeyRegistry={hotKeyRegistry}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
+          handleDeploySpec={handleDeploySpec}
           enableSyncBeta={enableSyncBeta}
           isLoading={isLoading}
           vcs={vcs}

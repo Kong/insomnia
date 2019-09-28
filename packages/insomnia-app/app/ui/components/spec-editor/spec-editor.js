@@ -4,7 +4,6 @@ import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
 import type { Workspace } from '../../../models/workspace';
 import type { ApiSpec } from '../../../models/api-spec';
-import { importRaw } from '../../../common/import';
 
 type Props = {|
   apiSpec: ApiSpec,
@@ -14,6 +13,8 @@ type Props = {|
   lineWrapping: boolean,
   editorKeyMap: string,
   onChange: (spec: ApiSpec) => Promise<void>,
+  handleDeploy: () => void,
+  handleTest: () => void,
 |};
 
 @autobind
@@ -22,14 +23,6 @@ class SpecEditor extends React.PureComponent<Props> {
 
   _setEditorRef(n: ?CodeEditor) {
     this.editor = n;
-  }
-
-  async _handleReImport() {
-    const { workspace, apiSpec } = this.props;
-    await importRaw(
-      () => Promise.resolve(workspace._id), // Always import into current workspace
-      apiSpec.contents,
-    );
   }
 
   async _handleOnChange(v: string) {
@@ -42,22 +35,37 @@ class SpecEditor extends React.PureComponent<Props> {
   }
 
   jumpToLine(val: string, value: string | Object) {
-    if (this.editor) {
-      this.editor.setCursor(0, 0);
+    const editor = this.editor;
+
+    if (!editor) {
+      return;
     }
-    this.editor.search(val, value);
+
+    editor.setCursor(0, 0);
+    editor.search(val, value);
   }
 
   render() {
-    const { editorFontSize, editorIndentSize, lineWrapping, editorKeyMap, apiSpec } = this.props;
+    const {
+      editorFontSize,
+      editorIndentSize,
+      lineWrapping,
+      editorKeyMap,
+      apiSpec,
+      handleDeploy,
+      handleTest,
+    } = this.props;
 
     return (
       <div className="spec-editor theme--pane">
         <div className="spec-editor__header theme--pane__header">
           <h1>Edit API Specification</h1>
           <nav className="spec-editor__header__buttons">
-            <button className="btn" onClick={this._handleReImport}>
-              Test Changes
+            <button className="btn" onClick={handleDeploy}>
+              Deploy
+            </button>
+            <button className="btn" onClick={handleTest}>
+              Test
             </button>
           </nav>
         </div>

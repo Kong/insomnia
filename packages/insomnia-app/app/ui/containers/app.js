@@ -981,6 +981,21 @@ class App extends PureComponent {
       App._handleShowSettingsModal();
     });
 
+    ipcRenderer.on('kong-manager-prompt', () => {
+      const { settings } = this.props;
+
+      showPrompt({
+        title: 'Kong Manager',
+        label: 'Kong Manager URL',
+        defaultValue: settings.kongManagerUrl,
+        placeholder: 'http://localhost:8001/default/services',
+        onComplete: async url => {
+          settings.kongManagerUrl = url || 'http://localhost:8001/default/services';
+          await models.settings.update(settings);
+        },
+      });
+    });
+
     ipcRenderer.on('reload-plugins', this._handleReloadPlugins);
 
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
