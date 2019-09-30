@@ -192,6 +192,16 @@ export async function importRaw(
       resource.body.mimeType = CONTENT_TYPE_GRAPHQL;
     }
 
+    if (
+      model.type === models.request.type &&
+      resource.body &&
+      typeof resource.body.text === 'string' &&
+      Array.isArray(resource.headers) &&
+      !resource.headers.find(h => h.name.toLowerCase() === 'content-type')
+    ) {
+      resource.headers.push({ name: 'Content-Type', value: 'application/json' });
+    }
+
     const existingDoc = await model.getById(resource._id);
     let newDoc: BaseModel;
     if (existingDoc) {
@@ -217,6 +227,12 @@ export async function importRaw(
     });
 
     importedDocs[spec.type].push(spec);
+
+    // Set default environment if there is one
+    const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+    const envs = importedDocs[models.environment.type];
+    meta.activeEnvironmentId = envs.length > 0 ? envs[0]._id : null;
+    await models.workspaceMeta.update(meta);
   }
 
   await db.flushChanges();

@@ -58,8 +58,8 @@ class Onboarding extends React.PureComponent<Props> {
 
   _handleImportPetstore() {
     this._handleImportUri(
-      'https://gist.githubusercontent.com/gschier/4e2278d5a50b4bbf1110755d9b48a9f9/raw/0e6fef533243d6842dd8f3199ec86394508bf9c5/petstore-spec.yaml',
-      true,
+      'https://gist.githubusercontent.com/gschier/4e2278d5a50b4bbf1110755d9b48a9f9' +
+        '/raw/0e6fef533243d6842dd8f3199ec86394508bf9c5/petstore-spec.yaml',
     );
   }
 
