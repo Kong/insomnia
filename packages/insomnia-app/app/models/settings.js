@@ -95,7 +95,7 @@ export function init(): BaseSettings {
 
     // Studio stuff
     enableAnalytics: true,
-    kongManagerUrl: 'http://localhost:8001/default/services',
+    kongManagerUrl: 'http://localhost:8002/default/services',
   };
 }
 
