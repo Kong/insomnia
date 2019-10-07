@@ -294,6 +294,7 @@ class CodeEditor extends React.Component {
     this.codeMirror.setCursor({ line: -1, ch: -1 });
 
     this.codeMirror.setOption('extraKeys', {
+      ...BASE_CODEMIRROR_OPTIONS.extraKeys,
       Tab: cm => {
         const spaces = this._indentChars();
         cm.replaceSelection(spaces);
