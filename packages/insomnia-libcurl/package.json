@@ -1,6 +1,6 @@
 {
   "name": "insomnia-libcurl",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Insomnia libcurl wrapper",
   "license": "MIT",
