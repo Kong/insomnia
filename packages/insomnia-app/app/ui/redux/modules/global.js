@@ -490,7 +490,7 @@ function askToImportIntoWorkspace(workspaceId, forceToWorkspace) {
     return new Promise(resolve => {
       showModal(AskModal, {
         title: 'Import',
-        message: 'Do you wand to import into the current workspace or a new one?',
+        message: 'Do you want to import into the current workspace or a new one?',
         yesText: 'Current',
         noText: 'New Workspace',
         onDone: yes => {

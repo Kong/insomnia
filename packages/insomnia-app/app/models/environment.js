@@ -82,6 +82,20 @@ export function getById(id: string): Promise<Environment | null> {
   return db.get(type, id);
 }
 
+export async function duplicate(environment: Environment): Promise<Environment> {
+  const name = `${environment.name} (Copy)`;
+
+  // Get sort key of next environment
+  const q = { metaSortKey: { $gt: environment.metaSortKey } };
+  const [nextEnvironment] = await db.find(type, q, { metaSortKey: 1 });
+  const nextSortKey = nextEnvironment ? nextEnvironment.metaSortKey : environment.metaSortKey + 100;
+
+  // Calculate new sort key
+  const metaSortKey = (environment.metaSortKey + nextSortKey) / 2;
+
+  return db.duplicate(environment, { name, metaSortKey });
+}
+
 export function remove(environment: Environment): Promise<void> {
   return db.remove(environment);
 }

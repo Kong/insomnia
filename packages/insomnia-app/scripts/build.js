@@ -96,29 +96,37 @@ async function install(relDir) {
   return new Promise(resolve => {
     const prefix = path.resolve(__dirname, relDir);
 
-    // Link all plugins
-    const plugins = path.resolve(__dirname, `../../../plugins`);
-    for (const dir of fs.readdirSync(plugins)) {
-      console.log(`[build] Linking plugin ${dir}`);
-      const p = path.join(plugins, dir);
-      childProcess.spawnSync('npm', ['link', p], {
-        cwd: prefix,
-        shell: true,
-      });
-    }
+    // // Link all plugins
+    // const plugins = path.resolve(__dirname, `../../../plugins`);
+    // for (const dir of fs.readdirSync(plugins)) {
+    //   if (dir.indexOf('.') === 0) {
+    //     continue;
+    //   }
+    //
+    //   console.log(`[build] Linking plugin ${dir}`);
+    //   const p = path.join(plugins, dir);
+    //   childProcess.spawnSync('npm', ['link', p], {
+    //     cwd: prefix,
+    //     shell: true,
+    //   });
+    // }
 
-    // Link all packages
-    const packages = path.resolve(__dirname, `../../../packages`);
-    for (const dir of fs.readdirSync(packages)) {
-      // Don't like ourselves
-      if (dir === packageJson.name) {
-        continue;
-      }
-
-      console.log(`[build] Linking local package ${dir}`);
-      const p = path.join(packages, dir);
-      childProcess.spawnSync('npm', ['link', p], { cwd: prefix, shell: true });
-    }
+    // // Link all packages
+    // const packages = path.resolve(__dirname, `../../../packages`);
+    // for (const dir of fs.readdirSync(packages)) {
+    //   // Don't like ourselves
+    //   if (dir === packageJson.name) {
+    //     continue;
+    //   }
+    //
+    //   if (dir.indexOf('.') === 0) {
+    //     continue;
+    //   }
+    //
+    //   console.log(`[build] Linking local package ${dir}`);
+    //   const p = path.join(packages, dir);
+    //   childProcess.spawnSync('npm', ['link', p], { cwd: prefix, shell: true });
+    // }
 
     const p = childProcess.spawn('npm', ['install', '--production', '--no-optional'], {
       cwd: prefix,
