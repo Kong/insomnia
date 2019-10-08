@@ -1,6 +1,7 @@
 {
   "appId": "__APP_ID__",
   "publish": false,
+  "afterSign": "./scripts/afterSignHook.js",
   "extraResources": [
     {
       "from": "./bin",
@@ -23,8 +24,10 @@
     "output": "dist"
   },
   "mac": {
-    "category": "public.app-category.developer-tools",
+    "hardenedRuntime": true,
     "icon": "./build/icon.png",
+    "category": "public.app-category.developer-tools",
+    "entitlements": "./build/static/entitlements.mac.inherit.plist",
     "target": [
       "dmg",
       "zip"
@@ -40,7 +43,7 @@
       "zip"
     ]
   },
-  "squirrelWindows":{
+  "squirrelWindows": {
     "iconUrl": "__ICON_URL__"
   },
   "linux": {
