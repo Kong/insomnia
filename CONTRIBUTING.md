@@ -53,7 +53,7 @@ commits.
 
 **Please ask first** before embarking on any significant pull request (e.g.
 implementing features, refactoring code, porting to a different language),
-otherwise you risk spending a lot of time working on something that might
+otherwise, you risk spending a lot of time working on something that might
 not get accepted into the project.
 
 **IMPORTANT**: By submitting a patch, you agree to allow the project owner to
