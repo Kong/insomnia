@@ -46,6 +46,7 @@
     "start": "concurrently --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "build": "node ./scripts/build.js",
     "package": "node ./scripts/package.js",
+    "release": "node ./scripts/release.js",
     "bootstrap": "rimraf node_modules/fsevents && rimraf node_modules/graphql-language-service-interface/dist/*.flow && electron-rebuild -f -w insomnia-libcurl"
   },
   "dev": {
@@ -186,6 +187,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.4.0",
+    "@octokit/rest": "^16.33.0",
     "concurrently": "^3.5.0",
     "cross-env": "^2.0.0",
     "css-loader": "^2.1.1",
@@ -195,6 +197,7 @@
     "electron-builder-squirrel-windows": "^21.2.0",
     "electron-notarize": "^0.1.1",
     "electron-rebuild": "^1.8.6",
+    "fast-glob": "^3.1.0",
     "file-loader": "^3.0.1",
     "less": "^3.8.1",
     "less-loader": "^4.1.0",

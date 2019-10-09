@@ -13,14 +13,26 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 10
-      - name: Configure Visual Studio version
-        run: npm config set msvs_version 2017
+      - name: Install node tools
+        run: npm install --global --production windows-build-tools@4.0.0
+      - name: Install node-gyp
+        run: npm install --global node-gyp@latest
+      - name: Set node config to use python2.7
+        run: npm config set python python2.7
+      - name: Set node config to set msvs_version to 2015
+        run: npm config set msvs_version 2015
+      - name: Work around for Windows Server 2019
+        run: set path=%path%;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin
       - name: Bootstrap packages
         run: npm run bootstrap
-        env:
-          GYP_MSVS_VERSION: 2017
       - name: Run tests
         run: npm test
+      - name: Release app
+        if: startsWith(github.event.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: ${{ github.event.ref }}
+        run: npm run app-release
   Mac:
     name: Mac
     runs-on: macOS-latest
@@ -35,21 +47,19 @@ jobs:
         run: npm run bootstrap
       - name: Run tests
         run: npm test
+      - name: Release app
+        run: npm run app-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: ${{ github.event.ref }}
   Linux:
     name: Ubuntu
     runs-on: ubuntu-16.04
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Install NodeJS
-        uses: actions/setup-node@v1
-        with:
-          node-version: 10
-      - name: Install OS packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev
-      - name: Bootstrap packages
-        run: npm run bootstrap
-      - name: Run tests
-        run: npm test
+      - name: Run Docker
+        uses: ./.github/actions/build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: ${{ github.event.ref }}
