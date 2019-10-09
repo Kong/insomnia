@@ -1,4 +1,4 @@
-FROM docker:stable
+FROM ubuntu:14.04
 
 LABEL "name"="Insomnia-Linux"
 LABEL "maintainer"="Gregory Schier <gschier1990@gmail.com>"
