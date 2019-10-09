@@ -12,7 +12,7 @@ LABEL "com.github.actions.description"="Do the stuff"
 COPY entrypoint.sh /entrypoint.sh
 
 ADD install-dependencies.sh /scripts/install-dependencies.sh
-RUN bash /scripts/install-dependencies.sh
+RUN chmod +x /scripts/install-dependencies.sh && /scripts/install-dependencies.sh
 
 # Setup dirs
 ADD . /src/insomnia
@@ -20,6 +20,6 @@ WORKDIR /src/insomnia
 VOLUME /src/insomnia/packages/insomnia-app/dist
 
 ADD docker/bootstrap.sh /scripts/bootstrap.sh
-RUN bash /scripts/bootstrap.sh
+RUN chmod +x /scripts/bootstrap.sh && /scripts/bootstrap.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
