@@ -63,20 +63,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: ${{ github.event.ref }}
-  Linux2:
-    name: Ubuntu
-    runs-on: ubuntu-16.04
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v1
-      - name: Install dependencies
-        run: ./.github/actions/install-dependencies.sh
-      - name: Bootstrap packages
-        run: npm run bootstrap
-      - name: Run tests
-        run: npm test
-      - name: Release app
-        run: npm run app-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REF: ${{ github.event.ref }}
