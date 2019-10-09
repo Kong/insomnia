@@ -16,6 +16,7 @@
     "app-start": "lerna run start --stream --parallel --bail",
     "app-build": "lerna run build --stream --parallel --bail",
     "app-package": "lerna run package --stream --parallel --bail",
+    "app-release": "lerna run release --stream --parallel --bail",
     "format-code": "prettier --write \"**/*.js\""
   },
   "husky": {

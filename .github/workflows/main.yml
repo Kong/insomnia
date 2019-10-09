@@ -31,6 +31,7 @@ jobs:
         if: startsWith(github.event.ref, 'refs/tags/v')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: ${{ github.event.ref }}
         run: npm run app-release
   Mac:
     name: Mac
@@ -47,9 +48,9 @@ jobs:
       - name: Run tests
         run: npm test
       - name: Release app
-        if: startsWith(github.event.ref, 'refs/tags/v')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: ${{ github.event.ref }}
         run: npm run app-release
   Linux:
     name: Ubuntu
@@ -59,3 +60,6 @@ jobs:
         uses: actions/checkout@v1
       - name: Run Docker
         uses: ./.github/actions/build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: ${{ github.event.ref }}

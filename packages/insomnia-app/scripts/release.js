@@ -13,6 +13,11 @@ const octokit = new Octokit({
 
 // Start package if ran from CLI
 if (require.main === module) {
+  if (!process.env.GITHUB_REF.match(/v\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
+    console.log(`[release] Not running release for ref ${process.env.GITHUB_REF}`);
+    process.exit(0);
+  }
+
   process.nextTick(async () => {
     try {
       await buildTask.start();
