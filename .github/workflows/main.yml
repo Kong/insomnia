@@ -27,8 +27,11 @@ jobs:
         run: npm run bootstrap
       - name: Run tests
         run: npm test
-      - name: Package App
-        run: npm run app-package
+      - name: Release app
+        if: startsWith(github.event.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run app-release
   Mac:
     name: Mac
     runs-on: macOS-latest
@@ -43,8 +46,11 @@ jobs:
         run: npm run bootstrap
       - name: Run tests
         run: npm test
-      - name: Package App
-        run: npm run app-package
+      - name: Release app
+        if: startsWith(github.event.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run app-release
   Linux:
     name: Ubuntu
     runs-on: ubuntu-16.04
