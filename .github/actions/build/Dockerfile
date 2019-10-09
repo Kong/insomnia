@@ -9,10 +9,10 @@ LABEL "com.github.actions.color"="blue"
 LABEL "com.github.actions.name"="Insomnia Linux"
 LABEL "com.github.actions.description"="Do the stuff"
 
-COPY entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /scripts/entrypoint.sh
 COPY install-dependencies.sh /scripts/install-dependencies.sh
 
-RUN chmod +x /scripts/install-dependencies.sh
+RUN chmod +x /scripts/*
 RUN /scripts/install-dependencies.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/scripts/entrypoint.sh"]
