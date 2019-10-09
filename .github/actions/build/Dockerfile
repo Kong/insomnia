@@ -19,7 +19,7 @@ ADD . /src/insomnia
 WORKDIR /src/insomnia
 VOLUME /src/insomnia/packages/insomnia-app/dist
 
-ADD docker/bootstrap.sh /scripts/bootstrap.sh
+ADD bootstrap.sh /scripts/bootstrap.sh
 RUN chmod +x /scripts/bootstrap.sh && /scripts/bootstrap.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
