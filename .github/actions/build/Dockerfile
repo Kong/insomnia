@@ -11,10 +11,10 @@ LABEL "com.github.actions.description"="Do the stuff"
 
 COPY entrypoint.sh /entrypoint.sh
 
-ADD install-dependencies.sh /scripts/install-dependencies.sh
-RUN /scripts/install-dependencies.sh
+ADD install-dependencies.sh bootstrap.sh /scripts/
+RUN chmod +x /scripts/*.sh
 
-ADD bootstrap.sh /scripts/bootstrap.sh
+RUN /scripts/install-dependencies.sh
 RUN /scripts/bootstrap.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
