@@ -16,7 +16,7 @@ const REPO = 'insomnia';
 
 // Start package if ran from CLI
 if (require.main === module) {
-  if (!process.env.GITHUB_REF.match(/v\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
+  if (!process.env.GITHUB_REF.match(/v\d+\.\d+\.\d+(-(beta|alpha)\.\d+)?$/)) {
     console.log(`[release] Not running release for ref ${process.env.GITHUB_REF}`);
     process.exit(0);
   }
