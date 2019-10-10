@@ -28,7 +28,6 @@ jobs:
       - name: Run tests
         run: npm test
       - name: Release app
-        if: startsWith(github.event.ref, 'refs/tags/v')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: ${{ github.event.ref }}

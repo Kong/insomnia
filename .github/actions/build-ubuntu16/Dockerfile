@@ -9,8 +9,8 @@ LABEL "com.github.actions.color"="blue"
 LABEL "com.github.actions.name"="Insomnia Ubuntu 16"
 LABEL "com.github.actions.description"="Do the stuff"
 
-COPY ../common/entrypoint.sh /scripts/entrypoint.sh
-COPY ../common/install-dependencies.sh /scripts/install-dependencies.sh
+COPY entrypoint.sh /scripts/entrypoint.sh
+COPY install-dependencies.sh /scripts/install-dependencies.sh
 
 RUN chmod +x /scripts/*
 RUN /scripts/install-dependencies.sh && apt-get install -y snapcraft
