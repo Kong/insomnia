@@ -13,7 +13,7 @@ COPY entrypoint.sh /scripts/entrypoint.sh
 COPY install-dependencies.sh /scripts/install-dependencies.sh
 
 RUN chmod +x /scripts/*
-RUN /scripts/install-dependencies.sh && apt-get install -y snapd
+RUN /scripts/install-dependencies.sh && apt-get install -y snapd && snap install snapcraft --classic
 RUN snapcraft --version
 
 ENTRYPOINT ["/scripts/entrypoint.sh"]
