@@ -193,7 +193,6 @@
     "css-loader": "^2.1.1",
     "electron": "^3.0.4",
     "electron-builder": "^21.2.0",
-    "electron-builder-lib": "^20.23.1",
     "electron-builder-squirrel-windows": "^21.2.0",
     "electron-notarize": "^0.1.1",
     "electron-rebuild": "^1.8.6",

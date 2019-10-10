@@ -14,5 +14,6 @@ COPY install-dependencies.sh /scripts/install-dependencies.sh
 
 RUN chmod +x /scripts/*
 RUN /scripts/install-dependencies.sh && apt-get install -y snapd
+RUN snapcraft --version
 
 ENTRYPOINT ["/scripts/entrypoint.sh"]
