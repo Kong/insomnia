@@ -57,5 +57,8 @@
       "snap",
       "rpm"
     ]
+  },
+  "snap": {
+    "publish": false
   }
 }
