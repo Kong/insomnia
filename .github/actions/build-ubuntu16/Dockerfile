@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 LABEL "name"="Insomnia-Ubuntu-16"
 LABEL "maintainer"="Gregory Schier <gschier1990@gmail.com>"

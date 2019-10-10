@@ -58,7 +58,7 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
   Ubuntu14:
-    name: Ubuntu 14 (Snap)
+    name: Ubuntu 16 (Snap)
     runs-on: ubuntu-16.04
     steps:
       - name: Checkout branch
