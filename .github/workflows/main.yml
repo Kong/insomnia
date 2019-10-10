@@ -58,14 +58,25 @@ jobs:
           CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-  Linux:
+  Ubuntu14:
     name: Ubuntu
     runs-on: ubuntu-16.04
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
       - name: Run Docker
-        uses: ./.github/actions/build
+        uses: ./.github/actions/build-ubuntu14
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: ${{ github.event.ref }}
+  Ubuntu16:
+    name: Ubuntu
+    runs-on: ubuntu-16.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v1
+      - name: Run Docker
+        uses: ./.github/actions/build-ubuntu16
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: ${{ github.event.ref }}
