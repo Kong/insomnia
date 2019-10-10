@@ -64,7 +64,7 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v1
       - name: Run Docker
-        uses: ./.github/actions/build-ubuntu14
+        uses: ./.github/actions/build-linux
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: ${{ github.event.ref }}
@@ -77,7 +77,7 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v1
       - name: Run Docker
-        uses: ./.github/actions/build-ubuntu16
+        uses: ./.github/actions/build-snap
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: ${{ github.event.ref }}
