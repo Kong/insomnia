@@ -68,6 +68,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: ${{ github.event.ref }}
+          BUILD_TARGETS: AppImage,deb,tar.gz,rpm
+          NODELIBCURL_BUILD_STATIC: yes
   Ubuntu16:
     name: Ubuntu 14
     runs-on: ubuntu-16.04
@@ -79,3 +81,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: ${{ github.event.ref }}
+          BUILD_TARGETS: snap
+          NODELIBCURL_BUILD_STATIC: yes
