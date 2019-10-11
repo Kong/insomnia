@@ -65,7 +65,13 @@
       },
       "method": "POST",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/json"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "addPet"
@@ -80,7 +86,13 @@
       },
       "method": "PUT",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/json"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "updatePet"
@@ -142,7 +154,13 @@
       },
       "method": "POST",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/x-www-form-urlencoded"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "updatePetWithForm"
@@ -174,7 +192,13 @@
       },
       "method": "POST",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "multipart/form-data"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "uploadFile"

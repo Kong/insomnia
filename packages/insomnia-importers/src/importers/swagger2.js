@@ -3,7 +3,9 @@ const utils = require('../utils');
 
 const SUPPORTED_SWAGGER_VERSION = '2.0';
 const MIMETYPE_JSON = 'application/json';
-const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON];
+const MIMETYPE_URLENCODED = 'x-www-form-urlencoded';
+const MIMETYPE_MULTIPART = 'multipart/form-data';
+const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON, MIMETYPE_URLENCODED, MIMETYPE_MULTIPART];
 const WORKSPACE_ID = '__WORKSPACE_ID__';
 
 let requestCount = 1;
@@ -159,7 +161,7 @@ function importFolderItem(item, parentId) {
  */
 function importRequest(endpointSchema, globalMimeTypes, id, parentId) {
   const name = endpointSchema.summary || `${endpointSchema.method} ${endpointSchema.path}`;
-  return {
+  const request = {
     _type: 'request',
     _id: id,
     parentId: parentId,
@@ -170,6 +172,16 @@ function importRequest(endpointSchema, globalMimeTypes, id, parentId) {
     headers: prepareHeaders(endpointSchema),
     parameters: prepareQueryParams(endpointSchema),
   };
+  if (request.body.mimeType && !request.headers.find(header => header.name === 'Content-Type')) {
+    request.headers = [
+      {
+        name: 'Content-Type',
+        disabled: false,
+        value: request.body.mimeType,
+      },
+    ].concat(request.headers);
+  }
+  return request;
 }
 
 /**
@@ -224,22 +236,33 @@ function prepareBody(endpointSchema, globalMimeTypes) {
   const mimeTypes = endpointSchema.consumes || globalMimeTypes || [];
   const isAvailable = m => mimeTypes.includes(m);
   const supportedMimeType = SUPPORTED_MIME_TYPES.find(isAvailable);
-
   if (supportedMimeType === MIMETYPE_JSON) {
     const isSendInBody = p => p.in === 'body';
     const parameters = endpointSchema.parameters || [];
     const bodyParameter = parameters.find(isSendInBody);
     if (!bodyParameter) {
-      return {
-        mimeType: supportedMimeType,
-      };
+      return {};
     }
 
-    const example = bodyParameter ? generateParameterExample(bodyParameter.schema) : undefined;
+    const example = generateParameterExample(bodyParameter.schema);
     const text = JSON.stringify(example, null, 2);
     return {
       mimeType: supportedMimeType,
       text,
+    };
+  }
+
+  if (supportedMimeType === MIMETYPE_URLENCODED || supportedMimeType === MIMETYPE_MULTIPART) {
+    const isSendInFormData = p => p.in === 'formData';
+    const parameters = endpointSchema.parameters || [];
+    const formDataParameters = parameters.filter(isSendInFormData);
+
+    if (formDataParameters.length === 0) {
+      return {};
+    }
+    return {
+      mimeType: supportedMimeType,
+      params: convertParameters(formDataParameters),
     };
   }
 
@@ -260,7 +283,14 @@ function prepareBody(endpointSchema, globalMimeTypes) {
  */
 function convertParameters(parameters) {
   return parameters.map(parameter => {
-    const { required, name } = parameter;
+    const { required, name, type } = parameter;
+    if (type === 'file') {
+      return {
+        name,
+        disabled: required !== true,
+        type: 'file',
+      };
+    }
     return {
       name,
       disabled: required !== true,

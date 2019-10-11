@@ -57,7 +57,17 @@ npm test
 npm run app-start
 ```
 
+## Windows
+
 If you are on Windows and have problems, you may need to install [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)
+
+## Ubuntu 18.04.3
+
+Building from source can require to install additial to build-essentials:
+
+- libfontconfig1-dev for fontconfig headers
+- libcurl4-gnutls-dev for curl-config
+
 </details>
 
 <details>

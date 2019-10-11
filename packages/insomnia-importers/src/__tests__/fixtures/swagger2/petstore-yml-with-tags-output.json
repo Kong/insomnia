@@ -54,7 +54,13 @@
           "value": "0"
         }
       ],
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/json"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "listPets"
@@ -68,7 +74,13 @@
       },
       "method": "POST",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/json"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "createPets"
@@ -82,7 +94,13 @@
       },
       "method": "GET",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/json"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "showPetById"
