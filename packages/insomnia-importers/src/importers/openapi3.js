@@ -256,6 +256,14 @@ function prepareHeaders(endpointSchema) {
  * @returns {Object} headers or basic http authentication details
  */
 function parseSecurity(security, securitySchemes) {
+  if (!security || !securitySchemes) {
+    return {
+      authentication: {},
+      headers: [],
+      parameters: [],
+    };
+  }
+
   const supportedSchemes = security
     .map(securityPolicy => {
       const securityName = Object.keys(securityPolicy)[0];
@@ -273,15 +281,10 @@ function parseSecurity(security, securitySchemes) {
         value: '{{ apiKey }}',
       };
     });
-  const apiKeyCookieHeader = apiKeySchemes
+  const apiKeyCookies = apiKeySchemes
     .filter(scheme => scheme.in === 'cookie')
-    .reduce(
-      (cookieHeader, scheme) => ({
-        ...cookieHeader,
-        value: `${cookieHeader.value}${scheme.name}={{ apiKey }}; `,
-      }),
-      { name: 'Cookie', disabled: false, value: '' },
-    );
+    .map(scheme => `${scheme.name}={{ apiKey }}`);
+  const apiKeyCookieHeader = { name: 'Cookie', disabled: false, value: apiKeyCookies.join('; ') };
   const apiKeyParams = apiKeySchemes
     .filter(scheme => scheme.in === 'query')
     .map(scheme => {
@@ -292,7 +295,7 @@ function parseSecurity(security, securitySchemes) {
       };
     });
 
-  if (apiKeyCookieHeader.value) {
+  if (apiKeyCookies.length > 0) {
     apiKeyHeaders.push(apiKeyCookieHeader);
   }
 
@@ -300,7 +303,7 @@ function parseSecurity(security, securitySchemes) {
     scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
   )
     ? { username: '{{ httpUsername }}', password: '{{ httpPassword }}' }
-    : undefined;
+    : {};
 
   return {
     authentication: httpAuth,
