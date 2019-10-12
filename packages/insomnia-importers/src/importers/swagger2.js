@@ -122,7 +122,9 @@ function parseEndpoints(document) {
         ? `${endpointSchema.operationId}${index > 0 ? index : ''}`
         : `__REQUEST_${requestCount++}__`;
       let parentId = folderLookup[tag] || defaultParent;
-      requests.push(importRequest(endpointSchema, globalMimeTypes, id, parentId));
+      requests.push(
+        importRequest(document.securityDefinitions, endpointSchema, globalMimeTypes, id, parentId),
+      );
     });
   });
 
@@ -151,15 +153,16 @@ function importFolderItem(item, parentId) {
  * Return Insomnia request
  *
  *
+ * @param {Object} securityDefinitions - swagger 2.0 security definitions
  * @param {Object} endpointSchema - swagger 2.0 endpoint schema
  * @param {string[]} globalMimeTypes - list of mimeTypes available in document globally (i.e. document.consumes)
  * @param {string} id - id to be given to current request
  * @param {string} parentId - id of parent category
  * @returns {Object}
  */
-function importRequest(endpointSchema, globalMimeTypes, id, parentId) {
+function importRequest(securityDefinitions, endpointSchema, globalMimeTypes, id, parentId) {
   const name = endpointSchema.summary || `${endpointSchema.method} ${endpointSchema.path}`;
-  return {
+  const out = {
     _type: 'request',
     _id: id,
     parentId: parentId,
@@ -167,9 +170,115 @@ function importRequest(endpointSchema, globalMimeTypes, id, parentId) {
     method: endpointSchema.method.toUpperCase(),
     url: '{{ base_url }}' + pathWithParamsAsVariables(endpointSchema.path),
     body: prepareBody(endpointSchema, globalMimeTypes),
+    description: endpointSchema.description,
     headers: prepareHeaders(endpointSchema),
     parameters: prepareQueryParams(endpointSchema),
   };
+
+  return setupAuthentification(securityDefinitions, endpointSchema, out);
+}
+
+/**
+ * Populate Insomnia request with authentification
+ *
+ *
+ * @param {Object} securityDefinitions - swagger 2.0 security definitions
+ * @param {Object} endpointSchema - swagger 2.0 endpoint schema
+ * @param {Object} request - insomnia request object
+ * @returns {Object}
+ */
+function setupAuthentification(securityDefinitions, endpointSchema, request) {
+  if (endpointSchema.security && endpointSchema.security.length > 0) {
+    const usedDefinitions = endpointSchema.security.reduce(
+      (collect, obj) => collect.concat(...Object.keys(obj)),
+      [],
+    );
+    const scopes = endpointSchema.security.reduce((scopes, security) => {
+      for (const defname in security) {
+        if (security[defname].length === 0) {
+          continue;
+        }
+        return scopes.concat(security[defname]);
+      }
+      return scopes;
+    }, []);
+    for (const usedDefinition of usedDefinitions) {
+      const definition = securityDefinitions[usedDefinition];
+      if (definition.type === 'basic') {
+        request.authentication = {
+          type: 'basic',
+          disabled: false,
+          password: '{{ password }}',
+          username: '{{ username }}',
+        };
+      }
+      if (definition.type === 'apiKey') {
+        if (definition.in === 'header') {
+          request.headers.push({
+            name: definition.name,
+            disabled: false,
+            value: `{{ api_key }}`,
+          });
+        }
+        if (definition.in === 'query') {
+          request.parameters.push({
+            name: definition.name,
+            disabled: false,
+            value: '{{ api_key }}',
+          });
+        }
+      }
+      if (definition.type === 'oauth2') {
+        if (definition.flow === 'implicit') {
+          request.authentication = {
+            type: 'oauth2',
+            grantType: 'authorization_code',
+            disabled: false,
+            authorizationUrl: definition.authorizationUrl,
+            clientId: '{{ client_id }}',
+            scope: scopes.join(' '),
+          };
+        }
+        if (definition.flow === 'password') {
+          request.authentication = {
+            type: 'oauth2',
+            grantType: 'password',
+            disabled: false,
+            accessTokenUrl: definition.tokenUrl,
+            username: '{{ username }}',
+            password: '{{ password }}',
+            clientId: '{{ client_id }}',
+            clientSecret: '{{ client_secret }}',
+            scope: scopes.join(' '),
+          };
+        }
+        if (definition.flow === 'application') {
+          request.authentication = {
+            type: 'oauth2',
+            grantType: 'client_credentials',
+            disabled: false,
+            accessTokenUrl: definition.tokenUrl,
+            clientId: '{{ client_id }}',
+            clientSecret: '{{ client_secret }}',
+            scope: scopes.join(' '),
+          };
+        }
+        if (definition.flow === 'accessCode') {
+          request.authentication = {
+            type: 'oauth2',
+            grantType: 'authorization_code',
+            disabled: false,
+            accessTokenUrl: definition.tokenUrl,
+            authorizationUrl: definition.authorizationUrl,
+            clientId: '{{ client_id }}',
+            clientSecret: '{{ client_secret }}',
+            scope: scopes.join(' '),
+          };
+        }
+      }
+    }
+  }
+  return request;
 }
 
 /**
