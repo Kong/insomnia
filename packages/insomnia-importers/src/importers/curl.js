@@ -130,13 +130,18 @@ function importArgs(args) {
   // ~~~~~~~~~~~~~~~~~ //
 
   // Url & parameters
-  const urlObject = new URL(getPairValue(pairs, singletons[0] || '', 'url'));
-  const parameters = Array.from(urlObject.searchParams.entries()).map(([key, value]) => ({
-    name: key,
-    value,
-    disabled: false,
-  }));
-  const url = urlObject.toString().replace(urlObject.search, '');
+  let parameters = [];
+  let url = '';
+
+  try {
+    const urlObject = new URL(getPairValue(pairs, singletons[0] || '', 'url'));
+    parameters = Array.from(urlObject.searchParams.entries()).map(([key, value]) => ({
+      name: key,
+      value,
+      disabled: false,
+    }));
+    url = urlObject.href.replace(urlObject.search, '').replace(/\/$/, '');
+  } catch (err) {}
 
   // Authentication
   const [username, password] = getPairValue(pairs, '', 'u', 'user').split(/:(.*)$/);
