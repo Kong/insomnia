@@ -78,7 +78,7 @@ module.exports.convert = async function(rawData) {
  *
  * @param {string} rawData
  *
- * @returns {Object|null} OpenAPI 3 object
+ * @returns {Promise<Object|null>} OpenAPI 3 object
  */
 async function parseDocument(rawData) {
   try {
