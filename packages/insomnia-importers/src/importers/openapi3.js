@@ -62,6 +62,9 @@ module.exports.convert = async function(rawData) {
 
   const servers = api.servers.map(s => new URL(s.url));
   const defaultServer = servers[0] || new URL('http://example.com/');
+  const securityVariables = getSecurityEnvVariables(
+    api.components && api.components.securitySchemes,
+  );
 
   const openapiEnv = {
     _type: 'environment',
@@ -72,6 +75,7 @@ module.exports.convert = async function(rawData) {
       base_path: defaultServer.pathname || '',
       scheme: defaultServer.protocol.replace(/:$/, '') || ['http'], // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
       host: defaultServer.host || '',
+      ...securityVariables,
     },
   };
 
@@ -303,6 +307,36 @@ function parseSecurity(security, securitySchemes) {
     headers: apiKeyHeaders,
     parameters: apiKeyParams,
   };
+}
+
+/**
+ * Get Insomnia environment variables for OpenAPI securitySchemes
+ *
+ * @param {Object} securitySchemes - Open API security schemes
+ * @returns {Object} Insomnia environment variables containing security information
+ */
+function getSecurityEnvVariables(securitySchemes) {
+  if (!securitySchemes) {
+    return {};
+  }
+
+  const variables = {};
+  const securitySchemesArray = Object.values(securitySchemes);
+  const hasApiKeyScheme = securitySchemesArray.some(
+    scheme => scheme.type === SECURITY_TYPE.API_KEY,
+  );
+  const hasHttpScheme = securitySchemesArray.some(scheme => scheme.type === SECURITY_TYPE.HTTP);
+
+  if (hasApiKeyScheme) {
+    variables.apiKey = 'apiKey';
+  }
+
+  if (hasHttpScheme) {
+    variables.httpUsername = 'username';
+    variables.httpPassword = 'password';
+  }
+
+  return variables;
 }
 
 /**
