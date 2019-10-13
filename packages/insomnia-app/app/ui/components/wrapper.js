@@ -442,6 +442,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           onChange={handleSetSidebarFilter}
           requestCreate={this._handleCreateRequestInWorkspace}
           requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
+          handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           filter={sidebarFilter || ''}
           hotKeyRegistry={settings.hotKeyRegistry}
         />

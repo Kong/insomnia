@@ -59,6 +59,7 @@ class SidebarRequestGroupRow extends PureComponent {
       handleCreateRequest,
       handleCreateRequestGroup,
       handleDuplicateRequestGroup,
+      handleSetRequestGroupCollapsed,
       handleMoveRequestGroup,
       isDragging,
       isDraggingOver,
@@ -121,6 +122,7 @@ class SidebarRequestGroupRow extends PureComponent {
               handleCreateRequest={handleCreateRequest}
               handleCreateRequestGroup={handleCreateRequestGroup}
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}
+              handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
               handleMoveRequestGroup={handleMoveRequestGroup}
               workspace={workspace}
               requestGroup={requestGroup}

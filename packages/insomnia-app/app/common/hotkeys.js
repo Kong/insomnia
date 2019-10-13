@@ -147,6 +147,8 @@ export const hotKeyRefs = {
 
   REQUEST_SHOW_CREATE_FOLDER: defineHotKey('request_showCreateFolder', 'Create Folder'),
 
+  REQUEST_SHOW_CLOSE_OPEN_FOLDER: defineHotKey('request_showOpenFolder', 'Expand/Collapse Folders'),
+
   REQUEST_SHOW_DUPLICATE: defineHotKey('request_showDuplicate', 'Duplicate Request'),
 
   REQUEST_TOGGLE_PIN: defineHotKey('request_togglePin', 'Pin/Unpin Request'),
@@ -293,6 +295,11 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]: keyBinds(
     keyComb(false, false, true, true, keyboardKeys.n.keyCode),
     keyComb(true, false, true, false, keyboardKeys.n.keyCode),
+  ),
+
+  [hotKeyRefs.REQUEST_SHOW_CLOSE_OPEN_FOLDER.id]: keyBinds(
+    keyComb(true, false, false, false, keyboardKeys.uparrow.keyCode),
+    keyComb(true, false, false, false, keyboardKeys.uparrow.keyCode),
   ),
 
   [hotKeyRefs.REQUEST_SHOW_DUPLICATE.id]: keyBinds(

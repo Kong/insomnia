@@ -221,6 +221,12 @@ class App extends PureComponent {
         },
       ],
       [
+        hotKeyRefs.REQUEST_SHOW_CLOSE_OPEN_FOLDER,
+        () => {
+          this._handleSetRequestGroupCollapsed('all', true);
+        },
+      ],
+      [
         hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR,
         async () => {
           showModal(GenerateCodeModal, this.props.activeRequest);
@@ -395,12 +401,20 @@ class App extends PureComponent {
   }
 
   static async _updateRequestGroupMetaByParentId(requestGroupId, patch) {
-    const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
-    if (requestGroupMeta) {
-      await models.requestGroupMeta.update(requestGroupMeta, patch);
+    if (requestGroupId === 'all') {
+      const allData = await models.requestGroupMeta.all();
+      patch = { ...patch, collapsed: !Object.values(allData).every(val => val.collapsed) };
+      allData.map(async node => {
+        await models.requestGroupMeta.update(node, patch);
+      });
     } else {
-      const newPatch = Object.assign({ parentId: requestGroupId }, patch);
-      await models.requestGroupMeta.create(newPatch);
+      const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
+      if (requestGroupMeta) {
+        await models.requestGroupMeta.update(requestGroupMeta, patch);
+      } else {
+        const newPatch = Object.assign({ parentId: requestGroupId }, patch);
+        await models.requestGroupMeta.create(newPatch);
+      }
     }
   }
 

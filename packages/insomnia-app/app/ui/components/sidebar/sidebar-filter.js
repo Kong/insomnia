@@ -12,6 +12,7 @@ type Props = {
   onChange: string => void,
   requestCreate: () => void,
   requestGroupCreate: () => void,
+  handleSetRequestGroupCollapsed: Function,
   filter: string,
   hotKeyRegistry: HotKeyRegistry,
 };
@@ -48,6 +49,10 @@ class SidebarFilter extends React.PureComponent<Props> {
 
   _handleRequestCreate() {
     this.props.requestCreate();
+  }
+
+  async _handleOpenCloseFolder() {
+    this.props.handleSetRequestGroupCollapsed('all', true);
   }
 
   _handleKeydown(e: KeyboardEvent) {
@@ -88,6 +93,12 @@ class SidebarFilter extends React.PureComponent<Props> {
               <i className="fa fa-folder" /> New Folder
               <DropdownHint
                 keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]}
+              />
+            </DropdownItem>
+            <DropdownItem onClick={this._handleOpenCloseFolder}>
+              <i className="fa fa-folder" /> Expand/Collapse
+              <DropdownHint
+                keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CLOSE_OPEN_FOLDER.id]}
               />
             </DropdownItem>
           </Dropdown>

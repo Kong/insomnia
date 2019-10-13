@@ -30,6 +30,7 @@ type Props = {
   activeEnvironment: Environment | null,
   handleCreateRequest: (id: string) => any,
   handleDuplicateRequestGroup: (rg: RequestGroup) => any,
+  handleSetRequestGroupCollapsed: Function,
   handleMoveRequestGroup: (rg: RequestGroup) => any,
   handleCreateRequestGroup: (id: string) => any,
 };
@@ -78,6 +79,10 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
 
   async _handleRequestGroupCreate() {
     this.props.handleCreateRequestGroup(this.props.requestGroup._id);
+  }
+
+  async _handleOpenCloseFolder() {
+    this.props.handleSetRequestGroupCollapsed('all', true);
   }
 
   _handleDeleteFolder() {
@@ -146,6 +151,12 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
         <DropdownItem onClick={this._handleRequestGroupCreate}>
           <i className="fa fa-folder" /> New Folder
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]} />
+        </DropdownItem>
+        <DropdownItem onClick={this._handleOpenCloseFolder}>
+          <i className="fa fa-folder" /> Expand/Collapse
+          <DropdownHint
+            keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CLOSE_OPEN_FOLDER.id]}
+          />
         </DropdownItem>
         <DropdownDivider />
         <DropdownItem onClick={this._handleRequestGroupDuplicate}>
