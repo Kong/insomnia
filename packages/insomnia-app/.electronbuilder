@@ -1,6 +1,6 @@
 {
   "appId": "__APP_ID__",
-  "publish": false,
+  "publish": "never",
   "afterSign": "./scripts/afterSignHook.js",
   "extraResources": [
     {
@@ -57,8 +57,5 @@
       "snap",
       "rpm"
     ]
-  },
-  "snap": {
-    "publish": false
   }
 }
