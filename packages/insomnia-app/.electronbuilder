@@ -1,6 +1,6 @@
 {
   "appId": "__APP_ID__",
-  "publish": "never",
+  "publish": null,
   "afterSign": "./scripts/afterSignHook.js",
   "extraResources": [
     {
