@@ -57,6 +57,12 @@ async function pkg(relConfigPath) {
     ? process.env.BUILD_TARGETS.split(',')
     : config[targetPlatform].target;
 
+  // NOTE: This is likely a bug in electron-builder. Always tries to
+  //   publish snap even when set to null.
+  if (target.length === 0 && target[0] === 'snap') {
+    config.publish = 'never';
+  }
+
   return electronBuilder.build({
     config,
     [targetPlatform]: target,
