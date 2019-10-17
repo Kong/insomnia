@@ -15,4 +15,8 @@ npm install --no-save 7zip-bin-linux app-builder-bin-linux
 
 echo "Running the stuff"
 npm test
+
+# Log into snapcraft for publishing
+echo "$SNAPCRAFT_LOGIN_FILE" > snapcraft.txt && snapcraft login --with snapcraft.txt
+
 npm run app-release
