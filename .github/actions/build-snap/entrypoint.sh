@@ -3,7 +3,7 @@
 # Fail on any errors
 set -e
 
-if [[ -z "$GITHUB_WORKSPACE" ]]; then
+if [ -z "$GITHUB_WORKSPACE" ]; then
   echo "Set the GITHUB_WORKSPACE env variable."
   exit 1
 fi
