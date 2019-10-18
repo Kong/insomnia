@@ -30,6 +30,7 @@
       "settingEncodeUrl": true,
       "settingSendCookies": true,
       "settingStoreCookies": true,
+      "settingFollowRedirects": "global",
       "url": "https://insomnia.rest",
       "_type": "request"
     }

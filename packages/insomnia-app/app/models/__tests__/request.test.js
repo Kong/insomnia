@@ -21,6 +21,7 @@ describe('init()', () => {
       settingDisableRenderRequestBody: false,
       settingEncodeUrl: true,
       settingRebuildPath: true,
+      settingFollowRedirects: 'global',
     });
   });
 });
@@ -56,6 +57,7 @@ describe('create()', () => {
       settingDisableRenderRequestBody: false,
       settingEncodeUrl: true,
       settingRebuildPath: true,
+      settingFollowRedirects: 'global',
     };
 
     expect(request).toEqual(expected);
@@ -328,6 +330,7 @@ describe('migrate()', () => {
       settingDisableRenderRequestBody: false,
       settingEncodeUrl: true,
       settingRebuildPath: true,
+      settingFollowRedirects: 'global',
     };
 
     const migrated = await models.initModel(models.request.type, original);

@@ -401,6 +401,7 @@ export async function getRenderedRequestAndContext(
       settingSendCookies: renderedRequest.settingSendCookies,
       settingStoreCookies: renderedRequest.settingStoreCookies,
       settingRebuildPath: renderedRequest.settingRebuildPath,
+      settingFollowRedirects: renderedRequest.settingFollowRedirects,
       type: renderedRequest.type,
       url: renderedRequest.url,
     },
