@@ -1,0 +1,36 @@
+language: node_js
+
+matrix:
+  include:
+    - os: osx # High Sierra for older libcurl compatibility
+      osx_image: xcode9.4
+      env:
+        - CSC_LINK=$MAC_CSC_LINK
+        - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
+      before_deploy:
+        - npm run app-package
+
+cache:
+  directories:
+    - node_modules
+    - build/node_modules
+    - $HOME/.electron
+    - $HOME/.cache
+
+script:
+  - node --version
+  - npm --version
+  - npm run bootstrap
+  - npm test
+
+deploy:
+  provider: releases
+  api_key: $GITHUB_TOKEN
+  skip_cleanup: true
+  file_glob: true
+  prerelease: true
+  file:
+    - packages/insomnia-app/dist/**/*.zip
+    - packages/insomnia-app/dist/**/*.dmg
+  on:
+    tags: true

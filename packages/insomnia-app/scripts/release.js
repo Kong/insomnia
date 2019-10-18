@@ -89,7 +89,7 @@ async function getOrCreateRelease(tagName) {
     repo: REPO,
     tag_name: tagName,
     name: tagName,
-    body: `${packageJson.app.productName} ${tagName}`,
+    body: `Full changelog ⇒ https://insomnia.rest/changelog/${packageJson.app.version}`,
     draft: false,
     preRelease: true,
   });
