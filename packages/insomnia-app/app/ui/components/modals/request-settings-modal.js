@@ -322,7 +322,8 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
         <div className="pad-top">
           <div className="form-control form-control--outlined">
             <label>
-              Follow redirects
+              Follow redirects{' '}
+              <span className="txt-sm faint italic">(overrides global setting)</span>
               <select
                 defaultValue={this.state.request && this.state.request.settingFollowRedirects}
                 name="settingFollowRedirects"
