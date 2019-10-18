@@ -3,7 +3,7 @@ language: node_js
 matrix:
   include:
     - os: osx # High Sierra for older libcurl compatibility
-      osx_image: xcode9.4
+      osx_image: xcode10.1
       env:
         - CSC_LINK=$MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
