@@ -34,29 +34,30 @@ jobs:
           CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
         run: npm run app-release
-  Mac:
-    name: Mac
-    runs-on: macOS-10.14
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v1
-      - name: Install NodeJS
-        uses: actions/setup-node@v1
-        with:
-          node-version: 10
-      - name: Bootstrap packages
-        run: npm run bootstrap
-      - name: Run tests
-        run: npm test
-      - name: Release app
-        run: npm run app-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REF: ${{ github.event.ref }}
-          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+  # Disable for now in favor of TravisCI (this Mac version not old enough)
+  #  Mac:
+  #    name: Mac
+  #    runs-on: macOS-10.14
+  #    steps:
+  #      - name: Checkout branch
+  #        uses: actions/checkout@v1
+  #      - name: Install NodeJS
+  #        uses: actions/setup-node@v1
+  #        with:
+  #          node-version: 10
+  #      - name: Bootstrap packages
+  #        run: npm run bootstrap
+  #      - name: Run tests
+  #        run: npm test
+  #      - name: Release app
+  #        run: npm run app-release
+  #        env:
+  #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #          GITHUB_REF: ${{ github.event.ref }}
+  #          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+  #          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+  #          APPLE_ID: ${{ secrets.APPLE_ID }}
+  #          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
   Ubuntu14:
     name: Linux (Generic)
     runs-on: ubuntu-16.04
