@@ -411,14 +411,8 @@ class App extends PureComponent {
   }
 
   async _updateActiveWorkspaceMeta(patch) {
-    const workspaceId = this.props.activeWorkspace._id;
-    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-    if (workspaceMeta) {
-      return models.workspaceMeta.update(workspaceMeta, patch);
-    } else {
-      const newPatch = Object.assign({ parentId: workspaceId }, patch);
-      return models.workspaceMeta.create(newPatch);
-    }
+    const { activeWorkspaceMeta } = this.props;
+    return models.workspaceMeta.update(activeWorkspaceMeta, patch);
   }
 
   static async _updateRequestMetaByParentId(requestId, patch) {
@@ -1070,11 +1064,17 @@ class App extends PureComponent {
   }
 
   async _ensureWorkspaceChildren(props) {
-    const { activeWorkspace, activeCookieJar, environments, activeApiSpec } = props;
+    const {
+      activeWorkspace,
+      activeWorkspaceMeta,
+      activeCookieJar,
+      environments,
+      activeApiSpec,
+    } = props;
     const baseEnvironments = environments.filter(e => e.parentId === activeWorkspace._id);
 
     // Nothing to do
-    if (baseEnvironments.length && activeCookieJar && activeApiSpec) {
+    if (baseEnvironments.length && activeCookieJar && activeApiSpec && activeWorkspaceMeta) {
       return;
     }
 
@@ -1090,6 +1090,7 @@ class App extends PureComponent {
     await models.environment.getOrCreateForWorkspace(activeWorkspace);
     await models.cookieJar.getOrCreateForParentId(activeWorkspace._id);
     await models.apiSpec.getOrCreateForParentId(activeWorkspace._id);
+    await models.workspaceMeta.getOrCreateByParentId(activeWorkspace._id);
     await db.flushChanges(flushId);
 
     this._isMigratingChildren = false;
@@ -1240,14 +1241,14 @@ function mapStateToProps(state, props) {
   const settings = entitiesLists.settings[0];
 
   // Workspace stuff
-  const workspaceMeta = selectActiveWorkspaceMeta(state, props) || {};
+  const activeWorkspaceMeta = selectActiveWorkspaceMeta(state, props) || {};
   const activeWorkspace = selectActiveWorkspace(state, props);
   const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state, props);
-  const sidebarHidden = workspaceMeta.sidebarHidden || false;
-  const sidebarFilter = workspaceMeta.sidebarFilter || '';
-  const sidebarWidth = workspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
-  const paneWidth = workspaceMeta.paneWidth || DEFAULT_PANE_WIDTH;
-  const paneHeight = workspaceMeta.paneHeight || DEFAULT_PANE_HEIGHT;
+  const sidebarHidden = activeWorkspaceMeta.sidebarHidden || false;
+  const sidebarFilter = activeWorkspaceMeta.sidebarFilter || '';
+  const sidebarWidth = activeWorkspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
+  const paneWidth = activeWorkspaceMeta.paneWidth || DEFAULT_PANE_WIDTH;
+  const paneHeight = activeWorkspaceMeta.paneHeight || DEFAULT_PANE_HEIGHT;
 
   // Request stuff
   const requestMeta = selectActiveRequestMeta(state, props) || {};
@@ -1265,7 +1266,7 @@ function mapStateToProps(state, props) {
   const activeResponse = selectActiveResponse(state, props) || null;
 
   // Environment stuff
-  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const activeEnvironmentId = activeWorkspaceMeta.activeEnvironmentId;
   const activeEnvironment = entities.environments[activeEnvironmentId];
 
   // OAuth2Token stuff
@@ -1293,6 +1294,7 @@ function mapStateToProps(state, props) {
     activeResponse,
     activeWorkspace,
     activeWorkspaceClientCertificates,
+    activeWorkspaceMeta,
     environments,
     isLoading,
     isLoggedIn,
