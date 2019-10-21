@@ -12,8 +12,20 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
 
+const GITHUB_ORG = 'kong';
+const GITHUB_REPO = 'studio';
+
+const BINTRAY_PKG = 'release';
+const BINTRAY_REPO = 'studio';
+const BINTRAY_ORG = 'kong';
+
 // Start package if ran from CLI
 if (require.main === module) {
+  if (!process.env.GITHUB_REF.match(/v\d+\.\d+\.\d+(-(beta|alpha)\.\d+)?$/)) {
+    console.log(`[release] Not running release for ref ${process.env.GITHUB_REF}`);
+    process.exit(0);
+  }
+
   process.nextTick(async () => {
     try {
       await buildTask.start();
@@ -59,8 +71,8 @@ async function uploadToGitHub(tagName, paths) {
       url: 'https://uploads.github.com/repos/:owner/:repo/releases/:id/assets{?name,label}"',
       id: data.id,
       name: name,
-      owner: 'kong',
-      repo: 'studio',
+      owner: GITHUB_ORG,
+      repo: GITHUB_REPO,
       headers: {
         'Content-Type': 'application/octet-stream',
       },
@@ -79,21 +91,16 @@ async function uploadToBintray(tagName, paths) {
 
 async function uploadFileToBintray(tagName, p) {
   return new Promise((resolve, reject) => {
-    const pkg = 'package';
-    const repo = 'studio';
-    const org = 'kong';
-    const user = process.env.BINTRAY_USER;
-    const apiKey = process.env.BINTRAY_API_KEY;
     const name = path.basename(p);
 
     console.log(`[release] Uploading ${name} (${tagName}) to Bintray`);
 
     const options = {
       host: 'api.bintray.com',
-      path: `/content/${org}/${repo}/${pkg}/${tagName}/${name}?publish=1`,
+      path: `/content/${BINTRAY_ORG}/${BINTRAY_REPO}/${BINTRAY_PKG}/${tagName}/${name}?publish=1`,
       method: 'PUT',
       headers: {
-        Authorization: getBasicAuthHeader(user, apiKey),
+        Authorization: getBasicAuthHeader(process.env.BINTRAY_USER, process.env.BINTRAY_API_KEY),
       },
     };
 
@@ -122,8 +129,8 @@ async function uploadFileToBintray(tagName, p) {
 async function getOrCreateRelease(tagName) {
   try {
     return await octokit.repos.getReleaseByTag({
-      owner: 'kong',
-      repo: 'studio',
+      owner: GITHUB_ORG,
+      repo: GITHUB_REPO,
       tag: tagName,
     });
   } catch (err) {
@@ -131,8 +138,8 @@ async function getOrCreateRelease(tagName) {
   }
 
   return octokit.repos.createRelease({
-    owner: 'kong',
-    repo: 'studio',
+    owner: GITHUB_ORG,
+    repo: GITHUB_REPO,
     tag_name: tagName,
     name: tagName,
     body: `${packageJson.app.productName} ${tagName}`,
