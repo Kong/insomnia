@@ -1,4 +1,5 @@
 const packageJson = require('../package.json');
+const https = require('https');
 const glob = require('fast-glob');
 const fs = require('fs');
 const path = require('path');
@@ -43,11 +44,16 @@ async function start() {
 
   const paths = await glob(globs[process.platform]);
 
+  await uploadToGitHub(tagName, paths);
+  await uploadToBintray(tagName, paths);
+}
+
+async function uploadToGitHub(tagName, paths) {
   const { data } = await getOrCreateRelease(tagName);
 
   for (const p of paths) {
     const name = path.basename(p);
-    console.log(`[release] Uploading ${p}`);
+    console.log(`[release] Uploading ${name} (${tagName}) to GitHub`);
     await octokit.request({
       method: 'POST',
       url: 'https://uploads.github.com/repos/:owner/:repo/releases/:id/assets{?name,label}"',
@@ -63,6 +69,54 @@ async function start() {
   }
 
   console.log(`[release] Release created ${data.url}`);
+}
+
+async function uploadToBintray(tagName, paths) {
+  for (const p of paths) {
+    await uploadFileToBintray(tagName, p);
+  }
+}
+
+async function uploadFileToBintray(tagName, p) {
+  return new Promise((resolve, reject) => {
+    const pkg = 'package';
+    const repo = 'studio';
+    const org = 'kong';
+    const user = process.env.BINTRAY_USER;
+    const apiKey = process.env.BINTRAY_API_KEY;
+    const name = path.basename(p);
+
+    console.log(`[release] Uploading ${name} (${tagName}) to Bintray`);
+
+    const options = {
+      host: 'api.bintray.com',
+      path: `/content/${org}/${repo}/${pkg}/${tagName}/${name}?publish=1`,
+      method: 'PUT',
+      headers: {
+        Authorization: getBasicAuthHeader(user, apiKey),
+      },
+    };
+
+    const req = https.request(options, res => {
+      let data = '';
+
+      res.setEncoding('utf8');
+      res.on('data', chunk => {
+        data += chunk;
+      });
+
+      res.on('end', () => {
+        resolve(JSON.parse(data));
+      });
+    });
+
+    req.on('error', e => {
+      reject(e);
+    });
+
+    req.write(fs.readFileSync(p));
+    req.end();
+  });
 }
 
 async function getOrCreateRelease(tagName) {
@@ -85,4 +139,10 @@ async function getOrCreateRelease(tagName) {
     draft: false,
     preRelease: true,
   });
+}
+
+function getBasicAuthHeader(username, password) {
+  const header = `${username || ''}:${password || ''}`;
+  const authString = Buffer.from(header, 'utf8').toString('base64');
+  return `Basic ${authString}`;
 }
