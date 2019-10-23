@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="88px" height="88px" viewBox="0 0 88 88" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: sketchtool 59.1 (101010) - https://sketch.com -->
+    <title>31806BE9-BD58-4878-9268-D57350E9E6E7@1.00x</title>
+    <desc>Created with sketchtool.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="00-welcome-screen-analytics" transform="translate(-677.000000, -437.000000)">
+            <g id="floating-container" transform="translate(540.000000, 183.000000)">
+                <g id="illustration-chart" transform="translate(137.000000, 254.000000)">
+                    <rect id="Rectangle" fill="#EBF2F7" x="0" y="0" width="88" height="88" rx="7"></rect>
+                    <g id="chart" transform="translate(12.000000, 19.000000)">
+                        <rect id="Rectangle" fill="#2D5D80" x="0" y="48" width="64" height="2" rx="1"></rect>
+                        <path d="M3,16 L9,16 C10.1045695,16 11,16.8954305 11,18 L11,43 C11,44.1045695 10.1045695,45 9,45 L3,45 C1.8954305,45 1,44.1045695 1,43 L1,18 C1,16.8954305 1.8954305,16 3,16 Z" id="Rectangle" fill="#47B38F"></path>
+                        <path d="M16,12 L22,12 C23.1045695,12 24,12.8954305 24,14 L24,43 C24,44.1045695 23.1045695,45 22,45 L16,45 C14.8954305,45 14,44.1045695 14,43 L14,14 C14,12.8954305 14.8954305,12 16,12 Z" id="Rectangle" fill="#47B3A1"></path>
+                        <path d="M29,4 L35,4 C36.1045695,4 37,4.8954305 37,6 L37,43 C37,44.1045695 36.1045695,45 35,45 L29,45 C27.8954305,45 27,44.1045695 27,43 L27,6 C27,4.8954305 27.8954305,4 29,4 Z" id="Rectangle" fill="#47B3B3"></path>
+                        <path d="M42,8 L48,8 C49.1045695,8 50,8.8954305 50,10 L50,43 C50,44.1045695 49.1045695,45 48,45 L42,45 C40.8954305,45 40,44.1045695 40,43 L40,10 C40,8.8954305 40.8954305,8 42,8 Z" id="Rectangle" fill="#47A1B3"></path>
+                        <path d="M55,0 L61,0 C62.1045695,-2.02906125e-16 63,0.8954305 63,2 L63,43 C63,44.1045695 62.1045695,45 61,45 L55,45 C53.8954305,45 53,44.1045695 53,43 L53,2 C53,0.8954305 53.8954305,2.02906125e-16 55,0 Z" id="Rectangle" fill="#478FB3"></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

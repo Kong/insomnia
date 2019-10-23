@@ -77,6 +77,7 @@ import GitVCS from '../../sync/git/git-vcs';
 import Onboarding from './onboarding';
 import YAML from 'yaml';
 import { importRaw } from '../../common/import';
+import { trackPageView } from '../../common/analytics';
 
 type Props = {
   // Helper Functions
@@ -519,6 +520,15 @@ class Wrapper extends React.PureComponent<Props, State> {
         <SpecEditorSidebar apiSpec={activeApiSpec} handleJumpToLine={this._handleJumpToLine} />
       </ErrorBoundary>
     );
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    // We're using activities as page views so here we monitor
+    // for a change in activity and send it as a pageview.
+    const { activity } = this.props;
+    if (prevProps.activity !== activity) {
+      trackPageView(`/${activity || ''}`);
+    }
   }
 
   renderSidebarBody(): React.Node {
@@ -1052,6 +1062,7 @@ class Wrapper extends React.PureComponent<Props, State> {
 
         {activity === null && (
           <Onboarding
+            settings={settings}
             handleImportFile={this._handleImportFile}
             handleImportUri={this._handleImportUri}
             handleSetActivity={handleSetActiveActivity}

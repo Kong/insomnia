@@ -2,6 +2,7 @@
 import * as models from '../models/index';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import * as electron from 'electron';
+import * as db from '../common/database';
 import uuid from 'uuid';
 import {
   GA_ID,
@@ -48,13 +49,36 @@ export function trackNonInteractiveEvent(
   value: ?string,
 ) {
   process.nextTick(async () => {
-    await _trackEvent(false, category, action, label, value);
+    await _trackEvent(false, category, action, label, value, false);
   });
 }
 
-export function trackPageView() {
+/**
+ * Tracks an analytics event but queues it for later if analytics are
+ * currently disabled. Once analytics setting is enabled, any queued
+ * events will be sent automatically.
+ *
+ * This should be used sparingly!
+ *
+ * @param category
+ * @param action
+ * @param label
+ * @param value
+ */
+export function trackNonInteractiveEventQueueable(
+  category: string,
+  action: string,
+  label: ?string,
+  value: ?string,
+) {
   process.nextTick(async () => {
-    await _trackPageView();
+    await _trackEvent(false, category, action, label, value, true);
+  });
+}
+
+export function trackPageView(path: string) {
+  process.nextTick(async () => {
+    await _trackPageView(GA_LOCATION + path);
   });
 }
 
@@ -69,6 +93,7 @@ export async function _trackEvent(
   action: string,
   label: ?string,
   value: ?string,
+  queuable: ?boolean,
 ) {
   const prefix = interactive ? '[ga] Event' : '[ga] Non-interactive';
   console.log(prefix, [category, action, label, value].filter(Boolean).join(', '));
@@ -83,13 +108,16 @@ export async function _trackEvent(
   label && params.push({ name: KEY_EVENT_LABEL, value: label });
   value && params.push({ name: KEY_EVENT_VALUE, value: value });
 
-  await _sendToGoogle(params);
+  await _sendToGoogle(params, !!queuable);
 }
 
-async function _trackPageView() {
-  const params = [{ name: KEY_HIT_TYPE, value: 'pageview' }];
-  console.log('[ga] Page', GA_LOCATION);
-  await _sendToGoogle(params);
+async function _trackPageView(location: string) {
+  const params = [
+    { name: KEY_HIT_TYPE, value: 'pageview' },
+    { name: KEY_LOCATION, value: location },
+  ];
+  console.log('[ga] Page', location);
+  await _sendToGoogle(params, false);
 }
 
 async function _getDefaultParams(): Promise<Array<RequestParameter>> {
@@ -127,9 +155,26 @@ async function _getDefaultParams(): Promise<Array<RequestParameter>> {
   return params;
 }
 
-async function _sendToGoogle(params: Array<RequestParameter>) {
+// Monitor database changes to see if analytics gets enabled. If analytics
+// become enabled, flush any queued events.
+db.onChange(async changes => {
+  for (const change of changes) {
+    const [event, doc] = change;
+    if (doc.type === models.settings.type && event === 'update') {
+      if (doc.enableAnalytics) {
+        await _flushQueuedEvents();
+      }
+    }
+  }
+});
+
+async function _sendToGoogle(params: Array<RequestParameter>, queueable: boolean) {
   let settings = await models.settings.getOrCreate();
-  if (settings.enableAnalytics) {
+  if (!settings.enableAnalytics) {
+    if (queueable) {
+      console.log(`[ga] Queued event`, params);
+      _queuedEvents.push(params);
+    }
     return;
   }
 
@@ -187,4 +232,26 @@ async function _sendToGoogle(params: Array<RequestParameter>) {
   });
 
   request.end();
+}
+
+/**
+ * Flush any analytics events that were built up when analytics
+ * were disabled.
+ * @returns {Promise<void>}
+ * @private
+ */
+let _queuedEvents = [];
+
+async function _flushQueuedEvents() {
+  console.log(`[ga] Flushing ${_queuedEvents.length} queued events`);
+
+  const tmp = [..._queuedEvents];
+
+  // Clear queue before we even start sending to prevent races
+  _queuedEvents = [];
+
+  for (const params of tmp) {
+    console.log('[ga] Flushing queued event', params);
+    await _sendToGoogle(params, false);
+  }
 }
