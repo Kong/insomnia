@@ -16,7 +16,9 @@
     "test": "jest --silent"
   },
   "dependencies": {
+    "apiconnect-wsdl": "^1.8.10",
     "commander": "^2.20.0",
+    "lodash": "^4.17.15",
     "shell-quote": "^1.6.1",
     "swagger-parser": "^6.0.5",
     "yaml": "^1.5.0"
