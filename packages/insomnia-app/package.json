@@ -98,7 +98,6 @@
   ],
   "dependencies": {
     "@hot-loader/react-dom": "^16.8.6",
-    "apiconnect-wsdl": "^1.8.10",
     "autobind-decorator": "^2.4.0",
     "aws4": "^1.6.0",
     "classnames": "^2.2.5",
