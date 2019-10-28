@@ -419,7 +419,7 @@ class General extends React.PureComponent<Props, State> {
             <input
               type="checkbox"
               name="enableAnalytics"
-              checked={settings.enableAnalytics}
+              checked={!!settings.enableAnalytics}
               onChange={this._handleUpdateSetting}
             />
           </label>

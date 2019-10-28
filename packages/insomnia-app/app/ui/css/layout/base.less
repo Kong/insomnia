@@ -244,6 +244,14 @@ p.notice {
   }
 }
 
+.notice.success {
+  border-color: var(--color-success);
+
+  &::before {
+    background-color: var(--color-success);
+  }
+}
+
 .notice.info {
   border-color: var(--color-info);
 
@@ -560,6 +568,10 @@ i.fa.fa--fixed-width {
 
 .margin-sm {
   margin: @padding-sm;
+}
+
+.margin-md {
+  margin: @padding-md;
 }
 
 .margin-xs {

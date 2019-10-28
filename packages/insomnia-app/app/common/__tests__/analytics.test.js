@@ -2,7 +2,7 @@ import * as electron from 'electron';
 import { EventEmitter } from 'events';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models/index';
-import { _trackEvent } from '../analytics';
+import { _trackEvent, _trackPageView } from '../analytics';
 import { getAppPlatform, getAppVersion } from '../constants';
 
 describe('init()', () => {
@@ -18,10 +18,10 @@ describe('init()', () => {
 
   it('does not work with tracking disabled', async () => {
     const settings = await models.settings.getOrCreate({
-      enableAnalytics: true,
+      enableAnalytics: false,
       deviceId: 'device',
     });
-    expect(settings.enableAnalytics).toBe(true);
+    expect(settings.enableAnalytics).toBe(false);
     expect(electron.net.request.mock.calls).toEqual([]);
 
     await _trackEvent(true, 'Foo', 'Bar');
@@ -31,10 +31,10 @@ describe('init()', () => {
 
   it('works with tracking enabled', async () => {
     const settings = await models.settings.getOrCreate({
-      enableAnalytics: false,
+      enableAnalytics: true,
       deviceId: 'device',
     });
-    expect(settings.enableAnalytics).toBe(false);
+    expect(settings.enableAnalytics).toBe(true);
     expect(electron.net.request.mock.calls).toEqual([]);
 
     await _trackEvent(true, 'Foo', 'Bar');
@@ -63,7 +63,7 @@ describe('init()', () => {
   it('tracks non-interactive event', async () => {
     await models.settings.getOrCreate({
       deviceId: 'device',
-      enableAnalytics: false,
+      enableAnalytics: true,
     });
 
     await _trackEvent(false, 'Foo', 'Bar');
@@ -93,10 +93,10 @@ describe('init()', () => {
   it('tracks page view', async () => {
     await models.settings.getOrCreate({
       deviceId: 'device',
-      enableAnalytics: false,
+      enableAnalytics: true,
     });
 
-    await _trackEvent(false, 'Foo', 'Bar');
+    await _trackPageView('/my/path');
     jest.runAllTimers();
     expect(electron.net.request.mock.calls).toEqual([
       [
@@ -104,7 +104,50 @@ describe('init()', () => {
           'v=1&' +
           'tid=UA-8499472-31&' +
           'cid=device&' +
-          'dl=https%3A%2F%2Fdesktop.studio.konghq.com%2F&' +
+          'dl=https%3A%2F%2Fdesktop.studio.konghq.com%2Fmy%2Fpath&' +
+          'sr=1920x1080&' +
+          'ul=en-US&' +
+          `dt=com.konghq.studio%3A${getAppVersion()}&` +
+          `cd1=${getAppPlatform()}&` +
+          `cd2=${getAppVersion()}&` +
+          'vp=1900x1060&' +
+          'de=UTF-8&' +
+          't=pageview',
+      ],
+    ]);
+  });
+
+  it('tracking page view remembers path', async () => {
+    await models.settings.getOrCreate({
+      deviceId: 'device',
+      enableAnalytics: true,
+    });
+
+    await _trackPageView('/my/path');
+    jest.runAllTimers();
+    await _trackEvent(true, 'cat', 'act', 'lab', 'val');
+    expect(electron.net.request.mock.calls).toEqual([
+      [
+        'https://www.google-analytics.com/collect?' +
+          'v=1&' +
+          'tid=UA-8499472-31&' +
+          'cid=device&' +
+          'dl=https%3A%2F%2Fdesktop.studio.konghq.com%2Fmy%2Fpath&' +
+          'sr=1920x1080&' +
+          'ul=en-US&' +
+          `dt=com.konghq.studio%3A${getAppVersion()}&` +
+          `cd1=${getAppPlatform()}&` +
+          `cd2=${getAppVersion()}&` +
+          'vp=1900x1060&' +
+          'de=UTF-8&' +
+          't=pageview',
+      ],
+      [
+        'https://www.google-analytics.com/collect?' +
+          'v=1&' +
+          'tid=UA-8499472-31&' +
+          'cid=device&' +
+          'dl=https%3A%2F%2Fdesktop.studio.konghq.com%2Fmy%2Fpath&' +
           'sr=1920x1080&' +
           'ul=en-US&' +
           `dt=com.konghq.studio%3A${getAppVersion()}&` +
@@ -113,9 +156,10 @@ describe('init()', () => {
           'vp=1900x1060&' +
           'de=UTF-8&' +
           't=event&' +
-          'ec=Foo&' +
-          'ea=Bar&' +
-          'ni=1',
+          'ec=cat&' +
+          'ea=act&' +
+          'el=lab&' +
+          'ev=val',
       ],
     ]);
   });

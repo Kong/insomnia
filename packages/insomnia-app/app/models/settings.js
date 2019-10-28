@@ -44,7 +44,7 @@ type BaseSettings = {
   hotKeyRegistry: hotkeys.HotKeyRegistry,
 
   // Studio stuff
-  enableAnalytics: boolean | null,
+  enableAnalytics: boolean,
   kongManagerUrl: string,
 };
 
@@ -94,7 +94,7 @@ export function init(): BaseSettings {
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
 
     // Studio stuff
-    enableAnalytics: true,
+    enableAnalytics: false,
     kongManagerUrl: 'http://localhost:8002/default/services',
   };
 }

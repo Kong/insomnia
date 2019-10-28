@@ -5,7 +5,7 @@ import ActivityBarButton from './activity-bar-button';
 import { getHotKeyDisplay, hotKeyRefs } from '../../../common/hotkeys';
 import type { HotKeyDefinition, HotKeyRegistry } from '../../../common/hotkeys';
 
-export type GlobalActivity = 'spec' | 'test' | 'monitor';
+export type GlobalActivity = 'spec' | 'debug' | 'monitor';
 
 type Props = {|
   activity: GlobalActivity,
@@ -21,8 +21,8 @@ const ACTIVITIES: Array<{ key: GlobalActivity, name: string, hotKey: HotKeyDefin
     hotKey: hotKeyRefs.SHOW_SPEC_EDITOR,
   },
   {
-    key: 'test',
-    name: 'Try API',
+    key: 'debug',
+    name: 'Debug API',
     hotKey: hotKeyRefs.SHOW_TEST,
   },
   {

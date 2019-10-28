@@ -21,6 +21,7 @@
   }
 
   &__content {
+    width: @modal-width-skinny;
     position: relative;
     text-align: center;
     background: var(--color-bg);
@@ -64,13 +65,20 @@
     &__body {
       display: flex;
       flex-direction: column;
-      padding: @padding-lg;
+      padding: @padding-sm @padding-lg @padding-md;
       color: var(--color-font);
 
-      button {
-        margin-top: @padding-md;
+      img {
+        width: 7rem;
+      }
+
+      button.btn--clicky {
         border-color: var(--color-info) !important;
         color: var(--color-info);
+      }
+
+      button {
+        margin-top: @padding-sm;
         width: 100%;
       }
     }
