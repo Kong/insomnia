@@ -104,7 +104,7 @@ class Onboarding extends React.PureComponent<Props, State> {
 
   _handleSkipImport() {
     const { handleSetActivity } = this.props;
-    handleSetActivity(('test': GlobalActivity));
+    handleSetActivity(('debug': GlobalActivity));
   }
 
   renderStep1() {

@@ -277,12 +277,12 @@ class Wrapper extends React.PureComponent<Props, State> {
     return null;
   }
 
-  _handleTestSpec() {
+  _handleDebugSpec() {
     showAlert({
-      title: 'Test Spec',
+      title: 'Debug Spec',
       okLabel: 'Generate Requests',
       message:
-        'Testing this spec will overwrite all requests in the test activity.' +
+        'Debugging this spec will overwrite all requests in the test activity.' +
         ' Do you want to proceed?',
       onConfirm: async () => {
         const { activeWorkspace, activeApiSpec, handleSetActiveActivity } = this.props;
@@ -290,7 +290,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           () => Promise.resolve(activeWorkspace._id), // Always import into current workspace
           activeApiSpec.contents,
         );
-        handleSetActiveActivity('test');
+        handleSetActiveActivity('debug');
       },
     });
   }
@@ -534,7 +534,7 @@ class Wrapper extends React.PureComponent<Props, State> {
   renderSidebarBody(): React.Node {
     if (this.props.activity === 'spec') {
       return this.renderSpecEditorSidebarBody();
-    } else if (this.props.activity === 'test') {
+    } else if (this.props.activity === 'debug') {
       const {
         activeEnvironment,
         activeRequest,
@@ -953,7 +953,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             </ErrorBoundary>
           )}
 
-          {activity === 'test' && (
+          {activity === 'debug' && (
             <React.Fragment>
               <ErrorBoundary showAlert>
                 <RequestPane
@@ -1046,7 +1046,7 @@ class Wrapper extends React.PureComponent<Props, State> {
                 lineWrapping={settings.editorLineWrapping}
                 onChange={this._handleUpdateApiSpec}
                 handleDeploy={this._handleDeploySpec}
-                handleTest={this._handleTestSpec}
+                handleTest={this._handleDebugSpec}
               />
             </ErrorBoundary>
           )}
