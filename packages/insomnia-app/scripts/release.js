@@ -11,8 +11,8 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
 
-const OWNER = 'getinsomnia';
-const REPO = 'insomnia';
+const GITHUB_ORG = 'getinsomnia';
+const GITHUB_REPO = 'insomnia';
 
 // Start package if ran from CLI
 if (require.main === module) {
@@ -61,8 +61,8 @@ async function start() {
       url: 'https://uploads.github.com/repos/:owner/:repo/releases/:id/assets{?name,label}"',
       id: data.id,
       name: name,
-      owner: OWNER,
-      repo: REPO,
+      owner: GITHUB_ORG,
+      repo: GITHUB_REPO,
       headers: {
         'Content-Type': 'application/octet-stream',
       },
@@ -76,8 +76,8 @@ async function start() {
 async function getOrCreateRelease(tagName) {
   try {
     return await octokit.repos.getReleaseByTag({
-      owner: OWNER,
-      repo: REPO,
+      owner: GITHUB_ORG,
+      repo: GITHUB_REPO,
       tag: tagName,
     });
   } catch (err) {
@@ -85,8 +85,8 @@ async function getOrCreateRelease(tagName) {
   }
 
   return octokit.repos.createRelease({
-    owner: OWNER,
-    repo: REPO,
+    owner: GITHUB_ORG,
+    repo: GITHUB_REPO,
     tag_name: tagName,
     name: tagName,
     body: `Full changelog ⇒ https://insomnia.rest/changelog/${packageJson.app.version}`,

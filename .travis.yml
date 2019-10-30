@@ -7,8 +7,6 @@ matrix:
       env:
         - CSC_LINK=$MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
-      before_deploy:
-        - npm run app-package
 
 cache:
   directories:
@@ -22,15 +20,4 @@ script:
   - npm --version
   - npm run bootstrap
   - npm test
-
-deploy:
-  provider: releases
-  api_key: $GITHUB_TOKEN
-  skip_cleanup: true
-  file_glob: true
-  prerelease: true
-  file:
-    - packages/insomnia-app/dist/**/*.zip
-    - packages/insomnia-app/dist/**/*.dmg
-  on:
-    tags: true
+  - npm run app-release
