@@ -14,6 +14,14 @@ const PLATFORM_MAP = {
 // Start package if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
+    // First check if we need to publish (uses Git tags)
+    const gitRefStr = process.env.GITHUB_REF || process.env.TRAVIS_TAG;
+    const skipPublish = !gitRefStr || !gitRefStr.match(/v\d+\.\d+\.\d+(-(beta|alpha)\.\d+)?$/);
+    if (skipPublish) {
+      console.log(`[package] Not packaging for ref=${gitRefStr}`);
+      process.exit(0);
+    }
+
     try {
       await buildTask.start();
       await module.exports.start();
