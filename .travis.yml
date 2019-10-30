@@ -7,8 +7,6 @@ matrix:
       env:
         - CSC_LINK=$MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
-      before_deploy:
-        - npm run app-release
 
 cache:
   directories:
@@ -22,3 +20,4 @@ script:
   - npm --version
   - npm run bootstrap
   - npm test
+  - npm run app-release

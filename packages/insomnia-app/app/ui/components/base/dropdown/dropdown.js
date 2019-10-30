@@ -224,7 +224,9 @@ class Dropdown extends PureComponent {
         continue;
       }
 
-      if (Array.isArray(child)) {
+      if (child.type === React.Fragment) {
+        newChildren = [...newChildren, ...this._getFlattenedChildren(child.props.children)];
+      } else if (Array.isArray(child)) {
         newChildren = [...newChildren, ...this._getFlattenedChildren(child)];
       } else {
         newChildren.push(child);

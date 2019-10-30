@@ -21,12 +21,15 @@ const BINTRAY_ORG = 'kong';
 
 // Start package if ran from CLI
 if (require.main === module) {
-  if (!process.env.GITHUB_REF.match(/v\d+\.\d+\.\d+(-(beta|alpha)\.\d+)?$/)) {
-    console.log(`[release] Not running release for ref ${process.env.GITHUB_REF}`);
-    process.exit(0);
-  }
-
   process.nextTick(async () => {
+    // First check if we need to publish (uses Git tags)
+    const gitRefStr = process.env.GITHUB_REF || process.env.TRAVIS_TAG;
+    const skipPublish = !gitRefStr || !gitRefStr.match(/v\d+\.\d+\.\d+(-(beta|alpha)\.\d+)?$/);
+    if (skipPublish) {
+      console.log(`[package] Not packaging for ref=${gitRefStr}`);
+      process.exit(0);
+    }
+
     try {
       await buildTask.start();
       await packageTask.start();
@@ -142,7 +145,7 @@ async function getOrCreateRelease(tagName) {
     repo: GITHUB_REPO,
     tag_name: tagName,
     name: tagName,
-    body: `${packageJson.app.productName} ${tagName}`,
+    body: `Full changelog ⇒ https://insomnia.rest/changelog/${packageJson.app.version}`,
     draft: false,
     preRelease: true,
   });
