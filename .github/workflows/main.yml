@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: 10
       - name: Install node tools
-        run: npm install --global --production windows-build-tools@4.0.0
+        run: npm install --global --production windows-build-tools
       - name: Install node-gyp
         run: npm install --global node-gyp@latest
       - name: Set node config to use python2.7
