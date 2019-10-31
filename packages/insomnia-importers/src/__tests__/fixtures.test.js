@@ -16,6 +16,10 @@ describe('Fixtures', () => {
       const prefix = input.replace(/-input\.[^.]+/, '');
       const output = `${prefix}-output.json`;
 
+      if (!prefix.includes('simple')) {
+        continue;
+      }
+
       it(`Import ${name} ${input}`, async () => {
         expect(typeof input).toBe('string');
         expect(typeof output).toBe('string');

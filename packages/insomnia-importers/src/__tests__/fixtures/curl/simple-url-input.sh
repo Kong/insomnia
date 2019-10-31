@@ -1,0 +1,1 @@
+curl --compressed 'https://www.google.com/'

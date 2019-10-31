@@ -1,6 +1,7 @@
 {
-  "appId": "com.insomnia.app",
-  "publish": false,
+  "appId": "__APP_ID__",
+  "publish": null,
+  "afterSign": "./scripts/afterSignHook.js",
   "extraResources": [
     {
       "from": "./bin",
@@ -23,7 +24,10 @@
     "output": "dist"
   },
   "mac": {
+    "hardenedRuntime": true,
+    "icon": "./build/icon.png",
     "category": "public.app-category.developer-tools",
+    "entitlements": "./build/static/entitlements.mac.inherit.plist",
     "target": [
       "dmg",
       "zip"
@@ -39,12 +43,12 @@
       "zip"
     ]
   },
-  "squirrelWindows":{
-    "iconUrl": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true"
+  "squirrelWindows": {
+    "iconUrl": "__ICON_URL__"
   },
   "linux": {
-    "executableName": "insomnia",
-    "synopsis": "A simple, beautiful, and free REST API client",
+    "executableName": "__EXECUTABLE_NAME__",
+    "synopsis": "__SYNOPSIS__",
     "category": "Development",
     "target": [
       "AppImage",

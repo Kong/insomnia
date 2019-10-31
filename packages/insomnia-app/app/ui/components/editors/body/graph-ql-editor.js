@@ -399,6 +399,20 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       return;
     }
 
+    try {
+      this._documentAST = parse(query);
+    } catch (e) {
+      this._documentAST = null;
+    }
+
+    // Find op if there isn't one yet
+    if (!body.operationName) {
+      const newOperationName = this._getCurrentOperation();
+      if (newOperationName) {
+        body.operationName = newOperationName;
+      }
+    }
+
     this.setState({
       variablesSyntaxError: '',
       body,
@@ -406,17 +420,13 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     this.props.onChange(newContent);
     this._highlightOperation(body.operationName || null);
-
-    try {
-      this._documentAST = parse(query);
-    } catch (e) {
-      this._documentAST = null;
-    }
   }
 
   _handleQueryChange(query: string): void {
-    const currentOperation = this._getCurrentOperation();
-    this._handleBodyChange(query, this.state.body.variables, currentOperation);
+    // Since we're editing the query, we may be changing the operation name, so
+    // Don't pass it to the body change in order to automatically re-detect it
+    // based on the current cursor position.
+    this._handleBodyChange(query, this.state.body.variables, null);
   }
 
   _handleVariablesChange(variables: string): void {

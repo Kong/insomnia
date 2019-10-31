@@ -63,7 +63,7 @@ async function _isInsomniaPlugin(lookupName: string): Promise<Object> {
       escape(process.execPath),
       [
         '--no-deprecation', // Because Yarn still uses `new Buffer()`
-        _getYarnPath(),
+        escape(_getYarnPath()),
         'info',
         lookupName,
         '--json',
@@ -129,13 +129,13 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
       escape(process.execPath),
       [
         '--no-deprecation', // Because Yarn still uses `new Buffer()`
-        _getYarnPath(),
+        escape(_getYarnPath()),
         'add',
         lookupName,
         '--modules-folder',
-        tmpDir,
+        escape(tmpDir),
         '--cwd',
-        tmpDir,
+        escape(tmpDir),
         '--no-lockfile',
         '--production',
         '--no-progress',
