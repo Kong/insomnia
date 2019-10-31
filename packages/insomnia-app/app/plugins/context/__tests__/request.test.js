@@ -52,6 +52,7 @@ describe('init()', () => {
       'setUrl',
       'settingDisableRenderRequestBody',
       'settingEncodeUrl',
+      'settingFollowRedirects',
       'settingSendCookies',
       'settingStoreCookies',
     ]);
