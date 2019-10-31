@@ -69,17 +69,17 @@ jobs:
           GITHUB_REF: ${{ github.event.ref }}
           BUILD_TARGETS: AppImage,deb,tar.gz,rpm
           NODELIBCURL_BUILD_STATIC: yes
-  Ubuntu16:
-    name: Linux (Snap)
-    runs-on: ubuntu-16.04
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v1
-      - name: Run Docker
-        uses: ./.github/actions/build-snap
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REF: ${{ github.event.ref }}
-          SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
-          BUILD_TARGETS: snap
-          NODELIBCURL_BUILD_STATIC: yes
+#  Ubuntu16:
+#    name: Linux (Snap)
+#    runs-on: ubuntu-16.04
+#    steps:
+#      - name: Checkout branch
+#        uses: actions/checkout@v1
+#      - name: Run Docker
+#        uses: ./.github/actions/build-snap
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          GITHUB_REF: ${{ github.event.ref }}
+#          SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
+#          BUILD_TARGETS: snap
+#          NODELIBCURL_BUILD_STATIC: yes
