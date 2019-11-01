@@ -921,18 +921,12 @@ class App extends PureComponent {
         getDataDirectory(),
         `version-control/git/${activeGitRepository._id}/git`,
       );
-      const otherDataDir = path.join(
-        getDataDirectory(),
-        `version-control/git/${activeGitRepository._id}/other`,
-      );
       const pStudioData = NeDBPlugin.createPlugin(activeWorkspace._id);
       const pGitData = FSPlugin.createPlugin();
-      const pOtherData = FSPlugin.createPlugin(otherDataDir);
 
       // Only care about .studio/ and .git/
       // Everything else in the repo will be ignored
-      const fsPlugin = routableFSPlugin(pOtherData, {
-        '/.studio': pStudioData,
+      const fsPlugin = routableFSPlugin(pStudioData, {
         [gitDir]: pGitData,
       });
 

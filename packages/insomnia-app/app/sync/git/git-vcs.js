@@ -143,6 +143,8 @@ export default class GitVCS {
       pattern: '.studio/**',
     });
 
+    console.log('MATRIX', matrix);
+
     const status = {
       hasChanges: false,
       allStaged: true,
@@ -174,6 +176,10 @@ export default class GitVCS {
   }
 
   async add(relPath: string): Promise<void> {
+    if (relPath.indexOf('.studio/') !== 0) {
+      throw new Error('Cannot add files outside /.studio/');
+    }
+
     console.log(`[git] Add ${relPath}`);
     return git.add({ ...this._baseOpts, filepath: relPath });
   }
