@@ -5,20 +5,24 @@ import electron from 'electron';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
-import Tooltip from '../tooltip';
-import type { GitLogEntry, GitRemoteConfig, GitStatus } from '../../../sync/git/git-vcs';
+import type { GitLogEntry, GitStatus } from '../../../sync/git/git-vcs';
 import GitVCS from '../../../sync/git/git-vcs';
-import { showAlert, showError, showModal, showPrompt } from '../modals';
-import TimeFromNow from '../time-from-now';
-import GitConfigModal from '../modals/git-config-modal';
+import { showAlert, showError, showModal } from '../modals';
 import GitStagingModal from '../modals/git-staging-modal';
 import * as db from '../../../common/database';
+import type { GitRepository } from '../../../models/git-repository';
+import GitRepositorySettingsModal from '../modals/git-repository-settings-modal';
+import GitLogModal from '../modals/git-log-modal';
+import Tooltip from '../tooltip';
+import GitBranchesModal from '../modals/git-branches-modal';
 
 const { shell } = electron;
 
 type Props = {|
+  handleInitializeEntities: () => void,
   workspace: Workspace,
   vcs: GitVCS,
+  gitRepository: GitRepository | null,
 
   // Optional
   className?: string,
@@ -31,10 +35,13 @@ type State = {|
   log: Array<GitLogEntry>,
   status: GitStatus,
   branch: string,
+  branches: Array<string>,
 |};
 
 @autobind
 class GitSyncDropdown extends React.PureComponent<Props, State> {
+  _dropdown: ?Dropdown;
+
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -49,16 +56,27 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
         entries: [],
       },
       branch: '',
+      branches: [],
     };
+  }
+
+  _setDropdownRef(n: ?Dropdown) {
+    this._dropdown = n;
   }
 
   async _refreshState(otherState?: Object) {
     const { vcs } = this.props;
+
+    if (!vcs.isInitialized()) {
+      return;
+    }
+
     this.setState({
       ...(otherState || {}),
       status: await vcs.status(),
       log: (await vcs.log()) || [],
-      branch: await vcs.branch(),
+      branch: await vcs.getBranch(),
+      branches: await vcs.listBranches(),
     });
   }
 
@@ -66,67 +84,18 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     await this._refreshState();
   }
 
-  async _getOrCreateRemote(name: string): Promise<GitRemoteConfig | null> {
-    const { vcs } = this.props;
-    const remote = await vcs.getRemote('origin');
-
-    if (remote) {
-      return remote;
-    }
-
-    return new Promise(resolve => {
-      showPrompt({
-        title: 'Add Remote',
-        label: 'HTTP URL of remote',
-        onCancel: () => {
-          resolve(null);
-        },
-        onComplete: async url => {
-          resolve(await vcs.addRemote(name, url));
-        },
-      });
-    });
-  }
-
-  async _promptForToken(url: string): Promise<string | null> {
-    if (url.indexOf('https://github.com') < 0) {
-      return null;
-    }
-
-    return new Promise(resolve => {
-      showPrompt({
-        title: `Github Token`,
-        label: 'Application token for auth',
-        defaultValue: 'cba27dac5ee374a5676f17a3d1682e427e80f7bf',
-        onCancel: () => {
-          resolve(null);
-        },
-        onComplete: url => {
-          resolve(url);
-        },
-      });
-    });
-  }
-
   async _handlePull() {
     this.setState({ loadingPull: true });
-    const { vcs } = this.props;
+    const { vcs, gitRepository } = this.props;
 
-    const remoteConfig = await this._getOrCreateRemote('origin');
-
-    // User canceled prompt?
-    if (remoteConfig === null) {
-      this.setState({ loadingPush: false });
-      return;
+    if (!gitRepository) {
+      // Should never happen
+      throw new Error('Tried to pull without configuring git repo');
     }
-
-    const { url, remote } = remoteConfig;
-
-    const token = await this._promptForToken(url);
 
     const bufferId = await db.bufferChanges();
     try {
-      await vcs.pull(remote, token);
+      await vcs.pull(gitRepository.credentials);
     } catch (err) {
       showError({ title: 'Pull Error', error: err });
     }
@@ -135,28 +104,43 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     this.setState({ loadingPull: false });
   }
 
-  async _handlePush() {
-    const { vcs } = this.props;
+  async _handlePush(e: any, force: boolean = false) {
+    const { vcs, gitRepository } = this.props;
 
-    this.setState({ loadingPush: true });
+    if (!gitRepository) {
+      // Should never happen
+      throw new Error('Tried to push without configuring git repo');
+    }
 
-    const remoteConfig = await this._getOrCreateRemote('origin');
-
-    // User canceled prompt?
-    if (remoteConfig === null) {
-      this.setState({ loadingPush: false });
+    const canPush = await vcs.canPush(gitRepository.credentials);
+    if (!canPush) {
+      showAlert({
+        title: 'Push Skipped',
+        message: 'Everything up-to-date. Nothing was pushed to the remote',
+      });
       return;
     }
 
-    const { url, remote } = remoteConfig;
-
-    const token = await this._promptForToken(url);
+    this.setState({ loadingPush: true });
 
     const bufferId = await db.bufferChanges();
     try {
-      await vcs.push(remote, token);
+      await vcs.push(gitRepository.credentials, force);
     } catch (err) {
-      showError({ title: 'Push Error', error: err });
+      if (err.code === 'PushRejectedNonFastForward') {
+        this._dropdown && this._dropdown.hide();
+        showAlert({
+          title: 'Push Rejected',
+          message: 'Do you want to force push?',
+          okLabel: 'Force Push',
+          addCancel: true,
+          onConfirm: () => {
+            this._handlePush(null, true);
+          },
+        });
+      } else {
+        showError({ title: 'Push Error', error: err });
+      }
     }
 
     await db.flushChanges(bufferId);
@@ -164,50 +148,13 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     this.setState({ loadingPush: false });
   }
 
-  async _handleConfig() {
-    showModal(GitConfigModal, {});
+  _handleConfig() {
+    const { gitRepository } = this.props;
+    showModal(GitRepositorySettingsModal, { gitRepository });
   }
 
-  async _handleLog() {
-    const { log, branch } = this.state;
-
-    showAlert({
-      title: 'Git Log',
-      message: log ? (
-        <table className="table--fancy table--striped">
-          <thead>
-            <tr>
-              <th className="text-left">Message</th>
-              <th className="text-left">When</th>
-              <th className="text-left">Author</th>
-            </tr>
-          </thead>
-          <tbody>
-            {log.map(({ author, message, oid }) => (
-              <tr key={oid}>
-                <td>{message}</td>
-                <td>
-                  <TimeFromNow
-                    className="no-wrap"
-                    timestamp={author.timestamp * 1000}
-                    intervalSeconds={30}
-                  />
-                </td>
-                <td>
-                  <Tooltip message={`${author.name} <${author.email}>`} delay={800}>
-                    {author.name}
-                  </Tooltip>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <React.Fragment>
-          No history yet for branch <code>{branch}</code>
-        </React.Fragment>
-      ),
-    });
+  _handleLog() {
+    showModal(GitLogModal);
   }
 
   async _handleCommit() {
@@ -219,23 +166,48 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     shell.showItemInFolder(await vcs.getGitDirectory());
   }
 
+  _handleManageBranches() {
+    showModal(GitBranchesModal, { onHide: this._refreshState });
+  }
+
+  async _handleCheckoutBranch(branch: string) {
+    const { vcs, handleInitializeEntities } = this.props;
+
+    const bufferId = await db.bufferChanges();
+    try {
+      await vcs.checkout(branch);
+    } catch (err) {
+      showError({ title: 'Checkout Error', error: err });
+    }
+    await db.flushChanges(bufferId, true);
+
+    handleInitializeEntities();
+    await this._refreshState();
+  }
+
   componentDidMount() {
     this._refreshState();
   }
 
   renderButton() {
-    const { loadingPush, status } = this.state;
+    const { status, branch } = this.state;
+    const { vcs } = this.props;
+
+    if (!vcs.isInitialized()) {
+      return (
+        <DropdownButton className="btn btn--compact wide">
+          <i className="fa fa-code-fork space-right" />
+          Setup Git Sync
+        </DropdownButton>
+      );
+    }
 
     const initializing = false;
-    const currentBranch = 'master';
-    const snapshotToolTipMsg = 'TO-DO';
-    const pushToolTipMsg = 'TO-DO';
-    const pullToolTipMsg = 'TO-DO';
+    const currentBranch = branch;
     const canCommit = status.hasChanges;
-    const canPull = true;
-    const canPush = true;
-
-    const loadingIcon = <i className="fa fa-spin fa-refresh fa--fixed-width" />;
+    const commitTooltip = canCommit
+      ? 'You have changes ready to commit'
+      : 'You do not have any changes to commit';
 
     return (
       <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
@@ -244,73 +216,100 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           {initializing ? 'Initializing...' : currentBranch}
         </div>
         <div className="space-left">
-          <Tooltip message={snapshotToolTipMsg} delay={800}>
+          <Tooltip message={commitTooltip} delay={500}>
             <i
               className={classnames('icon fa fa-check fa--fixed-width', {
                 'super-duper-faint': !canCommit,
               })}
             />
           </Tooltip>
-
-          {/* Only show cloud icons if logged in */}
-          <React.Fragment>
-            <Tooltip message={pullToolTipMsg} delay={800}>
-              <i
-                className={classnames('fa fa-cloud-download fa--fixed-width', {
-                  'super-duper-faint': !canPull,
-                })}
-              />
-            </Tooltip>
-
-            {loadingPush ? (
-              loadingIcon
-            ) : (
-              <Tooltip message={pushToolTipMsg} delay={800}>
-                <i
-                  className={classnames('fa fa-cloud-upload fa--fixed-width', {
-                    'super-duper-faint': !canPush,
-                  })}
-                />
-              </Tooltip>
-            )}
-          </React.Fragment>
         </div>
       </DropdownButton>
     );
   }
 
+  renderBranch(branch: string) {
+    const { branch: currentBranch } = this.state;
+
+    const icon =
+      branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
+
+    const isCurrentBranch = branch === currentBranch;
+    return (
+      <DropdownItem
+        key={branch}
+        onClick={isCurrentBranch ? null : () => this._handleCheckoutBranch(branch)}
+        className={classnames({ bold: isCurrentBranch })}
+        title={isCurrentBranch ? null : `Switch to "${branch}"`}>
+        {icon}
+        {branch}
+      </DropdownItem>
+    );
+  }
+
   render() {
-    const { className } = this.props;
-    const { log, status } = this.state;
+    const { className, vcs } = this.props;
+    const { log, status, branches, branch, loadingPull, loadingPush } = this.state;
 
     return (
       <div className={className}>
-        <Dropdown className="wide tall" onOpen={this._handleOpen}>
+        <Dropdown className="wide tall" onOpen={this._handleOpen} ref={this._setDropdownRef}>
           {this.renderButton()}
 
-          <DropdownDivider>Git Project</DropdownDivider>
-
-          <DropdownItem onClick={this._handleCommit} disabled={!status.hasChanges}>
-            <i className="fa fa-check" /> Commit
-          </DropdownItem>
-          <DropdownItem onClick={this._handlePush}>
-            <i className="fa fa-cloud-upload" /> Push
-          </DropdownItem>
-          <DropdownItem onClick={this._handlePull}>
-            <i className="fa fa-cloud-download" /> Pull
-          </DropdownItem>
-          <DropdownItem onClick={this._handleLog} disabled={log.length === 0}>
-            <i className="fa fa-clock-o" /> History ({log.length})
-          </DropdownItem>
-
-          <DropdownDivider>Settings</DropdownDivider>
+          <DropdownDivider>Git Sync</DropdownDivider>
 
           <DropdownItem onClick={this._handleConfig}>
-            <i className="fa fa-wrench" /> Git Config
+            <i className="fa fa-wrench" /> Repository Settings
           </DropdownItem>
-          <DropdownItem onClick={this._handleShowGitDirectory}>
-            <i className="fa fa-folder-o" /> Reveal Git Directory
-          </DropdownItem>
+
+          {vcs.isInitialized() && (
+            <React.Fragment>
+              <DropdownItem onClick={this._handleShowGitDirectory}>
+                <i className="fa fa-folder-o" /> Reveal Git Directory
+              </DropdownItem>
+              <DropdownItem onClick={this._handleManageBranches}>
+                <i className="fa fa-code-fork" /> Branches
+              </DropdownItem>
+            </React.Fragment>
+          )}
+
+          {vcs.isInitialized() && (
+            <React.Fragment>
+              <DropdownDivider>Branches</DropdownDivider>
+              {branches.map(this.renderBranch)}
+
+              <DropdownDivider>{branch}</DropdownDivider>
+
+              <DropdownItem onClick={this._handleCommit} disabled={!status.hasChanges}>
+                <i className="fa fa-check" /> Commit
+              </DropdownItem>
+              {log.length > 0 && (
+                <DropdownItem onClick={this._handlePush} stayOpenAfterClick>
+                  <i
+                    className={classnames({
+                      fa: true,
+                      'fa-spin fa-refresh': loadingPush,
+                      'fa-cloud-upload': !loadingPush,
+                    })}
+                  />{' '}
+                  Push
+                </DropdownItem>
+              )}
+              <DropdownItem onClick={this._handlePull} stayOpenAfterClick>
+                <i
+                  className={classnames({
+                    fa: true,
+                    'fa-spin fa-refresh': loadingPull,
+                    'fa-cloud-download': !loadingPull,
+                  })}
+                />{' '}
+                Pull
+              </DropdownItem>
+              <DropdownItem onClick={this._handleLog} disabled={log.length === 0}>
+                <i className="fa fa-clock-o" /> History ({log.length})
+              </DropdownItem>
+            </React.Fragment>
+          )}
         </Dropdown>
       </div>
     );

@@ -32,9 +32,9 @@ export default class NeDBPlugin {
       options = { encoding: options };
     }
 
-    const { type, id } = this._parsePath(filePath);
+    const { root, type, id } = this._parsePath(filePath);
 
-    if (id === null || type === null) {
+    if (root === null || id === null || type === null) {
       throw new Error(`Cannot read from directory or missing ${filePath}`);
     }
 
@@ -44,12 +44,16 @@ export default class NeDBPlugin {
       throw new Error(`Cannot find doc ${filePath}`);
     }
 
-    if (doc.type !== models.workspace.type) {
-      const ancestors = await db.withAncestors(doc);
-      if (!ancestors.find(d => d.type === models.workspace.type)) {
-        throw new Error(`Not found under workspace ${filePath}`);
-      }
-    }
+    // It would be nice to be able to add this check here but we can't since
+    // isomorphic-git may have just deleted the workspace from the FS. This
+    // happens frequently during branch checkouts and merges
+    //
+    // if (doc.type !== models.workspace.type) {
+    //   const ancestors = await db.withAncestors(doc);
+    //   if (!ancestors.find(d => d.type === models.workspace.type)) {
+    //     throw new Error(`Not found under workspace ${filePath}`);
+    //   }
+    // }
 
     const raw = Buffer.from(stringifyJSON(doc, { space: '  ' }), 'utf8');
 
@@ -96,20 +100,20 @@ export default class NeDBPlugin {
   async readdir(filePath: string, ...x: Array<any>): Promise<Array<string>> {
     filePath = path.normalize(filePath);
 
-    const MODELS = [
-      models.workspace.type,
-      models.environment.type,
-      models.requestGroup.type,
-      models.request.type,
-      models.apiSpec.type,
-    ];
-
-    const { type, id } = this._parsePath(filePath);
+    const { root, type, id } = this._parsePath(filePath);
 
     let docs = [];
     let otherFolders = [];
-    if (id === null && type === null) {
-      otherFolders = MODELS;
+    if (root === null && id === null && type === null) {
+      otherFolders = ['.studio'];
+    } else if (id === null && type === null) {
+      otherFolders = [
+        models.workspace.type,
+        models.environment.type,
+        models.requestGroup.type,
+        models.request.type,
+        models.apiSpec.type,
+      ];
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
       const children = await db.withDescendants(workspace);
@@ -119,6 +123,7 @@ export default class NeDBPlugin {
     }
 
     const ids = docs.map(d => `${d._id}.json`);
+
     return [...ids, ...otherFolders].sort();
   }
 
@@ -133,13 +138,15 @@ export default class NeDBPlugin {
     let dir: Array<string> | null = null;
     try {
       fileBuff = await this.readFile(filePath);
-    } catch (err) {}
+    } catch (err) {
+      // console.log('[nedb] Failed to read file', err);
+    }
 
     if (fileBuff === null) {
       try {
         dir = await this.readdir(filePath);
       } catch (err) {
-        // Nothing
+        // console.log('[nedb] Failed to read dir', err);
       }
     }
 
@@ -183,14 +190,15 @@ export default class NeDBPlugin {
     throw new Error('NeDBPlugin symlink not supported');
   }
 
-  _parsePath(filePath: string): { type: string | null, id: string | null } {
+  _parsePath(filePath: string): { root: string | null, type: string | null, id: string | null } {
     filePath = path.normalize(filePath);
 
-    const [type, idRaw] = filePath.split(path.sep).filter(s => s !== '');
+    const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '');
 
     const id = typeof idRaw === 'string' ? idRaw.replace(/\.json$/, '') : idRaw;
 
     return {
+      root: root || null,
       type: type || null,
       id: id || null,
     };

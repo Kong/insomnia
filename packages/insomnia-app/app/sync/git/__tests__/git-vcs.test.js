@@ -71,13 +71,13 @@ describe('Git-VCS', () => {
       });
     });
 
-    it('fails to log without first commit', async () => {
+    it('Returns empty log without first commit', async () => {
       const fs = MemPlugin.createPlugin();
       const vcs = new GitVCS();
       await vcs.init('/', fs);
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
-      expect(await vcs.log()).toBe(null);
+      expect(await vcs.log()).toEqual([]);
     });
 
     it('commit file', async () => {

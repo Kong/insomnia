@@ -26,8 +26,9 @@ import HelpTooltip from '../help-tooltip';
 import type { Project } from '../../../sync/types';
 import * as sync from '../../../sync-legacy/index';
 import * as session from '../../../account/session';
+import GitRepositorySettingsModal from '../modals/git-repository-settings-modal';
 
-type Props = {
+type Props = {|
   isLoading: boolean,
   handleSetActiveWorkspace: (id: string) => void,
   handleDeploySpec: () => void,
@@ -40,13 +41,13 @@ type Props = {
 
   // Optional
   className?: string,
-};
+|};
 
-type State = {
+type State = {|
   remoteProjects: Array<Project>,
   localProjects: Array<Project>,
   pullingProjects: { [string]: boolean },
-};
+|};
 
 @autobind
 class WorkspaceDropdown extends React.PureComponent<Props, State> {
@@ -172,6 +173,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     });
   }
 
+  _handleWorkspaceClone() {
+    showModal(GitRepositorySettingsModal, { gitRepository: null });
+  }
+
   _handleKeydown(e: KeyboardEvent) {
     executeHotKey(e, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
       this._dropdown && this._dropdown.toggle(true);
@@ -278,6 +283,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
           <DropdownItem onClick={this._handleWorkspaceCreate}>
             <i className="fa fa-empty" /> Create Workspace
+          </DropdownItem>
+
+          <DropdownItem onClick={this._handleWorkspaceClone}>
+            <i className="fa fa-empty" /> Clone from Git
           </DropdownItem>
 
           {missingRemoteProjects.length > 0 && (

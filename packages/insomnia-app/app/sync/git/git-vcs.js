@@ -12,6 +12,17 @@ export type GitRemoteConfig = {|
   url: string,
 |};
 
+type GitCredentialsPassword = {
+  username: string,
+  password: string,
+};
+
+type GitCredentialsToken = {
+  token: string,
+};
+
+export type GitCredentials = GitCredentialsPassword | GitCredentialsToken;
+
 export type GitLogEntry = {|
   oid: string,
   message: string,
@@ -47,20 +58,27 @@ export type GitStatus = {
 };
 
 const STATUS_MAP: { [string]: GitStatusState } = {
+  '0 0 3': '*deleted', // added, staged, with unstaged changes
   '0 2 0': '*added',
   '0 2 2': 'added', // added, staged
   '0 2 3': '*added', // added, staged, with unstaged changes
+  '1 0 0': 'deleted', // deleted, staged
+  '1 0 1': '*deleted', // deleted, unstaged
+  '1 1 0': '*deleted', // deleted + ??
   '1 1 1': 'unmodified', // unmodified
   '1 2 1': '*modified', // modified, unstaged
   '1 2 2': 'modified', // modified, staged
   '1 2 3': '*modified', // modified, staged, with unstaged changes
-  '1 0 1': '*deleted', // deleted, unstaged
-  '1 0 0': 'deleted', // deleted, staged
 };
 
 export default class GitVCS {
   _git: Object;
   _baseOpts: { dir: string, gitdir?: string };
+  _initialized: boolean;
+
+  constructor() {
+    this._initialized = false;
+  }
 
   async init(directory: string, fsPlugin: Object, gitDirectory?: string) {
     // Default gitDirectory to <directory>/.git
@@ -77,6 +95,13 @@ export default class GitVCS {
       console.log(`[git] Initialized repo in ${gitDirectory}`);
       await git.init({ ...this._baseOpts });
     }
+
+    await this._ensureMasterBranch();
+    this._initialized = true;
+  }
+
+  isInitialized(): boolean {
+    return this._initialized;
   }
 
   async getGitDirectory() {
@@ -88,13 +113,24 @@ export default class GitVCS {
     return git.listFiles({ ...this._baseOpts });
   }
 
-  async branch(): Promise<string> {
+  async getBranch(): Promise<string> {
     const branch = await git.currentBranch({ ...this._baseOpts });
     if (typeof branch !== 'string') {
       throw new Error('No active branch');
     }
 
     return branch;
+  }
+
+  async listBranches(): Promise<Array<string>> {
+    return GitVCS._sortBranches(await git.listBranches({ ...this._baseOpts }));
+  }
+
+  async listRemoteBranches(): Promise<Array<string>> {
+    const branches = await git.listBranches({ ...this._baseOpts, remote: 'origin' });
+
+    // Don't care about returning remote HEAD
+    return GitVCS._sortBranches(branches.filter(b => b !== 'HEAD'));
   }
 
   async status(path?: string): Promise<GitStatus> {
@@ -108,7 +144,9 @@ export default class GitVCS {
     };
 
     for (const m of matrix) {
-      const s = STATUS_MAP[m.slice(1).join(' ')];
+      const key = m.slice(1).join(' ');
+      const s = STATUS_MAP[key] || '??';
+
       if (s.indexOf('*') === 0) {
         status.allStaged = false;
       } else if (s !== 'unmodified') {
@@ -138,14 +176,14 @@ export default class GitVCS {
     return git.remove({ ...this._baseOpts, filepath: relPath });
   }
 
-  async addRemote(name: string, url: string): Promise<GitRemoteConfig> {
-    console.log(`[git] Add Remote name=${name} url=${url}`);
-    await git.addRemote({ ...this._baseOpts, remote: name, url, force: true });
-    const config = await this.getRemote(name);
+  async addRemote(url: string): Promise<GitRemoteConfig> {
+    console.log(`[git] Add Remote url=${url}`);
+    await git.addRemote({ ...this._baseOpts, remote: 'origin', url, force: true });
+    const config = await this.getRemote('origin');
 
     if (config === null) {
       // Should never happen but it's here to make Flow happy
-      throw new Error('Remote not found ' + name);
+      throw new Error('Remote not found remote=origin');
     }
 
     return config;
@@ -179,21 +217,85 @@ export default class GitVCS {
     return git.commit({ ...this._baseOpts, message });
   }
 
-  async push(remote: string, token?: string | null): Promise<Object> {
-    console.log(`[git] Push remote=${remote} token=${(token || '').replace(/./g, '*')}`);
-    return git.push({ ...this._baseOpts, remote, token, force: true });
+  /**
+   * Check to see whether remote is different than local. This is here because
+   * when pushing with isomorphic-git, if the HEAD of local is equal the HEAD
+   * of remote, it will fail with a non-fast-forward message.
+   *
+   * @param creds
+   * @returns {Promise<boolean>}
+   */
+  async canPush(creds?: GitCredentials | null) {
+    const branch = await this.getBranch();
+
+    const remote = await this.getRemote('origin');
+    if (!remote) {
+      throw new Error('Remote not configured');
+    }
+
+    const remoteInfo = await git.getRemoteInfo({
+      ...this._baseOpts,
+      ...creds,
+      forPush: true,
+      url: remote.url,
+    });
+
+    const logs = (await this.log(1)) || [];
+    const localHead = logs[0].oid;
+    const remoteHead = remoteInfo.refs.heads[branch];
+    if (localHead === remoteHead) {
+      return false;
+    }
+
+    return true;
   }
 
-  async pull(remote: string, token?: string | null): Promise<void> {
-    console.log(`[git] Pull remote=${remote} token=${(token || '').replace(/./g, '*')}`);
+  async push(creds?: GitCredentials | null, force?: boolean = false): Promise<boolean> {
+    console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
 
-    return git.pull({ ...this._baseOpts, remote, token, singleBranch: true });
+    return git.push({ ...this._baseOpts, remote: 'origin', ...creds, force });
   }
 
-  async log(depth: number = 5): Promise<Array<GitLogEntry> | null> {
-    console.log(`[git] Log depth=${depth}`);
+  async pull(creds?: GitCredentials | null): Promise<void> {
+    console.log(`[git] Pull remote=origin`, await this.getBranch());
+
+    return git.pull({
+      ...this._baseOpts,
+      ...creds,
+      remote: 'origin',
+      singleBranch: true,
+      fast: true,
+    });
+  }
+
+  async merge(theirBranch: string): Promise<void> {
+    const ours = await this.getBranch();
+    console.log(`[git] Merge ${ours} <-- ${theirBranch}`);
+    return git.merge({ ...this._baseOpts, ours, theirs: theirBranch });
+  }
+
+  async fetch(
+    singleBranch: boolean,
+    depth: number | null,
+    creds?: GitCredentials | null,
+  ): Promise<void> {
+    console.log(`[git] Fetch remote=origin`);
+
+    return git.fetch({
+      ...this._baseOpts,
+      ...creds,
+      singleBranch,
+      remote: 'origin',
+      depth,
+      prune: true,
+      pruneTags: true,
+    });
+  }
+
+  async log(depth?: number): Promise<Array<GitLogEntry>> {
+    console.log(`[git] Log depth=${depth || '--'}`);
     let err = null;
-    let log = null;
+    let log = [];
 
     try {
       log = await git.log({ ...this._baseOpts, depth: depth });
@@ -202,7 +304,7 @@ export default class GitVCS {
     }
 
     if (err && err.code === 'ResolveRefError') {
-      return null;
+      return [];
     }
 
     if (err) {
@@ -212,13 +314,26 @@ export default class GitVCS {
     }
   }
 
+  async branch(branch: string, checkout: boolean = false): Promise<void> {
+    await git.branch({ ...this._baseOpts, ref: branch, checkout, remote: 'origin' });
+  }
+
+  async deleteBranch(branch: string): Promise<void> {
+    if (branch === 'master') {
+      throw new Error('Cannot delete master branch');
+    }
+
+    await git.deleteBranch({ ...this._baseOpts, ref: branch });
+  }
+
   async checkout(branch: string): Promise<void> {
     console.log('[git] Checkout', { branch });
-    try {
-      return await git.checkout({ ...this._baseOpts, ref: branch });
-    } catch (err) {
-      // Create if doesn't exist
-      return git.branch({ ...this._baseOpts, ref: branch, checkout: true });
+    const branches = await this.listBranches();
+
+    if (branches.includes(branch)) {
+      await git.checkout({ ...this._baseOpts, ref: branch, remote: 'origin' });
+    } else {
+      await this.branch(branch, true);
     }
   }
 
@@ -245,5 +360,28 @@ export default class GitVCS {
     }
 
     return true;
+  }
+
+  async _ensureMasterBranch() {
+    const branches = await this.listBranches();
+
+    // If master doesn't exist, create it
+    if (!branches.includes('master')) {
+      await this.branch('master');
+    }
+  }
+
+  static _sortBranches(branches: Array<string>) {
+    const newBranches = [...branches];
+    newBranches.sort((a: string, b: string) => {
+      if (a === 'master') {
+        return -1;
+      } else if (b === 'master') {
+        return 1;
+      } else {
+        return b > a ? -1 : 1;
+      }
+    });
+    return newBranches;
   }
 }

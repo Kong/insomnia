@@ -17,8 +17,8 @@ import * as misc from '../common/misc';
 
 const { app, Menu, BrowserWindow, shell, dialog } = electron;
 
-const DEFAULT_WIDTH = 1100;
-const DEFAULT_HEIGHT = 650;
+const DEFAULT_WIDTH = 1280;
+const DEFAULT_HEIGHT = 700;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 

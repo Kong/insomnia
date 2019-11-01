@@ -41,26 +41,3 @@ export const reducer = combineReducers({
   entities: entities.reducer,
   global: global.reducer,
 });
-
-/**
- * Async function to get all docs concurrently
- */
-async function getAllDocs() {
-  // Restore docs in parent->child->grandchild order
-  return [
-    ...(await models.settings.all()),
-    ...(await models.workspace.all()),
-    ...(await models.workspaceMeta.all()),
-    ...(await models.environment.all()),
-    ...(await models.cookieJar.all()),
-    ...(await models.requestGroup.all()),
-    ...(await models.requestGroupMeta.all()),
-    ...(await models.request.all()),
-    ...(await models.requestMeta.all()),
-    ...(await models.requestVersion.all()),
-    ...(await models.response.all()),
-    ...(await models.oAuth2Token.all()),
-    ...(await models.clientCertificate.all()),
-    ...(await models.apiSpec.all()),
-  ];
-}

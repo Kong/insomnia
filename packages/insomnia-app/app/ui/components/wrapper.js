@@ -40,8 +40,10 @@ import ResponsePane from './response-pane';
 import RequestSettingsModal from './modals/request-settings-modal';
 import SetupSyncModal from './modals/setup-sync-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
+import GitRepositorySettingsModal from './modals/git-repository-settings-modal';
 import GitStagingModal from './modals/git-staging-modal';
-import GitConfigModal from './modals/git-config-modal';
+import GitBranchesModal from './modals/git-branches-modal';
+import GitLogModal from './modals/git-log-modal';
 import SyncMergeModal from './modals/sync-merge-modal';
 import SyncHistoryModal from './modals/sync-history-modal';
 import SyncShareModal from './modals/sync-share-modal';
@@ -78,6 +80,7 @@ import Onboarding from './onboarding';
 import YAML from 'yaml';
 import { importRaw } from '../../common/import';
 import { trackPageView } from '../../common/analytics';
+import type { GitRepository } from '../../models/git-repository';
 
 type Props = {
   // Helper Functions
@@ -86,6 +89,7 @@ type Props = {
   handleToggleMenuBar: Function,
   handleImportFileToWorkspace: Function,
   handleImportUriToWorkspace: Function,
+  handleInitializeEntities: Function,
   handleExportFile: Function,
   handleShowExportRequestsModal: Function,
   handleShowSettingsModal: Function,
@@ -121,6 +125,7 @@ type Props = {
   handleSetRequestPinned: Function,
   handleSendRequestWithEnvironment: Function,
   handleSendAndDownloadRequestWithEnvironment: Function,
+  handleSetActiveGitRepository: (string | null) => Promise<void>,
   handleUpdateRequestMimeType: Function,
   handleUpdateDownloadPath: Function,
   handleSetActiveActivity: (activity: string) => void,
@@ -152,11 +157,13 @@ type Props = {
   activeWorkspace: Workspace,
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
+  activeGitRepository: GitRepository | null,
   activeWorkspaceClientCertificates: Array<ClientCertificate>,
   isVariableUncovered: boolean,
   headerEditorKey: string,
   vcs: VCS | null,
   gitVCS: GitVCS | null,
+  gitRepositories: Array<GitRepository>,
   syncItems: Array<StatusCandidate>,
 
   // Optional
@@ -522,6 +529,11 @@ class Wrapper extends React.PureComponent<Props, State> {
     );
   }
 
+  componentDidMount() {
+    const { activity } = this.props;
+    trackPageView(`/${activity || ''}`);
+  }
+
   componentDidUpdate(prevProps: Props) {
     // We're using activities as page views so here we monitor
     // for a change in activity and send it as a pageview.
@@ -620,6 +632,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       activeApiSpec,
       activeCookieJar,
       activeEnvironment,
+      activeGitRepository,
       activeRequest,
       activeRequestResponses,
       activeResponse,
@@ -632,12 +645,14 @@ class Wrapper extends React.PureComponent<Props, State> {
       handleExportRequestsToFile,
       handleGenerateCodeForActiveRequest,
       handleGetRenderContext,
+      handleInitializeEntities,
       handleRender,
       handleResetDragPaneHorizontal,
       handleResetDragPaneVertical,
       handleResetDragSidebar,
       handleSetActiveActivity,
       handleSetActiveEnvironment,
+      handleSetActiveGitRepository,
       handleSetActiveWorkspace,
       handleSetRequestPaneRef,
       handleSetResponsePaneRef,
@@ -824,8 +839,20 @@ class Wrapper extends React.PureComponent<Props, State> {
 
             {gitVCS && (
               <React.Fragment>
-                <GitConfigModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
                 <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
+                <GitLogModal ref={registerModal} vcs={gitVCS} />
+                <GitRepositorySettingsModal
+                  ref={registerModal}
+                  handleSetActiveGitRepository={handleSetActiveGitRepository}
+                />
+                {activeGitRepository !== null && (
+                  <GitBranchesModal
+                    ref={registerModal}
+                    vcs={gitVCS}
+                    gitRepository={activeGitRepository}
+                    handleInitializeEntities={handleInitializeEntities}
+                  />
+                )}
               </React.Fragment>
             )}
 
@@ -925,8 +952,10 @@ class Wrapper extends React.PureComponent<Props, State> {
               <Sidebar
                 ref={handleSetSidebarRef}
                 activeEnvironment={activeEnvironment}
+                activeGitRepository={activeGitRepository}
                 enableSyncBeta={settings.enableSyncBeta}
                 environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
+                handleInitializeEntities={handleInitializeEntities}
                 handleSetActiveEnvironment={handleSetActiveEnvironment}
                 handleSetActiveWorkspace={handleSetActiveWorkspace}
                 handleDeploySpec={this._handleDeploySpec}

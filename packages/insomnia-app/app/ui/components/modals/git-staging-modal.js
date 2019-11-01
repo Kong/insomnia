@@ -1,6 +1,8 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
+import path from 'path';
+import * as models from '../../../models';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -132,7 +134,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     const docs = await withDescendants(workspace);
     this.statusNames = {};
     for (const doc of docs) {
-      this.statusNames[`${doc.type}/${doc._id}.json`] = (doc: any).name || '';
+      this.statusNames[path.join('.studio', doc.type, `${doc._id}.json`)] = (doc: any).name || '';
     }
 
     // Create status items
@@ -158,16 +160,26 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         }
       }
 
+      // We know that type is in the path but we don't know where. This
+      // is the safest way to check for the type
+      let type = 'Unknown';
+      for (const t of models.types()) {
+        if (s.path.includes(t)) {
+          type = t;
+          break;
+        }
+      }
+
       items[s.path] = {
+        type,
         path: s.path,
         status: s.status,
-        type: s.path.split('/')[0] || 'Unknown',
         name: 'n/a',
         staged: !s.status.includes('added'),
       };
     }
 
-    const branch = await vcs.branch();
+    const branch = await vcs.getBranch();
     this.setState(
       {
         items,
