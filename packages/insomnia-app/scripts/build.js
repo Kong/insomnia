@@ -21,8 +21,8 @@ module.exports.start = async function() {
   console.log('[build] npm: ' + childProcess.spawnSync('npm', ['--version']).stdout);
   console.log('[build] node: ' + childProcess.spawnSync('node', ['--version']).stdout);
 
-  if (process.version.indexOf('v10.15') !== 0) {
-    console.log('[build] Node v10.15.x is required to build');
+  if (process.version.indexOf('v10.') !== 0) {
+    console.log('[build] Node v10.x.x is required to build');
     process.exit(1);
   }
 
