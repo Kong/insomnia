@@ -67,7 +67,7 @@ async function uploadToGitHub(tagName, paths) {
   const { data } = await getOrCreateRelease(tagName);
 
   for (const p of paths) {
-    const name = path.basename(p);
+    const name = path.basename(p).replace(' ', '.');
     console.log(`[release] Uploading ${name} (${tagName}) to GitHub`);
     await octokit.request({
       method: 'POST',
