@@ -24,7 +24,7 @@ class MethodTag extends PureComponent {
         )}
         <div
           className={'tag tag--no-bg tag--small http-method-' + (overrideName ? override : method)}>
-          <span className="tag__inner">{overrideName ? overrideName : methodName}</span>
+          <span className="tag__inner">{overrideName || methodName}</span>
         </div>
       </div>
     );
