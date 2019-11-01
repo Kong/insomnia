@@ -32,7 +32,7 @@ jobs:
         run: npm run app-release
     Mac:
       name: Mac
-      runs-on: macOS-10.13
+      runs-on: macOS-10.14
       steps:
         - name: Checkout branch
           uses: actions/checkout@v1

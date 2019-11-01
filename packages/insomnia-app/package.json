@@ -11,7 +11,7 @@
     "synopsis": "Desktop application for spec-first API development",
     "icon": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
     "theme": "studio-light",
-    "version": "0.0.15",
+    "version": "0.0.16",
     "main": "main.min.js",
     "plugins": [
       "kong-studio-themes",
