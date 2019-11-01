@@ -302,7 +302,7 @@ function parseSecurity(security, securitySchemes) {
   const httpAuth = supportedSchemes.find(
     scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
   )
-    ? { username: '{{ httpUsername }}', password: '{{ httpPassword }}' }
+    ? { type: 'basic', username: '{{ httpUsername }}', password: '{{ httpPassword }}' }
     : {};
 
   return {
