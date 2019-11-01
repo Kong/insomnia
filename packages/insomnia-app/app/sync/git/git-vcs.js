@@ -133,9 +133,16 @@ export default class GitVCS {
     return GitVCS._sortBranches(branches.filter(b => b !== 'HEAD'));
   }
 
-  async status(path?: string): Promise<GitStatus> {
+  async status(): Promise<GitStatus> {
     console.log('[git] Status');
-    const matrix = await git.statusMatrix({ ...this._baseOpts, pattern: path });
+    const matrix = await git.statusMatrix({
+      ...this._baseOpts,
+
+      // Only check for .studio because we don't want to accidentally commit
+      // anything other files that may exist in the repo.
+      pattern: '.studio/**',
+    });
+
     const status = {
       hasChanges: false,
       allStaged: true,
@@ -331,7 +338,7 @@ export default class GitVCS {
     const branches = await this.listBranches();
 
     if (branches.includes(branch)) {
-      await git.checkout({ ...this._baseOpts, ref: branch, remote: 'origin' });
+      await git.fastCheckout({ ...this._baseOpts, ref: branch, remote: 'origin' });
     } else {
       await this.branch(branch, true);
     }

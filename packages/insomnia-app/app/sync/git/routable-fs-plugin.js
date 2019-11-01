@@ -20,7 +20,7 @@ export function routableFSPlugin(defaultFS: Object, otherFS: { [string]: Object 
     }
 
     // Fallback to default if no prefix matched
-    // console.log('NeDB', method, filePath);
+    // console.log('EXEC', method, filePath, {args});
     return defaultFS.promises[method](filePath, ...args);
   };
 

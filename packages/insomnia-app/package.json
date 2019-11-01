@@ -209,6 +209,7 @@
     "less": "^3.8.1",
     "less-loader": "^4.1.0",
     "ncp": "^2.0.0",
+    "node-gyp": "^6.0.1",
     "react-hot-loader": "^4.8.3",
     "style-loader": "^0.23.1",
     "url-loader": "^1.1.2",
