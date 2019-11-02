@@ -20,4 +20,5 @@ script:
   - npm --version
   - npm run bootstrap
   - npm test
-  - npm run app-release
+  # Disable releases on Travis for now (prefer GH Actions)
+  # - npm run app-release
