@@ -223,7 +223,8 @@ class App extends PureComponent {
       [
         hotKeyRefs.REQUEST_SHOW_CLOSE_OPEN_FOLDER,
         () => {
-          this._handleSetRequestGroupCollapsed('all', true);
+          const { activeWorkspace } = this.props;
+          this._handleSetRequestGroupCollapsed(activeWorkspace._id, true, false, true);
         },
       ],
       [
@@ -400,17 +401,57 @@ class App extends PureComponent {
     clipboard.writeText(cmd);
   }
 
-  static async _updateRequestGroupMetaByParentId(requestGroupId, patch) {
-    if (requestGroupId === 'all') {
-      const allData = await models.requestGroupMeta.all();
-      patch = { ...patch, collapsed: !Object.values(allData).every(val => val.collapsed) };
-      allData.map(async node => {
-        await models.requestGroupMeta.update(node, patch);
+  static async _updateRequestGroupMetaByParentId(
+    requestGroupId,
+    patch,
+    onlyDescendants = false,
+    all = false,
+  ) {
+    if (all) {
+      await models.requestGroup.getById(requestGroupId);
+      const descendants = await db.withDescendants(); // will return RequestGroup, Request, etc models too
+      const foldersFromWorkspace = descendants
+        .filter(f => {
+          return f.type === models.requestGroup.type && requestGroupId === f.parentId;
+        })
+        .map(folder => folder._id);
+
+      const onlyRequestGroups = descendants.filter(d => {
+        return d.type === models.requestGroupMeta.type && foldersFromWorkspace.includes(d.parentId);
+      });
+      patch = {
+        ...patch,
+        collapsed: !Object.values(onlyRequestGroups).every(val => val.collapsed),
+      };
+      onlyRequestGroups.map(async (doc, i) => {
+        await models.requestGroupMeta.update(doc, patch);
       });
     } else {
       const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
-      if (requestGroupMeta) {
+      if (requestGroupMeta && !onlyDescendants) {
         await models.requestGroupMeta.update(requestGroupMeta, patch);
+      } else if (requestGroupMeta && onlyDescendants) {
+        let requestGroupIsCollapsed = false;
+        const requestGroup = await models.requestGroup.getById(requestGroupId);
+        const descendants = await db.withDescendants(requestGroup); // will return RequestGroup, Request, etc models too
+        const onlyRequestGroups = descendants.filter(d => {
+          if (d.type === models.requestGroupMeta.type) {
+            if (requestGroupId !== d.parentId) return true;
+            else if (requestGroupId === d.parentId && d.collapsed) requestGroupIsCollapsed = true;
+          }
+          return false;
+        });
+        patch = {
+          ...patch,
+          collapsed: !Object.values(onlyRequestGroups).every(val => val.collapsed),
+        };
+        onlyRequestGroups.map(async doc => {
+          await models.requestGroupMeta.update(doc, patch);
+        });
+        if (requestGroupIsCollapsed) {
+          patch = { ...patch, collapsed: false };
+          await models.requestGroupMeta.update(requestGroupMeta, patch);
+        }
       } else {
         const newPatch = Object.assign({ parentId: requestGroupId }, patch);
         await models.requestGroupMeta.create(newPatch);
@@ -478,8 +519,8 @@ class App extends PureComponent {
     await this._updateActiveWorkspaceMeta({ sidebarFilter });
   }
 
-  _handleSetRequestGroupCollapsed(requestGroupId, collapsed) {
-    App._updateRequestGroupMetaByParentId(requestGroupId, { collapsed });
+  _handleSetRequestGroupCollapsed(requestGroupId, collapsed, onlyDescendants = false, all = false) {
+    App._updateRequestGroupMetaByParentId(requestGroupId, { collapsed }, onlyDescendants, all);
   }
 
   async _handleSetRequestPinned(request, pinned) {

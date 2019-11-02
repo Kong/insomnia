@@ -1,7 +1,13 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import { Dropdown, DropdownHint, DropdownButton, DropdownItem } from '../base/dropdown';
+import {
+  Dropdown,
+  DropdownHint,
+  DropdownButton,
+  DropdownItem,
+  DropdownDivider,
+} from '../base/dropdown';
 import { DEBOUNCE_MILLIS } from '../../../common/constants';
 import KeydownBinder from '../keydown-binder';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
@@ -9,6 +15,7 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 
 type Props = {
+  workspaces: Workspace,
   onChange: string => void,
   requestCreate: () => void,
   requestGroupCreate: () => void,
@@ -52,7 +59,7 @@ class SidebarFilter extends React.PureComponent<Props> {
   }
 
   async _handleOpenCloseFolder() {
-    this.props.handleSetRequestGroupCollapsed('all', true);
+    this.props.handleSetRequestGroupCollapsed(this.props.workspaces._id, true, false, true);
   }
 
   _handleKeydown(e: KeyboardEvent) {
@@ -95,6 +102,7 @@ class SidebarFilter extends React.PureComponent<Props> {
                 keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]}
               />
             </DropdownItem>
+            <DropdownDivider>Actions</DropdownDivider>
             <DropdownItem onClick={this._handleOpenCloseFolder}>
               <i className="fa fa-folder" /> Expand/Collapse
               <DropdownHint

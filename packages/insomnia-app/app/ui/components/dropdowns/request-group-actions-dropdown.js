@@ -82,7 +82,7 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleOpenCloseFolder() {
-    this.props.handleSetRequestGroupCollapsed('all', true);
+    this.props.handleSetRequestGroupCollapsed(this.props.requestGroup._id, true, true);
   }
 
   _handleDeleteFolder() {
@@ -154,9 +154,6 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
         </DropdownItem>
         <DropdownItem onClick={this._handleOpenCloseFolder}>
           <i className="fa fa-folder" /> Expand/Collapse
-          <DropdownHint
-            keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CLOSE_OPEN_FOLDER.id]}
-          />
         </DropdownItem>
         <DropdownDivider />
         <DropdownItem onClick={this._handleRequestGroupDuplicate}>

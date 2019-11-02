@@ -438,6 +438,7 @@ class Wrapper extends React.PureComponent<Props, State> {
         </div>
 
         <SidebarFilter
+          workspaces={activeWorkspace}
           key={`${activeWorkspace._id}::filter`}
           onChange={handleSetSidebarFilter}
           requestCreate={this._handleCreateRequestInWorkspace}
