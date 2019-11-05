@@ -5,24 +5,8 @@ import { MemPlugin } from '../mem-plugin';
 describe('Git-VCS', () => {
   beforeEach(setupDateMocks);
 
-  describe('status', () => {
-    it('does the thing', async () => {
-      const vcs = new GitVCS();
-      await vcs.init('/', MemPlugin.createPlugin());
-      await vcs.setAuthor('Karen Brown', 'karen@example.com');
-
-      const files = await vcs.status();
-      expect(files).toEqual({
-        hasChanges: false,
-        allStaged: true,
-        allUnstaged: true,
-        entries: [],
-      });
-    });
-  });
-
-  describe('playing around', () => {
-    it('does the thing', async () => {
+  describe('common operations', () => {
+    it('listFiles()', async () => {
       const fs = MemPlugin.createPlugin();
 
       const vcs = new GitVCS();
@@ -51,46 +35,16 @@ describe('Git-VCS', () => {
       await vcs.init('/', fs);
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
-      expect(await vcs.status()).toEqual({
-        allStaged: false,
-        hasChanges: true,
-        allUnstaged: true,
-        entries: [
-          { path: '.studio/bar.txt', status: '*added' },
-          {
-            path: '.studio/foo.txt',
-            status: '*added',
-          },
-        ],
-      });
+      expect(await vcs.status('.studio/bar.txt')).toBe('*added');
+      expect(await vcs.status('.studio/foo.txt')).toBe('*added');
 
       await vcs.add('.studio/foo.txt');
-      expect(await vcs.status()).toEqual({
-        allStaged: false,
-        hasChanges: true,
-        allUnstaged: false,
-        entries: [
-          { path: '.studio/bar.txt', status: '*added' },
-          {
-            path: '.studio/foo.txt',
-            status: 'added',
-          },
-        ],
-      });
+      expect(await vcs.status('.studio/bar.txt')).toBe('*added');
+      expect(await vcs.status('.studio/foo.txt')).toBe('added');
 
       await vcs.remove('.studio/foo.txt');
-      expect(await vcs.status()).toEqual({
-        allStaged: false,
-        hasChanges: true,
-        allUnstaged: true,
-        entries: [
-          { path: '.studio/bar.txt', status: '*added' },
-          {
-            path: '.studio/foo.txt',
-            status: '*added',
-          },
-        ],
-      });
+      expect(await vcs.status('.studio/bar.txt')).toBe('*added');
+      expect(await vcs.status('.studio/foo.txt')).toBe('*added');
     });
 
     it('Returns empty log without first commit', async () => {
@@ -116,18 +70,8 @@ describe('Git-VCS', () => {
       await vcs.add('.studio/foo.txt');
       await vcs.commit('First commit!');
 
-      expect(await vcs.status()).toEqual({
-        allStaged: false,
-        hasChanges: true,
-        allUnstaged: true,
-        entries: [
-          { path: '.studio/bar.txt', status: '*added' },
-          {
-            path: '.studio/foo.txt',
-            status: 'unmodified',
-          },
-        ],
-      });
+      expect(await vcs.status('.studio/bar.txt')).toBe('*added');
+      expect(await vcs.status('.studio/foo.txt')).toBe('unmodified');
 
       expect(await vcs.log()).toEqual([
         {
@@ -151,37 +95,16 @@ describe('Git-VCS', () => {
       ]);
 
       await fs.promises.unlink('/.studio/foo.txt');
-      expect(await vcs.status()).toEqual({
-        allStaged: false,
-        hasChanges: true,
-        allUnstaged: true,
-        entries: [
-          { path: '.studio/bar.txt', status: '*added' },
-          { path: '.studio/foo.txt', status: '*deleted' },
-        ],
-      });
+      expect(await vcs.status('.studio/bar.txt')).toBe('*added');
+      expect(await vcs.status('.studio/foo.txt')).toBe('*deleted');
 
       await vcs.remove('.studio/foo.txt');
-      expect(await vcs.status()).toEqual({
-        allStaged: false,
-        hasChanges: true,
-        allUnstaged: false,
-        entries: [
-          { path: '.studio/bar.txt', status: '*added' },
-          { path: '.studio/foo.txt', status: 'deleted' },
-        ],
-      });
+      expect(await vcs.status('.studio/bar.txt')).toBe('*added');
+      expect(await vcs.status('.studio/foo.txt')).toBe('deleted');
 
       await vcs.remove('.studio/foo.txt');
-      expect(await vcs.status()).toEqual({
-        allStaged: false,
-        hasChanges: true,
-        allUnstaged: false,
-        entries: [
-          { path: '.studio/bar.txt', status: '*added' },
-          { path: '.studio/foo.txt', status: 'deleted' },
-        ],
-      });
+      expect(await vcs.status('.studio/bar.txt')).toBe('*added');
+      expect(await vcs.status('.studio/foo.txt')).toBe('deleted');
     });
 
     it('create branch', async () => {

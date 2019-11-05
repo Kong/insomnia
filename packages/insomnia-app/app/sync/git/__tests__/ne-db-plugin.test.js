@@ -1,3 +1,4 @@
+import YAML from 'yaml';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
 import { assertAsyncError, setupDateMocks } from './util';
@@ -30,8 +31,8 @@ describe('NeDBPlugin', () => {
         'RequestGroup',
         'Workspace',
       ]);
-      expect(await pNeDB.readdir('/.studio/Request')).toEqual(['req_1.json', 'req_2.json']);
-      expect(await pNeDB.readdir('/.studio/Workspace')).toEqual(['wrk_1.json']);
+      expect(await pNeDB.readdir('/.studio/Request')).toEqual(['req_1.yml', 'req_2.yml']);
+      expect(await pNeDB.readdir('/.studio/Workspace')).toEqual(['wrk_1.yml']);
     });
   });
 
@@ -39,15 +40,15 @@ describe('NeDBPlugin', () => {
     it('reads file from model/id folders', async () => {
       const pNeDB = new NeDBPlugin('wrk_1');
 
-      expect(JSON.parse(await pNeDB.readFile('/.studio/Workspace/wrk_1.json'))).toEqual(
+      expect(YAML.parse(await pNeDB.readFile('/.studio/Workspace/wrk_1.yml', 'utf8'))).toEqual(
         expect.objectContaining({ _id: 'wrk_1', parentId: null }),
       );
 
-      expect(JSON.parse(await pNeDB.readFile('/.studio/Request/req_1.json'))).toEqual(
+      expect(YAML.parse(await pNeDB.readFile('/.studio/Request/req_1.yml', 'utf8'))).toEqual(
         expect.objectContaining({ _id: 'req_1', parentId: 'wrk_1' }),
       );
 
-      await assertAsyncError(pNeDB.readFile('/.studio/Request/req_x.json'));
+      await assertAsyncError(pNeDB.readFile('/.studio/Request/req_x.yml'));
     });
   });
 
@@ -57,13 +58,13 @@ describe('NeDBPlugin', () => {
 
       expect(await pNeDB.stat('/')).toEqual(expect.objectContaining({ type: 'dir' }));
       expect(await pNeDB.stat('/.studio')).toEqual(expect.objectContaining({ type: 'dir' }));
-      expect(await pNeDB.stat('/.studio/Workspace/wrk_1.json')).toEqual(
+      expect(await pNeDB.stat('/.studio/Workspace/wrk_1.yml')).toEqual(
         expect.objectContaining({ type: 'file' }),
       );
       expect(await pNeDB.stat('/.studio/Request')).toEqual(
         expect.objectContaining({ type: 'dir' }),
       );
-      expect(await pNeDB.stat('/.studio/Request/req_2.json')).toEqual(
+      expect(await pNeDB.stat('/.studio/Request/req_2.yml')).toEqual(
         expect.objectContaining({ type: 'file' }),
       );
     });

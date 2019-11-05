@@ -53,7 +53,8 @@ class RenderedQueryString extends PureComponent {
     clearTimeout(this._interval);
   }
 
-  componentWillReceiveProps(nextProps) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.request._id !== this.props.request._id) {
       this._update(nextProps);
     } else {

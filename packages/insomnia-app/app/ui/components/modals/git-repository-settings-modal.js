@@ -4,13 +4,11 @@ import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import * as models from '../../../models';
 import type { GitRepository } from '../../../models/git-repository';
 import ModalFooter from '../base/modal-footer';
+import * as models from '../../../models';
 
-type Props = {|
-  handleSetActiveGitRepository: (string | null) => Promise<void>,
-|};
+type Props = {||};
 
 type State = {|
   gitRepository: GitRepository | null,
@@ -26,6 +24,7 @@ type State = {|
 class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   input: ?HTMLInputElement;
+  _onSubmitEdits: ?(GitRepository) => any;
 
   constructor(props: Props) {
     super(props);
@@ -52,13 +51,23 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
   }
 
   async _handleReset() {
-    const { handleSetActiveGitRepository } = this.props;
     const { gitRepository } = this.state;
 
-    if (gitRepository) {
-      await models.gitRepository.remove(gitRepository);
-      await handleSetActiveGitRepository(null);
+    if (!gitRepository) {
+      // Nothing to do
+      return;
     }
+
+    const id = gitRepository ? gitRepository._id : 'n/a';
+    const workspaceMeta = await models.workspaceMeta.getByGitRepositoryId(id);
+
+    // Update the
+    if (workspaceMeta) {
+      await models.workspaceMeta.update(workspaceMeta, { gitRepositoryId: null });
+    }
+
+    // Remove the git repo
+    await models.gitRepository.remove(gitRepository);
 
     this.hide();
   }
@@ -66,7 +75,6 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
   async _handleSubmitEdit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const { handleSetActiveGitRepository } = this.props;
     const { inputs, gitRepository } = this.state;
 
     const uri = inputs.uri || '';
@@ -85,17 +93,16 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
 
     const patch = { uri, credentials, author };
 
-    const repo =
-      gitRepository !== null
-        ? await models.gitRepository.update(gitRepository, patch)
-        : await models.gitRepository.create(patch);
-
-    await handleSetActiveGitRepository(repo._id);
+    if (this._onSubmitEdits) {
+      this._onSubmitEdits({ ...gitRepository, ...patch });
+    }
 
     this.hide();
   }
 
-  show(options: { gitRepository: GitRepository | null } = {}) {
+  show(options: { gitRepository: GitRepository | null, onSubmitEdits: GitRepository => any }) {
+    this._onSubmitEdits = options.onSubmitEdits;
+
     const { gitRepository } = options;
 
     const inputs = {};
@@ -138,6 +145,7 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
                   type="url"
                   name="uri"
                   defaultValue={inputs.uri}
+                  disabled={!!gitRepository}
                   onChange={this._handleInputChange}
                   placeholder="https://github.com/org/repo.git"
                 />
@@ -185,13 +193,18 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
             </div>
           </ModalBody>
           <ModalFooter>
+            {gitRepository && (
+              <div className="margin-left txt-xs faint tall monospace selectable">
+                {gitRepository._id}
+              </div>
+            )}
             <div>
               {gitRepository !== null && (
                 <button type="button" className="btn" onClick={this._handleReset}>
                   Reset
                 </button>
               )}
-              <button className="btn">{gitRepository ? 'Update' : 'Save'}</button>
+              <button className="btn">Done</button>
             </div>
           </ModalFooter>
         </Modal>

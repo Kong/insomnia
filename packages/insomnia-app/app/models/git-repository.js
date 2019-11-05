@@ -15,6 +15,7 @@ type CredentialsToken = {
 type GitCredentials = null | CredentialsPassword | CredentialsToken;
 
 type BaseGitRepository = {
+  needsFullClone: boolean,
   uri: string,
   credentials: GitCredentials,
   author: {
@@ -33,6 +34,7 @@ export const canSync = false;
 
 export function init(): BaseGitRepository {
   return {
+    needsFullClone: false,
     uri: '',
     credentials: null,
     author: {

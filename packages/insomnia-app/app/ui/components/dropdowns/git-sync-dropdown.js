@@ -1,22 +1,19 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import electron from 'electron';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
-import type { GitLogEntry, GitStatus } from '../../../sync/git/git-vcs';
+import type { GitLogEntry } from '../../../sync/git/git-vcs';
 import GitVCS from '../../../sync/git/git-vcs';
 import { showAlert, showError, showModal } from '../modals';
 import GitStagingModal from '../modals/git-staging-modal';
 import * as db from '../../../common/database';
+import * as models from '../../../models';
 import type { GitRepository } from '../../../models/git-repository';
 import GitRepositorySettingsModal from '../modals/git-repository-settings-modal';
 import GitLogModal from '../modals/git-log-modal';
-import Tooltip from '../tooltip';
 import GitBranchesModal from '../modals/git-branches-modal';
-
-const { shell } = electron;
 
 type Props = {|
   handleInitializeEntities: () => void,
@@ -33,7 +30,6 @@ type State = {|
   loadingPush: boolean,
   loadingPull: boolean,
   log: Array<GitLogEntry>,
-  status: GitStatus,
   branch: string,
   branches: Array<string>,
 |};
@@ -49,12 +45,6 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
       loadingPush: false,
       loadingPull: false,
       log: [],
-      status: {
-        hasChanges: false,
-        allStaged: false,
-        allUnstaged: true,
-        entries: [],
-      },
       branch: '',
       branches: [],
     };
@@ -73,7 +63,6 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
     this.setState({
       ...(otherState || {}),
-      status: await vcs.status(),
       log: (await vcs.log()) || [],
       branch: await vcs.getBranch(),
       branches: await vcs.listBranches(),
@@ -105,6 +94,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handlePush(e: any, force: boolean = false) {
+    this.setState({ loadingPush: true });
     const { vcs, gitRepository } = this.props;
 
     if (!gitRepository) {
@@ -118,10 +108,9 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
         title: 'Push Skipped',
         message: 'Everything up-to-date. Nothing was pushed to the remote',
       });
+      this.setState({ loadingPush: false });
       return;
     }
-
-    this.setState({ loadingPush: true });
 
     const bufferId = await db.bufferChanges();
     try {
@@ -150,7 +139,20 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
   _handleConfig() {
     const { gitRepository } = this.props;
-    showModal(GitRepositorySettingsModal, { gitRepository });
+    showModal(GitRepositorySettingsModal, {
+      gitRepository,
+      onSubmitEdits: async patch => {
+        const { workspace } = this.props;
+        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+        if (gitRepository) {
+          await models.gitRepository.update(gitRepository, patch);
+        } else {
+          const repo = await models.gitRepository.create(patch);
+          await models.workspaceMeta.update(workspaceMeta, { gitRepositoryId: repo._id });
+        }
+      },
+    });
   }
 
   _handleLog() {
@@ -159,11 +161,6 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
   async _handleCommit() {
     showModal(GitStagingModal, { onCommit: this._refreshState });
-  }
-
-  async _handleShowGitDirectory() {
-    const { vcs } = this.props;
-    shell.showItemInFolder(await vcs.getGitDirectory());
   }
 
   _handleManageBranches() {
@@ -190,7 +187,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   renderButton() {
-    const { status, branch } = this.state;
+    const { branch } = this.state;
     const { vcs } = this.props;
 
     if (!vcs.isInitialized()) {
@@ -203,27 +200,10 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     }
 
     const initializing = false;
-    const currentBranch = branch;
-    const canCommit = status.hasChanges;
-    const commitTooltip = canCommit
-      ? 'You have changes ready to commit'
-      : 'You do not have any changes to commit';
-
     return (
       <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
-        <div className="ellipsis">
-          <i className="fa fa-code-fork space-right" />{' '}
-          {initializing ? 'Initializing...' : currentBranch}
-        </div>
-        <div className="space-left">
-          <Tooltip message={commitTooltip} delay={500}>
-            <i
-              className={classnames('icon fa fa-check fa--fixed-width', {
-                'super-duper-faint': !canCommit,
-              })}
-            />
-          </Tooltip>
-        </div>
+        <div className="ellipsis">{initializing ? 'Initializing...' : branch}</div>
+        <i className="fa fa-code-fork space-left" />
       </DropdownButton>
     );
   }
@@ -249,7 +229,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
   render() {
     const { className, vcs } = this.props;
-    const { log, status, branches, branch, loadingPull, loadingPush } = this.state;
+    const { log, branches, branch, loadingPull, loadingPush } = this.state;
 
     return (
       <div className={className}>
@@ -264,9 +244,6 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
           {vcs.isInitialized() && (
             <React.Fragment>
-              <DropdownItem onClick={this._handleShowGitDirectory}>
-                <i className="fa fa-folder-o" /> Reveal Git Directory
-              </DropdownItem>
               <DropdownItem onClick={this._handleManageBranches}>
                 <i className="fa fa-code-fork" /> Branches
               </DropdownItem>
@@ -280,7 +257,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
               <DropdownDivider>{branch}</DropdownDivider>
 
-              <DropdownItem onClick={this._handleCommit} disabled={!status.hasChanges}>
+              <DropdownItem onClick={this._handleCommit}>
                 <i className="fa fa-check" /> Commit
               </DropdownItem>
               {log.length > 0 && (

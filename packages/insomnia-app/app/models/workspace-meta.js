@@ -62,6 +62,10 @@ export async function getByParentId(parentId: string): Promise<WorkspaceMeta | n
   return db.getWhere(type, { parentId });
 }
 
+export async function getByGitRepositoryId(gitRepositoryId: string): Promise<WorkspaceMeta | null> {
+  return db.getWhere(type, { gitRepositoryId });
+}
+
 export async function getOrCreateByParentId(parentId: string): Promise<WorkspaceMeta> {
   const doc = await getByParentId(parentId);
   return doc || this.create({ parentId });

@@ -125,7 +125,6 @@ type Props = {
   handleSetRequestPinned: Function,
   handleSendRequestWithEnvironment: Function,
   handleSendAndDownloadRequestWithEnvironment: Function,
-  handleSetActiveGitRepository: (string | null) => Promise<void>,
   handleUpdateRequestMimeType: Function,
   handleUpdateDownloadPath: Function,
   handleSetActiveActivity: (activity: string) => void,
@@ -652,7 +651,6 @@ class Wrapper extends React.PureComponent<Props, State> {
       handleResetDragSidebar,
       handleSetActiveActivity,
       handleSetActiveEnvironment,
-      handleSetActiveGitRepository,
       handleSetActiveWorkspace,
       handleSetRequestPaneRef,
       handleSetResponsePaneRef,
@@ -841,10 +839,7 @@ class Wrapper extends React.PureComponent<Props, State> {
               <React.Fragment>
                 <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
                 <GitLogModal ref={registerModal} vcs={gitVCS} />
-                <GitRepositorySettingsModal
-                  ref={registerModal}
-                  handleSetActiveGitRepository={handleSetActiveGitRepository}
-                />
+                <GitRepositorySettingsModal ref={registerModal} />
                 {activeGitRepository !== null && (
                   <GitBranchesModal
                     ref={registerModal}

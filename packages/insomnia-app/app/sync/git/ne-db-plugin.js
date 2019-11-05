@@ -2,7 +2,7 @@
 import path from 'path';
 import * as db from '../../common/database';
 import * as models from '../../models';
-import stringifyJSON from 'json-stable-stringify';
+import YAML from 'yaml';
 import Stat from './stat';
 
 export default class NeDBPlugin {
@@ -55,7 +55,7 @@ export default class NeDBPlugin {
     //   }
     // }
 
-    const raw = Buffer.from(stringifyJSON(doc, { space: '  ' }), 'utf8');
+    const raw = Buffer.from(YAML.stringify(doc), 'utf8');
 
     if (options.encoding) {
       return raw.toString(options.encoding);
@@ -66,8 +66,14 @@ export default class NeDBPlugin {
 
   async writeFile(filePath: string, data: Buffer | string, ...x: Array<any>): Promise<void> {
     filePath = path.normalize(filePath);
-    const { id, type } = this._parsePath(filePath);
-    const doc = JSON.parse(data.toString());
+    const { root, id, type } = this._parsePath(filePath);
+
+    if (root !== '.studio') {
+      console.log(`[git] Ignoring external file ${filePath}`);
+      return;
+    }
+
+    const doc = YAML.parse(data.toString());
 
     if (id !== doc._id) {
       throw new Error(`Doc _id does not match file path ${doc._id} != ${id || 'null'}`);
@@ -122,7 +128,7 @@ export default class NeDBPlugin {
       throw new Error(`file path is not a directory ${filePath}`);
     }
 
-    const ids = docs.map(d => `${d._id}.json`);
+    const ids = docs.map(d => `${d._id}.yml`);
 
     return [...ids, ...otherFolders].sort();
   }
@@ -155,7 +161,7 @@ export default class NeDBPlugin {
     }
 
     if (fileBuff) {
-      const doc = JSON.parse(fileBuff.toString());
+      const doc = YAML.parse(fileBuff.toString());
       return new Stat({
         type: 'file',
         mode: 0o777,
@@ -174,19 +180,20 @@ export default class NeDBPlugin {
     }
   }
 
-  async readlink(filePath: string, ...x: Array<any>) {
+  async readlink(filePath: string, ...x: Array<any>): Promise<Buffer | string> {
     return this.readFile(filePath, ...x);
   }
 
-  async lstat(filePath: string, ...x: Array<any>) {
+  async lstat(filePath: string, ...x: Array<any>): Promise<Stat> {
     return this.stat(filePath, ...x);
   }
 
-  async rmdir(filePath: string, ...x: Array<any>) {
-    throw new Error('NeDBPlugin rmdir not supported');
+  async rmdir(dir: string, ...x: Array<any>): Promise<void> {
+    // Dirs in NeDB can't be removed, so we'll just pretend like it succeeded
+    return Promise.resolve();
   }
 
-  async symlink(targetPath: string, filePath: string, ...x: Array<any>) {
+  async symlink(targetPath: string, filePath: string, ...x: Array<any>): Promise<void> {
     throw new Error('NeDBPlugin symlink not supported');
   }
 
@@ -195,7 +202,7 @@ export default class NeDBPlugin {
 
     const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '');
 
-    const id = typeof idRaw === 'string' ? idRaw.replace(/\.json$/, '') : idRaw;
+    const id = typeof idRaw === 'string' ? idRaw.replace(/\.(json|yml)$/, '') : idRaw;
 
     return {
       root: root || null,

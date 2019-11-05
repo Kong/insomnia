@@ -89,6 +89,7 @@ class Sidebar extends React.PureComponent<Props> {
           enableSyncBeta={enableSyncBeta}
           isLoading={isLoading}
           vcs={vcs}
+          gitVCS={gitVCS}
         />
 
         {children}

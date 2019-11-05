@@ -1,5 +1,8 @@
 // @flow
 import * as React from 'react';
+import * as git from 'isomorphic-git';
+import YAML from 'yaml';
+import path from 'path';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import Dropdown from '../base/dropdown/dropdown';
@@ -26,6 +29,8 @@ import HelpTooltip from '../help-tooltip';
 import type { Project } from '../../../sync/types';
 import * as sync from '../../../sync-legacy/index';
 import * as session from '../../../account/session';
+import { MemPlugin } from '../../../sync/git/mem-plugin';
+import GitVCS from '../../../sync/git/git-vcs';
 import GitRepositorySettingsModal from '../modals/git-repository-settings-modal';
 
 type Props = {|
@@ -38,6 +43,7 @@ type Props = {|
   hotKeyRegistry: HotKeyRegistry,
   enableSyncBeta: boolean,
   vcs: VCS | null,
+  gitVCS: GitVCS | null,
 
   // Optional
   className?: string,
@@ -173,8 +179,142 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     });
   }
 
-  _handleWorkspaceClone() {
-    showModal(GitRepositorySettingsModal, { gitRepository: null });
+  async _handleWorkspaceClone() {
+    // This is a huge flow and we don't really have anywhere to put something like this. I guess
+    // it's fine here for now (?)
+    showModal(GitRepositorySettingsModal, {
+      gitRepository: null,
+      onSubmitEdits: async repoSettingsPatch => {
+        const core = Math.random() + '';
+        const studioDirname = '.studio';
+        const studioRoot = path.join('/', studioDirname);
+
+        // Create in-memory filesystem to perform clone
+        const plugins = git.cores.create(core);
+        const fsPlugin = MemPlugin.createPlugin();
+        plugins.set('fs', fsPlugin);
+
+        // Pull settings returned from dialog and shallow-clone the repo
+        const { credentials, uri: url } = repoSettingsPatch;
+        const token = credentials ? credentials.token : null;
+        await git.clone({ core, dir: '/', singleBranch: true, url, token, depth: 1 });
+
+        const f = fsPlugin.promises;
+        const ensureDir = async (base: string, name: string): Promise<boolean> => {
+          const rootDirs = await f.readdir(base);
+          if (rootDirs.includes(name)) {
+            return true;
+          }
+
+          showAlert({
+            title: 'Clone Problem',
+            message: (
+              <React.Fragment>
+                Could not locate{' '}
+                <code>
+                  {base}/{name}
+                </code>{' '}
+                directory in repository.
+              </React.Fragment>
+            ),
+          });
+
+          return false;
+        };
+
+        if (!(await ensureDir('/', studioDirname))) {
+          return;
+        }
+
+        if (!(await ensureDir(studioRoot, models.workspace.type))) {
+          return;
+        }
+
+        const workspaceBase = path.join(studioRoot, models.workspace.type);
+        const workspaceDirs = await f.readdir(workspaceBase);
+
+        if (workspaceDirs.length > 1) {
+          return showAlert({
+            title: 'Clone Problem',
+            message: 'Multiple workspaces found in repository',
+          });
+        }
+
+        if (workspaceDirs.length === 0) {
+          return showAlert({
+            title: 'Clone Problem',
+            message: 'No workspaces found in repository',
+          });
+        }
+
+        const workspacePath = path.join(workspaceBase, workspaceDirs[0]);
+        const workspaceJson = await f.readFile(workspacePath);
+        const workspace = YAML.parse(workspaceJson.toString());
+
+        // Check if the workspace already exists
+        const existingWorkspace = await models.workspace.getById(workspace._id);
+
+        if (existingWorkspace) {
+          return showAlert({
+            title: 'Clone Problem',
+            okLabel: 'Done',
+            message: (
+              <React.Fragment>
+                Workspace <strong>{existingWorkspace.name}</strong> already exists in Studio. Please
+                delete it before cloning.
+              </React.Fragment>
+            ),
+          });
+        }
+
+        // Prompt user to confirm importing the workspace
+        showAlert({
+          title: 'Project Found',
+          okLabel: 'Import',
+          message: (
+            <React.Fragment>
+              Workspace <strong>{workspace.name}</strong> found in repository. Would you like to
+              import it?
+            </React.Fragment>
+          ),
+
+          // Import all docs to the DB
+          onConfirm: async () => {
+            const { handleSetActiveWorkspace } = this.props;
+
+            // Stop the DB from pushing updates to the UI temporarily
+            const bufferId = await db.bufferChanges();
+
+            // Loop over all model folders in .studio/
+            for (const modelType of await f.readdir(studioRoot)) {
+              const modelDir = path.join(studioRoot, modelType);
+
+              // Loop over all documents in model folder and save them
+              for (const docFileName of await f.readdir(modelDir)) {
+                const docPath = path.join(modelDir, docFileName);
+                const docYaml = await f.readFile(docPath);
+                const doc = YAML.parse(docYaml.toString());
+                await db.upsert(doc);
+              }
+            }
+
+            // Store GitRepository settings and set it as active
+            const newRepo = await models.gitRepository.create({
+              ...repoSettingsPatch,
+              needsFullClone: true,
+            });
+            const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+            await models.workspaceMeta.update(meta, { gitRepositoryId: newRepo._id });
+
+            // Activate the workspace after importing everything
+            await handleSetActiveWorkspace(workspace._id);
+
+            // Flush DB changes
+            await db.flushChanges(bufferId);
+          },
+        });
+      },
+    });
   }
 
   _handleKeydown(e: KeyboardEvent) {

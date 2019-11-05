@@ -248,7 +248,8 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     this._handleSend();
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     if (nextProps.request._id !== this.props.request._id) {
       this._handleResetTimeouts();
     }

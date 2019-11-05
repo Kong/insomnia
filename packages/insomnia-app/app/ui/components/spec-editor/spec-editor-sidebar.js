@@ -40,7 +40,8 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     handleJumpToLine(key, value);
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     this._refreshSpec(nextProps.apiSpec);
   }
 

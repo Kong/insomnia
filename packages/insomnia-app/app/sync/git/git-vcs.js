@@ -57,20 +57,6 @@ export type GitStatus = {
   entries: Array<GitStatusEntry>,
 };
 
-const STATUS_MAP: { [string]: GitStatusState } = {
-  '0 0 3': '*deleted', // added, staged, with unstaged changes
-  '0 2 0': '*added',
-  '0 2 2': 'added', // added, staged
-  '0 2 3': '*added', // added, staged, with unstaged changes
-  '1 0 0': 'deleted', // deleted, staged
-  '1 0 1': '*deleted', // deleted, unstaged
-  '1 1 0': '*deleted', // deleted + ??
-  '1 1 1': 'unmodified', // unmodified
-  '1 2 1': '*modified', // modified, unstaged
-  '1 2 2': 'modified', // modified, staged
-  '1 2 3': '*modified', // modified, staged, with unstaged changes
-};
-
 export default class GitVCS {
   _git: Object;
   _baseOpts: { dir: string, gitdir?: string };
@@ -96,16 +82,34 @@ export default class GitVCS {
       await git.init({ ...this._baseOpts });
     }
 
-    await this._ensureMasterBranch();
+    window.git = this;
+    this._initialized = true;
+  }
+
+  async initFromClone(
+    url: string,
+    creds: GitCredentials,
+    directory: string,
+    fsPlugin: Object,
+    gitDirectory?: string,
+  ) {
+    // Default gitDirectory to <directory>/.git
+    gitDirectory = gitDirectory || path.join(directory, '.git');
+
+    this._git = git;
+    git.plugins.set('fs', fsPlugin);
+
+    this._baseOpts = { dir: directory, gitdir: gitDirectory };
+
+    await git.clone({ ...this._baseOpts, ...creds, url, singleBranch: true });
+
+    console.log(`[git] Clones repo to ${gitDirectory} from ${url}`);
+
     this._initialized = true;
   }
 
   isInitialized(): boolean {
     return this._initialized;
-  }
-
-  async getGitDirectory() {
-    return this._baseOpts.gitdir;
   }
 
   async listFiles(): Promise<Array<string>> {
@@ -123,7 +127,15 @@ export default class GitVCS {
   }
 
   async listBranches(): Promise<Array<string>> {
-    return GitVCS._sortBranches(await git.listBranches({ ...this._baseOpts }));
+    const branch = await this.getBranch();
+    const branches = await git.listBranches({ ...this._baseOpts });
+
+    // For some reason, master isn't in branches on fresh repo (no commits)
+    if (!branches.includes(branch)) {
+      branches.push(branch);
+    }
+
+    return GitVCS._sortBranches(branches);
   }
 
   async listRemoteBranches(): Promise<Array<string>> {
@@ -133,46 +145,8 @@ export default class GitVCS {
     return GitVCS._sortBranches(branches.filter(b => b !== 'HEAD'));
   }
 
-  async status(): Promise<GitStatus> {
-    console.log('[git] Status');
-    const matrix = await git.statusMatrix({
-      ...this._baseOpts,
-
-      // Only check for .studio because we don't want to accidentally commit
-      // anything other files that may exist in the repo.
-      pattern: '.studio/**',
-    });
-
-    console.log('MATRIX', matrix);
-
-    const status = {
-      hasChanges: false,
-      allStaged: true,
-      allUnstaged: true,
-      entries: [],
-    };
-
-    for (const m of matrix) {
-      const key = m.slice(1).join(' ');
-      const s = STATUS_MAP[key] || '??';
-
-      if (s.indexOf('*') === 0) {
-        status.allStaged = false;
-      } else if (s !== 'unmodified') {
-        status.allUnstaged = false;
-      }
-
-      if (s !== 'unmodified') {
-        status.hasChanges = true;
-      }
-
-      status.entries.push({
-        path: m[0],
-        status: s,
-      });
-    }
-
-    return status;
+  async status(filepath: string) {
+    return git.status({ ...this._baseOpts, filepath });
   }
 
   async add(relPath: string): Promise<void> {
@@ -255,7 +229,9 @@ export default class GitVCS {
 
     const logs = (await this.log(1)) || [];
     const localHead = logs[0].oid;
-    const remoteHead = remoteInfo.refs.heads[branch];
+    const remoteRefs = remoteInfo.refs || {};
+    const remoteHeads = remoteRefs.heads || {};
+    const remoteHead = remoteHeads[branch];
     if (localHead === remoteHead) {
       return false;
     }
@@ -375,13 +351,8 @@ export default class GitVCS {
     return true;
   }
 
-  async _ensureMasterBranch() {
-    const branches = await this.listBranches();
-
-    // If master doesn't exist, create it
-    if (!branches.includes('master')) {
-      await this.branch('master');
-    }
+  getFs() {
+    return git.plugins.get('fs');
   }
 
   static _sortBranches(branches: Array<string>) {

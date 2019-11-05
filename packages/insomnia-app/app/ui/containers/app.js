@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import deepEqual from 'deep-equal';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
 import { clipboard, ipcRenderer, remote } from 'electron';
@@ -415,6 +414,7 @@ class App extends PureComponent {
 
   async _updateActiveWorkspaceMeta(patch) {
     const { activeWorkspaceMeta } = this.props;
+    console.log('WORKSPACE META', activeWorkspaceMeta, this.props);
     return models.workspaceMeta.update(activeWorkspaceMeta, patch);
   }
 
@@ -465,12 +465,6 @@ class App extends PureComponent {
 
   async _handleSetSidebarFilter(sidebarFilter) {
     await this._updateActiveWorkspaceMeta({ sidebarFilter });
-  }
-
-  async _handleSetActiveGitRepository(id) {
-    await this._updateActiveWorkspaceMeta({
-      gitRepositoryId: id || null,
-    });
   }
 
   _handleSetRequestGroupCollapsed(requestGroupId, collapsed) {
@@ -879,6 +873,7 @@ class App extends PureComponent {
   }
 
   componentDidUpdate(prevProps) {
+    console.log('DID UPDATE');
     this._updateDocumentTitle();
     this._ensureWorkspaceChildren();
 
@@ -899,7 +894,9 @@ class App extends PureComponent {
     }
 
     // Update Git VCS if needed
-    if (changingWorkspace || !deepEqual(activeGitRepository, prevProps.activeGitRepository)) {
+    const thisGit = activeGitRepository || {};
+    const nextGit = prevProps.activeGitRepository || {};
+    if (changingWorkspace || thisGit._id !== nextGit._id) {
       this._updateGitVCS();
     }
   }
@@ -932,8 +929,16 @@ class App extends PureComponent {
 
       // Init VCS
       mkdirp.sync(gitDir);
+      if (activeGitRepository.needsFullClone) {
+        await models.gitRepository.update(activeGitRepository, { needsFullClone: false });
+        const { credentials, uri } = activeGitRepository;
+        await gitVCS.initFromClone(uri, credentials, '/', fsPlugin, gitDir);
+      } else {
+        await gitVCS.init('/', fsPlugin, gitDir);
+      }
+
+      // Configure basic info
       const { author, uri: gitUri } = activeGitRepository;
-      await gitVCS.init('/', fsPlugin, gitDir);
       await gitVCS.setAuthor(author.name, author.email);
       await gitVCS.addRemote(gitUri);
     } else {
@@ -1140,7 +1145,9 @@ class App extends PureComponent {
     this._isMigratingChildren = false;
   }
 
+  // eslint-disable-next-line camelcase
   componentWillMount() {
+    console.log('WILL MOUNT');
     this._ensureWorkspaceChildren();
   }
 
@@ -1214,7 +1221,6 @@ class App extends PureComponent {
               handleShowExportRequestsModal={this._handleShowExportRequestsModal}
               handleShowSettingsModal={App._handleShowSettingsModal}
               handleUpdateDownloadPath={this._handleUpdateDownloadPath}
-              handleSetActiveGitRepository={this._handleSetActiveGitRepository}
               isVariableUncovered={isVariableUncovered}
               headerEditorKey={forceRefreshHeaderCounter + ''}
               vcs={vcs}
@@ -1262,7 +1268,6 @@ function mapStateToProps(state, props) {
 
   // Entities
   const entitiesLists = selectEntitiesLists(state, props);
-  window.__entities = entitiesLists;
   const {
     workspaces,
     environments,
@@ -1277,15 +1282,17 @@ function mapStateToProps(state, props) {
   const settings = entitiesLists.settings[0];
 
   // Workspace stuff
-  const activeWorkspaceMeta = selectActiveWorkspaceMeta(state, props) || {};
+  const activeWorkspaceMeta = selectActiveWorkspaceMeta(state, props);
   const activeWorkspace = selectActiveWorkspace(state, props);
   const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state, props);
   const activeGitRepository = selectActiveGitRepository(state, props);
-  const sidebarHidden = activeWorkspaceMeta.sidebarHidden || false;
-  const sidebarFilter = activeWorkspaceMeta.sidebarFilter || '';
-  const sidebarWidth = activeWorkspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
-  const paneWidth = activeWorkspaceMeta.paneWidth || DEFAULT_PANE_WIDTH;
-  const paneHeight = activeWorkspaceMeta.paneHeight || DEFAULT_PANE_HEIGHT;
+
+  const safeMeta = activeWorkspaceMeta || {};
+  const sidebarHidden = safeMeta.sidebarHidden || false;
+  const sidebarFilter = safeMeta.sidebarFilter || '';
+  const sidebarWidth = safeMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
+  const paneWidth = safeMeta.paneWidth || DEFAULT_PANE_WIDTH;
+  const paneHeight = safeMeta.paneHeight || DEFAULT_PANE_HEIGHT;
 
   // Request stuff
   const requestMeta = selectActiveRequestMeta(state, props) || {};
@@ -1303,7 +1310,7 @@ function mapStateToProps(state, props) {
   const activeResponse = selectActiveResponse(state, props) || null;
 
   // Environment stuff
-  const activeEnvironmentId = activeWorkspaceMeta.activeEnvironmentId;
+  const activeEnvironmentId = safeMeta.activeEnvironmentId;
   const activeEnvironment = entities.environments[activeEnvironmentId];
 
   // OAuth2Token stuff

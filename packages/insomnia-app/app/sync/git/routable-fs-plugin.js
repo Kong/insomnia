@@ -10,10 +10,8 @@ import path from 'path';
  * @returns {{promises: *}}
  */
 export function routableFSPlugin(defaultFS: Object, otherFS: { [string]: Object }) {
-  const execMethod = (method: string, filePath: string, ...args: Array<any>) => {
+  const execMethod = async (method: string, filePath: string, ...args: Array<any>) => {
     filePath = path.normalize(filePath);
-
-    console.log('EXEC', method, filePath, { args });
 
     for (const prefix of Object.keys(otherFS)) {
       if (filePath.indexOf(path.normalize(prefix)) === 0) {
@@ -21,9 +19,16 @@ export function routableFSPlugin(defaultFS: Object, otherFS: { [string]: Object 
       }
     }
 
+    // Uncomment this to debug operations
+    // console.log('[routablefs] Executing', method, filePath, { args });
+
     // Fallback to default if no prefix matched
-    // console.log('EXEC', method, filePath, {args});
-    return defaultFS.promises[method](filePath, ...args);
+    const result = await defaultFS.promises[method](filePath, ...args);
+
+    // Uncomment this to debug operations
+    // console.log('[routablefs] Executing', method, filePath, { args }, { result });
+
+    return result;
   };
 
   const methods = {};
