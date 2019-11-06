@@ -63,6 +63,7 @@ async function _getOAuth2AuthorizationCodeHeader(
     authentication.redirectUrl,
     authentication.scope,
     authentication.state,
+    authentication.audience,
   );
 
   return _updateOAuth2Token(requestId, results);

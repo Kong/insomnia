@@ -18,6 +18,7 @@ export default async function(
   redirectUri: string = '',
   scope: string = '',
   state: string = '',
+  audience: string = '',
 ): Promise<Object> {
   if (!authorizeUrl) {
     throw new Error('Invalid authorization URL');
@@ -27,7 +28,14 @@ export default async function(
     throw new Error('Invalid access token URL');
   }
 
-  const authorizeResults = await _authorize(authorizeUrl, clientId, redirectUri, scope, state);
+  const authorizeResults = await _authorize(
+    authorizeUrl,
+    clientId,
+    redirectUri,
+    scope,
+    state,
+    audience,
+  );
 
   // Handle the error
   if (authorizeResults[c.P_ERROR]) {
@@ -49,7 +57,7 @@ export default async function(
   );
 }
 
-async function _authorize(url, clientId, redirectUri = '', scope = '', state = '') {
+async function _authorize(url, clientId, redirectUri = '', scope = '', state = '', audience = '') {
   const params = [
     { name: c.P_RESPONSE_TYPE, value: c.RESPONSE_TYPE_CODE },
     { name: c.P_CLIENT_ID, value: clientId },
@@ -59,6 +67,7 @@ async function _authorize(url, clientId, redirectUri = '', scope = '', state = '
   redirectUri && params.push({ name: c.P_REDIRECT_URI, value: redirectUri });
   scope && params.push({ name: c.P_SCOPE, value: scope });
   state && params.push({ name: c.P_STATE, value: state });
+  audience && params.push({ name: c.P_AUDIENCE, value: audience });
 
   // Add query params to URL
   const qs = buildQueryStringFromParams(params);
