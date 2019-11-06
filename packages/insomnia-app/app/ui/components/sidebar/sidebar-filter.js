@@ -13,6 +13,7 @@ import KeydownBinder from '../keydown-binder';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
+import type { Workspace } from '../../../models/workspace';
 
 type Props = {
   workspaces: Workspace,
