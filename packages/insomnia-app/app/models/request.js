@@ -85,6 +85,7 @@ type BaseRequest = {
   settingDisableRenderRequestBody: boolean,
   settingEncodeUrl: boolean,
   settingRebuildPath: boolean,
+  settingFollowRedirects: string,
 };
 
 export type Request = BaseModel & BaseRequest;
@@ -108,6 +109,7 @@ export function init(): BaseRequest {
     settingDisableRenderRequestBody: false,
     settingEncodeUrl: true,
     settingRebuildPath: true,
+    settingFollowRedirects: 'global',
   };
 }
 
