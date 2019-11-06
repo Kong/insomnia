@@ -43,9 +43,7 @@
       "parentId": "__GRP_1__",
       "name": "List all pets",
       "url": "{{ base_url }}/pets",
-      "body": {
-        "mimeType": "application/json"
-      },
+      "body": {},
       "method": "GET",
       "parameters": [
         {
@@ -54,13 +52,7 @@
           "value": "0"
         }
       ],
-      "headers": [
-        {
-          "name": "Content-Type",
-          "disabled": false,
-          "value": "application/json"
-        }
-      ],
+      "headers": [],
       "authentication": {},
       "_type": "request",
       "_id": "listPets"
@@ -69,18 +61,10 @@
       "parentId": "__GRP_1__",
       "name": "Create a pet",
       "url": "{{ base_url }}/pets",
-      "body": {
-        "mimeType": "application/json"
-      },
+      "body": {},
       "method": "POST",
       "parameters": [],
-      "headers": [
-        {
-          "name": "Content-Type",
-          "disabled": false,
-          "value": "application/json"
-        }
-      ],
+      "headers": [],
       "authentication": {},
       "_type": "request",
       "_id": "createPets"
@@ -89,18 +73,10 @@
       "parentId": "__GRP_1__",
       "name": "Info for a specific pet",
       "url": "{{ base_url }}/pets/{{ petId }}",
-      "body": {
-        "mimeType": "application/json"
-      },
+      "body": {},
       "method": "GET",
       "parameters": [],
-      "headers": [
-        {
-          "name": "Content-Type",
-          "disabled": false,
-          "value": "application/json"
-        }
-      ],
+      "headers": [],
       "authentication": {},
       "_type": "request",
       "_id": "showPetById"
