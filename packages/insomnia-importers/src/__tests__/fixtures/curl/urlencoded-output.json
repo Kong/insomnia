@@ -8,8 +8,8 @@
       "_id": "__REQ_1__",
       "_type": "request",
       "parentId": "__WORKSPACE_ID__",
-      "url": "https://insomnia.rest/",
-      "name": "https://insomnia.rest/",
+      "url": "https://insomnia.rest",
+      "name": "https://insomnia.rest",
       "method": "POST",
       "body": {
         "mimeType": "application/x-www-form-urlencoded",

@@ -68,7 +68,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     for (const workspace of this.props.unseenWorkspaces) {
       const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
       if (!workspaceMeta.hasSeen) {
-        models.workspaceMeta.update(workspaceMeta, { hasSeen: true });
+        await models.workspaceMeta.update(workspaceMeta, { hasSeen: true });
       }
     }
   }

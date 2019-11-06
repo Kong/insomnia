@@ -5,7 +5,7 @@ import fuzzysort from 'fuzzysort';
 import uuid from 'uuid';
 import zlib from 'zlib';
 import { join as pathJoin } from 'path';
-import { DEBOUNCE_MILLIS } from './constants';
+import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -115,6 +115,16 @@ export function delay(milliseconds: number = DEBOUNCE_MILLIS): Promise<void> {
 
 export function removeVowels(str: string): string {
   return str.replace(/[aeiouyAEIOUY]/g, '');
+}
+
+export function formatMethodName(method: string): string {
+  let methodName = method;
+  if (method === METHOD_DELETE || method === METHOD_OPTIONS) {
+    methodName = method.slice(0, 3);
+  } else if (method.length > 4) {
+    methodName = removeVowels(method).slice(0, 4);
+  }
+  return methodName;
 }
 
 export function keyedDebounce(callback: Function, millis: number = DEBOUNCE_MILLIS): Function {
