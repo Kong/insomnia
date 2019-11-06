@@ -15,6 +15,7 @@ const REDIRECT_URI = 'https://foo.com/redirect';
 const SCOPE = 'scope_123';
 const STATE = 'state_123';
 const AUDIENCE = 'https://foo.com/resource';
+const RESOURCE = 'foo.com';
 
 describe('authorization_code', () => {
   beforeEach(globalBeforeEach);
@@ -29,6 +30,7 @@ describe('authorization_code', () => {
         token_type: 'token_type',
         scope: SCOPE,
         audience: AUDIENCE,
+        resource: RESOURCE,
       }),
     );
 
@@ -51,6 +53,7 @@ describe('authorization_code', () => {
       SCOPE,
       STATE,
       AUDIENCE,
+      RESOURCE,
     );
 
     // Check the request to fetch the token
@@ -95,6 +98,7 @@ describe('authorization_code', () => {
       token_type: 'token_type',
       scope: SCOPE,
       audience: AUDIENCE,
+      resource: RESOURCE,
       error: null,
       error_uri: null,
       error_description: null,
@@ -113,6 +117,7 @@ describe('authorization_code', () => {
         token_type: 'token_type',
         scope: SCOPE,
         audience: AUDIENCE,
+        resource: RESOURCE,
       }),
     );
 
@@ -135,6 +140,7 @@ describe('authorization_code', () => {
       SCOPE,
       STATE,
       AUDIENCE,
+      RESOURCE,
     );
 
     // Check the request to fetch the token
@@ -177,6 +183,7 @@ describe('authorization_code', () => {
       token_type: 'token_type',
       scope: SCOPE,
       audience: AUDIENCE,
+      resource: RESOURCE,
       error: null,
       error_uri: null,
       error_description: null,

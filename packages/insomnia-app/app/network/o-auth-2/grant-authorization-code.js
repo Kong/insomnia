@@ -19,6 +19,7 @@ export default async function(
   scope: string = '',
   state: string = '',
   audience: string = '',
+  resource: string = '',
 ): Promise<Object> {
   if (!authorizeUrl) {
     throw new Error('Invalid authorization URL');
@@ -35,6 +36,7 @@ export default async function(
     scope,
     state,
     audience,
+    resource,
   );
 
   // Handle the error
@@ -57,7 +59,15 @@ export default async function(
   );
 }
 
-async function _authorize(url, clientId, redirectUri = '', scope = '', state = '', audience = '') {
+async function _authorize(
+  url,
+  clientId,
+  redirectUri = '',
+  scope = '',
+  state = '',
+  audience = '',
+  resource = '',
+) {
   const params = [
     { name: c.P_RESPONSE_TYPE, value: c.RESPONSE_TYPE_CODE },
     { name: c.P_CLIENT_ID, value: clientId },
@@ -68,6 +78,7 @@ async function _authorize(url, clientId, redirectUri = '', scope = '', state = '
   scope && params.push({ name: c.P_SCOPE, value: scope });
   state && params.push({ name: c.P_STATE, value: state });
   audience && params.push({ name: c.P_AUDIENCE, value: audience });
+  resource && params.push({ name: c.P_RESOURCE, value: resource });
 
   // Add query params to URL
   const qs = buildQueryStringFromParams(params);

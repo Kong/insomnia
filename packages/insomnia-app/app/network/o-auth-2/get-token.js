@@ -64,6 +64,7 @@ async function _getOAuth2AuthorizationCodeHeader(
     authentication.scope,
     authentication.state,
     authentication.audience,
+    authentication.resource,
   );
 
   return _updateOAuth2Token(requestId, results);
