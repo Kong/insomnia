@@ -70,6 +70,8 @@ describe('authorization_code', () => {
               { name: 'code', value: 'code_123' },
               { name: 'redirect_uri', value: REDIRECT_URI },
               { name: 'state', value: STATE },
+              { name: 'audience', value: AUDIENCE },
+              { name: 'resource', value: RESOURCE },
             ],
           },
           headers: [
@@ -157,6 +159,8 @@ describe('authorization_code', () => {
               { name: 'code', value: 'code_123' },
               { name: 'redirect_uri', value: REDIRECT_URI },
               { name: 'state', value: STATE },
+              { name: 'audience', value: AUDIENCE },
+              { name: 'resource', value: RESOURCE },
               { name: 'client_id', value: CLIENT_ID },
               { name: 'client_secret', value: CLIENT_SECRET },
             ],

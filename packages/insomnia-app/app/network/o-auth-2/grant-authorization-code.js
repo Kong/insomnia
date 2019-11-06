@@ -56,6 +56,8 @@ export default async function(
     authorizeResults[c.P_CODE],
     redirectUri,
     state,
+    audience,
+    resource,
   );
 }
 
@@ -109,6 +111,8 @@ async function _getToken(
   code: string,
   redirectUri: string = '',
   state: string = '',
+  audience: string = '',
+  resource: string = '',
 ): Promise<Object> {
   const params = [
     { name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_AUTHORIZATION_CODE },
@@ -118,6 +122,8 @@ async function _getToken(
   // Add optional params
   redirectUri && params.push({ name: c.P_REDIRECT_URI, value: redirectUri });
   state && params.push({ name: c.P_STATE, value: state });
+  audience && params.push({ name: c.P_AUDIENCE, value: audience });
+  resource && params.push({ name: c.P_RESOURCE, value: resource });
 
   const headers = [
     { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
@@ -165,6 +171,8 @@ async function _getToken(
     c.P_EXPIRES_IN,
     c.P_TOKEN_TYPE,
     c.P_SCOPE,
+    c.P_AUDIENCE,
+    c.P_RESOURCE,
     c.P_ERROR,
     c.P_ERROR_URI,
     c.P_ERROR_DESCRIPTION,
