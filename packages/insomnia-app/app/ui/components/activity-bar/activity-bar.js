@@ -7,6 +7,10 @@ import type { HotKeyDefinition, HotKeyRegistry } from '../../../common/hotkeys';
 
 export type GlobalActivity = 'spec' | 'debug' | 'monitor';
 
+export const ACTIVITY_SPEC: GlobalActivity = 'spec';
+export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
+export const ACTIVITY_MONITOR: GlobalActivity = 'monitor';
+
 type Props = {|
   activity: GlobalActivity,
   setActivity: GlobalActivity => void,
@@ -16,17 +20,17 @@ type Props = {|
 
 const ACTIVITIES: Array<{ key: GlobalActivity, name: string, hotKey: HotKeyDefinition }> = [
   {
-    key: 'spec',
+    key: ACTIVITY_SPEC,
     name: 'API Specification',
     hotKey: hotKeyRefs.SHOW_SPEC_EDITOR,
   },
   {
-    key: 'debug',
+    key: ACTIVITY_DEBUG,
     name: 'Debug API',
     hotKey: hotKeyRefs.SHOW_TEST,
   },
   {
-    key: 'monitor',
+    key: ACTIVITY_MONITOR,
     name: 'Monitor Instance',
     hotKey: hotKeyRefs.SHOW_MONITOR,
   },

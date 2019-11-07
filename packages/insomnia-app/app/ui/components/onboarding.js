@@ -9,6 +9,7 @@ import type { BaseModel } from '../../models';
 import { showPrompt } from './modals';
 import chartSrc from '../images/chart.svg';
 import type { Settings } from '../../models/settings';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from './activity-bar/activity-bar';
 
 type Props = {|
   settings: Settings,
@@ -47,8 +48,7 @@ class Onboarding extends React.PureComponent<Props, State> {
   async _handleDone() {
     const { handleSetActivity } = this.props;
 
-    // Set activity to 'spec'
-    handleSetActivity('spec');
+    handleSetActivity(ACTIVITY_SPEC);
 
     // Unsubscribe DB listener
     db.offChange(this._handleDbChange);
@@ -104,7 +104,7 @@ class Onboarding extends React.PureComponent<Props, State> {
 
   _handleSkipImport() {
     const { handleSetActivity } = this.props;
-    handleSetActivity(('debug': GlobalActivity));
+    handleSetActivity(ACTIVITY_DEBUG);
   }
 
   renderStep1() {

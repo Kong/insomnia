@@ -69,7 +69,11 @@ import type { StatusCandidate } from '../../sync/types';
 import type { RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
 import type { GlobalActivity } from './activity-bar/activity-bar';
-import ActivityBar from './activity-bar/activity-bar';
+import ActivityBar, {
+  ACTIVITY_DEBUG,
+  ACTIVITY_MONITOR,
+  ACTIVITY_SPEC,
+} from './activity-bar/activity-bar';
 import SpecEditor from './spec-editor/spec-editor';
 import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
@@ -296,7 +300,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           () => Promise.resolve(activeWorkspace._id), // Always import into current workspace
           activeApiSpec.contents,
         );
-        handleSetActiveActivity('debug');
+        handleSetActiveActivity(ACTIVITY_DEBUG);
       },
     });
   }
@@ -350,7 +354,7 @@ class Wrapper extends React.PureComponent<Props, State> {
         }
 
         console.log('Deployment', await resp.json());
-        handleSetActiveActivity('monitor');
+        handleSetActiveActivity(ACTIVITY_MONITOR);
       },
     });
     // showModal(WrapperModal, {
@@ -543,9 +547,9 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   renderSidebarBody(): React.Node {
-    if (this.props.activity === 'spec') {
+    if (this.props.activity === ACTIVITY_SPEC) {
       return this.renderSpecEditorSidebarBody();
-    } else if (this.props.activity === 'debug') {
+    } else if (this.props.activity === ACTIVITY_DEBUG) {
       const {
         activeEnvironment,
         activeRequest,
@@ -977,7 +981,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             </ErrorBoundary>
           )}
 
-          {activity === 'debug' && (
+          {activity === ACTIVITY_DEBUG && (
             <React.Fragment>
               <ErrorBoundary showAlert>
                 <RequestPane
@@ -1057,7 +1061,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             </React.Fragment>
           )}
 
-          {activity === 'spec' && (
+          {activity === ACTIVITY_SPEC && (
             <ErrorBoundary showAlert>
               <SpecEditor
                 key={this.state.forceRefreshKey}
@@ -1075,7 +1079,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             </ErrorBoundary>
           )}
 
-          {activity === 'monitor' && (
+          {activity === ACTIVITY_MONITOR && (
             <webview
               src={settings.kongManagerUrl}
               className="monitor-webview"

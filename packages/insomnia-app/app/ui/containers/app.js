@@ -873,7 +873,6 @@ class App extends PureComponent {
   }
 
   componentDidUpdate(prevProps) {
-    console.log('DID UPDATE');
     this._updateDocumentTitle();
     this._ensureWorkspaceChildren();
 
