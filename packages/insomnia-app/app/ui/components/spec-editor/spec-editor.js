@@ -13,7 +13,6 @@ type Props = {|
   lineWrapping: boolean,
   editorKeyMap: string,
   onChange: (spec: ApiSpec) => Promise<void>,
-  handleDeploy: () => void,
   handleTest: () => void,
 |};
 
@@ -52,7 +51,6 @@ class SpecEditor extends React.PureComponent<Props> {
       lineWrapping,
       editorKeyMap,
       apiSpec,
-      handleDeploy,
       handleTest,
     } = this.props;
 
@@ -61,9 +59,6 @@ class SpecEditor extends React.PureComponent<Props> {
         <div className="spec-editor__header theme--pane__header">
           <h1>Edit API Specification</h1>
           <nav className="spec-editor__header__buttons">
-            <button className="btn" onClick={handleDeploy}>
-              Deploy
-            </button>
             <button className="btn" onClick={handleTest}>
               Test
             </button>

@@ -22,6 +22,10 @@ type BaseWorkspaceMeta = {
   paneWidth: number,
   paneHeight: number,
   hasSeen: boolean,
+  kongPortalRbacToken: string,
+  kongPortalApiUrl: string,
+  kongPortalUrl: string,
+  kongPortalUserWorkspace: string,
   gitRepositoryId: string | null,
 };
 
@@ -38,6 +42,10 @@ export function init(): BaseWorkspaceMeta {
     paneWidth: DEFAULT_PANE_WIDTH,
     paneHeight: DEFAULT_PANE_HEIGHT,
     hasSeen: true,
+    kongPortalRbacToken: '',
+    kongPortalApiUrl: '',
+    kongPortalUrl: '',
+    kongPortalUserWorkspace: '',
     gitRepositoryId: null,
   };
 }

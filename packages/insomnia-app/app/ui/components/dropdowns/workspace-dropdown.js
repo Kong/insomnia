@@ -16,6 +16,7 @@ import { getAppName, getAppVersion } from '../../../common/constants';
 import { showAlert, showModal, showPrompt } from '../modals';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
+import PortalUploadModal from '../modals/portal-upload-modal';
 import Tooltip from '../tooltip';
 import KeydownBinder from '../keydown-binder';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
@@ -36,7 +37,6 @@ import GitRepositorySettingsModal from '../modals/git-repository-settings-modal'
 type Props = {|
   isLoading: boolean,
   handleSetActiveWorkspace: (id: string) => void,
-  handleDeploySpec: () => void,
   workspaces: Array<Workspace>,
   unseenWorkspaces: Array<Workspace>,
   activeWorkspace: Workspace,
@@ -164,6 +164,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     } else {
       showModal(WorkspaceShareSettingsModal);
     }
+  }
+
+  _handlePortalUpload() {
+    showModal(PortalUploadModal, {});
   }
 
   _handleWorkspaceCreate() {
@@ -343,7 +347,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       isLoading,
       hotKeyRegistry,
       handleSetActiveWorkspace,
-      handleDeploySpec,
       enableSyncBeta,
       ...other
     } = this.props;
@@ -402,8 +405,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             <i className="fa fa-wrench" /> Workspace Settings
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
           </DropdownItem>
-          <DropdownItem onClick={handleDeploySpec}>
-            <i className="fa fa-cloud-upload" /> Deploy to <strong>Kong</strong>
+          <DropdownItem onClick={this._handlePortalUpload}>
+            <i className="fa fa-cloud-upload" /> Upload to Kong Portal
           </DropdownItem>
           <DropdownDivider>Switch Workspace</DropdownDivider>
 

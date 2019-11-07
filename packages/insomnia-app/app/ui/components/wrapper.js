@@ -3,6 +3,7 @@ import type { Settings } from '../../models/settings';
 import type { Response } from '../../models/response';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { Workspace } from '../../models/workspace';
+import type { WorkspaceMeta } from '../../models/workspace-meta';
 import type {
   Request,
   RequestAuthentication,
@@ -16,7 +17,7 @@ import SidebarChildren from './sidebar/sidebar-children';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import { registerModal, showError, showModal, showAlert } from './modals/index';
+import { registerModal, showModal, showAlert } from './modals/index';
 import AlertModal from './modals/alert-modal';
 import WrapperModal from './modals/wrapper-modal';
 import ErrorModal from './modals/error-modal';
@@ -52,6 +53,7 @@ import RequestRenderErrorModal from './modals/request-render-error-modal';
 import Sidebar from './sidebar/sidebar';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
+import PortalUploadModal from './modals/portal-upload-modal';
 import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';
 import CodePromptModal from './modals/code-prompt-modal';
 import * as db from '../../common/database';
@@ -81,7 +83,6 @@ import SidebarFilter from './sidebar/sidebar-filter';
 import type { ApiSpec } from '../../models/api-spec';
 import GitVCS from '../../sync/git/git-vcs';
 import Onboarding from './onboarding';
-import YAML from 'yaml';
 import { importRaw } from '../../common/import';
 import { trackPageView } from '../../common/analytics';
 import type { GitRepository } from '../../models/git-repository';
@@ -154,6 +155,7 @@ type Props = {
   requestVersions: Array<RequestVersion>,
   unseenWorkspaces: Array<Workspace>,
   workspaceChildren: Array<Object>,
+  activeWorkspaceMeta: WorkspaceMeta,
   environments: Array<Object>,
   activeApiSpec: ApiSpec,
   activeRequestResponses: Array<Response>,
@@ -303,74 +305,6 @@ class Wrapper extends React.PureComponent<Props, State> {
         handleSetActiveActivity(ACTIVITY_DEBUG);
       },
     });
-  }
-
-  _handleDeploySpec() {
-    showAlert({
-      title: 'Deploy to Kong',
-      okLabel: 'Deploy Spec',
-      message:
-        'Deploying this spec to Kong is going to add all the services ' +
-        'and routes to Kong. Do you want to proceed?',
-      onConfirm: async () => {
-        const { activeApiSpec, handleSetActiveActivity } = this.props;
-
-        let spec;
-        try {
-          spec =
-            activeApiSpec.type === 'json'
-              ? JSON.parse(activeApiSpec.contents)
-              : YAML.parse(activeApiSpec.contents);
-        } catch (err) {
-          console.log('[spec-sidebar] Failed to parse', err.message);
-          return;
-        }
-
-        let resp;
-        try {
-          resp = await window.fetch('http://localhost:8001/default/oas-config/v2', {
-            method: 'post',
-            body: JSON.stringify(spec, null, 2),
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-        } catch (err) {
-          showError({
-            title: 'Deploy Failed',
-            error: err,
-            message: 'Deploy to kong failed',
-          });
-          return;
-        }
-
-        if (!resp.ok) {
-          showError({
-            title: 'Deploy Failed',
-            error: new Error('Status code ' + resp.status),
-            message: 'Deploy to kong failed',
-          });
-          return;
-        }
-
-        console.log('Deployment', await resp.json());
-        handleSetActiveActivity(ACTIVITY_MONITOR);
-      },
-    });
-    // showModal(WrapperModal, {
-    //   title: 'Deploy to Kong',
-    //   body: (
-    //     <React.Fragment>
-    //       <p>
-    //         Deploying this spec to Kong is going to add all the services
-    //         and routes to Kong. Do you want to proceed?
-    //       </p>
-    //       <button className="btn btn--clicky">
-    //         Deploy Spec
-    //       </button>
-    //     </React.Fragment>
-    //   ),
-    // });
   }
 
   // Settings updaters
@@ -689,6 +623,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       gitVCS,
       workspaceChildren,
       workspaces,
+      activeWorkspaceMeta,
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
@@ -698,7 +633,8 @@ class Wrapper extends React.PureComponent<Props, State> {
     const rows = `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
 
     const sidebarBody = this.renderSidebarBody();
-
+    console.log(this.props);
+    console.log(activeWorkspaceMeta);
     return (
       <React.Fragment>
         <div key="modals" className="modals">
@@ -789,6 +725,14 @@ class Wrapper extends React.PureComponent<Props, State> {
               handleDuplicateWorkspace={handleDuplicateWorkspace}
               handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
               isVariableUncovered={isVariableUncovered}
+            />
+
+            <PortalUploadModal
+              ref={registerModal}
+              workspace={activeWorkspace}
+              apiSpec={activeApiSpec}
+              workspaceMeta={activeWorkspaceMeta}
+              handleSetActivity={handleSetActiveActivity}
             />
 
             <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />
@@ -957,7 +901,6 @@ class Wrapper extends React.PureComponent<Props, State> {
                 handleInitializeEntities={handleInitializeEntities}
                 handleSetActiveEnvironment={handleSetActiveEnvironment}
                 handleSetActiveWorkspace={handleSetActiveWorkspace}
-                handleDeploySpec={this._handleDeploySpec}
                 hidden={sidebarHidden || false}
                 hotKeyRegistry={settings.hotKeyRegistry}
                 isLoading={isLoading}
@@ -1073,6 +1016,7 @@ class Wrapper extends React.PureComponent<Props, State> {
                 editorKeyMap={settings.editorKeyMap}
                 lineWrapping={settings.editorLineWrapping}
                 onChange={this._handleUpdateApiSpec}
+                handleTest={this._handleTestSpec}
                 handleDeploy={this._handleDeploySpec}
                 handleTest={this._handleDebugSpec}
               />
@@ -1081,7 +1025,7 @@ class Wrapper extends React.PureComponent<Props, State> {
 
           {activity === ACTIVITY_MONITOR && (
             <webview
-              src={settings.kongManagerUrl}
+              src={this.props.activeWorkspaceMeta.kongPortalUrl}
               className="monitor-webview"
               nodeintegration="false"
             />

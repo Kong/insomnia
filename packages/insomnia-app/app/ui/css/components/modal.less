@@ -121,6 +121,18 @@
 
     button {
       padding: 0 @padding-md;
+      &.studio-action-btn {
+        color: #0084d5;
+        float: left;
+        .with-icon {
+          display: flex;
+          align-items: center;
+          svg,
+          div {
+            float: left;
+          }
+        }
+      }
     }
   }
 
@@ -138,6 +150,16 @@
   .modal__content > *:first-child {
     border-top-left-radius: @radius-md;
     border-top-right-radius: @radius-md;
+  }
+
+  .status-loading {
+    width: 30px;
+    height: 30px;
+    display: inline-block;
+
+    path {
+      fill: #004ec1;
+    }
   }
 }
 
