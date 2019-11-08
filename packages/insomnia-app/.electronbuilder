@@ -63,7 +63,7 @@
     "oneClick": true,
     "perMachine": false,
     "allowToChangeInstallationDirectory": false,
-    "installerIcon": "build/uninstallerIcon.ico",
+    "installerIcon": "build/installerIcon.ico",
     "uninstallerSidebar": "build/uninstallerSidebar.bmp",
     "uninstallerIcon":  "build/uninstallerIcon.ico",
     "installerHeader": "build/installerHeader.bmp",

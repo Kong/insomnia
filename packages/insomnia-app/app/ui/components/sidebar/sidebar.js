@@ -24,7 +24,6 @@ type Props = {|
   environmentHighlightColorStyle: string,
   handleSetActiveEnvironment: Function,
   handleSetActiveWorkspace: Function,
-  handleDeploySpec: () => void,
   handleInitializeEntities: () => void,
   hidden: boolean,
   hotKeyRegistry: HotKeyRegistry,
