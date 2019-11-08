@@ -12,6 +12,7 @@ import type { ApiSpec } from '../../../models/api-spec';
 import type { WorkspaceMeta } from '../../../models/workspace-meta';
 import type { GlobalActivity } from '../../components/activity-bar/activity-bar';
 import ModalFooter from '../base/modal-footer';
+import url from 'url';
 
 type Props = {|
   workspace: Workspace,
@@ -102,62 +103,66 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
   }
 
   async _handleUploadSpec(overwrite: boolean) {
-    let activeSpec = this.props.apiSpec;
+    const {
+      kongSpecFileName,
+      kongPortalUserWorkspace,
+      kongPortalApiUrl,
+      kongPortalRbacToken,
+      kongPortalLegacyMode,
+    } = this.state;
+    const { apiSpec } = this.props;
+    let activeSpec = apiSpec;
     let newSpec;
+    let method = 'post';
+    let urlFilePath = url.resolve(kongPortalApiUrl, kongPortalUserWorkspace + '/files');
     let headers = {};
-    let method = '';
-    const url = require('url');
 
-    // Set method based on overwrite intent
-    if (overwrite === true) {
-      method = 'patch';
-    } else {
-      method = 'post';
-    }
-
-    // Check legacy mode & RBAC presence, format as needed
-    if (this.state.kongPortalLegacyMode === true) {
+    // Check legacy mode
+    if (kongPortalLegacyMode) {
       newSpec = {
         type: 'spec',
-        name: this.state.kongSpecFileName,
+        name: kongSpecFileName,
         contents: activeSpec.contents,
       };
     } else {
       newSpec = {
-        path: 'specs/' + this.state.kongSpecFileName,
+        path: 'specs/' + kongSpecFileName,
         contents: activeSpec.contents,
       };
     }
-    if (this.state.kongPortalRbacToken.length > 0) {
+    // Check RBAC
+    if (kongPortalRbacToken.length > 0) {
       headers = {
         'Content-Type': 'application/json',
-        'Kong-Admin-Token': this.state.kongPortalRbacToken,
+        'Kong-Admin-Token': kongPortalRbacToken,
       };
     }
+    // Check overwrite intent
+    if (overwrite) {
+      method = 'patch';
+      urlFilePath = url.resolve(
+        kongPortalApiUrl,
+        kongPortalUserWorkspace + '/files/specs/' + kongSpecFileName,
+      );
+    }
     try {
-      const response = await axios({
+      let response = await axios({
         method: method,
-        url: url.resolve(
-          this.props.workspaceMeta.kongPortalApiUrl,
-          this.state.kongPortalUserWorkspace + '/files',
-        ),
-        // url.resolve(this.props.workspaceMeta.kongPortalApiUrl, this.state.kongPortalUserWorkspace + '/files'),
+        url: urlFilePath,
         data: newSpec,
         adapter: global.require('axios/lib/adapters/http'),
         headers: headers,
       });
-      if (response.statusText === 'Created') {
+      if (response.statusText === 'Created' || response.statusText === 'OK') {
         this.setState({ kongPortalDeployView: 'success' });
       }
     } catch (err) {
       this.setState({ kongPortalDeployView: 'overwrite' });
     }
   }
-
   async _handleConnectKong() {
     // Show loading animation
     this._handleLoadingToggle(true);
-
     try {
       // Check connection
       const response = await axios.get(

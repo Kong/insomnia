@@ -1016,8 +1016,6 @@ class Wrapper extends React.PureComponent<Props, State> {
                 editorKeyMap={settings.editorKeyMap}
                 lineWrapping={settings.editorLineWrapping}
                 onChange={this._handleUpdateApiSpec}
-                handleTest={this._handleTestSpec}
-                handleDeploy={this._handleDeploySpec}
                 handleTest={this._handleDebugSpec}
               />
             </ErrorBoundary>

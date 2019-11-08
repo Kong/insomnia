@@ -406,7 +406,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
           </DropdownItem>
           <DropdownItem onClick={this._handlePortalUpload}>
-            <i className="fa fa-cloud-upload" /> Upload to Kong Portal
+            <i className="fa fa-cloud-upload" /> Deploy to <strong>Kong Portal</strong>
           </DropdownItem>
           <DropdownDivider>Switch Workspace</DropdownDivider>
 
