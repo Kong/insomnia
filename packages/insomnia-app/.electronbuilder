@@ -60,9 +60,15 @@
   },
   "nsis": {
     "artifactName": "Kong.Studio-Setup-${version}.${ext}",
-    "oneClick": false,
+    "oneClick": true,
     "perMachine": false,
-    "allowToChangeInstallationDirectory": true
+    "allowToChangeInstallationDirectory": false,
+    "installerIcon": "build/uninstallerIcon.ico",
+    "uninstallerSidebar": "build/uninstallerSidebar.bmp",
+    "uninstallerIcon":  "build/uninstallerIcon.ico",
+    "installerHeader": "build/installerHeader.bmp",
+    "installerHeaderIcon": "build/installerHeaderIcon.ico",
+    "installerSidebar": "build/installerSidebar.bmp"
   },
   "linux": {
     "artifactName": "Kong.Studio-${version}.${ext}",
