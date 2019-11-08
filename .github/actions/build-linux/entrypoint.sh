@@ -15,4 +15,4 @@ npm install --no-save 7zip-bin-linux app-builder-bin-linux
 
 echo "Running the stuff"
 npm test
-npm run app-release
+npm run app-package

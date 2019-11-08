@@ -23,13 +23,16 @@ jobs:
         run: npm run bootstrap
       - name: Run tests
         run: npm test
-      - name: Release app
+      - name: Package app
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: ${{ github.event.ref }}
           CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
-        run: npm run app-release
+          BT_USER: ${{ secrets.BINTRAY_USER }}
+          BT_TOKEN: ${{ secrets.BINTRAY_TOKEN }}
+          BT_UPDATES_USER: ${{ secrets.BINTRAY_UPDATES_USER }}
+          BT_UPDATES_TOKEN: ${{ secrets.BINTRAY_UPDATES_TOKEN }}
+        run: npm run app-package
   Mac:
     name: Mac
     runs-on: macOS-10.14
@@ -44,15 +47,18 @@ jobs:
         run: npm run bootstrap
       - name: Run tests
         run: npm test
-      - name: Release app
-        run: npm run app-release
+      - name: Package app
+        run: npm run app-package
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: ${{ github.event.ref }}
           CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          BT_USER: ${{ secrets.BINTRAY_USER }}
+          BT_TOKEN: ${{ secrets.BINTRAY_TOKEN }}
+          BT_UPDATES_USER: ${{ secrets.BINTRAY_UPDATES_USER }}
+          BT_UPDATES_TOKEN: ${{ secrets.BINTRAY_UPDATES_TOKEN }}
   Ubuntu14:
     name: Linux (Generic)
     runs-on: ubuntu-16.04
@@ -62,21 +68,10 @@ jobs:
       - name: Run Docker
         uses: ./.github/actions/build-linux
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: ${{ github.event.ref }}
-          BUILD_TARGETS: AppImage,deb,tar.gz,rpm
+          BUILD_TARGETS: AppImage
           NODELIBCURL_BUILD_STATIC: yes
-#  Ubuntu16:
-#    name: Linux (Snap)
-#    runs-on: ubuntu-16.04
-#    steps:
-#      - name: Checkout branch
-#        uses: actions/checkout@v1
-#      - name: Run Docker
-#        uses: ./.github/actions/build-snap
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          GITHUB_REF: ${{ github.event.ref }}
-#          SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
-#          BUILD_TARGETS: snap
-#          NODELIBCURL_BUILD_STATIC: yes
+          BT_USER: ${{ secrets.BINTRAY_USER }}
+          BT_TOKEN: ${{ secrets.BINTRAY_TOKEN }}
+          BT_UPDATES_USER: ${{ secrets.BINTRAY_UPDATES_USER }}
+          BT_UPDATES_TOKEN: ${{ secrets.BINTRAY_UPDATES_TOKEN }}

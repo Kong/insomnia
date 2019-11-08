@@ -169,6 +169,7 @@ function generatePackageJson(relBasePkg, relOutPkg) {
     license: basePkg.license,
     homepage: basePkg.homepage,
     author: basePkg.author,
+    copyright: `Copyright © ${new Date().getFullYear()} ${basePkg.author}`,
     main: 'main.min.js',
     dependencies: {},
   };

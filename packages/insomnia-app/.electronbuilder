@@ -1,6 +1,15 @@
 {
   "appId": "__APP_ID__",
-  "publish": null,
+  "publish": [
+    {
+      "provider": "bintray",
+      "package": "desktop",
+      "repo": "studio",
+      "owner": "kong",
+      "distribution": "stable",
+      "user": "__BT_USER__"
+    }
+  ],
   "afterSign": "./scripts/afterSignHook.js",
   "extraResources": [
     {
@@ -10,6 +19,13 @@
     }
   ],
   "protocols": [
+    {
+      "name": "Kong Studio",
+      "role": "Viewer",
+      "schemes": [
+        "kongstudio"
+      ]
+    },
     {
       "name": "Insomnia",
       "role": "Viewer",
@@ -25,9 +41,9 @@
   },
   "mac": {
     "hardenedRuntime": true,
-    "icon": "./build/icon.png",
     "category": "public.app-category.developer-tools",
     "entitlements": "./build/static/entitlements.mac.inherit.plist",
+    "artifactName": "Kong.Studio-${version}.${ext}",
     "target": [
       "dmg",
       "zip"
@@ -37,25 +53,24 @@
     }
   },
   "win": {
-    "icon": "./build/icon.ico",
+    "artifactName": "Kong.Studio-${version}.${ext}",
     "target": [
-      "squirrel",
-      "zip"
+      "nsis"
     ]
   },
-  "squirrelWindows": {
-    "iconUrl": "__ICON_URL__"
+  "nsis": {
+    "artifactName": "Kong.Studio-Setup-${version}.${ext}",
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true
   },
   "linux": {
+    "artifactName": "Kong.Studio-${version}.${ext}",
     "executableName": "__EXECUTABLE_NAME__",
     "synopsis": "__SYNOPSIS__",
     "category": "Development",
     "target": [
-      "AppImage",
-      "deb",
-      "tar.gz",
-      "snap",
-      "rpm"
+      "AppImage"
     ]
   }
 }
