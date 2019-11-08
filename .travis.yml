@@ -20,4 +20,4 @@ script:
   - npm --version
   - npm run bootstrap
   - npm test
-  - npm run app-release
+  - npm run app-package
