@@ -33,32 +33,6 @@ jobs:
           BT_UPDATES_USER: ${{ secrets.BINTRAY_UPDATES_USER }}
           BT_UPDATES_TOKEN: ${{ secrets.BINTRAY_UPDATES_TOKEN }}
         run: npm run app-package
-  Mac:
-    name: Mac
-    runs-on: macOS-10.14
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v1
-      - name: Install NodeJS
-        uses: actions/setup-node@v1
-        with:
-          node-version: 10
-      - name: Bootstrap packages
-        run: npm run bootstrap
-      - name: Run tests
-        run: npm test
-      - name: Package app
-        run: npm run app-package
-        env:
-          GITHUB_REF: ${{ github.event.ref }}
-          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          BT_USER: ${{ secrets.BINTRAY_USER }}
-          BT_TOKEN: ${{ secrets.BINTRAY_TOKEN }}
-          BT_UPDATES_USER: ${{ secrets.BINTRAY_UPDATES_USER }}
-          BT_UPDATES_TOKEN: ${{ secrets.BINTRAY_UPDATES_TOKEN }}
   Ubuntu14:
     name: Linux (Generic)
     runs-on: ubuntu-16.04
@@ -75,3 +49,30 @@ jobs:
           BT_TOKEN: ${{ secrets.BINTRAY_TOKEN }}
           BT_UPDATES_USER: ${{ secrets.BINTRAY_UPDATES_USER }}
           BT_UPDATES_TOKEN: ${{ secrets.BINTRAY_UPDATES_TOKEN }}
+#  Mac builds moved to Travis-CI for older OS versions
+#  Mac:
+#    name: Mac
+#    runs-on: macOS-10.14
+#    steps:
+#      - name: Checkout branch
+#        uses: actions/checkout@v1
+#      - name: Install NodeJS
+#        uses: actions/setup-node@v1
+#        with:
+#          node-version: 10
+#      - name: Bootstrap packages
+#        run: npm run bootstrap
+#      - name: Run tests
+#        run: npm test
+#      - name: Package app
+#        run: npm run app-package
+#        env:
+#          GITHUB_REF: ${{ github.event.ref }}
+#          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+#          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+#          APPLE_ID: ${{ secrets.APPLE_ID }}
+#          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+#          BT_USER: ${{ secrets.BINTRAY_USER }}
+#          BT_TOKEN: ${{ secrets.BINTRAY_TOKEN }}
+#          BT_UPDATES_USER: ${{ secrets.BINTRAY_UPDATES_USER }}
+#          BT_UPDATES_TOKEN: ${{ secrets.BINTRAY_UPDATES_TOKEN }}
