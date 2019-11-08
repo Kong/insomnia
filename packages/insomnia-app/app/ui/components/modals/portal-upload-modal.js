@@ -282,7 +282,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
               <label>
                 Kong RBAC Token
                 <DebouncedInput
-                  type="text"
+                  type="password"
                   delay={300}
                   placeholder="Optional"
                   defaultValue={kongPortalRbacToken}
