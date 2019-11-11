@@ -11,6 +11,13 @@ const MIMETYPE_JSON = 'application/json';
 const MIMETYPE_LITERALLY_ANYTHING = '*/*';
 const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON, MIMETYPE_LITERALLY_ANYTHING];
 const WORKSPACE_ID = '__WORKSPACE_ID__';
+const SECURITY_TYPE = {
+  HTTP: 'http',
+  API_KEY: 'apiKey',
+  OAUTH: 'oauth2',
+  OPEN_ID: 'openIdConnect',
+};
+const SUPPORTED_SECURITY_TYPES = [SECURITY_TYPE.HTTP, SECURITY_TYPE.API_KEY];
 
 let requestCounts = {};
 
@@ -55,6 +62,9 @@ module.exports.convert = async function(rawData) {
 
   const servers = api.servers.map(s => new URL(s.url));
   const defaultServer = servers[0] || new URL('http://example.com/');
+  const securityVariables = getSecurityEnvVariables(
+    api.components && api.components.securitySchemes,
+  );
 
   const openapiEnv = {
     _type: 'environment',
@@ -65,6 +75,7 @@ module.exports.convert = async function(rawData) {
       base_path: defaultServer.pathname || '',
       scheme: defaultServer.protocol.replace(/:$/, '') || ['http'], // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
       host: defaultServer.host || '',
+      ...securityVariables,
     },
   };
 
@@ -78,7 +89,7 @@ module.exports.convert = async function(rawData) {
  *
  * @param {string} rawData
  *
- * @returns {Object|null} OpenAPI 3 object
+ * @returns {Promise<Object|null>} OpenAPI 3 object
  */
 async function parseDocument(rawData) {
   try {
@@ -96,6 +107,8 @@ async function parseDocument(rawData) {
  * @returns {Object[]} array of insomnia endpoints definitions
  */
 function parseEndpoints(document) {
+  const rootSecurity = document.security;
+  const securitySchemes = document.components ? document.components.securitySchemes : {};
   const defaultParent = WORKSPACE_ID;
 
   const paths = Object.keys(document.paths);
@@ -131,7 +144,8 @@ function parseEndpoints(document) {
 
     for (const tag of tags) {
       const parentId = folderLookup[tag] || defaultParent;
-      requests.push(importRequest(endpointSchema, parentId));
+      const resolvedSecurity = endpointSchema.security || rootSecurity;
+      requests.push(importRequest(endpointSchema, parentId, resolvedSecurity, securitySchemes));
     }
   });
 
@@ -167,13 +181,20 @@ function importFolderItem(item, parentId) {
  *
  * @param {Object} endpointSchema - OpenAPI 3 endpoint schema
  * @param {string} parentId - id of parent category
+ * @param {Object} security - OpenAPI 3 security rules
+ * @param {Object} securitySchemes - OpenAPI 3 security schemes
  * @returns {Object}
  */
-function importRequest(endpointSchema, parentId) {
+function importRequest(endpointSchema, parentId, security, securitySchemes) {
   const name = endpointSchema.summary || endpointSchema.path;
   const id = generateUniqueRequestId(endpointSchema);
+  const paramHeaders = prepareHeaders(endpointSchema);
+  const { authentication, headers: securityHeaders, parameters: securityParams } = parseSecurity(
+    security,
+    securitySchemes,
+  );
 
-  return {
+  const request = {
     _type: 'request',
     _id: id,
     parentId: parentId,
@@ -181,9 +202,12 @@ function importRequest(endpointSchema, parentId) {
     method: endpointSchema.method.toUpperCase(),
     url: '{{ base_url }}' + pathWithParamsAsVariables(endpointSchema.path),
     body: prepareBody(endpointSchema),
-    headers: prepareHeaders(endpointSchema),
-    parameters: prepareQueryParams(endpointSchema),
+    headers: [...paramHeaders, ...securityHeaders],
+    authentication,
+    parameters: [...prepareQueryParams(endpointSchema), ...securityParams],
   };
+
+  return request;
 }
 
 /**
@@ -222,6 +246,100 @@ function prepareHeaders(endpointSchema) {
   const parameters = endpointSchema.parameters || [];
   const headerParameters = parameters.filter(isSendInHeader);
   return convertParameters(headerParameters);
+}
+
+/**
+ * Parse OpenAPI 3 securitySchemes into insomnia definitions of authentication, headers and parameters
+ *
+ * @param {Object} security - OpenAPI 3 security rules
+ * @param {Object} securitySchemes - OpenAPI 3 security schemes
+ * @returns {Object} headers or basic http authentication details
+ */
+function parseSecurity(security, securitySchemes) {
+  if (!security || !securitySchemes) {
+    return {
+      authentication: {},
+      headers: [],
+      parameters: [],
+    };
+  }
+
+  const supportedSchemes = security
+    .map(securityPolicy => {
+      const securityName = Object.keys(securityPolicy)[0];
+      return securitySchemes[securityName];
+    })
+    .filter(schemeDetails => SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type));
+
+  const apiKeySchemes = supportedSchemes.filter(scheme => scheme.type === SECURITY_TYPE.API_KEY);
+  const apiKeyHeaders = apiKeySchemes
+    .filter(scheme => scheme.in === 'header')
+    .map(scheme => {
+      return {
+        name: scheme.name,
+        disabled: false,
+        value: '{{ apiKey }}',
+      };
+    });
+  const apiKeyCookies = apiKeySchemes
+    .filter(scheme => scheme.in === 'cookie')
+    .map(scheme => `${scheme.name}={{ apiKey }}`);
+  const apiKeyCookieHeader = { name: 'Cookie', disabled: false, value: apiKeyCookies.join('; ') };
+  const apiKeyParams = apiKeySchemes
+    .filter(scheme => scheme.in === 'query')
+    .map(scheme => {
+      return {
+        name: scheme.name,
+        disabled: false,
+        value: '{{ apiKey }}',
+      };
+    });
+
+  if (apiKeyCookies.length > 0) {
+    apiKeyHeaders.push(apiKeyCookieHeader);
+  }
+
+  const httpAuth = supportedSchemes.find(
+    scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
+  )
+    ? { type: 'basic', username: '{{ httpUsername }}', password: '{{ httpPassword }}' }
+    : {};
+
+  return {
+    authentication: httpAuth,
+    headers: apiKeyHeaders,
+    parameters: apiKeyParams,
+  };
+}
+
+/**
+ * Get Insomnia environment variables for OpenAPI securitySchemes
+ *
+ * @param {Object} securitySchemes - Open API security schemes
+ * @returns {Object} Insomnia environment variables containing security information
+ */
+function getSecurityEnvVariables(securitySchemes) {
+  if (!securitySchemes) {
+    return {};
+  }
+
+  const variables = {};
+  const securitySchemesArray = Object.values(securitySchemes);
+  const hasApiKeyScheme = securitySchemesArray.some(
+    scheme => scheme.type === SECURITY_TYPE.API_KEY,
+  );
+  const hasHttpScheme = securitySchemesArray.some(scheme => scheme.type === SECURITY_TYPE.HTTP);
+
+  if (hasApiKeyScheme) {
+    variables.apiKey = 'apiKey';
+  }
+
+  if (hasHttpScheme) {
+    variables.httpUsername = 'username';
+    variables.httpPassword = 'password';
+  }
+
+  return variables;
 }
 
 /**

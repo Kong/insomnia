@@ -57,7 +57,15 @@ npm test
 npm run app-start
 ```
 
+If you are on Linux and have problems, you may need to install `libfontconfig-dev`
+
+```bash
+# Install libfontconfig-dev
+sudo apt-get install libfontconfig-dev
+```
+
 If you are on Windows and have problems, you may need to install [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)
+
 </details>
 
 <details>

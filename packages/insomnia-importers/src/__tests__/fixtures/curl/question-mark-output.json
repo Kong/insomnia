@@ -8,14 +8,14 @@
       "_id": "__REQ_1__",
       "_type": "request",
       "parentId": "__WORKSPACE_ID__",
-      "url": "http://192.168.1.1:9200/executions/_search?pretty",
-      "name": "http://192.168.1.1:9200/executions/_search?pretty",
+      "url": "http://192.168.1.1:9200/executions/_search",
+      "name": "http://192.168.1.1:9200/executions/_search",
       "method": "POST",
       "body": {
         "mimeType": "",
         "text": "{\"query\":{\"match_all\":{}}}"
       },
-      "parameters": [],
+      "parameters": [{ "name": "pretty", "disabled": false, "value": "" }],
       "headers": [],
       "authentication": {}
     }

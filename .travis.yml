@@ -1,0 +1,23 @@
+language: node_js
+
+matrix:
+  include:
+    - os: osx # High Sierra for older libcurl compatibility
+      osx_image: xcode10.1
+      env:
+        - CSC_LINK=$MAC_CSC_LINK
+        - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
+
+cache:
+  directories:
+    - node_modules
+    - build/node_modules
+    - $HOME/.electron
+    - $HOME/.cache
+
+script:
+  - node --version
+  - npm --version
+  - npm run bootstrap
+  - npm test
+  - npm run app-release
