@@ -633,8 +633,6 @@ class Wrapper extends React.PureComponent<Props, State> {
     const rows = `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
 
     const sidebarBody = this.renderSidebarBody();
-    console.log(this.props);
-    console.log(activeWorkspaceMeta);
     return (
       <React.Fragment>
         <div key="modals" className="modals">
