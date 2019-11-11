@@ -60,7 +60,7 @@ class SpecEditor extends React.PureComponent<Props> {
           <h1>Edit API Specification</h1>
           <nav className="spec-editor__header__buttons">
             <button className="btn" onClick={handleTest}>
-              Test
+              Debug
             </button>
           </nav>
         </div>
