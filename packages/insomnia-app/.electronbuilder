@@ -25,7 +25,6 @@
   },
   "mac": {
     "hardenedRuntime": true,
-    "icon": "./build/icon.png",
     "category": "public.app-category.developer-tools",
     "entitlements": "./build/static/entitlements.mac.inherit.plist",
     "target": [
@@ -37,7 +36,6 @@
     }
   },
   "win": {
-    "icon": "./build/icon.ico",
     "target": [
       "squirrel",
       "zip"
