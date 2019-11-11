@@ -12,7 +12,7 @@ import type { ApiSpec } from '../../../models/api-spec';
 import type { WorkspaceMeta } from '../../../models/workspace-meta';
 import type { GlobalActivity } from '../../components/activity-bar/activity-bar';
 import ModalFooter from '../base/modal-footer';
-import url from 'url';
+import urljoin from 'url-join';
 
 type Props = {|
   workspace: Workspace,
@@ -114,7 +114,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
     let activeSpec = apiSpec;
     let newSpec;
     let method = 'post';
-    let urlFilePath = url.resolve(kongPortalApiUrl, kongPortalUserWorkspace + '/files');
+    let urlFilePath = urljoin(kongPortalApiUrl, kongPortalUserWorkspace + '/files');
     let headers = {};
 
     // Check legacy mode
@@ -140,7 +140,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
     // Check overwrite intent
     if (overwrite) {
       method = 'patch';
-      urlFilePath = url.resolve(
+      urlFilePath = urljoin(
         kongPortalApiUrl,
         kongPortalUserWorkspace + '/files/specs/' + kongSpecFileName,
       );
@@ -165,15 +165,17 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
     this._handleLoadingToggle(true);
     try {
       // Check connection
-      const response = await axios.get(
-        this.state.kongPortalApiUrl + this.state.kongPortalUserWorkspace + '/kong',
-        {
-          adapter: global.require('axios/lib/adapters/http'),
-          headers: {
-            'Kong-Admin-Token': this.state.kongPortalRbacToken,
-          },
-        },
+      const apiUrl = urljoin(
+        this.state.kongPortalApiUrl,
+        this.state.kongPortalUserWorkspace + '/kong',
       );
+
+      const response = await axios.get(apiUrl, {
+        adapter: global.require('axios/lib/adapters/http'),
+        headers: {
+          'Kong-Admin-Token': this.state.kongPortalRbacToken,
+        },
+      });
       if (response.status === 200 || response.status === 201) {
         // Set legacy mode for post upload formatting, suppress loader, set monitor portal URL, move to upload view
         const workspaceMeta = this.props.workspaceMeta;

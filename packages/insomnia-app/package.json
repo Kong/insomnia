@@ -182,6 +182,7 @@
     "reselect": "^4.0.0",
     "srp-js": "^0.2.1",
     "tough-cookie": "^2.3.1",
+    "url-join": "^4.0.1",
     "uuid": "^3.0.0",
     "vkbeautify": "^0.99.1",
     "whatwg-fetch": "^2.0.1",
