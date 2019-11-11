@@ -12,7 +12,7 @@ jobs:
       - name: Install NodeJS
         uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 10.15
       - name: Install node tools
         run: npm install --global --production windows-build-tools
       - name: Install node-gyp
