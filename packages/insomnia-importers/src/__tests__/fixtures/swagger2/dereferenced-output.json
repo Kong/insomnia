@@ -32,7 +32,31 @@
       "_id": "__ENV_2__"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "_id": "__GRP_1__",
+      "_type": "request_group",
+      "description": "",
+      "environment": {},
+      "name": "pet",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "_id": "__GRP_2__",
+      "_type": "request_group",
+      "description": "",
+      "environment": {},
+      "name": "store",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "_id": "__GRP_3__",
+      "_type": "request_group",
+      "description": "",
+      "environment": {},
+      "name": "user",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "parentId": "__GRP_1__",
       "name": "Add a new pet to the store",
       "url": "{{ base_url }}/pet",
       "body": {
@@ -47,7 +71,7 @@
       "_id": "addPet"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_1__",
       "name": "Update an existing pet",
       "url": "{{ base_url }}/pet",
       "body": {
@@ -62,7 +86,7 @@
       "_id": "updatePet"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_1__",
       "name": "Finds Pets by status",
       "url": "{{ base_url }}/pet/findByStatus",
       "body": {},
@@ -80,7 +104,7 @@
       "_id": "findPetsByStatus"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_1__",
       "name": "Finds Pets by tags",
       "url": "{{ base_url }}/pet/findByTags",
       "body": {},
@@ -98,7 +122,7 @@
       "_id": "findPetsByTags"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_1__",
       "name": "Find pet by ID",
       "url": "{{ base_url }}/pet/{{ petId }}",
       "body": {},
@@ -110,7 +134,7 @@
       "_id": "getPetById"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_1__",
       "name": "Updates a pet in the store with form data",
       "url": "{{ base_url }}/pet/{{ petId }}",
       "body": {
@@ -124,7 +148,7 @@
       "_id": "updatePetWithForm"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_1__",
       "name": "Deletes a pet",
       "url": "{{ base_url }}/pet/{{ petId }}",
       "body": {},
@@ -142,7 +166,7 @@
       "_id": "deletePet"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_1__",
       "name": "uploads an image",
       "url": "{{ base_url }}/pet/{{ petId }}/uploadImage",
       "body": {
@@ -156,7 +180,7 @@
       "_id": "uploadFile"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_2__",
       "name": "Returns pet inventories by status",
       "url": "{{ base_url }}/store/inventory",
       "body": {},
@@ -168,7 +192,7 @@
       "_id": "getInventory"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_2__",
       "name": "Place an order for a pet",
       "url": "{{ base_url }}/store/order",
       "body": {},
@@ -180,7 +204,7 @@
       "_id": "placeOrder"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_2__",
       "name": "Find purchase order by ID",
       "url": "{{ base_url }}/store/order/{{ orderId }}",
       "body": {},
@@ -192,7 +216,7 @@
       "_id": "getOrderById"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_2__",
       "name": "Delete purchase order by ID",
       "url": "{{ base_url }}/store/order/{{ orderId }}",
       "body": {},
@@ -204,7 +228,7 @@
       "_id": "deleteOrder"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_3__",
       "name": "Create user",
       "url": "{{ base_url }}/user",
       "body": {},
@@ -216,7 +240,7 @@
       "_id": "createUser"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_3__",
       "name": "Creates list of users with given input array",
       "url": "{{ base_url }}/user/createWithArray",
       "body": {},
@@ -228,7 +252,7 @@
       "_id": "createUsersWithArrayInput"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_3__",
       "name": "Creates list of users with given input array",
       "url": "{{ base_url }}/user/createWithList",
       "body": {},
@@ -240,7 +264,7 @@
       "_id": "createUsersWithListInput"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_3__",
       "name": "Logs user into the system",
       "url": "{{ base_url }}/user/login",
       "body": {},
@@ -263,7 +287,7 @@
       "_id": "loginUser"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_3__",
       "name": "Logs out current logged in user session",
       "url": "{{ base_url }}/user/logout",
       "body": {},
@@ -275,7 +299,7 @@
       "_id": "logoutUser"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_3__",
       "name": "Get user by user name",
       "url": "{{ base_url }}/user/{{ username }}",
       "body": {},
@@ -287,7 +311,7 @@
       "_id": "getUserByName"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_3__",
       "name": "Updated user",
       "url": "{{ base_url }}/user/{{ username }}",
       "body": {},
@@ -299,7 +323,7 @@
       "_id": "updateUser"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_3__",
       "name": "Delete user",
       "url": "{{ base_url }}/user/{{ username }}",
       "body": {},

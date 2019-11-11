@@ -117,7 +117,7 @@ function parseEndpoints(document) {
       }
       return distinct;
     }, []) // remove duplicates
-    .filter(tag => !tags.includes(tag))
+    .filter(tag => !tags.map(tag => tag.name).includes(tag))
     .map(tag => ({
       name: tag,
       desciption: '',
