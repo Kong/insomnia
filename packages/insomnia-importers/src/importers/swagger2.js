@@ -188,6 +188,9 @@ function importRequest(securityDefinitions, endpointSchema, globalMimeTypes, id,
  * @returns {Object}
  */
 function setupAuthentification(securityDefinitions, endpointSchema, request) {
+  if (!securityDefinitions) {
+    return request;
+  }
   if (endpointSchema.security && endpointSchema.security.length > 0) {
     const usedDefinitions = endpointSchema.security.reduce(
       (collect, obj) => collect.concat(...Object.keys(obj)),
