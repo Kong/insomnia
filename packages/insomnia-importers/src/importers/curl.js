@@ -1,6 +1,7 @@
 'use strict';
 
 const { parse } = require('shell-quote');
+const { URL } = require('url');
 
 let requestCount = 1;
 
@@ -128,8 +129,19 @@ function importArgs(args) {
   // Build the request //
   // ~~~~~~~~~~~~~~~~~ //
 
-  // Url
-  const url = getPairValue(pairs, singletons[0] || '', 'url');
+  // Url & parameters
+  let parameters = [];
+  let url = '';
+
+  try {
+    const urlObject = new URL(getPairValue(pairs, singletons[0] || '', 'url'));
+    parameters = Array.from(urlObject.searchParams.entries()).map(([key, value]) => ({
+      name: key,
+      value,
+      disabled: false,
+    }));
+    url = urlObject.href.replace(urlObject.search, '').replace(/\/$/, '');
+  } catch (err) {}
 
   // Authentication
   const [username, password] = getPairValue(pairs, '', 'u', 'user').split(/:(.*)$/);
@@ -191,13 +203,14 @@ function importArgs(args) {
   });
 
   // Body
-  let parameters = [];
   let body = mimeType ? { mimeType: mimeType } : {};
   if (textBody && bodyAsGET) {
-    parameters = textBody.split('&').map(v => {
+    const bodyParams = textBody.split('&').map(v => {
       const [name, value] = v.split('=');
       return { name: name || '', value: value || '' };
     });
+
+    parameters.push(...bodyParams);
   } else if (textBody && mimeType === 'application/x-www-form-urlencoded') {
     body.params = textBody.split('&').map(v => {
       const [name, value] = v.split('=');
