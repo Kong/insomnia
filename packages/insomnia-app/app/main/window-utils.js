@@ -4,7 +4,7 @@ import { Curl } from 'insomnia-libcurl';
 import fs from 'fs';
 import LocalStorage from './local-storage';
 import {
-  CHANGELOG_BASE_URL,
+  changelogUrl,
   getAppLongName,
   getAppName,
   getAppVersion,
@@ -130,7 +130,7 @@ export function createWindow() {
           if (!window || !window.webContents) {
             return;
           }
-          misc.clickLink(`${CHANGELOG_BASE_URL}/${getAppVersion()}/`);
+          misc.clickLink(changelogUrl());
         },
       },
       ...(isMac()
@@ -243,9 +243,10 @@ export function createWindow() {
     id: 'help',
     submenu: [
       {
-        label: `Contact ${MNEMONIC_SYM}Support`,
+        label: `${MNEMONIC_SYM}Help and Support`,
+        accelerator: !isMac() ? 'F1' : null,
         click: () => {
-          shell.openExternal('https://insomnia.rest/support/');
+          shell.openExternal('https://docs.konghq.com/studio/1.0.x/');
         },
       },
       {
@@ -263,13 +264,6 @@ export function createWindow() {
         click: (menuItem, w, e) => {
           const directory = misc.getDataDirectory();
           shell.showItemInFolder(directory);
-        },
-      },
-      {
-        label: `Insomnia ${MNEMONIC_SYM}Help`,
-        accelerator: !isMac() ? 'F1' : null,
-        click: () => {
-          shell.openExternal('https://support.insomnia.rest');
         },
       },
     ],

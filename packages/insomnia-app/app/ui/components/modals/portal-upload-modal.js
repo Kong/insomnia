@@ -13,6 +13,7 @@ import type { WorkspaceMeta } from '../../../models/workspace-meta';
 import type { GlobalActivity } from '../../components/activity-bar/activity-bar';
 import ModalFooter from '../base/modal-footer';
 import urljoin from 'url-join';
+import HelpLink from '../help-link';
 
 type Props = {|
   workspace: Workspace,
@@ -160,6 +161,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
       this.setState({ kongPortalDeployView: 'overwrite' });
     }
   }
+
   async _handleConnectKong() {
     // Show loading animation
     this._handleLoadingToggle(true);
@@ -246,12 +248,14 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
     let connectIsEnabled = kongPortalApiUrl.length > 0 && kongPortalUserWorkspace.length > 0;
     let uploadIsEnabled = kongSpecFileName.length > 0;
 
+    const helpLink = <HelpLink slug="deploy-to-dev-portal" />;
+
     // Check view
     if (kongPortalDeployView === 'edit') {
       return (
         // Kong Connection Details
         <Modal ref={this._setModalRef} className="modal--skinny">
-          <ModalHeader>Upload Spec to Kong Portal</ModalHeader>
+          <ModalHeader>Upload Spec to Kong Portal {helpLink}</ModalHeader>
           <ModalBody className="pad">
             {showConnectionError && (
               <p className="notice error margin-top-sm">
@@ -339,7 +343,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
       return (
         // File Name > Upload
         <Modal ref={this._setModalRef} className="modal--skinny">
-          <ModalHeader>Upload Spec to Kong Portal</ModalHeader>
+          <ModalHeader>Upload Spec to Kong Portal {helpLink}</ModalHeader>
           <ModalBody className="pad">
             <p
               className="pad margin-top-sm"
@@ -447,7 +451,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
       return (
         // File Name > Upload
         <Modal ref={this._setModalRef} className="modal--skinny">
-          <ModalHeader>Upload Spec to Kong Portal</ModalHeader>
+          <ModalHeader>Upload Spec to Kong Portal {helpLink}</ModalHeader>
           <ModalBody className="pad">
             <p className="no-pad no-margin-top">File already exists in workspace.</p>
             <p className="no-pad no-margin-top">

@@ -1131,7 +1131,6 @@ class App extends PureComponent {
 
   // eslint-disable-next-line camelcase
   componentWillMount() {
-    console.log('WILL MOUNT');
     this._ensureWorkspaceChildren();
   }
 
