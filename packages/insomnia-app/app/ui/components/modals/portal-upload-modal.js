@@ -239,6 +239,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
       isLoading,
       showUploadError,
       kongPortalLegacyMode,
+      kongPortalUrl,
     } = this.state;
 
     // Check input > enable connection & upload
@@ -423,16 +424,18 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
           <ModalBody className="pad">
             <p className="no-pad no-margin-top">
               The latest changes are now available in the Developer Portal.
-              {kongPortalLegacyMode === false && <span> Would you like to:</span>}
+              {kongPortalLegacyMode === false && (
+                <span>
+                  Would you like to{' '}
+                  <a href={kongPortalUrl}>
+                    <strong>view the developer portal?</strong>
+                  </a>
+                </span>
+              )}
             </p>
           </ModalBody>
           <ModalFooter>
             <div>
-              {kongPortalLegacyMode === false && (
-                <button className="btn" onClick={this._handleShowDeveloperPortal}>
-                  View Developer Portal
-                </button>
-              )}
               <button className="btn" onClick={this._handleCloseConnectKong}>
                 Close
               </button>

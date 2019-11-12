@@ -29,11 +29,13 @@ const ACTIVITIES: Array<{ key: GlobalActivity, name: string, hotKey: HotKeyDefin
     name: 'Debug API',
     hotKey: hotKeyRefs.SHOW_TEST,
   },
+  /*
   {
     key: ACTIVITY_MONITOR,
     name: 'Monitor Instance',
     hotKey: hotKeyRefs.SHOW_MONITOR,
   },
+  */
 ];
 
 @autobind
