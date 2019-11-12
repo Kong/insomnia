@@ -58,13 +58,26 @@ export function getClientString() {
   return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
 }
 
+export function getDocumentationUrl(slug) {
+  // Replace minor version with "x"
+  // 1.2.3        -> 1.2.x
+  // 1.2.3-beta.1 -> 1.2.x
+  const genericVersion = getAppVersion().replace(/(\d+\.\d+.)(\d+)(-.+)?/, '$1x');
+
+  // Return URL
+  return `https://docs.konghq.com/studio/${genericVersion}/${slug}`;
+}
+
+export function changelogUrl() {
+  return getDocumentationUrl('release-notes');
+}
+
 // Global Stuff
 export const DB_PERSIST_INTERVAL = 1000 * 60 * 30; // Compact every once in a while
 export const DEBOUNCE_MILLIS = 100;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 export const GA_ID = 'UA-8499472-31';
 export const GA_LOCATION = 'https://desktop.studio.konghq.com';
-export const CHANGELOG_BASE_URL = 'https://konghq.com/products/kong-enterprise/kong-studio';
 export const STATUS_CODE_PLUGIN_ERROR = -222;
 export const LARGE_RESPONSE_MB = 5;
 export const HUGE_RESPONSE_MB = 100;

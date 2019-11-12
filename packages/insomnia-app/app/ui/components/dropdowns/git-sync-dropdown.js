@@ -14,6 +14,9 @@ import type { GitRepository } from '../../../models/git-repository';
 import GitRepositorySettingsModal from '../modals/git-repository-settings-modal';
 import GitLogModal from '../modals/git-log-modal';
 import GitBranchesModal from '../modals/git-branches-modal';
+import HelpTooltip from '../help-tooltip';
+import Link from '../base/link';
+import { getDocumentationUrl } from '../../../common/constants';
 
 type Props = {|
   handleInitializeEntities: () => void,
@@ -236,7 +239,18 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
         <Dropdown className="wide tall" onOpen={this._handleOpen} ref={this._setDropdownRef}>
           {this.renderButton()}
 
-          <DropdownDivider>Git Sync</DropdownDivider>
+          <DropdownDivider>
+            Git Sync
+            <HelpTooltip>
+              Sync and collaborate with Git{' '}
+              <Link href={getDocumentationUrl('git-sync')}>
+                <span className="no-wrap">
+                  <br />
+                  Documentation <i className="fa fa-external-link" />
+                </span>
+              </Link>
+            </HelpTooltip>
+          </DropdownDivider>
 
           <DropdownItem onClick={this._handleConfig}>
             <i className="fa fa-wrench" /> Repository Settings

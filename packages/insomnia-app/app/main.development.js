@@ -5,7 +5,7 @@ import { autoUpdater } from 'electron-updater';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import * as database from './common/database';
-import { CHANGELOG_BASE_URL, getAppVersion, isDevelopment, isMac } from './common/constants';
+import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';
 import { trackNonInteractiveEventQueueable } from './common/analytics';
@@ -139,7 +139,7 @@ async function _trackStats() {
     const { BrowserWindow } = electron;
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
-      url: `${CHANGELOG_BASE_URL}/${currentVersion}/`,
+      url: changelogUrl(),
       cta: "See What's New",
       message: `Updated to ${currentVersion}`,
     };

@@ -17,7 +17,7 @@ import SidebarChildren from './sidebar/sidebar-children';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import { registerModal, showModal, showAlert } from './modals/index';
+import { registerModal, showAlert, showModal } from './modals/index';
 import AlertModal from './modals/alert-modal';
 import WrapperModal from './modals/wrapper-modal';
 import ErrorModal from './modals/error-modal';
@@ -86,6 +86,7 @@ import Onboarding from './onboarding';
 import { importRaw } from '../../common/import';
 import { trackPageView } from '../../common/analytics';
 import type { GitRepository } from '../../models/git-repository';
+import HelpLink from './help-link';
 
 type Props = {
   // Helper Functions
@@ -291,7 +292,11 @@ class Wrapper extends React.PureComponent<Props, State> {
 
   _handleDebugSpec() {
     showAlert({
-      title: 'Debug Spec',
+      title: (
+        <React.Fragment>
+          Debug Spec <HelpLink slug={'debugging-with-insomnia'} />
+        </React.Fragment>
+      ),
       okLabel: 'Generate Requests',
       message:
         'Debugging this spec will overwrite all requests in the test activity.' +
