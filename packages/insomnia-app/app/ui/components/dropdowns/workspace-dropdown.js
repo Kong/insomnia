@@ -33,6 +33,7 @@ import * as session from '../../../account/session';
 import { MemPlugin } from '../../../sync/git/mem-plugin';
 import GitVCS from '../../../sync/git/git-vcs';
 import GitRepositorySettingsModal from '../modals/git-repository-settings-modal';
+import { trackEvent } from '../../../common/analytics';
 
 type Props = {|
   isLoading: boolean,
@@ -179,6 +180,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       onComplete: async name => {
         const workspace = await models.workspace.create({ name });
         this.props.handleSetActiveWorkspace(workspace._id);
+
+        trackEvent('Workspace', 'Create');
       },
     });
   }
@@ -189,6 +192,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
       onSubmitEdits: async repoSettingsPatch => {
+        trackEvent('Git', 'Clone');
+
         const core = Math.random() + '';
         const studioDirname = '.studio';
         const studioRoot = path.join('/', studioDirname);

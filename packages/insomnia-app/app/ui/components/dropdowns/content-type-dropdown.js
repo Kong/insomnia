@@ -17,6 +17,7 @@ import {
 import { showModal } from '../modals/index';
 import AlertModal from '../modals/alert-modal';
 import type { Request, RequestBody } from '../../../models/request';
+import { trackEvent } from '../../../common/analytics';
 
 type Props = {
   onChange: Function,
@@ -72,6 +73,8 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
     }
 
     this.props.onChange(mimeType);
+
+    trackEvent('Request', 'Change MimeType', mimeType);
   }
 
   _renderDropdownItem(mimeType: string | null, forcedName: string = '') {

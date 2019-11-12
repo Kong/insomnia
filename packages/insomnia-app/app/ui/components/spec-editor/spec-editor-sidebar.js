@@ -4,6 +4,7 @@ import autobind from 'autobind-decorator';
 import YAML from 'yaml';
 import type { ApiSpec } from '../../../models/api-spec';
 import SpecEditorSidebarItem from './spec-editor-sidebar-item';
+import { trackEvent } from '../../../common/analytics';
 
 type Props = {|
   apiSpec: ApiSpec,
@@ -36,6 +37,7 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
   }
 
   _handleScrollEditor(key: string, value: string) {
+    trackEvent('Spec Sidebar', 'Navigate');
     const { handleJumpToLine } = this.props;
     handleJumpToLine(key, value);
   }

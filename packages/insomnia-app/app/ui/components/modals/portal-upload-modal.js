@@ -14,6 +14,7 @@ import type { GlobalActivity } from '../../components/activity-bar/activity-bar'
 import ModalFooter from '../base/modal-footer';
 import urljoin from 'url-join';
 import HelpLink from '../help-link';
+import { trackEvent } from '../../../common/analytics';
 
 type Props = {|
   workspace: Workspace,
@@ -156,9 +157,11 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
       });
       if (response.statusText === 'Created' || response.statusText === 'OK') {
         this.setState({ kongPortalDeployView: 'success' });
+        trackEvent('Portal', 'Upload', overwrite ? 'Replace' : 'Create');
       }
     } catch (err) {
       this.setState({ kongPortalDeployView: 'overwrite' });
+      trackEvent('Portal', 'Upload Error', overwrite ? 'Replace' : 'Create');
     }
   }
 
@@ -179,9 +182,10 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
         },
       });
       if (response.status === 200 || response.status === 201) {
+        trackEvent('Portal', 'Connection');
         // Set legacy mode for post upload formatting, suppress loader, set monitor portal URL, move to upload view
         const workspaceMeta = this.props.workspaceMeta;
-        models.workspaceMeta.update(workspaceMeta, {
+        await models.workspaceMeta.update(workspaceMeta, {
           kongPortalUrl:
             'http://' +
             response.data.configuration.portal_gui_host +
@@ -199,6 +203,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
         this._handleLoadingToggle(false);
       }
     } catch (error) {
+      trackEvent('Portal', 'Connection Error');
       this._handleLoadingToggle(false);
       this.setState({ showConnectionError: true });
     }

@@ -17,6 +17,7 @@ import GitBranchesModal from '../modals/git-branches-modal';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import { getDocumentationUrl } from '../../../common/constants';
+import { trackEvent } from '../../../common/analytics';
 
 type Props = {|
   handleInitializeEntities: () => void,
@@ -73,6 +74,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleOpen() {
+    trackEvent('Git Dropdown', 'Open');
     await this._refreshState();
   }
 

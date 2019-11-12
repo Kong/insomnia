@@ -1,6 +1,7 @@
 // @flow
 import * as git from 'isomorphic-git';
 import path from 'path';
+import { trackEvent } from '../../common/analytics';
 
 export type GitAuthor = {|
   name: string,
@@ -201,6 +202,7 @@ export default class GitVCS {
 
   async commit(message: string): Promise<string> {
     console.log(`[git] Commit "${message}"`);
+    trackEvent('Git', 'Commit');
     return git.commit({ ...this._baseOpts, message });
   }
 
@@ -241,12 +243,14 @@ export default class GitVCS {
 
   async push(creds?: GitCredentials | null, force?: boolean = false): Promise<boolean> {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
+    trackEvent('Git', 'Push');
 
     return git.push({ ...this._baseOpts, remote: 'origin', ...creds, force });
   }
 
   async pull(creds?: GitCredentials | null): Promise<void> {
     console.log(`[git] Pull remote=origin`, await this.getBranch());
+    trackEvent('Git', 'Pull');
 
     return git.pull({
       ...this._baseOpts,
@@ -260,6 +264,7 @@ export default class GitVCS {
   async merge(theirBranch: string): Promise<void> {
     const ours = await this.getBranch();
     console.log(`[git] Merge ${ours} <-- ${theirBranch}`);
+    trackEvent('Git', 'Merge');
     return git.merge({ ...this._baseOpts, ours, theirs: theirBranch });
   }
 
@@ -304,6 +309,7 @@ export default class GitVCS {
   }
 
   async branch(branch: string, checkout: boolean = false): Promise<void> {
+    trackEvent('Git', 'Create Branch');
     await git.branch({ ...this._baseOpts, ref: branch, checkout, remote: 'origin' });
   }
 
@@ -312,6 +318,7 @@ export default class GitVCS {
       throw new Error('Cannot delete master branch');
     }
 
+    trackEvent('Git', 'Delete Branch');
     await git.deleteBranch({ ...this._baseOpts, ref: branch });
   }
 
@@ -320,6 +327,7 @@ export default class GitVCS {
     const branches = await this.listBranches();
 
     if (branches.includes(branch)) {
+      trackEvent('Git', 'Checkout Branch');
       await git.fastCheckout({ ...this._baseOpts, ref: branch, remote: 'origin' });
     } else {
       await this.branch(branch, true);
