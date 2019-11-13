@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import mkdirp from 'mkdirp';
 import fs from 'fs';
 import { clipboard, ipcRenderer, remote } from 'electron';
 import { parse as urlParse } from 'url';
@@ -913,27 +912,37 @@ class App extends PureComponent {
 
     if (activeGitRepository) {
       // Create FS plugin
-      const gitDir = path.join(
+      const baseDir = path.join(
         getDataDirectory(),
-        `version-control/git/${activeGitRepository._id}/git`,
+        `version-control/git/${activeGitRepository._id}`,
       );
-      const pStudioData = NeDBPlugin.createPlugin(activeWorkspace._id);
-      const pGitData = FSPlugin.createPlugin();
+      const pStudioDataNeDb = NeDBPlugin.createPlugin(activeWorkspace._id);
+      const pGitData = FSPlugin.createPlugin(baseDir);
+      const pOtherData = FSPlugin.createPlugin(path.join(baseDir, 'other'));
+      const gitSubDir = '/git';
 
-      // Only care about .studio/ and .git/
-      // Everything else in the repo will be ignored
-      const fsPlugin = routableFSPlugin(pStudioData, {
-        [gitDir]: pGitData,
-      });
+      const fsPlugin = routableFSPlugin(
+        // All data outside the directories listed below will be stored in an 'other'
+        // directory. This is so we can support files that exist outside the ones
+        // Studio is specifically in charge of.
+        pOtherData,
+        {
+          // All studio data is stored within the .studio/ directory at the root of the
+          // repository and is read/written from the local NeDB database
+          '/.studio': pStudioDataNeDb,
+
+          // All git metadata is stored in a git/ directory on the filesystem
+          [gitSubDir]: pGitData,
+        },
+      );
 
       // Init VCS
-      mkdirp.sync(gitDir);
       if (activeGitRepository.needsFullClone) {
         await models.gitRepository.update(activeGitRepository, { needsFullClone: false });
         const { credentials, uri } = activeGitRepository;
-        await gitVCS.initFromClone(uri, credentials, '/', fsPlugin, gitDir);
+        await gitVCS.initFromClone(uri, credentials, '/', fsPlugin, gitSubDir);
       } else {
-        await gitVCS.init('/', fsPlugin, gitDir);
+        await gitVCS.init('/', fsPlugin, gitSubDir);
       }
 
       // Configure basic info

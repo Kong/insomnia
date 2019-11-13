@@ -1,11 +1,13 @@
 // @flow
 import fs from 'fs';
 import path from 'path';
+import mkdirp from 'mkdirp';
 
 export default class FSPlugin {
   _basePath: string;
 
   constructor(basePath?: string = '/') {
+    mkdirp.sync(basePath);
     this._basePath = basePath;
     console.log(`[FSPlugin] Created in ${basePath}`);
   }

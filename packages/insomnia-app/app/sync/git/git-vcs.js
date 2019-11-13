@@ -1,6 +1,5 @@
 // @flow
 import * as git from 'isomorphic-git';
-import path from 'path';
 import { trackEvent } from '../../common/analytics';
 
 export type GitAuthor = {|
@@ -67,10 +66,7 @@ export default class GitVCS {
     this._initialized = false;
   }
 
-  async init(directory: string, fsPlugin: Object, gitDirectory?: string) {
-    // Default gitDirectory to <directory>/.git
-    gitDirectory = gitDirectory || path.join(directory, '.git');
-
+  async init(directory: string, fsPlugin: Object, gitDirectory: string) {
     this._git = git;
     git.plugins.set('fs', fsPlugin);
 
@@ -92,11 +88,8 @@ export default class GitVCS {
     creds: GitCredentials,
     directory: string,
     fsPlugin: Object,
-    gitDirectory?: string,
+    gitDirectory: string,
   ) {
-    // Default gitDirectory to <directory>/.git
-    gitDirectory = gitDirectory || path.join(directory, '.git');
-
     this._git = git;
     git.plugins.set('fs', fsPlugin);
 
@@ -160,6 +153,10 @@ export default class GitVCS {
   }
 
   async remove(relPath: string): Promise<void> {
+    if (relPath.indexOf('.studio/') !== 0) {
+      throw new Error('Cannot remove files outside /.studio/');
+    }
+
     console.log(`[git] Remove relPath=${relPath}`);
     return git.remove({ ...this._baseOpts, filepath: relPath });
   }
