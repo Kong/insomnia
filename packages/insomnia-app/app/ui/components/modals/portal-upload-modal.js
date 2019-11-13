@@ -428,9 +428,10 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
               The latest changes are now available in the Developer Portal.
               {kongPortalLegacyMode === false && (
                 <span>
-                  Would you like to{' '}
+                  {' '}
+                  Would you like to
                   <a href={kongPortalUrl}>
-                    <strong>view the developer portal?</strong>
+                    <strong> view the developer portal?</strong>
                   </a>
                 </span>
               )}
