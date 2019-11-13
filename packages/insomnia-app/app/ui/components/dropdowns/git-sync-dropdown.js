@@ -107,7 +107,17 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
       throw new Error('Tried to push without configuring git repo');
     }
 
-    const canPush = await vcs.canPush(gitRepository.credentials);
+    // Check if there is anything to push
+    let canPush = false;
+    try {
+      canPush = await vcs.canPush(gitRepository.credentials);
+    } catch (err) {
+      showAlert({ title: 'Push Rejected', message: err.message });
+      this.setState({ loadingPush: false });
+      return;
+    }
+
+    // If nothing to push, display that to the user
     if (!canPush) {
       showAlert({
         title: 'Push Skipped',
