@@ -413,7 +413,6 @@ class App extends PureComponent {
 
   async _updateActiveWorkspaceMeta(patch) {
     const { activeWorkspaceMeta } = this.props;
-    console.log('WORKSPACE META', activeWorkspaceMeta, this.props);
     return models.workspaceMeta.update(activeWorkspaceMeta, patch);
   }
 

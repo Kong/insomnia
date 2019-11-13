@@ -35,13 +35,13 @@ export default class NeDBPlugin {
     const { root, type, id } = this._parsePath(filePath);
 
     if (root === null || id === null || type === null) {
-      throw new Error(`Cannot read from directory or missing ${filePath}`);
+      throw this._errMissing(filePath);
     }
 
     const doc = await db.get(type, id);
 
     if (!doc || (doc: any).isPrivate) {
-      throw new Error(`Cannot find doc ${filePath}`);
+      throw this._errMissing(filePath);
     }
 
     // It would be nice to be able to add this check here but we can't since
@@ -125,7 +125,7 @@ export default class NeDBPlugin {
       const children = await db.withDescendants(workspace);
       docs = children.filter(d => d.type === type && !(d: any).isPrivate);
     } else {
-      throw new Error(`file path is not a directory ${filePath}`);
+      throw this._errMissing(filePath);
     }
 
     const ids = docs.map(d => `${d._id}.yml`);
@@ -157,7 +157,7 @@ export default class NeDBPlugin {
     }
 
     if (!fileBuff && !dir) {
-      throw new Error(`Not found ${filePath}`);
+      throw this._errMissing(filePath);
     }
 
     if (fileBuff) {
@@ -209,5 +209,14 @@ export default class NeDBPlugin {
       type: type || null,
       id: id || null,
     };
+  }
+
+  _errMissing(filePath: string): Error {
+    const e: ErrnoError = new Error(`ENOENT: no such file or directory, scandir '${filePath}'`);
+    e.errno = -2;
+    e.code = 'ENOENT';
+    e.syscall = 'scandir';
+    e.path = filePath;
+    return e;
   }
 }
