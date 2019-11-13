@@ -34,7 +34,6 @@ type State = {
   forceSpecOverwrite: boolean,
   kongSpecFileName: string,
   kongPortalLegacyMode: boolean,
-  kongConnectionDetails: boolean,
   kongPortalDeployView: string,
 };
 
@@ -56,7 +55,6 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
       showConnectionError: false,
       showUploadError: false,
       kongPortalLegacyMode: false,
-      kongConnectionDetails: false,
       kongPortalDeployView: 'edit',
       forceSpecOverwrite: false,
     };
@@ -70,13 +68,8 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
     this.setState({ isLoading: status });
   }
 
-  _hasKongConnectionInfo() {
-    this.setState({
-      kongConnectionDetails:
-        this.state.kongPortalRbacToken.length > 0 &&
-        this.state.kongPortalApiUrl.length > 0 &&
-        this.state.kongPortalUserWorkspace.length > 0,
-    });
+  _hasConnectInfo() {
+    return this.state.kongPortalApiUrl.length > 0 && this.state.kongPortalUserWorkspace.length > 0;
   }
 
   _handleEditKongConnection() {
@@ -195,7 +188,6 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
 
         this.setState({
           kongPortalLegacyMode: response.data.configuration.portal_is_legacy,
-          kongConnectionDetails: true,
           showConnectionError: false,
           kongPortalDeployView: 'upload',
         });
@@ -232,6 +224,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
   }
 
   async show(options: { onUpload?: () => void }) {
+    this._hasConnectInfo() ? this._handleReturnToUpload() : this._handleEditKongConnection();
     this.modal && this.modal.show();
   }
 
@@ -419,7 +412,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
                   <div>Upload To Kong Portal</div>
                 </div>
               </button>
-              <button className="btn" onClick={this._handleReturnToUpload}>
+              <button className="btn" onClick={this._handleEditKongConnection}>
                 Go Back
               </button>
             </div>
