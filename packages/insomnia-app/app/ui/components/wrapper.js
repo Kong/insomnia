@@ -461,6 +461,8 @@ class Wrapper extends React.PureComponent<Props, State> {
           moveDoc={handleMoveDoc}
           hidden={sidebarHidden}
           width={sidebarWidth}
+          requestCreate={this._handleCreateRequestInWorkspace}
+          requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
           workspace={activeWorkspace}
           activeRequest={activeRequest}
           filter={sidebarFilter || ''}

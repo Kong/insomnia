@@ -5,12 +5,13 @@ import type { KeyBindings } from '../../../../common/hotkeys';
 
 type Props = {
   keyBindings: KeyBindings,
+  styles: Object,
 };
 
 class DropdownHint extends React.PureComponent<Props> {
   render() {
-    const { keyBindings } = this.props;
-    return <Hotkey className="dropdown__hint" keyBindings={keyBindings} />;
+    const { keyBindings, styles } = this.props;
+    return <Hotkey styles={styles} className="dropdown__hint" keyBindings={keyBindings} />;
   }
 }
 

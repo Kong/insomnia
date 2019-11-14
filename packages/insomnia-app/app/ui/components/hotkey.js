@@ -10,6 +10,7 @@ type Props = {
   // If both is given, keyCombination will be used.
   keyCombination?: KeyCombination,
   keyBindings?: KeyBindings,
+  styles: Object,
 
   // Optional
   className?: string,
@@ -20,8 +21,7 @@ type Props = {
 
 class Hotkey extends React.PureComponent<Props> {
   render() {
-    const { keyCombination, keyBindings, className, useFallbackMessage } = this.props;
-
+    const { keyCombination, keyBindings, className, useFallbackMessage, styles } = this.props;
     if (keyCombination == null && keyBindings == null) {
       console.error(`Hotkey needs one of keyCombination or keyBindings!`);
       return null;
@@ -52,7 +52,11 @@ class Hotkey extends React.PureComponent<Props> {
       italic: isFallback,
     };
 
-    return <span className={classnames(className, classes)}>{display}</span>;
+    return (
+      <span style={styles} className={classnames(className, classes)}>
+        {display}
+      </span>
+    );
   }
 }
 

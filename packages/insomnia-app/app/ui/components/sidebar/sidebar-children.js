@@ -8,6 +8,7 @@ import type { Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Environment } from '../../../models/environment';
+import SidebarContextMenu from './sidebar-context-menu';
 
 type Child = {
   doc: Request | RequestGroup,
@@ -28,6 +29,8 @@ type Props = {
   handleCreateRequest: Function,
   handleCreateRequestGroup: Function,
   handleSetRequestPinned: Function,
+  requestCreate: Function,
+  requestGroupCreate: Function,
   handleSetRequestGroupCollapsed: Function,
   handleDuplicateRequest: Function,
   handleDuplicateRequestGroup: Function,
@@ -46,6 +49,22 @@ type Props = {
 };
 
 class SidebarChildren extends React.PureComponent<Props> {
+  constructor(props) {
+    super(props);
+    this.state = {
+      clicked: false,
+    };
+    this._handleEvent = this._handleEvent.bind(this);
+  }
+  _handleEvent(e) {
+    e.preventDefault();
+    if (e.target.tagName === 'UL') {
+      this.setState(prevState => ({
+        clicked: !prevState.clicked,
+      }));
+    }
+    return false;
+  }
   _renderChildren(children: Array<Child>, isInPinnedList: boolean): React.Node {
     const {
       filter,
@@ -72,7 +91,6 @@ class SidebarChildren extends React.PureComponent<Props> {
       if (!isInPinnedList && child.hidden) {
         return null;
       }
-
       if (child.doc.type === models.request.type) {
         return (
           <SidebarRequestRow
@@ -141,14 +159,16 @@ class SidebarChildren extends React.PureComponent<Props> {
 
   _renderList(children: Array<Child>, pinnedList: boolean): React.Node {
     return (
-      <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
+      <ul
+        onContextMenu={this._handleEvent}
+        className="sidebar__list sidebar__list-root theme--sidebar__list">
         {this._renderChildren(children, pinnedList)}
       </ul>
     );
   }
 
   render() {
-    const { childObjects } = this.props;
+    const { childObjects, requestCreate, requestGroupCreate, hotKeyRegistry } = this.props;
 
     const showSeparator = childObjects.pinned.length > 0;
 
@@ -157,6 +177,13 @@ class SidebarChildren extends React.PureComponent<Props> {
         {this._renderList(childObjects.pinned, true)}
         <div className={`sidebar__list-separator${showSeparator ? '' : '--invisible'}`} />
         {this._renderList(childObjects.all, false)}
+        {this.state.clicked && (
+          <SidebarContextMenu
+            requestCreate={requestCreate}
+            requestGroupCreate={requestGroupCreate}
+            hotKeyRegistry={hotKeyRegistry}
+          />
+        )}
       </React.Fragment>
     );
   }
