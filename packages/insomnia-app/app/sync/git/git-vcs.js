@@ -79,7 +79,6 @@ export default class GitVCS {
       await git.init({ ...this._baseOpts });
     }
 
-    window.git = this;
     this._initialized = true;
   }
 
@@ -284,7 +283,6 @@ export default class GitVCS {
   }
 
   async log(depth?: number): Promise<Array<GitLogEntry>> {
-    console.log(`[git] Log depth=${depth || '--'}`);
     let err = null;
     let log = [];
 
@@ -311,10 +309,6 @@ export default class GitVCS {
   }
 
   async deleteBranch(branch: string): Promise<void> {
-    if (branch === 'master') {
-      throw new Error('Cannot delete master branch');
-    }
-
     trackEvent('Git', 'Delete Branch');
     await git.deleteBranch({ ...this._baseOpts, ref: branch });
   }

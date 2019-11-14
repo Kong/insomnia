@@ -223,7 +223,6 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
                       {name === currentBranch ? (
                         <span className="txt-sm space-left">(current)</span>
                       ) : null}
-                      {name === 'master' && <i className="fa fa-lock space-left faint" />}
                     </td>
                     <td className="text-right">
                       {name !== currentBranch && (
@@ -237,7 +236,6 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
                           <PromptButton
                             className="btn btn--micro btn--outlined space-left"
                             doneMessage="Deleted"
-                            disabled={name === 'master'}
                             onClick={() => this._handleDelete(name)}>
                             Delete
                           </PromptButton>
@@ -266,10 +264,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
                 <tbody>
                   {remoteOnlyBranches.map(name => (
                     <tr key={name} className="table--no-outline-row">
-                      <td>
-                        {name}
-                        {name === 'master' && <i className="fa fa-lock space-left faint" />}
-                      </td>
+                      <td>{name}</td>
                       <td className="text-right">
                         <button
                           className="btn btn--micro btn--outlined space-left"
