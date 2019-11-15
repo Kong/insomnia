@@ -163,13 +163,7 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
         <GraphQLExplorerField onNavigateType={this._handleNavigateType} field={currentField} />
       );
     } else if (currentType && currentType instanceof GraphQLEnumType) {
-      child = (
-        <GraphQLExplorerEnum
-          type={currentType}
-          onNavigateType={this._handleNavigateType}
-          onNavigateField={this._handleNavigateField}
-        />
-      );
+      child = <GraphQLExplorerEnum type={currentType} />;
     } else if (currentType) {
       child = (
         <GraphQLExplorerType
