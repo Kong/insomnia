@@ -189,6 +189,7 @@ p.notice {
   text-align: center;
   color: var(--color-font) !important;
   padding: calc(@padding-sm * 1.5);
+  margin-bottom: @padding-md;
   border: 1px dotted var(--hl);
   border-radius: @radius-md;
   position: relative;
@@ -418,7 +419,11 @@ blockquote {
   width: 100%;
 }
 
-&.row--top {
+.row--right {
+  justify-content: flex-end;
+}
+
+.row--top {
   align-items: start;
 }
 

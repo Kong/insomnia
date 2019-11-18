@@ -16,6 +16,8 @@ module.exports = {
       __DEV__: false,
       'process.env.NODE_ENV': JSON.stringify('production'),
       'process.env.HOT': JSON.stringify(null),
+      'process.env.BT_UPDATES_USER': JSON.stringify(process.env.BT_UPDATES_USER || ''),
+      'process.env.BT_UPDATES_TOKEN': JSON.stringify(process.env.BT_UPDATES_TOKEN || ''),
     }),
   ],
 };

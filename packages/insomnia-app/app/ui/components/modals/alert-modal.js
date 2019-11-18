@@ -47,7 +47,7 @@ class AlertModal extends PureComponent {
     const { title, message, addCancel, onConfirm, okLabel } = options;
     this.setState({ title, message, addCancel, okLabel });
 
-    this.modal.show();
+    this.modal && this.modal.show();
 
     // Need to do this after render because modal focuses itself too
     setTimeout(() => {

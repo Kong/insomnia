@@ -84,7 +84,7 @@ export class MemPlugin {
 
   async readFile(
     filePath: string,
-    options: buffer$Encoding | { encoding?: buffer$Encoding },
+    options?: buffer$Encoding | { encoding?: buffer$Encoding } = {},
   ): Promise<Buffer | string> {
     filePath = path.normalize(filePath);
 

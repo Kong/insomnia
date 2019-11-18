@@ -14,6 +14,7 @@ import * as models from '../../../models';
 import SelectModal from '../../components/modals/select-modal';
 import { showError, showModal } from '../../components/modals/index';
 import * as db from '../../../common/database';
+import { trackEvent } from '../../../common/analytics';
 
 const LOCALSTORAGE_PREFIX = `insomnia::meta`;
 
@@ -144,6 +145,7 @@ export function loadRequestStop(requestId) {
 
 export function setActiveActivity(activity) {
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
+  trackEvent('Activity', 'Change', activity);
   return { type: SET_ACTIVE_ACTIVITY, activity };
 }
 

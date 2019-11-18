@@ -84,7 +84,8 @@ class CookiesModal extends PureComponent<Props, State> {
     this._applyFilter(filter, this.props.cookieJar.cookies);
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     // Re-filter if we received new cookies
     // Compare cookies with Dates cast to strings
     const sameCookies = deepEqual(this.props.cookieJar.cookies, nextProps.cookieJar.cookies);

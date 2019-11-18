@@ -21,6 +21,11 @@ module.exports.start = async function() {
   console.log('[build] npm: ' + childProcess.spawnSync('npm', ['--version']).stdout);
   console.log('[build] node: ' + childProcess.spawnSync('node', ['--version']).stdout);
 
+  if (process.version.indexOf('v10.') !== 0) {
+    console.log('[build] Node v10.x.x is required to build');
+    process.exit(1);
+  }
+
   // Remove folders first
   console.log('[build] Removing existing directories');
   await emptyDir('../build');
@@ -96,20 +101,20 @@ async function install(relDir) {
   return new Promise(resolve => {
     const prefix = path.resolve(__dirname, relDir);
 
-    // // Link all plugins
-    // const plugins = path.resolve(__dirname, `../../../plugins`);
-    // for (const dir of fs.readdirSync(plugins)) {
-    //   if (dir.indexOf('.') === 0) {
-    //     continue;
-    //   }
-    //
-    //   console.log(`[build] Linking plugin ${dir}`);
-    //   const p = path.join(plugins, dir);
-    //   childProcess.spawnSync('npm', ['link', p], {
-    //     cwd: prefix,
-    //     shell: true,
-    //   });
-    // }
+    // Link all plugins
+    const plugins = path.resolve(__dirname, `../../../plugins`);
+    for (const dir of fs.readdirSync(plugins)) {
+      if (dir.indexOf('.') === 0) {
+        continue;
+      }
+
+      console.log(`[build] Linking plugin ${dir}`);
+      const p = path.join(plugins, dir);
+      childProcess.spawnSync('npm', ['link', p], {
+        cwd: prefix,
+        shell: true,
+      });
+    }
 
     // // Link all packages
     // const packages = path.resolve(__dirname, `../../../packages`);
@@ -164,6 +169,7 @@ function generatePackageJson(relBasePkg, relOutPkg) {
     license: basePkg.license,
     homepage: basePkg.homepage,
     author: basePkg.author,
+    copyright: `Copyright © ${new Date().getFullYear()} ${basePkg.author}`,
     main: 'main.min.js',
     dependencies: {},
   };

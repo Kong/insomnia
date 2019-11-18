@@ -14,15 +14,17 @@ import type { StatusCandidate } from '../../../sync/types';
 import { isLoggedIn } from '../../../account/session';
 import GitSyncDropdown from '../dropdowns/git-sync-dropdown';
 import GitVCS from '../../../sync/git/git-vcs';
+import type { GitRepository } from '../../../models/git-repository';
 
 type Props = {|
   activeEnvironment: Environment | null,
+  activeGitRepository: GitRepository | null,
   children: React.Node,
   enableSyncBeta: boolean,
   environmentHighlightColorStyle: string,
   handleSetActiveEnvironment: Function,
   handleSetActiveWorkspace: Function,
-  handleDeploySpec: () => void,
+  handleInitializeEntities: () => void,
   hidden: boolean,
   hotKeyRegistry: HotKeyRegistry,
   isLoading: boolean,
@@ -41,11 +43,12 @@ class Sidebar extends React.PureComponent<Props> {
   render() {
     const {
       activeEnvironment,
+      activeGitRepository,
       children,
       enableSyncBeta,
       environmentHighlightColorStyle,
+      handleInitializeEntities,
       handleSetActiveWorkspace,
-      handleDeploySpec,
       hidden,
       hotKeyRegistry,
       isLoading,
@@ -80,16 +83,22 @@ class Sidebar extends React.PureComponent<Props> {
           unseenWorkspaces={unseenWorkspaces}
           hotKeyRegistry={hotKeyRegistry}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
-          handleDeploySpec={handleDeploySpec}
           enableSyncBeta={enableSyncBeta}
           isLoading={isLoading}
           vcs={vcs}
+          gitVCS={gitVCS}
         />
 
         {children}
 
         {gitVCS && (
-          <GitSyncDropdown workspace={workspace} className="sidebar__footer" vcs={gitVCS} />
+          <GitSyncDropdown
+            workspace={workspace}
+            className="sidebar__footer"
+            gitRepository={activeGitRepository}
+            vcs={gitVCS}
+            handleInitializeEntities={handleInitializeEntities}
+          />
         )}
 
         {enableSyncBeta && vcs && isLoggedIn() && (

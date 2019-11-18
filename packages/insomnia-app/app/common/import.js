@@ -11,6 +11,7 @@ import AlertModal from '../ui/components/modals/alert-modal';
 import fs from 'fs';
 import { fnOrString, generateId } from './misc';
 import YAML from 'yaml';
+import { trackEvent } from './analytics';
 
 const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
 const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
@@ -237,6 +238,8 @@ export async function importRaw(
 
   await db.flushChanges();
 
+  trackEvent('Data', 'Import', results.type.id);
+
   return {
     source: results.type && typeof results.type.id === 'string' ? results.type.id : 'unknown',
     summary: importedDocs,
@@ -301,6 +304,8 @@ export async function exportRequestsHAR(
   }
 
   const data = await har.exportHar(harRequests);
+
+  trackEvent('Data', 'Export', 'HAR');
 
   return JSON.stringify(data, null, '\t');
 }
@@ -388,6 +393,8 @@ export async function exportRequestsData(
       delete d.type;
       return d;
     });
+
+  trackEvent('Data', 'Export', `Insomnia ${format}`);
 
   if (format.toLowerCase() === 'yaml') {
     return YAML.stringify(data);

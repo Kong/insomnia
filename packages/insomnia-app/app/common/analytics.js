@@ -1,7 +1,7 @@
 // @flow
-import * as models from '../models/index';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import * as electron from 'electron';
+import * as models from '../models/index';
 import * as db from '../common/database';
 import uuid from 'uuid';
 import {
@@ -35,6 +35,8 @@ const KEY_EVENT_LABEL = 'el';
 const KEY_EVENT_VALUE = 'ev';
 
 const KEY_CUSTOM_DIMENSION_PREFIX = 'cd';
+
+let _currentLocationPath = '/';
 
 export function trackEvent(category: string, action: string, label: ?string, value: ?string) {
   process.nextTick(async () => {
@@ -78,7 +80,7 @@ export function trackNonInteractiveEventQueueable(
 
 export function trackPageView(path: string) {
   process.nextTick(async () => {
-    await _trackPageView(GA_LOCATION + path);
+    await _trackPageView(path);
   });
 }
 
@@ -111,12 +113,12 @@ export async function _trackEvent(
   await _sendToGoogle(params, !!queuable);
 }
 
-async function _trackPageView(location: string) {
-  const params = [
-    { name: KEY_HIT_TYPE, value: 'pageview' },
-    { name: KEY_LOCATION, value: location },
-  ];
-  console.log('[ga] Page', location);
+export async function _trackPageView(location: string) {
+  _currentLocationPath = location;
+  console.log('[ga] Page', _currentLocationPath);
+
+  const params = [{ name: KEY_HIT_TYPE, value: 'pageview' }];
+
   await _sendToGoogle(params, false);
 }
 
@@ -135,7 +137,7 @@ async function _getDefaultParams(): Promise<Array<RequestParameter>> {
     { name: KEY_VERSION, value: '1' },
     { name: KEY_TRACKING_ID, value: GA_ID },
     { name: KEY_CLIENT_ID, value: deviceId },
-    { name: KEY_LOCATION, value: GA_LOCATION },
+    { name: KEY_LOCATION, value: GA_LOCATION + _currentLocationPath },
     { name: KEY_SCREEN_RESOLUTION, value: getScreenResolution() },
     { name: KEY_USER_LANGUAGE, value: getUserLanguage() },
     { name: KEY_TITLE, value: `${getAppId()}:${getAppVersion()}` },

@@ -1,20 +1,15 @@
 // @flow
-import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as electron from 'electron';
 import * as errorHandling from './main/error-handling';
-import * as updates from './main/updates';
+import { autoUpdater } from 'electron-updater';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import * as database from './common/database';
-import { CHANGELOG_BASE_URL, getAppVersion, isDevelopment, isMac } from './common/constants';
+import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';
 import { trackNonInteractiveEventQueueable } from './common/analytics';
-
-// Handle potential auto-update
-if (checkIfRestartNeeded()) {
-  process.exit(0);
-}
+import { getBasicAuthHeader } from './network/basic-auth/get-header';
 
 const { app, ipcMain, session } = electron;
 const commandLineArgs = process.argv.slice(1);
@@ -33,8 +28,7 @@ app.on('ready', async () => {
   await _trackStats();
   await _launchApp();
 
-  // Init the rest
-  await updates.init();
+  _checkForUpdates();
 });
 
 // Set as default protocol
@@ -145,7 +139,7 @@ async function _trackStats() {
     const { BrowserWindow } = electron;
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
-      url: `${CHANGELOG_BASE_URL}/${currentVersion}/`,
+      url: changelogUrl(),
       cta: "See What's New",
       message: `Updated to ${currentVersion}`,
     };
@@ -157,4 +151,15 @@ async function _trackStats() {
       }
     }, 5000);
   });
+}
+
+function _checkForUpdates() {
+  const authHeader = getBasicAuthHeader(process.env.BT_UPDATES_USER, process.env.BT_UPDATES_TOKEN);
+
+  // Authenticate with Bintray
+  autoUpdater.requestHeaders = {
+    [authHeader.name]: authHeader.value,
+  };
+
+  autoUpdater.checkForUpdatesAndNotify();
 }

@@ -1,6 +1,9 @@
 // @flow
+import YAML from 'yaml';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
+import path from 'path';
+import * as models from '../../../models';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -19,9 +22,9 @@ type Props = {|
 type Item = {|
   path: string,
   type: string,
-  name: string,
   status: string,
   staged: boolean,
+  editable: boolean,
 |};
 
 type State = {|
@@ -98,6 +101,10 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     const newItems = { ...this.state.items };
 
     for (const { path: p } of items) {
+      if (!newItems[p].editable) {
+        continue;
+      }
+
       newItems[p].staged = doStage || forceAdd;
     }
 
@@ -109,13 +116,39 @@ class GitStagingModal extends React.PureComponent<Props, State> {
 
     const gitPath = e.currentTarget.name;
 
-    if (!newItems[gitPath]) {
+    if (!newItems[gitPath] || !newItems[gitPath].editable) {
       return;
     }
 
     newItems[gitPath].staged = !newItems[gitPath].staged;
 
     this.setState({ items: newItems });
+  }
+
+  async getAllPaths(): Promise<Array<string>> {
+    const { vcs } = this.props;
+
+    const f = vcs.getFs().promises;
+    const rootDir = path.join('/', '.studio');
+
+    const fsPaths = [];
+    for (const type of await f.readdir(rootDir)) {
+      const typeDir = path.join(rootDir, type);
+      for (const name of await f.readdir(typeDir)) {
+        // NOTE: git paths don't start with '/' so we're omitting
+        //  it here too.
+        const gitPath = path.join('.studio/', type, name);
+        fsPaths.push(path.join(gitPath));
+      }
+    }
+
+    // To get all possible paths, we need to combine the paths already in Git
+    // with the paths on the FS. This is required to cover the case where a
+    // file can be deleted from FS or from Git.
+    const gitPaths = await vcs.listFiles();
+    const uniquePaths = new Set([...fsPaths, ...gitPaths]);
+
+    return Array.from(uniquePaths).sort();
   }
 
   async show(options: { onCommit?: () => void }) {
@@ -130,44 +163,68 @@ class GitStagingModal extends React.PureComponent<Props, State> {
 
     // Cache status names
     const docs = await withDescendants(workspace);
+    const allPaths = await this.getAllPaths();
+
     this.statusNames = {};
     for (const doc of docs) {
-      this.statusNames[`${doc.type}/${doc._id}.json`] = (doc: any).name || '';
+      this.statusNames[path.join('.studio', doc.type, `${doc._id}.json`)] = (doc: any).name || '';
+      this.statusNames[path.join('.studio', doc.type, `${doc._id}.yml`)] = (doc: any).name || '';
     }
 
     // Create status items
     const items = {};
-    const status = await vcs.status();
     const log = (await vcs.log()) || [];
-    for (const s of status.entries) {
-      if (s.status === 'unmodified') {
+    for (const gitPath of allPaths) {
+      const status = await vcs.status(gitPath);
+      if (status === 'unmodified') {
         continue;
       }
 
-      if (!this.statusNames[s.path] && log.length > 0) {
-        const docJSON = await vcs.readObjFromTree(log[0].tree, s.path);
-        if (!docJSON) {
+      if (!this.statusNames[gitPath] && log.length > 0) {
+        const docYML = await vcs.readObjFromTree(log[0].tree, gitPath);
+        if (!docYML) {
           continue;
         }
 
         try {
-          const doc = JSON.parse(docJSON);
-          this.statusNames[s.path] = (doc: any).name || '';
+          const doc = YAML.parse(docYML);
+          this.statusNames[gitPath] = (doc: any).name || '';
         } catch (err) {
           // Nothing here
         }
       }
 
-      items[s.path] = {
-        path: s.path,
-        status: s.status,
-        type: s.path.split('/')[0] || 'Unknown',
-        name: 'n/a',
-        staged: !s.status.includes('added'),
+      // We know that type is in the path but we don't know where. This
+      // is the safest way to check for the type
+      let type = 'Unknown';
+      for (const t of models.types()) {
+        if (gitPath.includes(t)) {
+          type = t;
+          break;
+        }
+      }
+
+      let staged = !status.includes('added');
+
+      // We want to enforce that the workspace is committed because otherwise
+      // others won't be able to clone from it. So here we're preventing
+      // people from un-staging the workspace if it's not added yet.
+      let editable = true;
+      if (type === models.workspace.type && status.includes('added')) {
+        editable = false;
+        staged = true;
+      }
+
+      items[gitPath] = {
+        type,
+        staged,
+        editable,
+        status,
+        path: gitPath,
       };
     }
 
-    const branch = await vcs.branch();
+    const branch = await vcs.getBranch();
     this.setState(
       {
         items,
@@ -207,7 +264,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
   }
 
   renderItem(item: Item) {
-    const { path: gitPath, staged } = item;
+    const { path: gitPath, staged, editable } = item;
 
     const docName = this.statusNames[gitPath] || 'n/a';
 
@@ -216,6 +273,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         <td>
           <label className="no-pad wide">
             <input
+              disabled={!editable}
               className="space-right"
               type="checkbox"
               checked={staged}

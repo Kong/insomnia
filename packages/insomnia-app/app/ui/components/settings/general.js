@@ -11,12 +11,8 @@ import {
   EDITOR_KEY_MAP_VIM,
   isLinux,
   isMac,
-  isWindows,
-  UPDATE_CHANNEL_BETA,
-  UPDATE_CHANNEL_STABLE,
 } from '../../../common/constants';
 import type { Settings } from '../../../models/settings';
-import CheckForUpdatesButton from '../check-for-updates-button';
 import { setFont } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
@@ -349,7 +345,8 @@ class General extends React.PureComponent<Props, State> {
           )}
         </div>
 
-        {(isWindows() || isMac()) && (
+        {/* Update channels not supported in Studio yet */}
+        {/* (isWindows() || isMac()) && (
           <React.Fragment>
             <hr className="pad-top" />
             <div>
@@ -378,7 +375,7 @@ class General extends React.PureComponent<Props, State> {
               </label>
             </div>
           </React.Fragment>
-        )}
+        ) */}
 
         {isLinux() && (
           <React.Fragment>
@@ -419,7 +416,7 @@ class General extends React.PureComponent<Props, State> {
             <input
               type="checkbox"
               name="enableAnalytics"
-              checked={settings.enableAnalytics}
+              checked={!!settings.enableAnalytics}
               onChange={this._handleUpdateSetting}
             />
           </label>

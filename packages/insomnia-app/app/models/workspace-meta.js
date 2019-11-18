@@ -22,6 +22,11 @@ type BaseWorkspaceMeta = {
   paneWidth: number,
   paneHeight: number,
   hasSeen: boolean,
+  kongPortalRbacToken: string,
+  kongPortalApiUrl: string,
+  kongPortalUrl: string,
+  kongPortalUserWorkspace: string,
+  gitRepositoryId: string | null,
 };
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
@@ -37,6 +42,11 @@ export function init(): BaseWorkspaceMeta {
     paneWidth: DEFAULT_PANE_WIDTH,
     paneHeight: DEFAULT_PANE_HEIGHT,
     hasSeen: true,
+    kongPortalRbacToken: '',
+    kongPortalApiUrl: '',
+    kongPortalUrl: '',
+    kongPortalUserWorkspace: '',
+    gitRepositoryId: null,
   };
 }
 
@@ -58,6 +68,10 @@ export function update(workspaceMeta: WorkspaceMeta, patch: Object = {}): Promis
 
 export async function getByParentId(parentId: string): Promise<WorkspaceMeta | null> {
   return db.getWhere(type, { parentId });
+}
+
+export async function getByGitRepositoryId(gitRepositoryId: string): Promise<WorkspaceMeta | null> {
+  return db.getWhere(type, { gitRepositoryId });
 }
 
 export async function getOrCreateByParentId(parentId: string): Promise<WorkspaceMeta> {

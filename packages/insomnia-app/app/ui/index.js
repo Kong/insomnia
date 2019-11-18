@@ -14,7 +14,7 @@ import { setFont, setTheme } from '../plugins/misc';
 import { AppContainer } from 'react-hot-loader';
 import { DragDropContext } from 'react-dnd';
 import DNDBackend from './dnd-backend';
-import { trackEvent, trackPageView } from '../common/analytics';
+import { trackEvent } from '../common/analytics';
 
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
@@ -46,9 +46,6 @@ document.title = packageJson.app.longName;
 
   render(App);
 
-  // Track the page view
-  trackPageView();
-
   // Hot Module Replacement API
   if (module.hot) {
     // module.hot.accept('./containers/app', () => {
@@ -56,14 +53,17 @@ document.title = packageJson.app.longName;
     // });
   }
 
-  // Do things that can wait
-  const { enableSyncBeta } = await models.settings.getOrCreate();
-  if (enableSyncBeta) {
-    console.log('[app] Enabling sync beta');
-    legacySync.disableForSession();
-  } else {
-    process.nextTick(legacySync.init);
-  }
+  // Legacy sync not part of Studio
+  legacySync.disableForSession();
+
+  // // Do things that can wait
+  // const { enableSyncBeta } = await models.settings.getOrCreate();
+  // if (enableSyncBeta) {
+  //   console.log('[app] Enabling sync beta');
+  //   legacySync.disableForSession();
+  // } else {
+  //   process.nextTick(legacySync.init);
+  // }
 })();
 
 // Export some useful things for dev

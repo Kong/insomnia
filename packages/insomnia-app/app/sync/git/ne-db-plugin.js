@@ -2,7 +2,7 @@
 import path from 'path';
 import * as db from '../../common/database';
 import * as models from '../../models';
-import stringifyJSON from 'json-stable-stringify';
+import YAML from 'yaml';
 import Stat from './stat';
 
 export default class NeDBPlugin {
@@ -32,26 +32,30 @@ export default class NeDBPlugin {
       options = { encoding: options };
     }
 
-    const { type, id } = this._parsePath(filePath);
+    const { root, type, id } = this._parsePath(filePath);
 
-    if (id === null || type === null) {
-      throw new Error(`Cannot read from directory or missing ${filePath}`);
+    if (root === null || id === null || type === null) {
+      throw this._errMissing(filePath);
     }
 
     const doc = await db.get(type, id);
 
     if (!doc || (doc: any).isPrivate) {
-      throw new Error(`Cannot find doc ${filePath}`);
+      throw this._errMissing(filePath);
     }
 
-    if (doc.type !== models.workspace.type) {
-      const ancestors = await db.withAncestors(doc);
-      if (!ancestors.find(d => d.type === models.workspace.type)) {
-        throw new Error(`Not found under workspace ${filePath}`);
-      }
-    }
+    // It would be nice to be able to add this check here but we can't since
+    // isomorphic-git may have just deleted the workspace from the FS. This
+    // happens frequently during branch checkouts and merges
+    //
+    // if (doc.type !== models.workspace.type) {
+    //   const ancestors = await db.withAncestors(doc);
+    //   if (!ancestors.find(d => d.type === models.workspace.type)) {
+    //     throw new Error(`Not found under workspace ${filePath}`);
+    //   }
+    // }
 
-    const raw = Buffer.from(stringifyJSON(doc, { space: '  ' }), 'utf8');
+    const raw = Buffer.from(YAML.stringify(doc), 'utf8');
 
     if (options.encoding) {
       return raw.toString(options.encoding);
@@ -62,8 +66,14 @@ export default class NeDBPlugin {
 
   async writeFile(filePath: string, data: Buffer | string, ...x: Array<any>): Promise<void> {
     filePath = path.normalize(filePath);
-    const { id, type } = this._parsePath(filePath);
-    const doc = JSON.parse(data.toString());
+    const { root, id, type } = this._parsePath(filePath);
+
+    if (root !== '.studio') {
+      console.log(`[git] Ignoring external file ${filePath}`);
+      return;
+    }
+
+    const doc = YAML.parse(data.toString());
 
     if (id !== doc._id) {
       throw new Error(`Doc _id does not match file path ${doc._id} != ${id || 'null'}`);
@@ -96,29 +106,30 @@ export default class NeDBPlugin {
   async readdir(filePath: string, ...x: Array<any>): Promise<Array<string>> {
     filePath = path.normalize(filePath);
 
-    const MODELS = [
-      models.workspace.type,
-      models.environment.type,
-      models.requestGroup.type,
-      models.request.type,
-      models.apiSpec.type,
-    ];
-
-    const { type, id } = this._parsePath(filePath);
+    const { root, type, id } = this._parsePath(filePath);
 
     let docs = [];
     let otherFolders = [];
-    if (id === null && type === null) {
-      otherFolders = MODELS;
+    if (root === null && id === null && type === null) {
+      otherFolders = ['.studio'];
+    } else if (id === null && type === null) {
+      otherFolders = [
+        models.workspace.type,
+        models.environment.type,
+        models.requestGroup.type,
+        models.request.type,
+        models.apiSpec.type,
+      ];
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
       const children = await db.withDescendants(workspace);
       docs = children.filter(d => d.type === type && !(d: any).isPrivate);
     } else {
-      throw new Error(`file path is not a directory ${filePath}`);
+      throw this._errMissing(filePath);
     }
 
-    const ids = docs.map(d => `${d._id}.json`);
+    const ids = docs.map(d => `${d._id}.yml`);
+
     return [...ids, ...otherFolders].sort();
   }
 
@@ -133,22 +144,24 @@ export default class NeDBPlugin {
     let dir: Array<string> | null = null;
     try {
       fileBuff = await this.readFile(filePath);
-    } catch (err) {}
+    } catch (err) {
+      // console.log('[nedb] Failed to read file', err);
+    }
 
     if (fileBuff === null) {
       try {
         dir = await this.readdir(filePath);
       } catch (err) {
-        // Nothing
+        // console.log('[nedb] Failed to read dir', err);
       }
     }
 
     if (!fileBuff && !dir) {
-      throw new Error(`Not found ${filePath}`);
+      throw this._errMissing(filePath);
     }
 
     if (fileBuff) {
-      const doc = JSON.parse(fileBuff.toString());
+      const doc = YAML.parse(fileBuff.toString());
       return new Stat({
         type: 'file',
         mode: 0o777,
@@ -167,32 +180,43 @@ export default class NeDBPlugin {
     }
   }
 
-  async readlink(filePath: string, ...x: Array<any>) {
+  async readlink(filePath: string, ...x: Array<any>): Promise<Buffer | string> {
     return this.readFile(filePath, ...x);
   }
 
-  async lstat(filePath: string, ...x: Array<any>) {
+  async lstat(filePath: string, ...x: Array<any>): Promise<Stat> {
     return this.stat(filePath, ...x);
   }
 
-  async rmdir(filePath: string, ...x: Array<any>) {
-    throw new Error('NeDBPlugin rmdir not supported');
+  async rmdir(dir: string, ...x: Array<any>): Promise<void> {
+    // Dirs in NeDB can't be removed, so we'll just pretend like it succeeded
+    return Promise.resolve();
   }
 
-  async symlink(targetPath: string, filePath: string, ...x: Array<any>) {
+  async symlink(targetPath: string, filePath: string, ...x: Array<any>): Promise<void> {
     throw new Error('NeDBPlugin symlink not supported');
   }
 
-  _parsePath(filePath: string): { type: string | null, id: string | null } {
+  _parsePath(filePath: string): { root: string | null, type: string | null, id: string | null } {
     filePath = path.normalize(filePath);
 
-    const [type, idRaw] = filePath.split(path.sep).filter(s => s !== '');
+    const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '');
 
-    const id = typeof idRaw === 'string' ? idRaw.replace(/\.json$/, '') : idRaw;
+    const id = typeof idRaw === 'string' ? idRaw.replace(/\.(json|yml)$/, '') : idRaw;
 
     return {
+      root: root || null,
       type: type || null,
       id: id || null,
     };
+  }
+
+  _errMissing(filePath: string): Error {
+    const e: ErrnoError = new Error(`ENOENT: no such file or directory, scandir '${filePath}'`);
+    e.errno = -2;
+    e.code = 'ENOENT';
+    e.syscall = 'scandir';
+    e.path = filePath;
+    return e;
   }
 }

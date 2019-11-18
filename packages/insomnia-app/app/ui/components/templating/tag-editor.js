@@ -85,7 +85,8 @@ class TagEditor extends React.PureComponent<Props, State> {
     this.loadVariables();
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     const { workspace } = nextProps;
 
     if (this.props.workspace._id !== workspace._id) {

@@ -10,7 +10,7 @@ import path from 'path';
  * @returns {{promises: *}}
  */
 export function routableFSPlugin(defaultFS: Object, otherFS: { [string]: Object }) {
-  const execMethod = (method: string, filePath: string, ...args: Array<any>) => {
+  const execMethod = async (method: string, filePath: string, ...args: Array<any>) => {
     filePath = path.normalize(filePath);
 
     for (const prefix of Object.keys(otherFS)) {
@@ -19,9 +19,16 @@ export function routableFSPlugin(defaultFS: Object, otherFS: { [string]: Object 
       }
     }
 
+    // Uncomment this to debug operations
+    // console.log('[routablefs] Executing', method, filePath, { args });
+
     // Fallback to default if no prefix matched
-    // console.log('NeDB', method, filePath);
-    return defaultFS.promises[method](filePath, ...args);
+    const result = await defaultFS.promises[method](filePath, ...args);
+
+    // Uncomment this to debug operations
+    // console.log('[routablefs] Executing', method, filePath, { args }, { result });
+
+    return result;
   };
 
   const methods = {};

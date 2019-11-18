@@ -4,6 +4,7 @@ import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
 import type { Workspace } from '../../../models/workspace';
 import type { ApiSpec } from '../../../models/api-spec';
+import HelpLink from '../help-link';
 
 type Props = {|
   apiSpec: ApiSpec,
@@ -13,7 +14,6 @@ type Props = {|
   lineWrapping: boolean,
   editorKeyMap: string,
   onChange: (spec: ApiSpec) => Promise<void>,
-  handleDeploy: () => void,
   handleTest: () => void,
 |};
 
@@ -52,20 +52,18 @@ class SpecEditor extends React.PureComponent<Props> {
       lineWrapping,
       editorKeyMap,
       apiSpec,
-      handleDeploy,
       handleTest,
     } = this.props;
 
     return (
       <div className="spec-editor theme--pane">
         <div className="spec-editor__header theme--pane__header">
-          <h1>Edit API Specification</h1>
+          <h1>
+            Edit API Specification <HelpLink slug="editing-specs" />
+          </h1>
           <nav className="spec-editor__header__buttons">
-            <button className="btn" onClick={handleDeploy}>
-              Deploy
-            </button>
             <button className="btn" onClick={handleTest}>
-              Test
+              Debug
             </button>
           </nav>
         </div>

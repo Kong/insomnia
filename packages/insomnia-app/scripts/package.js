@@ -14,6 +14,46 @@ const PLATFORM_MAP = {
 // Start package if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
+    const {
+      GITHUB_REF,
+      TRAVIS_TAG,
+      FORCE_PACKAGE,
+
+      // Bintray env vars for publishing
+      BT_USER,
+      BT_TOKEN,
+
+      // Bintray env vars for consuming (auto-updater)
+      BT_UPDATES_USER,
+      BT_UPDATES_TOKEN,
+    } = process.env;
+
+    // First check if we need to publish (uses Git tags)
+    const gitRefStr = GITHUB_REF || TRAVIS_TAG;
+    const skipPublish = !gitRefStr || !gitRefStr.match(/v\d+\.\d+\.\d+(-(beta|alpha)\.\d+)?$/);
+    if (FORCE_PACKAGE !== 'true' && skipPublish) {
+      console.log(`[package] Not packaging for ref=${gitRefStr}`);
+      process.exit(0);
+    }
+
+    // Error out if no Bintray credentials for auto-updates
+    if (!BT_USER || !BT_TOKEN) {
+      console.log(
+        '[package] BT_USER and BT_TOKEN environment variables must be set' +
+          'in order to publish to Bintray!',
+      );
+      process.exit(1);
+    }
+
+    // Error out if no Bintray credentials for auto-updates
+    if (!BT_UPDATES_USER || !BT_UPDATES_TOKEN) {
+      console.log(
+        '[package] BT_UPDATES_USER and BT_UPDATES_TOKEN environment variables ' +
+          'must be set for auto-updater to authenticate with Bintray!',
+      );
+      process.exit(1);
+    }
+
     try {
       await buildTask.start();
       await module.exports.start();
@@ -46,6 +86,7 @@ async function pkg(relConfigPath) {
     .replace('__APP_ID__', packageJson.app.appId)
     .replace('__ICON_URL__', packageJson.app.icon)
     .replace('__EXECUTABLE_NAME__', packageJson.app.executableName)
+    .replace('__BT_USER__', process.env.BT_USER)
     .replace('__SYNOPSIS__', packageJson.app.synopsis);
 
   const config = JSON.parse(rawConfig);
@@ -56,6 +97,7 @@ async function pkg(relConfigPath) {
     : config[targetPlatform].target;
 
   return electronBuilder.build({
+    publish: shouldPublish() ? 'always' : 'never',
     config,
     [targetPlatform]: target,
   });
@@ -72,4 +114,15 @@ async function emptyDir(relPath) {
       }
     });
   });
+}
+
+// Only release if we're building a tag that ends in a version number
+function shouldPublish() {
+  const gitRefStr = process.env.GITHUB_REF || process.env.TRAVIS_TAG;
+
+  if (!gitRefStr || !gitRefStr.match(/v\d+\.\d+\.\d+(-(beta|alpha)\.\d+)?$/)) {
+    return false;
+  }
+
+  return true;
 }

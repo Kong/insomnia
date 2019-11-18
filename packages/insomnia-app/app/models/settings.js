@@ -45,7 +45,6 @@ type BaseSettings = {
 
   // Studio stuff
   enableAnalytics: boolean,
-  kongManagerUrl: string,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -95,7 +94,6 @@ export function init(): BaseSettings {
 
     // Studio stuff
     enableAnalytics: false,
-    kongManagerUrl: 'http://localhost:8002/default/services',
   };
 }
 

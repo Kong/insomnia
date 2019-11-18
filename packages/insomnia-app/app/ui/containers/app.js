@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import mkdirp from 'mkdirp';
 import fs from 'fs';
 import { clipboard, ipcRenderer, remote } from 'electron';
 import { parse as urlParse } from 'url';
@@ -29,10 +28,12 @@ import {
   PREVIEW_MODE_SOURCE,
 } from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
+import * as entitiesActions from '../redux/modules/entities';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import {
   selectActiveCookieJar,
+  selectActiveGitRepository,
   selectActiveOAuth2Token,
   selectActiveRequest,
   selectActiveRequestMeta,
@@ -871,6 +872,7 @@ class App extends PureComponent {
 
   componentDidUpdate(prevProps) {
     this._updateDocumentTitle();
+    this._ensureWorkspaceChildren();
 
     // Force app refresh if login state changes
     if (prevProps.isLoggedIn !== this.props.isLoggedIn) {
@@ -878,9 +880,27 @@ class App extends PureComponent {
         forceRefreshCounter: state.forceRefreshCounter + 1,
       }));
     }
+
+    // Check on VCS things
+    const { activeWorkspace, activeGitRepository } = this.props;
+    const changingWorkspace = prevProps.activeWorkspace._id !== activeWorkspace._id;
+
+    // Update VCS if needed
+    if (changingWorkspace) {
+      this._updateVCS();
+    }
+
+    // Update Git VCS if needed
+    const thisGit = activeGitRepository || {};
+    const nextGit = prevProps.activeGitRepository || {};
+    if (changingWorkspace || thisGit._id !== nextGit._id) {
+      this._updateGitVCS();
+    }
   }
 
-  async _updateGitVCS(activeWorkspace) {
+  async _updateGitVCS() {
+    const { activeGitRepository, activeWorkspace } = this.props;
+
     // Get the vcs and set it to null in the state while we update it
     let gitVCS = this.state.gitVCS;
     this.setState({ gitVCS: null });
@@ -889,20 +909,56 @@ class App extends PureComponent {
       gitVCS = new GitVCS();
     }
 
-    // Create FS plugin
-    const gitDir = path.join(getDataDirectory(), `version-control/git/${activeWorkspace._id}.git`);
-    const pDir = NeDBPlugin.createPlugin(activeWorkspace._id);
-    const pGit = FSPlugin.createPlugin();
-    const fsPlugin = routableFSPlugin(pDir, { [gitDir]: pGit });
+    if (activeGitRepository) {
+      // Create FS plugin
+      const baseDir = path.join(
+        getDataDirectory(),
+        `version-control/git/${activeGitRepository._id}`,
+      );
+      const pStudioDataNeDb = NeDBPlugin.createPlugin(activeWorkspace._id);
+      const pGitData = FSPlugin.createPlugin(baseDir);
+      const pOtherData = FSPlugin.createPlugin(path.join(baseDir, 'other'));
+      const gitSubDir = '/git';
 
-    // Init VCS
-    mkdirp.sync(gitDir);
-    await gitVCS.init('/', fsPlugin, gitDir);
+      const fsPlugin = routableFSPlugin(
+        // All data outside the directories listed below will be stored in an 'other'
+        // directory. This is so we can support files that exist outside the ones
+        // Studio is specifically in charge of.
+        pOtherData,
+        {
+          // All studio data is stored within the .studio/ directory at the root of the
+          // repository and is read/written from the local NeDB database
+          '/.studio': pStudioDataNeDb,
+
+          // All git metadata is stored in a git/ directory on the filesystem
+          [gitSubDir]: pGitData,
+        },
+      );
+
+      // Init VCS
+      if (activeGitRepository.needsFullClone) {
+        await models.gitRepository.update(activeGitRepository, { needsFullClone: false });
+        const { credentials, uri } = activeGitRepository;
+        await gitVCS.initFromClone(uri, credentials, '/', fsPlugin, gitSubDir);
+      } else {
+        await gitVCS.init('/', fsPlugin, gitSubDir);
+      }
+
+      // Configure basic info
+      const { author, uri: gitUri } = activeGitRepository;
+      await gitVCS.setAuthor(author.name, author.email);
+      await gitVCS.addRemote(gitUri);
+    } else {
+      // Create new one to un-initialize it
+      gitVCS = new GitVCS();
+    }
 
     this.setState({ gitVCS });
   }
 
-  async _updateVCS(activeWorkspace) {
+  async _updateVCS() {
+    const { activeWorkspace } = this.props;
+
     // Get the vcs and set it to null in the state while we update it
     let vcs = this.state.vcs;
     this.setState({ vcs: null });
@@ -973,21 +1029,6 @@ class App extends PureComponent {
 
     ipcRenderer.on('toggle-preferences', () => {
       App._handleShowSettingsModal();
-    });
-
-    ipcRenderer.on('kong-manager-prompt', () => {
-      const { settings } = this.props;
-
-      showPrompt({
-        title: 'Kong Manager',
-        label: 'Kong Manager URL',
-        defaultValue: settings.kongManagerUrl,
-        placeholder: 'http://localhost:8002/default/services',
-        onComplete: async url => {
-          settings.kongManagerUrl = url || 'http://localhost:8002/default/services';
-          await models.settings.update(settings);
-        },
-      });
     });
 
     ipcRenderer.on('reload-plugins', this._handleReloadPlugins);
@@ -1063,14 +1104,14 @@ class App extends PureComponent {
     document.removeEventListener('mousemove', this._handleMouseMove);
   }
 
-  async _ensureWorkspaceChildren(props) {
+  async _ensureWorkspaceChildren() {
     const {
       activeWorkspace,
       activeWorkspaceMeta,
       activeCookieJar,
       environments,
       activeApiSpec,
-    } = props;
+    } = this.props;
     const baseEnvironments = environments.filter(e => e.parentId === activeWorkspace._id);
 
     // Nothing to do
@@ -1096,19 +1137,9 @@ class App extends PureComponent {
     this._isMigratingChildren = false;
   }
 
-  componentWillReceiveProps(nextProps) {
-    this._ensureWorkspaceChildren(nextProps);
-
-    // Update VCS if needed
-    const { activeWorkspace } = this.props;
-    if (nextProps.activeWorkspace._id !== activeWorkspace._id) {
-      this._updateVCS(nextProps.activeWorkspace);
-      this._updateGitVCS(nextProps.activeWorkspace);
-    }
-  }
-
+  // eslint-disable-next-line camelcase
   componentWillMount() {
-    this._ensureWorkspaceChildren(this.props);
+    this._ensureWorkspaceChildren();
   }
 
   render() {
@@ -1236,19 +1267,23 @@ function mapStateToProps(state, props) {
     requestMetas,
     requestVersions,
     apiSpecs,
+    gitRepositories,
   } = entitiesLists;
 
   const settings = entitiesLists.settings[0];
 
   // Workspace stuff
-  const activeWorkspaceMeta = selectActiveWorkspaceMeta(state, props) || {};
+  const activeWorkspaceMeta = selectActiveWorkspaceMeta(state, props);
   const activeWorkspace = selectActiveWorkspace(state, props);
   const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state, props);
-  const sidebarHidden = activeWorkspaceMeta.sidebarHidden || false;
-  const sidebarFilter = activeWorkspaceMeta.sidebarFilter || '';
-  const sidebarWidth = activeWorkspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
-  const paneWidth = activeWorkspaceMeta.paneWidth || DEFAULT_PANE_WIDTH;
-  const paneHeight = activeWorkspaceMeta.paneHeight || DEFAULT_PANE_HEIGHT;
+  const activeGitRepository = selectActiveGitRepository(state, props);
+
+  const safeMeta = activeWorkspaceMeta || {};
+  const sidebarHidden = safeMeta.sidebarHidden || false;
+  const sidebarFilter = safeMeta.sidebarFilter || '';
+  const sidebarWidth = safeMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
+  const paneWidth = safeMeta.paneWidth || DEFAULT_PANE_WIDTH;
+  const paneHeight = safeMeta.paneHeight || DEFAULT_PANE_HEIGHT;
 
   // Request stuff
   const requestMeta = selectActiveRequestMeta(state, props) || {};
@@ -1266,7 +1301,7 @@ function mapStateToProps(state, props) {
   const activeResponse = selectActiveResponse(state, props) || null;
 
   // Environment stuff
-  const activeEnvironmentId = activeWorkspaceMeta.activeEnvironmentId;
+  const activeEnvironmentId = safeMeta.activeEnvironmentId;
   const activeEnvironment = entities.environments[activeEnvironmentId];
 
   // OAuth2Token stuff
@@ -1289,6 +1324,7 @@ function mapStateToProps(state, props) {
     activeApiSpec,
     activeCookieJar,
     activeEnvironment,
+    activeGitRepository,
     activeRequest,
     activeRequestResponses,
     activeResponse,
@@ -1296,6 +1332,7 @@ function mapStateToProps(state, props) {
     activeWorkspaceClientCertificates,
     activeWorkspaceMeta,
     environments,
+    gitRepositories,
     isLoading,
     isLoggedIn,
     loadStartTime,
@@ -1324,6 +1361,7 @@ function mapStateToProps(state, props) {
 
 function mapDispatchToProps(dispatch) {
   const global = bindActionCreators(globalActions, dispatch);
+  const entities = bindActionCreators(entitiesActions, dispatch);
 
   return {
     handleStartLoading: global.loadRequestStart,
@@ -1336,6 +1374,7 @@ function mapDispatchToProps(dispatch) {
     handleCommand: global.newCommand,
     handleExportFile: global.exportWorkspacesToFile,
     handleExportRequestsToFile: global.exportRequestsToFile,
+    handleInitializeEntities: entities.initialize,
     handleMoveDoc: _moveDoc,
   };
 }
