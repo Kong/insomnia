@@ -69,7 +69,8 @@ export function getDocumentationUrl(slug) {
 }
 
 export function changelogUrl() {
-  return getDocumentationUrl('release-notes');
+  return 'https://docs.konghq.com/studio/changelog/';
+  // return getDocumentationUrl('release-notes');
 }
 
 // Global Stuff
