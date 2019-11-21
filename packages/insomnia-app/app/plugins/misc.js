@@ -78,15 +78,21 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
     const styles = renderedTheme.styles;
 
     // Activity Bar
-    css += wrapStyles(n, '.theme--activity-bar', getThemeBlockCSS(styles.activityBar));
+    css += wrapStyles(
+      n,
+      '.theme--activity-bar',
+      getThemeBlockCSS(styles.activityBar || styles.sidebar),
+    );
 
     // Dropdown Menus
-    css += wrapStyles(n, '.theme--dropdown__menu', getThemeBlockCSS(styles.dialog));
-    css += wrapStyles(n, '.theme--dropdown__menu', getThemeBlockCSS(styles.dropdown));
+    css += wrapStyles(
+      n,
+      '.theme--dropdown__menu',
+      getThemeBlockCSS(styles.dropdown || styles.dialog),
+    );
 
     // Tooltips
-    css += wrapStyles(n, '.theme--tooltip', getThemeBlockCSS(styles.dialog));
-    css += wrapStyles(n, '.theme--tooltip', getThemeBlockCSS(styles.tooltip));
+    css += wrapStyles(n, '.theme--tooltip', getThemeBlockCSS(styles.tooltip || styles.dialog));
 
     // Overlay
     css += wrapStyles(
