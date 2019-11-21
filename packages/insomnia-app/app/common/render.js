@@ -70,7 +70,7 @@ export async function buildRenderContext(
        * A regular Object.assign would yield { base_url: '{{ base_url }}/foo' } and the
        * original base_url of google.com would be lost.
        */
-      if (typeof renderContext[key] === 'string') {
+      if (typeof envObject[key] === 'string') {
         const isSelfRecursive = envObject[key].match(`{{ ?${key}[ |][^}]*}}`);
 
         if (isSelfRecursive) {
