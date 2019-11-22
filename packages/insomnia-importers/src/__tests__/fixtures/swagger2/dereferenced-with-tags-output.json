@@ -66,7 +66,6 @@
       },
       "method": "POST",
       "parameters": [],
-      "headers": [],
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
         "clientId": "{{ client_id }}",
@@ -75,6 +74,13 @@
         "scope": "write:pets read:pets",
         "type": "oauth2"
       },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/json"
+        }
+      ],
       "_type": "request",
       "_id": "addPet"
     },
@@ -89,7 +95,6 @@
       },
       "method": "PUT",
       "parameters": [],
-      "headers": [],
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
         "clientId": "{{ client_id }}",
@@ -98,6 +103,13 @@
         "scope": "write:pets read:pets",
         "type": "oauth2"
       },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/json"
+        }
+      ],
       "_type": "request",
       "_id": "updatePet"
     },
@@ -178,11 +190,22 @@
       "description": "",
       "url": "{{ base_url }}/pet/{{ petId }}",
       "body": {
-        "mimeType": "application/x-www-form-urlencoded"
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+          {
+            "disabled": true,
+            "name": "name",
+            "value": "string"
+          },
+          {
+            "disabled": true,
+            "name": "status",
+            "value": "string"
+          }
+        ]
       },
       "method": "POST",
       "parameters": [],
-      "headers": [],
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
         "clientId": "{{ client_id }}",
@@ -191,6 +214,13 @@
         "scope": "write:pets read:pets",
         "type": "oauth2"
       },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/x-www-form-urlencoded"
+        }
+      ],
       "_type": "request",
       "_id": "updatePetWithForm"
     },
@@ -226,11 +256,22 @@
       "description": "",
       "url": "{{ base_url }}/pet/{{ petId }}/uploadImage",
       "body": {
-        "mimeType": "multipart/form-data"
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "disabled": true,
+            "name": "additionalMetadata",
+            "value": "string"
+          },
+          {
+            "disabled": true,
+            "name": "file",
+            "type": "file"
+          }
+        ]
       },
       "method": "POST",
       "parameters": [],
-      "headers": [],
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
         "clientId": "{{ client_id }}",
@@ -239,6 +280,13 @@
         "scope": "write:pets read:pets",
         "type": "oauth2"
       },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "multipart/form-data"
+        }
+      ],
       "_type": "request",
       "_id": "uploadFile"
     },

@@ -241,7 +241,7 @@ class OneLineEditor extends PureComponent {
       const check = () => {
         if (this._editor) {
           this._editor.focus();
-          this._editor.setSelection(start, end);
+          this._editor.setSelection(start, end, 0, 0);
         } else {
           setTimeout(check, 40);
         }
