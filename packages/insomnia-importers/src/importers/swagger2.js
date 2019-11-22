@@ -109,7 +109,23 @@ function parseEndpoints(document) {
     .reduce((flat, arr) => flat.concat(arr), []); // flat single array
 
   const tags = document.tags || [];
-  const folders = tags.map(tag => {
+
+  const implicitTags = endpointsSchemas
+    .map(endpointSchema => endpointSchema.tags)
+    .reduce((flat, arr) => flat.concat(arr), []) // flat single array
+    .reduce((distinct, value) => {
+      if (!distinct.includes(value)) {
+        distinct.push(value);
+      }
+      return distinct;
+    }, []) // remove duplicates
+    .filter(tag => !tags.map(tag => tag.name).includes(tag))
+    .map(tag => ({
+      name: tag,
+      desciption: '',
+    }));
+
+  const folders = [...tags, ...implicitTags].map(tag => {
     return importFolderItem(tag, defaultParent);
   });
   const folderLookup = {};

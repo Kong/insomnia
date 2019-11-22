@@ -32,7 +32,15 @@
       "_id": "__ENV_2__"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "_id": "__GRP_1__",
+      "_type": "request_group",
+      "description": "",
+      "environment": {},
+      "name": "pets",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "parentId": "__GRP_1__",
       "name": "List all pets",
       "url": "{{ base_url }}/pets",
       "body": {},
@@ -50,7 +58,7 @@
       "_id": "listPets"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_1__",
       "name": "Create a pet",
       "url": "{{ base_url }}/pets",
       "body": {
@@ -71,7 +79,7 @@
       "_id": "createPets"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
+      "parentId": "__GRP_1__",
       "name": "Info for a specific pet",
       "url": "{{ base_url }}/pets/{{ petId }}",
       "body": {},
