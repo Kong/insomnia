@@ -18,5 +18,6 @@
   "dependencies": {
     "insomnia-cookies": "^0.0.20",
     "insomnia-url": "^0.1.12"
-  }
+  },
+  "gitHead": "f325aef9ffe748b2d05562782852e83b16056210"
 }

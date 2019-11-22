@@ -10,5 +10,6 @@
   },
   "dependencies": {
     "tough-cookie": "^2.3.3"
-  }
+  },
+  "gitHead": "f325aef9ffe748b2d05562782852e83b16056210"
 }

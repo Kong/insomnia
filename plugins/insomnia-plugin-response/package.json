@@ -19,5 +19,6 @@
     "iconv-lite": "^0.4.19",
     "insomnia-xpath": "^1.0.17",
     "jsonpath": "^1.0.2"
-  }
+  },
+  "gitHead": "f325aef9ffe748b2d05562782852e83b16056210"
 }

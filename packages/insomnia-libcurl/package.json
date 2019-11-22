@@ -12,5 +12,6 @@
     "fstream": "^1.0.12",
     "insomnia-node-libcurl": "^2.0.0-alpha.0-1",
     "tar": "^4.4.10"
-  }
+  },
+  "gitHead": "f325aef9ffe748b2d05562782852e83b16056210"
 }

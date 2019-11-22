@@ -12,5 +12,6 @@
     "insomnia-cookies": "^0.0.20",
     "xmldom": "^0.1.27",
     "xpath": "0.0.27"
-  }
+  },
+  "gitHead": "f325aef9ffe748b2d05562782852e83b16056210"
 }
