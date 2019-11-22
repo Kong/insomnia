@@ -1,18 +1,18 @@
 module.exports = {
-  name: 'studio-dark',
+  name: 'studio-colorful',
   displayName: 'Studio Dark',
   theme: {
     foreground: {
-      default: '#fff',
+      default: '#e6eff5',
     },
     background: {
-      default: '#004672',
-      success: '#74d49c',
-      notice: '#ffdb02',
-      warning: '#ffac49',
-      danger: '#ff7575',
+      default: '#003052',
+      success: '#69c790',
+      notice: '#edcb02',
+      warning: '#e89c42',
+      danger: '#ef6e6e',
       surprise: '#bfa3f9',
-      info: '#75ddff',
+      info: '#6ac7e6',
     },
     highlight: {
       default: 'rgba(133, 157, 176)',
@@ -34,7 +34,7 @@ module.exports = {
           default: '#fff',
         },
         background: {
-          default: '#003C66',
+          default: '#003961',
         },
       },
       activityBar: {
@@ -42,7 +42,7 @@ module.exports = {
           default: '#fff',
         },
         background: {
-          default: '#003052',
+          default: '#004572',
         },
         highlight: {
           default: 'rgba(23, 130, 207, 1)',
@@ -56,20 +56,12 @@ module.exports = {
       },
       dialog: {
         background: {
-          info: '#005B9E',
-        },
-      },
-      sidebarHeader: {
-        foreground: {
-          default: '#fff',
+          default: '#004672',
         },
       },
       transparentOverlay: {
         background: {
-          default: 'rgba(230,240,250,0.8)',
-        },
-        foreground: {
-          default: '#555',
+          default: 'rgba(0,37,64,0.8)',
         },
       },
     },
