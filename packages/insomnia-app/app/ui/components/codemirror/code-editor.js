@@ -153,9 +153,9 @@ class CodeEditor extends React.Component {
     }
   }
 
-  setSelection(chStart, chEnd, line = 0) {
+  setSelection(chStart, chEnd, lineStart, lineEnd) {
     if (this.codeMirror) {
-      this.codeMirror.setSelection({ line, ch: chStart }, { line, ch: chEnd });
+      this.codeMirror.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
     }
   }
 
@@ -184,60 +184,6 @@ class CodeEditor extends React.Component {
       }
       const doc = this.codeMirror.getDoc();
       doc.setCursor(doc.lineCount(), 0);
-    }
-  }
-  search(val, value) {
-    let match = false;
-    let cursor;
-    if (typeof value === 'string' || typeof value === 'number') {
-      cursor = this.codeMirror.getSearchCursor(val + ': ' + value);
-      while (cursor.findNext()) {
-        this.codeMirror.setSelection(cursor.from(), cursor.to());
-        match = true;
-        return;
-      }
-      if (!match) {
-        cursor = this.codeMirror.getSearchCursor(val + ': ' + `"${value}"`);
-        while (cursor.findNext()) {
-          this.codeMirror.setSelection(cursor.from(), cursor.to());
-          match = true;
-          return;
-        }
-      }
-    }
-    if (typeof value === 'object') {
-      cursor = this.codeMirror.getSearchCursor(
-        val +
-          ':\n' +
-          JSON.stringify(value)
-            .replace('{', ' ')
-            .replace(/"/g, ' ')
-            .slice(0, 5),
-      );
-
-      while (cursor.findNext()) {
-        this.codeMirror.setSelection(cursor.from(), cursor.to());
-        match = true;
-        return;
-      }
-      if (!match) {
-        cursor = this.codeMirror.getSearchCursor(' ' + val + ':\n');
-
-        while (cursor.findNext()) {
-          this.codeMirror.setSelection(cursor.from(), cursor.to());
-          match = true;
-          return;
-        }
-      }
-      if (!match) {
-        cursor = this.codeMirror.getSearchCursor(val + ':\n');
-
-        while (cursor.findNext()) {
-          this.codeMirror.setSelection(cursor.from(), cursor.to());
-          match = true;
-          return;
-        }
-      }
     }
   }
 

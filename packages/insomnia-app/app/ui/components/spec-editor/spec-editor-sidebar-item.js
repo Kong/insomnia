@@ -6,7 +6,7 @@ import autobind from 'autobind-decorator';
 type Props = {|
   name: string,
   onClick: (SyntheticEvent<HTMLButtonElement>) => void,
-  children: React.Node,
+  children?: React.Node,
 |};
 
 type State = {|

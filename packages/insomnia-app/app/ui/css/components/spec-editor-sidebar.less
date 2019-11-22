@@ -2,6 +2,7 @@
 
 .spec-editor-sidebar {
   padding: @padding-sm;
+  overflow: auto;
 
   li ul {
     border-left: 1px dotted var(--hl-lg);
@@ -10,11 +11,18 @@
   li {
     display: block;
     width: 100%;
+    white-space: nowrap;
   }
 
   li > button {
     display: inline-block;
     height: @line-height-xxxs;
+
+    // Extra padding for the textual button so we have
+    // a larger click area.
+    &:last-of-type {
+      padding-right: @padding-md;
+    }
 
     i {
       width: calc(@padding-md * 1.3);

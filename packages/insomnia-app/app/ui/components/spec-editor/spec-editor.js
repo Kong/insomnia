@@ -34,15 +34,14 @@ class SpecEditor extends React.PureComponent<Props> {
     });
   }
 
-  jumpToLine(val: string, value: string | Object) {
+  setSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
     const editor = this.editor;
 
     if (!editor) {
       return;
     }
 
-    editor.setCursor(0, 0);
-    editor.search(val, value);
+    editor.setSelection(chStart, chEnd, lineStart, lineEnd);
   }
 
   render() {
