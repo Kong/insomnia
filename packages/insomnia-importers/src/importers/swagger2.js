@@ -174,7 +174,7 @@ function importRequest(schema, endpointSchema, globalMimeTypes, id, parentId) {
     headers: prepareHeaders(endpointSchema),
     parameters: prepareQueryParams(endpointSchema),
   };
-  
+
   if (request.body.mimeType && !request.headers.find(header => header.name === 'Content-Type')) {
     request.headers = [
       {
@@ -183,18 +183,13 @@ function importRequest(schema, endpointSchema, globalMimeTypes, id, parentId) {
         value: request.body.mimeType,
       },
     ].concat(request.headers);
-    body: prepareBody(endpointSchema, globalMimeTypes),
-    description: endpointSchema.description,
-    headers: prepareHeaders(endpointSchema),
-    parameters: prepareQueryParams(endpointSchema),
-  };
+  }
 
-  return setupAuthentication(securityDefinitions, endpointSchema, request);
+  return setupAuthentication(schema.securityDefinitions, endpointSchema, request);
 }
 
 /**
  * Populate Insomnia request with authentication
- *
  *
  * @param {Object} securityDefinitions - swagger 2.0 security definitions
  * @param {Object} endpointSchema - swagger 2.0 endpoint schema
@@ -211,7 +206,7 @@ function setupAuthentication(securityDefinitions, endpointSchema, request) {
       [],
     );
     const scopes = endpointSchema.security.reduce((scopes, security) => {
-      for (const defname in security) {
+      for (const defname of Object.keys(security)) {
         if (security[defname].length === 0) {
           continue;
         }
