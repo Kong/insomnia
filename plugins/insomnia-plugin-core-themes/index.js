@@ -6,6 +6,7 @@ module.exports.themes = [
   require('./themes/one-light'),
   require('./themes/one-dark'),
   require('./themes/purple'),
+  require('./themes/gruvbox'),
   require('./themes/hyper'),
   require('./themes/railscasts'),
   require('./themes/solarized-light'),
