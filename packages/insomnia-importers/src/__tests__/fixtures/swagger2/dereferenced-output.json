@@ -34,6 +34,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Add a new pet to the store",
+      "description": "",
       "url": "{{ base_url }}/pet",
       "body": {
         "mimeType": "application/json",
@@ -41,6 +42,14 @@
       },
       "method": "POST",
       "parameters": [],
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "headers": [
         {
           "name": "Content-Type",
@@ -55,6 +64,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Update an existing pet",
+      "description": "",
       "url": "{{ base_url }}/pet",
       "body": {
         "mimeType": "application/json",
@@ -62,6 +72,14 @@
       },
       "method": "PUT",
       "parameters": [],
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "headers": [
         {
           "name": "Content-Type",
@@ -69,13 +87,13 @@
           "value": "application/json"
         }
       ],
-      "authentication": {},
       "_type": "request",
       "_id": "updatePet"
     },
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Finds Pets by status",
+      "description": "Multiple status values can be provided with comma separated strings",
       "url": "{{ base_url }}/pet/findByStatus",
       "body": {},
       "method": "GET",
@@ -87,13 +105,21 @@
         }
       ],
       "headers": [],
-      "authentication": {},
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "_type": "request",
       "_id": "findPetsByStatus"
     },
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Finds Pets by tags",
+      "description": "Muliple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.",
       "url": "{{ base_url }}/pet/findByTags",
       "body": {},
       "method": "GET",
@@ -105,18 +131,32 @@
         }
       ],
       "headers": [],
-      "authentication": {},
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "_type": "request",
       "_id": "findPetsByTags"
     },
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Find pet by ID",
+      "description": "Returns a single pet",
       "url": "{{ base_url }}/pet/{{ petId }}",
       "body": {},
       "method": "GET",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "disabled": false,
+          "name": "api_key",
+          "value": "{{ api_key }}"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "getPetById"
@@ -124,6 +164,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Updates a pet in the store with form data",
+      "description": "",
       "url": "{{ base_url }}/pet/{{ petId }}",
       "body": {
         "mimeType": "application/x-www-form-urlencoded",
@@ -142,6 +183,14 @@
       },
       "method": "POST",
       "parameters": [],
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "headers": [
         {
           "name": "Content-Type",
@@ -149,13 +198,13 @@
           "value": "application/x-www-form-urlencoded"
         }
       ],
-      "authentication": {},
       "_type": "request",
       "_id": "updatePetWithForm"
     },
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Deletes a pet",
+      "description": "",
       "url": "{{ base_url }}/pet/{{ petId }}",
       "body": {},
       "method": "DELETE",
@@ -167,13 +216,21 @@
           "value": "string"
         }
       ],
-      "authentication": {},
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "_type": "request",
       "_id": "deletePet"
     },
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "uploads an image",
+      "description": "",
       "url": "{{ base_url }}/pet/{{ petId }}/uploadImage",
       "body": {
         "mimeType": "multipart/form-data",
@@ -192,6 +249,14 @@
       },
       "method": "POST",
       "parameters": [],
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "headers": [
         {
           "name": "Content-Type",
@@ -199,18 +264,24 @@
           "value": "multipart/form-data"
         }
       ],
-      "authentication": {},
       "_type": "request",
       "_id": "uploadFile"
     },
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Returns pet inventories by status",
+      "description": "Returns a map of status codes to quantities",
       "url": "{{ base_url }}/store/inventory",
       "body": {},
       "method": "GET",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "disabled": false,
+          "name": "api_key",
+          "value": "{{ api_key }}"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "getInventory"
@@ -218,6 +289,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Place an order for a pet",
+      "description": "",
       "url": "{{ base_url }}/store/order",
       "body": {},
       "method": "POST",
@@ -230,6 +302,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Find purchase order by ID",
+      "description": "For valid response try integer IDs with value >= 1 and <= 10. Other values will generated exceptions",
       "url": "{{ base_url }}/store/order/{{ orderId }}",
       "body": {},
       "method": "GET",
@@ -242,6 +315,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Delete purchase order by ID",
+      "description": "For valid response try integer IDs with positive integer value. Negative or non-integer values will generate API errors",
       "url": "{{ base_url }}/store/order/{{ orderId }}",
       "body": {},
       "method": "DELETE",
@@ -254,6 +328,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Create user",
+      "description": "This can only be done by the logged in user.",
       "url": "{{ base_url }}/user",
       "body": {},
       "method": "POST",
@@ -266,6 +341,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Creates list of users with given input array",
+      "description": "",
       "url": "{{ base_url }}/user/createWithArray",
       "body": {},
       "method": "POST",
@@ -278,6 +354,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Creates list of users with given input array",
+      "description": "",
       "url": "{{ base_url }}/user/createWithList",
       "body": {},
       "method": "POST",
@@ -290,6 +367,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Logs user into the system",
+      "description": "",
       "url": "{{ base_url }}/user/login",
       "body": {},
       "method": "GET",
@@ -313,6 +391,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Logs out current logged in user session",
+      "description": "",
       "url": "{{ base_url }}/user/logout",
       "body": {},
       "method": "GET",
@@ -325,6 +404,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Get user by user name",
+      "description": "",
       "url": "{{ base_url }}/user/{{ username }}",
       "body": {},
       "method": "GET",
@@ -337,6 +417,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Updated user",
+      "description": "This can only be done by the logged in user.",
       "url": "{{ base_url }}/user/{{ username }}",
       "body": {},
       "method": "PUT",
@@ -349,6 +430,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "Delete user",
+      "description": "This can only be done by the logged in user.",
       "url": "{{ base_url }}/user/{{ username }}",
       "body": {},
       "method": "DELETE",

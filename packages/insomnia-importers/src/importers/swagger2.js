@@ -159,6 +159,7 @@ function importFolderItem(item, parentId) {
  * @param {string} parentId - id of parent category
  * @returns {Object}
  */
+
 function importRequest(schema, endpointSchema, globalMimeTypes, id, parentId) {
   const name = endpointSchema.summary || `${endpointSchema.method} ${endpointSchema.path}`;
   const request = {
@@ -169,9 +170,11 @@ function importRequest(schema, endpointSchema, globalMimeTypes, id, parentId) {
     method: endpointSchema.method.toUpperCase(),
     url: '{{ base_url }}' + pathWithParamsAsVariables(endpointSchema.path),
     body: prepareBody(schema, endpointSchema, globalMimeTypes),
+    description: endpointSchema.description,
     headers: prepareHeaders(endpointSchema),
     parameters: prepareQueryParams(endpointSchema),
   };
+  
   if (request.body.mimeType && !request.headers.find(header => header.name === 'Content-Type')) {
     request.headers = [
       {
@@ -180,6 +183,117 @@ function importRequest(schema, endpointSchema, globalMimeTypes, id, parentId) {
         value: request.body.mimeType,
       },
     ].concat(request.headers);
+    body: prepareBody(endpointSchema, globalMimeTypes),
+    description: endpointSchema.description,
+    headers: prepareHeaders(endpointSchema),
+    parameters: prepareQueryParams(endpointSchema),
+  };
+
+  return setupAuthentication(securityDefinitions, endpointSchema, request);
+}
+
+/**
+ * Populate Insomnia request with authentication
+ *
+ *
+ * @param {Object} securityDefinitions - swagger 2.0 security definitions
+ * @param {Object} endpointSchema - swagger 2.0 endpoint schema
+ * @param {Object} request - insomnia request object
+ * @returns {Object}
+ */
+function setupAuthentication(securityDefinitions, endpointSchema, request) {
+  if (!securityDefinitions) {
+    return request;
+  }
+  if (endpointSchema.security && endpointSchema.security.length > 0) {
+    const usedDefinitions = endpointSchema.security.reduce(
+      (collect, obj) => collect.concat(...Object.keys(obj)),
+      [],
+    );
+    const scopes = endpointSchema.security.reduce((scopes, security) => {
+      for (const defname in security) {
+        if (security[defname].length === 0) {
+          continue;
+        }
+        return scopes.concat(security[defname]);
+      }
+      return scopes;
+    }, []);
+    for (const usedDefinition of usedDefinitions) {
+      const definition = securityDefinitions[usedDefinition];
+      if (definition.type === 'basic') {
+        request.authentication = {
+          type: 'basic',
+          disabled: false,
+          password: '{{ password }}',
+          username: '{{ username }}',
+        };
+      }
+      if (definition.type === 'apiKey') {
+        if (definition.in === 'header') {
+          request.headers.push({
+            name: definition.name,
+            disabled: false,
+            value: `{{ api_key }}`,
+          });
+        }
+        if (definition.in === 'query') {
+          request.parameters.push({
+            name: definition.name,
+            disabled: false,
+            value: '{{ api_key }}',
+          });
+        }
+      }
+      if (definition.type === 'oauth2') {
+        if (definition.flow === 'implicit') {
+          request.authentication = {
+            type: 'oauth2',
+            grantType: 'authorization_code',
+            disabled: false,
+            authorizationUrl: definition.authorizationUrl,
+            clientId: '{{ client_id }}',
+            scope: scopes.join(' '),
+          };
+        }
+        if (definition.flow === 'password') {
+          request.authentication = {
+            type: 'oauth2',
+            grantType: 'password',
+            disabled: false,
+            accessTokenUrl: definition.tokenUrl,
+            username: '{{ username }}',
+            password: '{{ password }}',
+            clientId: '{{ client_id }}',
+            clientSecret: '{{ client_secret }}',
+            scope: scopes.join(' '),
+          };
+        }
+        if (definition.flow === 'application') {
+          request.authentication = {
+            type: 'oauth2',
+            grantType: 'client_credentials',
+            disabled: false,
+            accessTokenUrl: definition.tokenUrl,
+            clientId: '{{ client_id }}',
+            clientSecret: '{{ client_secret }}',
+            scope: scopes.join(' '),
+          };
+        }
+        if (definition.flow === 'accessCode') {
+          request.authentication = {
+            type: 'oauth2',
+            grantType: 'authorization_code',
+            disabled: false,
+            accessTokenUrl: definition.tokenUrl,
+            authorizationUrl: definition.authorizationUrl,
+            clientId: '{{ client_id }}',
+            clientSecret: '{{ client_secret }}',
+            scope: scopes.join(' '),
+          };
+        }
+      }
+    }
   }
   return request;
 }
