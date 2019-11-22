@@ -186,7 +186,7 @@ function importRequest(schema, endpointSchema, globalMimeTypes, id, parentId) {
     method: endpointSchema.method.toUpperCase(),
     url: '{{ base_url }}' + pathWithParamsAsVariables(endpointSchema.path),
     body: prepareBody(schema, endpointSchema, globalMimeTypes),
-    description: endpointSchema.description,
+    description: endpointSchema.description || '',
     headers: prepareHeaders(endpointSchema),
     parameters: prepareQueryParams(endpointSchema),
   };

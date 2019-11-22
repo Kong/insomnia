@@ -1,35 +1,35 @@
 {
-  "_type": "export",
+  "__export_date": "2019-11-22T18:54:59.959Z",
   "__export_format": 4,
-  "__export_date": "2018-01-09T23:33:12.799Z",
   "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
   "resources": [
     {
-      "_type": "workspace",
       "_id": "__WORKSPACE_ID__",
-      "parentId": null,
+      "_type": "workspace",
+      "description": "",
       "name": "Swagger Petstore 1.0.0",
-      "description": ""
+      "parentId": null
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Base environment",
+      "_id": "__ENV_1__",
+      "_type": "environment",
       "data": {
         "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
       },
-      "_type": "environment",
-      "_id": "__ENV_1__"
+      "name": "Base environment",
+      "parentId": "__WORKSPACE_ID__"
     },
     {
-      "parentId": "__ENV_1__",
-      "name": "Swagger env",
+      "_id": "__ENV_2__",
+      "_type": "environment",
       "data": {
         "base_path": "/v1",
-        "scheme": "http",
-        "host": "petstore.swagger.io"
+        "host": "petstore.swagger.io",
+        "scheme": "http"
       },
-      "_type": "environment",
-      "_id": "__ENV_2__"
+      "name": "Swagger env",
+      "parentId": "__ENV_1__"
     },
     {
       "_id": "__GRP_1__",
@@ -40,33 +40,33 @@
       "parentId": "__WORKSPACE_ID__"
     },
     {
-      "parentId": "__GRP_1__",
-      "name": "List all pets",
-      "url": "{{ base_url }}/pets",
+      "_id": "listPets",
+      "_type": "request",
+      "authentication": {},
       "body": {},
+      "description": "",
+      "headers": [],
       "method": "GET",
+      "name": "List all pets",
       "parameters": [
         {
-          "name": "limit",
           "disabled": true,
+          "name": "limit",
           "value": "0"
         }
       ],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "listPets"
+      "parentId": "__GRP_1__",
+      "url": "{{ base_url }}/pets"
     },
     {
-      "parentId": "__GRP_1__",
-      "name": "Create a pet",
-      "url": "{{ base_url }}/pets",
+      "_id": "createPets",
+      "_type": "request",
+      "authentication": {},
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"id\": 0,\n  \"name\": \"string\",\n  \"tag\": \"string\"\n}"
       },
-      "method": "POST",
-      "parameters": [],
+      "description": "",
       "headers": [
         {
           "disabled": false,
@@ -74,26 +74,29 @@
           "value": "application/json"
         }
       ],
-      "authentication": {},
-      "_type": "request",
-      "_id": "createPets"
-    },
-    {
-      "parentId": "__GRP_1__",
-      "name": "Info for a specific pet",
-      "url": "{{ base_url }}/pets/{{ petId }}",
-      "body": {},
-      "method": "GET",
+      "method": "POST",
+      "name": "Create a pet",
       "parameters": [],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "showPetById"
+      "parentId": "__GRP_1__",
+      "url": "{{ base_url }}/pets"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Update specific pet",
-      "url": "{{ base_url }}/pets/{{ petId }}",
+      "_id": "showPetById",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "description": "This is a longer description",
+      "headers": [],
+      "method": "GET",
+      "name": "Info for a specific pet",
+      "parameters": [],
+      "parentId": "__GRP_1__",
+      "url": "{{ base_url }}/pets/{{ petId }}"
+    },
+    {
+      "_id": "updatePet",
+      "_type": "request",
+      "authentication": {},
       "body": {
         "mimeType": "application/x-www-form-urlencoded",
         "params": [
@@ -104,8 +107,7 @@
           }
         ]
       },
-      "method": "POST",
-      "parameters": [],
+      "description": "",
       "headers": [
         {
           "disabled": false,
@@ -113,9 +115,11 @@
           "value": "application/x-www-form-urlencoded"
         }
       ],
-      "authentication": {},
-      "_type": "request",
-      "_id": "updatePet"
+      "method": "POST",
+      "name": "Update specific pet",
+      "parameters": [],
+      "parentId": "__GRP_1__",
+      "url": "{{ base_url }}/pets/{{ petId }}"
     }
   ]
 }

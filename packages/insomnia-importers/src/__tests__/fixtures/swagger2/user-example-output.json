@@ -1,5 +1,5 @@
 {
-  "__export_date": "2019-04-26T04:04:46.087Z",
+  "__export_date": "2019-11-22T18:56:44.435Z",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -44,6 +44,7 @@
       "_type": "request",
       "authentication": {},
       "body": {},
+      "description": "",
       "headers": [],
       "method": "GET",
       "name": "Some list",

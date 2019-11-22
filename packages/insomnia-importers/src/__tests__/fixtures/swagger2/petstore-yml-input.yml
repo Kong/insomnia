@@ -60,6 +60,7 @@ paths:
   /pets/{petId}:
     get:
       summary: Info for a specific pet
+      description: This is a longer description
       operationId: showPetById
       tags:
         - pets
