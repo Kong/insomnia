@@ -35,9 +35,7 @@
       "parentId": "__WORKSPACE_ID__",
       "name": "List all pets",
       "url": "{{ base_url }}/pets",
-      "body": {
-        "mimeType": "application/json"
-      },
+      "body": {},
       "method": "GET",
       "parameters": [
         {
@@ -56,11 +54,18 @@
       "name": "Create a pet",
       "url": "{{ base_url }}/pets",
       "body": {
-        "mimeType": "application/json"
+        "mimeType": "application/json",
+        "text": "{\n  \"id\": 0,\n  \"name\": \"string\",\n  \"tag\": \"string\"\n}"
       },
       "method": "POST",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "disabled": false,
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "createPets"
@@ -69,15 +74,40 @@
       "parentId": "__WORKSPACE_ID__",
       "name": "Info for a specific pet",
       "url": "{{ base_url }}/pets/{{ petId }}",
-      "body": {
-        "mimeType": "application/json"
-      },
+      "body": {},
       "method": "GET",
       "parameters": [],
       "headers": [],
       "authentication": {},
       "_type": "request",
       "_id": "showPetById"
+    },
+    {
+      "parentId": "__WORKSPACE_ID__",
+      "name": "Update specific pet",
+      "url": "{{ base_url }}/pets/{{ petId }}",
+      "body": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+          {
+            "disabled": false,
+            "name": "name",
+            "value": "string"
+          }
+        ]
+      },
+      "method": "POST",
+      "parameters": [],
+      "headers": [
+        {
+          "disabled": false,
+          "name": "Content-Type",
+          "value": "application/x-www-form-urlencoded"
+        }
+      ],
+      "authentication": {},
+      "_type": "request",
+      "_id": "updatePet"
     }
   ]
 }

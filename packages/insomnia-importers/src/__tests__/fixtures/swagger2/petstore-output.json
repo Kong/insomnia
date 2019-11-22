@@ -41,7 +41,13 @@
       },
       "method": "POST",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/json"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "addPet"
@@ -56,7 +62,13 @@
       },
       "method": "PUT",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/json"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "updatePet"
@@ -114,11 +126,29 @@
       "name": "Updates a pet in the store with form data",
       "url": "{{ base_url }}/pet/{{ petId }}",
       "body": {
-        "mimeType": "application/x-www-form-urlencoded"
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+          {
+            "disabled": true,
+            "name": "name",
+            "value": "string"
+          },
+          {
+            "disabled": true,
+            "name": "status",
+            "value": "string"
+          }
+        ]
       },
       "method": "POST",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/x-www-form-urlencoded"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "updatePetWithForm"
@@ -146,11 +176,29 @@
       "name": "uploads an image",
       "url": "{{ base_url }}/pet/{{ petId }}/uploadImage",
       "body": {
-        "mimeType": "multipart/form-data"
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "disabled": true,
+            "name": "additionalMetadata",
+            "value": "string"
+          },
+          {
+            "disabled": true,
+            "name": "file",
+            "type": "file"
+          }
+        ]
       },
       "method": "POST",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "multipart/form-data"
+        }
+      ],
       "authentication": {},
       "_type": "request",
       "_id": "uploadFile"

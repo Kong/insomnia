@@ -1,4 +1,4 @@
-swagger: "2.0"
+swagger: '2.0'
 info:
   version: 1.0.0
   title: Swagger Petstore
@@ -27,7 +27,7 @@ paths:
           type: integer
           format: int32
       responses:
-        "200":
+        '200':
           description: A paged array of pets
           headers:
             x-next:
@@ -44,8 +44,14 @@ paths:
       operationId: createPets
       tags:
         - pets
+      parameters:
+        - name: pet
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Pet'
       responses:
-        "201":
+        '201':
           description: Null response
         default:
           description: unexpected error
@@ -64,7 +70,33 @@ paths:
           description: The id of the pet to retrieve
           type: string
       responses:
-        "200":
+        '200':
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Pets'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    post:
+      summary: Update specific pet
+      operationId: updatePet
+      tags:
+        - pets
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: The id of the pet to retrieve
+          type: string
+        - name: name
+          in: formData
+          type: string
+          required: true
+      responses:
+        '200':
           description: Expected response to a valid request
           schema:
             $ref: '#/definitions/Pets'

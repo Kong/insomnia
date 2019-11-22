@@ -3,7 +3,9 @@ const utils = require('../utils');
 
 const SUPPORTED_SWAGGER_VERSION = '2.0';
 const MIMETYPE_JSON = 'application/json';
-const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON];
+const MIMETYPE_URLENCODED = 'application/x-www-form-urlencoded';
+const MIMETYPE_MULTIPART = 'multipart/form-data';
+const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON, MIMETYPE_URLENCODED, MIMETYPE_MULTIPART];
 const WORKSPACE_ID = '__WORKSPACE_ID__';
 
 let requestCount = 1;
@@ -122,7 +124,7 @@ function parseEndpoints(document) {
         ? `${endpointSchema.operationId}${index > 0 ? index : ''}`
         : `__REQUEST_${requestCount++}__`;
       let parentId = folderLookup[tag] || defaultParent;
-      requests.push(importRequest(endpointSchema, globalMimeTypes, id, parentId));
+      requests.push(importRequest(document, endpointSchema, globalMimeTypes, id, parentId));
     });
   });
 
@@ -150,26 +152,36 @@ function importFolderItem(item, parentId) {
 /**
  * Return Insomnia request
  *
- *
+ * @param {Object} schema - swagger 2.0 schema
  * @param {Object} endpointSchema - swagger 2.0 endpoint schema
  * @param {string[]} globalMimeTypes - list of mimeTypes available in document globally (i.e. document.consumes)
  * @param {string} id - id to be given to current request
  * @param {string} parentId - id of parent category
  * @returns {Object}
  */
-function importRequest(endpointSchema, globalMimeTypes, id, parentId) {
+function importRequest(schema, endpointSchema, globalMimeTypes, id, parentId) {
   const name = endpointSchema.summary || `${endpointSchema.method} ${endpointSchema.path}`;
-  return {
+  const request = {
     _type: 'request',
     _id: id,
     parentId: parentId,
     name,
     method: endpointSchema.method.toUpperCase(),
     url: '{{ base_url }}' + pathWithParamsAsVariables(endpointSchema.path),
-    body: prepareBody(endpointSchema, globalMimeTypes),
+    body: prepareBody(schema, endpointSchema, globalMimeTypes),
     headers: prepareHeaders(endpointSchema),
     parameters: prepareQueryParams(endpointSchema),
   };
+  if (request.body.mimeType && !request.headers.find(header => header.name === 'Content-Type')) {
+    request.headers = [
+      {
+        name: 'Content-Type',
+        disabled: false,
+        value: request.body.mimeType,
+      },
+    ].concat(request.headers);
+  }
+  return request;
 }
 
 /**
@@ -210,36 +222,66 @@ function prepareHeaders(endpointSchema) {
   return convertParameters(headerParameters);
 }
 
+function resolve$ref(schema, $ref) {
+  const parts = $ref.split('/');
+  parts.shift(); // remove #
+  return parts.reduce((doc, path) => doc[path], schema);
+}
+
 /**
  * Imports insomnia request body definitions, including data mock (if available)
  *
  * If multiple types are available, the one for which an example can be generated will be selected first (i.e. application/json)
  *
+ * @param {Object} schema - swagger 2.0 schema
  * @param {Object} endpointSchema - swagger 2.0 endpoint schema
  * @param {string[]} globalMimeTypes - list of mimeTypes available in document globally (i.e. document.consumes)
  *
  * @return {Object} insomnia request's body definition
  */
-function prepareBody(endpointSchema, globalMimeTypes) {
+function prepareBody(schema, endpointSchema, globalMimeTypes) {
   const mimeTypes = endpointSchema.consumes || globalMimeTypes || [];
   const isAvailable = m => mimeTypes.includes(m);
   const supportedMimeType = SUPPORTED_MIME_TYPES.find(isAvailable);
-
   if (supportedMimeType === MIMETYPE_JSON) {
     const isSendInBody = p => p.in === 'body';
     const parameters = endpointSchema.parameters || [];
     const bodyParameter = parameters.find(isSendInBody);
     if (!bodyParameter) {
-      return {
-        mimeType: supportedMimeType,
-      };
+      return {};
     }
 
-    const example = bodyParameter ? generateParameterExample(bodyParameter.schema) : undefined;
-    const text = JSON.stringify(example, null, 2);
+    const type = bodyParameter.type || 'object';
+    const example = generateParameterExample(type);
+    let text;
+    if (type === 'object') {
+      if (bodyParameter.schema.$ref) {
+        const definition = resolve$ref(schema, bodyParameter.schema.$ref);
+        text = JSON.stringify(example(definition), null, 2);
+      } else {
+        text = JSON.stringify(example(bodyParameter.schema), null, 2);
+      }
+    } else {
+      text = JSON.stringify(example, null, 2);
+    }
+
     return {
       mimeType: supportedMimeType,
       text,
+    };
+  }
+
+  if (supportedMimeType === MIMETYPE_URLENCODED || supportedMimeType === MIMETYPE_MULTIPART) {
+    const isSendInFormData = p => p.in === 'formData';
+    const parameters = endpointSchema.parameters || [];
+    const formDataParameters = parameters.filter(isSendInFormData);
+
+    if (formDataParameters.length === 0) {
+      return {};
+    }
+    return {
+      mimeType: supportedMimeType,
+      params: convertParameters(formDataParameters),
     };
   }
 
@@ -260,7 +302,14 @@ function prepareBody(endpointSchema, globalMimeTypes) {
  */
 function convertParameters(parameters) {
   return parameters.map(parameter => {
-    const { required, name } = parameter;
+    const { required, name, type } = parameter;
+    if (type === 'file') {
+      return {
+        name,
+        disabled: required !== true,
+        type: 'file',
+      };
+    }
     return {
       name,
       disabled: required !== true,
