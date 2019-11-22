@@ -34,21 +34,25 @@ export function createWindow() {
   const { bounds, fullscreen, maximize } = getBounds();
   const { x, y, width, height } = bounds;
 
-  // Make sure we don't place the window outside of the visible space
-  let maxX = 0;
-  let maxY = 0;
+  let isVisibleOnAnyDisplay = true;
   for (const d of electron.screen.getAllDisplays()) {
-    // Set the maximum placement location to 50 pixels short of the end
-    maxX = Math.max(maxX, d.bounds.x + d.bounds.width - 50);
-    maxY = Math.max(maxY, d.bounds.y + d.bounds.height - 50);
+    const isVisibleOnDisplay =
+      x >= d.bounds.x &&
+      y >= d.bounds.y &&
+      x + width <= d.bounds.x + d.bounds.width &&
+      y + height <= d.bounds.y + d.bounds.height;
+
+    if (!isVisibleOnDisplay) {
+      isVisibleOnAnyDisplay = false;
+    }
   }
-  const finalX = Math.min(maxX, x);
-  const finalY = Math.min(maxX, y);
 
   mainWindow = new BrowserWindow({
     // Make sure we don't initialize the window outside the bounds
-    x: finalX,
-    y: finalY,
+    x: isVisibleOnAnyDisplay ? x : undefined,
+    y: isVisibleOnAnyDisplay ? y : undefined,
+
+    // Other options
     fullscreen: fullscreen,
     fullscreenable: true,
     title: getAppName(),

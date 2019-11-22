@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-now",
-  "version": "1.0.16",
+  "version": "1.0.19",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Insomnia now template tag",
   "license": "MIT",
@@ -17,5 +17,6 @@
   },
   "dependencies": {
     "moment": "^2.21.0"
-  }
+  },
+  "gitHead": "f325aef9ffe748b2d05562782852e83b16056210"
 }

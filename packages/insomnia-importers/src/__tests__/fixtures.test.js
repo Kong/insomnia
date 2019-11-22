@@ -16,7 +16,12 @@ describe('Fixtures', () => {
       const prefix = input.replace(/-input\.[^.]+/, '');
       const output = `${prefix}-output.json`;
 
+      if (prefix.startsWith('skip')) {
+        continue;
+      }
+
       it(`Import ${name} ${input}`, async () => {
+        expect.assertions(5);
         expect(typeof input).toBe('string');
         expect(typeof output).toBe('string');
 
@@ -32,6 +37,16 @@ describe('Fixtures', () => {
         expected.__export_date = results.data.__export_date;
 
         expect(results.data).toEqual(expected);
+
+        const ids = new Set();
+        for (const r of results.data.resources) {
+          if (ids.has(r._id)) {
+            throw new Error(
+              'Export contained multiple duplicate IDs: ' + JSON.stringify(r, null, '\t'),
+            );
+          }
+          ids.add(r._id);
+        }
       });
     }
   }

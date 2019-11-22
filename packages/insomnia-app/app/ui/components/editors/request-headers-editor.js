@@ -129,8 +129,8 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
         <div className="scrollable">
           <KeyValueEditor
             sortable
-            namePlaceholder="Header"
-            valuePlaceholder="Value"
+            namePlaceholder="header"
+            valuePlaceholder="value"
             pairs={request.headers}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}

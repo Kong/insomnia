@@ -1,12 +1,35 @@
 'use strict';
 
 const { parse } = require('shell-quote');
+const { URL } = require('url');
 
 let requestCount = 1;
 
 module.exports.id = 'curl';
 module.exports.name = 'cURL';
 module.exports.description = 'cURL command line tool';
+
+const SUPPORTED_ARGS = [
+  'url',
+  'u',
+  'user',
+  'header',
+  'H',
+  'cookie',
+  'b',
+  'get',
+  'G',
+  'd',
+  'data',
+  'data-raw',
+  'data-urlencode',
+  'data-binary',
+  'data-ascii',
+  'form',
+  'F',
+  'request',
+  'X',
+];
 
 module.exports.convert = function(rawData) {
   requestCount = 1;
@@ -75,6 +98,10 @@ function importArgs(args) {
       const isSingleDash = arg[0] === '-' && arg[1] !== '-';
       let name = arg.replace(/^-{1,2}/, '');
 
+      if (!SUPPORTED_ARGS.includes(name)) {
+        continue;
+      }
+
       let value;
       if (isSingleDash && name.length > 1) {
         // Handle squished arguments like -XPOST
@@ -102,8 +129,19 @@ function importArgs(args) {
   // Build the request //
   // ~~~~~~~~~~~~~~~~~ //
 
-  // Url
-  const url = getPairValue(pairs, singletons[0] || '', 'url');
+  // Url & parameters
+  let parameters = [];
+  let url = '';
+
+  try {
+    const urlObject = new URL(getPairValue(pairs, singletons[0] || '', 'url'));
+    parameters = Array.from(urlObject.searchParams.entries()).map(([key, value]) => ({
+      name: key,
+      value,
+      disabled: false,
+    }));
+    url = urlObject.href.replace(urlObject.search, '').replace(/\/$/, '');
+  } catch (err) {}
 
   // Authentication
   const [username, password] = getPairValue(pairs, '', 'u', 'user').split(/:(.*)$/);
@@ -116,7 +154,7 @@ function importArgs(args) {
   });
 
   // Cookies
-  const cookieHeaderValue = [...(pairs.cookie || []), ...(pairs.b || [])]
+  const cookieHeaderValue = [...(pairs['cookie'] || []), ...(pairs['b'] || [])]
     .map(str => {
       const name = str.split('=', 1)[0];
       const value = str.replace(`${name}=`, '');
@@ -165,13 +203,14 @@ function importArgs(args) {
   });
 
   // Body
-  let parameters = [];
   let body = mimeType ? { mimeType: mimeType } : {};
   if (textBody && bodyAsGET) {
-    parameters = textBody.split('&').map(v => {
+    const bodyParams = textBody.split('&').map(v => {
       const [name, value] = v.split('=');
       return { name: name || '', value: value || '' };
     });
+
+    parameters.push(...bodyParams);
   } else if (textBody && mimeType === 'application/x-www-form-urlencoded') {
     body.params = textBody.split('&').map(v => {
       const [name, value] = v.split('=');

@@ -1,5 +1,7 @@
 'use strict';
 
+const crypto = require('crypto');
+
 const SwaggerParser = require('swagger-parser');
 const URL = require('url').URL;
 const utils = require('../utils');
@@ -9,9 +11,15 @@ const MIMETYPE_JSON = 'application/json';
 const MIMETYPE_LITERALLY_ANYTHING = '*/*';
 const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON, MIMETYPE_LITERALLY_ANYTHING];
 const WORKSPACE_ID = '__WORKSPACE_ID__';
+const SECURITY_TYPE = {
+  HTTP: 'http',
+  API_KEY: 'apiKey',
+  OAUTH: 'oauth2',
+  OPEN_ID: 'openIdConnect',
+};
+const SUPPORTED_SECURITY_TYPES = [SECURITY_TYPE.HTTP, SECURITY_TYPE.API_KEY];
 
-let requestCount = 1;
-let requestGroupCount = 1;
+let requestCounts = {};
 
 module.exports.id = 'openapi3';
 module.exports.name = 'OpenAPI 3.0';
@@ -19,8 +27,7 @@ module.exports.description = 'Importer for OpenAPI 3.0 specification (json/yaml)
 
 module.exports.convert = async function(rawData) {
   // Reset
-  requestCount = 1;
-  requestGroupCount = 1;
+  requestCounts = {};
 
   // Validate
   let api = await parseDocument(rawData);
@@ -45,7 +52,7 @@ module.exports.convert = async function(rawData) {
 
   const baseEnv = {
     _type: 'environment',
-    _id: '__ENV_1__',
+    _id: '__BASE_ENVIRONMENT_ID__',
     parentId: WORKSPACE_ID,
     name: 'Base environment',
     data: {
@@ -55,16 +62,20 @@ module.exports.convert = async function(rawData) {
 
   const servers = api.servers.map(s => new URL(s.url));
   const defaultServer = servers[0] || new URL('http://example.com/');
+  const securityVariables = getSecurityEnvVariables(
+    api.components && api.components.securitySchemes,
+  );
 
   const openapiEnv = {
     _type: 'environment',
-    _id: '__ENV_2__',
+    _id: `env___BASE_ENVIRONMENT_ID___sub`,
     parentId: baseEnv._id,
     name: 'OpenAPI env',
     data: {
       base_path: defaultServer.pathname || '',
       scheme: defaultServer.protocol.replace(/:$/, '') || ['http'], // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
       host: defaultServer.host || '',
+      ...securityVariables,
     },
   };
 
@@ -78,7 +89,7 @@ module.exports.convert = async function(rawData) {
  *
  * @param {string} rawData
  *
- * @returns {Object|null} OpenAPI 3 object
+ * @returns {Promise<Object|null>} OpenAPI 3 object
  */
 async function parseDocument(rawData) {
   try {
@@ -96,6 +107,8 @@ async function parseDocument(rawData) {
  * @returns {Object[]} array of insomnia endpoints definitions
  */
 function parseEndpoints(document) {
+  const rootSecurity = document.security;
+  const securitySchemes = document.components ? document.components.securitySchemes : {};
   const defaultParent = WORKSPACE_ID;
 
   const paths = Object.keys(document.paths);
@@ -108,26 +121,35 @@ function parseEndpoints(document) {
         .filter(method => method !== 'parameters')
         .map(method => Object.assign({}, schemasPerMethod[method], { path, method }));
     })
-    .reduce((flat, arr) => flat.concat(arr), []); // flat single array
+    .reduce(
+      // flat single array
+      (flat, arr) => flat.concat(arr),
+      [],
+    );
 
   const tags = document.tags || [];
   const folders = tags.map(tag => {
     return importFolderItem(tag, defaultParent);
   });
   const folderLookup = {};
-  folders.forEach(folder => (folderLookup[folder.name] = folder._id));
+
+  for (const folder of folders) {
+    folderLookup[folder.name] = folder._id;
+  }
 
   const requests = [];
   endpointsSchemas.map(endpointSchema => {
     let { tags } = endpointSchema;
-    if (!tags || tags.length === 0) tags = [''];
-    tags.forEach((tag, index) => {
-      let id = endpointSchema.operationId
-        ? `${endpointSchema.operationId}${index > 0 ? index : ''}`
-        : `__REQUEST_${requestCount++}__`;
-      let parentId = folderLookup[tag] || defaultParent;
-      requests.push(importRequest(endpointSchema, id, parentId));
-    });
+
+    if (!tags || tags.length === 0) {
+      tags = [''];
+    }
+
+    for (const tag of tags) {
+      const parentId = folderLookup[tag] || defaultParent;
+      const resolvedSecurity = endpointSchema.security || rootSecurity;
+      requests.push(importRequest(endpointSchema, parentId, resolvedSecurity, securitySchemes));
+    }
   });
 
   return [...folders, ...requests];
@@ -142,9 +164,14 @@ function parseEndpoints(document) {
  * @returns {Object}
  */
 function importFolderItem(item, parentId) {
+  const hash = crypto
+    .createHash('sha1')
+    .update(item.name)
+    .digest('hex')
+    .slice(0, 8);
   return {
     parentId,
-    _id: `__GRP_${requestGroupCount++}__`,
+    _id: `fld___WORKSPACE_ID__${hash}`,
     _type: 'request_group',
     name: item.name || `Folder {requestGroupCount}`,
     description: item.description || '',
@@ -156,13 +183,21 @@ function importFolderItem(item, parentId) {
  *
  *
  * @param {Object} endpointSchema - OpenAPI 3 endpoint schema
- * @param {string} id - id to be given to current request
  * @param {string} parentId - id of parent category
+ * @param {Object} security - OpenAPI 3 security rules
+ * @param {Object} securitySchemes - OpenAPI 3 security schemes
  * @returns {Object}
  */
-function importRequest(endpointSchema, id, parentId) {
-  const name = endpointSchema.summary || `${endpointSchema.method} ${endpointSchema.path}`;
-  return {
+function importRequest(endpointSchema, parentId, security, securitySchemes) {
+  const name = endpointSchema.summary || endpointSchema.path;
+  const id = generateUniqueRequestId(endpointSchema);
+  const paramHeaders = prepareHeaders(endpointSchema);
+  const { authentication, headers: securityHeaders, parameters: securityParams } = parseSecurity(
+    security,
+    securitySchemes,
+  );
+
+  const request = {
     _type: 'request',
     _id: id,
     parentId: parentId,
@@ -170,9 +205,12 @@ function importRequest(endpointSchema, id, parentId) {
     method: endpointSchema.method.toUpperCase(),
     url: '{{ base_url }}' + pathWithParamsAsVariables(endpointSchema.path),
     body: prepareBody(endpointSchema),
-    headers: prepareHeaders(endpointSchema),
-    parameters: prepareQueryParams(endpointSchema),
+    headers: [...paramHeaders, ...securityHeaders],
+    authentication,
+    parameters: [...prepareQueryParams(endpointSchema), ...securityParams],
   };
+
+  return request;
 }
 
 /**
@@ -211,6 +249,100 @@ function prepareHeaders(endpointSchema) {
   const parameters = endpointSchema.parameters || [];
   const headerParameters = parameters.filter(isSendInHeader);
   return convertParameters(headerParameters);
+}
+
+/**
+ * Parse OpenAPI 3 securitySchemes into insomnia definitions of authentication, headers and parameters
+ *
+ * @param {Object} security - OpenAPI 3 security rules
+ * @param {Object} securitySchemes - OpenAPI 3 security schemes
+ * @returns {Object} headers or basic http authentication details
+ */
+function parseSecurity(security, securitySchemes) {
+  if (!security || !securitySchemes) {
+    return {
+      authentication: {},
+      headers: [],
+      parameters: [],
+    };
+  }
+
+  const supportedSchemes = security
+    .map(securityPolicy => {
+      const securityName = Object.keys(securityPolicy)[0];
+      return securitySchemes[securityName];
+    })
+    .filter(schemeDetails => SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type));
+
+  const apiKeySchemes = supportedSchemes.filter(scheme => scheme.type === SECURITY_TYPE.API_KEY);
+  const apiKeyHeaders = apiKeySchemes
+    .filter(scheme => scheme.in === 'header')
+    .map(scheme => {
+      return {
+        name: scheme.name,
+        disabled: false,
+        value: '{{ apiKey }}',
+      };
+    });
+  const apiKeyCookies = apiKeySchemes
+    .filter(scheme => scheme.in === 'cookie')
+    .map(scheme => `${scheme.name}={{ apiKey }}`);
+  const apiKeyCookieHeader = { name: 'Cookie', disabled: false, value: apiKeyCookies.join('; ') };
+  const apiKeyParams = apiKeySchemes
+    .filter(scheme => scheme.in === 'query')
+    .map(scheme => {
+      return {
+        name: scheme.name,
+        disabled: false,
+        value: '{{ apiKey }}',
+      };
+    });
+
+  if (apiKeyCookies.length > 0) {
+    apiKeyHeaders.push(apiKeyCookieHeader);
+  }
+
+  const httpAuth = supportedSchemes.find(
+    scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
+  )
+    ? { type: 'basic', username: '{{ httpUsername }}', password: '{{ httpPassword }}' }
+    : {};
+
+  return {
+    authentication: httpAuth,
+    headers: apiKeyHeaders,
+    parameters: apiKeyParams,
+  };
+}
+
+/**
+ * Get Insomnia environment variables for OpenAPI securitySchemes
+ *
+ * @param {Object} securitySchemes - Open API security schemes
+ * @returns {Object} Insomnia environment variables containing security information
+ */
+function getSecurityEnvVariables(securitySchemes) {
+  if (!securitySchemes) {
+    return {};
+  }
+
+  const variables = {};
+  const securitySchemesArray = Object.values(securitySchemes);
+  const hasApiKeyScheme = securitySchemesArray.some(
+    scheme => scheme.type === SECURITY_TYPE.API_KEY,
+  );
+  const hasHttpScheme = securitySchemesArray.some(scheme => scheme.type === SECURITY_TYPE.HTTP);
+
+  if (hasApiKeyScheme) {
+    variables.apiKey = 'apiKey';
+  }
+
+  if (hasHttpScheme) {
+    variables.httpUsername = 'username';
+    variables.httpPassword = 'password';
+  }
+
+  return variables;
 }
 
 /**
@@ -298,9 +430,11 @@ function generateParameterExample(schema) {
       const example = {};
       const { properties } = schema;
 
-      Object.keys(properties).forEach(propertyName => {
-        example[propertyName] = generateParameterExample(properties[propertyName]);
-      });
+      if (properties) {
+        for (const propertyName of Object.keys(properties)) {
+          example[propertyName] = generateParameterExample(properties[propertyName]);
+        }
+      }
 
       return example;
     },
@@ -341,4 +475,32 @@ function generateParameterExample(schema) {
 
     return factory(schema);
   }
+}
+
+/**
+ * Generates a unique and deterministic request ID based on the endpoint schema
+ *
+ * @param endpointSchema
+ */
+function generateUniqueRequestId(endpointSchema) {
+  // `operationId` is unique already, so we can just use that, combined with the ID
+  // of the workspace to get something globally unique
+  const uniqueKey = endpointSchema.operationId
+    ? `${endpointSchema.operationId}`
+    : `[${endpointSchema.method}]${endpointSchema.path}`;
+
+  const hash = crypto
+    .createHash('sha1')
+    .update(uniqueKey)
+    .digest('hex')
+    .slice(0, 8);
+
+  // Suffix the ID with a counter in case we try creating two with the same hash
+  if (requestCounts.hasOwnProperty(hash)) {
+    requestCounts[hash]++;
+  } else {
+    requestCounts[hash] = 0;
+  }
+
+  return `req_${WORKSPACE_ID}${hash}${requestCounts[hash] || ''}`;
 }

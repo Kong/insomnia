@@ -43,9 +43,7 @@
       "parentId": "__GRP_1__",
       "name": "List all pets",
       "url": "{{ base_url }}/pets",
-      "body": {
-        "mimeType": "application/json"
-      },
+      "body": {},
       "method": "GET",
       "parameters": [
         {
@@ -63,9 +61,7 @@
       "parentId": "__GRP_1__",
       "name": "Create a pet",
       "url": "{{ base_url }}/pets",
-      "body": {
-        "mimeType": "application/json"
-      },
+      "body": {},
       "method": "POST",
       "parameters": [],
       "headers": [],
@@ -77,9 +73,7 @@
       "parentId": "__GRP_1__",
       "name": "Info for a specific pet",
       "url": "{{ base_url }}/pets/{{ petId }}",
-      "body": {
-        "mimeType": "application/json"
-      },
+      "body": {},
       "method": "GET",
       "parameters": [],
       "headers": [],

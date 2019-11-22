@@ -9,7 +9,7 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
-import { getAppVersion } from '../../../common/constants';
+import { getAppName, getAppVersion } from '../../../common/constants';
 import { showAlert, showModal, showPrompt } from '../modals';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
@@ -68,7 +68,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     for (const workspace of this.props.unseenWorkspaces) {
       const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
       if (!workspaceMeta.hasSeen) {
-        models.workspaceMeta.update(workspaceMeta, { hasSeen: true });
+        await models.workspaceMeta.update(workspaceMeta, { hasSeen: true });
       }
     }
   }
@@ -307,7 +307,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             </DropdownItem>
           ))}
 
-          <DropdownDivider>Insomnia Version {getAppVersion()}</DropdownDivider>
+          <DropdownDivider>
+            {getAppName()} v{getAppVersion()}
+          </DropdownDivider>
 
           <DropdownItem onClick={WorkspaceDropdown._handleShowSettings}>
             <i className="fa fa-cog" /> Preferences
