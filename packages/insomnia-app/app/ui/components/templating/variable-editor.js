@@ -34,9 +34,9 @@ class VariableEditor extends PureComponent {
   _resize() {
     setTimeout(() => {
       const element = this.textAreaRef.current;
-      element.style.cssText = 'height: auto, padding: 0';
-      element.style.cssText = `height:${element.scrollHeight}px`;
-    }, 100);
+      element.style.cssText = 'height:auto';
+      element.style.cssText = `height:${element.scrollHeight}px;overflow:hidden`;
+    }, 200);
   }
 
   _setSelectRef(n) {
