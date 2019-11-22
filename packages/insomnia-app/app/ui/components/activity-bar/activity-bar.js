@@ -63,7 +63,7 @@ class ActivityBar extends React.PureComponent<Props> {
               hotKeyRegistry,
               false,
             )})`}>
-            <i className="fa fa-cog" />
+            <i className="ico-preferences" />
           </button>
         </li>
       </ul>
