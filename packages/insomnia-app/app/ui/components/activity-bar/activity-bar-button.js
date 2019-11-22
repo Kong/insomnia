@@ -20,9 +20,8 @@ type Props = {|
 |};
 
 const ACTIVITY_MAP_ICONS: { [GlobalActivity]: string } = {
-  spec: 'fa-file-text',
-  debug: 'fa-flask',
-  monitor: 'fa-tachometer',
+  spec: 'ico-edit-spec',
+  debug: 'ico-debug',
 };
 
 @autobind
@@ -58,7 +57,7 @@ class ActivityBarButton extends React.PureComponent<Props> {
             className={classnames(classes)}
             title={`${activity.name} (${getHotKeyDisplay(activity.hotKey, hotKeyRegistry, false)})`}
             onClick={this._handleSetActivity}>
-            <i className={classnames('fa', icon)} />
+            <i className={icon} />
           </button>
         </li>
       </KeydownBinder>

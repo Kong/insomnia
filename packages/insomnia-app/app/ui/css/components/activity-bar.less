@@ -6,6 +6,19 @@
   flex-direction: column;
   background: var(--color-bg);
   border-right: 1px solid @hl-md;
+  padding-top: @padding-sm;
+
+  button {
+    margin: 0px @padding-sm;
+
+    i {
+      display: flex;
+    }
+
+    &:last-child {
+      margin-bottom: @padding-sm;
+    }
+  }
 
   &__spacer {
     flex: 1;
@@ -15,22 +28,34 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    height: @line-height-md;
-    width: @line-height-md;
+    height: @line-height-sm;
+    width: @line-height-sm;
+    border-radius: @radius-sm;
 
     i {
-      color: var(--hl);
-      font-size: @font-size-lg;
+      color: var(--color-font);
+      font-size: @font-size-xl;
+      opacity: @opacity-super-subtle;
     }
 
     // Set active opacity
     &:hover {
       background-color: var(--hl-sm);
       color: var(--color-font);
+
+      i {
+        opacity: 1;
+      }
     }
 
-    &--active i {
-      color: var(--color-font);
+    &--active {
+      background-color: var(--hl-lg);
+      border: 1px solid var(--hl);
+
+      i {
+        color: var(--color-font);
+        opacity: 1;
+      }
     }
   }
 }

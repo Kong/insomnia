@@ -186,60 +186,6 @@ class CodeEditor extends React.Component {
       doc.setCursor(doc.lineCount(), 0);
     }
   }
-  search(val, value) {
-    let match = false;
-    let cursor;
-    if (typeof value === 'string' || typeof value === 'number') {
-      cursor = this.codeMirror.getSearchCursor(val + ': ' + value);
-      while (cursor.findNext()) {
-        this.codeMirror.setSelection(cursor.from(), cursor.to());
-        match = true;
-        return;
-      }
-      if (!match) {
-        cursor = this.codeMirror.getSearchCursor(val + ': ' + `"${value}"`);
-        while (cursor.findNext()) {
-          this.codeMirror.setSelection(cursor.from(), cursor.to());
-          match = true;
-          return;
-        }
-      }
-    }
-    if (typeof value === 'object') {
-      cursor = this.codeMirror.getSearchCursor(
-        val +
-          ':\n' +
-          JSON.stringify(value)
-            .replace('{', ' ')
-            .replace(/"/g, ' ')
-            .slice(0, 5),
-      );
-
-      while (cursor.findNext()) {
-        this.codeMirror.setSelection(cursor.from(), cursor.to());
-        match = true;
-        return;
-      }
-      if (!match) {
-        cursor = this.codeMirror.getSearchCursor(' ' + val + ':\n');
-
-        while (cursor.findNext()) {
-          this.codeMirror.setSelection(cursor.from(), cursor.to());
-          match = true;
-          return;
-        }
-      }
-      if (!match) {
-        cursor = this.codeMirror.getSearchCursor(val + ':\n');
-
-        while (cursor.findNext()) {
-          this.codeMirror.setSelection(cursor.from(), cursor.to());
-          match = true;
-          return;
-        }
-      }
-    }
-  }
 
   hasFocus() {
     if (this.codeMirror) {

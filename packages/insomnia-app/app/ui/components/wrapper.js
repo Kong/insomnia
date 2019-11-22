@@ -460,9 +460,14 @@ class Wrapper extends React.PureComponent<Props, State> {
     this.specEditor = n;
   }
 
-  _handleJumpToLine(val: string, value: string | Object) {
+  _handleSetSpecEditorSelection(
+    chStart: number,
+    chEnd: number,
+    lineStart: number,
+    lineEnd: number,
+  ) {
     if (this.specEditor) {
-      this.specEditor.jumpToLine(val, value);
+      this.specEditor.setSelection(chStart, chEnd, lineStart, lineEnd);
     }
   }
 
@@ -470,7 +475,10 @@ class Wrapper extends React.PureComponent<Props, State> {
     const { activeApiSpec } = this.props;
     return (
       <ErrorBoundary showAlert>
-        <SpecEditorSidebar apiSpec={activeApiSpec} handleJumpToLine={this._handleJumpToLine} />
+        <SpecEditorSidebar
+          apiSpec={activeApiSpec}
+          handleSetSelection={this._handleSetSpecEditorSelection}
+        />
       </ErrorBoundary>
     );
   }
