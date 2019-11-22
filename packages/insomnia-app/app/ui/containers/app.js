@@ -1370,6 +1370,7 @@ function mapDispatchToProps(dispatch) {
     handleSetActiveActivity: global.setActiveActivity,
     handleSetActiveWorkspace: global.setActiveWorkspace,
     handleImportFileToWorkspace: global.importFile,
+    handleImportClipBoardToWorkspace: global.importClipBoard,
     handleImportUriToWorkspace: global.importUri,
     handleCommand: global.newCommand,
     handleExportFile: global.exportWorkspacesToFile,

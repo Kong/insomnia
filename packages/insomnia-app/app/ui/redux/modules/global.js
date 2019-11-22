@@ -202,6 +202,29 @@ export function importFile(workspaceId, forceToWorkspace) {
   };
 }
 
+export function importClipBoard(workspaceId, forceToWorkspace) {
+  return async dispatch => {
+    dispatch(loadStart());
+    const schema = electron.clipboard.readText();
+    // Let's import all the paths!
+    let importedWorkspaces = [];
+    try {
+      const result = await importUtils.importRaw(
+        askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+        schema,
+      );
+      importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
+    } catch (err) {
+      showModal(AlertModal, { title: 'Import Failed', message: err + '' });
+    } finally {
+      dispatch(loadStop());
+    }
+    if (importedWorkspaces.length === 1) {
+      dispatch(setActiveWorkspace(importedWorkspaces[0]._id));
+    }
+  };
+}
+
 export function importUri(workspaceId, uri, forceToWorkspace) {
   return async dispatch => {
     dispatch(loadStart());

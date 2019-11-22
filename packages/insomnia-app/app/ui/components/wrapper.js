@@ -94,6 +94,7 @@ type Props = {
   handleSetSidebarFilter: Function,
   handleToggleMenuBar: Function,
   handleImportFileToWorkspace: Function,
+  handleImportClipBoardToWorkspace: Function,
   handleImportUriToWorkspace: Function,
   handleInitializeEntities: Function,
   handleExportFile: Function,
@@ -321,13 +322,16 @@ class Wrapper extends React.PureComponent<Props, State> {
     return sUpdate(this.props.settings, { useBulkHeaderEditor });
   }
 
-  // Other Helpers
   _handleImportFile(forceToWorkspace?: boolean): void {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
   }
 
   _handleImportUri(uri: string, forceToWorkspace?: boolean): void {
     this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri, forceToWorkspace);
+  }
+
+  _handleImportClipBoard(forceToWorkspace?: boolean): void {
+    this.props.handleImportClipBoardToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
   }
 
   _handleSetActiveResponse(responseId: string | null): void {
@@ -752,6 +756,7 @@ class Wrapper extends React.PureComponent<Props, State> {
               ref={registerModal}
               handleShowExportRequestsModal={handleShowExportRequestsModal}
               handleExportAllToFile={handleExportFile}
+              handleImportClipBoard={this._handleImportClipBoard}
               handleImportFile={this._handleImportFile}
               handleImportUri={this._handleImportUri}
               handleToggleMenuBar={handleToggleMenuBar}
