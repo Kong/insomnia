@@ -132,7 +132,10 @@ function parseEndpoints(document) {
     return importFolderItem(tag, defaultParent);
   });
   const folderLookup = {};
-  folders.forEach(folder => (folderLookup[folder.name] = folder._id));
+
+  for (const folder of folders) {
+    folderLookup[folder.name] = folder._id;
+  }
 
   const requests = [];
   endpointsSchemas.map(endpointSchema => {
@@ -427,9 +430,11 @@ function generateParameterExample(schema) {
       const example = {};
       const { properties } = schema;
 
-      Object.keys(properties).forEach(propertyName => {
-        example[propertyName] = generateParameterExample(properties[propertyName]);
-      });
+      if (properties) {
+        for (const propertyName of Object.keys(properties)) {
+          example[propertyName] = generateParameterExample(properties[propertyName]);
+        }
+      }
 
       return example;
     },
