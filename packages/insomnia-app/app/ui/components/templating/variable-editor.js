@@ -6,7 +6,7 @@ import autobind from 'autobind-decorator';
 class VariableEditor extends PureComponent {
   constructor(props) {
     super(props);
-
+    this.textAreaRef = React.createRef();
     const inner = props.defaultValue.replace(/\s*}}$/, '').replace(/^{{\s*/, '');
 
     this.state = {
@@ -19,11 +19,24 @@ class VariableEditor extends PureComponent {
 
   componentDidMount() {
     this._update(this.state.value, true);
+    this._resize();
+  }
+
+  componentDidUpdate() {
+    this._resize();
   }
 
   _handleChange(e) {
     const name = e.target.value;
     this._update(name);
+  }
+
+  _resize() {
+    setTimeout(() => {
+      const element = this.textAreaRef.current;
+      element.style.cssText = 'height: auto, padding: 0';
+      element.style.cssText = `height:${element.scrollHeight}px`;
+    }, 100);
   }
 
   _setSelectRef(n) {
@@ -95,7 +108,7 @@ class VariableEditor extends PureComponent {
             {error ? (
               <textarea className="danger" value={error || 'Error'} readOnly />
             ) : (
-              <textarea value={preview || ''} readOnly />
+              <textarea ref={this.textAreaRef} value={preview || ''} readOnly />
             )}
           </label>
         </div>
