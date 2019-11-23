@@ -131,6 +131,7 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
             sortable
             namePlaceholder="Header"
             valuePlaceholder="Value"
+            descriptionPlaceholder="description"
             pairs={request.headers}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}

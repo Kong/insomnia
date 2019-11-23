@@ -38,7 +38,16 @@ class Editor extends PureComponent {
 
     this.state = {
       pairs: pairs,
+      displayDescription: false,
     };
+
+    // If any pair has a description, display description field.
+    for (const pair of this.props.pairs) {
+      if (pair.description) {
+        this.state.displayDescription = true;
+        break;
+      }
+    }
   }
 
   _setRowRef(n) {
@@ -335,6 +344,10 @@ class Editor extends PureComponent {
     }
   }
 
+  _toggleDescription() {
+    this.setState({ displayDescription: !this.state.displayDescription });
+  }
+
   componentDidUpdate() {
     this._updateFocus();
   }
@@ -357,7 +370,6 @@ class Editor extends PureComponent {
       allowMultiline,
       sortable,
       disableDelete,
-      withDescriptionField,
     } = this.props;
 
     const { pairs } = this.state;
@@ -373,7 +385,7 @@ class Editor extends PureComponent {
               index={i} // For dragging
               ref={this._setRowRef}
               sortable={sortable}
-              withDescriptionField={withDescriptionField}
+              displayDescription={this.state.displayDescription}
               namePlaceholder={namePlaceholder}
               valuePlaceholder={valuePlaceholder}
               descriptionPlaceholder={descriptionPlaceholder}
@@ -419,10 +431,11 @@ class Editor extends PureComponent {
                   <DropdownItem onClick={this._handleDeleteAll} buttonClass={PromptButton}>
                     Delete All Items
                   </DropdownItem>
+                  <DropdownItem onClick={this._toggleDescription}>Toggle Description</DropdownItem>
                 </Dropdown>
               )}
               className="key-value-editor__row-wrapper--clicker"
-              withDescriptionField={withDescriptionField}
+              displayDescription={this.state.displayDescription}
               namePlaceholder={`New ${namePlaceholder}`}
               valuePlaceholder={`New ${valuePlaceholder}`}
               descriptionPlaceholder={`New ${descriptionPlaceholder}`}
@@ -455,7 +468,6 @@ Editor.propTypes = {
   allowMultiline: PropTypes.bool,
   sortable: PropTypes.bool,
   maxPairs: PropTypes.number,
-  withDescriptionField: PropTypes.bool,
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,
   descriptionPlaceholder: PropTypes.string,

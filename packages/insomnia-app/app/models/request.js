@@ -39,6 +39,7 @@ export type RequestAuthentication = Object;
 export type RequestHeader = {
   name: string,
   value: string,
+  description?: string,
   disabled?: boolean,
 };
 

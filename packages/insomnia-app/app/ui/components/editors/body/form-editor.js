@@ -22,7 +22,6 @@ class FormEditor extends PureComponent {
             sortable
             allowFile
             allowMultiline
-            withDescriptionField={true}
             namePlaceholder="name"
             valuePlaceholder="value"
             descriptionPlaceholder="description"

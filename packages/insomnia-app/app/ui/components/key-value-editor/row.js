@@ -194,7 +194,7 @@ class KeyValueEditorRow extends PureComponent {
 
   renderPairDescription() {
     const {
-      withDescriptionField,
+      displayDescription,
       readOnly,
       forceInput,
       descriptionPlaceholder,
@@ -205,7 +205,7 @@ class KeyValueEditorRow extends PureComponent {
       isVariableUncovered,
     } = this.props;
 
-    return withDescriptionField ? (
+    return displayDescription ? (
       <div
         className={classnames(
           'form-control form-control--underlined form-control--wide no-min-width',
@@ -218,7 +218,7 @@ class KeyValueEditorRow extends PureComponent {
           readOnly={readOnly}
           forceInput={forceInput}
           placeholder={descriptionPlaceholder || 'Description'}
-          defaultValue={pair.description}
+          defaultValue={pair.description || ''}
           onChange={this._handleDescriptionChange}
           onBlur={this._handleBlurDescription}
           onKeyDown={this._handleKeyDown}
@@ -469,7 +469,7 @@ KeyValueEditorRow.propTypes = {
   onFocusName: PropTypes.func.isRequired,
   onFocusValue: PropTypes.func.isRequired,
   onFocusDescription: PropTypes.func.isRequired,
-  withDescriptionField: PropTypes.bool,
+  displayDescription: PropTypes.bool,
   index: PropTypes.number.isRequired,
   pair: PropTypes.shape({
     name: PropTypes.string.isRequired,
