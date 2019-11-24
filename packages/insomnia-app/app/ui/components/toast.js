@@ -80,6 +80,7 @@ class Toast extends React.PureComponent<Props, State> {
         firstLaunch: stats.created,
         launches: stats.launches,
         platform: constants.getAppPlatform(),
+        app: constants.getAppId(),
         version: constants.getAppVersion(),
         requests: await db.count(models.request.type),
         requestGroups: await db.count(models.requestGroup.type),

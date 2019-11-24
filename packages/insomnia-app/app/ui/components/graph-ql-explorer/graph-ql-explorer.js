@@ -4,21 +4,23 @@ import autobind from 'autobind-decorator';
 import GraphQLExplorerField from './graph-ql-explorer-field';
 import GraphQLExplorerType from './graph-ql-explorer-type';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
+import { GraphQLEnumType } from 'graphql';
 import GraphQLExplorerSchema from './graph-ql-explorer-schema';
+import GraphQLExplorerEnum from './graph-ql-explorer-enum';
 
 type Props = {
   handleClose: () => void,
   schema: GraphQLSchema | null,
   visible: boolean,
   reference: null | {
-    type: GraphQLType | null,
+    type: GraphQLType | GraphQLEnumType | null,
     argument: GraphQLArgument | null,
     field: GraphQLField<any, any> | null,
   },
 };
 
 type HistoryItem = {
-  currentType: null | GraphQLType,
+  currentType: null | GraphQLType | GraphQLEnumType,
   currentField: null | GraphQLField<any, any>,
 };
 
@@ -37,7 +39,7 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
     };
   }
 
-  _handleNavigateType(type: GraphQLType) {
+  _handleNavigateType(type: GraphQLType | GraphQLEnumType) {
     this.setState({
       currentType: type,
       currentField: null,
@@ -160,6 +162,8 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
       child = (
         <GraphQLExplorerField onNavigateType={this._handleNavigateType} field={currentField} />
       );
+    } else if (currentType && currentType instanceof GraphQLEnumType) {
+      child = <GraphQLExplorerEnum type={currentType} />;
     } else if (currentType) {
       child = (
         <GraphQLExplorerType

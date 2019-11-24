@@ -205,6 +205,12 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     await this._load(workspace, environment);
   }
 
+  async _handleDuplicateEnvironment(environment: Environment) {
+    const { workspace } = this.state;
+    const newEnvironment = await models.environment.duplicate(environment);
+    this._load(workspace, newEnvironment);
+  }
+
   async _handleDeleteEnvironment(environment: Environment) {
     const { rootEnvironment, workspace } = this.state;
 
@@ -483,6 +489,13 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                       Unset Color
                     </DropdownItem>
                   </Dropdown>
+
+                  <Button
+                    value={activeEnvironment}
+                    onClick={this._handleDuplicateEnvironment}
+                    className="btn btn--clicky space-right">
+                    <i className="fa fa-copy" /> Duplicate
+                  </Button>
 
                   <PromptButton
                     value={activeEnvironment}

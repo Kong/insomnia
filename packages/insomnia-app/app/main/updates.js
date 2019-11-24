@@ -3,6 +3,7 @@ import electron from 'electron';
 import {
   CHECK_FOR_UPDATES_INTERVAL,
   getAppVersion,
+  getAppId,
   isDevelopment,
   UPDATE_URL_MAC,
   UPDATE_URL_WINDOWS,
@@ -28,6 +29,7 @@ async function getUpdateUrl(force: boolean): Promise<string | null> {
 
   const params = [
     { name: 'v', value: getAppVersion() },
+    { name: 'app', value: getAppId() },
     { name: 'channel', value: settings.updateChannel },
   ];
 

@@ -63,6 +63,8 @@ async function _getOAuth2AuthorizationCodeHeader(
     authentication.redirectUrl,
     authentication.scope,
     authentication.state,
+    authentication.audience,
+    authentication.resource,
   );
 
   return _updateOAuth2Token(requestId, results);
@@ -138,6 +140,7 @@ async function _getOAuth2PasswordHeader(
     authentication.username,
     authentication.password,
     authentication.scope,
+    authentication.audience,
   );
 
   return _updateOAuth2Token(requestId, results);

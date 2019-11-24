@@ -152,9 +152,9 @@ class CodeEditor extends React.Component {
     }
   }
 
-  setSelection(chStart, chEnd, line = 0) {
+  setSelection(chStart, chEnd, lineStart, lineEnd) {
     if (this.codeMirror) {
-      this.codeMirror.setSelection({ line, ch: chStart }, { line, ch: chEnd });
+      this.codeMirror.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
     }
   }
 
@@ -294,9 +294,15 @@ class CodeEditor extends React.Component {
     this.codeMirror.setCursor({ line: -1, ch: -1 });
 
     this.codeMirror.setOption('extraKeys', {
+      ...BASE_CODEMIRROR_OPTIONS.extraKeys,
       Tab: cm => {
-        const spaces = this._indentChars();
-        cm.replaceSelection(spaces);
+        // Indent with tabs or spaces
+        // From https://github.com/codemirror/CodeMirror/issues/988#issuecomment-14921785
+        if (cm.somethingSelected()) {
+          cm.indentSelection('add');
+        } else {
+          cm.replaceSelection(this._indentChars(), 'end', '+input');
+        }
       },
     });
 

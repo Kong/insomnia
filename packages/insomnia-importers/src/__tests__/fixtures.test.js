@@ -16,7 +16,12 @@ describe('Fixtures', () => {
       const prefix = input.replace(/-input\.[^.]+/, '');
       const output = `${prefix}-output.json`;
 
+      if (prefix.startsWith('skip')) {
+        continue;
+      }
+
       it(`Import ${name} ${input}`, async () => {
+        expect.assertions(5);
         expect(typeof input).toBe('string');
         expect(typeof output).toBe('string');
 
