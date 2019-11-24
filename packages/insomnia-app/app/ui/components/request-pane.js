@@ -9,28 +9,28 @@ import type {
 import type { Workspace } from '../../models/workspace';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 
-import * as React from 'react';
 import autobind from 'autobind-decorator';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import ContentTypeDropdown from './dropdowns/content-type-dropdown';
-import AuthDropdown from './dropdowns/auth-dropdown';
-import KeyValueEditor from './key-value-editor/editor';
-import RequestHeadersEditor from './editors/request-headers-editor';
-import RenderedQueryString from './rendered-query-string';
-import BodyEditor from './editors/body/body-editor';
-import AuthWrapper from './editors/auth/auth-wrapper';
-import RequestUrlBar from './request-url-bar.js';
-import { getAuthTypeName, getContentTypeName } from '../../common/constants';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
+import * as React from 'react';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+import { getAuthTypeName, getContentTypeName } from '../../common/constants';
 import * as db from '../../common/database';
+import { hotKeyRefs } from '../../common/hotkeys';
 import * as models from '../../models';
+import AuthDropdown from './dropdowns/auth-dropdown';
+import ContentTypeDropdown from './dropdowns/content-type-dropdown';
+import AuthWrapper from './editors/auth/auth-wrapper';
+import BodyEditor from './editors/body/body-editor';
+import RequestHeadersEditor from './editors/request-headers-editor';
+import ErrorBoundary from './error-boundary';
 import Hotkey from './hotkey';
+import KeyValueEditor from './key-value-editor/editor';
+import MarkdownPreview from './markdown-preview';
 import { showModal } from './modals/index';
 import RequestSettingsModal from './modals/request-settings-modal';
-import MarkdownPreview from './markdown-preview';
+import RenderedQueryString from './rendered-query-string';
+import RequestUrlBar from './request-url-bar.js';
 import type { Settings } from '../../models/settings';
-import ErrorBoundary from './error-boundary';
-import { hotKeyRefs } from '../../common/hotkeys';
 
 type Props = {
   // Functions
@@ -136,7 +136,7 @@ class RequestPane extends React.PureComponent<Props> {
     }
 
     // Remove the search string (?foo=bar&...) from the Url
-    const url = request.url.replace(query, '');
+    const url = request.url.replace(`?${query}`, '');
     const parameters = [...request.parameters, ...deconstructQueryStringToParams(query)];
 
     // Only update if url changed

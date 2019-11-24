@@ -53,6 +53,11 @@ class SettingsModal extends PureComponent {
     this.modal.hide();
   }
 
+  _handleImportClipBoard() {
+    this.props.handleImportClipBoard();
+    this.modal.hide();
+  }
+
   _handleImportUri(uri) {
     this.props.handleImportUri(uri);
     this.modal.hide();
@@ -134,6 +139,7 @@ class SettingsModal extends PureComponent {
                 handleExportAll={this._handleExportAllToFile}
                 handleShowExportRequestsModal={this._handleShowExportRequestsModal}
                 handleImportFile={this._handleImportFile}
+                handleImportClipBoard={this._handleImportClipBoard}
                 handleImportUri={this._handleImportUri}
               />
             </TabPanel>

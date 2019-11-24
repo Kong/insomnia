@@ -425,7 +425,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         enabled,
       ];
 
-      advancedFields = [scope, state, credentialsInBody, tokenPrefix];
+      advancedFields = [scope, state, credentialsInBody, tokenPrefix, audience, resource];
     } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
       basicFields = [accessTokenUrl, clientId, clientSecret, enabled];
 

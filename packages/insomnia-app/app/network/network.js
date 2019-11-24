@@ -213,12 +213,25 @@ export async function _actuallySend(
       };
 
       // Set all the basic options
-      setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, true); // True so curl doesn't print progress
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
       enable(Curl.feature.NO_HEADER_PARSING);
       enable(Curl.feature.NO_DATA_PARSING);
+
+      // Set follow redirects setting
+      switch (renderedRequest.settingFollowRedirects) {
+        case 'off':
+          setOpt(Curl.option.FOLLOWLOCATION, false);
+          break;
+        case 'on':
+          setOpt(Curl.option.FOLLOWLOCATION, true);
+          break;
+        default:
+          // Set to global setting
+          setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
+          break;
+      }
 
       // Set maximum amount of redirects allowed
       // NOTE: Setting this to -1 breaks some versions of libcurl

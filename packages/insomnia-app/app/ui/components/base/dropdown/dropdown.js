@@ -218,6 +218,9 @@ class Dropdown extends PureComponent {
   _getFlattenedChildren(children) {
     let newChildren = [];
 
+    // Ensure children is an array
+    children = Array.isArray(children) ? children : [children];
+
     for (const child of children) {
       if (!child) {
         // Ignore null components
@@ -307,8 +310,7 @@ class Dropdown extends PureComponent {
     const dropdownButtons = [];
     const dropdownItems = [];
 
-    const listedChildren = Array.isArray(children) ? children : [children];
-    const allChildren = this._getFlattenedChildren(listedChildren);
+    const allChildren = this._getFlattenedChildren(children);
 
     const visibleChildren = allChildren.filter((child, i) => {
       if (child.type.name !== DropdownItem.name) {

@@ -5,8 +5,8 @@ process easy and effective for everyone involved.
 
 ## Using the issue tracker
 
-[GitHub Issues](https://github.com/getinsomnia/insomnia/issues) is the preferred channel 
-for [bug reports](#bug-reports), [features requests](#feature-requests) 
+[GitHub Issues](https://github.com/getinsomnia/insomnia/issues) is the preferred channel
+for [bug reports](#bug-reports), [features requests](#feature-requests)
 and [submitting pull requests](#pull-requests).
 
 Please respect the following restrictions:
@@ -34,14 +34,14 @@ Guidelines for bug reports:
 
 A good bug report should not leave others needing to chase you up for more
 information. Please try to be as detailed as possible in your report. What is
-your environment? What steps will reproduce the issue? What OS experienced the 
-problem? What would you expect to be the outcome? All these details will help 
+your environment? What steps will reproduce the issue? What OS experienced the
+problem? What would you expect to be the outcome? All these details will help
 to fix any potential bugs.
 
 ## Feature Requests
 
 Feature requests are welcome. But take a moment to find out whether your idea
-fits with the scope and aims of the project. It's up to *you* to make a strong
+fits with the scope and aims of the project. It's up to _you_ to make a strong
 case to convince the project's developers of the merits of this feature. Please
 provide as much detail and context as possible.
 
