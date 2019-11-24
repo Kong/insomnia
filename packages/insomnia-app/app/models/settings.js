@@ -20,6 +20,8 @@ type BaseSettings = {
   proxyEnabled: boolean,
   timeout: number,
   validateSSL: boolean,
+  caBundle: string,
+  caBundlePath: String,
   forceVerticalLayout: boolean,
   autoHideMenuBar: boolean,
   theme: string,
