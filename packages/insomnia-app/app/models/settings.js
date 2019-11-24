@@ -70,6 +70,8 @@ export function init(): BaseSettings {
     proxyEnabled: false,
     timeout: 0,
     validateSSL: true,
+    caBundle: '',
+    caBundlePath: '',
     forceVerticalLayout: false,
     autoHideMenuBar: false,
     theme: packageJson.app.theme,

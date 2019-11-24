@@ -20,6 +20,7 @@ import CheckForUpdatesButton from '../check-for-updates-button';
 import { setFont } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
+import FileInputButton from '../base/file-input-button';
 
 type Props = {
   settings: Settings,
@@ -63,6 +64,10 @@ class General extends React.PureComponent<Props, State> {
     }
 
     return this.props.updateSetting(el.name, value);
+  }
+
+  async _handleCaBundlePathChange(path: string) {
+    return this.props.updateSetting('caBundlePath', path);
   }
 
   async _handleToggleMenuBar(e: SyntheticEvent<HTMLInputElement>) {
@@ -293,6 +298,39 @@ class General extends React.PureComponent<Props, State> {
         <h2>Network</h2>
 
         {this.renderBooleanSetting('Validate certificates', 'validateSSL', '')}
+
+        <div className="form-control form-control--outlined">
+          <label>
+            Certificate Authority Bundle
+            <select name="caBundle" value={settings.caBundle} onChange={this._handleUpdateSetting}>
+              {isMac() ? (
+                <option value="default">Mac Keychain (Default)</option>
+              ) : (
+                <React.Fragment>
+                  <option>Insomnia CA Bundle (Default)</option>,
+                  <option value="windowsCertStore">Windows Certificate Store</option>,
+                  <option value="userProvided">User Provided Bundle</option>
+                </React.Fragment>
+              )}
+            </select>
+          </label>
+        </div>
+
+        {settings.caBundle === 'userProvided' && (
+          <div className="form-control form-control--outlined">
+            <label>
+              Certificate Authority Bundle File
+              <FileInputButton
+                className="btn btn--clicky"
+                name="CA Bundle"
+                onChange={this._handleCaBundlePathChange}
+                path={settings.caBundlePath}
+                showFileName
+              />
+            </label>
+          </div>
+        )}
+
         {this.renderBooleanSetting('Follow redirects', 'followRedirects', '')}
 
         <div className="form-row pad-top-sm">
