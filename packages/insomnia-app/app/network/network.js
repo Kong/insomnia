@@ -4,6 +4,7 @@ import type { Request, RequestHeader } from '../models/request';
 import type { Workspace } from '../models/workspace';
 import type { Settings } from '../models/settings';
 import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
+
 import {
   getRenderedRequestAndContext,
   RENDER_PURPOSE_NO_RENDER,
@@ -28,6 +29,8 @@ import {
   getAppVersion,
   getTempDir,
   STATUS_CODE_PLUGIN_ERROR,
+  isWindows,
+  isMac,
 } from '../common/constants';
 import {
   delay,
@@ -53,6 +56,7 @@ import {
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
+import * as winCa from 'win-ca';
 import * as plugins from '../plugins/index';
 import * as pluginContexts from '../plugins/context/index';
 import { getAuthHeader } from './authentication';
@@ -344,9 +348,37 @@ export async function _actuallySend(
         addTimelineText('Disable SSL validation');
       }
 
-      // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
-      // certificates form the OS.
-      if (process.platform !== 'darwin') {
+      // Setup Certifcate Authority
+      if (isWindows() && settings.caBundle === 'windowsCertStore') {
+        const baseCAPath = getTempDir();
+        const fullCAPath = pathJoin(baseCAPath, 'windows.pem');
+        let caFile = '';
+
+        await new Promise(resolve => {
+          winCa({
+            format: winCa.der2.pem,
+            store: ['root'],
+            save: fullCAPath,
+            onsave: folder => {
+              caFile = folder + '/roots.pem';
+              console.log(
+                '[net] Saved CA from Windows Certificates to folder ',
+                folder,
+                ' and set CA file to ',
+                caFile,
+              );
+              resolve();
+            },
+          });
+        });
+
+        setOpt(Curl.option.CAINFO, caFile);
+      } else if (isMac()) {
+        // Thanks to libcurl, Mac will use certificates form the OS.
+      } else if (settings.caBundle === 'userProvided') {
+        setOpt(Curl.option.CAINFO, settings.caBundlePath);
+        console.log('[net] Set CA to user provided file ', settings.caBundlePath);
+      } else {
         const baseCAPath = getTempDir();
         const fullCAPath = pathJoin(baseCAPath, CACerts.filename);
 
