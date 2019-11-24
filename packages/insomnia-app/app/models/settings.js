@@ -21,7 +21,7 @@ type BaseSettings = {
   timeout: number,
   validateSSL: boolean,
   caBundle: string,
-  caBundlePath: String,
+  caBundlePath: string,
   forceVerticalLayout: boolean,
   autoHideMenuBar: boolean,
   theme: string,
