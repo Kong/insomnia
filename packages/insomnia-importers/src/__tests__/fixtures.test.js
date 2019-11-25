@@ -21,6 +21,7 @@ describe('Fixtures', () => {
       }
 
       it(`Import ${name} ${input}`, async () => {
+        expect.assertions(5);
         expect(typeof input).toBe('string');
         expect(typeof output).toBe('string');
 

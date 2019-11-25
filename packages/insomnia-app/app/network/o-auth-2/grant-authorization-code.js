@@ -18,6 +18,8 @@ export default async function(
   redirectUri: string = '',
   scope: string = '',
   state: string = '',
+  audience: string = '',
+  resource: string = '',
 ): Promise<Object> {
   if (!authorizeUrl) {
     throw new Error('Invalid authorization URL');
@@ -27,7 +29,15 @@ export default async function(
     throw new Error('Invalid access token URL');
   }
 
-  const authorizeResults = await _authorize(authorizeUrl, clientId, redirectUri, scope, state);
+  const authorizeResults = await _authorize(
+    authorizeUrl,
+    clientId,
+    redirectUri,
+    scope,
+    state,
+    audience,
+    resource,
+  );
 
   // Handle the error
   if (authorizeResults[c.P_ERROR]) {
@@ -46,10 +56,20 @@ export default async function(
     authorizeResults[c.P_CODE],
     redirectUri,
     state,
+    audience,
+    resource,
   );
 }
 
-async function _authorize(url, clientId, redirectUri = '', scope = '', state = '') {
+async function _authorize(
+  url,
+  clientId,
+  redirectUri = '',
+  scope = '',
+  state = '',
+  audience = '',
+  resource = '',
+) {
   const params = [
     { name: c.P_RESPONSE_TYPE, value: c.RESPONSE_TYPE_CODE },
     { name: c.P_CLIENT_ID, value: clientId },
@@ -59,6 +79,8 @@ async function _authorize(url, clientId, redirectUri = '', scope = '', state = '
   redirectUri && params.push({ name: c.P_REDIRECT_URI, value: redirectUri });
   scope && params.push({ name: c.P_SCOPE, value: scope });
   state && params.push({ name: c.P_STATE, value: state });
+  audience && params.push({ name: c.P_AUDIENCE, value: audience });
+  resource && params.push({ name: c.P_RESOURCE, value: resource });
 
   // Add query params to URL
   const qs = buildQueryStringFromParams(params);
@@ -89,6 +111,8 @@ async function _getToken(
   code: string,
   redirectUri: string = '',
   state: string = '',
+  audience: string = '',
+  resource: string = '',
 ): Promise<Object> {
   const params = [
     { name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_AUTHORIZATION_CODE },
@@ -98,6 +122,8 @@ async function _getToken(
   // Add optional params
   redirectUri && params.push({ name: c.P_REDIRECT_URI, value: redirectUri });
   state && params.push({ name: c.P_STATE, value: state });
+  audience && params.push({ name: c.P_AUDIENCE, value: audience });
+  resource && params.push({ name: c.P_RESOURCE, value: resource });
 
   const headers = [
     { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
@@ -145,6 +171,8 @@ async function _getToken(
     c.P_EXPIRES_IN,
     c.P_TOKEN_TYPE,
     c.P_SCOPE,
+    c.P_AUDIENCE,
+    c.P_RESOURCE,
     c.P_ERROR,
     c.P_ERROR_URI,
     c.P_ERROR_DESCRIPTION,
