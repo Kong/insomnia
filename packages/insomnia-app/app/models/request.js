@@ -39,6 +39,7 @@ export type RequestAuthentication = Object;
 export type RequestHeader = {
   name: string,
   value: string,
+  description?: string,
   disabled?: boolean,
 };
 
@@ -53,6 +54,7 @@ export type RequestParameter = {
 export type RequestBodyParameter = {
   name: string,
   value: string,
+  description?: string,
   disabled?: boolean,
   multiline?: string,
   id?: string,
