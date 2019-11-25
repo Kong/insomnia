@@ -38,16 +38,10 @@ class Editor extends PureComponent {
 
     this.state = {
       pairs: pairs,
-      displayDescription: false,
-    };
 
-    // If any pair has a description, display description field.
-    for (const pair of this.props.pairs) {
-      if (pair.description) {
-        this.state.displayDescription = true;
-        break;
-      }
-    }
+      // If any pair has a description, display description field
+      displayDescription: props.pairs.some(p => p.description),
+    };
   }
 
   _setRowRef(n) {
@@ -241,7 +235,10 @@ class Editor extends PureComponent {
     if (this._focusedField === NAME) {
       this._focusedField = VALUE;
       this._updateFocus();
-    } else if (this._focusedField === VALUE) {
+    } else if (this._focusedField === VALUE && this.state.displayDescription) {
+      this._focusedField = DESCRIPTION;
+      this._updateFocus();
+    } else if (this._focusedField === VALUE || this._focusedField === DESCRIPTION) {
       this._focusedField = NAME;
       if (addIfValue) {
         this._addPair(this._getFocusedPairIndex() + 1);
@@ -252,7 +249,10 @@ class Editor extends PureComponent {
   }
 
   _focusPrevious(deleteIfEmpty = false) {
-    if (this._focusedField === VALUE) {
+    if (this._focusedField === DESCRIPTION) {
+      this._focusedField = VALUE;
+      this._updateFocus();
+    } else if (this._focusedField === VALUE) {
       this._focusedField = NAME;
       this._updateFocus();
     } else if (this._focusedField === NAME) {
