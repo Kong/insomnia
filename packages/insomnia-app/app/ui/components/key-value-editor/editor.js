@@ -11,6 +11,7 @@ import PromptButton from '../base/prompt-button';
 
 const NAME = 'name';
 const VALUE = 'value';
+const DESCRIPTION = 'description';
 const ENTER = 13;
 const BACKSPACE = 8;
 const UP = 38;
@@ -37,7 +38,16 @@ class Editor extends PureComponent {
 
     this.state = {
       pairs: pairs,
+      displayDescription: false,
     };
+
+    // If any pair has a description, display description field.
+    for (const pair of this.props.pairs) {
+      if (pair.description) {
+        this.state.displayDescription = true;
+        break;
+      }
+    }
   }
 
   _setRowRef(n) {
@@ -98,6 +108,10 @@ class Editor extends PureComponent {
     this._focusedField = null;
   }
 
+  _handleBlurDescription() {
+    this._focusedField = null;
+  }
+
   _handleFocusName(pair) {
     this._setFocusedPair(pair);
     this._focusedField = NAME;
@@ -110,6 +124,12 @@ class Editor extends PureComponent {
     this._rows[pair.id].focusValueEnd();
   }
 
+  _handleFocusDescription(pair) {
+    this._setFocusedPair(pair);
+    this._focusedField = DESCRIPTION;
+    this._rows[pair.id].focusDescriptionEnd();
+  }
+
   _handleAddFromName() {
     this._focusedField = NAME;
     this._addPair();
@@ -118,6 +138,11 @@ class Editor extends PureComponent {
   // Sometimes multiple focus events come in, so lets debounce it
   _handleAddFromValue() {
     this._focusedField = VALUE;
+    this._addPair();
+  }
+
+  _handleAddFromDescription() {
+    this._focusedField = DESCRIPTION;
     this._addPair();
   }
 
@@ -168,6 +193,7 @@ class Editor extends PureComponent {
     const pair = {
       name: '',
       value: '',
+      description: '',
     };
 
     // Only add ids if we need 'em
@@ -289,6 +315,8 @@ class Editor extends PureComponent {
       row.focusNameEnd();
     } else if (this._focusedField === VALUE) {
       row.focusValueEnd();
+    } else if (this._focusedField === DESCRIPTION) {
+      row.focusDescriptionEnd();
     }
   }
 
@@ -316,6 +344,10 @@ class Editor extends PureComponent {
     }
   }
 
+  _toggleDescription() {
+    this.setState({ displayDescription: !this.state.displayDescription });
+  }
+
   componentDidUpdate() {
     this._updateFocus();
   }
@@ -327,6 +359,7 @@ class Editor extends PureComponent {
       valueInputType,
       valuePlaceholder,
       namePlaceholder,
+      descriptionPlaceholder,
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
@@ -352,16 +385,20 @@ class Editor extends PureComponent {
               index={i} // For dragging
               ref={this._setRowRef}
               sortable={sortable}
+              displayDescription={this.state.displayDescription}
               namePlaceholder={namePlaceholder}
               valuePlaceholder={valuePlaceholder}
+              descriptionPlaceholder={descriptionPlaceholder}
               valueInputType={valueInputType}
               onChange={this._handlePairChange}
               onDelete={this._handlePairDelete}
               onFocusName={this._handleFocusName}
               onFocusValue={this._handleFocusValue}
+              onFocusDescription={this._handleFocusDescription}
               onKeyDown={this._handleKeyDown}
               onBlurName={this._handleBlurName}
               onBlurValue={this._handleBlurValue}
+              onBlurDescription={this._handleBlurDescription}
               onMove={this._handleMove}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
@@ -394,16 +431,20 @@ class Editor extends PureComponent {
                   <DropdownItem onClick={this._handleDeleteAll} buttonClass={PromptButton}>
                     Delete All Items
                   </DropdownItem>
+                  <DropdownItem onClick={this._toggleDescription}>Toggle Description</DropdownItem>
                 </Dropdown>
               )}
               className="key-value-editor__row-wrapper--clicker"
+              displayDescription={this.state.displayDescription}
               namePlaceholder={`New ${namePlaceholder}`}
               valuePlaceholder={`New ${valuePlaceholder}`}
+              descriptionPlaceholder={`New ${descriptionPlaceholder}`}
               onFocusName={this._handleAddFromName}
               onFocusValue={this._handleAddFromValue}
+              onFocusDescription={this._handleAddFromDescription}
               allowMultiline={allowMultiline}
               allowFile={allowFile}
-              pair={{ name: '', value: '' }}
+              pair={{ name: '', value: '', description: '' }}
             />
           ) : null}
         </ul>
@@ -429,6 +470,7 @@ Editor.propTypes = {
   maxPairs: PropTypes.number,
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,
+  descriptionPlaceholder: PropTypes.string,
   valueInputType: PropTypes.string,
   disableDelete: PropTypes.bool,
   onToggleDisable: PropTypes.func,
