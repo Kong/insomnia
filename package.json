@@ -17,6 +17,7 @@
     "app-build": "lerna run build --stream --parallel --bail",
     "app-package": "lerna run package --stream --parallel --bail",
     "app-release": "lerna run release --stream --parallel --bail",
+    "app-storybook": "lerna run storybook --stream --parallel --bail",
     "format-code": "prettier --write \"**/*.js\""
   },
   "husky": {
@@ -31,6 +32,7 @@
     "@babel/preset-env": "^7.4.3",
     "@babel/preset-flow": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
+    "@storybook/addon-info": "^5.2.6",
     "babel-eslint": "^8.2.3",
     "babel-jest": "^24.7.1",
     "babel-loader": "^8.0.5",
