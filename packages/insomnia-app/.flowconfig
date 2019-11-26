@@ -10,5 +10,6 @@
 
 [options]
 esproposal.decorators=ignore
+module.file_ext=.css
 
 [lints]
