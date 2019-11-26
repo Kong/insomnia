@@ -65,7 +65,7 @@ class SpecEditor extends React.PureComponent<Props> {
       handleTest,
     } = this.props;
 
-    let swaggerSpec = YAML.parse(apiSpec.contents);
+    const swaggerSpec = YAML.parse(apiSpec.contents) || {};
 
     return (
       <div
