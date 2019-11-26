@@ -25,7 +25,7 @@
   },
   "mac": {
     "hardenedRuntime": true,
-    "icon": "./build/icon.png",
+    "icon": "./build/icon.icns",
     "category": "public.app-category.developer-tools",
     "entitlements": "./build/static/entitlements.mac.inherit.plist",
     "target": [
@@ -50,6 +50,7 @@
     "executableName": "__EXECUTABLE_NAME__",
     "synopsis": "__SYNOPSIS__",
     "category": "Development",
+    "icon": "./build/icon.icns",
     "target": [
       "AppImage",
       "deb",
