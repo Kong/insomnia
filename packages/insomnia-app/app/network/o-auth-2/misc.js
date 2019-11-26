@@ -101,6 +101,9 @@ export function authorizeUserInWindow(
 
     // Show the window to the user after it loads
     child.on('ready-to-show', child.show.bind(child));
-    child.loadURL(url);
+    child.loadURL(url, {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
+    });
   });
 }
