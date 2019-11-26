@@ -44,6 +44,7 @@
     "start:electron": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js && electron .",
     "start:dev-server": "webpack-dev-server --config ./webpack/webpack.config.development.babel.js",
     "start": "concurrently --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
+    "storybook": "start-storybook --port 3222",
     "build": "node ./scripts/build.js",
     "package": "node ./scripts/package.js",
     "release": "node ./scripts/release.js",
@@ -188,6 +189,7 @@
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.4.0",
     "@octokit/rest": "^16.33.0",
+    "@storybook/react": "^5.2.6",
     "concurrently": "^3.5.0",
     "cross-env": "^2.0.0",
     "css-loader": "^2.1.1",
