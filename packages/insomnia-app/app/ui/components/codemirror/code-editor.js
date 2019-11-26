@@ -457,27 +457,28 @@ class CodeEditor extends React.Component {
   async _codemirrorSetOptions() {
     const {
       mode: rawMode,
-      readOnly,
-      hideLineNumbers,
-      keyMap,
-      lineWrapping,
-      getRenderContext,
+      autoCloseBrackets,
+      dynamicHeight,
       getAutocompleteConstants,
+      getRenderContext,
       hideGutters,
-      tabIndex,
-      placeholder,
-      noMatchBrackets,
-      noDragDrop,
+      hideLineNumbers,
       hideScrollbars,
-      noStyleActiveLine,
-      noLint,
+      hintOptions,
       indentSize,
       indentWithTabs,
-      dynamicHeight,
-      hintOptions,
       infoOptions,
       jumpOptions,
+      keyMap,
+      lineWrapping,
       lintOptions,
+      noDragDrop,
+      noLint,
+      noMatchBrackets,
+      noStyleActiveLine,
+      placeholder,
+      readOnly,
+      tabIndex,
     } = this.props;
 
     let mode;
@@ -546,6 +547,10 @@ class CodeEditor extends React.Component {
 
     if (lintOptions) {
       options.lint = lintOptions;
+    }
+
+    if (typeof autoCloseBrackets === 'boolean') {
+      options.autoCloseBrackets = autoCloseBrackets;
     }
 
     if (!hideGutters && options.lint) {
@@ -975,6 +980,7 @@ CodeEditor.propTypes = {
   singleLine: PropTypes.bool,
   debounceMillis: PropTypes.number,
   dynamicHeight: PropTypes.bool,
+  autoCloseBrackets: PropTypes.bool,
   hintOptions: PropTypes.object,
   lintOptions: PropTypes.object,
   infoOptions: PropTypes.object,
