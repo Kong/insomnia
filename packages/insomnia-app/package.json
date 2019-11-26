@@ -11,7 +11,7 @@
     "synopsis": "A simple, beautiful, and free REST API client",
     "icon": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
     "theme": "default",
-    "version": "7.0.4-beta.4",
+    "version": "7.0.4-beta.5",
     "main": "main.min.js",
     "plugins": [
       "insomnia-plugin-base64",
