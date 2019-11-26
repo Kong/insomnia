@@ -988,7 +988,7 @@ export function _getAwsAuthHeaders(
   method: string,
   region?: string,
   service?: string,
-): Array<{ name: string, value: string, disabled?: boolean }> {
+): Array<{ name: string, value: string, description?: string, disabled?: boolean }> {
   const parsedUrl = urlParse(url);
   const contentTypeHeader = getContentTypeHeader(headers);
 

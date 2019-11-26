@@ -374,6 +374,7 @@ class RequestPane extends React.PureComponent<Props> {
                   allowMultiline
                   namePlaceholder="name"
                   valuePlaceholder="value"
+                  descriptionPlaceholder="description"
                   pairs={request.parameters}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
