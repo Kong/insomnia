@@ -7,7 +7,7 @@ LABEL "version"="1.0.0"
 LABEL "com.github.actions.icon"="package"
 LABEL "com.github.actions.color"="blue"
 LABEL "com.github.actions.name"="Insomnia Ubuntu 14"
-LABEL "com.github.actions.description"="Do the stuff"
+LABEL "com.github.actions.description"="Build and package on Ubuntu 14"
 
 COPY entrypoint.sh /scripts/entrypoint.sh
 COPY install-dependencies.sh /scripts/install-dependencies.sh
