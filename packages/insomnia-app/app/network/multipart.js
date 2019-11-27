@@ -72,8 +72,13 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
       } else {
         const name = param.name || '';
         const value = param.value || '';
+        const contentType = param.multiline;
         addString(`Content-Disposition: form-data; name="${name}"`);
         addString(lineBreak);
+        if (contentType) {
+          addString(`Content-Type: ${contentType}`);
+          addString(lineBreak);
+        }
         addString(lineBreak);
         addString(value);
       }
