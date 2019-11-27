@@ -322,6 +322,7 @@ class OneLineEditor extends PureComponent {
             noStyleActiveLine
             noLint
             singleLine
+            autoCloseBrackets={false}
             tabIndex={0}
             id={id}
             type={type}

@@ -108,6 +108,12 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
     const { error, warning } = this.state;
 
+    const defaultValue = orderedJSON.stringify(
+      environmentInfo.object,
+      environmentInfo.propertyOrder || null,
+      '~|',
+    );
+
     return (
       <div className="environment-editor">
         <CodeEditor
@@ -118,10 +124,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           lineWrapping={lineWrapping}
           keyMap={editorKeyMap}
           onChange={this._handleChange}
-          defaultValue={orderedJSON.stringify(
-            environmentInfo.object,
-            environmentInfo.propertyOrder || null,
-          )}
+          defaultValue={defaultValue}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           render={render}
