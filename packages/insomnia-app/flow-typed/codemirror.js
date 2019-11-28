@@ -2,12 +2,14 @@
 
 declare module 'codemirror' {
   declare class TextMarker {
+    __isFold: boolean;
     clear(): void;
+    find(): { from: Pos, to: Pos };
   }
   declare class Doc {
     markText(
-      from: { line: number, ch: number },
-      to: { line: number, ch: number },
+      from: Pos,
+      to: Pos,
       options?: {|
         inclusiveLeft?: boolean,
         className?: string,
@@ -28,5 +30,6 @@ declare module 'codemirror' {
     setValue(string): void;
     hasFocus(): boolean;
     indexFromPos(pos: Pos): number;
+    getAllMarks(): Array<TextMarker>;
   }
 }
