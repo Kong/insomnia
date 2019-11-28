@@ -231,13 +231,21 @@ class CodeEditor extends React.Component {
     if (!uniquenessKey || !this.codeMirror) {
       return;
     }
+    const marks = this.codeMirror
+      .getAllMarks()
+      .filter(c => c.__isFold)
+      .forEach(mark => {
+        const { from, to } = mark.find();
+
+        return { from, to };
+      });
 
     editorStates[uniquenessKey] = {
       scroll: this.codeMirror.getScrollInfo(),
       selections: this.codeMirror.listSelections(),
       cursor: this.codeMirror.getCursor(),
       history: this.codeMirror.getHistory(),
-      marks: this.codeMirror.getAllMarks(),
+      marks,
     };
   }
 
@@ -255,12 +263,9 @@ class CodeEditor extends React.Component {
     this.codeMirror.setCursor(cursor.line, cursor.ch, { scroll: false });
     this.codeMirror.setSelections(selections, null, { scroll: false });
 
-    marks
-      .filter(c => c.__isFold)
-      .forEach(mark => {
-        const { from, to } = mark.find();
-        this.codeMirror.foldCode(from, to);
-      });
+    marks.forEach(({ from, to }) => {
+      this.codeMirror.foldCode(from, to);
+    });
   }
 
   _setFilterInputRef(n) {
