@@ -231,7 +231,7 @@ class CodeEditor extends React.Component {
     if (!uniquenessKey || !this.codeMirror) {
       return;
     }
-    const marks = this.codeMirror
+    const foldMarks = this.codeMirror
       .getAllMarks()
       .filter(c => c.__isFold)
       .map(mark => {
@@ -245,7 +245,7 @@ class CodeEditor extends React.Component {
       selections: this.codeMirror.listSelections(),
       cursor: this.codeMirror.getCursor(),
       history: this.codeMirror.getHistory(),
-      marks,
+      foldMarks,
     };
   }
 
@@ -255,7 +255,7 @@ class CodeEditor extends React.Component {
       return;
     }
 
-    const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
+    const { scroll, selections, cursor, history, foldMarks } = editorStates[uniquenessKey];
     this.codeMirror.scrollTo(scroll.left, scroll.top);
     this.codeMirror.setHistory(history);
 
@@ -263,8 +263,8 @@ class CodeEditor extends React.Component {
     this.codeMirror.setCursor(cursor.line, cursor.ch, { scroll: false });
     this.codeMirror.setSelections(selections, null, { scroll: false });
 
-    marks &&
-      marks.forEach(({ from, to }) => {
+    foldMarks &&
+      foldMarks.forEach(({ from, to }) => {
         this.codeMirror.foldCode(from, to);
       });
   }
