@@ -8,8 +8,8 @@ declare module 'codemirror' {
   }
   declare class Doc {
     markText(
-      from: Pos,
-      to: Pos,
+      from: { line: number, ch: number },
+      to: { line: number, ch: number },
       options?: {|
         inclusiveLeft?: boolean,
         className?: string,
