@@ -234,7 +234,7 @@ class CodeEditor extends React.Component {
     const marks = this.codeMirror
       .getAllMarks()
       .filter(c => c.__isFold)
-      .forEach(mark => {
+      .map(mark => {
         const { from, to } = mark.find();
 
         return { from, to };
@@ -263,9 +263,10 @@ class CodeEditor extends React.Component {
     this.codeMirror.setCursor(cursor.line, cursor.ch, { scroll: false });
     this.codeMirror.setSelections(selections, null, { scroll: false });
 
-    marks.forEach(({ from, to }) => {
-      this.codeMirror.foldCode(from, to);
-    });
+    marks &&
+      marks.forEach(({ from, to }) => {
+        this.codeMirror.foldCode(from, to);
+      });
   }
 
   _setFilterInputRef(n) {
@@ -711,7 +712,6 @@ class CodeEditor extends React.Component {
   }
 
   _codemirrorToggleFold() {
-    console.log('folded');
     this._persistState();
   }
 
