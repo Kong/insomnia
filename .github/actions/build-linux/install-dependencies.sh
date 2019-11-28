@@ -3,8 +3,6 @@
 # Fail on any errors
 set -e
 
-ua attach C12iGY4P3wuhx4hBsartu8bgcu8qpB
-
 # Install core deps
 apt-get update
 apt-get upgrade -y
