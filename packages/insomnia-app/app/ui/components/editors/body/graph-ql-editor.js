@@ -86,10 +86,15 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     this._disabledOperationMarkers = [];
-    this._documentAST = null;
     this._queryEditor = null;
     this._isMounted = false;
+
     const body = GraphQLEditor._stringToGraphQL(props.content);
+    try {
+      this._documentAST = parse(body.query);
+    } catch (e) {
+      this._documentAST = null;
+    }
 
     let automaticFetch;
     try {
@@ -484,6 +489,15 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     this._isMounted = true;
     (async () => {
       await this._fetchAndSetSchema(this.props.request);
+
+      // When the schema request returns the editor should
+      // exist as the first render should have completed.
+      // We put this guard in place just incase.
+      if (this._queryEditor) {
+        // $ExpectError
+        await this._queryEditor.performLint();
+        this.forceUpdate();
+      }
     })();
   }
 
