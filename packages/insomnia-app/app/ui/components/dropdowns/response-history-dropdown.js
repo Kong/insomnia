@@ -74,10 +74,21 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
           small
           statusCode={response.statusCode}
           statusMessage={response.statusMessage || undefined}
+          tooltipDelay={1000}
         />
-        <URLTag small url={response.url} method={request ? request.method : ''} />
-        <TimeTag milliseconds={response.elapsedTime} small />
-        <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} small />
+        <URLTag
+          small
+          url={response.url}
+          method={request ? request.method : ''}
+          tooltipDelay={1000}
+        />
+        <TimeTag milliseconds={response.elapsedTime} small tooltipDelay={1000} />
+        <SizeTag
+          bytesRead={response.bytesRead}
+          bytesContent={response.bytesContent}
+          small
+          tooltipDelay={1000}
+        />
         {!response.requestVersionId && <i className="icon fa fa-info-circle" title={message} />}
       </DropdownItem>
     );
