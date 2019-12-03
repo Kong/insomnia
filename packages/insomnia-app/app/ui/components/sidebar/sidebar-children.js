@@ -1,5 +1,7 @@
 // @flow
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import autobind from 'autobind-decorator';
 import SidebarRequestRow from './sidebar-request-row';
 import SidebarRequestGroupRow from './sidebar-request-group-row';
 import * as models from '../../../models/index';
@@ -8,6 +10,8 @@ import type { Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Environment } from '../../../models/environment';
+import { Dropdown } from '../base/dropdown';
+import SidebarCreateDropdown from './sidebar-create-dropdown';
 
 type Child = {
   doc: Request | RequestGroup,
@@ -45,7 +49,31 @@ type Props = {
   activeRequest: ?Request,
 };
 
+@autobind
 class SidebarChildren extends React.PureComponent<Props> {
+  _contextMenu: ?SidebarCreateDropdown;
+
+  _handleContextMenu(e: MouseEvent) {
+    const { target, currentTarget, clientX, clientY } = e;
+
+    if (target !== currentTarget) {
+      return;
+    }
+
+    e.preventDefault();
+
+    const menu = this._contextMenu;
+    if (menu && document.body) {
+      const x = clientX;
+      const y = document.body.getBoundingClientRect().height - clientY;
+      menu.show({ x, y });
+    }
+  }
+
+  _setContextMenuRef(n: ?Dropdown) {
+    this._contextMenu = n;
+  }
+
   _renderChildren(children: Array<Child>, isInPinnedList: boolean): React.Node {
     const {
       filter,
@@ -141,22 +169,47 @@ class SidebarChildren extends React.PureComponent<Props> {
 
   _renderList(children: Array<Child>, pinnedList: boolean): React.Node {
     return (
-      <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
+      <ul
+        className="sidebar__list sidebar__list-root theme--sidebar__list"
+        onContextMenu={this._handleContextMenu}>
         {this._renderChildren(children, pinnedList)}
       </ul>
     );
   }
 
+  _handleCreateRequest() {
+    const { handleCreateRequest, workspace } = this.props;
+    handleCreateRequest(workspace._id);
+  }
+
+  _handleCreateRequestGroup() {
+    const { handleCreateRequestGroup, workspace } = this.props;
+    handleCreateRequestGroup(workspace._id);
+  }
+
   render() {
-    const { childObjects } = this.props;
+    const { childObjects, hotKeyRegistry } = this.props;
 
     const showSeparator = childObjects.pinned.length > 0;
+
+    const contextMenuPortal = ReactDOM.createPortal(
+      <div className="hide">
+        <SidebarCreateDropdown
+          ref={this._setContextMenuRef}
+          handleCreateRequest={this._handleCreateRequest}
+          handleCreateRequestGroup={this._handleCreateRequestGroup}
+          hotKeyRegistry={hotKeyRegistry}
+        />
+      </div>,
+      (document.querySelector('#dropdowns-container'): any),
+    );
 
     return (
       <React.Fragment>
         {this._renderList(childObjects.pinned, true)}
         <div className={`sidebar__list-separator${showSeparator ? '' : '--invisible'}`} />
         {this._renderList(childObjects.all, false)}
+        {contextMenuPortal}
       </React.Fragment>
     );
   }
