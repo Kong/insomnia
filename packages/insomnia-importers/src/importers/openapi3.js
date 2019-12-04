@@ -3,7 +3,7 @@
 const crypto = require('crypto');
 
 const SwaggerParser = require('swagger-parser');
-const URL = require('url').URL;
+const { parse: urlParse } = require('url');
 const utils = require('../utils');
 
 const SUPPORTED_OPENAPI_VERSION = /^3\.\d+\.\d+$/; // 3.x.x
@@ -60,20 +60,22 @@ module.exports.convert = async function(rawData) {
     },
   };
 
-  const servers = api.servers.map(s => new URL(s.url));
-  const defaultServer = servers[0] || new URL('http://example.com/');
+  const servers = api.servers.map(s => urlParse(s.url));
+  const defaultServer = servers[0] || urlParse('http://example.com/');
   const securityVariables = getSecurityEnvVariables(
     api.components && api.components.securitySchemes,
   );
 
+  const protocol = defaultServer.protocol || '';
   const openapiEnv = {
     _type: 'environment',
     _id: `env___BASE_ENVIRONMENT_ID___sub`,
     parentId: baseEnv._id,
     name: 'OpenAPI env',
     data: {
+      // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
+      scheme: protocol.replace(/:$/, '') || ['http'],
       base_path: defaultServer.pathname || '',
-      scheme: defaultServer.protocol.replace(/:$/, '') || ['http'], // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
       host: defaultServer.host || '',
       ...securityVariables,
     },

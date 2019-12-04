@@ -208,7 +208,8 @@ export function importUri(workspaceId, uri) {
     let importedWorkspaces = [];
     try {
       const result = await importUtils.importUri(askToImportIntoWorkspace(workspaceId), uri);
-      importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
+      const workspaces = result.summary[models.workspace.type] || [];
+      importedWorkspaces = [...importedWorkspaces, ...workspaces];
     } catch (err) {
       showModal(AlertModal, { title: 'Import Failed', message: err + '' });
     } finally {
