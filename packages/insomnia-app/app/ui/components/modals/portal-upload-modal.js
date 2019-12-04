@@ -35,6 +35,7 @@ type State = {
   kongSpecFileName: string,
   kongPortalLegacyMode: boolean,
   kongPortalDeployView: string,
+  kongPortalDeployError: string,
 };
 
 @autobind
@@ -57,6 +58,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
       kongPortalLegacyMode: false,
       kongPortalDeployView: 'edit',
       forceSpecOverwrite: false,
+      kongPortalDeployError: '',
     };
   }
 
@@ -121,7 +123,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
       };
     } else {
       newSpec = {
-        path: 'specs/' + kongSpecFileName,
+        path: urljoin('specs/', kongSpecFileName),
         contents: activeSpec.contents,
       };
     }
@@ -137,7 +139,9 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
       method = 'patch';
       urlFilePath = urljoin(
         kongPortalApiUrl,
-        kongPortalUserWorkspace + '/files/specs/' + kongSpecFileName,
+        kongPortalUserWorkspace,
+        '/files/specs/',
+        kongSpecFileName,
       );
     }
     try {
@@ -153,8 +157,15 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
         trackEvent('Portal', 'Upload', overwrite ? 'Replace' : 'Create');
       }
     } catch (err) {
-      this.setState({ kongPortalDeployView: 'overwrite' });
-      trackEvent('Portal', 'Upload Error', overwrite ? 'Replace' : 'Create');
+      if (err.response && err.response.status === 409) {
+        this.setState({ kongPortalDeployView: 'overwrite' });
+        trackEvent('Portal', 'Upload Error', overwrite ? 'Replace' : 'Create');
+      } else {
+        if (err.response && err.response.data && err.response.data.message) {
+          this.setState({ kongPortalDeployError: err.response.data.message });
+        }
+        this.setState({ kongPortalDeployView: 'error' });
+      }
     }
   }
 
@@ -240,6 +251,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
       showUploadError,
       kongPortalLegacyMode,
       kongPortalUrl,
+      kongPortalDeployError,
     } = this.state;
 
     // Check input > enable connection & upload
@@ -441,6 +453,60 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
             <div>
               <button className="btn" onClick={this._handleCloseConnectKong}>
                 Close
+              </button>
+            </div>
+          </ModalFooter>
+        </Modal>
+      );
+    } else if (kongPortalDeployView === 'error') {
+      return (
+        // File Name > Upload
+        <Modal ref={this._setModalRef} className="modal--skinny">
+          <ModalHeader>Upload Spec to Kong Portal {helpLink}</ModalHeader>
+          <ModalBody className="pad">
+            <p className="no-pad no-margin-top">Error Uploading File</p>
+            <p className="no-pad no-margin-top">
+              Error uploading spec <strong>{kongSpecFileName}</strong> to the{' '}
+              <strong>{kongPortalUserWorkspace}</strong> workspace.{' '}
+              <strong>{kongPortalDeployError}</strong>
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <div>
+              <button
+                className="btn studio-action-btn"
+                onClick={() => this._handleUploadSpec(false)}
+                disabled={!uploadIsEnabled}>
+                <div className="with-icon">
+                  {isLoading && (
+                    <svg
+                      className="status-loading"
+                      version="1.1"
+                      id="L9"
+                      x="0px"
+                      y="0px"
+                      viewBox="0 0 100 100"
+                      enableBackground="new 0 0 0 0">
+                      <path
+                        fill="#000"
+                        d="M73,50c0-12.7-10.3-23-23-23S27,37.3,27,50 M30.9,50c0-10.5,8.5-19.1,19.1-19.1S69.1,39.5,69.1,50">
+                        <animateTransform
+                          attributeName="transform"
+                          attributeType="XML"
+                          type="rotate"
+                          dur=".8"
+                          from="0 50 50"
+                          to="360 50 50"
+                          repeatCount="indefinite"
+                        />
+                      </path>
+                    </svg>
+                  )}
+                  <div>Try again?</div>
+                </div>
+              </button>
+              <button className="btn" onClick={this._handleReturnToUpload}>
+                Go Back
               </button>
             </div>
           </ModalFooter>
