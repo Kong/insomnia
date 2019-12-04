@@ -118,7 +118,7 @@ export function removeVowels(str: string): string {
 }
 
 export function formatMethodName(method: string): string {
-  let methodName = method;
+  let methodName = method || '';
   if (method === METHOD_DELETE || method === METHOD_OPTIONS) {
     methodName = method.slice(0, 3);
   } else if (method.length > 4) {
