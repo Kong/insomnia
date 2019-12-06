@@ -28,6 +28,8 @@ import ErrorBoundary from './error-boundary';
 import type { HotKeyRegistry } from '../../common/hotkeys';
 import { hotKeyRefs } from '../../common/hotkeys';
 import type { RequestVersion } from '../../models/request-version';
+import { showError } from '../components/modals/index';
+import prettify from 'insomnia-prettify';
 
 type Props = {
   // Functions
@@ -96,11 +98,24 @@ class ResponsePane extends React.PureComponent<Props> {
       }
 
       const readStream = models.response.getBodyStream(response);
+      let dataBuffers = [];
       if (readStream) {
-        const to = fs.createWriteStream(outputPath);
-        readStream.pipe(to);
-        to.on('error', err => {
-          console.warn('Failed to save response body', err);
+        readStream.on('data', data => {
+          dataBuffers.push(data);
+        });
+        readStream.on('end', () => {
+          const to = fs.createWriteStream(outputPath);
+          if (extension === 'json') {
+            dataBuffers = prettify.json(dataBuffers);
+          }
+          to.write(dataBuffers);
+          to.on('error', err => {
+            showError({
+              title: 'Save Failed',
+              message: 'Failed to save response body',
+              error: err,
+            });
+          });
         });
       }
     });
