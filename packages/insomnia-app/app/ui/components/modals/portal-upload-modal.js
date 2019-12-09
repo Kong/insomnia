@@ -13,6 +13,7 @@ import type { WorkspaceMeta } from '../../../models/workspace-meta';
 import type { GlobalActivity } from '../../components/activity-bar/activity-bar';
 import ModalFooter from '../base/modal-footer';
 import urljoin from 'url-join';
+import Link from '../base/link';
 import HelpLink from '../help-link';
 import { trackEvent } from '../../../common/analytics';
 
@@ -440,11 +441,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
               The latest changes are now available in the Developer Portal.
               {kongPortalLegacyMode === false && (
                 <span>
-                  {' '}
-                  Would you like to
-                  <a href={kongPortalUrl}>
-                    <strong> view the developer portal?</strong>
-                  </a>
+                  Would you like to <Link href={kongPortalUrl}>view the developer portal</Link>?
                 </span>
               )}
             </p>
