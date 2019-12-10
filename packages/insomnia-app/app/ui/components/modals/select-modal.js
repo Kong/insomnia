@@ -13,6 +13,7 @@ type State = {
   options: Array<{ name: string, value: string }>,
   value: string,
   message: string,
+  onCancel?: Function,
 };
 
 @autobind
@@ -54,11 +55,11 @@ class SelectModal extends React.PureComponent<Props, State> {
   }
 
   show(data: Object = {}) {
-    const { title, message, options, value, onDone } = data;
+    const { title, message, options, value, onDone, onCancel } = data;
 
     this._doneCallback = onDone;
 
-    this.setState({ title, message, options, value });
+    this.setState({ title, message, options, value, onCancel });
 
     this.modal && this.modal.show();
     setTimeout(() => {
@@ -67,10 +68,10 @@ class SelectModal extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { message, title, options, value } = this.state;
+    const { message, title, options, value, onCancel } = this.state;
 
     return (
-      <Modal noEscape ref={this._setModalRef}>
+      <Modal ref={this._setModalRef} onCancel={onCancel}>
         <ModalHeader>{title || 'Confirm?'}</ModalHeader>
         <ModalBody className="wide pad">
           <p>{message}</p>

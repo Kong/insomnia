@@ -232,12 +232,21 @@ class CodeEditor extends React.Component {
     if (!uniquenessKey || !this.codeMirror) {
       return;
     }
+    const marks = this.codeMirror
+      .getAllMarks()
+      .filter(c => c.__isFold)
+      .map(mark => {
+        const { from, to } = mark.find();
+
+        return { from, to };
+      });
 
     editorStates[uniquenessKey] = {
       scroll: this.codeMirror.getScrollInfo(),
       selections: this.codeMirror.listSelections(),
       cursor: this.codeMirror.getCursor(),
       history: this.codeMirror.getHistory(),
+      marks,
     };
   }
 
@@ -247,13 +256,18 @@ class CodeEditor extends React.Component {
       return;
     }
 
-    const { scroll, selections, cursor, history } = editorStates[uniquenessKey];
+    const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
     this.codeMirror.scrollTo(scroll.left, scroll.top);
     this.codeMirror.setHistory(history);
 
     // NOTE: These won't be visible unless the editor is focused
     this.codeMirror.setCursor(cursor.line, cursor.ch, { scroll: false });
     this.codeMirror.setSelections(selections, null, { scroll: false });
+
+    marks &&
+      marks.forEach(({ from, to }) => {
+        this.codeMirror.foldCode(from, to);
+      });
   }
 
   _setFilterInputRef(n) {
@@ -285,6 +299,8 @@ class CodeEditor extends React.Component {
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorPaste);
     this.codeMirror.on('scroll', this._codemirrorScroll);
+    this.codeMirror.on('fold', this._codemirrorToggleFold);
+    this.codeMirror.on('unfold', this._codemirrorToggleFold);
     this.codeMirror.on('keyHandled', this._codemirrorKeyHandled);
 
     // Prevent these things if we're type === "password"
@@ -693,6 +709,10 @@ class CodeEditor extends React.Component {
   }
 
   _codemirrorScroll() {
+    this._persistState();
+  }
+
+  _codemirrorToggleFold() {
     this._persistState();
   }
 

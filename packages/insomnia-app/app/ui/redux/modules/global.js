@@ -235,7 +235,8 @@ export function importUri(workspaceId, uri, forceToWorkspace) {
         askToImportIntoWorkspace(workspaceId, forceToWorkspace),
         uri,
       );
-      importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
+      const workspaces = result.summary[models.workspace.type] || [];
+      importedWorkspaces = [...importedWorkspaces, ...workspaces];
     } catch (err) {
       showModal(AlertModal, { title: 'Import Failed', message: err + '' });
     } finally {

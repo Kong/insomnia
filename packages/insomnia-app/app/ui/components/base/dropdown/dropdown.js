@@ -28,6 +28,9 @@ class Dropdown extends PureComponent {
       filterItems: null,
       filterActiveIndex: 0,
 
+      // Position
+      forcedPosition: null,
+
       // Use this to force new menu every time dropdown opens
       uniquenessKey: 0,
     };
@@ -130,9 +133,21 @@ class Dropdown extends PureComponent {
     const dropdownList = this._dropdownList;
 
     // Compute the size of all the menus
-    const dropdownBtnRect = this._node.getBoundingClientRect();
+    let dropdownBtnRect = this._node.getBoundingClientRect();
     const bodyRect = document.body.getBoundingClientRect();
     const dropdownListRect = dropdownList.getBoundingClientRect();
+
+    const { forcedPosition } = this.state;
+    if (forcedPosition) {
+      dropdownBtnRect = {
+        left: forcedPosition.x,
+        right: bodyRect.width - forcedPosition.x,
+        top: forcedPosition.y,
+        bottom: bodyRect.height - forcedPosition.y,
+        width: 100,
+        height: 10,
+      };
+    }
 
     // Should it drop up?
     const bodyHeight = bodyRect.height;
@@ -254,7 +269,7 @@ class Dropdown extends PureComponent {
     this.props.onHide && this.props.onHide();
   }
 
-  show(filterVisible = false) {
+  show(filterVisible = false, forcedPosition = null) {
     const bodyHeight = document.body.getBoundingClientRect().height;
     const dropdownTop = this._node.getBoundingClientRect().top;
     const dropUp = dropdownTop > bodyHeight - 200;
@@ -262,6 +277,7 @@ class Dropdown extends PureComponent {
     this.setState({
       open: true,
       dropUp,
+      forcedPosition,
       filterVisible,
       filter: '',
       filterItems: null,

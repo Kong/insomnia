@@ -86,10 +86,11 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     this._disabledOperationMarkers = [];
-    this._documentAST = null;
     this._queryEditor = null;
     this._isMounted = false;
+
     const body = GraphQLEditor._stringToGraphQL(props.content);
+    this._setDocumentAST(body.query);
 
     let automaticFetch;
     try {
@@ -312,9 +313,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _buildVariableTypes(schema: Object | null): { [string]: Object } {
+  _buildVariableTypes(schema: Object | null): { [string]: Object } | null {
     if (!schema) {
-      return {};
+      return null;
     }
 
     const definitions = this._documentAST ? this._documentAST.definitions : [];
@@ -380,6 +381,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     return this._documentAST.definitions.filter(def => def.kind === 'OperationDefinition');
   }
 
+  _setDocumentAST(query: string) {
+    try {
+      this._documentAST = parse(query);
+    } catch (e) {
+      this._documentAST = null;
+    }
+  }
+
   _handleBodyChange(query: string, variables: ?Object, operationName: ?string): void {
     const body: GraphQLBody = { query };
 
@@ -399,11 +408,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       return;
     }
 
-    try {
-      this._documentAST = parse(query);
-    } catch (e) {
-      this._documentAST = null;
-    }
+    this._setDocumentAST(query);
 
     // Find op if there isn't one yet
     if (!body.operationName) {
@@ -667,9 +672,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             render={render}
             getRenderContext={getRenderContext}
             getAutocompleteConstants={() => Object.keys(variableTypes || {})}
-            lintOptions={{
-              variableToType: variableTypes,
-            }}
+            lintOptions={{ variableToType: variableTypes }}
+            noLint={!variableTypes}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             onChange={this._handleVariablesChange}

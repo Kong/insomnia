@@ -98,9 +98,8 @@ class App extends PureComponent {
       gitVCS: null,
       forceRefreshCounter: 0,
       forceRefreshHeaderCounter: 0,
+      isMigratingChildren: false,
     };
-
-    this._isMigratingChildren = false;
 
     this._getRenderContextPromiseCache = {};
 
@@ -1124,21 +1123,21 @@ class App extends PureComponent {
     }
 
     // We already started migrating. Let it finish.
-    if (this._isMigratingChildren) {
+    if (this.state.isMigratingChildren) {
       return;
     }
 
     // Prevent rendering of everything
-    this._isMigratingChildren = true;
+    this.setState({ isMigratingChildren: true }, async () => {
+      const flushId = await db.bufferChanges();
+      await models.environment.getOrCreateForWorkspace(activeWorkspace);
+      await models.cookieJar.getOrCreateForParentId(activeWorkspace._id);
+      await models.apiSpec.getOrCreateForParentId(activeWorkspace._id);
+      await models.workspaceMeta.getOrCreateByParentId(activeWorkspace._id);
+      await db.flushChanges(flushId);
 
-    const flushId = await db.bufferChanges();
-    await models.environment.getOrCreateForWorkspace(activeWorkspace);
-    await models.cookieJar.getOrCreateForParentId(activeWorkspace._id);
-    await models.apiSpec.getOrCreateForParentId(activeWorkspace._id);
-    await models.workspaceMeta.getOrCreateByParentId(activeWorkspace._id);
-    await db.flushChanges(flushId);
-
-    this._isMigratingChildren = false;
+      this.setState({ isMigratingChildren: false });
+    });
   }
 
   // eslint-disable-next-line camelcase
@@ -1147,7 +1146,7 @@ class App extends PureComponent {
   }
 
   render() {
-    if (this._isMigratingChildren) {
+    if (this.state.isMigratingChildren) {
       console.log('[app] Waiting for migration to complete');
       return null;
     }
