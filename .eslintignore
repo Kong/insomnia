@@ -11,3 +11,5 @@ packages/insomnia-app/dist/
 **/bin/
 **/__fixtures__/
 **/flow-typed/
+**/dist/
+**/.cache/
