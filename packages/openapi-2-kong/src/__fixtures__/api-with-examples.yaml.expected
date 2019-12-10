@@ -1,0 +1,36 @@
+{
+  "services": [
+    {
+      "host": "Simple_API_overview",
+      "port": 80,
+      "path": "\/",
+      "protocol": "http",
+      "name": "Simple_API_overview",
+      "routes": [
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
+          "name": "Simple_API_overview-path-get",
+          "paths": ["\/path\/$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
+          "name": "Simple_API_overview-path_1-get",
+          "paths": ["\/path\/v2$"]
+        }
+      ],
+      "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"]
+    }
+  ],
+  "upstreams": [
+    {
+      "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
+      "name": "Simple_API_overview",
+      "targets": [{"target": "backend.com:80"}]
+    }
+  ],
+  "_format_version": "1.1"
+}

@@ -1,0 +1,33 @@
+{
+  "name": "openapi-2-kong",
+  "private": true,
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "jest",
+    "build": "parcel build ./src/index.js --target node",
+    "watch": "parcel watch ./src/index.js --target node"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run build"
+    }
+  },
+  "jest": {
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "verbose": false,
+    "resetMocks": true,
+    "resetModules": true
+  },
+  "dependencies": {
+    "swagger-parser": "^8.0.3",
+    "yaml": "^1.7.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.7.5",
+    "husky": "^3.1.0",
+    "parcel-bundler": "^1.12.4"
+  }
+}
