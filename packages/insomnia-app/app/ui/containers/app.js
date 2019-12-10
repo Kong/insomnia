@@ -91,9 +91,8 @@ class App extends PureComponent {
       vcs: null,
       forceRefreshCounter: 0,
       forceRefreshHeaderCounter: 0,
+      isMigratingChildren: false,
     };
-
-    this._isMigratingChildren = false;
 
     this._getRenderContextPromiseCache = {};
 
@@ -1025,7 +1024,7 @@ class App extends PureComponent {
     document.removeEventListener('mousemove', this._handleMouseMove);
   }
 
-  async _ensureWorkspaceChildren(props) {
+  _ensureWorkspaceChildren(props) {
     const { activeWorkspace, activeCookieJar, environments } = props;
     const baseEnvironments = environments.filter(e => e.parentId === activeWorkspace._id);
 
@@ -1035,19 +1034,23 @@ class App extends PureComponent {
     }
 
     // We already started migrating. Let it finish.
-    if (this._isMigratingChildren) {
+    if (this.state.isMigratingChildren) {
       return;
     }
 
     // Prevent rendering of everything
-    this._isMigratingChildren = true;
+    this.setState({ isMigratingChildren: true }, async () => {
+      console.log('START');
+      const flushId = await db.bufferChanges();
+      console.log('.');
+      await models.environment.getOrCreateForWorkspace(activeWorkspace);
+      console.log('.');
+      await models.cookieJar.getOrCreateForParentId(activeWorkspace._id);
+      console.log('.');
+      await db.flushChanges(flushId);
 
-    const flushId = await db.bufferChanges();
-    await models.environment.getOrCreateForWorkspace(activeWorkspace);
-    await models.cookieJar.getOrCreateForParentId(activeWorkspace._id);
-    await db.flushChanges(flushId);
-
-    this._isMigratingChildren = false;
+      this.setState({ isMigratingChildren: false });
+    });
   }
 
   componentWillReceiveProps(nextProps) {
@@ -1065,10 +1068,12 @@ class App extends PureComponent {
   }
 
   render() {
-    if (this._isMigratingChildren) {
+    if (this.state.isMigratingChildren) {
       console.log('[app] Waiting for migration to complete');
       return null;
     }
+
+    console.log('MIGRATION COMPLETE');
 
     const { activeWorkspace } = this.props;
 
