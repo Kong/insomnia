@@ -1040,13 +1040,9 @@ class App extends PureComponent {
 
     // Prevent rendering of everything
     this.setState({ isMigratingChildren: true }, async () => {
-      console.log('START');
       const flushId = await db.bufferChanges();
-      console.log('.');
       await models.environment.getOrCreateForWorkspace(activeWorkspace);
-      console.log('.');
       await models.cookieJar.getOrCreateForParentId(activeWorkspace._id);
-      console.log('.');
       await db.flushChanges(flushId);
 
       this.setState({ isMigratingChildren: false });
@@ -1072,8 +1068,6 @@ class App extends PureComponent {
       console.log('[app] Waiting for migration to complete');
       return null;
     }
-
-    console.log('MIGRATION COMPLETE');
 
     const { activeWorkspace } = this.props;
 
