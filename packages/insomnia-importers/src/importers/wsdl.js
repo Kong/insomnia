@@ -13,9 +13,8 @@ module.exports.convert = async function(data) {
         '<?xml version="1.0" encoding="UTF-8" ?>' + data,
       );
       postmanData.info.schema += 'collection.json';
-      let postmanjson = JSON.stringify(postmanData);
-      let converted = postman.convert(postmanjson);
-      return converted;
+      const postmanJson = JSON.stringify(postmanData);
+      return postman.convert(postmanJson);
     }
   } catch (e) {
     // Nothing
@@ -36,21 +35,21 @@ function convertToPostman(items) {
   out.item = items.map(i => {
     const item = [];
     const url = get(i, 'x-ibm-configuration.assembly.execute.0.proxy.target-url');
-    for (const k in i.paths) {
-      // eslint-disable-line
+    for (const k of Object.keys(i.paths)) {
       const methods = i.paths[k];
 
-      for (const method in methods) {
-        // eslint-disable-line
+      for (const method of Object.keys(methods)) {
         const api = methods[method];
         const paths = get(api, 'parameters.0.schema.$ref').split('/');
+
         paths.shift();
         paths.push('example');
+
         const example = get(i, paths.join('.'));
 
         item.push({
           name: api.operationId,
-          description: api.description,
+          description: api.description || '',
           request: {
             url,
             method,
@@ -93,10 +92,9 @@ async function convertWsdlToPostman(input) {
   const wsdls = await apiWSDL.getJsonForWSDL(input);
   const serviceData = apiWSDL.getWSDLServices(wsdls);
 
-  const items = [];
   // Loop through all services
-  for (const item in serviceData.services) {
-    // eslint-disable-line
+  const items = [];
+  for (const item of Object.keys(serviceData.services)) {
     const svcName = serviceData.services[item].service;
     const wsdlId = serviceData.services[item].filename;
     const wsdlEntry = apiWSDL.findWSDLForServiceName(wsdls, svcName);
@@ -104,5 +102,6 @@ async function convertWsdlToPostman(input) {
 
     items.push(swagger);
   }
+
   return convertToPostman(items);
 }

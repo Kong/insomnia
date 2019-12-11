@@ -8,14 +8,17 @@
       "parentId": "__WORKSPACE_ID__",
       "_id": "__GRP_1__",
       "_type": "request_group",
-      "name": "Calculator"
+      "name": "Calculator",
+      "description": "",
+      "environment": {}
     },
     {
       "parentId": "__GRP_1__",
       "_id": "__GRP_2__",
       "_type": "request_group",
       "name": "Calculator",
-      "description": ""
+      "description": "",
+      "environment": {}
     },
     {
       "parentId": "__GRP_2__",
@@ -24,7 +27,7 @@
       "name": "Add",
       "description": "",
       "url": "http://www.dneonline.com/calculator.asmx",
-      "method": "post",
+      "method": "POST",
       "headers": [
         { "name": "SOAPAction", "value": "http://tempuri.org/Add" },
         { "name": "Content-Type", "value": "text/xml" },
@@ -34,7 +37,8 @@
         "mimeType": "",
         "text": "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n <soapenv:Header>\n  <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\n   <wsse:UsernameToken>\n    <wsse:Username>string</wsse:Username>\n    <wsse:Password>string</wsse:Password>\n    <wsse:Nonce EncodingType=\"string\">string</wsse:Nonce>\n    <wsu:Created>string</wsu:Created>\n   </wsse:UsernameToken>\n   <wsu:Timestamp wsu:Id=\"string\">\n    <wsu:Created>string</wsu:Created>\n    <wsu:Expires>string</wsu:Expires>\n   </wsu:Timestamp>\n  </wsse:Security>\n </soapenv:Header>\n <soapenv:Body>\n  <tns:Add xmlns:tns=\"http://tempuri.org/\"><!-- mandatory -->\n   <tns:intA><!-- mandatory -->3</tns:intA>\n   <tns:intB><!-- mandatory -->3</tns:intB>\n  </tns:Add>\n </soapenv:Body>\n</soapenv:Envelope>"
       },
-      "authentication": {}
+      "authentication": {},
+      "parameters": []
     },
     {
       "parentId": "__GRP_2__",
@@ -43,7 +47,7 @@
       "name": "Subtract",
       "description": "",
       "url": "http://www.dneonline.com/calculator.asmx",
-      "method": "post",
+      "method": "POST",
       "headers": [
         { "name": "SOAPAction", "value": "http://tempuri.org/Subtract" },
         { "name": "Content-Type", "value": "text/xml" },
@@ -53,7 +57,8 @@
         "mimeType": "",
         "text": "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n <soapenv:Header>\n  <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\n   <wsse:UsernameToken>\n    <wsse:Username>string</wsse:Username>\n    <wsse:Password>string</wsse:Password>\n    <wsse:Nonce EncodingType=\"string\">string</wsse:Nonce>\n    <wsu:Created>string</wsu:Created>\n   </wsse:UsernameToken>\n   <wsu:Timestamp wsu:Id=\"string\">\n    <wsu:Created>string</wsu:Created>\n    <wsu:Expires>string</wsu:Expires>\n   </wsu:Timestamp>\n  </wsse:Security>\n </soapenv:Header>\n <soapenv:Body>\n  <tns:Subtract xmlns:tns=\"http://tempuri.org/\"><!-- mandatory -->\n   <tns:intA><!-- mandatory -->3</tns:intA>\n   <tns:intB><!-- mandatory -->3</tns:intB>\n  </tns:Subtract>\n </soapenv:Body>\n</soapenv:Envelope>"
       },
-      "authentication": {}
+      "authentication": {},
+      "parameters": []
     },
     {
       "parentId": "__GRP_2__",
@@ -62,7 +67,7 @@
       "name": "Multiply",
       "description": "",
       "url": "http://www.dneonline.com/calculator.asmx",
-      "method": "post",
+      "method": "POST",
       "headers": [
         { "name": "SOAPAction", "value": "http://tempuri.org/Multiply" },
         { "name": "Content-Type", "value": "text/xml" },
@@ -72,7 +77,8 @@
         "mimeType": "",
         "text": "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n <soapenv:Header>\n  <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\n   <wsse:UsernameToken>\n    <wsse:Username>string</wsse:Username>\n    <wsse:Password>string</wsse:Password>\n    <wsse:Nonce EncodingType=\"string\">string</wsse:Nonce>\n    <wsu:Created>string</wsu:Created>\n   </wsse:UsernameToken>\n   <wsu:Timestamp wsu:Id=\"string\">\n    <wsu:Created>string</wsu:Created>\n    <wsu:Expires>string</wsu:Expires>\n   </wsu:Timestamp>\n  </wsse:Security>\n </soapenv:Header>\n <soapenv:Body>\n  <tns:Multiply xmlns:tns=\"http://tempuri.org/\"><!-- mandatory -->\n   <tns:intA><!-- mandatory -->3</tns:intA>\n   <tns:intB><!-- mandatory -->3</tns:intB>\n  </tns:Multiply>\n </soapenv:Body>\n</soapenv:Envelope>"
       },
-      "authentication": {}
+      "authentication": {},
+      "parameters": []
     },
     {
       "parentId": "__GRP_2__",
@@ -81,7 +87,7 @@
       "name": "Divide",
       "description": "",
       "url": "http://www.dneonline.com/calculator.asmx",
-      "method": "post",
+      "method": "POST",
       "headers": [
         { "name": "SOAPAction", "value": "http://tempuri.org/Divide" },
         { "name": "Content-Type", "value": "text/xml" },
@@ -91,7 +97,8 @@
         "mimeType": "",
         "text": "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n <soapenv:Header>\n  <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\n   <wsse:UsernameToken>\n    <wsse:Username>string</wsse:Username>\n    <wsse:Password>string</wsse:Password>\n    <wsse:Nonce EncodingType=\"string\">string</wsse:Nonce>\n    <wsu:Created>string</wsu:Created>\n   </wsse:UsernameToken>\n   <wsu:Timestamp wsu:Id=\"string\">\n    <wsu:Created>string</wsu:Created>\n    <wsu:Expires>string</wsu:Expires>\n   </wsu:Timestamp>\n  </wsse:Security>\n </soapenv:Header>\n <soapenv:Body>\n  <tns:Divide xmlns:tns=\"http://tempuri.org/\"><!-- mandatory -->\n   <tns:intA><!-- mandatory -->3</tns:intA>\n   <tns:intB><!-- mandatory -->3</tns:intB>\n  </tns:Divide>\n </soapenv:Body>\n</soapenv:Envelope>"
       },
-      "authentication": {}
+      "authentication": {},
+      "parameters": []
     }
   ]
 }

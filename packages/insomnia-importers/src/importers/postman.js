@@ -34,7 +34,7 @@ function importCollection(collection, schema) {
     _id: `__GRP_${requestGroupCount++}__`,
     _type: 'request_group',
     name: collection.info.name,
-    description: collection.info.description,
+    description: collection.info.description || '',
   };
   if (postmanVariable) {
     collectionFolder.variable = postmanVariable;
