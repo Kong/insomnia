@@ -305,29 +305,48 @@ class App extends PureComponent {
   }
 
   static async _requestGroupDuplicate(requestGroup) {
-    models.requestGroup.duplicate(requestGroup);
+    showPrompt({
+      title: 'Duplicate Folder',
+      defaultValue: requestGroup.name,
+      submitName: 'Create',
+      label: 'New Name',
+      selectText: true,
+      onComplete: async name => {
+        await models.requestGroup.duplicate(requestGroup, { name });
+      },
+    });
   }
 
   static async _requestGroupMove(requestGroup) {
     showModal(MoveRequestGroupModal, { requestGroup });
   }
 
-  async _requestDuplicate(request) {
+  _requestDuplicate(request) {
     if (!request) {
       return;
     }
 
-    const newRequest = await models.request.duplicate(request);
-    await this._handleSetActiveRequest(newRequest._id);
+    showPrompt({
+      title: 'Duplicate Request',
+      defaultValue: request.name,
+      submitName: 'Create',
+      label: 'New Name',
+      selectText: true,
+      onComplete: async name => {
+        const newRequest = await models.request.duplicate(request, { name });
+        await this._handleSetActiveRequest(newRequest._id);
+      },
+    });
   }
 
-  async _workspaceDuplicate(callback) {
+  _workspaceDuplicate(callback) {
     const workspace = this.props.activeWorkspace;
     showPrompt({
       title: 'Duplicate Workspace',
-      defaultValue: `${workspace.name} (Copy)`,
-      submitName: 'Duplicate',
+      defaultValue: workspace.name,
+      submitName: 'Create',
       selectText: true,
+      label: 'New Name',
       onComplete: async name => {
         const newWorkspace = await db.duplicate(workspace, { name });
         await this.props.handleSetActiveWorkspace(newWorkspace._id);
