@@ -23,6 +23,7 @@ const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
 const EXPORT_TYPE_WORKSPACE = 'workspace';
 const EXPORT_TYPE_COOKIE_JAR = 'cookie_jar';
 const EXPORT_TYPE_ENVIRONMENT = 'environment';
+const EXPORT_TYPE_API_SPEC = 'api_spec';
 
 // If we come across an ID of this form, we will replace it with a new one
 const REPLACE_ID_REGEX = /__\w+_\d+__/g;
@@ -33,6 +34,7 @@ const MODELS = {
   [EXPORT_TYPE_WORKSPACE]: models.workspace,
   [EXPORT_TYPE_COOKIE_JAR]: models.cookieJar,
   [EXPORT_TYPE_ENVIRONMENT]: models.environment,
+  [EXPORT_TYPE_API_SPEC]: models.apiSpec,
 };
 
 export async function importUri(
@@ -41,7 +43,7 @@ export async function importUri(
 ): Promise<{
   source: string,
   error: Error | null,
-  summary: { [string]: Array<BaseModel> },
+  summary: {[string]: Array<BaseModel>},
 }> {
   let rawText;
   if (uri.match(/^(http|https):\/\//)) {
@@ -91,7 +93,7 @@ export async function importRaw(
 ): Promise<{
   source: string,
   error: Error | null,
-  summary: { [string]: Array<BaseModel> },
+  summary: {[string]: Array<BaseModel>},
 }> {
   let results;
   try {
@@ -107,7 +109,7 @@ export async function importRaw(
   const { data } = results;
 
   // Generate all the ids we may need
-  const generatedIds: { [string]: string | Function } = {};
+  const generatedIds: {[string]: string | Function} = {};
   for (const r of data.resources) {
     for (const key of r._id.match(REPLACE_ID_REGEX) || []) {
       generatedIds[key] = generateId(MODELS[r._type].prefix);
@@ -203,7 +205,7 @@ export async function importRaw(
       resource.headers.push({ name: 'Content-Type', value: 'application/json' });
     }
 
-    const existingDoc = await model.getById(resource._id);
+    const existingDoc = await db.get(model.type, resource._id);
     let newDoc: BaseModel;
     if (existingDoc) {
       newDoc = await db.docUpdate(existingDoc, resource);
@@ -222,7 +224,14 @@ export async function importRaw(
 
   // Store spec under workspace if it's OpenAPI
   for (const workspace of importedDocs[models.workspace.type]) {
-    const spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
+    let spec = await models.apiSpec.getByParentId(workspace._id);
+
+    // Don't create a spec if one was imported
+    if (spec) {
+      continue;
+    }
+
+    spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
       contents: rawContent,
       contentType: 'yaml',
     });
@@ -354,7 +363,11 @@ export async function exportRequestsData(
   for (const workspace of workspaces) {
     const descendants: Array<BaseModel> = (await db.withDescendants(workspace)).filter(d => {
       // Only interested in these additional model types.
-      return d.type === models.cookieJar.type || d.type === models.environment.type;
+      return (
+        d.type === models.cookieJar.type ||
+        d.type === models.environment.type ||
+        d.type === models.apiSpec.type
+      );
     });
     docs.push(...descendants);
   }
@@ -368,7 +381,8 @@ export async function exportRequestsData(
           d.type === models.requestGroup.type ||
           d.type === models.workspace.type ||
           d.type === models.cookieJar.type ||
-          d.type === models.environment.type
+          d.type === models.environment.type ||
+          d.type === models.apiSpec.type
         )
       ) {
         return false;
@@ -387,6 +401,8 @@ export async function exportRequestsData(
         d._type = EXPORT_TYPE_REQUEST_GROUP;
       } else if (d.type === models.request.type) {
         d._type = EXPORT_TYPE_REQUEST;
+      } else if (d.type === models.apiSpec.type) {
+        d._type = EXPORT_TYPE_API_SPEC;
       }
 
       // Delete the things we don't want to export
