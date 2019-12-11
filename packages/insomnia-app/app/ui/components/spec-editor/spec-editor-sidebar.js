@@ -25,8 +25,8 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
   }
 
   _handleScrollEditor(pos: {
-    start: { line: number, col: number },
-    end: { line: number, col: number },
+    start: {line: number, col: number},
+    end: {line: number, col: number},
   }) {
     trackEvent('Spec Sidebar', 'Navigate');
     const { handleSetSelection } = this.props;
@@ -50,9 +50,8 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     }
   }
 
-  renderMap(collection: Object) {
+  renderMap(collection: Object, path: string) {
     const children = [];
-    const collectionKeys = [];
     for (let i = 0; i < collection.items.length; i++) {
       const curr: Object = collection.items[i];
       const next: ?Object = collection.items[i + 1];
@@ -62,14 +61,13 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
         continue;
       }
 
-      collectionKeys.push(curr.strValue);
-
+      const newPath = `${path}.${curr.strValue}`;
       children.push(
         <SpecEditorSidebarItem
-          key={curr.strValue}
+          key={newPath}
           name={curr.strValue}
           onClick={() => this._handleScrollEditor(curr.rangeAsLinePos)}>
-          {this.renderNext(next)}
+          {this.renderNext(next, newPath)}
         </SpecEditorSidebarItem>,
       );
 
@@ -77,10 +75,10 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
       i++;
     }
 
-    return <ul key={collectionKeys.join('::')}>{children}</ul>;
+    return <ul key={path}>{children}</ul>;
   }
 
-  renderSequence(collection: Object) {
+  renderSequence(collection: Object, path: string) {
     const children = [];
 
     for (let i = 0; i < collection.items.length; i++) {
@@ -89,27 +87,29 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
         continue;
       }
 
+      const newPath = `${path}[${i}]`;
+
       children.push(
         <SpecEditorSidebarItem
-          key={i}
+          key={newPath}
           name={String(i)}
           onClick={() => this._handleScrollEditor(item.rangeAsLinePos)}>
-          {this.renderNext(item)}
+          {this.renderNext(item, newPath)}
         </SpecEditorSidebarItem>,
       );
     }
 
-    return <ul>{children}</ul>;
+    return <ul key={path}>{children}</ul>;
   }
 
-  renderNext(thing: Object) {
+  renderNext(thing: Object, path: string) {
     if (thing.type === 'MAP') {
-      return this.renderMap(thing);
+      return this.renderMap(thing, path);
     } else if (thing.type === 'SEQ') {
-      return this.renderSequence(thing);
+      return this.renderSequence(thing, path);
     } else if (thing.node) {
       // Try rendering child node if it has one
-      return this.renderNext(thing.node);
+      return this.renderNext(thing.node, path);
     }
 
     // Everything else terminates recursion (eg. FLOW_SEQ, MAP_SEQ)
@@ -135,7 +135,7 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
       return null;
     }
 
-    const navigationEl = document.contents.map(v => this.renderNext(v));
+    const navigationEl = document.contents.map(v => this.renderNext(v, '$'));
 
     return <div className="spec-editor-sidebar">{navigationEl}</div>;
   }
