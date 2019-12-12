@@ -19,3 +19,11 @@ npm run app-start
 4. Push tags `git push --tags`
 5. GitHub action will automatically on tags and test/build/package the app into a
    [GitHub Release](https://github.com/kong/studio/releases/)
+   
+   
+## Merging Insomnia Changes
+
+1. Add git remote called `insomnia` that points to Insomnia repo
+2. Pull Insomnia changes with `git pull --no-tags insomnia develop`
+3. Fix conflicts if any occur
+4. Push merged changes to Studio
