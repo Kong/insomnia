@@ -137,7 +137,7 @@ export async function getAuthHeader(
   return null;
 }
 
-export function _buildBearerHeader(accessToken, prefix) {
+export function _buildBearerHeader(accessToken: string, prefix: string) {
   if (!accessToken) {
     return null;
   }

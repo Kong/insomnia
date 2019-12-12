@@ -1,4 +1,5 @@
 {
+  "tagVersionPrefix": "pkg-v",
   "version": "2.1.1",
   "packages": ["packages/*", "plugins/*"]
 }
