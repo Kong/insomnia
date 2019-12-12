@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-request",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Insomnia request template tag",
   "license": "MIT",
@@ -16,8 +16,8 @@
     "test": "jest --silent"
   },
   "dependencies": {
-    "insomnia-cookies": "^2.1.0",
-    "insomnia-url": "^2.1.0"
+    "insomnia-cookies": "^2.1.1",
+    "insomnia-url": "^2.1.1"
   },
   "gitHead": "f325aef9ffe748b2d05562782852e83b16056210"
 }
