@@ -1,13 +1,13 @@
 # Insomnia REST Client
 
-[![Travis](https://api.travis-ci.org/getinsomnia/insomnia.svg)](https://travis-ci.org/getinsomnia/insomnia)
+[![Travis](https://api.travis-ci.org/Kong/insomnia.svg)](https://travis-ci.org/Kong/insomnia)
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/getinsomnia/insomnia/master/LICENSE)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/Kong/insomnia/blob/master/LICENSE)
 [![CodeFund](https://img.shields.io/badge/codefund-advertiser-success.svg)](https://codefund.io)
 
 Insomnia is a cross-platform _REST client_, built on top of [Electron](http://electron.atom.io/).
 
-![Insomnia REST Client Screenshot](https://raw.githubusercontent.com/getinsomnia/insomnia/master/screenshots/main.png)
+![Insomnia REST Client Screenshot](https://raw.githubusercontent.com/Kong/insomnia/master/screenshots/main.png)
 
 ## Download
 
