@@ -1,4 +1,4 @@
 {
-  "version": "2.0.0",
-  "packages": ["plugins/*", "packages/*"]
+  "version": "2.1.0",
+  "packages": ["packages/*", "plugins/*"]
 }
