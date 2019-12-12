@@ -836,6 +836,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             requestVersions={requestVersions}
             responses={activeRequestResponses}
             response={activeResponse}
+            disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}

@@ -58,7 +58,7 @@ type Props = {
 };
 
 @autobind
-class ResponsePane extends React.PureComponent<Props> {
+class ResponsePane extends React.PureComponent<Props, State> {
   _responseViewer: any;
 
   _setResponseViewerRef(n: any) {
@@ -97,10 +97,14 @@ class ResponsePane extends React.PureComponent<Props> {
 
       const readStream = models.response.getBodyStream(response);
       if (readStream) {
-        const to = fs.createWriteStream(outputPath);
-        readStream.pipe(to);
-        to.on('error', err => {
-          console.warn('Failed to save response body', err);
+        readStream.on('data', data => {
+          const data_ = data.toString();
+          const readStreamContents = JSON.stringify(JSON.parse(data_), null, 2);
+          const to = fs.createWriteStream(outputPath);
+          to.write(readStreamContents);
+          to.on('error', err => {
+            console.warn('Failed to save response body', err);
+          });
         });
       }
     });
@@ -174,11 +178,11 @@ class ResponsePane extends React.PureComponent<Props> {
       editorIndentSize,
       editorKeyMap,
       filter,
+      disableResponsePreviewLinks,
       filterHistory,
       showCookiesModal,
       hotKeyRegistry,
     } = this.props;
-
     const paneClasses = 'response-pane theme--pane pane';
     const paneHeaderClasses = 'pane__header theme--pane__header';
     const paneBodyClasses = 'pane__body theme--pane__body';
@@ -320,6 +324,7 @@ class ResponsePane extends React.PureComponent<Props> {
               contentType={response.contentType || ''}
               previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
               filter={filter}
+              disableResponsePreviewLinks={disableResponsePreviewLinks}
               filterHistory={filterHistory}
               updateFilter={response.error ? null : handleSetFilter}
               download={this._handleDownloadResponseBody}

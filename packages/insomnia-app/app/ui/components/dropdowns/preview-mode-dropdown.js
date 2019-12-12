@@ -49,7 +49,6 @@ PreviewModeDropdown.propTypes = {
   updatePreviewMode: PropTypes.func.isRequired,
   download: PropTypes.func.isRequired,
   fullDownload: PropTypes.func.isRequired,
-
   // Required
   previewMode: PropTypes.string.isRequired,
 };
