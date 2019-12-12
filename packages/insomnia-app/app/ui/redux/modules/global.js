@@ -166,7 +166,19 @@ export function importFile(workspaceId, forceToWorkspace) {
       filters: [
         {
           name: 'Insomnia Import',
-          extensions: ['', 'sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell', 'yaml', 'yml'],
+          extensions: [
+            '',
+            'sh',
+            'txt',
+            'json',
+            'har',
+            'curl',
+            'bash',
+            'shell',
+            'yaml',
+            'yml',
+            'wsdl',
+          ],
         },
       ],
     };

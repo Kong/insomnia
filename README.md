@@ -4,8 +4,6 @@ Studio is a spec-first API development app built in top of [Insomnia](https://gi
 
 ![Kong Studio Screenshot](https://user-images.githubusercontent.com/587576/62305922-dbd30800-b44e-11e9-8de6-ea8bdcb8d93b.png)
 
-## Development
-
 ```shell
 npm run bootstrap
 npm run app-start

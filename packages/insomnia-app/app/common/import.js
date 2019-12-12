@@ -195,6 +195,7 @@ export async function importRaw(
       resource.body.mimeType = CONTENT_TYPE_GRAPHQL;
     }
 
+    // Try adding Content-Type JSON if no Content-Type exists
     if (
       model.type === models.request.type &&
       resource.body &&
@@ -202,7 +203,12 @@ export async function importRaw(
       Array.isArray(resource.headers) &&
       !resource.headers.find(h => h.name.toLowerCase() === 'content-type')
     ) {
-      resource.headers.push({ name: 'Content-Type', value: 'application/json' });
+      try {
+        JSON.parse(resource.body.text);
+        resource.headers.push({ name: 'Content-Type', value: 'application/json' });
+      } catch (err) {
+        // Not JSON
+      }
     }
 
     const existingDoc = await db.get(model.type, resource._id);
