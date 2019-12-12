@@ -137,13 +137,21 @@ export async function getAuthHeader(
   return null;
 }
 
-function _buildBearerHeader(accessToken, prefix) {
+export function _buildBearerHeader(accessToken, prefix) {
   if (!accessToken) {
     return null;
   }
 
-  const name = 'Authorization';
-  const value = `${prefix || 'Bearer'} ${accessToken}`;
+  const header = {
+    name: 'Authorization',
+    value: '',
+  };
 
-  return { name, value };
+  if (prefix === 'NO_PREFIX') {
+    header.value = accessToken;
+  } else {
+    header.value = `${prefix || 'Bearer'} ${accessToken}`;
+  }
+
+  return header;
 }
