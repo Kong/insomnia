@@ -499,7 +499,7 @@ async function _setSessionData() {
     'acct_123',
     'Tammy',
     'Tester',
-    'gschier1990@gmail.com',
+    'greg.schier@konghq.com',
     symmetricKey,
     publicKey,
     encPrivateKey,

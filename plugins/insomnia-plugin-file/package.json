@@ -1,7 +1,7 @@
 {
   "name": "insomnia-plugin-file",
   "version": "2.1.0",
-  "author": "Gregory Schier <gschier1990@gmail.com>",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Insomnia file templte tag",
   "license": "MIT",
   "repository": "https://github.com/getinsomnia/insomnia/tree/master/plugins/insomnia-plugin-file",

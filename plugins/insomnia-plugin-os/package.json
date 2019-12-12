@@ -1,7 +1,7 @@
 {
   "name": "insomnia-plugin-os",
   "version": "2.1.0",
-  "author": "Gregory Schier <gschier1990@gmail.com>",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Template tag to get information about the OS",
   "license": "MIT",
   "repository": "https://github.com/getinsomnia/insomnia/tree/master/plugins/insomnia-plugin-os",
