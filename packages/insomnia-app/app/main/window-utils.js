@@ -133,15 +133,11 @@ export function createWindow() {
           misc.clickLink(`${CHANGELOG_BASE_URL}/${getAppVersion()}/`);
         },
       },
-      ...(isMac()
-        ? [
-            { type: 'separator' },
-            { role: 'hide' },
-            { role: 'hideothers' },
-            { type: 'separator' },
-            { label: `${MNEMONIC_SYM}Quit`, accelerator: 'CmdOrCtrl+Q', click: () => app.quit() },
-          ]
-        : []),
+      { type: 'separator' },
+      { role: 'hide' },
+      { role: 'hideothers' },
+      { type: 'separator' },
+      { label: `${MNEMONIC_SYM}Quit`, accelerator: 'CmdOrCtrl+Q', click: () => app.quit() },
     ],
   };
 
