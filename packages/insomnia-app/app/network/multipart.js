@@ -22,10 +22,16 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
         } catch (err) {
           reject(err);
         }
+
         const stream = fs.createReadStream(path);
         stream.once('end', () => {
           resolve();
         });
+
+        stream.once('error', err => {
+          reject(err);
+        });
+
         stream.pipe(
           writeStream,
           { end: false },
@@ -89,11 +95,11 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
     addString(`--${DEFAULT_BOUNDARY}--`);
     addString(lineBreak);
 
-    writeStream.on('error', err => {
+    writeStream.once('error', err => {
       reject(err);
     });
 
-    writeStream.on('close', () => {
+    writeStream.once('close', () => {
       resolve({
         boundary: DEFAULT_BOUNDARY,
         filePath,
