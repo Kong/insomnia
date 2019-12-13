@@ -1,6 +1,5 @@
 // @flow
 import * as git from 'isomorphic-git';
-import path from 'path';
 import { trackEvent } from '../../common/analytics';
 
 export type GitAuthor = {|
@@ -144,7 +143,7 @@ export default class GitVCS {
   }
 
   async add(relPath: string): Promise<void> {
-    if (relPath.indexOf(`.studio${path.sep}`) !== 0) {
+    if (relPath.indexOf('.studio') !== 0) {
       throw new Error('Cannot add files outside .studio');
     }
 
@@ -153,7 +152,7 @@ export default class GitVCS {
   }
 
   async remove(relPath: string): Promise<void> {
-    if (relPath.indexOf(`.studio${path.sep}`) !== 0) {
+    if (relPath.indexOf('.studio') !== 0) {
       throw new Error('Cannot remove files outside .studio');
     }
 

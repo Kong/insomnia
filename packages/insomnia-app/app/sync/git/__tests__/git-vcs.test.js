@@ -1,15 +1,28 @@
 import GitVCS from '../git-vcs';
 import { setupDateMocks } from './util';
 import { MemPlugin } from '../mem-plugin';
-import path from 'path';
-
-const sep = path.sep;
 
 describe('Git-VCS', () => {
   beforeEach(setupDateMocks);
 
-  describe('common operations', () => {
-    it('listFiles()', async () => {
+  describe('status', () => {
+    it('does the thing', async () => {
+      const vcs = new GitVCS();
+      await vcs.init('/', MemPlugin.createPlugin());
+      await vcs.setAuthor('Karen Brown', 'karen@example.com');
+
+      const files = await vcs.status();
+      expect(files).toEqual({
+        hasChanges: false,
+        allStaged: true,
+        allUnstaged: true,
+        entries: [],
+      });
+    });
+  });
+
+  describe('playing around', () => {
+    it('does the thing', async () => {
       const fs = MemPlugin.createPlugin();
 
       const vcs = new GitVCS();
@@ -20,40 +33,48 @@ describe('Git-VCS', () => {
       const files1 = await vcs.listFiles();
       expect(files1).toEqual([]);
 
-      await fs.promises.writeFile(`${sep}foo.txt`, 'bar');
+      await fs.promises.writeFile('/foo.txt', 'bar');
       const files2 = await vcs.listFiles();
       expect(files2).toEqual([]);
     });
 
     it('stage and unstage file', async () => {
       const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(`${sep}.studio`);
-      await fs.promises.writeFile(`${sep}.studio${sep}foo.txt`, 'foo');
-      await fs.promises.writeFile(`${sep}.studio${sep}bar.txt`, 'bar');
-
-      // Files outside .studio should be ignored
-      await fs.promises.writeFile(`${sep}other.txt`, 'other');
+      await fs.promises.writeFile('/foo.txt', 'foo');
+      await fs.promises.writeFile('/bar.txt', 'bar');
 
       const vcs = new GitVCS();
-      await vcs.init(sep, fs);
+      await vcs.init('/', fs);
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
-      expect(await vcs.status(`.studio${sep}bar.txt`)).toBe('*added');
-      expect(await vcs.status(`.studio${sep}foo.txt`)).toBe('*added');
+      expect(await vcs.status()).toEqual({
+        allStaged: false,
+        hasChanges: true,
+        allUnstaged: true,
+        entries: [{ path: 'bar.txt', status: '*added' }, { path: 'foo.txt', status: '*added' }],
+      });
 
-      await vcs.add(`.studio${sep}foo.txt`);
-      expect(await vcs.status(`.studio${sep}bar.txt`)).toBe('*added');
-      expect(await vcs.status(`.studio${sep}foo.txt`)).toBe('added');
+      await vcs.add('foo.txt');
+      expect(await vcs.status()).toEqual({
+        allStaged: false,
+        hasChanges: true,
+        allUnstaged: false,
+        entries: [{ path: 'bar.txt', status: '*added' }, { path: 'foo.txt', status: 'added' }],
+      });
 
-      await vcs.remove(`.studio${sep}foo.txt`);
-      expect(await vcs.status(`.studio${sep}bar.txt`)).toBe('*added');
-      expect(await vcs.status(`.studio${sep}foo.txt`)).toBe('*added');
+      await vcs.remove('foo.txt');
+      expect(await vcs.status()).toEqual({
+        allStaged: false,
+        hasChanges: true,
+        allUnstaged: true,
+        entries: [{ path: 'bar.txt', status: '*added' }, { path: 'foo.txt', status: '*added' }],
+      });
     });
 
     it('Returns empty log without first commit', async () => {
       const fs = MemPlugin.createPlugin();
       const vcs = new GitVCS();
-      await vcs.init(sep, fs);
+      await vcs.init('/', fs);
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
       expect(await vcs.log()).toEqual([]);
@@ -61,20 +82,21 @@ describe('Git-VCS', () => {
 
     it('commit file', async () => {
       const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(`${sep}.studio`);
-      await fs.promises.writeFile(`${sep}.studio${sep}foo.txt`, 'foo');
-      await fs.promises.writeFile(`${sep}.studio${sep}bar.txt`, 'bar');
-
-      await fs.promises.writeFile(`${sep}other.txt`, 'should be ignored');
+      await fs.promises.writeFile('/foo.txt', 'foo');
+      await fs.promises.writeFile('/bar.txt', 'bar');
 
       const vcs = new GitVCS();
-      await vcs.init(`${sep}`, fs);
+      await vcs.init('/', fs);
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
-      await vcs.add(`.studio${sep}foo.txt`);
+      await vcs.add('foo.txt');
       await vcs.commit('First commit!');
 
-      expect(await vcs.status(`.studio${sep}bar.txt`)).toBe('*added');
-      expect(await vcs.status(`.studio${sep}foo.txt`)).toBe('unmodified');
+      expect(await vcs.status()).toEqual({
+        allStaged: false,
+        hasChanges: true,
+        allUnstaged: true,
+        entries: [{ path: 'bar.txt', status: '*added' }, { path: 'foo.txt', status: 'unmodified' }],
+      });
 
       expect(await vcs.log()).toEqual([
         {
@@ -91,42 +113,53 @@ describe('Git-VCS', () => {
             timezoneOffset: 0,
           },
           message: 'First commit!\n',
-          oid: 'b26d7e19ec581f90317d00085960735052abf5f0',
+          oid: '3f2c080f624720a716893fb17f221a49fc7f70f5',
           parent: [],
-          tree: '257d1b410966994eb8b79e004c679c26f72794c9',
+          tree: '95d3aa5f7462c052c821f8fe976c506c94946d68',
         },
       ]);
 
-      await fs.promises.unlink(`${sep}.studio${sep}foo.txt`);
-      expect(await vcs.status(`.studio${sep}bar.txt`)).toBe('*added');
-      expect(await vcs.status(`.studio${sep}foo.txt`)).toBe('*deleted');
+      await fs.promises.unlink('/foo.txt');
+      expect(await vcs.status()).toEqual({
+        allStaged: false,
+        hasChanges: true,
+        allUnstaged: true,
+        entries: [{ path: 'bar.txt', status: '*added' }, { path: 'foo.txt', status: '*deleted' }],
+      });
 
-      await vcs.remove(`.studio${sep}foo.txt`);
-      expect(await vcs.status(`.studio${sep}bar.txt`)).toBe('*added');
-      expect(await vcs.status(`.studio${sep}foo.txt`)).toBe('deleted');
+      await vcs.remove('foo.txt');
+      expect(await vcs.status()).toEqual({
+        allStaged: false,
+        hasChanges: true,
+        allUnstaged: false,
+        entries: [{ path: 'bar.txt', status: '*added' }, { path: 'foo.txt', status: 'deleted' }],
+      });
 
-      await vcs.remove(`.studio${sep}foo.txt`);
-      expect(await vcs.status(`.studio${sep}bar.txt`)).toBe('*added');
-      expect(await vcs.status(`.studio${sep}foo.txt`)).toBe('deleted');
+      await vcs.remove('foo.txt');
+      expect(await vcs.status()).toEqual({
+        allStaged: false,
+        hasChanges: true,
+        allUnstaged: false,
+        entries: [{ path: 'bar.txt', status: '*added' }, { path: 'foo.txt', status: 'deleted' }],
+      });
     });
 
     it('create branch', async () => {
       const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(`${sep}.studio`);
-      await fs.promises.writeFile(`${sep}.studio${sep}foo.txt`, 'foo');
-      await fs.promises.writeFile(`${sep}.studio${sep}bar.txt`, 'bar');
+      await fs.promises.writeFile('/foo.txt', 'foo');
+      await fs.promises.writeFile('/bar.txt', 'bar');
 
       const vcs = new GitVCS();
-      await vcs.init(sep, fs);
+      await vcs.init('/', fs);
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
-      await vcs.add(`.studio${sep}foo.txt`);
+      await vcs.add('foo.txt');
       await vcs.commit('First commit!');
 
       expect((await vcs.log()).length).toBe(1);
 
       await vcs.checkout('new-branch');
       expect((await vcs.log()).length).toBe(1);
-      await vcs.add(`.studio${sep}bar.txt`);
+      await vcs.add('bar.txt');
       await vcs.commit('Second commit!');
       expect((await vcs.log()).length).toBe(2);
 
@@ -138,24 +171,23 @@ describe('Git-VCS', () => {
   describe('readObjectFromTree()', () => {
     it('reads an object from tree', async () => {
       const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(`${sep}.studio`);
-      await fs.promises.mkdir(`${sep}.studio${sep}dir`);
-      await fs.promises.writeFile(`${sep}.studio${sep}dir${sep}foo.txt`, 'foo');
+      await fs.promises.mkdir('/dir');
+      await fs.promises.writeFile('/dir/foo.txt', 'foo');
 
       const vcs = new GitVCS();
-      await vcs.init(sep, fs);
+      await vcs.init('/', fs);
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
-      await vcs.add(`.studio${sep}dir${sep}foo.txt`);
+      await vcs.add('dir/foo.txt');
       await vcs.commit('First');
 
-      await fs.promises.writeFile(`.studio${sep}${sep}dir${sep}foo.txt`, 'foo bar');
-      await vcs.add(`.studio${sep}dir${sep}foo.txt`);
+      await fs.promises.writeFile('/dir/foo.txt', 'foo bar');
+      await vcs.add('dir/foo.txt');
       await vcs.commit('Second');
 
       const log = await vcs.log();
-      expect(await vcs.readObjFromTree(log[0].tree, `.studio${sep}dir${sep}foo.txt`)).toBe('foo bar');
-      expect(await vcs.readObjFromTree(log[1].tree, `.studio${sep}dir${sep}foo.txt`)).toBe('foo');
+      expect(await vcs.readObjFromTree(log[0].tree, 'dir/foo.txt')).toBe('foo bar');
+      expect(await vcs.readObjFromTree(log[1].tree, 'dir/foo.txt')).toBe('foo');
 
       // Some extra checks
       expect(await vcs.readObjFromTree(log[1].tree, 'missing')).toBe(null);
