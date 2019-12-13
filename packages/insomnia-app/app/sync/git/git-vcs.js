@@ -143,18 +143,18 @@ export default class GitVCS {
   }
 
   async add(relPath: string): Promise<void> {
-    if (relPath.indexOf('.studio') !== 0) {
-      throw new Error('Cannot add files outside .studio');
-    }
+    // if (relPath.indexOf('.studio') !== 0) {
+    //   throw new Error('Cannot add files outside .studio');
+    // }
 
     console.log(`[git] Add ${relPath}`);
     return git.add({ ...this._baseOpts, filepath: relPath });
   }
 
   async remove(relPath: string): Promise<void> {
-    if (relPath.indexOf('.studio') !== 0) {
-      throw new Error('Cannot remove files outside .studio');
-    }
+    // if (relPath.indexOf('.studio') !== 0) {
+    //   throw new Error('Cannot remove files outside .studio');
+    // }
 
     console.log(`[git] Remove relPath=${relPath}`);
     return git.remove({ ...this._baseOpts, filepath: relPath });
