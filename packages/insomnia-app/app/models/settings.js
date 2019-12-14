@@ -6,7 +6,11 @@ import { UPDATE_CHANNEL_STABLE } from '../common/constants';
 import * as hotkeys from '../common/hotkeys';
 
 export type PluginConfig = {
-  diabled: boolean,
+  disabled: boolean,
+};
+
+export type PluginConfigMap = {
+  [string]: PluginConfig,
 };
 
 type BaseSettings = {
@@ -42,9 +46,7 @@ type BaseSettings = {
   fontSize: number,
   fontVariantLigatures: boolean,
   maxTimelineDataSizeKB: number,
-  pluginConfig: {
-    [string]: PluginConfig,
-  },
+  pluginConfig: PluginConfigMap,
 
   // Feature flags
   enableSyncBeta: boolean,
