@@ -12,6 +12,7 @@ import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import { delay } from '../../../common/misc';
 import { PLUGIN_PATH } from '../../../common/constants';
+import type { Settings, PluginConfig } from '../../../models/settings';
 
 type State = {
   plugins: Array<Plugin>,
@@ -21,11 +22,16 @@ type State = {
   isRefreshingPlugins: boolean,
 };
 
+type Props = {
+  settings: Settings,
+  updateSetting: Function,
+};
+
 @autobind
-class Plugins extends React.PureComponent<void, State> {
+class Plugins extends React.PureComponent<Props, State> {
   _isMounted: boolean;
 
-  constructor(props: any) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       plugins: [],
@@ -101,6 +107,39 @@ class Plugins extends React.PureComponent<void, State> {
     this._isMounted = false;
   }
 
+  async _handleUpdatePluginConfig(pluginName, config) {
+    await this.props.updateSetting('pluginConfig', {
+      ...this.props.settings.pluginConfig,
+      [pluginName]: config,
+    });
+  }
+
+  async _togglePluginEnabled(e: SyntheticEvent<HTMLInputElement>, config: PluginConfig) {
+    const value = e.currentTarget.checked;
+    const pluginName = e.currentTarget.name;
+
+    const newConfig = {
+      ...config,
+      disabled: !value,
+    };
+
+    await this._handleUpdatePluginConfig(pluginName, newConfig);
+    this._handleRefreshPlugins();
+  }
+
+  renderCheckboxInput(plugin: Plugin) {
+    return (
+      <input
+        type="checkbox"
+        name={plugin.name}
+        checked={!plugin.config.disabled}
+        onChange={async e => {
+          await this._togglePluginEnabled(e, plugin);
+        }}
+      />
+    );
+  }
+
   render() {
     const { plugins, error, isInstallingFromNpm, isRefreshingPlugins } = this.state;
 
@@ -123,35 +162,35 @@ class Plugins extends React.PureComponent<void, State> {
               </tr>
             </thead>
             <tbody>
-              {plugins.map(
-                plugin =>
-                  !plugin.directory ? null : (
-                    <tr key={plugin.name}>
-                      <td>
-                        {plugin.name}
-                        {plugin.description && (
-                          <HelpTooltip info className="space-left">
-                            {plugin.description}
-                          </HelpTooltip>
-                        )}
-                      </td>
-                      <td>{plugin.version}</td>
-                      <td className="no-wrap" style={{ width: '10rem' }}>
-                        <CopyButton
-                          className="btn btn--outlined btn--super-duper-compact"
-                          title={plugin.directory}
-                          content={plugin.directory}>
-                          Copy Path
-                        </CopyButton>{' '}
-                        <Button
-                          className="btn btn--outlined btn--super-duper-compact"
-                          onClick={Plugins._handleOpenDirectory}
-                          value={plugin.directory}>
-                          Show Folder
-                        </Button>
-                      </td>
-                    </tr>
-                  ),
+              {plugins.map(plugin =>
+                !plugin.directory ? null : (
+                  <tr key={plugin.name}>
+                    <td>
+                      {this.renderCheckboxInput(plugin)}
+                      {plugin.name}
+                      {plugin.description && (
+                        <HelpTooltip info className="space-left">
+                          {plugin.description}
+                        </HelpTooltip>
+                      )}
+                    </td>
+                    <td>{plugin.version}</td>
+                    <td className="no-wrap" style={{ width: '10rem' }}>
+                      <CopyButton
+                        className="btn btn--outlined btn--super-duper-compact"
+                        title={plugin.directory}
+                        content={plugin.directory}>
+                        Copy Path
+                      </CopyButton>{' '}
+                      <Button
+                        className="btn btn--outlined btn--super-duper-compact"
+                        onClick={Plugins._handleOpenDirectory}
+                        value={plugin.directory}>
+                        Show Folder
+                      </Button>
+                    </td>
+                  </tr>
+                ),
               )}
             </tbody>
           </table>

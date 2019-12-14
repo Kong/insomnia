@@ -156,7 +156,7 @@ class SettingsModal extends PureComponent {
               <Account />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <Plugins />
+              <Plugins settings={settings} updateSetting={this._handleUpdateSetting} />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <About />
