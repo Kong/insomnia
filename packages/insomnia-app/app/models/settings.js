@@ -5,6 +5,10 @@ import * as db from '../common/database';
 import { UPDATE_CHANNEL_STABLE } from '../common/constants';
 import * as hotkeys from '../common/hotkeys';
 
+export type PluginConfig = {
+  diabled: boolean,
+};
+
 type BaseSettings = {
   showPasswords: boolean,
   useBulkHeaderEditor: boolean,
@@ -38,6 +42,9 @@ type BaseSettings = {
   fontSize: number,
   fontVariantLigatures: boolean,
   maxTimelineDataSizeKB: number,
+  pluginConfig: {
+    [string]: PluginConfig,
+  },
 
   // Feature flags
   enableSyncBeta: boolean,
@@ -88,6 +95,7 @@ export function init(): BaseSettings {
     maxTimelineDataSizeKB: 10,
     enableSyncBeta: false,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
+    pluginConfig: {},
   };
 }
 
