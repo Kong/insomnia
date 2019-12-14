@@ -4,7 +4,7 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import CodeEditor from '../codemirror/code-editor';
-import type { Request } from '../../../models/request';
+import type { Request, RequestParameter } from '../../../models/request';
 
 type Props = {
   onChange: (r: Request, parameters: Array<RequestParameter>) => Promise<Request>,
@@ -103,7 +103,7 @@ class RequestParametersEditor extends React.PureComponent<Props> {
     ) : (
       <KeyValueEditor
         sortable
-        namePlaceholder="header"
+        namePlaceholder="name"
         valuePlaceholder="value"
         descriptionPlaceholder="description"
         pairs={request.parameters}
@@ -111,8 +111,6 @@ class RequestParametersEditor extends React.PureComponent<Props> {
         isVariableUncovered={isVariableUncovered}
         handleRender={handleRender}
         handleGetRenderContext={handleGetRenderContext}
-        handleGetAutocompleteNameConstants={RequestParametersEditor._getCommonHeaderNames}
-        handleGetAutocompleteValueConstants={RequestParametersEditor._getCommonHeaderValues}
         onChange={this._handleKeyValueUpdate}
       />
     );

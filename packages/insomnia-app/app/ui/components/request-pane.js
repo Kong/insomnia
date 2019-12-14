@@ -394,7 +394,7 @@ class RequestPane extends React.PureComponent<Props> {
               <button
                 className="margin-top-sm btn btn--clicky space-left"
                 onClick={this._handleUpdateSettingsUseBulkParametersEditor}>
-                {settings.useBulkParametersEditorEditor ? 'Regular Edit' : 'Bulk Edit'}
+                {settings.useBulkParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>
           </TabPanel>
@@ -418,7 +418,7 @@ class RequestPane extends React.PureComponent<Props> {
             <div className="pad-right text-right">
               <button
                 className="margin-top-sm btn btn--clicky"
-                onClick={this._handleUpdateSettingsUseBulkHeaderggEditor}>
+                onClick={this._handleUpdateSettingsUseBulkHeaderEditor}>
                 {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>
