@@ -129,14 +129,23 @@ class Plugins extends React.PureComponent<Props, State> {
 
   renderCheckboxInput(plugin: Plugin) {
     return (
-      <input
-        type="checkbox"
-        name={plugin.name}
-        checked={!plugin.config.disabled}
-        onChange={async e => {
-          await this._togglePluginEnabled(e, plugin);
-        }}
-      />
+      <div className="form-control form-control--thin">
+        <input
+          className="space-right"
+          type="checkbox"
+          name={plugin.name}
+          checked={!plugin.config.disabled}
+          onChange={async e => {
+            await this._togglePluginEnabled(e, plugin);
+          }}
+        />
+        {plugin.name}
+        {plugin.description && (
+          <HelpTooltip info className="space-left">
+            {plugin.description}
+          </HelpTooltip>
+        )}
+      </div>
     );
   }
 
@@ -165,15 +174,7 @@ class Plugins extends React.PureComponent<Props, State> {
               {plugins.map(plugin =>
                 !plugin.directory ? null : (
                   <tr key={plugin.name}>
-                    <td>
-                      {this.renderCheckboxInput(plugin)}
-                      {plugin.name}
-                      {plugin.description && (
-                        <HelpTooltip info className="space-left">
-                          {plugin.description}
-                        </HelpTooltip>
-                      )}
-                    </td>
+                    <td>{this.renderCheckboxInput(plugin)}</td>
                     <td>{plugin.version}</td>
                     <td className="no-wrap" style={{ width: '10rem' }}>
                       <CopyButton
