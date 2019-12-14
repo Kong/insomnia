@@ -207,7 +207,6 @@ export function createWindow() {
       },
       {
         label: 'Toggle Sidebar',
-        accelerator: 'CmdOrCtrl+\\',
         click: () => {
           const w = BrowserWindow.getFocusedWindow();
           if (!w || !w.webContents) {

@@ -135,6 +135,8 @@ export const hotKeyRefs = {
 
   SIDEBAR_FOCUS_FILTER: defineHotKey('sidebar_focusFilter', 'Filter Sidebar'),
 
+  SIDEBAR_TOGGLE: defineHotKey('sidebar_toggle', 'Toggle Sidebar'),
+
   RESPONSE_FOCUS: defineHotKey('response_focus', 'Focus Response'),
 
   SHOW_COOKIES_EDITOR: defineHotKey('showCookiesEditor', 'Edit Cookies'),
@@ -263,6 +265,11 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.SIDEBAR_FOCUS_FILTER.id]: keyBinds(
     keyComb(false, false, true, true, keyboardKeys.f.keyCode),
     keyComb(true, false, true, false, keyboardKeys.f.keyCode),
+  ),
+
+  [hotKeyRefs.SIDEBAR_TOGGLE.id]: keyBinds(
+    keyComb(false, false, false, true, keyboardKeys.backslash.keyCode),
+    keyComb(true, false, false, false, keyboardKeys.backslash.keyCode),
   ),
 
   [hotKeyRefs.RESPONSE_FOCUS.id]: keyBinds(
