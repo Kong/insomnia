@@ -1,5 +1,5 @@
 // @flow
-import * as React from 'react';
+import React from 'react';
 import Switch from 'react-switch';
 
 type Props = {
