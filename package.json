@@ -57,7 +57,5 @@
     "pretty-quick": "^1.10.0",
     "rimraf": "^2.6.3"
   },
-  "dependencies": {
-    "react-switch": "^5.0.1"
-  }
+  "dependencies": {}
 }
