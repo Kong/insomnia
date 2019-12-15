@@ -115,16 +115,17 @@ class Plugins extends React.PureComponent<Props, State> {
     });
   }
 
-  async _togglePluginEnabled(e: SyntheticEvent<HTMLInputElement>, config: PluginConfig) {
-    const value = e.currentTarget.checked;
-    const pluginName = e.currentTarget.name;
-
+  async _togglePluginEnabled(name: string, checked: boolean, config: PluginConfig) {
     const newConfig = {
       ...config,
-      disabled: !value,
+      disabled: !checked,
     };
 
-    await this._handleUpdatePluginConfig(pluginName, newConfig);
+    if (this._isMounted) {
+      this.setState({ isRefreshingPlugins: true });
+    }
+
+    await this._handleUpdatePluginConfig(name, newConfig);
     this._handleRefreshPlugins();
   }
 
@@ -133,25 +134,12 @@ class Plugins extends React.PureComponent<Props, State> {
       <ToggleSwitch
         name={plugin.name}
         checked={!plugin.config.disabled}
-        onChange={async e => {
-          await this._togglePluginEnabled(e, plugin.config);
+        disabled={this.state.isRefreshingPlugins}
+        onChange={async (name, checked) => {
+          await this._togglePluginEnabled(name, checked, plugin.config);
         }}
       />
     );
-
-    // return (
-    //   <div className="form-control form-control--thin">
-    //     <input
-    //       className="space-right"
-    //       type="checkbox"
-    //       name={plugin.name}
-    //       checked={!plugin.config.disabled}
-    //       onChange={async e => {
-    //         await this._togglePluginEnabled(e, plugin.config);
-    //       }}
-    //     />
-    //   </div>
-    // );
   }
 
   render() {
@@ -170,7 +158,7 @@ class Plugins extends React.PureComponent<Props, State> {
           <table className="table--fancy table--striped table--vertical-middle margin-top margin-bottom">
             <thead>
               <tr>
-                <th>Enabled</th>
+                <th>Active</th>
                 <th>Name</th>
                 <th>Version</th>
                 <th>Folder</th>
@@ -180,7 +168,7 @@ class Plugins extends React.PureComponent<Props, State> {
               {plugins.map(plugin =>
                 !plugin.directory ? null : (
                   <tr key={plugin.name}>
-                    <td style={{ width: '3rem' }}>{this.renderCheckboxInput(plugin)}</td>
+                    <td>{this.renderCheckboxInput(plugin)}</td>
                     <td>
                       {plugin.name}
                       {plugin.description && (

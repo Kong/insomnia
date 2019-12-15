@@ -1,34 +1,37 @@
 // @flow
 import * as React from 'react';
+import Switch from 'react-switch';
 
 type Props = {
   name: string,
   checked: boolean,
-  onChange(e: SyntheticEvent<HTMLInputElement>): void,
+  disabled?: boolean,
+  onChange(name: string, checked: boolean): void,
 };
 
-const ToggleSwitch: React.FC<Props> = ({ name, checked: checkedProp, onChange }) => {
-  const [checkedState, setChecked] = React.useState(checkedProp);
+const ToggleSwitch: React.FC<Props> = ({ name, checked: checkedProp, onChange, disabled }) => {
+  const [checked, setChecked] = React.useState(checkedProp);
 
+  // If prop changes and differs from state, update state
   React.useEffect(() => {
-    if (checkedState !== checkedProp) {
+    if (checked !== checkedProp) {
       setChecked(checkedProp);
     }
   }, [checkedProp]);
 
   return (
-    <label className="switch no-pad-top">
-      <input
-        type="checkbox"
+    <label>
+      <Switch
         name={name}
-        checked={checkedState}
-        onChange={e => {
-          console.log('Trigger change', e);
-          setChecked(!checkedProp);
-          onChange(e);
+        checked={checked}
+        disabled={disabled}
+        onChange={c => {
+          setChecked(c);
+          onChange(name, c);
         }}
+        height={20}
+        width={40}
       />
-      <span className="slider" />
     </label>
   );
 };
