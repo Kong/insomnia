@@ -9,7 +9,12 @@ type Props = {
   onChange(name: string, checked: boolean): void,
 };
 
-const ToggleSwitch: React.FC<Props> = ({ name, checked: checkedProp, onChange, disabled }) => {
+const ToggleSwitch: React.FunctionComponent<Props> = ({
+  name,
+  checked: checkedProp,
+  onChange,
+  disabled,
+}) => {
   const [checked, setChecked] = React.useState(checkedProp);
 
   // If prop changes and differs from state, update state
