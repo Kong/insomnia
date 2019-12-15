@@ -13,6 +13,7 @@ import Link from '../base/link';
 import { delay } from '../../../common/misc';
 import { PLUGIN_PATH } from '../../../common/constants';
 import type { Settings, PluginConfig } from '../../../models/settings';
+import ToggleSwitch from './toggle-switch';
 
 type State = {
   plugins: Array<Plugin>,
@@ -129,18 +130,28 @@ class Plugins extends React.PureComponent<Props, State> {
 
   renderCheckboxInput(plugin: Plugin) {
     return (
-      <div className="form-control form-control--thin">
-        <input
-          className="space-right"
-          type="checkbox"
-          name={plugin.name}
-          checked={!plugin.config.disabled}
-          onChange={async e => {
-            await this._togglePluginEnabled(e, plugin.config);
-          }}
-        />
-      </div>
+      <ToggleSwitch
+        name={plugin.name}
+        checked={!plugin.config.disabled}
+        onChange={async e => {
+          await this._togglePluginEnabled(e, plugin.config);
+        }}
+      />
     );
+
+    // return (
+    //   <div className="form-control form-control--thin">
+    //     <input
+    //       className="space-right"
+    //       type="checkbox"
+    //       name={plugin.name}
+    //       checked={!plugin.config.disabled}
+    //       onChange={async e => {
+    //         await this._togglePluginEnabled(e, plugin.config);
+    //       }}
+    //     />
+    //   </div>
+    // );
   }
 
   render() {
