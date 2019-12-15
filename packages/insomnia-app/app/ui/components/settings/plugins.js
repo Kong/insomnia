@@ -107,7 +107,7 @@ class Plugins extends React.PureComponent<Props, State> {
     this._isMounted = false;
   }
 
-  async _handleUpdatePluginConfig(pluginName, config) {
+  async _handleUpdatePluginConfig(pluginName: string, config: PluginConfig) {
     await this.props.updateSetting('pluginConfig', {
       ...this.props.settings.pluginConfig,
       [pluginName]: config,
@@ -136,15 +136,9 @@ class Plugins extends React.PureComponent<Props, State> {
           name={plugin.name}
           checked={!plugin.config.disabled}
           onChange={async e => {
-            await this._togglePluginEnabled(e, plugin);
+            await this._togglePluginEnabled(e, plugin.config);
           }}
         />
-        {plugin.name}
-        {plugin.description && (
-          <HelpTooltip info className="space-left">
-            {plugin.description}
-          </HelpTooltip>
-        )}
       </div>
     );
   }
@@ -162,9 +156,10 @@ class Plugins extends React.PureComponent<Props, State> {
         {plugins.length === 0 ? (
           <div className="text-center faint italic pad">No Plugins Added</div>
         ) : (
-          <table className="table--fancy table--striped margin-top margin-bottom">
+          <table className="table--fancy table--striped table--vertical-middle margin-top margin-bottom">
             <thead>
               <tr>
+                <th>Enabled</th>
                 <th>Name</th>
                 <th>Version</th>
                 <th>Folder</th>
@@ -174,7 +169,15 @@ class Plugins extends React.PureComponent<Props, State> {
               {plugins.map(plugin =>
                 !plugin.directory ? null : (
                   <tr key={plugin.name}>
-                    <td>{this.renderCheckboxInput(plugin)}</td>
+                    <td style={{ width: '3rem' }}>{this.renderCheckboxInput(plugin)}</td>
+                    <td>
+                      {plugin.name}
+                      {plugin.description && (
+                        <HelpTooltip info className="space-left">
+                          {plugin.description}
+                        </HelpTooltip>
+                      )}
+                    </td>
                     <td>{plugin.version}</td>
                     <td className="no-wrap" style={{ width: '10rem' }}>
                       <CopyButton
