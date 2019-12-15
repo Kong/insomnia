@@ -9,7 +9,7 @@ type Props = {
   onChange(checked: boolean): void,
 };
 
-function ToggleSwitch({ className, checked: checkedProp, onChange, disabled }: Props) {
+const ToggleSwitch: React.FC<Props> = ({ className, checked: checkedProp, onChange, disabled }) => {
   const [checked, setChecked] = React.useState(checkedProp);
 
   // If prop changes and differs from state, update state
@@ -32,6 +32,6 @@ function ToggleSwitch({ className, checked: checkedProp, onChange, disabled }: P
       width={40}
     />
   );
-}
+};
 
 export default ToggleSwitch;
