@@ -3,14 +3,14 @@ import * as React from 'react';
 import Switch from 'react-switch';
 
 type Props = {
-  name: string,
+  className?: string,
   checked: boolean,
   disabled?: boolean,
-  onChange(name: string, checked: boolean): void,
+  onChange(checked: boolean): void,
 };
 
 const ToggleSwitch: React.FunctionComponent<Props> = ({
-  name,
+  className,
   checked: checkedProp,
   onChange,
   disabled,
@@ -25,19 +25,17 @@ const ToggleSwitch: React.FunctionComponent<Props> = ({
   }, [checkedProp]);
 
   return (
-    <label>
-      <Switch
-        name={name}
-        checked={checked}
-        disabled={disabled}
-        onChange={c => {
-          setChecked(c);
-          onChange(name, c);
-        }}
-        height={20}
-        width={40}
-      />
-    </label>
+    <Switch
+      className={className}
+      checked={checked}
+      disabled={disabled}
+      onChange={c => {
+        setChecked(c);
+        onChange(c);
+      }}
+      height={20}
+      width={40}
+    />
   );
 };
 

@@ -132,11 +132,11 @@ class Plugins extends React.PureComponent<Props, State> {
   renderToggleSwitch(plugin: Plugin) {
     return (
       <ToggleSwitch
-        name={plugin.name}
+        className="valign-middle"
         checked={!plugin.config.disabled}
         disabled={this.state.isRefreshingPlugins}
-        onChange={async (name, checked) => {
-          await this._togglePluginEnabled(name, checked, plugin.config);
+        onChange={async checked => {
+          await this._togglePluginEnabled(plugin.name, checked, plugin.config);
         }}
       />
     );
