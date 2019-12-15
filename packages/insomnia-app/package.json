@@ -108,6 +108,7 @@
     "@hot-loader/react-dom",
     "react-redux",
     "react-sortable-hoc",
+    "react-switch",
     "react-tabs",
     "redux",
     "redux-thunk",
