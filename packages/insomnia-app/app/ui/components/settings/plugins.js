@@ -129,7 +129,7 @@ class Plugins extends React.PureComponent<Props, State> {
     this._handleRefreshPlugins();
   }
 
-  renderCheckboxInput(plugin: Plugin) {
+  renderToggleSwitch(plugin: Plugin) {
     return (
       <ToggleSwitch
         name={plugin.name}
@@ -158,7 +158,7 @@ class Plugins extends React.PureComponent<Props, State> {
           <table className="table--fancy table--striped table--vertical-middle margin-top margin-bottom">
             <thead>
               <tr>
-                <th>Active</th>
+                <th>Enable</th>
                 <th>Name</th>
                 <th>Version</th>
                 <th>Folder</th>
@@ -168,7 +168,7 @@ class Plugins extends React.PureComponent<Props, State> {
               {plugins.map(plugin =>
                 !plugin.directory ? null : (
                   <tr key={plugin.name}>
-                    <td>{this.renderCheckboxInput(plugin)}</td>
+                    <td style={{ width: '4rem' }}>{this.renderToggleSwitch(plugin)}</td>
                     <td>
                       {plugin.name}
                       {plugin.description && (
