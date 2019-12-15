@@ -4,7 +4,7 @@ import Switch from 'react-switch';
 
 type Props = {
   className?: string,
-  checked: boolean,
+  checked?: boolean,
   disabled?: boolean,
   onChange(checked: boolean): void,
 };

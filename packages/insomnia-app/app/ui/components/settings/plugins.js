@@ -109,16 +109,18 @@ class Plugins extends React.PureComponent<Props, State> {
   }
 
   async _handleUpdatePluginConfig(pluginName: string, config: PluginConfig) {
-    await this.props.updateSetting('pluginConfig', {
-      ...this.props.settings.pluginConfig,
+    const { updateSetting, settings } = this.props;
+
+    await updateSetting('pluginConfig', {
+      ...settings.pluginConfig,
       [pluginName]: config,
     });
   }
 
-  async _togglePluginEnabled(name: string, checked: boolean, config: PluginConfig) {
+  async _togglePluginEnabled(name: string, enabled: boolean, config: PluginConfig) {
     const newConfig = {
       ...config,
-      disabled: !checked,
+      disabled: !enabled,
     };
 
     if (this._isMounted) {
@@ -155,10 +157,10 @@ class Plugins extends React.PureComponent<Props, State> {
         {plugins.length === 0 ? (
           <div className="text-center faint italic pad">No Plugins Added</div>
         ) : (
-          <table className="table--fancy table--striped table--vertical-middle margin-top margin-bottom">
+          <table className="table--fancy table--striped table--valign-middle margin-top margin-bottom">
             <thead>
               <tr>
-                <th>Enable</th>
+                <th>Enable?</th>
                 <th>Name</th>
                 <th>Version</th>
                 <th>Folder</th>
