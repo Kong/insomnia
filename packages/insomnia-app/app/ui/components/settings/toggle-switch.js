@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import Switch from 'react-switch';
+import { Switch } from 'react-switch';
 
 type Props = {
   className?: string,
@@ -9,12 +9,7 @@ type Props = {
   onChange(checked: boolean): void,
 };
 
-const ToggleSwitch: React.FunctionComponent<Props> = ({
-  className,
-  checked: checkedProp,
-  onChange,
-  disabled,
-}) => {
+function ToggleSwitch({ className, checked: checkedProp, onChange, disabled }: Props) {
   const [checked, setChecked] = React.useState(checkedProp);
 
   // If prop changes and differs from state, update state
@@ -37,6 +32,6 @@ const ToggleSwitch: React.FunctionComponent<Props> = ({
       width={40}
     />
   );
-};
+}
 
 export default ToggleSwitch;
