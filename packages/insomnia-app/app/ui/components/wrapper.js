@@ -847,26 +847,27 @@ class Wrapper extends React.PureComponent<Props, State> {
         <ErrorBoundary showAlert>
           <ResponsePane
             ref={handleSetResponsePaneRef}
-            request={activeRequest}
-            requestVersions={requestVersions}
-            responses={activeRequestResponses}
-            response={activeResponse}
+            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
             editorLineWrapping={settings.editorLineWrapping}
-            hotKeyRegistry={settings.hotKeyRegistry}
-            previewMode={responsePreviewMode}
             filter={responseFilter}
             filterHistory={responseFilterHistory}
-            loadStartTime={loadStartTime}
-            showCookiesModal={this._handleShowCookiesModal}
-            handleShowRequestSettings={this._handleShowRequestSettingsModal}
-            handleSetActiveResponse={this._handleSetActiveResponse}
-            handleSetPreviewMode={this._handleSetPreviewMode}
-            handleDeleteResponses={this._handleDeleteResponses}
             handleDeleteResponse={this._handleDeleteResponse}
+            handleDeleteResponses={this._handleDeleteResponses}
+            handleSetActiveResponse={this._handleSetActiveResponse}
             handleSetFilter={this._handleSetResponseFilter}
+            handleSetPreviewMode={this._handleSetPreviewMode}
+            handleShowRequestSettings={this._handleShowRequestSettingsModal}
+            hotKeyRegistry={settings.hotKeyRegistry}
+            loadStartTime={loadStartTime}
+            previewMode={responsePreviewMode}
+            request={activeRequest}
+            requestVersions={requestVersions}
+            response={activeResponse}
+            responses={activeRequestResponses}
+            showCookiesModal={this._handleShowCookiesModal}
           />
         </ErrorBoundary>
       </div>,

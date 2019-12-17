@@ -29,6 +29,7 @@ type Props = {
   responseId: string,
   bodyBuffer: Buffer | null,
   contentType: string,
+  disableHtmlPreviewJs: boolean,
   filter: string,
   filterHistory: Array<string>,
   editorFontSize: number,
@@ -215,6 +216,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
   render() {
     const {
       download,
+      disableHtmlPreviewJs,
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
@@ -282,6 +284,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
               bytes={selectedPart.bytes || 0}
               contentType={getContentTypeFromHeaders(selectedPart.headers, 'text/plain')}
               download={download}
+              disableHtmlPreviewJs={disableHtmlPreviewJs}
               editorFontSize={editorFontSize}
               editorIndentSize={editorIndentSize}
               editorKeyMap={editorKeyMap}
