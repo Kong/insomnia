@@ -4,9 +4,9 @@
   "author": "Preston Alvarado <pjalva1@hotmail.com>",
   "description": "Insomnia cookie jar template tag",
   "license": "MIT",
-  "repository": "https://github.com/getinsomnia/insomnia/tree/master/plugins/insomnia-plugin-cookie-jar",
+  "repository": "https://github.com/kong/insomnia/tree/master/plugins/insomnia-plugin-cookie-jar",
   "bugs": {
-    "url": "https://github.com/getinsomnia/insomnia"
+    "url": "https://github.com/kong/insomnia"
   },
   "main": "index.js",
   "insomnia": {

@@ -5,7 +5,7 @@ process easy and effective for everyone involved.
 
 ## Using the issue tracker
 
-[GitHub Issues](https://github.com/getinsomnia/insomnia/issues) is the preferred channel
+[GitHub Issues](https://github.com/kong/insomnia/issues) is the preferred channel
 for [bug reports](#bug-reports), [features requests](#feature-requests)
 and [submitting pull requests](#pull-requests).
 

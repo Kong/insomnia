@@ -9,7 +9,7 @@
     "productName": "Insomnia",
     "longName": "Insomnia REST Client",
     "synopsis": "A simple, beautiful, and free REST API client",
-    "icon": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
+    "icon": "https://github.com/kong/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
     "theme": "default",
     "version": "7.0.6",
     "main": "main.min.js",
@@ -35,7 +35,7 @@
   "appveyorCacheBreaker": 2,
   "repository": {
     "type": "git",
-    "url": "https://github.com/getinsomnia/insomnia"
+    "url": "https://github.com/kong/insomnia"
   },
   "scripts": {
     "test": "flow check && npm run test:jest",
