@@ -11,6 +11,7 @@ import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
 import { showModal } from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
+import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 
 @autobind
 class SidebarRequestRow extends PureComponent {
@@ -57,6 +58,23 @@ class SidebarRequestRow extends PureComponent {
 
   _handleShowRequestSettings() {
     showModal(RequestSettingsModal, { request: this.props.request });
+  }
+
+  _getMethodOverrideHeaderValue() {
+    const { request } = this.props;
+
+    const header = request.headers.find(h => h.name.toLowerCase() === 'x-http-method-override');
+
+    if (header) {
+      return header.value;
+    }
+
+    // If no override, use GraphQL as override if it's a gql request
+    if (request.body && request.body.mimeType === CONTENT_TYPE_GRAPHQL) {
+      return 'GQL';
+    }
+
+    return null;
   }
 
   setDragDirection(dragDirection) {
@@ -116,7 +134,10 @@ class SidebarRequestRow extends PureComponent {
               onClick={this._handleRequestActivate}
               onContextMenu={this._handleShowRequestActions}>
               <div className="sidebar__clickable">
-                <MethodTag method={request.method} />
+                <MethodTag
+                  method={request.method}
+                  override={this._getMethodOverrideHeaderValue()}
+                />
                 <Editable
                   value={request.name}
                   className="inline-block"

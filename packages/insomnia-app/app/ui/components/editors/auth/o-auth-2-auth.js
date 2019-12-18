@@ -373,7 +373,8 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       'Header Prefix',
       'tokenPrefix',
       this._handleChangeTokenPrefix,
-      'Change Authorization header prefix from Bearer to something else',
+      'Change Authorization header prefix from "Bearer" to something else. Use "NO_PREFIX" to ' +
+        'send raw token without prefix.',
     );
 
     const responseType = this.renderSelectRow(
@@ -425,7 +426,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         enabled,
       ];
 
-      advancedFields = [scope, state, credentialsInBody, tokenPrefix];
+      advancedFields = [scope, state, credentialsInBody, tokenPrefix, audience, resource];
     } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
       basicFields = [accessTokenUrl, clientId, clientSecret, enabled];
 

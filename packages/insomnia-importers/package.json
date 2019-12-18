@@ -1,12 +1,12 @@
 {
   "name": "insomnia-importers",
-  "version": "2.0.22",
-  "author": "Gregory Schier <gschier1990@gmail.com>",
+  "version": "2.1.2",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Various data importers for Insomnia",
   "license": "MIT",
-  "repository": "https://github.com/getinsomnia/insomnia/tree/master/packages/insomnia-importers",
+  "repository": "https://github.com/kong/insomnia/tree/master/packages/insomnia-importers",
   "bugs": {
-    "url": "https://github.com/getinsomnia/insomnia"
+    "url": "https://github.com/kong/insomnia"
   },
   "main": "index.js",
   "bin": {
@@ -16,9 +16,12 @@
     "test": "jest --silent"
   },
   "dependencies": {
+    "apiconnect-wsdl": "^1.8.10",
     "commander": "^2.20.0",
+    "lodash": "^4.17.15",
     "shell-quote": "^1.6.1",
     "swagger-parser": "^6.0.5",
     "yaml": "^1.5.0"
-  }
+  },
+  "gitHead": "08d57747bae21e09737569eabac94b062cefaac9"
 }

@@ -48,6 +48,7 @@ export default async function(
   });
 
   const statusCode = response.statusCode || 0;
+  const bodyBuffer = models.response.getBodyBuffer(response);
 
   if (statusCode === 401) {
     // If the refresh token was rejected due an unauthorized request, we will
@@ -56,10 +57,21 @@ export default async function(
 
     return responseToObject(null, [c.P_ACCESS_TOKEN]);
   } else if (statusCode < 200 || statusCode >= 300) {
+    if (bodyBuffer && statusCode === 400) {
+      const response = responseToObject(bodyBuffer.toString(), [c.P_ERROR, c.P_ERROR_DESCRIPTION]);
+
+      // If the refresh token was rejected due an oauth2 invalid_grant error, we will
+      // return a null access_token to trigger an authentication request to fetch
+      // brand new refresh and access tokens.
+
+      if (response[c.P_ERROR] === 'invalid_grant') {
+        return responseToObject(null, [c.P_ACCESS_TOKEN]);
+      }
+    }
+
     throw new Error(`[oauth2] Failed to refresh token url=${url} status=${statusCode}`);
   }
 
-  const bodyBuffer = models.response.getBodyBuffer(response);
   if (!bodyBuffer) {
     throw new Error(`[oauth2] No body returned from ${url}`);
   }

@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
+import moment from 'moment';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import StatusTag from '../tags/status-tag';
 import URLTag from '../tags/url-tag';
@@ -73,12 +74,58 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
           small
           statusCode={response.statusCode}
           statusMessage={response.statusMessage || undefined}
+          tooltipDelay={1000}
         />
-        <URLTag small url={response.url} method={request ? request.method : ''} />
-        <TimeTag milliseconds={response.elapsedTime} small />
-        <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} small />
+        <URLTag
+          small
+          url={response.url}
+          method={request ? request.method : ''}
+          tooltipDelay={1000}
+        />
+        <TimeTag milliseconds={response.elapsedTime} small tooltipDelay={1000} />
+        <SizeTag
+          bytesRead={response.bytesRead}
+          bytesContent={response.bytesContent}
+          small
+          tooltipDelay={1000}
+        />
         {!response.requestVersionId && <i className="icon fa fa-info-circle" title={message} />}
       </DropdownItem>
+    );
+  }
+
+  renderPastResponses(responses: Array<Response>) {
+    const now = moment();
+    // Four arrays for four time groups
+    const categories = [[], [], [], []];
+    responses.forEach(r => {
+      const resTime = moment(r.modified);
+      if (now.diff(resTime, 'minutes') < 5) {
+        // Five minutes ago
+        categories[0].push(r);
+      } else if (now.diff(resTime, 'hours') < 2) {
+        // Two hours ago
+        categories[1].push(r);
+      } else if (now.isSame(resTime, 'day')) {
+        // Today
+        categories[2].push(r);
+      } else if (now.isSame(resTime, 'week')) {
+        // This week
+        categories[3].push(r);
+      }
+    });
+
+    return (
+      <React.Fragment>
+        <DropdownDivider>5 Minutes Ago</DropdownDivider>
+        {categories[0].map(this.renderDropdownItem)}
+        <DropdownDivider>2 Hours Ago</DropdownDivider>
+        {categories[1].map(this.renderDropdownItem)}
+        <DropdownDivider>Today</DropdownDivider>
+        {categories[2].map(this.renderDropdownItem)}
+        <DropdownDivider>This Week</DropdownDivider>
+        {categories[3].map(this.renderDropdownItem)}
+      </React.Fragment>
     );
   }
 
@@ -117,8 +164,7 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
             <i className="fa fa-trash-o" />
             Clear History
           </DropdownItem>
-          <DropdownDivider>Past Responses</DropdownDivider>
-          {responses.map(this.renderDropdownItem)}
+          {this.renderPastResponses(responses)}
         </Dropdown>
       </KeydownBinder>
     );

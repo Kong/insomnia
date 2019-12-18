@@ -183,7 +183,7 @@ export function getFirstName() {
 }
 
 export function getLastName() {
-  return _getSessionData().firstName;
+  return _getSessionData().lastName;
 }
 
 export function getFullName() {

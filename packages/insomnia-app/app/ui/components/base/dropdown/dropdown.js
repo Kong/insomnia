@@ -28,6 +28,9 @@ class Dropdown extends PureComponent {
       filterItems: null,
       filterActiveIndex: 0,
 
+      // Position
+      forcedPosition: null,
+
       // Use this to force new menu every time dropdown opens
       uniquenessKey: 0,
     };
@@ -130,9 +133,21 @@ class Dropdown extends PureComponent {
     const dropdownList = this._dropdownList;
 
     // Compute the size of all the menus
-    const dropdownBtnRect = this._node.getBoundingClientRect();
+    let dropdownBtnRect = this._node.getBoundingClientRect();
     const bodyRect = document.body.getBoundingClientRect();
     const dropdownListRect = dropdownList.getBoundingClientRect();
+
+    const { forcedPosition } = this.state;
+    if (forcedPosition) {
+      dropdownBtnRect = {
+        left: forcedPosition.x,
+        right: bodyRect.width - forcedPosition.x,
+        top: forcedPosition.y,
+        bottom: bodyRect.height - forcedPosition.y,
+        width: 100,
+        height: 10,
+      };
+    }
 
     // Should it drop up?
     const bodyHeight = bodyRect.height;
@@ -218,13 +233,18 @@ class Dropdown extends PureComponent {
   _getFlattenedChildren(children) {
     let newChildren = [];
 
+    // Ensure children is an array
+    children = Array.isArray(children) ? children : [children];
+
     for (const child of children) {
       if (!child) {
         // Ignore null components
         continue;
       }
 
-      if (Array.isArray(child)) {
+      if (child.type === React.Fragment) {
+        newChildren = [...newChildren, ...this._getFlattenedChildren(child.props.children)];
+      } else if (Array.isArray(child)) {
         newChildren = [...newChildren, ...this._getFlattenedChildren(child)];
       } else {
         newChildren.push(child);
@@ -249,7 +269,7 @@ class Dropdown extends PureComponent {
     this.props.onHide && this.props.onHide();
   }
 
-  show(filterVisible = false) {
+  show(filterVisible = false, forcedPosition = null) {
     const bodyHeight = document.body.getBoundingClientRect().height;
     const dropdownTop = this._node.getBoundingClientRect().top;
     const dropUp = dropdownTop > bodyHeight - 200;
@@ -257,6 +277,7 @@ class Dropdown extends PureComponent {
     this.setState({
       open: true,
       dropUp,
+      forcedPosition,
       filterVisible,
       filter: '',
       filterItems: null,
@@ -305,8 +326,7 @@ class Dropdown extends PureComponent {
     const dropdownButtons = [];
     const dropdownItems = [];
 
-    const listedChildren = Array.isArray(children) ? children : [children];
-    const allChildren = this._getFlattenedChildren(listedChildren);
+    const allChildren = this._getFlattenedChildren(children);
 
     const visibleChildren = allChildren.filter((child, i) => {
       if (child.type.name !== DropdownItem.name) {

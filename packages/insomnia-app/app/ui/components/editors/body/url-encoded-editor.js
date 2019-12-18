@@ -23,6 +23,7 @@ class UrlEncodedEditor extends PureComponent {
             allowMultiline
             namePlaceholder="name"
             valuePlaceholder="value"
+            descriptionPlaceholder="description"
             onChange={onChange}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}

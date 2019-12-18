@@ -107,10 +107,11 @@
   .CodeMirror-lines {
     // Scroll past the end
     padding-bottom: 30px;
-  }
 
-  .CodeMirror-placeholder {
-    color: var(--hl-lg);
+    // Has to be nested to have higher precedence than default style
+    .CodeMirror-placeholder {
+      color: var(--hl-lg);
+    }
   }
 
   .CodeMirror-lint-marker-error {

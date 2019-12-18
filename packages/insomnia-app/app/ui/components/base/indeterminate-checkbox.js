@@ -4,6 +4,7 @@ import autobind from 'autobind-decorator';
 
 type Props = {
   indeterminate: boolean,
+  checked: boolean,
 };
 
 @autobind

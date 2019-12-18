@@ -78,6 +78,17 @@ class FilterHelpModal extends PureComponent {
                 </td>
                 <td>Get the number of books in the store</td>
               </tr>
+
+              {isJson && (
+                <tr>
+                  <td>
+                    <code className="selectable">
+                      $.store.books[?(@.title.match(/lord.*rings/i))]
+                    </code>
+                  </td>
+                  <td>Get book by title regular expression</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </ModalBody>

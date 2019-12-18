@@ -73,6 +73,7 @@ type Props = {
   handleSetSidebarFilter: Function,
   handleToggleMenuBar: Function,
   handleImportFileToWorkspace: Function,
+  handleImportClipBoardToWorkspace: Function,
   handleImportUriToWorkspace: Function,
   handleExportFile: Function,
   handleShowExportRequestsModal: Function,
@@ -263,9 +264,19 @@ class Wrapper extends React.PureComponent<Props, State> {
     return sUpdate(this.props.settings, { useBulkHeaderEditor });
   }
 
+  _handleUpdateSettingsUseBulkParametersEditor(
+    useBulkParametersEditor: boolean,
+  ): Promise<Settings> {
+    return sUpdate(this.props.settings, { useBulkParametersEditor });
+  }
+
   // Other Helpers
   _handleImportFile(): void {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
+  }
+
+  _handleImportClipBoard(): void {
+    this.props.handleImportClipBoardToWorkspace(this.props.activeWorkspace._id);
   }
 
   _handleImportUri(uri: string): void {
@@ -640,6 +651,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleShowExportRequestsModal={handleShowExportRequestsModal}
             handleExportAllToFile={handleExportFile}
             handleImportFile={this._handleImportFile}
+            handleImportClipBoard={this._handleImportClipBoard}
             handleImportUri={this._handleImportUri}
             handleToggleMenuBar={handleToggleMenuBar}
             settings={settings}
@@ -808,6 +820,9 @@ class Wrapper extends React.PureComponent<Props, State> {
             updateRequestMimeType={handleUpdateRequestMimeType}
             updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
             updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
+            updateSettingsUseBulkParametersEditor={
+              this._handleUpdateSettingsUseBulkParametersEditor
+            }
             forceRefreshCounter={this.state.forceRefreshKey}
             handleSend={this._handleSendRequestWithActiveEnvironment}
             handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}

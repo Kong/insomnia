@@ -14,6 +14,7 @@ import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Workspace } from '../../../models/workspace';
+import SidebarCreateDropdown from './sidebar-create-dropdown';
 
 type Props = {
   workspaces: Workspace,
@@ -88,6 +89,7 @@ class SidebarFilter extends React.PureComponent<Props> {
               </button>
             )}
           </div>
+
           <Dropdown right>
             <DropdownButton className="btn btn--compact">
               <i className="fa fa-plus-circle" />
@@ -111,6 +113,11 @@ class SidebarFilter extends React.PureComponent<Props> {
               />
             </DropdownItem>
           </Dropdown>
+          <SidebarCreateDropdown
+            handleCreateRequest={this._handleRequestCreate}
+            handleCreateRequestGroup={this._handleRequestGroupCreate}
+            hotKeyRegistry={hotKeyRegistry}
+          />
         </div>
       </KeydownBinder>
     );
