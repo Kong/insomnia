@@ -107,12 +107,51 @@ class OAuth1Auth extends React.PureComponent<Props> {
     this._handleChangeProperty('privateKey', value);
   }
 
+  _handleChangeIncludeBodyHash(value: boolean): void {
+    this._handleChangeProperty('includeBodyHash', value);
+  }
+
   _handleChangeVersion(value: string): void {
     this._handleChangeProperty('version', value);
   }
 
   _handleChangeEnabled(value: boolean): void {
     this._handleChangeProperty('disabled', value);
+  }
+
+  renderCheckbox(
+    label: string,
+    property: string,
+    help: string,
+    onChange: boolean => void,
+  ): React.Element<*> {
+    const { request } = this.props;
+    const { authentication } = request;
+    return (
+      <tr key={label}>
+        <td className="pad-right no-wrap valign-middle">
+          <label htmlFor={label} className="label--small no-pad">
+            {label}
+            {help && <HelpTooltip> {help}</HelpTooltip>}
+          </label>
+        </td>
+        <td className="wide">
+          <div className="form-control no-margin">
+            <Button
+              className="btn btn--super-duper-compact"
+              id={label}
+              onClick={onChange}
+              value={!authentication[property]}>
+              {authentication[property] ? (
+                <i className="fa fa-check-square-o" />
+              ) : (
+                <i className="fa fa-square-o" />
+              )}
+            </Button>
+          </div>
+        </td>
+      </tr>
+    );
   }
 
   renderEnabledRow(onChange: boolean => void): React.Element<*> {
@@ -326,6 +365,14 @@ class OAuth1Auth extends React.PureComponent<Props> {
 
     const version = this.renderInputRow('Version', 'version', this._handleChangeVersion);
 
+    const bodyHash = this.renderCheckbox(
+      'Hash Body',
+      'includeBodyHash',
+      'If a application/x-www-form-urlencoded body is present, also generate a ' +
+        'oauth_body_hash property',
+      this._handleChangeIncludeBodyHash,
+    );
+
     const enabled = this.renderEnabledRow(this._handleChangeEnabled);
 
     const fields = [
@@ -340,6 +387,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
       realm,
       nonce,
       verifier,
+      bodyHash,
       enabled,
     ];
 
