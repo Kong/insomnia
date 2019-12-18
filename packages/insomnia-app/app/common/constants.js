@@ -241,7 +241,7 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   // 200s
 
   200: 'The request has succeeded.',
-  201: 'The request has succeeded and a new resource has been created as a result of it. This is typically the response sent after a PUT request.',
+  201: 'The request has succeeded and a new resource has been created as a result. This is typically the response sent after POST requests, or some PUT requests.',
   202: 'The request has been received but not yet acted upon. It is non-committal, meaning that there is no way in HTTP to later send an asynchronous response indicating the outcome of processing the request. It is intended for cases where another process or server handles the request, or for batch processing.',
   203: 'This response code means returned meta-information set is not exact set as available from the origin server, but collected from a local or a third party copy. Except this condition, 200 OK response should be preferred instead of this response.',
   204: 'There is no content to send for this request, but the headers may be useful. The user-agent may update its cached headers for this resource with the new ones.',
