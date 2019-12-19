@@ -11,7 +11,7 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
 
-const GITHUB_ORG = 'getinsomnia';
+const GITHUB_ORG = 'kong';
 const GITHUB_REPO = 'insomnia';
 
 // Start package if ran from CLI

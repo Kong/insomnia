@@ -252,6 +252,12 @@ class App extends PureComponent {
           await this._updateIsVariableUncovered();
         },
       ],
+      [
+        hotKeyRefs.SIDEBAR_TOGGLE,
+        () => {
+          this._handleToggleSidebar();
+        },
+      ],
     ];
   }
 

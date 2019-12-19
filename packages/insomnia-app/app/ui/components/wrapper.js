@@ -264,6 +264,12 @@ class Wrapper extends React.PureComponent<Props, State> {
     return sUpdate(this.props.settings, { useBulkHeaderEditor });
   }
 
+  _handleUpdateSettingsUseBulkParametersEditor(
+    useBulkParametersEditor: boolean,
+  ): Promise<Settings> {
+    return sUpdate(this.props.settings, { useBulkParametersEditor });
+  }
+
   // Other Helpers
   _handleImportFile(): void {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
@@ -812,6 +818,9 @@ class Wrapper extends React.PureComponent<Props, State> {
             updateRequestMimeType={handleUpdateRequestMimeType}
             updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
             updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
+            updateSettingsUseBulkParametersEditor={
+              this._handleUpdateSettingsUseBulkParametersEditor
+            }
             forceRefreshCounter={this.state.forceRefreshKey}
             handleSend={this._handleSendRequestWithActiveEnvironment}
             handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
@@ -838,26 +847,27 @@ class Wrapper extends React.PureComponent<Props, State> {
         <ErrorBoundary showAlert>
           <ResponsePane
             ref={handleSetResponsePaneRef}
-            request={activeRequest}
-            requestVersions={requestVersions}
-            responses={activeRequestResponses}
-            response={activeResponse}
+            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
             editorLineWrapping={settings.editorLineWrapping}
-            hotKeyRegistry={settings.hotKeyRegistry}
-            previewMode={responsePreviewMode}
             filter={responseFilter}
             filterHistory={responseFilterHistory}
-            loadStartTime={loadStartTime}
-            showCookiesModal={this._handleShowCookiesModal}
-            handleShowRequestSettings={this._handleShowRequestSettingsModal}
-            handleSetActiveResponse={this._handleSetActiveResponse}
-            handleSetPreviewMode={this._handleSetPreviewMode}
-            handleDeleteResponses={this._handleDeleteResponses}
             handleDeleteResponse={this._handleDeleteResponse}
+            handleDeleteResponses={this._handleDeleteResponses}
+            handleSetActiveResponse={this._handleSetActiveResponse}
             handleSetFilter={this._handleSetResponseFilter}
+            handleSetPreviewMode={this._handleSetPreviewMode}
+            handleShowRequestSettings={this._handleShowRequestSettingsModal}
+            hotKeyRegistry={settings.hotKeyRegistry}
+            loadStartTime={loadStartTime}
+            previewMode={responsePreviewMode}
+            request={activeRequest}
+            requestVersions={requestVersions}
+            response={activeResponse}
+            responses={activeRequestResponses}
+            showCookiesModal={this._handleShowCookiesModal}
           />
         </ErrorBoundary>
       </div>,

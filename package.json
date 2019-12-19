@@ -3,9 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "author": "Gregory Schier <greg.schier@konghq.com>",
-  "repository": "https://github.com/getinsomnia/insomnia",
+  "repository": "https://github.com/kong/insomnia",
   "bugs": {
-    "url": "https://github.com/getinsomnia/insomnia"
+    "url": "https://github.com/kong/insomnia"
   },
   "scripts": {
     "lint": "eslint \"**/*.js\" \"**/*.html\" \"**/*.json\"",

@@ -342,7 +342,7 @@ export async function getRenderedRequestAndContext(
   );
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
-  // https://github.com/getinsomnia/insomnia/issues/895
+  // https://github.com/kong/insomnia/issues/895
   try {
     if (request.body.text && request.body.mimeType === CONTENT_TYPE_GRAPHQL) {
       const o = JSON.parse(request.body.text);

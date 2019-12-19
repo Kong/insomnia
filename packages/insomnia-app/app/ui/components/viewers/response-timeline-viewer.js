@@ -87,7 +87,9 @@ class ResponseTimelineViewer extends PureComponent {
     const rows = timeline
       .map(this.renderRow)
       .filter(r => r !== null)
-      .join('\n');
+      .join('\n')
+      .trim();
+
     return (
       <CodeEditor
         key={timelineKey}

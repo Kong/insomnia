@@ -102,7 +102,7 @@ export function authorizeUserInWindow(
     const options = {};
 
     // Force user-agent for GitHub until we update Chromium version. Note, we don't do this for
-    // everything because it breaks things. https://github.com/getinsomnia/insomnia/issues/1816
+    // everything because it breaks things. https://github.com/kong/insomnia/issues/1816
     if (url.includes('github.com')) {
       options.userAgent =
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, ' +

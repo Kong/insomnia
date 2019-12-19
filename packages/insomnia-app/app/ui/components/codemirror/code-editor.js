@@ -58,6 +58,8 @@ const BASE_CODEMIRROR_OPTIONS = {
       // HACK: So nothing conflicts withe the "Send Request" shortcut
     },
     [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
+
+    // Autocomplete
     'Ctrl-Space': 'autocomplete',
 
     // Change default find command from "find" to "findPersistent" so the
@@ -509,7 +511,7 @@ class CodeEditor extends React.Component {
     const isYaml = typeof rawMode === 'string' ? rawMode.includes('yaml') : false;
     const actuallyIndentWithTabs = indentWithTabs && !isYaml;
 
-    let options = {
+    const options = {
       readOnly: !!readOnly,
       placeholder: placeholder || '',
       mode: mode,
@@ -567,11 +569,6 @@ class CodeEditor extends React.Component {
 
     if (typeof autoCloseBrackets === 'boolean') {
       options.autoCloseBrackets = autoCloseBrackets;
-    }
-
-    if (!hideGutters && options.lint) {
-      // Don't really need this
-      // options.gutters.push('CodeMirror-lint-markers');
     }
 
     // Setup the hint options

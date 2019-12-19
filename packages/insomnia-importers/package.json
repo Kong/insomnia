@@ -1,12 +1,12 @@
 {
   "name": "insomnia-importers",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Various data importers for Insomnia",
   "license": "MIT",
-  "repository": "https://github.com/getinsomnia/insomnia/tree/master/packages/insomnia-importers",
+  "repository": "https://github.com/kong/insomnia/tree/master/packages/insomnia-importers",
   "bugs": {
-    "url": "https://github.com/getinsomnia/insomnia"
+    "url": "https://github.com/kong/insomnia"
   },
   "main": "index.js",
   "bin": {
