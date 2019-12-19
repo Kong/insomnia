@@ -1,4 +1,5 @@
 const packageJson = require('../package.json');
+const https = require('https');
 const electronBuilder = require('electron-builder');
 const path = require('path');
 const rimraf = require('rimraf');
@@ -15,10 +16,6 @@ const PLATFORM_MAP = {
 if (require.main === module) {
   process.nextTick(async () => {
     const {
-      GITHUB_REF,
-      TRAVIS_TAG,
-      FORCE_PACKAGE,
-
       // Bintray env vars for publishing
       BT_USER,
       BT_TOKEN,
@@ -28,11 +25,9 @@ if (require.main === module) {
       BT_UPDATES_TOKEN,
     } = process.env;
 
-    // First check if we need to publish (uses Git tags)
-    const gitRefStr = GITHUB_REF || TRAVIS_TAG;
-    const skipPublish = !gitRefStr || !gitRefStr.match(/v\d+\.\d+\.\d+(-(beta|alpha)\.\d+)?$/);
-    if (FORCE_PACKAGE !== 'true' && skipPublish) {
-      console.log(`[package] Not packaging for ref=${gitRefStr}`);
+    const { isInternalBuild, publish, gitRef, gitCommit } = shouldPublish();
+    if (!publish) {
+      console.log(`[package] Not packaging for ref=${gitRef}`);
       process.exit(0);
     }
 
@@ -40,7 +35,7 @@ if (require.main === module) {
     if (!BT_USER || !BT_TOKEN) {
       console.log(
         '[package] BT_USER and BT_TOKEN environment variables must be set' +
-          'in order to publish to Bintray!',
+        'in order to publish to Bintray!',
       );
       process.exit(1);
     }
@@ -49,14 +44,24 @@ if (require.main === module) {
     if (!BT_UPDATES_USER || !BT_UPDATES_TOKEN) {
       console.log(
         '[package] BT_UPDATES_USER and BT_UPDATES_TOKEN environment variables ' +
-          'must be set for auto-updater to authenticate with Bintray!',
+        'must be set for auto-updater to authenticate with Bintray!',
       );
       process.exit(1);
     }
 
+    // Generate version if it's internal
+    let version = packageJson.app.version;
+    let bintrayRepo = 'studio';
+
+    // Generate internal build number if it's internal
+    if (isInternalBuild) {
+      version = `${version}-sha.${gitCommit}`;
+      bintrayRepo = 'studio-internal';
+    }
+
     try {
-      await buildTask.start();
-      await module.exports.start();
+      await buildTask.start(version);
+      await start(bintrayRepo, version);
     } catch (err) {
       console.log('[package] ERROR:', err);
       process.exit(1);
@@ -64,7 +69,7 @@ if (require.main === module) {
   });
 }
 
-module.exports.start = async function() {
+async function start(bintrayRepo, version) {
   console.log('[package] Removing existing directories');
 
   if (process.env.KEEP_DIST_FOLDER !== 'yes') {
@@ -72,12 +77,40 @@ module.exports.start = async function() {
   }
 
   console.log('[package] Packaging app');
-  await pkg('../.electronbuilder');
+  await pkg('../.electronbuilder', bintrayRepo, version);
 
   console.log('[package] Complete!');
-};
+}
 
-async function pkg(relConfigPath) {
+async function ensureBintrayVersion(bintrayRepo, version) {
+  return new Promise((resolve, reject) => {
+    const { BT_USER, BT_TOKEN } = process.env;
+
+    const req = https.request(`https://api.bintray.com/packages/kong/${bintrayRepo}/desktop/versions`, {
+      method: 'POST',
+      auth: [BT_USER, BT_TOKEN].join(':'),
+      headers: { 'Content-Type': 'application/json' },
+    }, res => {
+      res.setEncoding('utf8');
+      let body = [];
+      res.on('data', chunk => {
+        body += chunk;
+      });
+      res.on('end', () => {
+        resolve(JSON.parse(body));
+      });
+    });
+
+    req.on('error', err => {
+      reject(err);
+    });
+
+    req.write(JSON.stringify({ name: version }));
+    req.end();
+  });
+}
+
+async function pkg(relConfigPath, bintrayRepo, version) {
   const configPath = path.resolve(__dirname, relConfigPath);
 
   // Replace some things
@@ -87,6 +120,7 @@ async function pkg(relConfigPath) {
     .replace('__ICON_URL__', packageJson.app.icon)
     .replace('__EXECUTABLE_NAME__', packageJson.app.executableName)
     .replace('__BT_USER__', process.env.BT_USER)
+    .replace('__BT_REPO__', bintrayRepo)
     .replace('__SYNOPSIS__', packageJson.app.synopsis);
 
   const config = JSON.parse(rawConfig);
@@ -96,8 +130,10 @@ async function pkg(relConfigPath) {
     ? process.env.BUILD_TARGETS.split(',')
     : config[targetPlatform].target;
 
+  await ensureBintrayVersion(bintrayRepo, version);
+
   return electronBuilder.build({
-    publish: shouldPublish() ? 'always' : 'never',
+    publish: 'always',
     config,
     [targetPlatform]: target,
   });
@@ -118,11 +154,27 @@ async function emptyDir(relPath) {
 
 // Only release if we're building a tag that ends in a version number
 function shouldPublish() {
-  const gitRefStr = process.env.GITHUB_REF || process.env.TRAVIS_TAG;
+  const {
+    GITHUB_REF,
+    GITHUB_SHA,
+    TRAVIS_TAG,
+    TRAVIS_COMMIT,
+    FORCE_PACKAGE,
+  } = process.env;
 
-  if (!gitRefStr || !gitRefStr.match(/v\d+\.\d+\.\d+(-(beta|alpha)\.\d+)?$/)) {
-    return false;
-  }
+  const gitCommit = GITHUB_SHA || TRAVIS_COMMIT;
+  const gitRef = GITHUB_REF || TRAVIS_TAG || '';
+  const isInternalBuild = gitRef.match(/master$/);
+  const publish = (
+    FORCE_PACKAGE === 'true' ||
+    isInternalBuild ||
+    gitRef.match(/v\d+\.\d+\.\d+(-([a-z]+)\.\d+)?$/i)
+  );
 
-  return true;
+  return {
+    publish,
+    isInternalBuild,
+    gitRef,
+    gitCommit,
+  };
 }

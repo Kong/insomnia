@@ -4,9 +4,8 @@
     {
       "provider": "bintray",
       "package": "desktop",
-      "repo": "studio",
+      "repo": "__BT_REPO__",
       "owner": "kong",
-      "distribution": "stable",
       "user": "__BT_USER__"
     }
   ],

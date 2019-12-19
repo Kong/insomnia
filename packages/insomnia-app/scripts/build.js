@@ -16,7 +16,7 @@ if (require.main === module) {
   });
 }
 
-module.exports.start = async function() {
+module.exports.start = async function(forcedVersion = null) {
   console.log('[build] Starting build');
   console.log('[build] npm: ' + childProcess.spawnSync('npm', ['--version']).stdout);
   console.log('[build] node: ' + childProcess.spawnSync('node', ['--version']).stdout);
@@ -43,7 +43,11 @@ module.exports.start = async function() {
   await copyFiles('../app/icons/', '../build/');
 
   // Generate package.json
-  await generatePackageJson('../package.json', '../build/package.json');
+  await generatePackageJson(
+    '../package.json',
+    '../build/package.json',
+    forcedVersion,
+  );
 
   // Install Node modules
   console.log('[build] Installing dependencies');
@@ -86,7 +90,7 @@ async function copyFiles(relSource, relDest) {
   return new Promise((resolve, reject) => {
     const source = path.resolve(__dirname, relSource);
     const dest = path.resolve(__dirname, relDest);
-    console.log(`[build] copy ${source} to ${dest}`);
+    console.log(`[build] copy "${relSource}" to "${relDest}"`);
     ncp(source, dest, err => {
       if (err) {
         reject(err);
@@ -156,7 +160,7 @@ async function install(relDir) {
   });
 }
 
-function generatePackageJson(relBasePkg, relOutPkg) {
+function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
   // Read package.json's
   const basePath = path.resolve(__dirname, relBasePkg);
   const outPath = path.resolve(__dirname, relOutPkg);
@@ -165,7 +169,7 @@ function generatePackageJson(relBasePkg, relOutPkg) {
 
   const appPkg = {
     name: packageJson.app.name,
-    version: basePkg.app.version,
+    version: forcedVersion || basePkg.app.version,
     productName: basePkg.app.productName,
     longName: basePkg.app.longName,
     description: basePkg.description,
@@ -176,6 +180,8 @@ function generatePackageJson(relBasePkg, relOutPkg) {
     main: 'main.min.js',
     dependencies: {},
   };
+
+  console.log(`[build] Generated build config for ${appPkg.name} ${appPkg.version}`);
 
   for (const key of Object.keys(appPkg)) {
     if (key === undefined) {
