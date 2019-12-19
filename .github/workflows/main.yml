@@ -25,7 +25,8 @@ jobs:
         run: npm test
       - name: Package app
         env:
-          GITHUB_REF: ${{ github.event.ref }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_SHA: ${{ github.sha }}
           CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
           BT_USER: ${{ secrets.BINTRAY_USER }}
@@ -42,7 +43,8 @@ jobs:
       - name: Run Docker
         uses: ./.github/actions/build-linux
         env:
-          GITHUB_REF: ${{ github.event.ref }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_SHA: ${{ github.sha }}
           BUILD_TARGETS: AppImage
           NODELIBCURL_BUILD_STATIC: yes
           BT_USER: ${{ secrets.BINTRAY_USER }}
@@ -67,7 +69,8 @@ jobs:
 #      - name: Package app
 #        run: npm run app-package
 #        env:
-#          GITHUB_REF: ${{ github.event.ref }}
+#          GITHUB_REF: ${{ github.ref }}
+#          GITHUB_SHA: ${{ github.sha }}
 #          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
 #          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
 #          APPLE_ID: ${{ secrets.APPLE_ID }}
