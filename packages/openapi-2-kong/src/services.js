@@ -1,9 +1,10 @@
 // @flow
 
 import {
-  getName,
+  fillServerVariables,
   generateSlug,
   getAllServers,
+  getName,
   joinPath,
   parseUrl,
   pathVariablesToRegex,
@@ -29,16 +30,20 @@ export function generateService(
   api: OpenApi3Spec,
   tags: Array<string>,
 ): DCService {
-  const { pathname, protocol, port } = parseUrl(server.url);
+  const { pathname, protocol, port } = parseUrl(fillServerVariables(server));
 
+  const name = getName(api);
   const service: DCService = {
-    name: getName(api),
-    host: getName(api),
+    name,
     path: '/',
     port: parseInt(port),
     protocol: protocol.replace(':', ''),
     routes: [],
     tags,
+
+    // I'm not sure why host is set to name, but it came from the openapi2kong Lua repo
+    // https://github.com/Kong/openapi2kong/blob/078be111a9ced6040e77c635161a1161053055e0/src/openapi2kong/init.lua#L218
+    host: name,
   };
 
   for (const routePath of Object.keys(api.paths)) {
@@ -101,6 +106,11 @@ export function generateRouteName(
 ): string {
   const n = numRoutes;
   const name = getName(api);
+
+  if (typeof pathItem['x-kong-name'] === 'string') {
+    const pathSlug = generateSlug(pathItem['x-kong-name']);
+    return `${name}-${pathSlug}-${method}`;
+  }
 
   // If a summary key exists, use that to generate the name
   if (typeof pathItem.summary === 'string') {

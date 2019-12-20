@@ -82,14 +82,34 @@ export function parseUrl(
   pathname: string,
 |} {
   const parsed: Object = url.parse(urlStr);
+
   if (!parsed.port && parsed.protocol === 'https:') {
     parsed.port = '443';
   } else if (!parsed.port && parsed.protocol === 'http:') {
     parsed.port = '80';
   }
 
+  parsed.protocol = parsed.protocol || 'http:';
   parsed.host = `${parsed.hostname}:${parsed.port}`;
+
   return parsed;
+}
+
+export function fillServerVariables(server: OA3Server): string {
+  let finalUrl = server.url;
+
+  const variables = server.variables || {};
+
+  for (const name of Object.keys(variables)) {
+    const defaultValue = variables[name].default;
+    if (!defaultValue) {
+      throw new Error(`Server variable "${name}" missing default value`);
+    }
+
+    finalUrl = finalUrl.replace(`{${name}}`, defaultValue);
+  }
+
+  return finalUrl;
 }
 
 export function joinPath(p1: string, p2: string): string {

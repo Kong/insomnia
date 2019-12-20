@@ -1,4 +1,4 @@
-import { generateSlug, getName, getSecurity, getServers, parseSpec } from '../common';
+import { generateSlug, getName, getSecurity, getServers, fillServerVariables, parseSpec } from '../common';
 import YAML from 'yaml';
 
 describe('common', () => {
@@ -167,6 +167,31 @@ describe('common', () => {
       expect(generateSlug('foo bar')).toBe('foo_bar');
       expect(generateSlug('foo,bar')).toBe('foo_bar');
       expect(generateSlug('Foo Bar')).toBe('Foo_Bar');
+    });
+  });
+
+  describe('fillServerVariables()', () => {
+    it('parses basic url', () => {
+      const server = { url: 'https://swagger.io/v1' };
+      expect(fillServerVariables(server)).toBe('https://swagger.io/v1');
+    });
+
+    it('replaces variables', () => {
+      const server = {
+        url: 'https://{subdomain}.swagger.io/v1',
+        variables: { subdomain: { default: 'petstore' } },
+      };
+      expect(fillServerVariables(server)).toBe('https://petstore.swagger.io/v1');
+    });
+
+    it('fails with no default value', () => {
+      const server = {
+        url: 'https://{subdomain}.swagger.io/v1',
+        variables: { subdomain: { enum: ['petstore'] } },
+      };
+
+      const fn = () => fillServerVariables(server);
+      expect(fn).toThrowError('Server variable "subdomain" missing default value');
     });
   });
 });

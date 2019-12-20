@@ -10,10 +10,18 @@ describe('services', () => {
         info: { version: '1.0', title: 'My API' },
         servers: [{ url: 'https://server1.com/path' }],
         paths: {
+          '/cats': {
+            'x-kong-name': 'Cat stuff',
+            summary: 'summary is ignored',
+            post: {},
+          },
           '/dogs': {
             summary: 'Dog stuff',
             get: {},
-            post: { summary: 'Create dog' },
+            post: { summary: 'Ignored summary' },
+          },
+          '/birds': {
+            get: {},
           },
         },
       });
@@ -29,6 +37,13 @@ describe('services', () => {
           tags: ['Tag'],
           routes: [
             {
+              name: 'My_API-Cat_stuff-post',
+              strip_path: false,
+              methods: ['POST'],
+              paths: ['/path/cats$'],
+              tags: ['Tag'],
+            },
+            {
               name: 'My_API-Dog_stuff-get',
               strip_path: false,
               methods: ['GET'],
@@ -40,6 +55,13 @@ describe('services', () => {
               strip_path: false,
               methods: ['POST'],
               paths: ['/path/dogs$'],
+              tags: ['Tag'],
+            },
+            {
+              name: 'My_API-path_3-get',
+              strip_path: false,
+              methods: ['GET'],
+              paths: ['/path/birds$'],
               tags: ['Tag'],
             },
           ],
@@ -62,6 +84,32 @@ describe('services', () => {
 
       const fn = () => generateServices(api, ['Tag']);
       expect(fn).toThrowError('no servers defined in spec');
+    });
+
+    it('replaces variables', async () => {
+      const api: OpenApi3Spec = await parseSpec({
+        openapi: '3.0',
+        info: { version: '1.0', title: 'My API' },
+        servers: [{
+          url: 'https://{customerId}.saas-app.com:{port}/v2',
+          variables: {
+            customerId: { default: 'demo' },
+            port: { enum: ['443', '8443'], default: '8443' },
+          },
+        }],
+        paths: {},
+      });
+
+      const result = await generateServices(api, []);
+      expect(result).toEqual([{
+        host: 'My_API',
+        name: 'My_API',
+        path: '/',
+        port: 8443,
+        protocol: 'https',
+        routes: [],
+        tags: [],
+      }]);
     });
   });
 });
