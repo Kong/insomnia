@@ -286,8 +286,38 @@ class CodeEditor extends React.Component {
       return;
     }
 
+    const foldOptions = {
+      widget: (from, to) => {
+        let count;
+        // Get open / close token
+        let startToken = '{';
+        let endToken = '}';
+
+        const prevLine = this.codeMirror.getLine(from.line);
+        if (prevLine.lastIndexOf('[') > prevLine.lastIndexOf('{')) {
+          startToken = '[';
+          endToken = ']';
+        }
+
+        // Get json content
+        const internal = this.codeMirror.getRange(from, to);
+        const toParse = startToken + internal + endToken;
+
+        // Get key count
+        try {
+          const parsed = JSON.parse(toParse);
+          count = Object.keys(parsed).length;
+        } catch (e) {}
+        return count ? `\u21A4 ${count} \u21A6` : '\u2194';
+      },
+    };
+
     const { defaultValue, debounceMillis: ms } = this.props;
-    this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
+
+    this.codeMirror = CodeMirror.fromTextArea(textarea, {
+      ...BASE_CODEMIRROR_OPTIONS,
+      foldOptions,
+    });
 
     // Set default listeners
     const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
