@@ -122,7 +122,7 @@
     "aws4": "^1.9.0",
     "classnames": "^2.2.5",
     "clone": "^2.1.0",
-    "codemirror": "^5.49.2",
+    "codemirror": "^5.50.0",
     "codemirror-graphql": "^0.11.3",
     "deep-equal": "^1.0.1",
     "electron-context-menu": "^0.10.0",
