@@ -55,7 +55,7 @@ if (require.main === module) {
 
     // Generate internal build number if it's internal
     if (isInternalBuild) {
-      version = `${version}-sha.${gitCommit}`;
+      version = `${version}-sha.${gitCommit.slice(0, 8)}`;
       bintrayRepo = 'studio-internal';
     }
 
