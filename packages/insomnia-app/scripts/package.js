@@ -159,11 +159,12 @@ function shouldPublish() {
     GITHUB_SHA,
     TRAVIS_TAG,
     TRAVIS_COMMIT,
+    TRAVIS_CURRENT_BRANCH,
     FORCE_PACKAGE,
   } = process.env;
 
   const gitCommit = GITHUB_SHA || TRAVIS_COMMIT;
-  const gitRef = GITHUB_REF || TRAVIS_TAG || '';
+  const gitRef = GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || '';
   const isInternalBuild = gitRef.match(/master$/);
   const publish = (
     FORCE_PACKAGE === 'true' ||
