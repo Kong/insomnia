@@ -6,7 +6,10 @@ import type { Workspace } from '../../../models/workspace';
 import type { ApiSpec } from '../../../models/api-spec';
 import HelpLink from '../help-link';
 import YAML from 'yaml';
+import { showModal } from '../modals';
+import CodePromptModal from '../modals/code-prompt-modal';
 import SwaggerUI from 'swagger-ui-react';
+import {generateFromString} from 'openapi-2-kong';
 import 'swagger-ui-react/swagger-ui.css';
 
 type Props = {|
@@ -30,6 +33,20 @@ class SpecEditor extends React.PureComponent<Props> {
 
   _setEditorRef(n: ?CodeEditor) {
     this.editor = n;
+  }
+
+  async _showGenerateConfig() {
+    const { apiSpec } = this.props;
+    let kongConfig = await generateFromString(apiSpec.contents);
+    showModal(CodePromptModal, {
+      submitName: 'Done',
+      title: `Kong Declarative Config`,
+      defaultValue: YAML.stringify(kongConfig),
+      placeholder: '',
+      mode: 'yaml',
+      hideMode: true,
+      showCopyButton: true,
+    });
   }
 
   _togglePreview() {
@@ -83,6 +100,9 @@ class SpecEditor extends React.PureComponent<Props> {
             <button className="btn" onClick={this._togglePreview}>
               <i className={'fa ' + (this.state.previewActive ? 'fa-eye' : 'fa-eye-slash')} />{' '}
               Toggle Preview
+            </button>
+            <button className="btn" onClick={this._showGenerateConfig}>
+              <i className="fa fa-code" /> Generate Config
             </button>
             <button className="btn" onClick={handleTest}>
               <i className="fa fa-cogs" /> Generate Requests
