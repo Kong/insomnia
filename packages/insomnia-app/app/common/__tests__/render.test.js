@@ -399,6 +399,28 @@ describe('buildRenderContext()', () => {
     });
   });
 
+  it('handles the consumption of variables derived from tags', async () => {
+    const rootEnvironment = {
+      type: models.environment.type,
+      data: {
+        flag: true,
+        req: 'https://www.mock.com?code=123',
+        reqTag: '{% if flag %}{{ req }}{% endif %}',
+        codeVar: "{{ reqTag | replace('https://www.mock.com?code=', '') }}",
+        codeVarConsumer: '{{ codeVar }}',
+      },
+    };
+    const context = await renderUtils.buildRenderContext([], rootEnvironment);
+
+    expect(context).toEqual({
+      flag: true,
+      req: 'https://www.mock.com?code=123',
+      reqTag: 'https://www.mock.com?code=123',
+      codeVar: '123',
+      codeVarConsumer: '123',
+    });
+  });
+
   it('handles variables being used in tags', async () => {
     const rootEnvironment = {
       type: models.environment.type,
