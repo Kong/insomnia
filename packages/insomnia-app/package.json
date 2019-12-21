@@ -153,7 +153,7 @@
     "insomnia-prettify": "^2.1.2",
     "insomnia-url": "^2.1.2",
     "insomnia-xpath": "^2.1.2",
-    "json-order": "^1.0.12",
+    "json-order": "^1.1.0",
     "jsonlint": "^1.6.3",
     "jsonpath": "^1.0.2",
     "jwt-authentication": "^0.4.0",
