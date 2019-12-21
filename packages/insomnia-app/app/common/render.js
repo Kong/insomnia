@@ -68,7 +68,8 @@ export async function buildRenderContext(
   }
 
   // At this point, environments is a list of environments ordered
-  // from top-most parent to bottom-most child
+  // from top-most parent to bottom-most child, and they keys in each environment
+  // ordered by its property map.
   // Do an Object.assign, but render each property as it overwrites. This
   // way we can keep same-name variables from the parent context.
   let renderContext = baseContext;

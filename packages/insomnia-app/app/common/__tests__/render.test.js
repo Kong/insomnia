@@ -417,21 +417,51 @@ describe('buildRenderContext()', () => {
     });
   });
 
-  it('resolves environment keys in the defined order and not alphabetical order', async () => {
+  it('handles variables using tag after tag is defined as expected (correct order)', async () => {
     const rootEnvironment = {
       type: models.environment.type,
       data: {
-        url: '{% if true %}https://foo.com?code=123{% endif %}',
-        extract: "{{ url | replace('https://foo.com?code=', '') }}",
-        consume: '{{ extract }}',
+        consume: '{{ replaced }}',
+        hash: "{% hash 'md5', 'hex', value %}",
+        replaced: "{{ hash | replace('f67565de946a899a534fd908e7eef872', 'cat') }}",
+        value: 'ThisIsATopSecretValue',
+      },
+      dataPropertyOrder: {
+        '&': ['value', 'hash', 'replaced', 'consume'],
       },
     };
+
     const context = await renderUtils.buildRenderContext([], rootEnvironment);
 
     expect(context).toEqual({
-      url: 'https://foo.com?code=123',
-      extract: '123',
-      consume: '123',
+      value: 'ThisIsATopSecretValue',
+      hash: 'f67565de946a899a534fd908e7eef872',
+      replaced: 'cat',
+      consume: 'cat',
+    });
+  });
+
+  it('handles variables using tag before tag is defined as expected (incorrect order)', async () => {
+    const rootEnvironment = {
+      type: models.environment.type,
+      data: {
+        consume: '{{ replaced }}',
+        hash: "{% hash 'md5', 'hex', value %}",
+        replaced: "{{ hash | replace('f67565de946a899a534fd908e7eef872', 'cat') }}",
+        value: 'ThisIsATopSecretValue',
+      },
+      dataPropertyOrder: {
+        '&': ['value', 'replaced', 'hash', 'consume'],
+      },
+    };
+
+    const context = await renderUtils.buildRenderContext([], rootEnvironment);
+
+    expect(context).toEqual({
+      value: 'ThisIsATopSecretValue',
+      hash: 'f67565de946a899a534fd908e7eef872',
+      replaced: 'cat',
+      consume: 'f67565de946a899a534fd908e7eef872',
     });
   });
 
