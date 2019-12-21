@@ -403,21 +403,35 @@ describe('buildRenderContext()', () => {
     const rootEnvironment = {
       type: models.environment.type,
       data: {
-        reqTag: '{% if flag %}{{ req }}{% endif %}',
-        codeVar: "{{ reqTag | replace('https://www.mock.com?code=', '') }}",
-        codeVarConsumer: '{{ codeVar }}',
-        req: 'https://www.mock.com?code=123',
-        flag: true,
+        aUrl: '{% if true %}https://foo.com?code=123{% endif %}',
+        bExtract: "{{ aUrl | replace('https://foo.com?code=', '') }}",
+        cConsume: '{{ bExtract }}',
       },
     };
     const context = await renderUtils.buildRenderContext([], rootEnvironment);
 
     expect(context).toEqual({
-      flag: true,
-      req: 'https://www.mock.com?code=123',
-      reqTag: 'https://www.mock.com?code=123',
-      codeVar: '123',
-      codeVarConsumer: '123',
+      cConsume: '123',
+      bExtract: '123',
+      aUrl: 'https://foo.com?code=123',
+    });
+  });
+
+  it('resolves environment keys in the defined order and not alphabetical order', async () => {
+    const rootEnvironment = {
+      type: models.environment.type,
+      data: {
+        url: '{% if true %}https://foo.com?code=123{% endif %}',
+        extract: "{{ url | replace('https://foo.com?code=', '') }}",
+        consume: '{{ extract }}',
+      },
+    };
+    const context = await renderUtils.buildRenderContext([], rootEnvironment);
+
+    expect(context).toEqual({
+      url: 'https://foo.com?code=123',
+      extract: '123',
+      consume: '123',
     });
   });
 
