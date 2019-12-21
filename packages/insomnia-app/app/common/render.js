@@ -437,9 +437,7 @@ export async function getRenderedRequest(
  * @returns {number}
  */
 function _nunjucksSortValue(v) {
-  if (v && v.match && v.match(/({%)/)) {
-    return 3;
-  } else if (v && v.match && v.match(/({{)/)) {
+  if (v && v.match && v.match(/({{|{%)/)) {
     return 2;
   } else {
     return 1;
