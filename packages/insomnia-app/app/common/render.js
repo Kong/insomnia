@@ -437,11 +437,7 @@ export async function getRenderedRequest(
  * @returns {number}
  */
 function _nunjucksSortValue(v) {
-  if (v && v.match && v.match(/({{|{%)/)) {
-    return 2;
-  } else {
-    return 1;
-  }
+  return v && v.match && v.match(/({{|{%)/) ? 2 : 1;
 }
 
 function _getOrderedEnvironmentKeys(finalRenderContext: Object): Array<string> {
