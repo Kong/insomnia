@@ -404,12 +404,12 @@ describe('buildRenderContext()', () => {
       type: models.environment.type,
       data: {
         consume: '{{ replaced }}',
-        hash: "{% hash 'md5', 'hex', value %}",
-        replaced: "{{ hash | replace('f67565de946a899a534fd908e7eef872', 'cat') }}",
+        hashed: "{% hash 'md5', 'hex', value %}",
+        replaced: "{{ hashed | replace('f67565de946a899a534fd908e7eef872', 'cat') }}",
         value: 'ThisIsATopSecretValue',
       },
       dataPropertyOrder: {
-        '&': ['value', 'hash', 'replaced', 'consume'],
+        '&': ['value', 'hashed', 'replaced', 'consume'],
       },
     };
 
@@ -417,7 +417,7 @@ describe('buildRenderContext()', () => {
 
     expect(context).toEqual({
       value: 'ThisIsATopSecretValue',
-      hash: 'f67565de946a899a534fd908e7eef872',
+      hashed: 'f67565de946a899a534fd908e7eef872',
       replaced: 'cat',
       consume: 'cat',
     });
@@ -428,12 +428,12 @@ describe('buildRenderContext()', () => {
       type: models.environment.type,
       data: {
         consume: '{{ replaced }}',
-        hash: "{% hash 'md5', 'hex', value %}",
-        replaced: "{{ hash | replace('f67565de946a899a534fd908e7eef872', 'cat') }}",
+        hashed: "{% hash 'md5', 'hex', value %}",
+        replaced: "{{ hashed | replace('f67565de946a899a534fd908e7eef872', 'cat') }}",
         value: 'ThisIsATopSecretValue',
       },
       dataPropertyOrder: {
-        '&': ['value', 'replaced', 'hash', 'consume'],
+        '&': ['value', 'replaced', 'hashed', 'consume'],
       },
     };
 
@@ -441,8 +441,8 @@ describe('buildRenderContext()', () => {
 
     expect(context).toEqual({
       value: 'ThisIsATopSecretValue',
-      hash: 'f67565de946a899a534fd908e7eef872',
-      replaced: 'cat',
+      hashed: 'f67565de946a899a534fd908e7eef872',
+      replaced: 'cat', // is cat at runtime, but is f67565de946a899a534fd908e7eef872 during the test, rest are the same :shrug:
       consume: 'f67565de946a899a534fd908e7eef872',
     });
   });
