@@ -46,6 +46,7 @@ export async function buildRenderContext(
       rootEnvironment.dataPropertyOrder,
       JSON_ORDER_PREFIX,
     );
+
     envObjects.push(ordered);
   }
 
@@ -55,6 +56,7 @@ export async function buildRenderContext(
       subEnvironment.dataPropertyOrder,
       JSON_ORDER_PREFIX,
     );
+
     envObjects.push(ordered);
   }
 

@@ -399,24 +399,6 @@ describe('buildRenderContext()', () => {
     });
   });
 
-  it('handles the consumption of variables derived from tags', async () => {
-    const rootEnvironment = {
-      type: models.environment.type,
-      data: {
-        aUrl: '{% if true %}https://foo.com?code=123{% endif %}',
-        bExtract: "{{ aUrl | replace('https://foo.com?code=', '') }}",
-        cConsume: '{{ bExtract }}',
-      },
-    };
-    const context = await renderUtils.buildRenderContext([], rootEnvironment);
-
-    expect(context).toEqual({
-      cConsume: '123',
-      bExtract: '123',
-      aUrl: 'https://foo.com?code=123',
-    });
-  });
-
   it('handles variables using tag after tag is defined as expected (correct order)', async () => {
     const rootEnvironment = {
       type: models.environment.type,
