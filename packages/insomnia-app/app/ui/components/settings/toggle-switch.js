@@ -14,26 +14,14 @@ type State = {
 };
 
 class ToggleSwitch extends React.PureComponent<Props, State> {
-  _mounted: boolean;
-
   constructor(props: Props) {
     super(props);
 
     this.state = { checked: props.checked || false };
   }
 
-  componentDidMount() {
-    this._mounted = true;
-  }
-
-  componentWillUnmount() {
-    this._mounted = false;
-  }
-
   setChecked(checked: boolean) {
-    if (this._mounted) {
-      this.setState({ checked });
-    }
+    this.setState({ checked });
   }
 
   componentWillReceiveProps(newProps: Props) {
