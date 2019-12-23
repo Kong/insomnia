@@ -50,7 +50,7 @@ module.exports = {
       },
       sidebarHeader: {
         background: {
-          default: '#695eb8',
+          default: '#37bf7a',
         },
         foreground: {
           default: '#fff',

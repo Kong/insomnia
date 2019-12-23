@@ -10,25 +10,24 @@ import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
 import { getAppName, getAppVersion } from '../../../common/constants';
-import { showAlert, showModal, showPrompt } from '../modals';
-import Link from '../base/link';
+import { showAlert, showModal } from '../modals';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
-import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
-import LoginModal from '../modals/login-modal';
 import Tooltip from '../tooltip';
 import KeydownBinder from '../keydown-binder';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Workspace } from '../../../models/workspace';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
-import SyncShareModal from '../modals/sync-share-modal';
 import * as db from '../../../common/database';
 import VCS from '../../../sync/vcs';
-import HelpTooltip from '../help-tooltip';
 import type { Project } from '../../../sync/types';
 import * as sync from '../../../sync-legacy/index';
-import PromptButton from '../base/prompt-button';
 import * as session from '../../../account/session';
+import chooseFile from '../base/choose-file';
+import fs from 'fs';
+import fsPath from 'path';
+import * as electron from 'electron';
+import { getDataDirectory } from '../../../common/misc';
 
 type Props = {
   isLoading: boolean,
@@ -153,25 +152,16 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     showModal(WorkspaceSettingsModal);
   }
 
-  _handleShowShareSettings() {
-    if (this.props.enableSyncBeta) {
-      showModal(SyncShareModal);
-    } else {
-      showModal(WorkspaceShareSettingsModal);
+  async _handleWorkspaceOpen() {
+    const path = await chooseFile({ itemtypes: ['directory'] });
+    if (path) {
+      fs.writeFileSync(fsPath.join(getDataDirectory(), `insomnia.currentDBDirectory`), path, {});
+      const { app } = electron.remote || electron;
+      app.relaunch();
+      app.exit();
+      // const workspace = await models.workspace.create({ path });
+      // this.props.handleSetActiveWorkspace(workspace._id);
     }
-  }
-
-  _handleWorkspaceCreate() {
-    showPrompt({
-      title: 'Create New Workspace',
-      defaultValue: 'My Workspace',
-      submitName: 'Create',
-      selectText: true,
-      onComplete: async name => {
-        const workspace = await models.workspace.create({ name });
-        this.props.handleSetActiveWorkspace(workspace._id);
-      },
-    });
   }
 
   _handleKeydown(e: KeyboardEvent) {
@@ -203,18 +193,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       enableSyncBeta,
       ...other
     } = this.props;
-
-    const { remoteProjects, localProjects, pullingProjects } = this.state;
-
-    const missingRemoteProjects = remoteProjects.filter(({ id, rootDocumentId }) => {
-      const localProjectExists = localProjects.find(p => p.id === id);
-      const workspaceExists = workspaces.find(w => w._id === rootDocumentId);
-
-      // Mark as missing if:
-      //   - the project doesn't yet exists locally
-      //   - the project exists locally but somehow the workspace doesn't anymore
-      return !(workspaceExists && localProjectExists);
-    });
 
     const nonActiveWorkspaces = workspaces
       .filter(w => w._id !== activeWorkspace._id)
@@ -259,10 +237,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
           </DropdownItem>
 
-          <DropdownItem onClick={this._handleShowShareSettings}>
-            <i className="fa fa-globe" /> Share <strong>{activeWorkspace.name}</strong>
-          </DropdownItem>
-
           <DropdownDivider>Switch Workspace</DropdownDivider>
 
           {nonActiveWorkspaces.map(w => {
@@ -279,33 +253,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             );
           })}
 
-          <DropdownItem onClick={this._handleWorkspaceCreate}>
-            <i className="fa fa-empty" /> Create Workspace
+          <DropdownItem onClick={this._handleWorkspaceOpen}>
+            <i className="fa fa-empty" /> Open Workspace
           </DropdownItem>
-
-          {missingRemoteProjects.length > 0 && (
-            <DropdownDivider>
-              Remote Workspaces{' '}
-              <HelpTooltip>
-                These workspaces have been shared with you via Insomnia Sync and do not yet exist on
-                your machine.
-              </HelpTooltip>
-            </DropdownDivider>
-          )}
-
-          {missingRemoteProjects.map(p => (
-            <DropdownItem
-              key={p.id}
-              stayOpenAfterClick
-              onClick={() => this._handlePullRemoteWorkspace(p)}>
-              {pullingProjects[p.id] ? (
-                <i className="fa fa-refresh fa-spin" />
-              ) : (
-                <i className="fa fa-cloud-download" />
-              )}
-              Pull <strong>{p.name}</strong>
-            </DropdownItem>
-          ))}
 
           <DropdownDivider>
             {getAppName()} v{getAppVersion()}
@@ -318,32 +268,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
           <DropdownItem onClick={WorkspaceDropdown._handleShowExport}>
             <i className="fa fa-share" /> Import/Export
           </DropdownItem>
-
-          {/* Not Logged In */}
-
-          {session.isLoggedIn() ? (
-            <DropdownItem
-              key="login"
-              onClick={WorkspaceDropdown._handleLogout}
-              buttonClass={PromptButton}>
-              <i className="fa fa-sign-out" /> Logout
-            </DropdownItem>
-          ) : (
-            <DropdownItem key="login" onClick={() => showModal(LoginModal)}>
-              <i className="fa fa-sign-in" /> Log In
-            </DropdownItem>
-          )}
-
-          {!session.isLoggedIn() && (
-            <DropdownItem
-              key="invite"
-              buttonClass={Link}
-              href="https://insomnia.rest/pricing/"
-              button>
-              <i className="fa fa-users" /> Upgrade to Plus
-              <i className="fa fa-star surprise fa-outline" />
-            </DropdownItem>
-          )}
         </Dropdown>
       </KeydownBinder>
     );

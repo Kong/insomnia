@@ -1,17 +1,17 @@
 {
   "private": true,
   "version": "2.1.1",
-  "name": "insomnia-app",
+  "name": "sleepless",
   "app": {
-    "name": "insomnia",
-    "executableName": "insomnia",
-    "appId": "com.insomnia.app",
-    "productName": "Insomnia",
-    "longName": "Insomnia REST Client",
-    "synopsis": "A simple, beautiful, and free REST API client",
-    "icon": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
+    "name": "Sleepless",
+    "executableName": "sleepless",
+    "appId": "com.sleepless.app",
+    "productName": "Sleepless",
+    "longName": "Sleepless REST Client",
+    "synopsis": "A simple, beautiful, and free REST API client, on crack!",
+    "icon": "./build/icon.icns",
     "theme": "default",
-    "version": "7.0.5",
+    "version": "1.0.0",
     "main": "main.min.js",
     "plugins": [
       "insomnia-plugin-base64",
@@ -28,15 +28,10 @@
     ]
   },
   "licence": "MIT",
-  "homepage": "https://insomnia.rest/",
   "description": "Debug APIs like a human, not a robot",
-  "author": "Insomnia <support@insomnia.rest>",
+  "author": "Alexandre Savard",
   "main": "app/main.min.js",
   "appveyorCacheBreaker": 2,
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/getinsomnia/insomnia"
-  },
   "scripts": {
     "test": "flow check && npm run test:jest",
     "test:jest": "cross-env NODE_ENV=test jest --silent",

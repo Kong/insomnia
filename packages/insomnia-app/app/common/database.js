@@ -6,7 +6,7 @@ import NeDB from 'nedb';
 import fsPath from 'path';
 import { DB_PERSIST_INTERVAL } from './constants';
 import uuid from 'uuid';
-import { getDataDirectory } from './misc';
+import { getDataDirectory, getDbDirectories } from './misc';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -17,6 +17,13 @@ const db = {
   _empty: true,
 };
 
+let dbDirectories = null;
+try {
+  dbDirectories = getDbDirectories();
+} catch (e) {
+  // Do nothing
+}
+
 // ~~~~~~~ //
 // HELPERS //
 // ~~~~~~~ //
@@ -26,8 +33,13 @@ function allTypes() {
 }
 
 function getDBFilePath(modelType) {
-  // NOTE: Do not EVER change this. EVER!
-  return fsPath.join(getDataDirectory(), `insomnia.${modelType}.db`);
+  if (dbDirectories && dbDirectories.current) {
+    return fsPath.join(
+      dbDirectories.all[dbDirectories.current].path,
+      `sleepless/sleepless.${modelType}.db`,
+    );
+  }
+  return fsPath.join(getDataDirectory(), `sleepless.${modelType}.db`);
 }
 
 export async function initClient() {

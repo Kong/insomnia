@@ -2,7 +2,7 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { basename as pathBasename } from 'path';
-import { remote } from 'electron';
+import chooseFile from './choose-file';
 
 type Props = {
   // Required
@@ -33,47 +33,12 @@ class FileInputButton extends React.PureComponent<Props> {
     this._button = n;
   }
 
-  _handleChooseFile() {
-    // If no types are selected then default to just files and not directories
-    const types = this.props.itemtypes ? this.props.itemtypes : ['file'];
-    let title = 'Select ';
-    if (types.includes('file')) {
-      title += ' File';
-      if (types.length > 2) {
-        title += ' or';
-      }
-    }
-    if (types.includes('directory')) {
-      title += ' Directory';
-    }
-    const options = {
-      title: title,
-      buttonLabel: 'Select',
-      properties: types.map(type => {
-        if (type === 'file') {
-          return 'openFile';
-        }
-        if (type === 'directory') {
-          return 'openDirectory';
-        }
-      }),
-      filters: [{ name: 'All Files', extensions: ['*'] }],
-    };
-
-    // If extensions are provided then filter for just those extensions
-    if (this.props.extensions) {
-      options.filters = [{ name: 'Files', extensions: this.props.extensions }];
-    }
-
-    remote.dialog.showOpenDialog(options, async paths => {
-      // Only change the file if a new file was selected
-      if (!paths || paths.length === 0) {
-        return;
-      }
-
-      const path = paths[0];
-      this.props.onChange(path);
+  async _handleChooseFile() {
+    const path = await chooseFile({
+      extensions: this.props.extensions,
+      itemtypes: this.props.itemtypes,
     });
+    if (path !== this.props.path) this.props.onChange(path);
   }
 
   render() {

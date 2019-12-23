@@ -5,11 +5,6 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import GravatarImg from './gravatar-img';
 import Link from './base/link';
-import * as models from '../../models/index';
-import * as constants from '../../common/constants';
-import * as db from '../../common/database';
-import * as session from '../../account/session';
-import * as fetch from '../../account/fetch';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
@@ -63,43 +58,6 @@ class Toast extends React.PureComponent<Props, State> {
     return seenNotifications[notification.key];
   }
 
-  async _checkForNotifications() {
-    // If there is a notification open, skip check
-    if (this.state.notification) {
-      return;
-    }
-
-    const stats = await models.stats.get();
-    const settings = await models.settings.getOrCreate();
-
-    let notification: ToastNotification;
-
-    // Try fetching user notification
-    try {
-      const data = {
-        firstLaunch: stats.created,
-        launches: stats.launches,
-        platform: constants.getAppPlatform(),
-        app: constants.getAppId(),
-        version: constants.getAppVersion(),
-        requests: await db.count(models.request.type),
-        requestGroups: await db.count(models.requestGroup.type),
-        environments: await db.count(models.environment.type),
-        workspaces: await db.count(models.workspace.type),
-        updatesNotSupported: constants.isLinux(),
-        autoUpdatesDisabled: !settings.updateAutomatically,
-        disableUpdateNotification: settings.disableUpdateNotification,
-        updateChannel: !settings.updateChannel,
-      };
-
-      notification = await fetch.post(`/notification`, data, session.getCurrentSessionId());
-    } catch (err) {
-      console.warn('[toast] Failed to fetch user notifications', err);
-    }
-
-    this._handleNotification(notification);
-  }
-
   _handleNotification(notification: ?ToastNotification) {
     // No new notifications
     if (!notification || this._hasSeenNotification(notification)) {
@@ -127,32 +85,9 @@ class Toast extends React.PureComponent<Props, State> {
     }
   }
 
-  _dismissNotification() {
-    const { notification } = this.state;
-    if (!notification) {
-      return;
-    }
-
-    // Hide the currently showing notification
-    this.setState({ visible: false });
-
-    // Give time for toast to fade out, then remove it
-    setTimeout(() => {
-      this.setState({ notification: null }, async () => {
-        await this._checkForNotifications();
-      });
-    }, 1000);
-  }
-
   _listenerShowNotification(e: any, notification: ToastNotification) {
     console.log('[toast] Received notification ' + notification.key);
     this._handleNotification(notification);
-  }
-
-  componentDidMount() {
-    setTimeout(this._checkForNotifications, 1000 * 10);
-    this._interval = setInterval(this._checkForNotifications, 1000 * 60 * 30);
-    electron.ipcRenderer.on('show-notification', this._listenerShowNotification);
   }
 
   componentWillUnmount() {

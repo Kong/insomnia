@@ -4,8 +4,9 @@ import { Readable, Writable } from 'stream';
 import fuzzysort from 'fuzzysort';
 import uuid from 'uuid';
 import zlib from 'zlib';
-import { join as pathJoin } from 'path';
+import fsPath, { join as pathJoin } from 'path';
 import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
+import fs from 'fs';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -99,9 +100,11 @@ export function getContentLengthHeader<T: Header>(headers: Array<T>): T | null {
  * @param prefix
  * @returns {string}
  */
-export function generateId(prefix: string): string {
-  const id = uuid.v4().replace(/-/g, '');
-
+export function generateId(prefix: string, short: boolean = false): string {
+  let id = uuid.v4().replace(/-/g, '');
+  if (short) {
+    id = id.substr(0, 8);
+  }
   if (prefix) {
     return `${prefix}_${id}`;
   } else {
@@ -361,4 +364,65 @@ export function chunkArray<T>(arr: Array<T>, chunkSize: number): Array<Array<T>>
   }
 
   return chunks;
+}
+
+const baseDbDirectories = {
+  current: undefined,
+  all: {},
+};
+
+export function addPathToDbDirectories(path: string) {
+  try {
+    const currentDir = getDbDirectories();
+    const dir = {
+      ...baseDbDirectories,
+      ...currentDir,
+    };
+    const newDir = {
+      _id: generateId('dir', true),
+      path,
+    };
+    dir.all[newDir._id] = newDir;
+    dir.current = newDir._id;
+    console.log('Saving new dir object: ', dir);
+    fs.writeFileSync(fsPath.join(getDataDirectory(), `currentDBDirectory`), JSON.stringify(dir));
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+export function selectDbDirectories(id?: string) {
+  try {
+    const currentDir = getDbDirectories();
+    const dir = {
+      ...baseDbDirectories,
+      ...currentDir,
+      current: id,
+    };
+    fs.writeFileSync(fsPath.join(getDataDirectory(), `currentDBDirectory`), JSON.stringify(dir));
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+export function getDbDirectories() {
+  try {
+    const dir = JSON.parse(
+      fs.readFileSync(fsPath.join(getDataDirectory(), `currentDBDirectory`), {}),
+    );
+    if (dir) return dir;
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      createDbDirectories();
+      return baseDbDirectories;
+    }
+    // Nothing
+  }
+}
+
+function createDbDirectories() {
+  fs.writeFileSync(
+    fsPath.join(getDataDirectory(), `currentDBDirectory`),
+    JSON.stringify(baseDbDirectories),
+  );
 }

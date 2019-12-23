@@ -207,8 +207,8 @@ class SidebarChildren extends React.PureComponent<Props> {
     return (
       <React.Fragment>
         {this._renderList(childObjects.pinned, true)}
-        <div className={`sidebar__list-separator${showSeparator ? '' : '--invisible'}`} />
         {this._renderList(childObjects.all, false)}
+        <div className={`sidebar__list-separator${showSeparator ? '' : '--invisible'}`} />
         {contextMenuPortal}
       </React.Fragment>
     );

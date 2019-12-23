@@ -529,6 +529,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       vcs,
       workspaceChildren,
       workspaces,
+      directories,
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
@@ -776,6 +777,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             vcs={vcs}
             width={sidebarWidth}
             workspace={activeWorkspace}
+            directories={directories}
             workspaces={workspaces}>
             {this.renderSidebarBody()}
           </Sidebar>

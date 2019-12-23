@@ -12,6 +12,7 @@ import SyncDropdown from '../dropdowns/sync-dropdown';
 import SyncLegacyDropdown from '../dropdowns/sync-legacy-dropdown';
 import type { StatusCandidate } from '../../../sync/types';
 import { isLoggedIn } from '../../../account/session';
+import WorkingBdDirectoryDropdown from '../dropdowns/working-bd-directory-dropdown';
 
 type Props = {|
   activeEnvironment: Environment | null,
@@ -50,6 +51,7 @@ class Sidebar extends React.PureComponent<Props> {
       width,
       workspace,
       workspaces,
+      directories,
     } = this.props;
 
     return (
@@ -67,6 +69,7 @@ class Sidebar extends React.PureComponent<Props> {
               ? '5px solid ' + activeEnvironment.color
               : null,
         }}>
+        <WorkingBdDirectoryDropdown className={`sidebar__header`} directories={directories} />
         <WorkspaceDropdown
           className="sidebar__header theme--sidebar__header"
           activeWorkspace={workspace}

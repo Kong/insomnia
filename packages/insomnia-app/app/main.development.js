@@ -6,9 +6,7 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import * as database from './common/database';
-import { CHANGELOG_BASE_URL, getAppVersion, isDevelopment, isMac } from './common/constants';
-import type { ToastNotification } from './ui/components/toast';
-import type { Stats } from './models/stats';
+import { isDevelopment, isMac } from './common/constants';
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -29,7 +27,6 @@ app.on('ready', async () => {
   await windowUtils.init();
 
   // Init the app
-  await _trackStats();
   await _launchApp();
 
   // Init the rest
@@ -109,44 +106,5 @@ function _launchApp() {
   session.defaultSession.webRequest.onBeforeSendHeaders((details, fn) => {
     delete details.requestHeaders['Origin'];
     fn({ cancel: false, requestHeaders: details.requestHeaders });
-  });
-}
-
-async function _trackStats() {
-  // Handle the stats
-  const oldStats = await models.stats.get();
-  const stats: Stats = await models.stats.update({
-    currentLaunch: Date.now(),
-    lastLaunch: oldStats.currentLaunch,
-    currentVersion: getAppVersion(),
-    lastVersion: oldStats.currentVersion,
-    launches: oldStats.launches + 1,
-  });
-
-  // Update Stats Object
-  const firstLaunch = stats.launches === 1;
-  const justUpdated = !firstLaunch && stats.currentVersion !== stats.lastVersion;
-
-  ipcMain.once('window-ready', () => {
-    const { currentVersion } = stats;
-    if (!justUpdated || !currentVersion) {
-      return;
-    }
-
-    const { BrowserWindow } = electron;
-    const notification: ToastNotification = {
-      key: `updated-${currentVersion}`,
-      url: `${CHANGELOG_BASE_URL}/${currentVersion}/`,
-      cta: "See What's New",
-      message: `Updated to ${currentVersion}`,
-      email: 'support@insomnia.rest',
-    };
-
-    // Wait a bit before showing the user because the app just launched.
-    setTimeout(() => {
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.send('show-notification', notification);
-      }
-    }, 5000);
   });
 }

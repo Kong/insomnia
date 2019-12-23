@@ -10,7 +10,6 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import Wrapper from '../components/wrapper';
 import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-environments-edit-modal';
-import Toast from '../components/toast';
 import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
@@ -52,7 +51,12 @@ import WorkspaceSettingsModal from '../components/modals/workspace-settings-moda
 import RequestSettingsModal from '../components/modals/request-settings-modal';
 import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
 import * as network from '../../network/network';
-import { debounce, getContentDispositionHeader, getDataDirectory } from '../../common/misc';
+import {
+  debounce,
+  getContentDispositionHeader,
+  getDataDirectory,
+  getDbDirectories,
+} from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
@@ -76,6 +80,8 @@ import SyncMergeModal from '../components/modals/sync-merge-modal';
 
 @autobind
 class App extends PureComponent {
+  directories = getDbDirectories();
+
   constructor(props) {
     super(props);
 
@@ -1153,11 +1159,8 @@ class App extends PureComponent {
               isVariableUncovered={isVariableUncovered}
               headerEditorKey={forceRefreshHeaderCounter + ''}
               vcs={vcs}
+              directories={this.directories}
             />
-          </ErrorBoundary>
-
-          <ErrorBoundary showAlert>
-            <Toast />
           </ErrorBoundary>
 
           {/* Block all mouse activity by showing an overlay while dragging */}
@@ -1368,7 +1371,4 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps,
-)(App);
+export default connect(mapStateToProps, mapDispatchToProps)(App);

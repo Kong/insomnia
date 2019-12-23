@@ -11,7 +11,6 @@ import * as _requestMeta from './request-meta';
 import * as _requestVersion from './request-version';
 import * as _response from './response';
 import * as _settings from './settings';
-import * as _stats from './stats';
 import * as _workspace from './workspace';
 import * as _workspaceMeta from './workspace-meta';
 import { generateId } from '../common/misc';
@@ -37,13 +36,11 @@ export const requestMeta = _requestMeta;
 export const requestVersion = _requestVersion;
 export const response = _response;
 export const settings = _settings;
-export const stats = _stats;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 
 export function all() {
   return [
-    stats,
     settings,
     workspace,
     workspaceMeta,
