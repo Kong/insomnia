@@ -1,0 +1,17 @@
+{
+  "plugins": [
+    "babel-plugin-styled-components",
+    "babel-plugin-inline-react-svg",
+    "@babel/plugin-proposal-class-properties",
+  ],
+  "presets": [
+    "@babel/preset-flow",
+    "@babel/preset-react",
+    [
+      "@babel/preset-env",
+      {
+        "targets": "> 0.25%, not dead"
+      }
+    ]
+  ]
+}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="12px" height="12px" viewBox="0 0 12 12" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 61.2 (89653) - https://sketch.com -->
+    <title>icn-errors</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="02-B-editor-view-open-icon-hover" transform="translate(-307.000000, -840.000000)">
+            <g id="--linter--open" transform="translate(284.000000, 830.000000)">
+                <g id="toggle-bar--linter">
+                    <g id="stat--error-number+icon" transform="translate(23.000000, 7.000000)">
+                        <g id="icn-errors" transform="translate(0.000000, 3.000000)">
+                            <circle id="Oval" fill="#BF0000" cx="6" cy="6" r="6"></circle>
+                            <path d="M8.09867337,3 L9,3.90132663 L6.901,6 L9,8.09867337 L8.09867337,9 L6,6.901 L3.90132663,9 L3,8.09867337 L5.098,6 L3,3.90132663 L3.90132663,3 L6,5.098 L8.09867337,3 Z" id="Combined-Shape" fill="#FFFFFF" fill-rule="nonzero"></path>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
