@@ -1,0 +1,42 @@
+openapi: '3.0.2'
+info:
+  title: Global Security
+  version: '1.2'
+servers:
+  - url: https://api.server.test/v1
+
+components:
+  securitySchemes:
+    Basic:
+      type: http
+      scheme: basic
+    Key-Header:
+      type: apiKey
+      name: x-api_key
+      in: header
+    Key-Cookie:
+      type: apiKey
+      name: CookieName
+      in: cookie
+    Key-Query:
+      type: apiKey
+      name: apiKeyHere
+      in: query
+
+security:
+  - Basic: []
+  - Key-Header: []
+
+paths:
+  /global:
+    get:
+      responses:
+        '200':
+          description: OK
+  /override:
+    get:
+      security:
+        - Key-Query: []
+      responses:
+        '200':
+          description: OK

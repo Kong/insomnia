@@ -1,12 +1,12 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import { Dropdown, DropdownHint, DropdownButton, DropdownItem } from '../base/dropdown';
 import { DEBOUNCE_MILLIS } from '../../../common/constants';
 import KeydownBinder from '../keydown-binder';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
+import SidebarCreateDropdown from './sidebar-create-dropdown';
 
 type Props = {
   onChange: string => void,
@@ -75,22 +75,11 @@ class SidebarFilter extends React.PureComponent<Props> {
               </button>
             )}
           </div>
-          <Dropdown right>
-            <DropdownButton className="btn btn--compact">
-              <i className="fa fa-plus-circle" />
-              <i className="fa fa-caret-down" />
-            </DropdownButton>
-            <DropdownItem onClick={this._handleRequestCreate}>
-              <i className="fa fa-plus-circle" /> New Request
-              <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]} />
-            </DropdownItem>
-            <DropdownItem onClick={this._handleRequestGroupCreate}>
-              <i className="fa fa-folder" /> New Folder
-              <DropdownHint
-                keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]}
-              />
-            </DropdownItem>
-          </Dropdown>
+          <SidebarCreateDropdown
+            handleCreateRequest={this._handleRequestCreate}
+            handleCreateRequestGroup={this._handleRequestGroupCreate}
+            hotKeyRegistry={hotKeyRegistry}
+          />
         </div>
       </KeydownBinder>
     );

@@ -28,6 +28,8 @@ import ErrorBoundary from './error-boundary';
 import type { HotKeyRegistry } from '../../common/hotkeys';
 import { hotKeyRefs } from '../../common/hotkeys';
 import type { RequestVersion } from '../../models/request-version';
+import { showError } from '../components/modals/index';
+import { json as jsonPrettify } from 'insomnia-prettify';
 
 type Props = {
   // Functions
@@ -43,6 +45,7 @@ type Props = {
   previewMode: string,
   filter: string,
   filterHistory: Array<string>,
+  disableHtmlPreviewJs: boolean,
   editorFontSize: number,
   editorIndentSize: number,
   editorKeyMap: string,
@@ -73,7 +76,7 @@ class ResponsePane extends React.PureComponent<Props, State> {
     return models.response.getBodyBuffer(this.props.response);
   }
 
-  async _handleDownloadResponseBody() {
+  async _handleDownloadResponseBody(prettify: boolean) {
     const { response, request } = this.props;
     if (!response || !request) {
       // Should never happen
@@ -96,15 +99,28 @@ class ResponsePane extends React.PureComponent<Props, State> {
       }
 
       const readStream = models.response.getBodyStream(response);
+      let dataBuffers = [];
       if (readStream) {
         readStream.on('data', data => {
-          const data_ = data.toString();
-          const readStreamContents = JSON.stringify(JSON.parse(data_), null, 2);
+          dataBuffers.push(data);
+        });
+        readStream.on('end', () => {
           const to = fs.createWriteStream(outputPath);
-          to.write(readStreamContents);
+          const finalBuffer = Buffer.concat(dataBuffers);
+
           to.on('error', err => {
-            console.warn('Failed to save response body', err);
+            showError({
+              title: 'Save Failed',
+              message: 'Failed to save response body',
+              error: err,
+            });
           });
+
+          if (prettify && contentType.includes('json')) {
+            to.write(jsonPrettify(finalBuffer.toString('utf8')));
+          } else {
+            to.write(finalBuffer);
+          }
         });
       }
     });
@@ -161,27 +177,28 @@ class ResponsePane extends React.PureComponent<Props, State> {
 
   render() {
     const {
-      request,
-      responses,
-      requestVersions,
-      response,
-      previewMode,
-      handleShowRequestSettings,
-      handleSetPreviewMode,
-      handleSetActiveResponse,
-      handleDeleteResponses,
-      handleDeleteResponse,
-      handleSetFilter,
-      loadStartTime,
-      editorLineWrapping,
+      disableHtmlPreviewJs,
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
+      editorLineWrapping,
       filter,
       disableResponsePreviewLinks,
       filterHistory,
-      showCookiesModal,
+      handleDeleteResponse,
+      handleDeleteResponses,
+      handleSetActiveResponse,
+      handleSetFilter,
+      handleSetPreviewMode,
+      handleShowRequestSettings,
       hotKeyRegistry,
+      loadStartTime,
+      previewMode,
+      request,
+      requestVersions,
+      response,
+      responses,
+      showCookiesModal,
     } = this.props;
     const paneClasses = 'response-pane theme--pane pane';
     const paneHeaderClasses = 'pane__header theme--pane__header';
@@ -293,6 +310,7 @@ class ResponsePane extends React.PureComponent<Props, State> {
                 fullDownload={this._handleDownloadFullResponseBody}
                 previewMode={previewMode}
                 updatePreviewMode={handleSetPreviewMode}
+                showPrettifyOption={response.contentType.includes('json')}
               />
             </Tab>
             <Tab tabIndex="-1">
@@ -328,6 +346,7 @@ class ResponsePane extends React.PureComponent<Props, State> {
               filterHistory={filterHistory}
               updateFilter={response.error ? null : handleSetFilter}
               download={this._handleDownloadResponseBody}
+              disableHtmlPreviewJs={disableHtmlPreviewJs}
               getBody={this._handleGetResponseBody}
               error={response.error}
               editorLineWrapping={editorLineWrapping}

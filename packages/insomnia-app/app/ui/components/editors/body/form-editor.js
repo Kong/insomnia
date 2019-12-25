@@ -24,6 +24,7 @@ class FormEditor extends PureComponent {
             allowMultiline
             namePlaceholder="name"
             valuePlaceholder="value"
+            descriptionPlaceholder="description"
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={nunjucksPowerUserMode}

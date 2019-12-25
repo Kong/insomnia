@@ -26,8 +26,17 @@ module.exports = async function(params) {
     appleIdPassword: process.env.APPLE_ID_PASSWORD,
   };
 
-  const printCreds = `${process.env.APPLE_ID}:${process.env.APPLE_ID_PASSWORD.replace(/./g, '*')}`;
-  console.log(`[afterSign] Notarizing ${appName} (${appId}) with ${printCreds}`);
+  if (!process.env.APPLE_ID) {
+    console.log('[aftersign] APPLE_ID env variable not set. Skipping notarization');
+    return;
+  }
+
+  if (!process.env.APPLE_ID_PASSWORD) {
+    console.log('[aftersign] APPLE_ID env variable not set. Skipping notarization');
+    return;
+  }
+
+  console.log(`[afterSign] Notarizing ${appName} (${appId})`);
 
   try {
     await electronNotarize.notarize(args);

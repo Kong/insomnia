@@ -75,6 +75,20 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     this.setState({ request });
   }
 
+  async _updateRequestSettingString(e: SyntheticEvent<HTMLInputElement>) {
+    if (!this.state.request) {
+      // Should never happen
+      return;
+    }
+
+    const value = e.currentTarget.value;
+    const setting = e.currentTarget.name;
+    const request = await models.request.update(this.state.request, {
+      [setting]: value,
+    });
+    this.setState({ request });
+  }
+
   async _handleNameChange(name: string) {
     if (!this.state.request) {
       return;
@@ -302,6 +316,22 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
                 5.2.4
               </HelpTooltip>
               {this.renderCheckboxInput('settingRebuildPath')}
+            </label>
+          </div>
+        </div>
+        <div className="pad-top">
+          <div className="form-control form-control--outlined">
+            <label>
+              Follow redirects{' '}
+              <span className="txt-sm faint italic">(overrides global setting)</span>
+              <select
+                defaultValue={this.state.request && this.state.request.settingFollowRedirects}
+                name="settingFollowRedirects"
+                onChange={this._updateRequestSettingString}>
+                <option value={'global'}>Use global setting</option>
+                <option value={'off'}>Don't follow redirects</option>
+                <option value={'on'}>Follow redirects</option>
+              </select>
             </label>
           </div>
           <hr />

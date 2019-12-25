@@ -39,6 +39,7 @@ export type RequestAuthentication = Object;
 export type RequestHeader = {
   name: string,
   value: string,
+  description?: string,
   disabled?: boolean,
 };
 
@@ -53,6 +54,7 @@ export type RequestParameter = {
 export type RequestBodyParameter = {
   name: string,
   value: string,
+  description?: string,
   disabled?: boolean,
   multiline?: string,
   id?: string,
@@ -85,6 +87,7 @@ type BaseRequest = {
   settingDisableRenderRequestBody: boolean,
   settingEncodeUrl: boolean,
   settingRebuildPath: boolean,
+  settingFollowRedirects: string,
 };
 
 export type Request = BaseModel & BaseRequest;
@@ -108,6 +111,7 @@ export function init(): BaseRequest {
     settingDisableRenderRequestBody: false,
     settingEncodeUrl: true,
     settingRebuildPath: true,
+    settingFollowRedirects: 'global',
   };
 }
 
@@ -337,8 +341,10 @@ export function updateMimeType(
   }
 }
 
-export async function duplicate(request: Request): Promise<Request> {
-  const name = `${request.name} (Copy)`;
+export async function duplicate(request: Request, patch: Object = {}): Promise<Request> {
+  if (!patch.name) {
+    patch.name = `${request.name} (Copy)`;
+  }
 
   // Get sort key of next request
   const q = { metaSortKey: { $gt: request.metaSortKey } };
@@ -349,7 +355,7 @@ export async function duplicate(request: Request): Promise<Request> {
   const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
   const metaSortKey = request.metaSortKey + sortKeyIncrement;
 
-  return db.duplicate(request, { name, metaSortKey });
+  return db.duplicate(request, { name, metaSortKey, ...patch });
 }
 
 export function remove(request: Request): Promise<void> {

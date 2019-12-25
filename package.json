@@ -2,10 +2,10 @@
   "name": "insomnia",
   "private": true,
   "version": "1.0.0",
-  "author": "Gregory Schier <gschier1990@gmail.com>",
-  "repository": "https://github.com/getinsomnia/insomnia",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "repository": "https://github.com/kong/insomnia",
   "bugs": {
-    "url": "https://github.com/getinsomnia/insomnia"
+    "url": "https://github.com/kong/insomnia"
   },
   "scripts": {
     "lint": "eslint \"**/*.js\" \"**/*.html\" \"**/*.json\"",
@@ -17,11 +17,12 @@
     "app-build": "lerna run build --stream --parallel --bail",
     "app-package": "lerna run package --stream --parallel --bail",
     "app-release": "lerna run release --stream --parallel --bail",
+    "app-storybook": "lerna run storybook --stream --parallel --bail",
     "format-code": "prettier --write \"**/*.js\""
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged"
+      "pre-commit": "pretty-quick --staged && npm run lint"
     }
   },
   "devDependencies": {
@@ -31,6 +32,7 @@
     "@babel/preset-env": "^7.4.3",
     "@babel/preset-flow": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
+    "@storybook/addon-info": "^5.2.6",
     "babel-eslint": "^8.2.3",
     "babel-jest": "^24.7.1",
     "babel-loader": "^8.0.5",
@@ -50,7 +52,7 @@
     "flow-bin": "^0.104.0",
     "husky": "^1.0.0-rc.9",
     "jest": "^24.7.1",
-    "lerna": "^3.14.1",
+    "lerna": "^3.19.0",
     "prettier": "^1.16.4",
     "pretty-quick": "^1.10.0",
     "rimraf": "^2.6.3"

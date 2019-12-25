@@ -1,17 +1,7 @@
 {
   "parser": "babel-eslint",
-  "extends": [
-    "semistandard",
-    "plugin:flowtype/recommended"
-  ],
-  "plugins": [
-    "react",
-    "jest",
-    "html",
-    "json",
-    "filenames",
-    "flowtype"
-  ],
+  "extends": ["semistandard", "plugin:flowtype/recommended"],
+  "plugins": ["react", "jest", "html", "json", "filenames", "flowtype"],
   "parserOptions": {
     "ecmaFeatures": {
       "jsx": true
@@ -29,10 +19,7 @@
     "jest/globals": true
   },
   "rules": {
-    "comma-dangle": [
-      "error",
-      "always-multiline"
-    ],
+    "comma-dangle": ["error", "always-multiline"],
     "indent": "off",
     "no-var": "error",
     "no-duplicate-imports": "off",
@@ -48,10 +35,7 @@
         "asyncArrow": "always"
       }
     ],
-    "filenames/match-exported": [
-      "error",
-      "kebab"
-    ]
+    "filenames/match-exported": ["error", "kebab"]
   },
   "settings": {
     "flowtype": {

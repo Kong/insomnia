@@ -30,7 +30,7 @@ make install
 ldconfig
 
 # Build OpenSSL from source (for Curl)
-wget -q https://github.com/openssl/openssl/archive/OpenSSL_1_1_0h.tar.gz -O ./openssl.tar.gz
+wget -q https://github.com/openssl/openssl/archive/OpenSSL_1_1_1d.tar.gz -O ./openssl.tar.gz
 mkdir -p /src/openssl /build/openssl
 tar -xf openssl.tar.gz -C /src/openssl --strip 1
 cd /src/openssl
@@ -40,7 +40,7 @@ make install
 ldconfig
 
 # Build nghttp2 from source (for Curl)
-wget -q https://github.com/nghttp2/nghttp2/releases/download/v1.31.1/nghttp2-1.31.1.tar.gz -O ./nghttp2.tar.gz
+wget -q https://github.com/nghttp2/nghttp2/releases/download/v1.40.0/nghttp2-1.40.0.tar.gz -O ./nghttp2.tar.gz
 mkdir -p /src/nghttp2 /build/nghttp2
 tar -xf nghttp2.tar.gz -C /src/nghttp2 --strip 1
 cd /src/nghttp2
@@ -50,7 +50,7 @@ make install
 ldconfig
 
 # Build Curl from source
-wget -q https://github.com/curl/curl/releases/download/curl-7_61_1/curl-7.61.1.tar.gz -O ./curl.tar.gz
+wget -q https://github.com/curl/curl/releases/download/curl-7_67_0/curl-7.67.0.tar.gz -O ./curl.tar.gz
 mkdir -p /src/curl
 tar -xf curl.tar.gz -C /src/curl --strip 1
 cd /src/curl

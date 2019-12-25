@@ -58,6 +58,8 @@ const BASE_CODEMIRROR_OPTIONS = {
       // HACK: So nothing conflicts withe the "Send Request" shortcut
     },
     [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
+
+    // Autocomplete
     'Ctrl-Space': 'autocomplete',
 
     // Change default find command from "find" to "findPersistent" so the
@@ -151,9 +153,9 @@ class CodeEditor extends React.Component {
     }
   }
 
-  setSelection(chStart, chEnd, line = 0) {
+  setSelection(chStart, chEnd, lineStart, lineEnd) {
     if (this.codeMirror) {
-      this.codeMirror.setSelection({ line, ch: chStart }, { line, ch: chEnd });
+      this.codeMirror.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
     }
   }
 
@@ -230,12 +232,21 @@ class CodeEditor extends React.Component {
     if (!uniquenessKey || !this.codeMirror) {
       return;
     }
+    const marks = this.codeMirror
+      .getAllMarks()
+      .filter(c => c.__isFold)
+      .map(mark => {
+        const { from, to } = mark.find();
+
+        return { from, to };
+      });
 
     editorStates[uniquenessKey] = {
       scroll: this.codeMirror.getScrollInfo(),
       selections: this.codeMirror.listSelections(),
       cursor: this.codeMirror.getCursor(),
       history: this.codeMirror.getHistory(),
+      marks,
     };
   }
 
@@ -245,13 +256,18 @@ class CodeEditor extends React.Component {
       return;
     }
 
-    const { scroll, selections, cursor, history } = editorStates[uniquenessKey];
+    const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
     this.codeMirror.scrollTo(scroll.left, scroll.top);
     this.codeMirror.setHistory(history);
 
     // NOTE: These won't be visible unless the editor is focused
     this.codeMirror.setCursor(cursor.line, cursor.ch, { scroll: false });
     this.codeMirror.setSelections(selections, null, { scroll: false });
+
+    marks &&
+      marks.forEach(({ from, to }) => {
+        this.codeMirror.foldCode(from, to);
+      });
   }
 
   _setFilterInputRef(n) {
@@ -269,8 +285,38 @@ class CodeEditor extends React.Component {
       return;
     }
 
+    const foldOptions = {
+      widget: (from, to) => {
+        let count;
+        // Get open / close token
+        let startToken = '{';
+        let endToken = '}';
+
+        const prevLine = this.codeMirror.getLine(from.line);
+        if (prevLine.lastIndexOf('[') > prevLine.lastIndexOf('{')) {
+          startToken = '[';
+          endToken = ']';
+        }
+
+        // Get json content
+        const internal = this.codeMirror.getRange(from, to);
+        const toParse = startToken + internal + endToken;
+
+        // Get key count
+        try {
+          const parsed = JSON.parse(toParse);
+          count = Object.keys(parsed).length;
+        } catch (e) {}
+        return count ? `\u21A4 ${count} \u21A6` : '\u2194';
+      },
+    };
+
     const { defaultValue, debounceMillis: ms } = this.props;
-    this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
+
+    this.codeMirror = CodeMirror.fromTextArea(textarea, {
+      ...BASE_CODEMIRROR_OPTIONS,
+      foldOptions,
+    });
 
     // Set default listeners
     const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
@@ -283,6 +329,8 @@ class CodeEditor extends React.Component {
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorPaste);
     this.codeMirror.on('scroll', this._codemirrorScroll);
+    this.codeMirror.on('fold', this._codemirrorToggleFold);
+    this.codeMirror.on('unfold', this._codemirrorToggleFold);
     this.codeMirror.on('keyHandled', this._codemirrorKeyHandled);
 
     // Prevent these things if we're type === "password"
@@ -456,27 +504,28 @@ class CodeEditor extends React.Component {
   async _codemirrorSetOptions() {
     const {
       mode: rawMode,
-      readOnly,
-      hideLineNumbers,
-      keyMap,
-      lineWrapping,
-      getRenderContext,
+      autoCloseBrackets,
+      dynamicHeight,
       getAutocompleteConstants,
+      getRenderContext,
       hideGutters,
-      tabIndex,
-      placeholder,
-      noMatchBrackets,
-      noDragDrop,
+      hideLineNumbers,
       hideScrollbars,
-      noStyleActiveLine,
-      noLint,
+      hintOptions,
       indentSize,
       indentWithTabs,
-      dynamicHeight,
-      hintOptions,
       infoOptions,
       jumpOptions,
+      keyMap,
+      lineWrapping,
       lintOptions,
+      noDragDrop,
+      noLint,
+      noMatchBrackets,
+      noStyleActiveLine,
+      placeholder,
+      readOnly,
+      tabIndex,
     } = this.props;
 
     let mode;
@@ -491,7 +540,7 @@ class CodeEditor extends React.Component {
     const isYaml = typeof rawMode === 'string' ? rawMode.includes('yaml') : false;
     const actuallyIndentWithTabs = indentWithTabs && !isYaml;
 
-    let options = {
+    const options = {
       readOnly: !!readOnly,
       placeholder: placeholder || '',
       mode: mode,
@@ -547,9 +596,8 @@ class CodeEditor extends React.Component {
       options.lint = lintOptions;
     }
 
-    if (!hideGutters && options.lint) {
-      // Don't really need this
-      // options.gutters.push('CodeMirror-lint-markers');
+    if (typeof autoCloseBrackets === 'boolean') {
+      options.autoCloseBrackets = autoCloseBrackets;
     }
 
     // Setup the hint options
@@ -686,6 +734,10 @@ class CodeEditor extends React.Component {
   }
 
   _codemirrorScroll() {
+    this._persistState();
+  }
+
+  _codemirrorToggleFold() {
     this._persistState();
   }
 
@@ -974,6 +1026,7 @@ CodeEditor.propTypes = {
   singleLine: PropTypes.bool,
   debounceMillis: PropTypes.number,
   dynamicHeight: PropTypes.bool,
+  autoCloseBrackets: PropTypes.bool,
   hintOptions: PropTypes.object,
   lintOptions: PropTypes.object,
   infoOptions: PropTypes.object,

@@ -311,6 +311,49 @@ describe('buildRenderContext()', () => {
     expect(context).toEqual({ parent: 'parent', test: 'parent grandparent' });
   });
 
+  it('merges nested properties when rendering', async () => {
+    const ancestors = [
+      {
+        name: 'Parent',
+        type: models.requestGroup.type,
+        environment: {
+          parent: 'parent',
+          nested: {
+            common: 'parent',
+            parentA: 'pa',
+            parentB: 'pb',
+          },
+        },
+      },
+      {
+        name: 'Grandparent',
+        type: models.requestGroup.type,
+        environment: {
+          test: '{{ parent }} grandparent',
+          nested: {
+            common: 'grandparent',
+            grandParentA: 'gpa',
+            grandParentB: 'gpb',
+          },
+        },
+      },
+    ];
+
+    const context = await renderUtils.buildRenderContext(ancestors);
+
+    expect(context).toEqual({
+      parent: 'parent',
+      test: 'parent grandparent',
+      nested: {
+        common: 'parent',
+        grandParentA: 'gpa',
+        grandParentB: 'gpb',
+        parentA: 'pa',
+        parentB: 'pb',
+      },
+    });
+  });
+
   it('cascades properly and renders', async () => {
     const ancestors = [
       {

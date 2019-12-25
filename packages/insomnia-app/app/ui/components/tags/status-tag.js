@@ -10,11 +10,12 @@ type Props = {
   // Optional
   small?: boolean,
   statusMessage?: string,
+  tooltipDelay?: number,
 };
 
 class StatusTag extends React.PureComponent<Props> {
   render() {
-    const { statusMessage, statusCode, small } = this.props;
+    const { statusMessage, statusCode, small, tooltipDelay } = this.props;
 
     let colorClass;
     let statusCodeToDisplay = statusCode;
@@ -50,7 +51,7 @@ class StatusTag extends React.PureComponent<Props> {
 
     return (
       <div className={classnames('tag', colorClass, { 'tag--small': small })}>
-        <Tooltip message={description} position="bottom">
+        <Tooltip message={description} position="bottom" delay={tooltipDelay}>
           <strong>{statusCodeToDisplay}</strong> {statusMessage}
         </Tooltip>
       </div>

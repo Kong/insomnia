@@ -1,24 +1,30 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import * as constants from '../../../common/constants';
 import * as util from '../../../common/misc';
 
 class MethodTag extends PureComponent {
   render() {
-    const { method, fullNames } = this.props;
+    const { method, override, fullNames } = this.props;
+
     let methodName = method;
+    let overrideName = override;
 
     if (!fullNames) {
-      if (method === constants.METHOD_DELETE || method === constants.METHOD_OPTIONS) {
-        methodName = method.slice(0, 3);
-      } else if (method.length > 4) {
-        methodName = util.removeVowels(method).slice(0, 4);
-      }
+      methodName = util.formatMethodName(method);
+      overrideName = override ? util.formatMethodName(override) : override;
     }
 
     return (
-      <div className={'tag tag--no-bg tag--small http-method-' + method}>
-        <span className="tag__inner">{methodName}</span>
+      <div style={{ position: 'relative' }}>
+        {overrideName && (
+          <div className={'tag tag--no-bg tag--superscript http-method-' + method}>
+            <span>{methodName}</span>
+          </div>
+        )}
+        <div
+          className={'tag tag--no-bg tag--small http-method-' + (overrideName ? override : method)}>
+          <span className="tag__inner">{overrideName || methodName}</span>
+        </div>
       </div>
     );
   }
@@ -28,6 +34,7 @@ MethodTag.propTypes = {
   method: PropTypes.string.isRequired,
 
   // Optional
+  override: PropTypes.string,
   fullNames: PropTypes.bool,
 };
 
