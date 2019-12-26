@@ -15,7 +15,7 @@
           "plugins": [
             {"config": {"auth_methods": ["client_credentials"]}, "name": "openid-connect"}
           ],
-          "paths": ["\/path\/only\/oath2$"]
+          "paths": ["/path/only/oath2"]
         },
         {
           "methods": ["GET"],
@@ -23,7 +23,7 @@
           "tags": ["OAS3_import", "OAS3file_security.yaml"],
           "name": "Security_Example-path_1-get",
           "plugins": [{"config": {"key_names": ["api_key_by_me"]}, "name": "key-auth"}],
-          "paths": ["\/path\/only\/key$"]
+          "paths": ["/path/only/key"]
         },
         {
           "methods": ["GET"],
@@ -33,7 +33,7 @@
           "plugins": [
             {"config": {"auth_methods": ["client_credentials"]}, "name": "openid-connect"}
           ],
-          "paths": ["\/path\/and\/based\/auth$"]
+          "paths": ["/path/and/based/auth"]
         },
         {
           "methods": ["GET"],
@@ -41,7 +41,7 @@
           "tags": ["OAS3_import", "OAS3file_security.yaml"],
           "name": "Security_Example-path_5-get",
           "plugins": [{"config": {"key_names": ["api_key_by_me"]}, "name": "key-auth"}],
-          "paths": ["\/path\/or\/based\/auth$"]
+          "paths": ["/path/or/based/auth"]
         },
         {
           "methods": ["GET"],
@@ -57,7 +57,7 @@
               "name": "openid-connect"
             }
           ],
-          "paths": ["\/path\/only\/oidc$"]
+          "paths": ["/path/only/oidc"]
         },
         {
           "methods": ["GET"],
@@ -65,7 +65,7 @@
           "tags": ["OAS3_import", "OAS3file_security.yaml"],
           "name": "Security_Example-path-get",
           "plugins": [{"config": {}, "name": "basic-auth"}],
-          "paths": ["\/path\/only\/basic$"]
+          "paths": ["/path/only/basic"]
         }
       ],
       "tags": ["OAS3_import", "OAS3file_security.yaml"]

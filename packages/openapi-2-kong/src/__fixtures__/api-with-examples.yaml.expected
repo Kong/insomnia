@@ -12,14 +12,14 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
           "name": "Simple_API_overview-path-get",
-          "paths": ["\/path\/$"]
+          "paths": ["/path/"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
           "name": "Simple_API_overview-path_1-get",
-          "paths": ["\/path\/v2$"]
+          "paths": ["/path/v2"]
         }
       ],
       "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"]

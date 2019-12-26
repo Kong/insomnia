@@ -70,7 +70,13 @@ export function generateSlug(str: string): string {
 }
 
 export function pathVariablesToRegex(p: string): string {
-  return p.replace(/{([^}]+)}/g, '(?<$1>\\S+)') + '$';
+  const result = p.replace(/{([^}]+)}/g, '(?<$1>\\S+)');
+  if (result === p) {
+    return result;
+  }
+
+  // If anything was replaced, it's a regex, so add a line-ending match
+  return result + '$';
 }
 
 export function parseUrl(

@@ -9,7 +9,7 @@ import YAML from 'yaml';
 import { showModal } from '../modals';
 import CodePromptModal from '../modals/code-prompt-modal';
 import SwaggerUI from 'swagger-ui-react';
-import {generateFromString} from 'openapi-2-kong';
+import { generateFromString } from 'openapi-2-kong';
 import 'swagger-ui-react/swagger-ui.css';
 
 type Props = {|

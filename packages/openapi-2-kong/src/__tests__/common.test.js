@@ -1,4 +1,12 @@
-import { generateSlug, getName, getSecurity, getServers, fillServerVariables, parseSpec } from '../common';
+import {
+  generateSlug,
+  getName,
+  getSecurity,
+  getServers,
+  fillServerVariables,
+  parseSpec,
+  pathVariablesToRegex,
+} from '../common';
 import YAML from 'yaml';
 
 describe('common', () => {
@@ -192,6 +200,15 @@ describe('common', () => {
 
       const fn = () => fillServerVariables(server);
       expect(fn).toThrowError('Server variable "subdomain" missing default value');
+    });
+  });
+  describe('pathVariablesToRegex()', () => {
+    it('converts variables to regex path', () => {
+      expect(pathVariablesToRegex('/foo/{bar}/{baz}')).toBe('/foo/(?<bar>\\S+)/(?<baz>\\S+)$');
+    });
+
+    it('does not convert to regex if no variables present', () => {
+      expect(pathVariablesToRegex('/foo/bar/baz')).toBe('/foo/bar/baz');
     });
   });
 });

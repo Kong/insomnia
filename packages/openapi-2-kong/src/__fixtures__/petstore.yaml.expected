@@ -12,14 +12,14 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
           "name": "Swagger_Petstore-path-get",
-          "paths": ["\/v1\/pets$"]
+          "paths": ["/v1/pets"]
         },
         {
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
           "name": "Swagger_Petstore-path_1-post",
-          "paths": ["\/v1\/pets$"]
+          "paths": ["/v1/pets"]
         },
         {
           "methods": ["GET"],
