@@ -28,9 +28,13 @@ export async function generateFromString(
   return generateFromSpec(api, ['OAS3_import', ...tags]);
 }
 
-export function generateFromSpec(api: OpenApi3Spec, tags: Array<string> = []): DeclarativeConfig {
+export function generateFromSpec(
+  api: OpenApi3Spec,
+  tags: Array<string> = [],
+): DeclarativeConfig {
+  let result = null;
   try {
-    return {
+     result = {
       _format_version: '1.1',
       services: generateServices(api, tags),
       upstreams: generateUpstreams(api, tags),
@@ -38,4 +42,9 @@ export function generateFromSpec(api: OpenApi3Spec, tags: Array<string> = []): D
   } catch (err) {
     throw new Error('Failed to generate spec: ' + err.message);
   }
+
+  // This remover any circular references or weirdness that might result
+  // from the JS objects used.
+  // SEE: https://github.com/Kong/studio/issues/93
+  return JSON.parse(JSON.stringify(result));
 }

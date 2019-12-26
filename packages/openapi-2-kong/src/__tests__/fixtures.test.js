@@ -20,11 +20,11 @@ describe('fixtures', () => {
       const expectedObj = JSON.parse(expected);
 
       // Make matching friendlier
-      for (const service of expectedObj.services) {
+      for (const service of expectedObj.services || []) {
         service.routes = _sortRoutes(service.routes);
       }
 
-      for (const service of result.services) {
+      for (const service of result.services || []) {
         service.routes = _sortRoutes(service.routes);
       }
 

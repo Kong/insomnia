@@ -107,8 +107,8 @@ export function generateRouteName(
   const n = numRoutes;
   const name = getName(api);
 
-  if (typeof pathItem['x-kong-name'] === 'string') {
-    const pathSlug = generateSlug(pathItem['x-kong-name']);
+  if (typeof (pathItem: Object)['x-kong-name'] === 'string') {
+    const pathSlug = generateSlug((pathItem: Object)['x-kong-name']);
     return `${name}-${pathSlug}-${method}`;
   }
 
