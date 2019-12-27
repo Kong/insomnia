@@ -3,11 +3,7 @@ import * as React from 'react';
 import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
 import Button from './button';
 import styled from 'styled-components';
-import IcnErr from '../assets/icn-errors.svg';
-import IcnWarn from '../assets/icn-warning.svg';
-import IcnChvDown from '../assets/icn-chevron-down.svg';
-import IcnChvUp from '../assets/icn-chevron-up.svg';
-import IcnArrowRight from '../assets/icn-arrow-right.svg';
+import SvgIcon from './svg-icon';
 
 type Notice = {|
   type: 'warning' | 'error',
@@ -28,11 +24,6 @@ type State = {
   collapsed: boolean,
 };
 
-const icons = {
-  warning: <IcnWarn />,
-  error: <IcnErr />,
-};
-
 const Wrapper: React.ComponentType<any> = styled.div`
   width: 100%;
 
@@ -51,21 +42,18 @@ const ErrorCount: React.ComponentType<any> = styled.div`
 
 const JumpButton: React.ComponentType<any> = styled.button`
   outline: 0;
-  border: 0;
+  //border: 0;
   background: transparent;
-  width: 2rem;
-  left: -1.5rem;
-  padding: 0;
-  height: 100%;
+  font-size: var(--font-size-md);
+  margin: 0;
   display: none;
-  position: absolute;
 
-  svg {
-    display: block;
-    width: 0.8rem;
-    height: 0.8rem;
-    margin: auto;
-  }
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -0.5em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
 
   &:not(:hover) svg {
     fill: var(--hl);
@@ -76,7 +64,9 @@ const JumpButton: React.ComponentType<any> = styled.button`
   }
 
   tr:hover & {
-    display: block;
+    // To keep icon centered vertically
+    display: flex;
+    align-items: center;
   }
 `;
 
@@ -92,10 +82,10 @@ const Header: React.ComponentType<any> = styled.header`
 
   & > * {
     display: flex;
-    align-items: center;
+    align-items: stretch;
 
     svg {
-      margin-right: 0.3rem;
+      margin-right: 0.2rem;
     }
   }
 `;
@@ -122,7 +112,7 @@ class NoticeTable extends React.PureComponent<Props, State> {
     const { notices, compact } = this.props;
     const { collapsed } = this.state;
 
-    const caret = collapsed ? <IcnChvUp /> : <IcnChvDown />;
+    const caret = collapsed ? <SvgIcon icon="chevron-up" /> : <SvgIcon icon="chevron-down" />;
 
     const errors = notices.filter(n => n.type === 'error');
     const warnings = notices.filter(n => n.type === 'warning');
@@ -132,10 +122,10 @@ class NoticeTable extends React.PureComponent<Props, State> {
         <Header>
           <div>
             {errors.length > 0 && (
-              <ErrorCount>{icons.error} {errors.length}</ErrorCount>
+              <ErrorCount><SvgIcon icon="error" /> {errors.length}</ErrorCount>
             )}
             {warnings.length > 0 && (
-              <ErrorCount>{icons.warning} {warnings.length}</ErrorCount>
+              <ErrorCount><SvgIcon icon="warning" /> {warnings.length}</ErrorCount>
             )}
           </div>
           <Button onClick={this.collapse.bind(this)} noOutline>
@@ -147,21 +137,21 @@ class NoticeTable extends React.PureComponent<Props, State> {
             <TableHead>
               <TableRow>
                 <TableHeader align="center">Type</TableHeader>
-                <TableHeader style={{ minWidth: '4rem' }} align="center">Line</TableHeader>
+                <TableHeader style={{ minWidth: '3em' }} align="center">Line</TableHeader>
                 <TableHeader style={{ width: '100%' }} align="left">Message</TableHeader>
               </TableRow>
             </TableHead>
             <TableBody>
               {notices.map((n, i) => (
                 <TableRow key={`${n.line}:${n.type}:${n.message}`}>
-                  <TableData align="center">{icons[n.type]}</TableData>
-                  <TableData align="center">{n.line}</TableData>
-                  <TableData align="left">
+                  <TableData align="center"><SvgIcon icon={n.type} /></TableData>
+                  <TableData align="center">
+                    {n.line}
                     <JumpButton onClick={this.onClick.bind(this, n)}>
-                      <IcnArrowRight />
+                      <SvgIcon icon="arrow-right" />
                     </JumpButton>
-                    {n.message}
                   </TableData>
+                  <TableData align="left">{n.message}</TableData>
                 </TableRow>
               ))}
             </TableBody>

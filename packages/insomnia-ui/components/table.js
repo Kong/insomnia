@@ -6,6 +6,7 @@ type Props = {
   children: React.Node,
   striped?: boolean,
   outlined?: boolean,
+  compact?: boolean,
   headings?: Array<React.Node>,
 };
 
@@ -15,7 +16,7 @@ const Table: React.ComponentType<Props> = styled.table`
   border-collapse: collapse;
 
   td, th {
-    line-height: var(--line-height-${({compact}) => compact ? 'xs' : 'sm'});
+    padding: var(--padding-${({compact}) => compact ? 'xs' : 'sm'}) var(--padding-${({compact}) => compact ? 'sm' : 'md'});
   }
 
   ${({ striped }) => striped && `
@@ -66,16 +67,10 @@ const TableData: React.ComponentType<{compact?: boolean, align?: 'center' | 'lef
 const TableHeader: React.ComponentType<{compact?: boolean, align?: 'center' | 'left'}> = styled.th`
   vertical-align: top;
   padding: 0 var(--padding-md);
-  line-height: var(--line-height-${({ compact }) => compact ? 'xs' : 'sm'});
   text-align: ${({ align }) => align || 'left'};
 `;
 
-const TableHead: React.ComponentType<{}> = styled.thead`
-  padding: 0 var(--padding-md);
-  line-height: var(--line-height-sm);
-  vertical-align: top;
-  text-align: left;
-`;
+const TableHead: React.ComponentType<{}> = styled.thead``;
 
 const TableBody: React.ComponentType<{}> = styled.tbody``;
 

@@ -5,7 +5,7 @@ import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from '.
 export default { title: 'Table' };
 
 export const _default = () => (
-  <Table headings={['Column 1', 'Column 2', 'Column 3']}>
+  <Table>
     <TableHead>
       <TableRow>
         <TableHeader>Col 1</TableHeader>
@@ -26,7 +26,7 @@ export const _default = () => (
 );
 
 export const striped = () => (
-  <Table striped headings={['Column 1', 'Column 2', 'Column 3']}>
+  <Table striped>
     <TableHead>
       <TableRow>
         <TableHeader>Col 1</TableHeader>
@@ -47,7 +47,7 @@ export const striped = () => (
 );
 
 export const stripedAndOutlined = () => (
-  <Table striped outlined headings={['Column 1', 'Column 2', 'Column 3']}>
+  <Table striped outlined>
     <TableHead>
       <TableRow>
         <TableHeader>Col 1</TableHeader>

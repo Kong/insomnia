@@ -5,6 +5,39 @@
 </script>
 
 <style>
+  /* reset.css */
+  html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    vertical-align: baseline;
+  }
+
+  /* HTML5 display-role reset for older browsers */
+
+  article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
+    display: block;
+  }
+
+  body {
+    line-height: normal;
+  }
+
+  ol, ul {
+    list-style: none;
+  }
+
+  blockquote, q {
+    quotes: none;
+  }
+
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+</style>
+
+<style>
   html {
     --font-monospace: Menlo, Monaco, Consolas, 'Droid Sans Mono', 'Courier New', monospace,
     'Droid Sans Fallback';
@@ -44,7 +77,7 @@
 <!-- Default Theme Variables -->
 <style>
   html {
-    --font-size: 13px;
+    --font-size: 14px;
   }
 
   *[theme],
@@ -78,14 +111,15 @@
     --hl: rgba(130, 130, 130, 1);
 
     /* Font Size */
-    --font-size-xxs: calc(var(--font-size) * 0.6);
-    --font-size-xs: calc(var(--font-size) * 0.8);
-    --font-size-sm: calc(var(--font-size) * 0.9);
-    --font-size-md: calc(var(--font-size) * 1.0);
-    --font-size-lg: calc(var(--font-size) * 1.2);
-    --font-size-xl: calc(var(--font-size) * 1.35);
-    --font-size-xxl: calc(var(--font-size) * 1.5);
-    --font-size-xxxl: calc(var(--font-size) * 1.7);
+    --font-size-xxs: 8px;
+    --font-size-xs: 11px;
+    --font-size-sm: 13px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 19px;
+    --font-size-xxl: 21px;
+    --font-size-xxxl: 24px;
+    --font-size: var(--font-size-md);
 
     /* Padding */
     --padding-md: calc(var(--font-size) * 1.2);

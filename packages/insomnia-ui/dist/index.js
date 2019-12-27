@@ -4097,14 +4097,17 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var Table = _styledComponents.default.table.withConfig({
   displayName: "table__Table",
   componentId: "sc-1aofif7-0"
-})(["width:100%;border-spacing:0;border-collapse:collapse;td,th{line-height:var(--line-height-", ");}", " ", ""], function (_ref) {
+})(["width:100%;border-spacing:0;border-collapse:collapse;td,th{padding:var(--padding-", ") var(--padding-", ");}", " ", ""], function (_ref) {
   var compact = _ref.compact;
   return compact ? 'xs' : 'sm';
 }, function (_ref2) {
-  var striped = _ref2.striped;
-  return striped && "\n  tbody tr:nth-child(odd) {\n    background: var(--hl-xs);\n  }";
+  var compact = _ref2.compact;
+  return compact ? 'sm' : 'md';
 }, function (_ref3) {
-  var outlined = _ref3.outlined;
+  var striped = _ref3.striped;
+  return striped && "\n  tbody tr:nth-child(odd) {\n    background: var(--hl-xs);\n  }";
+}, function (_ref4) {
+  var outlined = _ref4.outlined;
   return outlined && "\n  & {\n    th {\n      background: var(--hl-xxs);\n    }\n\n    &,\n    td {\n      border: 1px solid var(--hl-sm);\n    }\n\n    tr.table--no-outline-row td {\n      border-left: 0;\n      border-right: 0;\n    }\n\n    & {\n      border-radius: 3px;\n      border-collapse: unset;\n    }\n\n    td {\n      border-left: 0;\n      border-bottom: 0;\n\n      &:last-child {\n        border-right: 0;\n      }\n    }\n  }";
 });
 
@@ -4120,8 +4123,8 @@ exports.TableRow = TableRow;
 var TableData = _styledComponents.default.td.withConfig({
   displayName: "table__TableData",
   componentId: "sc-1aofif7-2"
-})(["vertical-align:top;padding:0 var(--padding-md);text-align:", ";"], function (_ref4) {
-  var align = _ref4.align;
+})(["vertical-align:top;padding:0 var(--padding-md);text-align:", ";"], function (_ref5) {
+  var align = _ref5.align;
   return align || 'left';
 });
 
@@ -4130,10 +4133,7 @@ exports.TableData = TableData;
 var TableHeader = _styledComponents.default.th.withConfig({
   displayName: "table__TableHeader",
   componentId: "sc-1aofif7-3"
-})(["vertical-align:top;padding:0 var(--padding-md);line-height:var(--line-height-", ");text-align:", ";"], function (_ref5) {
-  var compact = _ref5.compact;
-  return compact ? 'xs' : 'sm';
-}, function (_ref6) {
+})(["vertical-align:top;padding:0 var(--padding-md);text-align:", ";"], function (_ref6) {
   var align = _ref6.align;
   return align || 'left';
 });
@@ -4143,7 +4143,7 @@ exports.TableHeader = TableHeader;
 var TableHead = _styledComponents.default.thead.withConfig({
   displayName: "table__TableHead",
   componentId: "sc-1aofif7-4"
-})(["padding:0 var(--padding-md);line-height:var(--line-height-sm);vertical-align:top;text-align:left;"]);
+})([""]);
 
 exports.TableHead = TableHead;
 
@@ -4153,7 +4153,164 @@ var TableBody = _styledComponents.default.tbody.withConfig({
 })([""]);
 
 exports.TableBody = TableBody;
-},{"styled-components":"OuUI","react":"HdMw"}],"Ng7p":[function(require,module,exports) {
+},{"styled-components":"OuUI","react":"HdMw"}],"yeGe":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var React = _interopRequireWildcard(require("react"));
+
+var _styledComponents = _interopRequireDefault(require("styled-components"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var IcnArrowRight = function IcnArrowRight(props) {
+  return React.createElement("svg", props, React.createElement("circle", {
+    cx: "6",
+    cy: "6",
+    r: "6"
+  }), React.createElement("path", {
+    fill: "#FFF",
+    d: "M3 5v2h3v2l4-3-4-3v2z"
+  }));
+};
+
+IcnArrowRight.defaultProps = {
+  width: "12",
+  height: "12",
+  viewBox: "0 0 12 12",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+
+var IcnChevronDown = function IcnChevronDown(props) {
+  return React.createElement("svg", props, React.createElement("path", {
+    d: "M1 2L0 3l5 5 5-5-1-1-4 4-4-4z"
+  }));
+};
+
+IcnChevronDown.defaultProps = {
+  width: "12",
+  height: "12",
+  viewBox: "0 0 10 10",
+  xmlns: "http://www.w3.org/2000/svg",
+  className: "svg-icon"
+};
+
+var IcnChevronUp = function IcnChevronUp(props) {
+  return React.createElement("svg", props, React.createElement("path", {
+    d: "M1 8L0 7l5-5 5 5-1 1-4-4-4 4z"
+  }));
+};
+
+IcnChevronUp.defaultProps = {
+  width: "12",
+  height: "12",
+  viewBox: "0 0 10 10",
+  xmlns: "http://www.w3.org/2000/svg",
+  className: "svg-icon"
+};
+
+var IcnWarning = function IcnWarning(props) {
+  return React.createElement("svg", props, React.createElement("path", {
+    d: "M.096 10.546c-.212.482-.061 1.08.337 1.338.119.076.251.116.385.116h10.364c.452 0 .818-.443.818-.989 0-.162-.033-.322-.096-.465L7.27.916C6.829 0 5.903-.274 5.2.302c-.19.157-.351.367-.47.616L.095 10.546z",
+    fill: "#F2B230"
+  }), React.createElement("path", {
+    d: "M6.5 8a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h1zm0-5a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-3a.5.5 0 0 1 .5-.5h1z",
+    fill: "#FFF"
+  }));
+};
+
+IcnWarning.defaultProps = {
+  width: "12",
+  height: "12",
+  viewBox: "0 0 12 12",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+
+var IcnError = function IcnError(props) {
+  return React.createElement("svg", props, React.createElement("circle", {
+    fill: "#BF0000",
+    cx: "6",
+    cy: "6",
+    r: "6"
+  }), React.createElement("path", {
+    d: "M8.099 3L9 3.901 6.901 6 9 8.099 8.099 9 6 6.901 3.901 9 3 8.099 5.098 6 3 3.901 3.901 3 6 5.098 8.099 3z",
+    fill: "#FFF"
+  }));
+};
+
+IcnError.defaultProps = {
+  width: "12",
+  height: "12",
+  viewBox: "0 0 12 12",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+
+var SvgIconStyled = _styledComponents.default.div.withConfig({
+  displayName: "svg-icon__SvgIconStyled",
+  componentId: "sc-1q0oex1-0"
+})(["display:inline-block;width:1em;height:1em;"]);
+
+var SvgIcon =
+/*#__PURE__*/
+function (_React$Component) {
+  _inherits(SvgIcon, _React$Component);
+
+  function SvgIcon() {
+    _classCallCheck(this, SvgIcon);
+
+    return _possibleConstructorReturn(this, _getPrototypeOf(SvgIcon).apply(this, arguments));
+  }
+
+  _createClass(SvgIcon, [{
+    key: "render",
+    value: function render() {
+      var icon = this.props.icon;
+      return React.createElement(SvgIconStyled, null, SvgIcon.icns[icon]);
+    }
+  }]);
+
+  return SvgIcon;
+}(React.Component);
+
+_defineProperty(SvgIcon, "icns", {
+  'arrow-right': React.createElement(IcnArrowRight, null),
+  'chevron-up': React.createElement(IcnChevronUp, null),
+  'chevron-down': React.createElement(IcnChevronDown, null),
+  'warning': React.createElement(IcnWarning, null),
+  'error': React.createElement(IcnError, null)
+});
+
+var _default = SvgIcon;
+exports.default = _default;
+},{"react":"HdMw","styled-components":"OuUI"}],"Ng7p":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4168,6 +4325,8 @@ var _table = require("./table");
 var _button = _interopRequireDefault(require("./button"));
 
 var _styledComponents = _interopRequireDefault(require("styled-components"));
+
+var _svgIcon = _interopRequireDefault(require("./svg-icon"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4195,94 +4354,25 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var IcnErr = function IcnErr(props) {
-  return React.createElement("svg", props, React.createElement("title", null, "icn-errors"), React.createElement("g", {
-    fill: "none",
-    fillRule: "evenodd"
-  }, React.createElement("circle", {
-    fill: "#BF0000",
-    cx: "6",
-    cy: "6",
-    r: "6"
-  }), React.createElement("path", {
-    d: "M8.099 3L9 3.901 6.901 6 9 8.099 8.099 9 6 6.901 3.901 9 3 8.099 5.098 6 3 3.901 3.901 3 6 5.098 8.099 3z",
-    fill: "#FFF",
-    fillRule: "nonzero"
-  })));
-};
-
-IcnErr.defaultProps = {
-  width: "12",
-  height: "12",
-  viewBox: "0 0 12 12",
-  xmlns: "http://www.w3.org/2000/svg"
-};
-
-var IcnWarn = function IcnWarn(props) {
-  return React.createElement("svg", props, React.createElement("title", null, "icn-warning-16x"), React.createElement("g", {
-    fill: "none",
-    fillRule: "evenodd"
-  }, React.createElement("path", {
-    d: "M.096 10.546c-.212.482-.061 1.08.337 1.338.119.076.251.116.385.116h10.364c.452 0 .818-.443.818-.989 0-.162-.033-.322-.096-.465L7.27.916C6.829 0 5.903-.274 5.2.302c-.19.157-.351.367-.47.616L.095 10.546z",
-    fill: "#F2B230"
-  }), React.createElement("path", {
-    d: "M6.5 8a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h1zm0-5a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-3a.5.5 0 0 1 .5-.5h1z",
-    fill: "#FFF"
-  })));
-};
-
-IcnWarn.defaultProps = {
-  width: "12",
-  height: "12",
-  viewBox: "0 0 12 12",
-  xmlns: "http://www.w3.org/2000/svg"
-};
-
-var IcnChvDown = function IcnChvDown(props) {
-  return React.createElement("svg", props, React.createElement("path", {
-    d: "M1 0L0 1l5 5 5-5-1-1-4 4-4-4z"
-  }));
-};
-
-IcnChvDown.defaultProps = {
-  viewBox: "0 0 10 6",
-  xmlns: "http://www.w3.org/2000/svg",
-  className: "svg-icon",
-  fillRule: "evenodd",
-  clipRule: "evenodd",
-  strokeLinejoin: "round",
-  strokeMiterlimit: "2"
-};
-
-var IcnChvUp = function IcnChvUp(props) {
-  return React.createElement("svg", props, React.createElement("path", {
-    d: "M1 6L0 5l5-5 5 5-1 1-4-4-4 4z"
-  }));
-};
-
-IcnChvUp.defaultProps = {
-  viewBox: "0 0 10 6",
-  xmlns: "http://www.w3.org/2000/svg",
-  className: "svg-icon",
-  fillRule: "evenodd",
-  clipRule: "evenodd",
-  strokeLinejoin: "round",
-  strokeMiterlimit: "2"
-};
-var icons = {
-  warning: React.createElement(IcnWarn, null),
-  error: React.createElement(IcnErr, null)
-};
-
 var Wrapper = _styledComponents.default.div.withConfig({
   displayName: "notice-table__Wrapper",
   componentId: "sc-172isf7-0"
-})(["width:100%;"]);
+})(["width:100%;td{position:relative;}tr:hover{background-color:var(--hl-sm) !important;}"]);
+
+var ErrorCount = _styledComponents.default.div.withConfig({
+  displayName: "notice-table__ErrorCount",
+  componentId: "sc-172isf7-1"
+})(["margin-right:var(--padding-md);"]);
+
+var JumpButton = _styledComponents.default.button.withConfig({
+  displayName: "notice-table__JumpButton",
+  componentId: "sc-172isf7-2"
+})(["outline:0;background:transparent;font-size:var(--font-size-md);margin:0;display:none;position:absolute;top:0;bottom:0;right:-0.5em;padding-left:0.5em;padding-right:0.5em;&:not(:hover) svg{fill:var(--hl);}&:active svg{fill:var(--color-font);}tr:hover &{display:flex;align-items:center;}"]);
 
 var Header = _styledComponents.default.header.withConfig({
   displayName: "notice-table__Header",
-  componentId: "sc-172isf7-1"
-})(["display:flex;align-items:center;flex-grow:0;justify-content:space-between;border:1px solid var(--hl-sm);border-left:0;border-right:0;padding-left:var(--padding-md);& > *{display:flex;align-items:center;svg{margin-right:0.3rem;}}"]);
+  componentId: "sc-172isf7-3"
+})(["display:flex;align-items:center;flex-grow:0;justify-content:space-between;border:1px solid var(--hl-sm);border-left:0;border-right:0;padding-left:var(--padding-md);& > *{display:flex;align-items:stretch;svg{margin-right:0.2rem;}}"]);
 
 var NoticeTable =
 /*#__PURE__*/
@@ -4319,14 +4409,41 @@ function (_React$PureComponent) {
       });
     }
   }, {
+    key: "onClick",
+    value: function onClick(notice, e) {
+      var onClick = this.props.onClick;
+
+      if (!onClick) {
+        return;
+      }
+
+      onClick(notice, e);
+    }
+  }, {
     key: "render",
     value: function render() {
+      var _this2 = this;
+
       var _this$props = this.props,
           notices = _this$props.notices,
           compact = _this$props.compact;
       var collapsed = this.state.collapsed;
-      var caret = collapsed ? React.createElement(IcnChvUp, null) : React.createElement(IcnChvDown, null);
-      return React.createElement(Wrapper, null, React.createElement(Header, null, React.createElement("div", null, icons.error, " 1\xA0\xA0\xA0\xA0", icons.warning, " 1"), React.createElement(_button.default, {
+      var caret = collapsed ? React.createElement(_svgIcon.default, {
+        icon: "chevron-up"
+      }) : React.createElement(_svgIcon.default, {
+        icon: "chevron-down"
+      });
+      var errors = notices.filter(function (n) {
+        return n.type === 'error';
+      });
+      var warnings = notices.filter(function (n) {
+        return n.type === 'warning';
+      });
+      return React.createElement(Wrapper, null, React.createElement(Header, null, React.createElement("div", null, errors.length > 0 && React.createElement(ErrorCount, null, React.createElement(_svgIcon.default, {
+        icon: "error"
+      }), " ", errors.length), warnings.length > 0 && React.createElement(ErrorCount, null, React.createElement(_svgIcon.default, {
+        icon: "warning"
+      }), " ", warnings.length)), React.createElement(_button.default, {
         onClick: this.collapse.bind(this),
         noOutline: true
       }, collapsed ? 'Show' : 'Hide', " Details\xA0", caret)), !collapsed && React.createElement(_table.Table, {
@@ -4336,7 +4453,7 @@ function (_React$PureComponent) {
         align: "center"
       }, "Type"), React.createElement(_table.TableHeader, {
         style: {
-          minWidth: '4rem'
+          minWidth: '3em'
         },
         align: "center"
       }, "Line"), React.createElement(_table.TableHeader, {
@@ -4344,16 +4461,22 @@ function (_React$PureComponent) {
           width: '100%'
         },
         align: "left"
-      }, "Message"))), React.createElement(_table.TableBody, null, notices.map(function (j) {
+      }, "Message"))), React.createElement(_table.TableBody, null, notices.map(function (n, i) {
         return React.createElement(_table.TableRow, {
-          key: j.message
+          key: "".concat(n.line, ":").concat(n.type, ":").concat(n.message)
         }, React.createElement(_table.TableData, {
           align: "center"
-        }, icons[j.type]), React.createElement(_table.TableData, {
+        }, React.createElement(_svgIcon.default, {
+          icon: n.type
+        })), React.createElement(_table.TableData, {
           align: "center"
-        }, j.line), React.createElement(_table.TableData, {
+        }, n.line, React.createElement(JumpButton, {
+          onClick: _this2.onClick.bind(_this2, n)
+        }, React.createElement(_svgIcon.default, {
+          icon: "arrow-right"
+        }))), React.createElement(_table.TableData, {
           align: "left"
-        }, j.message));
+        }, n.message));
       }))));
     }
   }]);
@@ -4363,7 +4486,7 @@ function (_React$PureComponent) {
 
 var _default = NoticeTable;
 exports.default = _default;
-},{"react":"HdMw","./table":"zpSa","./button":"gy5R","styled-components":"OuUI"}],"Focm":[function(require,module,exports) {
+},{"react":"HdMw","./table":"zpSa","./button":"gy5R","styled-components":"OuUI","./svg-icon":"yeGe"}],"Focm":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
