@@ -30,6 +30,14 @@ export function getAppEnvironment() {
   return process.env.INSOMNIA_ENV || 'production';
 }
 
+export function getBrowserUserAgent() {
+  const ua = encodeURIComponent(String(window.navigator.userAgent)
+  .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
+  .replace(/Electron\/\d+\.\d+\.\d+ /, ''))
+  .replace('%2C', ',');
+  return ua;
+}
+
 export function getTempDir() {
   // NOTE: Using a fairly unique name here because "insomnia" is a common word
   const { app } = electron.remote || electron;

@@ -3,7 +3,7 @@ import { EventEmitter } from 'events';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models/index';
 import { _trackEvent, _trackPageView } from '../analytics';
-import { getAppPlatform, getAppVersion } from '../constants';
+import { getAppPlatform, getAppVersion, getBrowserUserAgent } from '../constants';
 
 describe('init()', () => {
   beforeEach(async () => {
@@ -45,6 +45,7 @@ describe('init()', () => {
           'v=1&' +
           'tid=UA-8499472-31&' +
           'cid=device&' +
+          `ua=${getBrowserUserAgent()}&` +
           'dl=https%3A%2F%2Fdesktop.studio.konghq.com%2F&' +
           'sr=1920x1080&' +
           'ul=en-US&' +
@@ -74,6 +75,7 @@ describe('init()', () => {
           'v=1&' +
           'tid=UA-8499472-31&' +
           'cid=device&' +
+          `ua=${getBrowserUserAgent()}&` +
           'dl=https%3A%2F%2Fdesktop.studio.konghq.com%2F&' +
           'sr=1920x1080&' +
           'ul=en-US&' +
@@ -104,6 +106,7 @@ describe('init()', () => {
           'v=1&' +
           'tid=UA-8499472-31&' +
           'cid=device&' +
+          `ua=${getBrowserUserAgent()}&` +
           'dl=https%3A%2F%2Fdesktop.studio.konghq.com%2Fmy%2Fpath&' +
           'sr=1920x1080&' +
           'ul=en-US&' +
@@ -132,6 +135,7 @@ describe('init()', () => {
           'v=1&' +
           'tid=UA-8499472-31&' +
           'cid=device&' +
+          `ua=${getBrowserUserAgent()}&` +
           'dl=https%3A%2F%2Fdesktop.studio.konghq.com%2Fmy%2Fpath&' +
           'sr=1920x1080&' +
           'ul=en-US&' +
@@ -147,6 +151,7 @@ describe('init()', () => {
           'v=1&' +
           'tid=UA-8499472-31&' +
           'cid=device&' +
+          `ua=${getBrowserUserAgent()}&` +
           'dl=https%3A%2F%2Fdesktop.studio.konghq.com%2Fmy%2Fpath&' +
           'sr=1920x1080&' +
           'ul=en-US&' +

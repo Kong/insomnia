@@ -28,6 +28,7 @@ const KEY_NON_INTERACTION = 'ni';
 const KEY_VIEWPORT_SIZE = 'vp';
 const KEY_SCREEN_RESOLUTION = 'sr';
 const KEY_USER_LANGUAGE = 'ul';
+const KEY_USER_AGENT = 'ua';
 const KEY_DOCUMENT_ENCODING = 'de';
 const KEY_EVENT_CATEGORY = 'ec';
 const KEY_EVENT_ACTION = 'ea';
@@ -133,10 +134,16 @@ async function _getDefaultParams(): Promise<Array<RequestParameter>> {
     await models.settings.update(settings, { deviceId });
   }
 
+  // Prepping user agent string prior to sending to GA due to Electron base UA not being GA friendly.
+  let ua = String(window.navigator.userAgent)
+  .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
+  .replace(/Electron\/\d+\.\d+\.\d+ /, '');
+
   const params = [
     { name: KEY_VERSION, value: '1' },
     { name: KEY_TRACKING_ID, value: GA_ID },
     { name: KEY_CLIENT_ID, value: deviceId },
+    { name: KEY_USER_AGENT, value: ua },
     { name: KEY_LOCATION, value: GA_LOCATION + _currentLocationPath },
     { name: KEY_SCREEN_RESOLUTION, value: getScreenResolution() },
     { name: KEY_USER_LANGUAGE, value: getUserLanguage() },
