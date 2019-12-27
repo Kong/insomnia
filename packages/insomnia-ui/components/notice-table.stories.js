@@ -14,4 +14,4 @@ const notices = [
   },
 ];
 
-export const _default = () => <NoticeTable notices={notices} />;
+export const _default = () => <NoticeTable notices={notices} onClick={n => window.alert(n.message)} />;
