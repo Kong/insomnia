@@ -42,7 +42,7 @@ const ErrorCount: React.ComponentType<any> = styled.div`
 
 const JumpButton: React.ComponentType<any> = styled.button`
   outline: 0;
-  //border: 0;
+  border: 0;
   background: transparent;
   font-size: var(--font-size-md);
   margin: 0;
