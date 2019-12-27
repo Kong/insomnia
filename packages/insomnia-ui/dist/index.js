@@ -4045,7 +4045,7 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 var StyledButton = _styledComponents.default.button.withConfig({
   displayName: "button__StyledButton",
   componentId: "sc-1lnydp2-0"
-})(["text-align:center;color:", ";padding:0 var(--padding-md);height:var(--line-height-xs);line-height:var(--line-height-xs);opacity:0.8;border-radius:2px;border:", ";&:focus,&:hover{outline:0;background-color:var(--hl-xxs);opacity:1;}&:active{background-color:var(--hl-xs);}svg{margin-left:0.2em;vertical-align:center;height:0.6em;padding-bottom:0.1em;path{fill:var(--color-font);}}"], function (_ref) {
+})(["text-align:center;color:", ";padding:0 var(--padding-md);height:var(--line-height-xs);line-height:var(--line-height-xs);opacity:0.8;border-radius:2px;border:", ";&:focus,&:hover{outline:0;background-color:var(--hl-xxs);opacity:1;}&:active{background-color:var(--hl-xs);}svg{margin-left:0.2em;vertical-align:center;height:0.8em;max-width:1em;}.icon-svg path{fill:var(--color-font);}"], function (_ref) {
   var bg = _ref.bg;
   return bg ? "var(--color-".concat(bg, ")") : 'var(--color-font)';
 }, function (_ref2) {

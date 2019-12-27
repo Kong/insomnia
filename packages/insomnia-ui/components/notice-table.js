@@ -91,8 +91,8 @@ class NoticeTable extends React.PureComponent<Props, State> {
               </TableRow>
             </TableHead>
             <TableBody>
-              {notices.map(j => (
-                <TableRow key={j.message}>
+              {notices.map((j, i) => (
+                <TableRow key={`${j.line}:${j.type}:${j.message}`}>
                   <TableData align="center">{icons[j.type]}</TableData>
                   <TableData align="center">{j.line}</TableData>
                   <TableData align="left">{j.message}</TableData>

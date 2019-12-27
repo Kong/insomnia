@@ -32,11 +32,12 @@ const StyledButton: React.ComponentType<Props> = styled.button`
   svg {
     margin-left: 0.2em;
     vertical-align: center;
-    height: 0.6em;
-    padding-bottom: 0.1em;
-    path {
-      fill: var(--color-font);
-    }
+    height: 0.8em;
+    max-width: 1em;
+  }
+
+  .icon-svg path {
+    fill: var(--color-font);
   }
 `;
 
