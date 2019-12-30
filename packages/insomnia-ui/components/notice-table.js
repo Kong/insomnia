@@ -54,13 +54,18 @@ const JumpButton: React.ComponentType<any> = styled.button`
   right: -0.5em;
   padding-left: 0.5em;
   padding-right: 0.5em;
+  z-index: 1;
 
-  &:not(:hover) svg {
-    fill: var(--hl);
+  & svg {
+    opacity: 0.7;
+  }
+
+  &:hover svg {
+    opacity: 1;
   }
 
   &:active svg {
-    fill: var(--color-font);
+    opacity: 0.85;
   }
 
   tr:hover & {
@@ -122,14 +127,18 @@ class NoticeTable extends React.PureComponent<Props, State> {
         <Header>
           <div>
             {errors.length > 0 && (
-              <ErrorCount><SvgIcon icon="error" /> {errors.length}</ErrorCount>
+              <ErrorCount>
+                <SvgIcon icon="error" /> {errors.length}
+              </ErrorCount>
             )}
             {warnings.length > 0 && (
-              <ErrorCount><SvgIcon icon="warning" /> {warnings.length}</ErrorCount>
+              <ErrorCount>
+                <SvgIcon icon="warning" /> {warnings.length}
+              </ErrorCount>
             )}
           </div>
           <Button onClick={this.collapse.bind(this)} noOutline>
-            {collapsed ? 'Show' : 'Hide'} Details&nbsp;{caret}
+            {collapsed ? 'Show' : 'Hide'} Details{caret}
           </Button>
         </Header>
         {!collapsed && (
@@ -137,14 +146,20 @@ class NoticeTable extends React.PureComponent<Props, State> {
             <TableHead>
               <TableRow>
                 <TableHeader align="center">Type</TableHeader>
-                <TableHeader style={{ minWidth: '3em' }} align="center">Line</TableHeader>
-                <TableHeader style={{ width: '100%' }} align="left">Message</TableHeader>
+                <TableHeader style={{ minWidth: '3em' }} align="center">
+                  Line
+                </TableHeader>
+                <TableHeader style={{ width: '100%' }} align="left">
+                  Message
+                </TableHeader>
               </TableRow>
             </TableHead>
             <TableBody>
               {notices.map((n, i) => (
                 <TableRow key={`${n.line}:${n.type}:${n.message}`}>
-                  <TableData align="center"><SvgIcon icon={n.type} /></TableData>
+                  <TableData align="center">
+                    <SvgIcon icon={n.type} />
+                  </TableData>
                   <TableData align="center">
                     {n.line}
                     <JumpButton onClick={this.onClick.bind(this, n)}>

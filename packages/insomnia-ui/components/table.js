@@ -2,7 +2,11 @@
 import styled from 'styled-components';
 import * as React from 'react';
 
-type Props = {
+/***********/
+/* <table> */
+/***********/
+
+type TableProps = {
   children: React.Node,
   striped?: boolean,
   outlined?: boolean,
@@ -10,21 +14,27 @@ type Props = {
   headings?: Array<React.Node>,
 };
 
-const Table: React.ComponentType<Props> = styled.table`
+const TableStyled: React.ComponentType<{}> = styled.table`
   width: 100%;
   border-spacing: 0;
   border-collapse: collapse;
 
-  td, th {
-    padding: var(--padding-${({compact}) => compact ? 'xs' : 'sm'}) var(--padding-${({compact}) => compact ? 'sm' : 'md'});
+  td,
+  th {
+    padding: var(--padding- ${({ compact }) => (compact ? 'xs' : 'sm')})
+      var(--padding- ${({ compact }) => (compact ? 'sm' : 'md')});
   }
 
-  ${({ striped }) => striped && `
+  ${({ striped }) =>
+    striped &&
+    `
   tbody tr:nth-child(odd) {
     background: var(--hl-xs);
   }`}
 
-  ${({ outlined }) => outlined && `
+  ${({ outlined }) =>
+    outlined &&
+    `
   & {
     th {
       background: var(--hl-xxs);
@@ -55,30 +65,59 @@ const Table: React.ComponentType<Props> = styled.table`
     }
   }`}
 `;
+const Table = (props: TableProps) => <TableStyled {...props} />;
 
-const TableRow: React.ComponentType<{className?: string}> = styled.tr``;
+/********/
+/* <tr> */
+/********/
 
-const TableData: React.ComponentType<{compact?: boolean, align?: 'center' | 'left'}> = styled.td`
-  vertical-align: top;
-  padding: 0 var(--padding-md);
-  text-align: ${({ align }) => align || 'left'};
-`;
+const TableRowStyled: React.ComponentType<{}> = styled.tr``;
+const TableRow = (props: {}) => <TableRowStyled {...props} />;
 
-const TableHeader: React.ComponentType<{compact?: boolean, align?: 'center' | 'left'}> = styled.th`
-  vertical-align: top;
-  padding: 0 var(--padding-md);
-  text-align: ${({ align }) => align || 'left'};
-`;
+/********/
+/* <td> */
+/********/
 
-const TableHead: React.ComponentType<{}> = styled.thead``;
-
-const TableBody: React.ComponentType<{}> = styled.tbody``;
-
-export {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableData,
+type TableDataProps = {
+  compact?: boolean,
+  align?: 'center' | 'left',
 };
+const TableDataStyled: React.ComponentType<{
+  compact?: boolean,
+  align?: 'center' | 'left',
+}> = styled.td`
+  vertical-align: top;
+  padding: 0 var(--padding-md);
+  text-align: ${({ align }) => align || 'left'};
+`;
+const TableData = (props: TableDataProps) => <TableDataStyled {...props} />;
+
+/********/
+/* <th> */
+/********/
+type TableHeaderProps = {
+  compact?: boolean,
+  align?: 'center' | 'left',
+};
+const TableHeaderStyled: React.ComponentType<TableHeaderProps> = styled.th`
+  vertical-align: top;
+  padding: 0 var(--padding-md);
+  text-align: ${({ align }) => align || 'left'};
+`;
+const TableHeader = (props: TableHeaderProps) => <TableHeaderStyled {...props} />;
+
+/***********/
+/* <thead> */
+/***********/
+
+const TableHeadStyled: React.ComponentType<{}> = styled.thead``;
+const TableHead = (props: {}) => <TableHeadStyled {...props} />;
+
+/***********/
+/* <tbody> */
+/***********/
+
+const TableBodyStyled: React.ComponentType<{}> = styled.tbody``;
+const TableBody = (props: {}) => <TableBodyStyled {...props} />;
+
+export { Table, TableBody, TableHead, TableHeader, TableRow, TableData };

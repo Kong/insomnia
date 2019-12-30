@@ -4045,7 +4045,7 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 var StyledButton = _styledComponents.default.button.withConfig({
   displayName: "button__StyledButton",
   componentId: "sc-1lnydp2-0"
-})(["text-align:center;color:", ";padding:0 var(--padding-md);height:var(--line-height-xs);line-height:var(--line-height-xs);opacity:0.8;border-radius:2px;border:", ";&:focus,&:hover{outline:0;background-color:var(--hl-xxs);opacity:1;}&:active{background-color:var(--hl-xs);}svg{margin-left:0.2em;vertical-align:center;height:0.8em;max-width:1em;}.icon-svg path{fill:var(--color-font);}"], function (_ref) {
+})(["text-align:center;color:", ";padding:0 var(--padding-md);height:var(--line-height-xs);line-height:var(--line-height-xs);opacity:0.8;border-radius:2px;border:", ";&:focus,&:hover{outline:0;background-color:var(--hl-xxs);opacity:1;}&:active{background-color:var(--hl-xs);}svg{display:inline-block !important;margin-left:0.2em;}.icon-svg path{fill:var(--color-font);}"], function (_ref) {
   var bg = _ref.bg;
   return bg ? "var(--color-".concat(bg, ")") : 'var(--color-font)';
 }, function (_ref2) {
@@ -4193,10 +4193,12 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 var IcnArrowRight = function IcnArrowRight(props) {
   return React.createElement("svg", props, React.createElement("circle", {
+    className: "fill-hl",
     cx: "6",
     cy: "6",
     r: "6"
   }), React.createElement("path", {
+    className: "fill-hl-font",
     fill: "#FFF",
     d: "M3 5v2h3v2l4-3-4-3v2z"
   }));
@@ -4211,6 +4213,7 @@ IcnArrowRight.defaultProps = {
 
 var IcnChevronDown = function IcnChevronDown(props) {
   return React.createElement("svg", props, React.createElement("path", {
+    className: "fill-font",
     d: "M1 2L0 3l5 5 5-5-1-1-4 4-4-4z"
   }));
 };
@@ -4219,12 +4222,12 @@ IcnChevronDown.defaultProps = {
   width: "12",
   height: "12",
   viewBox: "0 0 10 10",
-  xmlns: "http://www.w3.org/2000/svg",
-  className: "svg-icon"
+  xmlns: "http://www.w3.org/2000/svg"
 };
 
 var IcnChevronUp = function IcnChevronUp(props) {
   return React.createElement("svg", props, React.createElement("path", {
+    className: "fill-font",
     d: "M1 8L0 7l5-5 5 5-1 1-4-4-4 4z"
   }));
 };
@@ -4233,15 +4236,17 @@ IcnChevronUp.defaultProps = {
   width: "12",
   height: "12",
   viewBox: "0 0 10 10",
-  xmlns: "http://www.w3.org/2000/svg",
-  className: "svg-icon"
+  xmlns: "http://www.w3.org/2000/svg"
 };
 
 var IcnWarning = function IcnWarning(props) {
   return React.createElement("svg", props, React.createElement("path", {
+    className: "fill-notice",
     d: "M.096 10.546c-.212.482-.061 1.08.337 1.338.119.076.251.116.385.116h10.364c.452 0 .818-.443.818-.989 0-.162-.033-.322-.096-.465L7.27.916C6.829 0 5.903-.274 5.2.302c-.19.157-.351.367-.47.616L.095 10.546z",
-    fill: "#F2B230"
+    fill: "#F2B230",
+    opacity: ".9"
   }), React.createElement("path", {
+    className: "fill-notice-fg",
     d: "M6.5 8a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h1zm0-5a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-3a.5.5 0 0 1 .5-.5h1z",
     fill: "#FFF"
   }));
@@ -4256,11 +4261,14 @@ IcnWarning.defaultProps = {
 
 var IcnError = function IcnError(props) {
   return React.createElement("svg", props, React.createElement("circle", {
+    className: "fill-danger",
+    opacity: ".9",
     fill: "#BF0000",
     cx: "6",
     cy: "6",
     r: "6"
   }), React.createElement("path", {
+    className: "fill-fg-danger",
     d: "M8.099 3L9 3.901 6.901 6 9 8.099 8.099 9 6 6.901 3.901 9 3 8.099 5.098 6 3 3.901 3.901 3 6 5.098 8.099 3z",
     fill: "#FFF"
   }));
@@ -4276,7 +4284,7 @@ IcnError.defaultProps = {
 var SvgIconStyled = _styledComponents.default.div.withConfig({
   displayName: "svg-icon__SvgIconStyled",
   componentId: "sc-1q0oex1-0"
-})(["display:inline-block;width:1em;height:1em;"]);
+})(["display:inline-block;width:1em;height:1em;svg{display:block;height:100%;width:auto;transform:scale(0.9);}svg .fill-font{fill:var(--color-font)}svg .fill-danger{fill:var(--color-danger)}svg .fill-danger-font{fill:var(--color-font-danger)}svg .fill-warning{fill:var(--color-warning)}svg .fill-warning-font{fill:var(--color-font-warning)}svg .fill-notice{fill:var(--color-notice)}svg .fill-notice-font{fill:var(--color-font-notice)}svg .fill-hl{fill:var(--hl)}svg .fill-hl-font{fill:var(--color-font-danger)}"]);
 
 var SvgIcon =
 /*#__PURE__*/
@@ -4367,7 +4375,7 @@ var ErrorCount = _styledComponents.default.div.withConfig({
 var JumpButton = _styledComponents.default.button.withConfig({
   displayName: "notice-table__JumpButton",
   componentId: "sc-172isf7-2"
-})(["outline:0;background:transparent;font-size:var(--font-size-md);margin:0;display:none;position:absolute;top:0;bottom:0;right:-0.5em;padding-left:0.5em;padding-right:0.5em;&:not(:hover) svg{fill:var(--hl);}&:active svg{fill:var(--color-font);}tr:hover &{display:flex;align-items:center;}"]);
+})(["outline:0;border:0;background:transparent;font-size:var(--font-size-md);margin:0;display:none;position:absolute;top:0;bottom:0;right:-0.5em;padding-left:0.5em;padding-right:0.5em;z-index:1;& svg{opacity:0.7;}&:hover svg{opacity:1;}&:active svg{opacity:0.85;}tr:hover &{display:flex;align-items:center;}"]);
 
 var Header = _styledComponents.default.header.withConfig({
   displayName: "notice-table__Header",

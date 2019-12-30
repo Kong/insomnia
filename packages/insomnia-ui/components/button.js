@@ -4,19 +4,22 @@ import styled from 'styled-components';
 
 type Props = {
   onClick?: (e: SyntheticEvent<HTMLButtonElement>) => any,
-  bg?: 'success' | 'notice' | 'warning' | 'danger' | 'surprise' | 'info';
+  bg?: 'success' | 'notice' | 'warning' | 'danger' | 'surprise' | 'info',
 };
 
 const StyledButton: React.ComponentType<Props> = styled.button`
   text-align: center;
-  color: ${({ bg }) => bg ? `var(--color-${bg})` : 'var(--color-font)'};
+  color: ${({ bg }) => (bg ? `var(--color-${bg})` : 'var(--color-font)')};
+  font-size: var(--font-size-sm);
   padding: 0 var(--padding-md);
   height: var(--line-height-xs);
-  line-height: var(--line-height-xs);
   opacity: 0.8;
   border-radius: 2px;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
 
-  border: ${({ noOutline }) => noOutline ? '0' : '1px solid'};
+  border: ${({ noOutline }) => (noOutline ? '0' : '1px solid')};
 
   &:focus,
   &:hover {
@@ -30,14 +33,8 @@ const StyledButton: React.ComponentType<Props> = styled.button`
   }
 
   svg {
-    margin-left: 0.2em;
-    vertical-align: center;
-    height: 0.8em;
-    max-width: 1em;
-  }
-
-  .icon-svg path {
-    fill: var(--color-font);
+    display: inline-block !important;
+    margin-left: 0.4em;
   }
 `;
 
