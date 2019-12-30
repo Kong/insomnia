@@ -84,6 +84,7 @@ the following tools:
 
 Here is a list of plugins available for installation via NPM.
 
+- [AWS IAM](https://www.npmjs.com/package/insomnia-plugin-aws-iam) – Template tag to retrieve system AWS credentials
 - [Chance](https://www.npmjs.com/package/insomnia-plugin-chance) – Generates a random value using Chance.JS
 - [Cuid](https://www.npmjs.com/package/insomnia-plugin-cuid) – Generate random cuids
 - [Custom Timestamp](https://www.npmjs.com/package/insomnia-plugin-customtimestamp) – Advanced timestamp creator
