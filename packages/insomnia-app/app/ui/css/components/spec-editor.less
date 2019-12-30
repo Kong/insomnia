@@ -52,27 +52,8 @@
 
 #swagger-ui-wrapper {
   border-left: 1px solid var(--hl-sm);
-
-  .scheme-container {
-    background: none;
-  }
-
   overflow-y: scroll;
   grid-area: body-right;
-
-  section.schemes {
-    div:first-child {
-      float: left;
-
-      .servers-title {
-        line-height: @line-height-xs;
-      }
-    }
-
-    .auth-wrapper {
-      padding-top: @padding-sm;
-    }
-  }
 
   .nostyle,
   .renderedMarkdown,
@@ -81,16 +62,53 @@
   p,
   .model-box,
   .model-title,
-  .opblock-summary-description {
+  .opblock-summary-description ,
+  .opblock-title,
+  .try-out__btn,
+  .col_header,
+  .header-col,
+  .response,
+  .response-col_status,
+  .response-col_description,
+  .response-col_links,
+  .parameter__name,
+  .parameter__type {
     color: var(--color-font);
     font-weight: inherit;
+  }
+
+  .model {
+    & .model {
+      color: var(--color-font);
+    }
+  }
+
+  .scheme-container {
+    background: none;
+  }
+  section.schemes {
+    div:first-child {
+      float: left;
+
+      .servers-title {
+        line-height: @line-height-xs;
+      }
+    }
+    
+    .auth-wrapper {
+      padding-top: @padding-sm;
+    }
+  }
+
+  .model-toggle:after {
+    background-color: var(--hl-md);
   }
 
   svg {
     fill: var(--color-font);
   }
 
-  .opblock {
+  .opblock-section-header, .opblock {
     background-color: var(--hl-xs);
   }
 
