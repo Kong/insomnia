@@ -21,8 +21,8 @@ const TableStyled: React.ComponentType<{}> = styled.table`
 
   td,
   th {
-    padding: var(--padding- ${({ compact }) => (compact ? 'xs' : 'sm')})
-      var(--padding- ${({ compact }) => (compact ? 'sm' : 'md')});
+    padding: ${({ compact }) => (compact ? 'var(--padding-xs)' : 'var(--padding-sm)')}
+      ${({ compact }) => (compact ? 'var(--padding-sm)' : 'var(--padding-md)')};
   }
 
   ${({ striped }) =>
