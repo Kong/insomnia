@@ -264,10 +264,10 @@ class CodeEditor extends React.Component {
     this.codeMirror.setCursor(cursor.line, cursor.ch, { scroll: false });
     this.codeMirror.setSelections(selections, null, { scroll: false });
 
-    marks &&
-      marks.forEach(({ from, to }) => {
-        this.codeMirror.foldCode(from, to);
-      });
+    // Restore marks one-by-one
+    for (const { from, to } in marks || []) {
+      this.codeMirror.foldCode(from, to);
+    }
   }
 
   _setFilterInputRef(n) {
@@ -768,9 +768,12 @@ class CodeEditor extends React.Component {
 
     const value = this.codeMirror.getDoc().getValue();
 
-    const lint = value.length > MAX_SIZE_FOR_LINTING ? false : !this.props.noLint;
+    // This disabled linting if the document reaches a maximum size
+    const shouldLint = value.length > MAX_SIZE_FOR_LINTING ? false : !this.props.noLint;
     const existingLint = this.codeMirror.options.lint || false;
-    if (lint !== existingLint) {
+    if (shouldLint !== existingLint) {
+      const { lintOptions } = this.props;
+      const lint = shouldLint ? lintOptions || true : false;
       this.codeMirror.setOption('lint', lint);
     }
 

@@ -26,9 +26,16 @@ type Props = {|
 @autobind
 class SpecEditor extends React.PureComponent<Props> {
   editor: ?CodeEditor;
+  debounceTimeout: IntervalID;
 
   state = {
     previewActive: true,
+  };
+
+  // Defining it here instead of in render() so it won't act as a changed prop
+  // when being passed to <CodeEditor> again
+  static lintOptions = {
+    delay: 1000,
   };
 
   _setEditorRef(n: ?CodeEditor) {
@@ -53,13 +60,14 @@ class SpecEditor extends React.PureComponent<Props> {
     this.setState({ previewActive: !this.state.previewActive });
   }
 
-  async _handleOnChange(v: string) {
+  _handleOnChange(v: string) {
     const { apiSpec, onChange } = this.props;
 
-    await onChange({
-      ...apiSpec,
-      contents: v,
-    });
+    // Debounce the update because these specs can get pretty large
+    clearTimeout(this.debounceTimeout);
+    this.debounceTimeout = setTimeout(async () => {
+      await onChange({ ...apiSpec, contents: v });
+    }, 500);
   }
 
   setSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
@@ -120,6 +128,7 @@ class SpecEditor extends React.PureComponent<Props> {
             indentSize={editorIndentSize}
             lineWrapping={lineWrapping}
             keyMap={editorKeyMap}
+            lintOptions={SpecEditor.lintOptions}
             mode="openapi"
             defaultValue={apiSpec.contents}
             onChange={this._handleOnChange}
