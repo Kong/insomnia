@@ -34,6 +34,7 @@ const KEY_EVENT_CATEGORY = 'ec';
 const KEY_EVENT_ACTION = 'ea';
 const KEY_EVENT_LABEL = 'el';
 const KEY_EVENT_VALUE = 'ev';
+const KEY_ANONYMIZE_IP = 'aip';
 
 const KEY_CUSTOM_DIMENSION_PREFIX = 'cd';
 
@@ -150,6 +151,7 @@ async function _getDefaultParams(): Promise<Array<RequestParameter>> {
     { name: KEY_TITLE, value: `${getAppId()}:${getAppVersion()}` },
     { name: KEY_CUSTOM_DIMENSION_PREFIX + DIMENSION_PLATFORM, value: getAppPlatform() },
     { name: KEY_CUSTOM_DIMENSION_PREFIX + DIMENSION_VERSION, value: getAppVersion() },
+    { name: KEY_ANONYMIZE_IP, value: '1' },
   ];
 
   const viewport = getViewportSize();
