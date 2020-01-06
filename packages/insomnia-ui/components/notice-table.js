@@ -16,6 +16,7 @@ type Props = {
 
   // Optional
   onClick?: (n: Notice, e: SyntheticEvent<HTMLElement>) => any,
+  onVisibilityToggle?: (expanded: boolean) => any,
   compact?: boolean,
   className?: string,
 };
@@ -101,7 +102,15 @@ class NoticeTable extends React.PureComponent<Props, State> {
   };
 
   collapse(e: SyntheticEvent<HTMLButtonElement>) {
-    this.setState(state => ({ collapsed: !state.collapsed }));
+    const { onVisibilityToggle } = this.props;
+    this.setState(
+      state => ({ collapsed: !state.collapsed }),
+      () => {
+        if (onVisibilityToggle) {
+          onVisibilityToggle(!this.state.collapsed);
+        }
+      },
+    );
   }
 
   onClick(notice: Notice, e: SyntheticEvent<HTMLButtonElement>) {
