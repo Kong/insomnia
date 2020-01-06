@@ -88,7 +88,10 @@
   }
   section.schemes {
     div:first-child {
-      float: left;
+
+      &:not('.modal-ux-header') {
+        float: left;
+      }
 
       .servers-title {
         line-height: @line-height-xs;
