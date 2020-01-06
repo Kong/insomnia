@@ -4044,8 +4044,8 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 
 var StyledButton = _styledComponents.default.button.withConfig({
   displayName: "button__StyledButton",
-  componentId: "sc-1lnydp2-0"
-})(["text-align:center;color:", ";padding:0 var(--padding-md);height:var(--line-height-xs);line-height:var(--line-height-xs);opacity:0.8;border-radius:2px;border:", ";&:focus,&:hover{outline:0;background-color:var(--hl-xxs);opacity:1;}&:active{background-color:var(--hl-xs);}svg{display:inline-block !important;margin-left:0.2em;}.icon-svg path{fill:var(--color-font);}"], function (_ref) {
+  componentId: "sc-1rp6fgf-0"
+})(["text-align:center;color:", ";font-size:var(--font-size-sm);padding:0 var(--padding-md);height:var(--line-height-xs);opacity:0.8;border-radius:2px;display:flex !important;flex-direction:row !important;align-items:center !important;border:", ";&:focus,&:hover{outline:0;background-color:var(--hl-xxs);opacity:1;}&:active{background-color:var(--hl-xs);}svg{display:inline-block !important;margin-left:0.4em;}"], function (_ref) {
   var bg = _ref.bg;
   return bg ? "var(--color-".concat(bg, ")") : 'var(--color-font)';
 }, function (_ref2) {
@@ -4094,15 +4094,15 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var Table = _styledComponents.default.table.withConfig({
-  displayName: "table__Table",
-  componentId: "sc-1aofif7-0"
-})(["width:100%;border-spacing:0;border-collapse:collapse;td,th{padding:var(--padding-", ") var(--padding-", ");}", " ", ""], function (_ref) {
+var TableStyled = _styledComponents.default.table.withConfig({
+  displayName: "table__TableStyled",
+  componentId: "sc-1rqczh1-0"
+})(["width:100%;border-spacing:0;border-collapse:collapse;td,th{padding:", " ", ";}", " ", ""], function (_ref) {
   var compact = _ref.compact;
-  return compact ? 'xs' : 'sm';
+  return compact ? 'var(--padding-xs)' : 'var(--padding-sm)';
 }, function (_ref2) {
   var compact = _ref2.compact;
-  return compact ? 'sm' : 'md';
+  return compact ? 'var(--padding-sm)' : 'var(--padding-md)';
 }, function (_ref3) {
   var striped = _ref3.striped;
   return striped && "\n  tbody tr:nth-child(odd) {\n    background: var(--hl-xs);\n  }";
@@ -4111,46 +4111,100 @@ var Table = _styledComponents.default.table.withConfig({
   return outlined && "\n  & {\n    th {\n      background: var(--hl-xxs);\n    }\n\n    &,\n    td {\n      border: 1px solid var(--hl-sm);\n    }\n\n    tr.table--no-outline-row td {\n      border-left: 0;\n      border-right: 0;\n    }\n\n    & {\n      border-radius: 3px;\n      border-collapse: unset;\n    }\n\n    td {\n      border-left: 0;\n      border-bottom: 0;\n\n      &:last-child {\n        border-right: 0;\n      }\n    }\n  }";
 });
 
+var Table = function Table(props) {
+  return React.createElement(TableStyled, props);
+};
+/********/
+
+/* <tr> */
+
+/********/
+
+
 exports.Table = Table;
 
-var TableRow = _styledComponents.default.tr.withConfig({
-  displayName: "table__TableRow",
-  componentId: "sc-1aofif7-1"
+var TableRowStyled = _styledComponents.default.tr.withConfig({
+  displayName: "table__TableRowStyled",
+  componentId: "sc-1rqczh1-1"
 })([""]);
+
+var TableRow = function TableRow(props) {
+  return React.createElement(TableRowStyled, props);
+};
+/********/
+
+/* <td> */
+
+/********/
+
 
 exports.TableRow = TableRow;
 
-var TableData = _styledComponents.default.td.withConfig({
-  displayName: "table__TableData",
-  componentId: "sc-1aofif7-2"
+var TableDataStyled = _styledComponents.default.td.withConfig({
+  displayName: "table__TableDataStyled",
+  componentId: "sc-1rqczh1-2"
 })(["vertical-align:top;padding:0 var(--padding-md);text-align:", ";"], function (_ref5) {
   var align = _ref5.align;
   return align || 'left';
 });
 
+var TableData = function TableData(props) {
+  return React.createElement(TableDataStyled, props);
+};
+/********/
+
+/* <th> */
+
+/********/
+
+
 exports.TableData = TableData;
 
-var TableHeader = _styledComponents.default.th.withConfig({
-  displayName: "table__TableHeader",
-  componentId: "sc-1aofif7-3"
+var TableHeaderStyled = _styledComponents.default.th.withConfig({
+  displayName: "table__TableHeaderStyled",
+  componentId: "sc-1rqczh1-3"
 })(["vertical-align:top;padding:0 var(--padding-md);text-align:", ";"], function (_ref6) {
   var align = _ref6.align;
   return align || 'left';
 });
 
+var TableHeader = function TableHeader(props) {
+  return React.createElement(TableHeaderStyled, props);
+};
+/***********/
+
+/* <thead> */
+
+/***********/
+
+
 exports.TableHeader = TableHeader;
 
-var TableHead = _styledComponents.default.thead.withConfig({
-  displayName: "table__TableHead",
-  componentId: "sc-1aofif7-4"
+var TableHeadStyled = _styledComponents.default.thead.withConfig({
+  displayName: "table__TableHeadStyled",
+  componentId: "sc-1rqczh1-4"
 })([""]);
+
+var TableHead = function TableHead(props) {
+  return React.createElement(TableHeadStyled, props);
+};
+/***********/
+
+/* <tbody> */
+
+/***********/
+
 
 exports.TableHead = TableHead;
 
-var TableBody = _styledComponents.default.tbody.withConfig({
-  displayName: "table__TableBody",
-  componentId: "sc-1aofif7-5"
+var TableBodyStyled = _styledComponents.default.tbody.withConfig({
+  displayName: "table__TableBodyStyled",
+  componentId: "sc-1rqczh1-5"
 })([""]);
+
+var TableBody = function TableBody(props) {
+  return React.createElement(TableBodyStyled, props);
+};
 
 exports.TableBody = TableBody;
 },{"styled-components":"OuUI","react":"HdMw"}],"yeGe":[function(require,module,exports) {
@@ -4283,8 +4337,8 @@ IcnError.defaultProps = {
 
 var SvgIconStyled = _styledComponents.default.div.withConfig({
   displayName: "svg-icon__SvgIconStyled",
-  componentId: "sc-1q0oex1-0"
-})(["display:inline-block;width:1em;height:1em;svg{display:block;height:100%;width:auto;transform:scale(0.9);}svg .fill-font{fill:var(--color-font)}svg .fill-danger{fill:var(--color-danger)}svg .fill-danger-font{fill:var(--color-font-danger)}svg .fill-warning{fill:var(--color-warning)}svg .fill-warning-font{fill:var(--color-font-warning)}svg .fill-notice{fill:var(--color-notice)}svg .fill-notice-font{fill:var(--color-font-notice)}svg .fill-hl{fill:var(--hl)}svg .fill-hl-font{fill:var(--color-font-danger)}"]);
+  componentId: "k2d8g9-0"
+})(["display:inline-block;width:1em;height:1em;position:relative;svg{display:block;height:100%;width:auto;transform:scale(0.9);position:absolute;top:0;left:0;right:0;bottom:0;}svg .fill-font{fill:var(--color-font);}svg .fill-danger{fill:var(--color-danger);}svg .fill-danger-font{fill:var(--color-font-danger);}svg .fill-warning{fill:var(--color-warning);}svg .fill-warning-font{fill:var(--color-font-warning);}svg .fill-notice{fill:var(--color-notice);}svg .fill-notice-font{fill:var(--color-font-notice);}svg .fill-hl{fill:var(--hl);}svg .fill-hl-font{fill:var(--color-font-danger);}"]);
 
 var SvgIcon =
 /*#__PURE__*/
@@ -4312,8 +4366,8 @@ _defineProperty(SvgIcon, "icns", {
   'arrow-right': React.createElement(IcnArrowRight, null),
   'chevron-up': React.createElement(IcnChevronUp, null),
   'chevron-down': React.createElement(IcnChevronDown, null),
-  'warning': React.createElement(IcnWarning, null),
-  'error': React.createElement(IcnError, null)
+  warning: React.createElement(IcnWarning, null),
+  error: React.createElement(IcnError, null)
 });
 
 var _default = SvgIcon;
@@ -4364,22 +4418,22 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 var Wrapper = _styledComponents.default.div.withConfig({
   displayName: "notice-table__Wrapper",
-  componentId: "sc-172isf7-0"
+  componentId: "sc-1lwyq7g-0"
 })(["width:100%;td{position:relative;}tr:hover{background-color:var(--hl-sm) !important;}"]);
 
 var ErrorCount = _styledComponents.default.div.withConfig({
   displayName: "notice-table__ErrorCount",
-  componentId: "sc-172isf7-1"
+  componentId: "sc-1lwyq7g-1"
 })(["margin-right:var(--padding-md);"]);
 
 var JumpButton = _styledComponents.default.button.withConfig({
   displayName: "notice-table__JumpButton",
-  componentId: "sc-172isf7-2"
+  componentId: "sc-1lwyq7g-2"
 })(["outline:0;border:0;background:transparent;font-size:var(--font-size-md);margin:0;display:none;position:absolute;top:0;bottom:0;right:-0.5em;padding-left:0.5em;padding-right:0.5em;z-index:1;& svg{opacity:0.7;}&:hover svg{opacity:1;}&:active svg{opacity:0.85;}tr:hover &{display:flex;align-items:center;}"]);
 
 var Header = _styledComponents.default.header.withConfig({
   displayName: "notice-table__Header",
-  componentId: "sc-172isf7-3"
+  componentId: "sc-1lwyq7g-3"
 })(["display:flex;align-items:center;flex-grow:0;justify-content:space-between;border:1px solid var(--hl-sm);border-left:0;border-right:0;padding-left:var(--padding-md);& > *{display:flex;align-items:stretch;svg{margin-right:0.2rem;}}"]);
 
 var NoticeTable =
@@ -4410,10 +4464,17 @@ function (_React$PureComponent) {
   _createClass(NoticeTable, [{
     key: "collapse",
     value: function collapse(e) {
+      var _this2 = this;
+
+      var onVisibilityToggle = this.props.onVisibilityToggle;
       this.setState(function (state) {
         return {
           collapsed: !state.collapsed
         };
+      }, function () {
+        if (onVisibilityToggle) {
+          onVisibilityToggle(!_this2.state.collapsed);
+        }
       });
     }
   }, {
@@ -4430,7 +4491,7 @@ function (_React$PureComponent) {
   }, {
     key: "render",
     value: function render() {
-      var _this2 = this;
+      var _this3 = this;
 
       var _this$props = this.props,
           notices = _this$props.notices,
@@ -4454,7 +4515,7 @@ function (_React$PureComponent) {
       }), " ", warnings.length)), React.createElement(_button.default, {
         onClick: this.collapse.bind(this),
         noOutline: true
-      }, collapsed ? 'Show' : 'Hide', " Details\xA0", caret)), !collapsed && React.createElement(_table.Table, {
+      }, collapsed ? 'Show' : 'Hide', " Details", caret)), !collapsed && React.createElement(_table.Table, {
         striped: true,
         compact: compact
       }, React.createElement(_table.TableHead, null, React.createElement(_table.TableRow, null, React.createElement(_table.TableHeader, {
@@ -4479,7 +4540,7 @@ function (_React$PureComponent) {
         })), React.createElement(_table.TableData, {
           align: "center"
         }, n.line, React.createElement(JumpButton, {
-          onClick: _this2.onClick.bind(_this2, n)
+          onClick: _this3.onClick.bind(_this3, n)
         }, React.createElement(_svgIcon.default, {
           icon: "arrow-right"
         }))), React.createElement(_table.TableData, {
@@ -4500,31 +4561,39 @@ exports.default = _default;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-Object.defineProperty(exports, "Button", {
-  enumerable: true,
-  get: function () {
-    return _button.default;
-  }
-});
-Object.defineProperty(exports, "NoticeTable", {
-  enumerable: true,
-  get: function () {
-    return _noticeTable.default;
-  }
-});
-Object.defineProperty(exports, "Table", {
-  enumerable: true,
-  get: function () {
-    return _table.default;
-  }
-});
+exports.TableRow = exports.TableHeader = exports.TableHead = exports.TableData = exports.TableBody = exports.Table = exports.SvgIcon = exports.NoticeTable = exports.Button = void 0;
 
 var _button = _interopRequireDefault(require("./components/button"));
 
 var _noticeTable = _interopRequireDefault(require("./components/notice-table"));
 
-var _table = _interopRequireDefault(require("./components/table"));
+var _svgIcon = _interopRequireDefault(require("./components/svg-icon"));
+
+var table = _interopRequireWildcard(require("./components/table"));
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-},{"./components/button":"gy5R","./components/notice-table":"Ng7p","./components/table":"zpSa"}]},{},["Focm"], null)
+
+var Button = _button.default;
+exports.Button = Button;
+var NoticeTable = _noticeTable.default;
+exports.NoticeTable = NoticeTable;
+var SvgIcon = _svgIcon.default;
+exports.SvgIcon = SvgIcon;
+var Table = table.Table;
+exports.Table = Table;
+var TableBody = table.TableBody;
+exports.TableBody = TableBody;
+var TableData = table.TableData;
+exports.TableData = TableData;
+var TableHead = table.TableHead;
+exports.TableHead = TableHead;
+var TableHeader = table.TableHeader;
+exports.TableHeader = TableHeader;
+var TableRow = table.TableRow;
+exports.TableRow = TableRow;
+},{"./components/button":"gy5R","./components/notice-table":"Ng7p","./components/svg-icon":"yeGe","./components/table":"zpSa"}]},{},["Focm"], null)
 //# sourceMappingURL=/index.js.map

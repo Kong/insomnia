@@ -794,39 +794,39 @@ class Wrapper extends React.PureComponent<Props, State> {
         <ErrorBoundary showAlert>
           <RequestPane
             ref={handleSetRequestPaneRef}
-            handleImportFile={this._handleImportFile}
-            request={activeRequest}
-            workspace={activeWorkspace}
             downloadPath={responseDownloadPath}
-            settings={settings}
             environmentId={activeEnvironment ? activeEnvironment._id : ''}
-            oAuth2Token={oAuth2Token}
+            forceRefreshCounter={this.state.forceRefreshKey}
             forceUpdateRequest={this._handleForceUpdateRequest}
+            forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
             handleCreateRequest={handleCreateRequestForWorkspace}
             handleGenerateCode={handleGenerateCodeForActiveRequest}
-            handleImport={this._handleImport}
-            handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            handleImport={this._handleImport}
+            handleImportFile={this._handleImportFile}
+            handleRender={handleRender}
+            handleSend={this._handleSendRequestWithActiveEnvironment}
+            handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
             handleUpdateDownloadPath={handleUpdateDownloadPath}
-            updateRequestBody={Wrapper._handleUpdateRequestBody}
-            forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
-            updateRequestUrl={Wrapper._handleUpdateRequestUrl}
-            updateRequestMethod={Wrapper._handleUpdateRequestMethod}
-            updateRequestParameters={Wrapper._handleUpdateRequestParameters}
+            headerEditorKey={headerEditorKey}
+            isVariableUncovered={isVariableUncovered}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            oAuth2Token={oAuth2Token}
+            request={activeRequest}
+            settings={settings}
             updateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
+            updateRequestBody={Wrapper._handleUpdateRequestBody}
             updateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
+            updateRequestMethod={Wrapper._handleUpdateRequestMethod}
             updateRequestMimeType={handleUpdateRequestMimeType}
+            updateRequestParameters={Wrapper._handleUpdateRequestParameters}
+            updateRequestUrl={Wrapper._handleUpdateRequestUrl}
             updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
             updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
             updateSettingsUseBulkParametersEditor={
               this._handleUpdateSettingsUseBulkParametersEditor
             }
-            forceRefreshCounter={this.state.forceRefreshKey}
-            handleSend={this._handleSendRequestWithActiveEnvironment}
-            handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-            headerEditorKey={headerEditorKey}
+            workspace={activeWorkspace}
           />
         </ErrorBoundary>
 
