@@ -77,7 +77,8 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
     return [...history, { currentType, currentField }];
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     if (!nextProps.reference) {
       return;
     }

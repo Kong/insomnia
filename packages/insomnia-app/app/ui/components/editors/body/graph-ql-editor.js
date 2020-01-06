@@ -470,7 +470,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     return JSON.stringify(body);
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     if (this.state.automaticFetch && nextProps.request.url !== this.props.request.url) {
       clearTimeout(this._schemaFetchTimeout);
       this._schemaFetchTimeout = setTimeout(async () => {
@@ -486,7 +487,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     })();
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     this._isMounted = false;
     clearTimeout(this._schemaFetchTimeout);
   }

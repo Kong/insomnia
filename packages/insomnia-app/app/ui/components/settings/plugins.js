@@ -97,7 +97,8 @@ class Plugins extends React.PureComponent<void, State> {
     this._handleRefreshPlugins();
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     this._isMounted = false;
   }
 
@@ -123,35 +124,34 @@ class Plugins extends React.PureComponent<void, State> {
               </tr>
             </thead>
             <tbody>
-              {plugins.map(
-                plugin =>
-                  !plugin.directory ? null : (
-                    <tr key={plugin.name}>
-                      <td>
-                        {plugin.name}
-                        {plugin.description && (
-                          <HelpTooltip info className="space-left">
-                            {plugin.description}
-                          </HelpTooltip>
-                        )}
-                      </td>
-                      <td>{plugin.version}</td>
-                      <td className="no-wrap" style={{ width: '10rem' }}>
-                        <CopyButton
-                          className="btn btn--outlined btn--super-duper-compact"
-                          title={plugin.directory}
-                          content={plugin.directory}>
-                          Copy Path
-                        </CopyButton>{' '}
-                        <Button
-                          className="btn btn--outlined btn--super-duper-compact"
-                          onClick={Plugins._handleOpenDirectory}
-                          value={plugin.directory}>
-                          Show Folder
-                        </Button>
-                      </td>
-                    </tr>
-                  ),
+              {plugins.map(plugin =>
+                !plugin.directory ? null : (
+                  <tr key={plugin.name}>
+                    <td>
+                      {plugin.name}
+                      {plugin.description && (
+                        <HelpTooltip info className="space-left">
+                          {plugin.description}
+                        </HelpTooltip>
+                      )}
+                    </td>
+                    <td>{plugin.version}</td>
+                    <td className="no-wrap" style={{ width: '10rem' }}>
+                      <CopyButton
+                        className="btn btn--outlined btn--super-duper-compact"
+                        title={plugin.directory}
+                        content={plugin.directory}>
+                        Copy Path
+                      </CopyButton>{' '}
+                      <Button
+                        className="btn btn--outlined btn--super-duper-compact"
+                        onClick={Plugins._handleOpenDirectory}
+                        value={plugin.directory}>
+                        Show Folder
+                      </Button>
+                    </td>
+                  </tr>
+                ),
               )}
             </tbody>
           </table>

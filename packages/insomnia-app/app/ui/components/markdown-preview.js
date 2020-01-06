@@ -69,15 +69,18 @@ class MarkdownPreview extends PureComponent {
     }
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     clearTimeout(this._compileTimeout);
   }
 
-  componentWillMount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillMount() {
     this._compileMarkdown(this.props.markdown);
   }
 
-  componentWillReceiveProps(nextProps) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this._compileMarkdown(nextProps.markdown);
   }
 

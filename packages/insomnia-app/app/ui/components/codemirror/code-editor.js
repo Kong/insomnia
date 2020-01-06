@@ -86,13 +86,15 @@ class CodeEditor extends React.Component {
     this._previousUniquenessKey = 'n/a';
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     if (this.codeMirror) {
       this.codeMirror.toTextArea();
     }
   }
 
-  componentWillReceiveProps(nextProps) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this._uniquenessKey = nextProps.uniquenessKey;
     this._previousUniquenessKey = this.props.uniquenessKey;
 

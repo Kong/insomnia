@@ -52,7 +52,8 @@ class TimeFromNow extends React.PureComponent<Props, State> {
     this._update();
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     clearInterval(this._interval);
   }
 

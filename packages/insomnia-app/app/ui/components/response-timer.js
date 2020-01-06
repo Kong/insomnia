@@ -13,7 +13,8 @@ class ResponseTimer extends PureComponent {
     };
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     clearInterval(this._interval);
   }
 

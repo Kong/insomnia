@@ -60,7 +60,8 @@ class KeydownBinder extends React.PureComponent<Props> {
     }
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     if (this.props.scoped) {
       const el = ReactDOM.findDOMNode(this);
       el && el.removeEventListener('keydown', this._handleKeydown);

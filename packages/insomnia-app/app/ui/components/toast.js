@@ -155,7 +155,8 @@ class Toast extends React.PureComponent<Props, State> {
     electron.ipcRenderer.on('show-notification', this._listenerShowNotification);
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     clearInterval(this._interval);
     electron.ipcRenderer.removeListener('show-notification', this._listenerShowNotification);
   }

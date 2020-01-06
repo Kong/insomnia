@@ -1043,7 +1043,8 @@ class App extends PureComponent {
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     // Remove mouse and key handlers
     document.removeEventListener('mouseup', this._handleMouseUp);
     document.removeEventListener('mousemove', this._handleMouseMove);
@@ -1074,7 +1075,8 @@ class App extends PureComponent {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this._ensureWorkspaceChildren(nextProps);
 
     // Update VCS if needed
@@ -1084,7 +1086,8 @@ class App extends PureComponent {
     }
   }
 
-  componentWillMount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillMount() {
     this._ensureWorkspaceChildren(this.props);
   }
 

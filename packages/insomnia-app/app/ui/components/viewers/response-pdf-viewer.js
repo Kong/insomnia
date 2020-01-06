@@ -88,7 +88,8 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
     window.addEventListener('resize', this.handleResize);
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize);
   }
 
