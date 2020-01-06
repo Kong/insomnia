@@ -1,0 +1,28 @@
+{
+  "name": "insomnia-ui",
+  "version": "1.0.0",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "description": "Insomnia UI component library",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "parcel build ./*.js --bundle-node-modules --no-minify --target browser",
+    "storybook": "start-storybook --port 3223",
+    "bootstrap": "rimraf node_modules/fsevents"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run build"
+    }
+  },
+  "devDependencies": {
+    "@babel/core": "^7.7.7",
+    "@storybook/addon-info": "^5.2.8",
+    "@storybook/react": "^5.2.8",
+    "parcel-bundler": "^1.12.4"
+  },
+  "dependencies": {
+    "classnames": "^2.2.6",
+    "styled-components": "^4.4.1"
+  }
+}

@@ -3,8 +3,9 @@
 docker/
 screenshots/
 **/*.min.js
-packages/insomnia-app/build/
-packages/insomnia-app/dist/
+**/build/
+**/dist/
+**/.cache/
 **/coverage/
 **/node_modules/
 **/webpack/

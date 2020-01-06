@@ -90,6 +90,7 @@
     "codemirror-graphql",
     "fuzzysort",
     "graphql",
+    "insomnia-ui",
     "insomnia-cookies",
     "insomnia-importers",
     "insomnia-prettify",
@@ -151,6 +152,7 @@
     "insomnia-plugin-response": "^2.1.2",
     "insomnia-plugin-uuid": "^2.1.2",
     "insomnia-prettify": "^2.1.2",
+    "insomnia-ui": "^1.0.0",
     "insomnia-url": "^2.1.2",
     "insomnia-xpath": "^2.1.2",
     "json-order": "^1.0.12",
@@ -189,6 +191,7 @@
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.4.0",
     "@octokit/rest": "^16.33.0",
+    "@storybook/addon-info": "^5.2.8",
     "@storybook/react": "^5.2.6",
     "concurrently": "^3.5.0",
     "cross-env": "^2.0.0",
