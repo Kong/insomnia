@@ -131,7 +131,8 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     document.addEventListener('mousemove', this._handleUserActivity);
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     clearInterval(this.checkInterval);
     document.removeEventListener('mousemove', this._handleUserActivity);
   }

@@ -60,7 +60,8 @@ class SyncPullButton extends React.PureComponent<Props, State> {
     }
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     clearTimeout(this._timeout);
   }
 

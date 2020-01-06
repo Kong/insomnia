@@ -69,7 +69,8 @@ class MarkdownPreview extends PureComponent {
     }
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     clearTimeout(this._compileTimeout);
   }
 

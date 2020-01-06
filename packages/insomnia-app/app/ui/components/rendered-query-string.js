@@ -49,7 +49,8 @@ class RenderedQueryString extends PureComponent {
     this._update(this.props);
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     clearTimeout(this._interval);
   }
 

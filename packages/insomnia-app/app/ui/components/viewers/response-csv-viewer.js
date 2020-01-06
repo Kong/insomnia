@@ -38,7 +38,8 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
     this.update(this.props.body);
   }
 
-  componentWillUpdate(nextProps: Props, nextState: State) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUpdate(nextProps: Props, nextState: State) {
     if (this.props.body === nextProps.body) {
       return;
     }
@@ -55,7 +56,15 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
     return (
       <div className="pad-sm">
         <table className="table--fancy table--striped table--compact selectable">
-          <tbody>{result.data.map(row => <tr>{row.map(c => <td>{c}</td>)}</tr>)}</tbody>
+          <tbody>
+            {result.data.map(row => (
+              <tr>
+                {row.map(c => (
+                  <td>{c}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
     );

@@ -487,7 +487,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     })();
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     this._isMounted = false;
     clearTimeout(this._schemaFetchTimeout);
   }
