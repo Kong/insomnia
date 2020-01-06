@@ -22,36 +22,7 @@ type Props = {
   handleUpdateKeyBindings: Function,
 };
 
-const HOT_KEY_DEFS: Array<HotKeyDefinition> = [
-  hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
-  hotKeyRefs.REQUEST_QUICK_SWITCH,
-  hotKeyRefs.SHOW_RECENT_REQUESTS,
-  hotKeyRefs.REQUEST_SEND,
-  hotKeyRefs.REQUEST_SHOW_OPTIONS,
-  hotKeyRefs.REQUEST_SHOW_CREATE,
-  hotKeyRefs.REQUEST_QUICK_CREATE,
-  hotKeyRefs.REQUEST_SHOW_DELETE,
-  hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER,
-  hotKeyRefs.REQUEST_SHOW_DUPLICATE,
-  hotKeyRefs.REQUEST_TOGGLE_PIN,
-  hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR,
-  hotKeyRefs.SHOW_COOKIES_EDITOR,
-  hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
-  hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU,
-  hotKeyRefs.REQUEST_FOCUS_URL,
-  hotKeyRefs.RESPONSE_FOCUS,
-  hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU,
-  hotKeyRefs.SIDEBAR_FOCUS_FILTER,
-  hotKeyRefs.SIDEBAR_TOGGLE,
-  hotKeyRefs.REQUEST_TOGGLE_HISTORY,
-  hotKeyRefs.SHOW_AUTOCOMPLETE,
-  hotKeyRefs.PREFERENCES_SHOW_GENERAL,
-  hotKeyRefs.WORKSPACE_SHOW_SETTINGS,
-  hotKeyRefs.REQUEST_SHOW_SETTINGS,
-  hotKeyRefs.TOGGLE_MAIN_MENU,
-  hotKeyRefs.PLUGIN_RELOAD,
-  hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES,
-];
+const HOT_KEY_DEFS: Array<HotKeyDefinition> = Object.keys(hotKeyRefs).map(k => hotKeyRefs[k]);
 
 @autobind
 class Shortcuts extends PureComponent<Props> {
