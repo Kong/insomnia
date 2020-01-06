@@ -36,6 +36,7 @@ type Props = {
   url: string,
   bytes: number,
   contentType: string,
+  disableHtmlPreviewJs: boolean,
 
   // Optional
   updateFilter: Function | null,
@@ -196,6 +197,7 @@ class ResponseViewer extends React.Component<Props, State> {
   _renderView() {
     const {
       bytes,
+      disableHtmlPreviewJs,
       download,
       editorFontSize,
       editorIndentSize,
@@ -320,7 +322,9 @@ class ResponseViewer extends React.Component<Props, State> {
         <ResponseWebView
           body={this._decodeIconv(bodyBuffer, charset)}
           contentType={contentType}
+          key={disableHtmlPreviewJs ? 'no-js' : 'yes-js'}
           url={url}
+          webpreferences={disableHtmlPreviewJs ? 'javascript=no' : 'javascript=yes'}
         />
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
@@ -338,9 +342,9 @@ class ResponseViewer extends React.Component<Props, State> {
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
       return (
         <MultipartViewer
-          key={responseId}
           bodyBuffer={bodyBuffer}
           contentType={contentType}
+          disableHtmlPreviewJs={disableHtmlPreviewJs}
           download={download}
           editorFontSize={editorFontSize}
           editorIndentSize={editorIndentSize}
@@ -348,6 +352,7 @@ class ResponseViewer extends React.Component<Props, State> {
           editorLineWrapping={editorLineWrapping}
           filter={filter}
           filterHistory={filterHistory}
+          key={responseId}
           responseId={responseId}
           url={url}
         />

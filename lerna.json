@@ -1,4 +1,5 @@
 {
-  "version": "independent",
-  "packages": ["plugins/*", "packages/*"]
+  "tagVersionPrefix": "pkg-v",
+  "version": "2.1.3",
+  "packages": ["packages/*", "plugins/*"]
 }

@@ -1,4 +1,8 @@
 **/bin/*
 **/build/*
 **/dist/*
+<<<<<<< HEAD
 **/__fixtures__/*
+=======
+**/flow-typed/*
+>>>>>>> 1a6bdad51766de37692c99761359b607aa863fb4

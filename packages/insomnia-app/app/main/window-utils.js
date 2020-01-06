@@ -133,15 +133,11 @@ export function createWindow() {
           misc.clickLink(changelogUrl());
         },
       },
-      ...(isMac()
-        ? [
-            { type: 'separator' },
-            { role: 'hide' },
-            { role: 'hideothers' },
-            { type: 'separator' },
-            { label: `${MNEMONIC_SYM}Quit`, accelerator: 'CmdOrCtrl+Q', click: () => app.quit() },
-          ]
-        : []),
+      { type: 'separator' },
+      { role: 'hide' },
+      { role: 'hideothers' },
+      { type: 'separator' },
+      { label: `${MNEMONIC_SYM}Quit`, accelerator: 'CmdOrCtrl+Q', click: () => app.quit() },
     ],
   };
 
@@ -211,7 +207,6 @@ export function createWindow() {
       },
       {
         label: 'Toggle Sidebar',
-        accelerator: 'CmdOrCtrl+\\',
         click: () => {
           const w = BrowserWindow.getFocusedWindow();
           if (!w || !w.webContents) {

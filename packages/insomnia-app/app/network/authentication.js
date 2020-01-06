@@ -24,7 +24,7 @@ export async function getAuthHeader(
   renderedRequest: RenderedRequest,
   url: string,
 ): Promise<Header | null> {
-  const { method, authentication } = renderedRequest;
+  const { method, authentication, body } = renderedRequest;
   const requestId = renderedRequest._id;
 
   if (authentication.disabled) {
@@ -58,7 +58,7 @@ export async function getAuthHeader(
   }
 
   if (authentication.type === AUTH_OAUTH_1) {
-    const oAuth1Token = await getOAuth1Token(url, method, authentication);
+    const oAuth1Token = await getOAuth1Token(url, method, authentication, body);
     if (oAuth1Token) {
       return {
         name: 'Authorization',
@@ -137,13 +137,21 @@ export async function getAuthHeader(
   return null;
 }
 
-function _buildBearerHeader(accessToken, prefix) {
+export function _buildBearerHeader(accessToken: string, prefix: string) {
   if (!accessToken) {
     return null;
   }
 
-  const name = 'Authorization';
-  const value = `${prefix || 'Bearer'} ${accessToken}`;
+  const header = {
+    name: 'Authorization',
+    value: '',
+  };
 
-  return { name, value };
+  if (prefix === 'NO_PREFIX') {
+    header.value = accessToken;
+  } else {
+    header.value = `${prefix || 'Bearer'} ${accessToken}`;
+  }
+
+  return header;
 }

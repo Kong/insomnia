@@ -1,7 +1,7 @@
 FROM ubuntu:14.04
 
 LABEL "name"="Insomnia-Ubuntu-14"
-LABEL "maintainer"="Gregory Schier <gschier1990@gmail.com>"
+LABEL "maintainer"="Gregory Schier <greg.schier@konghq.com>"
 LABEL "version"="1.0.0"
 
 LABEL "com.github.actions.icon"="package"

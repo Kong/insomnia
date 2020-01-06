@@ -58,6 +58,8 @@ const BASE_CODEMIRROR_OPTIONS = {
       // HACK: So nothing conflicts withe the "Send Request" shortcut
     },
     [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
+
+    // Autocomplete
     'Ctrl-Space': 'autocomplete',
 
     // Change default find command from "find" to "findPersistent" so the
@@ -285,8 +287,38 @@ class CodeEditor extends React.Component {
       return;
     }
 
+    const foldOptions = {
+      widget: (from, to) => {
+        let count;
+        // Get open / close token
+        let startToken = '{';
+        let endToken = '}';
+
+        const prevLine = this.codeMirror.getLine(from.line);
+        if (prevLine.lastIndexOf('[') > prevLine.lastIndexOf('{')) {
+          startToken = '[';
+          endToken = ']';
+        }
+
+        // Get json content
+        const internal = this.codeMirror.getRange(from, to);
+        const toParse = startToken + internal + endToken;
+
+        // Get key count
+        try {
+          const parsed = JSON.parse(toParse);
+          count = Object.keys(parsed).length;
+        } catch (e) {}
+        return count ? `\u21A4 ${count} \u21A6` : '\u2194';
+      },
+    };
+
     const { defaultValue, debounceMillis: ms } = this.props;
-    this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
+
+    this.codeMirror = CodeMirror.fromTextArea(textarea, {
+      ...BASE_CODEMIRROR_OPTIONS,
+      foldOptions,
+    });
 
     // Set default listeners
     const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
@@ -510,7 +542,7 @@ class CodeEditor extends React.Component {
     const isYaml = typeof rawMode === 'string' ? rawMode.includes('yaml') : false;
     const actuallyIndentWithTabs = indentWithTabs && !isYaml;
 
-    let options = {
+    const options = {
       readOnly: !!readOnly,
       placeholder: placeholder || '',
       mode: mode,
@@ -568,11 +600,6 @@ class CodeEditor extends React.Component {
 
     if (typeof autoCloseBrackets === 'boolean') {
       options.autoCloseBrackets = autoCloseBrackets;
-    }
-
-    if (!hideGutters && options.lint) {
-      // Don't really need this
-      // options.gutters.push('CodeMirror-lint-markers');
     }
 
     // Setup the hint options

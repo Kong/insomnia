@@ -1,7 +1,7 @@
 FROM snapcore/snapcraft:stable
 
 LABEL "name"="Insomnia-Ubuntu-16"
-LABEL "maintainer"="Gregory Schier <gschier1990@gmail.com>"
+LABEL "maintainer"="Gregory Schier <greg.schier@konghq.com>"
 LABEL "version"="1.0.0"
 
 LABEL "com.github.actions.icon"="package"
