@@ -322,20 +322,14 @@ class Wrapper extends React.PureComponent<Props, State> {
     return sUpdate(this.props.settings, { useBulkHeaderEditor });
   }
 
-<<<<<<< HEAD
   _handleImportFile(forceToWorkspace?: boolean): void {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
-=======
+  }
+
   _handleUpdateSettingsUseBulkParametersEditor(
     useBulkParametersEditor: boolean,
   ): Promise<Settings> {
     return sUpdate(this.props.settings, { useBulkParametersEditor });
-  }
-
-  // Other Helpers
-  _handleImportFile(): void {
-    this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
->>>>>>> 1a6bdad51766de37692c99761359b607aa863fb4
   }
 
   _handleImportUri(uri: string, forceToWorkspace?: boolean): void {
@@ -658,7 +652,7 @@ class Wrapper extends React.PureComponent<Props, State> {
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
 
     const columns = `auto ${realSidebarWidth}rem 0 minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 -
-      paneWidth}fr)`;
+    paneWidth}fr)`;
     const rows = `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
 
     const sidebarBody = this.renderSidebarBody();
@@ -957,36 +951,37 @@ class Wrapper extends React.PureComponent<Props, State> {
               <ErrorBoundary showAlert>
                 <RequestPane
                   ref={handleSetRequestPaneRef}
-                  handleImportFile={this._handleImportFile}
-                  request={activeRequest}
-                  workspace={activeWorkspace}
                   downloadPath={responseDownloadPath}
-                  settings={settings}
                   environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                  oAuth2Token={oAuth2Token}
+                  forceRefreshCounter={this.state.forceRefreshKey}
                   forceUpdateRequest={this._handleForceUpdateRequest}
+                  forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
                   handleCreateRequest={handleCreateRequestForWorkspace}
                   handleGenerateCode={handleGenerateCodeForActiveRequest}
-                  handleImport={this._handleImport}
-                  handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
-                  handleUpdateDownloadPath={handleUpdateDownloadPath}
-                  updateRequestBody={Wrapper._handleUpdateRequestBody}
-                  forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
-                  updateRequestUrl={Wrapper._handleUpdateRequestUrl}
-                  updateRequestMethod={Wrapper._handleUpdateRequestMethod}
-                  updateRequestParameters={Wrapper._handleUpdateRequestParameters}
-                  updateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
-                  updateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
-                  updateRequestMimeType={handleUpdateRequestMimeType}
-                  updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
-                  updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
-                  forceRefreshCounter={this.state.forceRefreshKey}
+                  handleImport={this._handleImport}
+                  handleImportFile={this._handleImportFile}
+                  handleRender={handleRender}
                   handleSend={this._handleSendRequestWithActiveEnvironment}
                   handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
-                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-                  isVariableUncovered={isVariableUncovered}
+                  handleUpdateDownloadPath={handleUpdateDownloadPath}
                   headerEditorKey={headerEditorKey}
+                  isVariableUncovered={isVariableUncovered}
+                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                  oAuth2Token={oAuth2Token}
+                  request={activeRequest}
+                  settings={settings}
+                  updateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
+                  updateRequestBody={Wrapper._handleUpdateRequestBody}
+                  updateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
+                  updateRequestMethod={Wrapper._handleUpdateRequestMethod}
+                  updateRequestMimeType={handleUpdateRequestMimeType}
+                  updateRequestParameters={Wrapper._handleUpdateRequestParameters}
+                  updateRequestUrl={Wrapper._handleUpdateRequestUrl}
+                  updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
+                  updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
+                  updateSettingsUseBulkParametersEditor={settings.useBulkParametersEditor}
+                  workspace={activeWorkspace}
                 />
               </ErrorBoundary>
 
@@ -1007,26 +1002,27 @@ class Wrapper extends React.PureComponent<Props, State> {
               <ErrorBoundary showAlert>
                 <ResponsePane
                   ref={handleSetResponsePaneRef}
-                  request={activeRequest}
-                  requestVersions={requestVersions}
-                  responses={activeRequestResponses}
-                  response={activeResponse}
+                  disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
                   editorFontSize={settings.editorFontSize}
                   editorIndentSize={settings.editorIndentSize}
                   editorKeyMap={settings.editorKeyMap}
                   editorLineWrapping={settings.editorLineWrapping}
-                  hotKeyRegistry={settings.hotKeyRegistry}
-                  previewMode={responsePreviewMode}
                   filter={responseFilter}
                   filterHistory={responseFilterHistory}
-                  loadStartTime={loadStartTime}
-                  showCookiesModal={this._handleShowCookiesModal}
-                  handleShowRequestSettings={this._handleShowRequestSettingsModal}
-                  handleSetActiveResponse={this._handleSetActiveResponse}
-                  handleSetPreviewMode={this._handleSetPreviewMode}
-                  handleDeleteResponses={this._handleDeleteResponses}
                   handleDeleteResponse={this._handleDeleteResponse}
+                  handleDeleteResponses={this._handleDeleteResponses}
+                  handleSetActiveResponse={this._handleSetActiveResponse}
                   handleSetFilter={this._handleSetResponseFilter}
+                  handleSetPreviewMode={this._handleSetPreviewMode}
+                  handleShowRequestSettings={this._handleShowRequestSettingsModal}
+                  hotKeyRegistry={settings.hotKeyRegistry}
+                  loadStartTime={loadStartTime}
+                  previewMode={responsePreviewMode}
+                  request={activeRequest}
+                  requestVersions={requestVersions}
+                  response={activeResponse}
+                  responses={activeRequestResponses}
+                  showCookiesModal={this._handleShowCookiesModal}
                 />
               </ErrorBoundary>
             </React.Fragment>
@@ -1061,81 +1057,9 @@ class Wrapper extends React.PureComponent<Props, State> {
         {activity === null && (
           <Onboarding
             settings={settings}
-<<<<<<< HEAD
             handleImportFile={this._handleImportFile}
             handleImportUri={this._handleImportUri}
             handleSetActivity={handleSetActiveActivity}
-=======
-            environmentId={activeEnvironment ? activeEnvironment._id : ''}
-            oAuth2Token={oAuth2Token}
-            forceUpdateRequest={this._handleForceUpdateRequest}
-            handleCreateRequest={handleCreateRequestForWorkspace}
-            handleGenerateCode={handleGenerateCodeForActiveRequest}
-            handleImport={this._handleImport}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            handleUpdateDownloadPath={handleUpdateDownloadPath}
-            updateRequestBody={Wrapper._handleUpdateRequestBody}
-            forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
-            updateRequestUrl={Wrapper._handleUpdateRequestUrl}
-            updateRequestMethod={Wrapper._handleUpdateRequestMethod}
-            updateRequestParameters={Wrapper._handleUpdateRequestParameters}
-            updateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
-            updateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
-            updateRequestMimeType={handleUpdateRequestMimeType}
-            updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
-            updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
-            updateSettingsUseBulkParametersEditor={
-              this._handleUpdateSettingsUseBulkParametersEditor
-            }
-            forceRefreshCounter={this.state.forceRefreshKey}
-            handleSend={this._handleSendRequestWithActiveEnvironment}
-            handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-            headerEditorKey={headerEditorKey}
-          />
-        </ErrorBoundary>
-
-        <div className="drag drag--pane-horizontal">
-          <div
-            onMouseDown={handleStartDragPaneHorizontal}
-            onDoubleClick={handleResetDragPaneHorizontal}
-          />
-        </div>
-
-        <div className="drag drag--pane-vertical">
-          <div
-            onMouseDown={handleStartDragPaneVertical}
-            onDoubleClick={handleResetDragPaneVertical}
-          />
-        </div>
-
-        <ErrorBoundary showAlert>
-          <ResponsePane
-            ref={handleSetResponsePaneRef}
-            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            editorLineWrapping={settings.editorLineWrapping}
-            filter={responseFilter}
-            filterHistory={responseFilterHistory}
-            handleDeleteResponse={this._handleDeleteResponse}
-            handleDeleteResponses={this._handleDeleteResponses}
-            handleSetActiveResponse={this._handleSetActiveResponse}
-            handleSetFilter={this._handleSetResponseFilter}
-            handleSetPreviewMode={this._handleSetPreviewMode}
-            handleShowRequestSettings={this._handleShowRequestSettingsModal}
-            hotKeyRegistry={settings.hotKeyRegistry}
-            loadStartTime={loadStartTime}
-            previewMode={responsePreviewMode}
-            request={activeRequest}
-            requestVersions={requestVersions}
-            response={activeResponse}
-            responses={activeRequestResponses}
-            showCookiesModal={this._handleShowCookiesModal}
->>>>>>> 1a6bdad51766de37692c99761359b607aa863fb4
           />
         )}
       </React.Fragment>

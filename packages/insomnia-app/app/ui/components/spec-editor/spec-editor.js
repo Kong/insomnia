@@ -10,7 +10,9 @@ import { showModal } from '../modals';
 import CodePromptModal from '../modals/code-prompt-modal';
 import SwaggerUI from 'swagger-ui-react';
 import { generateFromString } from 'openapi-2-kong';
+import { NoticeTable } from 'insomnia-components';
 import 'swagger-ui-react/swagger-ui.css';
+console.log('NOTICE TABLE', NoticeTable);
 
 type Props = {|
   apiSpec: ApiSpec,
@@ -133,6 +135,9 @@ class SpecEditor extends React.PureComponent<Props> {
             defaultValue={apiSpec.contents}
             onChange={this._handleOnChange}
             uniquenessKey={apiSpec._id}
+          />
+          <NoticeTable
+            notices={[]}
           />
         </div>
       </div>

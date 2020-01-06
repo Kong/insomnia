@@ -2,15 +2,10 @@
   "name": "insomnia",
   "private": true,
   "version": "1.0.0",
-<<<<<<< HEAD
   "repository": "https://github.com/kong/studio",
-=======
-  "author": "Gregory Schier <greg.schier@konghq.com>",
-  "repository": "https://github.com/kong/insomnia",
   "bugs": {
     "url": "https://github.com/kong/insomnia"
   },
->>>>>>> 1a6bdad51766de37692c99761359b607aa863fb4
   "scripts": {
     "lint": "eslint \"**/*.js\" \"**/*.html\" \"**/*.json\"",
     "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap",
@@ -20,13 +15,8 @@
     "app-start": "lerna run start --scope insomnia-app --stream --parallel --bail",
     "app-build": "lerna run build --stream --parallel --bail",
     "app-package": "lerna run package --stream --parallel --bail",
-<<<<<<< HEAD
-    "app-storybook": "lerna run storybook --stream --parallel --bail",
-=======
-    "app-release": "lerna run release --stream --parallel --bail",
     "app-storybook": "lerna run storybook --scope insomnia-app --stream --parallel --bail",
     "ui-storybook": "lerna run storybook --scope insomnia-ui --stream --parallel --bail",
->>>>>>> 1a6bdad51766de37692c99761359b607aa863fb4
     "format-code": "prettier --write \"**/*.js\""
   },
   "husky": {

@@ -44,13 +44,10 @@ type BaseSettings = {
 
   // Feature flags
   enableSyncBeta: boolean,
-<<<<<<< HEAD
   hotKeyRegistry: hotkeys.HotKeyRegistry,
 
   // Studio stuff
   enableAnalytics: boolean,
-=======
->>>>>>> 1a6bdad51766de37692c99761359b607aa863fb4
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -101,13 +98,9 @@ export function init(): BaseSettings {
 
     // Feature flags
     enableSyncBeta: false,
-<<<<<<< HEAD
-    hotKeyRegistry: hotkeys.newDefaultRegistry(),
 
     // Studio stuff
     enableAnalytics: false,
-=======
->>>>>>> 1a6bdad51766de37692c99761359b607aa863fb4
   };
 }
 
