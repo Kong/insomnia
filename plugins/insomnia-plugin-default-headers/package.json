@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-default-headers",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Various data importers for Insomnia",
   "license": "MIT",
