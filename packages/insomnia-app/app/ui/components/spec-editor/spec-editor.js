@@ -11,8 +11,10 @@ import CodePromptModal from '../modals/code-prompt-modal';
 import SwaggerUI from 'swagger-ui-react';
 import { generateFromString } from 'openapi-2-kong';
 import { NoticeTable } from 'insomnia-components';
+import { Spectral } from '@stoplight/spectral';
 import 'swagger-ui-react/swagger-ui.css';
-console.log('NOTICE TABLE', NoticeTable);
+
+const spectral = new Spectral();
 
 type Props = {|
   apiSpec: ApiSpec,
@@ -25,13 +27,19 @@ type Props = {|
   handleTest: () => void,
 |};
 
+type State = {|
+  previewActive: boolean,
+  lintMessages: Array<{}>,
+|};
+
 @autobind
-class SpecEditor extends React.PureComponent<Props> {
+class SpecEditor extends React.PureComponent<Props, State> {
   editor: ?CodeEditor;
   debounceTimeout: IntervalID;
 
   state = {
     previewActive: true,
+    lintMessages: [],
   };
 
   // Defining it here instead of in render() so it won't act as a changed prop
@@ -82,6 +90,40 @@ class SpecEditor extends React.PureComponent<Props> {
     editor.setSelection(chStart, chEnd, lineStart, lineEnd);
   }
 
+  _handleLintClick(notice: {}) {
+    const { start, end } = notice._range;
+    this.setSelection(start.character, end.character, start.line, end.line);
+  }
+
+  async _reLint() {
+    const { apiSpec } = this.props;
+    const results = await spectral.run(apiSpec.contents);
+
+    this.setState({
+      lintMessages: results.map(r => ({
+        type: r.severity === 0 ? 'error' : 'warning',
+        message: `${r.code} ${r.message}`,
+        line: r.range.start.line,
+
+        // Attach range that will be returned to our click handler
+        _range: r.range,
+      })),
+    });
+  }
+
+  componentDidMount() {
+    this._reLint();
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    const { apiSpec } = this.props;
+
+    // Re-lint if content changed
+    if (apiSpec.contents !== prevProps.apiSpec.contents) {
+      this._reLint();
+    }
+  }
+
   render() {
     const {
       editorFontSize,
@@ -91,6 +133,10 @@ class SpecEditor extends React.PureComponent<Props> {
       apiSpec,
       handleTest,
     } = this.props;
+
+    const {
+      lintMessages,
+    } = this.state;
 
     let swaggerSpec;
     try {
@@ -136,9 +182,12 @@ class SpecEditor extends React.PureComponent<Props> {
             onChange={this._handleOnChange}
             uniquenessKey={apiSpec._id}
           />
-          <NoticeTable
-            notices={[]}
-          />
+          {lintMessages.length > 0 && (
+            <NoticeTable
+              notices={lintMessages}
+              onClick={this._handleLintClick}
+            />
+          )}
         </div>
       </div>
     );

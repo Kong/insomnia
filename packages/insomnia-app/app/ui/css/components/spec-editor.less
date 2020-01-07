@@ -13,7 +13,7 @@
   border-left: 1px solid var(--hl-md);
 
   &.previewHidden {
-    grid-template-columns: 3fr 0fr;
+    grid-template-columns: 3fr 0;
   }
 
   &__header {
@@ -47,6 +47,9 @@
     grid-area: body-left;
     background: var(--color-bg);
     color: var(--color-font);
+    display: grid;
+    grid-template-columns: 100%;
+    grid-template-rows: 1fr auto;
   }
 }
 
