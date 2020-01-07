@@ -171,6 +171,11 @@ class General extends React.PureComponent<Props, State> {
               'forceVerticalLayout',
               '',
             )}
+            {this.renderBooleanSetting(
+              'Disable Response Preview Links',
+              'disableResponsePreviewLinks',
+              '',
+            )}
           </div>
           <div>
             {this.renderBooleanSetting('Reveal passwords', 'showPasswords', '')}

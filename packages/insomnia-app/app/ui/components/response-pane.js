@@ -61,7 +61,7 @@ type Props = {
 };
 
 @autobind
-class ResponsePane extends React.PureComponent<Props> {
+class ResponsePane extends React.PureComponent<Props, State> {
   _responseViewer: any;
 
   _setResponseViewerRef(n: any) {
@@ -183,6 +183,7 @@ class ResponsePane extends React.PureComponent<Props> {
       editorKeyMap,
       editorLineWrapping,
       filter,
+      disableResponsePreviewLinks,
       filterHistory,
       handleDeleteResponse,
       handleDeleteResponses,
@@ -199,7 +200,6 @@ class ResponsePane extends React.PureComponent<Props> {
       responses,
       showCookiesModal,
     } = this.props;
-
     const paneClasses = 'response-pane theme--pane pane';
     const paneHeaderClasses = 'pane__header theme--pane__header';
     const paneBodyClasses = 'pane__body theme--pane__body';
@@ -342,6 +342,7 @@ class ResponsePane extends React.PureComponent<Props> {
               contentType={response.contentType || ''}
               previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
               filter={filter}
+              disableResponsePreviewLinks={disableResponsePreviewLinks}
               filterHistory={filterHistory}
               updateFilter={response.error ? null : handleSetFilter}
               download={this._handleDownloadResponseBody}

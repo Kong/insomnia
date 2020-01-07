@@ -125,7 +125,6 @@ class ResponseViewer extends React.Component<Props, State> {
     for (let k of Object.keys(nextProps)) {
       const next = nextProps[k];
       const current = this.props[k];
-
       if (typeof next === 'function') {
         continue;
       }
@@ -209,9 +208,9 @@ class ResponseViewer extends React.Component<Props, State> {
       previewMode,
       responseId,
       updateFilter,
+      disableResponsePreviewLinks,
       url,
     } = this.props;
-
     let contentType = this.props.contentType;
 
     const { bodyBuffer, error: parseError } = this.state;
@@ -398,7 +397,7 @@ class ResponseViewer extends React.Component<Props, State> {
         <CodeEditor
           uniquenessKey={responseId}
           ref={this._setSelectableViewRef}
-          onClickLink={this._handleOpenLink}
+          onClickLink={disableResponsePreviewLinks ? null : this._handleOpenLink}
           defaultValue={body}
           updateFilter={updateFilter}
           filter={filter}
