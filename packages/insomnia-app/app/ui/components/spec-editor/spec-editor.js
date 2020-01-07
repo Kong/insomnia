@@ -29,7 +29,11 @@ type Props = {|
 
 type State = {|
   previewActive: boolean,
-  lintMessages: Array<{}>,
+  lintMessages: Array<{
+    message: string,
+    line: number,
+    type: 'error' | 'warning',
+  }>,
 |};
 
 @autobind
