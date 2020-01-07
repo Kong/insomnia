@@ -53,6 +53,7 @@ type Props = {
   loadStartTime: number,
   responses: Array<Response>,
   hotKeyRegistry: HotKeyRegistry,
+  disableResponsePreviewLinks: boolean,
 
   // Other
   requestVersions: Array<RequestVersion>,
@@ -61,7 +62,7 @@ type Props = {
 };
 
 @autobind
-class ResponsePane extends React.PureComponent<Props, State> {
+class ResponsePane extends React.PureComponent<Props> {
   _responseViewer: any;
 
   _setResponseViewerRef(n: any) {
@@ -336,23 +337,22 @@ class ResponsePane extends React.PureComponent<Props, State> {
           <TabPanel className="react-tabs__tab-panel">
             <ResponseViewer
               ref={this._setResponseViewerRef}
-              // Send larger one because legacy responses have bytesContent === -1
-              responseId={response._id}
               bytes={Math.max(response.bytesContent, response.bytesRead)}
               contentType={response.contentType || ''}
-              previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
-              filter={filter}
-              disableResponsePreviewLinks={disableResponsePreviewLinks}
-              filterHistory={filterHistory}
-              updateFilter={response.error ? null : handleSetFilter}
-              download={this._handleDownloadResponseBody}
               disableHtmlPreviewJs={disableHtmlPreviewJs}
-              getBody={this._handleGetResponseBody}
-              error={response.error}
-              editorLineWrapping={editorLineWrapping}
+              disablePreviewLinks={disableResponsePreviewLinks}
+              download={this._handleDownloadResponseBody}
               editorFontSize={editorFontSize}
               editorIndentSize={editorIndentSize}
               editorKeyMap={editorKeyMap}
+              editorLineWrapping={editorLineWrapping}
+              error={response.error}
+              filter={filter}
+              filterHistory={filterHistory}
+              getBody={this._handleGetResponseBody}
+              previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
+              responseId={response._id}
+              updateFilter={response.error ? null : handleSetFilter}
               url={response.url}
             />
           </TabPanel>

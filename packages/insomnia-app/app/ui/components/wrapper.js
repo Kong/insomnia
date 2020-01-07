@@ -848,6 +848,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           <ResponsePane
             ref={handleSetResponsePaneRef}
             disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+            disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
