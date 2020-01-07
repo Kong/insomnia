@@ -30,6 +30,7 @@ type Props = {
   bodyBuffer: Buffer | null,
   contentType: string,
   disableHtmlPreviewJs: boolean,
+  disablePreviewLinks: boolean,
   filter: string,
   filterHistory: Array<string>,
   editorFontSize: number,
@@ -217,6 +218,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
     const {
       download,
       disableHtmlPreviewJs,
+      disablePreviewLinks,
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
@@ -280,11 +282,11 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
         {selectedPart ? (
           <div className="tall wide">
             <ResponseViewer
-              key={`${responseId}::${activePart}`}
               bytes={selectedPart.bytes || 0}
               contentType={getContentTypeFromHeaders(selectedPart.headers, 'text/plain')}
-              download={download}
               disableHtmlPreviewJs={disableHtmlPreviewJs}
+              disablePreviewLinks={disablePreviewLinks}
+              download={download}
               editorFontSize={editorFontSize}
               editorIndentSize={editorIndentSize}
               editorKeyMap={editorKeyMap}
@@ -293,6 +295,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
               filter={filter}
               filterHistory={filterHistory}
               getBody={this._getBody}
+              key={`${responseId}::${activePart}`}
               previewMode={PREVIEW_MODE_FRIENDLY}
               responseId={`${responseId}[${activePart}]`}
               updateFilter={null}

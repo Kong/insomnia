@@ -117,7 +117,6 @@ class CodeEditor extends React.Component {
       if (key === 'defaultValue') {
         continue;
       }
-
       if (this.props[key] !== nextProps[key]) {
         return true;
       }

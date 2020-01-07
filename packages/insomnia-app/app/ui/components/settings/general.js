@@ -305,6 +305,11 @@ class General extends React.PureComponent<Props, State> {
           </div>
           <div>
             {this.renderBooleanSetting('Disable JS in HTML preview', 'disableHtmlPreviewJs', '')}
+            {this.renderBooleanSetting(
+              'Disable Links in response viewer',
+              'disableResponsePreviewLinks',
+              '',
+            )}
           </div>
         </div>
 
