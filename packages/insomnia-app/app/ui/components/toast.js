@@ -1,7 +1,6 @@
 // @flow
 import * as React from 'react';
 import * as electron from 'electron';
-import iconSrc from '../images/logo.png';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import GravatarImg from './gravatar-img';
