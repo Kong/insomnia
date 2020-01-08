@@ -1,7 +1,7 @@
 {
   "services": [
     {
-      "url":"http://backend.com:80",
+      "url":"http://backend.com/path",
       "name": "Callback_Example",
       "routes": [
         {
@@ -9,7 +9,7 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_callback-example.yaml"],
           "name": "Callback_Example-path-post",
-          "paths": ["/path/streams"]
+          "paths": ["/streams"]
         }
       ],
       "tags": ["OAS3_import", "OAS3file_callback-example.yaml"]

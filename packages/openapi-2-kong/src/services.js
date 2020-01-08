@@ -5,8 +5,6 @@ import {
   generateSlug,
   getAllServers,
   getName,
-  joinPath,
-  parseUrl,
   pathVariablesToRegex,
 } from './common';
 
@@ -30,11 +28,11 @@ export function generateService(
   api: OpenApi3Spec,
   tags: Array<string>,
 ): DCService {
-  const { pathname, protocol, port, hostname } = parseUrl(fillServerVariables(server));
+  const serverUrl = fillServerVariables(server);
   const name = getName(api);
   const service: DCService = {
     name,
-    url: protocol + '//' + hostname + ':' + port,
+    url: serverUrl,
     routes: [],
     tags,
   };
@@ -64,8 +62,7 @@ export function generateService(
       }
 
       // Create the base route object
-      const fullPath = joinPath(pathname, routePath);
-      const fullPathRegex = pathVariablesToRegex(fullPath);
+      const fullPathRegex = pathVariablesToRegex(routePath);
       const route: DCRoute = {
         tags,
         name: generateRouteName(api, pathItem, method, service.routes.length),

@@ -30,35 +30,35 @@ describe('services', () => {
       expect(result).toEqual([
         {
           name: 'My_API',
-          url: 'https://server1.com:443',
+          url: 'https://server1.com/path',
           tags: ['Tag'],
           routes: [
             {
               name: 'My_API-Cat_stuff-post',
               strip_path: false,
               methods: ['POST'],
-              paths: ['/path/cats'],
+              paths: ['/cats'],
               tags: ['Tag'],
             },
             {
               name: 'My_API-Dog_stuff-get',
               strip_path: false,
               methods: ['GET'],
-              paths: ['/path/dogs'],
+              paths: ['/dogs'],
               tags: ['Tag'],
             },
             {
               name: 'My_API-Dog_stuff-post',
               strip_path: false,
               methods: ['POST'],
-              paths: ['/path/dogs'],
+              paths: ['/dogs'],
               tags: ['Tag'],
             },
             {
               name: 'My_API-path_3-get',
               strip_path: false,
               methods: ['GET'],
-              paths: ['/path/birds/(?<id>\\S+)$'],
+              paths: ['/birds/(?<id>\\S+)$'],
               tags: ['Tag'],
             },
           ],
@@ -100,7 +100,7 @@ describe('services', () => {
       const result = await generateServices(api, []);
       expect(result).toEqual([{
         name: 'My_API',
-        url: 'https://demo.saas-app.com:8443',
+        url: 'https://demo.saas-app.com:8443/v2',
         routes: [],
         tags: [],
       }]);
