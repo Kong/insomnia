@@ -1,7 +1,7 @@
 {
   "services": [
     {
-      "url": "http://petstore.swagger.io:80",
+      "url": "http://petstore.swagger.io/v1",
       "name": "Swagger_Petstore",
       "routes": [
         {
@@ -9,21 +9,21 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
           "name": "Swagger_Petstore-path-get",
-          "paths": ["/v1/pets"]
+          "paths": ["/pets"]
         },
         {
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
           "name": "Swagger_Petstore-path_1-post",
-          "paths": ["/v1/pets"]
+          "paths": ["/pets"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
           "name": "Swagger_Petstore-path_2-get",
-          "paths": ["\/v1\/pets\/(?<petId>\\S+)$"]
+          "paths": ["\/pets\/(?<petId>\\S+)$"]
         }
       ],
       "tags": ["OAS3_import", "OAS3file_petstore.yaml"]

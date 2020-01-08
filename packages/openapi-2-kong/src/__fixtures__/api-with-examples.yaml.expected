@@ -1,7 +1,7 @@
 {
   "services": [
     {
-      "url":"http://backend.com:80",
+      "url":"http://backend.com/path",
       "name": "Simple_API_overview",
       "routes": [
         {
@@ -9,14 +9,14 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
           "name": "Simple_API_overview-path-get",
-          "paths": ["/path/"]
+          "paths": ["/"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
           "name": "Simple_API_overview-path_1-get",
-          "paths": ["/path/v2"]
+          "paths": ["/v2"]
         }
       ],
       "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"]

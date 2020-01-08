@@ -1,7 +1,7 @@
 {
   "services": [
     {
-      "url":"https://httpbin.org:443",
+      "url":"https://httpbin.org",
       "name": "httpbin",
       "routes": [
         {

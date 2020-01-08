@@ -1,7 +1,7 @@
 {
   "services": [
     {
-      "url":"http://backend.com:80",
+      "url":"http://backend.com/path",
       "name": "Link_Example",
       "routes": [
         {
@@ -9,28 +9,28 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
           "name": "Link_Example-path-get",
-          "paths": ["\/path\/2.0\/users\/(?<username>\\S+)$"]
+          "paths": ["\/2.0\/users\/(?<username>\\S+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
           "name": "Link_Example-path_1-get",
-          "paths": ["\/path\/2.0\/repositories\/(?<username>\\S+)$"]
+          "paths": ["\/2.0\/repositories\/(?<username>\\S+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
           "name": "Link_Example-path_2-get",
-          "paths": ["\/path\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)$"]
+          "paths": ["\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
           "name": "Link_Example-path_3-get",
-          "paths": ["\/path\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests$"]
+          "paths": ["\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests$"]
         },
         {
           "methods": ["GET"],
@@ -38,7 +38,7 @@
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
           "name": "Link_Example-path_4-get",
           "paths": [
-            "\/path\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests\/(?<pid>\\S+)$"
+            "\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests\/(?<pid>\\S+)$"
           ]
         },
         {
@@ -47,7 +47,7 @@
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
           "name": "Link_Example-path_5-post",
           "paths": [
-            "\/path\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests\/(?<pid>\\S+)\/merge$"
+            "\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests\/(?<pid>\\S+)\/merge$"
           ]
         }
       ],
