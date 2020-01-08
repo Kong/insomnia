@@ -18,10 +18,7 @@ declare type DCRoute = {|
 |};
 
 declare type DCService = {|
-  host: string,
-  port: number,
-  path: string,
-  protocol: string,
+  url: string,
   name: string,
   routes: Array<DCRoute>,
   tags: Array<string>,

@@ -83,6 +83,7 @@ export function parseUrl(
   urlStr: string,
 ): {|
   host: string,
+  hostname: string,
   port: string,
   protocol: string,
   pathname: string,

@@ -1,10 +1,7 @@
 {
   "services": [
     {
-      "host": "httpbin",
-      "port": 443,
-      "path": "\/",
-      "protocol": "https",
+      "url":"https://httpbin.org:443",
       "name": "httpbin",
       "routes": [
         {

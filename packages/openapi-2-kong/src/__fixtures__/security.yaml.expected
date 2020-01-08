@@ -1,10 +1,7 @@
 {
   "services": [
     {
-      "host": "Security_Example",
-      "port": 80,
-      "path": "\/",
-      "protocol": "http",
+      "url": "http://backend.com:80",
       "name": "Security_Example",
       "routes": [
         {

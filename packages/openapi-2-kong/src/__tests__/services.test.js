@@ -29,11 +29,8 @@ describe('services', () => {
       const result = generateServices(api, ['Tag']);
       expect(result).toEqual([
         {
-          host: 'My_API',
           name: 'My_API',
-          path: '/',
-          port: 443,
-          protocol: 'https',
+          url: 'https://server1.com:443',
           tags: ['Tag'],
           routes: [
             {
@@ -102,11 +99,8 @@ describe('services', () => {
 
       const result = await generateServices(api, []);
       expect(result).toEqual([{
-        host: 'My_API',
         name: 'My_API',
-        path: '/',
-        port: 8443,
-        protocol: 'https',
+        url: 'https://demo.saas-app.com:8443',
         routes: [],
         tags: [],
       }]);

@@ -1,10 +1,7 @@
 {
   "services": [
     {
-      "host": "USPTO_Data_Set_API",
-      "port": 443,
-      "path": "\/",
-      "protocol": "https",
+      "url": "https://developer.uspto.gov:443",
       "name": "USPTO_Data_Set_API",
       "routes": [
         {

@@ -30,20 +30,13 @@ export function generateService(
   api: OpenApi3Spec,
   tags: Array<string>,
 ): DCService {
-  const { pathname, protocol, port } = parseUrl(fillServerVariables(server));
-
+  const { pathname, protocol, port, hostname } = parseUrl(fillServerVariables(server));
   const name = getName(api);
   const service: DCService = {
     name,
-    path: '/',
-    port: parseInt(port),
-    protocol: protocol.replace(':', ''),
+    url: protocol + '//' + hostname + ':' + port,
     routes: [],
     tags,
-
-    // I'm not sure why host is set to name, but it came from the openapi2kong Lua repo
-    // https://github.com/Kong/openapi2kong/blob/078be111a9ced6040e77c635161a1161053055e0/src/openapi2kong/init.lua#L218
-    host: name,
   };
 
   for (const routePath of Object.keys(api.paths)) {
