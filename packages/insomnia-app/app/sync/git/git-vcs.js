@@ -1,6 +1,7 @@
 // @flow
 import * as git from 'isomorphic-git';
 import { trackEvent } from '../../common/analytics';
+import { httpPlugin } from './http';
 
 export type GitAuthor = {|
   name: string,
@@ -32,31 +33,6 @@ export type GitLogEntry = {|
   },
 |};
 
-type GitStatusState =
-  | 'ignored'
-  | 'unmodified'
-  | '*modified'
-  | '*deleted'
-  | '*added'
-  | 'absent'
-  | 'modified'
-  | 'deleted'
-  | 'added'
-  | '*unmodified'
-  | '*absent';
-
-export type GitStatusEntry = {
-  path: string,
-  status: GitStatusState,
-};
-
-export type GitStatus = {
-  hasChanges: boolean,
-  allStaged: boolean,
-  allUnstaged: boolean,
-  entries: Array<GitStatusEntry>,
-};
-
 export default class GitVCS {
   _git: Object;
   _baseOpts: {dir: string, gitdir?: string};
@@ -69,6 +45,7 @@ export default class GitVCS {
   async init(directory: string, fsPlugin: Object, gitDirectory: string) {
     this._git = git;
     git.plugins.set('fs', fsPlugin);
+    git.plugins.set('http', httpPlugin);
 
     this._baseOpts = { dir: directory, gitdir: gitDirectory };
 
