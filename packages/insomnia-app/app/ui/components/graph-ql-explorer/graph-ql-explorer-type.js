@@ -29,6 +29,33 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
     return <MarkdownPreview markdown={type.description || '*no description*'} />;
   }
 
+  renderTypesMaybe() {
+    const { type, onNavigateType } = this.props;
+
+    if (
+      Object.prototype.toString.call(type) !== '[object GraphQLUnionType]' &&
+      Object.prototype.toString.call(type.getTypes) !== '[object Function]'
+    ) {
+      return null;
+    }
+    // $FlowFixMe
+    const types = type.getTypes();
+    return (
+      <React.Fragment>
+        <h2 className="graphql-explorer__subheading">Possible Types</h2>
+        <ul className="graphql-explorer__defs">
+          {Object.keys(types).map(key => {
+            return (
+              <li>
+                <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={types[key]} />
+              </li>
+            );
+          })}
+        </ul>
+      </React.Fragment>
+    );
+  }
+
   renderFieldsMaybe() {
     const { type, onNavigateType } = this.props;
     if (typeof type.getFields !== 'function') {
@@ -92,6 +119,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
     return (
       <div className="graphql-explorer__type">
         {this.renderDescription()}
+        {this.renderTypesMaybe()}
         {this.renderFieldsMaybe()}
       </div>
     );
