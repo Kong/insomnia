@@ -1,8 +1,8 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: "[Bug] Short issue title"
-labels: ''
+title: Short issue title
+labels: "Bug \U0001F41B"
 assignees: ''
 
 ---
