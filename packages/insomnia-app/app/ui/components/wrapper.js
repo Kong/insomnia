@@ -980,7 +980,7 @@ class Wrapper extends React.PureComponent<Props, State> {
                   updateRequestUrl={Wrapper._handleUpdateRequestUrl}
                   updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
                   updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
-                  updateSettingsUseBulkParametersEditor={settings.useBulkParametersEditor}
+                  updateSettingsUseBulkParametersEditor={this._handleUpdateSettingsUseBulkParametersEditor}
                   workspace={activeWorkspace}
                 />
               </ErrorBoundary>
