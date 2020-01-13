@@ -3,7 +3,7 @@ import { EventEmitter } from 'events';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models/index';
 import { _trackEvent, _trackPageView } from '../analytics';
-import { getAppPlatform, getAppVersion, getBrowserUserAgent } from '../constants';
+import { getAppPlatform, getAppVersion, getBrowserUserAgent, getAppId, getAppName } from '../constants';
 
 describe('init()', () => {
   beforeEach(async () => {
@@ -53,6 +53,9 @@ describe('init()', () => {
           `cd1=${getAppPlatform()}&` +
           `cd2=${getAppVersion()}&` +
           'aip=1&' +
+          `an=${encodeURI(getAppName())}&` +
+          `aid=${getAppId()}&` +
+          `av=${getAppVersion()}&` +
           'vp=1900x1060&' +
           'de=UTF-8&' +
           't=event&' +
@@ -84,6 +87,9 @@ describe('init()', () => {
           `cd1=${getAppPlatform()}&` +
           `cd2=${getAppVersion()}&` +
           'aip=1&' +
+          `an=${encodeURI(getAppName())}&` +
+          `aid=${getAppId()}&` +
+          `av=${getAppVersion()}&` +
           'vp=1900x1060&' +
           'de=UTF-8&' +
           't=event&' +
@@ -116,6 +122,9 @@ describe('init()', () => {
           `cd1=${getAppPlatform()}&` +
           `cd2=${getAppVersion()}&` +
           'aip=1&' +
+          `an=${encodeURI(getAppName())}&` +
+          `aid=${getAppId()}&` +
+          `av=${getAppVersion()}&` +
           'vp=1900x1060&' +
           'de=UTF-8&' +
           't=pageview',
@@ -146,6 +155,9 @@ describe('init()', () => {
           `cd1=${getAppPlatform()}&` +
           `cd2=${getAppVersion()}&` +
           'aip=1&' +
+          `an=${encodeURI(getAppName())}&` +
+          `aid=${getAppId()}&` +
+          `av=${getAppVersion()}&` +
           'vp=1900x1060&' +
           'de=UTF-8&' +
           't=pageview',
@@ -163,6 +175,9 @@ describe('init()', () => {
           `cd1=${getAppPlatform()}&` +
           `cd2=${getAppVersion()}&` +
           'aip=1&' +
+          `an=${encodeURI(getAppName())}&` +
+          `aid=${getAppId()}&` +
+          `av=${getAppVersion()}&` +
           'vp=1900x1060&' +
           'de=UTF-8&' +
           't=event&' +
