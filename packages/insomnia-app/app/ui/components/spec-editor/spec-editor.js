@@ -6,7 +6,7 @@ import type { Workspace } from '../../../models/workspace';
 import type { ApiSpec } from '../../../models/api-spec';
 import HelpLink from '../help-link';
 import YAML from 'yaml';
-import { showModal } from '../modals';
+import { showError, showModal } from '../modals';
 import CodePromptModal from '../modals/code-prompt-modal';
 import SwaggerUI from 'swagger-ui-react';
 import { generateFromString } from 'openapi-2-kong';
@@ -58,7 +58,19 @@ class SpecEditor extends React.PureComponent<Props, State> {
 
   async _showGenerateConfig() {
     const { apiSpec } = this.props;
-    let kongConfig = await generateFromString(apiSpec.contents);
+    let kongConfig;
+
+    try {
+      kongConfig = await generateFromString(apiSpec.contents);
+    } catch (err) {
+      showError({
+        title: 'Error Generating',
+        error: err.message,
+        message: 'Failed to generate Kong declarative config',
+      });
+      return;
+    }
+
     showModal(CodePromptModal, {
       submitName: 'Done',
       title: `Kong Declarative Config`,
