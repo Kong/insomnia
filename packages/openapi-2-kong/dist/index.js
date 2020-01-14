@@ -305,7 +305,7 @@ function generateApiKeySecurityPlugin(scheme) {
 }
 
 function generateHttpSecurityPlugin(scheme) {
-  if (scheme.scheme !== 'basic') {
+  if ((scheme.scheme || '').toLowerCase() !== 'basic') {
     throw new Error(`Only "basic" http scheme supported. got ${scheme.scheme}`);
   }
 
@@ -339,15 +339,19 @@ function generateOAuth2SecurityPlugin(scheme, args) {
 }
 
 function generateSecurityPlugin(scheme, args) {
-  let plugin = null; // Generate base plugin
+  let plugin = null; // Flow doesn't like this (hence the "any" casting) but we're
+  // comparing the scheme type in a more flexible way to favor
+  // usability
 
-  if (scheme.type === 'apiKey') {
+  const type = (scheme.type || '').toLowerCase(); // Generate base plugin
+
+  if (type === 'apikey') {
     plugin = generateApiKeySecurityPlugin(scheme);
-  } else if (scheme.type === 'http') {
+  } else if (type === 'http') {
     plugin = generateHttpSecurityPlugin(scheme);
-  } else if (scheme.type === 'openIdConnect') {
+  } else if (type === 'openidconnect') {
     plugin = generateOpenIdConnectSecurityPlugin(scheme, args);
-  } else if (scheme.type === 'oauth2') {
+  } else if (type === 'oauth2') {
     plugin = generateOAuth2SecurityPlugin(scheme);
   } else {
     return null;

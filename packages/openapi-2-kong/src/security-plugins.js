@@ -39,7 +39,7 @@ export function generateApiKeySecurityPlugin(scheme: OA3SecuritySchemeApiKey): D
 }
 
 export function generateHttpSecurityPlugin(scheme: OA3SecuritySchemeHttp): DCPlugin {
-  if (scheme.scheme !== 'basic') {
+  if ((scheme.scheme || '').toLowerCase() !== 'basic') {
     throw new Error(`Only "basic" http scheme supported. got ${scheme.scheme}`);
   }
 
@@ -84,15 +84,20 @@ export function generateSecurityPlugin(
 ): DCPlugin | null {
   let plugin: DCPlugin | null = null;
 
+  // Flow doesn't like this (hence the "any" casting) but we're
+  // comparing the scheme type in a more flexible way to favor
+  // usability
+  const type = (scheme.type || '').toLowerCase();
+
   // Generate base plugin
-  if (scheme.type === 'apiKey') {
-    plugin = generateApiKeySecurityPlugin(scheme);
-  } else if (scheme.type === 'http') {
-    plugin = generateHttpSecurityPlugin(scheme);
-  } else if (scheme.type === 'openIdConnect') {
-    plugin = generateOpenIdConnectSecurityPlugin(scheme, args);
-  } else if (scheme.type === 'oauth2') {
-    plugin = generateOAuth2SecurityPlugin(scheme);
+  if (type === 'apikey') {
+    plugin = generateApiKeySecurityPlugin((scheme: any));
+  } else if (type === 'http') {
+    plugin = generateHttpSecurityPlugin((scheme: any));
+  } else if (type === 'openidconnect') {
+    plugin = generateOpenIdConnectSecurityPlugin((scheme: any), args);
+  } else if (type === 'oauth2') {
+    plugin = generateOAuth2SecurityPlugin((scheme: any));
   } else {
     return null;
   }
