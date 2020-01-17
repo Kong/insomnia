@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "jest",
-    "build": "parcel build ./src/index.js --target node",
-    "watch": "parcel watch ./src/index.js --target node"
+    "build": "parcel build ./src/index.js --no-minify --target node",
+    "watch": "parcel watch ./src/index.js --no-minify --target node"
   },
   "husky": {
     "hooks": {

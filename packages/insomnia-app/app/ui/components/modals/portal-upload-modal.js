@@ -1,7 +1,6 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import axios from 'axios';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -12,10 +11,11 @@ import type { ApiSpec } from '../../../models/api-spec';
 import type { WorkspaceMeta } from '../../../models/workspace-meta';
 import type { GlobalActivity } from '../../components/activity-bar/activity-bar';
 import ModalFooter from '../base/modal-footer';
-import urljoin from 'url-join';
+import urlJoin from 'url-join';
 import Link from '../base/link';
 import HelpLink from '../help-link';
 import { trackEvent } from '../../../common/analytics';
+import { axiosRequest } from '../../../network/axios-request';
 
 type Props = {|
   workspace: Workspace,
@@ -63,10 +63,6 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _workspaceUpdate(patch: Object) {
-    models.workspace.update(this.props.workspace, patch);
-  }
-
   _handleLoadingToggle(status: boolean) {
     this.setState({ isLoading: status });
   }
@@ -88,19 +84,9 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  _handleCloseSuccess() {
-    this.modal && this.modal.hide();
-    this.setState({ kongPortalDeployView: 'upload' });
-  }
-
-  _handleShowDeveloperPortal() {
-    this.setState({ kongPortalDeployView: 'upload' });
-    this.modal && this.modal.hide();
-    const { handleSetActivity } = this.props;
-    handleSetActivity('monitor');
-  }
-
   async _handleUploadSpec(overwrite: boolean) {
+    const { apiSpec } = this.props;
+
     const {
       kongSpecFileName,
       kongPortalUserWorkspace,
@@ -108,11 +94,10 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
       kongPortalRbacToken,
       kongPortalLegacyMode,
     } = this.state;
-    const { apiSpec } = this.props;
-    let activeSpec = apiSpec;
+
     let newSpec;
     let method = 'post';
-    let urlFilePath = urljoin(kongPortalApiUrl, kongPortalUserWorkspace + '/files');
+    let urlFilePath = urlJoin(kongPortalApiUrl, kongPortalUserWorkspace + '/files');
     let headers = {};
 
     // Check legacy mode
@@ -120,12 +105,12 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
       newSpec = {
         type: 'spec',
         name: kongSpecFileName,
-        contents: activeSpec.contents,
+        contents: apiSpec.contents,
       };
     } else {
       newSpec = {
-        path: urljoin('specs/', kongSpecFileName),
-        contents: activeSpec.contents,
+        path: urlJoin('specs/', kongSpecFileName),
+        contents: apiSpec.contents,
       };
     }
     // Check RBAC
@@ -138,19 +123,19 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
     // Check overwrite intent
     if (overwrite) {
       method = 'patch';
-      urlFilePath = urljoin(
+      urlFilePath = urlJoin(
         kongPortalApiUrl,
         kongPortalUserWorkspace,
         '/files/specs/',
         kongSpecFileName,
       );
     }
+
     try {
-      let response = await axios({
+      const response = await axiosRequest({
         method: method,
         url: urlFilePath,
         data: newSpec,
-        adapter: global.require('axios/lib/adapters/http'),
         headers: headers,
       });
       if (response.statusText === 'Created' || response.statusText === 'OK') {
@@ -175,13 +160,14 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
     this._handleLoadingToggle(true);
     try {
       // Check connection
-      const apiUrl = urljoin(
+      const apiUrl = urlJoin(
         this.state.kongPortalApiUrl,
         this.state.kongPortalUserWorkspace + '/kong',
       );
 
-      const response = await axios.get(apiUrl, {
-        adapter: global.require('axios/lib/adapters/http'),
+      const response = await axiosRequest({
+        method: 'get',
+        url: apiUrl,
         headers: {
           'Kong-Admin-Token': this.state.kongPortalRbacToken,
         },
@@ -235,7 +221,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
     this.modal = ref;
   }
 
-  async show(options: { onUpload?: () => void }) {
+  async show(options: {onUpload?: () => void}) {
     this._hasConnectInfo() ? this._handleReturnToUpload() : this._handleEditKongConnection();
     this.modal && this.modal.show();
   }

@@ -750,10 +750,10 @@ class Wrapper extends React.PureComponent<Props, State> {
 
             <PortalUploadModal
               ref={registerModal}
-              workspace={activeWorkspace}
               apiSpec={activeApiSpec}
-              workspaceMeta={activeWorkspaceMeta}
               handleSetActivity={handleSetActiveActivity}
+              workspace={activeWorkspace}
+              workspaceMeta={activeWorkspaceMeta}
             />
 
             <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />
@@ -980,7 +980,7 @@ class Wrapper extends React.PureComponent<Props, State> {
                   updateRequestUrl={Wrapper._handleUpdateRequestUrl}
                   updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
                   updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
-                  updateSettingsUseBulkParametersEditor={settings.useBulkParametersEditor}
+                  updateSettingsUseBulkParametersEditor={this._handleUpdateSettingsUseBulkParametersEditor}
                   workspace={activeWorkspace}
                 />
               </ErrorBoundary>

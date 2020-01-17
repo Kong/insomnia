@@ -17,5 +17,20 @@ describe('security-plugins', () => {
         },
       });
     });
+    it('generates apikey plugin with funny casing', async () => {
+      const scheme = {
+        type: 'ApIKeY',
+        in: 'header',
+        name: 'x-api-key',
+      };
+
+      const result = generateSecurityPlugin(scheme);
+      expect(result).toEqual({
+        name: 'key-auth',
+        config: {
+          key_names: ['x-api-key'],
+        },
+      });
+    });
   });
 });

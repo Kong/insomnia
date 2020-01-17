@@ -8,6 +8,7 @@ import {
   GA_ID,
   GA_LOCATION,
   getAppId,
+  getAppName,
   getAppPlatform,
   getAppVersion,
   isDevelopment,
@@ -35,6 +36,9 @@ const KEY_EVENT_ACTION = 'ea';
 const KEY_EVENT_LABEL = 'el';
 const KEY_EVENT_VALUE = 'ev';
 const KEY_ANONYMIZE_IP = 'aip';
+const KEY_APPLICATION_NAME = 'an';
+const KEY_APPLICATION_ID = 'aid';
+const KEY_APPLICATION_VERSION = 'av';
 
 const KEY_CUSTOM_DIMENSION_PREFIX = 'cd';
 
@@ -152,6 +156,9 @@ async function _getDefaultParams(): Promise<Array<RequestParameter>> {
     { name: KEY_CUSTOM_DIMENSION_PREFIX + DIMENSION_PLATFORM, value: getAppPlatform() },
     { name: KEY_CUSTOM_DIMENSION_PREFIX + DIMENSION_VERSION, value: getAppVersion() },
     { name: KEY_ANONYMIZE_IP, value: '1' },
+    { name: KEY_APPLICATION_NAME, value: getAppName() },
+    { name: KEY_APPLICATION_ID, value: getAppId() },
+    { name: KEY_APPLICATION_VERSION, value: getAppVersion() },
   ];
 
   const viewport = getViewportSize();
