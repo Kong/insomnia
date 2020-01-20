@@ -892,6 +892,7 @@ async function _applyRequestPluginHooks(
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
       ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
+      ...pluginContexts.data.init(),
       ...pluginContexts.store.init(plugin),
       ...pluginContexts.request.init(newRenderedRequest, renderedContext),
     };
@@ -918,6 +919,7 @@ async function _applyResponsePluginHooks(
   for (const { plugin, hook } of await plugins.getResponseHooks()) {
     const context = {
       ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
+      ...pluginContexts.data.init(),
       ...pluginContexts.store.init(plugin),
       ...pluginContexts.response.init(newResponse),
       ...pluginContexts.request.init(newRequest, renderContext, true),

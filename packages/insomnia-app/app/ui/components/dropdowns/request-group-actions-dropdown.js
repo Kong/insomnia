@@ -106,6 +106,7 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
 
       const context = {
         ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
+        ...pluginContexts.data.init(),
         ...pluginContexts.store.init(p.plugin),
         ...pluginContexts.network.init(activeEnvironmentId),
       };
