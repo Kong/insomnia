@@ -11,6 +11,7 @@ import type { PluginTemplateTag } from '../templating/extensions/index';
 import type { PluginTheme } from './misc';
 import type { RequestGroup } from '../models/request-group';
 import type { Request } from '../models/request';
+import type { Workspace } from '../models/workspace';
 
 export type Plugin = {
   name: string,
@@ -31,6 +32,20 @@ export type RequestGroupAction = {
     context: Object,
     models: {
       requestGroup: RequestGroup,
+      requests: Array<Request>,
+    },
+  ) => void | Promise<void>,
+  label: string,
+  icon?: string,
+};
+
+export type WorkspaceAction = {
+  plugin: Plugin,
+  action: (
+    context: Object,
+    models: {
+      workspace: Workspace,
+      requestGroups: Array<RequestGroup>,
       requests: Array<Request>,
     },
   ) => void | Promise<void>,
@@ -162,6 +177,16 @@ export async function getRequestGroupActions(): Promise<Array<RequestGroupAction
   let extensions = [];
   for (const plugin of await getPlugins()) {
     const actions = plugin.module.requestGroupActions || [];
+    extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
+  }
+
+  return extensions;
+}
+
+export async function getWorkspaceActions(): Promise<Array<WorkspaceAction>> {
+  let extensions = [];
+  for (const plugin of await getPlugins()) {
+    const actions = plugin.module.workspaceActions || [];
     extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
   }
 
