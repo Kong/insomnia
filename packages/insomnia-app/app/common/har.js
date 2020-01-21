@@ -191,6 +191,7 @@ export async function exportHar(exportRequests: Array<ExportRequest>): Promise<H
 
     const response: ResponseModel | null = await models.response.getLatestForRequest(
       exportRequest.requestId,
+      null,
     );
     const harResponse = await exportHarResponse(response);
     if (!harResponse) {

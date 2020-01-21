@@ -533,6 +533,9 @@ function _genTestContext(requests, responses, extraInfoRoot) {
   return {
     renderPurpose: 'send',
     context: {
+      getEnvironmentId() {
+        return null;
+      },
       getExtraInfo(key) {
         if (_extraInfo) {
           return _extraInfo[key] || null;

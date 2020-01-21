@@ -90,7 +90,8 @@ module.exports.templateTags = [
         throw new Error(`Could not find request ${id}`);
       }
 
-      let response = await context.util.models.response.getLatestForRequestId(id);
+      const environmentId = context.context.getEnvironmentId();
+      let response = await context.util.models.response.getLatestForRequestId(id, environmentId);
 
       let shouldResend = false;
       if (context.context.getExtraInfo('fromResponseTag')) {

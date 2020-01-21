@@ -28,6 +28,7 @@ export type ResponseTimelineEntry = {
 };
 
 type BaseResponse = {
+  environmentId: string | null,
   statusCode: number,
   statusMessage: string,
   httpVersion: string,
@@ -52,6 +53,7 @@ export type Response = BaseModel & BaseResponse;
 
 export function init(): BaseResponse {
   return {
+    environmentId: '__LEGACY__',
     statusCode: 0,
     statusMessage: '',
     httpVersion: '',
@@ -111,16 +113,27 @@ export function remove(response: Response) {
   return db.remove(response);
 }
 
-export async function findRecentForRequest(
+async function _findRecentForRequest(
   requestId: string,
+  environmentId: string | null,
   limit: number,
 ): Promise<Array<Response>> {
-  const responses = await db.findMostRecentlyModified(type, { parentId: requestId }, limit);
-  return responses;
+  const q: Object = {
+    parentId: requestId,
+  };
+
+  if (environmentId) {
+    q.environmentId = environmentId;
+  }
+
+  return db.findMostRecentlyModified(type, q, limit);
 }
 
-export async function getLatestForRequest(requestId: string): Promise<Response | null> {
-  const responses = await findRecentForRequest(requestId, 1);
+export async function getLatestForRequest(
+  requestId: string,
+  environmentId: string | null,
+): Promise<Response | null> {
+  const responses = await _findRecentForRequest(requestId, environmentId, 1);
   const response = (responses[0]: ?Response);
   return response || null;
 }
