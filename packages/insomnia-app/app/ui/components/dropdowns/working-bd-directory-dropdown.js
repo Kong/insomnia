@@ -34,8 +34,10 @@ class WorkingBdDirectoryDropdown extends React.PureComponent<Props, State> {
   _computePath(path: string): string {
     const split = path.split('/');
     let text = split[split.length - 1];
-    if (text.length > 20) {
+    if (text && text.length > 20) {
       return `/...${text.substring(text.length - 21, text.length - 1)}`;
+    } else if (text) {
+      return `/${text}`;
     }
 
     return path;
@@ -45,6 +47,11 @@ class WorkingBdDirectoryDropdown extends React.PureComponent<Props, State> {
     const { className, directories } = this.props;
 
     const classes = classnames(className, 'wide', 'working-dir-dropdown');
+
+    let dirText = 'Default';
+    if (directories.current) {
+      dirText = this._computePath(directories.all[directories.current].path);
+    }
 
     return (
       <Dropdown
@@ -58,9 +65,7 @@ class WorkingBdDirectoryDropdown extends React.PureComponent<Props, State> {
             <div className="pull-right">
               <i className="fa fa-caret-down space-left" />
             </div>
-            {directories.current
-              ? this._computePath(directories.all[directories.current].path)
-              : 'Default'}
+            {dirText}
           </h4>
         </DropdownButton>
 

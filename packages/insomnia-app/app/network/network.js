@@ -33,7 +33,7 @@ import {
   delay,
   describeByteSize,
   getContentTypeHeader,
-  getDataDirectory,
+  getCurrentDirectory,
   getHostHeader,
   getLocationHeader,
   getSetCookieHeaders,
@@ -645,9 +645,10 @@ export async function _actuallySend(
       setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       let responseBodyBytes = 0;
-      const responsesDir = pathJoin(getDataDirectory(), 'responses');
+      const responsesDir = pathJoin(getCurrentDirectory(), 'responses');
       mkdirp.sync(responsesDir);
-      const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.response');
+      const bodyPath = uuid.v4() + '.response';
+      const responseBodyPath = pathJoin(responsesDir, bodyPath);
       const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
       curl.on('end', () => responseBodyWriteStream.end());
       curl.on('error', () => responseBodyWriteStream.end());
@@ -737,7 +738,7 @@ export async function _actuallySend(
         await waitForStreamToFinish(responseBodyWriteStream);
 
         // Send response
-        await respond(responsePatch, responseBodyPath);
+        await respond(responsePatch, bodyPath);
       });
 
       curl.on('error', function(err, code) {
@@ -1020,14 +1021,14 @@ function storeTimeline(timeline: Array<ResponseTimelineEntry>): Promise<string> 
       .createHash('sha1')
       .update(timelineStr)
       .digest('hex');
-    const responsesDir = pathJoin(getDataDirectory(), 'responses');
+    const responsesDir = pathJoin(getCurrentDirectory(), 'responses');
     mkdirp.sync(responsesDir);
     const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
     fs.writeFile(timelinePath, timelineStr, err => {
       if (err != null) {
         reject(err);
       } else {
-        resolve(timelinePath);
+        resolve(timelineHash + '.timeline');
       }
     });
   });

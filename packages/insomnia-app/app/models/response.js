@@ -9,7 +9,7 @@ import path from 'path';
 import zlib from 'zlib';
 import mkdirp from 'mkdirp';
 import * as db from '../common/database';
-import { getDataDirectory } from '../common/misc';
+import { getDataDirectory, getCurrentDirectory } from '../common/misc';
 
 export const name = 'Response';
 export const type = 'Response';
@@ -183,7 +183,7 @@ function getBodyStreamFromPath<T>(
     return readFailureValue === undefined ? null : readFailureValue;
   }
 
-  const readStream = fs.createReadStream(bodyPath);
+  const readStream = fs.createReadStream(path.join(getCurrentDirectory(), 'responses', bodyPath));
   if (compression === 'zip') {
     return readStream.pipe(zlib.createGunzip());
   } else {
@@ -202,7 +202,7 @@ function getBodyBufferFromPath<T>(
   }
 
   try {
-    const rawBuffer = fs.readFileSync(bodyPath);
+    const rawBuffer = fs.readFileSync(path.join(getCurrentDirectory(), 'responses', bodyPath));
     if (compression === 'zip') {
       return zlib.gunzipSync(rawBuffer);
     } else {
@@ -221,7 +221,7 @@ function getTimelineFromPath(timelinePath: string): Array<ResponseTimelineEntry>
   }
 
   try {
-    const rawBuffer = fs.readFileSync(timelinePath);
+    const rawBuffer = fs.readFileSync(path.join(getCurrentDirectory(), 'responses', timelinePath));
     return JSON.parse(rawBuffer.toString());
   } catch (err) {
     console.warn('Failed to read response body', err.message);

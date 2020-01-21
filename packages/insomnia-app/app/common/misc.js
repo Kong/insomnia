@@ -405,6 +405,17 @@ export function selectDbDirectories(id?: string) {
   }
 }
 
+export function getCurrentDirectory() {
+  try {
+    const directories = getDbDirectories();
+    if (!directories.current) return getDataDirectory();
+
+    return pathJoin(directories.all[directories.current].path, 'sleepless');
+  } catch (e) {
+    console.log(e);
+  }
+}
+
 export function getDbDirectories() {
   try {
     const dir = JSON.parse(
