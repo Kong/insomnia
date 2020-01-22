@@ -69,7 +69,7 @@ export type ResponsePatch = {|
   bytesRead?: number,
   contentType?: string,
   elapsedTime?: number,
-  environmentId?: string,
+  environmentId?: string | null,
   error?: string,
   headers?: Array<ResponseHeader>,
   httpVersion?: string,
@@ -127,7 +127,7 @@ export async function _actuallySend(
     ): Promise<void> {
       const timelinePath = await storeTimeline(timeline);
 
-      const environmentId = environment ? environment._id : undefined;
+      const environmentId = environment ? environment._id : null;
       const responsePatchBeforeHooks = Object.assign(
         ({
           timelinePath,

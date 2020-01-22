@@ -171,7 +171,7 @@ export type Har = {
 
 export type ExportRequest = {
   requestId: string,
-  environmentId: string,
+  environmentId: string | null,
 };
 
 export async function exportHar(exportRequests: Array<ExportRequest>): Promise<Har> {
@@ -191,7 +191,7 @@ export async function exportHar(exportRequests: Array<ExportRequest>): Promise<H
 
     const response: ResponseModel | null = await models.response.getLatestForRequest(
       exportRequest.requestId,
-      null,
+      exportRequest.environmentId || null,
     );
     const harResponse = await exportHarResponse(response);
     if (!harResponse) {
@@ -277,7 +277,7 @@ export async function exportHarRequest(
 
 export async function exportHarWithRequest(
   request: Request,
-  environmentId: string,
+  environmentId: string | null,
   addContentLength: boolean = false,
 ): Promise<HarRequest | null> {
   try {

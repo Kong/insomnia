@@ -308,14 +308,14 @@ class Wrapper extends React.PureComponent<Props, State> {
     showModal(RequestSettingsModal, { request: this.props.activeRequest });
   }
 
-  async _handleDeleteResponses(): Promise<void> {
-    if (!this.props.activeRequest) {
-      console.warn('Tried to delete responses when request not active');
-      return;
-    }
+  async _handleDeleteResponses(requestId: string, environmentId: string | null): Promise<void> {
+    const { handleSetActiveResponse, activeRequest } = this.props;
 
-    await models.response.removeForRequest(this.props.activeRequest._id);
-    this._handleSetActiveResponse(null);
+    await models.response.removeForRequest(requestId, environmentId);
+
+    if (activeRequest && activeRequest._id === requestId) {
+      await handleSetActiveResponse(requestId, null);
+    }
   }
 
   async _handleDeleteResponse(response: Response): Promise<void> {
@@ -853,6 +853,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
             editorLineWrapping={settings.editorLineWrapping}
+            environment={activeEnvironment}
             filter={responseFilter}
             filterHistory={responseFilterHistory}
             handleDeleteResponse={this._handleDeleteResponse}
