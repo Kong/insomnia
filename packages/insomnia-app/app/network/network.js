@@ -60,25 +60,27 @@ import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 import aws4 from 'aws4';
 import { buildMultipart } from './multipart';
+import type { Environment } from '../models/environment';
 
 export type ResponsePatch = {|
-  statusMessage?: string,
-  error?: string,
-  url?: string,
-  statusCode?: number,
-  bytesContent?: number,
-  bodyPath?: string,
   bodyCompression?: 'zip' | null,
-  message?: string,
-  httpVersion?: string,
-  headers?: Array<ResponseHeader>,
-  elapsedTime?: number,
-  contentType?: string,
+  bodyPath?: string,
+  bytesContent?: number,
   bytesRead?: number,
+  contentType?: string,
+  elapsedTime?: number,
+  environmentId?: string | null,
+  error?: string,
+  headers?: Array<ResponseHeader>,
+  httpVersion?: string,
+  message?: string,
   parentId?: string,
-  settingStoreCookies?: boolean,
   settingSendCookies?: boolean,
+  settingStoreCookies?: boolean,
+  statusCode?: number,
+  statusMessage?: string,
   timelinePath?: string,
+  url?: string,
 |};
 
 // Time since user's last keypress to wait before making the request
@@ -101,6 +103,7 @@ export async function _actuallySend(
   renderContext: Object,
   workspace: Workspace,
   settings: Settings,
+  environment: Environment | null,
 ): Promise<ResponsePatch> {
   return new Promise(async resolve => {
     let timeline: Array<ResponseTimelineEntry> = [];
@@ -124,9 +127,11 @@ export async function _actuallySend(
     ): Promise<void> {
       const timelinePath = await storeTimeline(timeline);
 
+      const environmentId = environment ? environment._id : null;
       const responsePatchBeforeHooks = Object.assign(
         ({
           timelinePath,
+          environmentId,
           parentId: renderedRequest._id,
           bodyCompression: null, // Will default to .zip otherwise
           bodyPath: bodyPath || '',
@@ -719,14 +724,14 @@ export async function _actuallySend(
 
         // Return the response data
         const responsePatch = {
-          headers,
           contentType,
-          statusCode,
+          headers,
           httpVersion,
+          statusCode,
           statusMessage,
-          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
-          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
           bytesContent: responseBodyBytes,
+          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
+          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
           url: curl.getInfo(Curl.info.EFFECTIVE_URL),
         };
 
@@ -749,7 +754,14 @@ export async function _actuallySend(
           statusMessage = 'Abort';
         }
 
-        respond({ statusMessage, error }, null, true);
+        respond(
+          {
+            statusMessage,
+            error,
+          },
+          null,
+          true,
+        );
       });
 
       curl.perform();
@@ -790,6 +802,8 @@ export async function sendWithSettings(
     parentId: request._id,
   });
 
+  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
+
   let renderResult: { request: RenderedRequest, context: Object };
   try {
     renderResult = await getRenderedRequestAndContext(newRequest, environmentId);
@@ -797,12 +811,18 @@ export async function sendWithSettings(
     throw new Error(`Failed to render request: ${requestId}`);
   }
 
-  return _actuallySend(renderResult.request, renderResult.context, workspace, settings);
+  return _actuallySend(
+    renderResult.request,
+    renderResult.context,
+    workspace,
+    settings,
+    environment,
+  );
 }
 
 export async function send(
   requestId: string,
-  environmentId: string | null,
+  environmentId?: string,
   extraInfo?: ExtraRenderInfo,
 ): Promise<ResponsePatch> {
   console.log(`[network] Sending req=${requestId}`);
@@ -834,9 +854,11 @@ export async function send(
     throw new Error(`Failed to find request to send for ${requestId}`);
   }
 
+  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
+
   const renderResult = await getRenderedRequestAndContext(
     request,
-    environmentId,
+    environmentId || null,
     RENDER_PURPOSE_SEND,
     extraInfo,
   );
@@ -858,13 +880,14 @@ export async function send(
     );
   } catch (err) {
     return {
-      url: renderedRequestBeforePlugins.url,
-      parentId: renderedRequestBeforePlugins._id,
+      environmentId: environmentId,
       error: err.message,
-      statusCode: STATUS_CODE_PLUGIN_ERROR,
-      statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
+      parentId: renderedRequestBeforePlugins._id,
       settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
       settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies,
+      statusCode: STATUS_CODE_PLUGIN_ERROR,
+      statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
+      url: renderedRequestBeforePlugins.url,
     };
   }
 
@@ -873,6 +896,7 @@ export async function send(
     renderedContextBeforePlugins,
     workspace,
     settings,
+    environment,
   );
 
   console.log(

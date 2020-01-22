@@ -269,10 +269,19 @@ export const selectActiveRequestMeta = createSelector(
 export const selectActiveRequestResponses = createSelector(
   selectActiveRequest,
   selectEntitiesLists,
-  (activeRequest, entities) => {
+  selectActiveWorkspaceMeta,
+  (activeRequest, entities, meta) => {
     const requestId = activeRequest ? activeRequest._id : 'n/a';
     return entities.responses
-      .filter(response => requestId === response.parentId)
+      .filter(response => {
+        const requestMatches = requestId === response.parentId;
+        const environmentMatches = response.environmentId === meta.activeEnvironmentId;
+
+        // Legacy responses were sent before environment scoping existed
+        const isLegacy = response.environmentId === '__LEGACY__';
+
+        return requestMatches && (environmentMatches || isLegacy);
+      })
       .sort((a, b) => (a.created > b.created ? -1 : 1));
   },
 );
