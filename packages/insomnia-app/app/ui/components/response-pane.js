@@ -30,6 +30,7 @@ import { hotKeyRefs } from '../../common/hotkeys';
 import type { RequestVersion } from '../../models/request-version';
 import { showError } from '../components/modals/index';
 import { json as jsonPrettify } from 'insomnia-prettify';
+import type { Environment } from '../../models/environment';
 
 type Props = {
   // Functions
@@ -53,11 +54,13 @@ type Props = {
   loadStartTime: number,
   responses: Array<Response>,
   hotKeyRegistry: HotKeyRegistry,
+  disableResponsePreviewLinks: boolean,
 
   // Other
   requestVersions: Array<RequestVersion>,
   request: ?Request,
   response: ?Response,
+  environment: ?Environment,
 };
 
 @autobind
@@ -182,7 +185,9 @@ class ResponsePane extends React.PureComponent<Props> {
       editorIndentSize,
       editorKeyMap,
       editorLineWrapping,
+      environment,
       filter,
+      disableResponsePreviewLinks,
       filterHistory,
       handleDeleteResponse,
       handleDeleteResponses,
@@ -199,7 +204,6 @@ class ResponsePane extends React.PureComponent<Props> {
       responses,
       showCookiesModal,
     } = this.props;
-
     const paneClasses = 'response-pane theme--pane pane';
     const paneHeaderClasses = 'pane__header theme--pane__header';
     const paneBodyClasses = 'pane__body theme--pane__body';
@@ -288,6 +292,7 @@ class ResponsePane extends React.PureComponent<Props> {
             </div>
             <ResponseHistoryDropdown
               activeResponse={response}
+              activeEnvironment={environment}
               responses={responses}
               requestVersions={requestVersions}
               requestId={request._id}
@@ -336,22 +341,22 @@ class ResponsePane extends React.PureComponent<Props> {
           <TabPanel className="react-tabs__tab-panel">
             <ResponseViewer
               ref={this._setResponseViewerRef}
-              // Send larger one because legacy responses have bytesContent === -1
-              responseId={response._id}
               bytes={Math.max(response.bytesContent, response.bytesRead)}
               contentType={response.contentType || ''}
-              previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
-              filter={filter}
-              filterHistory={filterHistory}
-              updateFilter={response.error ? null : handleSetFilter}
-              download={this._handleDownloadResponseBody}
               disableHtmlPreviewJs={disableHtmlPreviewJs}
-              getBody={this._handleGetResponseBody}
-              error={response.error}
-              editorLineWrapping={editorLineWrapping}
+              disablePreviewLinks={disableResponsePreviewLinks}
+              download={this._handleDownloadResponseBody}
               editorFontSize={editorFontSize}
               editorIndentSize={editorIndentSize}
               editorKeyMap={editorKeyMap}
+              editorLineWrapping={editorLineWrapping}
+              error={response.error}
+              filter={filter}
+              filterHistory={filterHistory}
+              getBody={this._handleGetResponseBody}
+              previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
+              responseId={response._id}
+              updateFilter={response.error ? null : handleSetFilter}
               url={response.url}
             />
           </TabPanel>

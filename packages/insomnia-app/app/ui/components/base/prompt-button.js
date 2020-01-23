@@ -62,7 +62,8 @@ class PromptButton extends PureComponent {
     }
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     clearTimeout(this._triggerTimeout);
     clearTimeout(this._doneTimeout);
   }

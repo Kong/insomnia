@@ -104,7 +104,8 @@ class Plugins extends React.PureComponent<Props, State> {
     this._handleRefreshPlugins();
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     this._isMounted = false;
   }
 

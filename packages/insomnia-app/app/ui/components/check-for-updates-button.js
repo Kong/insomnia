@@ -45,7 +45,8 @@ class CheckForUpdatesButton extends React.PureComponent<Props, State> {
     electron.ipcRenderer.on('updater.check.complete', this._listenerCheckComplete);
   }
 
-  componentWillUnmount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUnmount() {
     electron.ipcRenderer.removeListener('updater.check.complete', this._listenerCheckComplete);
     electron.ipcRenderer.removeListener('updater.check.status', this._listenerCheckStatus);
   }
