@@ -25,7 +25,7 @@ type State = {
   collapsed: boolean,
 };
 
-const Wrapper: React.ComponentType<any> = styled.div`
+const Wrapper: React.ComponentType<{}> = styled.div`
   width: 100%;
 
   td {
@@ -37,11 +37,18 @@ const Wrapper: React.ComponentType<any> = styled.div`
   }
 `;
 
-const ErrorCount: React.ComponentType<any> = styled.div`
+const ScrollWrapperStyled: React.ComponentType<{}> = styled.div`
+  height: 100%;
+  width: 100%;
+  max-height: 13rem;
+  overflow-y: auto;
+`;
+
+const ErrorCount: React.ComponentType<{}> = styled.div`
   margin-right: var(--padding-md);
 `;
 
-const JumpButton: React.ComponentType<any> = styled.button`
+const JumpButton: React.ComponentType<{}> = styled.button`
   outline: 0;
   border: 0;
   background: transparent;
@@ -76,7 +83,7 @@ const JumpButton: React.ComponentType<any> = styled.button`
   }
 `;
 
-const Header: React.ComponentType<any> = styled.header`
+const Header: React.ComponentType<{}> = styled.header`
   display: flex;
   align-items: center;
   flex-grow: 0;
@@ -151,35 +158,37 @@ class NoticeTable extends React.PureComponent<Props, State> {
           </Button>
         </Header>
         {!collapsed && (
-          <Table striped compact={compact}>
-            <TableHead>
-              <TableRow>
-                <TableHeader align="center">Type</TableHeader>
-                <TableHeader style={{ minWidth: '3em' }} align="center">
-                  Line
-                </TableHeader>
-                <TableHeader style={{ width: '100%' }} align="left">
-                  Message
-                </TableHeader>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {notices.map((n, i) => (
-                <TableRow key={`${n.line}:${n.type}:${n.message}`}>
-                  <TableData align="center">
-                    <SvgIcon icon={n.type} />
-                  </TableData>
-                  <TableData align="center">
-                    {n.line}
-                    <JumpButton onClick={this.onClick.bind(this, n)}>
-                      <SvgIcon icon="arrow-right" />
-                    </JumpButton>
-                  </TableData>
-                  <TableData align="left">{n.message}</TableData>
+          <ScrollWrapperStyled>
+            <Table striped compact={compact}>
+              <TableHead>
+                <TableRow>
+                  <TableHeader align="center">Type</TableHeader>
+                  <TableHeader style={{ minWidth: '3em' }} align="center">
+                    Line
+                  </TableHeader>
+                  <TableHeader style={{ width: '100%' }} align="left">
+                    Message
+                  </TableHeader>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHead>
+              <TableBody>
+                {notices.map((n, i) => (
+                  <TableRow key={`${n.line}:${n.type}:${n.message}`}>
+                    <TableData align="center">
+                      <SvgIcon icon={n.type} />
+                    </TableData>
+                    <TableData align="center">
+                      {n.line}
+                      <JumpButton onClick={this.onClick.bind(this, n)}>
+                        <SvgIcon icon="arrow-right" />
+                      </JumpButton>
+                    </TableData>
+                    <TableData align="left">{n.message}</TableData>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollWrapperStyled>
         )}
       </Wrapper>
     );
