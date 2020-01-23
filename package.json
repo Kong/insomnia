@@ -15,8 +15,8 @@
     "app-start": "lerna run start --scope insomnia-app --stream --parallel --bail",
     "app-build": "lerna run build --stream --parallel --bail",
     "app-package": "lerna run package --stream --parallel --bail",
-    "app-storybook": "lerna run storybook --scope insomnia-app --stream --parallel --bail",
-    "ui-storybook": "lerna run storybook --scope insomnia-ui --stream --parallel --bail",
+    "app-storybook": "lerna run storybook --scope insomnia-components --stream --parallel --bail",
+    "app-storybook-legacy": "lerna run storybook --scope insomnia-app --stream --parallel --bail",
     "format-code": "prettier --write \"**/*.js\""
   },
   "husky": {

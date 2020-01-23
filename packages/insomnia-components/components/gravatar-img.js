@@ -7,7 +7,7 @@ type Props = {|
   size?: number,
   fallback?: string,
   className?: string,
-  rouned?:boolean,
+  rounded?:boolean,
 |};
 
 class GravatarImg extends React.PureComponent<Props> {
