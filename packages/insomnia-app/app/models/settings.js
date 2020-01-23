@@ -5,6 +5,14 @@ import * as db from '../common/database';
 import { UPDATE_CHANNEL_STABLE } from '../common/constants';
 import * as hotkeys from '../common/hotkeys';
 
+export type PluginConfig = {
+  disabled: boolean,
+};
+
+export type PluginConfigMap = {
+  [string]: PluginConfig,
+};
+
 type BaseSettings = {
   autoHideMenuBar: boolean,
   autocompleteDelay: number,
@@ -42,6 +50,7 @@ type BaseSettings = {
   useBulkHeaderEditor: boolean,
   useBulkParametersEditor: boolean,
   validateSSL: boolean,
+  pluginConfig: PluginConfigMap,
 
   // Feature flags
   enableSyncBeta: boolean,
@@ -96,6 +105,7 @@ export function init(): BaseSettings {
 
     // Feature flags
     enableSyncBeta: false,
+    pluginConfig: {},
   };
 }
 
