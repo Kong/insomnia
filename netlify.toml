@@ -1,0 +1,3 @@
+[build]
+  publish = "packages/insomnia-components/storybook-static"
+  command = "npm run app-build-storybook"
