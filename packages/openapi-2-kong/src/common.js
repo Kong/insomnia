@@ -1,33 +1,6 @@
 // @flow
-import SwaggerParser from 'swagger-parser';
 import url from 'url';
-
-export async function parseSpec(spec: string | Object): Promise<OpenApi3Spec> {
-  let api: OpenApi3Spec;
-
-  if (typeof spec === 'string') {
-    try {
-      api = JSON.parse(spec);
-    } catch (err) {
-      api = SwaggerParser.YAML.parse(spec);
-    }
-  } else {
-    api = JSON.parse(JSON.stringify(spec));
-  }
-
-  // Ensure it has some required properties to make parsing
-  // a bit less strict
-
-  if (!api.info) {
-    api.info = {};
-  }
-
-  if (api.openapi === '3.0') {
-    api.openapi = '3.0.0';
-  }
-
-  return SwaggerParser.dereference(api);
-}
+import slugify from 'slugify';
 
 export function getServers(obj: OpenApi3Spec | OA3PathItem): Array<OA3Server> {
   return obj.servers || [];
@@ -51,7 +24,11 @@ export function getSecurity(
   return obj.security || [];
 }
 
-export function getName(obj: OpenApi3Spec | OA3Operation): string {
+export function getName(
+  obj: OpenApi3Spec | OA3Operation,
+  defaultValue?: string = 'openapi',
+  slugifyOptions?: {replacement: string, lower: boolean},
+): string {
   let name;
 
   if ((obj: any)['x-kong-name']) {
@@ -62,11 +39,16 @@ export function getName(obj: OpenApi3Spec | OA3Operation): string {
     name = obj.info.title;
   }
 
-  return generateSlug(name || 'openapi');
+  return generateSlug(name || defaultValue, slugifyOptions);
 }
 
-export function generateSlug(str: string): string {
-  return str.replace(/[\s_\-.~,]/g, '_');
+export function generateSlug(
+  str: string,
+  options: {replacement: string, lower: boolean} = {},
+): string {
+  options.replacement = options.replacement || '_';
+  options.lower = options.lower || false;
+  return slugify(str, options);
 }
 
 export function pathVariablesToRegex(p: string): string {

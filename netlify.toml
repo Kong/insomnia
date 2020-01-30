@@ -2,4 +2,4 @@
   publish = "storybook-static"
   base = "packages/insomnia-components/"
   command = "npm run build-storybook"
-  ignore = "git diff --quiet HEAD^ HEAD packages/insomnia-components/"
+  ignore = "git diff --quiet HEAD^ HEAD -- packages/insomnia-components/"

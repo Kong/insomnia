@@ -44,35 +44,35 @@
           "methods": ["DELETE"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-Returns_the_specified_HTTP_status_code__or_a_random_status_code_if_more_than_one_are_given-delete",
+          "name": "httpbin-Returns_the_specified_HTTP_status_code_or_a_random_status_code_if_more_than_one_are_given-delete",
           "paths": ["\/status\/(?<statusCode>\\S+)$"]
         },
         {
           "methods": ["PUT"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-Returns_the_specified_HTTP_status_code__or_a_random_status_code_if_more_than_one_are_given-put",
+          "name": "httpbin-Returns_the_specified_HTTP_status_code_or_a_random_status_code_if_more_than_one_are_given-put",
           "paths": ["\/status\/(?<statusCode>\\S+)$"]
         },
         {
           "methods": ["PATCH"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-Returns_the_specified_HTTP_status_code__or_a_random_status_code_if_more_than_one_are_given-patch",
+          "name": "httpbin-Returns_the_specified_HTTP_status_code_or_a_random_status_code_if_more_than_one_are_given-patch",
           "paths": ["\/status\/(?<statusCode>\\S+)$"]
         },
         {
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-Returns_the_specified_HTTP_status_code__or_a_random_status_code_if_more_than_one_are_given-post",
+          "name": "httpbin-Returns_the_specified_HTTP_status_code_or_a_random_status_code_if_more_than_one_are_given-post",
           "paths": ["\/status\/(?<statusCode>\\S+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-Returns_the_specified_HTTP_status_code__or_a_random_status_code_if_more_than_one_are_given-get",
+          "name": "httpbin-Returns_the_specified_HTTP_status_code_or_a_random_status_code_if_more_than_one_are_given-get",
           "paths": ["\/status\/(?<statusCode>\\S+)$"]
         },
         {

@@ -16,7 +16,7 @@ describe('fixtures', () => {
     const expected = fs.readFileSync(expectedPath, 'utf8');
 
     it(`converts ${name}`, async () => {
-      const result = await generate(inputPath);
+      const result = await generate(inputPath, 'kong-declarative-config');
       const expectedObj = JSON.parse(expected);
 
       // Make matching friendlier
@@ -24,11 +24,11 @@ describe('fixtures', () => {
         service.routes = _sortRoutes(service.routes);
       }
 
-      for (const service of result.services || []) {
+      for (const service of result.document.services || []) {
         service.routes = _sortRoutes(service.routes);
       }
 
-      expect(result).toEqual(expectedObj);
+      expect(result.document).toEqual(expectedObj);
     });
   }
 });

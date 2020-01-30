@@ -1,69 +1,14 @@
 import {
+  fillServerVariables,
   generateSlug,
   getName,
   getSecurity,
   getServers,
-  fillServerVariables,
-  parseSpec,
   pathVariablesToRegex,
 } from '../common';
-import YAML from 'yaml';
+import { parseSpec } from '../index';
 
 describe('common', () => {
-  describe('parseSpec()', () => {
-    const spec = {
-      openapi: '3.0',
-      paths: {
-        '/': {
-          post: {
-            responses: {
-              '200': {
-                $ref: '#/components/schemas/dog',
-              },
-            },
-          },
-        },
-      },
-      components: {
-        schemas: {
-          dog: { name: { type: 'string' } },
-        },
-      },
-    };
-
-    const specResolved = {
-      openapi: '3.0.0',
-      components: spec.components,
-      info: {},
-      paths: {
-        '/': {
-          post: {
-            responses: {
-              '200': {
-                name: { type: 'string' },
-              },
-            },
-          },
-        },
-      },
-    };
-
-    it('parses JSON spec', async () => {
-      const result = await parseSpec(spec);
-      expect(result).toEqual(specResolved);
-    });
-
-    it('parses JSON spec string', async () => {
-      const result = await parseSpec(JSON.stringify(spec));
-      expect(result).toEqual(specResolved);
-    });
-
-    it('parses YAML spec string', async () => {
-      const result = await parseSpec(YAML.stringify(spec));
-      expect(result).toEqual(specResolved);
-    });
-  });
-
   describe('getServers()', () => {
     const spec = {
       openapi: '3.0.0',
@@ -154,6 +99,9 @@ describe('common', () => {
       const s = await parseSpec({ ...spec, info: { version: '1.0.0' } });
       const result = getName(s);
       expect(result).toBe('openapi');
+
+      const result2 = getName(s, 'Another Default');
+      expect(result2).toBe('Another_Default');
     });
 
     it('path object with x-kong-name', async () => {
@@ -167,14 +115,22 @@ describe('common', () => {
       const result = getName(p);
       expect(result).toBe('kong');
     });
+
+    it('works with slugify options', async () => {
+      const p = { 'x-kong-name': 'This Needs Slugify' };
+      const result = getName(p, '', {replacement: '?', lower: true});
+      expect(result).toBe('this?needs?slugify');
+    });
   });
 
   describe('generateSlug()', () => {
     it('passes basic cases', () => {
       expect(generateSlug('foo')).toBe('foo');
       expect(generateSlug('foo bar')).toBe('foo_bar');
-      expect(generateSlug('foo,bar')).toBe('foo_bar');
+      expect(generateSlug('foo, bar')).toBe('foo_bar');
       expect(generateSlug('Foo Bar')).toBe('Foo_Bar');
+      expect(generateSlug('foo bar', {replacement: '?'})).toBe('foo?bar');
+      expect(generateSlug('FOO Bar', {lower: true})).toBe('foo_bar');
     });
   });
 

@@ -1,6 +1,6 @@
 // @flow
 
-import { getName, parseUrl } from './common';
+import { getName, parseUrl } from '../common';
 
 export function generateUpstreams(api: OpenApi3Spec, tags: Array<string>) {
   const servers = api.servers || [];

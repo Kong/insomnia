@@ -1,6 +1,6 @@
 // @flow
 import { generateServices } from '../services';
-import { parseSpec } from '../common';
+import { parseSpec } from '../../index';
 
 describe('services', () => {
   describe('generateServices()', () => {

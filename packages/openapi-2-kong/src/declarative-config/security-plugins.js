@@ -1,6 +1,6 @@
 // @flow
 
-import { getSecurity } from './common';
+import { getSecurity } from '../common';
 
 export function generateSecurityPlugins(op: OA3Operation, api: OpenApi3Spec): Array<DCPlugin> {
   const plugins = [];

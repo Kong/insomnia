@@ -19,7 +19,7 @@ This module generates Kong Declarative Config from OpenAPI 3.0 specification fil
 
 This module exposes three methods of generating Kong declarative config.
 
-```js 
+```js
 generateFromString (spec: string, tags: Array<string>) => Promise<Object>,
 generateFromSpec (spec: Object, tags: Array<string>) => Promise<Object>,
 generate (filename: string, tags: Array<string>) => Promise<Object>,
@@ -81,8 +81,8 @@ servers:
 ```
 
 ```yaml
-services:                          
-  - host: swagger.io           # Subdomain stripped and added will prefix upstreams 
+services:
+  - host: swagger.io           # Subdomain stripped and added will prefix upstreams
     port: 80                   # Port inferred from protocol if not specified
     path: "\/"                 # The /v1 was stripped off and will prefix all routes
     protocol: http             # Extracted from URL or defaulted to http
@@ -100,12 +100,12 @@ servers:
     variables:
       subdomain:
         default: petstore
-        enum: 
+        enum:
           - petstore
           - shoestore
 ```
 
-The service name is set to the following 
+The service name is set to the following
 
 1. Root `x-kong-name` attribute
 1. Generated slug from `info.title`
@@ -113,7 +113,7 @@ The service name is set to the following
 
 ### `$.services[*].routes`
 
-Service routes are generated from the root `paths` property. One service route per path/method 
+Service routes are generated from the root `paths` property. One service route per path/method
 combination will be generated.
 
 ```yaml
@@ -132,7 +132,7 @@ paths:
 ```yaml
 services:
   - ...
-    routes: 
+    routes:
       - name: ApiName-create-pet         # Taken from x-kong-name, summary, or generated
         strip_path: true                 # Always `true`
         methods: [ PUT ]                 # Only ever a single-entry array
@@ -157,7 +157,7 @@ servers:
 ```
 
 ```yaml
-upstreams:                                 
+upstreams:
   - name: Simple_API_overview           # Name taken from info.title or `x-kong-name`
     targets:                            #
       - target: petstore.swagger.io:80  # Derived from first server entry
@@ -171,10 +171,10 @@ Upstream name will be the same as the service name.
 
 Each generated entity will get the tags as specified as well as the following tags:
 
-- `OAS3_import` 
+- `OAS3_import`
 - `OAS3file_<filename>`
 
-Tags can also be passed to this tool, which will be appended to the existing tags of 
+Tags can also be passed to this tool, which will be appended to the existing tags of
 all created resources.
 
 ## Security Plugins
@@ -239,7 +239,7 @@ This extension needs to hold an object that contains the entire plugin
 config.
 
 ```yaml
-x-kong-plugin-key-auth: 
+x-kong-plugin-key-auth:
   name: key-auth
   enabled: true
   config: {
@@ -252,7 +252,7 @@ References are also supported, so this is valid as well (provided the
 reference exists):
 
 ```yaml
-x-kong-plugin-key-auth: 
+x-kong-plugin-key-auth:
   $ref: '#/components/kong/plugins/key_auth_config'
 ```
 
@@ -280,3 +280,4 @@ paths:
       x-kong-plugin-request-validator:
          enabled: true
 ```
+

@@ -123,7 +123,6 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.parseSpec = parseSpec;
 exports.getServers = getServers;
 exports.getAllServers = getAllServers;
 exports.getSecurity = getSecurity;
@@ -134,37 +133,11 @@ exports.parseUrl = parseUrl;
 exports.fillServerVariables = fillServerVariables;
 exports.joinPath = joinPath;
 
-var _swaggerParser = _interopRequireDefault(require("swagger-parser"));
-
 var _url = _interopRequireDefault(require("url"));
 
+var _slugify = _interopRequireDefault(require("slugify"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-async function parseSpec(spec) {
-  let api;
-
-  if (typeof spec === 'string') {
-    try {
-      api = JSON.parse(spec);
-    } catch (err) {
-      api = _swaggerParser.default.YAML.parse(spec);
-    }
-  } else {
-    api = JSON.parse(JSON.stringify(spec));
-  } // Ensure it has some required properties to make parsing
-  // a bit less strict
-
-
-  if (!api.info) {
-    api.info = {};
-  }
-
-  if (api.openapi === '3.0') {
-    api.openapi = '3.0.0';
-  }
-
-  return _swaggerParser.default.dereference(api);
-}
 
 function getServers(obj) {
   return obj.servers || [];
@@ -186,7 +159,7 @@ function getSecurity(obj) {
   return obj.security || [];
 }
 
-function getName(obj) {
+function getName(obj, defaultValue = 'openapi', slugifyOptions) {
   let name;
 
   if (obj['x-kong-name']) {
@@ -197,11 +170,13 @@ function getName(obj) {
     name = obj.info.title;
   }
 
-  return generateSlug(name || 'openapi');
+  return generateSlug(name || defaultValue, slugifyOptions);
 }
 
-function generateSlug(str) {
-  return str.replace(/[\s_\-.~,]/g, '_');
+function generateSlug(str, options = {}) {
+  options.replacement = options.replacement || '_';
+  options.lower = options.lower || false;
+  return (0, _slugify.default)(str, options);
 }
 
 function pathVariablesToRegex(p) {
@@ -251,7 +226,7 @@ function joinPath(p1, p2) {
   p2 = p2.replace(/^\//, '');
   return `${p1}/${p2}`;
 }
-},{}],"ESDp":[function(require,module,exports) {
+},{}],"TyOt":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -264,7 +239,7 @@ exports.generateOpenIdConnectSecurityPlugin = generateOpenIdConnectSecurityPlugi
 exports.generateOAuth2SecurityPlugin = generateOAuth2SecurityPlugin;
 exports.generateSecurityPlugin = generateSecurityPlugin;
 
-var _common = require("./common");
+var _common = require("../common");
 
 function generateSecurityPlugins(op, api) {
   const plugins = [];
@@ -372,7 +347,7 @@ function generateSecurityPlugin(scheme, args) {
 
   return plugin;
 }
-},{"./common":"FoEN"}],"d5ui":[function(require,module,exports) {
+},{"../common":"FoEN"}],"XTAy":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -464,7 +439,7 @@ function generateRequestValidatorPlugin(obj, operation) {
     name: 'request-validator'
   };
 }
-},{}],"F1gv":[function(require,module,exports) {
+},{}],"dztZ":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -474,7 +449,7 @@ exports.generateServices = generateServices;
 exports.generateService = generateService;
 exports.generateRouteName = generateRouteName;
 
-var _common = require("./common");
+var _common = require("../common");
 
 var _securityPlugins = require("./security-plugins");
 
@@ -559,7 +534,7 @@ function generateRouteName(api, pathItem, method, numRoutes) {
 
   return `${(0, _common.generateSlug)(name)}-path${n ? '_' + n : ''}-${method}`;
 }
-},{"./common":"FoEN","./security-plugins":"ESDp","./plugins":"d5ui"}],"jHpF":[function(require,module,exports) {
+},{"../common":"FoEN","./security-plugins":"TyOt","./plugins":"XTAy"}],"ouAC":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -567,7 +542,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.generateUpstreams = generateUpstreams;
 
-var _common = require("./common");
+var _common = require("../common");
 
 function generateUpstreams(api, tags) {
   const servers = api.servers || [];
@@ -590,50 +565,19 @@ function generateUpstreams(api, tags) {
 
   return [upstream];
 }
-},{"./common":"FoEN"}],"Focm":[function(require,module,exports) {
+},{"../common":"FoEN"}],"aT9q":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.generate = generate;
-exports.generateFromString = generateFromString;
-exports.generateFromSpec = generateFromSpec;
-
-var _fs = _interopRequireDefault(require("fs"));
-
-var _path = _interopRequireDefault(require("path"));
-
-var _common = require("./common");
+exports.generateDeclarativeConfigFromSpec = generateDeclarativeConfigFromSpec;
 
 var _services = require("./services");
 
 var _upstreams = require("./upstreams");
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-async function generate(specPath, tags = []) {
-  return new Promise((resolve, reject) => {
-    _fs.default.readFile(_path.default.resolve(specPath), 'utf8', (err, contents) => {
-      if (err != null) {
-        reject(err);
-        return;
-      }
-
-      const fileSlug = _path.default.basename(specPath);
-
-      const allTags = [`OAS3file_${fileSlug}`, ...tags];
-      resolve(generateFromString(contents, allTags));
-    });
-  });
-}
-
-async function generateFromString(specStr, tags = []) {
-  const api = await (0, _common.parseSpec)(specStr);
-  return generateFromSpec(api, ['OAS3_import', ...tags]);
-}
-
-function generateFromSpec(api, tags = []) {
+function generateDeclarativeConfigFromSpec(api, tags) {
   let result = null;
 
   try {
@@ -649,7 +593,283 @@ function generateFromSpec(api, tags = []) {
   // SEE: https://github.com/Kong/studio/issues/93
 
 
-  return JSON.parse(JSON.stringify(result));
+  const document = JSON.parse(JSON.stringify(result));
+  return {
+    type: 'kong-declarative-config',
+    label: 'Kong Declarative Config',
+    document,
+    warnings: []
+  };
 }
-},{"./common":"FoEN","./services":"F1gv","./upstreams":"jHpF"}]},{},["Focm"], null)
+},{"./services":"dztZ","./upstreams":"ouAC"}],"HEkA":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.generateKongForKubernetesConfigFromSpec = generateKongForKubernetesConfigFromSpec;
+exports.generateMetadataName = generateMetadataName;
+exports.generateMetadataAnnotations = generateMetadataAnnotations;
+exports.generateRules = generateRules;
+exports.generateServiceName = generateServiceName;
+exports.generateTlsConfig = generateTlsConfig;
+exports.generateServicePort = generateServicePort;
+exports.generateServicePath = generateServicePath;
+
+var _common = require("../common");
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function generateKongForKubernetesConfigFromSpec(api, tags) {
+  const metadata = generateMetadata(api);
+  const document = {
+    apiVersion: 'extensions/v1beta1',
+    kind: 'Ingress',
+    metadata,
+    spec: {
+      rules: generateRules(api, metadata.name)
+    }
+  };
+  return {
+    type: 'kong-for-kubernetes',
+    label: 'Kong for Kubernetes',
+    document,
+    warnings: []
+  };
+}
+
+function generateMetadata(api) {
+  const metadata = {
+    name: generateMetadataName(api)
+  };
+  const annotations = generateMetadataAnnotations(api);
+
+  if (annotations) {
+    metadata.annotations = annotations;
+  }
+
+  return metadata;
+}
+
+function generateMetadataName(api) {
+  const info = api.info || {};
+  const metadata = info['x-kubernetes-ingress-metadata']; // x-kubernetes-ingress-metadata.name
+
+  if (metadata && metadata.name) {
+    return metadata.name;
+  }
+
+  return (0, _common.getName)(api, 'openapi', {
+    lower: true,
+    replacement: '-'
+  });
+}
+
+function generateMetadataAnnotations(api) {
+  const info = api.info || {};
+  const metadata = info['x-kubernetes-ingress-metadata'];
+
+  if (metadata && metadata.annotations) {
+    return metadata.annotations;
+  }
+
+  return null;
+}
+
+function generateRules(api, ingressName) {
+  return (0, _common.getServers)(api).map((server, i) => {
+    const {
+      hostname
+    } = (0, _common.parseUrl)(server.url);
+    const serviceName = generateServiceName(server, ingressName, i);
+    const servicePort = generateServicePort(server);
+    const backend = {
+      serviceName,
+      servicePort
+    };
+    const path = generateServicePath(server, backend);
+    const tlsConfig = generateTlsConfig(server);
+
+    if (tlsConfig) {
+      return {
+        host: hostname,
+        tls: _objectSpread({
+          paths: [path]
+        }, tlsConfig)
+      };
+    }
+
+    return {
+      host: hostname,
+      http: {
+        paths: [path]
+      }
+    };
+  });
+}
+
+function generateServiceName(server, ingressName, index) {
+  const backend = server['x-kubernetes-backend']; // x-kubernetes-backend.serviceName
+
+  if (backend && backend['serviceName']) {
+    return backend['serviceName'];
+  } // x-kubernetes-service.metadata.name
+
+
+  const service = server['x-kubernetes-service'];
+
+  if (service && service.metadata && service.metadata.name) {
+    return service.metadata.name;
+  } // <ingress-name>-s<server index>
+
+
+  return `${ingressName}-s${index}`;
+}
+
+function generateTlsConfig(server) {
+  const tlsConfig = server['x-kubernetes-tls'];
+  return tlsConfig || null;
+}
+
+function generateServicePort(server) {
+  // x-kubernetes-backend.servicePort
+  const backend = server['x-kubernetes-backend'];
+
+  if (backend && typeof backend.servicePort === 'number') {
+    return backend.servicePort;
+  }
+
+  const service = server['x-kubernetes-service'] || {};
+  const spec = service.spec || {};
+  const ports = spec.ports || []; // TLS configured
+
+  const tlsConfig = generateTlsConfig(server);
+
+  if (tlsConfig) {
+    if (ports.find(p => p.port === 443)) {
+      return 443;
+    }
+
+    if (ports[0] && ports[0].port) {
+      return ports[0].port;
+    }
+
+    return 443;
+  } // x-kubernetes-service.spec.ports.0.port
+
+
+  if (ports[0] && ports[0].port) {
+    return ports[0].port;
+  }
+
+  return 80;
+}
+
+function generateServicePath(server, backend) {
+  const {
+    pathname
+  } = (0, _common.parseUrl)(server.url);
+  const p = {
+    backend
+  };
+
+  if (!pathname || pathname === '/') {
+    return p;
+  }
+
+  if (pathname.match(/\/$/)) {
+    p.path = pathname + '.*';
+  } else {
+    p.path = pathname + '/.*';
+  }
+
+  return p;
+}
+},{"../common":"FoEN"}],"Focm":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.generate = generate;
+exports.generateFromString = generateFromString;
+exports.generateFromSpec = generateFromSpec;
+exports.parseSpec = parseSpec;
+
+var _fs = _interopRequireDefault(require("fs"));
+
+var _path = _interopRequireDefault(require("path"));
+
+var _declarativeConfig = require("./declarative-config");
+
+var _kubernetes = require("./kubernetes");
+
+var _swaggerParser = _interopRequireDefault(require("swagger-parser"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+async function generate(specPath, type, tags = []) {
+  return new Promise((resolve, reject) => {
+    _fs.default.readFile(_path.default.resolve(specPath), 'utf8', (err, contents) => {
+      if (err != null) {
+        reject(err);
+        return;
+      }
+
+      const fileSlug = _path.default.basename(specPath);
+
+      const allTags = [`OAS3file_${fileSlug}`, ...tags];
+      resolve(generateFromString(contents, type, allTags));
+    });
+  });
+}
+
+async function generateFromString(specStr, type, tags = []) {
+  const api = await parseSpec(specStr);
+  return generateFromSpec(api, type, ['OAS3_import', ...tags]);
+}
+
+function generateFromSpec(api, type, tags = []) {
+  switch (type) {
+    case 'kong-declarative-config':
+      return (0, _declarativeConfig.generateDeclarativeConfigFromSpec)(api, tags);
+
+    case 'kong-for-kubernetes':
+      return (0, _kubernetes.generateKongForKubernetesConfigFromSpec)(api, tags);
+
+    default:
+      throw new Error(`Unsupported output type "${type}"`);
+  }
+}
+
+async function parseSpec(spec) {
+  let api;
+
+  if (typeof spec === 'string') {
+    try {
+      api = JSON.parse(spec);
+    } catch (err) {
+      api = _swaggerParser.default.YAML.parse(spec);
+    }
+  } else {
+    api = JSON.parse(JSON.stringify(spec));
+  } // Ensure it has some required properties to make parsing
+  // a bit less strict
+
+
+  if (!api.info) {
+    api.info = {};
+  }
+
+  if (api.openapi === '3.0') {
+    api.openapi = '3.0.0';
+  }
+
+  return _swaggerParser.default.dereference(api);
+}
+},{"./declarative-config":"aT9q","./kubernetes":"HEkA"}]},{},["Focm"], null)
 //# sourceMappingURL=/index.js.map

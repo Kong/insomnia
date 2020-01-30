@@ -6,7 +6,7 @@ import {
   getAllServers,
   getName,
   pathVariablesToRegex,
-} from './common';
+} from '../common';
 
 import { generateSecurityPlugins } from './security-plugins';
 import { generatePlugins } from './plugins';
