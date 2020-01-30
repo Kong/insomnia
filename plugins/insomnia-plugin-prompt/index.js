@@ -43,14 +43,14 @@ module.exports.templateTags = [
         displayName: 'Prompt for a Value...',
         type: 'enum',
         help:
-          'Controls when this prompt should be shown and what value should be used to '+
+          'Controls when this prompt should be shown and what value should be used to ' +
           'pre-populate the prompt dialog',
         options: [
           { displayName: 'on each request', value: 'always-fresh' },
-          { displayName: 'on each request, using the default value as default',  value: 'always-default' },
-          { displayName: 'on each request, using the stored value as default',  value: 'always-storage' },
-          { displayName: 'at most once, storing the value for further requests',  value: 'once-storage' },
-        ]
+          { displayName: 'on each request, using the default value as default', value: 'always-default' },
+          { displayName: 'on each request, using the stored value as default', value: 'always-storage' },
+          { displayName: 'at most once, storing the value for further requests', value: 'once-storage' },
+        ],
       },
     ],
     async run(context, title, label, defaultValue, explicitStorageKey, maskText, showCondition) {
@@ -60,9 +60,9 @@ module.exports.templateTags = [
 
       // Backward compatibility with "Default to Last Value" #1597
       if (showCondition === true) {
-          showCondition = 'always-storage'
+          showCondition = 'always-storage';
       } else if (showCondition === false) {
-          showCondition = 'always-fresh'
+          showCondition = 'always-fresh';
       }
 
       // If we don't have a key, default to request ID and title
