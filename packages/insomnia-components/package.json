@@ -1,5 +1,6 @@
 {
   "name": "insomnia-components",
+  "private": true,
   "version": "2.1.5",
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Insomnia UI component library",
@@ -7,7 +8,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "parcel build ./*.js --bundle-node-modules --no-minify --target browser",
-    "build-storybook": "build-storybook",
+    "build-storybook": "build-storybook --quiet",
     "storybook": "start-storybook --port 3223",
     "bootstrap": "rimraf node_modules/fsevents"
   },
@@ -18,8 +19,10 @@
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",
-    "@storybook/addon-info": "^5.2.8",
-    "@storybook/react": "^5.2.8",
+    "@storybook/addon-info": "^5.3.9",
+    "@storybook/react": "^5.3.9",
+    "babel-loader": "^8.0.6",
+    "babel-plugin-inline-react-svg": "^1.1.1",
     "parcel-bundler": "^1.12.4"
   },
   "dependencies": {
