@@ -10,7 +10,7 @@ import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
 import { getAppName, getAppVersion } from '../../../common/constants';
-import { showAlert, showModal } from '../modals';
+import { showAlert, showModal, showPrompt } from '../modals';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import Tooltip from '../tooltip';
 import KeydownBinder from '../keydown-binder';
@@ -23,11 +23,6 @@ import VCS from '../../../sync/vcs';
 import type { Project } from '../../../sync/types';
 import * as sync from '../../../sync-legacy/index';
 import * as session from '../../../account/session';
-import chooseFile from '../base/choose-file';
-import fs from 'fs';
-import fsPath from 'path';
-import * as electron from 'electron';
-import { getDataDirectory } from '../../../common/misc';
 
 type Props = {
   isLoading: boolean,
@@ -152,16 +147,17 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     showModal(WorkspaceSettingsModal);
   }
 
-  async _handleWorkspaceOpen() {
-    const path = await chooseFile({ itemtypes: ['directory'] });
-    if (path) {
-      fs.writeFileSync(fsPath.join(getDataDirectory(), `insomnia.currentDBDirectory`), path, {});
-      const { app } = electron.remote || electron;
-      app.relaunch();
-      app.exit();
-      // const workspace = await models.workspace.create({ path });
-      // this.props.handleSetActiveWorkspace(workspace._id);
-    }
+  _handleWorkspaceCreate() {
+    showPrompt({
+      title: 'Create New Workspace',
+      defaultValue: 'My Workspace',
+      submitName: 'Create',
+      selectText: true,
+      onComplete: async name => {
+        const workspace = await models.workspace.create({ name });
+        this.props.handleSetActiveWorkspace(workspace._id);
+      },
+    });
   }
 
   _handleKeydown(e: KeyboardEvent) {
@@ -253,8 +249,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             );
           })}
 
-          <DropdownItem onClick={this._handleWorkspaceOpen}>
-            <i className="fa fa-empty" /> Open Workspace
+          <DropdownItem onClick={this._handleWorkspaceCreate}>
+            <i className="fa fa-empty" /> Create Workspace
           </DropdownItem>
 
           <DropdownDivider>
