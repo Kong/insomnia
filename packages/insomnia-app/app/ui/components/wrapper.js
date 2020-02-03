@@ -31,6 +31,7 @@ import PaymentNotificationModal from './modals/payment-notification-modal';
 import NunjucksModal from './modals/nunjucks-modal';
 import PromptModal from './modals/prompt-modal';
 import AskModal from './modals/ask-modal';
+import GenerateConfigModal from './modals/generate-config-modal';
 import SelectModal from './modals/select-modal';
 import RequestCreateModal from './modals/request-create-modal';
 import RequestPane from './request-pane';
@@ -672,6 +673,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             <PaymentNotificationModal ref={registerModal} />
             <FilterHelpModal ref={registerModal} />
             <RequestRenderErrorModal ref={registerModal} />
+            <GenerateConfigModal ref={registerModal} settings={settings} />
 
             <CodePromptModal
               ref={registerModal}

@@ -6,13 +6,12 @@ import type { Workspace } from '../../../models/workspace';
 import type { ApiSpec } from '../../../models/api-spec';
 import HelpLink from '../help-link';
 import YAML from 'yaml';
-import { showError, showModal } from '../modals';
-import CodePromptModal from '../modals/code-prompt-modal';
+import { showModal } from '../modals';
 import SwaggerUI from 'swagger-ui-react';
-import { generateFromString } from 'openapi-2-kong';
 import { NoticeTable } from 'insomnia-components';
 import { Spectral } from '@stoplight/spectral';
 import 'swagger-ui-react/swagger-ui.css';
+import GenerateConfigModal from '../modals/generate-config-modal';
 
 const spectral = new Spectral();
 
@@ -58,28 +57,7 @@ class SpecEditor extends React.PureComponent<Props, State> {
 
   async _showGenerateConfig() {
     const { apiSpec } = this.props;
-    let kongConfig;
-
-    try {
-      kongConfig = await generateFromString(apiSpec.contents);
-    } catch (err) {
-      showError({
-        title: 'Error Generating',
-        error: err.message,
-        message: 'Failed to generate Kong declarative config',
-      });
-      return;
-    }
-
-    showModal(CodePromptModal, {
-      submitName: 'Done',
-      title: `Kong Declarative Config`,
-      defaultValue: YAML.stringify(kongConfig),
-      placeholder: '',
-      mode: 'yaml',
-      hideMode: true,
-      showCopyButton: true,
-    });
+    showModal(GenerateConfigModal, { apiSpec });
   }
 
   _togglePreview() {
