@@ -21,11 +21,9 @@
     background-color: var(--color-bg);
     overflow: auto;
 
-    @scrollbar-height: @padding-sm;
-
     &::-webkit-scrollbar {
-      height: @scrollbar-height;
-      border-radius: calc(@scrollbar-height / 2);
+      height: var(--padding-sm);
+      border-radius: calc(var(--padding-sm) / 2);
     }
 
     &::-webkit-scrollbar-track {

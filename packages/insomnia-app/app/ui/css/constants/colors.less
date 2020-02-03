@@ -25,14 +25,17 @@
   --hl-xl: rgba(130, 130, 130, 0.8);
   --hl: rgba(130, 130, 130, 1);
 
+  --opacity-subtle: 0.7;
+  --opacity-super-subtle: 0.5;
+
   .theme--transparent-overlay {
     --color-bg: rgba(5, 5, 5, 0.7);
     --color-font: #ddd;
   }
 }
 
-@opacity-subtle: 0.7;
-@opacity-super-subtle: 0.5;
+@opacity-subtle: var(--opacity-subtle);
+@opacity-super-subtle: var(--opacity-super-subtle);
 
 @hl-xxs: var(--hl-xxs);
 @hl-xs: var(--hl-xs);
