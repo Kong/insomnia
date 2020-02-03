@@ -523,6 +523,20 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
           <DropdownItem onClick={WorkspaceDropdown._handleShowExport}>
             <i className="fa fa-share" /> Import/Export
           </DropdownItem>
+          {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
+          {actionPlugins.map((p: WorkspaceAction) => (
+            <DropdownItem
+              key={p.label}
+              onClick={() => this._handlePluginClick(p)}
+              stayOpenAfterClick>
+              {loadingActions[p.label] ? (
+                <i className="fa fa-refresh fa-spin" />
+              ) : (
+                <i className={classnames('fa', p.icon || 'fa-code')} />
+              )}
+              {p.label}
+            </DropdownItem>
+          ))}
         </Dropdown>
       </KeydownBinder>
     );
