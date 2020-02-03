@@ -7,7 +7,7 @@ import Breadcrumb from './breadcrumb';
 const StyledAppHeader: React.ComponentType<{}> = styled.div`
   display:flex;
   justify-content: space-between;
-  border:1px solid #ccc;
+  border:1px solid var(--hl-md);;
   padding: var(--padding-sm) var(--padding-md);
 `;
 
