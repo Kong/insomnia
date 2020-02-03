@@ -1,6 +1,3 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .modal {
   // Hidden state
   position: absolute;
@@ -8,7 +5,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  padding: @padding-lg;
+  padding: var(--padding-lg);
 
   &:focus {
     outline: 0;
@@ -24,7 +21,7 @@
   }
 
   .modal__content__wrapper {
-    width: @modal-width;
+    width: var(--modal-width);
     height: 100%;
     max-width: 100%;
     max-height: 100%;
@@ -39,14 +36,14 @@
   }
 
   &.modal--wide .modal__content__wrapper {
-    width: @modal-width-wide;
+    width: var(--modal-width)-wide;
   }
 
   .modal__content {
     display: grid;
     grid-template-columns: 100%;
     grid-template-rows: auto minmax(0, 1fr) auto;
-    border-radius: @radius-md;
+    border-radius: var(--radius-md);
     overflow: visible;
     box-sizing: border-box;
     box-shadow: 0 0 2rem 0 rgba(0, 0, 0, 0.2);
@@ -55,7 +52,7 @@
     width: 100%;
     background-color: var(--color-bg);
     color: var(--color-font);
-    border: 1px solid @hl-sm;
+    border: 1px solid var(--hl-sm);
 
     // Since we disable pointer-events on the parent, re-enable them here
     pointer-events: auto;
@@ -63,17 +60,17 @@
 
   .modal__header {
     overflow: hidden;
-    border-bottom: 1px solid @hl-md;
-    height: @line-height-md;
-    font-size: @font-size-lg;
-    line-height: @line-height-md;
+    border-bottom: 1px solid var(--hl-md);
+    height: var(--line-height-md);
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-md);
     background-color: var(--color-bg);
     color: var(--color-font);
     display: flex;
     flex-direction: row;
 
     .modal__header__children {
-      padding-left: @padding-md;
+      padding-left: var(--padding-md);
       width: 100%;
 
       & > * {
@@ -106,7 +103,7 @@
   }
 
   .modal__footer {
-    border-top: 1px solid @hl-md;
+    border-top: 1px solid var(--hl-md);
     background-color: var(--color-bg);
     color: var(--color-font);
     display: flex;
@@ -116,7 +113,7 @@
     padding: 1px;
 
     button {
-      padding: 0 @padding-md;
+      padding: 0 var(--padding-md);
     }
   }
 
@@ -127,13 +124,13 @@
   }
 
   .modal__content > *:last-child {
-    border-bottom-left-radius: @radius-md;
-    border-bottom-right-radius: @radius-md;
+    border-bottom-left-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
   }
 
   .modal__content > *:first-child {
-    border-top-left-radius: @radius-md;
-    border-top-right-radius: @radius-md;
+    border-top-left-radius: var(--radius-md);
+    border-top-right-radius: var(--radius-md);
   }
 }
 
