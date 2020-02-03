@@ -1,6 +1,3 @@
-@import '../constants/colors';
-@import '../constants/dimensions';
-
 .urlbar {
   width: 100%;
   display: flex;
@@ -22,13 +19,13 @@
     // Make everything the same height
     &,
     & > i.fa {
-      line-height: @height-nav;
+      line-height: var(--height-nav);
     }
   }
 
   .urlbar__send-btn {
-    padding-right: @padding-md;
-    padding-left: @padding-md;
+    padding-right: var(--padding-md);
+    padding-left: var(--padding-md);
     min-width: 5em;
     text-align: center;
   }
@@ -37,10 +34,10 @@
     width: 100%;
     display: flex;
     flex-direction: row;
-    margin-left: @padding-xxs;
+    margin-left: var(--padding-xxs);
 
     * {
-      font-size: @font-size-md;
+      font-size: var(--font-size-md);
     }
   }
 
@@ -51,11 +48,11 @@
 
   button:focus,
   button:hover {
-    background-color: @hl-xs;
+    background-color: var(--hl-xs);
   }
 
   & > .dropdown > button {
-    padding-left: @padding-md;
-    padding-right: calc(@padding-md / 2);
+    padding-left: var(--padding-md);
+    padding-right: calc(var(--padding-md) / 2);
   }
 }

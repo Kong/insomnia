@@ -1,22 +1,19 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .activity-bar {
   display: flex;
   flex-direction: column;
   background: var(--color-bg);
-  border-right: 1px solid @hl-md;
-  padding-top: @padding-sm;
+  border-right: 1px solid var(--hl-md);
+  padding-top: var(--padding-sm);
 
   button {
-    margin: 0px @padding-sm;
+    margin: 0 var(--padding-sm);
 
     i {
       display: flex;
     }
 
     &:last-child {
-      margin-bottom: @padding-sm;
+      margin-bottom: var(--padding-sm);
     }
   }
 
@@ -28,14 +25,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    height: @line-height-sm;
-    width: @line-height-sm;
-    border-radius: @radius-sm;
+    height: var(--line-height-sm);
+    width: var(--line-height-sm);
+    border-radius: var(--radius-sm);
 
     i {
       color: var(--color-font);
-      font-size: @font-size-xl;
-      opacity: @opacity-super-subtle;
+      font-size: var(--font-size-xl);
+      opacity: var(--opacity-super-subtle);
     }
 
     // Set active opacity

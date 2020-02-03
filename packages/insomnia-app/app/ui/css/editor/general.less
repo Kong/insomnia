@@ -1,6 +1,4 @@
 @import '../constants/animations';
-@import '../constants/dimensions';
-@import '../constants/fonts';
 
 .editor {
   box-sizing: border-box;
@@ -41,19 +39,19 @@
     flex-direction: row;
     align-items: center;
     border-top: 1px solid var(--hl-md);
-    height: @line-height-xs;
-    font-size: @font-size-sm;
+    height: var(--line-height-xs);
+    font-size: var(--font-size-sm);
 
     input {
-      font-family: @font-monospace;
+      font-family: var(--font-monospace);
       margin-right: 0;
       width: 100%;
-      margin-left: @padding-md;
+      margin-left: var(--padding-md);
     }
 
     button {
       color: var(--hl);
-      padding: @padding-xs @padding-md;
+      padding: var(--padding-xs) var(--padding-md);
       height: 100%;
     }
   }
@@ -62,7 +60,7 @@
     height: 100% !important;
     width: 100%;
     box-sizing: border-box;
-    font-family: @font-monospace;
+    font-family: var(--font-monospace);
 
     .CodeMirror-line * {
       font-variant-ligatures: var(--font-ligatures);

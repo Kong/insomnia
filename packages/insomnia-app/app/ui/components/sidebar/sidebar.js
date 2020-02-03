@@ -78,6 +78,7 @@ class Sidebar extends React.PureComponent<Props> {
         }}>
         <WorkspaceDropdown
           className="sidebar__header theme--sidebar__header"
+          activeEnvironment={activeEnvironment}
           activeWorkspace={workspace}
           workspaces={workspaces}
           unseenWorkspaces={unseenWorkspaces}

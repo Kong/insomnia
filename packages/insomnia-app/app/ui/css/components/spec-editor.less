@@ -1,13 +1,10 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .spec-editor {
   display: grid;
   width: 100%;
   height: 100%;
 
   grid-template-areas: 'header header' 'body-left body-right';
-  grid-template-rows: @height-nav 1fr;
+  grid-template-rows: var(--height-nav) 1fr;
   grid-template-columns: 1fr 1fr;
 
   border-left: 1px solid var(--hl-md);
@@ -38,7 +35,7 @@
     }
 
     h1 {
-      padding: 0 @padding-md;
+      padding: 0 var(--padding-md);
       margin: 0;
     }
   }
@@ -97,12 +94,12 @@
       }
 
       .servers-title {
-        line-height: @line-height-xs;
+        line-height: var(--line-height-xs);
       }
     }
     
     .auth-wrapper {
-      padding-top: @padding-sm;
+      padding-top: var(--padding-sm);
     }
   }
 

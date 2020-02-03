@@ -11,12 +11,15 @@ import type { PluginTemplateTag } from '../templating/extensions/index';
 import type { PluginTheme } from './misc';
 import type { RequestGroup } from '../models/request-group';
 import type { Request } from '../models/request';
+import type { PluginConfig, PluginConfigMap } from '../models/settings';
+import type { Workspace } from '../models/workspace';
 
 export type Plugin = {
   name: string,
   description: string,
   version: string,
   directory: string,
+  config: PluginConfig,
   module: *,
 };
 
@@ -31,6 +34,20 @@ export type RequestGroupAction = {
     context: Object,
     models: {
       requestGroup: RequestGroup,
+      requests: Array<Request>,
+    },
+  ) => void | Promise<void>,
+  label: string,
+  icon?: string,
+};
+
+export type WorkspaceAction = {
+  plugin: Plugin,
+  action: (
+    context: Object,
+    models: {
+      workspace: Workspace,
+      requestGroups: Array<RequestGroup>,
       requests: Array<Request>,
     },
   ) => void | Promise<void>,
@@ -60,7 +77,11 @@ export async function init(): Promise<void> {
   await getPlugins(true);
 }
 
-async function _traversePluginPath(pluginMap: Object, allPaths: Array<string>) {
+async function _traversePluginPath(
+  pluginMap: Object,
+  allPaths: Array<string>,
+  allConfigs: PluginConfigMap,
+) {
   for (const p of allPaths) {
     if (!fs.existsSync(p)) {
       continue;
@@ -78,7 +99,7 @@ async function _traversePluginPath(pluginMap: Object, allPaths: Array<string>) {
 
         // Is it a scoped directory?
         if (filename.startsWith('@')) {
-          await _traversePluginPath(pluginMap, [modulePath]);
+          await _traversePluginPath(pluginMap, [modulePath], allConfigs);
         }
 
         // Is it a Node module?
@@ -104,7 +125,9 @@ async function _traversePluginPath(pluginMap: Object, allPaths: Array<string>) {
         // Delete require cache entry and re-require
         const module = global.require(modulePath);
 
-        pluginMap[pluginJson.name] = _initPlugin(pluginJson || {}, module, modulePath);
+        const pluginName = pluginJson.name;
+
+        pluginMap[pluginName] = _initPlugin(pluginJson || {}, module, allConfigs, modulePath);
         console.log(`[plugin] Loaded ${modulePath}`);
       } catch (err) {
         showError({
@@ -124,6 +147,7 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
 
   if (!plugins) {
     const settings = await models.settings.getOrCreate();
+    const allConfigs: PluginConfigMap = settings.pluginConfig;
     const extraPaths = settings.pluginPath
       .split(':')
       .filter(p => p)
@@ -147,10 +171,10 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
     for (const p of packageJson.app.plugins) {
       const pluginJson = global.require(`${p}/package.json`);
       const pluginModule = global.require(p);
-      pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule);
+      pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule, allConfigs);
     }
 
-    await _traversePluginPath(pluginMap, allPaths);
+    await _traversePluginPath(pluginMap, allPaths, allConfigs);
 
     plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
   }
@@ -158,10 +182,24 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
   return plugins;
 }
 
+async function getActivePlugins(): Promise<Array<Plugin>> {
+  return (await getPlugins()).filter(p => !p.config.disabled);
+}
+
 export async function getRequestGroupActions(): Promise<Array<RequestGroupAction>> {
   let extensions = [];
-  for (const plugin of await getPlugins()) {
+  for (const plugin of await getActivePlugins()) {
     const actions = plugin.module.requestGroupActions || [];
+    extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
+  }
+
+  return extensions;
+}
+
+export async function getWorkspaceActions(): Promise<Array<WorkspaceAction>> {
+  let extensions = [];
+  for (const plugin of await getPlugins()) {
+    const actions = plugin.module.workspaceActions || [];
     extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
   }
 
@@ -170,7 +208,7 @@ export async function getRequestGroupActions(): Promise<Array<RequestGroupAction
 
 export async function getTemplateTags(): Promise<Array<TemplateTag>> {
   let extensions = [];
-  for (const plugin of await getPlugins()) {
+  for (const plugin of await getActivePlugins()) {
     const templateTags = plugin.module.templateTags || [];
     extensions = [...extensions, ...templateTags.map(tt => ({ plugin, templateTag: tt }))];
   }
@@ -180,7 +218,7 @@ export async function getTemplateTags(): Promise<Array<TemplateTag>> {
 
 export async function getRequestHooks(): Promise<Array<RequestHook>> {
   let functions = [];
-  for (const plugin of await getPlugins()) {
+  for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.requestHooks || [];
     functions = [...functions, ...moreFunctions.map(hook => ({ plugin, hook }))];
   }
@@ -190,7 +228,7 @@ export async function getRequestHooks(): Promise<Array<RequestHook>> {
 
 export async function getResponseHooks(): Promise<Array<ResponseHook>> {
   let functions = [];
-  for (const plugin of await getPlugins()) {
+  for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.responseHooks || [];
     functions = [...functions, ...moreFunctions.map(hook => ({ plugin, hook }))];
   }
@@ -200,7 +238,7 @@ export async function getResponseHooks(): Promise<Array<ResponseHook>> {
 
 export async function getThemes(): Promise<Array<Theme>> {
   let extensions = [];
-  for (const plugin of await getPlugins()) {
+  for (const plugin of await getActivePlugins()) {
     const themes = plugin.module.themes || [];
     extensions = [...extensions, ...themes.map(theme => ({ plugin, theme }))];
   }
@@ -208,13 +246,30 @@ export async function getThemes(): Promise<Array<Theme>> {
   return extensions;
 }
 
-function _initPlugin(packageJSON: Object, module: any, path: ?string): Plugin {
+const _defaultPluginConfig: PluginConfig = {
+  disabled: false,
+};
+
+function _initPlugin(
+  packageJSON: Object,
+  module: any,
+  allConfigs: PluginConfigMap,
+  path: ?string,
+): Plugin {
   const meta = packageJSON.insomnia || {};
+  const name = packageJSON.name || meta.name;
+
+  // Find config
+  const config: PluginConfig = allConfigs.hasOwnProperty(name)
+    ? allConfigs[name]
+    : _defaultPluginConfig;
+
   return {
-    name: packageJSON.name || meta.name,
+    name,
     description: packageJSON.description || meta.description || '',
     version: packageJSON.version || 'unknown',
     directory: path || '',
+    config,
     module: module,
   };
 }

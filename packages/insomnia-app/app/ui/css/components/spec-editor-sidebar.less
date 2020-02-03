@@ -1,7 +1,5 @@
-@import '../constants/dimensions';
-
 .spec-editor-sidebar {
-  padding: @padding-sm;
+  padding: var(--padding-sm);
   overflow: auto;
 
   li ul {
@@ -16,24 +14,24 @@
 
   li > button {
     display: inline-block;
-    height: @line-height-xxxs;
+    height: var(--line-height-xxxs);
 
     // Extra padding for the textual button so we have
     // a larger click area.
     &:last-of-type {
-      padding-right: @padding-md;
+      padding-right: var(--padding-md);
     }
 
     i {
-      width: calc(@padding-md * 1.3);
+      width: calc(var(--padding-md) * 1.3);
       color: var(--hl);
-      font-size: @font-size-lg;
-      padding: @padding-xs;
+      font-size: var(--font-size-lg);
+      padding: var(--padding-xs);
     }
   }
 
   ul ul {
-    margin-left: calc(@padding-md);
-    padding-left: @padding-sm;
+    margin-left: var(--padding-md);
+    padding-left: var(--padding-sm);
   }
 }

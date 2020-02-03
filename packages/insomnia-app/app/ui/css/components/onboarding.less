@@ -1,7 +1,3 @@
-@import '../constants/colors';
-@import '../constants/dimensions';
-@import '../constants/fonts';
-
 .onboarding {
   position: fixed;
   z-index: 10;
@@ -21,12 +17,12 @@
   }
 
   &__content {
-    width: @modal-width-skinny;
+    width: var(--modal-width-skinny);
     position: relative;
     text-align: center;
     background: var(--color-bg);
     margin: auto;
-    border-radius: @radius-md;
+    border-radius: var(--radius-md);
 
     .img-container {
       top: -3.5rem;
@@ -45,18 +41,18 @@
     }
 
     &__header {
-      padding: 4.5rem @padding-lg @padding-lg;
+      padding: 4.5rem var(--padding-lg) var(--padding-lg);
       border-bottom: 1px solid var(--hl-sm);
 
       h1 {
         color: var(--color-info);
-        font-size: @font-size-xxxl;
-        margin-bottom: @padding-sm;
+        font-size: var(--font-size-xxxl);
+        margin-bottom: var(--padding-sm);
       }
 
       h2 {
         color: var(--hl);
-        font-size: @font-size-lg;
+        font-size: var(--font-size-lg);
         margin-top: 0;
         margin-bottom: 0;
       }
@@ -65,7 +61,7 @@
     &__body {
       display: flex;
       flex-direction: column;
-      padding: @padding-sm @padding-lg @padding-md;
+      padding: var(--padding-sm) var(--padding-lg) var(--padding-md);
       color: var(--color-font);
 
       img {
@@ -78,7 +74,7 @@
       }
 
       button {
-        margin-top: @padding-sm;
+        margin-top: var(--padding-sm);
         width: 100%;
       }
     }

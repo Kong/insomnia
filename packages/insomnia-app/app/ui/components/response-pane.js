@@ -30,6 +30,7 @@ import { hotKeyRefs } from '../../common/hotkeys';
 import type { RequestVersion } from '../../models/request-version';
 import { showError } from '../components/modals/index';
 import { json as jsonPrettify } from 'insomnia-prettify';
+import type { Environment } from '../../models/environment';
 
 type Props = {
   // Functions
@@ -59,6 +60,7 @@ type Props = {
   requestVersions: Array<RequestVersion>,
   request: ?Request,
   response: ?Response,
+  environment: ?Environment,
 };
 
 @autobind
@@ -183,6 +185,7 @@ class ResponsePane extends React.PureComponent<Props> {
       editorIndentSize,
       editorKeyMap,
       editorLineWrapping,
+      environment,
       filter,
       disableResponsePreviewLinks,
       filterHistory,
@@ -289,6 +292,7 @@ class ResponsePane extends React.PureComponent<Props> {
             </div>
             <ResponseHistoryDropdown
               activeResponse={response}
+              activeEnvironment={environment}
               responses={responses}
               requestVersions={requestVersions}
               requestId={request._id}

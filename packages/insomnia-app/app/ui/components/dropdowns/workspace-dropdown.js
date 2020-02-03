@@ -13,7 +13,7 @@ import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
 import { getAppName, getAppVersion } from '../../../common/constants';
-import { showAlert, showModal, showPrompt } from '../modals';
+import { showAlert, showError, showModal, showPrompt } from '../modals';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import PortalUploadModal from '../modals/portal-upload-modal';
@@ -34,39 +34,84 @@ import { MemPlugin } from '../../../sync/git/mem-plugin';
 import GitVCS from '../../../sync/git/git-vcs';
 import GitRepositorySettingsModal from '../modals/git-repository-settings-modal';
 import { trackEvent } from '../../../common/analytics';
+import type { WorkspaceAction } from '../../../plugins';
+import { getWorkspaceActions } from '../../../plugins';
+import * as pluginContexts from '../../../plugins/context';
+import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import type { Environment } from '../../../models/environment';
 
 type Props = {|
   isLoading: boolean,
   handleSetActiveWorkspace: (id: string) => void,
   workspaces: Array<Workspace>,
   unseenWorkspaces: Array<Workspace>,
+  activeEnvironment: Environment | null,
   activeWorkspace: Workspace,
-  hotKeyRegistry: HotKeyRegistry,
   enableSyncBeta: boolean,
+  handleSetActiveWorkspace: (id: string) => void,
+  hotKeyRegistry: HotKeyRegistry,
+  isLoading: boolean,
+  unseenWorkspaces: Array<Workspace>,
   vcs: VCS | null,
   gitVCS: GitVCS | null,
+  workspaces: Array<Workspace>,
 
   // Optional
   className?: string,
 |};
 
-type State = {|
+type State = {
   remoteProjects: Array<Project>,
   localProjects: Array<Project>,
   pullingProjects: { [string]: boolean },
-|};
+  actionPlugins: Array<WorkspaceAction>,
+  loadingActions: { [string]: boolean },
+  localProjects: Array<Project>,
+  pullingProjects: { [string]: boolean },
+  remoteProjects: Array<Project>,
+};
 
 @autobind
 class WorkspaceDropdown extends React.PureComponent<Props, State> {
   _dropdown: ?Dropdown;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      remoteProjects: [],
-      localProjects: [],
-      pullingProjects: {},
-    };
+  state = {
+    actionPlugins: [],
+    loadingActions: {},
+    localProjects: [],
+    pullingProjects: {},
+    remoteProjects: [],
+  };
+
+  async _handlePluginClick(p: WorkspaceAction) {
+    this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: true } }));
+
+    const { activeEnvironment, activeWorkspace } = this.props;
+
+    try {
+      const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
+
+      const context = {
+        ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
+        ...pluginContexts.data.init(),
+        ...pluginContexts.store.init(p.plugin),
+        ...pluginContexts.network.init(activeEnvironmentId),
+      };
+
+      const docs = await db.withDescendants(activeWorkspace);
+      const requests: any = docs.filter(d => d.type === models.request.type && !(d: any).isPrivate);
+      const requestGroups: any = docs.filter(d => d.type === models.requestGroup.type);
+
+      await p.action(context, { requestGroups, requests, workspace: activeWorkspace });
+    } catch (err) {
+      showError({
+        title: 'Plugin Action Failed',
+        error: err,
+      });
+    }
+
+    this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
+    this._dropdown && this._dropdown.hide();
   }
 
   async _handleDropdownHide() {
@@ -81,6 +126,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
   async _handleDropdownOpen() {
     this._refreshRemoteWorkspaces();
+
+    // Load action plugins
+    const plugins = await getWorkspaceActions();
+    this.setState({ actionPlugins: plugins });
   }
 
   async _refreshRemoteWorkspaces() {
@@ -381,6 +430,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
         {addedWorkspaceNames}
       </div>
     );
+
+    const { actionPlugins, loadingActions } = this.state;
 
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>

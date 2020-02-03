@@ -1,10 +1,6 @@
-@import '../constants/colors';
-@import '../constants/dimensions';
-@import '../constants/fonts';
-
 .pane {
   display: grid;
-  grid-template-rows: @height-nav minmax(0, 1fr);
+  grid-template-rows: var(--height-nav) minmax(0, 1fr);
   grid-template-columns: 100%;
 
   .pane__header {
@@ -18,19 +14,20 @@
     color: var(--color-font);
     box-sizing: border-box;
 
-    border-left: 1px solid @hl-md;
-    border-bottom: 1px solid @hl-md;
-    border-top: 1px solid @hl-md;
+    border-left: 1px solid var(--hl-md);
+    border-bottom: 1px solid var(--hl-md);
+    border-top: 1px solid var(--hl-md);
 
     .pane__header__right {
-      box-shadow: calc(@padding-md * -1) 0 @padding-md calc(@padding-sm * -1) var(--color-bg);
+      box-shadow: calc(var(--padding-md) * -1) 0 var(--padding-md) calc(var(--padding-sm) * -1)
+        var(--color-bg);
       background: var(--color-bg);
-      font-size: @font-size-sm;
+      font-size: var(--font-size-sm);
     }
   }
 
   .pane__body {
-    border-left: 1px solid @hl-md;
+    border-left: 1px solid var(--hl-md);
     box-sizing: border-box;
     height: 100%;
     background: var(--color-bg);
@@ -39,7 +36,7 @@
 
   .pane__body--placeholder {
     overflow: hidden;
-    padding: @padding-md;
+    padding: var(--padding-md);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -47,7 +44,7 @@
 
     &,
     * {
-      color: @hl;
+      color: var(--hl);
     }
 
     & > * {
@@ -56,11 +53,11 @@
 
     .pane__body--placeholder__cta {
       width: auto;
-      margin: @padding-lg auto 0;
+      margin: var(--padding-lg) auto 0;
       display: block;
 
       & > * {
-        margin: @padding-xs;
+        margin: var(--padding-xs);
       }
     }
   }
@@ -70,24 +67,24 @@
     flex-direction: row;
     align-items: center;
     border-top: 1px solid var(--hl-md);
-    height: @line-height-xs;
-    font-size: @font-size-sm;
+    height: var(--line-height-xs);
+    font-size: var(--font-size-sm);
 
     input {
-      font-family: @font-monospace;
+      font-family: var(--font-monospace);
       margin-right: 0;
       width: 100%;
-      margin-left: @padding-md;
+      margin-left: var(--padding-md);
     }
 
     button {
       color: var(--hl);
-      padding: @padding-xs @padding-md;
+      padding: var(--padding-xs) var(--padding-md);
       height: 100%;
     }
   }
 }
 
 body[data-platform='win32'] .pane .pane__header {
-  border-top: 1px solid @hl-md;
+  border-top: 1px solid var(--hl-md);
 }

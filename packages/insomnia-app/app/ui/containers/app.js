@@ -710,6 +710,7 @@ class App extends PureComponent {
   }
 
   async _handleSetActiveResponse(requestId, activeResponse = null) {
+    const { activeEnvironment } = this.props;
     const activeResponseId = activeResponse ? activeResponse._id : null;
     await App._updateRequestMetaByParentId(requestId, { activeResponseId });
 
@@ -717,7 +718,8 @@ class App extends PureComponent {
     if (activeResponseId) {
       response = await models.response.getById(activeResponseId);
     } else {
-      response = await models.response.getLatestForRequest(requestId);
+      const environmentId = activeEnvironment ? activeEnvironment._id : null;
+      response = await models.response.getLatestForRequest(requestId, environmentId);
     }
 
     const requestVersionId = response ? response.requestVersionId : 'n/a';
