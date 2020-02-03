@@ -59,96 +59,45 @@ html {
   --breakpoint-sm: 660px;
 
   /* Radius */
-  --radius-sm: ~'calc(var(--font-size) * 0.2)';
-  --radius-md: ~'calc(var(--font-size) * 0.3)';
+  --radius-sm: calc(var(--font-size) * 0.2);
+  --radius-md: calc(var(--font-size) * 0.3);
 
   /* Scrollbars */
-  --scrollbar-width: ~'calc(var(--font-size) * 0.6)';
-
-  --dropdown-min-width: ~'calc(var(--font-size) * 12)';
+  --scrollbar-width: calc(var(--font-size) * 0.6);
 
   /* Modals */
-  --modal-width: ~'calc(var(--font-size) * 60)';
-  --modal-width-wide: ~'calc(var(--font-size) * 70)';
+  --modal-width: calc(var(--font-size) * 60);
+  --modal-width-wide: calc(var(--font-size) * 70);
 
   /* Other */
-  --drag-width: ~'calc(var(--font-size) * 0.5)';
+  --drag-width: calc(var(--font-size) * 0.5);
+  --height-nav: var(--line-height-md);
 }
 
-@font-size: var(--font-size);
-@font-size-xxs: var(--font-size-xxs);
-@font-size-xs: var(--font-size-xs);
-@font-size-sm: var(--font-size-sm);
-@font-size-md: var(--font-size-md);
-@font-size-lg: var(--font-size-lg);
-@font-size-xl: var(--font-size-xl);
-@font-size-xxl: var(--font-size-xxl);
-@font-size-xxxl: var(--font-size-xxxl);
-
-/* Padding */
-@padding-xxs: var(--padding-xxs);
-@padding-xs: var(--padding-xs);
-@padding-sm: var(--padding-sm);
-@padding-md: var(--padding-md);
-@padding-lg: var(--padding-lg);
-@padding-xl: var(--padding-xl);
-
-/* Wrapper */
-@line-height-md: var(--line-height-md);
-@line-height-sm: var(--line-height-sm);
-@line-height-xs: var(--line-height-xs);
-@line-height-xxs: var(--line-height-xxs);
-@line-height-xxxs: var(--line-height-xxxs);
-
-/* Nav */
-@height-nav: var(--line-height-md);
-
-/* Scrollbars */
-@scrollbar-width: var(--scrollbar-width);
-
-/* Borders */
-@radius-sm: var(--radius-sm);
-@radius-md: var(--radius-md);
-
-/* Dropdowns */
-@dropdown-min-width: var(--dropdown-min-width);
-
-/* Modals */
-@modal-width: var(--modal-width);
-@modal-width-wide: var(--modal-width-wide);
-
-/* Other */
-@drag-width: var(--drag-width);
-
-/* Breakpoints */
-@breakpoint-lg: var(--breakpoint-lg);
-@breakpoint-md: var(--breakpoint-md);
-@breakpoint-sm: var(--breakpoint-sm);
-
 .txt-xxs {
-  font-size: @font-size-xxs !important;
+  font-size: var(--font-size-xxs) !important;
 }
 
 .txt-xs {
-  font-size: @font-size-xs !important;
+  font-size: var(--font-size-xs) !important;
 }
 
 .txt-sm {
-  font-size: @font-size-sm !important;
+  font-size: var(--font-size-sm) !important;
 }
 
 .txt-md {
-  font-size: @font-size-md !important;
+  font-size: var(--font-size-md) !important;
 }
 
 .txt-lg {
-  font-size: @font-size-lg !important;
+  font-size: var(--font-size-lg) !important;
 }
 
 .txt-xl {
-  font-size: @font-size-xl !important;
+  font-size: var(--font-size-xl) !important;
 }
 
 .txt-xxl {
-  font-size: @font-size-xxl !important;
+  font-size: var(--font-size-xxl) !important;
 }
