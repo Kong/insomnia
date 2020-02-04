@@ -1,4 +1,5 @@
 // @flow
+import Color from 'color';
 import { render, THROW_ON_ERROR } from '../common/render';
 import { getThemes } from './index';
 import type { Theme } from './index';
@@ -71,6 +72,9 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
   const n = theme.name;
 
   let css = '';
+
+  // Default global styles
+  css += wrapStyles(n, '__DEFAULT__', getThemeBlockCSS(_baseTheme));
   css += wrapStyles(n, '', getThemeBlockCSS(renderedTheme));
 
   if (renderedTheme.styles) {
@@ -127,10 +131,31 @@ function getThemeBlockCSS(block?: ThemeBlock): string {
 
   let css = '';
 
-  const addVar = (variable?: string, value?: string) => {
-    if (variable && value) {
-      css += `${indent}--${variable}: ${value};\n`;
+  const addColorVar = (variable: string, value?: string) => {
+    if (!value) {
+      return;
     }
+
+    try {
+      const parsedColor = Color(value);
+      addVar(variable, parsedColor.rgb().string());
+      addVar(
+        `${variable}-rgb`,
+        parsedColor
+          .rgb()
+          .array()
+          .join(', '),
+      );
+    } catch (err) {
+      console.log('Failed to parse theme color', value);
+    }
+  };
+
+  const addVar = (variable: string, value?: string) => {
+    if (!value) {
+      return;
+    }
+    css += `${indent}--${variable}: ${value};\n`;
   };
 
   const addComment = comment => {
@@ -144,39 +169,39 @@ function getThemeBlockCSS(block?: ThemeBlock): string {
   if (block.background) {
     const { background } = block;
     addComment('Background');
-    addVar('color-bg', background.default);
-    addVar('color-success', background.success);
-    addVar('color-notice', background.notice);
-    addVar('color-warning', background.warning);
-    addVar('color-danger', background.danger);
-    addVar('color-surprise', background.surprise);
-    addVar('color-info', background.info);
+    addColorVar('color-bg', background.default);
+    addColorVar('color-success', background.success);
+    addColorVar('color-notice', background.notice);
+    addColorVar('color-warning', background.warning);
+    addColorVar('color-danger', background.danger);
+    addColorVar('color-surprise', background.surprise);
+    addColorVar('color-info', background.info);
     addNewLine();
   }
 
   if (block.foreground) {
     const { foreground } = block;
     addComment('Foreground');
-    addVar('color-font', foreground.default);
-    addVar('color-font-success', foreground.success);
-    addVar('color-font-notice', foreground.notice);
-    addVar('color-font-warning', foreground.warning);
-    addVar('color-font-danger', foreground.danger);
-    addVar('color-font-surprise', foreground.surprise);
-    addVar('color-font-info', foreground.info);
+    addColorVar('color-font', foreground.default);
+    addColorVar('color-font-success', foreground.success);
+    addColorVar('color-font-notice', foreground.notice);
+    addColorVar('color-font-warning', foreground.warning);
+    addColorVar('color-font-danger', foreground.danger);
+    addColorVar('color-font-surprise', foreground.surprise);
+    addColorVar('color-font-info', foreground.info);
     addNewLine();
   }
 
   if (block.highlight) {
     const { highlight } = block;
     addComment('Highlight');
-    addVar('hl', highlight.default);
-    addVar('hl-xxs', highlight.xxs);
-    addVar('hl-xs', highlight.xs);
-    addVar('hl-sm', highlight.sm);
-    addVar('hl-md', highlight.md);
-    addVar('hl-lg', highlight.lg);
-    addVar('hl-xl', highlight.xl);
+    addColorVar('hl', highlight.default);
+    addColorVar('hl-xxs', highlight.xxs);
+    addColorVar('hl-xs', highlight.xs);
+    addColorVar('hl-sm', highlight.sm);
+    addColorVar('hl-md', highlight.md);
+    addColorVar('hl-lg', highlight.lg);
+    addColorVar('hl-xl', highlight.xl);
     addNewLine();
   }
 
@@ -186,6 +211,11 @@ function getThemeBlockCSS(block?: ThemeBlock): string {
 function wrapStyles(theme: string, selector: string, styles: string) {
   if (!styles) {
     return '';
+  }
+
+  // If no selector, just ship it with body
+  if (selector === '__DEFAULT__') {
+    return ['body {', styles, '}', '', ''].join('\n');
   }
 
   return [
@@ -250,3 +280,33 @@ export async function setFont(settings: Object) {
   html.style.setProperty('--font-ligatures', settings.fontVariantLigatures ? 'normal' : 'none');
   html.style.setProperty('font-size', `${settings.fontSize}px`);
 }
+
+const _baseTheme = {
+  background: {
+    default: '#fff',
+    success: '#75ba24',
+    notice: '#d8c84d',
+    warning: '#ec8702',
+    danger: '#e15251',
+    surprise: '#8776d5',
+    info: '#20aed9',
+  },
+  foreground: {
+    default: '#666',
+    success: '#fff',
+    notice: '#fff',
+    warning: '#fff',
+    danger: '#fff',
+    surprise: '#fff',
+    info: '#fff',
+  },
+  highlight: {
+    default: 'rgba(130, 130, 130, 1)',
+    xxs: 'rgba(130, 130, 130, 0.05)',
+    xs: 'rgba(130, 130, 130, 0.1)',
+    sm: 'rgba(130, 130, 130, 0.25)',
+    md: 'rgba(130, 130, 130, 0.35)',
+    lg: 'rgba(130, 130, 130, 0.5)',
+    xl: 'rgba(130, 130, 130, 0.8)',
+  },
+};
