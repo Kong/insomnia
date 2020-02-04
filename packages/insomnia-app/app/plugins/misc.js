@@ -138,14 +138,9 @@ function getThemeBlockCSS(block?: ThemeBlock): string {
 
     try {
       const parsedColor = Color(value);
-      addVar(variable, parsedColor.rgb().string());
-      addVar(
-        `${variable}-rgb`,
-        parsedColor
-          .rgb()
-          .array()
-          .join(', '),
-      );
+      const rgb = parsedColor.rgb();
+      addVar(variable, rgb.string());
+      addVar(`${variable}-rgb`, rgb.array().join(', '));
     } catch (err) {
       console.log('Failed to parse theme color', value);
     }
