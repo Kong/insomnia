@@ -1,10 +1,14 @@
 // @flow
 import * as React from 'react';
+import { select, withKnobs } from '@storybook/addon-knobs';
 import Button from './button';
 import styled from 'styled-components';
 import SvgIcon from './svg-icon';
 
-export default { title: 'Button' };
+export default {
+  title: 'Button',
+  decorators: [withKnobs],
+};
 
 const Wrapper: React.ComponentType<any> = styled.div`
   display: flex;
@@ -15,10 +19,24 @@ const Wrapper: React.ComponentType<any> = styled.div`
 `;
 Wrapper.displayName = '...';
 
-export const _default = () => <Button onClick={() => window.alert('Clicked!')}>Click Me</Button>;
+const themeColors = {
+  default: null,
+  Surprise: 'surprise',
+  Info: 'info',
+  Success: 'success',
+  Notice: 'notice',
+  Warning: 'warning',
+  Danger: 'danger',
+};
+
+export const _default = () => (
+  <Button onClick={() => window.alert('Clicked!')} bg={select('Background', themeColors)}>
+    Click Me
+  </Button>
+);
 
 export const withIcon = () => (
-  <Button onClick={() => window.alert('Clicked!')}>
+  <Button onClick={() => window.alert('Clicked!')} bg={select('Background', themeColors)}>
     Expand <SvgIcon icon="chevron-down" />
   </Button>
 );

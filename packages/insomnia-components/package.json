@@ -19,7 +19,9 @@
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",
+    "@storybook/addon-contexts": "^5.3.10",
     "@storybook/addon-info": "^5.3.9",
+    "@storybook/addon-knobs": "^5.3.10",
     "@storybook/react": "^5.3.9",
     "babel-loader": "^8.0.6",
     "babel-plugin-inline-react-svg": "^1.1.1",

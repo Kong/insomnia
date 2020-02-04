@@ -8,12 +8,12 @@ type Props = {
 };
 
 const StyledButton: React.ComponentType<Props> = styled.button`
-  text-align: center;
   color: ${({ bg }) => (bg ? `var(--color-${bg})` : 'var(--color-font)')};
+  background-color: transparent;
+  text-align: center;
   font-size: var(--font-size-sm);
   padding: 0 var(--padding-md);
   height: var(--line-height-xs);
-  opacity: 0.8;
   border-radius: 2px;
   display: flex !important;
   flex-direction: row !important;
@@ -25,7 +25,7 @@ const StyledButton: React.ComponentType<Props> = styled.button`
   &:hover {
     outline: 0;
     background-color: var(--hl-xxs);
-    opacity: 1;
+    opacity: 0.9;
   }
 
   &:active {
