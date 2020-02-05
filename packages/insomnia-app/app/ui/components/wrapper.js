@@ -76,8 +76,10 @@ import ActivityBar, {
   ACTIVITY_DEBUG,
   ACTIVITY_MONITOR,
   ACTIVITY_SPEC,
+  ACTIVITY_HOME,
 } from './activity-bar/activity-bar';
 import SpecEditor from './spec-editor/spec-editor';
+import DocumentListing from './document-listing/document-listing';
 import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import SidebarFilter from './sidebar/sidebar-filter';
@@ -348,6 +350,10 @@ class Wrapper extends React.PureComponent<Props, State> {
     }
 
     this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
+  }
+
+  _handleSetHomeActivity(): void {
+    this.props.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
   _handleShowEnvironmentsModal(): void {
@@ -923,6 +929,7 @@ class Wrapper extends React.PureComponent<Props, State> {
                 enableSyncBeta={settings.enableSyncBeta}
                 environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
                 handleInitializeEntities={handleInitializeEntities}
+                handleNavigateHome={this._handleSetHomeActivity}
                 handleSetActiveEnvironment={handleSetActiveEnvironment}
                 handleSetActiveWorkspace={handleSetActiveWorkspace}
                 hidden={sidebarHidden || false}
@@ -1044,6 +1051,18 @@ class Wrapper extends React.PureComponent<Props, State> {
                 lineWrapping={settings.editorLineWrapping}
                 onChange={this._handleUpdateApiSpec}
                 handleTest={this._handleDebugSpec}
+              />
+            </ErrorBoundary>
+          )}
+
+          {activity === ACTIVITY_HOME && (
+            <ErrorBoundary showAlert>
+              <DocumentListing
+                key={this.state.forceRefreshKey}
+                ref={this._setSpecEditorRef}
+                workspaces={workspaces}
+                activeWorkspace={activeWorkspace}
+                handleSetActiveWorkspace={handleSetActiveWorkspace}
               />
             </ErrorBoundary>
           )}

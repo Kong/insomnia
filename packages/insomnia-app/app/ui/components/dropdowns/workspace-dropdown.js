@@ -15,7 +15,6 @@ import * as models from '../../../models';
 import { getAppName, getAppVersion } from '../../../common/constants';
 import { showAlert, showError, showModal, showPrompt } from '../modals';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
-import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import PortalUploadModal from '../modals/portal-upload-modal';
 import Tooltip from '../tooltip';
 import KeydownBinder from '../keydown-binder';
@@ -23,7 +22,6 @@ import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Workspace } from '../../../models/workspace';
-import SyncShareModal from '../modals/sync-share-modal';
 import * as db from '../../../common/database';
 import VCS from '../../../sync/vcs';
 import HelpTooltip from '../help-tooltip';
@@ -43,6 +41,7 @@ import type { Environment } from '../../../models/environment';
 type Props = {|
   isLoading: boolean,
   handleSetActiveWorkspace: (id: string) => void,
+  handleNavigateHome: () => any,
   workspaces: Array<Workspace>,
   unseenWorkspaces: Array<Workspace>,
   activeEnvironment: Environment | null,
@@ -393,11 +392,16 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       isLoading,
       hotKeyRegistry,
       handleSetActiveWorkspace,
+      handleNavigateHome,
       enableSyncBeta,
       ...other
     } = this.props;
 
-    const { remoteProjects, localProjects, pullingProjects } = this.state;
+    const {
+      remoteProjects,
+      localProjects,
+      pullingProjects,
+    } = this.state;
 
     const missingRemoteProjects = remoteProjects.filter(({ id, rootDocumentId }) => {
       const localProjectExists = localProjects.find(p => p.id === id);
@@ -456,7 +460,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
           <DropdownItem onClick={this._handlePortalUpload}>
             <i className="fa fa-cloud-upload" /> Deploy to <strong>Kong Portal</strong>
           </DropdownItem>
-          <DropdownDivider>Switch Workspace <button className="icon" onClick={this._handleHome}>
+          <DropdownDivider>Switch Workspace <button className="icon" onClick={handleNavigateHome}>
             <i className="fa fa-home" /></button></DropdownDivider>
 
           {nonActiveWorkspaces.map(w => {

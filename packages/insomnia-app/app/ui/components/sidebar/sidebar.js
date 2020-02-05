@@ -22,6 +22,7 @@ type Props = {|
   children: React.Node,
   enableSyncBeta: boolean,
   environmentHighlightColorStyle: string,
+  handleNavigateHome: () => any,
   handleSetActiveEnvironment: Function,
   handleSetActiveWorkspace: Function,
   handleInitializeEntities: () => void,
@@ -48,6 +49,7 @@ class Sidebar extends React.PureComponent<Props> {
       enableSyncBeta,
       environmentHighlightColorStyle,
       handleInitializeEntities,
+      handleNavigateHome,
       handleSetActiveWorkspace,
       hidden,
       hotKeyRegistry,
@@ -80,6 +82,7 @@ class Sidebar extends React.PureComponent<Props> {
           className="sidebar__header theme--sidebar__header"
           activeEnvironment={activeEnvironment}
           activeWorkspace={workspace}
+          handleNavigateHome={handleNavigateHome}
           workspaces={workspaces}
           unseenWorkspaces={unseenWorkspaces}
           hotKeyRegistry={hotKeyRegistry}

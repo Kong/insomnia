@@ -7,7 +7,7 @@
   "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
-    "build": "parcel build ./*.js --bundle-node-modules --no-minify --target browser",
+    "build": "parcel build ./index.js",
     "build-storybook": "build-storybook --quiet",
     "storybook": "start-storybook --port 3223",
     "bootstrap": "rimraf node_modules/fsevents"
