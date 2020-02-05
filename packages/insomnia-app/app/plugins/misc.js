@@ -73,9 +73,18 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
 
   let css = '';
 
-  // Default global styles
-  css += wrapStyles(n, '__DEFAULT__', getThemeBlockCSS(_baseTheme));
-  css += wrapStyles(n, '', getThemeBlockCSS(renderedTheme));
+  // For the top-level variables, merge with the base theme to ensure that
+  // we have everything we need.
+  css += wrapStyles(
+    n,
+    '',
+    getThemeBlockCSS({
+      ...renderedTheme,
+      background: { ..._baseTheme.background, ...renderedTheme.background },
+      foreground: { ..._baseTheme.foreground, ...renderedTheme.foreground },
+      highlight: { ..._baseTheme.highlight, ...renderedTheme.highlight },
+    }),
+  );
 
   if (renderedTheme.styles) {
     const styles = renderedTheme.styles;
@@ -206,11 +215,6 @@ function getThemeBlockCSS(block?: ThemeBlock): string {
 function wrapStyles(theme: string, selector: string, styles: string) {
   if (!styles) {
     return '';
-  }
-
-  // If no selector, just ship it with body
-  if (selector === '__DEFAULT__') {
-    return ['body {', styles, '}', '', ''].join('\n');
   }
 
   return [
