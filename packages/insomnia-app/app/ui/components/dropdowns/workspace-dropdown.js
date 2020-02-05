@@ -63,11 +63,11 @@ type Props = {|
 type State = {
   remoteProjects: Array<Project>,
   localProjects: Array<Project>,
-  pullingProjects: { [string]: boolean },
+  pullingProjects: {[string]: boolean},
   actionPlugins: Array<WorkspaceAction>,
-  loadingActions: { [string]: boolean },
+  loadingActions: {[string]: boolean},
   localProjects: Array<Project>,
-  pullingProjects: { [string]: boolean },
+  pullingProjects: {[string]: boolean},
   remoteProjects: Array<Project>,
 };
 
@@ -206,14 +206,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
   static _handleShowWorkspaceSettings() {
     showModal(WorkspaceSettingsModal);
-  }
-
-  _handleShowShareSettings() {
-    if (this.props.enableSyncBeta) {
-      showModal(SyncShareModal);
-    } else {
-      showModal(WorkspaceShareSettingsModal);
-    }
   }
 
   _handlePortalUpload() {
@@ -464,7 +456,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
           <DropdownItem onClick={this._handlePortalUpload}>
             <i className="fa fa-cloud-upload" /> Deploy to <strong>Kong Portal</strong>
           </DropdownItem>
-          <DropdownDivider>Switch Workspace</DropdownDivider>
+          <DropdownDivider>Switch Workspace <button className="icon" onClick={this._handleHome}>
+            <i className="fa fa-home" /></button></DropdownDivider>
 
           {nonActiveWorkspaces.map(w => {
             const isUnseen = !!unseenWorkspaces.find(v => v._id === w._id);
