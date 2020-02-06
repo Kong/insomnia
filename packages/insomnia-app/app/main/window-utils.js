@@ -261,6 +261,13 @@ export function createWindow() {
         },
       },
       {
+        label: 'Show Open Source Licenses',
+        click: (menuItem, w, e) => {
+          const licensePath = path.resolve(app.getAppPath(), '../opensource-licenses.txt');
+          shell.openItem(licensePath);
+        },
+      },
+      {
         label: `Insomnia ${MNEMONIC_SYM}Help`,
         accelerator: !isMac() ? 'F1' : null,
         click: () => {
