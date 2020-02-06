@@ -1,8 +1,10 @@
+import _AppHeader from './components/app-header';
 import _Button from './components/button';
 import _NoticeTable from './components/notice-table';
 import _SvgIcon from './components/svg-icon';
 import * as table from './components/table';
 
+export const AppHeader = _AppHeader;
 export const Button = _Button;
 export const NoticeTable = _NoticeTable;
 export const SvgIcon = _SvgIcon;

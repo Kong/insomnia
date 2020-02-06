@@ -5,11 +5,12 @@ import ActivityBarButton from './activity-bar-button';
 import { getHotKeyDisplay, hotKeyRefs } from '../../../common/hotkeys';
 import type { HotKeyDefinition, HotKeyRegistry } from '../../../common/hotkeys';
 
-export type GlobalActivity = 'spec' | 'debug' | 'monitor';
+export type GlobalActivity = 'spec' | 'debug' | 'monitor' | 'home';
 
 export const ACTIVITY_SPEC: GlobalActivity = 'spec';
 export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
 export const ACTIVITY_MONITOR: GlobalActivity = 'monitor';
+export const ACTIVITY_HOME: GlobalActivity = 'home';
 
 type Props = {|
   activity: GlobalActivity,
@@ -20,6 +21,11 @@ type Props = {|
 
 const ACTIVITIES: Array<{ key: GlobalActivity, name: string, hotKey: HotKeyDefinition }> = [
   {
+    key: ACTIVITY_HOME,
+    name: 'Home',
+    hotKey: hotKeyRefs.SHOW_HOME,
+  },
+  {
     key: ACTIVITY_SPEC,
     name: 'API Specification',
     hotKey: hotKeyRefs.SHOW_SPEC_EDITOR,
@@ -29,13 +35,6 @@ const ACTIVITIES: Array<{ key: GlobalActivity, name: string, hotKey: HotKeyDefin
     name: 'Debug API',
     hotKey: hotKeyRefs.SHOW_TEST,
   },
-  /*
-  {
-    key: ACTIVITY_MONITOR,
-    name: 'Monitor Instance',
-    hotKey: hotKeyRefs.SHOW_MONITOR,
-  },
-  */
 ];
 
 @autobind

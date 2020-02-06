@@ -20,6 +20,7 @@ type Props = {|
 |};
 
 const ACTIVITY_MAP_ICONS: { [GlobalActivity]: string } = {
+  home: 'fa fa-home',
   spec: 'ico-edit-spec',
   debug: 'ico-debug',
 };

@@ -21,12 +21,8 @@ module.exports = {
       },
       editor: {
         background: {
-          success: '#3d9c62',
-          notice: '#bb9700',
-          warning: '#d68853',
-          danger: '#e65c57',
-          surprise: '#005f9d',
-          info: '#8467c3',
+          surprise: '{{ background.info }}',
+          info: '{{ background.surprise }}',
         },
       },
       sidebar: {
@@ -72,6 +68,12 @@ module.exports = {
       dialog: {
         background: {
           info: '#005B9E',
+        },
+      },
+      pane: {
+        background: {
+          surprise: '{{ background.info }}',
+          info: '{{ background.surprise }}',
         },
       },
       paneHeader: {
