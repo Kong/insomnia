@@ -124,7 +124,7 @@ async function buildLicenseList(relSource, relDest) {
           repository ? `REPOSITORY: ${repository}` : null,
           publisher ? `PUBLISHER: ${publisher}` : null,
           email ? `EMAIL: ${email}` : null,
-          txt ? '\n' + txt : null,
+          '\n' + txt,
         ]
           .filter(v => v !== null)
           .join('\n');
