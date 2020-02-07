@@ -40,23 +40,35 @@ module.exports.templateTags = [
         defaultValue: false,
       },
       {
-        displayName: 'Default to Last Value',
-        type: 'boolean',
+        displayName: 'Prompt for a Value...',
+        type: 'enum',
         help:
-          'If this is enabled, the input field will be pre-filled with this value. This option is ' +
-          'ignored when the storage key is set.',
-        defaultValue: true,
+          'Controls when this prompt should be shown and what value should be used to ' +
+          'pre-populate the prompt dialog',
+        options: [
+          { displayName: 'on each request', value: 'always-fresh' },
+          { displayName: 'on each request, using the default value as default', value: 'always-default' },
+          { displayName: 'on each request, using the stored value as default', value: 'always-storage' },
+          { displayName: 'at most once, storing the value for further requests', value: 'once-storage' },
+        ],
       },
     ],
-    async run(context, title, label, defaultValue, explicitStorageKey, maskText, saveLastValue) {
+    async run(context, title, label, defaultValue, explicitStorageKey, maskText, showCondition) {
       if (!title) {
         throw new Error('Title attribute is required for prompt tag');
       }
 
-      // If we don't have a key, default to request ID.
+      // Backward compatibility with "Default to Last Value" #1597
+      if (showCondition === true) {
+          showCondition = 'always-storage';
+      } else if (showCondition === false) {
+          showCondition = 'always-fresh';
+      }
+
+      // If we don't have a key, default to request ID and title
       // We do this because we may render the prompt multiple times per request.
-      // We cache it under the requestId so it only prompts once. We then clear
-      // the cache in a response hook when the request is sent.
+      // We cache it under the requestId.title so it only prompts once. We then
+      // clear the cache in a response hook when the request is sent.
       const titleHash = crypto
         .createHash('md5')
         .update(title)
@@ -64,21 +76,20 @@ module.exports.templateTags = [
       const storageKey = explicitStorageKey || `${context.meta.requestId}.${titleHash}`;
       const cachedValue = await context.store.getItem(storageKey);
 
-      // Directly return cached value if using explicitly defined storage key
-      if (explicitStorageKey && cachedValue) {
-        console.log(`[prompt] Used cached value under ${storageKey}`);
-        return cachedValue;
+      if (showCondition === 'once-storage' && cachedValue !== null) {
+          console.log(`[prompt] Used cached value under ${storageKey}`);
+          return cachedValue;
       }
 
-      // Use cached value as default value
-      if (cachedValue && saveLastValue) {
-        defaultValue = cachedValue;
-        console.log(`[prompt] Used cached value under ${storageKey}`);
+      if (showCondition === 'always-fresh') {
+          defaultValue = '';
+      } else if (showCondition === 'always-storage') {
+          defaultValue = cachedValue;
       }
 
       // Only prompt when we're actually sending
       if (context.renderPurpose !== 'send') {
-        if (cachedValue !== null) {
+        if (showCondition === 'once-storage' && cachedValue !== null) {
           return cachedValue;
         } else {
           return defaultValue || '';
@@ -88,6 +99,7 @@ module.exports.templateTags = [
       const value = await context.app.prompt(title || 'Enter Value', {
         label,
         defaultValue,
+        selectText: true,
         inputType: maskText ? 'password' : 'text',
       });
 
