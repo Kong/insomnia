@@ -4,6 +4,7 @@ import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
 import autobind from 'autobind-decorator';
 import MarkdownPreview from '../markdown-preview';
 import GraphQLExplorerFieldLink from './graph-ql-explorer-field-link';
+import { GraphQLUnionType } from 'graphql';
 import type { GraphQLType, GraphQLField } from 'graphql';
 
 type Props = {
@@ -32,25 +33,26 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
   renderTypesMaybe() {
     const { type, onNavigateType } = this.props;
 
-    if (
-      Object.prototype.toString.call(type) !== '[object GraphQLUnionType]' &&
-      Object.prototype.toString.call(type.getTypes) !== '[object Function]'
-    ) {
+    if (typeof type.getTypes !== 'function') {
       return null;
     }
-    // $FlowFixMe
-    const types = type.getTypes();
+
+    if (!(type instanceof GraphQLUnionType)) {
+      return null;
+    }
+
+    const types = (type: Object).getTypes();
+
+    console.log('UNION TYPE? ', types);
     return (
       <React.Fragment>
         <h2 className="graphql-explorer__subheading">Possible Types</h2>
         <ul className="graphql-explorer__defs">
-          {Object.keys(types).map(key => {
-            return (
-              <li>
-                <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={types[key]} />
-              </li>
-            );
-          })}
+          {types.map(type => (
+            <li key={type.name}>
+              <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
+            </li>
+          ))}
         </ul>
       </React.Fragment>
     );
