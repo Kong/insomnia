@@ -55,7 +55,9 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
 
     try {
       const result = await generateFromString(apiSpec.contents, type);
-      config.content = YAML.stringify(result.document);
+      const yamlDocs = result.documents.map(d => YAML.stringify(d));
+      // Join the YAML docs with "---" and strip any extra newlines surrounding them
+      config.content = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
     } catch (err) {
       config.error = err;
     }
@@ -109,7 +111,7 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
     this.setState({ activeTab: index });
   }
 
-  renderConfigTab(config: Config, index: number) {
+  renderConfigTab(config: Config) {
     return (
       <Tab key={config.label} tabIndex="-1">
         <button>

@@ -61,7 +61,7 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_security.yaml"],
           "name": "Security_Example-path-get",
-          "plugins": [{"config": {}, "name": "basic-auth"}],
+          "plugins": [{"name": "basic-auth"}],
           "paths": ["/only/basic"]
         }
       ],

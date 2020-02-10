@@ -2,13 +2,13 @@
 
 import { getSecurity } from '../common';
 
-export function generateSecurityPlugins(op: OA3Operation, api: OpenApi3Spec): Array<DCPlugin> {
+export function generateSecurityPlugins(op: OA3Operation | null, api: OpenApi3Spec): Array<DCPlugin> {
   const plugins = [];
   const components = api.components || {};
   const securitySchemes = components.securitySchemes || {};
 
-  const security = getSecurity(op) || getSecurity(api) || [];
-  for (const securityItem of security) {
+  const security = op ? getSecurity(op) : getSecurity(api);
+  for (const securityItem of security || []) {
     for (const name of Object.keys(securityItem)) {
       const scheme: OA3SecurityScheme = securitySchemes[name] || {};
       const args = securityItem[name];
@@ -43,10 +43,7 @@ export function generateHttpSecurityPlugin(scheme: OA3SecuritySchemeHttp): DCPlu
     throw new Error(`Only "basic" http scheme supported. got ${scheme.scheme}`);
   }
 
-  return {
-    name: 'basic-auth',
-    config: {},
-  };
+  return { name: 'basic-auth' };
 }
 
 export function generateOpenIdConnectSecurityPlugin(

@@ -1,6 +1,7 @@
 // @flow
 
 import { getName, getServers, parseUrl } from '../common';
+import { generateSecurityPlugins } from '../declarative-config/security-plugins';
 
 export function generateKongForKubernetesConfigFromSpec(
   api: OpenApi3Spec,
@@ -14,10 +15,24 @@ export function generateKongForKubernetesConfigFromSpec(
     spec: { rules: generateRules(api, metadata.name) },
   };
 
+  const otherDocuments = generatePluginDocuments(api);
+
+  // Add Kong plugins as annotations to ingress definition
+  if (otherDocuments.length) {
+    const pluginNames = otherDocuments.map(d => d.metadata.name).join(', ');
+    if (document.metadata.annotations) {
+      document.metadata.annotations['plugins.konghq.com'] = pluginNames;
+    } else {
+      document.metadata.annotations = { 'plugins.konghq.com': pluginNames };
+    }
+  }
+
+  const documents = [...otherDocuments, document];
+
   return ({
     type: 'kong-for-kubernetes',
     label: 'Kong for Kubernetes',
-    document,
+    documents,
     warnings: [],
   }: KongForKubernetesResult);
 }
@@ -156,4 +171,51 @@ export function generateServicePath(server: OA3Server, backend: K8sBackend): K8s
   }
 
   return p;
+}
+
+export function generatePluginDocuments(api: OpenApi3Spec): Array<KubernetesPluginConfig> {
+  const plugins = [];
+  for (const key of Object.keys(api)) {
+    if (key.indexOf('x-kong-plugin-') !== 0) {
+      continue;
+    }
+    const nameFromKey = key.replace('x-kong-plugin-', '');
+    const pData: Object = api[key];
+    const p: KubernetesPluginConfig = {
+      apiVersion: 'configuration.konghq.com/v1',
+      kind: 'KongPlugin',
+      metadata: {
+        name: `add-${pData.name || nameFromKey}`,
+      },
+      plugin: pData.name || key.replace('x-kong-plugin-', ''),
+    };
+
+    if (pData.config) {
+      p.config = pData.config;
+    }
+
+    plugins.push(p);
+  }
+
+  // NOTE: It isn't great that we're relying on declarative-config stuff here but there's
+  // not much we can do about it. If we end up needing this again, it should be factored
+  // out to a higher-level.
+  const securityPlugins = generateSecurityPlugins(null, api).map(dcPlugin => {
+    const k8sPlugin: KubernetesPluginConfig = {
+      apiVersion: 'configuration.konghq.com/v1',
+      kind: 'KongPlugin',
+      metadata: {
+        name: `add-${dcPlugin.name}`,
+      },
+      plugin: dcPlugin.name,
+    };
+
+    if (dcPlugin.config) {
+      k8sPlugin.config = dcPlugin.config;
+    }
+
+    return k8sPlugin;
+  });
+
+  return [...plugins, ...securityPlugins];
 }

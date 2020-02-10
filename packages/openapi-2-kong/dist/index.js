@@ -245,9 +245,9 @@ function generateSecurityPlugins(op, api) {
   const plugins = [];
   const components = api.components || {};
   const securitySchemes = components.securitySchemes || {};
-  const security = (0, _common.getSecurity)(op) || (0, _common.getSecurity)(api) || [];
+  const security = op ? (0, _common.getSecurity)(op) : (0, _common.getSecurity)(api);
 
-  for (const securityItem of security) {
+  for (const securityItem of security || []) {
     for (const name of Object.keys(securityItem)) {
       const scheme = securitySchemes[name] || {};
       const args = securityItem[name];
@@ -285,8 +285,7 @@ function generateHttpSecurityPlugin(scheme) {
   }
 
   return {
-    name: 'basic-auth',
-    config: {}
+    name: 'basic-auth'
   };
 }
 
@@ -578,10 +577,10 @@ var _services = require("./services");
 var _upstreams = require("./upstreams");
 
 function generateDeclarativeConfigFromSpec(api, tags) {
-  let result = null;
+  let document = null;
 
   try {
-    result = {
+    document = {
       _format_version: '1.1',
       services: (0, _services.generateServices)(api, tags),
       upstreams: (0, _upstreams.generateUpstreams)(api, tags)
@@ -593,13 +592,12 @@ function generateDeclarativeConfigFromSpec(api, tags) {
   // SEE: https://github.com/Kong/studio/issues/93
 
 
-  const document = JSON.parse(JSON.stringify(result));
-  return {
+  return JSON.parse(JSON.stringify({
     type: 'kong-declarative-config',
     label: 'Kong Declarative Config',
-    document,
+    documents: [document],
     warnings: []
-  };
+  }));
 }
 },{"./services":"dztZ","./upstreams":"ouAC"}],"HEkA":[function(require,module,exports) {
 "use strict";
@@ -615,8 +613,11 @@ exports.generateServiceName = generateServiceName;
 exports.generateTlsConfig = generateTlsConfig;
 exports.generateServicePort = generateServicePort;
 exports.generateServicePath = generateServicePath;
+exports.generatePluginDocuments = generatePluginDocuments;
 
 var _common = require("../common");
+
+var _securityPlugins = require("../declarative-config/security-plugins");
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -634,10 +635,25 @@ function generateKongForKubernetesConfigFromSpec(api, tags) {
       rules: generateRules(api, metadata.name)
     }
   };
+  const otherDocuments = generatePluginDocuments(api); // Add Kong plugins as annotations to ingress definition
+
+  if (otherDocuments.length) {
+    const pluginNames = otherDocuments.map(d => d.metadata.name).join(', ');
+
+    if (document.metadata.annotations) {
+      document.metadata.annotations['plugins.konghq.com'] = pluginNames;
+    } else {
+      document.metadata.annotations = {
+        'plugins.konghq.com': pluginNames
+      };
+    }
+  }
+
+  const documents = [...otherDocuments, document];
   return {
     type: 'kong-for-kubernetes',
     label: 'Kong for Kubernetes',
-    document,
+    documents,
     warnings: []
   };
 }
@@ -789,7 +805,54 @@ function generateServicePath(server, backend) {
 
   return p;
 }
-},{"../common":"FoEN"}],"Focm":[function(require,module,exports) {
+
+function generatePluginDocuments(api) {
+  const plugins = [];
+
+  for (const key of Object.keys(api)) {
+    if (key.indexOf('x-kong-plugin-') !== 0) {
+      continue;
+    }
+
+    const pData = api[key];
+    const p = {
+      apiVersion: 'configuration.konghq.com/v1',
+      kind: 'KongPlugin',
+      metadata: {
+        name: `add-${pData.name}`
+      },
+      plugin: pData.name || key.replace('x-kong-plugin-', '')
+    };
+
+    if (pData.config) {
+      p.config = pData.config;
+    }
+
+    plugins.push(p);
+  } // NOTE: It isn't great that we're relying on declarative-config stuff here but there's
+  // not much we can do about it. If we end up needing this again, it should be factored
+  // out to a higher-level.
+
+
+  const securityPlugins = (0, _securityPlugins.generateSecurityPlugins)(null, api).map(dcPlugin => {
+    const k8sPlugin = {
+      apiVersion: 'configuration.konghq.com/v1',
+      kind: 'KongPlugin',
+      metadata: {
+        name: `add-${dcPlugin.name}`
+      },
+      plugin: dcPlugin.name
+    };
+
+    if (dcPlugin.config) {
+      k8sPlugin.config = dcPlugin.config;
+    }
+
+    return k8sPlugin;
+  });
+  return [...plugins, ...securityPlugins];
+}
+},{"../common":"FoEN","../declarative-config/security-plugins":"TyOt"}],"Focm":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

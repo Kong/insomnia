@@ -1,8 +1,9 @@
 // @flow
 import { parseSpec } from '../../index';
 import {
+  generateKongForKubernetesConfigFromSpec,
   generateMetadataAnnotations,
-  generateMetadataName,
+  generateMetadataName, generatePluginDocuments,
   generateRules,
   generateServiceName,
   generateServicePath,
@@ -291,6 +292,168 @@ describe('index', () => {
             backend: {
               serviceName: 'my-ingress-s0',
               servicePort: 80,
+            },
+          }],
+        },
+      }]);
+    });
+  });
+
+  describe('generateSecurityPlugin()', () => {
+    it('generates apikey plugin', async () => {
+      const api: OpenApi3Spec = await parseSpec({
+        ...spec,
+        'x-kong-plugin-key-auth': {
+          config: {
+            key_names: ['api_key', 'apikey'],
+            key_in_body: false,
+            hide_credentials: true,
+          },
+        },
+        'x-kong-plugin-with-name': {
+          name: 'my-name',
+        },
+      });
+
+      const result = generatePluginDocuments(api);
+      expect(result).toEqual([{
+        apiVersion: 'configuration.konghq.com/v1',
+        config: {
+          hide_credentials: true,
+          key_in_body: false,
+          key_names: [
+            'api_key',
+            'apikey',
+          ],
+        },
+        kind: 'KongPlugin',
+        metadata: {
+          name: 'add-key-auth',
+        },
+        plugin: 'key-auth',
+      }, {
+        apiVersion: 'configuration.konghq.com/v1',
+        kind: 'KongPlugin',
+        metadata: {
+          name: 'add-my-name',
+        },
+        plugin: 'my-name',
+      }]);
+    });
+
+    it('generates apikey plugin', async () => {
+      const api: OpenApi3Spec = await parseSpec({
+        ...spec,
+        'x-kong-plugin-key-auth': {
+          name: 'key-auth',
+          config: {
+            key_names: ['api_key', 'apikey'],
+            key_in_body: false,
+            hide_credentials: true,
+          },
+        },
+      });
+
+      const result = generatePluginDocuments(api);
+      expect(result).toEqual([{
+        apiVersion: 'configuration.konghq.com/v1',
+        config: {
+          hide_credentials: true,
+          key_in_body: false,
+          key_names: [
+            'api_key',
+            'apikey',
+          ],
+        },
+        kind: 'KongPlugin',
+        metadata: {
+          name: 'add-key-auth',
+        },
+        plugin: 'key-auth',
+      }]);
+    });
+
+    it('generates security plugin', async () => {
+      const api: OpenApi3Spec = await parseSpec({
+        ...spec,
+        security: [
+          {
+            really_basic: [],
+            your_api_key: [],
+          },
+        ],
+        'x-kong-plugin-dummy-thing': {
+          name: 'dummy-thing',
+          config: { foo: 'bar' },
+        },
+        components: {
+          securitySchemes: {
+            really_basic: {
+              type: 'http',
+              scheme: 'basic',
+            },
+            my_api_key: {
+              type: 'apiKey',
+              name: 'api_key_by_me',
+              in: 'header',
+            },
+            your_api_key: {
+              type: 'apiKey',
+              name: 'api_key_by_you',
+              in: 'header',
+            },
+            petstore_oauth2: {
+              type: 'oauth2',
+              flows: {
+                clientCredentials: {
+                  tokenUrl: 'http://example.org/api/oauth/dialog',
+                  scopes: {
+                    'write:pets': 'modify pets in your account',
+                    'read:pets': 'read your pets',
+                  },
+                },
+              },
+            },
+            petstore_openid: {
+              type: 'openIdConnect',
+              openIdConnectUrl: 'http://example.org/oid-discovery',
+            },
+          },
+        },
+      });
+
+      const result = generateKongForKubernetesConfigFromSpec(api, []);
+      expect(result.documents).toEqual([{
+        apiVersion: 'configuration.konghq.com/v1',
+        kind: 'KongPlugin',
+        plugin: 'dummy-thing',
+        metadata: { name: 'add-dummy-thing' },
+        config: { foo: 'bar' },
+      }, {
+        apiVersion: 'configuration.konghq.com/v1',
+        kind: 'KongPlugin',
+        plugin: 'basic-auth',
+        metadata: { name: 'add-basic-auth' },
+      }, {
+        apiVersion: 'configuration.konghq.com/v1',
+        kind: 'KongPlugin',
+        plugin: 'key-auth',
+        metadata: { name: 'add-key-auth' },
+        config: { key_names: ['api_key_by_you'] },
+      }, {
+        apiVersion: 'extensions/v1beta1',
+        kind: 'Ingress',
+        metadata: {
+          annotations: {
+            'plugins.konghq.com': 'add-dummy-thing, add-basic-auth, add-key-auth',
+          },
+          name: 'my-api',
+        },
+        spec: {
+          rules: [{
+            host: 'api.insomnia.rest',
+            http: {
+              paths: [{ backend: { serviceName: 'my-api-s0', servicePort: 80 } }],
             },
           }],
         },

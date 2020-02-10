@@ -17,6 +17,9 @@ describe('fixtures', () => {
 
     it(`converts ${name}`, async () => {
       const result = await generate(inputPath, 'kong-declarative-config');
+      expect(result.documents.length).toBe(1);
+
+      const document = result.documents[0];
       const expectedObj = JSON.parse(expected);
 
       // Make matching friendlier
@@ -24,11 +27,11 @@ describe('fixtures', () => {
         service.routes = _sortRoutes(service.routes);
       }
 
-      for (const service of result.document.services || []) {
+      for (const service of document.services || []) {
         service.routes = _sortRoutes(service.routes);
       }
 
-      expect(result.document).toEqual(expectedObj);
+      expect(document).toEqual(expectedObj);
     });
   }
 });

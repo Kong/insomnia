@@ -1,8 +1,8 @@
 // @flow
 
-declare type K8sAnnotations = {|
+declare type K8sAnnotations = {
   [string]: string,
-|};
+};
 
 declare type K8sMetadata = {
   name: string,
@@ -30,6 +30,17 @@ declare type K8sIngressRules = Array<K8sIngressRule>;
 declare type K8sSpec = {
   rules: K8sIngressRules,
 };
+
+declare type KubernetesPluginConfig = {
+  apiVersion: 'configuration.konghq.com/v1',
+  kind: 'KongPlugin',
+  metadata: {
+    name: string,
+    global?: boolean,
+  },
+  config?: {[string]: any},
+  plugin: string,
+}
 
 declare type KubernetesConfig = {|
   apiVersion: 'extensions/v1beta1',

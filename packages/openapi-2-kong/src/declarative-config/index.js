@@ -6,9 +6,9 @@ export function generateDeclarativeConfigFromSpec(
   api: OpenApi3Spec,
   tags: Array<string>,
 ): DeclarativeConfigResult {
-  let result = null;
+  let document = null;
   try {
-    result = {
+    document = {
       _format_version: '1.1',
       services: generateServices(api, tags),
       upstreams: generateUpstreams(api, tags),
@@ -20,12 +20,10 @@ export function generateDeclarativeConfigFromSpec(
   // This remover any circular references or weirdness that might result
   // from the JS objects used.
   // SEE: https://github.com/Kong/studio/issues/93
-  const document = JSON.parse(JSON.stringify(result));
-
-  return {
+  return JSON.parse(JSON.stringify({
     type: 'kong-declarative-config',
     label: 'Kong Declarative Config',
-    document,
+    documents: [document],
     warnings: [],
-  };
+  }));
 }
