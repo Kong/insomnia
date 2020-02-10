@@ -59,11 +59,11 @@ export function generateRequestValidatorPlugin(obj: Object, operation: OA3Operat
     }
 
     let bodySchema;
-    for (const item of content) {
-      if (item.mediatype !== 'application/json') {
-        throw new Error(`Body validation supports only 'application/json', not ${item.mediatype}`);
+    for (const mediatype of Object.keys(content)) {
+      if (mediatype !== 'application/json') {
+        throw new Error(`Body validation supports only 'application/json', not ${mediatype}`);
       }
-
+      const item = content[mediatype];
       bodySchema = JSON.stringify(item.schema);
     }
 
