@@ -22,6 +22,7 @@ import * as session from '../../../account/session';
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
+export const TAB_INDEX_PLUGINS = 5;
 
 @autobind
 class SettingsModal extends PureComponent {
