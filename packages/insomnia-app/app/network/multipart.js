@@ -81,7 +81,7 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
         const contentType = param.multiline;
         addString(`Content-Disposition: form-data; name="${name}"`);
         addString(lineBreak);
-        if (contentType) {
+        if (typeof contentType === 'string') {
           addString(`Content-Type: ${contentType}`);
           addString(lineBreak);
         }
