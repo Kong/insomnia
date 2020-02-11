@@ -275,7 +275,8 @@ export const selectActiveRequestResponses = createSelector(
     return entities.responses
       .filter(response => {
         const requestMatches = requestId === response.parentId;
-        const environmentMatches = response.environmentId === meta.activeEnvironmentId;
+        const activeEnvironmentId = meta ? meta.activeEnvironmentId : 'n/a';
+        const environmentMatches = response.environmentId === activeEnvironmentId;
 
         // Legacy responses were sent before environment scoping existed
         const isLegacy = response.environmentId === '__LEGACY__';
