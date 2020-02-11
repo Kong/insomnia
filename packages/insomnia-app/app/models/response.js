@@ -136,7 +136,7 @@ async function _findRecentForRequest(
   environmentId: string | null,
   limit: number,
 ): Promise<Array<Response>> {
-  const query = {
+  const query: Object = {
     parentId: requestId,
   };
 
@@ -170,7 +170,7 @@ export async function create(patch: Object = {}, maxResponses: number = 20) {
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
 
   // Filter responses by environment if setting is enabled
-  const query = { parentId };
+  const query: Object = { parentId };
   if (
     (await models.settings.getOrCreate()).filterResponsesByEnv &&
     patch.hasOwnProperty('environmentId')

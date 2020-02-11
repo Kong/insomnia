@@ -95,7 +95,7 @@ describe('password', () => {
       error: null,
       error_uri: null,
       error_description: null,
-      xResponseId: 'res_dd2ccc1a2745477a881a9e8ef9d42403',
+      xResponseId: expect.stringMatching(/^res_/),
     });
   });
 
@@ -176,7 +176,7 @@ describe('password', () => {
       error: null,
       error_uri: null,
       error_description: null,
-      xResponseId: 'res_e3e96e5fdd6842298b66dee1f0940f3d',
+      xResponseId: expect.stringMatching(/^res_/),
     });
   });
 });
