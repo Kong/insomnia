@@ -11,7 +11,7 @@
     "synopsis": "A simple, beautiful, and free REST API client",
     "icon": "https://github.com/kong/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
     "theme": "default",
-    "version": "7.0.6",
+    "version": "7.1.0",
     "main": "main.min.js",
     "plugins": [
       "insomnia-plugin-base64",
@@ -32,7 +32,6 @@
   "description": "Debug APIs like a human, not a robot",
   "author": "Insomnia <support@insomnia.rest>",
   "main": "app/main.min.js",
-  "appveyorCacheBreaker": 2,
   "repository": {
     "type": "git",
     "url": "https://github.com/kong/insomnia"
