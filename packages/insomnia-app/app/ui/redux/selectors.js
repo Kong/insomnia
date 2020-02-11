@@ -272,16 +272,20 @@ export const selectActiveRequestResponses = createSelector(
   selectActiveWorkspaceMeta,
   (activeRequest, entities, meta) => {
     const requestId = activeRequest ? activeRequest._id : 'n/a';
+    const settings = entities.settings[0];
+
+    // Filter responses down if the setting is enabled
     return entities.responses
       .filter(response => {
         const requestMatches = requestId === response.parentId;
-        const activeEnvironmentId = meta ? meta.activeEnvironmentId : 'n/a';
-        const environmentMatches = response.environmentId === activeEnvironmentId;
 
-        // Legacy responses were sent before environment scoping existed
-        const isLegacy = response.environmentId === '__LEGACY__';
-
-        return requestMatches && (environmentMatches || isLegacy);
+        if (settings.filterResponsesByEnv) {
+          const activeEnvironmentId = meta ? meta.activeEnvironmentId : 'n/a';
+          const environmentMatches = response.environmentId === activeEnvironmentId;
+          return requestMatches && environmentMatches;
+        } else {
+          return requestMatches;
+        }
       })
       .sort((a, b) => (a.created > b.created ? -1 : 1));
   },

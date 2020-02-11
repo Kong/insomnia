@@ -578,7 +578,7 @@ function _genTestContext(requests, responses, extraInfoRoot) {
           },
         },
         response: {
-          getLatestForRequestId(requestId) {
+          getLatestForRequestId(requestId, environmentId) {
             return responses.find(r => r.parentId === requestId) || null;
           },
           getBodyBuffer(response) {

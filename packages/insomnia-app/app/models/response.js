@@ -53,7 +53,6 @@ export type Response = BaseModel & BaseResponse;
 
 export function init(): BaseResponse {
   return {
-    environmentId: '__LEGACY__',
     statusCode: 0,
     statusMessage: '',
     httpVersion: '',
@@ -72,6 +71,10 @@ export function init(): BaseResponse {
     // Things from the request
     settingStoreCookies: null,
     settingSendCookies: null,
+
+    // Responses sent before environment filtering will have a special value
+    // so they don't show up at all when filtering is on.
+    environmentId: '__LEGACY__',
   };
 }
 
@@ -86,9 +89,6 @@ export function hookDatabaseInit() {
   console.log('Init responses DB');
   process.nextTick(async () => {
     await models.response.cleanDeletedResponses();
-
-    // Can remove this after March 2020
-    await addLegacyEnvironmentId();
   });
 }
 
@@ -110,20 +110,21 @@ export async function all(): Promise<Array<Response>> {
 }
 
 export async function removeForRequest(parentId: string, environmentId?: string | null) {
-  const q: Object = {
+  const settings = await models.settings.getOrCreate();
+  const query: Object = {
     parentId,
   };
 
   // Only add if not undefined. null is not the same as undefined
   //  null: find responses sent from base environment
   //  undefined: find all responses
-  if (environmentId !== undefined) {
-    q.environmentId = environmentId;
+  if (environmentId !== undefined && settings.filterResponsesByEnv) {
+    query.environmentId = environmentId;
   }
 
   // Also delete legacy responses here or else the user will be confused as to
   // why some responses are still showing in the UI.
-  await db.removeWhere(type, { $or: [q, { parentId, environmentId: '__LEGACY__' }] });
+  await db.removeWhere(type, query);
 }
 
 export function remove(response: Response) {
@@ -135,24 +136,16 @@ async function _findRecentForRequest(
   environmentId: string | null,
   limit: number,
 ): Promise<Array<Response>> {
-  const q = {
+  const query = {
     parentId: requestId,
-    environmentId: environmentId,
   };
 
-  return db.findMostRecentlyModified(
-    type,
-    {
-      $or: [
-        q,
-        {
-          parentId: requestId,
-          environmentId: '__LEGACY__',
-        },
-      ],
-    },
-    limit,
-  );
+  // Filter responses by environment if setting is enabled
+  if ((await models.settings.getOrCreate()).filterResponsesByEnv) {
+    query.environmentId = environmentId;
+  }
+
+  return db.findMostRecentlyModified(type, query, limit);
 }
 
 export async function getLatestForRequest(
@@ -176,14 +169,21 @@ export async function create(patch: Object = {}, maxResponses: number = 20) {
   const requestVersion = request ? await models.requestVersion.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
 
+  // Filter responses by environment if setting is enabled
+  const query = { parentId };
+  if (
+    (await models.settings.getOrCreate()).filterResponsesByEnv &&
+    patch.hasOwnProperty('environmentId')
+  ) {
+    query.environmentId = patch.environmentId;
+  }
+
   // Delete all other responses before creating the new one
-  const allResponses = await db.findMostRecentlyModified(
-    type,
-    { parentId },
-    Math.max(1, maxResponses),
-  );
+  const allResponses = await db.findMostRecentlyModified(type, query, Math.max(1, maxResponses));
   const recentIds = allResponses.map(r => r._id);
-  await db.removeWhere(type, { parentId, _id: { $nin: recentIds } });
+
+  // Remove all that were in the last query, except the first `maxResponses` IDs
+  await db.removeWhere(type, { ...query, _id: { $nin: recentIds } });
 
   // Actually create the new response
   return db.docCreate(type, patch);
@@ -320,33 +320,6 @@ async function migrateTimelineToFileSystem(doc: Object) {
   } else {
     return doc;
   }
-}
-
-async function addLegacyEnvironmentId() {
-  const all = await db.all(type);
-
-  // Bail early if none yet. This is mostly here so tests don't
-  // get impacted
-  if (all.length === 0) {
-    return;
-  }
-
-  // We need to query on the __LEGACY__ value so we need
-  // to migrate it into the DB to make that possible. If we
-  // don't do that, it will exist on queried document by default
-  // but won't actually be in the DB.
-  const promises = [];
-  const flushId = await db.bufferChanges();
-  for (const doc of all) {
-    if (doc.environmentId !== '__LEGACY__') {
-      continue;
-    }
-
-    promises.push(db.docUpdate(doc));
-  }
-
-  await Promise.all(promises);
-  await db.flushChanges(flushId);
 }
 
 export async function cleanDeletedResponses() {
