@@ -6,7 +6,7 @@ import 'swagger-ui-react/swagger-ui.css';
 import { fuzzyMatch } from '../../../common/misc';
 import Highlight from '../base/highlight';
 import Notice from '../notice';
-import { Button, AppHeader } from 'insomnia-components';
+import { Button, AppHeader, CardContainer, Card } from 'insomnia-components';
 import KeydownBinder from '../keydown-binder';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -89,13 +89,19 @@ class DocumentListing extends React.PureComponent<Props, State> {
               </div>
               <Button>Add New</Button>
             </header>
-            <div className="dummy-cards">
+            <CardContainer>
               {filteredWorkspaces.map(w => (
-                <div className="dummy-card" key={w._id} onClick={() => handleSetActiveWorkspace(w._id)}>
-                  <Highlight search={filter} text={w.name} />
-                </div>
+                <Card
+                  key={w._id}
+                  docBranch="feat/small-changes"
+                  docLog="2 hours ago by gschier"
+                  docTitle={<Highlight search={filter} text={w.name} />}
+                  docVersion="v2.8.4"
+                  onClick={() => handleSetActiveWorkspace(w._id)}
+                  tagLabel="OAS 2.0"
+                />
               ))}
-            </div>
+            </CardContainer>
             {filteredWorkspaces.length === 0 && (
               <Notice color="subtle">No workspaces found for <strong>{filter}</strong></Notice>
             )}

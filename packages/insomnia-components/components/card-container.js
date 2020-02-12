@@ -5,7 +5,7 @@ import styled from 'styled-components';
 const Cards: React.ComponentType<{}> = styled.div`
   display: flex;
   flex-wrap: wrap;
-  padding:1.5em;
+  padding-top: var(--padding-lg);
 `;
 
 class CardContainer extends React.PureComponent<{}> {
