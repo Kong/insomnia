@@ -11,6 +11,7 @@ type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
   handleUpdateSettingsShowPasswords: boolean => Promise<Settings>,
+  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   onChange: (Request, RequestAuthentication) => Promise<Request>,
   request: Request,
@@ -44,6 +45,7 @@ class BasicAuth extends React.PureComponent<Props> {
       showPasswords,
       handleRender,
       handleGetRenderContext,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -71,6 +73,7 @@ class BasicAuth extends React.PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangeUsername}
                     defaultValue={authentication.username || ''}
+                    nunjucksLiveDisplayName={nunjucksLiveDisplayName}
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
@@ -95,6 +98,7 @@ class BasicAuth extends React.PureComponent<Props> {
                     id="password"
                     onChange={this._handleChangePassword}
                     defaultValue={authentication.password || ''}
+                    nunjucksLiveDisplayName={nunjucksLiveDisplayName}
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}

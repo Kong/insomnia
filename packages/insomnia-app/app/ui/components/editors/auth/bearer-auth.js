@@ -10,6 +10,7 @@ import type { Request, RequestAuthentication } from '../../../../models/request'
 type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
+  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   request: Request,
   onChange: (Request, RequestAuthentication) => Promise<Request>,
@@ -41,6 +42,7 @@ class BearerAuth extends React.PureComponent<Props> {
       request,
       handleRender,
       handleGetRenderContext,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -68,6 +70,7 @@ class BearerAuth extends React.PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangeToken}
                     defaultValue={authentication.token || ''}
+                    nunjucksLiveDisplayName={nunjucksLiveDisplayName}
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
@@ -96,6 +99,7 @@ class BearerAuth extends React.PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangePrefix}
                     defaultValue={authentication.prefix || ''}
+                    nunjucksLiveDisplayName={nunjucksLiveDisplayName}
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}

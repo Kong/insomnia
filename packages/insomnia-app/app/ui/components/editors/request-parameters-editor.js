@@ -12,6 +12,7 @@ type Props = {
   editorFontSize: number,
   editorIndentSize: number,
   editorLineWrapping: boolean,
+  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
   handleRender: Function,
@@ -84,6 +85,7 @@ class RequestParametersEditor extends React.PureComponent<Props> {
       editorLineWrapping,
       handleRender,
       handleGetRenderContext,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -92,6 +94,7 @@ class RequestParametersEditor extends React.PureComponent<Props> {
       <CodeEditor
         getRenderContext={handleGetRenderContext}
         render={handleRender}
+        nunjucksLiveDisplayName={nunjucksLiveDisplayName}
         nunjucksPowerUserMode={nunjucksPowerUserMode}
         isVariableUncovered={isVariableUncovered}
         fontSize={editorFontSize}
@@ -108,6 +111,7 @@ class RequestParametersEditor extends React.PureComponent<Props> {
         valuePlaceholder="value"
         descriptionPlaceholder="description"
         pairs={request.parameters}
+        nunjucksLiveDisplayName={nunjucksLiveDisplayName}
         nunjucksPowerUserMode={nunjucksPowerUserMode}
         isVariableUncovered={isVariableUncovered}
         handleRender={handleRender}

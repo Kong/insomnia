@@ -669,6 +669,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             getAutocompleteConstants={() => Object.keys(variableTypes || {})}
             lintOptions={{ variableToType: variableTypes }}
             noLint={!variableTypes}
+            nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             onChange={this._handleVariablesChange}

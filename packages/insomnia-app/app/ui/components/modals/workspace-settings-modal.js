@@ -21,6 +21,7 @@ type Props = {
   editorIndentSize: number,
   editorKeyMap: string,
   editorLineWrapping: boolean,
+  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
   handleRender: Function,
@@ -258,6 +259,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
       editorKeyMap,
       handleRender,
       handleGetRenderContext,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -311,6 +313,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
                   lineWrapping={editorLineWrapping}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
+                  nunjucksLiveDisplayName={nunjucksLiveDisplayName}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
                   defaultValue={workspace.description}

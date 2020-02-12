@@ -18,6 +18,7 @@ import type { Workspace } from '../../../models/workspace';
 type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
+  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
   workspace: Workspace,
@@ -186,6 +187,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     const {
       handleRender,
       handleGetRenderContext,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -203,6 +205,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
           <OneLineEditor
             render={handleRender}
             getRenderContext={handleGetRenderContext}
+            nunjucksLiveDisplayName={nunjucksLiveDisplayName}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             defaultValue={val || ''}

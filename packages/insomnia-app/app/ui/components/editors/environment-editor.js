@@ -17,6 +17,7 @@ type Props = {
   editorKeyMap: string,
   render: Function,
   getRenderContext: Function,
+  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
   lineWrapping: boolean,
@@ -100,6 +101,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
       editorKeyMap,
       render,
       getRenderContext,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
       lineWrapping,
@@ -125,6 +127,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           keyMap={editorKeyMap}
           onChange={this._handleChange}
           defaultValue={defaultValue}
+          nunjucksLiveDisplayName={nunjucksLiveDisplayName}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           render={render}

@@ -563,6 +563,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             ref={registerModal}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
@@ -579,6 +580,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             editorLineWrapping={settings.editorLineWrapping}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             workspaces={workspaces}
             isVariableUncovered={isVariableUncovered}
@@ -589,6 +591,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             <CookiesModal
               handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
               handleRender={handleRender}
+              nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               ref={registerModal}
               workspace={activeWorkspace}
@@ -600,6 +603,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           <CookieModifyModal
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             ref={registerModal}
             cookieJar={activeCookieJar}
@@ -627,6 +631,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             editorLineWrapping={settings.editorLineWrapping}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
             handleDuplicateWorkspace={handleDuplicateWorkspace}
@@ -677,6 +682,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             onChange={models.requestGroup.update}
             render={handleRender}
             getRenderContext={handleGetRenderContext}
+            nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
           />
@@ -718,6 +724,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
             render={handleRender}
             getRenderContext={handleGetRenderContext}
+            nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
           />
@@ -810,6 +817,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleUpdateDownloadPath={handleUpdateDownloadPath}
             headerEditorKey={headerEditorKey}
             isVariableUncovered={isVariableUncovered}
+            nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             oAuth2Token={oAuth2Token}
             request={activeRequest}

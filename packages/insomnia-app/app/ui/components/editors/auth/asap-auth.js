@@ -14,6 +14,7 @@ type Props = {
   request: Request,
   handleRender: Function,
   handleGetRenderContext: Function,
+  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
   onChange: (Request, RequestAuthentication) => Promise<Request>,
@@ -91,6 +92,7 @@ class AsapAuth extends React.PureComponent<Props> {
       handleRender,
       handleGetRenderContext,
       request,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -115,6 +117,7 @@ class AsapAuth extends React.PureComponent<Props> {
               mode={mode}
               onChange={onChange}
               defaultValue={authentication[property] || ''}
+              nunjucksLiveDisplayName={nunjucksLiveDisplayName}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               render={handleRender}
               getRenderContext={handleGetRenderContext}

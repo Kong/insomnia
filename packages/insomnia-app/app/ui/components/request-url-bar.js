@@ -30,6 +30,7 @@ type Props = {
   handleSendAndDownload: (filepath?: string) => Promise<void>,
   handleUpdateDownloadPath: Function,
   isVariableUncovered: boolean,
+  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   onMethodChange: (r: Request, method: string) => Promise<Request>,
   onUrlChange: (r: Request, url: string) => Promise<Request>,
@@ -335,6 +336,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     const {
       request,
       handleRender,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
       handleGetRenderContext,
@@ -361,6 +363,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
               forceEditor
               type="text"
               render={handleRender}
+              nunjucksLiveDisplayName={nunjucksLiveDisplayName}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={handleAutocompleteUrls}

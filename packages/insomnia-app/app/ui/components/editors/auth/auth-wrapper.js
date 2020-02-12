@@ -32,6 +32,7 @@ type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
   handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>,
+  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   onChange: (Request, RequestAuthentication) => Promise<Request>,
   request: Request,
@@ -50,6 +51,7 @@ class AuthWrapper extends React.PureComponent<Props> {
       request,
       handleRender,
       handleGetRenderContext,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       handleUpdateSettingsShowPasswords,
       onChange,
@@ -66,6 +68,7 @@ class AuthWrapper extends React.PureComponent<Props> {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
+          nunjucksLiveDisplayName={nunjucksLiveDisplayName}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -79,6 +82,7 @@ class AuthWrapper extends React.PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
+          nunjucksLiveDisplayName={nunjucksLiveDisplayName}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
@@ -92,6 +96,7 @@ class AuthWrapper extends React.PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
+          nunjucksLiveDisplayName={nunjucksLiveDisplayName}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
@@ -103,6 +108,7 @@ class AuthWrapper extends React.PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
+          nunjucksLiveDisplayName={nunjucksLiveDisplayName}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           showPasswords={showPasswords}
           onChange={onChange}
@@ -116,6 +122,7 @@ class AuthWrapper extends React.PureComponent<Props> {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
+          nunjucksLiveDisplayName={nunjucksLiveDisplayName}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -128,6 +135,7 @@ class AuthWrapper extends React.PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
+          nunjucksLiveDisplayName={nunjucksLiveDisplayName}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
@@ -141,6 +149,7 @@ class AuthWrapper extends React.PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
+          nunjucksLiveDisplayName={nunjucksLiveDisplayName}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
@@ -153,6 +162,7 @@ class AuthWrapper extends React.PureComponent<Props> {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
+          nunjucksLiveDisplayName={nunjucksLiveDisplayName}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -167,6 +177,7 @@ class AuthWrapper extends React.PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
+          nunjucksLiveDisplayName={nunjucksLiveDisplayName}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}

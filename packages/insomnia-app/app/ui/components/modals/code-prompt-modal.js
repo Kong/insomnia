@@ -90,6 +90,7 @@ class CodePromptModal extends PureComponent {
   render() {
     const {
       handleGetRenderContext,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
       handleRender,
@@ -128,6 +129,7 @@ class CodePromptModal extends PureComponent {
                 indentSize={editorIndentSize}
                 fontSize={editorFontSize}
                 lineWrapping={editorLineWrapping}
+                nunjucksLiveDisplayName={nunjucksLiveDisplayName}
                 nunjucksPowerUserMode={nunjucksPowerUserMode}
                 isVariableUncovered={isVariableUncovered}
               />
@@ -141,6 +143,7 @@ class CodePromptModal extends PureComponent {
                   defaultValue={defaultValue}
                   placeholder={placeholder}
                   onChange={this._handleChange}
+                  nunjucksLiveDisplayName={nunjucksLiveDisplayName}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
                   getRenderContext={enableRender ? handleGetRenderContext : null}
@@ -187,6 +190,7 @@ CodePromptModal.propTypes = {
   editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
+  nunjucksLiveDisplayName: PropTypes.bool.isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
   isVariableUncovered: PropTypes.bool.isRequired,
 

@@ -32,6 +32,7 @@ type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
   handleUpdateSettingsShowPasswords: boolean => Promise<Settings>,
+  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   onChange: (Request, RequestAuthentication) => Promise<Request>,
   request: Request,
@@ -246,6 +247,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       handleRender,
       handleGetRenderContext,
       request,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -271,6 +273,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
               onChange={onChange}
               defaultValue={request.authentication[property] || ''}
               render={handleRender}
+              nunjucksLiveDisplayName={nunjucksLiveDisplayName}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               getAutocompleteConstants={handleAutocomplete}
               getRenderContext={handleGetRenderContext}

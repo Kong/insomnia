@@ -10,6 +10,7 @@ import type { Settings } from '../../../../models/settings';
 
 type Props = {
   request: Request,
+  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   showPasswords: boolean,
   isVariableUncovered: boolean,
@@ -57,6 +58,7 @@ class AWSAuth extends React.PureComponent<Props> {
   renderRow(key: string, label: string, onChange: Function, help?: string) {
     const {
       request,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       handleRender,
       handleGetRenderContext,
@@ -80,6 +82,7 @@ class AWSAuth extends React.PureComponent<Props> {
               id={key}
               onChange={onChange}
               defaultValue={request.authentication[key] || ''}
+              nunjucksLiveDisplayName={nunjucksLiveDisplayName}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               render={handleRender}
               getRenderContext={handleGetRenderContext}

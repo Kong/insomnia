@@ -73,6 +73,7 @@ class EnvironmentEditModal extends PureComponent {
       lineWrapping,
       render,
       getRenderContext,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
       ...extraProps
@@ -100,6 +101,7 @@ class EnvironmentEditModal extends PureComponent {
             didChange={this._didChange}
             render={render}
             getRenderContext={getRenderContext}
+            nunjucksLiveDisplayName={nunjucksLiveDisplayName}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
           />
@@ -124,6 +126,7 @@ EnvironmentEditModal.propTypes = {
   editorKeyMap: PropTypes.string.isRequired,
   render: PropTypes.func.isRequired,
   getRenderContext: PropTypes.func.isRequired,
+  nunjucksLiveDisplayName: PropTypes.bool.isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
   isVariableUncovered: PropTypes.bool.isRequired,
   lineWrapping: PropTypes.bool.isRequired,

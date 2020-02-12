@@ -12,6 +12,7 @@ type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
   handleUpdateSettingsShowPasswords: boolean => Promise<Settings>,
+  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   onChange: (Request, RequestAuthentication) => Promise<Request>,
   request: Request,
@@ -44,6 +45,7 @@ class DigestAuth extends React.PureComponent<Props> {
       request,
       showPasswords,
       handleRender,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       handleGetRenderContext,
       isVariableUncovered,
@@ -72,6 +74,7 @@ class DigestAuth extends React.PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangeUsername}
                     defaultValue={authentication.username || ''}
+                    nunjucksLiveDisplayName={nunjucksLiveDisplayName}
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
@@ -96,6 +99,7 @@ class DigestAuth extends React.PureComponent<Props> {
                     id="password"
                     onChange={this._handleChangePassword}
                     defaultValue={authentication.password || ''}
+                    nunjucksLiveDisplayName={nunjucksLiveDisplayName}
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}

@@ -31,6 +31,7 @@ type Props = {
   lineWrapping: boolean,
   render: Function,
   getRenderContext: Function,
+  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
 };
@@ -386,6 +387,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       lineWrapping,
       render,
       getRenderContext,
+      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -518,6 +520,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                 didChange={this._didChange}
                 render={render}
                 getRenderContext={getRenderContext}
+                nunjucksLiveDisplayName={nunjucksLiveDisplayName}
                 nunjucksPowerUserMode={nunjucksPowerUserMode}
                 isVariableUncovered={isVariableUncovered}
               />

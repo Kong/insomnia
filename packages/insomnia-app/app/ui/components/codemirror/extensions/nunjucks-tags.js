@@ -9,6 +9,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
   handleRender,
   handleGetRenderContext,
   isVariableUncovered = false,
+  useLiveDisplayName,
 ) {
   if (!handleRender) {
     console.warn("enableNunjucksTags wasn't passed a render function");
@@ -20,6 +21,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
     handleRender,
     handleGetRenderContext,
     isVariableUncovered,
+    useLiveDisplayName,
   );
   const debouncedRefreshFn = misc.debounce(refreshFn);
 
@@ -41,7 +43,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
   refreshFn();
 });
 
-async function _highlightNunjucksTags(render, renderContext, isVariableUncovered) {
+async function _highlightNunjucksTags(render, renderContext, isVariableUncovered, useLiveDisplayName) {
   const renderCacheKey = Math.random() + '';
   const renderString = text => render(text, renderCacheKey);
   const activeMarks = [];
@@ -126,6 +128,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
           tok.string,
           renderContext,
           isVariableUncovered,
+          useLiveDisplayName,
         );
       })();
 
@@ -137,6 +140,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
           tok.string,
           renderContext,
           isVariableUncovered,
+          useLiveDisplayName,
         );
       });
 
@@ -232,7 +236,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
   }
 }
 
-async function _updateElementText(render, mark, text, renderContext, isVariableUncovered) {
+async function _updateElementText(render, mark, text, renderContext, isVariableUncovered, useLiveDisplayName) {
   const el = mark.replacedWith;
 
   let innerHTML = '';
@@ -255,16 +259,18 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
       const tagDefinition = (await getTagDefinitions()).find(d => d.name === tagData.name);
 
       if (tagDefinition) {
-        const liveDisplayName = tagDefinition.liveDisplayName(tagData.args);
+        const displayName = useLiveDisplayName
+          ? tagDefinition.liveDisplayName(tagData.args)
+          : tagDefinition.displayName;
         // Try rendering these so we can show errors if needed
         const firstArg = tagDefinition.args[0];
         if (firstArg && firstArg.type === 'enum') {
           const argData = tagData.args[0];
           const foundOption = firstArg.options.find(d => d.value === argData.value);
           const option = foundOption || firstArg.options[0];
-          innerHTML = `${liveDisplayName} &rArr; ${option.displayName}`;
+          innerHTML = `${displayName} &rArr; ${option.displayName}`;
         } else {
-          innerHTML = liveDisplayName || tagData.name;
+          innerHTML = displayName || tagData.name;
         }
         title = await render(text);
       } else {
