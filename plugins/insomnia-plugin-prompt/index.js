@@ -6,6 +6,11 @@ module.exports.templateTags = [
     name: 'prompt',
     description: 'prompt user for input',
     disablePreview: args => args[4] && args[4].value === true,
+    liveDisplayName(args) {
+      return (args[0].value && args[0].value.trim().length > 0)
+        ? `<em>${args[0].value}</em>`
+        : this.displayName;
+    },
     args: [
       {
         displayName: 'Title',
