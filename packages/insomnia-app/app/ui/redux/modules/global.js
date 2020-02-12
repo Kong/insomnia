@@ -103,7 +103,7 @@ export function newCommand(command, args) {
           title: 'Confirm Data Import',
           message: (
             <span>
-              Do you really want to import <code>{args.uri}</code>?
+              Do you really want to import <code>{args.name || args.uri}</code>?
             </span>
           ),
           addCancel: true,

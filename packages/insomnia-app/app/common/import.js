@@ -50,7 +50,8 @@ export async function importUri(
     const path = uri.replace(/^(file):\/\//, '');
     rawText = fs.readFileSync(path, 'utf8');
   } else {
-    throw new Error(`Invalid import URI ${uri}`);
+    // Treat everything else as raw text
+    rawText = decodeURIComponent(uri);
   }
 
   const result = await importRaw(getWorkspaceId, rawText);
