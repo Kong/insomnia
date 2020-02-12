@@ -1373,6 +1373,7 @@ function mapStateToProps(state, props) {
     activeWorkspace,
     activeWorkspaceClientCertificates,
     activeWorkspaceMeta,
+    apiSpecs,
     environments,
     gitRepositories,
     isLoading,

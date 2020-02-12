@@ -141,6 +141,7 @@ type Props = {
 
   // Properties
   activity: GlobalActivity,
+  apiSpecs: Array<ApiSpec>,
   loadStartTime: number,
   isLoading: boolean,
   paneWidth: number,
@@ -605,6 +606,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       activeResponse,
       activeWorkspace,
       activeWorkspaceClientCertificates,
+      apiSpecs,
       handleActivateRequest,
       handleCreateRequestForWorkspace,
       handleDuplicateWorkspace,
@@ -1060,9 +1062,11 @@ class Wrapper extends React.PureComponent<Props, State> {
               <DocumentListing
                 key={this.state.forceRefreshKey}
                 ref={this._setSpecEditorRef}
+                apiSpecs={apiSpecs}
                 workspaces={workspaces}
                 activeWorkspace={activeWorkspace}
                 handleSetActiveWorkspace={handleSetActiveWorkspace}
+                handleSetActiveActivity={handleSetActiveActivity}
               />
             </ErrorBoundary>
           )}

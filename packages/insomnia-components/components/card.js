@@ -4,7 +4,8 @@ import styled from 'styled-components';
 import SvgIcon from './svg-icon';
 
 type Props = {
-  onChange: (e: SyntheticEvent<>) => any,
+  onChange: (e: SyntheticEvent<HTMLInputElement>) => any,
+  onClick: (e: SyntheticEvent<HTMLDivElement>) => any,
   tagLabel: string,
   docTitle: string,
   docVersion: string,
@@ -27,13 +28,13 @@ const StyledCard: React.ComponentType<{}> = styled.div`
   flex-direction: column;
   flex-grow: 0;
   flex-shrink: 0;
-  margin: 0px var(--padding-md) var(--padding-md) 0px;
+  margin: 0 var(--padding-md) var(--padding-md) 0;
   color: var(--font-dark);
   border-radius: var(--radius-md);
 
   &:hover {
     border-color: var(--color-surprise);
-    box-shadow: var(--padding-sm) var(--padding-sm) calc(var(--padding-xl), * 1.5)
+    box-shadow: var(--padding-sm) var(--padding-sm) calc(var(--padding-xl) * 1.5)
       calc(0px - var(--padding-xl)) rgba(0, 0, 0, 0.2);
     cursor: pointer;
     .title {
@@ -54,7 +55,7 @@ const StyledCard: React.ComponentType<{}> = styled.div`
   }
 
   &.deselected {
-    background-color: none;
+    background-color: transparent;
     border: 1px solid var(--hl-sm);
     cursor: default;
     &:hover {
@@ -78,16 +79,16 @@ const CardHeader: React.ComponentType<{}> = styled.div`
 
   .card-badge {
     background-color: var(--hl-xs);
-    width: calc(var(--font-size-xl) * 2.4);
     border-top-right-radius: var(--radius-sm);
     border-bottom-right-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     padding-left: var(--padding-md);
+    padding-right: var(--padding-md);
   }
 
   .card-menu {
-    padding: 0px var(--padding-sm) 0px 0px;
+    padding: 0 var(--padding-sm) 0 0;
     display: flex;
     align-items: center;
     font-weight: 900;
@@ -119,8 +120,8 @@ const CardHeader: React.ComponentType<{}> = styled.div`
       &::after {
         position: absolute;
         content: '';
-        height: 0px;
-        width: 0px;
+        height: 0;
+        width: 0;
         border-radius: var(--radius-md);
         border: solid var(--color-font-info);
         border-width: 0 var(--padding-sm) var(--padding-sm) 0;
@@ -205,17 +206,17 @@ class Card extends React.PureComponent<Props, State> {
     selectable: false,
   };
 
-  _handleOnChange(e:SyntheticInputEvent<>) {
-    this.setState({selected: !this.state.selected});
+  _handleOnChange(e: SyntheticInputEvent<HTMLInputElement>) {
+    this.setState({ selected: !this.state.selected });
     if (this.props.onChange) {
       this.props.onChange(e);
     }
   }
 
   render() {
-    const { tagLabel, docTitle, docVersion, docBranch, docLog, selectable } = this.props;
+    const { tagLabel, docTitle, docVersion, docBranch, docLog, selectable, onClick } = this.props;
     return (
-      <StyledCard className={this.state.selected ? 'selected' : 'deselected'}>
+      <StyledCard className={this.state.selected ? 'selected' : 'deselected'} onClick={onClick}>
         <CardHeader>
           <div className="header-item card-badge">{tagLabel}</div>
           {selectable ? (
@@ -233,18 +234,18 @@ class Card extends React.PureComponent<Props, State> {
           )}
         </CardHeader>
         <CardBody>
-          <div className="title">{docTitle}</div>
-          <div className="version">{docVersion}</div>
+          {docTitle && <div className="title">{docTitle}</div>}
+          {docVersion && <div className="version">{docVersion}</div>}
         </CardBody>
         <CardFooter>
-          <span>
+          {docBranch && <span>
             <SvgIcon icon="github-logo" />
             <div className="icoLabel">{docBranch}</div>
-          </span>
-          <span>
+          </span>}
+          {docLog && <span>
             <SvgIcon icon="clock" />
             <div className="icoLabel">{docLog}</div>
-          </span>
+          </span>}
         </CardFooter>
       </StyledCard>
     );
