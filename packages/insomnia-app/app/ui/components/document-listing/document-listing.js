@@ -51,8 +51,8 @@ class DocumentListing extends React.PureComponent<Props, State> {
   _handleWorkspaceCreate() {
     showPrompt({
       title: 'New Document',
-      defaultValue: 'my-oas-spec.yaml',
       submitName: 'Create',
+      placeholder: 'spec-name.yaml',
       selectText: true,
       onComplete: async name => {
         const workspace = await models.workspace.create({
