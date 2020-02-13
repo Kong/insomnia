@@ -6,7 +6,7 @@ import 'swagger-ui-react/swagger-ui.css';
 import { fuzzyMatch } from '../../../common/misc';
 import Highlight from '../base/highlight';
 import Notice from '../notice';
-import { Button, AppHeader, CardContainer, Card } from 'insomnia-components';
+import { AppHeader, Button, Card, CardContainer } from 'insomnia-components';
 import KeydownBinder from '../keydown-binder';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -17,11 +17,13 @@ import type { ApiSpec } from '../../../models/api-spec';
 import YAML from 'yaml';
 import TimeFromNow from '../time-from-now';
 import type { GlobalActivity } from '../activity-bar/activity-bar';
+import type { WorkspaceMeta } from '../../../models/workspace-meta';
 
 type Props = {|
   activeWorkspace: Workspace,
   apiSpecs: Array<ApiSpec>,
   workspaces: Array<Workspace>,
+  workspaceMetas: Array<WorkspaceMeta>,
   handleSetActiveWorkspace: (workspaceId: string) => any,
   handleSetActiveActivity: (activity: GlobalActivity) => any,
 |};
@@ -48,12 +50,15 @@ class DocumentListing extends React.PureComponent<Props, State> {
 
   _handleWorkspaceCreate() {
     showPrompt({
-      title: 'Create New Workspace',
-      defaultValue: 'My Workspace',
+      title: 'New Document',
+      defaultValue: 'my-oas-spec.yaml',
       submitName: 'Create',
       selectText: true,
       onComplete: async name => {
-        const workspace = await models.workspace.create({ name });
+        const workspace = await models.workspace.create({
+          name,
+          scope: 'spec',
+        });
         this.props.handleSetActiveWorkspace(workspace._id);
 
         trackEvent('Workspace', 'Create');
@@ -95,7 +100,7 @@ class DocumentListing extends React.PureComponent<Props, State> {
   }
 
   renderWorkspace(w: Workspace) {
-    const { apiSpecs } = this.props;
+    const { apiSpecs, workspaceMetas } = this.props;
     const { filter } = this.state;
 
     const apiSpec = apiSpecs.find(s => s.parentId === w._id);
@@ -108,16 +113,55 @@ class DocumentListing extends React.PureComponent<Props, State> {
       // TODO: Check for parse errors if it's an invalid spec
     }
 
-    if (spec) {
+    // Get cached branch from WorkspaceMeta
+    const workspaceMeta = workspaceMetas.find(wm => wm.parentId === w._id);
+    const lastActiveBranch = workspaceMeta ? workspaceMeta.cachedGitRepositoryBranch : null;
+    const lastCommitAuthor = workspaceMeta ? workspaceMeta.cachedGitLastAuthor : null;
+    const lastCommitTime = workspaceMeta ? workspaceMeta.cachedGitLastCommitTime : null;
+
+    // WorkspaceMeta is a good proxy for last modified time
+    const workspaceModified = workspaceMeta ? workspaceMeta.modified : w.modified;
+    const modifiedLocally = apiSpec ? apiSpec.modified : workspaceModified;
+
+    let log = <TimeFromNow timestamp={modifiedLocally} />;
+    let branch = lastActiveBranch;
+    if (apiSpec && lastCommitTime && apiSpec.modified > lastCommitTime) {
+      // Show locally unsaved changes for spec
+      // NOTE: this doesn't work for non-spec workspaces
+      branch = lastActiveBranch + '*';
+      log = (
+        <React.Fragment>
+          <TimeFromNow timestamp={modifiedLocally} /> (unsaved)
+        </React.Fragment>
+      );
+    } else if (lastCommitTime) {
+      // Show last commit time and author
+      branch = lastActiveBranch;
+      log = (
+        <React.Fragment>
+          <TimeFromNow timestamp={lastCommitTime} /> by {lastCommitAuthor}
+        </React.Fragment>
+      );
+    }
+
+    if (spec || w.scope === 'spec') {
+      let label: string = 'Unknown';
+      if (spec && spec.openapi) {
+        label = `OpenAPI ${spec.openapi}`;
+      } else if (spec && spec.swagger) {
+        label = `OpenAPI ${spec.swagger}`;
+      }
+
+      const version = (spec && spec.info && spec.info.version) ? spec.info.version : null;
       return (
         <Card
           key={w._id}
-          docBranch="feat/dummy-example"
-          docLog={<TimeFromNow timestamp={apiSpec.modified} />}
+          docBranch={branch}
+          docLog={log}
           docTitle={<Highlight search={filter} text={w.name} />}
-          docVersion={spec.info.version}
+          docVersion={version}
           onClick={() => this._handleSetActiveWorkspace(w._id, 'spec')}
-          tagLabel={`OAS ${spec.openapi}`}
+          tagLabel={label}
         />
       );
     }
@@ -125,8 +169,8 @@ class DocumentListing extends React.PureComponent<Props, State> {
     return (
       <Card
         key={w._id}
-        docBranch=""
-        docLog={<TimeFromNow timestamp={w.modified} />}
+        docBranch={branch}
+        docLog={log}
         docTitle={<Highlight search={filter} text={w.name} />}
         docVersion=""
         onClick={() => this._handleSetActiveWorkspace(w._id, 'debug')}

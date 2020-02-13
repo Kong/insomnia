@@ -419,11 +419,12 @@ function generateRequestValidatorPlugin(obj, operation) {
 
     let bodySchema;
 
-    for (const item of content) {
-      if (item.mediatype !== 'application/json') {
-        throw new Error(`Body validation supports only 'application/json', not ${item.mediatype}`);
+    for (const mediatype of Object.keys(content)) {
+      if (mediatype !== 'application/json') {
+        throw new Error(`Body validation supports only 'application/json', not ${mediatype}`);
       }
 
+      const item = content[mediatype];
       bodySchema = JSON.stringify(item.schema);
     }
 
@@ -814,12 +815,13 @@ function generatePluginDocuments(api) {
       continue;
     }
 
+    const nameFromKey = key.replace('x-kong-plugin-', '');
     const pData = api[key];
     const p = {
       apiVersion: 'configuration.konghq.com/v1',
       kind: 'KongPlugin',
       metadata: {
-        name: `add-${pData.name}`
+        name: `add-${pData.name || nameFromKey}`
       },
       plugin: pData.name || key.replace('x-kong-plugin-', '')
     };

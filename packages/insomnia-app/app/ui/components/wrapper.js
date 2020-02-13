@@ -86,10 +86,10 @@ import SidebarFilter from './sidebar/sidebar-filter';
 import type { ApiSpec } from '../../models/api-spec';
 import GitVCS from '../../sync/git/git-vcs';
 import Onboarding from './onboarding';
-import { importRaw } from '../../common/import';
 import { trackPageView } from '../../common/analytics';
 import type { GitRepository } from '../../models/git-repository';
 import HelpLink from './help-link';
+import { clickLink } from '../../common/misc';
 
 type Props = {
   // Helper Functions
@@ -307,12 +307,12 @@ class Wrapper extends React.PureComponent<Props, State> {
         'Debugging this spec will overwrite all requests in the test activity.' +
         ' Do you want to proceed?',
       onConfirm: async () => {
-        const { activeWorkspace, activeApiSpec, handleSetActiveActivity } = this.props;
-        await importRaw(
-          () => Promise.resolve(activeWorkspace._id), // Always import into current workspace
-          activeApiSpec.contents,
+        const { activeWorkspace, activeApiSpec } = this.props;
+        const name = activeWorkspace.name;
+        clickLink('insomnia://app/import?' +
+          `name=${encodeURIComponent(name)}&` +
+          `uri=${encodeURIComponent(activeApiSpec.contents)}`,
         );
-        handleSetActiveActivity(ACTIVITY_DEBUG);
       },
     });
   }
@@ -655,6 +655,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       gitVCS,
       workspaceChildren,
       workspaces,
+      workspaceMetas,
       activeWorkspaceMeta,
     } = this.props;
 
@@ -1019,6 +1020,7 @@ class Wrapper extends React.PureComponent<Props, State> {
                   editorIndentSize={settings.editorIndentSize}
                   editorKeyMap={settings.editorKeyMap}
                   editorLineWrapping={settings.editorLineWrapping}
+                  environment={activeEnvironment}
                   filter={responseFilter}
                   filterHistory={responseFilterHistory}
                   handleDeleteResponse={this._handleDeleteResponse}
@@ -1063,6 +1065,7 @@ class Wrapper extends React.PureComponent<Props, State> {
                 key={this.state.forceRefreshKey}
                 ref={this._setSpecEditorRef}
                 apiSpecs={apiSpecs}
+                workspaceMetas={workspaceMetas}
                 workspaces={workspaces}
                 activeWorkspace={activeWorkspace}
                 handleSetActiveWorkspace={handleSetActiveWorkspace}

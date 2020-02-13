@@ -190,6 +190,9 @@ const CardFooter: React.ComponentType<{}> = styled.div`
     margin-bottom: var(--padding-xxs);
     padding-left: var(--padding-xs);
     font-size: var(--font-size-sm);
+    * {
+      display: inline;
+    }
   }
 
   span {

@@ -27,6 +27,9 @@ type BaseWorkspaceMeta = {
   kongPortalUrl: string,
   kongPortalUserWorkspace: string,
   gitRepositoryId: string | null,
+  cachedGitRepositoryBranch: string | null,
+  cachedGitLastAuthor: string | null,
+  cachedGitLastCommitTime: number | null,
 };
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
@@ -47,6 +50,9 @@ export function init(): BaseWorkspaceMeta {
     kongPortalUrl: '',
     kongPortalUserWorkspace: '',
     gitRepositoryId: null,
+    cachedGitRepositoryBranch: null,
+    cachedGitLastAuthor: null,
+    cachedGitLastCommitTime: null,
   };
 }
 

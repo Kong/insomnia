@@ -13,6 +13,7 @@ export const canSync = true;
 type BaseWorkspace = {
   name: string,
   description: string,
+  scope: 'spec' | 'debug' | null,
 };
 
 export type Workspace = BaseModel & BaseWorkspace;
@@ -21,6 +22,7 @@ export function init() {
   return {
     name: 'New Workspace',
     description: '',
+    scope: null,
   };
 }
 

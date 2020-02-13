@@ -1303,6 +1303,7 @@ function mapStateToProps(state, props) {
   const entitiesLists = selectEntitiesLists(state, props);
   const {
     workspaces,
+    workspaceMetas,
     environments,
     requests,
     requestGroups,
@@ -1399,6 +1400,7 @@ function mapStateToProps(state, props) {
     unseenWorkspaces,
     workspaceChildren,
     workspaces,
+    workspaceMetas,
   });
 }
 
