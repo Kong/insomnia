@@ -108,11 +108,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
           Headers for <code>{part.name}</code>
         </span>
       ),
-      body: (
-        <ResponseHeadersViewer
-          headers={[...part.headers, ...part.headers, ...part.headers, ...part.headers]}
-        />
-      ),
+      body: <ResponseHeadersViewer headers={[...part.headers]} />,
     });
   }
 
