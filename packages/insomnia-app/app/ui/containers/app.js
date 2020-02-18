@@ -1045,8 +1045,7 @@ class App extends PureComponent {
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
   }
 
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillUnmount() {
+  componentWillUnmount() {
     // Remove mouse and key handlers
     document.removeEventListener('mouseup', this._handleMouseUp);
     document.removeEventListener('mousemove', this._handleMouseMove);
