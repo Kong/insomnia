@@ -150,8 +150,7 @@ class Tooltip extends React.PureComponent<Props, State> {
     }
   }
 
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillUnmount() {
+  componentWillUnmount() {
     // Remove the element from the body
     if (this._bubble) {
       const el = ReactDOM.findDOMNode(this._bubble);
