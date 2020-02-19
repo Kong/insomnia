@@ -12,6 +12,7 @@ type Props = {
   docBranch: string,
   docLog: string,
   selectable: boolean,
+  docMenu: React.Node,
 };
 type State = {
   selected: boolean,
@@ -217,7 +218,7 @@ class Card extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { tagLabel, docTitle, docVersion, docBranch, docLog, selectable, onClick } = this.props;
+    const { tagLabel, docTitle, docVersion, docBranch, docLog, docMenu, selectable, onClick } = this.props;
     return (
       <StyledCard className={this.state.selected ? 'selected' : 'deselected'} onClick={onClick}>
         <CardHeader>
@@ -233,7 +234,9 @@ class Card extends React.PureComponent<Props, State> {
               </label>
             </div>
           ) : (
-            <div className="header-item card-menu">...</div>
+            <div className="header-item card-menu">
+            {docMenu}
+            </div>
           )}
         </CardHeader>
         <CardBody>

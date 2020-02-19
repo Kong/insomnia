@@ -16,6 +16,7 @@ export const _default = () => (
     docVersion={text('Version', 'v2.8.4')}
     docBranch={text('Branch', 'feat/small-changes')}
     docLog={text('Log', '2 hours ago by gschier')}
+    docMenu="..."
   />
 );
 
@@ -27,6 +28,7 @@ export const _selectable = () => (
     docVersion={text('Version', 'v2.8.4')}
     docBranch={text('Branch', 'feat/small-changes')}
     docLog={text('Log', '2 hours ago by gschier')}
+    docMenu="..."
     selectable
   />
 );

@@ -7,6 +7,7 @@ import { fuzzyMatch } from '../../../common/misc';
 import Highlight from '../base/highlight';
 import Notice from '../notice';
 import { AppHeader, Button, Card, CardContainer } from 'insomnia-components';
+import DocumentCardDropdown from '../dropdowns/document-card-dropdown';
 import KeydownBinder from '../keydown-binder';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -94,7 +95,6 @@ class DocumentListing extends React.PureComponent<Props, State> {
 
   _handleSetActiveWorkspace(id: string, activity: GlobalActivity) {
     const { handleSetActiveWorkspace, handleSetActiveActivity } = this.props;
-
     handleSetActiveActivity(activity);
     handleSetActiveWorkspace(id);
   }
@@ -162,6 +162,13 @@ class DocumentListing extends React.PureComponent<Props, State> {
           docVersion={version}
           onClick={() => this._handleSetActiveWorkspace(w._id, 'spec')}
           tagLabel={label}
+          docMenu={<DocumentCardDropdown
+          workspaceId={w._id}
+          handleDuplicateWorkspaceById={this.props.handleDuplicateWorkspaceById}
+          handleRenameWorkspaceById={this.props.handleRenameWorkspaceById}
+          handleDeleteWorkspaceById={this.props.handleDeleteWorkspaceById}
+          >...
+        </DocumentCardDropdown>}
         />
       );
     }
@@ -175,6 +182,13 @@ class DocumentListing extends React.PureComponent<Props, State> {
         docVersion=""
         onClick={() => this._handleSetActiveWorkspace(w._id, 'debug')}
         tagLabel="Insomnia"
+        docMenu={<DocumentCardDropdown
+          workspaceId={w._id}
+          handleDuplicateWorkspaceById={this.props.handleDuplicateWorkspaceById}
+          handleRenameWorkspaceById={this.props.handleRenameWorkspaceById}
+          handleDeleteWorkspaceById={this.props.handleDeleteWorkspaceById}
+          >...
+        </DocumentCardDropdown>}
       />
     );
   }

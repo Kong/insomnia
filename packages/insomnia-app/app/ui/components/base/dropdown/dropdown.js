@@ -204,7 +204,9 @@ class Dropdown extends PureComponent {
     }
   }
 
-  _handleClick() {
+  _handleClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
     this.toggle();
   }
 

@@ -352,8 +352,41 @@ class App extends PureComponent {
     });
   }
 
-  _workspaceDuplicate(callback) {
-    const workspace = this.props.activeWorkspace;
+  _workspaceRename(callback, workspaceId) {
+    let workspace = this.props.workspaces.find(w => w._id === workspaceId);
+
+    showPrompt({
+      title: 'Rename Workspace',
+      defaultValue: workspace.name,
+      submitName: 'Rename',
+      selectText: true,
+      label: 'Name',
+      onComplete: async name => {
+        await models.workspace.update(workspace, {'name': name});
+        callback();
+      },
+    });
+  }
+
+  _workspaceDeleteById(callback, workspaceId) {
+    let workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    showModal(AskModal, {
+          title: 'Delete Workspace',
+          message: `Do you really want to delete ${workspace.name}?`,
+          yesText: 'Yes',
+          noText: 'Cancel',
+          onDone: async isYes => {
+            if (!isYes) {
+              return;
+            }
+            await models.workspace.remove(workspace);
+          },
+        });
+  }
+
+  _workspaceDuplicateById(callback, workspaceId) {
+    let workspace = this.props.workspaces.find(w => w._id === workspaceId);
+
     showPrompt({
       title: 'Duplicate Workspace',
       defaultValue: workspace.name,
@@ -366,6 +399,10 @@ class App extends PureComponent {
         callback();
       },
     });
+  }
+
+  _workspaceDuplicate(callback) {
+    this._workspaceDuplicateById(callback, this.props.activeWorkspace._id);
   }
 
   async _fetchRenderContext() {
@@ -1235,6 +1272,9 @@ class App extends PureComponent {
               handleDuplicateRequestGroup={App._requestGroupDuplicate}
               handleMoveRequestGroup={App._requestGroupMove}
               handleDuplicateWorkspace={this._workspaceDuplicate}
+              handleDuplicateWorkspaceById={this._workspaceDuplicateById}
+              handleRenameWorkspace={this._workspaceRename}
+              handleDeleteWorkspaceById={this._workspaceDeleteById}
               handleCreateRequestGroup={this._requestGroupCreate}
               handleGenerateCode={App._handleGenerateCode}
               handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}

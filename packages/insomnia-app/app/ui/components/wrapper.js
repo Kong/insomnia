@@ -112,6 +112,9 @@ type Props = {
   handleDuplicateRequestGroup: Function,
   handleMoveRequestGroup: Function,
   handleDuplicateWorkspace: Function,
+  handleDuplicateWorkspaceById: Function,
+  handleRenameWorkspace: Function,
+  handleDeleteWorkspaceById: Function,
   handleCreateRequestGroup: Function,
   handleGenerateCodeForActiveRequest: Function,
   handleGenerateCode: Function,
@@ -610,6 +613,9 @@ class Wrapper extends React.PureComponent<Props, State> {
       handleActivateRequest,
       handleCreateRequestForWorkspace,
       handleDuplicateWorkspace,
+      handleDuplicateWorkspaceById,
+      handleRenameWorkspace,
+      handleDeleteWorkspaceById,
       handleExportFile,
       handleExportRequestsToFile,
       handleGenerateCodeForActiveRequest,
@@ -1070,6 +1076,9 @@ class Wrapper extends React.PureComponent<Props, State> {
                 activeWorkspace={activeWorkspace}
                 handleSetActiveWorkspace={handleSetActiveWorkspace}
                 handleSetActiveActivity={handleSetActiveActivity}
+                handleDuplicateWorkspaceById={handleDuplicateWorkspaceById}
+                handleRenameWorkspace={handleRenameWorkspace}
+                handleDeleteWorkspaceById={handleDeleteWorkspaceById}
               />
             </ErrorBoundary>
           )}
