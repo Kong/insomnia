@@ -6,7 +6,7 @@ import { Dropdown, DropdownButton, DropdownItem, DropdownDivider } from '../base
 type Props = {
   children: ?React.Node,
   handleDuplicateWorkspaceById: Function,
-  handleRenameWorkspaceById: Function,
+  handleRenameWorkspace: Function,
   handleDeleteWorkspaceById: Function,
   className?: string,
 };

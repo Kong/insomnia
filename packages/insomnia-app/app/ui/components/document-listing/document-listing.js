@@ -165,7 +165,7 @@ class DocumentListing extends React.PureComponent<Props, State> {
           docMenu={<DocumentCardDropdown
           workspaceId={w._id}
           handleDuplicateWorkspaceById={this.props.handleDuplicateWorkspaceById}
-          handleRenameWorkspaceById={this.props.handleRenameWorkspaceById}
+          handleRenameWorkspace={this.props.handleRenameWorkspace}
           handleDeleteWorkspaceById={this.props.handleDeleteWorkspaceById}
           >...
         </DocumentCardDropdown>}
@@ -185,7 +185,7 @@ class DocumentListing extends React.PureComponent<Props, State> {
         docMenu={<DocumentCardDropdown
           workspaceId={w._id}
           handleDuplicateWorkspaceById={this.props.handleDuplicateWorkspaceById}
-          handleRenameWorkspaceById={this.props.handleRenameWorkspaceById}
+          handleRenameWorkspace={this.props.handleRenameWorkspace}
           handleDeleteWorkspaceById={this.props.handleDeleteWorkspaceById}
           >...
         </DocumentCardDropdown>}
