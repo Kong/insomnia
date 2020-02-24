@@ -140,7 +140,6 @@ class BodyEditor extends React.PureComponent<Props> {
           onChange={this._handleFormUrlEncodedChange}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
-          nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           parameters={request.body.params || []}
@@ -153,7 +152,6 @@ class BodyEditor extends React.PureComponent<Props> {
           onChange={this._handleFormChange}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
-          nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           parameters={request.body.params || []}
@@ -173,7 +171,6 @@ class BodyEditor extends React.PureComponent<Props> {
           settings={settings}
           environmentId={environmentId}
           getRenderContext={handleGetRenderContext}
-          nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           onChange={this._handleGraphQLChange}
@@ -193,7 +190,6 @@ class BodyEditor extends React.PureComponent<Props> {
           content={request.body.text || ''}
           render={handleRender}
           getRenderContext={handleGetRenderContext}
-          nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           onChange={this._handleRawChange}

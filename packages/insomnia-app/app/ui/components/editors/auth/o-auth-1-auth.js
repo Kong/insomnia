@@ -18,7 +18,6 @@ import Button from '../../base/button';
 type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
-  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   showPasswords: boolean,
   isVariableUncovered: boolean,
@@ -196,7 +195,6 @@ class OAuth1Auth extends React.PureComponent<Props> {
       handleRender,
       handleGetRenderContext,
       request,
-      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -222,7 +220,6 @@ class OAuth1Auth extends React.PureComponent<Props> {
               onChange={onChange}
               defaultValue={request.authentication[property] || ''}
               render={handleRender}
-              nunjucksLiveDisplayName={nunjucksLiveDisplayName}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               getAutocompleteConstants={handleAutocomplete}
               getRenderContext={handleGetRenderContext}

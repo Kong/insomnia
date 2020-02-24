@@ -362,7 +362,6 @@ class Editor extends PureComponent {
       descriptionPlaceholder,
       handleRender,
       handleGetRenderContext,
-      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
       handleGetAutocompleteNameConstants,
@@ -401,7 +400,6 @@ class Editor extends PureComponent {
               onBlurValue={this._handleBlurValue}
               onBlurDescription={this._handleBlurDescription}
               onMove={this._handleMove}
-              nunjucksLiveDisplayName={nunjucksLiveDisplayName}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
               handleRender={handleRender}
@@ -462,7 +460,6 @@ Editor.propTypes = {
   // Optional
   handleRender: PropTypes.func,
   handleGetRenderContext: PropTypes.func,
-  nunjucksLiveDisplayName: PropTypes.bool,
   nunjucksPowerUserMode: PropTypes.bool,
   isVariableUncovered: PropTypes.bool,
   handleGetAutocompleteNameConstants: PropTypes.func,

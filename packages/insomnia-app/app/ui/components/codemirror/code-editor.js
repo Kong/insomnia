@@ -371,7 +371,6 @@ class CodeEditor extends React.Component {
           this.props.render,
           this.props.getRenderContext,
           this.props.isVariableUncovered,
-          this.props.nunjucksLiveDisplayName,
         );
       }
 
@@ -997,7 +996,6 @@ CodeEditor.propTypes = {
   onPaste: PropTypes.func,
   onCodeMirrorInit: PropTypes.func,
   render: PropTypes.func,
-  nunjucksLiveDisplayName: PropTypes.bool,
   nunjucksPowerUserMode: PropTypes.bool,
   getRenderContext: PropTypes.func,
   getAutocompleteConstants: PropTypes.func,

@@ -264,7 +264,6 @@ class RequestPane extends React.PureComponent<Props> {
               handleSend={handleSend}
               handleSendAndDownload={handleSendAndDownload}
               handleRender={handleRender}
-              nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
               handleGetRenderContext={handleGetRenderContext}
@@ -334,7 +333,6 @@ class RequestPane extends React.PureComponent<Props> {
               settings={settings}
               onChange={updateRequestBody}
               onChangeHeaders={forceUpdateRequestHeaders}
-              nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
             />
@@ -349,7 +347,6 @@ class RequestPane extends React.PureComponent<Props> {
                   handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
-                  nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
                   nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
                   onChange={updateRequestAuthentication}
@@ -376,7 +373,6 @@ class RequestPane extends React.PureComponent<Props> {
                   key={headerEditorKey}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
-                  nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
                   nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
                   editorFontSize={settings.editorFontSize}
@@ -408,7 +404,6 @@ class RequestPane extends React.PureComponent<Props> {
                 key={headerEditorKey}
                 handleRender={handleRender}
                 handleGetRenderContext={handleGetRenderContext}
-                nunjucksLiveDisplayName={settings.nunjucksLiveDisplayName}
                 nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                 isVariableUncovered={isVariableUncovered}
                 editorFontSize={settings.editorFontSize}

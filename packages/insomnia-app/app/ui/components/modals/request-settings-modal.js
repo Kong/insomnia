@@ -17,7 +17,6 @@ type Props = {
   editorIndentSize: number,
   editorKeyMap: string,
   editorLineWrapping: boolean,
-  nunjucksLiveDisplayName: boolean,
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
   handleRender: Function,
@@ -223,7 +222,6 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       editorKeyMap,
       handleRender,
       handleGetRenderContext,
-      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
       workspaces,
@@ -265,7 +263,6 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
             lineWrapping={editorLineWrapping}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
-            nunjucksLiveDisplayName={nunjucksLiveDisplayName}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             defaultValue={request.description}

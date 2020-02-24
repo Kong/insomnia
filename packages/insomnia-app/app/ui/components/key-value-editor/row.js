@@ -201,7 +201,6 @@ class KeyValueEditorRow extends PureComponent {
       pair,
       handleRender,
       handleGetRenderContext,
-      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -226,7 +225,6 @@ class KeyValueEditorRow extends PureComponent {
           onFocus={this._handleFocusDescription}
           render={handleRender}
           getRenderContext={handleGetRenderContext}
-          nunjucksLiveDisplayName={nunjucksLiveDisplayName}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
         />
@@ -243,7 +241,6 @@ class KeyValueEditorRow extends PureComponent {
       valuePlaceholder,
       handleRender,
       handleGetRenderContext,
-      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -285,7 +282,6 @@ class KeyValueEditorRow extends PureComponent {
           onFocus={this._handleFocusValue}
           render={handleRender}
           getRenderContext={handleGetRenderContext}
-          nunjucksLiveDisplayName={nunjucksLiveDisplayName}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           getAutocompleteConstants={this._handleAutocompleteValues}
@@ -346,7 +342,6 @@ class KeyValueEditorRow extends PureComponent {
       namePlaceholder,
       handleRender,
       handleGetRenderContext,
-      nunjucksLiveDisplayName,
       nunjucksPowerUserMode,
       isVariableUncovered,
       sortable,
@@ -401,7 +396,6 @@ class KeyValueEditorRow extends PureComponent {
               defaultValue={pair.name}
               render={handleRender}
               getRenderContext={handleGetRenderContext}
-              nunjucksLiveDisplayName={nunjucksLiveDisplayName}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={this._handleAutocompleteNames}
@@ -495,7 +489,6 @@ KeyValueEditorRow.propTypes = {
   onBlurDescription: PropTypes.func,
   handleRender: PropTypes.func,
   handleGetRenderContext: PropTypes.func,
-  nunjucksLiveDisplayName: PropTypes.bool,
   nunjucksPowerUserMode: PropTypes.bool,
   isVariableUncovered: PropTypes.bool,
   handleGetAutocompleteNameConstants: PropTypes.func,
