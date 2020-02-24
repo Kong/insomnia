@@ -255,16 +255,18 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
       const tagDefinition = (await getTagDefinitions()).find(d => d.name === tagData.name);
 
       if (tagDefinition) {
-        const liveDisplayName = tagDefinition.liveDisplayName(tagData.args);
         // Try rendering these so we can show errors if needed
+        const liveDisplayName = tagDefinition.liveDisplayName(tagData.args);
         const firstArg = tagDefinition.args[0];
-        if (firstArg && firstArg.type === 'enum') {
+        if (liveDisplayName) {
+          innerHTML = liveDisplayName;
+        } else if (firstArg && firstArg.type === 'enum') {
           const argData = tagData.args[0];
           const foundOption = firstArg.options.find(d => d.value === argData.value);
           const option = foundOption || firstArg.options[0];
-          innerHTML = `${liveDisplayName} &rArr; ${option.displayName}`;
+          innerHTML = `${tagDefinition.displayName} &rArr; ${option.displayName}`;
         } else {
-          innerHTML = liveDisplayName || tagData.name;
+          innerHTML = tagDefinition.displayName || tagData.name;
         }
         title = await render(text);
       } else {
