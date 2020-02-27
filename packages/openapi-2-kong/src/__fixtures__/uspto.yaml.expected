@@ -3,6 +3,7 @@
     {
       "url": "https://developer.uspto.gov/ds-api",
       "name": "USPTO_Data_Set_API",
+      "plugins": [],
       "routes": [
         {
           "methods": ["GET"],

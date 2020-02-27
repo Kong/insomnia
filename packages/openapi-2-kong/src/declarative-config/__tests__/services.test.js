@@ -31,6 +31,7 @@ describe('services', () => {
         {
           name: 'My_API',
           url: 'https://server1.com/path',
+          plugins: [],
           tags: ['Tag'],
           routes: [
             {
@@ -87,23 +88,28 @@ describe('services', () => {
       const api: OpenApi3Spec = await parseSpec({
         openapi: '3.0',
         info: { version: '1.0', title: 'My API' },
-        servers: [{
-          url: 'https://{customerId}.saas-app.com:{port}/v2',
-          variables: {
-            customerId: { default: 'demo' },
-            port: { enum: ['443', '8443'], default: '8443' },
+        servers: [
+          {
+            url: 'https://{customerId}.saas-app.com:{port}/v2',
+            variables: {
+              customerId: { default: 'demo' },
+              port: { enum: ['443', '8443'], default: '8443' },
+            },
           },
-        }],
+        ],
         paths: {},
       });
 
       const result = await generateServices(api, []);
-      expect(result).toEqual([{
-        name: 'My_API',
-        url: 'https://demo.saas-app.com:8443/v2',
-        routes: [],
-        tags: [],
-      }]);
+      expect(result).toEqual([
+        {
+          name: 'My_API',
+          url: 'https://demo.saas-app.com:8443/v2',
+          plugins: [],
+          routes: [],
+          tags: [],
+        },
+      ]);
     });
   });
 });

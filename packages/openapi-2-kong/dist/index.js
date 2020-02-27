@@ -352,35 +352,50 @@ function generateSecurityPlugin(scheme, args) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.isPluginKey = isPluginKey;
+exports.isRequestValidatorPluginKey = isRequestValidatorPluginKey;
+exports.getPluginNameFromKey = getPluginNameFromKey;
 exports.generatePlugins = generatePlugins;
 exports.generatePlugin = generatePlugin;
 exports.generateRequestValidatorPlugin = generateRequestValidatorPlugin;
+exports.generateServerPlugins = generateServerPlugins;
+exports.generateServerPlugin = generateServerPlugin;
+exports.generateOperationPlugins = generateOperationPlugins;
+exports.generateOperationPlugin = generateOperationPlugin;
 
-function generatePlugins(operation) {
+function isPluginKey(key) {
+  return key.indexOf('x-kong-plugin-') === 0;
+}
+
+function isRequestValidatorPluginKey(key) {
+  return key.match(/-request-validator$/) != null;
+}
+
+function getPluginNameFromKey(key) {
+  return key.replace(/^x-kong-plugin-/, '');
+}
+
+function generatePlugins(iterable, generator) {
   const plugins = [];
 
-  for (const key of Object.keys(operation)) {
-    if (key.indexOf('x-kong-plugin-') !== 0) {
+  for (const key of Object.keys(iterable)) {
+    if (!isPluginKey(key)) {
       continue;
     }
 
-    plugins.push(generatePlugin(key, operation[key], operation));
+    plugins.push(generator(key, iterable[key], iterable));
   }
 
   return plugins;
 }
 
-function generatePlugin(key, obj, operation) {
-  if (key.match(/-request-validator$/)) {
-    return generateRequestValidatorPlugin(obj, operation);
-  }
-
+function generatePlugin(key, value) {
   const plugin = {
-    name: obj.name || key.replace(/^x-kong-plugin-/, '')
+    name: value.name || getPluginNameFromKey(key)
   };
 
-  if (obj.config) {
-    plugin.config = obj.config;
+  if (value.config) {
+    plugin.config = value.config;
   }
 
   return plugin;
@@ -439,6 +454,26 @@ function generateRequestValidatorPlugin(obj, operation) {
     name: 'request-validator'
   };
 }
+
+function generateServerPlugins(server) {
+  return generatePlugins(server, generateServerPlugin);
+}
+
+function generateServerPlugin(key, value, server) {
+  return generatePlugin(key, value);
+}
+
+function generateOperationPlugins(operation) {
+  return generatePlugins(operation, generateOperationPlugin);
+}
+
+function generateOperationPlugin(key, value, operation) {
+  if (isRequestValidatorPluginKey(key)) {
+    return generateRequestValidatorPlugin(value, operation);
+  }
+
+  return generatePlugin(key, value);
+}
 },{}],"dztZ":[function(require,module,exports) {
 "use strict";
 
@@ -473,6 +508,7 @@ function generateService(server, api, tags) {
   const service = {
     name,
     url: serverUrl,
+    plugins: (0, _plugins.generateServerPlugins)(server),
     routes: [],
     tags
   };
@@ -502,7 +538,7 @@ function generateService(server, api, tags) {
       }; // Generate generic and security-related plugin objects
 
       const securityPlugins = (0, _securityPlugins.generateSecurityPlugins)(operation, api);
-      const regularPlugins = (0, _plugins.generatePlugins)(operation);
+      const regularPlugins = (0, _plugins.generateOperationPlugins)(operation);
       const plugins = [...regularPlugins, ...securityPlugins]; // Add plugins if there are any
 
       if (plugins.length) {

@@ -3,6 +3,7 @@
     {
       "url": "http://petstore.swagger.io/api",
       "name": "Swagger_Petstore",
+      "plugins": [],
       "routes": [
         {
           "methods": ["GET"],

@@ -1,29 +1,39 @@
 // @flow
 
-export function generatePlugins(operation: OA3Operation): Array<DCPlugin> {
+export function isPluginKey(key: String): Boolean {
+  return key.indexOf('x-kong-plugin-') === 0;
+}
+
+export function isRequestValidatorPluginKey(key: String): Boolean {
+  return key.match(/-request-validator$/) != null;
+}
+
+export function getPluginNameFromKey(key: String): String {
+  return key.replace(/^x-kong-plugin-/, '');
+}
+
+type GeneratorFn = (key: string, value: Object, iterable: Object | Array) => DCPlugin;
+
+export function generatePlugins(iterable: Array, generator: GeneratorFn): Array<DCPlugin> {
   const plugins: Array<DCPlugin> = [];
-  for (const key of Object.keys(operation)) {
-    if (key.indexOf('x-kong-plugin-') !== 0) {
+  for (const key of Object.keys(iterable)) {
+    if (!isPluginKey(key)) {
       continue;
     }
 
-    plugins.push(generatePlugin(key, operation[key], operation));
+    plugins.push(generator(key, iterable[key], iterable));
   }
 
   return plugins;
 }
 
-export function generatePlugin(key: string, obj: Object, operation: OA3Operation): DCPlugin {
-  if (key.match(/-request-validator$/)) {
-    return generateRequestValidatorPlugin(obj, operation);
-  }
-
+export function generatePlugin(key: string, value: Object): DCPlugin {
   const plugin: DCPlugin = {
-    name: obj.name || key.replace(/^x-kong-plugin-/, ''),
+    name: value.name || getPluginNameFromKey(key),
   };
 
-  if (obj.config) {
-    plugin.config = obj.config;
+  if (value.config) {
+    plugin.config = value.config;
   }
 
   return plugin;
@@ -77,4 +87,28 @@ export function generateRequestValidatorPlugin(obj: Object, operation: OA3Operat
     enabled: true,
     name: 'request-validator',
   };
+}
+
+export function generateServerPlugins(server: OA3Server): Array<DCPlugin> {
+  return generatePlugins(server, generateServerPlugin);
+}
+
+export function generateServerPlugin(key: string, value: Object, server: OA3Server): DCPlugin {
+  return generatePlugin(key, value);
+}
+
+export function generateOperationPlugins(operation: OA3Operation): Array<DCPlugin> {
+  return generatePlugins(operation, generateOperationPlugin);
+}
+
+export function generateOperationPlugin(
+  key: string,
+  value: Object,
+  operation: OA3Operation,
+): DCPlugin {
+  if (isRequestValidatorPluginKey(key)) {
+    return generateRequestValidatorPlugin(value, operation);
+  }
+
+  return generatePlugin(key, value);
 }

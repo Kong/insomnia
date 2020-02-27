@@ -3,6 +3,7 @@
     {
       "url":"https://httpbin.org",
       "name": "httpbin",
+      "plugins": [],
       "routes": [
         {
           "methods": ["GET"],

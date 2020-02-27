@@ -3,6 +3,7 @@
     {
       "url":"http://backend.com/path",
       "name": "Callback_Example",
+      "plugins": [],
       "routes": [
         {
           "methods": ["POST"],

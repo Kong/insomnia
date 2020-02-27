@@ -9,7 +9,7 @@ import {
 } from '../common';
 
 import { generateSecurityPlugins } from './security-plugins';
-import { generatePlugins } from './plugins';
+import { generateOperationPlugins, generateServerPlugins } from './plugins';
 
 export function generateServices(api: OpenApi3Spec, tags: Array<string>): Array<DCService> {
   const servers = getAllServers(api);
@@ -33,6 +33,7 @@ export function generateService(
   const service: DCService = {
     name,
     url: serverUrl,
+    plugins: generateServerPlugins(server),
     routes: [],
     tags,
   };
@@ -73,7 +74,7 @@ export function generateService(
 
       // Generate generic and security-related plugin objects
       const securityPlugins = generateSecurityPlugins(operation, api);
-      const regularPlugins = generatePlugins(operation);
+      const regularPlugins = generateOperationPlugins(operation);
       const plugins = [...regularPlugins, ...securityPlugins];
 
       // Add plugins if there are any

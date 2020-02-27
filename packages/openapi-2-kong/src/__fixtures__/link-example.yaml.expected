@@ -3,6 +3,7 @@
     {
       "url":"http://backend.com/path",
       "name": "Link_Example",
+      "plugins": [],
       "routes": [
         {
           "methods": ["GET"],
