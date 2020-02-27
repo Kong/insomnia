@@ -130,11 +130,15 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
   render() {
     const {
+      gitSyncDropdown,
+      wrapperProps,
+    } = this.props;
+
+    const {
       activeApiSpec,
       activeWorkspace,
-      gitSyncDropdown,
       settings,
-    } = this.props.wrapperProps;
+    } = wrapperProps;
 
     const {
       lintMessages,
@@ -159,7 +163,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             menu={(
               <React.Fragment>
                 <button className="btn btn--clicky-small" onClick={this._handleDebugSpec}>
-                  Design <i className="fa fa-toggle-off"/> Test
+                  Design <i className="fa fa-toggle-off" /> Test
                 </button>
                 <button className="btn btn--clicky-small" onClick={this._handleTogglePreview}>
                   {previewActive ? 'Hide Preview' : 'Show Preview'}

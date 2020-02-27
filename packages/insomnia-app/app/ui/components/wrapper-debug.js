@@ -13,9 +13,8 @@ import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 
 type Props = {
-  wrapperProps: WrapperProps,
-  gitSyncDropdown: React.Node,
   forceRefreshKey: string,
+  gitSyncDropdown: React.Node,
   handleChangeEnvironment: Function,
   handleDeleteResponse: Function,
   handleDeleteResponses: Function,
@@ -24,6 +23,8 @@ type Props = {
   handleForceUpdateRequestHeaders: Function,
   handleImport: Function,
   handleImportFile: Function,
+  handleRequestCreate: Function,
+  handleRequestGroupCreate: Function,
   handleSendAndDownloadRequestWithActiveEnvironment: Function,
   handleSendRequestWithActiveEnvironment: Function,
   handleSetActiveResponse: Function,
@@ -39,6 +40,7 @@ type Props = {
   handleUpdateRequestUrl: Function,
   handleUpdateSettingsShowPasswords: Function,
   handleUpdateSettingsUseBulkHeaderEditor: Function,
+  wrapperProps: WrapperProps,
 };
 
 @autobind
@@ -65,6 +67,8 @@ class WrapperDebug extends React.PureComponent<Props> {
       handleForceUpdateRequestHeaders,
       handleImport,
       handleImportFile,
+      handleRequestCreate,
+      handleRequestGroupCreate,
       handleSendAndDownloadRequestWithActiveEnvironment,
       handleSendRequestWithActiveEnvironment,
       handleSetActiveResponse,
@@ -169,8 +173,8 @@ class WrapperDebug extends React.PureComponent<Props> {
             <SidebarFilter
               key={`${activeWorkspace._id}::filter`}
               onChange={handleSetSidebarFilter}
-              requestCreate={this._handleCreateRequestInWorkspace}
-              requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
+              requestCreate={handleRequestCreate}
+              requestGroupCreate={handleRequestGroupCreate}
               filter={sidebarFilter || ''}
               hotKeyRegistry={settings.hotKeyRegistry}
             />

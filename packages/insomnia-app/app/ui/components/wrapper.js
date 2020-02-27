@@ -877,6 +877,8 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
             handleImport={this._handleImport}
             handleImportFile={this._handleImportFile}
+            handleRequestCreate={this._handleCreateRequestInWorkspace}
+            handleRequestGroupCreate={this._handleCreateRequestGroupInWorkspace}
             handleSendAndDownloadRequestWithActiveEnvironment={this._handleSendAndDownloadRequestWithActiveEnvironment}
             handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
             handleSetActiveResponse={this._handleSetActiveResponse}
