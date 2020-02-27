@@ -4,6 +4,13 @@ import GravatarImg from './gravatar-img';
 import styled from 'styled-components';
 import Breadcrumb from './breadcrumb';
 
+type Props = {
+  className: string,
+  onBreadcrumb: (index: number) => any,
+  breadcrumbs: Array<String>,
+  menu?: React.Node,
+};
+
 const StyledAppHeader: React.ComponentType<{}> = styled.div`
   display:flex;
   justify-content: space-between;
@@ -12,23 +19,27 @@ const StyledAppHeader: React.ComponentType<{}> = styled.div`
 `;
 
 const StyledMenu: React.ComponentType<{}> = styled.div`
-    color: var(--hl-xl);
+    color: var(--hl);
     display:flex;
     align-items: center;
+    & > * {
+      margin-left: var(--padding-xs);
+    }
 `;
 
-class AppHeader extends React.PureComponent<{}> {
+class AppHeader extends React.PureComponent<Props> {
   render() {
+    const { className, menu, breadcrumbs, onBreadcrumb } = this.props;
     return (
-      <StyledAppHeader>
+      <StyledAppHeader className={className}>
         <GravatarImg
           className="gravatar"
           rounded
           email="support@insomnia.rest"
           size={24}
         />
-        <Breadcrumb crumbs={['Documents', 'Deployment']} />
-        <StyledMenu>Menu FPO</StyledMenu>
+        <Breadcrumb crumbs={breadcrumbs} onClick={onBreadcrumb} />
+        {menu && <StyledMenu>{menu}</StyledMenu>}
       </StyledAppHeader>
     );
   }

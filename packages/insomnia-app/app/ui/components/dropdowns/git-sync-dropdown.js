@@ -27,6 +27,7 @@ type Props = {|
 
   // Optional
   className?: string,
+  renderDropdownButton?: (children: React.Node) => React.Node,
 |};
 
 type State = {|
@@ -211,23 +212,29 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
   renderButton() {
     const { branch } = this.state;
-    const { vcs } = this.props;
+    const { vcs, renderDropdownButton } = this.props;
+
+    let renderBtn = renderDropdownButton || (children => (
+      <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
+        {children}
+      </DropdownButton>
+    ));
 
     if (!vcs.isInitialized()) {
-      return (
-        <DropdownButton className="btn btn--compact wide">
+      return renderBtn(
+        <React.Fragment>
           <i className="fa fa-code-fork space-right" />
           Setup Git Sync
-        </DropdownButton>
+        </React.Fragment>
       );
     }
 
     const initializing = false;
-    return (
-      <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
+    return renderBtn(
+      <React.Fragment>
         <div className="ellipsis">{initializing ? 'Initializing...' : branch}</div>
         <i className="fa fa-code-fork space-left" />
-      </DropdownButton>
+      </React.Fragment>
     );
   }
 

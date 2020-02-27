@@ -18,13 +18,13 @@
 
   .sidebar {
     grid-column-start: 2;
-    grid-row-start: 1;
+    grid-row-start: 2;
     grid-row-end: span 3;
     min-width: 0;
   }
 
   .drag {
-    grid-row-start: 1;
+    grid-row-start: 2;
     grid-row-end: span 3;
     position: relative;
 
@@ -48,7 +48,7 @@
   .request-pane {
     min-width: 0;
     grid-column-start: 4;
-    grid-row-start: 1;
+    grid-row-start: 2;
     grid-row-end: span 3;
     background: inherit;
   }
@@ -56,29 +56,29 @@
   .response-pane {
     min-width: 0;
     grid-column-start: 6;
-    grid-row-start: 1;
+    grid-row-start: 2;
     grid-row-end: span 3;
     background: inherit;
   }
 
-  .spec-editor {
-    grid-column-start: 4;
-    grid-column-end: span 3;
-    grid-row-start: 1;
-    grid-row-end: span 3;
-  }
-
-  .document-listing {
+  .app-header {
     grid-column-start: 1;
     grid-column-end: span 6;
     grid-row-start: 1;
+    grid-row-end: span 1;
+  }
+
+  .layout-body {
+    grid-column-start: 1;
+    grid-column-end: span 6;
+    grid-row-start: 2;
     grid-row-end: span 3;
   }
 
-  .monitor-webview {
-    grid-column-start: 2;
-    grid-column-end: span 5;
-    grid-row-start: 1;
+  .layout-body--sidebar {
+    grid-column-start: 3;
+    grid-column-end: span 4;
+    grid-row-start: 2;
     grid-row-end: span 3;
   }
 
@@ -90,20 +90,30 @@
   }
 }
 
+.drag--sidebar {
+  grid-column-start: 3;
+  z-index: 1000;
+  grid-column-end: span 1;
+}
+
+.drag--pane-horizontal {
+  grid-column-start: 5;
+  grid-column-end: span 1;
+}
+
 .wrapper--vertical {
   .request-pane {
     grid-column-start: 4;
     grid-column-end: span 3;
-    grid-row-start: 1;
+    grid-row-start: 2;
     grid-row-end: span 1;
   }
 
   .response-pane {
     grid-column-start: 4;
     grid-column-end: span 3;
-    grid-row-start: 3;
+    grid-row-start: 4;
     grid-row-end: span 1;
-    //z-index: 2; // So it covers the URL Bar and stuff
   }
 
   .drag--pane-horizontal {
@@ -114,7 +124,7 @@
     display: block !important;
     grid-column-start: 4;
     grid-column-end: span 3;
-    grid-row-start: 2;
+    grid-row-start: 3;
     grid-row-end: span 1;
 
     & > * {

@@ -1,14 +1,14 @@
 // @flow
 import * as React from 'react';
+import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
 import type { Workspace } from '../../../models/workspace';
 import type { ApiSpec } from '../../../models/api-spec';
-import HelpLink from '../help-link';
 import YAML from 'yaml';
 import { showModal } from '../modals';
 import SwaggerUI from 'swagger-ui-react';
-import { NoticeTable } from 'insomnia-components';
+import { AppHeader, NoticeTable } from 'insomnia-components';
 import { Spectral } from '@stoplight/spectral';
 import 'swagger-ui-react/swagger-ui.css';
 import GenerateConfigModal from '../modals/generate-config-modal';
@@ -125,11 +125,11 @@ class SpecEditor extends React.PureComponent<Props, State> {
       lineWrapping,
       editorKeyMap,
       apiSpec,
-      handleTest,
     } = this.props;
 
     const {
       lintMessages,
+      previewActive,
     } = this.state;
 
     let swaggerSpec;
@@ -141,24 +141,8 @@ class SpecEditor extends React.PureComponent<Props, State> {
 
     return (
       <div
-        className={'spec-editor theme--pane ' + (this.state.previewActive ? '' : 'previewHidden')}>
-        <div className="spec-editor__header theme--pane__header">
-          <h1>
-            Edit API Specification <HelpLink slug="editing-specs" />
-          </h1>
-          <nav className="spec-editor__header__buttons">
-            <button className="btn" onClick={this._togglePreview}>
-              <i className={'fa ' + (this.state.previewActive ? 'fa-eye' : 'fa-eye-slash')} />{' '}
-              Toggle Preview
-            </button>
-            <button className="btn" onClick={this._showGenerateConfig}>
-              <i className="fa fa-code" /> Generate Config
-            </button>
-            <button className="btn" onClick={handleTest}>
-              <i className="fa fa-cogs" /> Generate Requests
-            </button>
-          </nav>
-        </div>
+        className={classnames('spec-editor theme--pane', { 'preview-hidden': !previewActive })}>
+        <AppHeader className="app-header" />
         <div id="swagger-ui-wrapper">
           <SwaggerUI spec={swaggerSpec} />
         </div>

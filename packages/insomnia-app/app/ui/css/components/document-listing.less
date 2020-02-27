@@ -3,13 +3,21 @@
   width: 100%;
   box-sizing: border-box;
   background: var(--color-bg);
+  grid-template-rows: auto auto minmax(0, 1fr);
 
   &__body {
     padding: var(--padding-lg);
+    padding-top: 0;
+    overflow-y: auto;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
   }
 
   &__header {
+    padding: var(--padding-lg);
     width: 100%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -33,26 +41,7 @@
     // Remove weird margin that is there by default
     input {
       margin: 0;
-    }
-  }
-
-  .dummy-cards {
-    display: flex;
-    flex-wrap: wrap;
-    margin-left: calc(-1 * var(--padding-sm));
-    margin-right: calc(-1 * var(--padding-sm));
-    margin-top: var(--padding-md);
-
-    .dummy-card {
-      border: 1px solid var(--hl);
-      width: 17rem;
-      height: 10rem;
-      margin: var(--padding-sm);
-      padding: var(--padding-sm);
-
-      &:hover {
-        background-color: var(--hl-xs);
-      }
+      width: 15rem;
     }
   }
 }

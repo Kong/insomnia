@@ -5,36 +5,56 @@ import { Dropdown, DropdownButton, DropdownItem, DropdownDivider } from '../base
 
 type Props = {
   children: ?React.Node,
-  handleDuplicateWorkspaceById: Function,
-  handleRenameWorkspace: Function,
-  handleDeleteWorkspaceById: Function,
+  handleDuplicateWorkspaceById: (workspaceId: string) => any,
+  handleRenameWorkspaceById: (workspaceId: string) => any,
+  handleDeleteWorkspaceById: (workspaceId: string) => any,
   className?: string,
 };
 
 @autobind
 class DocumentCardDropdown extends React.PureComponent<Props> {
-  _handleDuplicateWorkspace(id) {
-    this.props.handleDuplicateWorkspaceById(() => {}, this.props.workspaceId);
+  _handleDuplicateWorkspace() {
+    const {workspaceId, handleDuplicateWorkspaceById} = this.props;
+    handleDuplicateWorkspaceById(() => null, workspaceId);
   }
 
-  _handleRenameWorkspace(id) {
-    this.props.handleRenameWorkspace((ws) => {}, id);
+  _handleRenameWorkspace() {
+    const {workspaceId, handleRenameWorkspaceById} = this.props;
+    handleRenameWorkspaceById(() => null, workspaceId);
   }
 
-  _handleDeleteWorkspaceById(id) {
-    this.props.handleDeleteWorkspaceById((ws) => {}, id);
+  _handleDeleteWorkspaceBy() {
+    const {workspaceId, handleDeleteWorkspaceById} = this.props;
+    handleDeleteWorkspaceById(() => null, workspaceId);
   }
 
   render() {
-    const { children, workspaceId, className, ...extraProps } = this.props;
+    const {
+      children,
+      workspaceId,
+      className,
+      handleDuplicateWorkspaceById,
+      handleRenameWorkspaceById,
+      handleDeleteWorkspaceById,
+      ...extraProps
+    } = this.props;
+
     return (
       <Dropdown beside {...extraProps}>
-        <DropdownButton className={className}>{children}</DropdownButton>
-        <DropdownItem className="txt-lg" onClick={this._handleDuplicateWorkspace}>Duplicate</DropdownItem>
-        <DropdownItem className="txt-lg" onClick={() => this._handleRenameWorkspace(workspaceId)}>Rename</DropdownItem>
-        <DropdownDivider>
-        </DropdownDivider>
-        <DropdownItem className="txt-lg" onClick={() => this._handleDeleteWorkspaceById(workspaceId)}><span className="danger">Delete</span></DropdownItem>
+        <DropdownButton className={className}>
+          {children}
+        </DropdownButton>
+
+        <DropdownItem onClick={this._handleDuplicateWorkspace}>
+          Duplicate
+        </DropdownItem>
+        <DropdownItem onClick={this._handleRenameWorkspace}>
+          Rename
+        </DropdownItem>
+        <DropdownDivider/>
+        <DropdownItem className="danger" onClick={this._handleDeleteWorkspaceBy}>
+          Delete
+        </DropdownItem>
       </Dropdown>
     );
   }

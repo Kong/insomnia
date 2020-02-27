@@ -3,14 +3,14 @@
   width: 100%;
   height: 100%;
 
-  grid-template-areas: 'header header' 'body-left body-right';
-  grid-template-rows: var(--height-nav) 1fr;
+  grid-template-areas: 'appheader appheader' 'body-left body-right';
+  grid-template-rows: auto 1fr;
   grid-template-columns: 1fr 1fr;
 
   border-left: 1px solid var(--hl-md);
 
-  &.previewHidden {
-    grid-template-columns: 3fr 0;
+  &.preview-hidden {
+    grid-template-columns: 1fr 0;
   }
 
   &__header {
@@ -20,7 +20,6 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    border-top: 1px solid var(--hl-md);
     border-bottom: 1px solid var(--hl-md);
 
     &__buttons {
@@ -62,7 +61,7 @@
   p,
   .model-box,
   .model-title,
-  .opblock-summary-description ,
+  .opblock-summary-description,
   .opblock-title,
   .try-out__btn,
   .col_header,
@@ -86,6 +85,7 @@
   .scheme-container {
     background: none;
   }
+
   section.schemes {
     div:first-child {
 
@@ -97,7 +97,7 @@
         line-height: var(--line-height-xs);
       }
     }
-    
+
     .auth-wrapper {
       padding-top: var(--padding-sm);
     }

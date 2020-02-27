@@ -16,8 +16,7 @@ import SidebarChildren from './sidebar/sidebar-children';
 
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import classnames from 'classnames';
-import { registerModal, showAlert, showModal } from './modals/index';
+import { registerModal, showModal } from './modals/index';
 import AlertModal from './modals/alert-modal';
 import WrapperModal from './modals/wrapper-modal';
 import ErrorModal from './modals/error-modal';
@@ -34,11 +33,9 @@ import AskModal from './modals/ask-modal';
 import GenerateConfigModal from './modals/generate-config-modal';
 import SelectModal from './modals/select-modal';
 import RequestCreateModal from './modals/request-create-modal';
-import RequestPane from './request-pane';
 import RequestSwitcherModal from './modals/request-switcher-modal';
 import SettingsModal from './modals/settings-modal';
 import FilterHelpModal from './modals/filter-help-modal';
-import ResponsePane from './response-pane';
 import RequestSettingsModal from './modals/request-settings-modal';
 import SetupSyncModal from './modals/setup-sync-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
@@ -51,7 +48,6 @@ import SyncHistoryModal from './modals/sync-history-modal';
 import SyncShareModal from './modals/sync-share-modal';
 import SyncBranchesModal from './modals/sync-branches-modal';
 import RequestRenderErrorModal from './modals/request-render-error-modal';
-import Sidebar from './sidebar/sidebar';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
 import PortalUploadModal from './modals/portal-upload-modal';
@@ -72,26 +68,24 @@ import type { StatusCandidate } from '../../sync/types';
 import type { RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
 import type { GlobalActivity } from './activity-bar/activity-bar';
-import ActivityBar, {
-  ACTIVITY_DEBUG,
-  ACTIVITY_MONITOR,
-  ACTIVITY_SPEC,
-  ACTIVITY_HOME,
-} from './activity-bar/activity-bar';
+import { ACTIVITY_DEBUG, ACTIVITY_HOME, ACTIVITY_SPEC } from './activity-bar/activity-bar';
 import SpecEditor from './spec-editor/spec-editor';
-import DocumentListing from './document-listing/document-listing';
 import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import SidebarFilter from './sidebar/sidebar-filter';
 import type { ApiSpec } from '../../models/api-spec';
 import GitVCS from '../../sync/git/git-vcs';
-import Onboarding from './onboarding';
 import { trackPageView } from '../../common/analytics';
 import type { GitRepository } from '../../models/git-repository';
-import HelpLink from './help-link';
-import { clickLink } from '../../common/misc';
+import WrapperHome from './wrapper-home';
+import WrapperDesign from './wrapper-design';
+import WrapperOnboarding from './wrapper-onboarding';
+import WrapperDebug from './wrapper-debug';
+import { importRaw } from '../../common/import';
+import GitSyncDropdown from './dropdowns/git-sync-dropdown';
+import { DropdownButton } from './base/dropdown';
 
-type Props = {
+export type WrapperProps = {
   // Helper Functions
   handleActivateRequest: Function,
   handleSetSidebarFilter: Function,
@@ -201,7 +195,7 @@ const rUpdate = (request, ...args) => {
 const sUpdate = models.settings.update;
 
 @autobind
-class Wrapper extends React.PureComponent<Props, State> {
+class Wrapper extends React.PureComponent<WrapperProps, State> {
   specEditor: ?SpecEditor;
 
   constructor(props: any) {
@@ -266,12 +260,6 @@ class Wrapper extends React.PureComponent<Props, State> {
     return rUpdate(r, { url });
   }
 
-  // Special request updaters
-  _handleStartDragSidebar(e: Event): void {
-    e.preventDefault();
-    this.props.handleStartDragSidebar();
-  }
-
   async _handleImport(text: string): Promise<Request | null> {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
@@ -298,26 +286,28 @@ class Wrapper extends React.PureComponent<Props, State> {
     return null;
   }
 
-  _handleDebugSpec() {
-    showAlert({
-      title: (
-        <React.Fragment>
-          Debug Spec <HelpLink slug={'debugging-with-insomnia'} />
-        </React.Fragment>
-      ),
-      okLabel: 'Generate Requests',
-      message:
-        'Debugging this spec will overwrite all requests in the test activity.' +
-        ' Do you want to proceed?',
-      onConfirm: async () => {
-        const { activeWorkspace, activeApiSpec } = this.props;
-        const name = activeWorkspace.name;
-        clickLink('insomnia://app/import?' +
-          `name=${encodeURIComponent(name)}&` +
-          `uri=${encodeURIComponent(activeApiSpec.contents)}`,
-        );
-      },
-    });
+  async _handleDebugSpec(apiSpec: ApiSpec) {
+    // showAlert({
+    //   title: (
+    //     <React.Fragment>
+    //       Debug Spec <HelpLink slug={'debugging-with-insomnia'} />
+    //     </React.Fragment>
+    //   ),
+    //   okLabel: 'Generate Requests',
+    //   message:
+    //     'Debugging this spec will overwrite all requests in the test activity.' +
+    //     ' Do you want to proceed?',
+    //   onConfirm: async () => {
+    const { handleSetActiveActivity, handleSetActiveWorkspace } = this.props;
+    const workspace = await models.workspace.getById(apiSpec.parentId);
+    await handleSetActiveWorkspace(workspace._id);
+    await importRaw(
+      () => Promise.resolve(workspace._id), // Always import into current workspace
+      apiSpec.contents,
+    );
+    await handleSetActiveActivity(ACTIVITY_DEBUG);
+    //   },
+    // });
   }
 
   // Settings updaters
@@ -599,79 +589,56 @@ class Wrapper extends React.PureComponent<Props, State> {
 
   render() {
     const {
-      activity,
       activeApiSpec,
       activeCookieJar,
       activeEnvironment,
       activeGitRepository,
       activeRequest,
-      activeRequestResponses,
-      activeResponse,
       activeWorkspace,
       activeWorkspaceClientCertificates,
-      apiSpecs,
+      activeWorkspaceMeta,
+      activity,
+      gitVCS,
       handleActivateRequest,
-      handleCreateRequestForWorkspace,
       handleDuplicateWorkspace,
-      handleDuplicateWorkspaceById,
-      handleRenameWorkspace,
-      handleDeleteWorkspaceById,
       handleExportFile,
       handleExportRequestsToFile,
-      handleGenerateCodeForActiveRequest,
       handleGetRenderContext,
       handleInitializeEntities,
       handleRender,
-      handleResetDragPaneHorizontal,
-      handleResetDragPaneVertical,
-      handleResetDragSidebar,
       handleSetActiveActivity,
-      handleSetActiveEnvironment,
       handleSetActiveWorkspace,
-      handleSetRequestPaneRef,
-      handleSetResponsePaneRef,
-      handleSetSidebarRef,
       handleShowExportRequestsModal,
-      handleShowSettingsModal,
-      handleStartDragPaneHorizontal,
-      handleStartDragPaneVertical,
       handleToggleMenuBar,
-      handleUpdateDownloadPath,
-      handleUpdateRequestMimeType,
-      headerEditorKey,
-      isLoading,
       isVariableUncovered,
-      loadStartTime,
-      oAuth2Token,
-      paneHeight,
-      paneWidth,
       requestMetas,
-      requestVersions,
-      responseDownloadPath,
-      responseFilter,
-      responseFilterHistory,
-      responsePreviewMode,
       settings,
       sidebarChildren,
-      sidebarHidden,
-      sidebarWidth,
       syncItems,
-      unseenWorkspaces,
       vcs,
-      gitVCS,
       workspaceChildren,
       workspaces,
-      workspaceMetas,
-      activeWorkspaceMeta,
     } = this.props;
 
-    const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
+    // Setup git sync dropdown for use in Design/Debug pages
+    let gitSyncDropdown = null;
+    if (gitVCS) {
+      gitSyncDropdown = (
+        <GitSyncDropdown
+          workspace={activeWorkspace}
+          dropdownButtonClassName="btn btn--clicky-small"
+          gitRepository={activeGitRepository}
+          vcs={gitVCS}
+          handleInitializeEntities={handleInitializeEntities}
+          renderDropdownButton={(children) => (
+            <DropdownButton className="btn btn--clicky-small">
+              {children}
+            </DropdownButton>
+          )}
+        />
+      );
+    }
 
-    const columns = `auto ${realSidebarWidth}rem 0 minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 -
-    paneWidth}fr)`;
-    const rows = `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
-
-    const sidebarBody = this.renderSidebarBody();
     return (
       <React.Fragment>
         <div key="modals" className="modals">
@@ -885,219 +852,55 @@ class Wrapper extends React.PureComponent<Props, State> {
             />
           </ErrorBoundary>
         </div>
-        <div
-          key="wrapper"
-          id="wrapper"
-          className={classnames('wrapper', {
-            'wrapper--vertical': settings.forceVerticalLayout,
-          })}
-          style={{
-            gridTemplateColumns: columns,
-            gridTemplateRows: rows,
-            boxSizing: 'border-box',
-            borderTop:
-              activeEnvironment &&
-              activeEnvironment.color &&
-              settings.environmentHighlightColorStyle === 'window-top'
-                ? '5px solid ' + activeEnvironment.color
-                : null,
-            borderBottom:
-              activeEnvironment &&
-              activeEnvironment.color &&
-              settings.environmentHighlightColorStyle === 'window-bottom'
-                ? '5px solid ' + activeEnvironment.color
-                : null,
-            borderLeft:
-              activeEnvironment &&
-              activeEnvironment.color &&
-              settings.environmentHighlightColorStyle === 'window-left'
-                ? '5px solid ' + activeEnvironment.color
-                : null,
-            borderRight:
-              activeEnvironment &&
-              activeEnvironment.color &&
-              settings.environmentHighlightColorStyle === 'window-right'
-                ? '5px solid ' + activeEnvironment.color
-                : null,
-          }}>
-          {activity && (
-            <ActivityBar
-              showSettings={handleShowSettingsModal}
-              activity={activity}
-              setActivity={handleSetActiveActivity}
-              hotKeyRegistry={settings.hotKeyRegistry}
-            />
-          )}
 
-          {sidebarBody && (
-            <ErrorBoundary showAlert>
-              <Sidebar
-                ref={handleSetSidebarRef}
-                activeEnvironment={activeEnvironment}
-                activeGitRepository={activeGitRepository}
-                enableSyncBeta={settings.enableSyncBeta}
-                environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
-                handleInitializeEntities={handleInitializeEntities}
-                handleNavigateHome={this._handleSetHomeActivity}
-                handleSetActiveEnvironment={handleSetActiveEnvironment}
-                handleSetActiveWorkspace={handleSetActiveWorkspace}
-                hidden={sidebarHidden || false}
-                hotKeyRegistry={settings.hotKeyRegistry}
-                isLoading={isLoading}
-                showEnvironmentsModal={this._handleShowEnvironmentsModal}
-                syncItems={syncItems}
-                unseenWorkspaces={unseenWorkspaces}
-                vcs={vcs}
-                gitVCS={gitVCS}
-                width={sidebarWidth}
-                workspace={activeWorkspace}
-                workspaces={workspaces}>
-                {sidebarBody}
-              </Sidebar>
+        {activity === ACTIVITY_HOME && (
+          <WrapperHome wrapperProps={this.props} />
+        )}
 
-              <div className="drag drag--sidebar">
-                <div
-                  onDoubleClick={handleResetDragSidebar}
-                  onMouseDown={this._handleStartDragSidebar}
-                />
-              </div>
-            </ErrorBoundary>
-          )}
+        {activity === ACTIVITY_SPEC && (
+          <WrapperDesign
+            gitSyncDropdown={gitSyncDropdown}
+            handleDebugSpec={this._handleDebugSpec}
+            handleUpdateApiSpec={this._handleUpdateApiSpec}
+            wrapperProps={this.props}
+          />
+        )}
 
-          {activity === ACTIVITY_DEBUG && (
-            <React.Fragment>
-              <ErrorBoundary showAlert>
-                <RequestPane
-                  ref={handleSetRequestPaneRef}
-                  downloadPath={responseDownloadPath}
-                  environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                  forceRefreshCounter={this.state.forceRefreshKey}
-                  forceUpdateRequest={this._handleForceUpdateRequest}
-                  forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
-                  handleCreateRequest={handleCreateRequestForWorkspace}
-                  handleGenerateCode={handleGenerateCodeForActiveRequest}
-                  handleGetRenderContext={handleGetRenderContext}
-                  handleImport={this._handleImport}
-                  handleImportFile={this._handleImportFile}
-                  handleRender={handleRender}
-                  handleSend={this._handleSendRequestWithActiveEnvironment}
-                  handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
-                  handleUpdateDownloadPath={handleUpdateDownloadPath}
-                  headerEditorKey={headerEditorKey}
-                  isVariableUncovered={isVariableUncovered}
-                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-                  oAuth2Token={oAuth2Token}
-                  request={activeRequest}
-                  settings={settings}
-                  updateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
-                  updateRequestBody={Wrapper._handleUpdateRequestBody}
-                  updateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
-                  updateRequestMethod={Wrapper._handleUpdateRequestMethod}
-                  updateRequestMimeType={handleUpdateRequestMimeType}
-                  updateRequestParameters={Wrapper._handleUpdateRequestParameters}
-                  updateRequestUrl={Wrapper._handleUpdateRequestUrl}
-                  updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
-                  updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
-                  updateSettingsUseBulkParametersEditor={this._handleUpdateSettingsUseBulkParametersEditor}
-                  workspace={activeWorkspace}
-                />
-              </ErrorBoundary>
-
-              <div className="drag drag--pane-horizontal">
-                <div
-                  onMouseDown={handleStartDragPaneHorizontal}
-                  onDoubleClick={handleResetDragPaneHorizontal}
-                />
-              </div>
-
-              <div className="drag drag--pane-vertical">
-                <div
-                  onMouseDown={handleStartDragPaneVertical}
-                  onDoubleClick={handleResetDragPaneVertical}
-                />
-              </div>
-
-              <ErrorBoundary showAlert>
-                <ResponsePane
-                  ref={handleSetResponsePaneRef}
-                  disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-                  disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
-                  editorFontSize={settings.editorFontSize}
-                  editorIndentSize={settings.editorIndentSize}
-                  editorKeyMap={settings.editorKeyMap}
-                  editorLineWrapping={settings.editorLineWrapping}
-                  environment={activeEnvironment}
-                  filter={responseFilter}
-                  filterHistory={responseFilterHistory}
-                  handleDeleteResponse={this._handleDeleteResponse}
-                  handleDeleteResponses={this._handleDeleteResponses}
-                  handleSetActiveResponse={this._handleSetActiveResponse}
-                  handleSetFilter={this._handleSetResponseFilter}
-                  handleSetPreviewMode={this._handleSetPreviewMode}
-                  handleShowRequestSettings={this._handleShowRequestSettingsModal}
-                  hotKeyRegistry={settings.hotKeyRegistry}
-                  loadStartTime={loadStartTime}
-                  previewMode={responsePreviewMode}
-                  request={activeRequest}
-                  requestVersions={requestVersions}
-                  response={activeResponse}
-                  responses={activeRequestResponses}
-                  showCookiesModal={this._handleShowCookiesModal}
-                />
-              </ErrorBoundary>
-            </React.Fragment>
-          )}
-
-          {activity === ACTIVITY_SPEC && (
-            <ErrorBoundary showAlert>
-              <SpecEditor
-                key={this.state.forceRefreshKey}
-                ref={this._setSpecEditorRef}
-                workspace={activeWorkspace}
-                apiSpec={activeApiSpec}
-                editorFontSize={settings.editorFontSize}
-                editorIndentSize={settings.editorIndentSize}
-                editorKeyMap={settings.editorKeyMap}
-                lineWrapping={settings.editorLineWrapping}
-                onChange={this._handleUpdateApiSpec}
-                handleTest={this._handleDebugSpec}
-              />
-            </ErrorBoundary>
-          )}
-
-          {activity === ACTIVITY_HOME && (
-            <ErrorBoundary showAlert>
-              <DocumentListing
-                key={this.state.forceRefreshKey}
-                ref={this._setSpecEditorRef}
-                apiSpecs={apiSpecs}
-                workspaceMetas={workspaceMetas}
-                workspaces={workspaces}
-                activeWorkspace={activeWorkspace}
-                handleSetActiveWorkspace={handleSetActiveWorkspace}
-                handleSetActiveActivity={handleSetActiveActivity}
-                handleDuplicateWorkspaceById={handleDuplicateWorkspaceById}
-                handleRenameWorkspace={handleRenameWorkspace}
-                handleDeleteWorkspaceById={handleDeleteWorkspaceById}
-              />
-            </ErrorBoundary>
-          )}
-
-          {activity === ACTIVITY_MONITOR && (
-            <webview
-              src={this.props.activeWorkspaceMeta.kongPortalUrl}
-              className="monitor-webview"
-              nodeintegration="false"
-            />
-          )}
-        </div>
+        {activity === ACTIVITY_DEBUG && (
+          <WrapperDebug
+            forceRefreshKey={this.state.forceRefreshKey}
+            gitSyncDropdown={gitSyncDropdown}
+            handleChangeEnvironment={this._handleChangeEnvironment}
+            handleDeleteResponse={this._handleDeleteResponse}
+            handleDeleteResponses={this._handleDeleteResponses}
+            handleForceUpdateRequest={this._handleForceUpdateRequest}
+            handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
+            handleImport={this._handleImport}
+            handleImportFile={this._handleImportFile}
+            handleSendAndDownloadRequestWithActiveEnvironment={this._handleSendAndDownloadRequestWithActiveEnvironment}
+            handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
+            handleSetActiveResponse={this._handleSetActiveResponse}
+            handleSetPreviewMode={this._handleSetPreviewMode}
+            handleSetResponseFilter={this._handleSetResponseFilter}
+            handleShowCookiesModal={this._handleShowCookiesModal}
+            handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
+            handleUpdateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
+            handleUpdateRequestBody={Wrapper._handleUpdateRequestBody}
+            handleUpdateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
+            handleUpdateRequestMethod={Wrapper._handleUpdateRequestMethod}
+            handleUpdateRequestParameters={Wrapper._handleUpdateRequestParameters}
+            handleUpdateRequestUrl={Wrapper._handleUpdateRequestUrl}
+            handleUpdateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
+            handleUpdateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
+            wrapperProps={this.props}
+          />
+        )}
 
         {activity === null && (
-          <Onboarding
-            settings={settings}
+          <WrapperOnboarding
+            wrapperProps={this.props}
             handleImportFile={this._handleImportFile}
             handleImportUri={this._handleImportUri}
-            handleSetActivity={handleSetActiveActivity}
           />
         )}
       </React.Fragment>

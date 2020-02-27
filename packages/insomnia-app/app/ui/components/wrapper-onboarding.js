@@ -1,21 +1,21 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import imgSrc from '../images/logo.png';
-import * as db from '../../common/database';
-import * as models from '../../models';
-import type { GlobalActivity } from './activity-bar/activity-bar';
-import type { BaseModel } from '../../models';
+import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
-import chartSrc from '../images/chart.svg';
-import type { Settings } from '../../models/settings';
+import type { BaseModel } from '../../models';
+import * as models from '../../models';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from './activity-bar/activity-bar';
+import type { WrapperProps } from './wrapper';
+import PageLayout from './page-layout';
+import * as db from '../../common/database';
+import chartSrc from '../images/chart.svg';
+import imgSrc from '../images/logo.png';
 
 type Props = {|
-  settings: Settings,
-  handleImportFile: (forceWorkspace: boolean) => void,
-  handleImportUri: (uri: string, forceWorkspace: boolean) => void,
-  handleSetActivity: (activity: GlobalActivity) => void,
+  wrapperProps: WrapperProps,
+  handleImportFile: (forceToWorkspace?: boolean) => any,
+  handleImportUri: (uri: string, forceToWorkspace?: boolean) => any,
 |};
 
 type State = {|
@@ -23,13 +23,10 @@ type State = {|
 |};
 
 @autobind
-class Onboarding extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      step: 1,
-    };
-  }
+class WrapperOnboarding extends React.PureComponent<Props, State> {
+  state = {
+    step: 1,
+  };
 
   componentDidMount() {
     db.onChange(this._handleDbChange);
@@ -46,9 +43,9 @@ class Onboarding extends React.PureComponent<Props, State> {
   }
 
   async _handleDone() {
-    const { handleSetActivity } = this.props;
+    const { handleSetActiveActivity } = this.props.wrapperProps;
 
-    handleSetActivity(ACTIVITY_SPEC);
+    handleSetActiveActivity(ACTIVITY_SPEC);
 
     // Unsubscribe DB listener
     db.offChange(this._handleDbChange);
@@ -61,7 +58,7 @@ class Onboarding extends React.PureComponent<Props, State> {
   }
 
   async _handleCompleteAnalyticsStep(enableAnalytics: boolean) {
-    const { settings } = this.props;
+    const { settings } = this.props.wrapperProps;
 
     // Update settings with analytics preferences
     await models.settings.update(settings, { enableAnalytics });
@@ -98,13 +95,13 @@ class Onboarding extends React.PureComponent<Props, State> {
   _handleImportPetstore() {
     this._handleImportUri(
       'https://gist.githubusercontent.com/gschier/4e2278d5a50b4bbf1110755d9b48a9f9' +
-        '/raw/801c05266ae102bcb9288ab92c60f52d45557425/petstore-spec.yaml',
+      '/raw/801c05266ae102bcb9288ab92c60f52d45557425/petstore-spec.yaml',
     );
   }
 
   _handleSkipImport() {
-    const { handleSetActivity } = this.props;
-    handleSetActivity(ACTIVITY_DEBUG);
+    const { handleSetActiveActivity } = this.props.wrapperProps;
+    handleSetActiveActivity(ACTIVITY_DEBUG);
   }
 
   renderStep1() {
@@ -133,9 +130,7 @@ class Onboarding extends React.PureComponent<Props, State> {
   }
 
   renderStep2() {
-    const {
-      settings: { enableAnalytics },
-    } = this.props;
+    const { settings: { enableAnalytics } } = this.props.wrapperProps;
     return (
       <React.Fragment>
         <p className="notice success text-left margin-top margin-bottom">
@@ -162,11 +157,10 @@ class Onboarding extends React.PureComponent<Props, State> {
     );
   }
 
-  render() {
+  renderPageBody() {
     const { step } = this.state;
 
-    let stepBody = null;
-
+    let stepBody;
     if (step === 1) {
       stepBody = this.renderStep1();
     } else {
@@ -189,6 +183,15 @@ class Onboarding extends React.PureComponent<Props, State> {
       </div>
     );
   }
+
+  render() {
+    return (
+      <PageLayout
+        wrapperProps={this.props.wrapperProps}
+        renderPageBody={this.renderPageBody}
+      />
+    );
+  }
 }
 
-export default Onboarding;
+export default WrapperOnboarding;

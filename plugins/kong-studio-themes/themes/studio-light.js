@@ -25,29 +25,6 @@ module.exports = {
           info: '{{ background.surprise }}',
         },
       },
-      sidebar: {
-        foreground: {
-          default: '#fff',
-        },
-        background: {
-          default: '#003C66',
-          success: '#74d49c',
-          notice: '#ffdb02',
-          warning: '#ffac49',
-          danger: '#ff7575',
-          surprise: '#bfa3f9',
-          info: '#75ddff',
-        },
-        highlight: {
-          default: 'rgba(133, 157, 176)',
-          xxs: 'rgba(133, 157, 176, 0.05)',
-          xs: 'rgba(133, 157, 176, 0.1)',
-          sm: 'rgba(133, 157, 176, 0.2)',
-          md: 'rgba(133, 157, 176, 0.3)',
-          lg: 'rgba(133, 157, 176, 0.5)',
-          xl: 'rgba(133, 157, 176, 0.8)',
-        },
-      },
       activityBar: {
         foreground: {
           default: '#fff',
@@ -70,21 +47,20 @@ module.exports = {
           info: '#005B9E',
         },
       },
-      pane: {
+      sidebar: {
         background: {
-          surprise: '{{ background.info }}',
-          info: '{{ background.surprise }}',
+          default: '#f7fafc',
+          success: '#50a14f',
+          notice: '#c18401',
+          warning: '#c18401',
+          danger: '#e45649',
+          surprise: '#a626a4',
+          info: '#0184bc',
         },
-      },
-      paneHeader: {
-        background: {
-          default: '#f0f9ff',
-        },
-      },
-      sidebarHeader: {
         foreground: {
-          default: '#fff',
+          default: '#444',
         },
+        highlight: {},
       },
       transparentOverlay: {
         background: {

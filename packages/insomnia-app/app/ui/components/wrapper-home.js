@@ -1,32 +1,27 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import type { Workspace } from '../../../models/workspace';
+import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
-import { fuzzyMatch } from '../../../common/misc';
-import Highlight from '../base/highlight';
-import Notice from '../notice';
 import { AppHeader, Button, Card, CardContainer } from 'insomnia-components';
-import DocumentCardDropdown from '../dropdowns/document-card-dropdown';
-import KeydownBinder from '../keydown-binder';
-import { executeHotKey } from '../../../common/hotkeys-listener';
-import { hotKeyRefs } from '../../../common/hotkeys';
-import { showPrompt } from '../modals';
-import * as models from '../../../models';
-import { trackEvent } from '../../../common/analytics';
-import type { ApiSpec } from '../../../models/api-spec';
+import DocumentCardDropdown from './dropdowns/document-card-dropdown';
+import KeydownBinder from './keydown-binder';
+import { executeHotKey } from '../../common/hotkeys-listener';
+import { hotKeyRefs } from '../../common/hotkeys';
+import { showPrompt } from './modals';
+import * as models from '../../models';
+import { trackEvent } from '../../common/analytics';
 import YAML from 'yaml';
-import TimeFromNow from '../time-from-now';
-import type { GlobalActivity } from '../activity-bar/activity-bar';
-import type { WorkspaceMeta } from '../../../models/workspace-meta';
+import TimeFromNow from './time-from-now';
+import Highlight from './base/highlight';
+import type { GlobalActivity } from './activity-bar/activity-bar';
+import { fuzzyMatch } from '../../common/misc';
+import type { WrapperProps } from './wrapper';
+import Notice from './notice';
+import PageLayout from './page-layout';
 
 type Props = {|
-  activeWorkspace: Workspace,
-  apiSpecs: Array<ApiSpec>,
-  workspaces: Array<Workspace>,
-  workspaceMetas: Array<WorkspaceMeta>,
-  handleSetActiveWorkspace: (workspaceId: string) => any,
-  handleSetActiveActivity: (activity: GlobalActivity) => any,
+  wrapperProps: WrapperProps,
 |};
 
 type State = {|
@@ -34,7 +29,7 @@ type State = {|
 |};
 
 @autobind
-class DocumentListing extends React.PureComponent<Props, State> {
+class WrapperHome extends React.PureComponent<Props, State> {
   state = {
     filter: '',
   };
@@ -68,7 +63,7 @@ class DocumentListing extends React.PureComponent<Props, State> {
   }
 
   _filterWorkspaces(): Array<Workspace> {
-    const { workspaces } = this.props;
+    const { workspaces } = this.props.wrapperProps;
     const { filter } = this.state;
 
     if (!filter) {
@@ -94,13 +89,20 @@ class DocumentListing extends React.PureComponent<Props, State> {
   }
 
   _handleSetActiveWorkspace(id: string, activity: GlobalActivity) {
-    const { handleSetActiveWorkspace, handleSetActiveActivity } = this.props;
+    const { handleSetActiveWorkspace, handleSetActiveActivity } = this.props.wrapperProps;
     handleSetActiveActivity(activity);
     handleSetActiveWorkspace(id);
   }
 
   renderWorkspace(w: Workspace) {
-    const { apiSpecs, workspaceMetas } = this.props;
+    const {
+      apiSpecs,
+      handleDuplicateWorkspaceById,
+      handleRenameWorkspace,
+      handleDeleteWorkspaceById,
+      workspaceMetas,
+    } = this.props.wrapperProps;
+
     const { filter } = this.state;
 
     const apiSpec = apiSpecs.find(s => s.parentId === w._id);
@@ -162,13 +164,14 @@ class DocumentListing extends React.PureComponent<Props, State> {
           docVersion={version}
           onClick={() => this._handleSetActiveWorkspace(w._id, 'spec')}
           tagLabel={label}
-          docMenu={<DocumentCardDropdown
-          workspaceId={w._id}
-          handleDuplicateWorkspaceById={this.props.handleDuplicateWorkspaceById}
-          handleRenameWorkspace={this.props.handleRenameWorkspace}
-          handleDeleteWorkspaceById={this.props.handleDeleteWorkspaceById}
-          >...
-        </DocumentCardDropdown>}
+          docMenu={(
+            <DocumentCardDropdown
+              workspaceId={w._id}
+              handleDuplicateWorkspaceById={handleDuplicateWorkspaceById}
+              handleRenameWorkspaceById={handleRenameWorkspace}
+              handleDeleteWorkspaceById={handleDeleteWorkspaceById}
+            >...</DocumentCardDropdown>
+          )}
         />
       );
     }
@@ -182,13 +185,14 @@ class DocumentListing extends React.PureComponent<Props, State> {
         docVersion=""
         onClick={() => this._handleSetActiveWorkspace(w._id, 'debug')}
         tagLabel="Insomnia"
-        docMenu={<DocumentCardDropdown
-          workspaceId={w._id}
-          handleDuplicateWorkspaceById={this.props.handleDuplicateWorkspaceById}
-          handleRenameWorkspace={this.props.handleRenameWorkspace}
-          handleDeleteWorkspaceById={this.props.handleDeleteWorkspaceById}
-          >...
-        </DocumentCardDropdown>}
+        docMenu={(
+          <DocumentCardDropdown
+            workspaceId={w._id}
+            handleDuplicateWorkspaceById={handleDuplicateWorkspaceById}
+            handleRenameWorkspaceById={handleRenameWorkspace}
+            handleDeleteWorkspaceById={handleDeleteWorkspaceById}
+          >...</DocumentCardDropdown>
+        )}
       />
     );
   }
@@ -198,33 +202,49 @@ class DocumentListing extends React.PureComponent<Props, State> {
     const filteredWorkspaces = this._filterWorkspaces();
 
     return (
-      <KeydownBinder onKeydown={this._handleKeyDown}>
-        <div className="document-listing theme--pane">
-          <AppHeader />
-          <div className="document-listing__body">
-            <header className="document-listing__header">
-              <h1>Documents</h1>
-              <div className="form-control form-control--outlined">
-                <input
-                  ref={this._setFilterInputRef}
-                  type="text"
-                  placeholder="filter"
-                  onChange={this._handleFilterChange}
-                />
-              </div>
-              <Button onClick={this._handleWorkspaceCreate}>Add New</Button>
-            </header>
-            <CardContainer>
-              {filteredWorkspaces.map(this.renderWorkspace)}
-            </CardContainer>
-            {filteredWorkspaces.length === 0 && (
-              <Notice color="subtle">No workspaces found for <strong>{filter}</strong></Notice>
+      <PageLayout
+        wrapperProps={this.props.wrapperProps}
+        renderPageHeader={() => (
+          <AppHeader
+            className="app-header"
+            breadcrumbs={['Documents']}
+            menu={(
+              <Button className="btn btn--clicky-small" onClick={this._handleWorkspaceCreate}>
+                Add New
+              </Button>
             )}
-          </div>
-        </div>
-      </KeydownBinder>
+          />
+        )}
+        renderPageBody={() => (
+          <KeydownBinder onKeydown={this._handleKeyDown}>
+            <div className="document-listing theme--pane layout-body">
+              <header className="document-listing__header">
+                <h1>Documents</h1>
+                <div className="form-control form-control--outlined">
+                  <input
+                    ref={this._setFilterInputRef}
+                    type="text"
+                    placeholder="filter"
+                    onChange={this._handleFilterChange}
+                  />
+                </div>
+              </header>
+              <div className="document-listing__body">
+                <CardContainer>
+                  {filteredWorkspaces.map(this.renderWorkspace)}
+                </CardContainer>
+                {filteredWorkspaces.length === 0 && (
+                  <Notice color="subtle">
+                    No workspaces found for <strong>{filter}</strong>
+                  </Notice>
+                )}
+              </div>
+            </div>
+          </KeydownBinder>
+        )}
+      />
     );
   }
 }
 
-export default DocumentListing;
+export default WrapperHome;

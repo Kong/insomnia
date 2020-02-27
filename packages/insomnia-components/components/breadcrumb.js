@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 type Props = {|
   crumbs: Array<Object>,
+  onClick: (index: number) => any,
 |};
 
 const StyledBreadcrumb: React.ComponentType<{}> = styled.ul`
@@ -14,7 +15,7 @@ const StyledBreadcrumb: React.ComponentType<{}> = styled.ul`
     font-size: var(--font-size-md);
     font-weight: 600;
     color: var(--color-font);
-    
+
     a,
     a::before,
     li > ::before {
@@ -23,7 +24,7 @@ const StyledBreadcrumb: React.ComponentType<{}> = styled.ul`
     }
 
     li {
-        
+
         a {
             cursor: pointer;
         }
@@ -41,6 +42,14 @@ const StyledBreadcrumb: React.ComponentType<{}> = styled.ul`
 `;
 
 class Breadcrumb extends React.PureComponent<Props> {
+  _handleClick(index: number, e: SyntheticEvent<HTMLAnchorElement>) {
+    e.preventDefault();
+    const { onClick } = this.props;
+    if (typeof onClick === 'function') {
+      onClick(index);
+    }
+  }
+
   render() {
     const { crumbs } = this.props;
     return (
@@ -51,7 +60,9 @@ class Breadcrumb extends React.PureComponent<Props> {
           } else {
             return (
               <li key={crumb}>
-                <a>{crumb}</a>
+                <a href="#" onClick={this._handleClick.bind(this, i)}>
+                  {crumb}
+                </a>
               </li>
             );
           }
