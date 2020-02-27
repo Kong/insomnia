@@ -51,11 +51,10 @@ class WrapperHome extends React.PureComponent<Props, State> {
       placeholder: 'spec-name.yaml',
       selectText: true,
       onComplete: async name => {
-        const workspace = await models.workspace.create({
+        await models.workspace.create({
           name,
           scope: 'spec',
         });
-        this.props.handleSetActiveWorkspace(workspace._id);
 
         trackEvent('Workspace', 'Create');
       },

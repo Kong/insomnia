@@ -70,7 +70,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
   _handleOnChange(v: string) {
     const { wrapperProps: { activeApiSpec }, handleUpdateApiSpec } = this.props;
-    console.log('PROPS', this.props);
 
     // Debounce the update because these specs can get pretty large
     clearTimeout(this.debounceTimeout);
