@@ -242,9 +242,9 @@ config.
 x-kong-plugin-key-auth:
   name: key-auth
   enabled: true
-  config: {
-    key_names: [api_key, apikey],
-    key_in_body: false,
+  config:
+    key_names: [api_key, apikey]
+    key_in_body: false
     hide_credentials: true
 ```
 
