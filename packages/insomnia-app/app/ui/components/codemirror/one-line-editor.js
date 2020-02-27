@@ -86,8 +86,7 @@ class OneLineEditor extends PureComponent {
     document.body.addEventListener('mousedown', this._handleDocumentMousedown);
   }
 
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillUnmount() {
+  componentWillUnmount() {
     document.body.removeEventListener('mousedown', this._handleDocumentMousedown);
   }
 
