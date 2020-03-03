@@ -26,10 +26,15 @@
       "data": {
         "scheme": "https",
         "base_path": "/v1",
+        "cookieName": "cookieName",
+        "anotherCookieName": "anotherCookieName",
+        "key": "key",
+        "anotherKey": "anotherKey",
         "host": "api.server.test",
-        "apiKey": "apiKey",
         "httpUsername": "username",
         "httpPassword": "password",
+        "xApiKey": "xApiKey",
+        "xAppVersion": "xAppVersion",
         "bearerToken": "bearerToken"
       },
       "_type": "environment",
@@ -78,7 +83,12 @@
         {
           "name": "x-api_key",
           "disabled": false,
-          "value": "{{ apiKey }}"
+          "value": "{{ xApiKey }}"
+        },
+        {
+          "name": "x-app-version",
+          "disabled": false,
+          "value": "{{ xAppVersion }}"
         }
       ],
       "authentication": {},
@@ -96,7 +106,7 @@
         {
           "name": "Cookie",
           "disabled": false,
-          "value": "CookieName={{ apiKey }}"
+          "value": "CookieName={{ cookieName }}; AnotherCookieName={{ anotherCookieName }}"
         }
       ],
       "authentication": {},
@@ -113,7 +123,12 @@
         {
           "name": "key",
           "disabled": false,
-          "value": "{{ apiKey }}"
+          "value": "{{ key }}"
+        },
+        {
+          "name": "another_key",
+          "disabled": false,
+          "value": "{{ anotherKey }}"
         }
       ],
       "headers": [],
@@ -131,19 +146,19 @@
         {
           "name": "key",
           "disabled": false,
-          "value": "{{ apiKey }}"
+          "value": "{{ key }}"
         }
       ],
       "headers": [
         {
           "name": "x-api_key",
           "disabled": false,
-          "value": "{{ apiKey }}"
+          "value": "{{ xApiKey }}"
         },
         {
           "name": "Cookie",
           "disabled": false,
-          "value": "CookieName={{ apiKey }}"
+          "value": "CookieName={{ cookieName }}"
         }
       ],
       "authentication": {
