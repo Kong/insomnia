@@ -87,7 +87,8 @@ class PromptModal extends React.PureComponent<Props, State> {
     e.preventDefault();
 
     if (this._input) {
-      const result = this._input.type === 'checkbox' ? this._input.checked : this._input.value;
+      const result =
+        this._input.type === 'checkbox' ? this._input.checked.toString() : this._input.value;
       this._done(result);
     }
   }
