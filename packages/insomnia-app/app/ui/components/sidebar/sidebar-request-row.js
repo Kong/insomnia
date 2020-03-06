@@ -12,6 +12,7 @@ import * as models from '../../../models';
 import { showModal } from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
+import { getMethodOverrideHeader } from '../../../common/misc';
 
 @autobind
 class SidebarRequestRow extends PureComponent {
@@ -63,7 +64,7 @@ class SidebarRequestRow extends PureComponent {
   _getMethodOverrideHeaderValue() {
     const { request } = this.props;
 
-    const header = request.headers.find(h => h.name.toLowerCase() === 'x-http-method-override');
+    const header = getMethodOverrideHeader(request.headers);
 
     if (header) {
       return header.value;
