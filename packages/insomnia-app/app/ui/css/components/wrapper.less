@@ -1,6 +1,3 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .wrapper {
   background-color: var(--color-bg);
   color: var(--color-font);
@@ -35,10 +32,10 @@
       position: absolute;
       height: 100%;
       z-index: 9;
-      width: @drag-width;
+      width: var(--drag-width);
       top: 0;
       // More to the right so it doesn't cover scroll bars
-      left: calc((@drag-width / 8) * -1);
+      left: calc((var(--drag-width) / 8) * -1);
     }
   }
 
@@ -88,16 +85,16 @@
 
     & > * {
       cursor: ns-resize;
-      height: @drag-width;
+      height: var(--drag-width);
       width: 100%;
       left: 0;
       // More to the right so it doesn't cover scroll bars
-      top: calc(@drag-width / 2 * -1);
+      top: calc(var(--drag-width) / 2 * -1);
     }
   }
 }
 
-@media (max-width: @breakpoint-md) {
+@media (max-width: 880px) {
   .wrapper {
     .wrapper--vertical();
   }

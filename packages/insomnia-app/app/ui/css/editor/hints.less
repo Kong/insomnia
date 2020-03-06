@@ -1,8 +1,3 @@
-@import '../constants/colors';
-@import '../constants/animations';
-@import '../constants/dimensions';
-@import '../constants/fonts';
-
 // NOTE: This is NOT a child of .editor
 .CodeMirror-hints {
   border: 0;
@@ -21,9 +16,9 @@
     padding: 0 !important; // ugh
     border-radius: 0;
     display: grid;
-    grid-template-columns: @line-height-xxs auto minmax(0, 1fr);
+    grid-template-columns: var(--line-height-xxs) auto minmax(0, 1fr);
     background: var(--color-bg);
-    font-size: @font-size-xs;
+    font-size: var(--font-size-xs);
 
     &.type--variable {
       .label {
@@ -47,7 +42,7 @@
     }
 
     &:not(.fancy-hint)::before {
-      margin-left: calc(@padding-sm * -1);
+      margin-left: calc(var(--padding-sm) * -1);
       content: '\1d43a';
       background: var(--color-warning);
       color: var(--color-font-warning);
@@ -58,8 +53,8 @@
     .value,
     .label {
       min-height: 100%;
-      line-height: @line-height-xxs;
-      padding: 0 @padding-sm !important;
+      line-height: var(--line-height-xxs);
+      padding: 0 var(--padding-sm) !important;
       margin: 0;
       box-sizing: border-box;
     }
@@ -68,7 +63,7 @@
     .name,
     .value {
       background: var(--color-bg);
-      font-family: @font-monospace !important;
+      font-family: var(--font-monospace) !important;
 
       // Ellipsis when too long
       width: 100%;
@@ -80,7 +75,7 @@
 
     .value {
       text-align: right;
-      padding-left: @padding-lg;
+      padding-left: var(--padding-lg);
       font-style: italic;
       font-size: 0.9em;
     }
@@ -88,10 +83,10 @@
     &:not(.fancy-hint)::before,
     .label {
       opacity: 0.8;
-      font-size: @font-size-sm;
-      font-family: @font-default;
+      font-size: var(--font-size-sm);
+      font-family: var(--font-default);
       text-align: center;
-      width: @line-height-xxs;
+      width: var(--line-height-xxs);
     }
 
     &:hover,

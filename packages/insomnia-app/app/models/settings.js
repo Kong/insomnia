@@ -5,12 +5,21 @@ import * as db from '../common/database';
 import { UPDATE_CHANNEL_STABLE } from '../common/constants';
 import * as hotkeys from '../common/hotkeys';
 
+export type PluginConfig = {
+  disabled: boolean,
+};
+
+export type PluginConfigMap = {
+  [string]: PluginConfig,
+};
+
 type BaseSettings = {
   autoHideMenuBar: boolean,
   autocompleteDelay: number,
   deviceId: string | null,
   disableHtmlPreviewJs: boolean,
   disableUpdateNotification: boolean,
+  disableResponsePreviewLinks: boolean,
   editorFontSize: number,
   editorIndentSize: number,
   editorIndentWithTabs: boolean,
@@ -33,6 +42,7 @@ type BaseSettings = {
   nunjucksPowerUserMode: boolean,
   pluginPath: string,
   proxyEnabled: boolean,
+  filterResponsesByEnv: boolean,
   showPasswords: boolean,
   theme: string,
   timeout: number,
@@ -41,6 +51,7 @@ type BaseSettings = {
   useBulkHeaderEditor: boolean,
   useBulkParametersEditor: boolean,
   validateSSL: boolean,
+  pluginConfig: PluginConfigMap,
 
   // Feature flags
   enableSyncBeta: boolean,
@@ -60,6 +71,7 @@ export function init(): BaseSettings {
     autocompleteDelay: 1200,
     deviceId: null,
     disableHtmlPreviewJs: false,
+    disableResponsePreviewLinks: false,
     disableUpdateNotification: false,
     editorFontSize: 11,
     editorIndentSize: 2,
@@ -83,6 +95,7 @@ export function init(): BaseSettings {
     nunjucksPowerUserMode: false,
     pluginPath: '',
     proxyEnabled: false,
+    filterResponsesByEnv: false,
     showPasswords: false,
     theme: packageJson.app.theme,
     timeout: 0,
@@ -94,6 +107,7 @@ export function init(): BaseSettings {
 
     // Feature flags
     enableSyncBeta: false,
+    pluginConfig: {},
   };
 }
 

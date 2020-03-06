@@ -67,6 +67,10 @@ module.exports.convert = async function(rawData) {
   );
 
   const protocol = defaultServer.protocol || '';
+
+  // Base path is pulled out of the URL, and the trailing slash is removed
+  const basePath = (defaultServer.pathname || '').replace(/\/$/, '');
+
   const openapiEnv = {
     _type: 'environment',
     _id: `env___BASE_ENVIRONMENT_ID___sub`,
@@ -75,7 +79,7 @@ module.exports.convert = async function(rawData) {
     data: {
       // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
       scheme: protocol.replace(/:$/, '') || ['http'],
-      base_path: defaultServer.pathname || '',
+      base_path: basePath,
       host: defaultServer.host || '',
       ...securityVariables,
     },

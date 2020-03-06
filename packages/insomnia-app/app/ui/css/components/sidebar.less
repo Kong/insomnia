@@ -1,10 +1,7 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .sidebar {
   position: relative;
   display: grid;
-  grid-template-rows: @height-nav auto auto fit-content(20%) auto minmax(0, 1fr) auto;
+  grid-template-rows: var(--height-nav) auto auto fit-content(20%) auto minmax(0, 1fr) auto;
   grid-template-columns: 100%;
   z-index: 10;
 
@@ -15,7 +12,7 @@
   height: 100%;
 
   & > .sidebar__list:last-child {
-    padding-bottom: @padding-md;
+    padding-bottom: var(--padding-md);
   }
 
   &.sidebar--collapsed > * > * {
@@ -37,8 +34,8 @@
   // ~~~~~~~~~~~~~~ //
 
   .sidebar__header {
-    border-top: 1px solid @hl-md;
-    border-bottom: 1px solid @hl-md;
+    border-top: 1px solid var(--hl-md);
+    border-bottom: 1px solid var(--hl-md);
     box-sizing: border-box;
     background-color: var(--color-bg);
     color: var(--color-font);
@@ -51,7 +48,7 @@
 
     h1,
     h1 * {
-      font-size: @font-size-xl;
+      font-size: var(--font-size-xl);
     }
   }
 
@@ -62,23 +59,23 @@
   .sidebar__filter {
     // Nothing yet
     display: grid;
-    font-size: @font-size-sm;
+    font-size: var(--font-size-sm);
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     box-sizing: border-box;
-    padding: 0 0 @padding-xxs @padding-sm;
+    padding: 0 0 var(--padding-xxs) var(--padding-sm);
 
     .btn {
-      padding: 0 calc(@padding-md - @padding-xs);
-      margin-right: @padding-xxs;
-      border-radius: @radius-md;
-      margin-left: @padding-xxs;
-      margin-bottom: @padding-sm;
-      height: @line-height-xxs;
+      padding: 0 calc(var(--padding-md) - var(--padding-xs));
+      margin-right: var(--padding-xxs);
+      border-radius: var(--radius-md);
+      margin-left: var(--padding-xxs);
+      margin-bottom: var(--padding-sm);
+      height: var(--line-height-xxs);
     }
 
     .form-control input {
-      padding: @padding-xs;
+      padding: var(--padding-xs);
       margin-top: 0;
       height: auto;
       background: transparent;
@@ -91,10 +88,10 @@
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    font-size: @font-size-sm;
-    color: @hl;
-    padding-left: @padding-xs;
-    padding-right: @padding-xs;
+    font-size: var(--font-size-sm);
+    color: var(--hl);
+    padding-left: var(--padding-xs);
+    padding-right: var(--padding-xs);
 
     // Make it scroll when too skinny
     overflow: auto;
@@ -105,8 +102,8 @@
 
     & > * {
       flex: 1;
-      margin-top: @padding-xs;
-      margin-bottom: @padding-xs;
+      margin-top: var(--padding-xs);
+      margin-bottom: var(--padding-xs);
       max-width: 100%;
     }
 
@@ -115,11 +112,11 @@
     }
 
     & > *:first-child {
-      margin-right: @padding-xxs;
+      margin-right: var(--padding-xxs);
     }
 
     & > *:last-child {
-      margin-left: @padding-xxs;
+      margin-left: var(--padding-xxs);
     }
 
     .sidebar__menu__thing {
@@ -143,9 +140,9 @@
 
     .btn {
       border-radius: 900px;
-      height: @line-height-xxs;
-      padding-left: @padding-xxs;
-      padding-right: @padding-xxs;
+      height: var(--line-height-xxs);
+      padding-left: var(--padding-xxs);
+      padding-right: var(--padding-xxs);
       color: var(--color-font);
 
       &:hover,
@@ -162,10 +159,10 @@
 
   &.sidebar--skinny .sidebar__filter {
     grid-template-columns: 100%;
-    padding-right: @padding-sm;
+    padding-right: var(--padding-sm);
 
     & > *:first-child {
-      margin-right: @padding-xs;
+      margin-right: var(--padding-xs);
     }
 
     & > *:last-child {
@@ -194,7 +191,7 @@
   .sidebar__list-separator {
     height: 2px;
     background-color: var(--hl-sm);
-    margin: @padding-sm 0;
+    margin: var(--padding-sm) 0;
 
     &--invisible {
       opacity: 0;
@@ -238,10 +235,10 @@
   .sidebar__item {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto auto;
-    grid-template-rows: @line-height-xs;
+    grid-template-rows: var(--line-height-xs);
 
     & > button {
-      color: @hl;
+      color: var(--hl);
     }
 
     & > * {
@@ -249,7 +246,7 @@
     }
 
     &.sidebar__item--big {
-      grid-template-rows: @line-height-sm;
+      grid-template-rows: var(--line-height-sm);
     }
 
     &.sidebar__item--active > button {
@@ -261,13 +258,13 @@
     }
 
     & > button {
-      border-left: @padding-xxs solid transparent;
+      border-left: var(--padding-xxs) solid transparent;
     }
 
     &.sidebar__item--active.sidebar__item--request,
     &:focus,
     &:hover {
-      background-color: @hl-xs;
+      background-color: var(--hl-xs);
       transition: background-color 0ms;
     }
 
@@ -302,23 +299,23 @@
   // Padding for nested folders
 
   .sidebar__list .sidebar__clickable {
-    padding-left: @padding-sm;
+    padding-left: var(--padding-sm);
   }
 
   .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: calc(@padding-sm + @padding-md * 1);
+    padding-left: calc(var(--padding-sm) + var(--padding-md) * 1);
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: calc(@padding-sm + @padding-md * 2);
+    padding-left: calc(var(--padding-sm) + var(--padding-md) * 2);
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: calc(@padding-sm + @padding-md * 3);
+    padding-left: calc(var(--padding-sm) + var(--padding-md) * 3);
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: calc(@padding-sm + @padding-md * 4);
+    padding-left: calc(var(--padding-sm) + var(--padding-md) * 4);
   }
 
   .sidebar__list
@@ -328,7 +325,7 @@
     .sidebar__list
     .sidebar__list
     .sidebar__clickable {
-    padding-left: calc(@padding-sm + @padding-md * 5);
+    padding-left: calc(var(--padding-sm) + var(--padding-md) * 5);
   }
 
   .sidebar__list
@@ -339,7 +336,7 @@
     .sidebar__list
     .sidebar__list
     .sidebar__clickable {
-    padding-left: calc(@padding-sm + @padding-md * 6);
+    padding-left: calc(var(--padding-sm) + var(--padding-md) * 6);
   }
 
   // ~~~~~~~~~~~~~~~ //
@@ -368,9 +365,9 @@
     & > button,
     & > .dropdown > button {
       display: none;
-      color: @hl;
+      color: var(--hl);
       height: 100%;
-      padding: 0 @padding-sm;
+      padding: 0 var(--padding-sm);
     }
 
     & > button:hover,
@@ -388,9 +385,9 @@
   .sidebar__item__icon-pin {
     display: flex;
     align-items: center;
-    color: @hl-xl;
+    color: var(--hl-xl);
     height: 100%;
-    padding: 0 @padding-sm;
+    padding: 0 var(--padding-sm);
   }
 
   .sidebar__item:hover .sidebar__item__icon-pin {
@@ -402,18 +399,18 @@
   // ~~~~~~~~~~~~~~ //
 
   .sidebar__footer {
-    height: @line-height-xs;
-    border-top: 1px solid @hl-md;
+    height: var(--line-height-xs);
+    border-top: 1px solid var(--hl-md);
     width: 100%;
   }
 
   .sidebar__footer > button,
   .sidebar__footer .dropdown > button {
-    font-size: @font-size-sm;
-    padding: @padding-xs @padding-md;
+    font-size: var(--font-size-sm);
+    padding: var(--padding-xs) var(--padding-md);
     height: 100%;
     margin: 0;
-    color: @hl;
+    color: var(--hl);
     box-sizing: border-box;
     overflow: hidden;
   }

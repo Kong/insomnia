@@ -533,6 +533,9 @@ function _genTestContext(requests, responses, extraInfoRoot) {
   return {
     renderPurpose: 'send',
     context: {
+      getEnvironmentId() {
+        return null;
+      },
       getExtraInfo(key) {
         if (_extraInfo) {
           return _extraInfo[key] || null;
@@ -575,7 +578,7 @@ function _genTestContext(requests, responses, extraInfoRoot) {
           },
         },
         response: {
-          getLatestForRequestId(requestId) {
+          getLatestForRequestId(requestId, environmentId) {
             return responses.find(r => r.parentId === requestId) || null;
           },
           getBodyBuffer(response) {

@@ -7,6 +7,11 @@
       "from": "./bin",
       "to": "./bin",
       "filter": "yarn-standalone.js"
+    },
+    {
+      "from": "./build",
+      "to": ".",
+      "filter": "opensource-licenses.txt"
     }
   ],
   "protocols": [

@@ -2,6 +2,10 @@ const jq = require('jsonpath');
 const iconv = require('iconv-lite');
 const { query: queryXPath } = require('insomnia-xpath');
 
+function isFilterableField(field) {
+  return field !== 'raw' && field !== 'url';
+}
+
 module.exports.templateTags = [
   {
     name: 'response',
@@ -27,6 +31,11 @@ module.exports.templateTags = [
             description: 'value of response header',
             value: 'header',
           },
+          {
+            displayName: 'Request URL',
+            description: 'Url of initiating request',
+            value: 'url',
+          },
         ],
       },
       {
@@ -37,7 +46,7 @@ module.exports.templateTags = [
       {
         type: 'string',
         encoding: 'base64',
-        hide: args => args[0].value === 'raw',
+        hide: args => !isFilterableField(args[0].value),
         displayName: args => {
           switch (args[0].value) {
             case 'body':
@@ -77,7 +86,7 @@ module.exports.templateTags = [
       filter = filter || '';
       resendBehavior = (resendBehavior || 'never').toLowerCase();
 
-      if (!['body', 'header', 'raw'].includes(field)) {
+      if (!['body', 'header', 'raw', 'url'].includes(field)) {
         throw new Error(`Invalid response field ${field}`);
       }
 
@@ -90,7 +99,8 @@ module.exports.templateTags = [
         throw new Error(`Could not find request ${id}`);
       }
 
-      let response = await context.util.models.response.getLatestForRequestId(id);
+      const environmentId = context.context.getEnvironmentId();
+      let response = await context.util.models.response.getLatestForRequestId(id, environmentId);
 
       let shouldResend = false;
       if (context.context.getExtraInfo('fromResponseTag')) {
@@ -132,7 +142,7 @@ module.exports.templateTags = [
         throw new Error('No successful responses for request');
       }
 
-      if (field !== 'raw' && !filter) {
+      if (isFilterableField(field) && !filter) {
         throw new Error(`No ${field} filter specified`);
       }
 
@@ -140,6 +150,8 @@ module.exports.templateTags = [
 
       if (field === 'header') {
         return matchHeader(response.headers, sanitizedFilter);
+      } else if (field === 'url') {
+        return response.url;
       } else if (field === 'raw') {
         const bodyBuffer = context.util.models.response.getBodyBuffer(response, '');
         const match = response.contentType.match(/charset=([\w-]+)/);

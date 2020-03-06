@@ -57,6 +57,12 @@ module.exports = {
     'file',
     'system',
   ],
-  plugins: [new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 })],
+  plugins: [
+    new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
+    new webpack.ContextReplacementPlugin(/\/@giphy\/js-brand\//, data => {
+      delete data.dependencies[0].critical;
+      return data;
+    }),
+  ],
   target: 'electron-renderer',
 };

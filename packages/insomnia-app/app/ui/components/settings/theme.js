@@ -48,7 +48,7 @@ class Theme extends React.PureComponent<Props, State> {
           onClick={handleChangeTheme}
           value={theme.theme.name}
           className={isActive ? 'active' : ''}>
-          <svg width="100%" height="100%" viewBox="0 0 500 300">
+          <svg theme={theme.theme.name} width="100%" height="100%" viewBox="0 0 500 300">
             <g subtheme={theme.theme.name}>
               {/* Panes */}
               <g className="theme--pane--sub">

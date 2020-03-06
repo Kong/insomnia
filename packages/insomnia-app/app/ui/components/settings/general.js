@@ -307,9 +307,21 @@ class General extends React.PureComponent<Props, State> {
           <div>
             {this.renderBooleanSetting('Validate certificates', 'validateSSL', '')}
             {this.renderBooleanSetting('Follow redirects', 'followRedirects', '')}
+            {this.renderBooleanSetting(
+              'Filter responses by environment',
+              'filterResponsesByEnv',
+              'Only show responses that were sent under the currently-active environment. This ' +
+                'adds additional separation when working with Development, Staging, Production ' +
+                'environments, for example.',
+            )}
           </div>
           <div>
             {this.renderBooleanSetting('Disable JS in HTML preview', 'disableHtmlPreviewJs', '')}
+            {this.renderBooleanSetting(
+              'Disable Links in response viewer',
+              'disableResponsePreviewLinks',
+              '',
+            )}
           </div>
         </div>
 

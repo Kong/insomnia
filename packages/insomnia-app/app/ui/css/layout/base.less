@@ -1,7 +1,3 @@
-@import '../constants/colors';
-@import '../constants/dimensions';
-@import '../constants/fonts';
-
 html {
   font-size: var(--font-size);
   font-variant-ligatures: var(--font-ligatures);
@@ -23,7 +19,7 @@ h5,
 h6,
 input {
   font-weight: 400;
-  font-family: @font-default;
+  font-family: var(--font-default);
 }
 
 body {
@@ -32,35 +28,35 @@ body {
 }
 
 h1 {
-  font-size: @font-size-xxl;
+  font-size: var(--font-size-xxl);
 }
 
 h2 {
-  font-size: @font-size-xl;
+  font-size: var(--font-size-xl);
 }
 
 h3 {
-  font-size: @font-size-lg;
+  font-size: var(--font-size-lg);
 }
 
 p,
 h1,
 h2,
 h3 {
-  margin-bottom: @padding-sm;
-  margin-top: @padding-md;
+  margin-bottom: var(--padding-sm);
+  margin-top: var(--padding-md);
 }
 
 hr {
   width: 100%;
   height: 0;
   border: 0;
-  border-bottom: 1px solid @hl-md;
-  margin: @padding-md 0;
+  border-bottom: 1px solid var(--hl-md);
+  margin: var(--padding-md) 0;
 }
 
 hr.hr--spaced {
-  margin: @padding-lg 0;
+  margin: var(--padding-lg) 0;
 }
 
 em {
@@ -69,7 +65,7 @@ em {
 
 label {
   display: inline-block;
-  padding-top: @padding-xs;
+  padding-top: var(--padding-xs);
 }
 
 p {
@@ -78,7 +74,7 @@ p {
 
 ul.ul--pretty {
   list-style: disc;
-  padding-left: @padding-lg;
+  padding-left: var(--padding-lg);
   margin-bottom: 1.5em;
 }
 
@@ -89,11 +85,11 @@ small {
 .label--small,
 label > small,
 table th {
-  color: @hl;
+  color: var(--hl);
   font-weight: 600;
   text-transform: uppercase;
-  font-size: @font-size-xs;
-  padding-bottom: @padding-xxs;
+  font-size: var(--font-size-xs);
+  padding-bottom: var(--padding-xxs);
 }
 
 webview {
@@ -107,12 +103,19 @@ table.table--fancy {
 
   td,
   th {
-    padding: @padding-sm;
+    padding: var(--padding-sm);
     vertical-align: top;
   }
 
   &.table--compact td {
-    padding: @padding-xs;
+    padding: var(--padding-xs);
+  }
+
+  &.table--valign-middle {
+    td,
+    th {
+      vertical-align: middle;
+    }
   }
 
   th {
@@ -120,17 +123,17 @@ table.table--fancy {
   }
 
   &.table--striped tbody tr:nth-child(odd) {
-    background: @hl-xs;
+    background: var(--hl-xs);
   }
 
   &.table--outlined {
     th {
-      background: @hl-xxs;
+      background: var(--hl-xxs);
     }
 
     &,
     td {
-      border: 1px solid @hl-sm;
+      border: 1px solid var(--hl-sm);
     }
 
     tr.table--no-outline-row td {
@@ -139,7 +142,7 @@ table.table--fancy {
     }
 
     & {
-      border-radius: @radius-md;
+      border-radius: var(--radius-md);
       border-collapse: unset;
     }
 
@@ -156,10 +159,10 @@ table.table--fancy {
 
 code {
   display: inline-block;
-  background: @hl-xs;
-  padding: @padding-xs @padding-sm;
+  background: var(--hl-xs);
+  padding: var(--padding-xs) var(--padding-sm);
   color: var(--color-font);
-  border: 1px solid @hl-sm;
+  border: 1px solid var(--hl-sm);
   font-size: 0.9em;
 
   &.code--compact {
@@ -171,12 +174,12 @@ code {
 code,
 pre,
 .monospace {
-  font-family: @font-monospace;
+  font-family: var(--font-monospace);
   tab-size: 4;
 }
 
 .font-normal {
-  font-family: @font-default;
+  font-family: var(--font-default);
 }
 
 .pre {
@@ -188,9 +191,9 @@ div.notice,
 p.notice {
   text-align: center;
   color: var(--color-font) !important;
-  padding: calc(@padding-sm * 1.5);
+  padding: calc(var(--padding-sm) * 1.5);
   border: 1px dotted var(--hl);
-  border-radius: @radius-md;
+  border-radius: var(--radius-md);
   position: relative;
   z-index: 0;
   overflow: auto;
@@ -209,7 +212,7 @@ p.notice {
   a {
     text-decoration: underline;
     color: var(--color-font);
-    opacity: @opacity-subtle;
+    opacity: var(--opacity-subtle);
   }
 
   a:hover {
@@ -292,10 +295,10 @@ p.notice {
 
 blockquote {
   border-left: 0.4em solid var(--hl-md);
-  padding: @padding-xxs @padding-md;
+  padding: var(--padding-xxs) var(--padding-md);
 
   p {
-    margin: @padding-xs 0;
+    margin: var(--padding-xs) 0;
   }
 }
 
@@ -308,19 +311,19 @@ blockquote {
 }
 
 .faint {
-  opacity: @opacity-subtle;
+  opacity: var(--opacity-subtle);
 }
 
 .super-faint {
-  opacity: @opacity-subtle * 0.8;
+  opacity: calc(var(--opacity-subtle) * 0.8);
 }
 
 .super-duper-faint {
-  opacity: @opacity-subtle * 0.5;
+  opacity: calc(var(--opacity-subtle) * 0.5);
 }
 
 .ultra-faint {
-  opacity: @opacity-subtle * 0.2;
+  opacity: calc(var(--opacity-subtle) * 0.2);
 }
 
 .faded {
@@ -340,7 +343,7 @@ blockquote {
 }
 
 .outlined {
-  border: 1px solid @hl-md;
+  border: 1px solid var(--hl-md);
 }
 
 .valign-bottom {
@@ -376,11 +379,11 @@ blockquote {
   }
 
   & > *:not(:first-child) {
-    padding-left: @padding-xs;
+    padding-left: var(--padding-xs);
   }
 
   & > *:not(:last-child) {
-    padding-right: @padding-xs;
+    padding-right: var(--padding-xs);
   }
 }
 
@@ -423,7 +426,7 @@ blockquote {
 }
 
 .height-md {
-  height: @line-height-md;
+  height: var(--line-height-md);
 }
 
 .pointer {
@@ -491,55 +494,55 @@ i.fa.fa--fixed-width {
 }
 
 .border-top {
-  border-top: 1px solid @hl-md;
+  border-top: 1px solid var(--hl-md);
 }
 
 .pad {
   box-sizing: border-box;
-  padding: @padding-md;
+  padding: var(--padding-md);
 }
 
 .pad-sm {
   box-sizing: border-box;
-  padding: @padding-sm;
+  padding: var(--padding-sm);
 }
 
 .pad-xs {
   box-sizing: border-box;
-  padding: @padding-xs;
+  padding: var(--padding-xs);
 }
 
 .pad-xxs {
   box-sizing: border-box;
-  padding: @padding-xxs;
+  padding: var(--padding-xxs);
 }
 
 .pad-left {
   box-sizing: border-box;
-  padding-left: @padding-md;
+  padding-left: var(--padding-md);
 }
 
 .pad-left-sm {
-  padding-left: calc(@padding-md / 2);
+  padding-left: calc(var(--padding-md) / 2);
 }
 
 .pad-right {
   box-sizing: border-box;
-  padding-right: @padding-md;
+  padding-right: var(--padding-md);
 }
 
 .pad-right-sm {
-  padding-right: calc(@padding-md / 2);
+  padding-right: calc(var(--padding-md) / 2);
 }
 
 .pad-top {
   box-sizing: border-box;
-  padding-top: @padding-md;
+  padding-top: var(--padding-md);
 }
 
 .pad-top-sm {
   box-sizing: border-box;
-  padding-top: calc(@padding-sm);
+  padding-top: calc(var(--padding-sm));
 }
 
 .space-left {
@@ -555,61 +558,61 @@ i.fa.fa--fixed-width {
 }
 
 .margin {
-  margin: @padding-md;
+  margin: var(--padding-md);
 }
 
 .margin-sm {
-  margin: @padding-sm;
+  margin: var(--padding-sm);
 }
 
 .margin-xs {
-  margin: @padding-xs;
+  margin: var(--padding-xs);
 }
 
 .margin-top-sm {
-  margin-top: @padding-sm;
+  margin-top: var(--padding-sm);
 }
 
 .margin-top {
-  margin-top: @padding-md;
+  margin-top: var(--padding-md);
 }
 
 .margin-left {
-  margin-left: @padding-md;
+  margin-left: var(--padding-md);
 }
 
 .margin-left-sm {
-  margin-left: @padding-sm;
+  margin-left: var(--padding-sm);
 }
 
 .margin-right-sm {
-  margin-right: @padding-sm;
+  margin-right: var(--padding-sm);
 }
 
 .margin-bottom {
-  margin-bottom: @padding-md;
+  margin-bottom: var(--padding-md);
 }
 
 .margin-bottom-sm {
-  margin-bottom: @padding-sm;
+  margin-bottom: var(--padding-sm);
 }
 
 .margin-bottom-xs {
-  margin-bottom: @padding-xs;
+  margin-bottom: var(--padding-xs);
 }
 
 .margin-top-sm {
-  margin-top: @padding-sm !important;
+  margin-top: var(--padding-sm) !important;
 }
 
 .pad-bottom {
   box-sizing: border-box;
-  padding-bottom: @padding-md;
+  padding-bottom: var(--padding-md);
 }
 
 .pad-bottom-sm {
   box-sizing: border-box;
-  padding-bottom: @padding-sm;
+  padding-bottom: var(--padding-sm);
 }
 
 .no-margin {
@@ -730,7 +733,7 @@ i.fa.fa--fixed-width {
   }
 
   .section__body {
-    border-right: 1px solid @hl-sm;
+    border-right: 1px solid var(--hl-sm);
   }
 }
 
@@ -752,14 +755,6 @@ strong {
   text-decoration: underline;
 }
 
-.hide-above-lg {
-  display: none;
-}
-
-.hide-above-md {
-  display: none;
-}
-
 .react-hot-loader-error-overlay > div {
   position: fixed;
   left: 0;
@@ -774,29 +769,5 @@ strong {
     margin: 0.2em;
     font-size: 0.8em;
     padding: 0.2em 0.5em;
-  }
-}
-
-@media (max-width: @breakpoint-lg) {
-  .hide-below-lg {
-    display: none;
-  }
-
-  .hide-above-lg {
-    display: initial;
-  }
-}
-
-@media (max-width: @breakpoint-md) {
-  html {
-    font-size: calc(@font-size * 0.95);
-  }
-
-  .hide-below-md {
-    display: none;
-  }
-
-  .hide-above-md {
-    display: initial;
   }
 }

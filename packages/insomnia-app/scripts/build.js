@@ -1,6 +1,7 @@
 const packageJson = require('../package.json');
 const childProcess = require('child_process');
 const webpack = require('webpack');
+const licenseChecker = require('license-checker');
 const rimraf = require('rimraf');
 const ncp = require('ncp').ncp;
 const path = require('path');
@@ -31,6 +32,8 @@ module.exports.start = async function() {
   await emptyDir('../build');
 
   // Build the things
+  console.log('[build] Building license list');
+  await buildLicenseList('../', '../build/opensource-licenses.txt');
   console.log('[build] Building Webpack renderer');
   await buildWebpack(configRenderer);
   console.log('[build] Building Webpack main');
@@ -93,6 +96,52 @@ async function copyFiles(relSource, relDest) {
       } else {
         resolve();
       }
+    });
+  });
+}
+
+async function buildLicenseList(relSource, relDest) {
+  return new Promise((resolve, reject) => {
+    const source = path.resolve(__dirname, relSource);
+    const dest = path.resolve(__dirname, relDest);
+    mkdirp.sync(path.dirname(dest));
+
+    licenseChecker.init({ start: source, production: true }, (err, packages) => {
+      if (err) {
+        return reject(err);
+      }
+
+      const out = [];
+      for (const pkgName of Object.keys(packages)) {
+        const { licenses, repository, publisher, email, licenseFile: lf } = packages[pkgName];
+        const licenseFile = (lf || '').includes('README') ? null : lf;
+        const txt = licenseFile ? fs.readFileSync(licenseFile) : '[no license file]';
+        const body = [
+          '-------------------------------------------------------------------------',
+          '',
+          `PACKAGE: ${pkgName}`,
+          licenses ? `LICENSES: ${licenses}` : null,
+          repository ? `REPOSITORY: ${repository}` : null,
+          publisher ? `PUBLISHER: ${publisher}` : null,
+          email ? `EMAIL: ${email}` : null,
+          '\n' + txt,
+        ]
+          .filter(v => v !== null)
+          .join('\n');
+
+        out.push(`${body}\n\n`);
+      }
+
+      const header = [
+        'This application bundles the following third-party packages in ',
+        'accordance with the following licenses:',
+        '-------------------------------------------------------------------------',
+        '',
+        '',
+      ].join('\n');
+
+      fs.writeFileSync(dest, header + out.join('\n\n'));
+      resolve();
     });
   });
 }
