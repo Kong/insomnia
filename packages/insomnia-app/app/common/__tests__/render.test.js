@@ -57,7 +57,7 @@ describe('render()', () => {
 
     // In runtime, this context is used to render, which re-evaluates the expression for replaced in the rootEnvironment by using the built context
     // Regression test from issue 1917 - https://github.com/Kong/insomnia/issues/1917
-    const renderExpression = renderUtils.render(rootEnvironment.data.replaced, context);
+    const renderExpression = await renderUtils.render(rootEnvironment.data.replaced, context);
     expect(renderExpression).toBe('cat');
   });
 });
