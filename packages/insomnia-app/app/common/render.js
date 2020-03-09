@@ -5,11 +5,12 @@ import type { BaseModel } from '../models/index';
 import { setDefaultProtocol } from 'insomnia-url';
 import clone from 'clone';
 import * as models from '../models';
-import { CONTENT_TYPE_GRAPHQL } from '../common/constants';
+import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_PREFIX } from '../common/constants';
 import * as db from './database';
 import * as templating from '../templating';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
+import orderedJSON from 'json-order';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -36,23 +37,41 @@ export async function buildRenderContext(
 ): Object {
   const envObjects = [];
 
+  // Get root environment keys in correct order
+  // Then get sub environment keys in correct order
+  // Then get ancestor (folder) environment keys in correct order
   if (rootEnvironment) {
-    envObjects.push(rootEnvironment.data);
+    const ordered = orderedJSON.order(
+      rootEnvironment.data,
+      rootEnvironment.dataPropertyOrder,
+      JSON_ORDER_PREFIX,
+    );
+
+    envObjects.push(ordered);
   }
 
   if (subEnvironment) {
-    envObjects.push(subEnvironment.data);
+    const ordered = orderedJSON.order(
+      subEnvironment.data,
+      subEnvironment.dataPropertyOrder,
+      JSON_ORDER_PREFIX,
+    );
+
+    envObjects.push(ordered);
   }
 
   for (const doc of (ancestors || []).reverse()) {
-    const environment = (doc: any).environment;
+    const ancestor: any = doc;
+    const { environment, environmentPropertyOrder } = ancestor;
     if (typeof environment === 'object' && environment !== null) {
-      envObjects.push(environment);
+      const ordered = orderedJSON.order(environment, environmentPropertyOrder, JSON_ORDER_PREFIX);
+      envObjects.push(ordered);
     }
   }
 
   // At this point, environments is a list of environments ordered
-  // from top-most parent to bottom-most child
+  // from top-most parent to bottom-most child, and they keys in each environment
+  // ordered by its property map.
   // Do an Object.assign, but render each property as it overwrites. This
   // way we can keep same-name variables from the parent context.
   let renderContext = baseContext;
@@ -437,13 +456,7 @@ export async function getRenderedRequest(
  * @returns {number}
  */
 function _nunjucksSortValue(v) {
-  if (v && v.match && v.match(/({%)/)) {
-    return 3;
-  } else if (v && v.match && v.match(/({{)/)) {
-    return 2;
-  } else {
-    return 1;
-  }
+  return v && v.match && v.match(/({{|{%)/) ? 2 : 1;
 }
 
 function _getOrderedEnvironmentKeys(finalRenderContext: Object): Array<string> {
