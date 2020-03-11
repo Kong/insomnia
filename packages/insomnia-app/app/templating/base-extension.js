@@ -29,6 +29,10 @@ export default class BaseExtension {
     return this._ext.description || 'no description';
   }
 
+  getLiveDisplayName() {
+    return this._ext.liveDisplayName || function(args) { return ''; };
+  }
+
   getDisablePreview() {
     return this._ext.disablePreview || (() => false);
   }
