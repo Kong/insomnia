@@ -26,10 +26,10 @@ module.exports = {
     styles: {
       sidebar: {
         background: {
-          default: '#073642',
+          default: '#002b36',
         },
         foreground: {
-          default: '#9cafb1',
+          default: '#839496',
         },
       },
     },

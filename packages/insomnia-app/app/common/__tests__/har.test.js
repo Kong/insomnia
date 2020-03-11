@@ -137,6 +137,30 @@ describe('exportHar()', () => {
     req3.headers.push({ name: 'X-Request', value: '3' });
     await models.request.create(req3);
 
+    const envBase = await models.environment.getOrCreateForWorkspace(workspace);
+    await models.environment.update(envBase, {
+      data: {
+        envvalue: '',
+      },
+    });
+    const envPublic = await models.environment.create({
+      _id: 'env_1',
+      name: 'Public',
+      parentId: envBase._id,
+      data: {
+        envvalue: 'public',
+      },
+    });
+    const envPrivate = await models.environment.create({
+      _id: 'env_2',
+      name: 'Private',
+      isPrivate: true,
+      parentId: envBase._id,
+      data: {
+        envvalue: 'private',
+      },
+    });
+
     await models.response.create({
       _id: 'res_1',
       parentId: req1._id,
@@ -153,36 +177,8 @@ describe('exportHar()', () => {
       statusCode: 500,
     });
 
-    const envBase = await models.environment.getOrCreateForWorkspace(workspace);
-    await models.environment.update(envBase, {
-      data: {
-        envvalue: '',
-      },
-    });
-    const envPublic = await models.environment.create({
-      _id: 'env_1',
-      name: 'Public',
-      parentId: envBase._id,
-    });
-    await models.environment.update(envPublic, {
-      data: {
-        envvalue: 'public',
-      },
-    });
-    const envPrivate = await models.environment.create({
-      _id: 'env_2',
-      name: 'Private',
-      isPrivate: true,
-      parentId: envBase._id,
-    });
-    await models.environment.update(envPrivate, {
-      data: {
-        envvalue: 'private',
-      },
-    });
-
     const exportRequests = [
-      { requestId: req1._id, environmentId: 'n/a' },
+      { requestId: req1._id, environmentId: null },
       { requestId: req2._id, environmentId: envPublic._id },
       { requestId: req3._id, environmentId: envPrivate._id },
     ];

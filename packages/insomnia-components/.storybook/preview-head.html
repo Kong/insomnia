@@ -1,0 +1,230 @@
+<script>
+  window.onload = function() {
+    document.body.setAttribute('theme', 'default');
+  };
+</script>
+
+<style>
+  /* reset.css */
+  html,
+  body,
+  div,
+  span,
+  applet,
+  object,
+  iframe,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  blockquote,
+  pre,
+  a,
+  abbr,
+  acronym,
+  address,
+  big,
+  cite,
+  code,
+  del,
+  dfn,
+  em,
+  img,
+  ins,
+  kbd,
+  q,
+  s,
+  samp,
+  small,
+  strike,
+  strong,
+  sub,
+  sup,
+  tt,
+  var,
+  b,
+  u,
+  i,
+  center,
+  dl,
+  dt,
+  dd,
+  ol,
+  ul,
+  li,
+  fieldset,
+  form,
+  label,
+  legend,
+  table,
+  caption,
+  tbody,
+  tfoot,
+  thead,
+  tr,
+  th,
+  td,
+  article,
+  aside,
+  canvas,
+  details,
+  embed,
+  figure,
+  figcaption,
+  footer,
+  header,
+  hgroup,
+  menu,
+  nav,
+  output,
+  ruby,
+  section,
+  summary,
+  time,
+  mark,
+  audio,
+  video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    vertical-align: baseline;
+  }
+
+  /* HTML5 display-role reset for older browsers */
+
+  article,
+  aside,
+  details,
+  figcaption,
+  figure,
+  footer,
+  header,
+  hgroup,
+  menu,
+  nav,
+  section {
+    display: block;
+  }
+
+  body {
+    line-height: normal;
+  }
+
+  ol,
+  ul {
+    list-style: none;
+  }
+
+  blockquote,
+  q {
+    quotes: none;
+  }
+
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+</style>
+
+<style>
+  html {
+    --font-monospace: Menlo, Monaco, Consolas, 'Droid Sans Mono', 'Courier New', monospace,
+      'Droid Sans Fallback';
+    --font-default: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI',
+      'HelveticaNeue-Light', 'Ubuntu', 'Droid Sans', sans-serif;
+    --font-ligatures: normal;
+  }
+
+  body {
+    overflow: auto;
+  }
+
+  #root {
+    max-width: 70rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  #story-root {
+    padding-left: 40px;
+    padding-right: 40px;
+    font-family: var(--font-default);
+    font-size: var(--font-size);
+  }
+
+  .storybook-skinny {
+    max-width: 40rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .simplebar-content pre {
+    font-size: 0.8rem;
+  }
+</style>
+
+<!-- Default Theme Variables -->
+<style>
+  html {
+    --font-size: 14px;
+  }
+
+  *[theme],
+  *[subtheme] {
+    --color-bg: #fff;
+    --color-font: #555;
+
+    /* Colors */
+    --color-success: #50a500;
+    --color-notice: #d1b800;
+    --color-warning: #d48a39;
+    --color-danger: #bf0000;
+    --color-surprise: #8570d2;
+    --color-info: #0092bf;
+
+    /* Font Colors */
+    --color-font-success: #fff;
+    --color-font-notice: #fff;
+    --color-font-warning: #fff;
+    --color-font-danger: #fff;
+    --color-font-surprise: #fff;
+    --color-font-info: #fff;
+
+    /* Highlight */
+    --hl-xxs: rgba(130, 130, 130, 0.05);
+    --hl-xs: rgba(130, 130, 130, 0.1);
+    --hl-sm: rgba(130, 130, 130, 0.25);
+    --hl-md: rgba(130, 130, 130, 0.35);
+    --hl-lg: rgba(130, 130, 130, 0.5);
+    --hl-xl: rgba(130, 130, 130, 0.8);
+    --hl: rgba(130, 130, 130, 1);
+
+    /* Font Size */
+    --font-size-xxs: 8px;
+    --font-size-xs: 11px;
+    --font-size-sm: 13px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 19px;
+    --font-size-xxl: 21px;
+    --font-size-xxxl: 24px;
+    --font-size: var(--font-size-md);
+
+    /* Padding */
+    --padding-md: calc(var(--font-size) * 1.2);
+    --padding-sm: calc(var(--font-size) * 0.6);
+    --padding-xs: calc(var(--font-size) * 0.4);
+    --padding-xxs: calc(var(--font-size) * 0.2);
+    --padding-lg: calc(var(--font-size) * 2.5);
+    --padding-xl: calc(var(--font-size) * 5);
+
+    /* Wrapper */
+    --line-height-md: calc(var(--font-size) * 3.6);
+    --line-height-sm: calc(var(--font-size) * 2.88);
+    --line-height-xs: calc(var(--font-size) * 2.448);
+    --line-height-xxs: calc(var(--font-size) * 2.08);
+  }
+</style>

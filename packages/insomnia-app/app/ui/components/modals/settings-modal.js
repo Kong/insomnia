@@ -22,6 +22,8 @@ import * as session from '../../../account/session';
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
+export const TAB_INDEX_THEMES = 2;
+export const TAB_INDEX_PLUGINS = 5;
 
 @autobind
 class SettingsModal extends PureComponent {
@@ -156,7 +158,7 @@ class SettingsModal extends PureComponent {
               <Account />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <Plugins />
+              <Plugins settings={settings} updateSetting={this._handleUpdateSetting} />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <About />

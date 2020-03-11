@@ -77,7 +77,8 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
     return [...history, { currentType, currentField }];
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     if (!nextProps.reference) {
       return;
     }
@@ -167,6 +168,7 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
     } else if (currentType) {
       child = (
         <GraphQLExplorerType
+          schema={schema}
           type={currentType}
           onNavigateType={this._handleNavigateType}
           onNavigateField={this._handleNavigateField}

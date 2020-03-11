@@ -1,85 +1,69 @@
-/* Fonts */
 html {
-  --font-size: 13px;
+  /* Font Size */
+  --font-size-xxs: 8px;
+  --font-size-xs: 10px;
+  --font-size-sm: 12px;
+  --font-size-md: 13px;
+  --font-size-lg: 15px;
+  --font-size-xl: 19px;
+  --font-size-xxl: 21px;
+  --font-size-xxxl: 24px;
+  --font-size: var(--font-size-md);
+
+  /* Padding */
+  --padding-md: calc(var(--font-size) * 1.2);
+  --padding-sm: calc(var(--font-size) * 0.6);
+  --padding-xs: calc(var(--font-size) * 0.4);
+  --padding-xxs: calc(var(--font-size) * 0.2);
+  --padding-lg: calc(var(--font-size) * 2.5);
+  --padding-xl: calc(var(--font-size) * 5);
+
+  /* Wrapper */
+  --line-height-md: calc(var(--font-size) * 3.6);
+  --line-height-sm: calc(var(--font-size) * 2.88);
+  --line-height-xs: calc(var(--font-size) * 2.448);
+  --line-height-xxs: calc(var(--font-size) * 2.08);
+
+  /* Radius */
+  --radius-sm: calc(var(--font-size) * 0.2);
+  --radius-md: calc(var(--font-size) * 0.3);
+
+  /* Scrollbars */
+  --scrollbar-width: calc(var(--font-size) * 0.6);
+
+  /* Modals */
+  --modal-width: calc(var(--font-size) * 60);
+  --modal-width-wide: calc(var(--font-size) * 70);
+
+  /* Other */
+  --drag-width: calc(var(--font-size) * 0.5);
+  --height-nav: var(--line-height-md);
 }
 
-@font-size: var(--font-size);
-@font-size-xxs: ~'calc(var(--font-size) * 0.6)';
-@font-size-xs: ~'calc(var(--font-size) * 0.8)';
-@font-size-sm: ~'calc(var(--font-size) * 0.9)';
-@font-size-md: ~'calc(var(--font-size) * 1.0)';
-@font-size-lg: ~'calc(var(--font-size) * 1.2)';
-@font-size-xl: ~'calc(var(--font-size) * 1.35)';
-@font-size-xxl: ~'calc(var(--font-size) * 1.5)';
-@font-size-xxxl: ~'calc(var(--font-size) * 1.7)';
-
-/* Padding */
-@padding-md: ~'calc(var(--font-size) * 1.2)';
-@padding-sm: ~'calc(var(--font-size) * 0.6)';
-@padding-xs: ~'calc(var(--font-size) * 0.4)';
-@padding-xxs: ~'calc(var(--font-size) * 0.2)';
-@padding-lg: ~'calc(var(--font-size) * 2.5)';
-@padding-xl: ~'calc(var(--font-size) * 5)';
-
-/* Wrapper */
-// line-height-md = x * 3.6
-// line-height-sm = x * 3.6 * 0.8 (2.88)
-// line-height-xs = x * 3.6 * 0.8 * 0.85 (2.448)
-// line-height-xxs= x * 3.6 * 0.8 * 0.85 * 0.85 (2.08)
-@line-height-md: ~'calc(var(--font-size) * 3.6)';
-@line-height-sm: ~'calc(var(--font-size) * 2.88)';
-@line-height-xs: ~'calc(var(--font-size) * 2.448)';
-@line-height-xxs: ~'calc(var(--font-size) * 2.08)';
-
-/* Nav */
-@height-nav: @line-height-md;
-
-/* Scrollbars */
-@scrollbar-width: ~'calc(var(--font-size) * 0.6)';
-
-/* Borders */
-@radius-sm: ~'calc(var(--font-size) * 0.2)';
-@radius-md: ~'calc(var(--font-size) * 0.3)';
-
-/* Dropdowns */
-@dropdown-min-width: ~'calc(var(--font-size) * 12)';
-
-/* Modals */
-@modal-width: ~'calc(var(--font-size) * 60)';
-@modal-width-wide: ~'calc(var(--font-size) * 70)';
-
-/* Other */
-@drag-width: ~'calc(var(--font-size) * 0.5)';
-
-/* Breakpoints */
-@breakpoint-lg: 1100px;
-@breakpoint-md: 880px;
-@breakpoint-sm: 660px;
-
 .txt-xxs {
-  font-size: @font-size-xxs !important;
+  font-size: var(--font-size-xxs) !important;
 }
 
 .txt-xs {
-  font-size: @font-size-xs !important;
+  font-size: var(--font-size-xs) !important;
 }
 
 .txt-sm {
-  font-size: @font-size-sm !important;
+  font-size: var(--font-size-sm) !important;
 }
 
 .txt-md {
-  font-size: @font-size-md !important;
+  font-size: var(--font-size-md) !important;
 }
 
 .txt-lg {
-  font-size: @font-size-lg !important;
+  font-size: var(--font-size-lg) !important;
 }
 
 .txt-xl {
-  font-size: @font-size-xl !important;
+  font-size: var(--font-size-xl) !important;
 }
 
 .txt-xxl {
-  font-size: @font-size-xxl !important;
+  font-size: var(--font-size-xxl) !important;
 }

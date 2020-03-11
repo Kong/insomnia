@@ -1,10 +1,7 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .form-control {
   outline: none;
   border: 0;
-  margin-bottom: @padding-sm;
+  margin-bottom: var(--padding-sm);
   width: 100%;
   box-sizing: border-box;
 
@@ -23,7 +20,7 @@
       position: absolute;
       right: 0;
       top: 0;
-      padding: 0 @padding-sm;
+      padding: 0 var(--padding-sm);
       height: 100%;
       display: flex;
       align-items: center;
@@ -44,7 +41,7 @@
     width: 100%;
     height: 100%;
     display: block;
-    margin-top: @padding-xs;
+    margin-top: var(--padding-xs);
     box-sizing: border-box;
   }
 
@@ -58,8 +55,8 @@
   input[type='checkbox'] {
     height: 1rem;
     float: left;
-    margin-top: @padding-xxs;
-    margin-right: @padding-xs;
+    margin-top: var(--padding-xxs);
+    margin-right: var(--padding-xs);
   }
 
   & > button {
@@ -73,7 +70,7 @@
   label {
     font-weight: 600;
     display: block;
-    margin-top: @padding-xs;
+    margin-top: var(--padding-xs);
     padding-top: 0;
 
     * {
@@ -86,7 +83,7 @@
       font-weight: normal;
     }
 
-    margin-bottom: @padding-xxs;
+    margin-bottom: var(--padding-xxs);
   }
 
   &.form-control--padded,
@@ -97,9 +94,9 @@
     input,
     select {
       border: 1px solid var(--hl-md);
-      padding: @padding-sm;
-      border-radius: @radius-md;
-      background-color: @hl-xxs;
+      padding: var(--padding-sm);
+      border-radius: var(--radius-md);
+      background-color: var(--hl-xxs);
     }
 
     // Because <select> is weird
@@ -112,7 +109,7 @@
       .input,
       input,
       select {
-        height: @line-height-xs;
+        height: var(--line-height-xs);
       }
     }
 
@@ -150,8 +147,8 @@
       border-right: 0;
       border-left: 0;
       background: none;
-      padding-left: @padding-xxs;
-      padding-right: @padding-xxs;
+      padding-left: var(--padding-xxs);
+      padding-right: var(--padding-xxs);
     }
   }
 
@@ -162,8 +159,8 @@
     .btn,
     select {
       border-style: dashed;
-      opacity: @opacity-subtle;
-      color: @hl-xl;
+      opacity: var(--opacity-subtle);
+      color: var(--hl-xl);
     }
   }
 }
@@ -176,7 +173,7 @@
 .form-control--no-label::before {
   content: 'nothing';
   opacity: 0;
-  padding-top: @padding-xs;
+  padding-top: var(--padding-xs);
   display: block;
 }
 
@@ -189,8 +186,8 @@
 
   & > * {
     width: 100%;
-    margin-left: @padding-xxs;
-    margin-right: @padding-xxs;
+    margin-left: var(--padding-xxs);
+    margin-right: var(--padding-xxs);
   }
 
   & > p {
@@ -224,37 +221,37 @@
   background: var(--color-bg);
 
   &:not(.btn--plain) {
-    padding: 0 calc(@padding-md * 1.5);
-    height: @line-height-md;
+    padding: 0 calc(var(--padding-md) * 1.5);
+    height: var(--line-height-md);
     border: 1px solid transparent;
   }
 
   &.btn--compact {
-    padding: 0 @padding-md;
-    height: @line-height-sm;
+    padding: 0 var(--padding-md);
+    height: var(--line-height-sm);
   }
 
   &.btn--super-compact {
-    padding: 0 @padding-md;
-    height: @line-height-xs;
+    padding: 0 var(--padding-md);
+    height: var(--line-height-xs);
   }
 
   &.btn--super-duper-compact {
-    padding: @padding-xxs @padding-sm;
+    padding: var(--padding-xxs) var(--padding-sm);
     height: auto;
   }
 
   &.btn--micro {
-    font-size: @font-size-sm;
-    line-height: @font-size-xs;
-    padding: @padding-xxs @padding-sm;
+    font-size: var(--font-size-sm);
+    line-height: var(--font-size-xs);
+    padding: var(--padding-xxs) var(--padding-sm);
     height: auto;
     border-radius: 3px;
   }
 
   &.btn--outlined {
-    border: 1px solid @hl-lg;
-    border-radius: @radius-md;
+    border: 1px solid var(--hl-lg);
+    border-radius: var(--radius-md);
   }
 
   &.btn--clicky {
@@ -268,8 +265,8 @@
   }
 
   &.btn--expandable-small {
-    padding: 0 @padding-md;
-    min-height: @line-height-sm;
+    padding: 0 var(--padding-md);
+    min-height: var(--line-height-sm);
     height: unset;
   }
 }
@@ -281,11 +278,11 @@
 .btn:focus:not(:disabled),
 .btn.focus:not(:disabled),
 .btn:hover:not(:disabled) {
-  background-color: @hl-xs;
+  background-color: var(--hl-xs);
 }
 
 .btn:active:not(:disabled) {
-  background-color: @hl-md;
+  background-color: var(--hl-md);
 }
 
 .btn.btn--no-background {
@@ -320,7 +317,7 @@ select {
   font-family: var(--font-family);
 
   &::-webkit-input-placeholder {
-    color: @hl-lg;
+    color: var(--hl-lg);
   }
 }
 
@@ -350,8 +347,8 @@ textarea.no-resize {
 }
 
 input[type='color'] {
-  height: @line-height-xs !important;
-  padding: @padding-xxs !important;
+  height: var(--line-height-xs) !important;
+  padding: var(--padding-xxs) !important;
 }
 
 label {
@@ -365,11 +362,11 @@ label {
       z-index: -1;
       content: ' ';
       position: absolute;
-      top: calc(-@padding-xxs * -1);
-      bottom: calc(-@padding-xxs * -1);
-      left: calc(-@padding-xxs * -1);
-      right: calc(-@padding-xxs * -1);
-      border-radius: @radius-sm;
+      top: var(--padding-xxs);
+      bottom: var(--padding-xxs);
+      left: var(--padding-xxs);
+      right: var(--padding-xxs);
+      border-radius: var(--radius-sm);
       background-color: var(--hl-sm);
     }
   }

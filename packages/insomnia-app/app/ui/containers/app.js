@@ -764,6 +764,7 @@ class App extends PureComponent {
   }
 
   async _handleSetActiveResponse(requestId, activeResponse = null) {
+    const { activeEnvironment } = this.props;
     const activeResponseId = activeResponse ? activeResponse._id : null;
     await App._updateRequestMetaByParentId(requestId, { activeResponseId });
 
@@ -771,7 +772,8 @@ class App extends PureComponent {
     if (activeResponseId) {
       response = await models.response.getById(activeResponseId);
     } else {
-      response = await models.response.getLatestForRequest(requestId);
+      const environmentId = activeEnvironment ? activeEnvironment._id : null;
+      response = await models.response.getLatestForRequest(requestId, environmentId);
     }
 
     const requestVersionId = response ? response.requestVersionId : 'n/a';
@@ -920,7 +922,7 @@ class App extends PureComponent {
 
   async _handleReloadPlugins() {
     const { settings } = this.props;
-    await plugins.getPlugins(true);
+    await plugins.reloadPlugins();
     templating.reload();
     themes.setTheme(settings.theme);
     console.log('[plugins] reloaded');
@@ -1129,7 +1131,8 @@ class App extends PureComponent {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this._ensureWorkspaceChildren(nextProps);
 
     // Update VCS if needed
@@ -1139,7 +1142,8 @@ class App extends PureComponent {
     }
   }
 
-  componentWillMount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillMount() {
     this._ensureWorkspaceChildren(this.props);
   }
 

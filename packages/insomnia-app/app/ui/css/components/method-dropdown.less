@@ -1,15 +1,12 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .method-dropdown {
   .dropdown__inner::before {
     content: '\25cf';
-    opacity: @opacity-subtle;
+    opacity: var(--opacity-subtle);
     -webkit-text-stroke: 1px rgba(0, 0, 0, 0.1);
   }
 
   .dropdown__text {
-    padding-left: @padding-md;
+    padding-left: var(--padding-md);
     color: var(--color-font);
     display: inline;
   }

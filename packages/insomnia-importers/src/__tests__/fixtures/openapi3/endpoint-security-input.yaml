@@ -10,6 +10,9 @@ components:
     Basic:
       type: http
       scheme: basic
+    Bearer:
+      type: http
+      scheme: bearer
     Key-Header:
       type: apiKey
       name: x-api_key
@@ -28,6 +31,13 @@ paths:
     get:
       security:
         - Basic: []
+      responses:
+        '200':
+          description: OK
+  /bearer:
+    get:
+      security:
+        - Bearer: []
       responses:
         '200':
           description: OK

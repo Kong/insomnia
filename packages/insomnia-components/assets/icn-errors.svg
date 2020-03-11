@@ -1,0 +1,5 @@
+<svg width="12px" height="12px" viewBox="0 0 12 12" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <circle class="fill-danger" opacity="0.9" fill="#BF0000" cx="6" cy="6" r="6"/>
+    <path class="fill-fg-danger" d="M8.09867337,3 L9,3.90132663 L6.901,6 L9,8.09867337 L8.09867337,9 L6,6.901 L3.90132663,9 L3,8.09867337 L5.098,6 L3,3.90132663 L3.90132663,3 L6,5.098 L8.09867337,3 Z"
+          id="Combined-Shape" fill="#FFFFFF" />
+</svg>

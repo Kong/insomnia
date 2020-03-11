@@ -14,6 +14,11 @@ declare module 'json-order' {
       separator?: string,
       space?: number | void,
     ) => string,
+    order: (
+      sourceObject: Object,
+      map: { [key: string]: Array<string> } | null,
+      separator?: string,
+    ) => Object,
   };
 
   declare module.exports: orderedJSON;

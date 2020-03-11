@@ -103,6 +103,7 @@ class RequestParametersEditor extends React.PureComponent<Props> {
     ) : (
       <KeyValueEditor
         sortable
+        allowMultiline
         namePlaceholder="name"
         valuePlaceholder="value"
         descriptionPlaceholder="description"

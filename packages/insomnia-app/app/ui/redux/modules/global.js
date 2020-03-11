@@ -14,6 +14,14 @@ import * as models from '../../../models';
 import SelectModal from '../../components/modals/select-modal';
 import { showError, showModal } from '../../components/modals/index';
 import * as db from '../../../common/database';
+import SettingsModal, {
+  TAB_INDEX_PLUGINS,
+  TAB_INDEX_THEMES,
+} from '../../components/modals/settings-modal';
+import install from '../../../plugins/install';
+import { createPlugin } from '../../../plugins/create';
+import { reloadPlugins } from '../../../plugins';
+import { setTheme } from '../../../plugins/misc';
 
 const LOCALSTORAGE_PREFIX = `insomnia::meta`;
 
@@ -27,6 +35,8 @@ const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
 const COMMAND_IMPORT_URI = 'app/import';
+const COMMAND_PLUGIN_INSTALL = 'plugins/install';
+const COMMAND_PLUGIN_THEME = 'plugins/theme';
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -100,13 +110,75 @@ export function newCommand(command, args) {
           title: 'Confirm Data Import',
           message: (
             <span>
-              Do you really want to import <code>{args.uri}</code>?
+              Do you really want to import <code>{args.name || args.uri}</code>?
             </span>
           ),
           addCancel: true,
         });
         dispatch(importUri(args.workspaceId, args.uri));
         break;
+      case COMMAND_PLUGIN_INSTALL:
+        showModal(AskModal, {
+          title: 'Plugin Install',
+          message: (
+            <React.Fragment>
+              Do you want to install <code>{args.name}</code>?
+            </React.Fragment>
+          ),
+          yesText: 'Install',
+          noText: 'Cancel',
+          onDone: async isYes => {
+            if (!isYes) {
+              return;
+            }
+
+            try {
+              await install(args.name);
+              showModal(SettingsModal, TAB_INDEX_PLUGINS);
+            } catch (err) {
+              showError({
+                title: 'Plugin Install',
+                message: 'Failed to install plugin',
+                error: err.message,
+              });
+            }
+          },
+        });
+        break;
+      case COMMAND_PLUGIN_THEME:
+        const parsedTheme = JSON.parse(decodeURIComponent(args.theme));
+        showModal(AskModal, {
+          title: 'Install Theme',
+          message: (
+            <React.Fragment>
+              Do you want to install <code>{parsedTheme.displayName}</code>?
+            </React.Fragment>
+          ),
+          yesText: 'Install',
+          noText: 'Cancel',
+          onDone: async isYes => {
+            if (!isYes) {
+              return;
+            }
+
+            const mainJsContent = `module.exports.themes = [${JSON.stringify(
+              parsedTheme,
+              null,
+              2,
+            )}];`;
+
+            await createPlugin(`theme-${parsedTheme.name}`, '0.0.1', mainJsContent);
+
+            const settings = await models.settings.getOrCreate();
+            await models.settings.update(settings, { theme: parsedTheme.name });
+            await reloadPlugins(true);
+            await setTheme(parsedTheme.name);
+            showModal(SettingsModal, TAB_INDEX_THEMES);
+          },
+        });
+        break;
+      default:
+      // Nothing
     }
   };
 }
