@@ -73,8 +73,7 @@ export type Theme = {
 let plugins: ?Array<Plugin> = null;
 
 export async function init(): Promise<void> {
-  // Force plugins to load.
-  await getPlugins(true);
+  await reloadPlugins();
 }
 
 async function _traversePluginPath(
@@ -180,6 +179,10 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
   }
 
   return plugins;
+}
+
+export async function reloadPlugins(): Promise<void> {
+  await getPlugins(true);
 }
 
 async function getActivePlugins(): Promise<Array<Plugin>> {
