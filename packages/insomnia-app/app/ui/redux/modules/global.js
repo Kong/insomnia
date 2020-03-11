@@ -148,7 +148,7 @@ export function newCommand(command, args) {
       case COMMAND_PLUGIN_THEME:
         const parsedTheme = JSON.parse(decodeURIComponent(args.theme));
         showModal(AskModal, {
-          title: 'Import Theme',
+          title: 'Install Theme',
           message: (
             <React.Fragment>
               Do you want to install <code>{parsedTheme.displayName}</code>?
