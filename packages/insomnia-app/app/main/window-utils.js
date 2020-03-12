@@ -268,6 +268,12 @@ export function createWindow() {
         },
       },
       {
+        label: 'Show Software License',
+        click: () => {
+          shell.openExternal('https://insomnia.rest/license');
+        },
+      },
+      {
         label: `Insomnia ${MNEMONIC_SYM}Help`,
         accelerator: !isMac() ? 'F1' : null,
         click: () => {
