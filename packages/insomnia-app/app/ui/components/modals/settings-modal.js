@@ -7,7 +7,6 @@ import Button from '../base/button';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import SettingsShortcuts from '../settings/shortcuts';
-import About from '../settings/about';
 import General from '../settings/general';
 import ImportExport from '../settings/import-export';
 import Account from '../settings/account';
@@ -124,9 +123,6 @@ class SettingsModal extends PureComponent {
               <Tab tabIndex="-1">
                 <Button value="Plugins">Plugins</Button>
               </Tab>
-              <Tab tabIndex="-1">
-                <Button value="About">About</Button>
-              </Tab>
             </TabList>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <General
@@ -159,9 +155,6 @@ class SettingsModal extends PureComponent {
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <Plugins settings={settings} updateSetting={this._handleUpdateSetting} />
-            </TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <About />
             </TabPanel>
           </Tabs>
         </ModalBody>
