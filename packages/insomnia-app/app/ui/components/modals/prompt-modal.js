@@ -232,33 +232,27 @@ class PromptModal extends React.PureComponent<Props, State> {
       sanitizedHints = hints.slice(0, 15).map(this._renderHintButton);
     }
 
-    let field;
-    if (inputType === 'checkbox') {
+    let field = input;
+    if (label) {
+      const labelClasses = classnames({
+        'inline-block': inputType === 'checkbox',
+      });
       field = (
-        <div className="form-control form-control--wide">
-          <label htmlFor="prompt-input" className="inline-block">
-            {label} {input}
-          </label>
-        </div>
+        <label htmlFor="prompt-input" className={labelClasses}>
+          {label} {input}
+        </label>
       );
-    } else if (label) {
-      field = (
-        <div className="form-control form-control--outlined form-control--wide">
-          <label htmlFor="prompt-input">
-            {label} {input}
-          </label>
-        </div>
-      );
-    } else {
-      field = <div className="form-control form-control--outlined form-control--wide">{input}</div>;
     }
 
+    const divClassnames = classnames('form-control form-control--wide', {
+      'form-control--outlined': inputType !== 'checkbox',
+    });
     return (
       <Modal ref={this._setModalRef} noEscape={!cancelable} onCancel={onCancel}>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">
-            {field}
+            <div className={divClassnames}>{field}</div>
             {sanitizedHints}
           </form>
         </ModalBody>
