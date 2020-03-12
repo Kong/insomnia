@@ -176,7 +176,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
           </div>
           <header className="onboarding__content__header">
             <h1>Welcome to Kong Studio</h1>
-            <h2>Edit, Test, and Deploy services to Kong</h2>
+            <h2>The Collaborative API Design Tool</h2>
           </header>
           <div className="onboarding__content__body">{stepBody}</div>
         </div>
