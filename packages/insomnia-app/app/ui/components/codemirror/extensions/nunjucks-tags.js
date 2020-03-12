@@ -268,7 +268,8 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
         } else {
           innerHTML = tagDefinition.displayName || tagData.name;
         }
-        title = await render(text);
+        const preview = await render(text);
+        title = tagDefinition.disablePreview(tagData.args) ? preview.replace(/./g, '*') : preview;
       } else {
         innerHTML = cleanedStr;
         title = 'Unrecognized tag';
