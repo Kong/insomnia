@@ -235,21 +235,22 @@ class PromptModal extends React.PureComponent<Props, State> {
     let field;
     if (inputType === 'checkbox') {
       field = (
-        <div>
-          {input}
-          <label htmlFor="prompt-input" className="label--checkbox">
-            {label}
+        <div className="form-control form-control--wide">
+          <label htmlFor="prompt-input" className="inline-block">
+            {label} {input}
           </label>
         </div>
       );
     } else if (label) {
       field = (
-        <label>
-          {label} {input}
-        </label>
+        <div className="form-control form-control--outlined form-control--wide">
+          <label htmlFor="prompt-input">
+            {label} {input}
+          </label>
+        </div>
       );
     } else {
-      field = input;
+      field = <div className="form-control form-control--outlined form-control--wide">{input}</div>;
     }
 
     return (
@@ -257,7 +258,7 @@ class PromptModal extends React.PureComponent<Props, State> {
         <ModalHeader>{title}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">
-            <div className="form-control form-control--outlined form-control--wide">{field}</div>
+            {field}
             {sanitizedHints}
           </form>
         </ModalBody>
