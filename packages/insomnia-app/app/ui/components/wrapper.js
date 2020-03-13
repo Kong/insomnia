@@ -337,7 +337,7 @@ class Wrapper extends React.PureComponent<Props, State> {
         message: 'Since you deleted your only workspace, a new one has been created for you.',
       });
 
-      models.workspace.create({ name: 'Insomnia' });
+      await models.workspace.create({ name: 'Insomnia' });
     }
 
     await models.workspace.remove(activeWorkspace);
