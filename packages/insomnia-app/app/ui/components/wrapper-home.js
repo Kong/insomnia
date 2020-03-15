@@ -3,7 +3,7 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
-import { AppHeader, Button, Card, CardContainer } from 'insomnia-components';
+import { AppHeader, Card, CardContainer } from 'insomnia-components';
 import DocumentCardDropdown from './dropdowns/document-card-dropdown';
 import KeydownBinder from './keydown-binder';
 import { executeHotKey } from '../../common/hotkeys-listener';
@@ -19,9 +19,15 @@ import { fuzzyMatch } from '../../common/misc';
 import type { WrapperProps } from './wrapper';
 import Notice from './notice';
 import PageLayout from './page-layout';
+import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from './base/dropdown';
+import type {ForceToWorkspace} from '../redux/modules/helpers';
+import {ForceToWorkspaceKeys} from '../redux/modules/helpers';
 
 type Props = {|
   wrapperProps: WrapperProps,
+  handleImportFile: (forceToWorkspace: ForceToWorkspace) => void,
+  handleImportUri: (uri: string, forceToWorkspace: ForceToWorkspace) => void,
+  handleImportClipboard: (forceToWorkspace: ForceToWorkspace) => void,
 |};
 
 type State = {|
@@ -57,6 +63,26 @@ class WrapperHome extends React.PureComponent<Props, State> {
         });
 
         trackEvent('Workspace', 'Create');
+      },
+    });
+  }
+
+  _handleImportFile() {
+    this.props.handleImportFile(ForceToWorkspaceKeys.new);
+  }
+
+  _handleImportClipBoard() {
+    this.props.handleImportClipboard(ForceToWorkspaceKeys.new);
+  }
+
+  _handleImportUri(uri) {
+    showPrompt({
+      title: 'Import document from URL',
+      submitName: 'Fetch and Import',
+      label: 'URL',
+      placeholder: 'https://website.com/insomnia-import.json',
+      onComplete: uri => {
+        this.props.handleImportUri(uri, ForceToWorkspaceKeys.new);
       },
     });
   }
@@ -196,6 +222,33 @@ class WrapperHome extends React.PureComponent<Props, State> {
     );
   }
 
+  renderMenu() {
+    return (
+      <Dropdown outline>
+        <DropdownButton className="btn btn--clicky-small">
+          Create <i className="fa fa-caret-down" />
+        </DropdownButton>
+        <DropdownDivider>From</DropdownDivider>
+        <DropdownItem onClick={this._handleWorkspaceCreate}>
+          <i className="fa fa-pencil" />
+          Scratch
+        </DropdownItem>
+        <DropdownItem onClick={this._handleImportFile}>
+          <i className="fa fa-file" />
+          File
+        </DropdownItem>
+        <DropdownItem onClick={this._handleImportUri}>
+          <i className="fa fa-link" />
+          URL
+        </DropdownItem>
+        <DropdownItem onClick={this._handleImportClipBoard}>
+          <i className="fa fa-clipboard" />
+          Clipboard
+        </DropdownItem>
+      </Dropdown>
+    );
+  }
+
   render() {
     const { filter } = this.state;
     const filteredWorkspaces = this._filterWorkspaces();
@@ -207,11 +260,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           <AppHeader
             className="app-header"
             breadcrumbs={['Documents']}
-            menu={(
-              <Button className="btn btn--clicky-small" onClick={this._handleWorkspaceCreate}>
-                Add New
-              </Button>
-            )}
+            menu={this.renderMenu()}
           />
         )}
         renderPageBody={() => (

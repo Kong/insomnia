@@ -1,3 +1,4 @@
+// @flow
 import electron from 'electron';
 import * as React from 'react';
 import { combineReducers } from 'redux';
@@ -17,6 +18,7 @@ import * as db from '../../../common/database';
 import { trackEvent } from '../../../common/analytics';
 import SettingsModal, { TAB_INDEX_PLUGINS } from '../../components/modals/settings-modal';
 import install from '../../../plugins/install';
+import {askToImportIntoWorkspace} from './helpers';
 
 const LOCALSTORAGE_PREFIX = `insomnia::meta`;
 
@@ -188,7 +190,7 @@ export function setActiveWorkspace(workspaceId) {
   return { type: SET_ACTIVE_WORKSPACE, workspaceId };
 }
 
-export function importFile(workspaceId, forceToWorkspace) {
+export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
   return async dispatch => {
     dispatch(loadStart());
 
@@ -247,7 +249,7 @@ export function importFile(workspaceId, forceToWorkspace) {
   };
 }
 
-export function importClipBoard(workspaceId, forceToWorkspace) {
+export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
   return async dispatch => {
     dispatch(loadStart());
     const schema = electron.clipboard.readText();
@@ -270,7 +272,7 @@ export function importClipBoard(workspaceId, forceToWorkspace) {
   };
 }
 
-export function importUri(workspaceId, uri, forceToWorkspace) {
+export function importUri(workspaceId: string, uri: string, forceToWorkspace?: ForceToWorkspace) {
   return async dispatch => {
     dispatch(loadStart());
 
@@ -546,28 +548,4 @@ export function init() {
   }
 
   return [setActiveWorkspace(workspaceId), setActiveActivity(activity)];
-}
-
-// ~~~~~~~ //
-// HELPERS //
-// ~~~~~~~ //
-
-function askToImportIntoWorkspace(workspaceId, forceToWorkspace) {
-  return function() {
-    if (forceToWorkspace) {
-      return workspaceId;
-    }
-
-    return new Promise(resolve => {
-      showModal(AskModal, {
-        title: 'Import',
-        message: 'Do you want to import into the current workspace or a new one?',
-        yesText: 'Current',
-        noText: 'New Workspace',
-        onDone: yes => {
-          resolve(yes ? workspaceId : null);
-        },
-      });
-    });
-  };
 }

@@ -11,11 +11,13 @@ import PageLayout from './page-layout';
 import * as db from '../../common/database';
 import chartSrc from '../images/chart.svg';
 import imgSrc from '../images/logo.png';
+import type {ForceToWorkspace} from '../redux/modules/helpers';
+import {ForceToWorkspaceKeys} from '../redux/modules/helpers';
 
 type Props = {|
   wrapperProps: WrapperProps,
-  handleImportFile: (forceToWorkspace?: boolean) => any,
-  handleImportUri: (uri: string, forceToWorkspace?: boolean) => any,
+  handleImportFile: (forceToWorkspace: ForceToWorkspace) => any,
+  handleImportUri: (uri: string, forceToWorkspace: ForceToWorkspace) => any,
 |};
 
 type State = {|
@@ -76,18 +78,19 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
 
   _handleImportFile() {
     const { handleImportFile } = this.props;
-    handleImportFile(true);
+    handleImportFile(ForceToWorkspaceKeys.current);
   }
 
   _handleImportUri(defaultValue: string) {
     const { handleImportUri } = this.props;
+
     showPrompt({
       title: 'Import From URI',
       defaultValue: typeof defaultValue === 'string' ? defaultValue : '',
       placeholder: 'https://example.com/openapi-spec.yaml',
       label: 'URI to Import',
       onComplete: value => {
-        handleImportUri(value, true);
+        handleImportUri(value, ForceToWorkspaceKeys.current);
       },
     });
   }

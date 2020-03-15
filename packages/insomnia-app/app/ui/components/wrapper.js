@@ -84,15 +84,16 @@ import WrapperDebug from './wrapper-debug';
 import { importRaw } from '../../common/import';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { DropdownButton } from './base/dropdown';
+import type {ForceToWorkspace} from '../redux/modules/helpers';
 
 export type WrapperProps = {
   // Helper Functions
   handleActivateRequest: Function,
   handleSetSidebarFilter: Function,
   handleToggleMenuBar: Function,
-  handleImportFileToWorkspace: Function,
-  handleImportClipBoardToWorkspace: Function,
-  handleImportUriToWorkspace: Function,
+  handleImportFileToWorkspace: (workspaceId: string, forceToWorkspace?: ForceToWorkspace) => void,
+  handleImportClipBoardToWorkspace: (workspaceId: string, forceToWorkspace?: ForceToWorkspace) => void,
+  handleImportUriToWorkspace: (workspaceId: string, uri: string, forceToWorkspace?: ForceToWorkspace) => void,
   handleInitializeEntities: Function,
   handleExportFile: Function,
   handleShowExportRequestsModal: Function,
@@ -319,7 +320,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     return sUpdate(this.props.settings, { useBulkHeaderEditor });
   }
 
-  _handleImportFile(forceToWorkspace?: boolean): void {
+  _handleImportFile(forceToWorkspace?: ForceToWorkspace): void {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
   }
 
@@ -329,11 +330,11 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     return sUpdate(this.props.settings, { useBulkParametersEditor });
   }
 
-  _handleImportUri(uri: string, forceToWorkspace?: boolean): void {
+  _handleImportUri(uri: string, forceToWorkspace?: ForceToWorkspace): void {
     this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri, forceToWorkspace);
   }
 
-  _handleImportClipBoard(forceToWorkspace?: boolean): void {
+  _handleImportClipBoard(forceToWorkspace?: ForceToWorkspace): void {
     this.props.handleImportClipBoardToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
   }
 
@@ -854,7 +855,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
         </div>
 
         {activity === ACTIVITY_HOME && (
-          <WrapperHome wrapperProps={this.props} />
+          <WrapperHome wrapperProps={this.props} handleImportFile={this._handleImportFile} handleImportUri={this._handleImportUri} handleImportClipboard={this._handleImportClipBoard} />
         )}
 
         {activity === ACTIVITY_SPEC && (
