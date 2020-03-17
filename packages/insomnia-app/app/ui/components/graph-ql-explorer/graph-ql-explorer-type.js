@@ -4,7 +4,13 @@ import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
 import autobind from 'autobind-decorator';
 import MarkdownPreview from '../markdown-preview';
 import GraphQLExplorerFieldLink from './graph-ql-explorer-field-link';
-import { GraphQLUnionType, GraphQLInterfaceType, GraphQLObjectType } from 'graphql';
+import {
+  GraphQLUnionType,
+  GraphQLInterfaceType,
+  GraphQLObjectType,
+  astFromValue,
+  print,
+} from 'graphql';
 import type { GraphQLType, GraphQLField, GraphQLSchema } from 'graphql';
 
 type Props = {
@@ -14,6 +20,12 @@ type Props = {
   schema: GraphQLSchema | null,
 };
 
+const printDefault = ast => {
+  if (!ast) {
+    return '';
+  }
+  return print(ast);
+};
 @autobind
 class GraphQLExplorerType extends React.PureComponent<Props> {
   _handleNavigateType(type: Object) {
@@ -109,11 +121,17 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
               <GraphQLExplorerTypeLink onNavigate={this._handleNavigateType} type={field.type} />
             );
 
+            let defaultValue = '';
+            if ('defaultValue' in field && field.defaultValue !== undefined) {
+              defaultValue = (
+                <span> = {printDefault(astFromValue(field.defaultValue, field.type))}</span>
+              );
+            }
             const description = field.description;
             return (
               <li key={key}>
                 {fieldLink}
-                {argLinks}: {typeLink}
+                {argLinks}: {typeLink} {defaultValue}
                 {description && (
                   <div className="graphql-explorer__defs__description">
                     <MarkdownPreview markdown={description} />
