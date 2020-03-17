@@ -47,7 +47,6 @@ type Props = {|
   activeEnvironment: Environment | null,
   activeWorkspace: Workspace,
   enableSyncBeta: boolean,
-  handleSetActiveWorkspace: (id: string) => void,
   hotKeyRegistry: HotKeyRegistry,
   isLoading: boolean,
   unseenWorkspaces: Array<Workspace>,

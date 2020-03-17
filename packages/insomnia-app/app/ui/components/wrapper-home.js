@@ -75,7 +75,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     this.props.handleImportClipboard(ForceToWorkspaceKeys.new);
   }
 
-  _handleImportUri(uri) {
+  _handleImportUri() {
     showPrompt({
       title: 'Import document from URL',
       submitName: 'Fetch and Import',
@@ -171,6 +171,15 @@ class WrapperHome extends React.PureComponent<Props, State> {
       );
     }
 
+    const docMenu = (
+      <DocumentCardDropdown
+        workspaceId={w._id}
+        handleDuplicateWorkspaceById={handleDuplicateWorkspaceById}
+        handleRenameWorkspaceById={handleRenameWorkspace}
+        handleDeleteWorkspaceById={handleDeleteWorkspaceById}
+      >...</DocumentCardDropdown>
+    );
+
     if (spec || w.scope === 'spec') {
       let label: string = 'Unknown';
       if (spec && spec.openapi) {
@@ -189,14 +198,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           docVersion={version}
           onClick={() => this._handleSetActiveWorkspace(w._id, 'spec')}
           tagLabel={label}
-          docMenu={(
-            <DocumentCardDropdown
-              workspaceId={w._id}
-              handleDuplicateWorkspaceById={handleDuplicateWorkspaceById}
-              handleRenameWorkspaceById={handleRenameWorkspace}
-              handleDeleteWorkspaceById={handleDeleteWorkspaceById}
-            >...</DocumentCardDropdown>
-          )}
+          docMenu={docMenu}
         />
       );
     }
@@ -210,14 +212,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         docVersion=""
         onClick={() => this._handleSetActiveWorkspace(w._id, 'debug')}
         tagLabel="Insomnia"
-        docMenu={(
-          <DocumentCardDropdown
-            workspaceId={w._id}
-            handleDuplicateWorkspaceById={handleDuplicateWorkspaceById}
-            handleRenameWorkspaceById={handleRenameWorkspace}
-            handleDeleteWorkspaceById={handleDeleteWorkspaceById}
-          >...</DocumentCardDropdown>
-        )}
+        docMenu={docMenu}
       />
     );
   }

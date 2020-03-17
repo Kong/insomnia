@@ -6,10 +6,8 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import DebouncedInput from '../base/debounced-input';
 import * as models from '../../../models';
-import type { Workspace } from '../../../models/workspace';
 import type { ApiSpec } from '../../../models/api-spec';
 import type { WorkspaceMeta } from '../../../models/workspace-meta';
-import type { GlobalActivity } from '../../components/activity-bar/activity-bar';
 import ModalFooter from '../base/modal-footer';
 import urlJoin from 'url-join';
 import Link from '../base/link';
@@ -17,14 +15,9 @@ import HelpLink from '../help-link';
 import { trackEvent } from '../../../common/analytics';
 import { axiosRequest } from '../../../network/axios-request';
 
-type Props = {|
-  workspace: Workspace,
-  apiSpec: ApiSpec,
-  workspaceMeta: WorkspaceMeta,
-  handleSetActivity: (activity: GlobalActivity) => void,
-|};
-
 type State = {
+  apiSpec: ?ApiSpec,
+  workspaceId: string,
   kongPortalRbacToken: string,
   kongPortalApiUrl: string,
   kongPortalUrl: string,
@@ -40,18 +33,18 @@ type State = {
 };
 
 @autobind
-class PortalUploadModal extends React.PureComponent<Props, State> {
+class PortalUploadModal extends React.PureComponent<{}, State> {
   modal: ?Modal;
-  onUpload: null | (() => void);
 
-  constructor(props: Props) {
+  constructor(props: {}) {
     super(props);
-    this.onUpload = null;
     this.state = {
-      kongPortalRbacToken: props.workspaceMeta.kongPortalRbacToken,
-      kongPortalApiUrl: props.workspaceMeta.kongPortalApiUrl,
-      kongPortalUrl: props.workspaceMeta.kongPortalUrl,
-      kongPortalUserWorkspace: props.workspaceMeta.kongPortalUserWorkspace,
+      apiSpec: null,
+      workspaceId: '',
+      kongPortalRbacToken: '',
+      kongPortalApiUrl: '',
+      kongPortalUrl: '',
+      kongPortalUserWorkspace: '',
       kongSpecFileName: '',
       isLoading: false,
       showConnectionError: false,
@@ -85,9 +78,8 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
   }
 
   async _handleUploadSpec(overwrite: boolean) {
-    const { apiSpec } = this.props;
-
     const {
+      apiSpec,
       kongSpecFileName,
       kongPortalUserWorkspace,
       kongPortalApiUrl,
@@ -156,32 +148,37 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
   }
 
   async _handleConnectKong() {
+    const {
+      kongPortalUserWorkspace,
+      kongPortalApiUrl,
+      kongPortalRbacToken,
+    } = this.state;
+
     // Show loading animation
     this._handleLoadingToggle(true);
     try {
       // Check connection
       const apiUrl = urlJoin(
-        this.state.kongPortalApiUrl,
-        this.state.kongPortalUserWorkspace + '/kong',
+        kongPortalApiUrl,
+        kongPortalUserWorkspace + '/kong',
       );
 
       const response = await axiosRequest({
         method: 'get',
         url: apiUrl,
         headers: {
-          'Kong-Admin-Token': this.state.kongPortalRbacToken,
+          'Kong-Admin-Token': kongPortalRbacToken,
         },
       });
       if (response.status === 200 || response.status === 201) {
         trackEvent('Portal', 'Connection');
         // Set legacy mode for post upload formatting, suppress loader, set monitor portal URL, move to upload view
-        const workspaceMeta = this.props.workspaceMeta;
-        await models.workspaceMeta.update(workspaceMeta, {
+        await this._patchWorkspaceMeta({
           kongPortalUrl:
             'http://' +
             response.data.configuration.portal_gui_host +
             '/' +
-            this.state.kongPortalUserWorkspace,
+            kongPortalUserWorkspace,
         });
 
         this.setState({
@@ -200,28 +197,42 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
   }
 
   async _handleKongPortalApiUrlChange(url: string) {
-    this.setState({ kongPortalApiUrl: url });
-    const workspaceMeta = this.props.workspaceMeta;
-    models.workspaceMeta.update(workspaceMeta, { kongPortalApiUrl: url });
+    await this._patchWorkspaceMeta( { kongPortalApiUrl: url });
   }
 
-  _handleRBACKTokenChange(token: string) {
-    this.setState({ kongPortalRbacToken: token });
-    const workspaceMeta = this.props.workspaceMeta;
-    models.workspaceMeta.update(workspaceMeta, { kongPortalRbacToken: token });
+  async _handleRBACKTokenChange(token: string) {
+    await this._patchWorkspaceMeta({ kongPortalRbacToken: token });
   }
 
-  _handleKongPortalUserWorkspaceChange(name: string) {
-    this.setState({ kongPortalUserWorkspace: name });
-    const workspaceMeta = this.props.workspaceMeta;
-    models.workspaceMeta.update(workspaceMeta, { kongPortalUserWorkspace: name });
+  async _handleKongPortalUserWorkspaceChange(name: string) {
+    await this._patchWorkspaceMeta({kongPortalUserWorkspace: name});
+  }
+
+  async _patchWorkspaceMeta(patch: $Shape<WorkspaceMeta>) {
+    const oldMeta = await models.workspaceMeta.getByParentId(this.state.workspaceId);
+    const newMeta = await models.workspaceMeta.update(oldMeta, patch);
+    this._setWorkspaceMetaToState(newMeta);
+  }
+
+  _setWorkspaceMetaToState(workspaceMeta: WorkspaceMeta) {
+    const {kongPortalApiUrl, kongPortalRbacToken, kongPortalUserWorkspace, kongPortalUrl} = workspaceMeta;
+
+    this.setState({kongPortalApiUrl, kongPortalRbacToken, kongPortalUserWorkspace, kongPortalUrl});
   }
 
   _setModalRef(ref: ?Modal) {
     this.modal = ref;
   }
 
-  async show(options: {onUpload?: () => void}) {
+  async show(options: {workspaceId: string}) {
+    const {workspaceId} = options;
+
+    const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+    const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+
+    this._setWorkspaceMetaToState(workspaceMeta);
+    this.setState({apiSpec, workspaceId});
+
     this._hasConnectInfo() ? this._handleReturnToUpload() : this._handleEditKongConnection();
     this.modal && this.modal.show();
   }

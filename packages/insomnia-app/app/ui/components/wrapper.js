@@ -590,14 +590,12 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
   render() {
     const {
-      activeApiSpec,
       activeCookieJar,
       activeEnvironment,
       activeGitRepository,
       activeRequest,
       activeWorkspace,
       activeWorkspaceClientCertificates,
-      activeWorkspaceMeta,
       activity,
       gitVCS,
       handleActivateRequest,
@@ -607,7 +605,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       handleGetRenderContext,
       handleInitializeEntities,
       handleRender,
-      handleSetActiveActivity,
       handleSetActiveWorkspace,
       handleShowExportRequestsModal,
       handleToggleMenuBar,
@@ -735,10 +732,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
             <PortalUploadModal
               ref={registerModal}
-              apiSpec={activeApiSpec}
-              handleSetActivity={handleSetActiveActivity}
-              workspace={activeWorkspace}
-              workspaceMeta={activeWorkspaceMeta}
             />
 
             <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />

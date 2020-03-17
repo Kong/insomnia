@@ -2,6 +2,8 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { Dropdown, DropdownButton, DropdownItem, DropdownDivider } from '../base/dropdown';
+import {showModal} from '../modals';
+import PortalUploadModal from '../modals/portal-upload-modal';
 
 type Props = {
   children: ?React.Node,
@@ -28,6 +30,11 @@ class DocumentCardDropdown extends React.PureComponent<Props> {
     handleDeleteWorkspaceById(() => null, workspaceId);
   }
 
+  _handleDeployPortal() {
+    const {workspaceId} = this.props;
+    showModal(PortalUploadModal, {workspaceId});
+  }
+
   render() {
     const {
       children,
@@ -45,6 +52,9 @@ class DocumentCardDropdown extends React.PureComponent<Props> {
           {children}
         </DropdownButton>
 
+        <DropdownItem onClick={this._handleDeployPortal}>
+          Deploy to portal
+        </DropdownItem>
         <DropdownItem onClick={this._handleDuplicateWorkspace}>
           Duplicate
         </DropdownItem>
