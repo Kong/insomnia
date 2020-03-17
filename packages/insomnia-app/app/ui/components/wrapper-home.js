@@ -158,7 +158,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       branch = lastActiveBranch + '*';
       log = (
         <React.Fragment>
-          <TimeFromNow timestamp={modifiedLocally} /> (unsaved)
+          <TimeFromNow className='text-danger' timestamp={modifiedLocally} /> (unsaved)
         </React.Fragment>
       );
     } else if (lastCommitTime) {
