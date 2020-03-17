@@ -375,7 +375,7 @@ class General extends React.PureComponent<Props, State> {
           )}
         </div>
 
-        {/* Update channels not supported in Studio yet */}
+        {/* Update channels not supported here yet */}
         {/* (isWindows() || isMac()) && (
           <React.Fragment>
             <hr className="pad-top" />

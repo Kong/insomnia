@@ -1,8 +1,8 @@
-# Kong Studio
+# Insomnia Designer
 
-Studio is a spec-first API development app built in top of [Insomnia](https://github.com/getinsomnia/insomnia).
+Designer is a spec-first API development app built in top of [Insomnia](https://github.com/getinsomnia/insomnia).
 
-![Kong Studio Screenshot](https://user-images.githubusercontent.com/587576/62305922-dbd30800-b44e-11e9-8de6-ea8bdcb8d93b.png)
+![Screenshot](https://user-images.githubusercontent.com/587576/62305922-dbd30800-b44e-11e9-8de6-ea8bdcb8d93b.png)
 
 ```shell
 npm run bootstrap
@@ -24,4 +24,4 @@ npm run app-start
 1. Add git remote called `insomnia` that points to Insomnia repo
 2. Pull Insomnia changes with `git pull --no-tags insomnia develop`
 3. Fix conflicts if any occur
-4. Push merged changes to Studio
+4. Push merged changes

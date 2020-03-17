@@ -24,10 +24,10 @@
   ],
   "protocols": [
     {
-      "name": "Kong Studio",
+      "name": "Insomnia Designer",
       "role": "Viewer",
       "schemes": [
-        "kongstudio"
+        "insomniad"
       ]
     },
     {
@@ -47,7 +47,7 @@
     "hardenedRuntime": true,
     "category": "public.app-category.developer-tools",
     "entitlements": "./build/static/entitlements.mac.inherit.plist",
-    "artifactName": "Kong.Studio-${version}.${ext}",
+    "artifactName": "Insomnia.Designer-${version}.${ext}",
     "target": [
       "dmg",
       "zip"
@@ -57,13 +57,13 @@
     }
   },
   "win": {
-    "artifactName": "Kong.Studio-${version}.${ext}",
+    "artifactName": "Insomnia.Designer-${version}.${ext}",
     "target": [
       "nsis"
     ]
   },
   "nsis": {
-    "artifactName": "Kong.Studio-Setup-${version}.${ext}",
+    "artifactName": "Insomnia.Designer-Setup-${version}.${ext}",
     "oneClick": true,
     "perMachine": false,
     "allowToChangeInstallationDirectory": false,
@@ -75,7 +75,7 @@
     "installerSidebar": "build/installerSidebar.bmp"
   },
   "linux": {
-    "artifactName": "Kong.Studio-${version}.${ext}",
+    "artifactName": "Insomnia.Designer-${version}.${ext}",
     "executableName": "__EXECUTABLE_NAME__",
     "synopsis": "__SYNOPSIS__",
     "category": "Development",

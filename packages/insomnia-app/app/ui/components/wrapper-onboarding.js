@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
+import * as packageJson from '../../../package.json';
 import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
@@ -117,7 +118,8 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
           <img src={chartSrc} alt="Demonstration chart" />
         </p>
         <p>
-          Help us understand how <strong>you</strong> use Kong Studio so we can make it better.
+          Help us understand how <strong>you</strong> use {packageJson.app.longName} so we can
+          make it better.
         </p>
         <button key="enable" className="btn btn--clicky" onClick={this._handleClickEnableAnalytics}>
           Share Usage Analytics
@@ -141,8 +143,8 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
             Back
           </a>
           {enableAnalytics
-            ? 'Thanks for helping make Studio better!'
-            : 'Opted out of analytics tracking'}
+            ? `Thanks for helping make ${packageJson.app.productName} better!`
+            : 'Opted out of analytics'}
         </p>
         <p>
           <strong>Import an OpenAPI spec to get started:</strong>
@@ -178,8 +180,8 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
             <img src={imgSrc} alt="Kong" />
           </div>
           <header className="onboarding__content__header">
-            <h1>Welcome to Kong Studio</h1>
-            <h2>The Collaborative API Design Tool</h2>
+            <h1>Welcome to {packageJson.app.longName}</h1>
+            <h2>{packageJson.app.synopsis}</h2>
           </header>
           <div className="onboarding__content__body">{stepBody}</div>
         </div>

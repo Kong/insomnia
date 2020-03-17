@@ -75,7 +75,7 @@ import ExportRequestsModal from '../components/modals/export-requests-modal';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import VCS from '../../sync/vcs';
 import SyncMergeModal from '../components/modals/sync-merge-modal';
-import GitVCS from '../../sync/git/git-vcs';
+import GitVCS, { GIT_NAMESPACE_DIR } from '../../sync/git/git-vcs';
 import NeDBPlugin from '../../sync/git/ne-db-plugin';
 import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
@@ -980,7 +980,7 @@ class App extends PureComponent {
         getDataDirectory(),
         `version-control/git/${activeGitRepository._id}`,
       );
-      const pStudioDataNeDb = NeDBPlugin.createPlugin(activeWorkspace._id);
+      const pNeDb = NeDBPlugin.createPlugin(activeWorkspace._id);
       const pGitData = FSPlugin.createPlugin(baseDir);
       const pOtherData = FSPlugin.createPlugin(path.join(baseDir, 'other'));
       const gitSubDir = '/git';
@@ -988,12 +988,12 @@ class App extends PureComponent {
       const fsPlugin = routableFSPlugin(
         // All data outside the directories listed below will be stored in an 'other'
         // directory. This is so we can support files that exist outside the ones
-        // Studio is specifically in charge of.
+        // the app is specifically in charge of.
         pOtherData,
         {
-          // All studio data is stored within the .studio/ directory at the root of the
+          // All app data is stored within the a namespaced directory at the root of the
           // repository and is read/written from the local NeDB database
-          '/.studio': pStudioDataNeDb,
+          [`/${GIT_NAMESPACE_DIR}`]: pNeDb,
 
           // All git metadata is stored in a git/ directory on the filesystem
           [gitSubDir]: pGitData,

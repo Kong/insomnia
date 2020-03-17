@@ -4,6 +4,7 @@ import * as db from '../../common/database';
 import * as models from '../../models';
 import YAML from 'yaml';
 import Stat from './stat';
+import { GIT_NAMESPACE_DIR } from './git-vcs';
 
 export default class NeDBPlugin {
   _workspaceId: string;
@@ -68,7 +69,7 @@ export default class NeDBPlugin {
     filePath = path.normalize(filePath);
     const { root, id, type } = this._parsePath(filePath);
 
-    if (root !== '.studio') {
+    if (root !== GIT_NAMESPACE_DIR) {
       console.log(`[git] Ignoring external file ${filePath}`);
       return;
     }
@@ -111,7 +112,7 @@ export default class NeDBPlugin {
     let docs = [];
     let otherFolders = [];
     if (root === null && id === null && type === null) {
-      otherFolders = ['.studio'];
+      otherFolders = [GIT_NAMESPACE_DIR];
     } else if (id === null && type === null) {
       otherFolders = [
         models.workspace.type,

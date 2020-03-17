@@ -29,7 +29,7 @@ import type { Project } from '../../../sync/types';
 import * as sync from '../../../sync-legacy/index';
 import * as session from '../../../account/session';
 import { MemPlugin } from '../../../sync/git/mem-plugin';
-import GitVCS from '../../../sync/git/git-vcs';
+import GitVCS, { GIT_NAMESPACE_DIR } from '../../../sync/git/git-vcs';
 import GitRepositorySettingsModal from '../modals/git-repository-settings-modal';
 import { trackEvent } from '../../../common/analytics';
 import type { WorkspaceAction } from '../../../plugins';
@@ -235,8 +235,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
         trackEvent('Git', 'Clone');
 
         const core = Math.random() + '';
-        const studioDirname = '.studio';
-        const studioRoot = path.join('/', studioDirname);
+        const rootDir = path.join('/', GIT_NAMESPACE_DIR);
 
         // Create in-memory filesystem to perform clone
         const plugins = git.cores.create(core);
@@ -271,15 +270,15 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
           return false;
         };
 
-        if (!(await ensureDir('/', studioDirname))) {
+        if (!(await ensureDir('/', GIT_NAMESPACE_DIR))) {
           return;
         }
 
-        if (!(await ensureDir(studioRoot, models.workspace.type))) {
+        if (!(await ensureDir(rootDir, models.workspace.type))) {
           return;
         }
 
-        const workspaceBase = path.join(studioRoot, models.workspace.type);
+        const workspaceBase = path.join(rootDir, models.workspace.type);
         const workspaceDirs = await f.readdir(workspaceBase);
 
         if (workspaceDirs.length > 1) {
@@ -309,7 +308,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             okLabel: 'Done',
             message: (
               <React.Fragment>
-                Workspace <strong>{existingWorkspace.name}</strong> already exists in Studio. Please
+                Workspace <strong>{existingWorkspace.name}</strong> already exists. Please
                 delete it before cloning.
               </React.Fragment>
             ),
@@ -334,9 +333,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             // Stop the DB from pushing updates to the UI temporarily
             const bufferId = await db.bufferChanges();
 
-            // Loop over all model folders in .studio/
-            for (const modelType of await f.readdir(studioRoot)) {
-              const modelDir = path.join(studioRoot, modelType);
+            // Loop over all model folders in root
+            for (const modelType of await f.readdir(rootDir)) {
+              const modelDir = path.join(rootDir, modelType);
 
               // Loop over all documents in model folder and save them
               for (const docFileName of await f.readdir(modelDir)) {

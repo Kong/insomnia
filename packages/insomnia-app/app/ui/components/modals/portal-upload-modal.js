@@ -259,7 +259,7 @@ class PortalUploadModal extends React.PureComponent<Props, State> {
                 Error. Please check your settings and try again.
               </p>
             )}
-            <p className="no-pad no-margin-top">Let's connect Kong Studio to the Kong API:</p>
+            <p className="no-pad no-margin-top">Let's connect to the Kong API:</p>
             <div className="form-control form-control--outlined">
               <label>
                 Kong API URL

@@ -8,7 +8,7 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import type { Workspace } from '../../../models/workspace';
-import GitVCS from '../../../sync/git/git-vcs';
+import GitVCS, { GIT_NAMESPACE_DIR } from '../../../sync/git/git-vcs';
 import { withDescendants } from '../../../common/database';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import ModalFooter from '../base/modal-footer';
@@ -129,7 +129,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     const { vcs } = this.props;
 
     const f = vcs.getFs().promises;
-    const rootDir = path.join('/', '.studio');
+    const rootDir = path.join('/', GIT_NAMESPACE_DIR);
 
     const fsPaths = [];
     for (const type of await f.readdir(rootDir)) {
@@ -137,7 +137,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
       for (const name of await f.readdir(typeDir)) {
         // NOTE: git paths don't start with '/' so we're omitting
         //  it here too.
-        const gitPath = path.join('.studio/', type, name);
+        const gitPath = path.join(`${GIT_NAMESPACE_DIR}/`, type, name);
         fsPaths.push(path.join(gitPath));
       }
     }
@@ -167,8 +167,8 @@ class GitStagingModal extends React.PureComponent<Props, State> {
 
     this.statusNames = {};
     for (const doc of docs) {
-      this.statusNames[path.join('.studio', doc.type, `${doc._id}.json`)] = (doc: any).name || '';
-      this.statusNames[path.join('.studio', doc.type, `${doc._id}.yml`)] = (doc: any).name || '';
+      this.statusNames[path.join(GIT_NAMESPACE_DIR, doc.type, `${doc._id}.json`)] = (doc: any).name || '';
+      this.statusNames[path.join(GIT_NAMESPACE_DIR, doc.type, `${doc._id}.yml`)] = (doc: any).name || '';
     }
 
     // Create status items

@@ -53,7 +53,7 @@ document.title = packageJson.app.longName;
     // });
   }
 
-  // Legacy sync not part of Studio
+  // Legacy sync not part of Designer
   legacySync.disableForSession();
 
   // // Do things that can wait

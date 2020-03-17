@@ -159,7 +159,7 @@ export const hotKeyRefs: { [string]: HotKeyDefinition } = {
 
   ENVIRONMENT_UNCOVER_VARIABLES: defineHotKey('environment_uncoverVariables', 'Uncover Variables'),
 
-  // Studio-specific
+  // Designer-specific
   SHOW_SPEC_EDITOR: defineHotKey('activity_specEditor', 'Show Spec Activity'),
   SHOW_TEST: defineHotKey('activity_test', 'Show Test Activity'),
   SHOW_MONITOR: defineHotKey('activity_monitor', 'Show Monitor Activity'),

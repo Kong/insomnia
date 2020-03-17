@@ -33,6 +33,16 @@ export type GitLogEntry = {|
   },
 |};
 
+/**
+ * In order to keep the Git stuff isolated within the repository, we store
+ * everything under a single directory at the root. This also gives us a
+ * location to look for when cloning a new repository.
+ *
+ * NOTE: The directory is still named `.studio` because that was the original name.
+ *   Changing it would be too difficult at this point.
+ */
+export const GIT_NAMESPACE_DIR = '.studio';
+
 export default class GitVCS {
   _git: Object;
   _baseOpts: {dir: string, gitdir?: string};
@@ -120,19 +130,11 @@ export default class GitVCS {
   }
 
   async add(relPath: string): Promise<void> {
-    // if (relPath.indexOf('.studio') !== 0) {
-    //   throw new Error('Cannot add files outside .studio');
-    // }
-
     console.log(`[git] Add ${relPath}`);
     return git.add({ ...this._baseOpts, filepath: relPath });
   }
 
   async remove(relPath: string): Promise<void> {
-    // if (relPath.indexOf('.studio') !== 0) {
-    //   throw new Error('Cannot remove files outside .studio');
-    // }
-
     console.log(`[git] Remove relPath=${relPath}`);
     return git.remove({ ...this._baseOpts, filepath: relPath });
   }

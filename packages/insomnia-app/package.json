@@ -3,12 +3,12 @@
   "version": "2.1.6",
   "name": "insomnia-app",
   "app": {
-    "name": "studio",
-    "executableName": "studio",
-    "appId": "com.konghq.studio",
-    "productName": "Kong Studio",
-    "longName": "Kong Studio",
-    "synopsis": "Desktop application for spec-first API development",
+    "name": "insomnia-designer",
+    "executableName": "designer",
+    "appId": "com.konghq.designer",
+    "productName": "Designer",
+    "longName": "Insomnia Designer",
+    "synopsis": "The Collaborative API Design Tool",
     "icon": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
     "theme": "studio-light",
     "version": "1.2.0",
@@ -29,7 +29,7 @@
     ]
   },
   "homepage": "https://konghq.com",
-  "description": "Desktop application for spec-first API development",
+  "description": "The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
   "main": "app/main.min.js",
   "scripts": {

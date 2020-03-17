@@ -1,6 +1,6 @@
 module.exports = {
-  name: 'studio-colorful',
-  displayName: 'Studio Dark',
+  name: 'default-dark',
+  displayName: 'Core Dark',
   theme: {
     foreground: {
       default: '#e6eff5',

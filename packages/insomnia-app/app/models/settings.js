@@ -25,6 +25,7 @@ type BaseSettings = {
   editorIndentWithTabs: boolean,
   editorKeyMap: string,
   editorLineWrapping: boolean,
+  enableAnalytics: boolean,
   environmentHighlightColorStyle: string,
   followRedirects: boolean,
   fontInterface: string | null,
@@ -56,9 +57,6 @@ type BaseSettings = {
   // Feature flags
   enableSyncBeta: boolean,
   hotKeyRegistry: hotkeys.HotKeyRegistry,
-
-  // Studio stuff
-  enableAnalytics: boolean,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -82,6 +80,7 @@ export function init(): BaseSettings {
     editorIndentWithTabs: true,
     editorKeyMap: 'default',
     editorLineWrapping: true,
+    enableAnalytics: false,
     environmentHighlightColorStyle: 'sidebar-indicator',
     followRedirects: true,
     fontInterface: null,
@@ -112,9 +111,6 @@ export function init(): BaseSettings {
 
     // Feature flags
     enableSyncBeta: false,
-
-    // Studio stuff
-    enableAnalytics: false,
   };
 }
 
