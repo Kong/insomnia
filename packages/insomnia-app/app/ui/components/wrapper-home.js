@@ -3,7 +3,7 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
-import { AppHeader, Card, CardContainer } from 'insomnia-components';
+import { Breadcrumb, Card, CardContainer, Header } from 'insomnia-components';
 import DocumentCardDropdown from './dropdowns/document-card-dropdown';
 import KeydownBinder from './keydown-binder';
 import { executeHotKey } from '../../common/hotkeys-listener';
@@ -22,6 +22,7 @@ import PageLayout from './page-layout';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from './base/dropdown';
 import type {ForceToWorkspace} from '../redux/modules/helpers';
 import {ForceToWorkspaceKeys} from '../redux/modules/helpers';
+import designerLogo from '../images/insomnia-designer-logo.svg';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -158,7 +159,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       branch = lastActiveBranch + '*';
       log = (
         <React.Fragment>
-          <TimeFromNow className='text-danger' timestamp={modifiedLocally} /> (unsaved)
+          <TimeFromNow className="text-danger" timestamp={modifiedLocally} /> (unsaved)
         </React.Fragment>
       );
     } else if (lastCommitTime) {
@@ -220,7 +221,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
   renderMenu() {
     return (
       <Dropdown outline>
-        <DropdownButton className="btn btn--clicky-small">
+        <DropdownButton className="margin-left btn-utility btn-create">
           Create <i className="fa fa-caret-down" />
         </DropdownButton>
         <DropdownDivider>From</DropdownDivider>
@@ -252,26 +253,33 @@ class WrapperHome extends React.PureComponent<Props, State> {
       <PageLayout
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={() => (
-          <AppHeader
-            className="app-header"
-            breadcrumbs={['Documents']}
-            menu={this.renderMenu()}
+          <Header
+              className="app-header"
+              gridLeft={
+                <React.Fragment>
+                    <img src={designerLogo} alt="Insomnia" width="24" height="24" />
+                    <Breadcrumb className="breadcrumb" crumbs={['Documents']} />
+                </React.Fragment>
+              }
+              gridCenter={
+                <div className="form-control form-control--outlined no-margin">
+                  <KeydownBinder onKeydown={this._handleKeyDown}>
+                    <input
+                      ref={this._setFilterInputRef}
+                      type="text"
+                      placeholder="Filter..."
+                      onChange={this._handleFilterChange}
+                      className="no-margin workspace-filter"
+                    />
+                    <span className="fa fa-search filter-icon"></span>
+                  </KeydownBinder>
+                </div>
+              }
+              gridRight={this.renderMenu()}
           />
         )}
         renderPageBody={() => (
-          <KeydownBinder onKeydown={this._handleKeyDown}>
-            <div className="document-listing theme--pane layout-body">
-              <header className="document-listing__header">
-                <h1>Documents</h1>
-                <div className="form-control form-control--outlined">
-                  <input
-                    ref={this._setFilterInputRef}
-                    type="text"
-                    placeholder="filter"
-                    onChange={this._handleFilterChange}
-                  />
-                </div>
-              </header>
+            <div className="document-listing theme--pane layout-body pad-top">
               <div className="document-listing__body">
                 <CardContainer>
                   {filteredWorkspaces.map(this.renderWorkspace)}
@@ -283,7 +291,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
                 )}
               </div>
             </div>
-          </KeydownBinder>
         )}
       />
     );

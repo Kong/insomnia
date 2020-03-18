@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import { AppHeader } from 'insomnia-components';
+import { Breadcrumb, Switch, Header } from 'insomnia-components';
 import PageLayout from './page-layout';
 import type { WrapperProps } from './wrapper';
 import { ACTIVITY_HOME, ACTIVITY_SPEC } from './activity-bar/activity-bar';
@@ -11,6 +11,7 @@ import ResponsePane from './response-pane';
 import SidebarChildren from './sidebar/sidebar-children';
 import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
+import designerLogo from '../images/insomnia-designer-logo.svg';
 
 type Props = {
   forceRefreshKey: string,
@@ -46,9 +47,7 @@ type Props = {
 @autobind
 class WrapperDebug extends React.PureComponent<Props> {
   _handleBreadcrumb(index: number) {
-    if (index === 0) {
-      this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
-    }
+    this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
   _handleDesign() {
@@ -138,18 +137,18 @@ class WrapperDebug extends React.PureComponent<Props> {
       <PageLayout
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={() => (
-          <AppHeader
-            className="app-header"
-            onBreadcrumb={this._handleBreadcrumb}
-            breadcrumbs={['Documents', activeWorkspace.name]}
-            menu={(
-              <React.Fragment>
-                <button className="btn btn--clicky-small" onClick={this._handleDesign}>
-                  Design <i className="fa fa-toggle-on" /> Test
-                </button>
-                {gitSyncDropdown}
-              </React.Fragment>
-            )}
+          <Header
+              className="app-header"
+              gridLeft={
+                  <React.Fragment>
+                      <img src={designerLogo} alt="Insomnia" width="24" height="24" />
+                      <Breadcrumb className="breadcrumb" crumbs={['Documents', activeWorkspace.name]} onClick={this._handleBreadcrumb} />
+                  </React.Fragment>
+              }
+              gridCenter={
+                  <Switch onClick={this._handleDesign} optionItems={[{'label': 'DESIGN', 'selected': false}, {'label': 'DEBUG', 'selected': true}]} />
+              }
+              gridRight={gitSyncDropdown}
           />
         )}
         renderPageSidebar={() => (

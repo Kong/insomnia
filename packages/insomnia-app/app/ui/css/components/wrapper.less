@@ -7,8 +7,64 @@
   //grid-template-rows: ...;
   //grid-template-columns: ...;
 
+  .workspace-filter {
+    border-radius: 0 !important;
+
+  }
+
+  .filter-icon {
+    float: right;
+    margin-right: var(--padding-sm);
+    margin-top: -22px;
+    position: relative;
+    z-index: 1;
+    color: var(--hl-xl);
+}
+
+  .btn-utility {
+    color: #fff;
+    background-color: var(--color-surprise);
+  }
+
+  .btn-create {
+    padding: var(--padding-sm) var(--padding-md);
+  }
+
+  .btn-utility-reverse {
+    color: var(--color-text);
+    background-color: var(--hl-xs);
+    border:none;
+    //border-color:var(--color-surprise);
+  }
+
+  .btn-sync {
+    text-align: center;
+    font-size: var(--font-size-sm);
+    height: var(--line-height-xs);
+    display: flex !important;
+    flex-direction: row !important;
+    -webkit-box-align: center !important;
+    align-items: center !important;
+    border-radius: 2px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: initial;
+    border-image: initial;
+    padding-left: var(--padding-sm);
+    padding-right: var(--padding-sm);
+  }
+
   height: 100%;
   width: 100%;
+
+  @keyframes togglePill {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(0);
+    }
+  }
 
   .activity-bar {
     grid-column-start: 1;

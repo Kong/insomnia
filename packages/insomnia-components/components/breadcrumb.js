@@ -8,13 +8,13 @@ type Props = {|
 |};
 
 const StyledBreadcrumb: React.ComponentType<{}> = styled.ul`
-    display: flex;
-    flex: 1;
-    margin-right: auto;
-    align-items: center;
     font-size: var(--font-size-md);
     font-weight: 600;
     color: var(--color-font);
+    grid-area: breadcrumbs;
+    display:flex;
+    align-items: center;
+    justify-content: center;
 
     a,
     a::before,
@@ -51,7 +51,7 @@ class Breadcrumb extends React.PureComponent<Props> {
   }
 
   render() {
-    const { crumbs } = this.props;
+    const { crumbs, onClick } = this.props;
     return (
       <StyledBreadcrumb>
         {crumbs.map((crumb, i, arr) => {
@@ -60,7 +60,7 @@ class Breadcrumb extends React.PureComponent<Props> {
           } else {
             return (
               <li key={crumb}>
-                <a href="#" onClick={this._handleClick.bind(this, i)}>
+                <a href="#" onClick={onClick}>
                   {crumb}
                 </a>
               </li>

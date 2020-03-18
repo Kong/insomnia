@@ -1,4 +1,8 @@
 import _AppHeader from './components/app-header';
+import _Breadcrumb from './components/breadcrumb';
+import _Header from './components/header';
+import _Switch from './components/switch';
+import _GravatarImg from './components/gravatar-img';
 import _Button from './components/button';
 import _CardContainer from './components/card-container';
 import _Card from './components/card';
@@ -7,6 +11,10 @@ import _SvgIcon from './components/svg-icon';
 import * as table from './components/table';
 
 export const AppHeader = _AppHeader;
+export const Breadcrumb = _Breadcrumb;
+export const Header = _Header;
+export const Switch = _Switch;
+export const GravatarImg = _GravatarImg;
 export const Button = _Button;
 export const CardContainer = _CardContainer;
 export const Card = _Card;

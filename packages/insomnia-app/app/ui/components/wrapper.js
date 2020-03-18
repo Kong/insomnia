@@ -302,11 +302,15 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     const { handleSetActiveActivity, handleSetActiveWorkspace } = this.props;
     const workspace = await models.workspace.getById(apiSpec.parentId);
     await handleSetActiveWorkspace(workspace._id);
-    await importRaw(
-      () => Promise.resolve(workspace._id), // Always import into current workspace
-      apiSpec.contents,
-    );
     await handleSetActiveActivity(ACTIVITY_DEBUG);
+
+    setTimeout(() => {
+      // Delaying generation so design to debug mode is smooth
+      importRaw(
+        () => Promise.resolve(workspace._id), // Always import into current workspace
+        apiSpec.contents,
+      );
+    }, 1000);
     //   },
     // });
   }
@@ -623,13 +627,14 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     if (gitVCS) {
       gitSyncDropdown = (
         <GitSyncDropdown
+          className='margin-left'
           workspace={activeWorkspace}
-          dropdownButtonClassName="btn btn--clicky-small"
+          dropdownButtonClassName="btn--clicky-small btn-sync btn-utility"
           gitRepository={activeGitRepository}
           vcs={gitVCS}
           handleInitializeEntities={handleInitializeEntities}
           renderDropdownButton={(children) => (
-            <DropdownButton className="btn btn--clicky-small">
+            <DropdownButton className="btn--clicky-small btn-sync btn-utility">
               {children}
             </DropdownButton>
           )}

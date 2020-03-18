@@ -3,7 +3,7 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
-import { AppHeader, NoticeTable } from 'insomnia-components';
+import { Button, Breadcrumb, NoticeTable, Switch, Header } from 'insomnia-components';
 import ErrorBoundary from './error-boundary';
 import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
 import CodeEditor from './codemirror/code-editor';
@@ -15,6 +15,9 @@ import SwaggerUI from 'swagger-ui-react';
 import YAML from 'yaml';
 import { ACTIVITY_HOME } from './activity-bar/activity-bar';
 import type { ApiSpec } from '../../models/api-spec';
+import designerLogo from '../images/insomnia-designer-logo.svg';
+import previewIcon from '../images/icn-eye.svg';
+import generateConfigIcon from '../images/icn-gear.svg';
 
 const spectral = new Spectral();
 
@@ -110,9 +113,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
   }
 
   _handleBreadcrumb(index: number) {
-    if (index === 0) {
-      this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
-    }
+    this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
   componentDidMount() {
@@ -156,24 +157,28 @@ class WrapperDesign extends React.PureComponent<Props, State> {
       <PageLayout
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={() => (
-          <AppHeader
-            className="app-header"
-            breadcrumbs={['Documents', activeWorkspace.name]}
-            onBreadcrumb={this._handleBreadcrumb}
-            menu={(
-              <React.Fragment>
-                <button className="btn btn--clicky-small" onClick={this._handleDebugSpec}>
-                  Design <i className="fa fa-toggle-off" /> Test
-                </button>
-                <button className="btn btn--clicky-small" onClick={this._handleTogglePreview}>
-                  {previewActive ? 'Hide Preview' : 'Show Preview'}
-                </button>
-                <button className="btn btn--clicky-small" onClick={this._handleGenerateConfig}>
-                  Generate Config
-                </button>
-                {gitSyncDropdown}
-              </React.Fragment>
-            )}
+          <Header
+              className="app-header"
+              gridLeft={
+                  <React.Fragment>
+                      <img src={designerLogo} alt="Insomnia" width="24" height="24" />
+                      <Breadcrumb className="breadcrumb" crumbs={['Documents', activeWorkspace.name]} onClick={this._handleBreadcrumb} />
+                  </React.Fragment>
+              }
+              gridCenter={
+                  <Switch onClick={this._handleDebugSpec} optionItems={[{'label': 'DESIGN', 'selected': true}, {'label': 'DEBUG', 'selected': false}]} />
+              }
+              gridRight={
+                  <React.Fragment>
+                      <Button onClick={this._handleTogglePreview} className="btn-utility-reverse">
+                      <img src={previewIcon} alt="Preview" width="15" />&nbsp; {previewActive ? 'Preview: On' : 'Preview: Off'}
+                      </Button>
+                      <Button onClick={this._handleGenerateConfig} className="margin-left btn-utility-reverse">
+                      <img src={generateConfigIcon} alt="Generate Config" width="15" />&nbsp; Generate Config
+                      </Button>
+                      {gitSyncDropdown}
+                  </React.Fragment>
+              }
           />
         )}
         renderPageBody={() => (
