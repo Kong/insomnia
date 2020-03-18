@@ -28,7 +28,7 @@ export function migrate(doc: RequestGroupMeta): RequestGroupMeta {
 
 export function create(patch: $Shape<RequestGroupMeta> = {}): Promise<RequestGroupMeta> {
   if (!patch.parentId) {
-    throw new Error('New RequestGroupMeta missing `parentId`', patch);
+    throw new Error('New RequestGroupMeta missing `parentId`: ' + JSON.stringify(patch));
   }
 
   return db.docCreate(type, patch);
@@ -41,7 +41,7 @@ export function update(
   return db.docUpdate(requestGroupMeta, patch);
 }
 
-export function getByParentId(parentId: string): Promise<RequestGroupMeta> {
+export function getByParentId(parentId: string): Promise<RequestGroupMeta | null> {
   return db.getWhere(type, { parentId });
 }
 
