@@ -116,7 +116,7 @@ export function migrate(doc: Settings): Settings {
   return doc;
 }
 
-export async function all(patch: Object = {}): Promise<Array<Settings>> {
+export async function all(patch: $Shape<Settings> = {}): Promise<Array<Settings>> {
   const settings = await db.all(type);
   if (settings.length === 0) {
     return [await getOrCreate()];
@@ -125,15 +125,15 @@ export async function all(patch: Object = {}): Promise<Array<Settings>> {
   }
 }
 
-export async function create(patch: Object = {}): Promise<Settings> {
+export async function create(patch: $Shape<Settings> = {}): Promise<Settings> {
   return db.docCreate(type, patch);
 }
 
-export async function update(settings: Settings, patch: Object): Promise<Settings> {
+export async function update(settings: Settings, patch: $Shape<Settings>): Promise<Settings> {
   return db.docUpdate(settings, patch);
 }
 
-export async function getOrCreate(patch: Object = {}): Promise<Settings> {
+export async function getOrCreate(patch: $Shape<Settings> = {}): Promise<Settings> {
   const results = await db.all(type);
   if (results.length === 0) {
     return create(patch);
