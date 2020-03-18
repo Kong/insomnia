@@ -9,7 +9,6 @@
 
   .workspace-filter {
     border-radius: 0 !important;
-
   }
 
   .filter-icon {
@@ -19,7 +18,7 @@
     position: relative;
     z-index: 1;
     color: var(--hl-xl);
-}
+  }
 
   .btn-utility {
     color: #fff;
@@ -33,8 +32,14 @@
   .btn-utility-reverse {
     color: var(--color-text);
     background-color: var(--hl-xs);
-    border:none;
-    //border-color:var(--color-surprise);
+    border: none;
+  }
+
+  .btn-utility,
+  .btn-utility-reverse {
+    &:hover {
+      filter: brightness(0.80);
+    }
   }
 
   .btn-sync {
@@ -61,6 +66,7 @@
     0% {
       transform: translateX(-100%);
     }
+
     100% {
       transform: translateX(0);
     }
@@ -88,7 +94,7 @@
       display: none;
     }
 
-    & > * {
+    &>* {
       //background-color: rgba(255, 0, 0, 0.5);
       cursor: ew-resize;
       position: absolute;
@@ -183,7 +189,7 @@
     grid-row-start: 3;
     grid-row-end: span 1;
 
-    & > * {
+    &>* {
       cursor: ns-resize;
       height: var(--drag-width);
       width: 100%;
