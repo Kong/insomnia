@@ -3,12 +3,19 @@ import * as React from 'react';
 import type { GraphQLField, GraphQLType } from 'graphql';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
 import MarkdownPreview from '../markdown-preview';
+import { astFromValue, print } from 'graphql';
 
 type Props = {
   onNavigateType: (type: GraphQLType) => void,
   field: GraphQLField<any, any>,
 };
 
+const printDefault = ast => {
+  if (!ast) {
+    return '';
+  }
+  return print(ast);
+};
 class GraphQLExplorerField extends React.PureComponent<Props> {
   renderDescription() {
     const { field } = this.props;
@@ -36,13 +43,20 @@ class GraphQLExplorerField extends React.PureComponent<Props> {
       <React.Fragment>
         <h2 className="graphql-explorer__subheading">Arguments</h2>
         <ul className="graphql-explorer__defs">
-          {field.args.map(a => (
-            <li key={a.name}>
-              <span className="info">{a.name}</span>:{' '}
-              <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={a.type} />
-              {a.description && <MarkdownPreview markdown={a.description} />}
-            </li>
-          ))}
+          {field.args.map(a => {
+            let defaultValue = '';
+            if ('defaultValue' in a && a.defaultValue !== undefined) {
+              defaultValue = <span> = {printDefault(astFromValue(a.defaultValue, a.type))}</span>;
+            }
+            return (
+              <li key={a.name}>
+                <span className="info">{a.name}</span>:{' '}
+                <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={a.type} />
+                {defaultValue}
+                {a.description && <MarkdownPreview markdown={a.description} />}
+              </li>
+            );
+          })}
         </ul>
       </React.Fragment>
     );
