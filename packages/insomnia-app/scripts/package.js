@@ -1,5 +1,4 @@
 const packageJson = require('../package.json');
-const https = require('https');
 const electronBuilder = require('electron-builder');
 const path = require('path');
 const rimraf = require('rimraf');
@@ -15,53 +14,15 @@ const PLATFORM_MAP = {
 // Start package if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
-    const {
-      // Bintray env vars for publishing
-      BT_USER,
-      BT_TOKEN,
-
-      // Bintray env vars for consuming (auto-updater)
-      BT_UPDATES_USER,
-      BT_UPDATES_TOKEN,
-    } = process.env;
-
-    const { isInternalBuild, publish, gitRef, gitCommit } = shouldPublish();
+    const { publish, gitRef } = shouldPublish();
     if (!publish) {
       console.log(`[package] Not packaging for ref=${gitRef}`);
       process.exit(0);
     }
 
-    // Error out if no Bintray credentials for auto-updates
-    if (!BT_USER || !BT_TOKEN) {
-      console.log(
-        '[package] BT_USER and BT_TOKEN environment variables must be set' +
-        'in order to publish to Bintray!',
-      );
-      process.exit(1);
-    }
-
-    // Error out if no Bintray credentials for auto-updates
-    if (!BT_UPDATES_USER || !BT_UPDATES_TOKEN) {
-      console.log(
-        '[package] BT_UPDATES_USER and BT_UPDATES_TOKEN environment variables ' +
-        'must be set for auto-updater to authenticate with Bintray!',
-      );
-      process.exit(1);
-    }
-
-    // Generate version if it's internal
-    let version = packageJson.app.version;
-    let bintrayRepo = 'studio';
-
-    // Generate internal build number if it's internal
-    if (isInternalBuild) {
-      version = `${version}-sha.${gitCommit.slice(0, 8)}`;
-      bintrayRepo = 'studio-internal';
-    }
-
     try {
-      await buildTask.start(version);
-      await start(bintrayRepo, version);
+      await buildTask.start();
+      await start();
     } catch (err) {
       console.log('[package] ERROR:', err);
       process.exit(1);
@@ -69,7 +30,7 @@ if (require.main === module) {
   });
 }
 
-async function start(bintrayRepo, version) {
+async function start() {
   console.log('[package] Removing existing directories');
 
   if (process.env.KEEP_DIST_FOLDER !== 'yes') {
@@ -77,50 +38,24 @@ async function start(bintrayRepo, version) {
   }
 
   console.log('[package] Packaging app');
-  await pkg('../.electronbuilder', bintrayRepo, version);
+  await pkg('../.electronbuilder');
 
   console.log('[package] Complete!');
 }
 
-async function ensureBintrayVersion(bintrayRepo, version) {
-  return new Promise((resolve, reject) => {
-    const { BT_USER, BT_TOKEN } = process.env;
-
-    const req = https.request(`https://api.bintray.com/packages/kong/${bintrayRepo}/desktop/versions`, {
-      method: 'POST',
-      auth: [BT_USER, BT_TOKEN].join(':'),
-      headers: { 'Content-Type': 'application/json' },
-    }, res => {
-      res.setEncoding('utf8');
-      let body = [];
-      res.on('data', chunk => {
-        body += chunk;
-      });
-      res.on('end', () => {
-        resolve(JSON.parse(body));
-      });
-    });
-
-    req.on('error', err => {
-      reject(err);
-    });
-
-    req.write(JSON.stringify({ name: version }));
-    req.end();
-  });
-}
-
-async function pkg(relConfigPath, bintrayRepo, version) {
+async function pkg(relConfigPath) {
   const configPath = path.resolve(__dirname, relConfigPath);
+
+  const [githubOwner, githubRepo] = packageJson.app.publishRepo.split('/');
 
   // Replace some things
   const rawConfig = fs
     .readFileSync(configPath, 'utf8')
     .replace('__APP_ID__', packageJson.app.appId)
     .replace('__ICON_URL__', packageJson.app.icon)
+    .replace('__GITHUB_REPO__', githubRepo)
+    .replace('__GITHUB_OWNER__', githubOwner)
     .replace('__EXECUTABLE_NAME__', packageJson.app.executableName)
-    .replace('__BT_USER__', process.env.BT_USER)
-    .replace('__BT_REPO__', bintrayRepo)
     .replace('__SYNOPSIS__', packageJson.app.synopsis);
 
   const config = JSON.parse(rawConfig);
@@ -129,8 +64,6 @@ async function pkg(relConfigPath, bintrayRepo, version) {
   const target = process.env.BUILD_TARGETS
     ? process.env.BUILD_TARGETS.split(',')
     : config[targetPlatform].target;
-
-  await ensureBintrayVersion(bintrayRepo, version);
 
   return electronBuilder.build({
     publish: 'always',

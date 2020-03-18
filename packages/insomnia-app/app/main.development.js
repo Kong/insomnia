@@ -9,7 +9,6 @@ import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/cons
 import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';
 import { trackNonInteractiveEventQueueable } from './common/analytics';
-import { getBasicAuthHeader } from './network/basic-auth/get-header';
 
 const { app, ipcMain, session } = electron;
 const commandLineArgs = process.argv.slice(1);
@@ -154,12 +153,5 @@ async function _trackStats() {
 }
 
 function _checkForUpdates() {
-  const authHeader = getBasicAuthHeader(process.env.BT_UPDATES_USER, process.env.BT_UPDATES_TOKEN);
-
-  // Authenticate with Bintray
-  autoUpdater.requestHeaders = {
-    [authHeader.name]: authHeader.value,
-  };
-
   autoUpdater.checkForUpdatesAndNotify();
 }

@@ -27,12 +27,9 @@ jobs:
         env:
           GITHUB_REF: ${{ github.ref }}
           GITHUB_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
-          BT_USER: ${{ secrets.BINTRAY_USER }}
-          BT_TOKEN: ${{ secrets.BINTRAY_TOKEN }}
-          BT_UPDATES_USER: ${{ secrets.BINTRAY_UPDATES_USER }}
-          BT_UPDATES_TOKEN: ${{ secrets.BINTRAY_UPDATES_TOKEN }}
         run: npm run app-package
   Ubuntu14:
     name: Linux (Generic)
@@ -45,12 +42,9 @@ jobs:
         env:
           GITHUB_REF: ${{ github.ref }}
           GITHUB_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           BUILD_TARGETS: AppImage
           NODELIBCURL_BUILD_STATIC: yes
-          BT_USER: ${{ secrets.BINTRAY_USER }}
-          BT_TOKEN: ${{ secrets.BINTRAY_TOKEN }}
-          BT_UPDATES_USER: ${{ secrets.BINTRAY_UPDATES_USER }}
-          BT_UPDATES_TOKEN: ${{ secrets.BINTRAY_UPDATES_TOKEN }}
 #  Mac builds moved to Travis-CI for older OS versions
 #  Mac:
 #    name: Mac
@@ -71,11 +65,8 @@ jobs:
 #        env:
 #          GITHUB_REF: ${{ github.ref }}
 #          GITHUB_SHA: ${{ github.sha }}
+#          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 #          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
 #          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
 #          APPLE_ID: ${{ secrets.APPLE_ID }}
 #          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-#          BT_USER: ${{ secrets.BINTRAY_USER }}
-#          BT_TOKEN: ${{ secrets.BINTRAY_TOKEN }}
-#          BT_UPDATES_USER: ${{ secrets.BINTRAY_UPDATES_USER }}
-#          BT_UPDATES_TOKEN: ${{ secrets.BINTRAY_UPDATES_TOKEN }}

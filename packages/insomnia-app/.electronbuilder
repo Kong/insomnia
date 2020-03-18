@@ -2,11 +2,11 @@
   "appId": "__APP_ID__",
   "publish": [
     {
-      "provider": "bintray",
-      "package": "desktop",
-      "repo": "__BT_REPO__",
-      "owner": "kong",
-      "user": "__BT_USER__"
+      "provider": "github",
+      "repo": "__GITHUB_REPO__",
+      "owner": "__GITHUB_OWNER__",
+      "releaseType": "draft",
+      "publishAutoUpdate": true
     }
   ],
   "afterSign": "./scripts/afterSignHook.js",
