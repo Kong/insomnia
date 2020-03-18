@@ -232,7 +232,7 @@ export function migrate(doc: Request): Request {
   return doc;
 }
 
-export function create(patch: Object = {}): Promise<Request> {
+export function create(patch: $Shape<Request> = {}): Promise<Request> {
   if (!patch.parentId) {
     throw new Error(`New Requests missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
@@ -248,7 +248,7 @@ export function findByParentId(parentId: string): Promise<Array<Request>> {
   return db.find(type, { parentId: parentId });
 }
 
-export function update(request: Request, patch: Object): Promise<Request> {
+export function update(request: Request, patch: $Shape<Request>): Promise<Request> {
   return db.docUpdate(request, patch);
 }
 
@@ -341,7 +341,7 @@ export function updateMimeType(
   }
 }
 
-export async function duplicate(request: Request, patch: Object = {}): Promise<Request> {
+export async function duplicate(request: Request, patch: $Shape<Request> = {}): Promise<Request> {
   if (!patch.name) {
     patch.name = `${request.name} (Copy)`;
   }

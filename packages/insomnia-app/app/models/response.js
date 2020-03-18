@@ -78,7 +78,7 @@ export function init(): BaseResponse {
   };
 }
 
-export async function migrate(doc: Object) {
+export async function migrate(doc: $Shape<Response>) {
   doc = await migrateBodyToFileSystem(doc);
   doc = await migrateBodyCompression(doc);
   doc = await migrateTimelineToFileSystem(doc);
@@ -111,7 +111,7 @@ export async function all(): Promise<Array<Response>> {
 
 export async function removeForRequest(parentId: string, environmentId?: string | null) {
   const settings = await models.settings.getOrCreate();
-  const query: Object = {
+  const query: $Shape<Response> = {
     parentId,
   };
 
@@ -136,7 +136,7 @@ async function _findRecentForRequest(
   environmentId: string | null,
   limit: number,
 ): Promise<Array<Response>> {
-  const query: Object = {
+  const query: $Shape<Response> = {
     parentId: requestId,
   };
 
@@ -157,7 +157,7 @@ export async function getLatestForRequest(
   return response || null;
 }
 
-export async function create(patch: Object = {}, maxResponses: number = 20) {
+export async function create(patch: $Shape<Response> = {}, maxResponses: number = 20) {
   if (!patch.parentId) {
     throw new Error('New Response missing `parentId`');
   }
@@ -170,7 +170,7 @@ export async function create(patch: Object = {}, maxResponses: number = 20) {
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
 
   // Filter responses by environment if setting is enabled
-  const query: Object = { parentId };
+  const query: $Shape<Response> = { parentId };
   if (
     (await models.settings.getOrCreate()).filterResponsesByEnv &&
     patch.hasOwnProperty('environmentId')
@@ -193,15 +193,21 @@ export function getLatestByParentId(parentId: string) {
   return db.getMostRecentlyModified(type, { parentId });
 }
 
-export function getBodyStream<T>(response: Object, readFailureValue: ?T): Readable | null | T {
+export function getBodyStream<T>(
+  response: $Shape<Response>,
+  readFailureValue: ?T,
+): Readable | null | T {
   return getBodyStreamFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
 }
 
-export function getBodyBuffer<T>(response: Object, readFailureValue: ?T): Buffer | T | null {
+export function getBodyBuffer<T>(
+  response: $Shape<Response>,
+  readFailureValue: ?T,
+): Buffer | T | null {
   return getBodyBufferFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
 }
 
-export function getTimeline(response: Object): Array<ResponseTimelineEntry> {
+export function getTimeline(response: $Shape<Response>): Array<ResponseTimelineEntry> {
   return getTimelineFromPath(response.timelinePath || '');
 }
 
@@ -268,7 +274,7 @@ function getTimelineFromPath(timelinePath: string): Array<ResponseTimelineEntry>
   }
 }
 
-async function migrateBodyToFileSystem(doc: Object) {
+async function migrateBodyToFileSystem(doc: $Shape<Response>) {
   if (doc.hasOwnProperty('body') && doc._id && !doc.bodyPath) {
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
     const dir = path.join(getDataDirectory(), 'responses');
@@ -294,7 +300,7 @@ async function migrateBodyToFileSystem(doc: Object) {
   }
 }
 
-function migrateBodyCompression(doc: Object) {
+function migrateBodyCompression(doc: $Shape<Response>) {
   if (doc.bodyCompression === '__NEEDS_MIGRATION__') {
     doc.bodyCompression = 'zip';
   }
@@ -302,7 +308,7 @@ function migrateBodyCompression(doc: Object) {
   return doc;
 }
 
-async function migrateTimelineToFileSystem(doc: Object) {
+async function migrateTimelineToFileSystem(doc: $Shape<Response>) {
   if (doc.hasOwnProperty('timeline') && doc._id && !doc.timelinePath) {
     const dir = path.join(getDataDirectory(), 'responses');
 

@@ -44,7 +44,7 @@ export function migrate(doc: WorkspaceMeta): WorkspaceMeta {
   return doc;
 }
 
-export function create(patch: Object = {}): Promise<WorkspaceMeta> {
+export function create(patch: $Shape<WorkspaceMeta> = {}): Promise<WorkspaceMeta> {
   if (!patch.parentId) {
     throw new Error(`New WorkspaceMeta missing parentId ${JSON.stringify(patch)}`);
   }
@@ -52,7 +52,10 @@ export function create(patch: Object = {}): Promise<WorkspaceMeta> {
   return db.docCreate(type, patch);
 }
 
-export function update(workspaceMeta: WorkspaceMeta, patch: Object = {}): Promise<WorkspaceMeta> {
+export function update(
+  workspaceMeta: WorkspaceMeta,
+  patch: $Shape<WorkspaceMeta> = {},
+): Promise<WorkspaceMeta> {
   return db.docUpdate(workspaceMeta, patch);
 }
 
