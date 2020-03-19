@@ -1,6 +1,7 @@
 // @flow
 import { keyboardKeys } from './keyboard-keys';
 import { ALT_SYM, CTRL_SYM, isMac, META_SYM, SHIFT_SYM } from './constants';
+import AppContext from './strings';
 
 /**
  * The readable definition of a hotkey.
@@ -85,7 +86,7 @@ function keyBinds(
  */
 // Not using dot, because NeDB prohibits field names to contain dots.
 export const hotKeyRefs: { [string]: HotKeyDefinition } = {
-  WORKSPACE_SHOW_SETTINGS: defineHotKey('workspace_showSettings', 'Show Workspace Settings'),
+  WORKSPACE_SHOW_SETTINGS: defineHotKey('workspace_showSettings', `Show ${AppContext.workspace} Settings`),
 
   REQUEST_SHOW_SETTINGS: defineHotKey('request_showSettings', 'Show Request Settings'),
 

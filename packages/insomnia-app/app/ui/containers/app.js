@@ -79,6 +79,7 @@ import GitVCS, { GIT_NAMESPACE_DIR } from '../../sync/git/git-vcs';
 import NeDBPlugin from '../../sync/git/ne-db-plugin';
 import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
+import AppContext from '../../common/strings';
 
 @autobind
 class App extends PureComponent {
@@ -354,9 +355,9 @@ class App extends PureComponent {
 
   _workspaceRename(callback, workspaceId) {
     let workspace = this.props.workspaces.find(w => w._id === workspaceId);
-
+    console.dir(AppContext);
     showPrompt({
-      title: 'Rename Workspace',
+      title: `Rename ${AppContext.workspace}`,
       defaultValue: workspace.name,
       submitName: 'Rename',
       selectText: true,
@@ -371,7 +372,7 @@ class App extends PureComponent {
   _workspaceDeleteById(callback, workspaceId) {
     let workspace = this.props.workspaces.find(w => w._id === workspaceId);
     showModal(AskModal, {
-          title: 'Delete Workspace',
+          title: `Delete ${AppContext.workspace}`,
           message: `Do you really want to delete ${workspace.name}?`,
           yesText: 'Yes',
           noText: 'Cancel',
@@ -388,7 +389,7 @@ class App extends PureComponent {
     let workspace = this.props.workspaces.find(w => w._id === workspaceId);
 
     showPrompt({
-      title: 'Duplicate Workspace',
+      title: `Duplicate ${AppContext.workspace}`,
       defaultValue: workspace.name,
       submitName: 'Create',
       selectText: true,
