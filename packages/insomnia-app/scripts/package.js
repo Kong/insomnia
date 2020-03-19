@@ -98,16 +98,13 @@ function shouldPublish() {
 
   const gitCommit = GITHUB_SHA || TRAVIS_COMMIT;
   const gitRef = GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || '';
-  const isInternalBuild = gitRef.match(/master$/);
   const publish = (
     FORCE_PACKAGE === 'true' ||
-    isInternalBuild ||
     gitRef.match(/v\d+\.\d+\.\d+(-([a-z]+)\.\d+)?$/i)
   );
 
   return {
     publish,
-    isInternalBuild,
     gitRef,
     gitCommit,
   };
