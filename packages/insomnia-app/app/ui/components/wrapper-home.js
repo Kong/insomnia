@@ -23,6 +23,7 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from './base/
 import type {ForceToWorkspace} from '../redux/modules/helpers';
 import {ForceToWorkspaceKeys} from '../redux/modules/helpers';
 import designerLogo from '../images/insomnia-designer-logo.svg';
+import {ACTIVITY_DEBUG, ACTIVITY_SPEC} from './activity-bar/activity-bar';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -114,9 +115,12 @@ class WrapperHome extends React.PureComponent<Props, State> {
     });
   }
 
-  _handleSetActiveWorkspace(id: string, activity: GlobalActivity) {
+  async _handleSetActiveWorkspace(id: string, defaultActivity: GlobalActivity) {
     const { handleSetActiveWorkspace, handleSetActiveActivity } = this.props.wrapperProps;
-    handleSetActiveActivity(activity);
+
+    const selectedWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(id);
+    handleSetActiveActivity(selectedWorkspaceMeta.activeActivity || defaultActivity);
+
     handleSetActiveWorkspace(id);
   }
 
@@ -197,7 +201,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           docLog={log}
           docTitle={<Highlight search={filter} text={w.name} />}
           docVersion={version}
-          onClick={() => this._handleSetActiveWorkspace(w._id, 'spec')}
+          onClick={() => this._handleSetActiveWorkspace(w._id, ACTIVITY_SPEC)}
           tagLabel={label}
           docMenu={docMenu}
         />
@@ -211,7 +215,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         docLog={log}
         docTitle={<Highlight search={filter} text={w.name} />}
         docVersion=""
-        onClick={() => this._handleSetActiveWorkspace(w._id, 'debug')}
+        onClick={() => this._handleSetActiveWorkspace(w._id, ACTIVITY_DEBUG)}
         tagLabel="Insomnia"
         docMenu={docMenu}
       />

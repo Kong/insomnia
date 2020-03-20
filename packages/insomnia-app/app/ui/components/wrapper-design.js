@@ -25,7 +25,7 @@ type Props = {|
   gitSyncDropdown: React.Node,
   wrapperProps: WrapperProps,
   handleUpdateApiSpec: (s: ApiSpec) => any,
-  handleDebugSpec: (s: ApiSpec) => any,
+  handleSetDebugActivity: (s: ApiSpec) => any,
 |};
 
 type State = {|
@@ -63,8 +63,8 @@ class WrapperDesign extends React.PureComponent<Props, State> {
   }
 
   _handleDebugSpec() {
-    const { handleDebugSpec, wrapperProps: { activeApiSpec } } = this.props;
-    handleDebugSpec(activeApiSpec);
+    const { handleSetDebugActivity, wrapperProps: { activeApiSpec } } = this.props;
+    handleSetDebugActivity(activeApiSpec);
   }
 
   _handleTogglePreview() {

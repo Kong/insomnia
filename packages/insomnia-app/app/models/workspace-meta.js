@@ -16,6 +16,7 @@ export const canSync = false;
 type BaseWorkspaceMeta = {
   activeRequestId: string | null,
   activeEnvironmentId: string | null,
+  activeActivity: string | null,
   sidebarFilter: string,
   sidebarHidden: boolean,
   sidebarWidth: number,
@@ -39,6 +40,7 @@ export function init(): BaseWorkspaceMeta {
     parentId: null,
     activeRequestId: null,
     activeEnvironmentId: null,
+    activeActivity: null,
     sidebarFilter: '',
     sidebarHidden: false,
     sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
@@ -70,6 +72,11 @@ export function create(patch: Object = {}): Promise<WorkspaceMeta> {
 
 export function update(workspaceMeta: WorkspaceMeta, patch: Object = {}): Promise<WorkspaceMeta> {
   return db.docUpdate(workspaceMeta, patch);
+}
+
+export async function updateByParentId(workspaceId: string, patch: Object = {}): Promise<WorkspaceMeta> {
+  const meta = await getByParentId(workspaceId);
+  return db.docUpdate(meta, patch);
 }
 
 export async function getByParentId(parentId: string): Promise<WorkspaceMeta | null> {

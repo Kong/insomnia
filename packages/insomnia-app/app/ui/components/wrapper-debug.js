@@ -4,7 +4,7 @@ import autobind from 'autobind-decorator';
 import { Breadcrumb, Switch, Header } from 'insomnia-components';
 import PageLayout from './page-layout';
 import type { WrapperProps } from './wrapper';
-import { ACTIVITY_HOME, ACTIVITY_SPEC } from './activity-bar/activity-bar';
+import {ACTIVITY_HOME} from './activity-bar/activity-bar';
 import RequestPane from './request-pane';
 import ErrorBoundary from './error-boundary';
 import ResponsePane from './response-pane';
@@ -41,6 +41,7 @@ type Props = {
   handleUpdateRequestUrl: Function,
   handleUpdateSettingsShowPasswords: Function,
   handleUpdateSettingsUseBulkHeaderEditor: Function,
+  handleSetDesignActivity: (workspaceId: string) => void,
   wrapperProps: WrapperProps,
 };
 
@@ -51,8 +52,8 @@ class WrapperDebug extends React.PureComponent<Props> {
   }
 
   _handleDesign() {
-    const { wrapperProps: { handleSetActiveActivity } } = this.props;
-    handleSetActiveActivity(ACTIVITY_SPEC);
+    const { handleSetDesignActivity, wrapperProps: { activeWorkspace } } = this.props;
+    handleSetDesignActivity(activeWorkspace._id);
   }
 
   render() {

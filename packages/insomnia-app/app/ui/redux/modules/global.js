@@ -19,6 +19,8 @@ import { trackEvent } from '../../../common/analytics';
 import SettingsModal, { TAB_INDEX_PLUGINS } from '../../components/modals/settings-modal';
 import install from '../../../plugins/install';
 import {askToImportIntoWorkspace} from './helpers';
+import type {GlobalActivity} from '../../components/activity-bar/activity-bar';
+import type {ForceToWorkspace} from './helpers';
 
 const LOCALSTORAGE_PREFIX = `insomnia::meta`;
 
@@ -178,13 +180,13 @@ export function loadRequestStop(requestId) {
   return { type: LOAD_REQUEST_STOP, requestId };
 }
 
-export function setActiveActivity(activity) {
+export function setActiveActivity(activity: GlobalActivity) {
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
   trackEvent('Activity', 'Change', activity);
   return { type: SET_ACTIVE_ACTIVITY, activity };
 }
 
-export function setActiveWorkspace(workspaceId) {
+export function setActiveWorkspace(workspaceId: string) {
   const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
   window.localStorage.setItem(key, JSON.stringify(workspaceId));
   return { type: SET_ACTIVE_WORKSPACE, workspaceId };

@@ -99,7 +99,7 @@ export type WrapperProps = {
   handleShowExportRequestsModal: Function,
   handleShowSettingsModal: Function,
   handleExportRequestsToFile: Function,
-  handleSetActiveWorkspace: Function,
+  handleSetActiveWorkspace: (workspaceId: string) => void,
   handleSetActiveEnvironment: Function,
   handleMoveDoc: Function,
   handleCreateRequest: Function,
@@ -135,7 +135,7 @@ export type WrapperProps = {
   handleSendAndDownloadRequestWithEnvironment: Function,
   handleUpdateRequestMimeType: Function,
   handleUpdateDownloadPath: Function,
-  handleSetActiveActivity: (activity: string) => void,
+  handleSetActiveActivity: (activity: GlobalActivity) => void,
 
   // Properties
   activity: GlobalActivity,
@@ -287,32 +287,30 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     return null;
   }
 
-  async _handleDebugSpec(apiSpec: ApiSpec) {
-    // showAlert({
-    //   title: (
-    //     <React.Fragment>
-    //       Debug Spec <HelpLink slug={'debugging-with-insomnia'} />
-    //     </React.Fragment>
-    //   ),
-    //   okLabel: 'Generate Requests',
-    //   message:
-    //     'Debugging this spec will overwrite all requests in the test activity.' +
-    //     ' Do you want to proceed?',
-    //   onConfirm: async () => {
-    const { handleSetActiveActivity, handleSetActiveWorkspace } = this.props;
-    const workspace = await models.workspace.getById(apiSpec.parentId);
-    await handleSetActiveWorkspace(workspace._id);
-    await handleSetActiveActivity(ACTIVITY_DEBUG);
+  async _handleWorkspaceActivityChange(workspaceId: string, activeActivity: GlobalActivity) {
+    this.props.handleSetActiveActivity(activeActivity);
+    await models.workspaceMeta.updateByParentId(workspaceId, {activeActivity});
+  }
+
+  async _handleSetDesignActivity(workspaceId: string) {
+    await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_SPEC);
+  }
+
+  async _handleSetDebugActivity(apiSpec: ApiSpec) {
+    const workspaceId = apiSpec.parentId;
+    await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_DEBUG);
 
     setTimeout(() => {
       // Delaying generation so design to debug mode is smooth
       importRaw(
-        () => Promise.resolve(workspace._id), // Always import into current workspace
+        () => Promise.resolve(workspaceId), // Always import into current workspace
         apiSpec.contents,
       );
     }, 1000);
-    //   },
-    // });
+  }
+
+  _handleSetHomeActivity(): void {
+    this.props.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
   // Settings updaters
@@ -349,10 +347,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     }
 
     this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
-  }
-
-  _handleSetHomeActivity(): void {
-    this.props.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
   _handleShowEnvironmentsModal(): void {
@@ -853,13 +847,18 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
         </div>
 
         {activity === ACTIVITY_HOME && (
-          <WrapperHome wrapperProps={this.props} handleImportFile={this._handleImportFile} handleImportUri={this._handleImportUri} handleImportClipboard={this._handleImportClipBoard} />
+          <WrapperHome
+            wrapperProps={this.props}
+            handleImportFile={this._handleImportFile}
+            handleImportUri={this._handleImportUri}
+            handleImportClipboard={this._handleImportClipBoard}
+          />
         )}
 
         {activity === ACTIVITY_SPEC && (
           <WrapperDesign
             gitSyncDropdown={gitSyncDropdown}
-            handleDebugSpec={this._handleDebugSpec}
+            handleSetDebugActivity={this._handleSetDebugActivity}
             handleUpdateApiSpec={this._handleUpdateApiSpec}
             wrapperProps={this.props}
           />
@@ -869,6 +868,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
           <WrapperDebug
             forceRefreshKey={this.state.forceRefreshKey}
             gitSyncDropdown={gitSyncDropdown}
+            handleSetDesignActivity={this._handleSetDesignActivity}
             handleChangeEnvironment={this._handleChangeEnvironment}
             handleDeleteResponse={this._handleDeleteResponse}
             handleDeleteResponses={this._handleDeleteResponses}
