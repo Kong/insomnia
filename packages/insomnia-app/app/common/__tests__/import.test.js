@@ -1,3 +1,5 @@
+// @flow
+
 import * as models from '../../models';
 import * as importUtil from '../import';
 import { getAppVersion } from '../constants';
@@ -298,5 +300,17 @@ describe('export', () => {
         expect.objectContaining({ _id: spec._id }),
       ]),
     });
+  });
+});
+
+describe('isApiSpec()', () => {
+  it.each(['swagger2', 'openapi3'])('should return true if spec id is %o', (id: string) => {
+    expect(importUtil.isApiSpec(id)).toBe(true);
+  });
+
+  it('should return false if spec id is not valid', () => {
+    const id = 'invalid-id';
+
+    expect(importUtil.isApiSpec(id)).toBe(false);
   });
 });

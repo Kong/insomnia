@@ -231,14 +231,14 @@ export async function importRaw(
 
   // Store spec under workspace if it's OpenAPI
   for (const workspace of importedDocs[models.workspace.type]) {
-    let spec = await models.apiSpec.getByParentId(workspace._id);
+    if (isApiSpec(results.type.id)) {
+      let spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
+        contents: rawContent,
+        contentType: 'yaml',
+      });
 
-    spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
-      contents: rawContent,
-      contentType: 'yaml',
-    });
-
-    importedDocs[spec.type].push(spec);
+      importedDocs[spec.type].push(spec);
+    }
 
     // Set default environment if there is one
     const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
@@ -256,6 +256,10 @@ export async function importRaw(
     summary: importedDocs,
     error: null,
   };
+}
+
+export function isApiSpec(content: string): boolean {
+  return content === 'openapi3' || content === 'swagger2';
 }
 
 export async function exportWorkspacesHAR(
