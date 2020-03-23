@@ -6,7 +6,7 @@ import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from './activity-bar/activity-bar';
+import { ACTIVITY_HOME } from './activity-bar/activity-bar';
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
 import * as db from '../../common/database';
@@ -48,7 +48,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
   async _handleDone() {
     const { handleSetActiveActivity } = this.props.wrapperProps;
 
-    handleSetActiveActivity(ACTIVITY_SPEC);
+    handleSetActiveActivity(ACTIVITY_HOME);
 
     // Unsubscribe DB listener
     db.offChange(this._handleDbChange);
@@ -105,7 +105,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
 
   _handleSkipImport() {
     const { handleSetActiveActivity } = this.props.wrapperProps;
-    handleSetActiveActivity(ACTIVITY_DEBUG);
+    handleSetActiveActivity(ACTIVITY_HOME);
   }
 
   renderStep1() {
