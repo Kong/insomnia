@@ -193,7 +193,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
-        renderPageBody={this.renderPageBody}
+        renderPageBody={() => this.renderPageBody()}
       />
     );
   }
