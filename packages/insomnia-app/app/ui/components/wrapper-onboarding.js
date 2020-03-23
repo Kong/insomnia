@@ -156,7 +156,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
           Petstore Example
         </button>
         <button key="skip" className="btn btn--super-compact" onClick={this._handleSkipImport}>
-          Start From Scratch
+          Skip
         </button>
       </React.Fragment>
     );
