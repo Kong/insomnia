@@ -255,6 +255,10 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
   return async dispatch => {
     dispatch(loadStart());
     const schema = electron.clipboard.readText();
+    if (!schema) {
+      showModal(AlertModal, {title: 'Import Failed', message: 'Your clipboard appears to be empty.'});
+      return;
+    }
     // Let's import all the paths!
     let importedWorkspaces = [];
     try {
@@ -264,7 +268,7 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
       );
       importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
     } catch (err) {
-      showModal(AlertModal, { title: 'Import Failed', message: err + '' });
+      showModal(AlertModal, { title: 'Import Failed', message: 'Your clipboard does not contain a valid specification.' });
     } finally {
       dispatch(loadStop());
     }
