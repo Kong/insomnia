@@ -85,7 +85,7 @@ export function changelogUrl() {
 export const DB_PERSIST_INTERVAL = 1000 * 60 * 30; // Compact every once in a while
 export const DEBOUNCE_MILLIS = 100;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
-export const GA_ID = 'UA-8499472-31';
+export const GA_ID = 'G-N5Q23R42TP';
 export const GA_LOCATION = 'https://desktop.designer.konghq.com';
 export const STATUS_CODE_PLUGIN_ERROR = -222;
 export const LARGE_RESPONSE_MB = 5;
