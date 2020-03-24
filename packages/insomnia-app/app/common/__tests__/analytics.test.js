@@ -43,7 +43,7 @@ describe('init()', () => {
       [
         'https://www.google-analytics.com/collect?' +
           'v=1&' +
-          'tid=UA-8499472-31&' +
+          'tid=G-N5Q23R42TP&' +
           'cid=device&' +
           `ua=${getBrowserUserAgent()}&` +
           'dl=https%3A%2F%2Fdesktop.designer.konghq.com%2F&' +
@@ -77,7 +77,7 @@ describe('init()', () => {
       [
         'https://www.google-analytics.com/collect?' +
           'v=1&' +
-          'tid=UA-8499472-31&' +
+          'tid=G-N5Q23R42TP&' +
           'cid=device&' +
           `ua=${getBrowserUserAgent()}&` +
           'dl=https%3A%2F%2Fdesktop.designer.konghq.com%2F&' +
@@ -112,7 +112,7 @@ describe('init()', () => {
       [
         'https://www.google-analytics.com/collect?' +
           'v=1&' +
-          'tid=UA-8499472-31&' +
+          'tid=G-N5Q23R42TP&' +
           'cid=device&' +
           `ua=${getBrowserUserAgent()}&` +
           'dl=https%3A%2F%2Fdesktop.designer.konghq.com%2Fmy%2Fpath&' +
@@ -145,7 +145,7 @@ describe('init()', () => {
       [
         'https://www.google-analytics.com/collect?' +
           'v=1&' +
-          'tid=UA-8499472-31&' +
+          'tid=G-N5Q23R42TP&' +
           'cid=device&' +
           `ua=${getBrowserUserAgent()}&` +
           'dl=https%3A%2F%2Fdesktop.designer.konghq.com%2Fmy%2Fpath&' +
@@ -165,7 +165,7 @@ describe('init()', () => {
       [
         'https://www.google-analytics.com/collect?' +
           'v=1&' +
-          'tid=UA-8499472-31&' +
+          'tid=G-N5Q23R42TP&' +
           'cid=device&' +
           `ua=${getBrowserUserAgent()}&` +
           'dl=https%3A%2F%2Fdesktop.designer.konghq.com%2Fmy%2Fpath&' +
