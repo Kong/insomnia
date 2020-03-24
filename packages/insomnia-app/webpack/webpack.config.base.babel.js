@@ -58,10 +58,6 @@ module.exports = {
     'system',
   ],
   plugins: [
-    new webpack.ContextReplacementPlugin(/\/insomnia-components\//, data => {
-      delete data.dependencies[0].critical;
-      return data;
-    }),
     new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
   ],
   target: 'electron-renderer',

@@ -5,8 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "jest",
-    "build": "parcel build ./src/index.js --no-minify --target node",
-    "watch": "parcel watch ./src/index.js --no-minify --target node"
+    "build": "webpack --config webpack.config.js"
   },
   "husky": {
     "hooks": {
@@ -27,8 +26,9 @@
     "yaml": "^1.7.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.7.5",
+    "@babel/core": "^7.9.0",
     "husky": "^3.1.0",
-    "parcel-bundler": "^1.12.4"
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
   }
 }

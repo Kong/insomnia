@@ -7,7 +7,7 @@
   "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
-    "build": "parcel build ./index.js",
+    "build": "webpack --config webpack.config.js",
     "build-storybook": "build-storybook --quiet",
     "storybook": "start-storybook --port 3223",
     "bootstrap": "rimraf node_modules/fsevents"
@@ -25,7 +25,8 @@
     "@storybook/react": "^5.3.9",
     "babel-loader": "^8.0.6",
     "babel-plugin-inline-react-svg": "^1.1.1",
-    "parcel-bundler": "^1.12.4"
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "classnames": "^2.2.6",
