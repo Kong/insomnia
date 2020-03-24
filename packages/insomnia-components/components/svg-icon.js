@@ -7,10 +7,11 @@ import IcnChevronUp from '../assets/icn-chevron-up.svg';
 import IcnWarning from '../assets/icn-warning.svg';
 import IcnError from '../assets/icn-errors.svg';
 import IcnGithubLogo from '../assets/icn-github-logo.svg';
+import IcnGitBranch from '../assets/icn-git-branch.svg';
 import IcnClock from '../assets/icn-clock.svg';
 
 type Props = {
-  icon: 'arrow-right' | 'chevron-up' | 'chevron-down' | 'warning' | 'error' | 'github-logo' | 'clock',
+  icon: 'arrow-right' | 'chevron-up' | 'chevron-down' | 'warning' | 'error' | 'github-logo' | 'git-branch' | 'clock',
 };
 
 const SvgIconStyled: React.ComponentType<any> = styled.div`
@@ -71,6 +72,7 @@ class SvgIcon extends React.Component<Props> {
     warning: <IcnWarning />,
     error: <IcnError />,
     'github-logo': <IcnGithubLogo />,
+    'git-branch': <IcnGitBranch />,
     clock: <IcnClock />,
   };
 

@@ -245,7 +245,7 @@ class Card extends React.PureComponent<Props, State> {
         </CardBody>
         <CardFooter>
           {docBranch && <span>
-            <SvgIcon icon="github-logo" />
+            <SvgIcon icon="git-branch" />
             <div className="icoLabel">{docBranch}</div>
           </span>}
           {docLog && <span>
