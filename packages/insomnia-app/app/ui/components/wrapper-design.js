@@ -18,6 +18,7 @@ import type { ApiSpec } from '../../models/api-spec';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import previewIcon from '../images/icn-eye.svg';
 import generateConfigIcon from '../images/icn-gear.svg';
+import * as models from '../../models/index';
 
 const spectral = new Spectral();
 
@@ -29,7 +30,7 @@ type Props = {|
 |};
 
 type State = {|
-  previewActive: boolean,
+  previewHidden: boolean,
   lintMessages: Array<{
     message: string,
     line: number,
@@ -42,10 +43,14 @@ class WrapperDesign extends React.PureComponent<Props, State> {
   editor: ?CodeEditor;
   debounceTimeout: IntervalID;
 
-  state = {
-    previewActive: true,
-    lintMessages: [],
-  };
+  constructor(props: Props) {
+    super(props);
+
+    this.state = {
+      previewHidden: props.wrapperProps.activeWorkspaceMeta.previewHidden || false,
+      lintMessages: [],
+    };
+  }
 
   // Defining it here instead of in render() so it won't act as a changed prop
   // when being passed to <CodeEditor> again
@@ -67,8 +72,15 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     handleSetDebugActivity(activeApiSpec);
   }
 
-  _handleTogglePreview() {
-    this.setState({ previewActive: !this.state.previewActive });
+  async _handleTogglePreview() {
+    await this.setState(
+      prevState => ({ previewHidden: !prevState.previewHidden }),
+      async () => {
+        const workspaceId = this.props.wrapperProps.activeWorkspace._id;
+        const previewHidden = this.state.previewHidden;
+        await models.workspaceMeta.updateByParentId(workspaceId, {previewHidden});
+      }
+    );
   }
 
   _handleOnChange(v: string) {
@@ -143,7 +155,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
     const {
       lintMessages,
-      previewActive,
+      previewHidden,
     } = this.state;
 
     let swaggerSpec;
@@ -171,7 +183,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
               gridRight={
                   <React.Fragment>
                       <Button onClick={this._handleTogglePreview} className="btn-utility-reverse">
-                      <img src={previewIcon} alt="Preview" width="15" />&nbsp; {previewActive ? 'Preview: On' : 'Preview: Off'}
+                      <img src={previewIcon} alt="Preview" width="15" />&nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
                       </Button>
                       <Button onClick={this._handleGenerateConfig} className="margin-left btn-utility-reverse">
                       <img src={generateConfigIcon} alt="Generate Config" width="15" />&nbsp; Generate Config
@@ -184,7 +196,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
         renderPageBody={() => (
           <div
             className={classnames('spec-editor layout-body--sidebar theme--pane', {
-              'preview-hidden': !previewActive,
+              'preview-hidden': previewHidden,
             })}>
             <div id="swagger-ui-wrapper">
               <SwaggerUI spec={swaggerSpec} />
