@@ -91,9 +91,9 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     editor.setSelection(chStart, chEnd, lineStart, lineEnd);
   }
 
-  _handleLintClick(notice: {}) {
+  _handleLintClick(notice: {}) { // TODO: Export Notice from insomnia-components and use here, instead of {}
     const { start, end } = notice._range;
-    this.setSelection(start.character, end.character, start.line, end.line);
+    this._handleSetSelection(start.character, end.character, start.line, end.line);
   }
 
   async _reLint() {
