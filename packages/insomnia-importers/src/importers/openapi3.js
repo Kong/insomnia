@@ -65,8 +65,9 @@ module.exports.convert = async function(rawData) {
     },
   };
 
-  const servers = api.servers.map(s => urlParse(s.url));
-  const defaultServer = servers[0] || urlParse('http://example.com/');
+  const servers = api.servers || [];
+  const serverUrls = servers.map(s => urlParse(s.url));
+  const defaultServer = serverUrls[0] || urlParse('http://example.com/');
   const securityVariables = getSecurityEnvVariables(
     api.components && api.components.securitySchemes,
   );
