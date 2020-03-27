@@ -11,7 +11,7 @@
     "synopsis": "The Collaborative API Design Tool",
     "icon": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
     "theme": "studio-light",
-    "version": "1.3.0-alpha.3",
+    "version": "1.3.0-alpha.4",
     "main": "main.min.js",
     "publishRepo": "kong/studio",
     "plugins": [
