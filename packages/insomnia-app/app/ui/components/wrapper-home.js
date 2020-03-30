@@ -30,6 +30,7 @@ import designerLogo from '../images/insomnia-designer-logo.svg';
 import {ACTIVITY_DEBUG, ACTIVITY_SPEC} from './activity-bar/activity-bar';
 import { MemPlugin } from '../../sync/git/mem-plugin';
 import GitVCS, { GIT_NAMESPACE_DIR } from '../../sync/git/git-vcs';
+import { parseApiSpec } from '../../common/api-specs';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -284,8 +285,13 @@ async _handleWorkspaceClone() {
     const apiSpec = apiSpecs.find(s => s.parentId === w._id);
 
     let spec = null;
+    let specFormat = null;
+    let specFormatVersion = null;
     try {
-      spec = YAML.parse(apiSpec ? apiSpec.contents : '');
+      const result = parseApiSpec(apiSpec.contents);
+      spec = result.document;
+      specFormat = result.format;
+      specFormatVersion = result.formatVersion;
     } catch (err) {
       // Assume there is no spec
       // TODO: Check for parse errors if it's an invalid spec
@@ -333,10 +339,11 @@ async _handleWorkspaceClone() {
 
     if (spec || w.scope === 'spec') {
       let label: string = 'Unknown';
-      if (spec && spec.openapi) {
-        label = `OpenAPI ${spec.openapi}`;
-      } else if (spec && spec.swagger) {
-        label = `OpenAPI ${spec.swagger}`;
+      if (specFormat === 'openapi') {
+        label = `OpenAPI ${specFormatVersion}`;
+      } else if (specFormat === 'swagger') {
+        // NOTE: This is not a typo, we're labeling Swagger as OpenAPI also
+        label = `OpenAPI ${specFormatVersion}`;
       }
 
       const version = (spec && spec.info && spec.info.version) ? spec.info.version : null;

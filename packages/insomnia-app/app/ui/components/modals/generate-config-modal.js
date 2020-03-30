@@ -6,13 +6,14 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import type { ApiSpec } from '../../../models/api-spec';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import { generateFromString } from 'openapi-2-kong';
 import CodeEditor from '../codemirror/code-editor';
-import YAML from 'yaml';
 import type { Settings } from '../../../models/settings';
 import Notice from '../notice';
 import CopyButton from '../base/copy-button';
 import ModalFooter from '../base/modal-footer';
+import type { ConfigGenerator } from '../../../plugins';
+import * as plugins from '../../../plugins';
+import { parseApiSpec } from '../../../common/api-specs';
 
 type Props = {|
   settings: Settings,
@@ -22,7 +23,7 @@ type Config = {|
   label: string,
   content: string,
   mimeType: string,
-  error?: Error,
+  error: string | null,
 |};
 
 type State = {|
@@ -46,30 +47,35 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
     this.modal = n;
   }
 
-  async _generate(apiSpec: ApiSpec, label: string, type: string): Promise<Config> {
+  async _generate(generatePlugin: ConfigGenerator, apiSpec: ApiSpec): Promise<Config> {
     const config: Config = {
       content: '',
       mimeType: 'text/yaml',
-      label,
+      label: generatePlugin.label,
+      error: null,
     };
 
+    let result;
     try {
-      const result = await generateFromString(apiSpec.contents, type);
-      const yamlDocs = result.documents.map(d => YAML.stringify(d));
-      // Join the YAML docs with "---" and strip any extra newlines surrounding them
-      config.content = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
+      const { document, format, formatVersion } = parseApiSpec(apiSpec.contents);
+      result = await generatePlugin.generate(document, format, formatVersion);
     } catch (err) {
-      config.error = err;
+      config.error = err.message;
+      return config;
     }
+
+    config.content = result.document || null;
+    config.error = result.error || null;
 
     return config;
   }
 
   async show(options: {apiSpec: ApiSpec}) {
-    const configs = await Promise.all([
-      this._generate(options.apiSpec, 'Declarative Config', 'kong-declarative-config'),
-      this._generate(options.apiSpec, 'Kong for Kubernetes', 'kong-for-kubernetes'),
-    ]);
+    const configs = [];
+
+    for (const p of await plugins.getConfigGenerators()) {
+      configs.push(await this._generate(p, options.apiSpec));
+    }
 
     this.setState({ configs });
 

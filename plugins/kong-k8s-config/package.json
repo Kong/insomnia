@@ -1,0 +1,14 @@
+{
+  "name": "kong-k8s-config",
+  "private": true,
+  "version": "1.0.0",
+  "main": "index.js",
+  "insomnia": {
+    "name": "kong-k8s-config",
+    "description": "Generate Kong For Kubernetes configuration"
+  },
+  "dependencies": {
+    "openapi-2-kong": "^0.0.1",
+    "yaml": "^1.8.3"
+  }
+}

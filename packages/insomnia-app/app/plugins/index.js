@@ -28,6 +28,15 @@ export type TemplateTag = {
   templateTag: PluginTemplateTag,
 };
 
+export type ConfigGenerator = {
+  plugin: Plugin,
+  generate: (
+    content: Object,
+    format: 'openapi',
+    formatVersion: string,
+  ) => Promise<{document?: string, error?: string}>,
+};
+
 export type RequestGroupAction = {
   plugin: Plugin,
   action: (
@@ -164,7 +173,7 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
     // Store plugins in a map so that plugins with the same
     // name only get added once
     // TODO: Make this more complex and have the latest version always win
-    const pluginMap: { [string]: Plugin } = {
+    const pluginMap: {[string]: Plugin} = {
       // "name": "module"
     };
 
@@ -244,6 +253,16 @@ export async function getThemes(): Promise<Array<Theme>> {
   }
 
   return extensions;
+}
+
+export async function getConfigGenerators(): Promise<Array<ConfigGenerator>> {
+  let functions = [];
+  for (const plugin of await getActivePlugins()) {
+    const moreFunctions = plugin.module.configGenerators || [];
+    functions = [...functions, ...moreFunctions.map(p => ({ plugin, ...p }))];
+  }
+
+  return functions;
 }
 
 const _defaultPluginConfig: PluginConfig = {
