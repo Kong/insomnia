@@ -170,15 +170,15 @@ class General extends React.PureComponent<Props, State> {
     const windowsOption = <option value="windowsCertStore">Windows Certificate Store</option>;
     const userOption = <option value="userProvided">User Provided Bundle</option>;
 
-    const options = [defaultOption, isWindows() ? windowsOption : null, userOption];
-
     return (
       <React.Fragment>
         <div className="form-control form-control--outlined">
           <label>
             Certificate Authority Bundle
             <select name="caBundle" value={settings.caBundle} onChange={this._handleUpdateSetting}>
-              {options}
+              {defaultOption}
+              {isWindows() ? windowsOption : null}
+              {userOption}
             </select>
           </label>
         </div>
