@@ -22,6 +22,10 @@ import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
 import FileInputButton from '../base/file-input-button';
 
+// Font family regex to match certain monospace fonts that don't get
+// recognized as monospace
+const FORCED_MONO_FONT_REGEX = /^fixedsys /i;
+
 type Props = {
   settings: Settings,
   updateSetting: Function,
@@ -31,6 +35,7 @@ type Props = {
 
 type State = {
   fonts: Array<{ family: string, monospace: boolean }> | null,
+  fontsMono: Array<{ family: string, monospace: boolean }> | null,
 };
 
 @autobind
@@ -39,16 +44,24 @@ class General extends React.PureComponent<Props, State> {
     super(props);
     this.state = {
       fonts: null,
+      fontsMono: null,
     };
   }
 
   async componentDidMount() {
     const allFonts = await fontScanner.getAvailableFonts();
+
+    // Find regular fonts
     const fonts = allFonts
       .filter(i => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)
       .sort((a, b) => (a.family > b.family ? 1 : -1));
 
-    this.setState({ fonts });
+    // Find monospaced fonts
+    // NOTE: Also include some others:
+    //  - https://github.com/Kong/insomnia/issues/1835
+    const fontsMono = fonts.filter(i => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX));
+
+    this.setState({ fonts, fontsMono });
   }
 
   async _handleUpdateSetting(e: SyntheticEvent<HTMLInputElement>): Promise<Settings> {
@@ -150,9 +163,47 @@ class General extends React.PureComponent<Props, State> {
     return this.renderTextSetting(label, name, help, { ...props, type: 'number' });
   }
 
+  renderCertificateBundleSetting() {
+    const { settings } = this.props;
+
+    const defaultOption = <option value="default">-- System Default --</option>;
+    const windowsOption = <option value="windowsCertStore">Windows Certificate Store</option>;
+    const userOption = <option value="userProvided">User Provided Bundle</option>;
+
+    const options = [defaultOption, isWindows() ? windowsOption : null, userOption];
+
+    return (
+      <React.Fragment>
+        <div className="form-control form-control--outlined">
+          <label>
+            Certificate Authority Bundle
+            <select name="caBundle" value={settings.caBundle} onChange={this._handleUpdateSetting}>
+              {options}
+            </select>
+          </label>
+        </div>
+
+        {settings.caBundle === 'userProvided' && (
+          <div className="form-control form-control--outlined">
+            <label>
+              Certificate Authority Bundle File
+              <FileInputButton
+                className="btn btn--clicky"
+                name="CA Bundle"
+                onChange={this._handleCaBundlePathChange}
+                path={settings.caBundlePath}
+                showFileName
+              />
+            </label>
+          </div>
+        )}
+      </React.Fragment>
+    );
+  }
+
   render() {
     const { settings } = this.props;
-    const { fonts } = this.state;
+    const { fonts, fontsMono } = this.state;
     return (
       <div>
         <div className="row-fill row-fill--top">
@@ -245,19 +296,17 @@ class General extends React.PureComponent<Props, State> {
           <div className="form-control form-control--outlined">
             <label>
               Text Editor Font
-              {fonts ? (
+              {fontsMono ? (
                 <select
                   name="fontMonospace"
                   value={settings.fontMonospace || '__NULL__'}
                   onChange={this._handleFontChange}>
                   <option value="__NULL__">-- System Default --</option>
-                  {fonts
-                    .filter(i => i.monospace)
-                    .map((item, index) => (
-                      <option key={index} value={item.family}>
-                        {item.family}
-                      </option>
-                    ))}
+                  {fontsMono.map((item, index) => (
+                    <option key={index} value={item.family}>
+                      {item.family}
+                    </option>
+                  ))}
                 </select>
               ) : (
                 <select disabled>
@@ -295,43 +344,31 @@ class General extends React.PureComponent<Props, State> {
 
         <hr className="pad-top" />
 
-        <h2>Network</h2>
-
-        {this.renderBooleanSetting('Validate certificates', 'validateSSL', '')}
-
-        <div className="form-control form-control--outlined">
-          <label>
-            Certificate Authority Bundle
-            <select name="caBundle" value={settings.caBundle} onChange={this._handleUpdateSetting}>
-              {isMac() ? (
-                <option value="default">Mac Keychain (Default)</option>
-              ) : (
-                <React.Fragment>
-                  <option>Insomnia CA Bundle (Default)</option>,
-                  <option value="windowsCertStore">Windows Certificate Store</option>,
-                  <option value="userProvided">User Provided Bundle</option>
-                </React.Fragment>
-              )}
-            </select>
-          </label>
+        <h2>Request / Response</h2>
+        <div>
+          {this.renderBooleanSetting('Validate certificates', 'validateSSL', '')}
+          {this.renderCertificateBundleSetting()}
         </div>
-
-        {settings.caBundle === 'userProvided' && (
-          <div className="form-control form-control--outlined">
-            <label>
-              Certificate Authority Bundle File
-              <FileInputButton
-                className="btn btn--clicky"
-                name="CA Bundle"
-                onChange={this._handleCaBundlePathChange}
-                path={settings.caBundlePath}
-                showFileName
-              />
-            </label>
+        <div className="row-fill row-fill--top">
+          <div>
+            {this.renderBooleanSetting('Follow redirects', 'followRedirects', '')}
+            {this.renderBooleanSetting(
+              'Filter responses by environment',
+              'filterResponsesByEnv',
+              'Only show responses that were sent under the currently-active environment. This ' +
+                'adds additional separation when working with Development, Staging, Production ' +
+                'environments, for example.',
+            )}
           </div>
-        )}
-
-        {this.renderBooleanSetting('Follow redirects', 'followRedirects', '')}
+          <div>
+            {this.renderBooleanSetting('Disable JS in HTML preview', 'disableHtmlPreviewJs', '')}
+            {this.renderBooleanSetting(
+              'Disable Links in response viewer',
+              'disableResponsePreviewLinks',
+              '',
+            )}
+          </div>
+        </div>
 
         <div className="form-row pad-top-sm">
           {this.renderNumberSetting('Maximum Redirects', 'maxRedirects', '-1 for infinite', {

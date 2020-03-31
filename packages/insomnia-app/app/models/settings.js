@@ -5,45 +5,58 @@ import * as db from '../common/database';
 import { UPDATE_CHANNEL_STABLE } from '../common/constants';
 import * as hotkeys from '../common/hotkeys';
 
+export type PluginConfig = {
+  disabled: boolean,
+};
+
+export type PluginConfigMap = {
+  [string]: PluginConfig,
+};
+
 type BaseSettings = {
-  showPasswords: boolean,
-  useBulkHeaderEditor: boolean,
-  followRedirects: boolean,
+  autoHideMenuBar: boolean,
+  autocompleteDelay: number,
+  deviceId: string | null,
+  disableHtmlPreviewJs: boolean,
+  disableUpdateNotification: boolean,
+  disableResponsePreviewLinks: boolean,
   editorFontSize: number,
   editorIndentSize: number,
-  editorLineWrapping: boolean,
-  editorKeyMap: string,
   editorIndentWithTabs: boolean,
+  editorKeyMap: string,
+  editorLineWrapping: boolean,
+  environmentHighlightColorStyle: string,
+  followRedirects: boolean,
+  fontInterface: string | null,
+  fontMonospace: string | null,
+  fontSize: number,
+  fontVariantLigatures: boolean,
+  forceVerticalLayout: boolean,
+  hotKeyRegistry: hotkeys.HotKeyRegistry,
   httpProxy: string,
   httpsProxy: string,
+  maxHistoryResponses: number,
+  maxRedirects: number,
+  maxTimelineDataSizeKB: number,
   noProxy: string,
+  nunjucksPowerUserMode: boolean,
+  pluginPath: string,
   proxyEnabled: boolean,
+  filterResponsesByEnv: boolean,
+  showPasswords: boolean,
+  theme: string,
   timeout: number,
+  updateAutomatically: boolean,
+  updateChannel: string,
+  useBulkHeaderEditor: boolean,
+  useBulkParametersEditor: boolean,
   validateSSL: boolean,
   caBundle: string,
   caBundlePath: string,
-  forceVerticalLayout: boolean,
-  autoHideMenuBar: boolean,
-  theme: string,
-  maxRedirects: number,
-  maxHistoryResponses: number,
-  pluginPath: string,
-  nunjucksPowerUserMode: boolean,
-  deviceId: string | null,
-  updateChannel: string,
-  updateAutomatically: boolean,
-  disableUpdateNotification: boolean,
-  environmentHighlightColorStyle: string,
-  autocompleteDelay: number,
-  fontMonospace: string | null,
-  fontInterface: string | null,
-  fontSize: number,
-  fontVariantLigatures: boolean,
-  maxTimelineDataSizeKB: number,
+  pluginConfig: PluginConfigMap,
 
   // Feature flags
   enableSyncBeta: boolean,
-  hotKeyRegistry: hotkeys.HotKeyRegistry,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -56,42 +69,49 @@ export const canSync = false;
 
 export function init(): BaseSettings {
   return {
-    showPasswords: false,
-    useBulkHeaderEditor: false,
-    followRedirects: true,
+    autoHideMenuBar: false,
+    autocompleteDelay: 1200,
+    deviceId: null,
+    disableHtmlPreviewJs: false,
+    disableResponsePreviewLinks: false,
+    disableUpdateNotification: false,
     editorFontSize: 11,
     editorIndentSize: 2,
-    editorLineWrapping: true,
-    editorKeyMap: 'default',
     editorIndentWithTabs: true,
+    editorKeyMap: 'default',
+    editorLineWrapping: true,
+    environmentHighlightColorStyle: 'sidebar-indicator',
+    followRedirects: true,
+    fontInterface: null,
+    fontMonospace: null,
+    fontSize: 13,
+    fontVariantLigatures: false,
+    forceVerticalLayout: false,
+    hotKeyRegistry: hotkeys.newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',
-    noProxy: '',
-    maxRedirects: -1,
     maxHistoryResponses: 20,
+    maxRedirects: -1,
+    maxTimelineDataSizeKB: 10,
+    noProxy: '',
+    nunjucksPowerUserMode: false,
+    pluginPath: '',
     proxyEnabled: false,
+    filterResponsesByEnv: false,
+    showPasswords: false,
+    theme: packageJson.app.theme,
     timeout: 0,
+    updateAutomatically: true,
+    updateChannel: UPDATE_CHANNEL_STABLE,
+    useBulkHeaderEditor: false,
+    useBulkParametersEditor: false,
     validateSSL: true,
     caBundle: '',
     caBundlePath: '',
-    forceVerticalLayout: false,
-    autoHideMenuBar: false,
-    theme: packageJson.app.theme,
-    pluginPath: '',
-    nunjucksPowerUserMode: false,
-    deviceId: null,
-    updateChannel: UPDATE_CHANNEL_STABLE,
-    updateAutomatically: true,
-    disableUpdateNotification: false,
-    environmentHighlightColorStyle: 'sidebar-indicator',
-    autocompleteDelay: 1200,
-    fontMonospace: null,
-    fontInterface: null,
-    fontSize: 13,
-    fontVariantLigatures: false,
-    maxTimelineDataSizeKB: 10,
+
+    // Feature flags
     enableSyncBeta: false,
-    hotKeyRegistry: hotkeys.newDefaultRegistry(),
+    pluginConfig: {},
   };
 }
 
@@ -100,7 +120,7 @@ export function migrate(doc: Settings): Settings {
   return doc;
 }
 
-export async function all(patch: Object = {}): Promise<Array<Settings>> {
+export async function all(patch: $Shape<Settings> = {}): Promise<Array<Settings>> {
   const settings = await db.all(type);
   if (settings.length === 0) {
     return [await getOrCreate()];
@@ -109,15 +129,15 @@ export async function all(patch: Object = {}): Promise<Array<Settings>> {
   }
 }
 
-export async function create(patch: Object = {}): Promise<Settings> {
+export async function create(patch: $Shape<Settings> = {}): Promise<Settings> {
   return db.docCreate(type, patch);
 }
 
-export async function update(settings: Settings, patch: Object): Promise<Settings> {
+export async function update(settings: Settings, patch: $Shape<Settings>): Promise<Settings> {
   return db.docUpdate(settings, patch);
 }
 
-export async function getOrCreate(patch: Object = {}): Promise<Settings> {
+export async function getOrCreate(patch: $Shape<Settings> = {}): Promise<Settings> {
   const results = await db.all(type);
   if (results.length === 0) {
     return create(patch);
