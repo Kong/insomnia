@@ -373,11 +373,11 @@ export async function _actuallySend(
         });
 
         setOpt(Curl.option.CAINFO, caFile);
-      } else if (isMac()) {
-        // Thanks to libcurl, Mac will use certificates form the OS.
       } else if (settings.caBundle === 'userProvided') {
         setOpt(Curl.option.CAINFO, settings.caBundlePath);
         console.log('[net] Set CA to user provided file ', settings.caBundlePath);
+      } else if (isMac()) {
+        // Thanks to libcurl, Mac will use certificates form the OS.
       } else {
         const baseCAPath = getTempDir();
         const fullCAPath = pathJoin(baseCAPath, CACerts.filename);
