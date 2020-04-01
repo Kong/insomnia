@@ -164,7 +164,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
       hasConfigPlugins,
     } = this.state;
 
-    const { apiSpec } = parseApiSpec(activeApiSpec.contents);
+    const {document: swaggerUiSpec} = parseApiSpec(activeApiSpec.contents);
 
     return (
       <PageLayout
@@ -206,7 +206,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
               'preview-hidden': previewHidden,
             })}>
             <div id="swagger-ui-wrapper">
-              <SwaggerUI spec={apiSpec} />
+              <SwaggerUI spec={swaggerUiSpec || {}} />
             </div>
             <div className="spec-editor__body theme--pane__body">
               <CodeEditor
