@@ -163,40 +163,49 @@ class General extends React.PureComponent<Props, State> {
     return this.renderTextSetting(label, name, help, { ...props, type: 'number' });
   }
 
-  renderCertificateBundleSetting() {
+  renderCertificateBundleSettings() {
     const { settings } = this.props;
 
+    const userProvidedValue = 'userProvided';
     const defaultOption = <option value="default">-- System Default --</option>;
     const windowsOption = <option value="windowsCertStore">Windows Certificate Store</option>;
-    const userOption = <option value="userProvided">User Provided Bundle</option>;
+    const userOption = <option value={userProvidedValue}>Custom Bundle</option>;
 
+    const disabled = !settings.validateSSL;
     return (
       <React.Fragment>
-        <div className="form-control form-control--outlined">
-          <label>
-            Certificate Authority Bundle
-            <select name="caBundle" value={settings.caBundle} onChange={this._handleUpdateSetting}>
-              {defaultOption}
-              {isWindows() ? windowsOption : null}
-              {userOption}
-            </select>
-          </label>
-        </div>
-
-        {settings.caBundle === 'userProvided' && (
+        {this.renderBooleanSetting('Validate certificates', 'validateSSL', '')}
+        <div className="form-row pad-top-sm">
           <div className="form-control form-control--outlined">
             <label>
-              Certificate Authority Bundle File
-              <FileInputButton
-                className="btn btn--clicky"
-                name="CA Bundle"
-                onChange={this._handleCaBundlePathChange}
-                path={settings.caBundlePath}
-                showFileName
-              />
+              Select Certificate Bundle
+              <select
+                name="caBundle"
+                value={settings.caBundle}
+                disabled={disabled}
+                onChange={this._handleUpdateSetting}>
+                {defaultOption}
+                {isWindows() ? windowsOption : null}
+                {userOption}
+              </select>
             </label>
           </div>
-        )}
+          {settings.caBundle === userProvidedValue && (
+            <div className="form-control form-control--outlined">
+              <label>
+                Select Custom Bundle
+                <FileInputButton
+                  className="btn btn--clicky"
+                  name="CA Bundle"
+                  onChange={this._handleCaBundlePathChange}
+                  path={settings.caBundlePath}
+                  showFileName
+                  disabled={disabled}
+                />
+              </label>
+            </div>
+          )}
+        </div>
       </React.Fragment>
     );
   }
@@ -345,10 +354,6 @@ class General extends React.PureComponent<Props, State> {
         <hr className="pad-top" />
 
         <h2>Request / Response</h2>
-        <div>
-          {this.renderBooleanSetting('Validate certificates', 'validateSSL', '')}
-          {this.renderCertificateBundleSetting()}
-        </div>
         <div className="row-fill row-fill--top">
           <div>
             {this.renderBooleanSetting('Follow redirects', 'followRedirects', '')}
@@ -391,6 +396,10 @@ class General extends React.PureComponent<Props, State> {
             { min: 0 },
           )}
         </div>
+
+        <h3>Certificate Authority</h3>
+
+        {this.renderCertificateBundleSettings()}
 
         <hr className="pad-top" />
 
