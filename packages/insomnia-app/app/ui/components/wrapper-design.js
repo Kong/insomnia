@@ -3,7 +3,7 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
-import { Button, Breadcrumb, NoticeTable, Switch, Header } from 'insomnia-components';
+import { Breadcrumb, Button, Header, NoticeTable, Switch } from 'insomnia-components';
 import ErrorBoundary from './error-boundary';
 import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
 import CodeEditor from './codemirror/code-editor';
@@ -12,13 +12,14 @@ import { showModal } from './modals';
 import GenerateConfigModal from './modals/generate-config-modal';
 import classnames from 'classnames';
 import SwaggerUI from 'swagger-ui-react';
-import YAML from 'yaml';
 import { ACTIVITY_HOME } from './activity-bar/activity-bar';
 import type { ApiSpec } from '../../models/api-spec';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import previewIcon from '../images/icn-eye.svg';
 import generateConfigIcon from '../images/icn-gear.svg';
 import * as models from '../../models/index';
+import { parseApiSpec } from '../../common/api-specs';
+import { getConfigGenerators } from '../../plugins';
 
 const spectral = new Spectral();
 
@@ -31,6 +32,7 @@ type Props = {|
 
 type State = {|
   previewHidden: boolean,
+  hasConfigPlugins: boolean,
   lintMessages: Array<{
     message: string,
     line: number,
@@ -78,8 +80,8 @@ class WrapperDesign extends React.PureComponent<Props, State> {
       async () => {
         const workspaceId = this.props.wrapperProps.activeWorkspace._id;
         const previewHidden = this.state.previewHidden;
-        await models.workspaceMeta.updateByParentId(workspaceId, {previewHidden});
-      }
+        await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden });
+      },
     );
   }
 
@@ -128,8 +130,11 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
-  componentDidMount() {
-    this._reLint();
+  async componentDidMount() {
+    const generateConfigPlugins = await getConfigGenerators();
+    this.setState({ hasConfigPlugins: generateConfigPlugins.length > 0 });
+
+    await this._reLint();
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -156,14 +161,10 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     const {
       lintMessages,
       previewHidden,
+      hasConfigPlugins,
     } = this.state;
 
-    let swaggerSpec;
-    try {
-      swaggerSpec = YAML.parse(activeApiSpec.contents) || {};
-    } catch (err) {
-      swaggerSpec = {};
-    }
+    const {document: swaggerUiSpec} = parseApiSpec(activeApiSpec.contents);
 
     const lintErrorsExist = !!lintMessages.find(c => c.type === 'error');
 
@@ -172,31 +173,34 @@ class WrapperDesign extends React.PureComponent<Props, State> {
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={() => (
           <Header
-              className="app-header"
-              gridLeft={
-                  <React.Fragment>
-                      <img src={designerLogo} alt="Insomnia" width="24" height="24" />
-                      <Breadcrumb className="breadcrumb" crumbs={['Documents', activeWorkspace.name]} onClick={this._handleBreadcrumb} />
-                  </React.Fragment>
-              }
-              gridCenter={
-                  <Switch
-                    onClick={this._handleDebugSpec}
-                    optionItems={[{'label': 'DESIGN', 'selected': true}, {'label': 'DEBUG', 'selected': false}]}
-                    error={lintErrorsExist ? 'Failed to generate requests due to linting errors.' : undefined}
-                  />
-              }
-              gridRight={
-                  <React.Fragment>
-                      <Button onClick={this._handleTogglePreview} className="btn-utility-reverse">
-                      <img src={previewIcon} alt="Preview" width="15" />&nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
-                      </Button>
-                      <Button onClick={this._handleGenerateConfig} className="margin-left btn-utility-reverse">
-                      <img src={generateConfigIcon} alt="Generate Config" width="15" />&nbsp; Generate Config
-                      </Button>
-                      {gitSyncDropdown}
-                  </React.Fragment>
-              }
+            className="app-header"
+            gridLeft={
+              <React.Fragment>
+                <img src={designerLogo} alt="Insomnia" width="24" height="24" />
+                <Breadcrumb className="breadcrumb" crumbs={['Documents', activeWorkspace.name]} onClick={this._handleBreadcrumb} />
+              </React.Fragment>
+            }
+            gridCenter={
+              <Switch
+                onClick={this._handleDebugSpec}
+                optionItems={[{'label': 'DESIGN', 'selected': true}, {'label': 'DEBUG', 'selected': false}]}
+                error={lintErrorsExist ? 'Failed to generate requests due to linting errors.' : undefined}
+              />
+            }
+            gridRight={
+              <React.Fragment>
+                <Button onClick={this._handleTogglePreview} className="btn-utility-reverse">
+                  <img src={previewIcon} alt="Preview" width="15" />&nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
+                </Button>
+                {hasConfigPlugins && (
+                  <Button onClick={this._handleGenerateConfig} className="margin-left btn-utility-reverse">
+                    <img src={generateConfigIcon} alt="Generate Config" width="15" />&nbsp; Generate
+                    Config
+                  </Button>
+                )}
+                {gitSyncDropdown}
+              </React.Fragment>
+            }
           />
         )}
         renderPageBody={() => (
@@ -205,7 +209,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
               'preview-hidden': previewHidden,
             })}>
             <div id="swagger-ui-wrapper">
-              <SwaggerUI spec={swaggerSpec} />
+              <SwaggerUI spec={swaggerUiSpec || {}} />
             </div>
             <div className="spec-editor__body theme--pane__body">
               <CodeEditor
