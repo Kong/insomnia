@@ -46,6 +46,15 @@ export async function importUri(
   summary: {[string]: Array<BaseModel>},
 }> {
   let rawText;
+
+  // If GH preview, force raw
+  let url = new URL(uri);
+  if (url.origin === 'https://github.com') {
+    uri = uri
+      .replace('https://github.com', 'https://raw.githubusercontent.com')
+      .replace('blob/', '');
+  }
+
   if (uri.match(/^(http|https):\/\//)) {
     const response = await window.fetch(uri);
     rawText = await response.text();
