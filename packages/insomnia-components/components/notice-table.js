@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
 import Button from './button';
 import styled from 'styled-components';
-import SvgIcon from './svg-icon';
+import SvgIcon, {IconEnum} from './svg-icon';
 
 type Notice = {|
   type: 'warning' | 'error',
@@ -133,7 +133,7 @@ class NoticeTable extends React.PureComponent<Props, State> {
     const { notices, compact } = this.props;
     const { collapsed } = this.state;
 
-    const caret = collapsed ? <SvgIcon icon="chevron-up" /> : <SvgIcon icon="chevron-down" />;
+    const caret = collapsed ? <SvgIcon icon={IconEnum.chevronUp} /> : <SvgIcon icon={IconEnum.chevronDown} />;
 
     const errors = notices.filter(n => n.type === 'error');
     const warnings = notices.filter(n => n.type === 'warning');
@@ -144,12 +144,12 @@ class NoticeTable extends React.PureComponent<Props, State> {
           <div>
             {errors.length > 0 && (
               <ErrorCount>
-                <SvgIcon icon="error" /> {errors.length}
+                <SvgIcon icon={IconEnum.error} /> {errors.length}
               </ErrorCount>
             )}
             {warnings.length > 0 && (
               <ErrorCount>
-                <SvgIcon icon="warning" /> {warnings.length}
+                <SvgIcon icon={IconEnum.warning} /> {warnings.length}
               </ErrorCount>
             )}
           </div>
@@ -180,7 +180,7 @@ class NoticeTable extends React.PureComponent<Props, State> {
                     <TableData align="center">
                       {n.line}
                       <JumpButton onClick={this.onClick.bind(this, n)}>
-                        <SvgIcon icon="arrow-right" />
+                        <SvgIcon icon={IconEnum.arrowRight} />
                       </JumpButton>
                     </TableData>
                     <TableData align="left">{n.message}</TableData>

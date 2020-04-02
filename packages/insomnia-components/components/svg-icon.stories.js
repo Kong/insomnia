@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import SvgIcon from './svg-icon';
+import SvgIcon, {IconEnum} from './svg-icon';
 import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
 import styled from 'styled-components';
 
@@ -14,7 +14,7 @@ const Wrapper = styled.div`
 `;
 Wrapper.displayName = '...';
 
-export const _default = () => <SvgIcon icon="arrow-right" />;
+export const _default = () => <SvgIcon icon={IconEnum.arrowRight} />;
 
 export const reference = () => (
   <React.Fragment>
@@ -27,7 +27,7 @@ export const reference = () => (
         </TableRow>
       </TableHead>
       <TableBody>
-        {Object.keys(SvgIcon.icns)
+        {Object.keys(SvgIcon.icons)
           .sort()
           .map(name => (
             <TableRow>

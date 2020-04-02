@@ -1,0 +1,8 @@
+{
+  "icon": true,
+  "memo": true,
+  "replaceAttrValues": {
+    "#000": "",
+    "#FFF": "currentColor"
+  }
+}

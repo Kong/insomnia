@@ -14,3 +14,4 @@ screenshots/
 **/flow-typed/
 **/dist/
 **/.cache/
+**/svgr/

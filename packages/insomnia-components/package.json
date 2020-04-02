@@ -10,7 +10,8 @@
     "build": "webpack --config webpack.config.js",
     "build-storybook": "build-storybook --quiet",
     "storybook": "start-storybook --port 3223",
-    "bootstrap": "rimraf node_modules/fsevents"
+    "bootstrap": "rimraf node_modules/fsevents && npm run convert-svg",
+    "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js"
   },
   "husky": {
     "hooks": {
@@ -23,6 +24,7 @@
     "@storybook/addon-info": "^5.3.9",
     "@storybook/addon-knobs": "^5.3.10",
     "@storybook/react": "^5.3.9",
+    "@svgr/cli": "^5.3.0",
     "babel-loader": "^8.0.6",
     "babel-plugin-inline-react-svg": "^1.1.1",
     "webpack": "^4.42.1",
