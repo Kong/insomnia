@@ -5,7 +5,9 @@ import * as ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
-import { parse, print, typeFromAST } from 'graphql';
+import { parse, typeFromAST } from 'graphql';
+import * as prettier from 'prettier/standalone';
+import * as graphqlParser from 'prettier/parser-graphql';
 import { introspectionQuery } from 'graphql/utilities/introspectionQuery';
 import { buildClientSchema } from 'graphql/utilities/buildClientSchema';
 import type { CodeMirror, TextMarker } from 'codemirror';
@@ -363,7 +365,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   _handlePrettify() {
     const { body } = this.state;
     const { variables, query } = body;
-    const prettyQuery = query && print(parse(query));
+    const prettyQuery =
+      query && prettier.format(query, { parser: 'graphql', plugins: [graphqlParser] });
     const prettyVariables = variables && JSON.parse(prettify.json(JSON.stringify(variables)));
     this._handleBodyChange(prettyQuery, prettyVariables, this.state.body.operationName);
 
