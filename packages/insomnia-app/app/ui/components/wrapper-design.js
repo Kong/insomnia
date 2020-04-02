@@ -164,7 +164,13 @@ class WrapperDesign extends React.PureComponent<Props, State> {
       hasConfigPlugins,
     } = this.state;
 
-    const {document: swaggerUiSpec} = parseApiSpec(activeApiSpec.contents);
+    let swaggerUiSpec;
+    try {
+      const {document} = parseApiSpec(activeApiSpec.contents);
+      swaggerUiSpec = document;
+    } catch (err) {
+      swaggerUiSpec = {};
+    }
 
     const lintErrorsExist = !!lintMessages.find(c => c.type === 'error');
 
