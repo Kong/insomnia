@@ -27,10 +27,10 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
       dialog(
         title,
         body: HTMLElement,
-        options: {
+        options?: {
           onHide?: () => void,
           tall?: boolean,
-        },
+        } = {},
       ): void {
         if (renderPurpose !== RENDER_PURPOSE_SEND && renderPurpose !== RENDER_PURPOSE_NO_RENDER) {
           return;
