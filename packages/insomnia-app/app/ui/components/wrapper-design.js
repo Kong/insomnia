@@ -164,7 +164,15 @@ class WrapperDesign extends React.PureComponent<Props, State> {
       hasConfigPlugins,
     } = this.state;
 
-    const { apiSpec } = parseApiSpec(activeApiSpec.contents);
+    let swaggerUiSpec;
+    try {
+      const {document} = parseApiSpec(activeApiSpec.contents);
+      swaggerUiSpec = document;
+    } catch (err) {
+      swaggerUiSpec = {};
+    }
+
+    const lintErrorsExist = !!lintMessages.find(c => c.type === 'error');
 
     return (
       <PageLayout
@@ -179,10 +187,11 @@ class WrapperDesign extends React.PureComponent<Props, State> {
               </React.Fragment>
             }
             gridCenter={
-              <Switch onClick={this._handleDebugSpec} optionItems={[{
-                'label': 'DESIGN',
-                'selected': true,
-              }, { 'label': 'DEBUG', 'selected': false }]} />
+              <Switch
+                onClick={this._handleDebugSpec}
+                optionItems={[{'label': 'DESIGN', 'selected': true}, {'label': 'DEBUG', 'selected': false}]}
+                error={lintErrorsExist ? 'Failed to generate requests due to linting errors.' : undefined}
+              />
             }
             gridRight={
               <React.Fragment>
@@ -206,7 +215,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
               'preview-hidden': previewHidden,
             })}>
             <div id="swagger-ui-wrapper">
-              <SwaggerUI spec={apiSpec} />
+              <SwaggerUI spec={swaggerUiSpec || {}} />
             </div>
             <div className="spec-editor__body theme--pane__body">
               <CodeEditor

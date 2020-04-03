@@ -20,16 +20,18 @@ export function parseApiSpec(rawDocument: string): {
     throw new Error(`Failed to parse API spec`);
   }
 
-  if (result.document.openapi) {
-    // Check if it's OpenAPI
-    result.format = 'openapi';
-    result.formatVersion = result.document.openapi;
-  } else if (result.document.swagger) {
-    // Check if it's Swagger
-    result.format = 'swagger';
-    result.formatVersion = result.document.swagger;
-  } else {
-    // Not sure what format it is
+  if (result.document) {
+    if (result.document.openapi) {
+      // Check if it's OpenAPI
+      result.format = 'openapi';
+      result.formatVersion = result.document.openapi;
+    } else if (result.document.swagger) {
+      // Check if it's Swagger
+      result.format = 'swagger';
+      result.formatVersion = result.document.swagger;
+    } else {
+      // Not sure what format it is
+    }
   }
 
   return result;

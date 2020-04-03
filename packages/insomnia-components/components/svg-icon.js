@@ -1,20 +1,45 @@
 // @flow
 import * as React from 'react';
-import styled from 'styled-components';
-import IcnArrowRight from '../assets/icn-arrow-right.svg';
-import IcnChevronDown from '../assets/icn-chevron-down.svg';
-import IcnChevronUp from '../assets/icn-chevron-up.svg';
-import IcnWarning from '../assets/icn-warning.svg';
-import IcnError from '../assets/icn-errors.svg';
-import IcnGithubLogo from '../assets/icn-github-logo.svg';
-import IcnGitBranch from '../assets/icn-git-branch.svg';
-import IcnClock from '../assets/icn-clock.svg';
+import styled, {css} from 'styled-components';
+import MemoSvgIcnArrowRight from '../assets/svgr/IcnArrowRight';
+import MemoSvgIcnInfo from '../assets/svgr/IcnInfo';
+import MemoSvgIcnClock from '../assets/svgr/IcnClock';
+import MemoSvgIcnChevronDown from '../assets/svgr/IcnChevronDown';
+import MemoSvgIcnChevronUp from '../assets/svgr/IcnChevronUp';
+import MemoSvgIcnErrors from '../assets/svgr/IcnErrors';
+import MemoSvgIcnGitBranch from '../assets/svgr/IcnGitBranch';
+import MemoSvgIcnGithubLogo from '../assets/svgr/IcnGithubLogo';
+import MemoSvgIcnWarning from '../assets/svgr/IcnWarning';
 
-type Props = {
-  icon: 'arrow-right' | 'chevron-up' | 'chevron-down' | 'warning' | 'error' | 'github-logo' | 'git-branch' | 'clock',
+export const ThemeEnum = {
+  default: 'default',
+  danger: 'danger',
+  warning: 'warning',
+  notice: 'notice',
+  highlight: 'highlight',
 };
 
-const SvgIconStyled: React.ComponentType<any> = styled.div`
+type ThemeKeys = $Values<typeof ThemeEnum>;
+
+export const IconEnum = {
+  info: 'info',
+  clock: 'clock',
+  arrowRight: 'arrow-right',
+  chevronUp: 'chevron-up',
+  chevronDown: 'chevron-down',
+  warning: 'warning',
+  error: 'error',
+  github: 'github',
+  gitBranch: 'git-branch',
+};
+
+type IconKeys = $Values<typeof IconEnum>;
+
+type Props = {
+  icon: IconKeys;
+};
+
+const SvgIconStyled: React.ComponentType<{theme: ThemeKeys}> = styled.div`
   display: inline-block;
   width: 1em;
   height: 1em;
@@ -25,6 +50,27 @@ const SvgIconStyled: React.ComponentType<any> = styled.div`
     height: 100%;
     width: auto;
     transform: scale(0.9);
+    ${
+      ({theme}) => {
+        switch (theme) {
+          case ThemeEnum.danger:
+          case ThemeEnum.warning:
+          case ThemeEnum.notice:
+            return css`
+                  fill: var(--color-${theme});
+                  color: var(--color-font-${theme});`;
+          case ThemeEnum.highlight:
+            return css`
+                  fill: var(--hl);
+                  color: var(--color-font-danger);`;
+          case ThemeEnum.default:
+          default:
+            return css`
+                  fill: var(--color-font);
+                  color: var(--color-font);`;
+        }
+      }
+    }
 
     // Ensures that the svg doesn't "bounce out" of the div
     // (flex-box parent styles can cause this to happen)
@@ -34,51 +80,34 @@ const SvgIconStyled: React.ComponentType<any> = styled.div`
     right: 0;
     bottom: 0;
   }
-
-  svg .fill-font {
-    fill: var(--color-font);
-  }
-  svg .fill-danger {
-    fill: var(--color-danger);
-  }
-  svg .fill-danger-font {
-    fill: var(--color-font-danger);
-  }
-  svg .fill-warning {
-    fill: var(--color-warning);
-  }
-  svg .fill-warning-font {
-    fill: var(--color-font-warning);
-  }
-  svg .fill-notice {
-    fill: var(--color-notice);
-  }
-  svg .fill-notice-font {
-    fill: var(--color-font-notice);
-  }
-  svg .fill-hl {
-    fill: var(--hl);
-  }
-  svg .fill-hl-font {
-    fill: var(--color-font-danger);
-  }
 `;
 
+type IconDictionary = {
+  [IconKeys]: [ThemeKeys, React.ComponentType<any>];
+}
+
 class SvgIcon extends React.Component<Props> {
-  static icns = {
-    'arrow-right': <IcnArrowRight />,
-    'chevron-up': <IcnChevronUp />,
-    'chevron-down': <IcnChevronDown />,
-    warning: <IcnWarning />,
-    error: <IcnError />,
-    'github-logo': <IcnGithubLogo />,
-    'git-branch': <IcnGitBranch />,
-    clock: <IcnClock />,
+  static icons: IconDictionary = {
+    [IconEnum.info]: [ThemeEnum.highlight, MemoSvgIcnInfo],
+    [IconEnum.clock]: [ThemeEnum.default, MemoSvgIcnClock],
+    [IconEnum.chevronDown]: [ThemeEnum.default, MemoSvgIcnChevronDown],
+    [IconEnum.chevronUp]: [ThemeEnum.default, MemoSvgIcnChevronUp],
+    [IconEnum.arrowRight]: [ThemeEnum.highlight, MemoSvgIcnArrowRight],
+    [IconEnum.error]: [ThemeEnum.danger, MemoSvgIcnErrors],
+    [IconEnum.gitBranch]: [ThemeEnum.default, MemoSvgIcnGitBranch],
+    [IconEnum.github]: [ThemeEnum.default, MemoSvgIcnGithubLogo],
+    [IconEnum.warning]: [ThemeEnum.notice, MemoSvgIcnWarning],
   };
 
   render() {
     const { icon } = this.props;
-    return <SvgIconStyled>{SvgIcon.icns[icon]}</SvgIconStyled>;
+    const [theme, Svg] = SvgIcon.icons[icon];
+
+    return (
+      <SvgIconStyled theme={theme}>
+        <Svg />
+      </SvgIconStyled>
+    );
   }
 }
 

@@ -62,6 +62,16 @@ describe('parseApiSpec()', () => {
     expect(parseApiSpec(jsonSpec)).toEqual(expected);
   });
 
+  it('returns the default result if empty document', () => {
+    const expected = {
+      format: null,
+      formatVersion: null,
+      document: null,
+    };
+
+    expect(parseApiSpec('')).toEqual(expected);
+  });
+
   it('Fails on malformed JSON/YAML', () => {
     const rawSpec = [
       'openapi: 3.0.0',

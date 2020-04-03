@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import styled from 'styled-components';
-import SvgIcon from './svg-icon';
+import SvgIcon, {IconEnum} from './svg-icon';
 
 type Props = {
   onChange: (e: SyntheticEvent<HTMLInputElement>) => any,
@@ -245,11 +245,11 @@ class Card extends React.PureComponent<Props, State> {
         </CardBody>
         <CardFooter>
           {docBranch && <span>
-            <SvgIcon icon="git-branch" />
+            <SvgIcon icon={IconEnum.gitBranch} />
             <div className="icoLabel">{docBranch}</div>
           </span>}
           {docLog && <span>
-            <SvgIcon icon="clock" />
+            <SvgIcon icon={IconEnum.clock} />
             <div className="icoLabel">{docLog}</div>
           </span>}
         </CardFooter>

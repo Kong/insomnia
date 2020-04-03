@@ -3,7 +3,7 @@ import * as React from 'react';
 import { select, withKnobs } from '@storybook/addon-knobs';
 import Button from './button';
 import styled from 'styled-components';
-import SvgIcon from './svg-icon';
+import SvgIcon, {IconEnum} from './svg-icon';
 
 export default {
   title: 'Button',
@@ -37,7 +37,7 @@ export const _default = () => (
 
 export const withIcon = () => (
   <Button onClick={() => window.alert('Clicked!')} bg={select('Background', themeColors)}>
-    Expand <SvgIcon icon="chevron-down" />
+    Expand <SvgIcon icon={IconEnum.chevronDown} />
   </Button>
 );
 
