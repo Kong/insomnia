@@ -51,6 +51,7 @@
     "dev-server-port": 3334
   },
   "jest": {
+    "testTimeout": 10000,
     "setupFiles": [
       "./__jest__/setup.js"
     ],
