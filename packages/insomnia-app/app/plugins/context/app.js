@@ -100,11 +100,12 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
 
       /** @deprecated as it was never officially supported */
       showGenericModalDialog(title: string, options?: { html: string } = {}): void {
-        console.warn(
-          'app.showGenericModalDialog() is a deprecated plugin API. Use app.dialog() instead.',
-        );
+        console.warn('app.showGenericModalDialog() is deprecated. Use app.dialog() instead.');
+
+        // Create DOM node so we can adapt to the new dialog() method
         const body = document.createElement('div');
         body.innerHTML = options.html;
+
         return this.dialog(title, { body });
       },
     },
