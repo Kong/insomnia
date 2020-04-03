@@ -1,5 +1,6 @@
 // @flow
 import type { RenderedRequest } from '../../common/render';
+import type { RequestBodyParameter } from '../../models/request';
 import * as misc from '../../common/misc';
 import { CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE } from '../../common/constants';
 
@@ -158,11 +159,11 @@ export function init(
       return renderedRequest.body.fileName || '';
     },
     setUploadFileName(fileName: string): boolean {
-      if (!renderedRequest.body || renderedRequest.body.mimeType !== CONTENT_TYPE_FILE) {
-        return false;
+      const canSetFile = renderedRequest.body.mimeType === CONTENT_TYPE_FILE;
+      if (canSetFile) {
+        renderedRequest.body.fileName = fileName;
       }
-      renderedRequest.body.fileName = fileName;
-      return true;
+      return canSetFile;
     },
     getTextForm(): Array<any> {
       return (renderedRequest.body.params || [])
@@ -174,23 +175,24 @@ export function init(
         .filter(p => p.type === 'file')
         .map(({ name, fileName }) => ({ name, fileName }));
     },
-    addFormItem(formItem: any): boolean {
-      if (
-        formItem.type === 'file' &&
-        (!renderedRequest.body || renderedRequest.body.mimeType !== CONTENT_TYPE_FORM_DATA)
-      ) {
+    addFormItem(formItem: RequestBodyParameter): boolean {
+      if (formItem.type === 'file' && renderedRequest.body.mimeType !== CONTENT_TYPE_FORM_DATA) {
         return false;
       }
-      const oldFormItem = misc.filterFormItem(renderedRequest.body.params || [], '', formItem.name);
-      if (oldFormItem.length === 0) {
-        if (!renderedRequest.body.params) {
-          renderedRequest.body.params = [formItem];
-        } else {
-          renderedRequest.body.params.push(formItem);
-        }
-        return true;
+      const oldFormItem = misc.filterFormItem(
+        renderedRequest.body.params || [],
+        '',
+        formItem.name,
+      )[0];
+      if (oldFormItem) {
+        return false;
       }
-      return false;
+      if (renderedRequest.body.params) {
+        renderedRequest.body.params.push(formItem);
+      } else {
+        renderedRequest.body.params = [formItem];
+      }
+      return true;
     },
     addTextFormItem(name: string, value: string): boolean {
       return this.addFormItem({ type: 'text', name, value });
@@ -198,31 +200,32 @@ export function init(
     addFileFormItem(name: string, fileName: string): boolean {
       return this.addFormItem({ type: 'file', name, fileName });
     },
-    setFormItem(formItem: any): void {
-      if (
-        formItem.type === 'file' &&
-        (!renderedRequest.body || renderedRequest.body.mimeType !== CONTENT_TYPE_FORM_DATA)
-      ) {
-        return;
+    setFormItem(formItem: RequestBodyParameter): boolean {
+      if (formItem.type === 'file' && renderedRequest.body.mimeType !== CONTENT_TYPE_FORM_DATA) {
+        return false;
       }
-      if (!this.addFormItem(formItem)) {
-        const oldFormItem = misc.filterFormItem(
-          renderedRequest.body.params || [],
-          formItem.type,
-          formItem.name,
-        )[0];
-        if (formItem.type === 'text') {
-          oldFormItem.value = formItem.value;
-        } else if (formItem.type === 'file') {
-          oldFormItem.fileName = formItem.fileName;
-        }
+      if (this.addFormItem(formItem)) {
+        return true;
       }
+      const oldFormItem = misc.filterFormItem(
+        renderedRequest.body.params || [],
+        formItem.type || 'text',
+        formItem.name,
+      )[0];
+      if (formItem.type === 'text') {
+        oldFormItem.value = formItem.value;
+      } else if (formItem.type === 'file') {
+        oldFormItem.fileName = formItem.fileName;
+      } else {
+        return false;
+      }
+      return true;
     },
     setTextFormItem(name: string, value: string): boolean {
       return this.setFormItem({ type: 'text', name, value });
     },
     setFileFormItem(name: string, fileName: string): boolean {
-      return this.setFormItem({ type: 'file', name, fileName });
+      return this.setFormItem({ type: 'file', name, value: fileName, fileName });
     },
     removeFormItem(name: string): void {
       if (!renderedRequest.body.params) {
