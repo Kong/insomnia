@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const changeCase = require('change-case');
 
 const SwaggerParser = require('swagger-parser');
 const { parse: urlParse } = require('url');
@@ -290,23 +291,28 @@ function parseSecurity(security, securitySchemes) {
   const apiKeyHeaders = apiKeySchemes
     .filter(scheme => scheme.in === 'header')
     .map(scheme => {
+      let variableName = changeCase.camelCase(scheme.name);
       return {
         name: scheme.name,
         disabled: false,
-        value: '{{ apiKey }}',
+        value: `{{ ${variableName} }}`,
       };
     });
   const apiKeyCookies = apiKeySchemes
     .filter(scheme => scheme.in === 'cookie')
-    .map(scheme => `${scheme.name}={{ apiKey }}`);
+    .map(scheme => {
+      let variableName = changeCase.camelCase(scheme.name);
+      return `${scheme.name}={{ ${variableName} }}`;
+    });
   const apiKeyCookieHeader = { name: 'Cookie', disabled: false, value: apiKeyCookies.join('; ') };
   const apiKeyParams = apiKeySchemes
     .filter(scheme => scheme.in === 'query')
     .map(scheme => {
+      let variableName = changeCase.camelCase(scheme.name);
       return {
         name: scheme.name,
         disabled: false,
-        value: '{{ apiKey }}',
+        value: `{{ ${variableName} }}`,
       };
     });
 
@@ -341,9 +347,9 @@ function getSecurityEnvVariables(securitySchemes) {
 
   const variables = {};
   const securitySchemesArray = Object.values(securitySchemes);
-  const hasApiKeyScheme = securitySchemesArray.some(
-    scheme => scheme.type === SECURITY_TYPE.API_KEY,
-  );
+  const apiKeyVariableNames = securitySchemesArray
+    .filter(scheme => scheme.type === SECURITY_TYPE.API_KEY)
+    .map(scheme => changeCase.camelCase(scheme.name));
   const hasHttpBasicScheme = securitySchemesArray.some(
     scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
   );
@@ -351,9 +357,9 @@ function getSecurityEnvVariables(securitySchemes) {
     scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'bearer',
   );
 
-  if (hasApiKeyScheme) {
-    variables.apiKey = 'apiKey';
-  }
+  Array.from(new Set(apiKeyVariableNames)).forEach(name => {
+    variables[name] = name;
+  });
 
   if (hasHttpBasicScheme) {
     variables.httpUsername = 'username';
