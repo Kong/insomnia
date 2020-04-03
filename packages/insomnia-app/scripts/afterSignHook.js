@@ -42,5 +42,6 @@ module.exports = async function(params) {
     await electronNotarize.notarize(args);
   } catch (err) {
     console.error(err);
+    process.exit(1);
   }
 };
