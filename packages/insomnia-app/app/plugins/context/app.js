@@ -26,9 +26,10 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
       },
       dialog(
         title,
+        body: HTMLElement,
         options: {
-          body: HTMLElement,
           onHide?: () => void,
+          tall?: boolean,
         },
       ): void {
         if (renderPurpose !== RENDER_PURPOSE_SEND && renderPurpose !== RENDER_PURPOSE_NO_RENDER) {
@@ -37,7 +38,8 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
 
         showModal(WrapperModal, {
           title,
-          body: <HtmlElementWrapper el={options.body} onUnmount={options.onHide} />,
+          body: <HtmlElementWrapper el={body} onUnmount={options.onHide} />,
+          tall: options.tall,
         });
       },
       prompt(
@@ -106,7 +108,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
         const body = document.createElement('div');
         body.innerHTML = options.html;
 
-        return this.dialog(title, { body });
+        return this.dialog(title, body);
       },
     },
   };
