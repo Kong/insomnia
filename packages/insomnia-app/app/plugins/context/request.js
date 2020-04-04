@@ -1,8 +1,7 @@
 // @flow
 import type { RenderedRequest } from '../../common/render';
-import type { RequestBodyParameter } from '../../models/request';
+import type { RequestBody } from '../../models/request';
 import * as misc from '../../common/misc';
-import { CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE } from '../../common/constants';
 
 export function init(
   renderedRequest: RenderedRequest,
@@ -16,12 +15,6 @@ export function init(
   const request = {
     getId(): string {
       return renderedRequest._id;
-    },
-    getMimeType(): string {
-      return renderedRequest.body.mimeType || '';
-    },
-    setMimeType(mimeType: string): void {
-      renderedRequest.body.mimeType = mimeType;
     },
     getBodyText(): string {
       return renderedRequest.body.text || '';
@@ -155,83 +148,11 @@ export function init(
     getAuthentication(): Object {
       return renderedRequest.authentication;
     },
-    getUploadFileName(): string {
-      return renderedRequest.body.fileName || '';
+    getBody(): RequestBody {
+      return renderedRequest.body;
     },
-    setUploadFileName(fileName: string): boolean {
-      const canSetFile = renderedRequest.body.mimeType === CONTENT_TYPE_FILE;
-      if (canSetFile) {
-        renderedRequest.body.fileName = fileName;
-      }
-      return canSetFile;
-    },
-    getTextForm(): Array<any> {
-      return (renderedRequest.body.params || [])
-        .filter(p => !p.type || p.type === 'text')
-        .map(({ name, value }) => ({ name, value }));
-    },
-    getFileForm(): Array<any> {
-      return (renderedRequest.body.params || [])
-        .filter(p => p.type === 'file')
-        .map(({ name, fileName }) => ({ name, fileName }));
-    },
-    addFormItem(formItem: RequestBodyParameter): boolean {
-      if (formItem.type === 'file' && renderedRequest.body.mimeType !== CONTENT_TYPE_FORM_DATA) {
-        return false;
-      }
-      const oldFormItem = misc.filterFormItem(
-        renderedRequest.body.params || [],
-        '',
-        formItem.name,
-      )[0];
-      if (oldFormItem) {
-        return false;
-      }
-      if (renderedRequest.body.params) {
-        renderedRequest.body.params.push(formItem);
-      } else {
-        renderedRequest.body.params = [formItem];
-      }
-      return true;
-    },
-    addTextFormItem(name: string, value: string): boolean {
-      return this.addFormItem({ type: 'text', name, value });
-    },
-    addFileFormItem(name: string, fileName: string): boolean {
-      return this.addFormItem({ type: 'file', name, fileName });
-    },
-    setFormItem(formItem: RequestBodyParameter): boolean {
-      if (formItem.type === 'file' && renderedRequest.body.mimeType !== CONTENT_TYPE_FORM_DATA) {
-        return false;
-      }
-      if (this.addFormItem(formItem)) {
-        return true;
-      }
-      const oldFormItem = misc.filterFormItem(
-        renderedRequest.body.params || [],
-        formItem.type || 'text',
-        formItem.name,
-      )[0];
-      if (formItem.type === 'text') {
-        oldFormItem.value = formItem.value;
-      } else if (formItem.type === 'file') {
-        oldFormItem.fileName = formItem.fileName;
-      } else {
-        return false;
-      }
-      return true;
-    },
-    setTextFormItem(name: string, value: string): boolean {
-      return this.setFormItem({ type: 'text', name, value });
-    },
-    setFileFormItem(name: string, fileName: string): boolean {
-      return this.setFormItem({ type: 'file', name, value: fileName, fileName });
-    },
-    removeFormItem(name: string): void {
-      if (!renderedRequest.body.params) {
-        return;
-      }
-      renderedRequest.body.params = renderedRequest.body.params.filter(f => f.name !== name);
+    setBody(body: RequestBody): void {
+      renderedRequest.body = body;
     },
 
     // NOTE: For these to make sense, we'd need to account for cookies in the jar as well
@@ -243,7 +164,6 @@ export function init(
   if (readOnly) {
     delete request.setUrl;
     delete request.setMethod;
-    delete request.setMimeType;
     delete request.setBodyText;
     delete request.setCookie;
     delete request.settingSendCookies;
@@ -259,14 +179,7 @@ export function init(
     delete request.addParameter;
     delete request.addParameter;
     delete request.setAuthenticationParameter;
-    delete request.setUploadFileName;
-    delete request.addFormItem;
-    delete request.addTextFormItem;
-    delete request.addFileFormItem;
-    delete request.setFormItem;
-    delete request.setTextFormItem;
-    delete request.setFileFormItem;
-    delete request.removeFormItem;
+    delete request.setBody;
   }
 
   return { request };

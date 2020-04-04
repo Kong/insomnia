@@ -19,32 +19,12 @@ type Parameter = {
   value: string,
 };
 
-type FormItem = {
-  name: string,
-  value: string,
-  type?: string,
-  fileName?: string,
-};
-
 export function filterParameters<T: Parameter>(parameters: Array<T>, name: string): Array<T> {
   if (!Array.isArray(parameters) || !name) {
     return [];
   }
 
   return parameters.filter(h => (!h || !h.name ? false : h.name === name));
-}
-
-export function filterFormItem<T: FormItem>(form: Array<T>, type: string, name: string): Array<T> {
-  if (!Array.isArray(form) || !name) {
-    return [];
-  }
-
-  return form.filter(
-    item =>
-      item &&
-      (!type || (!item.type && type === 'text') || item.type === type) &&
-      item.name === name,
-  );
 }
 
 export function filterHeaders<T: Header>(headers: Array<T>, name: string): Array<T> {

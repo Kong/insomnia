@@ -1,11 +1,7 @@
 import * as plugin from '../request';
 import * as models from '../../../models';
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import {
-  CONTENT_TYPE_FORM_URLENCODED,
-  CONTENT_TYPE_FILE,
-  CONTENT_TYPE_FORM_DATA,
-} from '../../../common/constants';
+import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
 
 const CONTEXT = {
   user_key: 'my_user_key',
@@ -30,43 +26,32 @@ describe('init()', () => {
     const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
     expect(Object.keys(result)).toEqual(['request']);
     expect(Object.keys(result.request).sort()).toEqual([
-      'addFileFormItem',
-      'addFormItem',
       'addHeader',
       'addParameter',
-      'addTextFormItem',
       'getAuthentication',
+      'getBody',
       'getBodyText',
       'getEnvironment',
       'getEnvironmentVariable',
-      'getFileForm',
       'getHeader',
       'getHeaders',
       'getId',
       'getMethod',
-      'getMimeType',
       'getName',
       'getParameter',
       'getParameters',
-      'getTextForm',
-      'getUploadFileName',
       'getUrl',
       'hasHeader',
       'hasParameter',
-      'removeFormItem',
       'removeHeader',
       'removeParameter',
       'setAuthenticationParameter',
+      'setBody',
       'setBodyText',
       'setCookie',
-      'setFileFormItem',
-      'setFormItem',
       'setHeader',
       'setMethod',
-      'setMimeType',
       'setParameter',
-      'setTextFormItem',
-      'setUploadFileName',
       'setUrl',
       'settingDisableRenderRequestBody',
       'settingEncodeUrl',
@@ -81,20 +66,17 @@ describe('init()', () => {
     expect(Object.keys(result)).toEqual(['request']);
     expect(Object.keys(result.request).sort()).toEqual([
       'getAuthentication',
+      'getBody',
       'getBodyText',
       'getEnvironment',
       'getEnvironmentVariable',
-      'getFileForm',
       'getHeader',
       'getHeaders',
       'getId',
       'getMethod',
-      'getMimeType',
       'getName',
       'getParameter',
       'getParameters',
-      'getTextForm',
-      'getUploadFileName',
       'getUrl',
       'hasHeader',
       'hasParameter',
@@ -132,13 +114,6 @@ describe('request.*', () => {
     expect(result.request.getMethod()).toBe('GET');
     expect(result.request.getBodyText()).toBe('body');
     expect(result.request.getAuthentication()).toEqual({ type: 'oauth2' });
-  });
-
-  it('works for mimetype', async () => {
-    const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
-    expect(result.request.getMimeType()).toBe('');
-    result.request.setMimeType(CONTENT_TYPE_FORM_URLENCODED);
-    expect(result.request.getMimeType()).toBe(CONTENT_TYPE_FORM_URLENCODED);
   });
 
   it('works for parameters', async () => {
@@ -253,40 +228,19 @@ describe('request.*', () => {
     expect(request.authentication).toEqual({ foo: 'baz' });
   });
 
-  it('works for upload file', async () => {
+  it('works for request body', async () => {
     const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
-    const fileToUpload = 'path/to/file';
-    expect(result.request.getUploadFileName()).toBe('');
-    expect(result.request.setUploadFileName(fileToUpload)).toBe(false);
-    result.request.setMimeType(CONTENT_TYPE_FILE);
-    expect(result.request.setUploadFileName(fileToUpload)).toBe(true);
-    expect(result.request.getUploadFileName()).toBe(fileToUpload);
-  });
-
-  it('works for parameter in body', async () => {
-    const request = await models.request.getById('req_1');
-    request.body.mimeType = CONTENT_TYPE_FORM_URLENCODED;
-    const result = plugin.init(request, CONTEXT);
-
-    expect(result.request.getTextForm()).toEqual([]);
-    expect(result.request.addTextFormItem('foo', 'bar')).toBe(true);
-    expect(result.request.getTextForm()).toEqual([{ name: 'foo', value: 'bar' }]);
-    expect(result.request.addTextFormItem('foo', 'baz')).toBe(false);
-    expect(result.request.setTextFormItem('foo', 'baz')).toBe(true);
-    expect(result.request.getTextForm()).toEqual([{ name: 'foo', value: 'baz' }]);
-    result.request.removeFormItem('foo');
-    expect(result.request.getTextForm()).toEqual([]);
-
-    const fileA = 'path/to/file_a';
-    const fileB = 'path/to/file_b';
-    expect(result.request.addFileFormItem('file', fileA)).toBe(false);
-    result.request.setMimeType(CONTENT_TYPE_FORM_DATA);
-    expect(result.request.addFileFormItem('file', fileA)).toBe(true);
-    expect(result.request.getFileForm()).toEqual([{ name: 'file', fileName: fileA }]);
-    expect(result.request.addFileFormItem('file', fileB)).toBe(false);
-    expect(result.request.setFileFormItem('file', fileB)).toBe(true);
-    expect(result.request.getFileForm()).toEqual([{ name: 'file', fileName: fileB }]);
-    result.request.removeFormItem('file');
-    expect(result.request.getFileForm()).toEqual([]);
+    expect(result.request.getBody()).toEqual({ text: 'body' });
+    const newBody = {
+      mimeType: CONTENT_TYPE_FORM_URLENCODED,
+      params: [
+        {
+          name: 'foo',
+          value: 'bar',
+        },
+      ],
+    };
+    result.request.setBody(newBody);
+    expect(result.request.getBody()).toEqual(newBody);
   });
 });
