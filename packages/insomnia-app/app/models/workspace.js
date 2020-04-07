@@ -24,7 +24,9 @@ export function init() {
 }
 
 export async function migrate(doc: Workspace): Promise<Workspace> {
-  return _migrateExtractClientCertificates(doc);
+  doc = await _migrateExtractClientCertificates(doc);
+  doc = await _migrateEnsureName(doc);
+  return doc;
 }
 
 export function getById(id: string): Promise<Workspace | null> {
@@ -82,6 +84,19 @@ async function _migrateExtractClientCertificates(workspace: Workspace): Promise<
   // This will remove the now-missing `certificates` property
   // NOTE: Using db.update so we don't change things like modified time
   await db.update(workspace);
+
+  return workspace;
+}
+
+/**
+ * Ensure workspace has a valid String name. Due to real-world bug reports, we know
+ * this happens (and it causes problems) so this migration will ensure that it is
+ * corrected.
+ */
+async function _migrateEnsureName(workspace: Workspace): Promise<Workspace> {
+  if (typeof workspace.name !== 'string') {
+    workspace.name = 'My Workspace';
+  }
 
   return workspace;
 }
