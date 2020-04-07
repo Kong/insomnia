@@ -30,6 +30,8 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
         options?: {
           onHide?: () => void,
           tall?: boolean,
+          skinny?: boolean,
+          wide?: boolean,
         } = {},
       ): void {
         if (renderPurpose !== RENDER_PURPOSE_SEND && renderPurpose !== RENDER_PURPOSE_NO_RENDER) {
@@ -40,6 +42,8 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
           title,
           body: <HtmlElementWrapper el={body} onUnmount={options.onHide} />,
           tall: options.tall,
+          skinny: options.skinny,
+          wide: options.wide,
         });
       },
       prompt(
