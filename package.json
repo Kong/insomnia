@@ -59,7 +59,5 @@
     "pretty-quick": "^1.10.0",
     "rimraf": "^2.6.3"
   },
-  "dependencies": {
-    "change-case": "^4.1.1"
-  }
+  "dependencies": {}
 }
