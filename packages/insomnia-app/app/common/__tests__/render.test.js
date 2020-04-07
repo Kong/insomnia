@@ -31,6 +31,35 @@ describe('render()', () => {
       expect(err.message).toContain('expected variable end');
     }
   });
+
+  it('handles variables using tag before tag is defined as expected (incorrect order)', async () => {
+    const rootEnvironment = {
+      type: models.environment.type,
+      data: {
+        consume: '{{ replaced }}',
+        hashed: "{% hash 'md5', 'hex', value %}",
+        replaced: "{{ hashed | replace('f67565de946a899a534fd908e7eef872', 'cat') }}",
+        value: 'ThisIsATopSecretValue',
+      },
+      dataPropertyOrder: {
+        '&': ['value', 'replaced', 'hashed', 'consume'],
+      },
+    };
+
+    const context = await renderUtils.buildRenderContext([], rootEnvironment);
+
+    expect(context).toEqual({
+      value: 'ThisIsATopSecretValue',
+      hashed: 'f67565de946a899a534fd908e7eef872',
+      replaced: 'f67565de946a899a534fd908e7eef872',
+      consume: 'f67565de946a899a534fd908e7eef872',
+    });
+
+    // In runtime, this context is used to render, which re-evaluates the expression for replaced in the rootEnvironment by using the built context
+    // Regression test from issue 1917 - https://github.com/Kong/insomnia/issues/1917
+    const renderExpression = await renderUtils.render(rootEnvironment.data.replaced, context);
+    expect(renderExpression).toBe('cat');
+  });
 });
 
 describe('buildRenderContext()', () => {
@@ -396,6 +425,30 @@ describe('buildRenderContext()', () => {
       winner: 'folder parent',
       root: true,
       sub: true,
+    });
+  });
+
+  it('handles variables using tag after tag is defined as expected (correct order)', async () => {
+    const rootEnvironment = {
+      type: models.environment.type,
+      data: {
+        consume: '{{ replaced }}',
+        hashed: "{% hash 'md5', 'hex', value %}",
+        replaced: "{{ hashed | replace('f67565de946a899a534fd908e7eef872', 'cat') }}",
+        value: 'ThisIsATopSecretValue',
+      },
+      dataPropertyOrder: {
+        '&': ['value', 'hashed', 'replaced', 'consume'],
+      },
+    };
+
+    const context = await renderUtils.buildRenderContext([], rootEnvironment);
+
+    expect(context).toEqual({
+      value: 'ThisIsATopSecretValue',
+      hashed: 'f67565de946a899a534fd908e7eef872',
+      replaced: 'cat',
+      consume: 'cat',
     });
   });
 

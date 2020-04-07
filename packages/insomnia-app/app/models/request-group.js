@@ -32,7 +32,7 @@ export function migrate(doc: RequestGroup) {
   return doc;
 }
 
-export function create(patch: Object = {}): Promise<RequestGroup> {
+export function create(patch: $Shape<RequestGroup> = {}): Promise<RequestGroup> {
   if (!patch.parentId) {
     throw new Error('New RequestGroup missing `parentId`: ' + JSON.stringify(patch));
   }
@@ -40,7 +40,10 @@ export function create(patch: Object = {}): Promise<RequestGroup> {
   return db.docCreate(type, patch);
 }
 
-export function update(requestGroup: RequestGroup, patch: Object = {}): Promise<RequestGroup> {
+export function update(
+  requestGroup: RequestGroup,
+  patch: $Shape<RequestGroup> = {},
+): Promise<RequestGroup> {
   return db.docUpdate(requestGroup, patch);
 }
 
@@ -62,7 +65,7 @@ export function all(): Promise<Array<RequestGroup>> {
 
 export async function duplicate(
   requestGroup: RequestGroup,
-  patch: Object = {},
+  patch: $Shape<RequestGroup> = {},
 ): Promise<RequestGroup> {
   if (!patch.name) {
     patch.name = `${requestGroup.name} (Copy)`;

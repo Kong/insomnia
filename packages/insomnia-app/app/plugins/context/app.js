@@ -1,4 +1,5 @@
 // @flow
+import * as React from 'react';
 import * as electron from 'electron';
 import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
 import type { RenderPurpose } from '../../common/render';
@@ -8,10 +9,12 @@ import {
   RENDER_PURPOSE_SEND,
 } from '../../common/render';
 import WrapperModal from '../../ui/components/modals/wrapper-modal';
+import HtmlElementWrapper from '../../ui/components/html-element-wrapper';
 
 export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { app: Object } {
   const canShowDialogs =
     renderPurpose === RENDER_PURPOSE_SEND || renderPurpose === RENDER_PURPOSE_NO_RENDER;
+
   return {
     app: {
       alert(title: string, message?: string): Promise<void> {
@@ -21,12 +24,23 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
 
         return showAlert({ title, message });
       },
-      showGenericModalDialog(title: string, options?: { html: string } = {}): Promise<void> {
+      dialog(
+        title,
+        body: HTMLElement,
+        options?: {
+          onHide?: () => void,
+          tall?: boolean,
+        } = {},
+      ): void {
         if (renderPurpose !== RENDER_PURPOSE_SEND && renderPurpose !== RENDER_PURPOSE_NO_RENDER) {
-          return Promise.resolve();
+          return;
         }
 
-        return showModal(WrapperModal, { title, bodyHTML: options.html });
+        showModal(WrapperModal, {
+          title,
+          body: <HtmlElementWrapper el={body} onUnmount={options.onHide} />,
+          tall: options.tall,
+        });
       },
       prompt(
         title: string,
@@ -80,6 +94,21 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
             resolve(filename || null);
           });
         });
+      },
+
+      // ~~~~~~~~~~~~~~~~~~ //
+      // Deprecated Methods //
+      // ~~~~~~~~~~~~~~~~~~ //
+
+      /** @deprecated as it was never officially supported */
+      showGenericModalDialog(title: string, options?: { html: string } = {}): void {
+        console.warn('app.showGenericModalDialog() is deprecated. Use app.dialog() instead.');
+
+        // Create DOM node so we can adapt to the new dialog() method
+        const body = document.createElement('div');
+        body.innerHTML = options.html;
+
+        return this.dialog(title, body);
       },
     },
   };

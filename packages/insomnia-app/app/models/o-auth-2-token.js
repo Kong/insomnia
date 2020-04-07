@@ -47,7 +47,7 @@ export function migrate<T>(doc: T): T {
   return doc;
 }
 
-export function create(patch: Object = {}): Promise<OAuth2Token> {
+export function create(patch: $Shape<OAuth2Token> = {}): Promise<OAuth2Token> {
   if (!patch.parentId) {
     throw new Error(`New OAuth2Token missing \`parentId\` ${JSON.stringify(patch)}`);
   }
@@ -55,7 +55,7 @@ export function create(patch: Object = {}): Promise<OAuth2Token> {
   return db.docCreate(type, patch);
 }
 
-export function update(token: OAuth2Token, patch: Object): Promise<OAuth2Token> {
+export function update(token: OAuth2Token, patch: $Shape<OAuth2Token>): Promise<OAuth2Token> {
   return db.docUpdate(token, patch);
 }
 

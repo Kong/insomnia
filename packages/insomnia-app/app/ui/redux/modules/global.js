@@ -16,11 +16,17 @@ import SelectModal from '../../components/modals/select-modal';
 import { showError, showModal } from '../../components/modals/index';
 import * as db from '../../../common/database';
 import { trackEvent } from '../../../common/analytics';
-import SettingsModal, { TAB_INDEX_PLUGINS } from '../../components/modals/settings-modal';
+import SettingsModal, {
+  TAB_INDEX_PLUGINS,
+  TAB_INDEX_THEMES,
+} from '../../components/modals/settings-modal';
 import install from '../../../plugins/install';
-import {askToImportIntoWorkspace} from './helpers';
-import type {GlobalActivity} from '../../components/activity-bar/activity-bar';
-import type {ForceToWorkspace} from './helpers';
+import type { ForceToWorkspace } from './helpers';
+import { askToImportIntoWorkspace } from './helpers';
+import type { GlobalActivity } from '../../components/activity-bar/activity-bar';
+import { createPlugin } from '../../../plugins/create';
+import { reloadPlugins } from '../../../plugins';
+import { setTheme } from '../../../plugins/misc';
 
 const LOCALSTORAGE_PREFIX = `insomnia::meta`;
 
@@ -36,6 +42,7 @@ const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
 const COMMAND_IMPORT_URI = 'app/import';
 const COMMAND_PLUGIN_INSTALL = 'plugins/install';
+const COMMAND_PLUGIN_THEME = 'plugins/theme';
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -154,6 +161,38 @@ export function newCommand(command, args) {
           },
         });
         break;
+      case COMMAND_PLUGIN_THEME:
+        const parsedTheme = JSON.parse(decodeURIComponent(args.theme));
+        showModal(AskModal, {
+          title: 'Install Theme',
+          message: (
+            <React.Fragment>
+              Do you want to install <code>{parsedTheme.displayName}</code>?
+            </React.Fragment>
+          ),
+          yesText: 'Install',
+          noText: 'Cancel',
+          onDone: async isYes => {
+            if (!isYes) {
+              return;
+            }
+
+            const mainJsContent = `module.exports.themes = [${JSON.stringify(
+              parsedTheme,
+              null,
+              2,
+            )}];`;
+
+            await createPlugin(`theme-${parsedTheme.name}`, '0.0.1', mainJsContent);
+
+            const settings = await models.settings.getOrCreate();
+            await models.settings.update(settings, { theme: parsedTheme.name });
+            await reloadPlugins(true);
+            await setTheme(parsedTheme.name);
+            showModal(SettingsModal, TAB_INDEX_THEMES);
+          },
+        });
+        break;
       default:
       // Nothing
     }
@@ -256,7 +295,10 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
     dispatch(loadStart());
     const schema = electron.clipboard.readText();
     if (!schema) {
-      showModal(AlertModal, {title: 'Import Failed', message: 'Your clipboard appears to be empty.'});
+      showModal(AlertModal, {
+        title: 'Import Failed',
+        message: 'Your clipboard appears to be empty.',
+      });
       return;
     }
     // Let's import all the paths!
@@ -268,7 +310,10 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
       );
       importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
     } catch (err) {
-      showModal(AlertModal, { title: 'Import Failed', message: 'Your clipboard does not contain a valid specification.' });
+      showModal(AlertModal, {
+        title: 'Import Failed',
+        message: 'Your clipboard does not contain a valid specification.',
+      });
     } finally {
       dispatch(loadStop());
     }

@@ -4,13 +4,15 @@ import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
 import autobind from 'autobind-decorator';
 import MarkdownPreview from '../markdown-preview';
 import GraphQLExplorerFieldLink from './graph-ql-explorer-field-link';
-import { GraphQLUnionType } from 'graphql';
-import type { GraphQLType, GraphQLField } from 'graphql';
+import type { GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
+import { GraphQLInterfaceType, GraphQLObjectType, GraphQLUnionType } from 'graphql';
+import GraphQLDefaultValue from './graph-ql-default-value';
 
 type Props = {
   onNavigateType: (type: Object) => void,
   onNavigateField: (field: Object) => void,
   type: GraphQLType,
+  schema: GraphQLSchema | null,
 };
 
 @autobind
@@ -31,22 +33,31 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
   }
 
   renderTypesMaybe() {
-    const { type, onNavigateType } = this.props;
+    const { schema, type, onNavigateType } = this.props;
 
-    if (typeof type.getTypes !== 'function') {
+    if (schema === null) {
       return null;
     }
 
-    if (!(type instanceof GraphQLUnionType)) {
+    let title = 'Types';
+    let types = [];
+
+    if (type instanceof GraphQLUnionType) {
+      title = 'Possible Types';
+      types = schema.getPossibleTypes(type);
+    } else if (type instanceof GraphQLInterfaceType) {
+      title = 'Implementations';
+      types = schema.getPossibleTypes(type);
+    } else if (type instanceof GraphQLObjectType) {
+      title = 'Implements';
+      types = type.getInterfaces();
+    } else {
       return null;
     }
 
-    const types = (type: Object).getTypes();
-
-    console.log('UNION TYPE? ', types);
     return (
       <React.Fragment>
-        <h2 className="graphql-explorer__subheading">Possible Types</h2>
+        <h2 className="graphql-explorer__subheading">{title}</h2>
         <ul className="graphql-explorer__defs">
           {types.map(type => (
             <li key={type.name}>
@@ -103,7 +114,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
             return (
               <li key={key}>
                 {fieldLink}
-                {argLinks}: {typeLink}
+                {argLinks}: {typeLink} <GraphQLDefaultValue field={field} />
                 {description && (
                   <div className="graphql-explorer__defs__description">
                     <MarkdownPreview markdown={description} />

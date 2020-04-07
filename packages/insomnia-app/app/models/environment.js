@@ -38,7 +38,7 @@ export function migrate(doc: Environment): Environment {
   return doc;
 }
 
-export function create(patch: Object = {}): Promise<Environment> {
+export function create(patch: $Shape<Environment> = {}): Promise<Environment> {
   if (!patch.parentId) {
     throw new Error(`New Environment missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
@@ -46,7 +46,7 @@ export function create(patch: Object = {}): Promise<Environment> {
   return db.docCreate(type, patch);
 }
 
-export function update(environment: Environment, patch: Object): Promise<Environment> {
+export function update(environment: Environment, patch: $Shape<Environment>): Promise<Environment> {
   return db.docUpdate(environment, patch);
 }
 

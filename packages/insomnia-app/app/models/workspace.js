@@ -34,7 +34,7 @@ export function getById(id: string): Promise<Workspace | null> {
   return db.get(type, id);
 }
 
-export async function create(patch: Object = {}): Promise<Workspace> {
+export async function create(patch: $Shape<Workspace> = {}): Promise<Workspace> {
   return db.docCreate(type, patch);
 }
 
@@ -53,7 +53,7 @@ export function count() {
   return db.count(type);
 }
 
-export function update(workspace: Workspace, patch: Object): Promise<Workspace> {
+export function update(workspace: Workspace, patch: $Shape<Workspace>): Promise<Workspace> {
   return db.docUpdate(workspace, patch);
 }
 

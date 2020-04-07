@@ -168,6 +168,7 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
     } else if (currentType) {
       child = (
         <GraphQLExplorerType
+          schema={schema}
           type={currentType}
           onNavigateType={this._handleNavigateType}
           onNavigateField={this._handleNavigateField}

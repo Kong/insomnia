@@ -46,7 +46,7 @@ export function migrate(doc: CookieJar): CookieJar {
   return doc;
 }
 
-export async function create(patch: Object = {}) {
+export async function create(patch: $Shape<CookieJar>) {
   if (!patch.parentId) {
     throw new Error(`New CookieJar missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
@@ -80,7 +80,7 @@ export async function getById(id: string) {
   return db.get(type, id);
 }
 
-export async function update(cookieJar: CookieJar, patch: Object = {}) {
+export async function update(cookieJar: CookieJar, patch: $Shape<CookieJar> = {}) {
   return db.docUpdate(cookieJar, patch);
 }
 

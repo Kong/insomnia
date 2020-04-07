@@ -162,7 +162,7 @@
     "insomnia-url": "^2.1.4",
     "insomnia-xpath": "^2.1.4",
     "isomorphic-git": "^0.70.3",
-    "json-order": "^1.0.12",
+    "json-order": "^1.1.0",
     "jsonlint": "^1.6.3",
     "jsonpath": "^1.0.2",
     "jwt-authentication": "^0.4.0",

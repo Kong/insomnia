@@ -10,6 +10,7 @@ describe('init()', () => {
     expect(Object.keys(result)).toEqual(['app']);
     expect(Object.keys(result.app).sort()).toEqual([
       'alert',
+      'dialog',
       'getPath',
       'prompt',
       'showGenericModalDialog',
