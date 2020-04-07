@@ -16,9 +16,6 @@ export function init(
     getId(): string {
       return renderedRequest._id;
     },
-    getBodyText(): string {
-      return renderedRequest.body.text || '';
-    },
     getName(): string {
       return renderedRequest.name;
     },
@@ -33,9 +30,6 @@ export function init(
     },
     setUrl(url: string): void {
       renderedRequest.url = url;
-    },
-    setBodyText(text: string): void {
-      renderedRequest.body.text = text;
     },
     setCookie(name: string, value: string): void {
       const cookie = renderedRequest.cookies.find(c => c.name === name);
@@ -153,6 +147,22 @@ export function init(
     },
     setBody(body: RequestBody): void {
       renderedRequest.body = body;
+    },
+
+    // ~~~~~~~~~~~~~~~~~~ //
+    // Deprecated Methods //
+    // ~~~~~~~~~~~~~~~~~~ //
+
+    /** @deprecated in favor of getting the whole body by getBody */
+    getBodyText(): string {
+      console.warn('request.getBodyText() is deprecated. Use request.getBody() instead.');
+      return renderedRequest.body.text || '';
+    },
+
+    /** @deprecated in favor of setting the whole body by setBody */
+    setBodyText(text: string): void {
+      console.warn('request.setBodyText() is deprecated. Use request.setBody() instead.');
+      renderedRequest.body.text = text;
     },
 
     // NOTE: For these to make sense, we'd need to account for cookies in the jar as well
