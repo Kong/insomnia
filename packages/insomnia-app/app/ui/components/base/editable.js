@@ -55,8 +55,7 @@ class Editable extends PureComponent {
       this._handleEditEnd();
     } else if (e.keyCode === 27) {
       // Pressed Escape
-      // NOTE: This blur causes a save because we save on blur
-      // TODO: Make escape blur without saving
+      this._input.value = this.props.value;
       this._input && this._input.blur();
     }
   }

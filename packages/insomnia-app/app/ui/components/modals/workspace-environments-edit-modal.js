@@ -400,7 +400,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     };
 
     return (
-      <Modal ref={this._setModalRef} wide tall {...(this.props: Object)}>
+      <Modal ref={this._setModalRef} wide tall noEscape {...(this.props: Object)}>
         <ModalHeader>Manage Environments</ModalHeader>
         <ModalBody noScroll className="env-modal">
           <div className="env-modal__sidebar">
