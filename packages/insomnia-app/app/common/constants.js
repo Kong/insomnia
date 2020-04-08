@@ -30,6 +30,10 @@ export function getAppEnvironment() {
   return process.env.INSOMNIA_ENV || 'production';
 }
 
+export function getAppReleaseDate() {
+  return packageJSON.app.releaseDate;
+}
+
 export function getTempDir() {
   // NOTE: Using a fairly unique name here because "insomnia" is a common word
   const { app } = electron.remote || electron;
