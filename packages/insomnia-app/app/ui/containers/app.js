@@ -14,6 +14,7 @@ import Toast from '../components/toast';
 import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
+import {ACTIVITY_HOME} from '../components/activity-bar/activity-bar';
 import {
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
@@ -26,6 +27,7 @@ import {
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
   PREVIEW_MODE_SOURCE,
+  getAppName,
 } from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as entitiesActions from '../redux/modules/entities';
@@ -917,20 +919,24 @@ class App extends PureComponent {
   }
 
   /**
-   * Update document.title to be "Workspace (Environment) – Request"
+   * Update document.title to be "Workspace (Environment) – Request" when not home
    * @private
    */
   _updateDocumentTitle() {
     const { activeWorkspace, activeEnvironment, activeRequest } = this.props;
 
-    let title = activeWorkspace.name;
+    let title;
 
-    if (activeEnvironment) {
-      title += ` (${activeEnvironment.name})`;
-    }
-
-    if (activeRequest) {
-      title += ` – ${activeRequest.name}`;
+    if (this.props.activity === ACTIVITY_HOME) {
+      title = getAppName();
+    } else {
+      title = activeWorkspace.name;
+      if (activeEnvironment) {
+        title += ` (${activeEnvironment.name})`;
+      }
+      if (activeRequest) {
+        title += ` – ${activeRequest.name}`;
+      }
     }
 
     document.title = title;
