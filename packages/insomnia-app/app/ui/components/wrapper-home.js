@@ -331,6 +331,7 @@ async _handleWorkspaceClone() {
     const docMenu = (
       <DocumentCardDropdown
         workspaceId={w._id}
+        apiSpec={apiSpec}
         handleDuplicateWorkspaceById={handleDuplicateWorkspaceById}
         handleRenameWorkspaceById={handleRenameWorkspace}
         handleDeleteWorkspaceById={handleDeleteWorkspaceById}

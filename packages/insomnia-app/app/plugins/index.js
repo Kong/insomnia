@@ -64,6 +64,20 @@ export type WorkspaceAction = {
   icon?: string,
 };
 
+export type DocumentAction = {
+  plugin: Plugin,
+  action: (
+    context: Object,
+    documents: Array<{
+      content: Object,
+      format: string,
+      formatVersion: string,
+    }>,
+  ) => void | Promise<void>,
+  label: string,
+  hideAfterClick?: boolean,
+};
+
 export type RequestHook = {
   plugin: Plugin,
   hook: Function,
@@ -212,6 +226,16 @@ export async function getWorkspaceActions(): Promise<Array<WorkspaceAction>> {
   let extensions = [];
   for (const plugin of await getPlugins()) {
     const actions = plugin.module.workspaceActions || [];
+    extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
+  }
+
+  return extensions;
+}
+
+export async function getDocumentActions(): Promise<Array<DocumentAction>> {
+  let extensions = [];
+  for (const plugin of await getPlugins()) {
+    const actions = plugin.module.documentActions || [];
     extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
   }
 
