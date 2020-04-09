@@ -88,7 +88,7 @@ class VariableEditor extends PureComponent {
           <label>
             Environment Variable
             <select ref={this._setSelectRef} value={value} onChange={this._handleChange}>
-              <option value={`{{ 'my custom template logic' | urlencode }}`}>-- Custom --</option>
+              <option value={"{{ 'my custom template logic' | urlencode }}"}>-- Custom --</option>
               {variables.map((v, i) => (
                 <option key={`${i}::${v.name}`} value={`{{ ${v.name} }}`}>
                   {v.name}

@@ -93,7 +93,7 @@ class Toast extends React.PureComponent<Props, State> {
         updateChannel: !settings.updateChannel,
       };
 
-      notification = await fetch.post(`/notification`, data, session.getCurrentSessionId());
+      notification = await fetch.post('/notification', data, session.getCurrentSessionId());
     } catch (err) {
       console.warn('[toast] Failed to fetch user notifications', err);
     }

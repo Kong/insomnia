@@ -78,7 +78,7 @@ export async function importUri(
     return result;
   }
 
-  let statements = Object.keys(summary)
+  const statements = Object.keys(summary)
     .map(type => {
       const count = summary[type].length;
       const name = models.getModelName(type, count);

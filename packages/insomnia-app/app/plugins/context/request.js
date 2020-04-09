@@ -11,7 +11,7 @@ export function init(
     throw new Error('contexts.request initialized without request');
   }
 
-  const request = {
+  const request = ({
     getId(): string {
       return renderedRequest._id;
     },
@@ -152,7 +152,7 @@ export function init(
     // addCookie (name: string, value: string): void {}
     // getCookie (name: string): string | null {}
     // removeCookie (name: string): void {}
-  };
+  }: Object);
 
   if (readOnly) {
     delete request.setUrl;

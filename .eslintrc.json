@@ -22,6 +22,9 @@
     "comma-dangle": ["error", "always-multiline"],
     "indent": "off",
     "no-var": "error",
+    "no-async-promise-executor": "off",
+    "no-case-declarations": "off",
+    "no-prototype-builtins": "off",
     "no-duplicate-imports": "off",
     "flowtype/space-after-type-colon": "off",
     "react/jsx-uses-react": "error",
@@ -39,7 +42,7 @@
   },
   "settings": {
     "flowtype": {
-      "onlyFilesWithFlowAnnotation": false
+      "onlyFilesWithFlowAnnotation": true
     }
   }
 }

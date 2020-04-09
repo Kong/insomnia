@@ -130,7 +130,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     const cursorIndex = _queryEditor.indexFromPos(cursor);
 
     let operationName = null;
-    let allOperationNames = [];
+    const allOperationNames = [];
 
     // Loop through all operations to see if one contains the cursor.
     for (let i = 0; i < operations.length; i++) {

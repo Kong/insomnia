@@ -133,7 +133,7 @@ class AsapAuth extends React.PureComponent<Props> {
 
     showModal(CodePromptModal, {
       submitName: 'Done',
-      title: `Edit Private Key`,
+      title: 'Edit Private Key',
       defaultValue: authentication.privateKey,
       onChange: this._handleChangePrivateKey,
       enableRender: handleRender || handleGetRenderContext,

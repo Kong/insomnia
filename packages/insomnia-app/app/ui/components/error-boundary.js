@@ -78,7 +78,7 @@ class ErrorBoundary extends React.PureComponent<Props> {
     // Unwrap multiple children into single children for better error isolation
     const childArray = Array.isArray(children) ? children : [children];
     return childArray.map((child, i) => (
-      <SingleErrorBoundary key={i} {...extraProps}>
+      <SingleErrorBoundary key={i} {...(extraProps: Object)}>
         {child}
       </SingleErrorBoundary>
     ));
