@@ -96,7 +96,7 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
       return;
     }
 
-    let history = this._addToHistory();
+    const history = this._addToHistory();
 
     this.setState({
       history,

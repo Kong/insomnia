@@ -148,13 +148,13 @@ function importArgs(args) {
   const authentication = username ? { username: username.trim(), password: password.trim() } : {};
 
   // Headers
-  const headers = [...(pairs['header'] || []), ...(pairs['H'] || [])].map(str => {
+  const headers = [...(pairs.header || []), ...(pairs.H || [])].map(str => {
     const [name, value] = str.split(/:(.*)$/);
     return { name: name.trim(), value: value.trim() };
   });
 
   // Cookies
-  const cookieHeaderValue = [...(pairs['cookie'] || []), ...(pairs['b'] || [])]
+  const cookieHeaderValue = [...(pairs.cookie || []), ...(pairs.b || [])]
     .map(str => {
       const name = str.split('=', 1)[0];
       const value = str.replace(`${name}=`, '');
@@ -188,7 +188,7 @@ function importArgs(args) {
   const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : null;
 
   // Body (Multipart Form Data)
-  const formDataParams = [...(pairs['form'] || []), ...(pairs['F'] || [])].map(str => {
+  const formDataParams = [...(pairs.form || []), ...(pairs.F || [])].map(str => {
     const [name, value] = str.split('=');
     const item = { name };
 
@@ -203,7 +203,7 @@ function importArgs(args) {
   });
 
   // Body
-  let body = mimeType ? { mimeType: mimeType } : {};
+  const body = mimeType ? { mimeType: mimeType } : {};
   if (textBody && bodyAsGET) {
     const bodyParams = textBody.split('&').map(v => {
       const [name, value] = v.split('=');

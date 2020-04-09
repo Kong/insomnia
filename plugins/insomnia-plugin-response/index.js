@@ -233,7 +233,7 @@ function matchXPath(bodyStr, query) {
 
 function matchHeader(headers, name) {
   if (!headers.length) {
-    throw new Error(`No headers available`);
+    throw new Error('No headers available');
   }
 
   const header = headers.find(h => h.name.toLowerCase() === name.toLowerCase());

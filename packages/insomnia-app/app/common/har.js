@@ -178,7 +178,7 @@ export async function exportHar(exportRequests: Array<ExportRequest>): Promise<H
   // Export HAR entries with the same start time in order to keep their workspace sort order.
   const startedDateTime = new Date().toISOString();
   const entries: Array<HarEntry> = [];
-  for (let exportRequest of exportRequests) {
+  for (const exportRequest of exportRequests) {
     const request: Request | null = await models.request.getById(exportRequest.requestId);
     if (!request) {
       continue;
@@ -305,9 +305,9 @@ async function _applyRequestPluginHooks(
     newRenderedRequest = clone(newRenderedRequest);
 
     const context = {
-      ...pluginContexts.app.init(),
-      ...pluginContexts.request.init(newRenderedRequest, renderedContext),
-      ...pluginContexts.store.init(plugin),
+      ...(pluginContexts.app.init(): Object),
+      ...(pluginContexts.request.init(newRenderedRequest, renderedContext): Object),
+      ...(pluginContexts.store.init(plugin): Object),
     };
 
     try {

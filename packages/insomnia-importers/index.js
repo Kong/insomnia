@@ -22,7 +22,7 @@ module.exports.convert = async function(contents) {
       if (resources.length > 0 && resources[0].variable) {
         resources[0].environment = resources[0].variable;
       }
-      let parsedData = {
+      const parsedData = {
         type: {
           id: importer.id,
           name: importer.name,

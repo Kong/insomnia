@@ -154,7 +154,7 @@ export function keyedDebounce(callback: Function, millis: number = DEBOUNCE_MILL
 export function debounce(callback: Function, millis: number = DEBOUNCE_MILLIS): Function {
   // For regular debounce, just use a keyed debounce with a fixed key
   return keyedDebounce(results => {
-    callback.apply(null, results['__key__']);
+    callback.apply(null, results.__key__);
   }, millis).bind(null, '__key__');
 }
 
@@ -235,7 +235,7 @@ export function jsonParseOr(str: string, fallback: any): any {
 }
 
 export function escapeHTML(unsafeText: string): string {
-  let div = document.createElement('div');
+  const div = document.createElement('div');
   div.innerText = unsafeText;
   return div.innerHTML;
 }

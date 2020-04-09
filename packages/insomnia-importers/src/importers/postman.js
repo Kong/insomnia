@@ -29,7 +29,7 @@ module.exports.convert = function(rawData) {
 
 function importCollection(collection, schema) {
   const postmanVariable = importVariable(collection.variable || []);
-  let collectionFolder = {
+  const collectionFolder = {
     parentId: '__WORKSPACE_ID__',
     _id: `__GRP_${requestGroupCount++}__`,
     _type: 'request_group',
@@ -43,7 +43,7 @@ function importCollection(collection, schema) {
 }
 
 function importVariable(items) {
-  let variable = {};
+  const variable = {};
   if (items.length === 0) {
     return null;
   } else {
@@ -402,7 +402,7 @@ function findValueByKey(array, key) {
     return '';
   }
 
-  let obj = array.find(o => o.key === key);
+  const obj = array.find(o => o.key === key);
   if (obj) {
     return obj.value || '';
   }

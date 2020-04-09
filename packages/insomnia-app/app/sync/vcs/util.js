@@ -361,7 +361,7 @@ export function getRootSnapshot(a: Branch | null, b: Branch | null): string | nu
   const snapshotsA = a ? a.snapshots : [];
   const snapshotsB = b ? b.snapshots : [];
 
-  let rootSnapshotId = '';
+  const rootSnapshotId = '';
   for (let ai = snapshotsA.length - 1; ai >= 0; ai--) {
     for (let bi = snapshotsB.length - 1; bi >= 0; bi--) {
       if (snapshotsA[ai] === snapshotsB[bi]) {
@@ -471,7 +471,7 @@ export function updateStateWithConflictResolutions(
 
     // Add the conflict
     if (choose !== null) {
-      newStateMap[key] = { ...stateEntry, blob: choose };
+      newStateMap[key] = { ...(stateEntry: Object), blob: choose };
       continue;
     }
 

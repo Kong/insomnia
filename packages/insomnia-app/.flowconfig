@@ -12,3 +12,7 @@
 esproposal.decorators=ignore
 
 [lints]
+
+[untyped]
+<PROJECT_ROOT>/node_modules/graphql
+<PROJECT_ROOT>/node_modules/iterall

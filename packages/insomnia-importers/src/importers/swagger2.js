@@ -136,10 +136,10 @@ function parseEndpoints(document) {
     let { tags } = endpointSchema;
     if (!tags || tags.length === 0) tags = [''];
     tags.forEach((tag, index) => {
-      let id = endpointSchema.operationId
+      const id = endpointSchema.operationId
         ? `${endpointSchema.operationId}${index > 0 ? index : ''}`
         : `__REQUEST_${requestCount++}__`;
-      let parentId = folderLookup[tag] || defaultParent;
+      const parentId = folderLookup[tag] || defaultParent;
       requests.push(importRequest(document, endpointSchema, globalMimeTypes, id, parentId));
     });
   });
@@ -160,7 +160,7 @@ function importFolderItem(item, parentId) {
     parentId,
     _id: `__GRP_${requestGroupCount++}__`,
     _type: 'request_group',
-    name: item.name || `Folder {requestGroupCount}`,
+    name: item.name || 'Folder {requestGroupCount}',
     description: item.description || '',
   };
 }
@@ -245,7 +245,7 @@ function setupAuthentication(securityDefinitions, endpointSchema, request) {
           request.headers.push({
             name: definition.name,
             disabled: false,
-            value: `{{ api_key }}`,
+            value: '{{ api_key }}',
           });
         }
         if (definition.in === 'query') {

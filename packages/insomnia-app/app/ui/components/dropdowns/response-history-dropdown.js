@@ -158,7 +158,7 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
         <Dropdown
           ref={this._setDropdownRef}
           key={activeResponse ? activeResponse._id : 'n/a'}
-          {...extraProps}>
+          {...(extraProps: Object)}>
           <DropdownButton className="btn btn--super-compact tall" title="Response history">
             {activeResponse && <TimeFromNow timestamp={activeResponse.created} capitalize />}
             {!isLatestResponseActive ? (

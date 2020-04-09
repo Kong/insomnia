@@ -179,7 +179,7 @@ export const HAWK_ALGORITHM_SHA1 = 'sha1';
 
 // json-order constants
 export const JSON_ORDER_PREFIX = '&';
-export const JSON_ORDER_SEPARATOR = `~|`;
+export const JSON_ORDER_SEPARATOR = '~|';
 
 const authTypesMap = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
