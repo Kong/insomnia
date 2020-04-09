@@ -80,7 +80,7 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
     const { selectedWorkspaceId } = this.state;
     return (
       <form onSubmit={this._handleSubmit}>
-        <Modal ref={this._setModalRef} {...this.props}>
+        <Modal ref={this._setModalRef} {...(this.props: Object)}>
           <ModalHeader key="header">Move Folder to Workspace</ModalHeader>
           <ModalBody key="body" className="pad">
             <div className="form-control form-control--outlined">

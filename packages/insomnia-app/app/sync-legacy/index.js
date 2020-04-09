@@ -228,7 +228,7 @@ export async function push(resourceGroupId = null) {
     return;
   }
 
-  let dirtyResources = [];
+  const dirtyResources = [];
   for (const r of allDirtyResources) {
     // Check if resource type is blacklisted by user
     const config = await store.getConfig(r.resourceGroupId);
@@ -803,7 +803,7 @@ export async function createResourceForDoc(doc) {
 }
 
 export async function getOrCreateResourceForDoc(doc) {
-  let [resource, ...extras] = await store.findResourcesByDocId(doc._id);
+  const [resource, ...extras] = await store.findResourcesByDocId(doc._id);
 
   // Sometimes there may be multiple resources created by accident for
   // the same doc. Let's delete the extras here if there are any.

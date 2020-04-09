@@ -13,9 +13,9 @@ export const CHANGE_UPDATE = 'update';
 export const CHANGE_REMOVE = 'remove';
 
 const database = {};
-const db = {
+const db = ({
   _empty: true,
-};
+}: Object);
 
 // ~~~~~~~ //
 // HELPERS //
@@ -566,7 +566,7 @@ export const withAncestors = (database.withAncestors = async function(
   let docsToReturn = doc ? [doc] : [];
 
   async function next(docs: Array<BaseModel>): Promise<Array<BaseModel>> {
-    let foundDocs = [];
+    const foundDocs = [];
     for (const d: BaseModel of docs) {
       for (const type of types) {
         // If the doc is null, we want to search for parentId === null
@@ -651,7 +651,7 @@ async function _send<T>(fnName: string, ...args: Array<any>): Promise<T> {
  * Run various database repair scripts
  */
 export async function _repairDatabase() {
-  console.log(`[fix] Running database repairs`);
+  console.log('[fix] Running database repairs');
   for (const workspace of await find(models.workspace.type)) {
     await _repairBaseEnvironments(workspace);
     await _fixMultipleCookieJars(workspace);

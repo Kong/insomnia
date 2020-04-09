@@ -160,7 +160,7 @@ class CookiesModal extends PureComponent<Props, State> {
     const cookies = this._getVisibleCookies();
 
     return (
-      <Modal ref={this._setModalRef} wide tall {...this.props}>
+      <Modal ref={this._setModalRef} wide tall {...(this.props: Object)}>
         <ModalHeader>Manage Cookies</ModalHeader>
         <ModalBody noScroll>
           {cookieJar && (

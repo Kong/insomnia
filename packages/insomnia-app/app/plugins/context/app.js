@@ -64,7 +64,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
         return new Promise((resolve, reject) => {
           showPrompt({
             title,
-            ...(options || {}),
+            ...(options || {}: Object),
             onCancel() {
               reject(new Error(`Prompt ${title} cancelled`));
             },

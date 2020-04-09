@@ -167,7 +167,7 @@ function getThemeBlockCSS(block?: ThemeBlock): string {
   };
 
   const addNewLine = () => {
-    css += `\n`;
+    css += '\n';
   };
 
   if (block.background) {

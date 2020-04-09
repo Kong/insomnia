@@ -91,7 +91,7 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
   render() {
     const { children, className, ...extraProps } = this.props;
     return (
-      <Dropdown beside {...extraProps}>
+      <Dropdown beside {...(extraProps: Object)}>
         <DropdownButton className={className}>{children}</DropdownButton>
         <DropdownDivider>
           <span>

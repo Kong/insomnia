@@ -111,7 +111,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     // Sanitize expires field
     const expires = new Date(cookie.expires || '').getTime();
     if (isNaN(expires)) {
-      delete cookie.expires;
+      cookie.expires = null;
     } else {
       cookie.expires = expires;
     }
@@ -219,68 +219,67 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     const checkFields = ['secure', 'httpOnly'];
 
     return (
-      <Modal ref={this._setModalRef} {...this.props}>
+      <Modal ref={this._setModalRef} {...(this.props: Object)}>
         <ModalHeader>Edit Cookie</ModalHeader>
         <ModalBody className="cookie-modify">
-          {cookieJar &&
-            cookie && (
-              <Tabs>
-                <TabList>
-                  <Tab tabIndex="-1">
-                    <button>Friendly</button>
-                  </Tab>
-                  <Tab tabIndex="-1">
-                    <button>Raw</button>
-                  </Tab>
-                </TabList>
-                <TabPanel>
-                  <div className="pad">
-                    <div className="form-row">
-                      {this._renderInputField('key')}
-                      {this._renderInputField('value')}
-                    </div>
-                    <div className="form-row">
-                      {this._renderInputField('domain')}
-                      {this._renderInputField('path')}
-                    </div>
-                    {this._renderInputField(
-                      'expires',
-                      isNaN(new Date(cookie.expires || 0).getTime()) ? 'Invalid Date' : null,
-                    )}
+          {cookieJar && cookie && (
+            <Tabs>
+              <TabList>
+                <Tab tabIndex="-1">
+                  <button>Friendly</button>
+                </Tab>
+                <Tab tabIndex="-1">
+                  <button>Raw</button>
+                </Tab>
+              </TabList>
+              <TabPanel>
+                <div className="pad">
+                  <div className="form-row">
+                    {this._renderInputField('key')}
+                    {this._renderInputField('value')}
                   </div>
-                  <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
-                    {checkFields.map((field, i) => {
-                      const checked = !!cookie[field];
+                  <div className="form-row">
+                    {this._renderInputField('domain')}
+                    {this._renderInputField('path')}
+                  </div>
+                  {this._renderInputField(
+                    'expires',
+                    isNaN(new Date(cookie.expires || 0).getTime()) ? 'Invalid Date' : null,
+                  )}
+                </div>
+                <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
+                  {checkFields.map((field, i) => {
+                    const checked = !!cookie[field];
 
-                      return (
-                        <label key={i}>
-                          {CookieModifyModal._capitalize(field)}
-                          <input
-                            className="space-left"
-                            type="checkbox"
-                            name={field}
-                            defaultChecked={checked || false}
-                            onChange={e => this._handleChange(field, e)}
-                          />
-                        </label>
-                      );
-                    })}
-                  </div>
-                </TabPanel>
-                <TabPanel className="react-tabs__tab-panel pad">
-                  <div className="form-control form-control--outlined">
-                    <label>
-                      Raw Cookie String
-                      <input
-                        type="text"
-                        onChange={this._handleChangeRawValue}
-                        defaultValue={this._getRawCookieString()}
-                      />
-                    </label>
-                  </div>
-                </TabPanel>
-              </Tabs>
-            )}
+                    return (
+                      <label key={i}>
+                        {CookieModifyModal._capitalize(field)}
+                        <input
+                          className="space-left"
+                          type="checkbox"
+                          name={field}
+                          defaultChecked={checked || false}
+                          onChange={e => this._handleChange(field, e)}
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
+              </TabPanel>
+              <TabPanel className="react-tabs__tab-panel pad">
+                <div className="form-control form-control--outlined">
+                  <label>
+                    Raw Cookie String
+                    <input
+                      type="text"
+                      onChange={this._handleChangeRawValue}
+                      defaultValue={this._getRawCookieString()}
+                    />
+                  </label>
+                </div>
+              </TabPanel>
+            </Tabs>
+          )}
         </ModalBody>
         <ModalFooter>
           <button className="btn" onClick={this.hide}>

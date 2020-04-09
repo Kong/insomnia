@@ -359,7 +359,7 @@ export function createWindow() {
     ],
   };
 
-  let template = [];
+  const template = [];
 
   template.push(applicationMenu);
   template.push(editMenu);

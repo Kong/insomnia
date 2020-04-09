@@ -40,7 +40,7 @@ const StyledButton: React.ComponentType<Props> = styled.button`
 
 class Button extends React.Component<Props> {
   render() {
-    return <StyledButton {...this.props} />;
+    return <StyledButton {...(this.props: Object)} />;
   }
 }
 

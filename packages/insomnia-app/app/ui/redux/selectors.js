@@ -202,7 +202,7 @@ export const selectSidebarChildren = createSelector(
       return children;
     }
 
-    let pinnedChildren = [];
+    const pinnedChildren = [];
     const childrenTree = next(activeWorkspace._id, pinnedChildren);
     const matchedChildren = matchChildren(childrenTree);
 

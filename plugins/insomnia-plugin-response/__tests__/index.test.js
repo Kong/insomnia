@@ -561,7 +561,7 @@ function _genTestContext(requests, responses, extraInfoRoot) {
       },
     },
     store: {
-      hasItem: key => store.hasOwnProperty(key),
+      hasItem: key => Object.prototype.hasOwnProperty.call(store, key),
       getItem: key => store[key],
       removeItem: key => {
         delete store[key];

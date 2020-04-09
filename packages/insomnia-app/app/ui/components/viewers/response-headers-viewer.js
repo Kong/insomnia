@@ -11,7 +11,7 @@ type Props = {
 
 function validateURL(urlString) {
   try {
-    let parsedUrl = new URL(urlString);
+    const parsedUrl = new URL(urlString);
     if (!parsedUrl.hostname) return false;
     return true;
   } catch (error) {

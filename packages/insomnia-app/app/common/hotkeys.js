@@ -329,7 +329,7 @@ const defaultRegistry: HotKeyRegistry = {
 };
 
 function copyKeyCombs(sources: Array<KeyCombination>): Array<KeyCombination> {
-  let targets: Array<KeyCombination> = [];
+  const targets: Array<KeyCombination> = [];
   sources.forEach(keyComb => {
     targets.push(Object.assign({}, keyComb));
   });
@@ -354,7 +354,7 @@ export function newDefaultKeyBindings(hotKeyRefId: string): KeyBindings {
  * @returns {HotKeyRegistry}
  */
 export function newDefaultRegistry(): HotKeyRegistry {
-  let newDefaults: HotKeyRegistry = {};
+  const newDefaults: HotKeyRegistry = {};
   for (const refId in defaultRegistry) {
     if (!defaultRegistry.hasOwnProperty(refId)) {
       continue;

@@ -125,7 +125,7 @@ export async function buildRenderContext(
   }
 
   // Render the context with itself to fill in the rest.
-  let finalRenderContext = renderContext;
+  const finalRenderContext = renderContext;
 
   const keys = _getOrderedEnvironmentKeys(finalRenderContext);
 
@@ -299,7 +299,7 @@ export async function getRenderContext(
   // Get Keys from ancestors (e.g. Folders)
   if (ancestors) {
     for (let idx = 0; idx < ancestors.length; idx++) {
-      let ancestor: any = ancestors[idx] || {};
+      const ancestor: any = ancestors[idx] || {};
       if (
         ancestor.type === 'RequestGroup' &&
         ancestor.hasOwnProperty('environment') &&
