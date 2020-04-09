@@ -51,7 +51,7 @@
     "eslint-plugin-standard": "^4.0.1",
     "flow-bin": "^0.122.0",
     "husky": "^1.0.0-rc.9",
-    "jest": "^24.7.1",
+    "jest": "^25.3.0",
     "lerna": "^3.19.0",
     "prettier": "^1.16.4",
     "pretty-quick": "^1.10.0",

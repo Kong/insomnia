@@ -46,6 +46,8 @@ const ScrollWrapperStyled: React.ComponentType<{}> = styled.div`
 
 const ErrorCount: React.ComponentType<{}> = styled.div`
   margin-right: var(--padding-md);
+  display: inline-flex;
+  align-items: center;
 `;
 
 const JumpButton: React.ComponentType<{}> = styled.button`
@@ -92,15 +94,6 @@ const Header: React.ComponentType<{}> = styled.header`
   border-left: 0;
   border-right: 0;
   padding-left: var(--padding-md);
-
-  & > * {
-    display: flex;
-    align-items: stretch;
-
-    svg {
-      margin-right: 0.2rem;
-    }
-  }
 `;
 
 class NoticeTable extends React.PureComponent<Props, State> {
@@ -133,7 +126,9 @@ class NoticeTable extends React.PureComponent<Props, State> {
     const { notices, compact } = this.props;
     const { collapsed } = this.state;
 
-    const caret = collapsed ? <SvgIcon icon={IconEnum.chevronUp} /> : <SvgIcon icon={IconEnum.chevronDown} />;
+    const caret = collapsed
+      ? <SvgIcon icon={IconEnum.chevronUp} />
+      : <SvgIcon icon={IconEnum.chevronDown} />;
 
     const errors = notices.filter(n => n.type === 'error');
     const warnings = notices.filter(n => n.type === 'warning');
@@ -144,12 +139,12 @@ class NoticeTable extends React.PureComponent<Props, State> {
           <div>
             {errors.length > 0 && (
               <ErrorCount>
-                <SvgIcon icon={IconEnum.error} /> {errors.length}
+                <SvgIcon icon={IconEnum.error} label={errors.length} />
               </ErrorCount>
             )}
             {warnings.length > 0 && (
               <ErrorCount>
-                <SvgIcon icon={IconEnum.warning} /> {warnings.length}
+                <SvgIcon icon={IconEnum.warning} label={warnings.length} />
               </ErrorCount>
             )}
           </div>

@@ -4,15 +4,16 @@ import styled from 'styled-components';
 import SvgIcon, { IconEnum } from './svg-icon';
 
 type Props = {
-  onChange: (e: SyntheticEvent<HTMLInputElement>) => any,
-  onClick: (e: SyntheticEvent<HTMLDivElement>) => any,
-  tagLabel: string,
-  docTitle: string,
-  docVersion: string,
   docBranch: string,
   docLog: string,
-  selectable: boolean,
   docMenu: React.Node,
+  docTitle: string,
+  docVersion: string,
+  tagLabel: string,
+
+  onChange?: (e: SyntheticEvent<HTMLInputElement>) => any,
+  onClick?: (e: SyntheticEvent<HTMLDivElement>) => any,
+  selectable?: boolean,
 };
 type State = {
   selected: boolean,
@@ -69,9 +70,10 @@ const StyledCard: React.ComponentType<{}> = styled.div`
 const CardHeader: React.ComponentType<{}> = styled.div`
   text-align: left;
   padding-top: var(--padding-md);
-  padding-right: var(--padding-sm);
+  padding-right: 0;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 
   .header-item {
     font-size: var(--font-size-xs);
@@ -89,12 +91,19 @@ const CardHeader: React.ComponentType<{}> = styled.div`
   }
 
   .card-menu {
-    padding: 0 var(--padding-sm) 0 0;
+    padding: var(--padding-sm);
+    margin: calc(-1 * var(--padding-sm));
+    margin-right: var(--padding-sm);
+    height: 100%;
     display: flex;
     align-items: center;
     font-weight: 900;
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-lg);
     color: var(--font-color);
+
+    &:hover {
+      background-color: var(--hl-xxs);
+    }
   }
 
   .card-checkbox-label {
@@ -235,7 +244,7 @@ class Card extends React.PureComponent<Props, State> {
             </div>
           ) : (
             <div className="header-item card-menu">
-            {docMenu}
+              {docMenu}
             </div>
           )}
         </CardHeader>

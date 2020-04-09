@@ -1,7 +1,9 @@
 import React from 'react';
 import Card from './card';
 import CardContainer from './card-container';
-import { withKnobs, text, boolean } from '@storybook/addon-knobs';
+import { boolean, text, withKnobs } from '@storybook/addon-knobs';
+import { SvgIcon } from '../index';
+import { IconEnum } from './svg-icon';
 
 export default {
   title: 'Card',
@@ -10,25 +12,23 @@ export default {
 
 export const _default = () => (
   <Card
-    onClick={null}
-    tagLabel={text('OAS 2.0')}
+    tagLabel={text('Label', 'OpenAPI 3.0')}
     docTitle={text('Title', 'Cloud OS Login')}
     docVersion={text('Version', 'v2.8.4')}
     docBranch={text('Branch', 'feat/small-changes')}
     docLog={text('Log', '2 hours ago by gschier')}
-    docMenu="..."
+    docMenu={<SvgIcon icon={IconEnum.ellipsis} />}
   />
 );
 
 export const _selectable = () => (
   <Card
-    onClick={null}
-    tagLabel={text('OAS 2.0')}
+    tagLabel={text('Label', 'OpenAPI 3.0')}
     docTitle={text('Title', 'Cloud OS Login')}
     docVersion={text('Version', 'v2.8.4')}
     docBranch={text('Branch', 'feat/small-changes')}
     docLog={text('Log', '2 hours ago by gschier')}
-    docMenu="..."
+    docMenu={<SvgIcon icon={IconEnum.ellipsis} />}
     selectable
   />
 );
@@ -36,102 +36,102 @@ export const _selectable = () => (
 export const _deck = () => (
   <CardContainer>
     <Card
-      onClick={null}
-      tagLabel={text('OAS 2.0')}
+      tagLabel={text('Label', 'OpenAPI 3.0')}
       docTitle={text('Title', 'Cloud OS Login')}
       docVersion={text('Version', 'v2.8.4')}
       docBranch={text('Branch', 'feat/small-changes')}
       docLog={text('Log', '2 hours ago by gschier')}
+      docMenu={<SvgIcon icon={IconEnum.ellipsis} />}
       selectable={boolean('Selectable?', false)}
     />
     <Card
-      onClick={null}
-      tagLabel={text('OAS 2.0')}
+      tagLabel={text('Label', 'OpenAPI 3.0')}
       docTitle={text('Title', 'Cloud OS Login')}
       docVersion={text('Version', 'v2.8.4')}
       docBranch={text('Branch', 'feat/small-changes')}
       docLog={text('Log', '2 hours ago by gschier')}
+      docMenu={<SvgIcon icon={IconEnum.ellipsis} />}
       selectable={boolean('Selectable?', false)}
     />
     <Card
-      onClick={null}
-      tagLabel={text('OAS 2.0')}
+      tagLabel={text('Label', 'OpenAPI 3.0')}
       docTitle={text('Title', 'Cloud OS Login')}
       docVersion={text('Version', 'v2.8.4')}
       docBranch={text('Branch', 'feat/small-changes')}
       docLog={text('Log', '2 hours ago by gschier')}
+      docMenu={<SvgIcon icon={IconEnum.ellipsis} />}
       selectable={boolean('Selectable?', false)}
     />
     <Card
-      onClick={null}
-      tagLabel={text('OAS 2.0')}
+      tagLabel={text('Label', 'OpenAPI 3.0')}
       docTitle={text('Title', 'Cloud OS Login')}
       docVersion={text('Version', 'v2.8.4')}
       docBranch={text('Branch', 'feat/small-changes')}
       docLog={text('Log', '2 hours ago by gschier')}
+      docMenu={<SvgIcon icon={IconEnum.ellipsis} />}
       selectable={boolean('Selectable?', false)}
     />
     <Card
-      onClick={null}
-      tagLabel={text('OAS 2.0')}
+      tagLabel={text('Label', 'OpenAPI 3.0')}
       docTitle={text('Title', 'Cloud OS Login')}
       docVersion={text('Version', 'v2.8.4')}
       docBranch={text('Branch', 'feat/small-changes')}
       docLog={text('Log', '2 hours ago by gschier')}
+      docMenu={<SvgIcon icon={IconEnum.ellipsis} />}
       selectable={boolean('Selectable?', false)}
     />
     <Card
-      onClick={null}
-      tagLabel={text('OAS 2.0')}
+      tagLabel={text('Label', 'OpenAPI 3.0')}
       docTitle={text('Title', 'Cloud OS Login')}
       docVersion={text('Version', 'v2.8.4')}
       docBranch={text('Branch', 'feat/small-changes')}
       docLog={text('Log', '2 hours ago by gschier')}
+      docMenu={<SvgIcon icon={IconEnum.ellipsis} />}
       selectable={boolean('Selectable?', false)}
     />
     <Card
-      onClick={null}
-      tagLabel={text('OAS 2.0')}
+      tagLabel={text('Label', 'OpenAPI 3.0')}
       docTitle={text('Title', 'Cloud OS Login')}
       docVersion={text('Version', 'v2.8.4')}
       docBranch={text('Branch', 'feat/small-changes')}
       docLog={text('Log', '2 hours ago by gschier')}
+      docMenu={<SvgIcon icon={IconEnum.ellipsis} />}
       selectable={boolean('Selectable?', false)}
     />
     <Card
-      onClick={null}
-      tagLabel={text('OAS 2.0')}
+      tagLabel={text('Label', 'OpenAPI 3.0')}
       docTitle={text('Title', 'Cloud OS Login')}
       docVersion={text('Version', 'v2.8.4')}
       docBranch={text('Branch', 'feat/small-changes')}
       docLog={text('Log', '2 hours ago by gschier')}
+      docMenu={<SvgIcon icon={IconEnum.ellipsis} />}
       selectable={boolean('Selectable?', false)}
     />
     <Card
-      onClick={null}
-      tagLabel={text('OAS 2.0')}
+      tagLabel={text('Label', 'OpenAPI 3.0')}
       docTitle={text('Title', 'Cloud OS Login')}
       docVersion={text('Version', 'v2.8.4')}
       docBranch={text('Branch', 'feat/small-changes')}
       docLog={text('Log', '2 hours ago by gschier')}
+      docMenu={<SvgIcon icon={IconEnum.ellipsis} />}
       selectable={boolean('Selectable?', false)}
     />
     <Card
-      onClick={null}
-      tagLabel={text('OAS 2.0')}
+      tagLabel={text('Label', 'OpenAPI 3.0')}
       docTitle={text('Title', 'Cloud OS Login')}
       docVersion={text('Version', 'v2.8.4')}
       docBranch={text('Branch', 'feat/small-changes')}
       docLog={text('Log', '2 hours ago by gschier')}
+      docMenu={<SvgIcon icon={IconEnum.ellipsis} />}
       selectable={boolean('Selectable?', false)}
     />
     <Card
-      onClick={null}
-      tagLabel={text('OAS 2.0')}
+      tagLabel={text('Label', 'OpenAPI 3.0')}
       docTitle={text('Title', 'Cloud OS Login')}
       docVersion={text('Version', 'v2.8.4')}
       docBranch={text('Branch', 'feat/small-changes')}
       docLog={text('Log', '2 hours ago by gschier')}
+      docMenu={<SvgIcon icon={IconEnum.ellipsis} />}
       selectable={boolean('Selectable?', false)}
     />
   </CardContainer>

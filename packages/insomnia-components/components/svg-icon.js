@@ -10,75 +10,74 @@ import MemoSvgIcnErrors from '../assets/svgr/IcnErrors';
 import MemoSvgIcnGitBranch from '../assets/svgr/IcnGitBranch';
 import MemoSvgIcnGithubLogo from '../assets/svgr/IcnGithubLogo';
 import MemoSvgIcnWarning from '../assets/svgr/IcnWarning';
+import MemoSvgIcnEllipsis from '../assets/svgr/IcnEllipsis';
 
 export const ThemeEnum = {
   default: 'default',
-  danger: 'danger',
-  warning: 'warning',
-  notice: 'notice',
   highlight: 'highlight',
+
+  // Colors
+  danger: 'danger',
+  info: 'info',
+  notice: 'notice',
+  success: 'success',
+  surprise: 'surprise',
+  warning: 'warning',
 };
 
 type ThemeKeys = $Values<typeof ThemeEnum>;
 
 export const IconEnum = {
-  info: 'info',
-  clock: 'clock',
   arrowRight: 'arrow-right',
-  chevronUp: 'chevron-up',
   chevronDown: 'chevron-down',
-  warning: 'warning',
+  chevronUp: 'chevron-up',
+  clock: 'clock',
+  ellipsis: 'ellipsis',
   error: 'error',
-  github: 'github',
   gitBranch: 'git-branch',
+  github: 'github',
+  info: 'info',
+  warning: 'warning',
 };
 
 type IconKeys = $Values<typeof IconEnum>;
 
 type Props = {
   icon: IconKeys;
+  label?: React.Node,
 };
 
-const SvgIconStyled: React.ComponentType<{theme: ThemeKeys}> = styled.div`
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  position: relative;
+const SvgIconStyled: React.ComponentType<{theme: ThemeKeys, hasLabel: boolean}> = styled.div`
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
 
   svg {
-    display: block;
-    height: 100%;
-    width: auto;
-    transform: scale(0.9);
-    ${
-      ({ theme }) => {
-        switch (theme) {
-          case ThemeEnum.danger:
-          case ThemeEnum.warning:
-          case ThemeEnum.notice:
-            return css`
-                  fill: var(--color-${theme});
-                  color: var(--color-font-${theme});`;
-          case ThemeEnum.highlight:
-            return css`
-                  fill: var(--hl);
-                  color: var(--color-font-danger);`;
-          case ThemeEnum.default:
-          default:
-            return css`
-                  fill: var(--color-font);
-                  color: var(--color-font);`;
-        }
+    flex-shrink: 0;
+    user-select: none;
+    ${({ hasLabel }) => hasLabel ? css`margin-right: var(--padding-xs);` : null}
+    ${({ theme }) => {
+      switch (theme) {
+        case ThemeEnum.danger:
+        case ThemeEnum.info:
+        case ThemeEnum.notice:
+        case ThemeEnum.success:
+        case ThemeEnum.surprise:
+        case ThemeEnum.warning:
+          return css`
+                        fill: var(--color-${theme});
+                        color: var(--color-font-${theme});`;
+        case ThemeEnum.highlight:
+          return css`
+                        fill: var(--hl);
+                        color: var(--color-font-danger);`;
+        case ThemeEnum.default:
+        default:
+          return css`
+                        fill: var(--color-font);
+                        color: var(--color-font);`;
       }
-    }
-
-    // Ensures that the svg doesn't "bounce out" of the div
-    // (flex-box parent styles can cause this to happen)
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    }}
   }
 `;
 
@@ -88,24 +87,33 @@ type IconDictionary = {
 
 class SvgIcon extends React.Component<Props> {
   static icons: IconDictionary = {
-    [IconEnum.info]: [ThemeEnum.highlight, MemoSvgIcnInfo],
-    [IconEnum.clock]: [ThemeEnum.default, MemoSvgIcnClock],
+    [IconEnum.arrowRight]: [ThemeEnum.highlight, MemoSvgIcnArrowRight],
     [IconEnum.chevronDown]: [ThemeEnum.default, MemoSvgIcnChevronDown],
     [IconEnum.chevronUp]: [ThemeEnum.default, MemoSvgIcnChevronUp],
-    [IconEnum.arrowRight]: [ThemeEnum.highlight, MemoSvgIcnArrowRight],
+    [IconEnum.clock]: [ThemeEnum.default, MemoSvgIcnClock],
+    [IconEnum.ellipsis]: [ThemeEnum.default, MemoSvgIcnEllipsis],
     [IconEnum.error]: [ThemeEnum.danger, MemoSvgIcnErrors],
     [IconEnum.gitBranch]: [ThemeEnum.default, MemoSvgIcnGitBranch],
     [IconEnum.github]: [ThemeEnum.default, MemoSvgIcnGithubLogo],
+    [IconEnum.info]: [ThemeEnum.highlight, MemoSvgIcnInfo],
     [IconEnum.warning]: [ThemeEnum.notice, MemoSvgIcnWarning],
   };
 
   render() {
-    const { icon } = this.props;
+    const { icon, label } = this.props;
+
+    if (!SvgIcon.icons[icon]) {
+      throw new Error(
+        `Invalid icon "${icon}" used. Must be one of ${Object.values(SvgIcon.icons).join('|')}`,
+      );
+    }
+
     const [theme, Svg] = SvgIcon.icons[icon];
 
     return (
-      <SvgIconStyled theme={theme}>
+      <SvgIconStyled theme={theme} hasLabel={!!label}>
         <Svg />
+        {label}
       </SvgIconStyled>
     );
   }

@@ -1,4 +1,3 @@
-import _AppHeader from './components/app-header';
 import _Breadcrumb from './components/breadcrumb';
 import _Header from './components/header';
 import _Switch from './components/switch';
@@ -10,7 +9,6 @@ import _NoticeTable from './components/notice-table';
 import _SvgIcon from './components/svg-icon';
 import * as table from './components/table';
 
-export const AppHeader = _AppHeader;
 export const Breadcrumb = _Breadcrumb;
 export const Header = _Header;
 export const Switch = _Switch;

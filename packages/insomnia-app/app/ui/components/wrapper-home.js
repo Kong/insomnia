@@ -6,18 +6,19 @@ import * as db from '../../common/database';
 import autobind from 'autobind-decorator';
 import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
-import { Breadcrumb, Card, CardContainer, Header } from 'insomnia-components';
+import { Breadcrumb, Card, CardContainer, Header, SvgIcon } from 'insomnia-components';
 import DocumentCardDropdown from './dropdowns/document-card-dropdown';
 import KeydownBinder from './keydown-binder';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
-import { showAlert, showPrompt, showModal } from './modals';
+import { showAlert, showModal, showPrompt } from './modals';
 import * as models from '../../models';
 import { trackEvent } from '../../common/analytics';
 import YAML from 'yaml';
 import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
 import type { GlobalActivity } from './activity-bar/activity-bar';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from './activity-bar/activity-bar';
 import { fuzzyMatch } from '../../common/misc';
 import type { WrapperProps } from './wrapper';
 import Notice from './notice';
@@ -27,7 +28,6 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from './base/
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import designerLogo from '../images/insomnia-designer-logo.svg';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from './activity-bar/activity-bar';
 import { MemPlugin } from '../../sync/git/mem-plugin';
 import GitVCS, { GIT_NAMESPACE_DIR } from '../../sync/git/git-vcs';
 import { parseApiSpec } from '../../common/api-specs';
@@ -335,7 +335,7 @@ async _handleWorkspaceClone() {
         handleDuplicateWorkspaceById={handleDuplicateWorkspaceById}
         handleRenameWorkspaceById={handleRenameWorkspace}
         handleDeleteWorkspaceById={handleDeleteWorkspaceById}
-      >...</DocumentCardDropdown>
+      ><SvgIcon icon="ellipsis"/></DocumentCardDropdown>
     );
 
     if (spec || w.scope === 'spec') {

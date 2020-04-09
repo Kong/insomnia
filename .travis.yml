@@ -19,7 +19,6 @@ script:
   - node --version
   - npm --version
   - npm run bootstrap
-  - npm install -g cross-env # Because Travis can't find it for some reason
   - npm test
   # Setup branch because Travis doesn't provide a good way to get it
   - export TRAVIS_CURRENT_BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)

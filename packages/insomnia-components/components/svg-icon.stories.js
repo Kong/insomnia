@@ -1,10 +1,14 @@
 // @flow
 import * as React from 'react';
+import { text, withKnobs } from '@storybook/addon-knobs';
 import SvgIcon, { IconEnum } from './svg-icon';
 import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
 import styled from 'styled-components';
 
-export default { title: 'SvgIcon' };
+export default {
+  title: 'SvgIcon',
+  decorators: [withKnobs],
+};
 
 const Wrapper = styled.div`
   font-size: 1.5rem;
@@ -15,6 +19,8 @@ const Wrapper = styled.div`
 Wrapper.displayName = '...';
 
 export const _default = () => <SvgIcon icon={IconEnum.arrowRight} />;
+
+export const labelled = () => <SvgIcon icon={IconEnum.warning} label={text('Label', '3 Warnings')} />;
 
 export const reference = () => (
   <React.Fragment>
