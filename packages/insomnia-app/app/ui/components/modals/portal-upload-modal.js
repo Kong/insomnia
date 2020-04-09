@@ -205,7 +205,7 @@ class PortalUploadModal extends React.PureComponent<{}, State> {
   }
 
   async _handleKongPortalUserWorkspaceChange(name: string) {
-    await this._patchWorkspaceMeta({kongPortalUserWorkspace: name});
+    await this._patchWorkspaceMeta({ kongPortalUserWorkspace: name });
   }
 
   async _patchWorkspaceMeta(patch: $Shape<WorkspaceMeta>) {
@@ -215,9 +215,9 @@ class PortalUploadModal extends React.PureComponent<{}, State> {
   }
 
   _setWorkspaceMetaToState(workspaceMeta: WorkspaceMeta) {
-    const {kongPortalApiUrl, kongPortalRbacToken, kongPortalUserWorkspace, kongPortalUrl} = workspaceMeta;
+    const { kongPortalApiUrl, kongPortalRbacToken, kongPortalUserWorkspace, kongPortalUrl } = workspaceMeta;
 
-    this.setState({kongPortalApiUrl, kongPortalRbacToken, kongPortalUserWorkspace, kongPortalUrl});
+    this.setState({ kongPortalApiUrl, kongPortalRbacToken, kongPortalUserWorkspace, kongPortalUrl });
   }
 
   _setModalRef(ref: ?Modal) {
@@ -225,13 +225,13 @@ class PortalUploadModal extends React.PureComponent<{}, State> {
   }
 
   async show(options: {workspaceId: string}) {
-    const {workspaceId} = options;
+    const { workspaceId } = options;
 
     const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
     const apiSpec = await models.apiSpec.getByParentId(workspaceId);
 
     this._setWorkspaceMetaToState(workspaceMeta);
-    this.setState({apiSpec, workspaceId});
+    this.setState({ apiSpec, workspaceId });
 
     this._hasConnectInfo() ? this._handleReturnToUpload() : this._handleEditKongConnection();
     this.modal && this.modal.show();
@@ -253,8 +253,8 @@ class PortalUploadModal extends React.PureComponent<{}, State> {
     } = this.state;
 
     // Check input > enable connection & upload
-    let connectIsEnabled = kongPortalApiUrl.length > 0 && kongPortalUserWorkspace.length > 0;
-    let uploadIsEnabled = kongSpecFileName.length > 0;
+    const connectIsEnabled = kongPortalApiUrl.length > 0 && kongPortalUserWorkspace.length > 0;
+    const uploadIsEnabled = kongSpecFileName.length > 0;
 
     const helpLink = <HelpLink slug="deploy-to-dev-portal" />;
 

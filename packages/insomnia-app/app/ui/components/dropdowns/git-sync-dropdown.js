@@ -214,7 +214,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     const { branch } = this.state;
     const { vcs, renderDropdownButton } = this.props;
 
-    let renderBtn = renderDropdownButton || (children => (
+    const renderBtn = renderDropdownButton || (children => (
       <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
         {children}
       </DropdownButton>
@@ -225,7 +225,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
         <React.Fragment>
           <i className="fa fa-code-fork space-right" />
           Setup Git Sync
-        </React.Fragment>
+        </React.Fragment>,
       );
     }
 
@@ -234,7 +234,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
       <React.Fragment>
         <div className="ellipsis">{initializing ? 'Initializing...' : branch}</div>
         <i className="fa fa-code-fork space-left" />
-      </React.Fragment>
+      </React.Fragment>,
     );
   }
 

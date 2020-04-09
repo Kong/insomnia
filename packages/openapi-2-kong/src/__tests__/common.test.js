@@ -118,7 +118,7 @@ describe('common', () => {
 
     it('works with slugify options', async () => {
       const p = { 'x-kong-name': 'This Needs Slugify' };
-      const result = getName(p, '', {replacement: '?', lower: true});
+      const result = getName(p, '', { replacement: '?', lower: true });
       expect(result).toBe('this?needs?slugify');
     });
   });
@@ -129,8 +129,8 @@ describe('common', () => {
       expect(generateSlug('foo bar')).toBe('foo_bar');
       expect(generateSlug('foo, bar')).toBe('foo_bar');
       expect(generateSlug('Foo Bar')).toBe('Foo_Bar');
-      expect(generateSlug('foo bar', {replacement: '?'})).toBe('foo?bar');
-      expect(generateSlug('FOO Bar', {lower: true})).toBe('foo_bar');
+      expect(generateSlug('foo bar', { replacement: '?' })).toBe('foo?bar');
+      expect(generateSlug('FOO Bar', { lower: true })).toBe('foo_bar');
     });
   });
 

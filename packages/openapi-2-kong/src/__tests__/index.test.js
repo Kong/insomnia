@@ -47,7 +47,7 @@ describe('index', () => {
         '/': {
           post: {
             responses: {
-              '200': {
+              200: {
                 $ref: '#/components/schemas/dog',
               },
             },
@@ -69,7 +69,7 @@ describe('index', () => {
         '/': {
           post: {
             responses: {
-              '200': {
+              200: {
                 name: { type: 'string' },
               },
             },

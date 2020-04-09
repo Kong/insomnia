@@ -166,7 +166,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
     let swaggerUiSpec;
     try {
-      const {document} = parseApiSpec(activeApiSpec.contents);
+      const { document } = parseApiSpec(activeApiSpec.contents);
       swaggerUiSpec = document;
     } catch (err) {
       swaggerUiSpec = {};
@@ -189,7 +189,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             gridCenter={
               <Switch
                 onClick={this._handleDebugSpec}
-                optionItems={[{'label': 'DESIGN', 'selected': true}, {'label': 'DEBUG', 'selected': false}]}
+                optionItems={[{ label: 'DESIGN', selected: true }, { label: 'DEBUG', selected: false }]}
                 error={lintErrorsExist ? 'Failed to generate requests due to linting errors.' : undefined}
               />
             }

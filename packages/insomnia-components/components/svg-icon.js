@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import styled, {css} from 'styled-components';
+import styled, { css } from 'styled-components';
 import MemoSvgIcnArrowRight from '../assets/svgr/IcnArrowRight';
 import MemoSvgIcnInfo from '../assets/svgr/IcnInfo';
 import MemoSvgIcnClock from '../assets/svgr/IcnClock';
@@ -51,7 +51,7 @@ const SvgIconStyled: React.ComponentType<{theme: ThemeKeys}> = styled.div`
     width: auto;
     transform: scale(0.9);
     ${
-      ({theme}) => {
+      ({ theme }) => {
         switch (theme) {
           case ThemeEnum.danger:
           case ThemeEnum.warning:

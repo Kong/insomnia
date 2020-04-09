@@ -79,7 +79,7 @@ import WrapperDebug from './wrapper-debug';
 import { importRaw } from '../../common/import';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { DropdownButton } from './base/dropdown';
-import type {ForceToWorkspace} from '../redux/modules/helpers';
+import type { ForceToWorkspace } from '../redux/modules/helpers';
 
 export type WrapperProps = {
   // Helper Functions
@@ -282,7 +282,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
   async _handleWorkspaceActivityChange(workspaceId: string, activeActivity: GlobalActivity) {
     this.props.handleSetActiveActivity(activeActivity);
-    await models.workspaceMeta.updateByParentId(workspaceId, {activeActivity});
+    await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity });
   }
 
   async _handleSetDesignActivity(workspaceId: string) {

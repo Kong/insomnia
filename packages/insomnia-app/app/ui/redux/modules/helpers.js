@@ -1,5 +1,5 @@
 // @flow
-import {showModal} from '../../components/modals';
+import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';
 
 export const ForceToWorkspaceKeys = {

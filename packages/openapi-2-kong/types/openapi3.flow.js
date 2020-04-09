@@ -38,7 +38,7 @@ declare type OA3SecurityRequirement = {|
   // TODO
 |};
 
-declare type OA3Operation = {|
+declare type OA3Operation = {
   description?: string,
   summary?: string,
   tags?: Array<string>,
@@ -49,13 +49,13 @@ declare type OA3Operation = {|
   deprecated?: boolean,
   security?: Array<OA3SecurityRequirement>,
   servers?: Array<OA3Server>,
-|};
+};
 
 declare type OA3Reference = {|
   $ref: string,
 |};
 
-declare type OA3Server = {|
+declare type OA3Server = {
   url: string,
   description?: string,
   variables?: {
@@ -65,7 +65,7 @@ declare type OA3Server = {|
       description?: string,
     },
   },
-|};
+};
 
 declare type OA3PathItem = {|
   $ref?: string,

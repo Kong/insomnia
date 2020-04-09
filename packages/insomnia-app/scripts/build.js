@@ -155,7 +155,7 @@ async function install(relDir) {
     const prefix = path.resolve(__dirname, relDir);
 
     // Link all plugins
-    const plugins = path.resolve(__dirname, `../../../plugins`);
+    const plugins = path.resolve(__dirname, '../../../plugins');
     for (const dir of fs.readdirSync(plugins)) {
       if (dir.indexOf('.') === 0) {
         continue;
@@ -170,7 +170,7 @@ async function install(relDir) {
     }
 
     // Link all packages
-    const packages = path.resolve(__dirname, `../../../packages`);
+    const packages = path.resolve(__dirname, '../../../packages');
     for (const dir of fs.readdirSync(packages)) {
       // Don't link ourselves
       if (dir === packageJson.name) {

@@ -17,7 +17,7 @@ export function parseApiSpec(rawDocument: string): {
   try {
     result.document = YAML.parse(rawDocument);
   } catch (err) {
-    throw new Error(`Failed to parse API spec`);
+    throw new Error('Failed to parse API spec');
   }
 
   if (result.document) {

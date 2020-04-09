@@ -2,7 +2,7 @@
 import * as React from 'react';
 import styled from 'styled-components';
 import classnames from 'classnames';
-import SvgIcon, {IconEnum} from './svg-icon';
+import SvgIcon, { IconEnum } from './svg-icon';
 
 type Item = {
   label: string,
@@ -94,7 +94,7 @@ class Switch extends React.PureComponent<Props> {
     return (
       <StyledSwitch className={className}>
         <div
-          className={classnames('switch', {'switch-disabled': disabled})}
+          className={classnames('switch', { 'switch-disabled': disabled })}
           onClick={disabled ? undefined : onClick}
           title={error}
         >

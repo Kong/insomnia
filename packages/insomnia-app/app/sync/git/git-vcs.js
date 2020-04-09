@@ -224,7 +224,7 @@ export default class GitVCS {
   }
 
   async pull(creds?: GitCredentials | null): Promise<void> {
-    console.log(`[git] Pull remote=origin`, await this.getBranch());
+    console.log('[git] Pull remote=origin', await this.getBranch());
     trackEvent('Git', 'Pull');
 
     return git.pull({
@@ -248,7 +248,7 @@ export default class GitVCS {
     depth: number | null,
     creds?: GitCredentials | null,
   ): Promise<void> {
-    console.log(`[git] Fetch remote=origin`);
+    console.log('[git] Fetch remote=origin');
 
     return git.fetch({
       ...this._baseOpts,

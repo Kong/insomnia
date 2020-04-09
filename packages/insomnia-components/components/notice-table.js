@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
 import Button from './button';
 import styled from 'styled-components';
-import SvgIcon, {IconEnum} from './svg-icon';
+import SvgIcon, { IconEnum } from './svg-icon';
 
 type Notice = {|
   type: 'warning' | 'error',

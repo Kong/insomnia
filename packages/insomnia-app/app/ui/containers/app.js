@@ -14,7 +14,7 @@ import Toast from '../components/toast';
 import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
-import {ACTIVITY_HOME} from '../components/activity-bar/activity-bar';
+import { ACTIVITY_HOME } from '../components/activity-bar/activity-bar';
 import {
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
@@ -356,7 +356,7 @@ class App extends PureComponent {
   }
 
   _workspaceRename(callback, workspaceId) {
-    let workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
     console.dir(AppContext);
     showPrompt({
       title: `Rename ${AppContext.workspace}`,
@@ -365,14 +365,14 @@ class App extends PureComponent {
       selectText: true,
       label: 'Name',
       onComplete: async name => {
-        await models.workspace.update(workspace, {'name': name});
+        await models.workspace.update(workspace, { name: name });
         callback();
       },
     });
   }
 
   _workspaceDeleteById(callback, workspaceId) {
-    let workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
     showModal(AskModal, {
           title: `Delete ${AppContext.workspace}`,
           message: `Do you really want to delete ${workspace.name}?`,
@@ -388,7 +388,7 @@ class App extends PureComponent {
   }
 
   _workspaceDuplicateById(callback, workspaceId) {
-    let workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
 
     showPrompt({
       title: `Duplicate ${AppContext.workspace}`,

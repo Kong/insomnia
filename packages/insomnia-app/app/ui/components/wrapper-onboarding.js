@@ -12,8 +12,8 @@ import PageLayout from './page-layout';
 import * as db from '../../common/database';
 import chartSrc from '../images/chart.svg';
 import imgSrc from '../images/logo.png';
-import type {ForceToWorkspace} from '../redux/modules/helpers';
-import {ForceToWorkspaceKeys} from '../redux/modules/helpers';
+import type { ForceToWorkspace } from '../redux/modules/helpers';
+import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 
 type Props = {|
   wrapperProps: WrapperProps,

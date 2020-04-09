@@ -48,7 +48,7 @@ export async function importUri(
   let rawText;
 
   // If GH preview, force raw
-  let url = new URL(uri);
+  const url = new URL(uri);
   if (url.origin === 'https://github.com') {
     uri = uri
       .replace('https://github.com', 'https://raw.githubusercontent.com')
@@ -241,7 +241,7 @@ export async function importRaw(
   // Store spec under workspace if it's OpenAPI
   for (const workspace of importedDocs[models.workspace.type]) {
     if (isApiSpec(results.type.id)) {
-      let spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
+      const spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
         contents: rawContent,
         contentType: 'yaml',
       });

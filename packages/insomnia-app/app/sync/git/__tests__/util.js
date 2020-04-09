@@ -33,5 +33,5 @@ export async function assertAsyncError(promise, code) {
     return;
   }
 
-  throw new Error(`Promise did not throw`);
+  throw new Error('Promise did not throw');
 }

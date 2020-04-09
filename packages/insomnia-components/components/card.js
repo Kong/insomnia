@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import styled from 'styled-components';
-import SvgIcon, {IconEnum} from './svg-icon';
+import SvgIcon, { IconEnum } from './svg-icon';
 
 type Props = {
   onChange: (e: SyntheticEvent<HTMLInputElement>) => any,

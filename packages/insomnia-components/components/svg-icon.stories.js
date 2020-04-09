@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import SvgIcon, {IconEnum} from './svg-icon';
+import SvgIcon, { IconEnum } from './svg-icon';
 import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
 import styled from 'styled-components';
 

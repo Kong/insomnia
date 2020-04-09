@@ -122,8 +122,8 @@ class CodePromptModal extends PureComponent {
           noScroll
           className="wide tall"
           style={showCopyButton
-            ? {display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gridTemplateRows: 'auto minmax(0, 1fr)'}
-            : {minHeight: '10rem'}
+            ? { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gridTemplateRows: 'auto minmax(0, 1fr)' }
+            : { minHeight: '10rem' }
           }>
           {showCopyButton
            ? <div className="pad-top-sm pad-right-sm"><CopyButton content={defaultValue} className="pull-right btn btn--clicky" /></div>

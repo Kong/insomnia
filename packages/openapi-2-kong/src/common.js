@@ -29,13 +29,13 @@ export function getName(
   defaultValue?: string = 'openapi',
   slugifyOptions?: {replacement: string, lower: boolean},
 ): string {
-  let name;
+  let name: string = '';
 
   if ((obj: any)['x-kong-name']) {
     name = (obj: any)['x-kong-name'];
   }
 
-  if (!name && obj.info && obj.info.title) {
+  if (!name && obj.info && typeof obj.info.title === 'string') {
     name = obj.info.title;
   }
 

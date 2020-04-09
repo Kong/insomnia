@@ -29,7 +29,7 @@ describe('plugins', () => {
 
   describe('generatePlugin()', () => {
     it('generates plugin given a plugin key, and value', async () => {
-      const pluginKey = `x-kong-plugin-key-auth`;
+      const pluginKey = 'x-kong-plugin-key-auth';
       const pluginValue = {
         name: 'key-auth',
         config: {
@@ -47,7 +47,7 @@ describe('plugins', () => {
     });
 
     it('generates name from key when missing `name` from value', async () => {
-      const pluginKey = `x-kong-plugin-key-auth`;
+      const pluginKey = 'x-kong-plugin-key-auth';
       const pluginValue = {
         config: {
           key_names: ['x-api-key'],

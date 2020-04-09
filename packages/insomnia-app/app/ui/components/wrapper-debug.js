@@ -4,7 +4,7 @@ import autobind from 'autobind-decorator';
 import { Breadcrumb, Switch, Header } from 'insomnia-components';
 import PageLayout from './page-layout';
 import type { WrapperProps } from './wrapper';
-import {ACTIVITY_HOME} from './activity-bar/activity-bar';
+import { ACTIVITY_HOME } from './activity-bar/activity-bar';
 import RequestPane from './request-pane';
 import ErrorBoundary from './error-boundary';
 import ResponsePane from './response-pane';
@@ -147,7 +147,7 @@ class WrapperDebug extends React.PureComponent<Props> {
                   </React.Fragment>
               }
               gridCenter={
-                  <Switch onClick={this._handleDesign} optionItems={[{'label': 'DESIGN', 'selected': false}, {'label': 'DEBUG', 'selected': true}]} />
+                  <Switch onClick={this._handleDesign} optionItems={[{ label: 'DESIGN', selected: false }, { label: 'DEBUG', selected: true }]} />
               }
               gridRight={gitSyncDropdown}
           />

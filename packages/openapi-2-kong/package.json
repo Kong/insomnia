@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "main": "dist/index.js",
   "scripts": {
-    "test": "jest",
+    "test": "flow check && jest",
     "build": "webpack --config webpack.config.js --display errors-only"
   },
   "husky": {

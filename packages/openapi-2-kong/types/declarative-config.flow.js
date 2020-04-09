@@ -22,6 +22,7 @@ declare type DCService = {|
   name: string,
   routes: Array<DCRoute>,
   tags: Array<string>,
+  plugins?: Array<DCPlugin>,
 |};
 
 declare type DCTarget = {|

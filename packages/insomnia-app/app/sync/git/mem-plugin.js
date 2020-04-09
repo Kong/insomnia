@@ -63,7 +63,7 @@ export class MemPlugin {
         return toPrint;
       }
 
-      let indent = new Array((dir.match(/\//g) || []).length).join('|   ');
+      const indent = new Array((dir.match(/\//g) || []).length).join('|   ');
       if (entry.type === 'dir') {
         if (entry.path !== baseDir) {
           toPrint += `${indent}${entry.name}/\n`;

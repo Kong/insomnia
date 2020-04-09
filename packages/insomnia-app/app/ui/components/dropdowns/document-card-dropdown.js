@@ -2,7 +2,7 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { Dropdown, DropdownButton, DropdownItem, DropdownDivider } from '../base/dropdown';
-import {showModal} from '../modals';
+import { showModal } from '../modals';
 import PortalUploadModal from '../modals/portal-upload-modal';
 
 type Props = {
@@ -16,23 +16,23 @@ type Props = {
 @autobind
 class DocumentCardDropdown extends React.PureComponent<Props> {
   _handleDuplicateWorkspace() {
-    const {workspaceId, handleDuplicateWorkspaceById} = this.props;
+    const { workspaceId, handleDuplicateWorkspaceById } = this.props;
     handleDuplicateWorkspaceById(() => null, workspaceId);
   }
 
   _handleRenameWorkspace() {
-    const {workspaceId, handleRenameWorkspaceById} = this.props;
+    const { workspaceId, handleRenameWorkspaceById } = this.props;
     handleRenameWorkspaceById(() => null, workspaceId);
   }
 
   _handleDeleteWorkspaceBy() {
-    const {workspaceId, handleDeleteWorkspaceById} = this.props;
+    const { workspaceId, handleDeleteWorkspaceById } = this.props;
     handleDeleteWorkspaceById(() => null, workspaceId);
   }
 
   _handleDeployPortal() {
-    const {workspaceId} = this.props;
-    showModal(PortalUploadModal, {workspaceId});
+    const { workspaceId } = this.props;
+    showModal(PortalUploadModal, { workspaceId });
   }
 
   render() {

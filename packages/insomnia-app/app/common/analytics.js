@@ -129,18 +129,18 @@ export async function _trackPageView(location: string) {
 }
 
 async function _getDefaultParams(): Promise<Array<RequestParameter>> {
-  let settings = await models.settings.getOrCreate();
+  const settings = await models.settings.getOrCreate();
 
   // Migrate old GA ID into settings model
   let { deviceId } = settings;
   if (!deviceId) {
-    const oldId = (window && window.localStorage['gaClientId']) || null;
+    const oldId = (window && window.localStorage.gaClientId) || null;
     deviceId = oldId || uuid.v4();
     await models.settings.update(settings, { deviceId });
   }
 
   // Prepping user agent string prior to sending to GA due to Electron base UA not being GA friendly.
-  let ua = String(window.navigator.userAgent)
+  const ua = String(window.navigator.userAgent)
   .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
   .replace(/Electron\/\d+\.\d+\.\d+ /, '');
 
@@ -187,10 +187,10 @@ db.onChange(async changes => {
 });
 
 async function _sendToGoogle(params: Array<RequestParameter>, queueable: boolean) {
-  let settings = await models.settings.getOrCreate();
+  const settings = await models.settings.getOrCreate();
   if (!settings.enableAnalytics) {
     if (queueable) {
-      console.log(`[ga] Queued event`, params);
+      console.log('[ga] Queued event', params);
       _queuedEvents.push(params);
     }
     return;

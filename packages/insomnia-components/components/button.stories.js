@@ -3,7 +3,7 @@ import * as React from 'react';
 import { select, withKnobs } from '@storybook/addon-knobs';
 import Button from './button';
 import styled from 'styled-components';
-import SvgIcon, {IconEnum} from './svg-icon';
+import SvgIcon, { IconEnum } from './svg-icon';
 
 export default {
   title: 'Button',

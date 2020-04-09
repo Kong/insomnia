@@ -102,8 +102,8 @@ export function generateServiceName(server: OA3Server, ingressName: string, inde
   const backend = (server: Object)['x-kubernetes-backend'];
 
   // x-kubernetes-backend.serviceName
-  if (backend && backend['serviceName']) {
-    return backend['serviceName'];
+  if (backend && backend.serviceName) {
+    return backend.serviceName;
   }
 
   // x-kubernetes-service.metadata.name
