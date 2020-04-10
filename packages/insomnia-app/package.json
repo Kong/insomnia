@@ -16,7 +16,6 @@
     "publishRepo": "kong/studio",
     "plugins": [
       "kong-declarative-config",
-      "kong-deploy",
       "kong-k8s-config",
       "kong-studio-themes",
       "insomnia-plugin-base64",
@@ -52,7 +51,6 @@
     "dev-server-port": 3334
   },
   "jest": {
-    "testTimeout": 10000,
     "setupFiles": [
       "./__jest__/setup.js"
     ],
@@ -168,7 +166,6 @@
     "jsonpath": "^1.0.2",
     "jwt-authentication": "^0.4.0",
     "kong-declarative-config": "^1.0.0",
-    "kong-deploy": "^1.0.0",
     "kong-k8s-config": "^1.0.0",
     "kong-studio-themes": "^1.0.0",
     "marked": "^0.3.9",
