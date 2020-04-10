@@ -15,3 +15,4 @@ screenshots/
 **/dist/
 **/.cache/
 **/svgr/
+**/storybook-static/

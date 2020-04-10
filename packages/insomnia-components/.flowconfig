@@ -2,6 +2,7 @@
 .*/node_modules/.*
 ./.cache
 ./dist
+./storybook-static
 
 [include]
 
