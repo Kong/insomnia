@@ -289,7 +289,7 @@ async _handleWorkspaceClone() {
     let specFormatVersion = null;
     try {
       const result = parseApiSpec(apiSpec.contents);
-      spec = result.document;
+      spec = result.contents;
       specFormat = result.format;
       specFormatVersion = result.formatVersion;
     } catch (err) {

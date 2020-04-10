@@ -14,7 +14,7 @@ describe('parseApiSpec()', () => {
     const expected = {
       format: 'openapi',
       formatVersion: '3.0.0',
-      document: objSpec,
+      contents: objSpec,
     };
 
     const yamlSpec = YAML.stringify(objSpec);
@@ -33,7 +33,7 @@ describe('parseApiSpec()', () => {
     const expected = {
       format: 'swagger',
       formatVersion: '2.0.0',
-      document: objSpec,
+      contents: objSpec,
     };
 
     const yamlSpec = YAML.stringify(objSpec);
@@ -52,7 +52,7 @@ describe('parseApiSpec()', () => {
     const expected = {
       format: null,
       formatVersion: null,
-      document: objSpec,
+      contents: objSpec,
     };
 
     const yamlSpec = YAML.stringify(objSpec);
@@ -66,7 +66,7 @@ describe('parseApiSpec()', () => {
     const expected = {
       format: null,
       formatVersion: null,
-      document: null,
+      contents: null,
     };
 
     expect(parseApiSpec('')).toEqual(expected);

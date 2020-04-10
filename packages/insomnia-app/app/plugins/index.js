@@ -28,15 +28,6 @@ export type TemplateTag = {
   templateTag: PluginTemplateTag,
 };
 
-export type ConfigGenerator = {
-  plugin: Plugin,
-  generate: (
-    content: Object,
-    format: 'openapi',
-    formatVersion: string,
-  ) => Promise<{document?: string, error?: string}>,
-};
-
 export type RequestGroupAction = {
   plugin: Plugin,
   action: (
@@ -64,16 +55,20 @@ export type WorkspaceAction = {
   icon?: string,
 };
 
+export type SpecInfo = {
+  contents: Object,
+  format: string,
+  formatVersion: string,
+};
+
+export type ConfigGenerator = {
+  plugin: Plugin,
+  generate: (info: SpecInfo) => Promise<{document?: string, error?: string}>,
+};
+
 export type DocumentAction = {
   plugin: Plugin,
-  action: (
-    context: Object,
-    documents: Array<{
-      content: Object,
-      format: string,
-      formatVersion: string,
-    }>,
-  ) => void | Promise<void>,
+  action: (context: Object, documents: SpecInfo) => void | Promise<void>,
   label: string,
   hideAfterClick?: boolean,
 };

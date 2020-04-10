@@ -73,7 +73,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
         ...pluginContexts.store.init(p.plugin),
       };
 
-      await p.action(context, [parseApiSpec(apiSpec.contents)]);
+      await p.action(context, parseApiSpec(apiSpec.contents));
     } catch (err) {
       showError({
         title: 'Document Action Failed',

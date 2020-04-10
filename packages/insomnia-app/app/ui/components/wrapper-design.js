@@ -166,8 +166,8 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
     let swaggerUiSpec;
     try {
-      const { document } = parseApiSpec(activeApiSpec.contents);
-      swaggerUiSpec = document;
+      const { contents } = parseApiSpec(activeApiSpec.contents);
+      swaggerUiSpec = contents;
     } catch (err) {
       swaggerUiSpec = {};
     }

@@ -3,7 +3,7 @@ const o2k = require('openapi-2-kong');
 
 module.exports = {
   label: 'Declarative Config',
-  generate: async (contents, format, formatVersion) => {
+  generate: async ({ contents, format, formatVersion }) => {
     const isSupported = format === 'openapi' && formatVersion.match(/^3./);
 
     // Return to signify that it's not supported
