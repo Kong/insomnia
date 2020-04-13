@@ -21,6 +21,7 @@ import { setFont } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
 import FileInputButton from '../base/file-input-button';
+import { CertificateBundleType } from '../../../models/settings';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -166,10 +167,13 @@ class General extends React.PureComponent<Props, State> {
   renderCertificateBundleSettings() {
     const { settings } = this.props;
 
-    const userProvidedValue = 'userProvided';
-    const defaultOption = <option value="default">-- System Default --</option>;
-    const windowsOption = <option value="windowsCertStore">Windows Certificate Store</option>;
-    const userOption = <option value={userProvidedValue}>Custom Bundle</option>;
+    const defaultOption = (
+      <option value={CertificateBundleType.default}>-- System Default --</option>
+    );
+    const windowsOption = (
+      <option value={CertificateBundleType.windowsCertStore}>Windows Certificate Store</option>
+    );
+    const userOption = <option value={CertificateBundleType.userProvided}>Custom Bundle</option>;
 
     const disabled = !settings.validateSSL;
     return (
@@ -178,10 +182,10 @@ class General extends React.PureComponent<Props, State> {
         <div className="form-row pad-top-sm">
           <div className="form-control form-control--outlined">
             <label>
-              Select Certificate Bundle
+              Certificate Bundle
               <select
-                name="caBundle"
-                value={settings.caBundle}
+                name="caBundleType"
+                value={settings.caBundleType}
                 disabled={disabled}
                 onChange={this._handleUpdateSetting}>
                 {defaultOption}
@@ -190,10 +194,10 @@ class General extends React.PureComponent<Props, State> {
               </select>
             </label>
           </div>
-          {settings.caBundle === userProvidedValue && (
+          {settings.caBundleType === CertificateBundleType.userProvided && (
             <div className="form-control form-control--outlined">
               <label>
-                Select Custom Bundle
+                Custom Bundle
                 <FileInputButton
                   className="btn btn--clicky"
                   name="CA Bundle"
@@ -397,7 +401,7 @@ class General extends React.PureComponent<Props, State> {
           )}
         </div>
 
-        <h3>Certificate Authority</h3>
+        <h3>Certificates</h3>
 
         {this.renderCertificateBundleSettings()}
 

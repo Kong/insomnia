@@ -64,6 +64,7 @@ import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 import aws4 from 'aws4';
 import { buildMultipart } from './multipart';
+import { CertificateBundleType } from '../models/settings';
 
 export type ResponsePatch = {|
   statusMessage?: string,
@@ -349,7 +350,7 @@ export async function _actuallySend(
       }
 
       // Setup Certifcate Authority
-      if (isWindows() && settings.caBundle === 'windowsCertStore') {
+      if (settings.caBundleType === CertificateBundleType.windowsCertStore && isWindows()) {
         const baseCAPath = getTempDir();
         const fullCAPath = pathJoin(baseCAPath, 'windows.pem');
         let caFile = '';
@@ -373,7 +374,7 @@ export async function _actuallySend(
         });
 
         setOpt(Curl.option.CAINFO, caFile);
-      } else if (settings.caBundle === 'userProvided') {
+      } else if (settings.caBundleType === CertificateBundleType.userProvided) {
         setOpt(Curl.option.CAINFO, settings.caBundlePath);
         console.log('[net] Set CA to user provided file ', settings.caBundlePath);
       } else if (isMac()) {
