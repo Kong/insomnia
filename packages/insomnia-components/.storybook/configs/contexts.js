@@ -1,11 +1,11 @@
 import * as React from 'react';
 
 const ThemeProvider = props => {
-  return (
-    <div theme={props.theme} id="theme-provider">
-      {props.children}
-    </div>
-  );
+  // Apply theme later because storybook adds its own `<body theme="...">` attribute too.
+  // TODO: Eventually change ours to `insomnia-theme` or something more specific.
+  setTimeout(() => document.body.setAttribute('theme', props.theme), 500);
+
+  return props.children;
 };
 
 export const contexts = [

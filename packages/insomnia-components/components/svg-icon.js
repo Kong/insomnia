@@ -2,15 +2,17 @@
 import * as React from 'react';
 import styled from 'styled-components';
 import MemoSvgIcnArrowRight from '../assets/svgr/IcnArrowRight';
-import MemoSvgIcnInfo from '../assets/svgr/IcnInfo';
-import MemoSvgIcnClock from '../assets/svgr/IcnClock';
 import MemoSvgIcnChevronDown from '../assets/svgr/IcnChevronDown';
 import MemoSvgIcnChevronUp from '../assets/svgr/IcnChevronUp';
+import MemoSvgIcnClock from '../assets/svgr/IcnClock';
+import MemoSvgIcnEllipsis from '../assets/svgr/IcnEllipsis';
+import MemoSvgIcnEmpty from '../assets/svgr/IcnEmpty';
 import MemoSvgIcnErrors from '../assets/svgr/IcnErrors';
 import MemoSvgIcnGitBranch from '../assets/svgr/IcnGitBranch';
 import MemoSvgIcnGithubLogo from '../assets/svgr/IcnGithubLogo';
+import MemoSvgIcnInfo from '../assets/svgr/IcnInfo';
+import MemoSvgIcnSearch from '../assets/svgr/IcnSearch';
 import MemoSvgIcnWarning from '../assets/svgr/IcnWarning';
-import MemoSvgIcnEllipsis from '../assets/svgr/IcnEllipsis';
 
 export const ThemeEnum = {
   default: 'default',
@@ -37,7 +39,11 @@ export const IconEnum = {
   gitBranch: 'git-branch',
   github: 'github',
   info: 'info',
+  search: 'search',
   warning: 'warning',
+
+  // Blank icon
+  empty: 'empty',
 };
 
 type IconKeys = $Values<typeof IconEnum>;
@@ -86,10 +92,12 @@ class SvgIcon extends React.Component<Props> {
     [IconEnum.chevronUp]: [ThemeEnum.default, MemoSvgIcnChevronUp],
     [IconEnum.clock]: [ThemeEnum.default, MemoSvgIcnClock],
     [IconEnum.ellipsis]: [ThemeEnum.default, MemoSvgIcnEllipsis],
+    [IconEnum.empty]: [ThemeEnum.default, MemoSvgIcnEmpty],
     [IconEnum.error]: [ThemeEnum.danger, MemoSvgIcnErrors],
     [IconEnum.gitBranch]: [ThemeEnum.default, MemoSvgIcnGitBranch],
     [IconEnum.github]: [ThemeEnum.default, MemoSvgIcnGithubLogo],
     [IconEnum.info]: [ThemeEnum.highlight, MemoSvgIcnInfo],
+    [IconEnum.search]: [ThemeEnum.default, MemoSvgIcnSearch],
     [IconEnum.warning]: [ThemeEnum.notice, MemoSvgIcnWarning],
   };
 

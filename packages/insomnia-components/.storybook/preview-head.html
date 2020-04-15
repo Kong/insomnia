@@ -132,14 +132,17 @@
 <style>
   html {
     --font-monospace: Menlo, Monaco, Consolas, 'Droid Sans Mono', 'Courier New', monospace,
-      'Droid Sans Fallback';
+    'Droid Sans Fallback';
     --font-default: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI',
-      'HelveticaNeue-Light', 'Ubuntu', 'Droid Sans', sans-serif;
+    'HelveticaNeue-Light', 'Ubuntu', 'Droid Sans', sans-serif;
     --font-ligatures: normal;
   }
 
   body {
     overflow: auto;
+    padding: 0.5rem 40px;
+    font-family: var(--font-default);
+    font-size: var(--font-size);
   }
 
   #root {
@@ -148,11 +151,14 @@
     margin-right: auto;
   }
 
+  #story-root,
+  #dropdowns-container {
+    background-color: var(--color-bg);
+    color: var(--color-font);
+  }
+
   #story-root {
-    padding-left: 40px;
-    padding-right: 40px;
-    font-family: var(--font-default);
-    font-size: var(--font-size);
+    padding: 0.5rem 40px;
   }
 
   .storybook-skinny {
@@ -165,10 +171,7 @@
     font-size: 0.8rem;
   }
 
-  #theme-provider {
-    background-color: var(--color-bg);
-    color: var(--color-font);
-    padding: .5rem .25rem;
+  body {
   }
 </style>
 
@@ -223,8 +226,8 @@
   }
 </style>
 
-<style data-theme-name="studio-light">[theme="studio-light"] ,
-[subtheme="studio-light"]  {
+<style data-theme-name="studio-light">[theme="studio-light"],
+[subtheme="studio-light"] {
   /* Background */
   --color-bg: rgb(255, 255, 255);
   --color-bg-rgb: 255, 255, 255;
@@ -384,8 +387,8 @@
 
 </style>
 
-<style data-theme-name="studio-colorful">[theme="studio-colorful"] ,
-[subtheme="studio-colorful"]  {
+<style data-theme-name="studio-colorful">[theme="studio-colorful"],
+[subtheme="studio-colorful"] {
   /* Background */
   --color-bg: rgb(0, 48, 82);
   --color-bg-rgb: 0, 48, 82;

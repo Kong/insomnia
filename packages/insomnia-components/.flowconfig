@@ -10,5 +10,6 @@
 ./flow-typed
 
 [options]
+esproposal.decorators=ignore
 
 [lints]

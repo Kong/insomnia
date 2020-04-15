@@ -2,6 +2,7 @@
   "plugins": [
     "babel-plugin-styled-components",
     "babel-plugin-inline-react-svg",
+    ["@babel/plugin-proposal-decorators", {"legacy": true}],
     "@babel/plugin-proposal-class-properties"
   ],
   "presets": [
