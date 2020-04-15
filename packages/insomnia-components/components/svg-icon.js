@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 import MemoSvgIcnArrowRight from '../assets/svgr/IcnArrowRight';
 import MemoSvgIcnInfo from '../assets/svgr/IcnInfo';
 import MemoSvgIcnClock from '../assets/svgr/IcnClock';
@@ -47,7 +47,7 @@ type Props = {
   label?: React.Node,
 };
 
-const SvgIconStyled: React.ComponentType<{theme: ThemeKeys, hasLabel: boolean}> = styled.div`
+const SvgIconStyled: React.ComponentType<{ theme: ThemeKeys, hasLabel: boolean }> = styled.div`
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
@@ -55,29 +55,23 @@ const SvgIconStyled: React.ComponentType<{theme: ThemeKeys, hasLabel: boolean}> 
   svg {
     flex-shrink: 0;
     user-select: none;
-    ${({ hasLabel }) => hasLabel ? css`margin-right: var(--padding-xs);` : null}
+    ${({ hasLabel }) => (hasLabel ? 'margin-right: var(--padding-xs);' : null)}
     ${({ theme }) => {
-      switch (theme) {
-        case ThemeEnum.danger:
-        case ThemeEnum.info:
-        case ThemeEnum.notice:
-        case ThemeEnum.success:
-        case ThemeEnum.surprise:
-        case ThemeEnum.warning:
-          return css`
-                        fill: var(--color-${theme});
-                        color: var(--color-font-${theme});`;
-        case ThemeEnum.highlight:
-          return css`
-                        fill: var(--hl);
-                        color: var(--color-font-danger);`;
-        case ThemeEnum.default:
-        default:
-          return css`
-                        fill: var(--color-font);
-                        color: var(--color-font);`;
-      }
-    }}
+  switch (theme) {
+    case ThemeEnum.danger:
+    case ThemeEnum.info:
+    case ThemeEnum.notice:
+    case ThemeEnum.success:
+    case ThemeEnum.surprise:
+    case ThemeEnum.warning:
+      return `fill: var(--color-${theme}); color: var(--color-font-${theme});`;
+    case ThemeEnum.highlight:
+      return 'fill: var(--hl); color: var(--color-font-danger);';
+    case ThemeEnum.default:
+    default:
+      return 'fill: var(--color-font); color: var(--color-font);';
+  }
+}}
   }
 `;
 

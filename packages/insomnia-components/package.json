@@ -16,7 +16,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run build"
+      "pre-commit": "pretty-quick --staged && npm run build"
     }
   },
   "peerDependencies": {
