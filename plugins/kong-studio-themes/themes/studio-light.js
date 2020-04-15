@@ -1,6 +1,6 @@
 module.exports = {
   name: 'studio-light',
-  displayName: 'Core Light',
+  displayName: 'Designer Light',
   theme: {
     foreground: {
       default: '#555',

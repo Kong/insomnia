@@ -16,8 +16,8 @@ export const contexts = [
       ThemeProvider,
     ],
     params: [
-      { name: 'Studio Light', props: { theme: 'studio-light' }, default: true },
-      { name: 'Studio Dark', props: { theme: 'studio-colorful' } },
+      { name: 'Designer Light', props: { theme: 'studio-light' }, default: true },
+      { name: 'Designer Dark', props: { theme: 'studio-colorful' } },
     ],
     options: {
       deep: true, // pass the `props` deeply into all wrapping components
