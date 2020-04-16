@@ -6,7 +6,8 @@ import NeDB from 'nedb';
 import fsPath from 'path';
 import { DB_PERSIST_INTERVAL } from './constants';
 import uuid from 'uuid';
-import { getDataDirectory } from './misc';
+import { generateId, getDataDirectory } from './misc';
+import { getModel } from '../models';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -597,13 +598,19 @@ export const duplicate = (database.duplicate = async function<T: BaseModel>(
   const flushId = await database.bufferChanges();
 
   async function next<T: BaseModel>(docToCopy: T, patch: Object): Promise<T> {
-    // 1. Copy the doc
-    const newDoc = Object.assign({}, docToCopy, patch);
-    delete newDoc._id;
-    delete newDoc.created;
-    delete newDoc.modified;
+    const model = getModel(docToCopy.type);
 
-    const createdDoc = await docCreate(newDoc.type, newDoc);
+    const overrides = {
+      _id: generateId(model.prefix),
+      modified: Date.now(),
+      created: Date.now(),
+      type: docToCopy.type, // Ensure this is not overwritten by the patch
+    };
+
+    // 1. Copy the doc
+    const newDoc = Object.assign({}, docToCopy, patch, overrides);
+
+    const createdDoc = await database.insert(newDoc);
 
     // 2. Get all the children
     for (const type of allTypes()) {
