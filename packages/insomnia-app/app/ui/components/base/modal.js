@@ -116,7 +116,7 @@ class Modal extends PureComponent {
   }
 
   render() {
-    const { tall, wide, noEscape, className, children } = this.props;
+    const { tall, wide, noEscape, className, children, scoped } = this.props;
     const { open, zIndex, forceRefreshCounter } = this.state;
 
     if (!open) {
@@ -138,7 +138,7 @@ class Modal extends PureComponent {
     }
 
     return (
-      <KeydownBinder stopMetaPropagation scoped onKeydown={this._handleKeyDown}>
+      <KeydownBinder stopMetaPropagation scoped={scoped} onKeydown={this._handleKeyDown}>
         <div
           ref={this._setModalRef}
           tabIndex="-1"
@@ -170,6 +170,10 @@ Modal.propTypes = {
   freshState: PropTypes.bool,
   children: PropTypes.node,
   className: PropTypes.string,
+};
+
+Modal.defaultProps = {
+  scoped: true,
 };
 
 export default Modal;

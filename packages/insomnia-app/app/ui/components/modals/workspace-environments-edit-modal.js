@@ -41,10 +41,17 @@ type State = {
   subEnvironments: Array<Environment>,
   rootEnvironment: Environment | null,
   selectedEnvironmentId: string | null,
+  disableEscape: boolean,
 };
 
 const SidebarListItem = SortableElement(
-  ({ environment, activeEnvironment, showEnvironment, changeEnvironmentName }) => {
+  ({
+    environment,
+    activeEnvironment,
+    showEnvironment,
+    changeEnvironmentName,
+    onEnvironmentNameEditStart,
+  }) => {
     const classes = classnames({
       'env-modal__sidebar-item': true,
       'env-modal__sidebar-item--active': activeEnvironment === environment,
@@ -73,6 +80,7 @@ const SidebarListItem = SortableElement(
             className="inline-block"
             onSubmit={name => changeEnvironmentName(environment, name)}
             value={environment.name}
+            onEditStart={onEnvironmentNameEditStart}
           />
         </Button>
       </li>
@@ -81,7 +89,13 @@ const SidebarListItem = SortableElement(
 );
 
 const SidebarList = SortableContainer(
-  ({ environments, activeEnvironment, showEnvironment, changeEnvironmentName }) => (
+  ({
+    environments,
+    activeEnvironment,
+    showEnvironment,
+    changeEnvironmentName,
+    onEnvironmentNameEditStart,
+  }) => (
     <ul>
       {environments.map((e, i) => (
         <SidebarListItem
@@ -91,6 +105,7 @@ const SidebarList = SortableContainer(
           activeEnvironment={activeEnvironment}
           showEnvironment={showEnvironment}
           changeEnvironmentName={changeEnvironmentName}
+          onEnvironmentNameEditStart={onEnvironmentNameEditStart}
         />
       ))}
     </ul>
@@ -113,6 +128,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       subEnvironments: [],
       rootEnvironment: null,
       selectedEnvironmentId: null,
+      disableEscape: false,
     };
 
     this.colorChangeTimeout = null;
@@ -242,8 +258,18 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     }
   }
 
+  _handleEnvironmentNameEditStart() {
+    this.setState({
+      disableEscape: true,
+    });
+  }
+
   async _handleChangeEnvironmentName(environment: Environment, name: string) {
     await this._updateEnvironment(environment, { name });
+
+    this.setState({
+      disableEscape: false,
+    });
   }
 
   _handleChangeEnvironmentColor(environment: Environment, color: string | null) {
@@ -390,7 +416,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       isVariableUncovered,
     } = this.props;
 
-    const { subEnvironments, rootEnvironment, isValid } = this.state;
+    const { subEnvironments, rootEnvironment, isValid, disableEscape } = this.state;
 
     const activeEnvironment = this._getActiveEnvironment();
 
@@ -400,7 +426,13 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     };
 
     return (
-      <Modal ref={this._setModalRef} wide tall noEscape {...(this.props: Object)}>
+      <Modal
+        ref={this._setModalRef}
+        wide
+        tall
+        scoped={false}
+        noEscape={disableEscape}
+        {...(this.props: Object)}>
         <ModalHeader>Manage Environments</ModalHeader>
         <ModalBody noScroll className="env-modal">
           <div className="env-modal__sidebar">
@@ -439,6 +471,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
               activeEnvironment={activeEnvironment}
               showEnvironment={this._handleShowEnvironment}
               changeEnvironmentName={this._handleChangeEnvironmentName}
+              onEnvironmentNameEditStart={this._handleEnvironmentNameEditStart}
               onSortEnd={this._handleSortEnd}
               helperClass="env-modal__sidebar-item--dragging"
               transitionDuration={0}

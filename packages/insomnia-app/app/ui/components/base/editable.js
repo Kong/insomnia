@@ -6,13 +6,10 @@ import autobind from 'autobind-decorator';
 class Editable extends PureComponent {
   constructor(props) {
     super(props);
+    this._input = React.createRef();
     this.state = {
       editing: false,
     };
-  }
-
-  _handleSetInputRef(n) {
-    this._input = n;
   }
 
   _handleSingleClickEditStart() {
@@ -25,8 +22,8 @@ class Editable extends PureComponent {
     this.setState({ editing: true });
 
     setTimeout(() => {
-      this._input && this._input.focus();
-      this._input && this._input.select();
+      this._input.current.focus();
+      this._input.current.select();
     });
 
     if (this.props.onEditStart) {
@@ -35,7 +32,7 @@ class Editable extends PureComponent {
   }
 
   _handleEditEnd() {
-    const value = this._input.value.trim();
+    const value = this._input.current.value.trim();
 
     if (!value) {
       // Don't do anything if it's empty
@@ -55,8 +52,8 @@ class Editable extends PureComponent {
       this._handleEditEnd();
     } else if (e.keyCode === 27) {
       // Pressed Escape
-      this._input.value = this.props.value;
-      this._input && this._input.blur();
+      this._input.current.value = this.props.value;
+      this._input.current.blur();
     }
   }
 
@@ -77,7 +74,7 @@ class Editable extends PureComponent {
           {...extra}
           className={`editable ${className || ''}`}
           type="text"
-          ref={this._handleSetInputRef}
+          ref={this._input}
           defaultValue={value}
           onKeyDown={this._handleEditKeyDown}
           onBlur={this._handleEditEnd}
