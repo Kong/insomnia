@@ -1,33 +1,69 @@
 // @flow
 
-import { getName, getServers, parseUrl } from '../common';
-import { generateSecurityPlugins } from '../declarative-config/security-plugins';
+import { getMethodAnnotationName, getName, parseUrl, pathVariablesToWildcard } from '../common';
+import urlJoin from 'url-join';
+import { flattenPluginDocuments, getPlugins } from './plugins';
+import type { HttpMethodKeys } from '../common';
 
 export function generateKongForKubernetesConfigFromSpec(
   api: OpenApi3Spec,
   tags: Array<string>,
 ): KongForKubernetesResult {
-  const metadata = generateMetadata(api);
-  const document: KubernetesConfig = {
-    apiVersion: 'extensions/v1beta1',
-    kind: 'Ingress',
-    metadata,
-    spec: { rules: generateRules(api, metadata.name) },
-  };
+  let _iterator = 0;
+  const increment = (): number => _iterator++;
 
-  const otherDocuments = generatePluginDocuments(api);
+  // Extract global, server, and path plugins upfront
+  const plugins = getPlugins(api, increment);
 
-  // Add Kong plugins as annotations to ingress definition
-  if (otherDocuments.length) {
-    const pluginNames = otherDocuments.map(d => d.metadata.name).join(', ');
-    if (document.metadata.annotations) {
-      document.metadata.annotations['plugins.konghq.com'] = pluginNames;
-    } else {
-      document.metadata.annotations = { 'plugins.konghq.com': pluginNames };
-    }
-  }
+  // Initialize document collections
+  const pluginDocuments = flattenPluginDocuments(plugins);
+  const ingressDocuments = [];
 
-  const documents = [...otherDocuments, document];
+  const methodsThatNeedKongIngressDocuments: { [HttpMethodKeys]: boolean } = {};
+
+  // Iterate all global servers
+  plugins.servers.forEach((sp, serverIndex) => {
+    // Iterate all paths
+    plugins.paths.forEach(pp => {
+      // Iterate methods
+      pp.operations.forEach(o => {
+        // Collect plugins for document
+        const pluginsForDoc = [...plugins.global, ...sp.plugins, ...pp.plugins, ...o.plugins];
+
+        // Identify custom annotations
+        const annotations: CustomAnnotations = {
+          pluginNames: pluginsForDoc.map(x => x.metadata.name),
+        };
+
+        const method = o.method;
+        if (method) {
+          annotations.overrideName = getMethodAnnotationName(method);
+          methodsThatNeedKongIngressDocuments[method] = true;
+        }
+
+        // Create metadata
+        const metadata = generateMetadata(api, annotations);
+
+        // Generate Kong ingress document for a server and path in the doc
+        const doc: KubernetesConfig = {
+          apiVersion: 'extensions/v1beta1',
+          kind: 'Ingress',
+          metadata,
+          spec: {
+            rules: [generateRulesForServer(serverIndex, sp.server, metadata.name, [pp.path])],
+          },
+        };
+
+        ingressDocuments.push(doc);
+      });
+    });
+  });
+
+  const methodDocuments = Object.keys(methodsThatNeedKongIngressDocuments).map(
+    generateK8sMethodDocuments,
+  );
+
+  const documents = [...methodDocuments, ...pluginDocuments, ...ingressDocuments];
 
   return ({
     type: 'kong-for-kubernetes',
@@ -37,12 +73,25 @@ export function generateKongForKubernetesConfigFromSpec(
   }: KongForKubernetesResult);
 }
 
-function generateMetadata(api: OpenApi3Spec): K8sMetadata {
+function generateK8sMethodDocuments(method: HttpMethodKeys): KubernetesMethodConfig {
+  return {
+    apiVersion: 'configuration.konghq.com/v1',
+    kind: 'KongIngress',
+    metadata: {
+      name: getMethodAnnotationName(method),
+    },
+    route: {
+      methods: [method],
+    },
+  };
+}
+
+function generateMetadata(api: OpenApi3Spec, customAnnotations: CustomAnnotations): K8sMetadata {
   const metadata: K8sMetadata = {
     name: generateMetadataName(api),
   };
 
-  const annotations = generateMetadataAnnotations(api);
+  const annotations = generateMetadataAnnotations(api, customAnnotations);
   if (annotations) {
     metadata.annotations = annotations;
   }
@@ -50,66 +99,86 @@ function generateMetadata(api: OpenApi3Spec): K8sMetadata {
   return metadata;
 }
 
-export function generateMetadataName(api: OpenApi3Spec): string {
-  const info: Object = api.info || {};
-  const metadata = info['x-kubernetes-ingress-metadata'];
+type CustomAnnotations = {
+  pluginNames: Array<string>,
+  overrideName?: string,
+};
 
-  // x-kubernetes-ingress-metadata.name
-  if (metadata && metadata.name) {
-    return metadata.name;
+export function generateMetadataName(api: OpenApi3Spec): string {
+  const name = api.info?.['x-kubernetes-ingress-metadata']?.name;
+  if (name) {
+    return name;
   }
 
   return getName(api, 'openapi', { lower: true, replacement: '-' });
 }
 
-export function generateMetadataAnnotations(api: OpenApi3Spec): K8sAnnotations | null {
-  const info: Object = api.info || {};
-  const metadata = info['x-kubernetes-ingress-metadata'];
-  if (metadata && metadata.annotations) {
-    return metadata.annotations;
+export function generateMetadataAnnotations(
+  api: OpenApi3Spec,
+  { pluginNames, overrideName }: CustomAnnotations,
+): K8sAnnotations | null {
+  const metadata = api.info?.['x-kubernetes-ingress-metadata'];
+
+  // Only continue if metadata annotations, or plugins, or overrides exist
+  if (metadata?.annotations || pluginNames.length || overrideName) {
+    const annotations = metadata?.annotations || {};
+
+    if (pluginNames.length) {
+      annotations['konghq.com/plugins'] = pluginNames.join(', ');
+    }
+
+    if (overrideName) {
+      annotations['konghq.com/override'] = overrideName;
+    }
+
+    return annotations;
   }
 
   return null;
 }
 
-export function generateRules(api: OpenApi3Spec, ingressName: string): K8sIngressRules {
-  return getServers(api).map((server, i) => {
-    const { hostname } = parseUrl(server.url);
-    const serviceName = generateServiceName(server, ingressName, i);
-    const servicePort = generateServicePort(server);
-    const backend = { serviceName, servicePort };
-    const path = generateServicePath(server, backend);
+export function generateRulesForServer(
+  index: number,
+  server: OA3Server,
+  ingressName: string,
+  paths?: Array<string>,
+): K8sIngressRule {
+  const { hostname } = parseUrl(server.url);
+  const serviceName = generateServiceName(server, ingressName, index);
+  const servicePort = generateServicePort(server);
+  const backend = { serviceName, servicePort };
 
-    const tlsConfig = generateTlsConfig(server);
-    if (tlsConfig) {
-      return {
-        host: hostname,
-        tls: {
-          paths: [path],
-          ...tlsConfig,
-        },
-      };
-    }
+  const pathsToUse: Array<string> = (paths?.length && paths) || ['']; // Make flow happy
+  const k8sPaths = pathsToUse.map(p => generateServicePath(server, backend, p));
 
+  const tlsConfig = generateTlsConfig(server);
+  if (tlsConfig) {
     return {
       host: hostname,
-      http: { paths: [path] },
+      tls: {
+        paths: k8sPaths,
+        ...tlsConfig,
+      },
     };
-  });
+  }
+
+  return {
+    host: hostname,
+    http: { paths: k8sPaths },
+  };
 }
 
 export function generateServiceName(server: OA3Server, ingressName: string, index: number): string {
-  const backend = (server: Object)['x-kubernetes-backend'];
-
   // x-kubernetes-backend.serviceName
-  if (backend && backend.serviceName) {
-    return backend.serviceName;
+  const serviceName = server['x-kubernetes-backend']?.serviceName;
+  if (serviceName) {
+    return serviceName;
   }
 
   // x-kubernetes-service.metadata.name
-  const service = (server: Object)['x-kubernetes-service'];
-  if (service && service.metadata && service.metadata.name) {
-    return service.metadata.name;
+  const metadataName = server['x-kubernetes-service']?.metadata?.name;
+  if (metadataName) {
+    return metadataName;
   }
 
   // <ingress-name>-s<server index>
@@ -117,45 +186,41 @@ export function generateServiceName(server: OA3Server, ingressName: string, inde
 }
 
 export function generateTlsConfig(server: OA3Server): Object | null {
-  const tlsConfig = (server: Object)['x-kubernetes-tls'];
-  return tlsConfig || null;
+  return server['x-kubernetes-tls'] || null;
 }
 
 export function generateServicePort(server: OA3Server): number {
   // x-kubernetes-backend.servicePort
-  const backend = (server: Object)['x-kubernetes-backend'];
+  const backend = server['x-kubernetes-backend'];
   if (backend && typeof backend.servicePort === 'number') {
     return backend.servicePort;
   }
 
-  const service = (server: Object)['x-kubernetes-service'] || {};
-  const spec = service.spec || {};
-  const ports = spec.ports || [];
+  const ports = server['x-kubernetes-service']?.spec?.ports || [];
+  const firstPort = ports[0]?.port;
 
-  // TLS configured
-  const tlsConfig = generateTlsConfig(server);
-  if (tlsConfig) {
+  // Return 443
+  if (generateTlsConfig(server)) {
     if (ports.find(p => p.port === 443)) {
       return 443;
     }
 
-    if (ports[0] && ports[0].port) {
-      return ports[0].port;
-    }
-
-    return 443;
+    return firstPort || 443;
   }
 
-  // x-kubernetes-service.spec.ports.0.port
-  if (ports[0] && ports[0].port) {
-    return ports[0].port;
-  }
-
-  return 80;
+  return firstPort || 80;
 }
 
-export function generateServicePath(server: OA3Server, backend: K8sBackend): K8sPath {
-  const { pathname } = parseUrl(server.url);
+export function generateServicePath(
+  server: OA3Server,
+  backend: K8sBackend,
+  specificPath: string = '',
+): K8sPath {
+  const fullUrl = urlJoin(server.url, specificPath);
+  const url = pathVariablesToWildcard(fullUrl);
+
+  const { pathname } = parseUrl(url);
+
   const p: K8sPath = {
     backend,
   };
@@ -164,58 +229,7 @@ export function generateServicePath(server: OA3Server, backend: K8sBackend): K8s
     return p;
   }
 
-  if (pathname.match(/\/$/)) {
-    p.path = pathname + '.*';
-  } else {
-    p.path = pathname + '/.*';
-  }
+  p.path = pathname + (specificPath ? '' : '/.*');
 
   return p;
-}
-
-export function generatePluginDocuments(api: OpenApi3Spec): Array<KubernetesPluginConfig> {
-  const plugins = [];
-  for (const key of Object.keys(api)) {
-    if (key.indexOf('x-kong-plugin-') !== 0) {
-      continue;
-    }
-    const nameFromKey = key.replace('x-kong-plugin-', '');
-    const pData: Object = api[key];
-    const p: KubernetesPluginConfig = {
-      apiVersion: 'configuration.konghq.com/v1',
-      kind: 'KongPlugin',
-      metadata: {
-        name: `add-${pData.name || nameFromKey}`,
-      },
-      plugin: pData.name || key.replace('x-kong-plugin-', ''),
-    };
-
-    if (pData.config) {
-      p.config = pData.config;
-    }
-
-    plugins.push(p);
-  }
-
-  // NOTE: It isn't great that we're relying on declarative-config stuff here but there's
-  // not much we can do about it. If we end up needing this again, it should be factored
-  // out to a higher-level.
-  const securityPlugins = generateSecurityPlugins(null, api).map(dcPlugin => {
-    const k8sPlugin: KubernetesPluginConfig = {
-      apiVersion: 'configuration.konghq.com/v1',
-      kind: 'KongPlugin',
-      metadata: {
-        name: `add-${dcPlugin.name}`,
-      },
-      plugin: dcPlugin.name,
-    };
-
-    if (dcPlugin.config) {
-      k8sPlugin.config = dcPlugin.config;
-    }
-
-    return k8sPlugin;
-  });
-
-  return [...plugins, ...securityPlugins];
 }

@@ -12,7 +12,7 @@ declare type DeclarativeConfigResult = {
 declare type KongForKubernetesResult = {
   type: 'kong-for-kubernetes',
   label: string,
-  documents: Array<KubernetesConfig | KubernetesPluginConfig>,
+  documents: Array<KubernetesConfig | KubernetesPluginConfig | KubernetesMethodConfig>,
   warnings: Array<{severity: number, message: string, range: {/* TODO */}}>,
 }
 

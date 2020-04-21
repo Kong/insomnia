@@ -3,21 +3,34 @@ import { parseSpec } from '../../index';
 import {
   generateKongForKubernetesConfigFromSpec,
   generateMetadataAnnotations,
-  generateMetadataName, generatePluginDocuments,
-  generateRules,
+  generateMetadataName,
+  generateRulesForServer,
   generateServiceName,
   generateServicePath,
   generateServicePort,
 } from '../index';
+import {
+  dummyName,
+  dummyPluginDoc,
+  ingressDoc,
+  ingressDocWithOverride,
+  keyAuthName,
+  keyAuthPluginDoc,
+  methodDoc,
+  pluginDummy,
+  pluginKeyAuth,
+} from './util/plugin-helpers';
 
 describe('index', () => {
   const spec = {
     openapi: '3.0',
     info: { version: '1.0', title: 'My API' },
-    servers: [{
-      url: 'http://api.insomnia.rest',
-    }],
-    paths: [],
+    servers: [
+      {
+        url: 'http://api.insomnia.rest',
+      },
+    ],
+    paths: {},
   };
 
   describe('generateMetadataName()', () => {
@@ -31,8 +44,9 @@ describe('index', () => {
       expect(generateMetadataName(api)).toBe('openapi');
     });
 
-    it('with x-kong-name', async () => {
-      const api: OpenApi3Spec = await parseSpec({ ...spec, 'x-kong-name': 'Kong Name' });
+    it('with x-kong-name', () => {
+      const api: OpenApi3Spec = { ...spec, 'x-kong-name': 'kong-name' };
+
       expect(generateMetadataName(api)).toBe('kong-name');
     });
 
@@ -51,7 +65,7 @@ describe('index', () => {
   });
 
   describe('generateMetadataAnnotations()', () => {
-    it('gets annotations', async () => {
+    it('gets annotations from x-kubernetes-ingress-metadata', async () => {
       const api: OpenApi3Spec = await parseSpec({
         ...spec,
         info: {
@@ -63,32 +77,69 @@ describe('index', () => {
           },
         },
       });
-      expect(generateMetadataAnnotations(api)).toEqual({
+
+      const result = generateMetadataAnnotations(api, { pluginNames: [] });
+
+      expect(result).toEqual({
         'nginx.ingress.kubernetes.io/rewrite-target': '/',
       });
     });
 
-    it('gets no annotations', async () => {
-      const api: OpenApi3Spec = await parseSpec({ ...spec });
-      expect(generateMetadataAnnotations(api)).toBe(null);
+    it('gets no annotations', () => {
+      const result = generateMetadataAnnotations(spec, { pluginNames: [] });
+      expect(result).toBe(null);
+    });
+
+    it('gets plugin annotations correctly', () => {
+      const result = generateMetadataAnnotations(spec, { pluginNames: ['one', 'two'] });
+      expect(result).toEqual({ 'konghq.com/plugins': 'one, two' });
+    });
+
+    it('gets override annotation correctly', () => {
+      const result = generateMetadataAnnotations(spec, { pluginNames: [], overrideName: 'name' });
+      expect(result).toEqual({ 'konghq.com/override': 'name' });
+    });
+
+    it('gets all annotations correctly', async () => {
+      const api: OpenApi3Spec = await parseSpec({
+        ...spec,
+        info: {
+          'x-kubernetes-ingress-metadata': {
+            name: 'info-name',
+            annotations: {
+              'nginx.ingress.kubernetes.io/rewrite-target': '/',
+            },
+          },
+        },
+      });
+      const result = generateMetadataAnnotations(api, {
+        pluginNames: ['one', 'two'],
+        overrideName: 'name',
+      });
+      expect(result).toEqual({
+        'nginx.ingress.kubernetes.io/rewrite-target': '/',
+        'konghq.com/plugins': 'one, two',
+        'konghq.com/override': 'name',
+      });
     });
   });
 
   describe('generateServiceName()', () => {
     it('defaults to ingress name', () => {
-      const server = { url: 'https://insomnia.rest' };
+      const server: OA3Server = { url: 'https://insomnia.rest' };
       expect(generateServiceName(server, 'ingrs', 0)).toBe('ingrs-s0');
       expect(generateServiceName(server, 'ingrs', 3)).toBe('ingrs-s3');
     });
 
-    it('uses x-kubernetes-backend.name', () => {
-      const server = {
+    it('uses x-kubernetes-backend.serviceName', () => {
+      const server: OA3Server = {
         url: 'https://insomnia.rest',
         'x-kubernetes-backend': {
           serviceName: 'b-name',
+          servicePort: 123,
         },
       };
-      expect(generateServiceName((server: Object), 'ingrs', 0)).toBe('b-name');
+      expect(generateServiceName(server, 'ingrs', 0)).toBe('b-name');
     });
 
     it('uses x-kubernetes-service.metadata.name', () => {
@@ -100,7 +151,7 @@ describe('index', () => {
           },
         },
       };
-      expect(generateServiceName((server: Object), 'ingrs', 0)).toBe('s-name');
+      expect(generateServiceName(server, 'ingrs', 0)).toBe('s-name');
     });
   });
 
@@ -117,347 +168,340 @@ describe('index', () => {
         url: 'https://api.insomnia.rest',
         'x-kubernetes-tls': { secretName: 'tls-secret' },
       };
-      expect(generateServicePort((server: Object))).toEqual(443);
+      expect(generateServicePort(server)).toEqual(443);
     });
 
-    it('uses uses first port', () => {
+    it('uses 443 if any port is 443 when tls configured ', () => {
+      const server: OA3Server = {
+        url: 'https://api.insomnia.rest',
+        'x-kubernetes-tls': { secretName: 'tls-secret' },
+        'x-kubernetes-service': {
+          spec: {
+            ports: [{ port: 212 }, { port: 443 }],
+          },
+        },
+      };
+      expect(generateServicePort(server)).toEqual(443);
+    });
+
+    it('uses x-kubernetes-backend.servicePort', () => {
+      const server: OA3Server = {
+        url: 'https://api.insomnia.rest',
+        'x-kubernetes-backend': {
+          serviceName: 'b-name',
+          servicePort: 123,
+        },
+        'x-kubernetes-service': {
+          spec: {
+            ports: [{ port: 212 }, { port: 322 }],
+          },
+        },
+      };
+      expect(generateServicePort(server)).toEqual(123);
+    });
+
+    it('uses first port', () => {
       const server = {
         url: 'https://api.insomnia.rest',
         'x-kubernetes-service': {
           spec: {
-            ports: [
-              { port: 212 },
-              { port: 322 },
-            ],
+            ports: [{ port: 212 }, { port: 322 }],
           },
         },
       };
-      expect(generateServicePort((server: Object))).toEqual(212);
+      expect(generateServicePort(server)).toEqual(212);
     });
   });
 
   describe('generateServicePath()', () => {
-    it('uses no path', () => {
+    it('uses no path in the server', () => {
       const server = { url: 'https://api.insomnia.rest' };
       const backend = { serviceName: 'svc', servicePort: 80 };
-      expect(generateServicePath(server, backend)).toEqual({
-        backend: {
-          serviceName: backend.serviceName,
-          servicePort: backend.servicePort,
-        },
-      });
+      expect(generateServicePath(server, backend)).toEqual({ backend });
     });
 
-    it('uses path', () => {
+    it('uses path in the server', () => {
       const server = { url: 'https://api.insomnia.rest/api/v1' };
       const backend = { serviceName: 'svc', servicePort: 80 };
       expect(generateServicePath(server, backend)).toEqual({
         path: '/api/v1/.*',
-        backend: {
-          serviceName: backend.serviceName,
-          servicePort: backend.servicePort,
-        },
+        backend,
+      });
+    });
+
+    it('uses path in the server and adds closing wildcard if url ends with /', () => {
+      const server = { url: 'https://api.insomnia.rest/api/v1/' };
+      const backend = { serviceName: 'svc', servicePort: 80 };
+      expect(generateServicePath(server, backend)).toEqual({
+        path: '/api/v1/.*',
+        backend,
+      });
+    });
+
+    it('converts path variables to .* wildcards', () => {
+      const server = { url: 'https://api.insomnia.rest/api/v1' };
+      const backend = { serviceName: 'svc', servicePort: 80 };
+      expect(generateServicePath(server, backend, '/specificPath')).toEqual({
+        path: '/api/v1/specificPath',
+        backend,
+      });
+    });
+
+    it('using a specific path with variables does not add closing wildcard', () => {
+      const server = { url: 'https://api.insomnia.rest/api/v1' };
+      const backend = { serviceName: 'svc', servicePort: 80 };
+      expect(generateServicePath(server, backend, '/{version}/{test}/specificPath')).toEqual({
+        path: '/api/v1/.*/.*/specificPath',
+        backend,
       });
     });
   });
 
-  describe('generateRules()', () => {
-    it('handles basic server', async () => {
-      const api: OpenApi3Spec = await parseSpec({ ...spec });
-      expect(generateRules(api, 'my-ingress')).toEqual([
-        {
-          host: 'api.insomnia.rest',
-          http: {
-            paths: [{
+  describe('generateRulesForServer()', () => {
+    it('handles basic server', () => {
+      const result = generateRulesForServer(
+        0,
+        { url: 'http://api.insomnia.rest/v1' },
+        'my-ingress',
+      );
+
+      expect(result).toEqual({
+        host: 'api.insomnia.rest',
+        http: {
+          paths: [
+            {
+              path: '/v1/.*',
               backend: {
                 serviceName: 'my-ingress-s0',
                 servicePort: 80,
               },
-            }],
-          },
+            },
+          ],
         },
-      ]);
+      });
     });
 
-    it('handles multiple servers', async () => {
-      const api: OpenApi3Spec = await parseSpec({
-        ...spec,
-        servers: [...spec.servers, { url: 'http://updates.insomnia.rest/v1' }],
-      });
+    it('handles server with specific path', () => {
+      const result = generateRulesForServer(
+        1,
+        { url: 'http://api.insomnia.rest/v1' },
+        'my-ingress',
+        ['/{parameter}/{another}/path'],
+      );
 
-      expect(generateRules(api, 'my-ingress')).toEqual([{
+      expect(result).toEqual({
         host: 'api.insomnia.rest',
         http: {
-          paths: [{
-            backend: {
-              serviceName: 'my-ingress-s0',
-              servicePort: 80,
+          paths: [
+            {
+              path: '/v1/.*/.*/path',
+              backend: {
+                serviceName: 'my-ingress-s1',
+                servicePort: 80,
+              },
             },
-          }],
+          ],
         },
-      }, {
-        host: 'updates.insomnia.rest',
-        http: {
-          paths: [{
-            path: '/v1/.*',
-            backend: {
-              serviceName: 'my-ingress-s1',
-              servicePort: 80,
-            },
-          }],
-        },
-      }]);
+      });
     });
 
-    it('handles TLS', async () => {
-      const api: OpenApi3Spec = await parseSpec({
-        ...spec,
-        servers: [{
+    it('handles server with no paths', () => {
+      const result = generateRulesForServer(
+        1,
+        { url: 'http://api.insomnia.rest/v1' },
+        'my-ingress',
+        [],
+      );
+
+      expect(result).toEqual({
+        host: 'api.insomnia.rest',
+        http: {
+          paths: [
+            {
+              path: '/v1/.*',
+              backend: {
+                serviceName: 'my-ingress-s1',
+                servicePort: 80,
+              },
+            },
+          ],
+        },
+      });
+    });
+
+    it('handles TLS', () => {
+      const result = generateRulesForServer(
+        0,
+        {
           url: 'http://api.insomnia.rest/v1',
           'x-kubernetes-tls': {
             secretName: 'my-secret',
           },
-        }],
-      });
+        },
+        'my-ingress',
+      );
 
-      expect(generateRules(api, 'my-ingress')).toEqual([{
+      expect(result).toEqual({
         host: 'api.insomnia.rest',
         tls: {
-          paths: [{
-            path: '/v1/.*',
-            backend: {
-              serviceName: 'my-ingress-s0',
-              servicePort: 443,
+          paths: [
+            {
+              path: '/v1/.*',
+              backend: {
+                serviceName: 'my-ingress-s0',
+                servicePort: 443,
+              },
             },
-          }],
+          ],
           secretName: 'my-secret',
         },
-      }]);
-    });
-
-    it('handles TLS and HTTP', async () => {
-      const api: OpenApi3Spec = await parseSpec({
-        ...spec,
-        servers: [{
-          url: 'http://api.insomnia.rest/v1',
-          'x-kubernetes-tls': {
-            secretName: 'my-secret',
-          },
-        }, {
-          url: 'http://api2.insomnia.rest/v1',
-          http: { paths: [] },
-        }],
       });
-
-      expect(generateRules(api, 'my-ingress')).toEqual([{
-        host: 'api.insomnia.rest',
-        tls: {
-          paths: [{
-            path: '/v1/.*',
-            backend: {
-              serviceName: 'my-ingress-s0',
-              servicePort: 443,
-            },
-          }],
-          secretName: 'my-secret',
-        },
-      }, {
-        host: 'api2.insomnia.rest',
-        http: {
-          paths: [{
-            path: '/v1/.*',
-            backend: {
-              serviceName: 'my-ingress-s1',
-              servicePort: 80,
-            },
-          }],
-        },
-      }]);
-    });
-
-    it('creates rule with path', async () => {
-      const api: OpenApi3Spec = await parseSpec({
-        ...spec,
-        servers: [{
-          url: 'http://api.insomnia.rest/v1',
-          http: { paths: [] },
-        }],
-      });
-
-      expect(generateRules(api, 'my-ingress')).toEqual([{
-        host: 'api.insomnia.rest',
-        http: {
-          paths: [{
-            path: '/v1/.*',
-            backend: {
-              serviceName: 'my-ingress-s0',
-              servicePort: 80,
-            },
-          }],
-        },
-      }]);
     });
   });
 
-  describe('generateSecurityPlugin()', () => {
-    it('generates apikey plugin', async () => {
+  describe('generateKongForKubernetesConfigFromSpec()', () => {
+    it('handles global plugins', async () => {
       const api: OpenApi3Spec = await parseSpec({
         ...spec,
-        'x-kong-plugin-key-auth': {
-          config: {
-            key_names: ['api_key', 'apikey'],
-            key_in_body: false,
-            hide_credentials: true,
-          },
-        },
-        'x-kong-plugin-with-name': {
-          name: 'my-name',
-        },
+        ...pluginKeyAuth,
+        ...pluginDummy,
       });
 
-      const result = generatePluginDocuments(api);
-      expect(result).toEqual([{
-        apiVersion: 'configuration.konghq.com/v1',
-        config: {
-          hide_credentials: true,
-          key_in_body: false,
-          key_names: [
-            'api_key',
-            'apikey',
-          ],
-        },
-        kind: 'KongPlugin',
-        metadata: {
-          name: 'add-key-auth',
-        },
-        plugin: 'key-auth',
-      }, {
-        apiVersion: 'configuration.konghq.com/v1',
-        kind: 'KongPlugin',
-        metadata: {
-          name: 'add-my-name',
-        },
-        plugin: 'my-name',
-      }]);
+      const result = generateKongForKubernetesConfigFromSpec(api, []);
+
+      expect(result.documents).toEqual([
+        keyAuthPluginDoc('g0'),
+        dummyPluginDoc('g1'),
+        ingressDoc([keyAuthName('g0'), dummyName('g1')], 'api.insomnia.rest', 'my-api-s0'),
+      ]);
     });
 
-    it('generates apikey plugin', async () => {
+    it('handles global and server plugins', async () => {
       const api: OpenApi3Spec = await parseSpec({
         ...spec,
-        'x-kong-plugin-key-auth': {
-          name: 'key-auth',
-          config: {
-            key_names: ['api_key', 'apikey'],
-            key_in_body: false,
-            hide_credentials: true,
-          },
-        },
-      });
-
-      const result = generatePluginDocuments(api);
-      expect(result).toEqual([{
-        apiVersion: 'configuration.konghq.com/v1',
-        config: {
-          hide_credentials: true,
-          key_in_body: false,
-          key_names: [
-            'api_key',
-            'apikey',
-          ],
-        },
-        kind: 'KongPlugin',
-        metadata: {
-          name: 'add-key-auth',
-        },
-        plugin: 'key-auth',
-      }]);
-    });
-
-    it('generates security plugin', async () => {
-      const api: OpenApi3Spec = await parseSpec({
-        ...spec,
-        security: [
+        ...pluginKeyAuth,
+        servers: [
           {
-            really_basic: [],
-            your_api_key: [],
+            url: 'http://api-0.insomnia.rest',
+          },
+          {
+            url: 'http://api-1.insomnia.rest',
+            ...pluginKeyAuth,
+          },
+          {
+            url: 'http://api-2.insomnia.rest',
+            ...pluginKeyAuth,
+            ...pluginDummy,
           },
         ],
-        'x-kong-plugin-dummy-thing': {
-          name: 'dummy-thing',
-          config: { foo: 'bar' },
+      });
+
+      const result = generateKongForKubernetesConfigFromSpec(api, []);
+
+      expect(result.documents).toEqual([
+        keyAuthPluginDoc('g0'),
+        keyAuthPluginDoc('s1'),
+        keyAuthPluginDoc('s2'),
+        dummyPluginDoc('s3'),
+        ingressDoc([keyAuthName('g0')], 'api-0.insomnia.rest', 'my-api-s0'),
+        ingressDoc([keyAuthName('g0'), keyAuthName('s1')], 'api-1.insomnia.rest', 'my-api-s1'),
+        ingressDoc(
+          [keyAuthName('g0'), keyAuthName('s2'), dummyName('s3')],
+          'api-2.insomnia.rest',
+          'my-api-s2',
+        ),
+      ]);
+    });
+
+    it('handles global and path plugins', async () => {
+      const api: OpenApi3Spec = await parseSpec({
+        ...spec,
+        ...pluginKeyAuth,
+        paths: {
+          '/no-plugin': {},
+          '/plugin-0': {
+            ...pluginKeyAuth,
+          },
+          '/plugin-1': {
+            ...pluginKeyAuth,
+            ...pluginDummy,
+          },
         },
-        components: {
-          securitySchemes: {
-            really_basic: {
-              type: 'http',
-              scheme: 'basic',
+      });
+
+      const result = generateKongForKubernetesConfigFromSpec(api, []);
+
+      expect(result.documents).toEqual([
+        keyAuthPluginDoc('g0'),
+        keyAuthPluginDoc('p1'),
+        keyAuthPluginDoc('p2'),
+        dummyPluginDoc('p3'),
+        ingressDoc([keyAuthName('g0')], 'api.insomnia.rest', 'my-api-s0', '/no-plugin'),
+        ingressDoc(
+          [keyAuthName('g0'), keyAuthName('p1')],
+          'api.insomnia.rest',
+          'my-api-s0',
+          '/plugin-0',
+        ),
+        ingressDoc(
+          [keyAuthName('g0'), keyAuthName('p2'), dummyName('p3')],
+          'api.insomnia.rest',
+          'my-api-s0',
+          '/plugin-1',
+        ),
+      ]);
+    });
+
+    it('handles global and method plugins', async () => {
+      const api: OpenApi3Spec = await parseSpec({
+        ...spec,
+        ...pluginKeyAuth,
+        paths: {
+          '/path': {
+            GET: {},
+            PUT: {
+              ...pluginKeyAuth,
             },
-            my_api_key: {
-              type: 'apiKey',
-              name: 'api_key_by_me',
-              in: 'header',
-            },
-            your_api_key: {
-              type: 'apiKey',
-              name: 'api_key_by_you',
-              in: 'header',
-            },
-            petstore_oauth2: {
-              type: 'oauth2',
-              flows: {
-                clientCredentials: {
-                  tokenUrl: 'http://example.org/api/oauth/dialog',
-                  scopes: {
-                    'write:pets': 'modify pets in your account',
-                    'read:pets': 'read your pets',
-                  },
-                },
-              },
-            },
-            petstore_openid: {
-              type: 'openIdConnect',
-              openIdConnectUrl: 'http://example.org/oid-discovery',
+            POST: {
+              ...pluginKeyAuth,
+              ...pluginDummy,
             },
           },
         },
       });
 
       const result = generateKongForKubernetesConfigFromSpec(api, []);
-      expect(result.documents).toEqual([{
-        apiVersion: 'configuration.konghq.com/v1',
-        kind: 'KongPlugin',
-        plugin: 'dummy-thing',
-        metadata: { name: 'add-dummy-thing' },
-        config: { foo: 'bar' },
-      }, {
-        apiVersion: 'configuration.konghq.com/v1',
-        kind: 'KongPlugin',
-        plugin: 'basic-auth',
-        metadata: { name: 'add-basic-auth' },
-      }, {
-        apiVersion: 'configuration.konghq.com/v1',
-        kind: 'KongPlugin',
-        plugin: 'key-auth',
-        metadata: { name: 'add-key-auth' },
-        config: { key_names: ['api_key_by_you'] },
-      }, {
-        apiVersion: 'extensions/v1beta1',
-        kind: 'Ingress',
-        metadata: {
-          annotations: {
-            'plugins.konghq.com': 'add-dummy-thing, add-basic-auth, add-key-auth',
-          },
-          name: 'my-api',
-        },
-        spec: {
-          rules: [{
-            host: 'api.insomnia.rest',
-            http: {
-              paths: [{ backend: { serviceName: 'my-api-s0', servicePort: 80 } }],
-            },
-          }],
-        },
-      }]);
+
+      expect(result.documents).toEqual([
+        methodDoc('get'),
+        methodDoc('put'),
+        methodDoc('post'),
+        keyAuthPluginDoc('g0'),
+        keyAuthPluginDoc('m1'),
+        keyAuthPluginDoc('m2'),
+        dummyPluginDoc('m3'),
+        ingressDocWithOverride(
+          [keyAuthName('g0')],
+          'get-method',
+          'api.insomnia.rest',
+          'my-api-s0',
+          '/path',
+        ),
+        ingressDocWithOverride(
+          [keyAuthName('g0'), keyAuthName('m1')],
+          'put-method',
+          'api.insomnia.rest',
+          'my-api-s0',
+          '/path',
+        ),
+        ingressDocWithOverride(
+          [keyAuthName('g0'), keyAuthName('m2'), dummyName('m3')],
+          'post-method',
+          'api.insomnia.rest',
+          'my-api-s0',
+          '/path',
+        ),
+      ]);
     });
   });
 });

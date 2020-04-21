@@ -1,15 +1,9 @@
 // @flow
 
-export function isPluginKey(key: string): boolean {
-  return key.indexOf('x-kong-plugin-') === 0;
-}
+import { getPluginNameFromKey, isPluginKey } from '../common';
 
 export function isRequestValidatorPluginKey(key: string): boolean {
   return key.match(/-request-validator$/) != null;
-}
-
-export function getPluginNameFromKey(key: string): string {
-  return key.replace(/^x-kong-plugin-/, '');
 }
 
 type GeneratorFn = (key: string, value: Object, iterable: Object | Array<Object>) => DCPlugin;

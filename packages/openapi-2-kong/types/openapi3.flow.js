@@ -14,6 +14,10 @@ declare type OA3Info = {|
     name: string,
     url?: string,
   |},
+  'x-kubernetes-ingress-metadata'?: {|
+    name?: string,
+    annotations?: Object,
+  |},
 |};
 
 declare type OA3ExternalDocs = {|
@@ -34,9 +38,9 @@ declare type OA3RequestBody = {|
   // TODO
 |};
 
-declare type OA3SecurityRequirement = {|
+declare type OA3SecurityRequirement = {
   // TODO
-|};
+};
 
 declare type OA3Operation = {
   description?: string,
@@ -65,9 +69,28 @@ declare type OA3Server = {
       description?: string,
     },
   },
+} & OA3ServerKubernetesProperties;
+
+// Improving typing of this
+declare type OA3ServerKubernetesProperties = {
+  'x-kubernetes-backend'?: {|
+    serviceName: string,
+    servicePort: number,
+  |},
+  'x-kubernetes-service'?: {|
+    spec?: {|
+      ports?: Array<{|
+        port: number,
+      |}>,
+    |},
+    metadata?: {|
+      name: string,
+    |},
+  |},
+  'x-kubernetes-tls'?: Object,
 };
 
-declare type OA3PathItem = {|
+declare type OA3PathItem = {
   $ref?: string,
   summary?: string,
   description?: string,
@@ -81,7 +104,7 @@ declare type OA3PathItem = {|
   head?: OA3Operation,
   patch?: OA3Operation,
   trace?: OA3Operation,
-|};
+};
 
 declare type OA3Paths = {
   [string]: OA3PathItem,
@@ -138,9 +161,9 @@ declare type OA3Example = {|
   // TODO
 |};
 
-declare type OA3Schema = {|
+declare type OA3Schema = {
   // TODO
-|};
+};
 
 declare type OA3Header = {|
   description?: string,
@@ -170,7 +193,7 @@ declare type OA3Components = {|
   },
 |};
 
-declare type OpenApi3Spec = {|
+declare type OpenApi3Spec = {
   openapi: string,
   info: OA3Info,
   paths: OA3Paths,
@@ -179,4 +202,5 @@ declare type OpenApi3Spec = {|
   security?: Array<OA3SecurityRequirement>,
   tags?: Array<string>,
   externalDocs?: OA3ExternalDocs,
-|};
+  'x-kong-name'?: string,
+};

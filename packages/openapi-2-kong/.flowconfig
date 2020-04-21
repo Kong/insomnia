@@ -11,5 +11,6 @@
 ./types
 
 [options]
+esproposal.optional_chaining=enable
 
 [lints]

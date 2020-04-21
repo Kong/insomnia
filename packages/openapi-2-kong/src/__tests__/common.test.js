@@ -1,14 +1,50 @@
+// @flow
 import {
   fillServerVariables,
   generateSlug,
+  getMethodAnnotationName,
   getName,
+  getPaths,
+  getPluginNameFromKey,
   getSecurity,
   getServers,
+  isHttpMethodKey,
+  isPluginKey,
   pathVariablesToRegex,
+  pathVariablesToWildcard,
 } from '../common';
 import { parseSpec } from '../index';
 
 describe('common', () => {
+  const spec: OpenApi3Spec = {
+    openapi: '3.0.0',
+    info: {
+      version: '1.0.0',
+      title: 'Swagger Petstore',
+    },
+    servers: [{ url: 'https://server1.com/path' }],
+    paths: {},
+  };
+
+  describe('getPaths()', () => {
+    it('should return api paths', () => {
+      const paths = {
+        '/': {
+          description: 'test',
+        },
+      };
+
+      const api = {
+        ...spec,
+        paths,
+      };
+
+      const result = getPaths(api);
+
+      expect(result).toBe(paths);
+    });
+  });
+
   describe('getServers()', () => {
     const spec = {
       openapi: '3.0.0',
@@ -38,39 +74,41 @@ describe('common', () => {
   });
 
   describe('getSecurity()', () => {
-    const spec = {
-      openapi: '3.0.0',
-      info: {
-        version: '1.0.0',
-        title: 'Swagger Petstore',
-      },
-      servers: [{ url: 'https://server1.com/path' }],
-      paths: {
-        '/': {
-          post: {
-            security: [{ petstoreAuth: [] }],
-            responses: {},
-          },
-        },
-      },
-      security: [{ anotherAuth: [] }],
-      components: {
-        securitySchemes: {
-          petstoreAuth: { type: 'http', scheme: 'basic' },
-          anotherAuth: { type: 'http', scheme: 'basic' },
-        },
-      },
-    };
+    it('returns security from operation', () => {
+      const operation: OA3Operation = {
+        security: [{ petstoreAuth: [] }],
+        responses: {},
+      };
 
-    it('returns path item security', async () => {
-      const s = await parseSpec(spec);
-      const result = getSecurity(s.paths['/'].post);
+      const result = getSecurity(operation);
       expect(result).toEqual([{ petstoreAuth: [] }]);
     });
 
-    it('returns api security', async () => {
-      const s = await parseSpec(spec);
-      const result = getSecurity(s);
+    it('returns security from api', () => {
+      const spec: OpenApi3Spec = {
+        openapi: '3.0.0',
+        info: {
+          version: '1.0.0',
+          title: 'Swagger Petstore',
+        },
+        servers: [{ url: 'https://server1.com/path' }],
+        paths: {
+          '/': {
+            post: {
+              security: [{ petstoreAuth: [] }],
+              responses: {},
+            },
+          },
+        },
+        security: [{ anotherAuth: [] }],
+        components: {
+          securitySchemes: {
+            petstoreAuth: { type: 'http', scheme: 'basic', name: 'name' },
+            anotherAuth: { type: 'http', scheme: 'basic', name: 'another-name' },
+          },
+        },
+      };
+      const result = getSecurity(spec);
       expect(result).toEqual([{ anotherAuth: [] }]);
     });
   });
@@ -89,7 +127,7 @@ describe('common', () => {
       expect(result).toBe('override');
     });
 
-    it('openapi object without', async () => {
+    it('openapi object without x-kong-name', async () => {
       const s = await parseSpec(spec);
       const result = getName(s);
       expect(result).toBe('Swagger_Petstore');
@@ -104,20 +142,8 @@ describe('common', () => {
       expect(result2).toBe('Another_Default');
     });
 
-    it('path object with x-kong-name', async () => {
-      const p = { 'x-kong-name': 'kong' };
-      const result = getName(p);
-      expect(result).toBe('kong');
-    });
-
-    it('path object with summary', async () => {
-      const p = { 'x-kong-name': 'kong' };
-      const result = getName(p);
-      expect(result).toBe('kong');
-    });
-
-    it('works with slugify options', async () => {
-      const p = { 'x-kong-name': 'This Needs Slugify' };
+    it('works with slugify options', () => {
+      const p = { ...spec, 'x-kong-name': 'This Needs Slugify' };
       const result = getName(p, '', { replacement: '?', lower: true });
       expect(result).toBe('this?needs?slugify');
     });
@@ -149,7 +175,7 @@ describe('common', () => {
     });
 
     it('fails with no default value', () => {
-      const server = {
+      const server: Object = {
         url: 'https://{subdomain}.swagger.io/v1',
         variables: { subdomain: { enum: ['petstore'] } },
       };
@@ -165,6 +191,42 @@ describe('common', () => {
 
     it('does not convert to regex if no variables present', () => {
       expect(pathVariablesToRegex('/foo/bar/baz')).toBe('/foo/bar/baz');
+    });
+  });
+  describe('pathVariablesToWildcard()', () => {
+    it('converts variables to .* wildcard', function() {
+      expect(pathVariablesToWildcard('/foo/{bar}/{baz}')).toBe('/foo/.*/.*');
+    });
+
+    it('does not convert to regex if no variables present', () => {
+      expect(pathVariablesToRegex('/foo/bar/baz')).toBe('/foo/bar/baz');
+    });
+  });
+  describe('getPluginNameFromKey()', () => {
+    it('should remove x-kong-plugin- prefix to extract name', () => {
+      expect(getPluginNameFromKey('x-kong-plugin-name')).toBe('name');
+    });
+  });
+  describe('isPluginKey()', () => {
+    it('should be true if key is prefixed by x-kong-plugin-', () => {
+      expect(isPluginKey('x-kong-plugin-name')).toBe(true);
+    });
+    it('should be false if key is not prefixed by x-kong-plugin-', () => {
+      expect(isPluginKey('x-kong-name')).toBe(false);
+    });
+  });
+  const methods = ['get', 'put', 'post', 'options', 'delete', 'head', 'patch', 'trace'];
+  describe('isHttpMethodKey()', () => {
+    it.each(methods)('should be true for %o', method => {
+      expect(isHttpMethodKey(method)).toBe(true);
+    });
+    it('should be false for non http method key', () => {
+      expect(isHttpMethodKey('test')).toBe(false);
+    });
+  });
+  describe('getMethodAnnotationName', () => {
+    it.each(methods)('should suffix with -method and lowercase: %o', method => {
+      expect(getMethodAnnotationName(method)).toBe(`${method}-method`.toLowerCase());
     });
   });
 });

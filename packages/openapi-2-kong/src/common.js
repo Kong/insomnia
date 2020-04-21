@@ -6,6 +6,10 @@ export function getServers(obj: OpenApi3Spec | OA3PathItem): Array<OA3Server> {
   return obj.servers || [];
 }
 
+export function getPaths(obj: OpenApi3Spec): OA3Paths {
+  return obj.paths || {};
+}
+
 export function getAllServers(api: OpenApi3Spec): Array<OA3Server> {
   const servers = getServers(api);
 
@@ -19,46 +23,82 @@ export function getAllServers(api: OpenApi3Spec): Array<OA3Server> {
 }
 
 export function getSecurity(
-  obj: OpenApi3Spec | OA3Operation,
-): Array<OA3SecurityRequirement> | null {
-  return obj.security || [];
+  obj: OpenApi3Spec | OA3Operation | null,
+): Array<OA3SecurityRequirement> {
+  return obj?.security || [];
 }
+
+type SlugifyOptions = {
+  replacement?: string,
+  lower?: boolean,
+};
 
 export function getName(
-  obj: OpenApi3Spec | OA3Operation,
-  defaultValue?: string = 'openapi',
-  slugifyOptions?: {replacement: string, lower: boolean},
+  api: OpenApi3Spec,
+  defaultValue?: string,
+  slugifyOptions?: SlugifyOptions,
 ): string {
-  let name: string = '';
+  let name = api['x-kong-name'] || '';
 
-  if ((obj: any)['x-kong-name']) {
-    name = (obj: any)['x-kong-name'];
+  if (!name && typeof api.info?.title === 'string') {
+    name = api.info.title;
   }
 
-  if (!name && obj.info && typeof obj.info.title === 'string') {
-    name = obj.info.title;
-  }
+  name = name || defaultValue || 'openapi';
 
-  return generateSlug(name || defaultValue, slugifyOptions);
+  return generateSlug(name, slugifyOptions);
 }
 
-export function generateSlug(
-  str: string,
-  options: {replacement: string, lower: boolean} = {},
-): string {
+export function generateSlug(str: string, options: SlugifyOptions = {}): string {
   options.replacement = options.replacement || '_';
   options.lower = options.lower || false;
   return slugify(str, options);
 }
 
+const pathVariableSearchValue = /{([^}]+)}(?!:\/\/)/g;
+
 export function pathVariablesToRegex(p: string): string {
-  const result = p.replace(/{([^}]+)}/g, '(?<$1>\\S+)');
+  const result = p.replace(pathVariableSearchValue, '(?<$1>\\S+)');
   if (result === p) {
     return result;
   }
 
   // If anything was replaced, it's a regex, so add a line-ending match
   return result + '$';
+}
+
+export function pathVariablesToWildcard(p: string): string {
+  return p.replace(pathVariableSearchValue, '.*');
+}
+
+export function getPluginNameFromKey(key: string): string {
+  return key.replace(/^x-kong-plugin-/, '');
+}
+
+export function isPluginKey(key: string): boolean {
+  return key.indexOf('x-kong-plugin-') === 0;
+}
+
+export const HttpMethod = {
+  get: 'GET',
+  put: 'PUT',
+  post: 'POST',
+  delete: 'DELETE',
+  options: 'OPTIONS',
+  head: 'HEAD',
+  patch: 'PATCH',
+  trace: 'TRACE',
+};
+
+export type HttpMethodKeys = $Values<typeof HttpMethod>;
+
+export function isHttpMethodKey(key: string): boolean {
+  const uppercaseKey = key.toUpperCase();
+  return Object.values(HttpMethod).some(m => m === uppercaseKey);
+}
+
+export function getMethodAnnotationName(method: HttpMethodKeys): string {
+  return `${method}-method`.toLowerCase();
 }
 
 export function parseUrl(
