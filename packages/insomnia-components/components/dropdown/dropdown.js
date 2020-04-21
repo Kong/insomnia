@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
-import fuzzySort from 'fuzzysort';
 import ReactDOM from 'react-dom';
+import fuzzySort from 'fuzzysort';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';

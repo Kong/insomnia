@@ -49,7 +49,6 @@ import SyncBranchesModal from './modals/sync-branches-modal';
 import RequestRenderErrorModal from './modals/request-render-error-modal';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
-import PortalUploadModal from './modals/portal-upload-modal';
 import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';
 import CodePromptModal from './modals/code-prompt-modal';
 import * as db from '../../common/database';
@@ -610,10 +609,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleDuplicateWorkspace={handleDuplicateWorkspace}
               handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
               isVariableUncovered={isVariableUncovered}
-            />
-
-            <PortalUploadModal
-              ref={registerModal}
             />
 
             <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />

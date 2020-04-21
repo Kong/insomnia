@@ -57,6 +57,7 @@ export type WorkspaceAction = {
 
 export type SpecInfo = {
   contents: Object,
+  rawContents: string,
   format: string,
   formatVersion: string,
 };

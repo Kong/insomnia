@@ -2,6 +2,7 @@ import { parse as urlParse } from 'url';
 import { setDefaultProtocol } from 'insomnia-url';
 import axios from 'axios';
 import * as models from '../models';
+import { isDevelopment } from '../common/constants';
 
 export async function axiosRequest(config) {
   const settings = await models.settings.getOrCreate();
@@ -24,5 +25,11 @@ export async function axiosRequest(config) {
     finalConfig.proxy = { host: hostname, port };
   }
 
-  return axios(finalConfig);
+  const response = await axios(finalConfig);
+
+  if (isDevelopment()) {
+    console.log('[axios] Response', { config, response });
+  }
+
+  return response;
 }

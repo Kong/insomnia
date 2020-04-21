@@ -57,8 +57,7 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
 
     let result;
     try {
-      const { contents, format, formatVersion } = parseApiSpec(apiSpec.contents);
-      result = await generatePlugin.generate({ contents, format, formatVersion });
+      result = await generatePlugin.generate(parseApiSpec(apiSpec.contents));
     } catch (err) {
       config.error = err.message;
       return config;

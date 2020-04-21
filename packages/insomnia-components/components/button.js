@@ -23,13 +23,19 @@ const StyledButton: React.ComponentType<Props> = styled.button`
 
   &:focus,
   &:hover {
-    outline: 0;
-    background-color: var(--hl-xxs);
-    opacity: 0.9;
+    &:not(:disabled) {
+      outline: 0;
+      background-color: var(--hl-xxs);
+      opacity: 0.9;
+    }
   }
 
-  &:active {
+  &:active:not(:disabled) {
     background-color: var(--hl-xs);
+  }
+
+  &:disabled {
+    opacity: 60%;
   }
 
   svg {

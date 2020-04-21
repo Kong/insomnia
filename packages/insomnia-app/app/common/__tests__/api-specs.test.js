@@ -11,17 +11,17 @@ describe('parseApiSpec()', () => {
       info: { title: 'My API' },
     };
 
+    const yamlSpec = YAML.stringify(objSpec);
+    const jsonSpec = JSON.stringify(objSpec);
+
     const expected = {
       format: 'openapi',
       formatVersion: '3.0.0',
       contents: objSpec,
     };
 
-    const yamlSpec = YAML.stringify(objSpec);
-    const jsonSpec = JSON.stringify(objSpec);
-
-    expect(parseApiSpec(yamlSpec)).toEqual(expected);
-    expect(parseApiSpec(jsonSpec)).toEqual(expected);
+    expect(parseApiSpec(yamlSpec)).toEqual({ ...expected, rawContents: yamlSpec });
+    expect(parseApiSpec(jsonSpec)).toEqual({ ...expected, rawContents: jsonSpec });
   });
 
   it('parses YAML and JSON Swagger specs', () => {
@@ -39,8 +39,8 @@ describe('parseApiSpec()', () => {
     const yamlSpec = YAML.stringify(objSpec);
     const jsonSpec = JSON.stringify(objSpec);
 
-    expect(parseApiSpec(yamlSpec)).toEqual(expected);
-    expect(parseApiSpec(jsonSpec)).toEqual(expected);
+    expect(parseApiSpec(yamlSpec)).toEqual({ ...expected, rawContents: yamlSpec });
+    expect(parseApiSpec(jsonSpec)).toEqual({ ...expected, rawContents: jsonSpec });
   });
 
   it('parses YAML and JSON Unknown specs', () => {
@@ -58,8 +58,8 @@ describe('parseApiSpec()', () => {
     const yamlSpec = YAML.stringify(objSpec);
     const jsonSpec = JSON.stringify(objSpec);
 
-    expect(parseApiSpec(yamlSpec)).toEqual(expected);
-    expect(parseApiSpec(jsonSpec)).toEqual(expected);
+    expect(parseApiSpec(yamlSpec)).toEqual({ ...expected, rawContents: yamlSpec });
+    expect(parseApiSpec(jsonSpec)).toEqual({ ...expected, rawContents: jsonSpec });
   });
 
   it('returns the default result if empty document', () => {
@@ -67,6 +67,7 @@ describe('parseApiSpec()', () => {
       format: null,
       formatVersion: null,
       contents: null,
+      rawContents: '',
     };
 
     expect(parseApiSpec('')).toEqual(expected);

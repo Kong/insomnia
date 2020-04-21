@@ -15,8 +15,6 @@
     "main": "main.min.js",
     "publishRepo": "kong/studio",
     "plugins": [
-      "kong-declarative-config",
-      "kong-k8s-config",
       "kong-studio-themes",
       "insomnia-plugin-base64",
       "insomnia-plugin-hash",
@@ -165,8 +163,6 @@
     "jsonlint": "^1.6.3",
     "jsonpath": "^1.0.2",
     "jwt-authentication": "^0.4.0",
-    "kong-declarative-config": "^2.2.0",
-    "kong-k8s-config": "^2.2.0",
     "kong-studio-themes": "^2.2.0",
     "marked": "^0.3.9",
     "mime-types": "^2.1.18",

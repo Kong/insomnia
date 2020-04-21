@@ -4,11 +4,13 @@ import YAML from 'yaml';
 
 export function parseApiSpec(rawDocument: string): {
   contents: Object | null,
+  rawContents: string,
   format: 'openapi' | 'swagger' | null,
   formatVersion: string | null,
 } {
   const result = {
     contents: null,
+    rawContents: rawDocument,
     format: null,
     formatVersion: null,
   };

@@ -35,6 +35,12 @@ export const _default = () => (
   </Button>
 );
 
+export const disabled = () => (
+  <Button onClick={() => window.alert('Clicked!')} bg={select('Background', themeColors)} disabled>
+    Can't Touch This
+  </Button>
+);
+
 export const withIcon = () => (
   <Button onClick={() => window.alert('Clicked!')} bg={select('Background', themeColors)}>
     Expand <SvgIcon icon={IconEnum.chevronDown} />
