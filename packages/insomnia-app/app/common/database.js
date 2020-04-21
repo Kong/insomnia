@@ -489,7 +489,7 @@ export async function docUpdate<T: BaseModel>(
   originalDoc: T,
   ...patches: Array<Object>
 ): Promise<T> {
-  // No need to re-initialize the model during update; originalDoc will be in a valid sate by virtue of loading
+  // No need to re-initialize the model during update; originalDoc will be in a valid state by virtue of loading
   const doc = await models.initModel(
     originalDoc.type,
     originalDoc,
