@@ -7,7 +7,7 @@ import fsPath from 'path';
 import { DB_PERSIST_INTERVAL } from './constants';
 import uuid from 'uuid';
 import { generateId, getDataDirectory } from './misc';
-import { getModel } from '../models';
+import { mustGetModel } from '../models';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -604,7 +604,7 @@ export const duplicate = (database.duplicate = async function<T: BaseModel>(
   const flushId = await database.bufferChanges();
 
   async function next<T: BaseModel>(docToCopy: T, patch: Object): Promise<T> {
-    const model = getModel(docToCopy.type);
+    const model = mustGetModel(docToCopy.type);
 
     const overrides = {
       _id: generateId(model.prefix),
