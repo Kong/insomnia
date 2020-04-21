@@ -6,7 +6,8 @@ import NeDB from 'nedb';
 import fsPath from 'path';
 import { DB_PERSIST_INTERVAL } from './constants';
 import uuid from 'uuid';
-import { getDataDirectory } from './misc';
+import { generateId, getDataDirectory } from './misc';
+import { mustGetModel } from '../models';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -346,13 +347,18 @@ export const upsert = (database.upsert = async function(
 export const insert = (database.insert = async function<T: BaseModel>(
   doc: T,
   fromSync: boolean = false,
+  initializeModel: boolean = true,
 ): Promise<T> {
   if (db._empty) return _send('insert', ...arguments);
 
   return new Promise(async (resolve, reject) => {
     let docWithDefaults;
     try {
-      docWithDefaults = await models.initModel(doc.type, doc);
+      if (initializeModel) {
+        docWithDefaults = await models.initModel(doc.type, doc);
+      } else {
+        docWithDefaults = doc;
+      }
     } catch (err) {
       return reject(err);
     }
@@ -483,6 +489,7 @@ export async function docUpdate<T: BaseModel>(
   originalDoc: T,
   ...patches: Array<Object>
 ): Promise<T> {
+  // No need to re-initialize the model during update; originalDoc will be in a valid state by virtue of loading
   const doc = await models.initModel(
     originalDoc.type,
     originalDoc,
@@ -597,13 +604,20 @@ export const duplicate = (database.duplicate = async function<T: BaseModel>(
   const flushId = await database.bufferChanges();
 
   async function next<T: BaseModel>(docToCopy: T, patch: Object): Promise<T> {
-    // 1. Copy the doc
-    const newDoc = Object.assign({}, docToCopy, patch);
-    delete newDoc._id;
-    delete newDoc.created;
-    delete newDoc.modified;
+    const model = mustGetModel(docToCopy.type);
 
-    const createdDoc = await docCreate(newDoc.type, newDoc);
+    const overrides = {
+      _id: generateId(model.prefix),
+      modified: Date.now(),
+      created: Date.now(),
+      type: docToCopy.type, // Ensure this is not overwritten by the patch
+    };
+
+    // 1. Copy the doc
+    const newDoc = Object.assign({}, docToCopy, patch, overrides);
+
+    // Don't initialize the model during insert, and simply duplicate
+    const createdDoc = await database.insert(newDoc, false, false);
 
     // 2. Get all the children
     for (const type of allTypes()) {

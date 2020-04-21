@@ -82,6 +82,16 @@ export function getModel(type: string): Object | null {
   return all().find(m => m.type === type) || null;
 }
 
+export function mustGetModel(type: string): Object {
+  const model = getModel(type);
+
+  if (!model) {
+    throw new Error(`The model type ${type} must exist but could not be found.`);
+  }
+
+  return model;
+}
+
 export function canDuplicate(type: string) {
   const model = getModel(type);
   return model ? model.canDuplicate : false;
