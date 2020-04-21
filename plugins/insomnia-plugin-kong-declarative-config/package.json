@@ -1,6 +1,5 @@
 {
-  "name": "kong-declarative-config",
-  "private": true,
+  "name": "insomnia-plugin-kong-declarative-config",
   "version": "2.2.0",
   "main": "index.js",
   "insomnia": {

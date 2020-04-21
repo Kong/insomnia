@@ -1,10 +1,9 @@
 {
-  "name": "kong-k8s-config",
-  "private": true,
+  "name": "insomnia-plugin-kong-kubernetes-config",
   "version": "2.2.0",
   "main": "index.js",
   "insomnia": {
-    "name": "kong-k8s-config",
+    "name": "kong-kubernetes-config",
     "description": "Generate Kong For Kubernetes configuration"
   },
   "dependencies": {

@@ -1,6 +1,5 @@
 {
-  "name": "kong-deploy-to-portal",
-  "private": true,
+  "name": "insomnia-plugin-kong-portal",
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
@@ -8,7 +7,7 @@
     "watch": "webpack --config webpack.config.js --watch"
   },
   "insomnia": {
-    "name": "kong-deploy",
+    "name": "kong-portal",
     "description": "Deploy API specifications to Kong Portal"
   },
   "devDependencies": {
