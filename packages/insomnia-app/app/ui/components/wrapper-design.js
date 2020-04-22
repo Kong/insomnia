@@ -20,6 +20,7 @@ import generateConfigIcon from '../images/icn-gear.svg';
 import * as models from '../../models/index';
 import { parseApiSpec } from '../../common/api-specs';
 import { getConfigGenerators } from '../../plugins';
+import AlertModal from './modals/alert-modal';
 
 const spectral = new Spectral();
 
@@ -69,9 +70,23 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     showModal(GenerateConfigModal, { apiSpec: activeApiSpec });
   }
 
-  _handleDebugSpec() {
-    const { handleSetDebugActivity, wrapperProps: { activeApiSpec } } = this.props;
-    handleSetDebugActivity(activeApiSpec);
+  _handleDebugSpec(errors, e) {
+    e.preventDefault();
+    if (errors) {
+      showModal(AlertModal, {
+        title: 'Error Generating Configuration',
+        message: 'Some requests may not be available due to errors found in the specification. We recommend fixing errors before proceeding. 🤗',
+        okLabel: 'Proceed',
+        addCancel: true,
+        onConfirm: () => {
+          const { handleSetDebugActivity, wrapperProps: { activeApiSpec } } = this.props;
+          handleSetDebugActivity(activeApiSpec);
+        },
+      });
+    } else {
+      const { handleSetDebugActivity, wrapperProps: { activeApiSpec } } = this.props;
+      handleSetDebugActivity(activeApiSpec);
+    }
   }
 
   async _handleTogglePreview() {
@@ -112,18 +127,25 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
   async _reLint() {
     const { activeApiSpec } = this.props.wrapperProps;
-    const results = await spectral.run(activeApiSpec.contents);
 
-    this.setState({
-      lintMessages: results.map(r => ({
-        type: r.severity === 0 ? 'error' : 'warning',
-        message: `${r.code} ${r.message}`,
-        line: r.range.start.line,
+    // Lint only if spec has content
+    if (activeApiSpec.contents.length !== 0) {
+      const results = await spectral.run(activeApiSpec.contents);
+      this.setState({
+        lintMessages: results.map(r => ({
+          type: r.severity === 0 ? 'error' : 'warning',
+          message: `${r.code} ${r.message}`,
+          line: r.range.start.line,
 
-        // Attach range that will be returned to our click handler
-        _range: r.range,
-      })),
-    });
+          // Attach range that will be returned to our click handler
+          _range: r.range,
+        })),
+      });
+    } else {
+      this.setState({
+        lintMessages: [],
+      });
+    }
   }
 
   _handleBreadcrumb(index: number) {
@@ -188,9 +210,8 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             }
             gridCenter={
               <Switch
-                onClick={this._handleDebugSpec}
+                onClick={this._handleDebugSpec.bind(this, lintErrorsExist)}
                 optionItems={[{ label: 'DESIGN', selected: true }, { label: 'DEBUG', selected: false }]}
-                error={lintErrorsExist ? 'Failed to generate requests due to linting errors.' : undefined}
               />
             }
             gridRight={

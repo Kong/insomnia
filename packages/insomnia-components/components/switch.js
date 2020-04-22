@@ -1,8 +1,6 @@
 // @flow
 import * as React from 'react';
 import styled from 'styled-components';
-import classnames from 'classnames';
-import SvgIcon, { IconEnum } from './svg-icon';
 
 type Item = {
   label: string,
@@ -11,9 +9,8 @@ type Item = {
 
 type Props = {|
   className?: string,
-  onClick: (e: SyntheticEvent<HTMLDivElement>) => any,
+  onClick: (e: SyntheticEvent<HTMLInputElement>) => any,
   optionItems: Array<Item>,
-  error?: string,
 |};
 
 const StyledSwitch: React.ComponentType<{}> = styled.div`
@@ -24,22 +21,6 @@ const StyledSwitch: React.ComponentType<{}> = styled.div`
     width: 140px;
     background: var(--hl-xs);
     border-radius: 17px;
-  }
-  .switch-disabled {
-    width: 150px;
-    .switch-label {
-      cursor: default;
-    }
-    .switch-input:not(:checked) + .switch-label {
-      opacity: 0.5;
-    }
-  }
-  .disabled-indicator {
-    position: absolute;
-    right: 8px;
-    line-height: 34px;
-    padding-top: 1px;
-    font-size: 1rem;
   }
   .switch-label {
     position: relative;
@@ -88,25 +69,25 @@ const StyledSwitch: React.ComponentType<{}> = styled.div`
 
 class Switch extends React.PureComponent<Props> {
   render() {
-    const { className, onClick, optionItems, error } = this.props;
-    const disabled = !!error;
+    const { className, onClick, optionItems } = this.props;
 
     return (
       <StyledSwitch className={className}>
-        <div
-          className={classnames('switch', { 'switch-disabled': disabled })}
-          onClick={disabled ? undefined : onClick}
-          title={error}
-        >
+        <div className='switch'>
         {optionItems.map((item, i) => {
           return <React.Fragment key={item.label}>
-            <input type="radio" className="switch-input" name="switch" value={item.label} id={item.label} defaultChecked={item.selected ? 'defaultChecked' : ''} disabled={disabled}/>
+            <input
+              type='radio'
+              className='switch-input'
+              name='switch'
+              onClick={onClick}
+              value={item.label}
+              id={item.label}
+              defaultChecked={item.selected ? 'defaultChecked' : ''}
+            />
             <label htmlFor={item.label} className={`switch-label ${i === 0 ? 'switch-label-off' : 'switch-label-on'}`}>{item.label}</label>
           </React.Fragment>;
-         })}
-          {disabled && <div className="disabled-indicator">
-            <SvgIcon icon={IconEnum.info}/>
-          </div>}
+        })}
           <span className="switch-selection"></span>
         </div>
       </StyledSwitch>
