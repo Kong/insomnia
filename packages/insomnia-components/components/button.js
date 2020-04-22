@@ -44,7 +44,14 @@ const StyledButton: React.ComponentType<Props> = styled.button`
   }
 
   &:active:not(:disabled) {
-    background-color: var(--hl-xs);
+    ${({ variant, bg }) => {
+      if (variant === 'contained') {
+        // kind of a hack, but using inset box shadow to darken the theme color
+        return 'box-shadow: inset 0 0 99px rgba(0, 0, 0, 0.2)';
+      }
+
+      return `background-color: rgba(var(--color-${bg}-rgb), 0.2)`;
+    }}
   }
 
   &:disabled {
