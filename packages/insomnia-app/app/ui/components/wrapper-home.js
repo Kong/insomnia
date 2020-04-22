@@ -388,7 +388,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
   renderMenu() {
     return (
       <Dropdown renderButton={() => (
-        <Button bg="surprise" className="margin-left">
+        <Button variant="contained" bg="surprise" className="margin-left">
           Create <i className="fa fa-caret-down" />
         </Button>
       )}>

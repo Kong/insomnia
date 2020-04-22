@@ -5,11 +5,11 @@ import styled from 'styled-components';
 type Props = {
   onClick?: (e: SyntheticEvent<HTMLButtonElement>) => any,
   bg?: 'success' | 'notice' | 'warning' | 'danger' | 'surprise' | 'info',
+  variant?: 'outlined' | 'contained' | 'text',
 };
 
 const StyledButton: React.ComponentType<Props> = styled.button`
   color: ${({ bg }) => (bg ? `var(--color-${bg})` : 'var(--color-font)')};
-  background-color: transparent;
   text-align: center;
   font-size: var(--font-size-sm);
   padding: 0 var(--padding-md);
@@ -19,14 +19,27 @@ const StyledButton: React.ComponentType<Props> = styled.button`
   flex-direction: row !important;
   align-items: center !important;
 
-  border: ${({ noOutline }) => (noOutline ? '0' : '1px solid')};
+  border: ${({ variant }) => (variant !== 'outlined' ? '1px solid transparent' : '1px solid')};
+  ${({ variant, bg }) => {
+    if (variant !== 'contained') {
+      return 'background-color: transparent;';
+    }
+
+    return `background: var(--color-${bg}); color: var(--color-font-${bg})`;
+  }}}
 
   &:focus,
   &:hover {
     &:not(:disabled) {
       outline: 0;
-      background-color: var(--hl-xxs);
-      opacity: 0.9;
+      ${({ variant, bg }) => {
+        if (variant === 'contained') {
+          // kind of a hack, but using inset box shadow to darken the theme color
+          return 'box-shadow: inset 0 0 99px rgba(0, 0, 0, 0.1)';
+        }
+
+        return `background-color: rgba(var(--color-${bg}-rgb), 0.1)`;
+      }}
     }
   }
 
@@ -46,7 +59,11 @@ const StyledButton: React.ComponentType<Props> = styled.button`
 
 class Button extends React.Component<Props> {
   render() {
-    return <StyledButton {...(this.props: Object)} />;
+    return <StyledButton
+      {...(this.props: Object)}
+      variant={this.props.variant || 'outlined'}
+      bg={this.props.bg || 'surprise'}
+    />;
   }
 }
 

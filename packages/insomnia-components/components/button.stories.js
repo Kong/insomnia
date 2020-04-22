@@ -15,12 +15,18 @@ const Wrapper: React.ComponentType<any> = styled.div`
 
   & > * {
     margin-right: 0.5rem;
+    margin-top: 0.8rem;
   }
 `;
 Wrapper.displayName = '...';
 
+const variants = {
+  Outlined: 'outlined',
+  Contained: 'contained',
+  Text: 'text',
+};
+
 const themeColors = {
-  default: null,
   Surprise: 'surprise',
   Info: 'info',
   Success: 'success',
@@ -29,9 +35,30 @@ const themeColors = {
   Danger: 'danger',
 };
 
-export const _default = () => (
-  <Button onClick={() => window.alert('Clicked!')} bg={select('Background', themeColors)}>
-    Click Me
+export const outlined = () => (
+  <Button
+    variant={select('Variant', variants, 'outlined')}
+    onClick={() => window.alert('Clicked!')}
+    bg={select('Background', themeColors)}>
+    Outlined
+  </Button>
+);
+
+export const text = () => (
+  <Button
+    variant={select('Variant', variants, 'text')}
+    onClick={() => window.alert('Clicked!')}
+    bg={select('Background', themeColors)}>
+    Text
+  </Button>
+);
+
+export const contained = () => (
+  <Button
+    variant={select('Variant', variants, 'contained')}
+    onClick={() => window.alert('Clicked!')}
+    bg={select('Background', themeColors)}>
+    Contained
   </Button>
 );
 
@@ -48,13 +75,30 @@ export const withIcon = () => (
 );
 
 export const colors = () => (
-  <Wrapper>
-    <Button>Default</Button>
-    <Button bg="success">Success</Button>
-    <Button bg="surprise">Surprise</Button>
-    <Button bg="danger">Danger</Button>
-    <Button bg="warning">Warning</Button>
-    <Button bg="notice">Notice</Button>
-    <Button bg="info">Info</Button>
-  </Wrapper>
+  <React.Fragment>
+    <Wrapper>
+      <Button bg="success" variant="contained">Success</Button>
+      <Button bg="surprise" variant="contained">Surprise</Button>
+      <Button bg="danger" variant="contained">Danger</Button>
+      <Button bg="warning" variant="contained">Warning</Button>
+      <Button bg="notice" variant="contained">Notice</Button>
+      <Button bg="info" variant="contained">Info</Button>
+    </Wrapper>
+    <Wrapper>
+      <Button bg="success" variant="outlined">Success</Button>
+      <Button bg="surprise" variant="outlined">Surprise</Button>
+      <Button bg="danger" variant="outlined">Danger</Button>
+      <Button bg="warning" variant="outlined">Warning</Button>
+      <Button bg="notice" variant="outlined">Notice</Button>
+      <Button bg="info" variant="outlined">Info</Button>
+    </Wrapper>
+    <Wrapper>
+      <Button bg="success" variant="text">Success</Button>
+      <Button bg="surprise" variant="text">Surprise</Button>
+      <Button bg="danger" variant="text">Danger</Button>
+      <Button bg="warning" variant="text">Warning</Button>
+      <Button bg="notice" variant="text">Notice</Button>
+      <Button bg="info" variant="text">Info</Button>
+    </Wrapper>
+  </React.Fragment>
 );
