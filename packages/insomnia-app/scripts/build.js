@@ -220,7 +220,6 @@ function generatePackageJson(relBasePkg, relOutPkg) {
     author: basePkg.author,
     main: 'main.min.js',
     dependencies: {},
-    releaseDate: '',
   };
 
   for (const key of Object.keys(appPkg)) {
@@ -243,11 +242,6 @@ function generatePackageJson(relBasePkg, relOutPkg) {
     appPkg.dependencies[name] = version;
     console.log(`[build] Adding native Node dep ${name}`);
   }
-
-  const date = new Date();
-  appPkg.releaseDate = date;
-  // console.log(date);
-  // console.log(appPkg);
 
   fs.writeFileSync(outPath, JSON.stringify(appPkg, null, 2));
 }
