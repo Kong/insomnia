@@ -60,9 +60,17 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _refreshState(otherState?: Object) {
-    const { vcs } = this.props;
+    const { vcs, workspace } = this.props;
 
-    if (!vcs.isInitialized()) {
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+    // Clear cached items and return if no state
+    if (!vcs.isInitialized() || !workspaceMeta.gitRepositoryId) {
+      await models.workspaceMeta.update(workspaceMeta, {
+        cachedGitRepositoryBranch: null,
+        cachedGitLastAuthor: null,
+        cachedGitLastCommitTime: null,
+      });
       return;
     }
 
@@ -71,11 +79,8 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     const log = (await vcs.log()) || [];
     this.setState({ ...(otherState || {}), log, branch, branches });
 
-    // Update cached branch name on WorkspaceMeta
-    const { workspace } = this.props;
-    const wm = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
     const author = log[0] ? log[0].author : null;
-    await models.workspaceMeta.update(wm, {
+    await models.workspaceMeta.update(workspaceMeta, {
       cachedGitRepositoryBranch: branch,
       cachedGitLastAuthor: author.name,
       cachedGitLastCommitTime: author.timestamp * 1000, // Convert to ms
