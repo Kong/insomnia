@@ -468,33 +468,6 @@ class Dropdown extends PureComponent {
     }
 
     const noResults = filter && filterItems && filterItems.length === 0;
-    const finalChildren = [
-      renderButton({ open }),
-      ReactDOM.createPortal(
-        <div
-          key="item"
-          className={menuClasses}
-          ref={this._addDropdownMenuRef}
-          aria-hidden={!open}>
-          {open && <StyledBackdrop className="theme--transparent-overlay" />}
-          {open && <StyledMenu key={uniquenessKey} ref={this._addDropdownListRef} tabIndex="-1">
-            <StyledFilter filtering={filterVisible}>
-              <SvgIcon icon="search" />
-              <input
-                type="text"
-                onInput={this._handleChangeFilter}
-                ref={this._addFilterRef}
-                onKeyPress={this._handleCheckFilterSubmit}
-              />
-            </StyledFilter>
-            {noResults && <StyledNoResults>No match</StyledNoResults>}
-            <ul className={classnames({ hide: noResults })}>{dropdownItems}</ul>
-          </StyledMenu>}
-        </div>,
-        this.dropdownsContainer,
-      ),
-    ];
-
     return (
       <StyledDropdown
         style={style}
@@ -504,7 +477,32 @@ class Dropdown extends PureComponent {
         onKeyDown={this._handleKeyDown}
         tabIndex="-1"
         onMouseDown={Dropdown._handleMouseDown}>
-        {finalChildren}
+        <React.Fragment key="button">
+          {renderButton({ open })}
+        </React.Fragment>
+        {ReactDOM.createPortal(
+          <div
+            key="item"
+            className={menuClasses}
+            ref={this._addDropdownMenuRef}
+            aria-hidden={!open}>
+            {open && <StyledBackdrop className="theme--transparent-overlay" />}
+            {open && <StyledMenu key={uniquenessKey} ref={this._addDropdownListRef} tabIndex="-1">
+              <StyledFilter filtering={filterVisible}>
+                <SvgIcon icon="search" />
+                <input
+                  type="text"
+                  onInput={this._handleChangeFilter}
+                  ref={this._addFilterRef}
+                  onKeyPress={this._handleCheckFilterSubmit}
+                />
+              </StyledFilter>
+              {noResults && <StyledNoResults>No match</StyledNoResults>}
+              <ul className={classnames({ hide: noResults })}>{dropdownItems}</ul>
+            </StyledMenu>}
+          </div>,
+          this.dropdownsContainer,
+        )}
       </StyledDropdown>
     );
   }
