@@ -50,7 +50,7 @@ type Props = {|
 |};
 
 type State = {|
-  filter: string
+  filter: string,
 |};
 
 @autobind
@@ -188,8 +188,8 @@ class WrapperHome extends React.PureComponent<Props, State> {
             okLabel: 'Done',
             message: (
               <React.Fragment>
-                Workspace <strong>{existingWorkspace.name}</strong> already exists. Please
-                delete it before cloning.
+                Workspace <strong>{existingWorkspace.name}</strong> already exists. Please delete it
+                before cloning.
               </React.Fragment>
             ),
           });
@@ -343,8 +343,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
         apiSpec={apiSpec}
         handleDuplicateWorkspaceById={handleDuplicateWorkspaceById}
         handleRenameWorkspaceById={handleRenameWorkspace}
-        handleDeleteWorkspaceById={handleDeleteWorkspaceById}
-      ><SvgIcon icon="ellipsis" /></DocumentCardDropdown>
+        handleDeleteWorkspaceById={handleDeleteWorkspaceById}>
+        <SvgIcon icon="ellipsis" />
+      </DocumentCardDropdown>
     );
 
     if (spec || w.scope === 'spec') {
@@ -356,7 +357,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         label = `OpenAPI ${specFormatVersion}`;
       }
 
-      const version = (spec && spec.info && spec.info.version) ? spec.info.version : null;
+      const version = spec && spec.info && spec.info.version ? spec.info.version : null;
       return (
         <Card
           key={w._id}
@@ -387,11 +388,12 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
   renderMenu() {
     return (
-      <Dropdown renderButton={() => (
-        <Button variant="contained" bg="surprise" className="margin-left">
-          Create <i className="fa fa-caret-down" />
-        </Button>
-      )}>
+      <Dropdown
+        renderButton={() => (
+          <Button variant="contained" bg="surprise" className="margin-left">
+            Create <i className="fa fa-caret-down" />
+          </Button>
+        )}>
         <DropdownDivider>New</DropdownDivider>
         <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleWorkspaceCreate}>
           Blank Document
@@ -403,7 +405,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
         <DropdownItem icon={<i className="fa fa-link" />} onClick={this._handleImportUri}>
           URL
         </DropdownItem>
-        <DropdownItem icon={<i className="fa fa-clipboard" />} onClick={this._handleImportClipBoard}>
+        <DropdownItem
+          icon={<i className="fa fa-clipboard" />}
+          onClick={this._handleImportClipBoard}>
           Clipboard
         </DropdownItem>
         <DropdownItem icon={<i className="fa fa-code-fork" />} onClick={this._handleWorkspaceClone}>
@@ -449,9 +453,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         renderPageBody={() => (
           <div className="document-listing theme--pane layout-body pad-top">
             <div className="document-listing__body">
-              <CardContainer>
-                {filteredWorkspaces.map(this.renderWorkspace)}
-              </CardContainer>
+              <CardContainer>{filteredWorkspaces.map(this.renderWorkspace)}</CardContainer>
               {filteredWorkspaces.length === 0 && (
                 <Notice color="subtle">
                   No workspaces found for <strong>{filter}</strong>

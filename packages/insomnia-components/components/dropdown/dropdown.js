@@ -49,9 +49,16 @@ const StyledFilter = styled.div`
 
   // Can't "display: none" this because we need to be able to type
   // in it. So, we'll just store it off screen
-  ${({ filtering }) => filtering
-  ? css`position: static; left: auto;`
-  : css`position: absolute; left: -9999999px;`}
+  ${({ filtering }) =>
+    filtering
+      ? css`
+          position: static;
+          left: auto;
+        `
+      : css`
+          position: absolute;
+          left: -9999999px;
+        `}
 
   input {
     margin: 0;
@@ -100,7 +107,6 @@ const StyledMenu = styled.div`
   li.active button:not(:disabled) {
     background: var(--hl-sm);
   }
-
 `;
 
 @autobind
@@ -477,9 +483,7 @@ class Dropdown extends PureComponent {
         onKeyDown={this._handleKeyDown}
         tabIndex="-1"
         onMouseDown={Dropdown._handleMouseDown}>
-        <React.Fragment key="button">
-          {renderButton({ open })}
-        </React.Fragment>
+        <React.Fragment key="button">{renderButton({ open })}</React.Fragment>
         {ReactDOM.createPortal(
           <div
             key="item"
@@ -487,19 +491,21 @@ class Dropdown extends PureComponent {
             ref={this._addDropdownMenuRef}
             aria-hidden={!open}>
             {open && <StyledBackdrop className="theme--transparent-overlay" />}
-            {open && <StyledMenu key={uniquenessKey} ref={this._addDropdownListRef} tabIndex="-1">
-              <StyledFilter filtering={filterVisible}>
-                <SvgIcon icon="search" />
-                <input
-                  type="text"
-                  onInput={this._handleChangeFilter}
-                  ref={this._addFilterRef}
-                  onKeyPress={this._handleCheckFilterSubmit}
-                />
-              </StyledFilter>
-              {noResults && <StyledNoResults>No match</StyledNoResults>}
-              <ul className={classnames({ hide: noResults })}>{dropdownItems}</ul>
-            </StyledMenu>}
+            {open && (
+              <StyledMenu key={uniquenessKey} ref={this._addDropdownListRef} tabIndex="-1">
+                <StyledFilter filtering={filterVisible}>
+                  <SvgIcon icon="search" />
+                  <input
+                    type="text"
+                    onInput={this._handleChangeFilter}
+                    ref={this._addFilterRef}
+                    onKeyPress={this._handleCheckFilterSubmit}
+                  />
+                </StyledFilter>
+                {noResults && <StyledNoResults>No match</StyledNoResults>}
+                <ul className={classnames({ hide: noResults })}>{dropdownItems}</ul>
+              </StyledMenu>
+            )}
           </div>,
           this.dropdownsContainer,
         )}

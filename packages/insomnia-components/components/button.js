@@ -66,11 +66,13 @@ const StyledButton: React.ComponentType<Props> = styled.button`
 
 class Button extends React.Component<Props> {
   render() {
-    return <StyledButton
-      {...(this.props: Object)}
-      variant={this.props.variant || 'outlined'}
-      bg={this.props.bg || 'surprise'}
-    />;
+    return (
+      <StyledButton
+        {...(this.props: Object)}
+        variant={this.props.variant || 'outlined'}
+        bg={this.props.bg || 'surprise'}
+      />
+    );
   }
 }
 

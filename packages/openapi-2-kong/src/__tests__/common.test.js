@@ -10,8 +10,8 @@ import {
   getServers,
   isHttpMethodKey,
   isPluginKey,
+  parseUrl,
   pathVariablesToRegex,
-  pathVariablesToWildcard,
 } from '../common';
 import { parseSpec } from '../index';
 
@@ -184,6 +184,7 @@ describe('common', () => {
       expect(fn).toThrowError('Server variable "subdomain" missing default value');
     });
   });
+
   describe('pathVariablesToRegex()', () => {
     it('converts variables to regex path', () => {
       expect(pathVariablesToRegex('/foo/{bar}/{baz}')).toBe('/foo/(?<bar>\\S+)/(?<baz>\\S+)$');
@@ -193,20 +194,13 @@ describe('common', () => {
       expect(pathVariablesToRegex('/foo/bar/baz')).toBe('/foo/bar/baz');
     });
   });
-  describe('pathVariablesToWildcard()', () => {
-    it('converts variables to .* wildcard', function() {
-      expect(pathVariablesToWildcard('/foo/{bar}/{baz}')).toBe('/foo/.*/.*');
-    });
 
-    it('does not convert to regex if no variables present', () => {
-      expect(pathVariablesToRegex('/foo/bar/baz')).toBe('/foo/bar/baz');
-    });
-  });
   describe('getPluginNameFromKey()', () => {
     it('should remove x-kong-plugin- prefix to extract name', () => {
       expect(getPluginNameFromKey('x-kong-plugin-name')).toBe('name');
     });
   });
+
   describe('isPluginKey()', () => {
     it('should be true if key is prefixed by x-kong-plugin-', () => {
       expect(isPluginKey('x-kong-plugin-name')).toBe(true);
@@ -215,6 +209,7 @@ describe('common', () => {
       expect(isPluginKey('x-kong-name')).toBe(false);
     });
   });
+
   const methods = ['get', 'put', 'post', 'options', 'delete', 'head', 'patch', 'trace'];
   describe('isHttpMethodKey()', () => {
     it.each(methods)('should be true for %o', method => {
@@ -224,9 +219,22 @@ describe('common', () => {
       expect(isHttpMethodKey('test')).toBe(false);
     });
   });
+
   describe('getMethodAnnotationName', () => {
     it.each(methods)('should suffix with -method and lowercase: %o', method => {
       expect(getMethodAnnotationName(method)).toBe(`${method}-method`.toLowerCase());
+    });
+  });
+
+  describe('parseUrl()', () => {
+    it('returns / for pathname if no path', () => {
+      const result = parseUrl('http://api.insomnia.rest');
+      expect(result.pathname).toBe('/');
+    });
+
+    it('returns pathname if defined in url', () => {
+      const result = parseUrl('http://api.insomnia.rest/api/v1');
+      expect(result.pathname).toBe('/api/v1');
     });
   });
 });
