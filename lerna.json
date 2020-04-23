@@ -1,5 +1,5 @@
 {
-  "tagVersionPrefix": "pkg-v",
+  "tagVersionPrefix": "lib@",
   "version": "2.2.0",
   "packages": [
     "packages/*",
