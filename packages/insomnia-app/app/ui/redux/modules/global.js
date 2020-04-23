@@ -27,6 +27,9 @@ import type { GlobalActivity } from '../../components/activity-bar/activity-bar'
 import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
+import { setActivityAttribute } from '../../../common/misc';
+import { getDefaultAppId, INSOMNIA_APP_ID, isDevelopment } from '../../../common/constants';
+import { ACTIVITY_HOME, ACTIVITY_INSOMNIA } from '../../components/activity-bar/activity-bar';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
@@ -220,9 +223,25 @@ export function loadRequestStop(requestId) {
 }
 
 export function setActiveActivity(activity: GlobalActivity) {
-  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
-  trackEvent('Activity', 'Change', activity);
-  return { type: SET_ACTIVE_ACTIVITY, activity };
+  let goToActivity = activity;
+
+  // If development, skip logic (to allow for real-time switching)
+  //   If app should be insomnia
+  //     then don't allow changing to another activity
+  //   If not insomnia
+  //     then don't allow changing to ACTIVITY_INSOMNIA
+  if (!isDevelopment()) {
+    if (getDefaultAppId() === INSOMNIA_APP_ID) {
+      goToActivity = ACTIVITY_INSOMNIA;
+    } else if (activity === ACTIVITY_INSOMNIA) {
+      goToActivity = ACTIVITY_HOME;
+    }
+  }
+
+  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(goToActivity));
+  setActivityAttribute(goToActivity);
+  trackEvent('Activity', 'Change', goToActivity);
+  return { type: SET_ACTIVE_ACTIVITY, activity: goToActivity };
 }
 
 export function setActiveWorkspace(workspaceId: string) {

@@ -12,6 +12,8 @@ import SidebarChildren from './sidebar/sidebar-children';
 import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import designerLogo from '../images/insomnia-designer-logo.svg';
+import WorkspaceDropdown from './dropdowns/workspace-dropdown';
+import { isInsomnia } from '../../common/constants';
 
 type Props = {
   forceRefreshKey: string,
@@ -19,7 +21,6 @@ type Props = {
   handleChangeEnvironment: Function,
   handleDeleteResponse: Function,
   handleDeleteResponses: Function,
-  handleForceUpdateRequest: Function,
   handleForceUpdateRequest: Function,
   handleForceUpdateRequestHeaders: Function,
   handleImport: Function,
@@ -47,19 +48,54 @@ type Props = {
 
 @autobind
 class WrapperDebug extends React.PureComponent<Props> {
-  _handleBreadcrumb(index: number) {
+  _handleBreadcrumb() {
     this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
   _handleDesign() {
-    const { handleSetDesignActivity, wrapperProps: { activeWorkspace } } = this.props;
+    const {
+      handleSetDesignActivity,
+      wrapperProps: { activeWorkspace },
+    } = this.props;
     handleSetDesignActivity(activeWorkspace._id);
+  }
+
+  _renderPageHeader() {
+    const {
+      gitSyncDropdown,
+      wrapperProps: { activeWorkspace },
+    } = this.props;
+
+    return (
+      <Header
+        className="app-header"
+        gridLeft={
+          <React.Fragment>
+            <img src={designerLogo} alt="Insomnia" width="24" height="24" />
+            <Breadcrumb
+              className="breadcrumb"
+              crumbs={['Documents', activeWorkspace.name]}
+              onClick={this._handleBreadcrumb}
+            />
+          </React.Fragment>
+        }
+        gridCenter={
+          <Switch
+            onClick={this._handleDesign}
+            optionItems={[
+              { label: 'DESIGN', selected: false },
+              { label: 'DEBUG', selected: true },
+            ]}
+          />
+        }
+        gridRight={gitSyncDropdown}
+      />
+    );
   }
 
   render() {
     const {
       forceRefreshKey,
-      gitSyncDropdown,
       handleChangeEnvironment,
       handleDeleteResponse,
       handleDeleteResponses,
@@ -87,13 +123,16 @@ class WrapperDebug extends React.PureComponent<Props> {
     } = this.props;
 
     const {
+      activity,
       activeEnvironment,
       activeRequest,
       activeRequestResponses,
       activeResponse,
       activeWorkspace,
       environments,
+      enableSyncBeta,
       handleActivateRequest,
+      handleSetActiveWorkspace,
       handleCopyAsCurl,
       handleCreateRequest,
       handleCreateRequestForWorkspace,
@@ -120,6 +159,7 @@ class WrapperDebug extends React.PureComponent<Props> {
       handleUpdateSettingsUseBulkParametersEditor,
       headerEditorKey,
       isVariableUncovered,
+      isLoading,
       loadStartTime,
       oAuth2Token,
       requestVersions,
@@ -132,28 +172,34 @@ class WrapperDebug extends React.PureComponent<Props> {
       sidebarFilter,
       sidebarHidden,
       sidebarWidth,
+      unseenWorkspaces,
+      vcs,
+      workspaces,
     } = this.props.wrapperProps;
+
+    const insomnia = isInsomnia(activity);
+    const designer = !insomnia;
 
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
-        renderPageHeader={() => (
-          <Header
-              className="app-header"
-              gridLeft={
-                  <React.Fragment>
-                      <img src={designerLogo} alt="Insomnia" width="24" height="24" />
-                      <Breadcrumb className="breadcrumb" crumbs={['Documents', activeWorkspace.name]} onClick={this._handleBreadcrumb} />
-                  </React.Fragment>
-              }
-              gridCenter={
-                  <Switch onClick={this._handleDesign} optionItems={[{ label: 'DESIGN', selected: false }, { label: 'DEBUG', selected: true }]} />
-              }
-              gridRight={gitSyncDropdown}
-          />
-        )}
+        renderPageHeader={designer && this._renderPageHeader}
         renderPageSidebar={() => (
           <React.Fragment>
+            {insomnia && (
+              <WorkspaceDropdown
+                className="sidebar__header theme--sidebar__header"
+                activeEnvironment={activeEnvironment}
+                activeWorkspace={activeWorkspace}
+                workspaces={workspaces}
+                unseenWorkspaces={unseenWorkspaces}
+                hotKeyRegistry={settings.hotKeyRegistry}
+                handleSetActiveWorkspace={handleSetActiveWorkspace}
+                enableSyncBeta={enableSyncBeta}
+                isLoading={isLoading}
+                vcs={vcs}
+              />
+            )}
             <div className="sidebar__menu">
               <EnvironmentsDropdown
                 handleChangeEnvironment={handleChangeEnvironment}

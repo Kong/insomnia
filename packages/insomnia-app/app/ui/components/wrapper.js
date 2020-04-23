@@ -66,7 +66,12 @@ import type { StatusCandidate } from '../../sync/types';
 import type { RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
 import type { GlobalActivity } from './activity-bar/activity-bar';
-import { ACTIVITY_DEBUG, ACTIVITY_HOME, ACTIVITY_SPEC } from './activity-bar/activity-bar';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_INSOMNIA,
+  ACTIVITY_SPEC,
+} from './activity-bar/activity-bar';
 import type { ApiSpec } from '../../models/api-spec';
 import GitVCS from '../../sync/git/git-vcs';
 import { trackPageView } from '../../common/analytics';
@@ -86,8 +91,15 @@ export type WrapperProps = {
   handleSetSidebarFilter: Function,
   handleToggleMenuBar: Function,
   handleImportFileToWorkspace: (workspaceId: string, forceToWorkspace?: ForceToWorkspace) => void,
-  handleImportClipBoardToWorkspace: (workspaceId: string, forceToWorkspace?: ForceToWorkspace) => void,
-  handleImportUriToWorkspace: (workspaceId: string, uri: string, forceToWorkspace?: ForceToWorkspace) => void,
+  handleImportClipBoardToWorkspace: (
+    workspaceId: string,
+    forceToWorkspace?: ForceToWorkspace,
+  ) => void,
+  handleImportUriToWorkspace: (
+    workspaceId: string,
+    uri: string,
+    forceToWorkspace?: ForceToWorkspace,
+  ) => void,
   handleInitializeEntities: Function,
   handleExportFile: Function,
   handleShowExportRequestsModal: Function,
@@ -280,8 +292,8 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
   }
 
   async _handleWorkspaceActivityChange(workspaceId: string, activeActivity: GlobalActivity) {
-    this.props.handleSetActiveActivity(activeActivity);
-    await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity });
+    const { activity: updatedActivity } = this.props.handleSetActiveActivity(activeActivity);
+    await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: updatedActivity });
   }
 
   async _handleSetDesignActivity(workspaceId: string) {
@@ -503,13 +515,13 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     if (gitVCS) {
       gitSyncDropdown = (
         <GitSyncDropdown
-          className='margin-left'
+          className="margin-left"
           workspace={activeWorkspace}
           dropdownButtonClassName="btn--clicky-small btn-sync btn-utility"
           gitRepository={activeGitRepository}
           vcs={gitVCS}
           handleInitializeEntities={handleInitializeEntities}
-          renderDropdownButton={(children) => (
+          renderDropdownButton={children => (
             <DropdownButton className="btn--clicky-small btn-sync btn-utility">
               {children}
             </DropdownButton>
@@ -630,6 +642,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleImportUri={this._handleImportUri}
               handleToggleMenuBar={handleToggleMenuBar}
               settings={settings}
+              activity={activity}
             />
 
             <ResponseDebugModal ref={registerModal} settings={settings} />
@@ -742,7 +755,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
           />
         )}
 
-        {activity === ACTIVITY_DEBUG && (
+        {(activity === ACTIVITY_DEBUG || activity === ACTIVITY_INSOMNIA) && (
           <WrapperDebug
             forceRefreshKey={this.state.forceRefreshKey}
             gitSyncDropdown={gitSyncDropdown}
@@ -756,7 +769,9 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             handleImportFile={this._handleImportFile}
             handleRequestCreate={this._handleCreateRequestInWorkspace}
             handleRequestGroupCreate={this._handleCreateRequestGroupInWorkspace}
-            handleSendAndDownloadRequestWithActiveEnvironment={this._handleSendAndDownloadRequestWithActiveEnvironment}
+            handleSendAndDownloadRequestWithActiveEnvironment={
+              this._handleSendAndDownloadRequestWithActiveEnvironment
+            }
             handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
             handleSetActiveResponse={this._handleSetActiveResponse}
             handleSetPreviewMode={this._handleSetPreviewMode}

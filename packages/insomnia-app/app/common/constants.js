@@ -1,8 +1,12 @@
+// @flow
+
 import * as packageJSON from '../../package.json';
 import * as electron from 'electron';
 import path from 'path';
 import mkdirp from 'mkdirp';
 import { getDataDirectory } from './misc';
+import { ACTIVITY_INSOMNIA } from '../ui/components/activity-bar/activity-bar';
+import type { GlobalActivity } from '../ui/components/activity-bar/activity-bar';
 
 // App Stuff
 
@@ -18,6 +22,11 @@ export function getAppName() {
   return packageJSON.app.productName;
 }
 
+export function getDefaultAppId() {
+  // Get from an environment variable (process.env.defaultAppId) or packageJSON.defaultAppId, etc
+  return DESIGNER_APP_ID;
+}
+
 export function getAppId() {
   return packageJSON.app.appId;
 }
@@ -31,10 +40,11 @@ export function getAppEnvironment() {
 }
 
 export function getBrowserUserAgent() {
-  const ua = encodeURIComponent(String(window.navigator.userAgent)
-  .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
-  .replace(/Electron\/\d+\.\d+\.\d+ /, ''))
-  .replace('%2C', ',');
+  const ua = encodeURIComponent(
+    String(window.navigator.userAgent)
+      .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
+      .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
+  ).replace('%2C', ',');
   return ua;
 }
 
@@ -60,6 +70,10 @@ export function isWindows() {
 
 export function isDevelopment() {
   return getAppEnvironment() === 'development';
+}
+
+export function isInsomnia(activity: GlobalActivity): boolean {
+  return activity === ACTIVITY_INSOMNIA;
 }
 
 export function getClientString() {
@@ -334,3 +348,6 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   510: 'Further extensions to the request are required for the server to fulfill it.',
   511: 'The 511 status code indicates that the client needs to authenticate to gain network access.',
 };
+
+export const INSOMNIA_APP_ID = 'com.insomnia.app';
+export const DESIGNER_APP_ID = 'com.insomnia.designer';

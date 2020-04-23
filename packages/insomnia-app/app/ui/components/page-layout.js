@@ -5,6 +5,7 @@ import type { WrapperProps } from './wrapper';
 import classnames from 'classnames';
 import ErrorBoundary from './error-boundary';
 import Sidebar from './sidebar/sidebar';
+import { isInsomnia } from '../../common/constants';
 
 type Props = {
   wrapperProps: WrapperProps,
@@ -28,14 +29,10 @@ class PageLayout extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const {
-      renderPageBody,
-      renderPageHeader,
-      renderPageSidebar,
-      wrapperProps,
-    } = this.props;
+    const { renderPageBody, renderPageHeader, renderPageSidebar, wrapperProps } = this.props;
 
     const {
+      activity,
       activeEnvironment,
       activeGitRepository,
       activeWorkspace,
@@ -61,7 +58,8 @@ class PageLayout extends React.PureComponent<Props, State> {
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
 
     const gridRows = `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
-    const gridColumns = `auto ${realSidebarWidth}rem 0 ` +
+    const gridColumns =
+      `auto ${realSidebarWidth}rem 0 ` +
       `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)`;
 
     return (
@@ -98,12 +96,7 @@ class PageLayout extends React.PureComponent<Props, State> {
               ? '5px solid ' + activeEnvironment.color
               : null,
         }}>
-
-        {renderPageHeader && (
-          <ErrorBoundary showAlert>
-            {renderPageHeader()}
-          </ErrorBoundary>
-        )}
+        {renderPageHeader && <ErrorBoundary showAlert>{renderPageHeader()}</ErrorBoundary>}
 
         {renderPageSidebar && (
           <ErrorBoundary showAlert>
@@ -129,11 +122,15 @@ class PageLayout extends React.PureComponent<Props, State> {
               workspace={activeWorkspace}
               workspaces={workspaces}>
               {renderPageSidebar()}
-              <div className="sidebar__footer">
-                <button className="btn btn--compact wide row-spaced" onClick={handleShowSettingsModal}>
-                  Preferences <i className="fa fa-gear" />
-                </button>
-              </div>
+              {!isInsomnia(activity) && (
+                <div className="sidebar__footer">
+                  <button
+                    className="btn btn--compact wide row-spaced"
+                    onClick={handleShowSettingsModal}>
+                    Preferences <i className="fa fa-gear" />
+                  </button>
+                </div>
+              )}
             </Sidebar>
 
             <div className="drag drag--sidebar">
@@ -145,11 +142,7 @@ class PageLayout extends React.PureComponent<Props, State> {
           </ErrorBoundary>
         )}
 
-        {renderPageBody && (
-          <ErrorBoundary showAlert>
-            {renderPageBody()}
-          </ErrorBoundary>
-        )}
+        {renderPageBody && <ErrorBoundary showAlert>{renderPageBody()}</ErrorBoundary>}
       </div>
     );
   }

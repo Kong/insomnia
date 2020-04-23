@@ -60,7 +60,6 @@ class Sidebar extends React.PureComponent<Props> {
               ? '5px solid ' + activeEnvironment.color
               : null,
         }}>
-
         {children}
 
         {enableSyncBeta && vcs && isLoggedIn() && (

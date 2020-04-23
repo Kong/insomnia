@@ -11,6 +11,7 @@ export const ACTIVITY_SPEC: GlobalActivity = 'spec';
 export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
 export const ACTIVITY_MONITOR: GlobalActivity = 'monitor';
 export const ACTIVITY_HOME: GlobalActivity = 'home';
+export const ACTIVITY_INSOMNIA: GlobalActivity = 'insomnia';
 
 type Props = {|
   activity: GlobalActivity,
