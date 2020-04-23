@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-kong-declarative-config",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "main": "index.js",
   "insomnia": {
     "unlisted": true,
@@ -8,7 +8,7 @@
     "description": "Generate Kong Declarative Config"
   },
   "dependencies": {
-    "openapi-2-kong": "^2.2.0",
+    "openapi-2-kong": "^2.2.1",
     "yaml": "^1.8.3"
   }
 }
