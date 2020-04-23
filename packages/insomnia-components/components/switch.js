@@ -30,7 +30,7 @@ const StyledSwitch: React.ComponentType<{}> = styled.div`
     width: 67px;
     line-height: 34px;
     font-size: 11px;
-    color: rgba(0, 0, 0, 0.55);
+    color: var(--hl);
     text-align: center;
     cursor: pointer;
     padding-top:0px;
@@ -45,24 +45,22 @@ const StyledSwitch: React.ComponentType<{}> = styled.div`
     display: none;
   }
   .switch-input:checked + .switch-label {
-    color: var(--color-surprise);
+    color: var(--color-font);
     text-shadow: 0 1px rgba(255, 255, 255, 0.25);
   }
   .switch-input:checked + .switch-label-on ~ .switch-selection {
-    left: 70px;
+    left: 71px;
   }
   .switch-selection {
     position: absolute;
     z-index: 1;
-    top: 3px;
-    left: 2px;
+    top: 4px;
+    left: 4px;
     display: block;
     width: 65px;
     height: 26px;
     border-radius: 13px;
-    background-color: #fff;
-    border:1px solid #DCDCDC;
-    box-shadow: 1px 1px 4px 0px rgba(0,0,0,0.15);
+    background-color: var(--color-bg);
     transition: left 0.20s ease-out;
   }
 `;
