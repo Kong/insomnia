@@ -220,7 +220,7 @@ export async function getRequestGroupActions(): Promise<Array<RequestGroupAction
 
 export async function getWorkspaceActions(): Promise<Array<WorkspaceAction>> {
   let extensions = [];
-  for (const plugin of await getPlugins()) {
+  for (const plugin of await getActivePlugins()) {
     const actions = plugin.module.workspaceActions || [];
     extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
   }
@@ -230,7 +230,7 @@ export async function getWorkspaceActions(): Promise<Array<WorkspaceAction>> {
 
 export async function getDocumentActions(): Promise<Array<DocumentAction>> {
   let extensions = [];
-  for (const plugin of await getPlugins()) {
+  for (const plugin of await getActivePlugins()) {
     const actions = plugin.module.documentActions || [];
     extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
   }
