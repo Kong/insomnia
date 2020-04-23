@@ -7,6 +7,7 @@
     "watch": "webpack --config webpack.config.js --watch"
   },
   "insomnia": {
+    "unlisted": true,
     "name": "kong-portal",
     "description": "Deploy API specifications to Kong Portal"
   },

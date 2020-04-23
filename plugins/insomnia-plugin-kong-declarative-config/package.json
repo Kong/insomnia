@@ -3,6 +3,7 @@
   "version": "2.2.0",
   "main": "index.js",
   "insomnia": {
+    "unlisted": true,
     "name": "kong-declarative-config",
     "description": "Generate Kong Declarative Config"
   },
