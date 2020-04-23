@@ -99,7 +99,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
   _handleImportPetstore() {
     this._handleImportUri(
       'https://gist.githubusercontent.com/gschier/4e2278d5a50b4bbf1110755d9b48a9f9' +
-      '/raw/801c05266ae102bcb9288ab92c60f52d45557425/petstore-spec.yaml',
+        '/raw/801c05266ae102bcb9288ab92c60f52d45557425/petstore-spec.yaml',
     );
   }
 
@@ -112,14 +112,12 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     return (
       <React.Fragment>
         <p>
-          <strong>Share Usage Analytics with Kong</strong>
+          <strong>Share Usage Analytics with Kong Inc</strong>
         </p>
+        <img src={chartSrc} alt="Demonstration chart" />
         <p>
-          <img src={chartSrc} alt="Demonstration chart" />
-        </p>
-        <p>
-          Help us understand how <strong>you</strong> use {packageJson.app.longName} so we can
-          make it better.
+          Help us understand how <strong>you</strong> use {packageJson.app.longName} so we can make
+          it better.
         </p>
         <button key="enable" className="btn btn--clicky" onClick={this._handleClickEnableAnalytics}>
           Share Usage Analytics
@@ -135,7 +133,9 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
   }
 
   renderStep2() {
-    const { settings: { enableAnalytics } } = this.props.wrapperProps;
+    const {
+      settings: { enableAnalytics },
+    } = this.props.wrapperProps;
     return (
       <React.Fragment>
         <p className="notice success text-left margin-top margin-bottom">
@@ -146,9 +146,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
             ? `Thanks for helping make ${packageJson.app.productName} better!`
             : 'Opted out of analytics'}
         </p>
-        <p>
-          <strong>Import an OpenAPI spec to get started:</strong>
-        </p>
+        <p>Import an OpenAPI spec to get started:</p>
         <button key="file" className="btn btn--clicky" onClick={this._handleImportFile}>
           From File
         </button>

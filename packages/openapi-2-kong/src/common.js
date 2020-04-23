@@ -67,10 +67,6 @@ export function pathVariablesToRegex(p: string): string {
   return result + '$';
 }
 
-export function pathVariablesToWildcard(p: string): string {
-  return p.replace(pathVariableSearchValue, '.*');
-}
-
 export function getPluginNameFromKey(key: string): string {
   return key.replace(/^x-kong-plugin-/, '');
 }

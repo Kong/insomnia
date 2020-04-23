@@ -62,13 +62,7 @@ declare type OA3Reference = {|
 declare type OA3Server = {
   url: string,
   description?: string,
-  variables?: {
-    [string]: {
-      default: string,
-      enum?: Array<string>,
-      description?: string,
-    },
-  },
+  variables?: OA3Variables,
 } & OA3ServerKubernetesProperties;
 
 // Improving typing of this
@@ -88,6 +82,14 @@ declare type OA3ServerKubernetesProperties = {
     |},
   |},
   'x-kubernetes-tls'?: Object,
+};
+
+declare type OA3Variables = {
+  [string]: {
+    default: string,
+    enum?: Array<string>,
+    description?: string,
+  },
 };
 
 declare type OA3PathItem = {

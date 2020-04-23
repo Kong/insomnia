@@ -1,9 +1,10 @@
 // @flow
 
-import { getMethodAnnotationName, getName, parseUrl, pathVariablesToWildcard } from '../common';
+import { getMethodAnnotationName, getName, parseUrl } from '../common';
 import urlJoin from 'url-join';
 import { flattenPluginDocuments, getPlugins } from './plugins';
 import type { HttpMethodKeys } from '../common';
+import { pathVariablesToWildcard, resolveUrlVariables } from './variables';
 
 export function generateKongForKubernetesConfigFromSpec(
   api: OpenApi3Spec,
@@ -16,7 +17,6 @@ export function generateKongForKubernetesConfigFromSpec(
   const plugins = getPlugins(api, increment);
 
   // Initialize document collections
-  const pluginDocuments = flattenPluginDocuments(plugins);
   const ingressDocuments = [];
 
   const methodsThatNeedKongIngressDocuments: { [HttpMethodKeys]: boolean } = {};
@@ -62,6 +62,7 @@ export function generateKongForKubernetesConfigFromSpec(
   const methodDocuments = Object.keys(methodsThatNeedKongIngressDocuments).map(
     generateK8sMethodDocuments,
   );
+  const pluginDocuments = flattenPluginDocuments(plugins);
 
   const documents = [...methodDocuments, ...pluginDocuments, ...ingressDocuments];
 
@@ -143,13 +144,19 @@ export function generateRulesForServer(
   ingressName: string,
   paths?: Array<string>,
 ): K8sIngressRule {
-  const { hostname } = parseUrl(server.url);
+  // Resolve serverUrl variables and update the source object so it only needs to be done once per server loop.
+  server.url = resolveUrlVariables(server.url, server.variables);
+
+  const { hostname, pathname } = parseUrl(server.url);
   const serviceName = generateServiceName(server, ingressName, index);
   const servicePort = generateServicePort(server);
   const backend = { serviceName, servicePort };
 
   const pathsToUse: Array<string> = (paths?.length && paths) || ['']; // Make flow happy
-  const k8sPaths = pathsToUse.map(p => generateServicePath(server, backend, p));
+  const k8sPaths: Array<K8sPath> = pathsToUse.map(p => ({
+    path: generateServicePath(pathname, p),
+    backend,
+  }));
 
   const tlsConfig = generateTlsConfig(server);
   if (tlsConfig) {
@@ -212,24 +219,16 @@ export function generateServicePort(server: OA3Server): number {
 }
 
 export function generateServicePath(
-  server: OA3Server,
-  backend: K8sBackend,
+  serverBasePath: string,
   specificPath: string = '',
-): K8sPath {
-  const fullUrl = urlJoin(server.url, specificPath);
-  const url = pathVariablesToWildcard(fullUrl);
-
-  const { pathname } = parseUrl(url);
-
-  const p: K8sPath = {
-    backend,
-  };
-
-  if (!pathname || pathname === '/') {
-    return p;
+): string | typeof undefined {
+  const shouldExtractPath = specificPath || (serverBasePath && serverBasePath !== '/');
+  if (!shouldExtractPath) {
+    return undefined;
   }
 
-  p.path = pathname + (specificPath ? '' : '/.*');
+  const fullPath = urlJoin(serverBasePath, specificPath);
+  const pathname = pathVariablesToWildcard(fullPath);
 
-  return p;
+  return pathname + (specificPath ? '' : '/.*');
 }

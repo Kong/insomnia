@@ -77,28 +77,64 @@ export const withIcon = () => (
 export const colors = () => (
   <React.Fragment>
     <Wrapper>
-      <Button bg="success" variant="contained">Success</Button>
-      <Button bg="surprise" variant="contained">Surprise</Button>
-      <Button bg="danger" variant="contained">Danger</Button>
-      <Button bg="warning" variant="contained">Warning</Button>
-      <Button bg="notice" variant="contained">Notice</Button>
-      <Button bg="info" variant="contained">Info</Button>
+      <Button bg="success" variant="contained">
+        Success
+      </Button>
+      <Button bg="surprise" variant="contained">
+        Surprise
+      </Button>
+      <Button bg="danger" variant="contained">
+        Danger
+      </Button>
+      <Button bg="warning" variant="contained">
+        Warning
+      </Button>
+      <Button bg="notice" variant="contained">
+        Notice
+      </Button>
+      <Button bg="info" variant="contained">
+        Info
+      </Button>
     </Wrapper>
     <Wrapper>
-      <Button bg="success" variant="outlined">Success</Button>
-      <Button bg="surprise" variant="outlined">Surprise</Button>
-      <Button bg="danger" variant="outlined">Danger</Button>
-      <Button bg="warning" variant="outlined">Warning</Button>
-      <Button bg="notice" variant="outlined">Notice</Button>
-      <Button bg="info" variant="outlined">Info</Button>
+      <Button bg="success" variant="outlined">
+        Success
+      </Button>
+      <Button bg="surprise" variant="outlined">
+        Surprise
+      </Button>
+      <Button bg="danger" variant="outlined">
+        Danger
+      </Button>
+      <Button bg="warning" variant="outlined">
+        Warning
+      </Button>
+      <Button bg="notice" variant="outlined">
+        Notice
+      </Button>
+      <Button bg="info" variant="outlined">
+        Info
+      </Button>
     </Wrapper>
     <Wrapper>
-      <Button bg="success" variant="text">Success</Button>
-      <Button bg="surprise" variant="text">Surprise</Button>
-      <Button bg="danger" variant="text">Danger</Button>
-      <Button bg="warning" variant="text">Warning</Button>
-      <Button bg="notice" variant="text">Notice</Button>
-      <Button bg="info" variant="text">Info</Button>
+      <Button bg="success" variant="text">
+        Success
+      </Button>
+      <Button bg="surprise" variant="text">
+        Surprise
+      </Button>
+      <Button bg="danger" variant="text">
+        Danger
+      </Button>
+      <Button bg="warning" variant="text">
+        Warning
+      </Button>
+      <Button bg="notice" variant="text">
+        Notice
+      </Button>
+      <Button bg="info" variant="text">
+        Info
+      </Button>
     </Wrapper>
   </React.Fragment>
 );

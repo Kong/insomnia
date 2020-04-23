@@ -214,51 +214,60 @@ describe('index', () => {
   });
 
   describe('generateServicePath()', () => {
-    it('uses no path in the server', () => {
-      const server = { url: 'https://api.insomnia.rest' };
-      const backend = { serviceName: 'svc', servicePort: 80 };
-      expect(generateServicePath(server, backend)).toEqual({ backend });
+    it.each(['', '/'])(
+      'returns undefined if base path is [%o] and no specific path exists',
+      serverBasePath => {
+        expect(generateServicePath(serverBasePath)).toBe(undefined);
+      },
+    );
+
+    it.each(['/api/v1', '/api/v1/'])('adds closing wildcard if base path is [%o]', basePath => {
+      expect(generateServicePath(basePath)).toBe('/api/v1/.*');
     });
 
-    it('uses path in the server', () => {
-      const server = { url: 'https://api.insomnia.rest/api/v1' };
-      const backend = { serviceName: 'svc', servicePort: 80 };
-      expect(generateServicePath(server, backend)).toEqual({
-        path: '/api/v1/.*',
-        backend,
-      });
+    // This state arises when a serverUrl is https://api.insomnia.rest/api/{var} and no paths exist on spec.
+    // Is this correct?
+    it('adds closing wildcard if basePath ends with wildcard and no specific path exists', () => {
+      const serverBasePath = '/api/.*';
+      expect(generateServicePath(serverBasePath)).toBe('/api/.*/.*');
     });
 
-    it('uses path in the server and adds closing wildcard if url ends with /', () => {
-      const server = { url: 'https://api.insomnia.rest/api/v1/' };
-      const backend = { serviceName: 'svc', servicePort: 80 };
-      expect(generateServicePath(server, backend)).toEqual({
-        path: '/api/v1/.*',
-        backend,
-      });
-    });
+    it.each(['/', '/specificPath'])(
+      'does not add closing wildcard if using specific path: [%o]',
+      specificPath => {
+        const serverBasePath = '/';
+        const result = generateServicePath(serverBasePath, specificPath);
+        expect(result).toBe(specificPath);
+      },
+    );
 
     it('converts path variables to .* wildcards', () => {
-      const server = { url: 'https://api.insomnia.rest/api/v1' };
-      const backend = { serviceName: 'svc', servicePort: 80 };
-      expect(generateServicePath(server, backend, '/specificPath')).toEqual({
-        path: '/api/v1/specificPath',
-        backend,
-      });
-    });
-
-    it('using a specific path with variables does not add closing wildcard', () => {
-      const server = { url: 'https://api.insomnia.rest/api/v1' };
-      const backend = { serviceName: 'svc', servicePort: 80 };
-      expect(generateServicePath(server, backend, '/{version}/{test}/specificPath')).toEqual({
-        path: '/api/v1/.*/.*/specificPath',
-        backend,
-      });
+      const serverBasePath = '/api/v1';
+      const result = generateServicePath(serverBasePath, '/{var}/{another-var}/path');
+      expect(result).toBe('/api/v1/.*/.*/path');
     });
   });
 
   describe('generateRulesForServer()', () => {
-    it('handles basic server', () => {
+    it('handles basic server at root', () => {
+      const result = generateRulesForServer(0, { url: 'http://api.insomnia.rest' }, 'my-ingress');
+
+      expect(result).toEqual({
+        host: 'api.insomnia.rest',
+        http: {
+          paths: [
+            {
+              backend: {
+                serviceName: 'my-ingress-s0',
+                servicePort: 80,
+              },
+            },
+          ],
+        },
+      });
+    });
+
+    it('handles basic server with base path', () => {
       const result = generateRulesForServer(
         0,
         { url: 'http://api.insomnia.rest/v1' },
@@ -356,6 +365,82 @@ describe('index', () => {
           secretName: 'my-secret',
         },
       });
+    });
+
+    it('handles server url with protocol variable - no default', () => {
+      const server = { url: '{protocol}://api.insomnia.rest/v1' };
+      const result = generateRulesForServer(1, server, 'my-ingress', []);
+
+      expect(result).toEqual({
+        host: 'api.insomnia.rest',
+        http: {
+          paths: [
+            {
+              path: '/v1/.*',
+              backend: {
+                serviceName: 'my-ingress-s1',
+                servicePort: 80,
+              },
+            },
+          ],
+        },
+      });
+
+      expect(server.url).toBe('http://api.insomnia.rest/v1');
+    });
+
+    it('handles server url with protocol variable - with default', () => {
+      const server = {
+        url: '{protocol}://api.insomnia.rest/v1',
+        variables: { protocol: { default: 'https' } },
+      };
+      const result = generateRulesForServer(1, server, 'my-ingress', []);
+
+      expect(result).toEqual({
+        host: 'api.insomnia.rest',
+        http: {
+          paths: [
+            {
+              path: '/v1/.*',
+              backend: {
+                serviceName: 'my-ingress-s1',
+                servicePort: 80,
+              },
+            },
+          ],
+        },
+      });
+
+      expect(server.url).toBe('https://api.insomnia.rest/v1');
+    });
+
+    it('handles server url with path variables', () => {
+      const server: OA3Server = {
+        url: '{protocol}://api.insomnia.rest/{route}/{version}',
+        variables: {
+          version: {
+            default: 'v1',
+          },
+        },
+      };
+      const result = generateRulesForServer(1, server, 'my-ingress', []);
+
+      expect(result).toEqual({
+        host: 'api.insomnia.rest',
+        http: {
+          paths: [
+            {
+              path: '/.*/v1/.*',
+              backend: {
+                serviceName: 'my-ingress-s1',
+                servicePort: 80,
+              },
+            },
+          ],
+        },
+      });
+
+      expect(server.url).toBe('http://api.insomnia.rest/.*/v1');
     });
   });
 
