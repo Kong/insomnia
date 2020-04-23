@@ -1,4 +1,7 @@
 .onboarding {
+  -webkit-font-smoothing: antialiased;
+  --brand-purple: #4D1BB2;
+
   position: fixed;
   z-index: 10;
   top: 0;
@@ -23,60 +26,84 @@
     background: var(--color-bg);
     margin: auto;
     border-radius: var(--radius-md);
+    border: 1px solid var(--hl-sm);
 
     .img-container {
-      top: -3.5rem;
+      top: -2.3rem;
       position: absolute;
       width: 100%;
-      height: 7rem;
       text-align: center;
 
       img {
-        width: 7.5rem;
-        height: 7.5rem;
+        width: 4.31rem;
+        height: 4.31rem;
         display: inline-block;
-        border-radius: 50%;
-        background-color: var(--color-bg);
       }
+
     }
 
     &__header {
-      padding: 4.5rem var(--padding-lg) var(--padding-lg);
+      padding: var(--padding-lg) var(--padding-lg) var(--padding-lg);
       border-bottom: 1px solid var(--hl-sm);
 
       h1 {
-        color: var(--color-info);
+        color: var(--brand-purple);
         font-size: var(--font-size-xxxl);
         margin-bottom: var(--padding-sm);
       }
 
       h2 {
-        color: var(--hl);
+        color: var(--hl-xl);
         font-size: var(--font-size-lg);
         margin-top: 0;
         margin-bottom: 0;
       }
+
     }
 
     &__body {
       display: flex;
       flex-direction: column;
-      padding: var(--padding-sm) var(--padding-lg) var(--padding-md);
+      padding: var(--padding-md) var(--padding-lg) var(--padding-md);
       color: var(--color-font);
 
-      img {
-        width: 7rem;
+      p {
+          font-size: var(--font-size-lg);
+
+          strong {
+            font-weight: 600;
+          }
+
       }
 
-      button.btn--clicky {
-        border-color: var(--color-info) !important;
-        color: var(--color-info);
+      p:last-of-type {
+        margin-bottom: var(--padding-md);
+      }
+
+      img {
+        padding: var(--padding-sm) 0 0 0;
       }
 
       button {
+        font-size: var(--font-size-lg);
         margin-top: var(--padding-sm);
         width: 100%;
+
+        &.btn--clicky, &.btn--super-compact {
+          height: var(--line-height-sm);
+        }
+        &.btn--clicky {
+          border-color: var(--brand-purple);
+          color: var(--color-surprise);
+        }
+        &.btn--super-compact {
+          text-decoration: underline;
+          color: var(--hl-xl);
+          font-size: var(--font-size-md);
+        }
+
       }
+
     }
   }
 }

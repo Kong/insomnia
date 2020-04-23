@@ -112,11 +112,9 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     return (
       <React.Fragment>
         <p>
-          <strong>Share Usage Analytics with Kong</strong>
+          <strong>Share Usage Analytics with Kong Inc</strong>
         </p>
-        <p>
-          <img src={chartSrc} alt="Demonstration chart" />
-        </p>
+        <img src={chartSrc} alt="Demonstration chart" />
         <p>
           Help us understand how <strong>you</strong> use {packageJson.app.longName} so we can
           make it better.
@@ -147,7 +145,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
             : 'Opted out of analytics'}
         </p>
         <p>
-          <strong>Import an OpenAPI spec to get started:</strong>
+          Import an OpenAPI spec to get started:
         </p>
         <button key="file" className="btn btn--clicky" onClick={this._handleImportFile}>
           From File
