@@ -45,7 +45,13 @@ async function start(app, version) {
   const { data } = await getOrCreateRelease(app, version);
 
   for (const p of paths) {
-    const name = path.basename(p);
+    let name = path.basename(p);
+
+    // This file would conflict between Core/Designer so we'll prefix it with the app ID
+    if (name === 'RELEASES') {
+      name = `${appConfig().appId}.RELEASES`;
+    }
+
     console.log(`[release] Uploading ${p}`);
     await octokit.request({
       method: 'POST',
