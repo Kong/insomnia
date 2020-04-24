@@ -30,7 +30,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
-        run: npm run app-package
+        run: npm run app-release
   Ubuntu14:
     name: Linux (Generic)
     runs-on: ubuntu-16.04
@@ -61,7 +61,7 @@ jobs:
 #      - name: Run tests
 #        run: npm test
 #      - name: Package app
-#        run: npm run app-package
+#        run: npm run app-release
 #        env:
 #          GITHUB_REF: ${{ github.ref }}
 #          GITHUB_SHA: ${{ github.sha }}

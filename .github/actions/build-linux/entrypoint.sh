@@ -15,4 +15,4 @@ npm install --no-save app-builder-bin-linux
 
 echo "Running the stuff"
 npm test
-npm run app-package
+npm run app-release

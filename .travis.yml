@@ -22,4 +22,4 @@ script:
   - npm test
   # Setup branch because Travis doesn't provide a good way to get it
   - export TRAVIS_CURRENT_BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
-  - npm run app-package
+  - npm run app-release
