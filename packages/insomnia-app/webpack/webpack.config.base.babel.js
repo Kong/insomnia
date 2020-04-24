@@ -59,6 +59,9 @@ module.exports = {
   ],
   plugins: [
     new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
+    new webpack.DefinePlugin({
+      'process.env.APP_ID': JSON.stringify(process.env.APP_ID),
+    }),
   ],
   target: 'electron-renderer',
 };

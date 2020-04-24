@@ -11,11 +11,15 @@ import {
   EDITOR_KEY_MAP_VIM,
   isLinux,
   isMac,
+  isWindows,
+  UPDATE_CHANNEL_BETA,
+  UPDATE_CHANNEL_STABLE,
 } from '../../../common/constants';
 import type { Settings } from '../../../models/settings';
 import { setFont } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
+import CheckForUpdatesButton from '../check-for-updates-button';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -375,8 +379,7 @@ class General extends React.PureComponent<Props, State> {
           )}
         </div>
 
-        {/* Update channels not supported here yet */}
-        {/* (isWindows() || isMac()) && (
+        {(isWindows() || isMac()) && (
           <React.Fragment>
             <hr className="pad-top" />
             <div>
@@ -405,7 +408,7 @@ class General extends React.PureComponent<Props, State> {
               </label>
             </div>
           </React.Fragment>
-        ) */}
+        )}
 
         {isLinux() && (
           <React.Fragment>

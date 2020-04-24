@@ -3,6 +3,7 @@ import Color from 'color';
 import { render, THROW_ON_ERROR } from '../common/render';
 import { getThemes } from './index';
 import type { Theme } from './index';
+import { getAppDefaultTheme } from '../common/constants';
 
 type ThemeBlock = {
   background?: {
@@ -249,8 +250,15 @@ export async function setTheme(themeName: string) {
     return;
   }
 
-  body.setAttribute('theme', themeName);
   const themes: Array<Theme> = await getThemes();
+
+  // If theme isn't installed for some reason, set to the default
+  if (!themes.find(t => t.name === themeName)) {
+    console.log(`[theme] Theme not found ${themeName}`);
+    themeName = getAppDefaultTheme();
+  }
+
+  body.setAttribute('theme', themeName);
 
   for (const theme of themes) {
     let themeCSS = (await generateThemeCSS(theme.theme)) + '\n';

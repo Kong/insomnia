@@ -31,8 +31,7 @@ export function getAppSynopsis() {
 }
 
 export function getDefaultAppId() {
-  // Get from an environment variable (process.env.defaultAppId) or packageJSON.defaultAppId, etc
-  return DESIGNER_APP_ID;
+  return process.env.APP_ID;
 }
 
 export function getAppId() {

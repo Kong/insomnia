@@ -13,12 +13,12 @@
     "publish": "lerna publish",
     "clean": "lerna clean --yes && rimraf node_modules",
     "test": "npm run lint && lerna run --stream --parallel test",
-    "app-start": "lerna run start --scope insomnia-app --stream --parallel --bail",
-    "app-build": "lerna run build --stream --parallel --bail",
-    "app-package": "lerna run package --stream --parallel --bail",
-    "app-release": "lerna run release --stream --parallel --bail",
-    "app-storybook": "lerna run storybook --scope insomnia-components --stream --parallel --bail",
-    "app-storybook-legacy": "lerna run storybook --scope insomnia-app --stream --parallel --bail",
+    "app-start": "npm start --prefix packages/insomnia-app",
+    "app-build": "npm run build --prefix packages/insomnia-app",
+    "app-package": "npm run package --prefix packages/insomnia-app",
+    "app-release": "npm run release --prefix packages/insomnia-app",
+    "storybook-start": "npm run storybook --prefix packages/insomnia-components",
+    "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app",
     "format-code": "prettier --write \"**/*.js\""
   },
   "husky": {

@@ -1,8 +1,7 @@
-const { appConfig } = require('../config');
+const { appConfig, electronBuilderConfig } = require('../config');
 const electronBuilder = require('electron-builder');
 const path = require('path');
 const rimraf = require('rimraf');
-const fs = require('fs');
 const buildTask = require('./build');
 
 const PLATFORM_MAP = {
@@ -38,20 +37,17 @@ async function start() {
   }
 
   console.log('[package] Packaging app');
-  await pkg('../.electronbuilder');
+  await pkg(electronBuilderConfig());
 
   console.log('[package] Complete!');
 }
 
-async function pkg(relConfigPath) {
-  const configPath = path.resolve(__dirname, relConfigPath);
-
+async function pkg(electronBuilderConfig) {
   const app = appConfig();
   const [githubOwner, githubRepo] = app.publishRepo.split('/');
 
   // Replace some things
-  const rawConfig = fs
-    .readFileSync(configPath, 'utf8')
+  const rawConfig = JSON.stringify(electronBuilderConfig, null, 2)
     .replace('__APP_ID__', app.appId)
     .replace('__ICON_URL__', app.icon)
     .replace('__GITHUB_REPO__', githubRepo)
