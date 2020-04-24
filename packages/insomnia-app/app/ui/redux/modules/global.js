@@ -28,8 +28,9 @@ import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
 import { setActivityAttribute } from '../../../common/misc';
-import { getDefaultAppId, INSOMNIA_APP_ID, isDevelopment } from '../../../common/constants';
+import { getDefaultAppId, isDevelopment } from '../../../common/constants';
 import { ACTIVITY_HOME, ACTIVITY_INSOMNIA } from '../../components/activity-bar/activity-bar';
+import { APP_ID_INSOMNIA } from '../../../../config';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
@@ -231,7 +232,7 @@ export function setActiveActivity(activity: GlobalActivity) {
   //   If not insomnia
   //     then don't allow changing to ACTIVITY_INSOMNIA
   if (!isDevelopment()) {
-    if (getDefaultAppId() === INSOMNIA_APP_ID) {
+    if (getDefaultAppId() === APP_ID_INSOMNIA) {
       goToActivity = ACTIVITY_INSOMNIA;
     } else if (activity === ACTIVITY_INSOMNIA) {
       goToActivity = ACTIVITY_HOME;

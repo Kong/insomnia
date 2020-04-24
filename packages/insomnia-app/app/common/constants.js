@@ -361,6 +361,3 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   510: 'Further extensions to the request are required for the server to fulfill it.',
   511: 'The 511 status code indicates that the client needs to authenticate to gain network access.',
 };
-
-export const INSOMNIA_APP_ID = 'com.insomnia.app';
-export const DESIGNER_APP_ID = 'com.insomnia.designer';
