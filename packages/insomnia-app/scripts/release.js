@@ -8,7 +8,7 @@ const Octokit = require('@octokit/rest');
 
 // Configure Octokit
 const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN,
+  auth: process.env.GH_TOKEN,
 });
 
 // Start package if ran from CLI
