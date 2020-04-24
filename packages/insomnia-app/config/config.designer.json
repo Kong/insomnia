@@ -9,7 +9,8 @@
   "theme": "studio-light",
   "version": "1.3.0-alpha.4",
   "main": "main.min.js",
-  "publishRepo": "kong/studio",
+  "githubOrg": "Kong",
+  "githubRepo": "studio",
   "gaId": "G-N5Q23R42TP",
   "gaLocation": "https://desktop.designer.konghq.com",
   "plugins": [

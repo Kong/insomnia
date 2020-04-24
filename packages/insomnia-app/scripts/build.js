@@ -1,4 +1,4 @@
-const appConfig = require('../config').appConfig();
+const { appConfig } = require('../config');
 const packageJson = require('../package.json');
 const childProcess = require('child_process');
 const webpack = require('webpack');
@@ -8,8 +8,7 @@ const ncp = require('ncp').ncp;
 const path = require('path');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
-const configRenderer = require('../webpack/webpack.config.production.babel');
-const configMain = require('../webpack/webpack.config.electron.babel');
+const { APP_ID_INSOMNIA, APP_ID_DESIGNER } = require('../config');
 
 // Start build if ran from CLI
 if (require.main === module) {
@@ -19,9 +18,31 @@ if (require.main === module) {
 }
 
 module.exports.start = async function(forcedVersion = null) {
-  console.log('[build] Starting build');
-  console.log('[build] npm: ' + childProcess.spawnSync('npm', ['--version']).stdout);
-  console.log('[build] node: ' + childProcess.spawnSync('node', ['--version']).stdout);
+  const buildContext = getBuildContext();
+  if (!buildContext.version) {
+    console.log(`[build] Skipping build for ref "${buildContext.gitRef}"`);
+    process.exit(0);
+  }
+
+  if (process.env.APP_ID) {
+    console.log('Should not set APP_ID for builds. Use Git tag instead');
+    process.exit(1);
+  }
+
+  // Configure APP_ID env based on what we detected
+  if (buildContext.app === 'designer') {
+    process.env.APP_ID = APP_ID_DESIGNER;
+  } else {
+    process.env.APP_ID = APP_ID_INSOMNIA;
+  }
+
+  // These must be required after APP_ID environment variable is set above
+  const configRenderer = require('../webpack/webpack.config.production.babel');
+  const configMain = require('../webpack/webpack.config.electron.babel');
+
+  console.log(`[build] Starting build for ref "${buildContext.gitRef}"`);
+  console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
+  console.log(`[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim());
 
   if (process.version.indexOf('v10.') !== 0) {
     console.log('[build] Node v10.x.x is required to build');
@@ -44,7 +65,7 @@ module.exports.start = async function(forcedVersion = null) {
   console.log('[build] Copying files');
   await copyFiles('../bin', '../build/');
   await copyFiles('../app/static', '../build/static');
-  await copyFiles(`../app/icons/${appConfig.appId}`, '../build/');
+  await copyFiles(`../app/icons/${appConfig().appId}`, '../build/');
 
   // Generate package.json
   await generatePackageJson(
@@ -58,6 +79,7 @@ module.exports.start = async function(forcedVersion = null) {
   await install('../build/');
 
   console.log('[build] Complete!');
+  return buildContext;
 };
 
 async function buildWebpack(config) {
@@ -217,12 +239,12 @@ function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
 
   const basePkg = JSON.parse(fs.readFileSync(basePath));
 
-  console.log('APPCONFIG', appConfig);
+  const app = appConfig();
   const appPkg = {
-    name: appConfig.name,
-    version: forcedVersion || appConfig.version,
-    productName: appConfig.productName,
-    longName: appConfig.longName,
+    name: app.name,
+    version: forcedVersion || app.version,
+    productName: app.productName,
+    longName: app.longName,
     description: basePkg.description,
     license: basePkg.license,
     homepage: basePkg.homepage,
@@ -246,14 +268,40 @@ function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
   const unpackedDependencies = allDependencies.filter(name => !packedDependencies.includes(name));
 
   // Add dependencies
+  console.log(`[build] Adding ${unpackedDependencies.length} node dependencies`);
   for (const name of unpackedDependencies) {
     const version = basePkg.dependencies[name];
     if (!version) {
       throw new Error(`Failed to find packed dep "${name}" in dependencies`);
     }
     appPkg.dependencies[name] = version;
-    console.log(`[build] Adding native Node dep ${name}`);
   }
 
   fs.writeFileSync(outPath, JSON.stringify(appPkg, null, 2));
+}
+
+// Only release if we're building a tag that ends in a version number
+function getBuildContext() {
+  const {
+    GITHUB_REF,
+    GITHUB_SHA,
+    TRAVIS_TAG,
+    TRAVIS_COMMIT,
+    TRAVIS_CURRENT_BRANCH,
+    GIT_TAG,
+  } = process.env;
+
+  const gitCommit = GITHUB_SHA || TRAVIS_COMMIT;
+  const gitRef = GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || GIT_TAG || '';
+  const tagMatch = gitRef.match(/^(designer|core)@(\d{4}\.\d+(\.\d+)?(-(alpha|beta)\.\d+)?)$/);
+
+  const app = tagMatch ? tagMatch[1] : null;
+  const version = tagMatch ? tagMatch[2] : null;
+
+  return {
+    app,
+    version,
+    gitRef,
+    gitCommit,
+  };
 }

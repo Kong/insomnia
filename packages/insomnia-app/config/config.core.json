@@ -9,7 +9,8 @@
   "theme": "default",
   "version": "7.1.1",
   "main": "main.min.js",
-  "publishRepo": "kong/studio",
+  "githubOrg": "Kong",
+  "githubRepo": "studio",
   "gaId": "<TODO>",
   "gaLocation": "<TODO>",
   "plugins": [

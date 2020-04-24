@@ -13,12 +13,6 @@ const PLATFORM_MAP = {
 // Start package if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
-    const { publish, gitRef } = shouldPublish();
-    if (!publish) {
-      console.log(`[package] Not packaging for ref: "${gitRef}"`);
-      process.exit(0);
-    }
-
     try {
       await buildTask.start();
       await start();
@@ -44,14 +38,13 @@ async function start() {
 
 async function pkg(electronBuilderConfig) {
   const app = appConfig();
-  const [githubOwner, githubRepo] = app.publishRepo.split('/');
 
   // Replace some things
   const rawConfig = JSON.stringify(electronBuilderConfig, null, 2)
     .replace('__APP_ID__', app.appId)
     .replace('__ICON_URL__', app.icon)
-    .replace('__GITHUB_REPO__', githubRepo)
-    .replace('__GITHUB_OWNER__', githubOwner)
+    .replace('__GITHUB_REPO__', app.githubRepo)
+    .replace('__GITHUB_OWNER__', app.githubOrg)
     .replace('__EXECUTABLE_NAME__', app.executableName)
     .replace('__SYNOPSIS__', app.synopsis);
 
@@ -82,27 +75,3 @@ async function emptyDir(relPath) {
   });
 }
 
-// Only release if we're building a tag that ends in a version number
-function shouldPublish() {
-  const {
-    GITHUB_REF,
-    GITHUB_SHA,
-    TRAVIS_TAG,
-    TRAVIS_COMMIT,
-    TRAVIS_CURRENT_BRANCH,
-    FORCE_PACKAGE,
-  } = process.env;
-
-  const gitCommit = GITHUB_SHA || TRAVIS_COMMIT;
-  const gitRef = GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || '';
-  const publish = (
-    FORCE_PACKAGE === 'true' ||
-    gitRef.match(/v\d+\.\d+\.\d+(-([a-z]+)\.\d+)?$/i)
-  );
-
-  return {
-    publish,
-    gitRef,
-    gitCommit,
-  };
-}

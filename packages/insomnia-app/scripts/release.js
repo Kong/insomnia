@@ -1,4 +1,4 @@
-const appConfig = require('../config').appConfig();
+const { appConfig } = require('../config');
 const glob = require('fast-glob');
 const fs = require('fs');
 const path = require('path');
@@ -11,16 +11,13 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
 
-const GITHUB_ORG = 'kong';
-const GITHUB_REPO = 'insomnia';
-
 // Start package if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      await buildTask.start();
+      const buildContext = await buildTask.start();
       await packageTask.start();
-      await start();
+      await start(buildContext.app, buildContext.version);
     } catch (err) {
       console.log('[package] ERROR:', err);
       process.exit(1);
@@ -28,11 +25,10 @@ if (require.main === module) {
   });
 }
 
-async function start() {
-  const tagName = `v${appConfig.version}`;
-  console.log(`[release] Creating release ${tagName}`);
+async function start(app, version) {
+  console.log(`[release] Creating release for ${app} ${version}`);
 
-  const globs = {
+  const assetGlobs = {
     darwin: ['dist/**/*.zip', 'dist/**/*.dmg'],
     win32: ['dist/squirrel-windows/*'],
     linux: [
@@ -44,9 +40,9 @@ async function start() {
     ],
   };
 
-  const paths = await glob(globs[process.platform]);
+  const paths = await glob(assetGlobs[process.platform]);
 
-  const { data } = await getOrCreateRelease(tagName);
+  const { data } = await getOrCreateRelease(app, version);
 
   for (const p of paths) {
     const name = path.basename(p);
@@ -56,8 +52,8 @@ async function start() {
       url: 'https://uploads.github.com/repos/:owner/:repo/releases/:id/assets{?name,label}"',
       id: data.id,
       name: name,
-      owner: GITHUB_ORG,
-      repo: GITHUB_REPO,
+      owner: appConfig().githubOrg,
+      repo: appConfig().githubRepo,
       headers: {
         'Content-Type': 'application/octet-stream',
       },
@@ -68,23 +64,26 @@ async function start() {
   console.log(`[release] Release created ${data.url}`);
 }
 
-async function getOrCreateRelease(tagName) {
+async function getOrCreateRelease(app, version) {
+  const tag = `${app}@${version}`;
+  const releaseName = `${app.slice(0, 1).toUpperCase()}${app.slice(1)} ${version} 📦`;
+
   try {
     return await octokit.repos.getReleaseByTag({
-      owner: GITHUB_ORG,
-      repo: GITHUB_REPO,
-      tag: tagName,
+      owner: appConfig().githubOrg,
+      repo: appConfig().githubRepo,
+      tag,
     });
   } catch (err) {
     // Doesn't exist
   }
 
   return octokit.repos.createRelease({
-    owner: GITHUB_ORG,
-    repo: GITHUB_REPO,
-    tag_name: tagName,
-    name: tagName,
-    body: `Full changelog ⇒ https://insomnia.rest/changelog/${appConfig.version}`,
+    owner: appConfig().githubOrg,
+    repo: appConfig().githubRepo,
+    tag_name: tag,
+    name: releaseName,
+    body: `Full changelog ⇒ https://insomnia.rest/changelog/${tag}`,
     draft: false,
     preRelease: true,
   });
