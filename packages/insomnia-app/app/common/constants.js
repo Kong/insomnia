@@ -38,6 +38,14 @@ export function getAppId() {
   return appConfig().appId;
 }
 
+export function getGoogleAnalyticsId() {
+  return appConfig().gaId;
+}
+
+export function getGoogleAnalyticsLocation() {
+  return appConfig().gaLocation;
+}
+
 export function getAppPlatform() {
   return process.platform;
 }

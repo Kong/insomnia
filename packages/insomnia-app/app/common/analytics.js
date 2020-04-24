@@ -5,12 +5,12 @@ import * as models from '../models/index';
 import * as db from '../common/database';
 import uuid from 'uuid';
 import {
-  GA_ID,
-  GA_LOCATION,
   getAppId,
   getAppName,
   getAppPlatform,
   getAppVersion,
+  getGoogleAnalyticsId,
+  getGoogleAnalyticsLocation,
   isDevelopment,
 } from './constants';
 import type { RequestParameter } from '../models/request';
@@ -141,15 +141,15 @@ async function _getDefaultParams(): Promise<Array<RequestParameter>> {
 
   // Prepping user agent string prior to sending to GA due to Electron base UA not being GA friendly.
   const ua = String(window.navigator.userAgent)
-  .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
-  .replace(/Electron\/\d+\.\d+\.\d+ /, '');
+    .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
+    .replace(/Electron\/\d+\.\d+\.\d+ /, '');
 
   const params = [
     { name: KEY_VERSION, value: '1' },
-    { name: KEY_TRACKING_ID, value: GA_ID },
+    { name: KEY_TRACKING_ID, value: getGoogleAnalyticsId() },
     { name: KEY_CLIENT_ID, value: deviceId },
     { name: KEY_USER_AGENT, value: ua },
-    { name: KEY_LOCATION, value: GA_LOCATION + _currentLocationPath },
+    { name: KEY_LOCATION, value: getGoogleAnalyticsLocation() + _currentLocationPath },
     { name: KEY_SCREEN_RESOLUTION, value: getScreenResolution() },
     { name: KEY_USER_LANGUAGE, value: getUserLanguage() },
     { name: KEY_TITLE, value: `${getAppId()}:${getAppVersion()}` },
@@ -165,10 +165,10 @@ async function _getDefaultParams(): Promise<Array<RequestParameter>> {
   viewport && params.push({ name: KEY_VIEWPORT_SIZE, value: viewport });
 
   global.document &&
-    params.push({
-      name: KEY_DOCUMENT_ENCODING,
-      value: global.document.inputEncoding,
-    });
+  params.push({
+    name: KEY_DOCUMENT_ENCODING,
+    value: global.document.inputEncoding,
+  });
 
   return params;
 }

@@ -10,6 +10,8 @@
   "version": "7.1.1",
   "main": "main.min.js",
   "publishRepo": "kong/studio",
+  "gaId": "<TODO>",
+  "gaLocation": "<TODO>",
   "plugins": [
     "insomnia-plugin-base64",
     "insomnia-plugin-hash",
