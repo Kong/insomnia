@@ -46,6 +46,7 @@ async function pkg(electronBuilderConfig) {
     .replace('__GITHUB_REPO__', app.githubRepo)
     .replace('__GITHUB_OWNER__', app.githubOrg)
     .replace('__EXECUTABLE_NAME__', app.executableName)
+    .replace('__BINARY_PREFIX__', app.binaryPrefix)
     .replace('__SYNOPSIS__', app.synopsis);
 
   const config = JSON.parse(rawConfig);

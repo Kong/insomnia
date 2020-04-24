@@ -39,7 +39,7 @@
     "hardenedRuntime": true,
     "category": "public.app-category.developer-tools",
     "entitlements": "./build/static/entitlements.mac.inherit.plist",
-    "artifactName": "Insomnia.Designer-${version}.${ext}",
+    "artifactName": "__BINARY_PREFIX__-${version}.${ext}",
     "target": [
       "dmg",
       "zip"
@@ -67,7 +67,7 @@
     ]
   },
   "win": {
-    "artifactName": "Insomnia.Designer-${version}.${ext}",
+    "artifactName": "__BINARY_PREFIX__-${version}.${ext}",
     "icon": "./build/icon.ico",
     "target": [
       "squirrel",
@@ -78,7 +78,7 @@
     "iconUrl": "__ICON_URL__"
   },
   "linux": {
-    "artifactName": "Insomnia.Designer-${version}.${ext}",
+    "artifactName": "__BINARY_PREFIX__-${version}.${ext}",
     "executableName": "__EXECUTABLE_NAME__",
     "synopsis": "__SYNOPSIS__",
     "category": "Development",

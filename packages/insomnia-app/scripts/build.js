@@ -36,6 +36,11 @@ module.exports.start = async function(forcedVersion = null) {
     process.env.APP_ID = APP_ID_INSOMNIA;
   }
 
+  if (appConfig().version !== buildContext.version) {
+    console.log(`[build] App version mismatch with Git tag ${appConfig().version} != ${buildContext.version}`);
+    process.exit(1);
+  }
+
   // These must be required after APP_ID environment variable is set above
   const configRenderer = require('../webpack/webpack.config.production.babel');
   const configMain = require('../webpack/webpack.config.electron.babel');

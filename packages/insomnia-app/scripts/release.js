@@ -49,10 +49,10 @@ async function start(app, version) {
 
     // This file would conflict between Core/Designer so we'll prefix it with the app ID
     if (name === 'RELEASES') {
-      name = `${appConfig().appId}.RELEASES`;
+      name = `${appConfig().binaryPrefix}.RELEASES`;
     }
 
-    console.log(`[release] Uploading ${p}`);
+    console.log(`[release] Uploading ${name}`);
     await octokit.request({
       method: 'POST',
       url: 'https://uploads.github.com/repos/:owner/:repo/releases/:id/assets{?name,label}"',
