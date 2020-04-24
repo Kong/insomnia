@@ -1,6 +1,6 @@
 // @flow
 import mkdirp from 'mkdirp';
-import * as packageJson from '../../package.json';
+import { appConfig } from '../../config';
 import * as models from '../models';
 import fs from 'fs';
 import path from 'path';
@@ -186,7 +186,7 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
       // "name": "module"
     };
 
-    for (const p of packageJson.app.plugins) {
+    for (const p of appConfig().plugins) {
       const pluginJson = global.require(`${p}/package.json`);
       const pluginModule = global.require(p);
       pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule, allConfigs);

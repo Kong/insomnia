@@ -1,7 +1,6 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import * as packageJson from '../../../package.json';
 import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
@@ -14,6 +13,7 @@ import chartSrc from '../images/chart.svg';
 import imgSrc from '../images/logo.png';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
+import { getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -99,7 +99,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
   _handleImportPetstore() {
     this._handleImportUri(
       'https://gist.githubusercontent.com/gschier/4e2278d5a50b4bbf1110755d9b48a9f9' +
-        '/raw/801c05266ae102bcb9288ab92c60f52d45557425/petstore-spec.yaml',
+      '/raw/801c05266ae102bcb9288ab92c60f52d45557425/petstore-spec.yaml',
     );
   }
 
@@ -116,7 +116,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
         </p>
         <img src={chartSrc} alt="Demonstration chart" />
         <p>
-          Help us understand how <strong>you</strong> use {packageJson.app.longName} so we can make
+          Help us understand how <strong>you</strong> use {getAppLongName()} so we can make
           it better.
         </p>
         <button key="enable" className="btn btn--clicky" onClick={this._handleClickEnableAnalytics}>
@@ -143,7 +143,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
             Back
           </a>
           {enableAnalytics
-            ? `Thanks for helping make ${packageJson.app.productName} better!`
+            ? `Thanks for helping make ${getAppName()} better!`
             : 'Opted out of analytics'}
         </p>
         <p>Import an OpenAPI spec to get started:</p>
@@ -178,8 +178,8 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
             <img src={imgSrc} alt="Kong" />
           </div>
           <header className="onboarding__content__header">
-            <h1>Welcome to {packageJson.app.longName}</h1>
-            <h2>{packageJson.app.synopsis}</h2>
+            <h1>Welcome to {getAppLongName()}</h1>
+            <h2>{getAppSynopsis()}</h2>
           </header>
           <div className="onboarding__content__body">{stepBody}</div>
         </div>

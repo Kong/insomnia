@@ -1,4 +1,4 @@
-const packageJson = require('../package.json');
+const { appConfig } = require('../config');
 const electronBuilder = require('electron-builder');
 const path = require('path');
 const rimraf = require('rimraf');
@@ -16,7 +16,7 @@ if (require.main === module) {
   process.nextTick(async () => {
     const { publish, gitRef } = shouldPublish();
     if (!publish) {
-      console.log(`[package] Not packaging for ref=${gitRef}`);
+      console.log(`[package] Not packaging for ref: "${gitRef}"`);
       process.exit(0);
     }
 
@@ -46,17 +46,18 @@ async function start() {
 async function pkg(relConfigPath) {
   const configPath = path.resolve(__dirname, relConfigPath);
 
-  const [githubOwner, githubRepo] = packageJson.app.publishRepo.split('/');
+  const app = appConfig();
+  const [githubOwner, githubRepo] = app.publishRepo.split('/');
 
   // Replace some things
   const rawConfig = fs
     .readFileSync(configPath, 'utf8')
-    .replace('__APP_ID__', packageJson.app.appId)
-    .replace('__ICON_URL__', packageJson.app.icon)
+    .replace('__APP_ID__', app.appId)
+    .replace('__ICON_URL__', app.icon)
     .replace('__GITHUB_REPO__', githubRepo)
     .replace('__GITHUB_OWNER__', githubOwner)
-    .replace('__EXECUTABLE_NAME__', packageJson.app.executableName)
-    .replace('__SYNOPSIS__', packageJson.app.synopsis);
+    .replace('__EXECUTABLE_NAME__', app.executableName)
+    .replace('__SYNOPSIS__', app.synopsis);
 
   const config = JSON.parse(rawConfig);
   const targetPlatform = PLATFORM_MAP[process.platform];

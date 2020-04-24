@@ -1,8 +1,7 @@
 // @flow
-import * as packageJson from '../../package.json';
 import type { BaseModel } from './index';
 import * as db from '../common/database';
-import { UPDATE_CHANNEL_STABLE } from '../common/constants';
+import { getAppDefaultTheme, UPDATE_CHANNEL_STABLE } from '../common/constants';
 import * as hotkeys from '../common/hotkeys';
 
 export type PluginConfig = {
@@ -101,7 +100,7 @@ export function init(): BaseSettings {
     proxyEnabled: false,
     filterResponsesByEnv: false,
     showPasswords: false,
-    theme: packageJson.app.theme,
+    theme: getAppDefaultTheme(),
     timeout: 0,
     updateAutomatically: true,
     updateChannel: UPDATE_CHANNEL_STABLE,

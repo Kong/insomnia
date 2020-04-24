@@ -77,18 +77,6 @@
   "squirrelWindows": {
     "iconUrl": "__ICON_URL__"
   },
-  "nsis": {
-    "artifactName": "Insomnia.Designer-Setup-${version}.${ext}",
-    "oneClick": true,
-    "perMachine": false,
-    "allowToChangeInstallationDirectory": false,
-    "installerIcon": "build/installerIcon.ico",
-    "uninstallerSidebar": "build/uninstallerSidebar.bmp",
-    "uninstallerIcon":  "build/uninstallerIcon.ico",
-    "installerHeader": "build/installerHeader.bmp",
-    "installerHeaderIcon": "build/installerHeaderIcon.ico",
-    "installerSidebar": "build/installerSidebar.bmp"
-  },
   "linux": {
     "artifactName": "Insomnia.Designer-${version}.${ext}",
     "executableName": "__EXECUTABLE_NAME__",

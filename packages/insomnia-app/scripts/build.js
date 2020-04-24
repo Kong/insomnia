@@ -1,3 +1,4 @@
+const appConfig = require('../config').appConfig();
 const packageJson = require('../package.json');
 const childProcess = require('child_process');
 const webpack = require('webpack');
@@ -43,7 +44,7 @@ module.exports.start = async function(forcedVersion = null) {
   console.log('[build] Copying files');
   await copyFiles('../bin', '../build/');
   await copyFiles('../app/static', '../build/static');
-  await copyFiles('../app/icons/', '../build/');
+  await copyFiles(`../app/icons/${appConfig.appId}`, '../build/');
 
   // Generate package.json
   await generatePackageJson(
@@ -216,11 +217,12 @@ function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
 
   const basePkg = JSON.parse(fs.readFileSync(basePath));
 
+  console.log('APPCONFIG', appConfig);
   const appPkg = {
-    name: packageJson.app.name,
-    version: forcedVersion || basePkg.app.version,
-    productName: basePkg.app.productName,
-    longName: basePkg.app.longName,
+    name: appConfig.name,
+    version: forcedVersion || appConfig.version,
+    productName: appConfig.productName,
+    longName: appConfig.longName,
     description: basePkg.description,
     license: basePkg.license,
     homepage: basePkg.homepage,

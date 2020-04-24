@@ -1,4 +1,4 @@
-const packageJson = require('../package.json');
+const appConfig = require('../config').appConfig();
 const glob = require('fast-glob');
 const fs = require('fs');
 const path = require('path');
@@ -17,14 +17,6 @@ const GITHUB_REPO = 'insomnia';
 // Start package if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
-    // First check if we need to publish (uses Git tags)
-    const gitRefStr = process.env.GITHUB_REF || process.env.TRAVIS_TAG;
-    const skipPublish = !gitRefStr || !gitRefStr.match(/v\d+\.\d+\.\d+(-(beta|alpha)\.\d+)?$/);
-    if (skipPublish) {
-      console.log(`[package] Not packaging for ref=${gitRefStr}`);
-      process.exit(0);
-    }
-
     try {
       await buildTask.start();
       await packageTask.start();
@@ -37,7 +29,7 @@ if (require.main === module) {
 }
 
 async function start() {
-  const tagName = `v${packageJson.app.version}`;
+  const tagName = `v${appConfig.version}`;
   console.log(`[release] Creating release ${tagName}`);
 
   const globs = {
@@ -92,7 +84,7 @@ async function getOrCreateRelease(tagName) {
     repo: GITHUB_REPO,
     tag_name: tagName,
     name: tagName,
-    body: `Full changelog ⇒ https://insomnia.rest/changelog/${packageJson.app.version}`,
+    body: `Full changelog ⇒ https://insomnia.rest/changelog/${appConfig.version}`,
     draft: false,
     preRelease: true,
   });
