@@ -15,7 +15,7 @@ if (require.main === module) {
   process.nextTick(async () => {
     try {
       await buildTask.start();
-      await start();
+      await module.exports.start();
     } catch (err) {
       console.log('[package] ERROR:', err);
       process.exit(1);
@@ -23,7 +23,7 @@ if (require.main === module) {
   });
 }
 
-async function start() {
+module.exports.start = async function() {
   console.log('[package] Removing existing directories');
 
   if (process.env.KEEP_DIST_FOLDER !== 'yes') {
@@ -34,7 +34,7 @@ async function start() {
   await pkg(electronBuilderConfig());
 
   console.log('[package] Complete!');
-}
+};
 
 async function pkg(electronBuilderConfig) {
   const app = appConfig();
