@@ -74,4 +74,3 @@ async function emptyDir(relPath) {
     });
   });
 }
-
