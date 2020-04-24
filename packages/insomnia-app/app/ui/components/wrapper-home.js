@@ -456,7 +456,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
               <CardContainer>{filteredWorkspaces.map(this.renderWorkspace)}</CardContainer>
               {filteredWorkspaces.length === 0 && (
                 <Notice color="subtle">
-                  No workspaces found for <strong>{filter}</strong>
+                  No documents found for <strong>{filter}</strong>
                 </Notice>
               )}
             </div>
