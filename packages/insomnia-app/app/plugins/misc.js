@@ -305,7 +305,7 @@ const _baseTheme = {
     notice: '#d8c84d',
     warning: '#ec8702',
     danger: '#e15251',
-    surprise: '#8776d5',
+    surprise: '#6030BF',
     info: '#20aed9',
   },
   foreground: {

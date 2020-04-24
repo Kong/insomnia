@@ -11,7 +11,7 @@ module.exports = {
       warning: '#d6803e',
       danger: '#da5b56',
       info: '#003052',
-      surprise: '#8467c3',
+      surprise: '#6030BF',
     },
     styles: {
       link: {
