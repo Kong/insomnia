@@ -22,6 +22,7 @@ RUN apt-get update \
         pkg-config \
         libfontconfig1-dev \
         python \
+        git \
         rpm \
         wget \
         graphicsmagick \
