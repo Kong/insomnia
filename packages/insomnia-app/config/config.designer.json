@@ -8,7 +8,7 @@
   "synopsis": "The Collaborative API Design Tool",
   "icon": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
   "theme": "studio-light",
-  "version": "2020.1",
+  "version": "2020.1.1",
   "main": "main.min.js",
   "githubOrg": "Kong",
   "githubRepo": "studio",
