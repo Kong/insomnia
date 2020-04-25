@@ -91,6 +91,6 @@ async function getOrCreateRelease(app, version) {
     name: releaseName,
     body: `Full changelog ⇒ https://insomnia.rest/changelog/${tag}`,
     draft: false,
-    preRelease: true,
+    prerelease: true,
   });
 }

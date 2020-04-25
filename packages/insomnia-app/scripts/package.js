@@ -49,8 +49,6 @@ async function pkg(electronBuilderConfig) {
     .replace(/__ICON_URL__/g, app.icon)
     .replace(/__SYNOPSIS__/g, app.synopsis);
 
-  console.log('CONFIG', rawConfig);
-
   const config = JSON.parse(rawConfig);
   const targetPlatform = PLATFORM_MAP[process.platform];
 
