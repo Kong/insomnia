@@ -3,6 +3,22 @@
 # Fail on any errors
 set -e
 
+# Install core deps
+apt-get update
+apt-get upgrade -y
+apt-get install -y \
+    build-essential \
+    autoconf \
+    libtool \
+    pkg-config \
+    libfontconfig1-dev \
+    rpm \
+    wget
+
+# Install Node and app-related dependencies
+wget -O- https://deb.nodesource.com/setup_10.x | bash -
+apt-get install -y nodejs graphicsmagick icnsutils
+
 # Build zlib from source (for Curl)
 wget -q https://github.com/madler/zlib/archive/v1.2.11.tar.gz -O ./zlib.tar.gz
 mkdir -p /src/zlib /build/zlib

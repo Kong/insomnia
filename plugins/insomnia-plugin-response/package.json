@@ -18,7 +18,7 @@
   "dependencies": {
     "iconv-lite": "^0.4.19",
     "insomnia-xpath": "^2.1.4",
-    "jsonpath": "github:kong/jsonpath#f8019918f5d717da56a682f4df9d448a452c947a"
+    "jsonpath": "^1.0.2"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
 }
