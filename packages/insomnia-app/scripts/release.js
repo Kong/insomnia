@@ -68,6 +68,7 @@ async function start(app, version) {
 async function getOrCreateRelease(app, version) {
   const tag = `${app}@${version}`;
   const releaseName = `${appConfig().productName} ${version} 📦`;
+  const changelogUrl = `https://insomnia.rest/changelog/${app}/${version}`;
 
   try {
     return await octokit.repos.getReleaseByTag({
@@ -84,7 +85,7 @@ async function getOrCreateRelease(app, version) {
     repo: appConfig().githubRepo,
     tag_name: tag,
     name: releaseName,
-    body: `Full changelog ⇒ https://insomnia.rest/changelog/${tag}`,
+    body: `Full changelog ⇒ ${changelogUrl}`,
     draft: false,
     prerelease: true,
   });
