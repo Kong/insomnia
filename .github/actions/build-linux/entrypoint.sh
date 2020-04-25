@@ -10,9 +10,9 @@ fi
 
 # Install root project dependencies
 echo "Bootstrapping dependencies"
+cd "$GITHUB_WORKSPACE"
 whoami
 ls -l
-cd "$GITHUB_WORKSPACE"
 npm run bootstrap
 
 echo "Running tests"

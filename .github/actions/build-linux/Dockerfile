@@ -9,6 +9,10 @@ LABEL "com.github.actions.color"="blue"
 LABEL "com.github.actions.name"="Insomnia Ubuntu 14"
 LABEL "com.github.actions.description"="Build and package on Ubuntu 14"
 
+# Copied from official Node dockerfile
+RUN groupadd --gid 1000 node \
+  && useradd --uid 1000 --gid node --shell /bin/bash --create-home node
+
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y \
