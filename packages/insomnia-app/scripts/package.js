@@ -41,13 +41,15 @@ async function pkg(electronBuilderConfig) {
 
   // Replace some things
   const rawConfig = JSON.stringify(electronBuilderConfig, null, 2)
-    .replace('__APP_ID__', app.appId)
-    .replace('__ICON_URL__', app.icon)
-    .replace('__GITHUB_REPO__', app.githubRepo)
-    .replace('__GITHUB_OWNER__', app.githubOrg)
-    .replace('__EXECUTABLE_NAME__', app.executableName)
-    .replace('__BINARY_PREFIX__', app.binaryPrefix)
-    .replace('__SYNOPSIS__', app.synopsis);
+    .replace(/__APP_ID__/g, app.appId)
+    .replace(/__BINARY_PREFIX__/g, app.binaryPrefix)
+    .replace(/__EXECUTABLE_NAME__/g, app.executableName)
+    .replace(/__GITHUB_OWNER__/g, app.githubOrg)
+    .replace(/__GITHUB_REPO__/g, app.githubRepo)
+    .replace(/__ICON_URL__/g, app.icon)
+    .replace(/__SYNOPSIS__/g, app.synopsis);
+
+  console.log('CONFIG', rawConfig);
 
   const config = JSON.parse(rawConfig);
   const targetPlatform = PLATFORM_MAP[process.platform];
@@ -57,7 +59,6 @@ async function pkg(electronBuilderConfig) {
     : config[targetPlatform].target;
 
   return electronBuilder.build({
-    publish: 'always',
     config,
     [targetPlatform]: target,
   });
