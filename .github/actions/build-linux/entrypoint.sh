@@ -11,7 +11,6 @@ fi
 # Install root project dependencies
 cd "$GITHUB_WORKSPACE"
 npm run bootstrap
-npm install --no-save app-builder-bin-linux
 
 echo "Running the stuff"
 npm test
