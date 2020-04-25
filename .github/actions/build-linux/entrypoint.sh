@@ -13,5 +13,7 @@ cd "$GITHUB_WORKSPACE"
 npm run bootstrap
 
 echo "Running the stuff"
+whoami
+ls -l
 npm test
 npm run app-release

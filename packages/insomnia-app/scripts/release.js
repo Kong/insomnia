@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const packageTask = require('./package');
 const buildTask = require('./build');
-const Octokit = require('@octokit/rest');
+const { Octokit } = require('@octokit/rest');
 
 // Configure Octokit
 const octokit = new Octokit({
