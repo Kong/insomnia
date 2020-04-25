@@ -14,7 +14,7 @@
     "description": "Get information about the OS"
   },
   "dependencies": {
-    "jsonpath": "^1.0.0"
+    "jsonpath": "github:kong/jsonpath#f8019918f5d717da56a682f4df9d448a452c947a"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
 }

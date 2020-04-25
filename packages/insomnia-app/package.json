@@ -136,7 +136,7 @@
     "isomorphic-git": "^0.70.3",
     "json-order": "^1.1.0",
     "jsonlint": "^1.6.3",
-    "jsonpath": "^1.0.2",
+    "jsonpath": "github:kong/jsonpath#f8019918f5d717da56a682f4df9d448a452c947a",
     "jwt-authentication": "^0.4.0",
     "kong-studio-themes": "^2.2.1",
     "marked": "^0.3.9",
