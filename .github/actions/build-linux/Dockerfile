@@ -17,6 +17,7 @@ RUN apt-get update \
         libtool \
         pkg-config \
         libfontconfig1-dev \
+        python \
         rpm \
         wget \
         graphicsmagick \
@@ -26,14 +27,16 @@ RUN apt-get update \
 ENV NODE_VERSION 10.14.0
 ENV PATH "/node-v${NODE_VERSION}-linux-x64/bin:${PATH}"
 RUN wget -q https://nodejs.org/download/release/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz \
-    && tar xzf node-v${NODE_VERSION}-linux-x64.tar.gz \
-    && node --version \
-    && npm --version
+    && tar xzf node-v${NODE_VERSION}-linux-x64.tar.gz
 
 # Install curl-related of dependencies
 COPY entrypoint.sh /scripts/entrypoint.sh
 COPY install-dependencies.sh /scripts/install-dependencies.sh
 RUN chmod +x /scripts/* \
     && /scripts/install-dependencies.sh
+
+RUN python --version \
+    && node --version \
+    && npm --version
 
 ENTRYPOINT ["/scripts/entrypoint.sh"]

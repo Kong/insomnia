@@ -45,6 +45,22 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           BUILD_TARGETS: AppImage
           NODELIBCURL_BUILD_STATIC: yes
+  Ubuntu16:
+    name: Linux (Snap)
+    runs-on: ubuntu-16.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v1
+      - name: Run Docker
+        uses: ./.github/actions/build-snap
+        env:
+          SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: ${{ github.event.ref }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          BUILD_TARGETS: snap
+          NODELIBCURL_BUILD_STATIC: yes
+
 #  Mac builds moved to Travis-CI for older OS versions
 #  Mac:
 #    name: Mac
