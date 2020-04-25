@@ -45,12 +45,7 @@ async function start(app, version) {
   const { data } = await getOrCreateRelease(app, version);
 
   for (const p of paths) {
-    let name = path.basename(p);
-
-    // This file would conflict between Core/Designer so we'll prefix it with the app ID
-    if (name === 'RELEASES') {
-      name = `${appConfig().binaryPrefix}.RELEASES`;
-    }
+    const name = path.basename(p);
 
     console.log(`[release] Uploading ${name}`);
     await octokit.request({
@@ -72,7 +67,7 @@ async function start(app, version) {
 
 async function getOrCreateRelease(app, version) {
   const tag = `${app}@${version}`;
-  const releaseName = `${app.slice(0, 1).toUpperCase()}${app.slice(1)} ${version} 📦`;
+  const releaseName = `${appConfig().productName} ${version} 📦`;
 
   try {
     return await octokit.repos.getReleaseByTag({
