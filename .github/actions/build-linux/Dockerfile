@@ -1,12 +1,12 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
-LABEL "name"="Insomnia-Ubuntu-14"
+LABEL "name"="Insomnia-Ubuntu-16"
 LABEL "maintainer"="Gregory Schier <greg.schier@konghq.com>"
 LABEL "version"="1.0.0"
 
 LABEL "com.github.actions.icon"="package"
 LABEL "com.github.actions.color"="blue"
-LABEL "com.github.actions.name"="Insomnia Ubuntu 14"
+LABEL "com.github.actions.name"="Insomnia Ubuntu 16"
 LABEL "com.github.actions.description"="Build and package on Ubuntu 14"
 
 COPY entrypoint.sh /scripts/entrypoint.sh
