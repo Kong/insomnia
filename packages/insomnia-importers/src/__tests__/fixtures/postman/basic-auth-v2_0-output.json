@@ -1,0 +1,34 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2018-10-27T19:15:26.661Z",
+  "__export_source": "insomnia.importers:v0.1.0",
+  "resources": [
+    {
+      "_id": "__GRP_1__",
+      "_type": "request_group",
+      "parentId": "__WORKSPACE_ID__",
+      "name": "Basic Auth Test",
+      "description": "A collection for testing",
+      "environment": {}
+    },
+    {
+      "_id": "__REQ_1__",
+      "_type": "request",
+      "parentId": "__GRP_1__",
+      "url": "https://insomnia.rest",
+      "name": "Basic Auth",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {
+        "disabled": false,
+        "password": "basic-password",
+        "type": "basic",
+        "username": "basic-username"
+      }
+    }
+  ]
+}

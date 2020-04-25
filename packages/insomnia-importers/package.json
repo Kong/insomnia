@@ -1,0 +1,28 @@
+{
+  "name": "insomnia-importers",
+  "version": "2.1.6",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "description": "Various data importers for Insomnia",
+  "license": "MIT",
+  "repository": "https://github.com/kong/insomnia/tree/master/packages/insomnia-importers",
+  "bugs": {
+    "url": "https://github.com/kong/insomnia"
+  },
+  "main": "index.js",
+  "bin": {
+    "insomnia-import": "./bin/cli"
+  },
+  "scripts": {
+    "test": "jest --silent"
+  },
+  "dependencies": {
+    "apiconnect-wsdl": "^1.8.10",
+    "change-case": "^4.1.1",
+    "commander": "^2.20.0",
+    "lodash": "^4.17.15",
+    "shell-quote": "^1.6.1",
+    "swagger-parser": "^6.0.5",
+    "yaml": "^1.5.0"
+  },
+  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
+}

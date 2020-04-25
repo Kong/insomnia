@@ -1,0 +1,17 @@
+{
+  "__export_date": "2016-12-01T03:24:37.929Z",
+  "__export_format": 4,
+  "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
+  "resources": [
+    {
+      "_id": "__ENV_1__",
+      "_type": "environment",
+      "name": "Postman Environment",
+      "parentId": "__BASE_ENVIRONMENT_ID__",
+      "data": {
+        "foo": "production"
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2016-12-03T04:07:20.499Z",
+  "__export_source": "insomnia.desktop.app:v4.0.1",
+  "resources": [
+    {
+      "_id": "wrk_123abc",
+      "parentId": null,
+      "modified": 1477939910686,
+      "created": 1474340560460,
+      "name": "Insomnia",
+      "description": "",
+      "certificates": [],
+      "_type": "workspace"
+    }
+  ]
+}

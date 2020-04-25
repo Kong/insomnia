@@ -1,0 +1,133 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_source": "insomnia.importers:v0.1.0",
+  "resources": [
+    {
+      "_id": "__GRP_1__",
+      "_type": "request_group",
+      "parentId": "__WORKSPACE_ID__",
+      "name": "Complex Test Collection",
+      "description": "A collection for testing",
+      "environment": {}
+    },
+    {
+      "_id": "__GRP_2__",
+      "_type": "request_group",
+      "parentId": "__GRP_1__",
+      "name": "First Folder",
+      "description": "The first folder",
+      "environment": {}
+    },
+    {
+      "_id": "__REQ_1__",
+      "_type": "request",
+      "parentId": "__GRP_2__",
+      "url": "{{base_url}}/api/users",
+      "name": "{{base_url}}/api/users",
+      "description": "First Request",
+      "method": "POST",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "disabled": false,
+            "type": "file",
+            "name": "file",
+            "fileName": "/home/user/test.txt"
+          },
+          {
+            "disabled": false,
+            "type": "text",
+            "name": "foo",
+            "value": "bar"
+          },
+          {
+            "disabled": true,
+            "type": "text",
+            "name": "baz",
+            "value": "disabled"
+          }
+        ]
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
+        }
+      ],
+      "authentication": {}
+    },
+    {
+      "_id": "__REQ_2__",
+      "_type": "request",
+      "parentId": "__GRP_2__",
+      "url": "{{base_url}}/api/users",
+      "name": "Urlencoded Form Test",
+      "description": "First Request",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+          {
+            "disabled": false,
+            "name": "foo",
+            "value": "bar"
+          }
+        ]
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
+        }
+      ],
+      "authentication": {}
+    },
+    {
+      "_id": "__REQ_3__",
+      "_type": "request",
+      "parentId": "__GRP_1__",
+      "url": "{{base_url}}/api/users",
+      "name": "Test Request",
+      "description": "Request with raw body",
+      "method": "POST",
+      "body": {
+        "mimeType": "",
+        "text": "hello world!"
+      },
+      "parameters": [],
+      "headers": [],
+      "authentication": {}
+    },
+    {
+      "_id": "__REQ_4__",
+      "_type": "request",
+      "parentId": "__GRP_1__",
+      "url": "{{base_url}}/api/users",
+      "name": "Test Request Unknown Body",
+      "description": "Request with unknown body",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {}
+    },
+    {
+      "_id": "__REQ_5__",
+      "_type": "request",
+      "parentId": "__GRP_1__",
+      "url": "{{base_url}}/api/users",
+      "name": "Test Request Empty Body",
+      "description": "Request with empty raw body",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {}
+    }
+  ]
+}

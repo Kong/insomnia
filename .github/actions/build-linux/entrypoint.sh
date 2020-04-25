@@ -9,11 +9,14 @@ if [ -z "$GITHUB_WORKSPACE" ]; then
 fi
 
 # Install root project dependencies
+echo "Bootstrapping dependencies"
+whoami
+ls -l
 cd "$GITHUB_WORKSPACE"
 npm run bootstrap
 
-echo "Running the stuff"
-whoami
-ls -l
+echo "Running tests"
 npm test
+
+echo "Releasing the app"
 npm run app-release

@@ -1,0 +1,17 @@
+{
+  "name": "insomnia-plugin-default-headers",
+  "version": "2.1.4",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "description": "Various data importers for Insomnia",
+  "license": "MIT",
+  "repository": "https://github.com/kong/insomnia/tree/master/plugins/insomnia-plugin-default-headers",
+  "bugs": {
+    "url": "https://github.com/kong/insomnia"
+  },
+  "main": "index.js",
+  "insomnia": {
+    "name": "default-headers",
+    "description": "Add default headers to requests"
+  },
+  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
+}

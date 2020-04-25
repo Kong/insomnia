@@ -1,0 +1,69 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_source": "insomnia.importers:v0.1.0",
+  "resources": [
+    {
+      "_id": "__REQ_1__",
+      "_type": "request",
+      "parentId": "__WORKSPACE_ID__",
+      "url": "http://requestb.in/api/v1/bins",
+      "name": "http://requestb.in/api/v1/bins",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+          {
+            "name": "private",
+            "value": "false"
+          }
+        ]
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Cookie",
+          "value": "__cfduid=d9e3031f00abce97dfdf7119a2d4620cc1478677611; _gat=1; session=eyJyZWNlbnQiOlsiMTlwd3g5NzEiLCIxYTNsaHg2MSJdfQ.CxF25Q.WfyUPLe9lQjtibrpD55c2gOD-YA; _ga=GA1.2.525721040.1478677612"
+        },
+        {
+          "name": "Origin",
+          "value": "http://requestb.in"
+        },
+        {
+          "name": "Accept-Encoding",
+          "value": "gzip, deflate"
+        },
+        {
+          "name": "Accept-Language",
+          "value": "en-US,en;q=0.8"
+        },
+        {
+          "name": "User-Agent",
+          "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/x-www-form-urlencoded; charset=UTF-8"
+        },
+        {
+          "name": "Accept",
+          "value": "*/*"
+        },
+        {
+          "name": "Referer",
+          "value": "http://requestb.in/"
+        },
+        {
+          "name": "X-Requested-With",
+          "value": "XMLHttpRequest"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        }
+      ],
+      "authentication": {}
+    }
+  ]
+}

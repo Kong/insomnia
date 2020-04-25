@@ -1,0 +1,19 @@
+{
+  "name": "insomnia-plugin-file",
+  "version": "2.1.4",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "description": "Insomnia file templte tag",
+  "license": "MIT",
+  "repository": "https://github.com/kong/insomnia/tree/master/plugins/insomnia-plugin-file",
+  "bugs": {
+    "url": "https://github.com/kong/insomnia"
+  },
+  "main": "index.js",
+  "insomnia": {
+    "name": "file"
+  },
+  "scripts": {
+    "test": "jest --silent"
+  },
+  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
+}

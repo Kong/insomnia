@@ -1,0 +1,12 @@
+{
+  "name": "insomnia-url",
+  "version": "2.1.4",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "description": "URL Utilities",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --silent"
+  },
+  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
+}

@@ -1,0 +1,21 @@
+{
+  "id": "fd5ae82a-d4c3-fa38-b53f-cddafb084535",
+  "values": [
+    {
+      "key": "foo",
+      "value": "production",
+      "type": "text",
+      "enabled": true
+    },
+    {
+      "key": "bar",
+      "value": "hahah",
+      "type": "text",
+      "enabled": false
+    }
+  ],
+  "timestamp": 1480561592875,
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2016-12-01T03:06:36.191Z",
+  "_postman_exported_using": "Postman/4.8.3"
+}

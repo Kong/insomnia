@@ -1,0 +1,43 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_source": "insomnia.importers:v0.1.0",
+  "resources": [
+    {
+      "_id": "__REQ_1__",
+      "_type": "request",
+      "parentId": "__WORKSPACE_ID__",
+      "url": "http://localhost:8000/api/v1/send",
+      "name": "http://localhost:8000/api/v1/send",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"email_id\": \"tem_123\"}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "x-custom-header",
+          "value": "foo bar"
+        },
+        {
+          "name": "content-type",
+          "value": "application/json"
+        },
+        {
+          "name": "Cookie",
+          "value": "foo=bar; NID=91=iOf1sU9Ovlns9Dzn2Ipz05syr2K4AlZ4Kgp84eRVLf3_6DgcNrkqpWg4lfUvCB5cNxD26t"
+        },
+        {
+          "name": "another-header",
+          "value": "foo"
+        }
+      ],
+      "authentication": {
+        "username": "My User",
+        "password": "My:Secret:Password"
+      }
+    }
+  ]
+}

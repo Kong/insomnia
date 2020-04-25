@@ -1,0 +1,14 @@
+{
+  "variables": [],
+  "info": {
+    "name": "Minimal Test Collection",
+    "_postman_id": "250d5bd3-4f7e-8fd0-7744-35e942e36a78",
+    "description": "A collection for testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "item": [
+    {
+      "request": {}
+    }
+  ]
+}

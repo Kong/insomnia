@@ -1,0 +1,52 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_source": "insomnia.importers:v0.1.0",
+  "resources": [
+    {
+      "_id": "__REQ_1__",
+      "_type": "request",
+      "parentId": "__WORKSPACE_ID__",
+      "url": "",
+      "name": "HAR Import 1",
+      "method": "POST",
+      "body": {
+        "mimeType": "",
+        "text": ""
+      },
+      "parameters": [],
+      "headers": [],
+      "authentication": {}
+    },
+    {
+      "_id": "__REQ_2__",
+      "_type": "request",
+      "parentId": "__WORKSPACE_ID__",
+      "url": "https://insomnia.rest/foo/bar",
+      "name": "https://insomnia.rest/foo/bar",
+      "method": "POST",
+      "body": {
+        "mimeType": "",
+        "text": "hello world!"
+      },
+      "parameters": [
+        {
+          "name": "foo",
+          "value": "bar"
+        }
+      ],
+      "headers": [
+        {
+          "name": "Host",
+          "value": "insomnia.rest"
+        },
+        {
+          "name": "cookie",
+          "value": "foo=bar; __cfduid=df7b43586f071c4aaa79dc8a9de0845771478571055; _ga=GA1.2.697086801.1478571058"
+        }
+      ],
+      "authentication": {}
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_source": "insomnia.importers:v0.1.0",
+  "resources": [
+    {
+      "_id": "__GRP_1__",
+      "_type": "request_group",
+      "parentId": "__WORKSPACE_ID__",
+      "name": "Test Folder",
+      "environment": {
+        "base_url": "https://insomnia.rest/api/v1",
+        "api_key": "live_123"
+      }
+    },
+    {
+      "_id": "__REQ_1__",
+      "_type": "request",
+      "parentId": "__GRP_1__",
+      "url": "{{ base_url }}/users",
+      "name": "Test Request",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"foo\": \"bar\"}"
+      },
+      "parameters": [
+        {
+          "name": "testing",
+          "value": "hi 123"
+        },
+        {
+          "name": "testing 2",
+          "value": "hi 456"
+        }
+      ],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json; charset=utf-8"
+        }
+      ],
+      "authentication": {
+        "username": "{{ api_key }}",
+        "password": ""
+      }
+    },
+    {
+      "_id": "__REQ_2__",
+      "_type": "request",
+      "parentId": "__GRP_1__",
+      "url": "{{ base_url }}/users",
+      "name": "Test Request",
+      "method": "POST",
+      "body": {
+        "mimeType": "",
+        "text": "Hello World!"
+      },
+      "parameters": [
+        {
+          "name": "testing",
+          "value": "hi 123"
+        },
+        {
+          "name": "testing 2",
+          "value": "hi 456"
+        }
+      ],
+      "headers": [],
+      "authentication": {
+        "username": "{{ api_key }}",
+        "password": ""
+      }
+    }
+  ]
+}

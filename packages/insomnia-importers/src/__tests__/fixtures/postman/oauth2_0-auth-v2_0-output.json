@@ -1,0 +1,58 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2018-10-27T19:15:26.661Z",
+  "__export_source": "insomnia.importers:v0.1.0",
+  "resources": [
+    {
+      "_id": "__GRP_1__",
+      "_type": "request_group",
+      "parentId": "__WORKSPACE_ID__",
+      "name": "Oauth 2.0 Test",
+      "description": "A collection for testing",
+      "environment": {}
+    },
+    {
+      "_id": "__REQ_1__",
+      "_type": "request",
+      "parentId": "__GRP_1__",
+      "url": "https://insomnia.rest",
+      "name": "Added to Request URL",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {
+        "disabled": true,
+        "accessTokenUrl": "",
+        "authorizationUrl": "",
+        "grantType": "authorization_code",
+        "password": "",
+        "type": "oauth2",
+        "username": ""
+      }
+    },
+    {
+      "_id": "__REQ_2__",
+      "_type": "request",
+      "parentId": "__GRP_1__",
+      "url": "https://insomnia.rest",
+      "name": "Added to Request Headers",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {
+        "disabled": true,
+        "accessTokenUrl": "",
+        "authorizationUrl": "",
+        "grantType": "authorization_code",
+        "password": "",
+        "type": "oauth2",
+        "username": ""
+      }
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "__export_date": "2019-08-15T19:32:12.806Z",
+  "__export_format": 4,
+  "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
+  "resources": [
+    {
+      "_id": "__WORKSPACE_ID__",
+      "_type": "workspace",
+      "description": "",
+      "name": "Swagger Petstore 1.0.0",
+      "parentId": null
+    },
+    {
+      "_id": "__BASE_ENVIRONMENT_ID__",
+      "_type": "environment",
+      "data": {
+        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+      },
+      "name": "Base environment",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_type": "environment",
+      "data": {
+        "base_path": "/v1",
+        "host": "petstore.swagger.io",
+        "scheme": "http"
+      },
+      "name": "OpenAPI env",
+      "parentId": "__BASE_ENVIRONMENT_ID__"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__26e3ae98",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "List all pets",
+      "parameters": [
+        {
+          "disabled": true,
+          "name": "limit",
+          "value": "0"
+        }
+      ],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/pets"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__09e1157b",
+      "_type": "request",
+      "authentication": {},
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"string\",\n  \"tag\": \"string\"\n}"
+      },
+      "headers": [],
+      "method": "POST",
+      "name": "Create a pet",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/pets"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__3b13e39c",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "Info for a specific pet",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/pets/{{ petId }}"
+    }
+  ]
+}

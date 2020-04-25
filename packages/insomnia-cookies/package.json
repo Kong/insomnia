@@ -1,0 +1,15 @@
+{
+  "name": "insomnia-cookies",
+  "version": "2.1.4",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "description": "Cookie utilities",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --silent"
+  },
+  "dependencies": {
+    "tough-cookie": "^2.3.3"
+  },
+  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
+}

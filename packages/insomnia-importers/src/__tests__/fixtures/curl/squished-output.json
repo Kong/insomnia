@@ -1,0 +1,22 @@
+{
+  "__export_format": 4,
+  "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
+  "resources": [
+    {
+      "_id": "__REQ_1__",
+      "_type": "request",
+      "authentication": {},
+      "body": {
+        "mimeType": "",
+        "text": "id=1234"
+      },
+      "headers": [],
+      "method": "POST",
+      "name": "https://insomnia.rest",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "https://insomnia.rest"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "insomnia-plugin-core-themes",
+  "version": "2.1.6",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "description": "Insomnia core themes",
+  "license": "MIT",
+  "repository": "https://github.com/kong/insomnia/tree/master/plugins/insomnia-plugin-core-themes",
+  "bugs": {
+    "url": "https://github.com/kong/insomnia"
+  },
+  "main": "index.js",
+  "insomnia": {
+    "name": "core-themes"
+  },
+  "scripts": {
+    "test": "node --version"
+  },
+  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
+}

@@ -1,0 +1,27 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_source": "insomnia.importers:v0.1.0",
+  "resources": [
+    {
+      "_id": "__GRP_1__",
+      "_type": "request_group",
+      "parentId": "__WORKSPACE_ID__",
+      "name": "Imported Folder 1",
+      "environment": {}
+    },
+    {
+      "_id": "__REQ_1__",
+      "_type": "request",
+      "parentId": "__GRP_1__",
+      "url": "",
+      "name": "Imported HAR 1",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {}
+    }
+  ]
+}

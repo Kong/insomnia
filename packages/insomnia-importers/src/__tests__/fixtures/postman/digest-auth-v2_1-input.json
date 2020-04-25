@@ -1,0 +1,68 @@
+{
+  "info": {
+    "_postman_id": "8bfb46b0-4a02-4941-b46f-bba11fadd681",
+    "name": "Digest Authentication Test",
+    "description": "A collection for testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Digest Auth",
+      "request": {
+        "auth": {
+          "type": "digest",
+          "digest": [
+            {
+              "key": "nonceCount",
+              "value": "digest-nonce-count",
+              "type": "string"
+            },
+            {
+              "key": "qop",
+              "value": "digest-qop",
+              "type": "string"
+            },
+            {
+              "key": "algorithm",
+              "value": "MD5",
+              "type": "string"
+            },
+            {
+              "key": "nonce",
+              "value": "digest-nonce",
+              "type": "string"
+            },
+            {
+              "key": "realm",
+              "value": "digest-realm",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "guest",
+              "type": "string"
+            },
+            {
+              "key": "username",
+              "value": "guest",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://jigsaw.w3.org/HTTP/Digest/",
+          "protocol": "https",
+          "host": ["jigsaw", "w3", "org"],
+          "path": ["HTTP", "Digest", ""]
+        }
+      },
+      "response": []
+    }
+  ]
+}

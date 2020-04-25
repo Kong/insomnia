@@ -1,0 +1,22 @@
+{
+  "name": "insomnia-plugin-now",
+  "version": "2.1.4",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "description": "Insomnia now template tag",
+  "license": "MIT",
+  "repository": "https://github.com/kong/insomnia/tree/master/plugins/insomnia-plugin-now",
+  "bugs": {
+    "url": "https://github.com/kong/insomnia"
+  },
+  "main": "index.js",
+  "insomnia": {
+    "name": "now"
+  },
+  "scripts": {
+    "test": "jest --silent"
+  },
+  "dependencies": {
+    "moment": "^2.21.0"
+  },
+  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
+}
