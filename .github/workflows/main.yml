@@ -39,7 +39,6 @@ jobs:
         uses: actions/checkout@v1
       - name: Run Docker
         uses: ./.github/actions/build-linux
-        options: --user node
         env:
           GITHUB_REF: ${{ github.ref }}
           GITHUB_SHA: ${{ github.sha }}
