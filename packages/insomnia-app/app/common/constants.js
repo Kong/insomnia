@@ -5,8 +5,8 @@ import * as electron from 'electron';
 import path from 'path';
 import mkdirp from 'mkdirp';
 import { getDataDirectory } from './misc';
-import { ACTIVITY_INSOMNIA } from '../ui/components/activity-bar/activity-bar';
 import type { GlobalActivity } from '../ui/components/activity-bar/activity-bar';
+import { ACTIVITY_INSOMNIA } from '../ui/components/activity-bar/activity-bar';
 
 // App Stuff
 
@@ -95,17 +95,11 @@ export function getClientString() {
   return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
 }
 
-export function getDocumentationUrl(slug) {
-  // Replace minor version with "x"
-  // 1.2.3        -> 1.2.x
-  // 1.2.3-beta.1 -> 1.2.x
-  const genericVersion = getAppVersion().replace(/(\d+\.\d+.)(\d+)(-.+)?/, '$1x');
-
-  // Return URL
-  return `https://docs.konghq.com/studio/${genericVersion}/${slug}`;
+export function getDocumentationUrl(slug: string): string {
+  return `https://support.insomnia.rest/${slug}`;
 }
 
-export function changelogUrl() {
+export function changelogUrl(): string {
   const { changelogBaseUrl, version } = appConfig();
   return `${changelogBaseUrl}/${version}`;
 }

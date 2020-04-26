@@ -2,7 +2,7 @@
   "name": "insomnia",
   "private": true,
   "version": "1.0.0",
-  "repository": "https://github.com/kong/studio",
+  "repository": "https://github.com/kong/insomnia",
   "bugs": {
     "url": "https://github.com/kong/insomnia"
   },

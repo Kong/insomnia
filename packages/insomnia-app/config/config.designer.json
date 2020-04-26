@@ -12,7 +12,7 @@
   "theme": "studio-light",
   "main": "main.min.js",
   "githubOrg": "Kong",
-  "githubRepo": "studio",
+  "githubRepo": "insomnia",
   "gaId": "G-N5Q23R42TP",
   "gaLocation": "https://desktop.designer.konghq.com",
   "plugins": [

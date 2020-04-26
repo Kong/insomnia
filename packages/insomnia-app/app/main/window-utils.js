@@ -7,7 +7,7 @@ import {
   changelogUrl,
   getAppLongName,
   getAppName,
-  getAppVersion,
+  getAppVersion, getDocumentationUrl,
   isDevelopment,
   isMac,
   MNEMONIC_SYM,
@@ -241,7 +241,7 @@ export function createWindow() {
         label: `${MNEMONIC_SYM}Help and Support`,
         accelerator: !isMac() ? 'F1' : null,
         click: () => {
-          shell.openExternal('https://docs.konghq.com/studio/1.0.x/');
+          shell.openExternal(getDocumentationUrl(''));
         },
       },
       {

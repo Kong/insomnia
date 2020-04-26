@@ -12,7 +12,7 @@
   "theme": "default",
   "main": "main.min.js",
   "githubOrg": "Kong",
-  "githubRepo": "studio",
+  "githubRepo": "insomnia",
   "gaId": "<TODO>",
   "gaLocation": "<TODO>",
   "plugins": [
