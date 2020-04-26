@@ -2,7 +2,8 @@ language: node_js
 
 matrix:
   include:
-    - os: osx # High Sierra for older libcurl compatibility
+    - name: Release Core
+      os: osx # High Sierra for older libcurl compatibility
       osx_image: xcode10.1
       if: (tag =~ ^core@)
       env:
@@ -11,7 +12,8 @@ matrix:
         - APPLE_ID_PASSWORD=$APPLE_ID_PASSWORD
         - CSC_LINK=$MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
-    - os: osx # High Sierra for older libcurl compatibility
+    - name: Release Designer
+      os: osx # High Sierra for older libcurl compatibility
       osx_image: xcode10.1
       if: (tag =~ ^designer@)
       env:
