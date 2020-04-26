@@ -55,7 +55,6 @@ type BaseSettings = {
 
   // Feature flags
   enableSyncBeta: boolean,
-  hotKeyRegistry: hotkeys.HotKeyRegistry,
 };
 
 export type Settings = BaseModel & BaseSettings;
