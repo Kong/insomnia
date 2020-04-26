@@ -4,20 +4,20 @@ import { Curl } from 'insomnia-libcurl';
 import fs from 'fs';
 import LocalStorage from './local-storage';
 import {
-  CHANGELOG_BASE_URL,
-  MNEMONIC_SYM,
+  changelogUrl,
   getAppLongName,
   getAppName,
   getAppVersion,
   isDevelopment,
   isMac,
+  MNEMONIC_SYM,
 } from '../common/constants';
 import * as misc from '../common/misc';
 
 const { app, Menu, BrowserWindow, shell, dialog } = electron;
 
-const DEFAULT_WIDTH = 1100;
-const DEFAULT_HEIGHT = 550;
+const DEFAULT_WIDTH = 1280;
+const DEFAULT_HEIGHT = 700;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
@@ -130,7 +130,7 @@ export function createWindow() {
           if (!window || !window.webContents) {
             return;
           }
-          misc.clickLink(`${CHANGELOG_BASE_URL}/${getAppVersion()}/`);
+          misc.clickLink(changelogUrl());
         },
       },
       { type: 'separator' },
@@ -238,9 +238,10 @@ export function createWindow() {
     id: 'help',
     submenu: [
       {
-        label: `Contact ${MNEMONIC_SYM}Support`,
+        label: `${MNEMONIC_SYM}Help and Support`,
+        accelerator: !isMac() ? 'F1' : null,
         click: () => {
-          shell.openExternal('https://insomnia.rest/support/');
+          shell.openExternal('https://docs.konghq.com/studio/1.0.x/');
         },
       },
       {
@@ -337,6 +338,17 @@ export function createWindow() {
             const dir = app.getPath('desktop');
             fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
           });
+        },
+      },
+      {
+        label: `${MNEMONIC_SYM}Toggle Insomnia`,
+        click: () => {
+          const w = BrowserWindow.getFocusedWindow();
+          if (!w || !w.webContents) {
+            return;
+          }
+
+          w.webContents.send('toggle-insomnia');
         },
       },
     ],

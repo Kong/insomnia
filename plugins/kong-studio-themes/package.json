@@ -1,0 +1,9 @@
+{
+  "name": "kong-studio-themes",
+  "private": true,
+  "version": "2.2.1",
+  "main": "index.js",
+  "insomnia": {
+    "name": "kong-themes"
+  }
+}

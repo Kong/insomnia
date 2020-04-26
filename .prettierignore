@@ -1,4 +1,5 @@
 **/bin/*
 **/build/*
 **/dist/*
+**/__fixtures__/*
 **/flow-typed/*

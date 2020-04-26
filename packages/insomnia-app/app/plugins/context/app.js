@@ -10,6 +10,8 @@ import {
 } from '../../common/render';
 import WrapperModal from '../../ui/components/modals/wrapper-modal';
 import HtmlElementWrapper from '../../ui/components/html-element-wrapper';
+import { axiosRequest as axios } from '../../../app/network/axios-request';
+import * as analytics from '../../../app/common/analytics';
 
 export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { app: Object } {
   const canShowDialogs =
@@ -114,6 +116,10 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
 
         return this.dialog(title, body);
       },
+    },
+    __private: {
+      axios,
+      analytics,
     },
   };
 }

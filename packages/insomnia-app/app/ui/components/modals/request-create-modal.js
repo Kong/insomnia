@@ -14,6 +14,7 @@ import {
   METHOD_DELETE,
 } from '../../../common/constants';
 import * as models from '../../../models/index';
+import { trackEvent } from '../../../common/analytics';
 
 @autobind
 class RequestCreateModal extends PureComponent {
@@ -57,6 +58,8 @@ class RequestCreateModal extends PureComponent {
     this._onComplete(finalRequest);
 
     this.hide();
+
+    trackEvent('Request', 'Create');
   }
 
   _handleChangeSelectedContentType(selectedContentType) {

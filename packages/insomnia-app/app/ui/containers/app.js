@@ -14,6 +14,7 @@ import Toast from '../components/toast';
 import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
+import { ACTIVITY_HOME, ACTIVITY_INSOMNIA } from '../components/activity-bar/activity-bar';
 import {
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
@@ -26,12 +27,15 @@ import {
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
   PREVIEW_MODE_SOURCE,
+  getAppName,
 } from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
+import * as entitiesActions from '../redux/modules/entities';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import {
   selectActiveCookieJar,
+  selectActiveGitRepository,
   selectActiveOAuth2Token,
   selectActiveRequest,
   selectActiveRequestMeta,
@@ -73,6 +77,11 @@ import ExportRequestsModal from '../components/modals/export-requests-modal';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import VCS from '../../sync/vcs';
 import SyncMergeModal from '../components/modals/sync-merge-modal';
+import GitVCS, { GIT_NAMESPACE_DIR } from '../../sync/git/git-vcs';
+import NeDBPlugin from '../../sync/git/ne-db-plugin';
+import FSPlugin from '../../sync/git/fs-plugin';
+import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
+import AppContext from '../../common/strings';
 
 @autobind
 class App extends PureComponent {
@@ -89,6 +98,7 @@ class App extends PureComponent {
       paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT,
       isVariableUncovered: props.isVariableUncovered || false,
       vcs: null,
+      gitVCS: null,
       forceRefreshCounter: 0,
       forceRefreshHeaderCounter: 0,
       isMigratingChildren: false,
@@ -110,13 +120,13 @@ class App extends PureComponent {
       [
         hotKeyRefs.PREFERENCES_SHOW_GENERAL,
         () => {
-          showModal(SettingsModal);
+          App._handleShowSettingsModal();
         },
       ],
       [
         hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
         () => {
-          showModal(SettingsModal, TAB_INDEX_SHORTCUTS);
+          App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
         },
       ],
       [
@@ -345,10 +355,43 @@ class App extends PureComponent {
     });
   }
 
-  _workspaceDuplicate(callback) {
-    const workspace = this.props.activeWorkspace;
+  _workspaceRename(callback, workspaceId) {
+    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    console.dir(AppContext);
     showPrompt({
-      title: 'Duplicate Workspace',
+      title: `Rename ${AppContext.workspace}`,
+      defaultValue: workspace.name,
+      submitName: 'Rename',
+      selectText: true,
+      label: 'Name',
+      onComplete: async name => {
+        await models.workspace.update(workspace, { name: name });
+        callback();
+      },
+    });
+  }
+
+  _workspaceDeleteById(callback, workspaceId) {
+    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    showModal(AskModal, {
+      title: `Delete ${AppContext.workspace}`,
+      message: `Do you really want to delete ${workspace.name}?`,
+      yesText: 'Yes',
+      noText: 'Cancel',
+      onDone: async isYes => {
+        if (!isYes) {
+          return;
+        }
+        await models.workspace.remove(workspace);
+      },
+    });
+  }
+
+  _workspaceDuplicateById(callback, workspaceId) {
+    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
+
+    showPrompt({
+      title: `Duplicate ${AppContext.workspace}`,
       defaultValue: workspace.name,
       submitName: 'Create',
       selectText: true,
@@ -359,6 +402,10 @@ class App extends PureComponent {
         callback();
       },
     });
+  }
+
+  _workspaceDuplicate(callback) {
+    this._workspaceDuplicateById(callback, this.props.activeWorkspace._id);
   }
 
   async _fetchRenderContext() {
@@ -429,14 +476,8 @@ class App extends PureComponent {
   }
 
   async _updateActiveWorkspaceMeta(patch) {
-    const workspaceId = this.props.activeWorkspace._id;
-    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-    if (workspaceMeta) {
-      return models.workspaceMeta.update(workspaceMeta, patch);
-    } else {
-      const newPatch = Object.assign({ parentId: workspaceId }, patch);
-      return models.workspaceMeta.create(newPatch);
-    }
+    const { activeWorkspaceMeta } = this.props;
+    return models.workspaceMeta.update(activeWorkspaceMeta, patch);
   }
 
   static async _updateRequestMetaByParentId(requestId, patch) {
@@ -861,6 +902,10 @@ class App extends PureComponent {
     showModal(ExportRequestsModal);
   }
 
+  static _handleShowSettingsModal(tabIndex) {
+    showModal(SettingsModal, tabIndex);
+  }
+
   _setWrapperRef(n) {
     this._wrapper = n;
   }
@@ -873,21 +918,31 @@ class App extends PureComponent {
     console.log('[plugins] reloaded');
   }
 
+  _handleToggleInsomniaActivity() {
+    const { activity, handleSetActiveActivity } = this.props;
+
+    handleSetActiveActivity(activity === ACTIVITY_INSOMNIA ? ACTIVITY_HOME : ACTIVITY_INSOMNIA);
+  }
+
   /**
-   * Update document.title to be "Workspace (Environment) – Request"
+   * Update document.title to be "Workspace (Environment) – Request" when not home
    * @private
    */
   _updateDocumentTitle() {
     const { activeWorkspace, activeEnvironment, activeRequest } = this.props;
 
-    let title = activeWorkspace.name;
+    let title;
 
-    if (activeEnvironment) {
-      title += ` (${activeEnvironment.name})`;
-    }
-
-    if (activeRequest) {
-      title += ` – ${activeRequest.name}`;
+    if (this.props.activity === ACTIVITY_HOME) {
+      title = getAppName();
+    } else {
+      title = activeWorkspace.name;
+      if (activeEnvironment) {
+        title += ` (${activeEnvironment.name})`;
+      }
+      if (activeRequest) {
+        title += ` – ${activeRequest.name}`;
+      }
     }
 
     document.title = title;
@@ -895,6 +950,7 @@ class App extends PureComponent {
 
   componentDidUpdate(prevProps) {
     this._updateDocumentTitle();
+    this._ensureWorkspaceChildren();
 
     // Force app refresh if login state changes
     if (prevProps.isLoggedIn !== this.props.isLoggedIn) {
@@ -902,9 +958,85 @@ class App extends PureComponent {
         forceRefreshCounter: state.forceRefreshCounter + 1,
       }));
     }
+
+    // Check on VCS things
+    const { activeWorkspace, activeGitRepository } = this.props;
+    const changingWorkspace = prevProps.activeWorkspace._id !== activeWorkspace._id;
+
+    // Update VCS if needed
+    if (changingWorkspace) {
+      this._updateVCS();
+    }
+
+    // Update Git VCS if needed
+    const thisGit = activeGitRepository || {};
+    const nextGit = prevProps.activeGitRepository || {};
+    if (changingWorkspace || thisGit._id !== nextGit._id) {
+      this._updateGitVCS();
+    }
   }
 
-  async _updateVCS(activeWorkspace) {
+  async _updateGitVCS() {
+    const { activeGitRepository, activeWorkspace } = this.props;
+
+    // Get the vcs and set it to null in the state while we update it
+    let gitVCS = this.state.gitVCS;
+    this.setState({ gitVCS: null });
+
+    if (!gitVCS) {
+      gitVCS = new GitVCS();
+    }
+
+    if (activeGitRepository) {
+      // Create FS plugin
+      const baseDir = path.join(
+        getDataDirectory(),
+        `version-control/git/${activeGitRepository._id}`,
+      );
+      const pNeDb = NeDBPlugin.createPlugin(activeWorkspace._id);
+      const pGitData = FSPlugin.createPlugin(baseDir);
+      const pOtherData = FSPlugin.createPlugin(path.join(baseDir, 'other'));
+      const gitSubDir = '/git';
+
+      const fsPlugin = routableFSPlugin(
+        // All data outside the directories listed below will be stored in an 'other'
+        // directory. This is so we can support files that exist outside the ones
+        // the app is specifically in charge of.
+        pOtherData,
+        {
+          // All app data is stored within the a namespaced directory at the root of the
+          // repository and is read/written from the local NeDB database
+          [`/${GIT_NAMESPACE_DIR}`]: pNeDb,
+
+          // All git metadata is stored in a git/ directory on the filesystem
+          [gitSubDir]: pGitData,
+        },
+      );
+
+      // Init VCS
+      if (activeGitRepository.needsFullClone) {
+        await models.gitRepository.update(activeGitRepository, { needsFullClone: false });
+        const { credentials, uri } = activeGitRepository;
+        await gitVCS.initFromClone(uri, credentials, '/', fsPlugin, gitSubDir);
+      } else {
+        await gitVCS.init('/', fsPlugin, gitSubDir);
+      }
+
+      // Configure basic info
+      const { author, uri: gitUri } = activeGitRepository;
+      await gitVCS.setAuthor(author.name, author.email);
+      await gitVCS.addRemote(gitUri);
+    } else {
+      // Create new one to un-initialize it
+      gitVCS = new GitVCS();
+    }
+
+    this.setState({ gitVCS });
+  }
+
+  async _updateVCS() {
+    const { activeWorkspace } = this.props;
+
     // Get the vcs and set it to null in the state while we update it
     let vcs = this.state.vcs;
     this.setState({ vcs: null });
@@ -938,6 +1070,7 @@ class App extends PureComponent {
 
     // Update VCS
     await this._updateVCS(this.props.activeWorkspace);
+    await this._updateGitVCS(this.props.activeWorkspace);
 
     db.onChange(async changes => {
       let needsRefresh = false;
@@ -975,13 +1108,15 @@ class App extends PureComponent {
     });
 
     ipcRenderer.on('toggle-preferences', () => {
-      showModal(SettingsModal);
+      App._handleShowSettingsModal();
     });
 
     ipcRenderer.on('reload-plugins', this._handleReloadPlugins);
 
+    ipcRenderer.on('toggle-insomnia', this._handleToggleInsomniaActivity);
+
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
-      showModal(SettingsModal, TAB_INDEX_SHORTCUTS);
+      App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
     });
 
     ipcRenderer.on('run-command', (e, commandUri) => {
@@ -1051,12 +1186,18 @@ class App extends PureComponent {
     document.removeEventListener('mousemove', this._handleMouseMove);
   }
 
-  _ensureWorkspaceChildren(props) {
-    const { activeWorkspace, activeCookieJar, environments } = props;
+  async _ensureWorkspaceChildren() {
+    const {
+      activeWorkspace,
+      activeWorkspaceMeta,
+      activeCookieJar,
+      environments,
+      activeApiSpec,
+    } = this.props;
     const baseEnvironments = environments.filter(e => e.parentId === activeWorkspace._id);
 
     // Nothing to do
-    if (baseEnvironments.length && activeCookieJar) {
+    if (baseEnvironments.length && activeCookieJar && activeApiSpec && activeWorkspaceMeta) {
       return;
     }
 
@@ -1070,6 +1211,8 @@ class App extends PureComponent {
       const flushId = await db.bufferChanges();
       await models.environment.getOrCreateForWorkspace(activeWorkspace);
       await models.cookieJar.getOrCreateForParentId(activeWorkspace._id);
+      await models.apiSpec.getOrCreateForParentId(activeWorkspace._id);
+      await models.workspaceMeta.getOrCreateByParentId(activeWorkspace._id);
       await db.flushChanges(flushId);
 
       this.setState({ isMigratingChildren: false });
@@ -1105,6 +1248,7 @@ class App extends PureComponent {
       paneHeight,
       sidebarWidth,
       isVariableUncovered,
+      gitVCS,
       vcs,
       forceRefreshCounter,
       forceRefreshHeaderCounter,
@@ -1142,6 +1286,9 @@ class App extends PureComponent {
               handleDuplicateRequestGroup={App._requestGroupDuplicate}
               handleMoveRequestGroup={App._requestGroupMove}
               handleDuplicateWorkspace={this._workspaceDuplicate}
+              handleDuplicateWorkspaceById={this._workspaceDuplicateById}
+              handleRenameWorkspace={this._workspaceRename}
+              handleDeleteWorkspaceById={this._workspaceDeleteById}
               handleCreateRequestGroup={this._requestGroupCreate}
               handleGenerateCode={App._handleGenerateCode}
               handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
@@ -1159,10 +1306,12 @@ class App extends PureComponent {
               handleToggleMenuBar={this._handleToggleMenuBar}
               handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
               handleShowExportRequestsModal={this._handleShowExportRequestsModal}
+              handleShowSettingsModal={App._handleShowSettingsModal}
               handleUpdateDownloadPath={this._handleUpdateDownloadPath}
               isVariableUncovered={isVariableUncovered}
               headerEditorKey={forceRefreshHeaderCounter + ''}
               vcs={vcs}
+              gitVCS={gitVCS}
             />
           </ErrorBoundary>
 
@@ -1189,6 +1338,7 @@ App.propTypes = {
   activeWorkspace: PropTypes.shape({
     _id: PropTypes.string.isRequired,
   }).isRequired,
+  handleSetActiveActivity: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
 
   // Optional
@@ -1201,30 +1351,36 @@ App.propTypes = {
 function mapStateToProps(state, props) {
   const { entities, global } = state;
 
-  const { isLoading, loadingRequestIds, isLoggedIn } = global;
+  const { activeActivity, isLoading, loadingRequestIds, isLoggedIn } = global;
 
   // Entities
   const entitiesLists = selectEntitiesLists(state, props);
   const {
     workspaces,
+    workspaceMetas,
     environments,
     requests,
     requestGroups,
     requestMetas,
     requestVersions,
+    apiSpecs,
+    gitRepositories,
   } = entitiesLists;
 
   const settings = entitiesLists.settings[0];
 
   // Workspace stuff
-  const workspaceMeta = selectActiveWorkspaceMeta(state, props) || {};
+  const activeWorkspaceMeta = selectActiveWorkspaceMeta(state, props);
   const activeWorkspace = selectActiveWorkspace(state, props);
   const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state, props);
-  const sidebarHidden = workspaceMeta.sidebarHidden || false;
-  const sidebarFilter = workspaceMeta.sidebarFilter || '';
-  const sidebarWidth = workspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
-  const paneWidth = workspaceMeta.paneWidth || DEFAULT_PANE_WIDTH;
-  const paneHeight = workspaceMeta.paneHeight || DEFAULT_PANE_HEIGHT;
+  const activeGitRepository = selectActiveGitRepository(state, props);
+
+  const safeMeta = activeWorkspaceMeta || {};
+  const sidebarHidden = safeMeta.sidebarHidden || false;
+  const sidebarFilter = safeMeta.sidebarFilter || '';
+  const sidebarWidth = safeMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
+  const paneWidth = safeMeta.paneWidth || DEFAULT_PANE_WIDTH;
+  const paneHeight = safeMeta.paneHeight || DEFAULT_PANE_HEIGHT;
 
   // Request stuff
   const requestMeta = selectActiveRequestMeta(state, props) || {};
@@ -1242,7 +1398,7 @@ function mapStateToProps(state, props) {
   const activeResponse = selectActiveResponse(state, props) || null;
 
   // Environment stuff
-  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const activeEnvironmentId = safeMeta.activeEnvironmentId;
   const activeEnvironment = entities.environments[activeEnvironmentId];
 
   // OAuth2Token stuff
@@ -1257,15 +1413,24 @@ function mapStateToProps(state, props) {
   // Sync stuff
   const syncItems = selectSyncItems(state, props);
 
+  // Api spec stuff
+  const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace._id);
+
   return Object.assign({}, state, {
+    activity: activeActivity,
+    activeApiSpec,
     activeCookieJar,
     activeEnvironment,
+    activeGitRepository,
     activeRequest,
     activeRequestResponses,
     activeResponse,
     activeWorkspace,
     activeWorkspaceClientCertificates,
+    activeWorkspaceMeta,
+    apiSpecs,
     environments,
+    gitRepositories,
     isLoading,
     isLoggedIn,
     loadStartTime,
@@ -1289,16 +1454,19 @@ function mapStateToProps(state, props) {
     unseenWorkspaces,
     workspaceChildren,
     workspaces,
+    workspaceMetas,
   });
 }
 
 function mapDispatchToProps(dispatch) {
   const global = bindActionCreators(globalActions, dispatch);
+  const entities = bindActionCreators(entitiesActions, dispatch);
 
   return {
     handleStartLoading: global.loadRequestStart,
     handleStopLoading: global.loadRequestStop,
 
+    handleSetActiveActivity: global.setActiveActivity,
     handleSetActiveWorkspace: global.setActiveWorkspace,
     handleImportFileToWorkspace: global.importFile,
     handleImportClipBoardToWorkspace: global.importClipBoard,
@@ -1306,6 +1474,7 @@ function mapDispatchToProps(dispatch) {
     handleCommand: global.newCommand,
     handleExportFile: global.exportWorkspacesToFile,
     handleExportRequestsToFile: global.exportRequestsToFile,
+    handleInitializeEntities: entities.initialize,
     handleMoveDoc: _moveDoc,
   };
 }
@@ -1378,7 +1547,4 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps,
-)(App);
+export default connect(mapStateToProps, mapDispatchToProps)(App);

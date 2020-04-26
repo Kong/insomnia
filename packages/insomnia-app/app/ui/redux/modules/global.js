@@ -1,3 +1,4 @@
+// @flow
 import electron from 'electron';
 import * as React from 'react';
 import { combineReducers } from 'redux';
@@ -14,14 +15,22 @@ import * as models from '../../../models';
 import SelectModal from '../../components/modals/select-modal';
 import { showError, showModal } from '../../components/modals/index';
 import * as db from '../../../common/database';
+import { trackEvent } from '../../../common/analytics';
 import SettingsModal, {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
 import install from '../../../plugins/install';
+import type { ForceToWorkspace } from './helpers';
+import { askToImportIntoWorkspace } from './helpers';
+import type { GlobalActivity } from '../../components/activity-bar/activity-bar';
 import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
+import { setActivityAttribute } from '../../../common/misc';
+import { getDefaultAppId, isDevelopment } from '../../../common/constants';
+import { ACTIVITY_HOME, ACTIVITY_INSOMNIA } from '../../components/activity-bar/activity-bar';
+import { APP_ID_INSOMNIA } from '../../../../config';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
@@ -31,6 +40,7 @@ const LOAD_STOP = 'global/load-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
 const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
+const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
@@ -41,6 +51,15 @@ const COMMAND_PLUGIN_THEME = 'plugins/theme';
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
+
+function activeActivityReducer(state = null, action) {
+  switch (action.type) {
+    case SET_ACTIVE_ACTIVITY:
+      return action.activity;
+    default:
+      return state;
+  }
+}
 
 function activeWorkspaceReducer(state = null, action) {
   switch (action.type) {
@@ -86,6 +105,7 @@ export const reducer = combineReducers({
   isLoading: loadingReducer,
   loadingRequestIds: loadingRequestsReducer,
   activeWorkspaceId: activeWorkspaceReducer,
+  activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
 });
 
@@ -203,13 +223,35 @@ export function loadRequestStop(requestId) {
   return { type: LOAD_REQUEST_STOP, requestId };
 }
 
-export function setActiveWorkspace(workspaceId) {
+export function setActiveActivity(activity: GlobalActivity) {
+  let goToActivity = activity;
+
+  // If development, skip logic (to allow for real-time switching)
+  //   If app should be insomnia
+  //     then don't allow changing to another activity
+  //   If not insomnia
+  //     then don't allow changing to ACTIVITY_INSOMNIA
+  if (!isDevelopment()) {
+    if (getDefaultAppId() === APP_ID_INSOMNIA) {
+      goToActivity = ACTIVITY_INSOMNIA;
+    } else if (activity === ACTIVITY_INSOMNIA) {
+      goToActivity = ACTIVITY_HOME;
+    }
+  }
+
+  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(goToActivity));
+  setActivityAttribute(goToActivity);
+  trackEvent('Activity', 'Change', goToActivity);
+  return { type: SET_ACTIVE_ACTIVITY, activity: goToActivity };
+}
+
+export function setActiveWorkspace(workspaceId: string) {
   const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
   window.localStorage.setItem(key, JSON.stringify(workspaceId));
   return { type: SET_ACTIVE_WORKSPACE, workspaceId };
 }
 
-export function importFile(workspaceId) {
+export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
   return async dispatch => {
     dispatch(loadStart());
 
@@ -249,7 +291,10 @@ export function importFile(workspaceId) {
       for (const p of paths) {
         try {
           const uri = `file://${p}`;
-          const result = await importUtils.importUri(askToImportIntoWorkspace(workspaceId), uri);
+          const result = await importUtils.importUri(
+            askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+            uri,
+          );
           importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
         } catch (err) {
           showModal(AlertModal, { title: 'Import Failed', message: err + '' });
@@ -265,17 +310,30 @@ export function importFile(workspaceId) {
   };
 }
 
-export function importClipBoard(workspaceId) {
+export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
   return async dispatch => {
     dispatch(loadStart());
     const schema = electron.clipboard.readText();
+    if (!schema) {
+      showModal(AlertModal, {
+        title: 'Import Failed',
+        message: 'Your clipboard appears to be empty.',
+      });
+      return;
+    }
     // Let's import all the paths!
     let importedWorkspaces = [];
     try {
-      const result = await importUtils.importRaw(askToImportIntoWorkspace(workspaceId), schema);
+      const result = await importUtils.importRaw(
+        askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+        schema,
+      );
       importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
     } catch (err) {
-      showModal(AlertModal, { title: 'Import Failed', message: err + '' });
+      showModal(AlertModal, {
+        title: 'Import Failed',
+        message: 'Your clipboard does not contain a valid specification.',
+      });
     } finally {
       dispatch(loadStop());
     }
@@ -285,13 +343,16 @@ export function importClipBoard(workspaceId) {
   };
 }
 
-export function importUri(workspaceId, uri) {
+export function importUri(workspaceId: string, uri: string, forceToWorkspace?: ForceToWorkspace) {
   return async dispatch => {
     dispatch(loadStart());
 
     let importedWorkspaces = [];
     try {
-      const result = await importUtils.importUri(askToImportIntoWorkspace(workspaceId), uri);
+      const result = await importUtils.importUri(
+        askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+        uri,
+      );
       const workspaces = result.summary[models.workspace.type] || [];
       importedWorkspaces = [...importedWorkspaces, ...workspaces];
     } catch (err) {
@@ -539,6 +600,7 @@ export function exportRequestsToFile(requestIds) {
 
 export function init() {
   let workspaceId = null;
+  let activity = null;
 
   try {
     const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
@@ -548,25 +610,13 @@ export function init() {
     // Nothing here...
   }
 
-  return setActiveWorkspace(workspaceId);
-}
+  try {
+    const key = `${LOCALSTORAGE_PREFIX}::activity`;
+    const item = window.localStorage.getItem(key);
+    activity = JSON.parse(item);
+  } catch (e) {
+    // Nothing here...
+  }
 
-// ~~~~~~~ //
-// HELPERS //
-// ~~~~~~~ //
-
-function askToImportIntoWorkspace(workspaceId) {
-  return function() {
-    return new Promise(resolve => {
-      showModal(AskModal, {
-        title: 'Import',
-        message: 'Do you want to import into the current workspace or a new one?',
-        yesText: 'Current',
-        noText: 'New Workspace',
-        onDone: yes => {
-          resolve(yes ? workspaceId : null);
-        },
-      });
-    });
-  };
+  return [setActiveWorkspace(workspaceId), setActiveActivity(activity)];
 }

@@ -6,9 +6,10 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import * as database from './common/database';
-import { CHANGELOG_BASE_URL, getAppVersion, isDevelopment, isMac } from './common/constants';
+import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';
+import { trackNonInteractiveEventQueueable } from './common/analytics';
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -127,6 +128,14 @@ async function _trackStats() {
   const firstLaunch = stats.launches === 1;
   const justUpdated = !firstLaunch && stats.currentVersion !== stats.lastVersion;
 
+  if (firstLaunch) {
+    trackNonInteractiveEventQueueable('General', 'First Launch', stats.currentVersion);
+  } else if (justUpdated) {
+    trackNonInteractiveEventQueueable('General', 'Updated', stats.currentVersion);
+  } else {
+    trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
+  }
+
   ipcMain.once('window-ready', () => {
     const { currentVersion } = stats;
     if (!justUpdated || !currentVersion) {
@@ -136,10 +145,9 @@ async function _trackStats() {
     const { BrowserWindow } = electron;
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
-      url: `${CHANGELOG_BASE_URL}/${currentVersion}/`,
+      url: changelogUrl(),
       cta: "See What's New",
       message: `Updated to ${currentVersion}`,
-      email: 'support@insomnia.rest',
     };
 
     // Wait a bit before showing the user because the app just launched.

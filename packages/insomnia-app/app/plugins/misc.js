@@ -3,6 +3,7 @@ import Color from 'color';
 import { render, THROW_ON_ERROR } from '../common/render';
 import { getThemes } from './index';
 import type { Theme } from './index';
+import { getAppDefaultTheme } from '../common/constants';
 
 type ThemeBlock = {
   background?: {
@@ -38,6 +39,7 @@ type ThemeInner = {
   ...ThemeBlock,
   rawCss?: string,
   styles: ?{
+    activityBar?: ThemeBlock,
     dialog?: ThemeBlock,
     dialogFooter?: ThemeBlock,
     dialogHeader?: ThemeBlock,
@@ -89,13 +91,22 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
   if (renderedTheme.styles) {
     const styles = renderedTheme.styles;
 
+    // Activity Bar
+    css += wrapStyles(
+      n,
+      '.theme--activity-bar',
+      getThemeBlockCSS(styles.activityBar || styles.sidebar),
+    );
+
     // Dropdown Menus
-    css += wrapStyles(n, '.theme--dropdown__menu', getThemeBlockCSS(styles.dialog));
-    css += wrapStyles(n, '.theme--dropdown__menu', getThemeBlockCSS(styles.dropdown));
+    css += wrapStyles(
+      n,
+      '.theme--dropdown__menu',
+      getThemeBlockCSS(styles.dropdown || styles.dialog),
+    );
 
     // Tooltips
-    css += wrapStyles(n, '.theme--tooltip', getThemeBlockCSS(styles.dialog));
-    css += wrapStyles(n, '.theme--tooltip', getThemeBlockCSS(styles.tooltip));
+    css += wrapStyles(n, '.theme--tooltip', getThemeBlockCSS(styles.tooltip || styles.dialog));
 
     // Overlay
     css += wrapStyles(
@@ -239,8 +250,15 @@ export async function setTheme(themeName: string) {
     return;
   }
 
-  body.setAttribute('theme', themeName);
   const themes: Array<Theme> = await getThemes();
+
+  // If theme isn't installed for some reason, set to the default
+  if (!themes.find(t => t.theme.name === themeName)) {
+    console.log(`[theme] Theme not found ${themeName}`);
+    themeName = getAppDefaultTheme();
+  }
+
+  body.setAttribute('theme', themeName);
 
   for (const theme of themes) {
     let themeCSS = (await generateThemeCSS(theme.theme)) + '\n';
@@ -287,7 +305,7 @@ const _baseTheme = {
     notice: '#d8c84d',
     warning: '#ec8702',
     danger: '#e15251',
-    surprise: '#8776d5',
+    surprise: '#6030BF',
     info: '#20aed9',
   },
   foreground: {

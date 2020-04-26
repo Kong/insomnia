@@ -170,13 +170,18 @@ export const bufferChanges = (database.bufferChanges = async function(
   return ++bufferChangesId;
 });
 
-export const flushChangesAsync = (database.flushChangesAsync = async function() {
+export const flushChangesAsync = (database.flushChangesAsync = async function(
+  fake: boolean = false,
+) {
   process.nextTick(async () => {
-    await flushChanges();
+    await flushChanges(0, fake);
   });
 });
 
-export const flushChanges = (database.flushChanges = async function(id: number = 0) {
+export const flushChanges = (database.flushChanges = async function(
+  id: number = 0,
+  fake: boolean = false,
+) {
   if (db._empty) return _send('flushChanges', ...arguments);
 
   // Only flush if ID is 0 or the current flush ID is the same as passed
@@ -190,6 +195,11 @@ export const flushChanges = (database.flushChanges = async function(id: number =
 
   if (changes.length === 0) {
     // No work to do
+    return;
+  }
+
+  if (fake) {
+    console.log(`[db] Dropped ${changes.length} changes.`);
     return;
   }
 

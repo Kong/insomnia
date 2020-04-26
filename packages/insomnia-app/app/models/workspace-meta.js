@@ -16,12 +16,18 @@ export const canSync = false;
 type BaseWorkspaceMeta = {
   activeRequestId: string | null,
   activeEnvironmentId: string | null,
+  activeActivity: string | null,
   sidebarFilter: string,
   sidebarHidden: boolean,
+  previewHidden: boolean,
   sidebarWidth: number,
   paneWidth: number,
   paneHeight: number,
   hasSeen: boolean,
+  gitRepositoryId: string | null,
+  cachedGitRepositoryBranch: string | null,
+  cachedGitLastAuthor: string | null,
+  cachedGitLastCommitTime: number | null,
 };
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
@@ -31,12 +37,18 @@ export function init(): BaseWorkspaceMeta {
     parentId: null,
     activeRequestId: null,
     activeEnvironmentId: null,
+    activeActivity: null,
     sidebarFilter: '',
     sidebarHidden: false,
+    previewHidden: false,
     sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
     paneWidth: DEFAULT_PANE_WIDTH,
     paneHeight: DEFAULT_PANE_HEIGHT,
     hasSeen: true,
+    gitRepositoryId: null,
+    cachedGitRepositoryBranch: null,
+    cachedGitLastAuthor: null,
+    cachedGitLastCommitTime: null,
   };
 }
 
@@ -59,8 +71,17 @@ export function update(
   return db.docUpdate(workspaceMeta, patch);
 }
 
+export async function updateByParentId(workspaceId: string, patch: Object = {}): Promise<WorkspaceMeta> {
+  const meta = await getByParentId(workspaceId);
+  return db.docUpdate(meta, patch);
+}
+
 export async function getByParentId(parentId: string): Promise<WorkspaceMeta | null> {
   return db.getWhere(type, { parentId });
+}
+
+export async function getByGitRepositoryId(gitRepositoryId: string): Promise<WorkspaceMeta | null> {
+  return db.getWhere(type, { gitRepositoryId });
 }
 
 export async function getOrCreateByParentId(parentId: string): Promise<WorkspaceMeta> {

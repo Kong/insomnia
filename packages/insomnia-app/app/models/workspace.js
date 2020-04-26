@@ -1,7 +1,8 @@
 // @flow
 import type { BaseModel } from './index';
-import * as db from '../common/database';
 import * as models from './index';
+import * as db from '../common/database';
+import { getAppName } from '../common/constants';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -12,6 +13,7 @@ export const canSync = true;
 type BaseWorkspace = {
   name: string,
   description: string,
+  scope: 'spec' | 'debug' | null,
 };
 
 export type Workspace = BaseModel & BaseWorkspace;
@@ -20,6 +22,7 @@ export function init() {
   return {
     name: 'New Workspace',
     description: '',
+    scope: null,
   };
 }
 
@@ -41,7 +44,7 @@ export async function all(): Promise<Array<Workspace>> {
   const workspaces = await db.all(type);
 
   if (workspaces.length === 0) {
-    await create({ name: 'Insomnia' });
+    await create({ name: getAppName() });
     return all();
   } else {
     return workspaces;

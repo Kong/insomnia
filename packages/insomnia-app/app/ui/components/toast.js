@@ -19,7 +19,7 @@ export type ToastNotification = {
   url: string,
   cta: string,
   message: string,
-  email: string,
+  email?: string,
 };
 
 type Props = {};

@@ -1,8 +1,8 @@
 ---
 name: Question
 about: Get help with something in the app
-title: "[Question] Short issue title"
-labels: ''
+title: Short issue title
+labels: Question ❓
 assignees: ''
 
 ---

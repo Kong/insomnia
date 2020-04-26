@@ -1,0 +1,16 @@
+[ignore]
+.*/node_modules/.*
+.*/__fixtures__/.*
+./.cache
+./dist
+
+[include]
+
+[libs]
+./flow-typed
+./types
+
+[options]
+esproposal.optional_chaining=enable
+
+[lints]

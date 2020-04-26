@@ -1,0 +1,31 @@
+{
+  "name": "insomnia-plugin-kong-portal",
+  "version": "2.2.1",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "webpack --config webpack.config.js --display errors-only",
+    "watch": "webpack --config webpack.config.js --watch"
+  },
+  "insomnia": {
+    "unlisted": true,
+    "name": "kong-portal",
+    "description": "Deploy API specifications to Kong Portal"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-proposal-decorators": "^7.8.3",
+    "@babel/preset-env": "^7.9.0",
+    "@babel/preset-flow": "^7.9.0",
+    "@babel/preset-react": "^7.9.4",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
+  },
+  "dependencies": {
+    "autobind-decorator": "^2.4.0",
+    "insomnia-components": "^2.2.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "url-join": "^4.0.1"
+  }
+}

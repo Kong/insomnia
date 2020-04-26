@@ -37,6 +37,8 @@ class ErrorModal extends PureComponent {
 
     this.modal.show();
 
+    console.log('[ErrorModal]', error);
+
     return new Promise(resolve => {
       this._okCallback = resolve;
     });

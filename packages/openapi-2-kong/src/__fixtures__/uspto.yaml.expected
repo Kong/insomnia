@@ -1,0 +1,41 @@
+{
+  "services": [
+    {
+      "url": "https://developer.uspto.gov/ds-api",
+      "name": "USPTO_Data_Set_API",
+      "plugins": [],
+      "routes": [
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
+          "name": "USPTO_Data_Set_API-path-get",
+          "paths": ["/"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
+          "name": "USPTO_Data_Set_API-path_1-get",
+          "paths": ["\/(?<dataset>\\S+)\/(?<version>\\S+)\/fields$"]
+        },
+        {
+          "methods": ["POST"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
+          "name": "USPTO_Data_Set_API-path_2-post",
+          "paths": ["\/(?<dataset>\\S+)\/(?<version>\\S+)\/records$"]
+        }
+      ],
+      "tags": ["OAS3_import", "OAS3file_uspto.yaml"]
+    }
+  ],
+  "upstreams": [
+    {
+      "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
+      "name": "USPTO_Data_Set_API",
+      "targets": [{"target": "developer.uspto.gov:443"}]
+    }
+  ],
+  "_format_version": "1.1"
+}

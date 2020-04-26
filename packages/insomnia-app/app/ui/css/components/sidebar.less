@@ -1,7 +1,7 @@
 .sidebar {
   position: relative;
   display: grid;
-  grid-template-rows: var(--height-nav) auto auto fit-content(20%) auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto fit-content(20%) auto minmax(0, 1fr) auto;
   grid-template-columns: 100%;
   z-index: 10;
 
@@ -40,7 +40,7 @@
     background-color: var(--color-bg);
     color: var(--color-font);
     width: 100%;
-    height: 100%;
+    height: var(--nav-height);
 
     h1 {
       margin: 0;
@@ -63,7 +63,7 @@
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     box-sizing: border-box;
-    padding: 0 0 var(--padding-xxs) var(--padding-sm);
+    padding: var(--padding-sm) 0 var(--padding-xxs) var(--padding-sm);
 
     .btn {
       padding: 0 calc(var(--padding-md) - var(--padding-xs));
@@ -86,12 +86,18 @@
     box-sizing: border-box;
     width: 100%;
     display: flex;
+    align-items: center;
     flex-direction: row;
     flex-wrap: wrap;
     font-size: var(--font-size-sm);
     color: var(--hl);
     padding-left: var(--padding-xs);
     padding-right: var(--padding-xs);
+    height: var(--height-nav);
+
+    &--insomnia-HACK {
+      height: var(--line-height-md);
+    }
 
     // Make it scroll when too skinny
     overflow: auto;
@@ -402,6 +408,7 @@
     height: var(--line-height-xs);
     border-top: 1px solid var(--hl-md);
     width: 100%;
+    grid-row-start: -1;
   }
 
   .sidebar__footer > button,

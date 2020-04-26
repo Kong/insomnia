@@ -192,6 +192,7 @@ p.notice {
   text-align: center;
   color: var(--color-font) !important;
   padding: calc(var(--padding-sm) * 1.5);
+  margin-bottom: var(--padding-md);
   border: 1px dotted var(--hl);
   border-radius: var(--radius-md);
   position: relative;
@@ -244,6 +245,14 @@ p.notice {
 
   &::before {
     background-color: var(--color-warning);
+  }
+}
+
+.notice.success {
+  border-color: var(--color-success);
+
+  &::before {
+    background-color: var(--color-success);
   }
 }
 
@@ -413,7 +422,11 @@ blockquote {
   width: 100%;
 }
 
-&.row--top {
+.row--right {
+  justify-content: flex-end;
+}
+
+.row--top {
   align-items: start;
 }
 
@@ -563,6 +576,10 @@ i.fa.fa--fixed-width {
 
 .margin-sm {
   margin: var(--padding-sm);
+}
+
+.margin-md {
+  margin: var(--padding-md);
 }
 
 .margin-xs {

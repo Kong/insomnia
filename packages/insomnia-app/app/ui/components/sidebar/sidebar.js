@@ -6,8 +6,6 @@ import type { Workspace } from '../../../models/workspace';
 import type { Environment } from '../../../models/environment';
 import classnames from 'classnames';
 import { COLLAPSE_SIDEBAR_REMS, SIDEBAR_SKINNY_REMS } from '../../../common/constants';
-import WorkspaceDropdown from '../dropdowns/workspace-dropdown';
-import VCS from '../../../sync/vcs';
 import SyncDropdown from '../dropdowns/sync-dropdown';
 import SyncLegacyDropdown from '../dropdowns/sync-legacy-dropdown';
 import type { StatusCandidate } from '../../../sync/types';
@@ -18,6 +16,7 @@ type Props = {|
   children: React.Node,
   enableSyncBeta: boolean,
   environmentHighlightColorStyle: string,
+  handleNavigateHome: () => any,
   handleSetActiveEnvironment: Function,
   handleSetActiveWorkspace: Function,
   hidden: boolean,
@@ -26,7 +25,6 @@ type Props = {|
   showEnvironmentsModal: Function,
   syncItems: Array<StatusCandidate>,
   unseenWorkspaces: Array<Workspace>,
-  vcs: VCS | null,
   width: number,
   workspace: Workspace,
   workspaces: Array<Workspace>,
@@ -40,16 +38,11 @@ class Sidebar extends React.PureComponent<Props> {
       children,
       enableSyncBeta,
       environmentHighlightColorStyle,
-      handleSetActiveWorkspace,
       hidden,
-      hotKeyRegistry,
-      isLoading,
       syncItems,
-      unseenWorkspaces,
       vcs,
       width,
       workspace,
-      workspaces,
     } = this.props;
 
     return (
@@ -67,19 +60,6 @@ class Sidebar extends React.PureComponent<Props> {
               ? '5px solid ' + activeEnvironment.color
               : null,
         }}>
-        <WorkspaceDropdown
-          className="sidebar__header theme--sidebar__header"
-          activeEnvironment={activeEnvironment}
-          activeWorkspace={workspace}
-          workspaces={workspaces}
-          unseenWorkspaces={unseenWorkspaces}
-          hotKeyRegistry={hotKeyRegistry}
-          handleSetActiveWorkspace={handleSetActiveWorkspace}
-          enableSyncBeta={enableSyncBeta}
-          isLoading={isLoading}
-          vcs={vcs}
-        />
-
         {children}
 
         {enableSyncBeta && vcs && isLoggedIn() && (

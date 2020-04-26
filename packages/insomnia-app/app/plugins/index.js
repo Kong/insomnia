@@ -1,6 +1,6 @@
 // @flow
 import mkdirp from 'mkdirp';
-import * as packageJson from '../../package.json';
+import { appConfig } from '../../config';
 import * as models from '../models';
 import fs from 'fs';
 import path from 'path';
@@ -53,6 +53,25 @@ export type WorkspaceAction = {
   ) => void | Promise<void>,
   label: string,
   icon?: string,
+};
+
+export type SpecInfo = {
+  contents: Object,
+  rawContents: string,
+  format: string,
+  formatVersion: string,
+};
+
+export type ConfigGenerator = {
+  plugin: Plugin,
+  generate: (info: SpecInfo) => Promise<{document?: string, error?: string}>,
+};
+
+export type DocumentAction = {
+  plugin: Plugin,
+  action: (context: Object, documents: SpecInfo) => void | Promise<void>,
+  label: string,
+  hideAfterClick?: boolean,
 };
 
 export type RequestHook = {
@@ -163,11 +182,11 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
     // Store plugins in a map so that plugins with the same
     // name only get added once
     // TODO: Make this more complex and have the latest version always win
-    const pluginMap: { [string]: Plugin } = {
+    const pluginMap: {[string]: Plugin} = {
       // "name": "module"
     };
 
-    for (const p of packageJson.app.plugins) {
+    for (const p of appConfig().plugins) {
       const pluginJson = global.require(`${p}/package.json`);
       const pluginModule = global.require(p);
       pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule, allConfigs);
@@ -201,8 +220,18 @@ export async function getRequestGroupActions(): Promise<Array<RequestGroupAction
 
 export async function getWorkspaceActions(): Promise<Array<WorkspaceAction>> {
   let extensions = [];
-  for (const plugin of await getPlugins()) {
+  for (const plugin of await getActivePlugins()) {
     const actions = plugin.module.workspaceActions || [];
+    extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
+  }
+
+  return extensions;
+}
+
+export async function getDocumentActions(): Promise<Array<DocumentAction>> {
+  let extensions = [];
+  for (const plugin of await getActivePlugins()) {
+    const actions = plugin.module.documentActions || [];
     extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
   }
 
@@ -247,6 +276,16 @@ export async function getThemes(): Promise<Array<Theme>> {
   }
 
   return extensions;
+}
+
+export async function getConfigGenerators(): Promise<Array<ConfigGenerator>> {
+  let functions = [];
+  for (const plugin of await getActivePlugins()) {
+    const moreFunctions = plugin.module.configGenerators || [];
+    functions = [...functions, ...moreFunctions.map(p => ({ plugin, ...p }))];
+  }
+
+  return functions;
 }
 
 const _defaultPluginConfig: PluginConfig = {

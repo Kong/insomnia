@@ -14,7 +14,7 @@
     "description": "Get information about the OS"
   },
   "dependencies": {
-    "jsonpath": "^1.0.0"
+    "jsonpath": "^1.0.2"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
 }

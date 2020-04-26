@@ -51,6 +51,15 @@ export const selectActiveWorkspace = createSelector(
   },
 );
 
+export const selectActiveWorkspaceMeta = createSelector(
+  selectActiveWorkspace,
+  selectEntitiesLists,
+  (activeWorkspace, entities) => {
+    const id = activeWorkspace ? activeWorkspace._id : 'n/a';
+    return entities.workspaceMetas.find(m => m.parentId === id);
+  },
+);
+
 export const selectActiveWorkspaceClientCertificates = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
@@ -59,12 +68,17 @@ export const selectActiveWorkspaceClientCertificates = createSelector(
   },
 );
 
-export const selectActiveWorkspaceMeta = createSelector(
-  selectActiveWorkspace,
+export const selectActiveGitRepository = createSelector(
   selectEntitiesLists,
-  (activeWorkspace, entities) => {
-    const id = activeWorkspace ? activeWorkspace._id : 'n/a';
-    return entities.workspaceMetas.find(m => m.parentId === id);
+  selectActiveWorkspaceMeta,
+  (entities, activeWorkspaceMeta) => {
+    if (!activeWorkspaceMeta) {
+      return null;
+    }
+
+    const id = activeWorkspaceMeta ? activeWorkspaceMeta.gitRepositoryId : 'n/a';
+    const repo = entities.gitRepositories.find(r => r._id === id);
+    return repo || null;
   },
 );
 
