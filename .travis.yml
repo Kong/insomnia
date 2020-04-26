@@ -6,6 +6,7 @@ matrix:
       osx_image: xcode10.1
       if: (tag =~ ^core@)
       env:
+        - GH_TOKEN=$GITHUB_TOKEN
         - APPLE_ID=$APPLE_ID
         - APPLE_ID_PASSWORD=$APPLE_ID_PASSWORD
         - CSC_LINK=$MAC_CSC_LINK
@@ -14,6 +15,7 @@ matrix:
       osx_image: xcode10.1
       if: (tag =~ ^designer@)
       env:
+        - GH_TOKEN=$GITHUB_TOKEN
         - APPLE_ID=$DESIGNER_APPLE_ID
         - APPLE_ID_PASSWORD=$DESIGNER_APPLE_ID_PASSWORD
         - CSC_LINK=$DESIGNER_MAC_CSC_LINK
