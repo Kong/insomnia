@@ -1,10 +1,6 @@
 name: Test
 
-on:
-  push:
-    tags-ignore:
-      - core@*
-      - designer@*
+on: push
 
 jobs:
   Test:
