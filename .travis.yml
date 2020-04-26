@@ -4,16 +4,26 @@ matrix:
   include:
     - os: osx # High Sierra for older libcurl compatibility
       osx_image: xcode10.1
+      if: (tag =~ ^core@)
       env:
+        - APPLE_ID=$APPLE_ID
+        - APPLE_ID_PASSWORD=$APPLE_ID_PASSWORD
         - CSC_LINK=$MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
+    - os: osx # High Sierra for older libcurl compatibility
+      osx_image: xcode10.1
+      if: (tag =~ ^designer@)
+      env:
+        - APPLE_ID=$DESIGNER_APPLE_ID
+        - APPLE_ID_PASSWORD=$DESIGNER_APPLE_ID_PASSWORD
+        - CSC_LINK=$DESIGNER_MAC_CSC_LINK
+        - CSC_KEY_PASSWORD=$DESIGNER_MAC_CSC_KEY_PASSWORD
 
 cache:
   directories:
     - node_modules
-    - build/node_modules
-    - $HOME/.electron
-    - $HOME/.cache
+    - packages/insomnia-app/node_modules
+    - packages/insomnia-app/build/node_modules
 
 script:
   - node --version

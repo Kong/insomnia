@@ -175,7 +175,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.4.0",
-    "@octokit/rest": "^16.33.0",
+    "@octokit/rest": "^17.6.0",
     "@storybook/addon-info": "^5.2.8",
     "@storybook/react": "^5.2.6",
     "concurrently": "^3.5.0",
