@@ -17,7 +17,7 @@ echo "Running the stuff"
 npm test
 
 # Log into snapcraft for publishing
-if [ -z "$SNAPCRAFT_LOGIN_FILE" ]; then
+if [ -n "$SNAPCRAFT_LOGIN_FILE" ]; then
   echo "$SNAPCRAFT_LOGIN_FILE" > snapcraft.txt && snapcraft login --with snapcraft.txt
 fi
 
