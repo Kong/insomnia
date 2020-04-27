@@ -88,7 +88,7 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
       return (
         <TabPanel key={config.label}>
           <Notice color="error" className="margin-md">
-            {config.error.message}
+            {config.error}
           </Notice>
         </TabPanel>
       );

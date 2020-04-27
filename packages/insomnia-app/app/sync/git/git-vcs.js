@@ -33,15 +33,7 @@ export type GitLogEntry = {|
   },
 |};
 
-/**
- * In order to keep the Git stuff isolated within the repository, we store
- * everything under a single directory at the root. This also gives us a
- * location to look for when cloning a new repository.
- *
- * NOTE: The directory is still named `.studio` because that was the original name.
- *   Changing it would be too difficult at this point.
- */
-export const GIT_NAMESPACE_DIR = '.studio';
+export const GIT_NAMESPACE_DIR = '.insomnia';
 
 export default class GitVCS {
   _git: Object;

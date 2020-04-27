@@ -13,8 +13,9 @@
   "main": "main.min.js",
   "githubOrg": "Kong",
   "githubRepo": "insomnia",
-  "gaId": "<TODO>",
-  "gaLocation": "<TODO>",
+  "gaId": "G-FY7M07EJ85",
+  "gaLocation": "https://core.lytics.insomnia.rest",
+  "gravatarEmail": "avatar.core@insomnia.rest",
   "plugins": [
     "insomnia-plugin-base64",
     "insomnia-plugin-hash",
