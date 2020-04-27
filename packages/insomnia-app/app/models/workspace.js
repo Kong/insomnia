@@ -3,6 +3,7 @@ import type { BaseModel } from './index';
 import * as models from './index';
 import * as db from '../common/database';
 import { getAppName } from '../common/constants';
+import { workspace } from './index';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -27,6 +28,7 @@ export function init() {
 }
 
 export async function migrate(doc: Workspace): Promise<Workspace> {
+  await models.apiSpec.getOrCreateForParentId(doc._id, { fileName: workspace.name });
   doc = await _migrateExtractClientCertificates(doc);
   doc = await _migrateEnsureName(doc);
   return doc;
