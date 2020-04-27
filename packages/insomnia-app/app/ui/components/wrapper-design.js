@@ -236,7 +236,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
               'preview-hidden': previewHidden,
             })}>
             <div id="swagger-ui-wrapper">
-              <SwaggerUI spec={swaggerUiSpec || {}} />
+              <SwaggerUI spec={swaggerUiSpec || {}} supportedSubmitMethods={['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace']} />
             </div>
             <div className="spec-editor__body theme--pane__body">
               <CodeEditor
