@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-kong-bundle",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "main": "index.js",
   "insomnia": {
     "unlisted": true,
@@ -8,8 +8,8 @@
     "description": "Bundle of all Kong plugins"
   },
   "dependencies": {
-    "insomnia-plugin-kong-declarative-config": "^2.2.1",
-    "insomnia-plugin-kong-kubernetes-config": "^2.2.1",
-    "insomnia-plugin-kong-portal": "^2.2.1"
+    "insomnia-plugin-kong-declarative-config": "^2.2.2",
+    "insomnia-plugin-kong-kubernetes-config": "^2.2.2",
+    "insomnia-plugin-kong-portal": "^2.2.2"
   }
 }
