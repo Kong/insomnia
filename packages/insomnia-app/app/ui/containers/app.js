@@ -1211,7 +1211,6 @@ class App extends PureComponent {
       const flushId = await db.bufferChanges();
       await models.environment.getOrCreateForWorkspace(activeWorkspace);
       await models.cookieJar.getOrCreateForParentId(activeWorkspace._id);
-      await models.apiSpec.getOrCreateForParentId(activeWorkspace._id);
       await models.workspaceMeta.getOrCreateByParentId(activeWorkspace._id);
       await db.flushChanges(flushId);
 
@@ -1287,7 +1286,7 @@ class App extends PureComponent {
               handleMoveRequestGroup={App._requestGroupMove}
               handleDuplicateWorkspace={this._workspaceDuplicate}
               handleDuplicateWorkspaceById={this._workspaceDuplicateById}
-              handleRenameWorkspace={this._workspaceRename}
+              handleRenameWorkspaceById={this._workspaceRename}
               handleDeleteWorkspaceById={this._workspaceDeleteById}
               handleCreateRequestGroup={this._requestGroupCreate}
               handleGenerateCode={App._handleGenerateCode}

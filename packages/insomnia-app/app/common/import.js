@@ -242,11 +242,18 @@ export async function importRaw(
   for (const workspace of importedDocs[models.workspace.type]) {
     if (isApiSpec(results.type.id)) {
       const spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
+        fileName: workspace.name,
         contents: rawContent,
         contentType: 'yaml',
       });
 
       importedDocs[spec.type].push(spec);
+    } else {
+      await models.apiSpec.updateOrCreateForParentId(workspace._id, {
+        fileName: workspace.name,
+        contents: '',
+        contentType: 'yaml',
+      });
     }
 
     // Set default environment if there is one

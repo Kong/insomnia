@@ -283,9 +283,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
   renderWorkspace(w: Workspace) {
     const {
       apiSpecs,
-      handleDuplicateWorkspaceById,
-      handleRenameWorkspace,
-      handleDeleteWorkspaceById,
+      handleSetActiveWorkspace,
       workspaceMetas,
     } = this.props.wrapperProps;
 
@@ -339,17 +337,19 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
     const docMenu = (
       <DocumentCardDropdown
-        workspaceId={w._id}
         apiSpec={apiSpec}
-        handleDuplicateWorkspaceById={handleDuplicateWorkspaceById}
-        handleRenameWorkspaceById={handleRenameWorkspace}
-        handleDeleteWorkspaceById={handleDeleteWorkspaceById}>
+        workspace={w}
+        handleSetActiveWorkspace={handleSetActiveWorkspace}
+      >
         <SvgIcon icon="ellipsis" />
       </DocumentCardDropdown>
     );
+    const version = spec?.info?.version || '';
+    let label: string = 'Insomnia';
+    let defaultActivity = ACTIVITY_DEBUG;
 
     if (spec || w.scope === 'spec') {
-      let label: string = 'Unknown';
+      label = 'Unknown';
       if (specFormat === 'openapi') {
         label = `OpenAPI ${specFormatVersion}`;
       } else if (specFormat === 'swagger') {
@@ -357,33 +357,19 @@ class WrapperHome extends React.PureComponent<Props, State> {
         label = `OpenAPI ${specFormatVersion}`;
       }
 
-      const version = spec && spec.info && spec.info.version ? spec.info.version : null;
-      return (
-        <Card
-          key={w._id}
-          docBranch={branch}
-          docLog={log}
-          docTitle={<Highlight search={filter} text={w.name} />}
-          docVersion={version}
-          onClick={() => this._handleSetActiveWorkspace(w._id, ACTIVITY_SPEC)}
-          tagLabel={label}
-          docMenu={docMenu}
-        />
-      );
+      defaultActivity = ACTIVITY_SPEC;
     }
 
-    return (
-      <Card
-        key={w._id}
-        docBranch={branch}
-        docLog={log}
-        docTitle={<Highlight search={filter} text={w.name} />}
-        docVersion=""
-        onClick={() => this._handleSetActiveWorkspace(w._id, ACTIVITY_DEBUG)}
-        tagLabel="Insomnia"
-        docMenu={docMenu}
-      />
-    );
+    return <Card
+      key={apiSpec._id}
+      docBranch={branch}
+      docLog={log}
+      docTitle={<Highlight search={filter} text={apiSpec.fileName} />}
+      docVersion={version}
+      onClick={() => this._handleSetActiveWorkspace(w._id, defaultActivity)}
+      tagLabel={label}
+      docMenu={docMenu}
+    />;
   }
 
   renderMenu() {

@@ -148,7 +148,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     }
   }
 
-  _handleBreadcrumb(index: number) {
+  _handleBreadcrumb() {
     this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
@@ -176,7 +176,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
     const {
       activeApiSpec,
-      activeWorkspace,
       settings,
     } = wrapperProps;
 
@@ -205,7 +204,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             gridLeft={
               <React.Fragment>
                 <img src={designerLogo} alt="Insomnia" width="24" height="24" />
-                <Breadcrumb className="breadcrumb" crumbs={['Documents', activeWorkspace.name]} onClick={this._handleBreadcrumb} />
+                <Breadcrumb className="breadcrumb" crumbs={['Documents', activeApiSpec.fileName]} onClick={this._handleBreadcrumb} />
               </React.Fragment>
             }
             gridCenter={
