@@ -1,7 +1,9 @@
 // @flow
+import * as _apiSpec from './api-spec';
 import * as _clientCertificate from './client-certificate';
 import * as _cookieJar from './cookie-jar';
 import * as _environment from './environment';
+import * as _gitRepository from './git-repository';
 import * as _oAuth2Token from './o-auth-2-token';
 import * as _pluginData from './plugin-data';
 import * as _request from './request';
@@ -25,9 +27,11 @@ export type BaseModel = {
 };
 
 // Reference to each model
+export const apiSpec = _apiSpec;
 export const clientCertificate = _clientCertificate;
 export const cookieJar = _cookieJar;
 export const environment = _environment;
+export const gitRepository = _gitRepository;
 export const oAuth2Token = _oAuth2Token;
 export const pluginData = _pluginData;
 export const request = _request;
@@ -48,7 +52,9 @@ export function all() {
     workspace,
     workspaceMeta,
     environment,
+    gitRepository,
     cookieJar,
+    apiSpec,
     requestGroup,
     requestGroupMeta,
     request,

@@ -5,12 +5,13 @@ import * as db from './database';
 import * as har from './har';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
-import { getAppVersion } from './constants';
+import { CONTENT_TYPE_GRAPHQL, getAppVersion } from './constants';
 import { showError, showModal } from '../ui/components/modals/index';
 import AlertModal from '../ui/components/modals/alert-modal';
 import fs from 'fs';
 import { fnOrString, generateId } from './misc';
 import YAML from 'yaml';
+import { trackEvent } from './analytics';
 
 const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
 const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
@@ -22,6 +23,7 @@ const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
 const EXPORT_TYPE_WORKSPACE = 'workspace';
 const EXPORT_TYPE_COOKIE_JAR = 'cookie_jar';
 const EXPORT_TYPE_ENVIRONMENT = 'environment';
+const EXPORT_TYPE_API_SPEC = 'api_spec';
 
 // If we come across an ID of this form, we will replace it with a new one
 const REPLACE_ID_REGEX = /__\w+_\d+__/g;
@@ -32,6 +34,7 @@ const MODELS = {
   [EXPORT_TYPE_WORKSPACE]: models.workspace,
   [EXPORT_TYPE_COOKIE_JAR]: models.cookieJar,
   [EXPORT_TYPE_ENVIRONMENT]: models.environment,
+  [EXPORT_TYPE_API_SPEC]: models.apiSpec,
 };
 
 export async function importUri(
@@ -40,9 +43,18 @@ export async function importUri(
 ): Promise<{
   source: string,
   error: Error | null,
-  summary: { [string]: Array<BaseModel> },
+  summary: {[string]: Array<BaseModel>},
 }> {
   let rawText;
+
+  // If GH preview, force raw
+  const url = new URL(uri);
+  if (url.origin === 'https://github.com') {
+    uri = uri
+      .replace('https://github.com', 'https://raw.githubusercontent.com')
+      .replace('blob/', '');
+  }
+
   if (uri.match(/^(http|https):\/\//)) {
     const response = await window.fetch(uri);
     rawText = await response.text();
@@ -91,7 +103,7 @@ export async function importRaw(
 ): Promise<{
   source: string,
   error: Error | null,
-  summary: { [string]: Array<BaseModel> },
+  summary: {[string]: Array<BaseModel>},
 }> {
   let results;
   try {
@@ -107,7 +119,7 @@ export async function importRaw(
   const { data } = results;
 
   // Generate all the ids we may need
-  const generatedIds: { [string]: string | Function } = {};
+  const generatedIds: {[string]: string | Function} = {};
   for (const r of data.resources) {
     for (const key of r._id.match(REPLACE_ID_REGEX) || []) {
       generatedIds[key] = generateId(MODELS[r._type].prefix);
@@ -180,6 +192,19 @@ export async function importRaw(
       continue;
     }
 
+    // Hack to switch to GraphQL based on finding `graphql` in the URL path
+    // TODO: Support this in a better way
+    if (
+      model.type === models.request.type &&
+      resource.body &&
+      typeof resource.body.text === 'string' &&
+      typeof resource.url === 'string' &&
+      resource.body.text.includes('"query"') &&
+      resource.url.includes('graphql')
+    ) {
+      resource.body.mimeType = CONTENT_TYPE_GRAPHQL;
+    }
+
     // Try adding Content-Type JSON if no Content-Type exists
     if (
       model.type === models.request.type &&
@@ -213,13 +238,37 @@ export async function importRaw(
     importedDocs[newDoc.type].push(newDoc);
   }
 
+  // Store spec under workspace if it's OpenAPI
+  for (const workspace of importedDocs[models.workspace.type]) {
+    if (isApiSpec(results.type.id)) {
+      const spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
+        contents: rawContent,
+        contentType: 'yaml',
+      });
+
+      importedDocs[spec.type].push(spec);
+    }
+
+    // Set default environment if there is one
+    const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+    const envs = importedDocs[models.environment.type];
+    meta.activeEnvironmentId = envs.length > 0 ? envs[0]._id : null;
+    await models.workspaceMeta.update(meta);
+  }
+
   await db.flushChanges();
+
+  trackEvent('Data', 'Import', results.type.id);
 
   return {
     source: results.type && typeof results.type.id === 'string' ? results.type.id : 'unknown',
     summary: importedDocs,
     error: null,
   };
+}
+
+export function isApiSpec(content: string): boolean {
+  return content === 'openapi3' || content === 'swagger2';
 }
 
 export async function exportWorkspacesHAR(
@@ -280,6 +329,8 @@ export async function exportRequestsHAR(
 
   const data = await har.exportHar(harRequests);
 
+  trackEvent('Data', 'Export', 'HAR');
+
   return JSON.stringify(data, null, '\t');
 }
 
@@ -327,7 +378,11 @@ export async function exportRequestsData(
   for (const workspace of workspaces) {
     const descendants: Array<BaseModel> = (await db.withDescendants(workspace)).filter(d => {
       // Only interested in these additional model types.
-      return d.type === models.cookieJar.type || d.type === models.environment.type;
+      return (
+        d.type === models.cookieJar.type ||
+        d.type === models.environment.type ||
+        d.type === models.apiSpec.type
+      );
     });
     docs.push(...descendants);
   }
@@ -341,7 +396,8 @@ export async function exportRequestsData(
           d.type === models.requestGroup.type ||
           d.type === models.workspace.type ||
           d.type === models.cookieJar.type ||
-          d.type === models.environment.type
+          d.type === models.environment.type ||
+          d.type === models.apiSpec.type
         )
       ) {
         return false;
@@ -360,12 +416,16 @@ export async function exportRequestsData(
         d._type = EXPORT_TYPE_REQUEST_GROUP;
       } else if (d.type === models.request.type) {
         d._type = EXPORT_TYPE_REQUEST;
+      } else if (d.type === models.apiSpec.type) {
+        d._type = EXPORT_TYPE_API_SPEC;
       }
 
       // Delete the things we don't want to export
       delete d.type;
       return d;
     });
+
+  trackEvent('Data', 'Export', `Insomnia ${format}`);
 
   if (format.toLowerCase() === 'yaml') {
     return YAML.stringify(data);

@@ -1,95 +1,26 @@
-# Insomnia REST Client
+# Insomnia Designer
 
-[![Travis](https://api.travis-ci.org/Kong/insomnia.svg)](https://travis-ci.org/Kong/insomnia)
-[![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/Kong/insomnia/blob/master/LICENSE)
-[![CodeFund](https://img.shields.io/badge/codefund-advertiser-success.svg)](https://codefund.io)
+Designer is a spec-first API development app built in top of [Insomnia](https://github.com/getinsomnia/insomnia).
 
-Insomnia is a cross-platform _REST client_, built on top of [Electron](http://electron.atom.io/).
+![Screenshot](https://user-images.githubusercontent.com/587576/62305922-dbd30800-b44e-11e9-8de6-ea8bdcb8d93b.png)
 
-![Insomnia REST Client Screenshot](https://raw.githubusercontent.com/Kong/insomnia/master/screenshots/main.png)
-
-## Download
-
-Insomnia is available for Mac, Windows, and Linux and can be downloaded
-from the website.
-
-**[https://insomnia.rest/download](https://insomnia.rest/download/)**
-
-## Bugs and Feature Requests
-
-Have a bug or a feature request? First, read the
-[issue guidelines](CONTRIBUTING.md#using-the-issue-tracker) and search for existing and
-closed issues. If your problem or idea is not addressed yet, [please open a new issue](/issues).
-
-For more generic product questions and feedback, join the [Slack Team](https://chat.insomnia.rest) or email
-[support@insomnia.rest](mailto:support@insomnia.rest)
-
-## Contributing
-
-Please read through our [contributing guidelines](CONTRIBUTING.md) and [code of conduct](CODE_OF_CONDUCT.md). Included are directions
-for opening issues, coding standards, and notes on development.
-
-Editor preferences are available in the [editor config](.editorconfig) for easy use in
-common text editors. Read more and download plugins at [editorconfig.org](http://editorconfig.org).
-
-## Developing
-
-Development on Insomnia can be done on Mac, Windows, or Linux as long as you have
-[NodeJS](https://nodejs.org) and [Git](https://git-scm.com/). See the `.nvmrc` file located in the project for the correct Node version.
-
-<details>
-<summary>Initial Dev Setup</summary>
-
-This repository is structured as a monorepo and contains many Node.JS packages. Each package has
-its own set of commands, but the most common commands are available from the
-root `[package.json](package.json)` and can be accessed using the `npm run ...` command. Here
-are the only three commands you should need to start developing on the app.
-
-```bash
-# Install and Link Dependencies
+```shell
 npm run bootstrap
-
-# Run Tests
-npm test
-
-# Start App with Live Reload
 npm run app-start
 ```
 
-If you are on Linux and have problems, you may need to install `libfontconfig-dev`
+## Creating Releases
 
-```bash
-# Install libfontconfig-dev
-sudo apt-get install libfontconfig-dev
-```
+1. Bump version number in `packages/insomnia-app/package.json` `app.version` property.
+2. Commit changes into Git
+3. Create git tag to match version `git tag v1.0.0`
+4. Push tags `git push --tags`
+5. GitHub action will automatically on tags and test/build/package the app into a
+   [GitHub Release](https://github.com/kong/studio/releases/)
 
-If you are on Windows and have problems, you may need to install [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)
+## Merging Insomnia Changes
 
-</details>
-
-<details>
-<summary>Editor Requirements</summary>
-
-You can use any editor you'd like, but make sure to have support/plugins for
-the following tools:
-
-- [ESLint](http://eslint.org/) – For catching syntax problems and common errors
-- [JSX Syntax](https://facebook.github.io/react/docs/jsx-in-depth.html) – For React components
-- [Flow](https://flow.org/) – For type annotations
-
-</details>
-
-## Plugins
-
-Search, discover, and install plugins from the Insomnia [Plugin Hub](https://insomnia.rest/plugins/)!
-
-## Community Projects
-
-- [Insomnia Documenter](https://github.com/jozsefsallai/insomnia-documenter) – Generate beautiful API documentation pages using your Insomnia export file.
-- [GitHub API Spec Importer](https://github.com/swinton/github-rest-apis-for-insomnia) – A complete set of GitHub REST API route specifications that can be imported straight into Insomnia
-- [Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
-
-## License
-
-[MIT](LICENSE) &copy; [Insomnia](https://insomnia.rest)
+1. Add git remote called `insomnia` that points to Insomnia repo
+2. Pull Insomnia changes with `git pull --no-tags insomnia develop`
+3. Fix conflicts if any occur
+4. Push merged changes

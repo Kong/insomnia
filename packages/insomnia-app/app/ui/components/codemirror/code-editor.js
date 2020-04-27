@@ -265,10 +265,10 @@ class CodeEditor extends React.Component {
     this.codeMirror.setCursor(cursor.line, cursor.ch, { scroll: false });
     this.codeMirror.setSelections(selections, null, { scroll: false });
 
-    marks &&
-      marks.forEach(({ from, to }) => {
-        this.codeMirror.foldCode(from, to);
-      });
+    // Restore marks one-by-one
+    for (const { from, to } in marks || []) {
+      this.codeMirror.foldCode(from, to);
+    }
   }
 
   _setFilterInputRef(n) {
@@ -755,17 +755,24 @@ class CodeEditor extends React.Component {
   }
 
   _codemirrorValueBeforeChange(doc, change) {
-    // If we're in single-line mode, merge all changed lines into one
-    if (this.props.singleLine && change.text && change.text.length > 1) {
-      const text = change.text
-        .join('') // join all changed lines into one
-        .replace(/\n/g, ' '); // Convert all whitespace to spaces
-      change.update(change.from, change.to, [text]);
-    }
+    const value = this.codeMirror.getDoc().getValue();
 
-    // Don't allow non-breaking spaces because they break the GraphQL syntax
-    if (doc.options.mode === 'graphql' && change.text && change.text.length > 1) {
-      change.text = change.text.map(text => text.replace(/\u00A0/g, ' '));
+    if (value === '') {
+      this.codeMirror.setOption('lint', false);
+    } else {
+      this.codeMirror.setOption('lint', true);
+      // If we're in single-line mode, merge all changed lines into one
+      if (this.props.singleLine && change.text && change.text.length > 1) {
+        const text = change.text
+          .join('') // join all changed lines into one
+          .replace(/\n/g, ' '); // Convert all whitespace to spaces
+        change.update(change.from, change.to, [text]);
+      }
+
+      // Don't allow non-breaking spaces because they break the GraphQL syntax
+      if (doc.options.mode === 'graphql' && change.text && change.text.length > 1) {
+        change.text = change.text.map(text => text.replace(/\u00A0/g, ' '));
+      }
     }
   }
 
@@ -794,9 +801,12 @@ class CodeEditor extends React.Component {
 
     const value = this.codeMirror.getDoc().getValue();
 
-    const lint = value.length > MAX_SIZE_FOR_LINTING ? false : !this.props.noLint;
+    // Disable linting if the document reaches a maximum size or is empty
+    const shouldLint = (value.length > MAX_SIZE_FOR_LINTING || value.length === 0) ? false : !this.props.noLint;
     const existingLint = this.codeMirror.options.lint || false;
-    if (lint !== existingLint) {
+    if (shouldLint !== existingLint) {
+      const { lintOptions } = this.props;
+      const lint = shouldLint ? lintOptions || true : false;
       this.codeMirror.setOption('lint', lint);
     }
 
@@ -972,7 +982,7 @@ class CodeEditor extends React.Component {
             id={id}
             ref={this._handleInitTextarea}
             style={{ display: 'none' }}
-            defaultValue=" "
+            defaultValue=""
             readOnly={readOnly}
             autoComplete="off"
           />

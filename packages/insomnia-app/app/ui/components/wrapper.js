@@ -3,6 +3,7 @@ import type { Settings } from '../../models/settings';
 import type { Response } from '../../models/response';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { Workspace } from '../../models/workspace';
+import type { WorkspaceMeta } from '../../models/workspace-meta';
 import type {
   Request,
   RequestAuthentication,
@@ -11,11 +12,9 @@ import type {
   RequestParameter,
 } from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
-import SidebarChildren from './sidebar/sidebar-children';
 
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import classnames from 'classnames';
 import { registerModal, showModal } from './modals/index';
 import AlertModal from './modals/alert-modal';
 import WrapperModal from './modals/wrapper-modal';
@@ -30,22 +29,24 @@ import PaymentNotificationModal from './modals/payment-notification-modal';
 import NunjucksModal from './modals/nunjucks-modal';
 import PromptModal from './modals/prompt-modal';
 import AskModal from './modals/ask-modal';
+import GenerateConfigModal from './modals/generate-config-modal';
 import SelectModal from './modals/select-modal';
 import RequestCreateModal from './modals/request-create-modal';
-import RequestPane from './request-pane';
 import RequestSwitcherModal from './modals/request-switcher-modal';
 import SettingsModal from './modals/settings-modal';
 import FilterHelpModal from './modals/filter-help-modal';
-import ResponsePane from './response-pane';
 import RequestSettingsModal from './modals/request-settings-modal';
 import SetupSyncModal from './modals/setup-sync-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
+import GitRepositorySettingsModal from './modals/git-repository-settings-modal';
+import GitStagingModal from './modals/git-staging-modal';
+import GitBranchesModal from './modals/git-branches-modal';
+import GitLogModal from './modals/git-log-modal';
 import SyncMergeModal from './modals/sync-merge-modal';
 import SyncHistoryModal from './modals/sync-history-modal';
 import SyncShareModal from './modals/sync-share-modal';
 import SyncBranchesModal from './modals/sync-branches-modal';
 import RequestRenderErrorModal from './modals/request-render-error-modal';
-import Sidebar from './sidebar/sidebar';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';
@@ -64,21 +65,47 @@ import VCS from '../../sync/vcs';
 import type { StatusCandidate } from '../../sync/types';
 import type { RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
-import EnvironmentsDropdown from './dropdowns/environments-dropdown';
-import SidebarFilter from './sidebar/sidebar-filter';
+import type { GlobalActivity } from './activity-bar/activity-bar';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_INSOMNIA,
+  ACTIVITY_SPEC,
+} from './activity-bar/activity-bar';
+import type { ApiSpec } from '../../models/api-spec';
+import GitVCS from '../../sync/git/git-vcs';
+import { trackPageView } from '../../common/analytics';
+import type { GitRepository } from '../../models/git-repository';
+import WrapperHome from './wrapper-home';
+import WrapperDesign from './wrapper-design';
+import WrapperOnboarding from './wrapper-onboarding';
+import WrapperDebug from './wrapper-debug';
+import { importRaw } from '../../common/import';
+import GitSyncDropdown from './dropdowns/git-sync-dropdown';
+import { DropdownButton } from './base/dropdown';
+import type { ForceToWorkspace } from '../redux/modules/helpers';
 
-type Props = {
+export type WrapperProps = {
   // Helper Functions
   handleActivateRequest: Function,
   handleSetSidebarFilter: Function,
   handleToggleMenuBar: Function,
-  handleImportFileToWorkspace: Function,
-  handleImportClipBoardToWorkspace: Function,
-  handleImportUriToWorkspace: Function,
+  handleImportFileToWorkspace: (workspaceId: string, forceToWorkspace?: ForceToWorkspace) => void,
+  handleImportClipBoardToWorkspace: (
+    workspaceId: string,
+    forceToWorkspace?: ForceToWorkspace,
+  ) => void,
+  handleImportUriToWorkspace: (
+    workspaceId: string,
+    uri: string,
+    forceToWorkspace?: ForceToWorkspace,
+  ) => void,
+  handleInitializeEntities: Function,
   handleExportFile: Function,
   handleShowExportRequestsModal: Function,
+  handleShowSettingsModal: Function,
   handleExportRequestsToFile: Function,
-  handleSetActiveWorkspace: Function,
+  handleSetActiveWorkspace: (workspaceId: string) => void,
   handleSetActiveEnvironment: Function,
   handleMoveDoc: Function,
   handleCreateRequest: Function,
@@ -86,6 +113,9 @@ type Props = {
   handleDuplicateRequestGroup: Function,
   handleMoveRequestGroup: Function,
   handleDuplicateWorkspace: Function,
+  handleDuplicateWorkspaceById: Function,
+  handleRenameWorkspace: Function,
+  handleDeleteWorkspaceById: Function,
   handleCreateRequestGroup: Function,
   handleGenerateCodeForActiveRequest: Function,
   handleGenerateCode: Function,
@@ -111,8 +141,11 @@ type Props = {
   handleSendAndDownloadRequestWithEnvironment: Function,
   handleUpdateRequestMimeType: Function,
   handleUpdateDownloadPath: Function,
+  handleSetActiveActivity: (activity: GlobalActivity) => void,
 
   // Properties
+  activity: GlobalActivity,
+  apiSpecs: Array<ApiSpec>,
   loadStartTime: number,
   isLoading: boolean,
   paneWidth: number,
@@ -132,15 +165,20 @@ type Props = {
   requestVersions: Array<RequestVersion>,
   unseenWorkspaces: Array<Workspace>,
   workspaceChildren: Array<Object>,
+  activeWorkspaceMeta: WorkspaceMeta,
   environments: Array<Object>,
+  activeApiSpec: ApiSpec,
   activeRequestResponses: Array<Response>,
   activeWorkspace: Workspace,
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
+  activeGitRepository: GitRepository | null,
   activeWorkspaceClientCertificates: Array<ClientCertificate>,
   isVariableUncovered: boolean,
   headerEditorKey: string,
   vcs: VCS | null,
+  gitVCS: GitVCS | null,
+  gitRepositories: Array<GitRepository>,
   syncItems: Array<StatusCandidate>,
 
   // Optional
@@ -164,7 +202,7 @@ const rUpdate = (request, ...args) => {
 const sUpdate = models.settings.update;
 
 @autobind
-class Wrapper extends React.PureComponent<Props, State> {
+class Wrapper extends React.PureComponent<WrapperProps, State> {
   constructor(props: any) {
     super(props);
     this.state = {
@@ -186,6 +224,10 @@ class Wrapper extends React.PureComponent<Props, State> {
 
   _handleForceUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>): Promise<Request> {
     return this._handleForceUpdateRequest(r, { headers });
+  }
+
+  async _handleUpdateApiSpec(s: ApiSpec) {
+    await models.apiSpec.update(s);
   }
 
   static _handleUpdateRequestBody(r: Request, body: RequestBody): Promise<Request> {
@@ -223,12 +265,6 @@ class Wrapper extends React.PureComponent<Props, State> {
     return rUpdate(r, { url });
   }
 
-  // Special request updaters
-  _handleStartDragSidebar(e: Event): void {
-    e.preventDefault();
-    this.props.handleStartDragSidebar();
-  }
-
   async _handleImport(text: string): Promise<Request | null> {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
@@ -255,6 +291,32 @@ class Wrapper extends React.PureComponent<Props, State> {
     return null;
   }
 
+  async _handleWorkspaceActivityChange(workspaceId: string, activeActivity: GlobalActivity) {
+    const { activity: updatedActivity } = this.props.handleSetActiveActivity(activeActivity);
+    await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: updatedActivity });
+  }
+
+  async _handleSetDesignActivity(workspaceId: string) {
+    await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_SPEC);
+  }
+
+  async _handleSetDebugActivity(apiSpec: ApiSpec) {
+    const workspaceId = apiSpec.parentId;
+    await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_DEBUG);
+
+    setTimeout(() => {
+      // Delaying generation so design to debug mode is smooth
+      importRaw(
+        () => Promise.resolve(workspaceId), // Always import into current workspace
+        apiSpec.contents,
+      );
+    }, 1000);
+  }
+
+  _handleSetHomeActivity(): void {
+    this.props.handleSetActiveActivity(ACTIVITY_HOME);
+  }
+
   // Settings updaters
   _handleUpdateSettingsShowPasswords(showPasswords: boolean): Promise<Settings> {
     return sUpdate(this.props.settings, { showPasswords });
@@ -264,23 +326,22 @@ class Wrapper extends React.PureComponent<Props, State> {
     return sUpdate(this.props.settings, { useBulkHeaderEditor });
   }
 
+  _handleImportFile(forceToWorkspace?: ForceToWorkspace): void {
+    this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
+  }
+
   _handleUpdateSettingsUseBulkParametersEditor(
     useBulkParametersEditor: boolean,
   ): Promise<Settings> {
     return sUpdate(this.props.settings, { useBulkParametersEditor });
   }
 
-  // Other Helpers
-  _handleImportFile(): void {
-    this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
+  _handleImportUri(uri: string, forceToWorkspace?: ForceToWorkspace): void {
+    this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri, forceToWorkspace);
   }
 
-  _handleImportClipBoard(): void {
-    this.props.handleImportClipBoardToWorkspace(this.props.activeWorkspace._id);
-  }
-
-  _handleImportUri(uri: string): void {
-    this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri);
+  _handleImportClipBoard(forceToWorkspace?: ForceToWorkspace): void {
+    this.props.handleImportClipBoardToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
   }
 
   _handleSetActiveResponse(responseId: string | null): void {
@@ -405,475 +466,339 @@ class Wrapper extends React.PureComponent<Props, State> {
     this.setState({ forceRefreshKey: Date.now() });
   }
 
-  renderSidebarBody(): React.Node {
-    const {
-      activeEnvironment,
-      activeRequest,
-      activeWorkspace,
-      environments,
-      handleActivateRequest,
-      handleCopyAsCurl,
-      handleCreateRequest,
-      handleCreateRequestGroup,
-      handleDuplicateRequest,
-      handleDuplicateRequestGroup,
-      handleGenerateCode,
-      handleMoveDoc,
-      handleMoveRequestGroup,
-      handleSetRequestGroupCollapsed,
-      handleSetRequestPinned,
-      handleSetSidebarFilter,
-      settings,
-      sidebarChildren,
-      sidebarFilter,
-      sidebarWidth,
-      sidebarHidden,
-    } = this.props;
+  componentDidMount() {
+    const { activity } = this.props;
+    trackPageView(`/${activity || ''}`);
+  }
 
-    return (
-      <React.Fragment>
-        <div className="sidebar__menu">
-          <EnvironmentsDropdown
-            handleChangeEnvironment={this._handleChangeEnvironment}
-            activeEnvironment={activeEnvironment}
-            environments={environments}
-            workspace={activeWorkspace}
-            environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
-            hotKeyRegistry={settings.hotKeyRegistry}
-          />
-          <button className="btn btn--super-compact" onClick={this._handleShowCookiesModal}>
-            <div className="sidebar__menu__thing">
-              <span>Cookies</span>
-            </div>
-          </button>
-        </div>
-
-        <SidebarFilter
-          key={`${activeWorkspace._id}::filter`}
-          onChange={handleSetSidebarFilter}
-          requestCreate={this._handleCreateRequestInWorkspace}
-          requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
-          filter={sidebarFilter || ''}
-          hotKeyRegistry={settings.hotKeyRegistry}
-        />
-
-        <SidebarChildren
-          childObjects={sidebarChildren}
-          handleActivateRequest={handleActivateRequest}
-          handleCreateRequest={handleCreateRequest}
-          handleCreateRequestGroup={handleCreateRequestGroup}
-          handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-          handleSetRequestPinned={handleSetRequestPinned}
-          handleDuplicateRequest={handleDuplicateRequest}
-          handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-          handleMoveRequestGroup={handleMoveRequestGroup}
-          handleGenerateCode={handleGenerateCode}
-          handleCopyAsCurl={handleCopyAsCurl}
-          moveDoc={handleMoveDoc}
-          hidden={sidebarHidden}
-          width={sidebarWidth}
-          workspace={activeWorkspace}
-          activeRequest={activeRequest}
-          filter={sidebarFilter || ''}
-          hotKeyRegistry={settings.hotKeyRegistry}
-          activeEnvironment={activeEnvironment}
-        />
-      </React.Fragment>
-    );
+  componentDidUpdate(prevProps: Props) {
+    // We're using activities as page views so here we monitor
+    // for a change in activity and send it as a pageview.
+    const { activity } = this.props;
+    if (prevProps.activity !== activity) {
+      trackPageView(`/${activity || ''}`);
+    }
   }
 
   render() {
     const {
       activeCookieJar,
       activeEnvironment,
+      activeGitRepository,
       activeRequest,
-      activeRequestResponses,
-      activeResponse,
       activeWorkspace,
       activeWorkspaceClientCertificates,
+      activity,
+      gitVCS,
       handleActivateRequest,
-      handleCreateRequestForWorkspace,
       handleDuplicateWorkspace,
       handleExportFile,
       handleExportRequestsToFile,
-      handleGenerateCodeForActiveRequest,
       handleGetRenderContext,
+      handleInitializeEntities,
       handleRender,
-      handleResetDragPaneHorizontal,
-      handleResetDragPaneVertical,
-      handleResetDragSidebar,
-      handleSetActiveEnvironment,
       handleSetActiveWorkspace,
-      handleSetRequestPaneRef,
-      handleSetResponsePaneRef,
-      handleSetSidebarRef,
       handleShowExportRequestsModal,
-      handleStartDragPaneHorizontal,
-      handleStartDragPaneVertical,
       handleToggleMenuBar,
-      handleUpdateDownloadPath,
-      handleUpdateRequestMimeType,
-      headerEditorKey,
-      isLoading,
       isVariableUncovered,
-      loadStartTime,
-      oAuth2Token,
-      paneHeight,
-      paneWidth,
       requestMetas,
-      requestVersions,
-      responseDownloadPath,
-      responseFilter,
-      responseFilterHistory,
-      responsePreviewMode,
       settings,
       sidebarChildren,
-      sidebarHidden,
-      sidebarWidth,
       syncItems,
-      unseenWorkspaces,
       vcs,
       workspaceChildren,
       workspaces,
     } = this.props;
 
-    const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
+    // Setup git sync dropdown for use in Design/Debug pages
+    let gitSyncDropdown = null;
+    if (gitVCS) {
+      gitSyncDropdown = (
+        <GitSyncDropdown
+          className="margin-left"
+          workspace={activeWorkspace}
+          dropdownButtonClassName="btn--clicky-small btn-sync btn-utility"
+          gitRepository={activeGitRepository}
+          vcs={gitVCS}
+          handleInitializeEntities={handleInitializeEntities}
+          renderDropdownButton={children => (
+            <DropdownButton className="btn--clicky-small btn-sync btn-utility">
+              {children}
+            </DropdownButton>
+          )}
+        />
+      );
+    }
 
-    const columns = `${realSidebarWidth}rem 0 minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 -
-      paneWidth}fr)`;
-    const rows = `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
+    return (
+      <React.Fragment>
+        <div key="modals" className="modals">
+          <ErrorBoundary showAlert>
+            <AlertModal ref={registerModal} />
+            <ErrorModal ref={registerModal} />
+            <PromptModal ref={registerModal} />
 
-    return [
-      <div key="modals" className="modals">
-        <ErrorBoundary showAlert>
-          <AlertModal ref={registerModal} />
-          <ErrorModal ref={registerModal} />
-          <PromptModal ref={registerModal} />
+            <WrapperModal ref={registerModal} />
+            <LoginModal ref={registerModal} />
+            <AskModal ref={registerModal} />
+            <SelectModal ref={registerModal} />
+            <RequestCreateModal ref={registerModal} />
+            <PaymentNotificationModal ref={registerModal} />
+            <FilterHelpModal ref={registerModal} />
+            <RequestRenderErrorModal ref={registerModal} />
+            <GenerateConfigModal ref={registerModal} settings={settings} />
 
-          <WrapperModal ref={registerModal} />
-          <LoginModal ref={registerModal} />
-          <AskModal ref={registerModal} />
-          <SelectModal ref={registerModal} />
-          <RequestCreateModal ref={registerModal} />
-          <PaymentNotificationModal ref={registerModal} />
-          <FilterHelpModal ref={registerModal} />
-          <RequestRenderErrorModal ref={registerModal} />
-
-          <CodePromptModal
-            ref={registerModal}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            editorLineWrapping={settings.editorLineWrapping}
-            isVariableUncovered={isVariableUncovered}
-          />
-
-          <RequestSettingsModal
-            ref={registerModal}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            editorLineWrapping={settings.editorLineWrapping}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            workspaces={workspaces}
-            isVariableUncovered={isVariableUncovered}
-          />
-
-          {/* TODO: Figure out why cookieJar is sometimes null */}
-          {activeCookieJar ? (
-            <CookiesModal
-              handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
-              handleRender={handleRender}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            <CodePromptModal
               ref={registerModal}
-              workspace={activeWorkspace}
-              cookieJar={activeCookieJar}
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+              editorLineWrapping={settings.editorLineWrapping}
               isVariableUncovered={isVariableUncovered}
             />
-          ) : null}
 
-          <CookieModifyModal
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            ref={registerModal}
-            cookieJar={activeCookieJar}
-            workspace={activeWorkspace}
-            isVariableUncovered={isVariableUncovered}
-          />
+            <RequestSettingsModal
+              ref={registerModal}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+              editorLineWrapping={settings.editorLineWrapping}
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              workspaces={workspaces}
+              isVariableUncovered={isVariableUncovered}
+            />
 
-          <NunjucksModal
-            uniqueKey={`key::${this.state.forceRefreshKey}`}
-            ref={registerModal}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            workspace={activeWorkspace}
-          />
+            {/* TODO: Figure out why cookieJar is sometimes null */}
+            {activeCookieJar ? (
+              <CookiesModal
+                handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
+                handleRender={handleRender}
+                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                ref={registerModal}
+                workspace={activeWorkspace}
+                cookieJar={activeCookieJar}
+                isVariableUncovered={isVariableUncovered}
+              />
+            ) : null}
 
-          <MoveRequestGroupModal ref={registerModal} workspaces={workspaces} />
+            <CookieModifyModal
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              ref={registerModal}
+              cookieJar={activeCookieJar}
+              workspace={activeWorkspace}
+              isVariableUncovered={isVariableUncovered}
+            />
 
-          <WorkspaceSettingsModal
-            ref={registerModal}
-            clientCertificates={activeWorkspaceClientCertificates}
-            workspace={activeWorkspace}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            editorLineWrapping={settings.editorLineWrapping}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
-            handleDuplicateWorkspace={handleDuplicateWorkspace}
-            handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
-            isVariableUncovered={isVariableUncovered}
-          />
+            <NunjucksModal
+              uniqueKey={`key::${this.state.forceRefreshKey}`}
+              ref={registerModal}
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              workspace={activeWorkspace}
+            />
 
-          <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />
+            <MoveRequestGroupModal ref={registerModal} workspaces={workspaces} />
 
-          <GenerateCodeModal
-            ref={registerModal}
-            environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-          />
+            <WorkspaceSettingsModal
+              ref={registerModal}
+              clientCertificates={activeWorkspaceClientCertificates}
+              workspace={activeWorkspace}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+              editorLineWrapping={settings.editorLineWrapping}
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
+              handleDuplicateWorkspace={handleDuplicateWorkspace}
+              handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
+              isVariableUncovered={isVariableUncovered}
+            />
 
-          <SettingsModal
-            ref={registerModal}
-            handleShowExportRequestsModal={handleShowExportRequestsModal}
-            handleExportAllToFile={handleExportFile}
+            <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />
+
+            <GenerateCodeModal
+              ref={registerModal}
+              environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+            />
+
+            <SettingsModal
+              ref={registerModal}
+              handleShowExportRequestsModal={handleShowExportRequestsModal}
+              handleExportAllToFile={handleExportFile}
+              handleImportClipBoard={this._handleImportClipBoard}
+              handleImportFile={this._handleImportFile}
+              handleImportUri={this._handleImportUri}
+              handleToggleMenuBar={handleToggleMenuBar}
+              settings={settings}
+              activity={activity}
+            />
+
+            <ResponseDebugModal ref={registerModal} settings={settings} />
+
+            <RequestSwitcherModal
+              ref={registerModal}
+              workspace={activeWorkspace}
+              workspaces={workspaces}
+              workspaceChildren={workspaceChildren}
+              activeRequest={activeRequest}
+              activateRequest={handleActivateRequest}
+              requestMetas={requestMetas}
+              handleSetActiveWorkspace={handleSetActiveWorkspace}
+            />
+
+            <EnvironmentEditModal
+              ref={registerModal}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+              lineWrapping={settings.editorLineWrapping}
+              onChange={models.requestGroup.update}
+              render={handleRender}
+              getRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
+            />
+
+            <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
+
+            {gitVCS && (
+              <React.Fragment>
+                <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
+                <GitLogModal ref={registerModal} vcs={gitVCS} />
+                <GitRepositorySettingsModal ref={registerModal} />
+                {activeGitRepository !== null && (
+                  <GitBranchesModal
+                    ref={registerModal}
+                    vcs={gitVCS}
+                    gitRepository={activeGitRepository}
+                    handleInitializeEntities={handleInitializeEntities}
+                  />
+                )}
+              </React.Fragment>
+            )}
+
+            {vcs && (
+              <React.Fragment>
+                <SyncStagingModal
+                  ref={registerModal}
+                  workspace={activeWorkspace}
+                  vcs={vcs}
+                  syncItems={syncItems}
+                />
+                <SyncMergeModal
+                  ref={registerModal}
+                  workspace={activeWorkspace}
+                  syncItems={syncItems}
+                  vcs={vcs}
+                />
+                <SyncBranchesModal
+                  ref={registerModal}
+                  workspace={activeWorkspace}
+                  vcs={vcs}
+                  syncItems={syncItems}
+                />
+                <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
+                <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
+              </React.Fragment>
+            )}
+
+            <WorkspaceEnvironmentsEditModal
+              ref={registerModal}
+              onChange={models.workspace.update}
+              lineWrapping={settings.editorLineWrapping}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+              activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
+              render={handleRender}
+              getRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
+            />
+
+            <AddKeyCombinationModal ref={registerModal} />
+            <ExportRequestsModal
+              ref={registerModal}
+              childObjects={sidebarChildren.all}
+              handleExportRequestsToFile={handleExportRequestsToFile}
+            />
+          </ErrorBoundary>
+        </div>
+
+        {activity === ACTIVITY_HOME && (
+          <WrapperHome
+            wrapperProps={this.props}
             handleImportFile={this._handleImportFile}
-            handleImportClipBoard={this._handleImportClipBoard}
             handleImportUri={this._handleImportUri}
-            handleToggleMenuBar={handleToggleMenuBar}
-            settings={settings}
+            handleImportClipboard={this._handleImportClipBoard}
           />
+        )}
 
-          <ResponseDebugModal ref={registerModal} settings={settings} />
-
-          <RequestSwitcherModal
-            ref={registerModal}
-            workspace={activeWorkspace}
-            workspaces={workspaces}
-            workspaceChildren={workspaceChildren}
-            activeRequest={activeRequest}
-            activateRequest={handleActivateRequest}
-            requestMetas={requestMetas}
-            handleSetActiveWorkspace={handleSetActiveWorkspace}
+        {activity === ACTIVITY_SPEC && (
+          <WrapperDesign
+            gitSyncDropdown={gitSyncDropdown}
+            handleSetDebugActivity={this._handleSetDebugActivity}
+            handleUpdateApiSpec={this._handleUpdateApiSpec}
+            wrapperProps={this.props}
           />
+        )}
 
-          <EnvironmentEditModal
-            ref={registerModal}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            lineWrapping={settings.editorLineWrapping}
-            onChange={models.requestGroup.update}
-            render={handleRender}
-            getRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-          />
-
-          <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
-
-          {vcs && (
-            <React.Fragment>
-              <SyncStagingModal
-                ref={registerModal}
-                workspace={activeWorkspace}
-                vcs={vcs}
-                syncItems={syncItems}
-              />
-              <SyncMergeModal
-                ref={registerModal}
-                workspace={activeWorkspace}
-                syncItems={syncItems}
-                vcs={vcs}
-              />
-              <SyncBranchesModal
-                ref={registerModal}
-                workspace={activeWorkspace}
-                vcs={vcs}
-                syncItems={syncItems}
-              />
-              <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
-              <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
-            </React.Fragment>
-          )}
-
-          <WorkspaceEnvironmentsEditModal
-            ref={registerModal}
-            onChange={models.workspace.update}
-            lineWrapping={settings.editorLineWrapping}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
-            render={handleRender}
-            getRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-          />
-
-          <AddKeyCombinationModal ref={registerModal} />
-          <ExportRequestsModal
-            ref={registerModal}
-            childObjects={sidebarChildren.all}
-            handleExportRequestsToFile={handleExportRequestsToFile}
-          />
-        </ErrorBoundary>
-      </div>,
-      <div
-        key="wrapper"
-        id="wrapper"
-        className={classnames('wrapper', {
-          'wrapper--vertical': settings.forceVerticalLayout,
-        })}
-        style={{
-          gridTemplateColumns: columns,
-          gridTemplateRows: rows,
-          boxSizing: 'border-box',
-          borderTop:
-            activeEnvironment &&
-            activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'window-top'
-              ? '5px solid ' + activeEnvironment.color
-              : null,
-          borderBottom:
-            activeEnvironment &&
-            activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'window-bottom'
-              ? '5px solid ' + activeEnvironment.color
-              : null,
-          borderLeft:
-            activeEnvironment &&
-            activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'window-left'
-              ? '5px solid ' + activeEnvironment.color
-              : null,
-          borderRight:
-            activeEnvironment &&
-            activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'window-right'
-              ? '5px solid ' + activeEnvironment.color
-              : null,
-        }}>
-        <ErrorBoundary showAlert>
-          <Sidebar
-            ref={handleSetSidebarRef}
-            activeEnvironment={activeEnvironment}
-            enableSyncBeta={settings.enableSyncBeta}
-            environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
-            handleSetActiveEnvironment={handleSetActiveEnvironment}
-            handleSetActiveWorkspace={handleSetActiveWorkspace}
-            hidden={sidebarHidden || false}
-            hotKeyRegistry={settings.hotKeyRegistry}
-            isLoading={isLoading}
-            showEnvironmentsModal={this._handleShowEnvironmentsModal}
-            syncItems={syncItems}
-            unseenWorkspaces={unseenWorkspaces}
-            vcs={vcs}
-            width={sidebarWidth}
-            workspace={activeWorkspace}
-            workspaces={workspaces}>
-            {this.renderSidebarBody()}
-          </Sidebar>
-        </ErrorBoundary>
-
-        <div className="drag drag--sidebar">
-          <div onDoubleClick={handleResetDragSidebar} onMouseDown={this._handleStartDragSidebar} />
-        </div>
-
-        <ErrorBoundary showAlert>
-          <RequestPane
-            ref={handleSetRequestPaneRef}
-            downloadPath={responseDownloadPath}
-            environmentId={activeEnvironment ? activeEnvironment._id : ''}
-            forceRefreshCounter={this.state.forceRefreshKey}
-            forceUpdateRequest={this._handleForceUpdateRequest}
-            forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
-            handleCreateRequest={handleCreateRequestForWorkspace}
-            handleGenerateCode={handleGenerateCodeForActiveRequest}
-            handleGetRenderContext={handleGetRenderContext}
-            handleImport={this._handleImport}
-            handleImportFile={this._handleImportFile}
-            handleRender={handleRender}
-            handleSend={this._handleSendRequestWithActiveEnvironment}
-            handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
-            handleUpdateDownloadPath={handleUpdateDownloadPath}
-            headerEditorKey={headerEditorKey}
-            isVariableUncovered={isVariableUncovered}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            oAuth2Token={oAuth2Token}
-            request={activeRequest}
-            settings={settings}
-            updateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
-            updateRequestBody={Wrapper._handleUpdateRequestBody}
-            updateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
-            updateRequestMethod={Wrapper._handleUpdateRequestMethod}
-            updateRequestMimeType={handleUpdateRequestMimeType}
-            updateRequestParameters={Wrapper._handleUpdateRequestParameters}
-            updateRequestUrl={Wrapper._handleUpdateRequestUrl}
-            updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
-            updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
-            updateSettingsUseBulkParametersEditor={
-              this._handleUpdateSettingsUseBulkParametersEditor
-            }
-            workspace={activeWorkspace}
-          />
-        </ErrorBoundary>
-
-        <div className="drag drag--pane-horizontal">
-          <div
-            onMouseDown={handleStartDragPaneHorizontal}
-            onDoubleClick={handleResetDragPaneHorizontal}
-          />
-        </div>
-
-        <div className="drag drag--pane-vertical">
-          <div
-            onMouseDown={handleStartDragPaneVertical}
-            onDoubleClick={handleResetDragPaneVertical}
-          />
-        </div>
-
-        <ErrorBoundary showAlert>
-          <ResponsePane
-            ref={handleSetResponsePaneRef}
-            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-            disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            editorLineWrapping={settings.editorLineWrapping}
-            environment={activeEnvironment}
-            filter={responseFilter}
-            filterHistory={responseFilterHistory}
+        {(activity === ACTIVITY_DEBUG || activity === ACTIVITY_INSOMNIA) && (
+          <WrapperDebug
+            forceRefreshKey={this.state.forceRefreshKey}
+            gitSyncDropdown={gitSyncDropdown}
+            handleSetDesignActivity={this._handleSetDesignActivity}
+            handleChangeEnvironment={this._handleChangeEnvironment}
             handleDeleteResponse={this._handleDeleteResponse}
             handleDeleteResponses={this._handleDeleteResponses}
+            handleForceUpdateRequest={this._handleForceUpdateRequest}
+            handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
+            handleImport={this._handleImport}
+            handleImportFile={this._handleImportFile}
+            handleRequestCreate={this._handleCreateRequestInWorkspace}
+            handleRequestGroupCreate={this._handleCreateRequestGroupInWorkspace}
+            handleSendAndDownloadRequestWithActiveEnvironment={
+              this._handleSendAndDownloadRequestWithActiveEnvironment
+            }
+            handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
             handleSetActiveResponse={this._handleSetActiveResponse}
-            handleSetFilter={this._handleSetResponseFilter}
             handleSetPreviewMode={this._handleSetPreviewMode}
-            handleShowRequestSettings={this._handleShowRequestSettingsModal}
-            hotKeyRegistry={settings.hotKeyRegistry}
-            loadStartTime={loadStartTime}
-            previewMode={responsePreviewMode}
-            request={activeRequest}
-            requestVersions={requestVersions}
-            response={activeResponse}
-            responses={activeRequestResponses}
-            showCookiesModal={this._handleShowCookiesModal}
+            handleSetResponseFilter={this._handleSetResponseFilter}
+            handleShowCookiesModal={this._handleShowCookiesModal}
+            handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
+            handleUpdateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
+            handleUpdateRequestBody={Wrapper._handleUpdateRequestBody}
+            handleUpdateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
+            handleUpdateRequestMethod={Wrapper._handleUpdateRequestMethod}
+            handleUpdateRequestParameters={Wrapper._handleUpdateRequestParameters}
+            handleUpdateRequestUrl={Wrapper._handleUpdateRequestUrl}
+            handleUpdateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
+            handleUpdateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
+            wrapperProps={this.props}
           />
-        </ErrorBoundary>
-      </div>,
-    ];
+        )}
+
+        {activity === null && (
+          <WrapperOnboarding
+            wrapperProps={this.props}
+            handleImportFile={this._handleImportFile}
+            handleImportUri={this._handleImportUri}
+          />
+        )}
+      </React.Fragment>
+    );
   }
 }
 

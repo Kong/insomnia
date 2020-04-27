@@ -2,28 +2,28 @@
   "name": "insomnia",
   "private": true,
   "version": "1.0.0",
-  "author": "Gregory Schier <greg.schier@konghq.com>",
   "repository": "https://github.com/kong/insomnia",
   "bugs": {
     "url": "https://github.com/kong/insomnia"
   },
   "scripts": {
     "lint": "eslint \"**/*.js\" \"**/*.html\" \"**/*.json\"",
+    "lint:fix": "eslint \"**/*.js\" \"**/*.html\" \"**/*.json\" --fix",
     "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap",
     "publish": "lerna publish",
     "clean": "lerna clean --yes && rimraf node_modules",
     "test": "npm run lint && lerna run --stream --parallel test",
-    "app-start": "lerna run start --scope insomnia-app --stream --parallel --bail",
-    "app-build": "lerna run build --stream --parallel --bail",
-    "app-package": "lerna run package --stream --parallel --bail",
-    "app-release": "lerna run release --stream --parallel --bail",
-    "app-storybook": "lerna run storybook --scope insomnia-app --stream --parallel --bail",
-    "ui-storybook": "lerna run storybook --scope insomnia-components --stream --parallel --bail",
+    "app-start": "npm start --prefix packages/insomnia-app",
+    "app-build": "npm run build --prefix packages/insomnia-app",
+    "app-package": "npm run package --prefix packages/insomnia-app",
+    "app-release": "npm run release --prefix packages/insomnia-app",
+    "storybook-start": "npm run storybook --prefix packages/insomnia-components",
+    "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app",
     "format-code": "prettier --write \"**/*.js\""
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged && npm run lint"
+      "pre-commit": "pretty-quick --staged && npm run lint:fix"
     }
   },
   "devDependencies": {
@@ -53,7 +53,7 @@
     "eslint-plugin-standard": "^4.0.1",
     "flow-bin": "^0.122.0",
     "husky": "^1.0.0-rc.9",
-    "jest": "^24.7.1",
+    "jest": "^25.3.0",
     "lerna": "^3.19.0",
     "prettier": "^1.16.4",
     "pretty-quick": "^1.10.0",

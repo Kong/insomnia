@@ -1,0 +1,35 @@
+{
+  "name": "openapi-2-kong",
+  "version": "2.2.1",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "flow check && jest",
+    "build": "webpack --config webpack.config.js --display errors-only"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run build"
+    }
+  },
+  "jest": {
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "verbose": false,
+    "resetMocks": true,
+    "resetModules": true
+  },
+  "dependencies": {
+    "slugify": "^1.3.6",
+    "swagger-parser": "^8.0.3",
+    "url-join": "^4.0.1",
+    "yaml": "^1.7.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/plugin-proposal-optional-chaining": "^7.9.0",
+    "husky": "^3.1.0",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
+  }
+}

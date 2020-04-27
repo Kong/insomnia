@@ -14,6 +14,7 @@ class AlertModal extends PureComponent {
       title: '',
       message: '',
       addCancel: false,
+      okLabel: '',
     };
   }
 
@@ -24,6 +25,10 @@ class AlertModal extends PureComponent {
   _handleOk() {
     this.hide();
     this._okCallback();
+
+    if (typeof this._okCallback2 === 'function') {
+      this._okCallback2();
+    }
   }
 
   hide() {
@@ -39,15 +44,17 @@ class AlertModal extends PureComponent {
   }
 
   show(options = {}) {
-    const { title, message, addCancel } = options;
-    this.setState({ title, message, addCancel });
+    const { title, message, addCancel, onConfirm, okLabel } = options;
+    this.setState({ title, message, addCancel, okLabel });
 
-    this.modal.show();
+    this.modal && this.modal.show();
 
     // Need to do this after render because modal focuses itself too
     setTimeout(() => {
       this._cancel && this._cancel.focus();
     }, 100);
+
+    this._okCallback2 = onConfirm;
 
     return new Promise(resolve => {
       this._okCallback = resolve;
@@ -55,10 +62,10 @@ class AlertModal extends PureComponent {
   }
 
   render() {
-    const { message, title, addCancel } = this.state;
+    const { message, title, addCancel, okLabel } = this.state;
 
     return (
-      <Modal ref={this._setModalRef} closeOnKeyCodes={[13]}>
+      <Modal ref={this._setModalRef} closeOnKeyCodes={[13]} skinny>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
         <ModalBody className="wide pad">{message}</ModalBody>
         <ModalFooter>
@@ -69,7 +76,7 @@ class AlertModal extends PureComponent {
               </button>
             ) : null}
             <button className="btn" ref={this.setOkRef} onClick={this._handleOk}>
-              Ok
+              {okLabel || 'Ok'}
             </button>
           </div>
         </ModalFooter>
