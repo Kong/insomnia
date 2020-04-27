@@ -88,9 +88,9 @@ describe('Git-VCS', () => {
             timezoneOffset: 0,
           },
           message: 'First commit!\n',
-          oid: 'b26d7e19ec581f90317d00085960735052abf5f0',
+          oid: '76f804a23eef9f52017bf93f4bc0bfde45ec8a93',
           parent: [],
-          tree: '257d1b410966994eb8b79e004c679c26f72794c9',
+          tree: '14819d8019f05edb70a29850deb09a4314ad0afc',
         },
       ]);
 
