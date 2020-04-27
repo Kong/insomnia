@@ -6,7 +6,7 @@ export const name = 'ApiSpec';
 export const type = 'ApiSpec';
 export const prefix = 'spc';
 export const canDuplicate = true;
-export const canSync = true;
+export const canSync = false;
 
 type BaseApiSpec = {
   name: string,
