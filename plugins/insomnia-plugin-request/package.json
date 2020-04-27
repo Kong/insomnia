@@ -10,7 +10,9 @@
   },
   "main": "index.js",
   "insomnia": {
-    "name": "request"
+    "name": "request",
+    "core": true,
+    "unlisted": true
   },
   "scripts": {
     "test": "jest --silent"

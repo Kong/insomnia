@@ -10,7 +10,9 @@
   },
   "main": "index.js",
   "insomnia": {
-    "name": "cookieJar"
+    "name": "cookieJar",
+    "core": true,
+    "unlisted": true
   },
   "scripts": {
     "test": "jest --silent"

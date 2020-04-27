@@ -10,7 +10,9 @@
   },
   "main": "index.js",
   "insomnia": {
-    "name": "core-themes"
+    "name": "core-themes",
+    "core": true,
+    "unlisted": true
   },
   "scripts": {
     "test": "node --version"

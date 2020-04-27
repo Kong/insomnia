@@ -10,7 +10,9 @@
   },
   "main": "index.js",
   "insomnia": {
-    "name": "prompt"
+    "name": "prompt",
+    "core": true,
+    "unlisted": true
   },
   "scripts": {
     "test": "node --version"

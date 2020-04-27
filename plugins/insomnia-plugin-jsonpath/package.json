@@ -11,7 +11,9 @@
   "main": "index.js",
   "insomnia": {
     "name": "json-path",
-    "description": "Template tag to pull data out of JSON strings"
+    "description": "Template tag to pull data out of JSON strings",
+    "core": true,
+    "unlisted": true
   },
   "dependencies": {
     "jsonpath": "^1.0.2"

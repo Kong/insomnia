@@ -4,6 +4,8 @@
   "version": "2.2.1",
   "main": "index.js",
   "insomnia": {
-    "name": "kong-themes"
+    "name": "kong-themes",
+    "core": true,
+    "unlisted": true
   }
 }

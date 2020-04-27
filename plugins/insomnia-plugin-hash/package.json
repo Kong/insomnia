@@ -11,7 +11,8 @@
   "main": "index.js",
   "insomnia": {
     "name": "hash",
-    "core": true
+    "core": true,
+    "unlisted": true
   },
   "scripts": {
     "test": "jest --silent"

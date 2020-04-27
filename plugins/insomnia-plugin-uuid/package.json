@@ -10,7 +10,9 @@
   },
   "main": "index.js",
   "insomnia": {
-    "name": "uuid"
+    "name": "uuid",
+    "core": true,
+    "unlisted": true
   },
   "scripts": {
     "test": "jest --silent"
