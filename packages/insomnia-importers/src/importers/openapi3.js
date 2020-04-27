@@ -131,7 +131,7 @@ function parseEndpoints(document) {
       const methods = Object.keys(schemasPerMethod);
 
       return methods
-        .filter(method => method !== 'parameters')
+        .filter(method => method !== 'parameters' && method.indexOf('x-') !== 0)
         .map(method => Object.assign({}, schemasPerMethod[method], { path, method }));
     })
     .reduce(
