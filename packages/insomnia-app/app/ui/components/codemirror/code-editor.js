@@ -827,7 +827,7 @@ class CodeEditor extends React.Component {
     this._originalCode = code;
 
     // Don't ignore changes from prettify
-    if (!forcePrettify) {
+    if (forcePrettify) {
       this._ignoreNextChange = true;
     }
 
