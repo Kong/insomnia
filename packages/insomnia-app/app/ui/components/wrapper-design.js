@@ -204,7 +204,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             gridLeft={
               <React.Fragment>
                 <img src={designerLogo} alt="Insomnia" width="32" height="32" />
-                <Breadcrumb className="breadcrumb" crumbs={['Documents', activeWorkspace.name]} onClick={this._handleBreadcrumb} />
+                <Breadcrumb className="breadcrumb" crumbs={['Documents', activeApiSpec.fileName]} onClick={this._handleBreadcrumb} />
               </React.Fragment>
             }
             gridCenter={
