@@ -349,7 +349,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     let defaultActivity = ACTIVITY_DEBUG;
 
     if (spec || w.scope === 'spec') {
-      let label: string = '';
+      label = 'Unknown';
       if (specFormat === 'openapi') {
         label = `OpenAPI ${specFormatVersion}`;
       } else if (specFormat === 'swagger') {
