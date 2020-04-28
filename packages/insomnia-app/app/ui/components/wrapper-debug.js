@@ -71,7 +71,7 @@ class WrapperDebug extends React.PureComponent<Props> {
         className="app-header"
         gridLeft={
           <React.Fragment>
-            <img src={designerLogo} alt="Insomnia" width="24" height="24" />
+            <img src={designerLogo} alt="Insomnia" width="32" height="32" />
             <Breadcrumb
               className="breadcrumb"
               crumbs={['Documents', activeApiSpec.fileName]}

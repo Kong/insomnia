@@ -349,7 +349,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     let defaultActivity = ACTIVITY_DEBUG;
 
     if (spec || w.scope === 'spec') {
-      label = 'Unknown';
+      label = '';
       if (specFormat === 'openapi') {
         label = `OpenAPI ${specFormatVersion}`;
       } else if (specFormat === 'swagger') {
@@ -415,7 +415,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
             className="app-header"
             gridLeft={
               <React.Fragment>
-                <img src={designerLogo} alt="Insomnia" width="24" height="24" />
+                <img src={designerLogo} alt="Insomnia" width="32" height="32" />
                 <Breadcrumb className="breadcrumb" crumbs={['Documents']} />
               </React.Fragment>
             }
@@ -427,7 +427,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
                     type="text"
                     placeholder="Filter..."
                     onChange={this._handleFilterChange}
-                    className="no-margin workspace-filter"
+                    className="no-margin"
                   />
                   <span className="fa fa-search filter-icon"></span>
                 </KeydownBinder>
