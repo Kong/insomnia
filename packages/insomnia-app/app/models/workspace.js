@@ -3,7 +3,6 @@ import type { BaseModel } from './index';
 import * as models from './index';
 import * as db from '../common/database';
 import { getAppName } from '../common/constants';
-import { workspace } from './index';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
