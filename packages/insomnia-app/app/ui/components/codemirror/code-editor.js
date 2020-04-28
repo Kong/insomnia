@@ -359,7 +359,7 @@ class CodeEditor extends React.Component {
 
     const setup = () => {
       // Actually set the value
-      this._codemirrorSetValue(defaultValue || '');
+      this._codemirrorSetValue(defaultValue || '', false);
 
       // Clear history so we can't undo the initial set
       this.codeMirror.clearHistory();
@@ -826,8 +826,9 @@ class CodeEditor extends React.Component {
 
     this._originalCode = code;
 
-    // Don't ignore changes from prettify
-    if (forcePrettify) {
+    // If we're setting initial value, don't trigger onChange because the
+    // user hasn't done anything yet
+    if (!forcePrettify) {
       this._ignoreNextChange = true;
     }
 
@@ -982,7 +983,7 @@ class CodeEditor extends React.Component {
             id={id}
             ref={this._handleInitTextarea}
             style={{ display: 'none' }}
-            defaultValue=""
+            defaultValue=" "
             readOnly={readOnly}
             autoComplete="off"
           />
