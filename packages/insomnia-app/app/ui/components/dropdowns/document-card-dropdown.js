@@ -75,8 +75,8 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
     const { apiSpec, workspace, isLastWorkspace } = this.props;
 
     const messages = [
-      `Do you really want to delete "${apiSpec.fileName}?"`,
-      isLastWorkspace && ` This is the only ${Strings.apiSpec.toLowerCase()} so a new one will be created for you.`,
+      `Do you really want to delete "${apiSpec.fileName}"?`,
+      isLastWorkspace ? ` This is the only ${Strings.apiSpec.toLowerCase()} so a new one will be created for you.` : null,
     ];
 
     showModal(AskModal, {
