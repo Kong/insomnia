@@ -2,20 +2,24 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import { showError } from '../modals';
+import { showError, showModal, showPrompt } from '../modals';
 import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
 import { parseApiSpec } from '../../../common/api-specs';
+import Strings from '../../../common/strings';
+import * as db from '../../../common/database';
+import * as models from '../../../models';
+import AskModal from '../modals/ask-modal';
+import type { Workspace } from '../../../models/workspace';
 
 type Props = {
   apiSpec: ?ApiSpec,
   children: ?React.Node,
-  handleDuplicateWorkspaceById: (workspaceId: string) => any,
-  handleRenameWorkspaceById: (workspaceId: string) => any,
-  handleDeleteWorkspaceById: (workspaceId: string) => any,
+  workspace: Workspace,
+  handleSetActiveWorkspace: (workspaceId: string) => void,
   className?: string,
 };
 
@@ -31,19 +35,56 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
     loadingActions: {},
   };
 
-  _handleDuplicateWorkspace() {
-    const { workspaceId, handleDuplicateWorkspaceById } = this.props;
-    handleDuplicateWorkspaceById(() => null, workspaceId);
+  _handleDuplicate() {
+    const { apiSpec, workspace, handleSetActiveWorkspace } = this.props;
+    const { fileName } = apiSpec;
+
+    showPrompt({
+      title: `Duplicate ${Strings.apiSpec}`,
+      defaultValue: fileName,
+      submitName: 'Create',
+      selectText: true,
+      label: 'New Name',
+      onComplete: async newName => {
+        const newWorkspace = await db.duplicate(workspace, { name: newName });
+        await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, { fileName: newName });
+
+        handleSetActiveWorkspace(newWorkspace._id);
+      },
+    });
   }
 
-  _handleRenameWorkspace() {
-    const { workspaceId, handleRenameWorkspaceById } = this.props;
-    handleRenameWorkspaceById(() => null, workspaceId);
+  _handleRename() {
+    const { apiSpec } = this.props;
+
+    showPrompt({
+      title: `Rename ${Strings.apiSpec}`,
+      defaultValue: apiSpec.fileName,
+      submitName: 'Rename',
+      selectText: true,
+      label: 'Name',
+      onComplete: async fileName => {
+        await models.apiSpec.update(apiSpec, { fileName });
+      },
+    });
   }
 
-  _handleDeleteWorkspaceBy() {
-    const { workspaceId, handleDeleteWorkspaceById } = this.props;
-    handleDeleteWorkspaceById(() => null, workspaceId);
+  _handleDelete() {
+    const { apiSpec, workspace } = this.props;
+
+    showModal(AskModal, {
+      title: `Delete ${Strings.apiSpec}`,
+      message: `Do you really want to delete ${apiSpec.fileName}?`,
+      yesText: 'Yes',
+      noText: 'Cancel',
+      onDone: async isYes => {
+        if (!isYes) {
+          return;
+        }
+
+        await models.workspace.remove(workspace);
+      },
+    });
   }
 
   async _onOpen() {
@@ -101,10 +142,10 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
           {children}
         </DropdownButton>
 
-        <DropdownItem onClick={this._handleDuplicateWorkspace}>
+        <DropdownItem onClick={this._handleDuplicate}>
           Duplicate
         </DropdownItem>
-        <DropdownItem onClick={this._handleRenameWorkspace}>
+        <DropdownItem onClick={this._handleRename}>
           Rename
         </DropdownItem>
 
@@ -120,7 +161,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
         ))}
 
         <DropdownDivider />
-        <DropdownItem className="danger" onClick={this._handleDeleteWorkspaceBy}>
+        <DropdownItem className="danger" onClick={this._handleDelete}>
           Delete
         </DropdownItem>
       </Dropdown>

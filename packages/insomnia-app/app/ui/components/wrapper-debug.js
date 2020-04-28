@@ -63,7 +63,7 @@ class WrapperDebug extends React.PureComponent<Props> {
   _renderPageHeader() {
     const {
       gitSyncDropdown,
-      wrapperProps: { activeWorkspace },
+      wrapperProps: { activeApiSpec },
     } = this.props;
 
     return (
@@ -74,7 +74,7 @@ class WrapperDebug extends React.PureComponent<Props> {
             <img src={designerLogo} alt="Insomnia" width="24" height="24" />
             <Breadcrumb
               className="breadcrumb"
-              crumbs={['Documents', activeWorkspace.name]}
+              crumbs={['Documents', activeApiSpec.fileName]}
               onClick={this._handleBreadcrumb}
             />
           </React.Fragment>

@@ -29,6 +29,7 @@ export function init() {
 export async function migrate(doc: Workspace): Promise<Workspace> {
   doc = await _migrateExtractClientCertificates(doc);
   doc = await _migrateEnsureName(doc);
+  await models.apiSpec.getOrCreateForParentId(doc._id, { fileName: doc.name });
   return doc;
 }
 
