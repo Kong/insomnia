@@ -84,6 +84,7 @@ import { importRaw } from '../../common/import';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { DropdownButton } from './base/dropdown';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
+import { getAppName } from '../../common/constants';
 
 export type WrapperProps = {
   // Helper Functions
@@ -397,7 +398,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
         title: 'Deleting Last Workspace',
         message: 'Since you deleted your only workspace, a new one has been created for you.',
         onConfirm: async () => {
-          await models.workspace.create({ name: 'Insomnia' });
+          await models.workspace.create({ name: getAppName() });
           await models.workspace.remove(activeWorkspace);
         },
       });
