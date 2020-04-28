@@ -829,7 +829,8 @@ class CodeEditor extends React.Component {
 
     this._originalCode = code;
 
-    // Don't ignore changes from prettify
+    // If we're setting initial value, don't trigger onChange because the
+    // user hasn't done anything yet
     if (!forcePrettify) {
       this._ignoreNextChange = true;
     }
@@ -985,9 +986,11 @@ class CodeEditor extends React.Component {
             id={id}
             ref={this._handleInitTextarea}
             style={{ display: 'none' }}
-            defaultValue=""
             readOnly={readOnly}
             autoComplete="off"
+            // NOTE: When setting this to empty string, it breaks the _ignoreNextChange
+            //   logic on initial component mount
+            defaultValue=" "
           />
         </div>
         {toolbar}
