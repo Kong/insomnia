@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-base64",
-  "version": "2.1.4",
+  "version": "2.2.2",
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Insomnia base64 template tag",
   "license": "MIT",
@@ -10,6 +10,8 @@
   },
   "main": "index.js",
   "insomnia": {
+    "core": true,
+    "unlisted": true,
     "name": "base64",
     "description": "Encode/Decode base64 strings"
   },

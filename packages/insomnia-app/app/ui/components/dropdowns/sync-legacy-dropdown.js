@@ -118,8 +118,7 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
     this._reloadData();
   }
 
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillUnmount() {
+  componentWillUnmount() {
     syncStorage.offChange(this._reloadData);
     this._isMounted = false;
   }

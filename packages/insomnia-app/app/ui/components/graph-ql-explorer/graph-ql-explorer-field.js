@@ -3,6 +3,7 @@ import * as React from 'react';
 import type { GraphQLField, GraphQLType } from 'graphql';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
 import MarkdownPreview from '../markdown-preview';
+import GraphQLDefaultValue from './graph-ql-default-value';
 
 type Props = {
   onNavigateType: (type: GraphQLType) => void,
@@ -36,13 +37,16 @@ class GraphQLExplorerField extends React.PureComponent<Props> {
       <React.Fragment>
         <h2 className="graphql-explorer__subheading">Arguments</h2>
         <ul className="graphql-explorer__defs">
-          {field.args.map(a => (
-            <li key={a.name}>
-              <span className="info">{a.name}</span>:{' '}
-              <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={a.type} />
-              {a.description && <MarkdownPreview markdown={a.description} />}
-            </li>
-          ))}
+          {field.args.map(a => {
+            return (
+              <li key={a.name}>
+                <span className="info">{a.name}</span>:{' '}
+                <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={a.type} />
+                <GraphQLDefaultValue field={(a: Object)} />
+                {a.description && <MarkdownPreview markdown={a.description} />}
+              </li>
+            );
+          })}
         </ul>
       </React.Fragment>
     );

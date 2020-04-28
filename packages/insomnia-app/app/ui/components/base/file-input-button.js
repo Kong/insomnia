@@ -85,7 +85,7 @@ class FileInputButton extends React.PureComponent<Props> {
         ref={this._setRef}
         onClick={this._handleChooseFile}
         title={path}
-        {...extraProps}>
+        {...(extraProps: Object)}>
         {showFileIcon && <i className="fa fa-file-o space-right" />}
         {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
       </button>

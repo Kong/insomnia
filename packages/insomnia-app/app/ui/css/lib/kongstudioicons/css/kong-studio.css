@@ -1,0 +1,29 @@
+@font-face {
+  font-family: 'kong-studio-icons';
+  src: url('../fonts/kong-studio-icons.woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class*='ico-']:before {
+  display: inline-block;
+  font-family: 'kong-studio-icons';
+  font-style: normal;
+  font-weight: normal;
+  text-rendering: auto;
+  font-size: inherit;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.ico-debug:before {
+  content: '\0041';
+}
+
+.ico-edit-spec:before {
+  content: '\0042';
+}
+
+.ico-preferences:before {
+  content: '\0043';
+}

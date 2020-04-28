@@ -30,8 +30,7 @@ class CopyButton extends PureComponent {
     }, 2000);
   }
 
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillUnmount() {
+  componentWillUnmount() {
     clearTimeout(this._triggerTimeout);
   }
 

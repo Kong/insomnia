@@ -1,0 +1,867 @@
+openapi: 3.0.1
+info:
+  version: '1.0-oas3'
+  title: httpbin
+  description: An unofficial OpenAPI definition for [httpbin.org](https://httpbin.org).
+
+servers:
+  - url: https://httpbin.org
+  #- url: http://httpbin.org
+  - url: https://eu.httpbin.org
+  #- url: http://eu.httpbin.org
+
+tags:
+  - name: auth
+    description: Operations for testing various authentication types
+  - name: HTTP methods
+    description: Operations for testing different HTTP methods
+  - name: Status codes
+    description: Return the specified HTTP status code, or a random status code if more than one are given
+
+# All paths & parameters are described in
+# https://github.com/kennethreitz/httpbin/blob/master/httpbin/core.py
+
+externalDocs:
+  url: http://httpbin.org/legacy
+
+paths:
+  # New operations for parsing time
+  /:
+    get:
+      summary: The current time, in a variety of formats
+      tags:
+        - time
+      servers:
+        - url: https://now.httpbin.org
+        #- url: http://now.httpbin.org
+      #externalDocs:
+      #  url: /docs # ???
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  now:
+                    $ref: '#/components/schemas/Timestamp'
+                  urls:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - /
+                      - /docs
+                      - '/when/:human_timestamp'
+                      - '/parse/:machine_timestamp'
+                required:
+                  - now
+                  - urls
+
+  /when/{human_timestamp}:
+    get:
+      tags:
+        - time
+      servers:
+        - url: http://now.httpbin.org
+        #- url: https://now.httpbin.org
+      parameters:
+        - in: path
+          name: human_timestamp
+          required: true
+          schema:
+            anyOf:
+              - type: string # ????
+      x-kong-plugin-request-validator:
+        enabled: true
+      responses:
+        '200':
+          $ref: '#/components/responses/TimestampResponse'
+        '500':
+          description: oops
+
+  /parse/{machine_timestamp}:
+    get:
+      tags:
+        - time
+      servers:
+        - url: http://now.httpbin.org
+        #- url: https://now.httpbin.org
+      parameters:
+        - in: path
+          name: machine_timestamp
+          required: true
+          schema:
+            anyOf:
+              - type: string # ????
+              - type: number
+      responses:
+        '200':
+          $ref: '#/components/responses/TimestampResponse'
+        '500':
+          description: oops
+
+  /get:
+    get:
+      tags:
+        - HTTP methods
+      summary: |
+        Returns the GET request's data. Accepts any query parameters and any headers.
+      parameters:
+        - $ref: '#/components/parameters/freeFormQuery'
+      responses:
+        '200':  # Change to 'default' ???
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /delete:
+    delete:
+      tags:
+        - HTTP methods
+      summary: |
+        Returns the DELETE request's data. Accepts any query parameters and any headers.
+      parameters:
+        - $ref: '#/components/parameters/freeFormQuery'
+      responses:
+        200:
+          description: OK
+
+  /post:
+    post:
+      tags:
+        - HTTP methods
+      # summary: POSTs a pizza order and returns the POSTed data.
+      summary: Returns the POSTed data
+      parameters:
+        - $ref: '#/components/parameters/freeFormQuery'
+      requestBody:
+        description: Data provided in the request body will be returned in the response.
+        content:
+          application/json:
+            schema: {}
+            example:
+              message: Hello, world!
+          application/vnd+json:
+            schema: {}
+            examples:
+              pizzaOrder:
+                summary: Pizza order data
+                description: Longer description ...
+                value:
+                  custname: Alice
+                  custtel: '+1-202-555-0100'
+                  custemail: alice@wonderland.net
+                  size: medium
+                  topping: [cheese, mushroom]
+                  delivery: '19:00'
+                  comments: Ring the door bell three times
+              simpleObject:
+                summary: sample object
+                value:
+                  foo: bar
+          application/xml:
+            schema:
+              type: object
+            example:
+              message: Hello, world!
+          text/plain:
+            schema:
+              type: string
+              example: Hi there
+          application/x-www-form-urlencoded:
+            schema:
+              # anyOf:
+              #   - type: object
+              #     additionalProperties: true
+
+              #   - description: Pizza order
+              type: object
+              properties:
+                custname:
+                  type: string
+                  example: Alice
+                  description: Customer name
+                custtel:
+                  type: string
+                  example: '+1-202-555-0100'
+                  description: Customer phone number
+                custemail:
+                  type: string
+                  format: email
+                  example: alice@wonderland.net
+                  description: Customer email address
+                size:
+                  type: string
+                  enum:
+                    - small
+                    - medium
+                    - large
+                  description: Pizza size
+                topping:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - bacon
+                      - cheese
+                      - mushroom
+                      - onion
+                  description: Pizza toppings
+                delivery:
+                  type: string
+                  example: '13:30'
+                  description: Delivery time
+                comments:
+                  type: string
+                  example: ASAP
+                  description: Comments
+            examples:
+              pizzaOrder:
+                summary: Pizza order data
+                description: Longer description ...
+                value:
+                  custname: Alice
+                  custtel: '+1-202-555-0100'
+                  custemail: alice@wonderland.net
+                  size: medium
+                  topping: [cheese, mushroom]
+                  delivery: '19:00'
+                  comments: Ring the door bell three times
+              simpleObject:
+                summary: sample object
+                value:
+                  foo: bar
+          # multipart/form-data: {}  # TODO
+          '*/*':   # is this valid?
+            schema: {}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+              #schema:
+              #  type: object
+
+  # /put: {}
+  # /patch: {}
+  # /delete: {}
+  # /response-headers:
+  #   parameters:
+  #     - in: query
+  #       name: headers
+  #       # Arbitrary key=value pairs
+  #       schema:
+  #         type: object
+  #         example:
+  #           Server: unicorn
+  #       style: simple
+  #   get: {}
+  #   post: {}
+
+
+  /ip:
+    get:
+      summary: Returns Origin IP.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  origin:
+                    type: string
+                    description: >
+                      The IP address, or a comma-separated list of IP addresses.
+                      For example, "10.100.10.10, 10.100.20.254, 52.91.14.13"'
+                    example: 10.100.10.10
+                required:
+                  - origin
+              examples:   # Content examples override schema-level examples
+                oneIp:
+                  description: Example of a single IP
+                  value:
+                    origin: 10.100.10.10
+                multipleIps:
+                  description: Example of multiple IPs
+                  value:
+                    origin: 10.100.10.10, 10.100.20.254, 52.91.14.13
+
+  /user-agent:
+    get:
+      summary: Returns the user agent.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user-agent:
+                    type: string
+                    example: curl/7.37.0
+                required:
+                  - user-agent
+
+  /headers:
+    get:
+      summary: Returns the request headers.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  headers:
+                    type: object
+                    additionalProperties:
+                      type: string
+                    # wrong syntax!
+                    #example:
+                    #  $ref: '#/components/examples/headers'
+                required:
+                  - headers
+
+  # /anything:
+  #   summary: Returns request data, including method used.
+  #   get: {}
+  #   post: {}
+  #   put: {}
+  #   patch: {}
+  #   delete: {}
+  #   trace: {}
+  #   options: {}
+
+  # /anything/{anything}:
+  #   summary: Returns request data, including method used.
+
+  #   parameters:
+  #     - in: path
+  #       name: anything
+  #       required: true
+  #       schema:
+  #         type: string
+  #       description: An arbitrary subpath
+
+  #   get: {}
+  #   post: {}
+  #   put: {}
+  #   patch: {}
+  #   delete: {}
+  #   trace: {}
+  #   options: {}
+
+  /delay/{n}:
+    get:
+      summary: Delays responding for min(n, 10) seconds.
+      parameters:
+        - name: n
+          in: path
+          required: true
+          description: Response delay, in seconds.
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json: {}
+              # schema:
+              #   type: object
+
+  /basic-auth/{user}/{password}:
+    get:
+      summary: Challenges HTTPBasic Auth.
+      tags:
+        - auth
+      security:
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/user'
+        - $ref: '#/components/parameters/password'
+      responses:
+        '200':
+          $ref: '#/components/responses/200BasicAuth'
+        '401':
+          description: >-
+            Unauthorized (The username and password used for Basic auth do not
+            match those in the URL path.)
+          headers:
+            Www-Authenticate:
+              schema:
+                type: string
+                example: 'Basic realm="Fake Realm"'
+
+  /hidden-basic-auth/{user}/{password}:
+    get:
+      summary: Hidden Basic authentication
+      tags:
+        - auth
+      description: Returns 404 Not Found unless the request is authenticated.
+      security:
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/user'
+        - $ref: '#/components/parameters/password'
+      responses:
+        '200':
+          $ref: '#/components/responses/200BasicAuth'
+        '404':
+          description: >-
+            Unautorized (the username and password used for Basic auth do not
+            match those in the URL path.)
+
+  /bearer:
+    get:
+      summary: Tests Bearer authentication
+      tags:
+        - auth
+      security:
+        - basicAuth: []
+        #- bearerAuth: []
+      responses:
+        '200':
+          description: Authorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authenticated:
+                    type: boolean
+                    example: true
+                  token:
+                    type: string
+                    description: Bearer token specified in the request
+        '404':
+          description: Unauthorized
+
+
+  /status/{statusCode}:
+    summary: Returns the specified HTTP status code, or a random status code if more than one are given
+    parameters:
+      - name: statusCode
+        in: path
+        required: true
+        description: The status code to return, or a weighted list of statuses to pick from, such as `200:4,500:0.3,418`.
+        schema:
+          type: array
+          items:
+            description: HTTP status code. May include optional weight, e.g. `200:0.9`
+            oneOf:
+              - type: string
+              - type: integer
+          minItems: 1
+          example:
+            - '200:5'
+            - '500:0.3'
+            - 418
+        style: simple
+
+    get:
+      tags:
+        - Status codes
+      responses:
+        default:
+          description: A response with the requested status code.
+    post:
+      tags:
+        - Status codes
+      responses:
+        default:
+          description: A response with the requested status code.
+    patch:
+      tags:
+        - Status codes
+      responses:
+        default:
+          description: A response with the requested status code.
+    put:
+      tags:
+        - Status codes
+      responses:
+        default:
+          description: A response with the requested status code.
+    delete:
+      tags:
+        - Status codes
+      responses:
+        default:
+          description: A response with the requested status code.
+
+  /xml:
+    get:
+      summary: Returns some XML.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml: {}
+
+  /html:
+    get:
+      summary: Returns an HTML page
+      responses:
+        '200':
+          description: OK
+          content:
+            text/html: {}
+
+  /image/{format}:
+    get:
+      summary: Returns an image with the specified format.
+      tags:
+        - images
+      parameters:
+        - in: path
+          name: format
+          required: true
+          schema:
+            type: string
+            enum:
+              - png
+              - jpeg
+              - webp
+              - svg
+      responses:
+        '200':
+          $ref: '#/components/responses/Image'
+
+  /image:
+    get:
+      summary: Returns an image based on the Accept header.
+      tags:
+        - images
+      responses:
+        '200':
+          $ref: '#/components/responses/Image'
+        '406':
+          description: Client did not request a supported media type.
+
+  /cache:
+    get:
+      summary: >-
+        Returns 200 unless an If-Modified-Since or If-None-Match header is
+        provided, when it returns a 304.
+      parameters:
+        - in: header
+          name: If-Modified-Since
+          required: false
+          description: >
+            For testing purposes this header accepts any value. (???)
+            See also https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Modified-Since
+          schema:
+            type: string
+            example: 'Wed, 21 Oct 2015 07:28:00 GMT'
+        - in: header
+          name: If-None-Match
+          required: false
+          description: >
+            For testing purposes this header accepts any value. (???)
+            See also https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match
+          schema:
+            type: string
+          examples:
+            etag:
+              value: '"bfc13a64729c4290ef5b2c2730249c88ca92d82d"' # Quotes are part of the value
+            etags:
+              value: 'W/"67ab43", "54ed21", "7892dd"'
+            asterisk:
+              value: '*'
+      responses:
+        '200':
+          description: Neigher If-Modified-Since nor If-None-Match header is provided
+        '304':
+          description: If-Modified-Since or If-None-Match header is provided
+
+  /cookies:
+    get:
+      x-kong-plugin-correlation-id:
+        name: correlation-id
+      tags:
+        - Cookies
+      summary: Returns cookie data
+      responses:
+        200:
+          description: OK
+  /cookies/set:
+    get:
+      tags:
+        - Cookies
+      summary: Sets one or more simple cookies
+      parameters:
+        - $ref: '#/components/parameters/freeFormQuery'
+      responses:
+        200:
+          description: OK
+  /cookies/delete:
+    get:
+      tags:
+        - Cookies
+      summary: Delete one or more simple cookies
+      parameters:
+        - $ref: '#/components/parameters/freeFormQuery'
+      responses:
+        200:
+          description: OK
+
+
+#################################
+# Reusable things
+#################################
+components:
+  schemas:
+    CommonResponse:
+      description: Response returned by `/get`
+      type: object
+      properties:
+        args:
+          type: object
+          additionalProperties:
+            type: string
+          description: Query string parameters specified in the request URL.
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+          description: >
+            Headers (standard or custom) used in the request. Some typical headers are:
+              - Accept
+              - Accept-Encoding
+              - Content-Length
+              - Content-Type
+              - Host
+              - Origin
+              - Referred
+              - User-Agent
+          # not valid syntax
+          #example:
+          #  $ref: '#/components/examples/headers'
+        origin:
+          type: string
+          description: The origin IP from which the request was made.
+          example: '10.100.10.10, 10.100.10.44, 52.91.14.13'
+        url:
+          type: string
+          format: uri
+          description: The endpoint URL to which the request was made.
+          example: https://httpbin.org/post
+      required:
+        - args
+        - headers
+        - origin
+        - url
+
+    PostResponse:
+      description: Response returned by /post, /put, /patch and /delete
+      allOf:
+        - $ref: '#/components/schemas/CommonResponse'
+        - type: object
+          properties:
+            data: {}    # Always a plain text string???
+              # ???
+              # oneOf:
+              #   - type: string
+              #   - type: object
+            files: {}
+            #  type: object
+            #  description: ???
+            form:
+              type: object
+              additionalProperties:
+                type: string
+              description: >
+                Form parameters specified in "application/x-www-form-urlencoded" and
+                `multipart/form-data` requests.
+            json:
+              description: >
+                JSON value sent in the payload.
+                Can be object, array, string, number, boolean or `null`.
+              nullable: true
+              # oneOf:
+              #   - type: object
+              #   - type: array
+              #   - type: string
+              #   - type: number
+              #   - type: boolean
+
+    TimestampWrapper:
+      type: object
+      properties:
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+      required:
+        - timestamp
+
+    Timestamp:
+      type: object
+      properties:
+        epoch:
+          type: number
+          format: double
+          example: 1498229228.0671656
+        slang_date:
+          type: string
+          example: today
+        slang_time:
+          type: string
+          example: now
+        iso8601:
+          type: string
+          # format: ???
+          example: '2017-06-23T14:47:08.067166Z'
+        rfc2822:
+          type: string
+          # format: ???
+          example: 'Fri, 23 Jun 2017 14:47:08 GMT'
+        rfc3339:
+          type: string
+          # format: ????
+          example: '2017-06-23T14:47:08.06Z'
+      required:
+        - epoch
+        - slang_date
+        - slang_time
+        - iso8601
+        - rfc2822
+        - rfc3339
+      example:
+        epoch: 1485183550.84644
+        slang_date: Jan 23
+        slang_time: 4 months ago
+        iso8601: '2017-01-23T14:59:10.846440Z'
+        rfc2822: Mon, 23 Jan 2017 14:59:10 GMT
+        rfc3339: '2017-01-23T14:59:10.84Z'
+      # schema does NOT support plural "examples"
+      # examples:
+      #   Now:
+      #     value:
+      #       epoch: 1498229228.0671656
+      #       slang_date: today
+      #       slang_time: now
+      #       iso8601: '2017-06-23T14:47:08.067166Z'
+      #       rfc2822: Fri, 23 Jun 2017 14:47:08 GMT
+      #       rfc3339: '2017-06-23T14:47:08.06Z'
+      #   DateInPast:
+      #     description: Example of a date in the past
+      #     value:
+      #       epoch: 1485183550.84644,
+      #       slang_date": Jan 23
+      #       slang_time": 4 months ago
+      #       iso8601: '2017-01-23T14:59:10.846440Z'
+      #       rfc2822: Mon, 23 Jan 2017 14:59:10 GMT
+      #       rfc3339: '2017-01-23T14:59:10.84Z'
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Use the same username and password as you will provide in path parameters.
+      x-kong-security-basic-auth:
+        config:
+          hide_credentials: true
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    user:
+      name: user
+      in: path
+      required: true
+      description: Username. Use the same username in the path AND for authorization.
+      schema:
+        type: string
+    password:
+      name: password
+      in: path
+      required: true
+      description: Password. Use the same password in the path AND for authorization.
+      schema:
+        type: string
+    freeFormQuery:
+      name: freeform
+      in: query
+      schema:
+        type: object
+        additionalProperties: true
+      # This is the default serialization method, so it can be omitted
+      style: form
+      explode: true
+      description: >
+        Enter free-form query parameters in the JSON format
+        `{ "param1": "value1", "param2": "value2", ... }`.
+
+
+        Note that the parameters will be actually sent as
+        `?param1=value1&param2=value2&...`
+
+
+  responses:
+    200BasicAuth:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              authenticated:
+                type: boolean
+                example: true
+              user:
+                type: string
+                description: The user name specified in the request.
+    Image:
+      description: OK
+      content:
+        image/png, image/jpeg, image/webp:
+          schema:
+            type: string
+            format: binary
+        image/svg+xml: {}  # string? object?
+        image/svg: {}  # string? object?
+
+    TimestampResponse:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TimestampWrapper'
+
+  examples:
+    headers:
+      value:
+        Accept: '*/*'
+        Connection: close
+        Host: httpbin.org
+        User-Agent: curl/7.37.0
+
+    Now:
+      value:
+        epoch: 1498229228.0671656
+        slang_date: today
+        slang_time: now
+        iso8601: '2017-06-23T14:47:08.067166Z'
+        rfc2822: Fri, 23 Jun 2017 14:47:08 GMT
+        rfc3339: '2017-06-23T14:47:08.06Z'
+    DateInPast:
+      description: Example of a date in the past
+      value:
+        epoch: 1485183550.84644,
+        slang_date": Jan 23
+        slang_time": 4 months ago
+        iso8601: '2017-01-23T14:59:10.846440Z'
+        rfc2822: Mon, 23 Jan 2017 14:59:10 GMT
+        rfc3339: '2017-01-23T14:59:10.84Z'

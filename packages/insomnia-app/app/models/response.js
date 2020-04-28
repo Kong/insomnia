@@ -28,6 +28,7 @@ export type ResponseTimelineEntry = {
 };
 
 type BaseResponse = {
+  environmentId: string | null,
   statusCode: number,
   statusMessage: string,
   httpVersion: string,
@@ -70,6 +71,10 @@ export function init(): BaseResponse {
     // Things from the request
     settingStoreCookies: null,
     settingSendCookies: null,
+
+    // Responses sent before environment filtering will have a special value
+    // so they don't show up at all when filtering is on.
+    environmentId: '__LEGACY__',
   };
 }
 
@@ -80,10 +85,11 @@ export async function migrate(doc: Object) {
   return doc;
 }
 
-export async function hookDatabaseInit() {
-  await models.response.cleanDeletedResponses();
-
+export function hookDatabaseInit() {
   console.log('Init responses DB');
+  process.nextTick(async () => {
+    await models.response.cleanDeletedResponses();
+  });
 }
 
 export function hookRemove(doc: Response) {
@@ -103,24 +109,50 @@ export async function all(): Promise<Array<Response>> {
   return db.all(type);
 }
 
-export async function removeForRequest(parentId: string) {
-  await db.removeWhere(type, { parentId });
+export async function removeForRequest(parentId: string, environmentId?: string | null) {
+  const settings = await models.settings.getOrCreate();
+  const query: Object = {
+    parentId,
+  };
+
+  // Only add if not undefined. null is not the same as undefined
+  //  null: find responses sent from base environment
+  //  undefined: find all responses
+  if (environmentId !== undefined && settings.filterResponsesByEnv) {
+    query.environmentId = environmentId;
+  }
+
+  // Also delete legacy responses here or else the user will be confused as to
+  // why some responses are still showing in the UI.
+  await db.removeWhere(type, query);
 }
 
 export function remove(response: Response) {
   return db.remove(response);
 }
 
-export async function findRecentForRequest(
+async function _findRecentForRequest(
   requestId: string,
+  environmentId: string | null,
   limit: number,
 ): Promise<Array<Response>> {
-  const responses = await db.findMostRecentlyModified(type, { parentId: requestId }, limit);
-  return responses;
+  const query: Object = {
+    parentId: requestId,
+  };
+
+  // Filter responses by environment if setting is enabled
+  if ((await models.settings.getOrCreate()).filterResponsesByEnv) {
+    query.environmentId = environmentId;
+  }
+
+  return db.findMostRecentlyModified(type, query, limit);
 }
 
-export async function getLatestForRequest(requestId: string): Promise<Response | null> {
-  const responses = await findRecentForRequest(requestId, 1);
+export async function getLatestForRequest(
+  requestId: string,
+  environmentId: string | null,
+): Promise<Response | null> {
+  const responses = await _findRecentForRequest(requestId, environmentId, 1);
   const response = (responses[0]: ?Response);
   return response || null;
 }
@@ -137,14 +169,21 @@ export async function create(patch: Object = {}, maxResponses: number = 20) {
   const requestVersion = request ? await models.requestVersion.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
 
+  // Filter responses by environment if setting is enabled
+  const query: Object = { parentId };
+  if (
+    (await models.settings.getOrCreate()).filterResponsesByEnv &&
+    patch.hasOwnProperty('environmentId')
+  ) {
+    query.environmentId = patch.environmentId;
+  }
+
   // Delete all other responses before creating the new one
-  const allResponses = await db.findMostRecentlyModified(
-    type,
-    { parentId },
-    Math.max(1, maxResponses),
-  );
+  const allResponses = await db.findMostRecentlyModified(type, query, Math.max(1, maxResponses));
   const recentIds = allResponses.map(r => r._id);
-  await db.removeWhere(type, { parentId, _id: { $nin: recentIds } });
+
+  // Remove all that were in the last query, except the first `maxResponses` IDs
+  await db.removeWhere(type, { ...query, _id: { $nin: recentIds } });
 
   // Actually create the new response
   return db.docCreate(type, patch);
@@ -303,6 +342,10 @@ export async function cleanDeletedResponses() {
       continue;
     }
 
-    fs.unlinkSync(path.join(responsesDir, filePath));
+    try {
+      fs.unlinkSync(path.join(responsesDir, filePath));
+    } catch (err) {
+      // Just keep going, doesn't matter
+    }
   }
 }

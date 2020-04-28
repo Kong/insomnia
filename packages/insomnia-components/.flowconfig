@@ -2,6 +2,7 @@
 .*/node_modules/.*
 ./.cache
 ./dist
+./storybook-static
 
 [include]
 
@@ -9,5 +10,6 @@
 ./flow-typed
 
 [options]
+esproposal.decorators=ignore
 
 [lints]

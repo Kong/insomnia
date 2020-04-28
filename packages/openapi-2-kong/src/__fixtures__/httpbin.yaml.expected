@@ -1,0 +1,225 @@
+{
+  "services": [
+    {
+      "url":"https://httpbin.org",
+      "name": "httpbin",
+      "plugins": [],
+      "routes": [
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_3-get",
+          "paths": ["/get"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_10-get",
+          "plugins": [{"config": {"hide_credentials": true}, "name": "basic-auth"}],
+          "paths": ["\/basic-auth\/(?<user>\\S+)\/(?<password>\\S+)$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_20-get",
+          "paths": ["\/image\/(?<format>\\S+)$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_9-get",
+          "paths": ["\/delay\/(?<n>\\S+)$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_19-get",
+          "paths": ["/html"]
+        },
+        {
+          "methods": ["DELETE"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-Returns_the_specified_HTTP_status_code_or_a_random_status_code_if_more_than_one_are_given-delete",
+          "paths": ["\/status\/(?<statusCode>\\S+)$"]
+        },
+        {
+          "methods": ["PUT"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-Returns_the_specified_HTTP_status_code_or_a_random_status_code_if_more_than_one_are_given-put",
+          "paths": ["\/status\/(?<statusCode>\\S+)$"]
+        },
+        {
+          "methods": ["PATCH"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-Returns_the_specified_HTTP_status_code_or_a_random_status_code_if_more_than_one_are_given-patch",
+          "paths": ["\/status\/(?<statusCode>\\S+)$"]
+        },
+        {
+          "methods": ["POST"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-Returns_the_specified_HTTP_status_code_or_a_random_status_code_if_more_than_one_are_given-post",
+          "paths": ["\/status\/(?<statusCode>\\S+)$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-Returns_the_specified_HTTP_status_code_or_a_random_status_code_if_more_than_one_are_given-get",
+          "paths": ["\/status\/(?<statusCode>\\S+)$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_7-get",
+          "paths": ["/user-agent"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_11-get",
+          "plugins": [{"config": {"hide_credentials": true}, "name": "basic-auth"}],
+          "paths": ["\/hidden-basic-auth\/(?<user>\\S+)\/(?<password>\\S+)$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_8-get",
+          "paths": ["/headers"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_23-get",
+          "plugins": [{"name": "correlation-id"}],
+          "paths": ["/cookies"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_6-get",
+          "paths": ["/ip"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_18-get",
+          "paths": ["/xml"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_25-get",
+          "paths": ["/cookies\/delete"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_21-get",
+          "paths": ["/image"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_2-get",
+          "paths": ["\/parse\/(?<machine_timestamp>\\S+)$"]
+        },
+        {
+          "methods": ["POST"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_5-post",
+          "paths": ["/post"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_22-get",
+          "paths": ["/cache"]
+        },
+        {
+          "methods": ["DELETE"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_4-delete",
+          "paths": ["/delete"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_1-get",
+          "plugins": [
+            {
+              "name": "request-validator",
+              "config": {
+                "parameter_schema": [
+                  {
+                    "schema": "{\"anyOf\":[{\"type\":\"string\"}]}",
+                    "style": "simple",
+                    "in": "path",
+                    "name": "human_timestamp",
+                    "required": true,
+                    "explode": false
+                  }
+                ],
+                "version": "draft4"
+              },
+              "enabled": true
+            }
+          ],
+          "paths": ["\/when\/(?<human_timestamp>\\S+)$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_12-get",
+          "plugins": [{"config": {"hide_credentials": true}, "name": "basic-auth"}],
+          "paths": ["/bearer"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path-get",
+          "paths": ["/"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "name": "httpbin-path_24-get",
+          "paths": ["/cookies/set"]
+        }
+      ],
+      "tags": ["OAS3_import", "OAS3file_httpbin.yaml"]
+    }
+  ],
+  "upstreams": [
+    {
+      "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+      "name": "httpbin",
+      "targets": [{"target": "httpbin.org:443"}, {"target": "eu.httpbin.org:443"}]
+    }
+  ],
+  "_format_version": "1.1"
+}

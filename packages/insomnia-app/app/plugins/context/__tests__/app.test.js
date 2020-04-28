@@ -7,9 +7,10 @@ describe('init()', () => {
   beforeEach(globalBeforeEach);
   it('initializes correctly', async () => {
     const result = plugin.init();
-    expect(Object.keys(result)).toEqual(['app']);
+    expect(Object.keys(result)).toEqual(['app', '__private']);
     expect(Object.keys(result.app).sort()).toEqual([
       'alert',
+      'dialog',
       'getPath',
       'prompt',
       'showGenericModalDialog',

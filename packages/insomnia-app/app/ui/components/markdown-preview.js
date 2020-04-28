@@ -69,8 +69,7 @@ class MarkdownPreview extends PureComponent {
     }
   }
 
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillUnmount() {
+  componentWillUnmount() {
     clearTimeout(this._compileTimeout);
   }
 
@@ -96,7 +95,7 @@ class MarkdownPreview extends PureComponent {
     const { className, heading } = this.props;
     const { compiled, renderError } = this.state;
 
-    let html = heading ? `<h1>${heading}</h1>\n${compiled}` : compiled;
+    const html = heading ? `<h1>${heading}</h1>\n${compiled}` : compiled;
 
     return (
       <div ref={this._setPreviewRef} className={classnames('markdown-preview', className)}>

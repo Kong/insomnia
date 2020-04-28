@@ -55,6 +55,7 @@ class GenerateCodeModal extends PureComponent {
   _setModalRef(n) {
     this.modal = n;
   }
+
   _setEditorRef(n) {
     this._editor = n;
   }

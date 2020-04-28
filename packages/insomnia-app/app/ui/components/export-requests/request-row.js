@@ -14,7 +14,7 @@ type Props = {
 class RequestRow extends PureComponent<Props> {
   handleSelect(e: SyntheticEvent<HTMLInputElement>) {
     const el = e.currentTarget;
-    let value = el.checked;
+    const value = el.checked;
     const { handleSetItemSelected, request } = this.props;
     return handleSetItemSelected(request._id, value);
   }

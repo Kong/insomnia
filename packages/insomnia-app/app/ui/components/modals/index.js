@@ -1,6 +1,7 @@
 import PromptModal from './prompt-modal';
 import AlertModal from './alert-modal';
 import ErrorModal from './error-modal';
+import { trackEvent } from '../../../common/analytics';
 
 const modals = {};
 
@@ -29,6 +30,7 @@ export function showError(config) {
 }
 
 export function showModal(modalCls, ...args) {
+  trackEvent('Modals', 'Show', modalCls.name);
   return _getModal(modalCls).show(...args);
 }
 

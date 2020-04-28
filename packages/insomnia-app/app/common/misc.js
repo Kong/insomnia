@@ -6,6 +6,7 @@ import uuid from 'uuid';
 import zlib from 'zlib';
 import { join as pathJoin } from 'path';
 import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
+import type { GlobalActivity } from '../ui/components/activity-bar/activity-bar';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -79,6 +80,11 @@ export function getContentTypeHeader<T: Header>(headers: Array<T>): T | null {
   return matches.length ? matches[0] : null;
 }
 
+export function getMethodOverrideHeader<T: Header>(headers: Array<T>): T | null {
+  const matches = filterHeaders(headers, 'x-http-method-override');
+  return matches.length ? matches[0] : null;
+}
+
 export function getHostHeader<T: Header>(headers: Array<T>): T | null {
   const matches = filterHeaders(headers, 'host');
   return matches.length ? matches[0] : null;
@@ -149,7 +155,7 @@ export function keyedDebounce(callback: Function, millis: number = DEBOUNCE_MILL
 export function debounce(callback: Function, millis: number = DEBOUNCE_MILLIS): Function {
   // For regular debounce, just use a keyed debounce with a fixed key
   return keyedDebounce(results => {
-    callback.apply(null, results['__key__']);
+    callback.apply(null, results.__key__);
   }, millis).bind(null, '__key__');
 }
 
@@ -230,7 +236,7 @@ export function jsonParseOr(str: string, fallback: any): any {
 }
 
 export function escapeHTML(unsafeText: string): string {
-  let div = document.createElement('div');
+  const div = document.createElement('div');
   div.innerText = unsafeText;
   return div.innerHTML;
 }
@@ -361,4 +367,8 @@ export function chunkArray<T>(arr: Array<T>, chunkSize: number): Array<Array<T>>
   }
 
   return chunks;
+}
+
+export function setActivityAttribute(activity: GlobalActivity) {
+  document.body.setAttribute('data-activity', activity);
 }

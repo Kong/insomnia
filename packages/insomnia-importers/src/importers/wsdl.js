@@ -9,7 +9,7 @@ module.exports.description = 'Importer for WSDL files';
 module.exports.convert = async function(data) {
   try {
     if (data.indexOf('wsdl:definition') !== -1) {
-      let postmanData = await convertWsdlToPostman(
+      const postmanData = await convertWsdlToPostman(
         '<?xml version="1.0" encoding="UTF-8" ?>' + data,
       );
       postmanData.info.schema += 'collection.json';

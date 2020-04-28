@@ -23,20 +23,21 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 let alwaysShowLargeResponses = false;
 
 type Props = {
-  getBody: Function,
+  bytes: number,
+  contentType: string,
+  disableHtmlPreviewJs: boolean,
+  disablePreviewLinks: boolean,
   download: Function,
-  responseId: string,
-  previewMode: string,
-  filter: string,
-  filterHistory: Array<string>,
   editorFontSize: number,
   editorIndentSize: number,
   editorKeyMap: string,
   editorLineWrapping: boolean,
+  filter: string,
+  filterHistory: Array<string>,
+  getBody: Function,
+  previewMode: string,
+  responseId: string,
   url: string,
-  bytes: number,
-  contentType: string,
-  disableHtmlPreviewJs: boolean,
 
   // Optional
   updateFilter: Function | null,
@@ -122,10 +123,9 @@ class ResponseViewer extends React.Component<Props, State> {
   }
 
   shouldComponentUpdate(nextProps: Props, nextState: State) {
-    for (let k of Object.keys(nextProps)) {
+    for (const k of Object.keys(nextProps)) {
       const next = nextProps[k];
       const current = this.props[k];
-
       if (typeof next === 'function') {
         continue;
       }
@@ -143,7 +143,7 @@ class ResponseViewer extends React.Component<Props, State> {
       }
     }
 
-    for (let k of Object.keys(nextState)) {
+    for (const k of Object.keys(nextState)) {
       const next = nextState[k];
       const current = this.state[k];
 
@@ -198,6 +198,7 @@ class ResponseViewer extends React.Component<Props, State> {
     const {
       bytes,
       disableHtmlPreviewJs,
+      disablePreviewLinks,
       download,
       editorFontSize,
       editorIndentSize,
@@ -211,7 +212,6 @@ class ResponseViewer extends React.Component<Props, State> {
       updateFilter,
       url,
     } = this.props;
-
     let contentType = this.props.contentType;
 
     const { bodyBuffer, error: parseError } = this.state;
@@ -345,6 +345,7 @@ class ResponseViewer extends React.Component<Props, State> {
           bodyBuffer={bodyBuffer}
           contentType={contentType}
           disableHtmlPreviewJs={disableHtmlPreviewJs}
+          disablePreviewLinks={disablePreviewLinks}
           download={download}
           editorFontSize={editorFontSize}
           editorIndentSize={editorIndentSize}
@@ -396,22 +397,23 @@ class ResponseViewer extends React.Component<Props, State> {
 
       return (
         <CodeEditor
-          uniquenessKey={responseId}
+          key={disablePreviewLinks ? 'links-no' : 'links-yes'}
           ref={this._setSelectableViewRef}
-          onClickLink={this._handleOpenLink}
+          autoPrettify
           defaultValue={body}
-          updateFilter={updateFilter}
           filter={filter}
           filterHistory={filterHistory}
-          autoPrettify
-          noMatchBrackets
-          readOnly
-          mode={mode}
-          lineWrapping={editorLineWrapping}
           fontSize={editorFontSize}
           indentSize={editorIndentSize}
           keyMap={editorKeyMap}
+          lineWrapping={editorLineWrapping}
+          mode={mode}
+          noMatchBrackets
+          onClickLink={disablePreviewLinks ? null : this._handleOpenLink}
           placeholder="..."
+          readOnly
+          uniquenessKey={responseId}
+          updateFilter={updateFilter}
         />
       );
     }

@@ -15,15 +15,17 @@ import TimeFromNow from '../time-from-now';
 import type { Response } from '../../../models/response';
 import type { RequestVersion } from '../../../models/request-version';
 import { decompressObject } from '../../../common/misc';
+import type { Environment } from '../../../models/environment';
 
 type Props = {
   handleSetActiveResponse: Response => Promise<void>,
-  handleDeleteResponses: (requestId: string) => Promise<void>,
+  handleDeleteResponses: (requestId: string, environmentId: string | null) => Promise<void>,
   handleDeleteResponse: Response => Promise<void>,
   requestId: string,
   responses: Array<Response>,
   requestVersions: Array<RequestVersion>,
   activeResponse: Response,
+  activeEnvironment: ?Environment,
 };
 
 @autobind
@@ -35,7 +37,9 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
   }
 
   _handleDeleteResponses() {
-    this.props.handleDeleteResponses(this.props.requestId);
+    const { requestId, activeEnvironment } = this.props;
+    const environmentId = activeEnvironment ? activeEnvironment._id : null;
+    this.props.handleDeleteResponses(requestId, environmentId);
   }
 
   _handleDeleteResponse() {
@@ -97,34 +101,39 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
   renderPastResponses(responses: Array<Response>) {
     const now = moment();
     // Four arrays for four time groups
-    const categories = [[], [], [], []];
+    const categories = { minutes: [], hours: [], today: [], week: [], other: [] };
     responses.forEach(r => {
-      const resTime = moment(r.modified);
+      const resTime = moment(r.created);
       if (now.diff(resTime, 'minutes') < 5) {
         // Five minutes ago
-        categories[0].push(r);
+        categories.minutes.push(r);
       } else if (now.diff(resTime, 'hours') < 2) {
         // Two hours ago
-        categories[1].push(r);
+        categories.hours.push(r);
       } else if (now.isSame(resTime, 'day')) {
         // Today
-        categories[2].push(r);
+        categories.today.push(r);
       } else if (now.isSame(resTime, 'week')) {
         // This week
-        categories[3].push(r);
+        categories.week.push(r);
+      } else {
+        // Older
+        categories.other.push(r);
       }
     });
 
     return (
       <React.Fragment>
         <DropdownDivider>5 Minutes Ago</DropdownDivider>
-        {categories[0].map(this.renderDropdownItem)}
+        {categories.minutes.map(this.renderDropdownItem)}
         <DropdownDivider>2 Hours Ago</DropdownDivider>
-        {categories[1].map(this.renderDropdownItem)}
+        {categories.hours.map(this.renderDropdownItem)}
         <DropdownDivider>Today</DropdownDivider>
-        {categories[2].map(this.renderDropdownItem)}
+        {categories.today.map(this.renderDropdownItem)}
         <DropdownDivider>This Week</DropdownDivider>
-        {categories[3].map(this.renderDropdownItem)}
+        {categories.week.map(this.renderDropdownItem)}
+        <DropdownDivider>Older Than This Week</DropdownDivider>
+        {categories.other.map(this.renderDropdownItem)}
       </React.Fragment>
     );
   }
@@ -136,8 +145,11 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
       handleDeleteResponses, // eslint-disable-line no-unused-vars
       handleDeleteResponse, // eslint-disable-line no-unused-vars
       responses,
+      activeEnvironment,
       ...extraProps
     } = this.props;
+
+    const environmentName = activeEnvironment ? activeEnvironment.name : 'Base';
 
     const isLatestResponseActive = !responses.length || activeResponse._id === responses[0]._id;
 
@@ -146,7 +158,7 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
         <Dropdown
           ref={this._setDropdownRef}
           key={activeResponse ? activeResponse._id : 'n/a'}
-          {...extraProps}>
+          {...(extraProps: Object)}>
           <DropdownButton className="btn btn--super-compact tall" title="Response history">
             {activeResponse && <TimeFromNow timestamp={activeResponse.created} capitalize />}
             {!isLatestResponseActive ? (
@@ -155,7 +167,9 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
               <i className="fa fa-caret-down space-left" />
             )}
           </DropdownButton>
-          <DropdownDivider>Response History</DropdownDivider>
+          <DropdownDivider>
+            <strong>{environmentName}</strong> Responses
+          </DropdownDivider>
           <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteResponse}>
             <i className="fa fa-trash-o" />
             Delete Current Response

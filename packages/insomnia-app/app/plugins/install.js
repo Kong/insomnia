@@ -58,7 +58,7 @@ export default async function(lookupName: string): Promise<void> {
 
 async function _isInsomniaPlugin(lookupName: string): Promise<Object> {
   return new Promise((resolve, reject) => {
-    console.log(`[plugins] Fetching module info from npm`);
+    console.log('[plugins] Fetching module info from npm');
     childProcess.execFile(
       escape(process.execPath),
       [

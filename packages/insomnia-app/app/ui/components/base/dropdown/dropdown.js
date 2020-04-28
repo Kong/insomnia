@@ -87,7 +87,7 @@ class Dropdown extends PureComponent {
     const { filterItems, filterActiveIndex } = this.state;
     if (['Tab', 'ArrowDown', 'ArrowUp'].includes(key)) {
       e.preventDefault();
-      let items = filterItems || [];
+      const items = filterItems || [];
       if (!filterItems) {
         for (const li of this._dropdownList.querySelectorAll('li')) {
           if (li.hasAttribute('data-filter-index')) {
@@ -204,7 +204,9 @@ class Dropdown extends PureComponent {
     }
   }
 
-  _handleClick() {
+  _handleClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
     this.toggle();
   }
 

@@ -1,9 +1,16 @@
 // @flow
-import * as packageJson from '../../package.json';
 import type { BaseModel } from './index';
 import * as db from '../common/database';
-import { UPDATE_CHANNEL_STABLE } from '../common/constants';
+import { getAppDefaultTheme, UPDATE_CHANNEL_STABLE } from '../common/constants';
 import * as hotkeys from '../common/hotkeys';
+
+export type PluginConfig = {
+  disabled: boolean,
+};
+
+export type PluginConfigMap = {
+  [string]: PluginConfig,
+};
 
 type BaseSettings = {
   autoHideMenuBar: boolean,
@@ -11,11 +18,13 @@ type BaseSettings = {
   deviceId: string | null,
   disableHtmlPreviewJs: boolean,
   disableUpdateNotification: boolean,
+  disableResponsePreviewLinks: boolean,
   editorFontSize: number,
   editorIndentSize: number,
   editorIndentWithTabs: boolean,
   editorKeyMap: string,
   editorLineWrapping: boolean,
+  enableAnalytics: boolean,
   environmentHighlightColorStyle: string,
   followRedirects: boolean,
   fontInterface: string | null,
@@ -33,6 +42,7 @@ type BaseSettings = {
   nunjucksPowerUserMode: boolean,
   pluginPath: string,
   proxyEnabled: boolean,
+  filterResponsesByEnv: boolean,
   showPasswords: boolean,
   theme: string,
   timeout: number,
@@ -41,6 +51,7 @@ type BaseSettings = {
   useBulkHeaderEditor: boolean,
   useBulkParametersEditor: boolean,
   validateSSL: boolean,
+  pluginConfig: PluginConfigMap,
 
   // Feature flags
   enableSyncBeta: boolean,
@@ -60,12 +71,14 @@ export function init(): BaseSettings {
     autocompleteDelay: 1200,
     deviceId: null,
     disableHtmlPreviewJs: false,
+    disableResponsePreviewLinks: false,
     disableUpdateNotification: false,
     editorFontSize: 11,
     editorIndentSize: 2,
     editorIndentWithTabs: true,
     editorKeyMap: 'default',
     editorLineWrapping: true,
+    enableAnalytics: false,
     environmentHighlightColorStyle: 'sidebar-indicator',
     followRedirects: true,
     fontInterface: null,
@@ -81,10 +94,12 @@ export function init(): BaseSettings {
     maxTimelineDataSizeKB: 10,
     noProxy: '',
     nunjucksPowerUserMode: false,
+    pluginConfig: {},
     pluginPath: '',
     proxyEnabled: false,
+    filterResponsesByEnv: false,
     showPasswords: false,
-    theme: packageJson.app.theme,
+    theme: getAppDefaultTheme(),
     timeout: 0,
     updateAutomatically: true,
     updateChannel: UPDATE_CHANNEL_STABLE,
@@ -102,7 +117,7 @@ export function migrate(doc: Settings): Settings {
   return doc;
 }
 
-export async function all(patch: Object = {}): Promise<Array<Settings>> {
+export async function all(patch: $Shape<Settings> = {}): Promise<Array<Settings>> {
   const settings = await db.all(type);
   if (settings.length === 0) {
     return [await getOrCreate()];
@@ -111,15 +126,15 @@ export async function all(patch: Object = {}): Promise<Array<Settings>> {
   }
 }
 
-export async function create(patch: Object = {}): Promise<Settings> {
+export async function create(patch: $Shape<Settings> = {}): Promise<Settings> {
   return db.docCreate(type, patch);
 }
 
-export async function update(settings: Settings, patch: Object): Promise<Settings> {
+export async function update(settings: Settings, patch: $Shape<Settings>): Promise<Settings> {
   return db.docUpdate(settings, patch);
 }
 
-export async function getOrCreate(patch: Object = {}): Promise<Settings> {
+export async function getOrCreate(patch: $Shape<Settings> = {}): Promise<Settings> {
   const results = await db.all(type);
   if (results.length === 0) {
     return create(patch);

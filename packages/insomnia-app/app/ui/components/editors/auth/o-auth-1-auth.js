@@ -45,7 +45,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     const { privateKey } = request.authentication;
     showModal(CodePromptModal, {
       submitName: 'Done',
-      title: `Edit Private Key`,
+      title: 'Edit Private Key',
       defaultValue: privateKey,
       onChange: this._handleChangePrivateKey,
       enableRender: handleRender || handleGetRenderContext,

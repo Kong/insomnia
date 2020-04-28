@@ -51,6 +51,15 @@ export const selectActiveWorkspace = createSelector(
   },
 );
 
+export const selectActiveWorkspaceMeta = createSelector(
+  selectActiveWorkspace,
+  selectEntitiesLists,
+  (activeWorkspace, entities) => {
+    const id = activeWorkspace ? activeWorkspace._id : 'n/a';
+    return entities.workspaceMetas.find(m => m.parentId === id);
+  },
+);
+
 export const selectActiveWorkspaceClientCertificates = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
@@ -59,12 +68,17 @@ export const selectActiveWorkspaceClientCertificates = createSelector(
   },
 );
 
-export const selectActiveWorkspaceMeta = createSelector(
-  selectActiveWorkspace,
+export const selectActiveGitRepository = createSelector(
   selectEntitiesLists,
-  (activeWorkspace, entities) => {
-    const id = activeWorkspace ? activeWorkspace._id : 'n/a';
-    return entities.workspaceMetas.find(m => m.parentId === id);
+  selectActiveWorkspaceMeta,
+  (entities, activeWorkspaceMeta) => {
+    if (!activeWorkspaceMeta) {
+      return null;
+    }
+
+    const id = activeWorkspaceMeta ? activeWorkspaceMeta.gitRepositoryId : 'n/a';
+    const repo = entities.gitRepositories.find(r => r._id === id);
+    return repo || null;
   },
 );
 
@@ -202,7 +216,7 @@ export const selectSidebarChildren = createSelector(
       return children;
     }
 
-    let pinnedChildren = [];
+    const pinnedChildren = [];
     const childrenTree = next(activeWorkspace._id, pinnedChildren);
     const matchedChildren = matchChildren(childrenTree);
 
@@ -269,10 +283,24 @@ export const selectActiveRequestMeta = createSelector(
 export const selectActiveRequestResponses = createSelector(
   selectActiveRequest,
   selectEntitiesLists,
-  (activeRequest, entities) => {
+  selectActiveWorkspaceMeta,
+  (activeRequest, entities, meta) => {
     const requestId = activeRequest ? activeRequest._id : 'n/a';
+    const settings = entities.settings[0];
+
+    // Filter responses down if the setting is enabled
     return entities.responses
-      .filter(response => requestId === response.parentId)
+      .filter(response => {
+        const requestMatches = requestId === response.parentId;
+
+        if (settings.filterResponsesByEnv) {
+          const activeEnvironmentId = meta ? meta.activeEnvironmentId : 'n/a';
+          const environmentMatches = response.environmentId === activeEnvironmentId;
+          return requestMatches && environmentMatches;
+        } else {
+          return requestMatches;
+        }
+      })
       .sort((a, b) => (a.created > b.created ? -1 : 1));
   },
 );

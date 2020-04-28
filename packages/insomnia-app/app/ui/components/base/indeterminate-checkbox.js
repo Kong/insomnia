@@ -35,7 +35,7 @@ class IndeterminateCheckbox extends React.PureComponent<Props> {
       ...otherProps
     } = this.props;
 
-    return <input ref={this._setRef} type="checkbox" {...otherProps} />;
+    return <input ref={this._setRef} type="checkbox" {...(otherProps: Object)} />;
   }
 }
 

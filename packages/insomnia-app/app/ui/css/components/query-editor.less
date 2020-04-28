@@ -1,10 +1,7 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .query-editor {
   display: grid;
   height: 100%;
-  grid-template-rows: auto minmax(100px, 1fr) @line-height-md;
+  grid-template-rows: auto minmax(100px, 1fr) var(--line-height-md);
   grid-template-columns: 100%;
 
   .query-editor__preview {

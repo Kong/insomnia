@@ -36,7 +36,7 @@ class TimeTag extends React.PureComponent<Props> {
       number = Math.round(number * 100) / 100;
     }
 
-    let description = `${milliseconds.toFixed(3)} milliseconds`;
+    const description = `${milliseconds.toFixed(3)} milliseconds`;
     return (
       <div className={classnames('tag', { 'tag--small': small }, className)}>
         <Tooltip message={description} position="bottom" delay={tooltipDelay}>
