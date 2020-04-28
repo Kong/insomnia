@@ -181,6 +181,7 @@ describe('export', () => {
   beforeEach(globalBeforeEach);
   it('exports all workspaces and some requests only', async () => {
     const w = await models.workspace.create({ name: 'Workspace' });
+    const spec = await models.apiSpec.getByParentId(w._id); // Created by workspace migration
     const jar = await models.cookieJar.getOrCreateForParentId(w._id);
     const r1 = await models.request.create({
       name: 'Request 1',
@@ -221,6 +222,7 @@ describe('export', () => {
       __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
       resources: expect.arrayContaining([
         expect.objectContaining({ _id: w._id }),
+        expect.objectContaining({ _id: spec._id }),
         expect.objectContaining({ _id: eBase._id }),
         expect.objectContaining({ _id: jar._id }),
         expect.objectContaining({ _id: r1._id }),
@@ -229,7 +231,7 @@ describe('export', () => {
         expect.objectContaining({ _id: ePub._id }),
       ]),
     });
-    expect(exportWorkspacesDataJson.resources.length).toBe(7);
+    expect(exportWorkspacesDataJson.resources.length).toBe(8);
 
     // Test export some requests only.
     const exportRequestsJson = await importUtil.exportRequestsData([r1], false, 'json');
@@ -251,8 +253,8 @@ describe('export', () => {
       ]),
     });
 
-    expect(exportRequestsDataJSON.resources.length).toBe(5);
-    expect(exportRequestsDataYAML.resources.length).toBe(5);
+    expect(exportRequestsDataJSON.resources.length).toBe(6);
+    expect(exportRequestsDataYAML.resources.length).toBe(6);
 
     // Ensure JSON and YAML are the same
     expect(exportRequestsDataJSON.resources).toEqual(exportRequestsDataYAML.resources);

@@ -157,7 +157,13 @@ describe('requestGroupDuplicate()', () => {
 });
 
 describe('_fixThings()', () => {
+  // Mock apiSpec create because it is called as a migration when creating a workspace
+  // It does not relate to these tests, and catering for it makes the test more confusing
+  jest.spyOn(models.apiSpec, 'getOrCreateForParentId').mockImplementation();
+
   beforeEach(globalBeforeEach);
+  afterAll(() => jest.restoreAllMocks());
+
   it('fixes duplicate environments', async () => {
     // Create Workspace with no children
     const workspace = await models.workspace.create({ _id: 'w1' });
