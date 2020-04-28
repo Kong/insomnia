@@ -180,7 +180,7 @@ const CardBody: React.ComponentType<{}> = styled.div`
   padding-left: var(--padding-md);
   .title {
     font-size: var(--font-size-md);
-    padding-right: var(--padding-sm);
+    padding-right: var(--padding-md);
   }
 
   .version {
