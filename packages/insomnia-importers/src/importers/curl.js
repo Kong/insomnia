@@ -174,16 +174,19 @@ function importArgs(args) {
 
   // Body (Text or Blob)
   const bodyAsGET = getPairValue(pairs, false, 'G', 'get');
-  const textBody = getPairValue(
-    pairs,
-    null,
-    'd',
-    'data',
-    'data-raw',
-    'data-urlencode',
-    'data-binary',
-    'data-ascii',
-  );
+
+  let textBodyParams = [];
+  const paramNames = ['d', 'data', 'data-raw', 'data-urlencode', 'data-binary', 'data-ascii'];
+
+  for (const paramName of paramNames) {
+    const pair = pairs[paramName];
+    if (pair && pair.length) {
+      textBodyParams = textBodyParams.concat(pair);
+    }
+  }
+  // join params to make body
+  const textBody = textBodyParams.join('&');
+
   const contentTypeHeader = headers.find(h => h.name.toLowerCase() === 'content-type');
   const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : null;
 
