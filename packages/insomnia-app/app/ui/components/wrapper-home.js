@@ -285,6 +285,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       apiSpecs,
       handleSetActiveWorkspace,
       workspaceMetas,
+      workspaces,
     } = this.props.wrapperProps;
 
     const { filter } = this.state;
@@ -340,6 +341,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         apiSpec={apiSpec}
         workspace={w}
         handleSetActiveWorkspace={handleSetActiveWorkspace}
+        isLastWorkspace={workspaces.length === 1}
       >
         <SvgIcon icon="ellipsis" />
       </DocumentCardDropdown>

@@ -396,12 +396,14 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       showModal(AlertModal, {
         title: 'Deleting Last Workspace',
         message: 'Since you deleted your only workspace, a new one has been created for you.',
+        onConfirm: async () => {
+          await models.workspace.create({ name: 'Insomnia' });
+          await models.workspace.remove(activeWorkspace);
+        },
       });
-
-      await models.workspace.create({ name: 'Insomnia' });
+    } else {
+      await models.workspace.remove(activeWorkspace);
     }
-
-    await models.workspace.remove(activeWorkspace);
   }
 
   async _handleActiveWorkspaceClearAllResponses(): Promise<void> {
