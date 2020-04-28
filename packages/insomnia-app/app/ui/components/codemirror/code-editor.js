@@ -359,7 +359,7 @@ class CodeEditor extends React.Component {
 
     const setup = () => {
       // Actually set the value
-      this._codemirrorSetValue(defaultValue || '', false);
+      this._codemirrorSetValue(defaultValue || '');
 
       // Clear history so we can't undo the initial set
       this.codeMirror.clearHistory();
@@ -983,9 +983,11 @@ class CodeEditor extends React.Component {
             id={id}
             ref={this._handleInitTextarea}
             style={{ display: 'none' }}
-            defaultValue=" "
             readOnly={readOnly}
             autoComplete="off"
+            // NOTE: When setting this to empty string, it breaks the _ignoreNextChange
+            //   logic on initial component mount
+            defaultValue=" "
           />
         </div>
         {toolbar}
