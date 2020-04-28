@@ -21,13 +21,6 @@
       "schemes": [
         "insomniad"
       ]
-    },
-    {
-      "name": "Insomnia",
-      "role": "Viewer",
-      "schemes": [
-        "insomnia"
-      ]
     }
   ],
   "fileAssociations": [],
