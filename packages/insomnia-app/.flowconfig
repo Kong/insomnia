@@ -11,6 +11,7 @@
 [options]
 esproposal.decorators=ignore
 module.file_ext=.css
+esproposal.optional_chaining=enable
 
 [lints]
 

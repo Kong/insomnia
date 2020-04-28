@@ -65,6 +65,9 @@ const BASE_CODEMIRROR_OPTIONS = {
     // Change default find command from "find" to "findPersistent" so the
     // search box stays open after pressing Enter
     [isMac() ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent',
+
+    'Shift-Tab': 'indentLess',
+    Tab: 'indentMore',
   }),
 
   // NOTE: Because the lint mode is initialized immediately, the lint gutter needs to

@@ -148,7 +148,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     }
   }
 
-  _handleBreadcrumb(index: number) {
+  _handleBreadcrumb() {
     this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
@@ -176,7 +176,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
     const {
       activeApiSpec,
-      activeWorkspace,
       settings,
     } = wrapperProps;
 
