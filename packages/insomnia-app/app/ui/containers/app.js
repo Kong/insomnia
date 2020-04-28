@@ -27,7 +27,7 @@ import {
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
   PREVIEW_MODE_SOURCE,
-  getAppName,
+  getAppName, getAppId,
 } from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as entitiesActions from '../redux/modules/entities';
@@ -82,6 +82,7 @@ import NeDBPlugin from '../../sync/git/ne-db-plugin';
 import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
+import { APP_ID_INSOMNIA } from '../../../config';
 
 @autobind
 class App extends PureComponent {
@@ -929,14 +930,14 @@ class App extends PureComponent {
    * @private
    */
   _updateDocumentTitle() {
-    const { activeWorkspace, activeEnvironment, activeRequest } = this.props;
+    const { activeWorkspace, activeApiSpec, activeEnvironment, activeRequest } = this.props;
 
     let title;
 
     if (this.props.activity === ACTIVITY_HOME) {
       title = getAppName();
     } else {
-      title = activeWorkspace.name;
+      title = getAppId() === APP_ID_INSOMNIA ? activeWorkspace.name : activeApiSpec.fileName;
       if (activeEnvironment) {
         title += ` (${activeEnvironment.name})`;
       }
