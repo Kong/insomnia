@@ -22,15 +22,13 @@ import SettingsModal, {
 } from '../../components/modals/settings-modal';
 import install from '../../../plugins/install';
 import type { ForceToWorkspace } from './helpers';
-import { askToImportIntoWorkspace } from './helpers';
+import { askToImportIntoWorkspace, ensureActivityIsForApp } from './helpers';
 import type { GlobalActivity } from '../../components/activity-bar/activity-bar';
 import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
 import { setActivityAttribute } from '../../../common/misc';
-import { getDefaultAppId, isDevelopment } from '../../../common/constants';
-import { ACTIVITY_HOME, ACTIVITY_INSOMNIA } from '../../components/activity-bar/activity-bar';
-import { APP_ID_INSOMNIA } from '../../../../config';
+import { isDevelopment } from '../../../common/constants';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
@@ -227,16 +225,8 @@ export function setActiveActivity(activity: GlobalActivity) {
   let goToActivity = activity;
 
   // If development, skip logic (to allow for real-time switching)
-  //   If app should be insomnia
-  //     then don't allow changing to another activity
-  //   If not insomnia
-  //     then don't allow changing to ACTIVITY_INSOMNIA
   if (!isDevelopment()) {
-    if (getDefaultAppId() === APP_ID_INSOMNIA) {
-      goToActivity = ACTIVITY_INSOMNIA;
-    } else if (activity === ACTIVITY_INSOMNIA) {
-      goToActivity = ACTIVITY_HOME;
-    }
+    goToActivity = ensureActivityIsForApp(activity);
   }
 
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(goToActivity));
@@ -617,6 +607,9 @@ export function init() {
   } catch (e) {
     // Nothing here...
   }
+
+  // If the default app id is insomnia, then default to the insomnia view at initialization
+  activity = ensureActivityIsForApp(activity);
 
   return [setActiveWorkspace(workspaceId), setActiveActivity(activity)];
 }

@@ -14,12 +14,14 @@ import * as db from '../../../common/database';
 import * as models from '../../../models';
 import AskModal from '../modals/ask-modal';
 import type { Workspace } from '../../../models/workspace';
+import { getAppName } from '../../../common/constants';
 
 type Props = {
   apiSpec: ?ApiSpec,
   children: ?React.Node,
   workspace: Workspace,
   handleSetActiveWorkspace: (workspaceId: string) => void,
+  isLastWorkspace: boolean,
   className?: string,
 };
 
@@ -70,11 +72,16 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
   }
 
   _handleDelete() {
-    const { apiSpec, workspace } = this.props;
+    const { apiSpec, workspace, isLastWorkspace } = this.props;
+
+    const messages = [
+      `Do you really want to delete "${apiSpec.fileName}"?`,
+      isLastWorkspace ? ` This is the only ${Strings.apiSpec.toLowerCase()} so a new one will be created for you.` : null,
+    ];
 
     showModal(AskModal, {
       title: `Delete ${Strings.apiSpec}`,
-      message: `Do you really want to delete ${apiSpec.fileName}?`,
+      message: messages.join(' '),
       yesText: 'Yes',
       noText: 'Cancel',
       onDone: async isYes => {
@@ -82,6 +89,9 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
           return;
         }
 
+        if (isLastWorkspace) {
+          await models.workspace.create({ name: getAppName(), scope: 'spec' });
+        }
         await models.workspace.remove(workspace);
       },
     });
