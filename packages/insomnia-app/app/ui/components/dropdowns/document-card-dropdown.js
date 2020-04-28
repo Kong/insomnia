@@ -13,7 +13,7 @@ import Strings from '../../../common/strings';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import AskModal from '../modals/ask-modal';
-import type {Workspace} from '../../../models/workspace';
+import type { Workspace } from '../../../models/workspace';
 
 type Props = {
   apiSpec: ?ApiSpec,
