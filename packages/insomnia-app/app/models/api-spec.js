@@ -62,8 +62,8 @@ export function update(apiSpec: ApiSpec, patch: $Shape<ApiSpec> = {}): Promise<A
   return db.docUpdate(apiSpec, patch);
 }
 
-export function remove(apiSpec: ApiSpec): Promise<void> {
-  return db.remove(apiSpec);
+export function removeWhere(parentId: string): Promise<void> {
+  return db.removeWhere(type, { parentId });
 }
 
 async function _migrateFileName(doc: ApiSpec): Promise<ApiSpec> {
