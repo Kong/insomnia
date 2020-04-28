@@ -176,16 +176,12 @@ function importArgs(args) {
   const bodyAsGET = getPairValue(pairs, false, 'G', 'get');
 
   let textBodyParams = [];
-  for (const paramName of [
-    'd',
-    'data',
-    'data-raw',
-    'data-urlencode',
-    'data-binary',
-    'data-ascii',
-  ]) {
-    if (pairs[paramName] && pairs[paramName].length) {
-      textBodyParams = textBodyParams.concat(pairs[paramName]);
+  const paramNames = ['d', 'data', 'data-raw', 'data-urlencode', 'data-binary', 'data-ascii'];
+
+  for (const paramName of paramNames) {
+    const pair = pairs[paramName];
+    if (pair && pair.length) {
+      textBodyParams = textBodyParams.concat(pair);
     }
   }
   // join params to make body
