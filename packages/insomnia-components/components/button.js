@@ -14,7 +14,7 @@ const StyledButton: React.ComponentType<Props> = styled.button`
   font-size: var(--font-size-sm);
   padding: 0 var(--padding-md);
   height: var(--line-height-xs);
-  border-radius: 2px;
+  border-radius: 3px;
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
