@@ -80,10 +80,15 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     this.setState({ ...(otherState || {}), log, branch, branches });
 
     const author = log[0] ? log[0].author : null;
+    const cachedGitRepositoryBranch = branch;
+    const cachedGitLastAuthor = author ? author.name : null;
+
+    // NOTE: We're converting timestamp to ms here
+    const cachedGitLastCommitTime = author ? author.timestamp * 1000 : null;
     await models.workspaceMeta.update(workspaceMeta, {
-      cachedGitRepositoryBranch: branch,
-      cachedGitLastAuthor: author.name,
-      cachedGitLastCommitTime: author.timestamp * 1000, // Convert to ms
+      cachedGitRepositoryBranch,
+      cachedGitLastAuthor,
+      cachedGitLastCommitTime,
     });
   }
 
