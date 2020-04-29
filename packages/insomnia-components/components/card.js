@@ -95,9 +95,8 @@ const CardHeader: React.ComponentType<{}> = styled.div`
   }
 
   .card-menu {
-    padding: var(--padding-sm);
     margin: calc(-1 * var(--padding-sm));
-    margin-right: var(--padding-sm);
+    margin-right: var(--padding-xs);
     height: 100%;
     display: flex;
     align-items: center;
@@ -105,9 +104,15 @@ const CardHeader: React.ComponentType<{}> = styled.div`
     font-size: var(--font-size-lg);
     color: var(--font-color);
 
-    &:hover {
-      background-color: var(--hl-xxs);
+    button {
+      padding: var(--padding-xs) var(--padding-sm);
+
+      &:hover {
+        background-color: var(--hl-xxs);
+      }
     }
+
+
   }
 
   .card-checkbox-label {
