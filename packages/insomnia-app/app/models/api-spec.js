@@ -1,7 +1,6 @@
 // @flow
 import type { BaseModel } from './index';
 import * as db from '../common/database';
-import * as models from './index';
 
 export const name = 'ApiSpec';
 export const type = 'ApiSpec';
@@ -19,14 +18,14 @@ export type ApiSpec = BaseModel & BaseApiSpec;
 
 export function init(): BaseApiSpec {
   return {
-    fileName: '',
+    fileName: 'Insomnia Designer',
     contents: '',
     contentType: 'yaml',
   };
 }
 
 export async function migrate(doc: ApiSpec): Promise<ApiSpec> {
-  return _migrateFileName(doc);
+  return doc;
 }
 
 export function getByParentId(workspaceId: string): Promise<ApiSpec> {
@@ -64,14 +63,4 @@ export function update(apiSpec: ApiSpec, patch: $Shape<ApiSpec> = {}): Promise<A
 
 export function removeWhere(parentId: string): Promise<void> {
   return db.removeWhere(type, { parentId });
-}
-
-async function _migrateFileName(doc: ApiSpec): Promise<ApiSpec> {
-  if (doc.fileName) {
-    return doc;
-  }
-
-  const workspace = await models.workspace.getById(doc.parentId);
-
-  return { ...doc, fileName: workspace?.name || '' };
 }
