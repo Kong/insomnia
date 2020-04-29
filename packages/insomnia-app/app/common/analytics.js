@@ -140,7 +140,7 @@ async function _getDefaultParams(): Promise<Array<RequestParameter>> {
   }
 
   // Prepping user agent string prior to sending to GA due to Electron base UA not being GA friendly.
-  const ua = String(window.navigator.userAgent)
+  const ua = String(window?.navigator?.userAgent)
     .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
     .replace(/Electron\/\d+\.\d+\.\d+ /, '');
 
