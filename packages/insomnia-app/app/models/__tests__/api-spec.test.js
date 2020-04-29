@@ -16,7 +16,7 @@ describe('migrate()', () => {
 
     const migratedApiSpec = await models.apiSpec.migrate(apiSpec);
 
-    expect(migratedApiSpec.fileName).toBe(workspace.name);
+    expect(migratedApiSpec.fileName).toBe('Insomnia Designer');
   });
 
   it('does not overwrite filename if it already exists', async () => {

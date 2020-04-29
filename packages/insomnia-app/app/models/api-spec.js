@@ -1,7 +1,6 @@
 // @flow
 import type { BaseModel } from './index';
 import * as db from '../common/database';
-import * as models from './index';
 
 export const name = 'ApiSpec';
 export const type = 'ApiSpec';
@@ -71,7 +70,5 @@ async function _migrateFileName(doc: ApiSpec): Promise<ApiSpec> {
     return doc;
   }
 
-  const workspace = await models.workspace.getById(doc.parentId);
-
-  return { ...doc, fileName: workspace?.name || '' };
+  return { ...doc, fileName: 'Insomnia Designer' };
 }
