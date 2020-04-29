@@ -18,7 +18,7 @@
     "build": "node ./scripts/build.js",
     "package": "node ./scripts/package.js",
     "release": "node ./scripts/release.js",
-    "bootstrap": "rimraf ./**/node_modules/fsevents && rimraf node_modules/graphql-language-service-interface/dist/*.flow && electron-rebuild -f -w insomnia-libcurl"
+    "bootstrap": "rimraf ./**/node_modules/fsevents && rimraf node_modules/graphql-language-service-interface/dist/*.flow && electron-rebuild -f -w inlc"
   },
   "dev": {
     "dev-server-port": 3334
@@ -114,10 +114,10 @@
     "html-entities": "^1.2.0",
     "httpsnippet": "^1.19.1",
     "iconv-lite": "^0.4.15",
+    "inlc": "^2.0.0-alpha.0-2",
     "insomnia-components": "^2.2.3",
     "insomnia-cookies": "^2.1.4",
     "insomnia-importers": "^2.2.3",
-    "insomnia-libcurl": "^2.2.3",
     "insomnia-plugin-base64": "^2.2.2",
     "insomnia-plugin-cookie-jar": "^2.2.2",
     "insomnia-plugin-core-themes": "^2.2.2",

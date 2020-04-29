@@ -13,7 +13,7 @@ import mkdirp from 'mkdirp';
 import crypto from 'crypto';
 import clone from 'clone';
 import { parse as urlParse, resolve as urlResolve } from 'url';
-import { Curl } from 'insomnia-libcurl';
+import { Curl } from '../node-libcurl/curl';
 import { join as pathJoin } from 'path';
 import uuid from 'uuid';
 import * as models from '../models';
