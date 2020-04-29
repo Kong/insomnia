@@ -1,6 +1,6 @@
-const nodeLibcurl = require('inlc');
+import nodeLibcurl from 'inlc';
 
-class Curl {
+export class Curl {
   constructor() {
     this._handle = null;
     this._options = [];
@@ -85,5 +85,3 @@ Curl.auth = nodeLibcurl.Curl.auth;
 Curl.code = nodeLibcurl.Curl.code;
 Curl.netrc = nodeLibcurl.Curl.netrc;
 Curl.info = nodeLibcurl.Curl.info;
-
-module.exports = Curl;
