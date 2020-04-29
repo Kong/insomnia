@@ -78,13 +78,19 @@ describe('bufferChanges()', () => {
     // Assert changes seen after flush
     await db.flushChanges();
     expect(changesSeen).toEqual([
-      [[db.CHANGE_INSERT, newDoc, false], [db.CHANGE_UPDATE, updatedDoc, false]],
+      [
+        [db.CHANGE_INSERT, newDoc, false],
+        [db.CHANGE_UPDATE, updatedDoc, false],
+      ],
     ]);
 
     // Assert no more changes seen after flush again
     await db.flushChanges();
     expect(changesSeen).toEqual([
-      [[db.CHANGE_INSERT, newDoc, false], [db.CHANGE_UPDATE, updatedDoc, false]],
+      [
+        [db.CHANGE_INSERT, newDoc, false],
+        [db.CHANGE_UPDATE, updatedDoc, false],
+      ],
     ]);
   });
 });
@@ -156,18 +162,15 @@ describe('requestGroupDuplicate()', () => {
   });
 });
 
-describe('_fixThings()', () => {
-  // Mock apiSpec create because it is called as a migration when creating a workspace
-  // It does not relate to these tests, and catering for it makes the test more confusing
-  jest.spyOn(models.apiSpec, 'getOrCreateForParentId').mockImplementation();
-
+describe('_repairDatabase()', () => {
   beforeEach(globalBeforeEach);
-  afterAll(() => jest.restoreAllMocks());
 
   it('fixes duplicate environments', async () => {
     // Create Workspace with no children
     const workspace = await models.workspace.create({ _id: 'w1' });
-    expect((await db.withDescendants(workspace)).length).toBe(1);
+    const spec = await models.apiSpec.getByParentId(workspace._id);
+
+    expect((await db.withDescendants(workspace)).length).toBe(2);
 
     // Create one set of sub environments
     await models.environment.create({
@@ -204,7 +207,7 @@ describe('_fixThings()', () => {
     });
 
     // Make sure we have everything
-    expect((await db.withDescendants(workspace)).length).toBe(7);
+    expect((await db.withDescendants(workspace)).length).toBe(8);
     const descendants = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
       parentId: d.parentId,
@@ -214,6 +217,7 @@ describe('_fixThings()', () => {
       { _id: 'w1', data: null, parentId: null },
       { _id: 'b1', data: { foo: 'b1', b1: true }, parentId: 'w1' },
       { _id: 'b2', data: { foo: 'b2', b2: true }, parentId: 'w1' },
+      expect.objectContaining({ _id: spec._id, parentId: 'w1' }),
       { _id: 'b1_sub1', data: { foo: '1' }, parentId: 'b1' },
       { _id: 'b1_sub2', data: { foo: '2' }, parentId: 'b1' },
       { _id: 'b2_sub1', data: { foo: '3' }, parentId: 'b2' },
@@ -232,6 +236,7 @@ describe('_fixThings()', () => {
     expect(descendants2).toEqual([
       { _id: 'w1', data: null, parentId: null },
       { _id: 'b1', data: { foo: 'b1', b1: true, b2: true }, parentId: 'w1' },
+      expect.objectContaining({ _id: spec._id, parentId: 'w1' }),
 
       // Extra base environments should have been deleted
       // {_id: 'b2', data: {foo: 'bar'}, parentId: 'w1'},
@@ -247,23 +252,31 @@ describe('_fixThings()', () => {
   it('fixes duplicate cookie jars', async () => {
     // Create Workspace with no children
     const workspace = await models.workspace.create({ _id: 'w1' });
-    expect((await db.withDescendants(workspace)).length).toBe(1);
+    const spec = await models.apiSpec.getByParentId(workspace._id);
+
+    expect((await db.withDescendants(workspace)).length).toBe(2);
 
     // Create one set of sub environments
     await models.cookieJar.create({
       _id: 'j1',
       parentId: 'w1',
-      cookies: [{ id: '1', key: 'foo', value: '1' }, { id: 'j1_1', key: 'j1', value: '1' }],
+      cookies: [
+        { id: '1', key: 'foo', value: '1' },
+        { id: 'j1_1', key: 'j1', value: '1' },
+      ],
     });
 
     await models.cookieJar.create({
       _id: 'j2',
       parentId: 'w1',
-      cookies: [{ id: '1', key: 'foo', value: '2' }, { id: 'j2_1', key: 'j2', value: '2' }],
+      cookies: [
+        { id: '1', key: 'foo', value: '2' },
+        { id: 'j2_1', key: 'j2', value: '2' },
+      ],
     });
 
     // Make sure we have everything
-    expect((await db.withDescendants(workspace)).length).toBe(3);
+    expect((await db.withDescendants(workspace)).length).toBe(4);
     const descendants = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
       cookies: d.cookies || null,
@@ -274,13 +287,20 @@ describe('_fixThings()', () => {
       {
         _id: 'j1',
         parentId: 'w1',
-        cookies: [{ id: '1', key: 'foo', value: '1' }, { id: 'j1_1', key: 'j1', value: '1' }],
+        cookies: [
+          { id: '1', key: 'foo', value: '1' },
+          { id: 'j1_1', key: 'j1', value: '1' },
+        ],
       },
       {
         _id: 'j2',
         parentId: 'w1',
-        cookies: [{ id: '1', key: 'foo', value: '2' }, { id: 'j2_1', key: 'j2', value: '2' }],
+        cookies: [
+          { id: '1', key: 'foo', value: '2' },
+          { id: 'j2_1', key: 'j2', value: '2' },
+        ],
       },
+      expect.objectContaining({ _id: spec._id, parentId: 'w1' }),
     ]);
 
     // Run the fix algorithm
@@ -303,7 +323,34 @@ describe('_fixThings()', () => {
           { id: 'j2_1', key: 'j2', value: '2' },
         ],
       },
+      expect.objectContaining({ _id: spec._id, parentId: 'w1' }),
     ]);
+  });
+
+  it('fixes the filename on an apiSpec', async () => {
+    // Create Workspace with apiSpec child (migration in workspace will automatically create this as it is not mocked)
+    const w1 = await models.workspace.create({ _id: 'w1', name: 'Workspace 1' });
+    const w2 = await models.workspace.create({ _id: 'w2', name: 'Workspace 2' });
+    const w3 = await models.workspace.create({ _id: 'w3', name: 'Workspace 3' });
+
+    await models.apiSpec.updateOrCreateForParentId(w1._id, { fileName: '' });
+    await models.apiSpec.updateOrCreateForParentId(w2._id, {
+      fileName: models.apiSpec.init().fileName,
+    });
+    await models.apiSpec.updateOrCreateForParentId(w3._id, { fileName: 'Unique name' });
+
+    // Make sure we have everything
+    expect((await models.apiSpec.getByParentId(w1._id)).fileName).toBe('');
+    expect((await models.apiSpec.getByParentId(w2._id)).fileName).toBe('Insomnia Designer');
+    expect((await models.apiSpec.getByParentId(w3._id)).fileName).toBe('Unique name');
+
+    // Run the fix algorithm
+    await db._repairDatabase();
+
+    // Make sure things get adjusted
+    expect((await models.apiSpec.getByParentId(w1._id)).fileName).toBe('Workspace 1'); // Should fix
+    expect((await models.apiSpec.getByParentId(w2._id)).fileName).toBe('Workspace 2'); // Should fix
+    expect((await models.apiSpec.getByParentId(w3._id)).fileName).toBe('Unique name'); // should not fix
   });
 });
 

@@ -8,6 +8,7 @@ import { DB_PERSIST_INTERVAL } from './constants';
 import uuid from 'uuid';
 import { generateId, getDataDirectory } from './misc';
 import { mustGetModel } from '../models';
+import type { Workspace } from '../models/workspace';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -679,6 +680,20 @@ export async function _repairDatabase() {
   for (const workspace of await find(models.workspace.type)) {
     await _repairBaseEnvironments(workspace);
     await _fixMultipleCookieJars(workspace);
+    await _applyApiSpecName(workspace);
+  }
+}
+
+/**
+ * This function ensures that apiSpec exists for each workspace
+ * If the filename on the apiSpec is not set or is the default initialized name
+ * It will apply the workspace name to it
+ */
+async function _applyApiSpecName(workspace: Workspace) {
+  const apiSpec = await models.apiSpec.getByParentId(workspace._id);
+
+  if (!apiSpec.fileName || apiSpec.fileName === models.apiSpec.init().fileName) {
+    await models.apiSpec.update(apiSpec, { fileName: workspace.name });
   }
 }
 
