@@ -9,6 +9,7 @@ export const canDuplicate = true;
 export const canSync = false;
 
 type BaseApiSpec = {
+  name: string,
   fileName: string,
   contentType: 'json' | 'yaml',
   contents: string,
@@ -18,6 +19,7 @@ export type ApiSpec = BaseModel & BaseApiSpec;
 
 export function init(): BaseApiSpec {
   return {
+    name: '',
     fileName: 'Insomnia Designer',
     contents: '',
     contentType: 'yaml',
