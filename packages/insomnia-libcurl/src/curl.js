@@ -1,4 +1,4 @@
-const nodeLibcurl = require('insomnia-node-libcurl');
+const nodeLibcurl = require('inlc');
 
 class Curl {
   constructor() {
