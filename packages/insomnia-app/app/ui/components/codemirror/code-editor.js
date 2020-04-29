@@ -759,8 +759,8 @@ class CodeEditor extends React.Component {
 
   _codemirrorValueBeforeChange(doc, change) {
     const value = this.codeMirror.getDoc().getValue();
-
-    if (value === '') {
+    // Suppress lint on empty doc or single space exists (default value)
+    if (value.trim() === '') {
       this.codeMirror.setOption('lint', false);
     } else {
       this.codeMirror.setOption('lint', true);
