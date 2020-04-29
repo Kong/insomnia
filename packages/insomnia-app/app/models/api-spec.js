@@ -18,14 +18,14 @@ export type ApiSpec = BaseModel & BaseApiSpec;
 
 export function init(): BaseApiSpec {
   return {
-    fileName: '',
+    fileName: 'Insomnia Designer',
     contents: '',
     contentType: 'yaml',
   };
 }
 
 export async function migrate(doc: ApiSpec): Promise<ApiSpec> {
-  return _migrateFileName(doc);
+  return doc;
 }
 
 export function getByParentId(workspaceId: string): Promise<ApiSpec> {
@@ -63,12 +63,4 @@ export function update(apiSpec: ApiSpec, patch: $Shape<ApiSpec> = {}): Promise<A
 
 export function removeWhere(parentId: string): Promise<void> {
   return db.removeWhere(type, { parentId });
-}
-
-async function _migrateFileName(doc: ApiSpec): Promise<ApiSpec> {
-  if (doc.fileName) {
-    return doc;
-  }
-
-  return { ...doc, fileName: 'Insomnia Designer' };
 }
