@@ -47,7 +47,7 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           NODELIBCURL_BUILD_STATIC: yes
-          BUILD_TARGETS: AppImage
+          BUILD_TARGETS: AppImage,deb,tar.gz,rpm
           # Don't build Snap for Designer (yet)
           # BUILD_TARGETS: AppImage,Snap
           # SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}

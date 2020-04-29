@@ -47,5 +47,5 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           NODELIBCURL_BUILD_STATIC: yes
-          BUILD_TARGETS: AppImage,Snap
+          BUILD_TARGETS: AppImage,Snap,deb,tar.gz,rpm
           SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
