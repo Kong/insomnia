@@ -29,12 +29,12 @@ export function filterParameters<T: Parameter>(parameters: Array<T>, name: strin
 }
 
 export function filterHeaders<T: Header>(headers: Array<T>, name: string): Array<T> {
-  if (!Array.isArray(headers) || !name) {
+  if (!Array.isArray(headers) || !(typeof name === 'string')) {
     return [];
   }
 
   return headers.filter(h => {
-    if (!h || !h.name) {
+    if (!h || !(typeof h.name === 'string')) {
       return false;
     } else {
       return h.name.toLowerCase() === name.toLowerCase();
