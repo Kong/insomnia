@@ -5,11 +5,12 @@ import type { BaseModel } from '../models/index';
 import { setDefaultProtocol } from 'insomnia-url';
 import clone from 'clone';
 import * as models from '../models';
-import { CONTENT_TYPE_GRAPHQL } from '../common/constants';
+import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_PREFIX } from '../common/constants';
 import * as db from './database';
 import * as templating from '../templating';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
+import orderedJSON from 'json-order';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -36,28 +37,48 @@ export async function buildRenderContext(
 ): Object {
   const envObjects = [];
 
+  // Get root environment keys in correct order
+  // Then get sub environment keys in correct order
+  // Then get ancestor (folder) environment keys in correct order
   if (rootEnvironment) {
-    envObjects.push(rootEnvironment.data);
+    const ordered = orderedJSON.order(
+      rootEnvironment.data,
+      rootEnvironment.dataPropertyOrder,
+      JSON_ORDER_PREFIX,
+    );
+
+    envObjects.push(ordered);
   }
 
   if (subEnvironment) {
-    envObjects.push(subEnvironment.data);
+    const ordered = orderedJSON.order(
+      subEnvironment.data,
+      subEnvironment.dataPropertyOrder,
+      JSON_ORDER_PREFIX,
+    );
+
+    envObjects.push(ordered);
   }
 
   for (const doc of (ancestors || []).reverse()) {
-    const environment = (doc: any).environment;
+    const ancestor: any = doc;
+    const { environment, environmentPropertyOrder } = ancestor;
     if (typeof environment === 'object' && environment !== null) {
-      envObjects.push(environment);
+      const ordered = orderedJSON.order(environment, environmentPropertyOrder, JSON_ORDER_PREFIX);
+      envObjects.push(ordered);
     }
   }
 
   // At this point, environments is a list of environments ordered
-  // from top-most parent to bottom-most child
+  // from top-most parent to bottom-most child, and they keys in each environment
+  // ordered by its property map.
   // Do an Object.assign, but render each property as it overwrites. This
   // way we can keep same-name variables from the parent context.
-  const renderContext = baseContext;
-  for (const envObject: Object of envObjects) {
-    const keys = _getOrderedEnvironmentKeys(envObject);
+  let renderContext = baseContext;
+
+  // Made the rendering into a recursive function to handle nested Objects
+  async function renderSubContext(subObject: Object, subContext: Object): Promise<any> {
+    const keys = _getOrderedEnvironmentKeys(subObject);
     for (const key of keys) {
       /*
        * If we're overwriting a string, try to render it first using the same key from the base
@@ -70,31 +91,41 @@ export async function buildRenderContext(
        * A regular Object.assign would yield { base_url: '{{ base_url }}/foo' } and the
        * original base_url of google.com would be lost.
        */
-      if (typeof envObject[key] === 'string') {
-        const isSelfRecursive = envObject[key].match(`{{ ?${key}[ |][^}]*}}`);
+      if (Object.prototype.toString.call(subObject[key]) === '[object String]') {
+        const isSelfRecursive = subObject[key].match(`{{ ?${key}[ |][^}]*}}`);
 
         if (isSelfRecursive) {
           // If we're overwriting a variable that contains itself, make sure we
           // render it first
-          renderContext[key] = await render(
-            envObject[key],
-            renderContext, // Only render with key being overwritten
+          subContext[key] = await render(
+            subObject[key],
+            subContext, // Only render with key being overwritten
             null,
             KEEP_ON_ERROR,
             'Environment',
           );
         } else {
           // Otherwise it's just a regular replacement
-          renderContext[key] = envObject[key];
+          subContext[key] = subObject[key];
         }
+      } else if (Object.prototype.toString.call(subContext[key]) === '[object Object]') {
+        // Context is of Type object, Call this function recursively to handle nested objects.
+        subContext[key] = renderSubContext(subObject[key], subContext[key]);
       } else {
-        renderContext[key] = envObject[key];
+        // For all other Types, add the Object to the Context.
+        subContext[key] = subObject[key];
       }
     }
+    return subContext;
+  }
+
+  for (const envObject: Object of envObjects) {
+    // For every environment render the Objects
+    renderContext = await renderSubContext(envObject, renderContext);
   }
 
   // Render the context with itself to fill in the rest.
-  let finalRenderContext = renderContext;
+  const finalRenderContext = renderContext;
 
   const keys = _getOrderedEnvironmentKeys(finalRenderContext);
 
@@ -127,7 +158,6 @@ export async function buildRenderContext(
       finalRenderContext[key] = renderResult;
     }
   }
-
   return finalRenderContext;
 }
 
@@ -269,7 +299,7 @@ export async function getRenderContext(
   // Get Keys from ancestors (e.g. Folders)
   if (ancestors) {
     for (let idx = 0; idx < ancestors.length; idx++) {
-      let ancestor: any = ancestors[idx] || {};
+      const ancestor: any = ancestors[idx] || {};
       if (
         ancestor.type === 'RequestGroup' &&
         ancestor.hasOwnProperty('environment') &&
@@ -331,7 +361,7 @@ export async function getRenderedRequestAndContext(
   );
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
-  // https://github.com/getinsomnia/insomnia/issues/895
+  // https://github.com/kong/insomnia/issues/895
   try {
     if (request.body.text && request.body.mimeType === CONTENT_TYPE_GRAPHQL) {
       const o = JSON.parse(request.body.text);
@@ -426,13 +456,7 @@ export async function getRenderedRequest(
  * @returns {number}
  */
 function _nunjucksSortValue(v) {
-  if (v && v.match && v.match(/({%)/)) {
-    return 3;
-  } else if (v && v.match && v.match(/({{)/)) {
-    return 2;
-  } else {
-    return 1;
-  }
+  return v && v.match && v.match(/({{|{%)/) ? 2 : 1;
 }
 
 function _getOrderedEnvironmentKeys(finalRenderContext: Object): Array<string> {

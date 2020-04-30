@@ -334,7 +334,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     el.type = 'color';
     document.body && document.body.appendChild(el);
 
-    let color = environment.color || '#7d69cb';
+    const color = environment.color || '#7d69cb';
 
     if (!environment.color) {
       await this._handleChangeEnvironmentColor(environment, color);
@@ -400,7 +400,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     };
 
     return (
-      <Modal ref={this._setModalRef} wide tall {...this.props}>
+      <Modal ref={this._setModalRef} wide tall {...(this.props: Object)}>
         <ModalHeader>Manage Environments</ModalHeader>
         <ModalBody noScroll className="env-modal">
           <div className="env-modal__sidebar">

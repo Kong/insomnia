@@ -1,0 +1,16 @@
+[ignore]
+.*/node_modules/.*
+./.cache
+./dist
+
+[include]
+
+[libs]
+./flow-typed
+
+[lints]
+
+[options]
+esproposal.decorators=ignore
+
+[strict]

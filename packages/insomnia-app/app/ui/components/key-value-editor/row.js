@@ -21,6 +21,7 @@ class KeyValueEditorRow extends PureComponent {
 
     this._nameInput = null;
     this._valueInput = null;
+    this._descriptionInput = null;
     this.state = {
       dragDirection: 0,
     };
@@ -38,6 +39,12 @@ class KeyValueEditorRow extends PureComponent {
     }
   }
 
+  focusDescriptionEnd() {
+    if (this._descriptionInput) {
+      this._descriptionInput.focusEnd();
+    }
+  }
+
   setDragDirection(dragDirection) {
     if (dragDirection !== this.state.dragDirection) {
       this.setState({ dragDirection });
@@ -50,6 +57,10 @@ class KeyValueEditorRow extends PureComponent {
 
   _setValueInputRef(n) {
     this._valueInput = n;
+  }
+
+  _setDescriptionInputRef(n) {
+    this._descriptionInput = n;
   }
 
   _sendChange(patch) {
@@ -91,6 +102,10 @@ class KeyValueEditorRow extends PureComponent {
     this._sendChange({ fileName });
   }
 
+  _handleDescriptionChange(description) {
+    this._sendChange({ description });
+  }
+
   _handleTypeChange(def) {
     // Remove newlines if converting to text
     let value = this.props.pair.value || '';
@@ -113,6 +128,10 @@ class KeyValueEditorRow extends PureComponent {
     this.props.onFocusValue(this.props.pair, e);
   }
 
+  _handleFocusDescription(e) {
+    this.props.onFocusDescription(this.props.pair, e);
+  }
+
   _handleBlurName(e) {
     if (this.props.onBlurName) {
       this.props.onBlurName(this.props.pair, e);
@@ -122,6 +141,12 @@ class KeyValueEditorRow extends PureComponent {
   _handleBlurValue(e) {
     if (this.props.onBlurName) {
       this.props.onBlurValue(this.props.pair, e);
+    }
+  }
+
+  _handleBlurDescription(e) {
+    if (this.props.onBlurDescription) {
+      this.props.onBlurDescription(this.props.pair, e);
     }
   }
 
@@ -165,6 +190,46 @@ class KeyValueEditorRow extends PureComponent {
         this._handleTypeChange(Object.assign({}, pair, { multiline: mode }));
       },
     });
+  }
+
+  renderPairDescription() {
+    const {
+      displayDescription,
+      readOnly,
+      forceInput,
+      descriptionPlaceholder,
+      pair,
+      handleRender,
+      handleGetRenderContext,
+      nunjucksPowerUserMode,
+      isVariableUncovered,
+    } = this.props;
+
+    return displayDescription ? (
+      <div
+        className={classnames(
+          'form-control form-control--underlined form-control--wide no-min-width',
+          {
+            'form-control--inactive': pair.disabled,
+          },
+        )}>
+        <OneLineEditor
+          ref={this._setDescriptionInputRef}
+          readOnly={readOnly}
+          forceInput={forceInput}
+          placeholder={descriptionPlaceholder || 'Description'}
+          defaultValue={pair.description || ''}
+          onChange={this._handleDescriptionChange}
+          onBlur={this._handleBlurDescription}
+          onKeyDown={this._handleKeyDown}
+          onFocus={this._handleFocusDescription}
+          render={handleRender}
+          getRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
+          isVariableUncovered={isVariableUncovered}
+        />
+      </div>
+    ) : null;
   }
 
   renderPairValue() {
@@ -343,14 +408,12 @@ class KeyValueEditorRow extends PureComponent {
             />
           </div>
           <div
-            className={classnames(
-              'form-control form-control--underlined form-control--wide no-min-width',
-              {
-                'form-control--inactive': pair.disabled,
-              },
-            )}>
+            className={classnames('form-control form-control--underlined form-control--wide', {
+              'form-control--inactive': pair.disabled,
+            })}>
             {this.renderPairValue()}
           </div>
+          {this.renderPairDescription()}
 
           {this.renderPairSelector()}
 
@@ -405,10 +468,13 @@ KeyValueEditorRow.propTypes = {
   onDelete: PropTypes.func.isRequired,
   onFocusName: PropTypes.func.isRequired,
   onFocusValue: PropTypes.func.isRequired,
+  onFocusDescription: PropTypes.func.isRequired,
+  displayDescription: PropTypes.bool,
   index: PropTypes.number.isRequired,
   pair: PropTypes.shape({
     name: PropTypes.string.isRequired,
     value: PropTypes.string,
+    description: PropTypes.string,
     fileName: PropTypes.string,
     type: PropTypes.string,
     disabled: PropTypes.bool,
@@ -420,6 +486,7 @@ KeyValueEditorRow.propTypes = {
   onKeyDown: PropTypes.func,
   onBlurName: PropTypes.func,
   onBlurValue: PropTypes.func,
+  onBlurDescription: PropTypes.func,
   handleRender: PropTypes.func,
   handleGetRenderContext: PropTypes.func,
   nunjucksPowerUserMode: PropTypes.bool,
@@ -428,6 +495,7 @@ KeyValueEditorRow.propTypes = {
   handleGetAutocompleteValueConstants: PropTypes.func,
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,
+  descriptionPlaceholder: PropTypes.string,
   valueInputType: PropTypes.string,
   forceInput: PropTypes.bool,
   allowMultiline: PropTypes.bool,
@@ -505,6 +573,10 @@ target.prototype.focusNameEnd = function() {
 
 target.prototype.focusValueEnd = function() {
   this.decoratedRef.current.decoratedRef.current.focusValueEnd();
+};
+
+target.prototype.focusDescriptionEnd = function() {
+  this.decoratedRef.current.decoratedRef.current.focusDescriptionEnd();
 };
 
 export default target;

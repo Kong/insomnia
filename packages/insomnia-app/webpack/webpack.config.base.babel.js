@@ -2,6 +2,11 @@ const webpack = require('webpack');
 const path = require('path');
 const pkg = require('../package.json');
 
+if (!process.env.APP_ID) {
+  console.log('APP_ID environment variable must be set for webpack build!\n');
+  process.exit(1);
+}
+
 module.exports = {
   devtool: 'source-map',
   context: path.join(__dirname, '../app'),
@@ -34,7 +39,7 @@ module.exports = {
         },
       },
       {
-        test: /\.(png)$/,
+        test: /\.(png|svg)$/,
         loader: 'url-loader',
       },
     ],
@@ -57,6 +62,11 @@ module.exports = {
     'file',
     'system',
   ],
-  plugins: [new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 })],
+  plugins: [
+    new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
+    new webpack.DefinePlugin({
+      'process.env.APP_ID': JSON.stringify(process.env.APP_ID),
+    }),
+  ],
   target: 'electron-renderer',
 };

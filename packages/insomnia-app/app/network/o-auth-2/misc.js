@@ -23,7 +23,7 @@ export function responseToObject(body, keys, defaults = {}) {
     data = {};
   }
 
-  let results = {};
+  const results = {};
   for (const key of keys) {
     if (data[key] !== undefined) {
       results[key] = data[key];
@@ -82,7 +82,7 @@ export function authorizeUserInWindow(
       if (finalUrl) {
         resolve(finalUrl);
       } else {
-        let errorDescription = 'Authorization window closed';
+        const errorDescription = 'Authorization window closed';
         reject(new Error(errorDescription));
       }
     });
@@ -99,8 +99,18 @@ export function authorizeUserInWindow(
       _parseUrl(url);
     });
 
+    const options = {};
+
+    // Force user-agent for GitHub until we update Chromium version. Note, we don't do this for
+    // everything because it breaks things. https://github.com/kong/insomnia/issues/1816
+    if (url.includes('github.com')) {
+      options.userAgent =
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, ' +
+        'like Gecko) Chrome/78.0.3904.108 Safari/537.36';
+    }
+
     // Show the window to the user after it loads
     child.on('ready-to-show', child.show.bind(child));
-    child.loadURL(url);
+    child.loadURL(url, options);
   });
 }

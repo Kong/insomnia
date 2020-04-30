@@ -28,11 +28,11 @@ export function migrate(doc: PluginData): PluginData {
   return doc;
 }
 
-export function create(patch: Object = {}): Promise<PluginData> {
+export function create(patch: $Shape<PluginData> = {}): Promise<PluginData> {
   return db.docCreate(type, patch);
 }
 
-export async function update(doc: PluginData, patch: Object): Promise<PluginData> {
+export async function update(doc: PluginData, patch: $Shape<PluginData>): Promise<PluginData> {
   return db.docUpdate(doc, patch);
 }
 

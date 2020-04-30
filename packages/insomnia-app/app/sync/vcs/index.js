@@ -180,8 +180,11 @@ export default class VCS {
   }
 
   static validateBranchName(branchName: string): string {
-    if (!branchName.match(/^[a-zA-Z0-9][a-zA-Z0-9-_.]{3,}$/)) {
-      return 'Branch names can only contain letters, numbers, - and _';
+    if (!branchName.match(/^[a-zA-Z0-9][a-zA-Z0-9-_.]{2,}$/)) {
+      return (
+        'Branch names must be at least 3 characters long and can only contain ' +
+        'letters, numbers, - and _'
+      );
     }
 
     return '';
@@ -556,7 +559,7 @@ export default class VCS {
     }
 
     // Fetch snapshots and blobs from remote branch
-    let snapshotsToFetch: Array<string> = [];
+    const snapshotsToFetch: Array<string> = [];
     for (const snapshotId of remoteBranch.snapshots) {
       const localSnapshot = await this._getSnapshot(snapshotId);
       if (!localSnapshot) {

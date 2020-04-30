@@ -1,9 +1,10 @@
 'use strict';
 
 const crypto = require('crypto');
+const changeCase = require('change-case');
 
 const SwaggerParser = require('swagger-parser');
-const URL = require('url').URL;
+const { parse: urlParse } = require('url');
 const utils = require('../utils');
 
 const SUPPORTED_OPENAPI_VERSION = /^3\.\d+\.\d+$/; // 3.x.x
@@ -17,7 +18,12 @@ const SECURITY_TYPE = {
   OAUTH: 'oauth2',
   OPEN_ID: 'openIdConnect',
 };
+const HTTP_AUTH_SCHEME = {
+  BASIC: 'basic',
+  BEARER: 'bearer',
+};
 const SUPPORTED_SECURITY_TYPES = [SECURITY_TYPE.HTTP, SECURITY_TYPE.API_KEY];
+const SUPPORTED_HTTP_AUTH_SCHEMES = [HTTP_AUTH_SCHEME.BASIC, HTTP_AUTH_SCHEME.BEARER];
 
 let requestCounts = {};
 
@@ -60,20 +66,27 @@ module.exports.convert = async function(rawData) {
     },
   };
 
-  const servers = api.servers.map(s => new URL(s.url));
-  const defaultServer = servers[0] || new URL('http://example.com/');
+  const servers = api.servers || [];
+  const serverUrls = servers.map(s => urlParse(s.url));
+  const defaultServer = serverUrls[0] || urlParse('http://example.com/');
   const securityVariables = getSecurityEnvVariables(
     api.components && api.components.securitySchemes,
   );
 
+  const protocol = defaultServer.protocol || '';
+
+  // Base path is pulled out of the URL, and the trailing slash is removed
+  const basePath = (defaultServer.pathname || '').replace(/\/$/, '');
+
   const openapiEnv = {
     _type: 'environment',
-    _id: `env___BASE_ENVIRONMENT_ID___sub`,
+    _id: 'env___BASE_ENVIRONMENT_ID___sub',
     parentId: baseEnv._id,
     name: 'OpenAPI env',
     data: {
-      base_path: defaultServer.pathname || '',
-      scheme: defaultServer.protocol.replace(/:$/, '') || ['http'], // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
+      // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
+      scheme: protocol.replace(/:$/, '') || ['http'],
+      base_path: basePath,
       host: defaultServer.host || '',
       ...securityVariables,
     },
@@ -118,7 +131,7 @@ function parseEndpoints(document) {
       const methods = Object.keys(schemasPerMethod);
 
       return methods
-        .filter(method => method !== 'parameters')
+        .filter(method => method !== 'parameters' && method.indexOf('x-') !== 0)
         .map(method => Object.assign({}, schemasPerMethod[method], { path, method }));
     })
     .reduce(
@@ -132,7 +145,10 @@ function parseEndpoints(document) {
     return importFolderItem(tag, defaultParent);
   });
   const folderLookup = {};
-  folders.forEach(folder => (folderLookup[folder.name] = folder._id));
+
+  for (const folder of folders) {
+    folderLookup[folder.name] = folder._id;
+  }
 
   const requests = [];
   endpointsSchemas.map(endpointSchema => {
@@ -170,7 +186,7 @@ function importFolderItem(item, parentId) {
     parentId,
     _id: `fld___WORKSPACE_ID__${hash}`,
     _type: 'request_group',
-    name: item.name || `Folder {requestGroupCount}`,
+    name: item.name || 'Folder {requestGroupCount}',
     description: item.description || '',
   };
 }
@@ -253,7 +269,7 @@ function prepareHeaders(endpointSchema) {
  *
  * @param {Object} security - OpenAPI 3 security rules
  * @param {Object} securitySchemes - OpenAPI 3 security schemes
- * @returns {Object} headers or basic http authentication details
+ * @returns {Object} headers or basic|bearer http authentication details
  */
 function parseSecurity(security, securitySchemes) {
   if (!security || !securitySchemes) {
@@ -275,23 +291,28 @@ function parseSecurity(security, securitySchemes) {
   const apiKeyHeaders = apiKeySchemes
     .filter(scheme => scheme.in === 'header')
     .map(scheme => {
+      const variableName = changeCase.camelCase(scheme.name);
       return {
         name: scheme.name,
         disabled: false,
-        value: '{{ apiKey }}',
+        value: `{{ ${variableName} }}`,
       };
     });
   const apiKeyCookies = apiKeySchemes
     .filter(scheme => scheme.in === 'cookie')
-    .map(scheme => `${scheme.name}={{ apiKey }}`);
+    .map(scheme => {
+      const variableName = changeCase.camelCase(scheme.name);
+      return `${scheme.name}={{ ${variableName} }}`;
+    });
   const apiKeyCookieHeader = { name: 'Cookie', disabled: false, value: apiKeyCookies.join('; ') };
   const apiKeyParams = apiKeySchemes
     .filter(scheme => scheme.in === 'query')
     .map(scheme => {
+      const variableName = changeCase.camelCase(scheme.name);
       return {
         name: scheme.name,
         disabled: false,
-        value: '{{ apiKey }}',
+        value: `{{ ${variableName} }}`,
       };
     });
 
@@ -299,11 +320,12 @@ function parseSecurity(security, securitySchemes) {
     apiKeyHeaders.push(apiKeyCookieHeader);
   }
 
-  const httpAuth = supportedSchemes.find(
-    scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
-  )
-    ? { type: 'basic', username: '{{ httpUsername }}', password: '{{ httpPassword }}' }
-    : {};
+  const httpAuthScheme = supportedSchemes.find(
+    scheme =>
+      scheme.type === SECURITY_TYPE.HTTP && SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.scheme),
+  );
+
+  const httpAuth = httpAuthScheme ? parseHttpAuth(httpAuthScheme.scheme) : {};
 
   return {
     authentication: httpAuth,
@@ -325,18 +347,27 @@ function getSecurityEnvVariables(securitySchemes) {
 
   const variables = {};
   const securitySchemesArray = Object.values(securitySchemes);
-  const hasApiKeyScheme = securitySchemesArray.some(
-    scheme => scheme.type === SECURITY_TYPE.API_KEY,
+  const apiKeyVariableNames = securitySchemesArray
+    .filter(scheme => scheme.type === SECURITY_TYPE.API_KEY)
+    .map(scheme => changeCase.camelCase(scheme.name));
+  const hasHttpBasicScheme = securitySchemesArray.some(
+    scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
   );
-  const hasHttpScheme = securitySchemesArray.some(scheme => scheme.type === SECURITY_TYPE.HTTP);
+  const hasHttpBearerScheme = securitySchemesArray.some(
+    scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'bearer',
+  );
 
-  if (hasApiKeyScheme) {
-    variables.apiKey = 'apiKey';
-  }
+  Array.from(new Set(apiKeyVariableNames)).forEach(name => {
+    variables[name] = name;
+  });
 
-  if (hasHttpScheme) {
+  if (hasHttpBasicScheme) {
     variables.httpUsername = 'username';
     variables.httpPassword = 'password';
+  }
+
+  if (hasHttpBearerScheme) {
+    variables.bearerToken = 'bearerToken';
   }
 
   return variables;
@@ -427,9 +458,11 @@ function generateParameterExample(schema) {
       const example = {};
       const { properties } = schema;
 
-      Object.keys(properties).forEach(propertyName => {
-        example[propertyName] = generateParameterExample(properties[propertyName]);
-      });
+      if (properties) {
+        for (const propertyName of Object.keys(properties)) {
+          example[propertyName] = generateParameterExample(properties[propertyName]);
+        }
+      }
 
       return example;
     },
@@ -498,4 +531,31 @@ function generateUniqueRequestId(endpointSchema) {
   }
 
   return `req_${WORKSPACE_ID}${hash}${requestCounts[hash] || ''}`;
+}
+
+function parseHttpAuth(scheme) {
+  switch (scheme) {
+    case HTTP_AUTH_SCHEME.BASIC:
+      return importBasicAuthentication();
+    case HTTP_AUTH_SCHEME.BEARER:
+      return importBearerAuthentication();
+    default:
+      return {};
+  }
+}
+
+function importBearerAuthentication() {
+  return {
+    type: 'bearer',
+    token: '{{bearerToken}}',
+    prefix: '',
+  };
+}
+
+function importBasicAuthentication() {
+  return {
+    type: 'basic',
+    username: '{{ httpUsername }}',
+    password: '{{ httpPassword }}',
+  };
 }

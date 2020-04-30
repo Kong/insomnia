@@ -90,7 +90,7 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
 
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
-        <Dropdown ref={this._setDropdownRef} {...other} className={className}>
+        <Dropdown ref={this._setDropdownRef} {...(other: Object)} className={className}>
           <DropdownButton className="btn btn--super-compact no-wrap">
             <div className="sidebar__menu__thing">
               {!activeEnvironment && subEnvironments.length > 0 && (

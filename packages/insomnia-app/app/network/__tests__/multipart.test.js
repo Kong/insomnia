@@ -30,6 +30,36 @@ describe('buildMultipart()', () => {
     );
   });
 
+  it('builds a multiline request with content-type', async () => {
+    const { filePath, boundary, contentLength } = await buildMultipart([
+      { name: 'foo', value: 'bar' },
+      { name: 'json', value: '{"hello": "world"}', multiline: 'application/json' },
+      { name: 'text', value: 'text', multiline: true },
+    ]);
+
+    expect(boundary).toBe(DEFAULT_BOUNDARY);
+    expect(contentLength).toBe(297);
+    expect(fs.readFileSync(filePath, 'utf8')).toBe(
+      [
+        `--${boundary}`,
+        'Content-Disposition: form-data; name="foo"',
+        '',
+        'bar',
+        `--${boundary}`,
+        'Content-Disposition: form-data; name="json"',
+        'Content-Type: application/json',
+        '',
+        '{"hello": "world"}',
+        `--${boundary}`,
+        'Content-Disposition: form-data; name="text"',
+        '',
+        'text',
+        `--${boundary}--`,
+        '',
+      ].join('\r\n'),
+    );
+  });
+
   it('builds with file', async () => {
     const fileName = path.resolve(path.join(__dirname, './testfile.txt'));
     const { filePath, boundary, contentLength } = await buildMultipart([

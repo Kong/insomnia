@@ -1,8 +1,7 @@
 // @flow
-import * as packageJson from '../../package.json';
 import type { BaseModel } from './index';
 import * as db from '../common/database';
-import { UPDATE_CHANNEL_STABLE } from '../common/constants';
+import { getAppDefaultTheme, UPDATE_CHANNEL_STABLE } from '../common/constants';
 import * as hotkeys from '../common/hotkeys';
 
 export type PluginConfig = {
@@ -33,6 +32,7 @@ type BaseSettings = {
   editorIndentWithTabs: boolean,
   editorKeyMap: string,
   editorLineWrapping: boolean,
+  enableAnalytics: boolean,
   environmentHighlightColorStyle: string,
   followRedirects: boolean,
   fontInterface: string | null,
@@ -88,6 +88,7 @@ export function init(): BaseSettings {
     editorIndentWithTabs: true,
     editorKeyMap: 'default',
     editorLineWrapping: true,
+    enableAnalytics: false,
     environmentHighlightColorStyle: 'sidebar-indicator',
     followRedirects: true,
     fontInterface: null,
@@ -103,11 +104,12 @@ export function init(): BaseSettings {
     maxTimelineDataSizeKB: 10,
     noProxy: '',
     nunjucksPowerUserMode: false,
+    pluginConfig: {},
     pluginPath: '',
     proxyEnabled: false,
     filterResponsesByEnv: false,
     showPasswords: false,
-    theme: packageJson.app.theme,
+    theme: getAppDefaultTheme(),
     timeout: 0,
     updateAutomatically: true,
     updateChannel: UPDATE_CHANNEL_STABLE,
@@ -119,7 +121,6 @@ export function init(): BaseSettings {
 
     // Feature flags
     enableSyncBeta: false,
-    pluginConfig: {},
   };
 }
 

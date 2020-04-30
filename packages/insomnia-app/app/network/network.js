@@ -4,7 +4,6 @@ import type { Request, RequestHeader } from '../models/request';
 import type { Workspace } from '../models/workspace';
 import type { Settings } from '../models/settings';
 import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
-
 import {
   getRenderedRequestAndContext,
   RENDER_PURPOSE_NO_RENDER,
@@ -14,7 +13,7 @@ import mkdirp from 'mkdirp';
 import crypto from 'crypto';
 import clone from 'clone';
 import { parse as urlParse, resolve as urlResolve } from 'url';
-import { Curl } from 'insomnia-libcurl';
+import { Curl } from '../node-libcurl/curl';
 import { join as pathJoin } from 'path';
 import uuid from 'uuid';
 import * as models from '../models';
@@ -67,23 +66,24 @@ import { buildMultipart } from './multipart';
 import { CertificateBundleType } from '../models/settings';
 
 export type ResponsePatch = {|
-  statusMessage?: string,
-  error?: string,
-  url?: string,
-  statusCode?: number,
-  bytesContent?: number,
-  bodyPath?: string,
   bodyCompression?: 'zip' | null,
-  message?: string,
-  httpVersion?: string,
-  headers?: Array<ResponseHeader>,
-  elapsedTime?: number,
-  contentType?: string,
+  bodyPath?: string,
+  bytesContent?: number,
   bytesRead?: number,
+  contentType?: string,
+  elapsedTime?: number,
+  environmentId?: string | null,
+  error?: string,
+  headers?: Array<ResponseHeader>,
+  httpVersion?: string,
+  message?: string,
   parentId?: string,
-  settingStoreCookies?: boolean,
   settingSendCookies?: boolean,
+  settingStoreCookies?: boolean,
+  statusCode?: number,
+  statusMessage?: string,
   timelinePath?: string,
+  url?: string,
 |};
 
 // Time since user's last keypress to wait before making the request
@@ -106,9 +106,10 @@ export async function _actuallySend(
   renderContext: Object,
   workspace: Workspace,
   settings: Settings,
+  environment: Environment | null,
 ): Promise<ResponsePatch> {
   return new Promise(async resolve => {
-    let timeline: Array<ResponseTimelineEntry> = [];
+    const timeline: Array<ResponseTimelineEntry> = [];
 
     function addTimeline(name, value) {
       timeline.push({ name, value, timestamp: Date.now() });
@@ -129,9 +130,11 @@ export async function _actuallySend(
     ): Promise<void> {
       const timelinePath = await storeTimeline(timeline);
 
+      const environmentId = environment ? environment._id : null;
       const responsePatchBeforeHooks = Object.assign(
         ({
           timelinePath,
+          environmentId,
           parentId: renderedRequest._id,
           bodyCompression: null, // Will default to .zip otherwise
           bodyPath: bodyPath || '',
@@ -329,7 +332,7 @@ export async function _actuallySend(
         addTimelineText(`Enable timeout of ${settings.timeout}ms`);
         setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
       } else {
-        addTimelineText(`Disable timeout`);
+        addTimelineText('Disable timeout');
         setOpt(Curl.option.TIMEOUT_MS, 0);
       }
 
@@ -752,14 +755,14 @@ export async function _actuallySend(
 
         // Return the response data
         const responsePatch = {
-          headers,
           contentType,
-          statusCode,
+          headers,
           httpVersion,
+          statusCode,
           statusMessage,
-          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
-          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
           bytesContent: responseBodyBytes,
+          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
+          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
           url: curl.getInfo(Curl.info.EFFECTIVE_URL),
         };
 
@@ -782,7 +785,14 @@ export async function _actuallySend(
           statusMessage = 'Abort';
         }
 
-        respond({ statusMessage, error }, null, true);
+        respond(
+          {
+            statusMessage,
+            error,
+          },
+          null,
+          true,
+        );
       });
 
       curl.perform();
@@ -823,6 +833,8 @@ export async function sendWithSettings(
     parentId: request._id,
   });
 
+  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
+
   let renderResult: { request: RenderedRequest, context: Object };
   try {
     renderResult = await getRenderedRequestAndContext(newRequest, environmentId);
@@ -830,12 +842,18 @@ export async function sendWithSettings(
     throw new Error(`Failed to render request: ${requestId}`);
   }
 
-  return _actuallySend(renderResult.request, renderResult.context, workspace, settings);
+  return _actuallySend(
+    renderResult.request,
+    renderResult.context,
+    workspace,
+    settings,
+    environment,
+  );
 }
 
 export async function send(
   requestId: string,
-  environmentId: string | null,
+  environmentId?: string,
   extraInfo?: ExtraRenderInfo,
 ): Promise<ResponsePatch> {
   console.log(`[network] Sending req=${requestId}`);
@@ -867,9 +885,11 @@ export async function send(
     throw new Error(`Failed to find request to send for ${requestId}`);
   }
 
+  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
+
   const renderResult = await getRenderedRequestAndContext(
     request,
-    environmentId,
+    environmentId || null,
     RENDER_PURPOSE_SEND,
     extraInfo,
   );
@@ -891,13 +911,14 @@ export async function send(
     );
   } catch (err) {
     return {
-      url: renderedRequestBeforePlugins.url,
-      parentId: renderedRequestBeforePlugins._id,
+      environmentId: environmentId,
       error: err.message,
-      statusCode: STATUS_CODE_PLUGIN_ERROR,
-      statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
+      parentId: renderedRequestBeforePlugins._id,
       settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
       settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies,
+      statusCode: STATUS_CODE_PLUGIN_ERROR,
+      statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
+      url: renderedRequestBeforePlugins.url,
     };
   }
 
@@ -906,6 +927,7 @@ export async function send(
     renderedContextBeforePlugins,
     workspace,
     settings,
+    environment,
   );
 
   console.log(
@@ -924,9 +946,10 @@ async function _applyRequestPluginHooks(
   const newRenderedRequest = clone(renderedRequest);
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
-      ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
-      ...pluginContexts.store.init(plugin),
-      ...pluginContexts.request.init(newRenderedRequest, renderedContext),
+      ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER): Object),
+      ...(pluginContexts.data.init(): Object),
+      ...(pluginContexts.store.init(plugin): Object),
+      ...(pluginContexts.request.init(newRenderedRequest, renderedContext): Object),
     };
 
     try {
@@ -950,10 +973,11 @@ async function _applyResponsePluginHooks(
 
   for (const { plugin, hook } of await plugins.getResponseHooks()) {
     const context = {
-      ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
-      ...pluginContexts.store.init(plugin),
-      ...pluginContexts.response.init(newResponse),
-      ...pluginContexts.request.init(newRequest, renderContext, true),
+      ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER): Object),
+      ...(pluginContexts.data.init(): Object),
+      ...(pluginContexts.store.init(plugin): Object),
+      ...(pluginContexts.response.init(newResponse): Object),
+      ...(pluginContexts.request.init(newRequest, renderContext, true): Object),
     };
 
     try {
@@ -1021,7 +1045,7 @@ export function _getAwsAuthHeaders(
   method: string,
   region?: string,
   service?: string,
-): Array<{ name: string, value: string, disabled?: boolean }> {
+): Array<{ name: string, value: string, description?: string, disabled?: boolean }> {
   const parsedUrl = urlParse(url);
   const contentTypeHeader = getContentTypeHeader(headers);
 

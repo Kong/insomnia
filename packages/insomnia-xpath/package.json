@@ -1,7 +1,7 @@
 {
   "name": "insomnia-xpath",
-  "version": "1.0.16",
-  "author": "Gregory Schier <gschier1990@gmail.com>",
+  "version": "2.1.4",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Query XML using XPath",
   "license": "MIT",
   "main": "index.js",
@@ -9,8 +9,9 @@
     "test": "jest --silent"
   },
   "dependencies": {
-    "insomnia-cookies": "^0.0.19",
+    "insomnia-cookies": "^2.1.4",
     "xmldom": "^0.1.27",
     "xpath": "0.0.27"
-  }
+  },
+  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
 }

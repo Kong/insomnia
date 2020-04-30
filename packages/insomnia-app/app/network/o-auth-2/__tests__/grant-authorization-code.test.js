@@ -14,6 +14,8 @@ const CLIENT_SECRET = 'secret_12345456677756343';
 const REDIRECT_URI = 'https://foo.com/redirect';
 const SCOPE = 'scope_123';
 const STATE = 'state_123';
+const AUDIENCE = 'https://foo.com/resource';
+const RESOURCE = 'foo.com';
 
 describe('authorization_code', () => {
   beforeEach(globalBeforeEach);
@@ -27,6 +29,8 @@ describe('authorization_code', () => {
         access_token: 'token_123',
         token_type: 'token_type',
         scope: SCOPE,
+        audience: AUDIENCE,
+        resource: RESOURCE,
       }),
     );
 
@@ -48,6 +52,8 @@ describe('authorization_code', () => {
       REDIRECT_URI,
       SCOPE,
       STATE,
+      AUDIENCE,
+      RESOURCE,
     );
 
     // Check the request to fetch the token
@@ -64,6 +70,8 @@ describe('authorization_code', () => {
               { name: 'code', value: 'code_123' },
               { name: 'redirect_uri', value: REDIRECT_URI },
               { name: 'state', value: STATE },
+              { name: 'audience', value: AUDIENCE },
+              { name: 'resource', value: RESOURCE },
             ],
           },
           headers: [
@@ -91,10 +99,12 @@ describe('authorization_code', () => {
       expires_in: null,
       token_type: 'token_type',
       scope: SCOPE,
+      audience: AUDIENCE,
+      resource: RESOURCE,
       error: null,
       error_uri: null,
       error_description: null,
-      xResponseId: 'res_dd2ccc1a2745477a881a9e8ef9d42403',
+      xResponseId: expect.stringMatching(/^res_/),
     });
   });
 
@@ -108,6 +118,8 @@ describe('authorization_code', () => {
         access_token: 'token_123',
         token_type: 'token_type',
         scope: SCOPE,
+        audience: AUDIENCE,
+        resource: RESOURCE,
       }),
     );
 
@@ -129,6 +141,8 @@ describe('authorization_code', () => {
       REDIRECT_URI,
       SCOPE,
       STATE,
+      AUDIENCE,
+      RESOURCE,
     );
 
     // Check the request to fetch the token
@@ -145,6 +159,8 @@ describe('authorization_code', () => {
               { name: 'code', value: 'code_123' },
               { name: 'redirect_uri', value: REDIRECT_URI },
               { name: 'state', value: STATE },
+              { name: 'audience', value: AUDIENCE },
+              { name: 'resource', value: RESOURCE },
               { name: 'client_id', value: CLIENT_ID },
               { name: 'client_secret', value: CLIENT_SECRET },
             ],
@@ -170,10 +186,12 @@ describe('authorization_code', () => {
       expires_in: null,
       token_type: 'token_type',
       scope: SCOPE,
+      audience: AUDIENCE,
+      resource: RESOURCE,
       error: null,
       error_uri: null,
       error_description: null,
-      xResponseId: 'res_e3e96e5fdd6842298b66dee1f0940f3d',
+      xResponseId: expect.stringMatching(/^res_/),
     });
   });
 });

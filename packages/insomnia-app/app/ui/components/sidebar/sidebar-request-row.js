@@ -11,6 +11,8 @@ import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
 import { showModal } from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
+import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
+import { getMethodOverrideHeader } from '../../../common/misc';
 
 @autobind
 class SidebarRequestRow extends PureComponent {
@@ -60,12 +62,20 @@ class SidebarRequestRow extends PureComponent {
   }
 
   _getMethodOverrideHeaderValue() {
-    let header = this.props.request.headers.find(
-      h => h.name.toLowerCase() === 'x-http-method-override',
-    );
-    if (!header || header.disabled) header = null;
-    else header = header.value;
-    return header;
+    const { request } = this.props;
+
+    const header = getMethodOverrideHeader(request.headers);
+
+    if (header) {
+      return header.value;
+    }
+
+    // If no override, use GraphQL as override if it's a gql request
+    if (request.body && request.body.mimeType === CONTENT_TYPE_GRAPHQL) {
+      return 'GQL';
+    }
+
+    return null;
   }
 
   setDragDirection(dragDirection) {

@@ -43,8 +43,8 @@ module.exports.prettify = function(json, indentChars = '\t', replaceUnicode = tr
   }
 
   let i = 0;
-  let il = json.length;
-  let tab = indentChars;
+  const il = json.length;
+  const tab = indentChars;
   let newJson = '';
   let indentLevel = 0;
   let currentChar = null;

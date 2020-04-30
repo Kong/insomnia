@@ -12,6 +12,8 @@ import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import { delay } from '../../../common/misc';
 import { PLUGIN_PATH } from '../../../common/constants';
+import type { Settings, PluginConfig } from '../../../models/settings';
+import ToggleSwitch from './toggle-switch';
 
 type State = {
   plugins: Array<Plugin>,
@@ -21,11 +23,16 @@ type State = {
   isRefreshingPlugins: boolean,
 };
 
+type Props = {
+  settings: Settings,
+  updateSetting: Function,
+};
+
 @autobind
-class Plugins extends React.PureComponent<void, State> {
+class Plugins extends React.PureComponent<Props, State> {
   _isMounted: boolean;
 
-  constructor(props: any) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       plugins: [],
@@ -101,6 +108,42 @@ class Plugins extends React.PureComponent<void, State> {
     this._isMounted = false;
   }
 
+  async _handleUpdatePluginConfig(pluginName: string, config: PluginConfig) {
+    const { updateSetting, settings } = this.props;
+
+    await updateSetting('pluginConfig', {
+      ...settings.pluginConfig,
+      [pluginName]: config,
+    });
+  }
+
+  async _togglePluginEnabled(name: string, enabled: boolean, config: PluginConfig) {
+    const newConfig = {
+      ...config,
+      disabled: !enabled,
+    };
+
+    if (this._isMounted) {
+      this.setState({ isRefreshingPlugins: true });
+    }
+
+    await this._handleUpdatePluginConfig(name, newConfig);
+    this._handleRefreshPlugins();
+  }
+
+  renderToggleSwitch(plugin: Plugin) {
+    return (
+      <ToggleSwitch
+        className="valign-middle"
+        checked={!plugin.config.disabled}
+        disabled={this.state.isRefreshingPlugins}
+        onChange={async checked => {
+          await this._togglePluginEnabled(plugin.name, checked, plugin.config);
+        }}
+      />
+    );
+  }
+
   render() {
     const { plugins, error, isInstallingFromNpm, isRefreshingPlugins } = this.state;
 
@@ -114,44 +157,45 @@ class Plugins extends React.PureComponent<void, State> {
         {plugins.length === 0 ? (
           <div className="text-center faint italic pad">No Plugins Added</div>
         ) : (
-          <table className="table--fancy table--striped margin-top margin-bottom">
+          <table className="table--fancy table--striped table--valign-middle margin-top margin-bottom">
             <thead>
               <tr>
+                <th>Enable?</th>
                 <th>Name</th>
                 <th>Version</th>
                 <th>Folder</th>
               </tr>
             </thead>
             <tbody>
-              {plugins.map(
-                plugin =>
-                  !plugin.directory ? null : (
-                    <tr key={plugin.name}>
-                      <td>
-                        {plugin.name}
-                        {plugin.description && (
-                          <HelpTooltip info className="space-left">
-                            {plugin.description}
-                          </HelpTooltip>
-                        )}
-                      </td>
-                      <td>{plugin.version}</td>
-                      <td className="no-wrap" style={{ width: '10rem' }}>
-                        <CopyButton
-                          className="btn btn--outlined btn--super-duper-compact"
-                          title={plugin.directory}
-                          content={plugin.directory}>
-                          Copy Path
-                        </CopyButton>{' '}
-                        <Button
-                          className="btn btn--outlined btn--super-duper-compact"
-                          onClick={Plugins._handleOpenDirectory}
-                          value={plugin.directory}>
-                          Show Folder
-                        </Button>
-                      </td>
-                    </tr>
-                  ),
+              {plugins.map(plugin =>
+                !plugin.directory ? null : (
+                  <tr key={plugin.name}>
+                    <td style={{ width: '4rem' }}>{this.renderToggleSwitch(plugin)}</td>
+                    <td>
+                      {plugin.name}
+                      {plugin.description && (
+                        <HelpTooltip info className="space-left">
+                          {plugin.description}
+                        </HelpTooltip>
+                      )}
+                    </td>
+                    <td>{plugin.version}</td>
+                    <td className="no-wrap" style={{ width: '10rem' }}>
+                      <CopyButton
+                        className="btn btn--outlined btn--super-duper-compact"
+                        title={plugin.directory}
+                        content={plugin.directory}>
+                        Copy Path
+                      </CopyButton>{' '}
+                      <Button
+                        className="btn btn--outlined btn--super-duper-compact"
+                        onClick={Plugins._handleOpenDirectory}
+                        value={plugin.directory}>
+                        Show Folder
+                      </Button>
+                    </td>
+                  </tr>
+                ),
               )}
             </tbody>
           </table>

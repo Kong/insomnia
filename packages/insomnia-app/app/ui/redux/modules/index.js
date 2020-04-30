@@ -30,7 +30,9 @@ export async function init() {
   fetch.setup(getClientString(), API_BASE_URL);
   fetch.onCommand(newCommand);
 
-  store.dispatch(global.init());
+  for (const action of global.init()) {
+    store.dispatch(action);
+  }
 
   return store;
 }

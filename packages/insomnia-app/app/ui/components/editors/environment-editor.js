@@ -3,6 +3,7 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
+import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 
 export type EnvironmentInfo = {
   object: Object,
@@ -77,7 +78,11 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
   getValue(): EnvironmentInfo | null {
     if (this._editor) {
-      const data = orderedJSON.parse(this._editor.getValue(), '&', `~|`);
+      const data = orderedJSON.parse(
+        this._editor.getValue(),
+        JSON_ORDER_PREFIX,
+        JSON_ORDER_SEPARATOR,
+      );
 
       return {
         object: data.object,
@@ -108,6 +113,12 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
     const { error, warning } = this.state;
 
+    const defaultValue = orderedJSON.stringify(
+      environmentInfo.object,
+      environmentInfo.propertyOrder || null,
+      JSON_ORDER_SEPARATOR,
+    );
+
     return (
       <div className="environment-editor">
         <CodeEditor
@@ -118,16 +129,13 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           lineWrapping={lineWrapping}
           keyMap={editorKeyMap}
           onChange={this._handleChange}
-          defaultValue={orderedJSON.stringify(
-            environmentInfo.object,
-            environmentInfo.propertyOrder || null,
-          )}
+          defaultValue={defaultValue}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           render={render}
           getRenderContext={getRenderContext}
           mode="application/json"
-          {...props}
+          {...(props: Object)}
         />
         {error && <p className="notice error margin">{error}</p>}
         {!error && warning && <p className="notice warning margin">{warning}</p>}

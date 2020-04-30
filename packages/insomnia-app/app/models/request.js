@@ -39,6 +39,7 @@ export type RequestAuthentication = Object;
 export type RequestHeader = {
   name: string,
   value: string,
+  description?: string,
   disabled?: boolean,
 };
 
@@ -53,6 +54,7 @@ export type RequestParameter = {
 export type RequestBodyParameter = {
   name: string,
   value: string,
+  description?: string,
   disabled?: boolean,
   multiline?: string,
   id?: string,
@@ -230,7 +232,7 @@ export function migrate(doc: Request): Request {
   return doc;
 }
 
-export function create(patch: Object = {}): Promise<Request> {
+export function create(patch: $Shape<Request> = {}): Promise<Request> {
   if (!patch.parentId) {
     throw new Error(`New Requests missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
@@ -246,7 +248,7 @@ export function findByParentId(parentId: string): Promise<Array<Request>> {
   return db.find(type, { parentId: parentId });
 }
 
-export function update(request: Request, patch: Object): Promise<Request> {
+export function update(request: Request, patch: $Shape<Request>): Promise<Request> {
   return db.docUpdate(request, patch);
 }
 
@@ -339,8 +341,10 @@ export function updateMimeType(
   }
 }
 
-export async function duplicate(request: Request): Promise<Request> {
-  const name = `${request.name} (Copy)`;
+export async function duplicate(request: Request, patch: $Shape<Request> = {}): Promise<Request> {
+  if (!patch.name) {
+    patch.name = `${request.name} (Copy)`;
+  }
 
   // Get sort key of next request
   const q = { metaSortKey: { $gt: request.metaSortKey } };
@@ -351,7 +355,7 @@ export async function duplicate(request: Request): Promise<Request> {
   const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
   const metaSortKey = request.metaSortKey + sortKeyIncrement;
 
-  return db.duplicate(request, { name, metaSortKey });
+  return db.duplicate(request, { name, metaSortKey, ...patch });
 }
 
 export function remove(request: Request): Promise<void> {

@@ -63,6 +63,8 @@ async function _getOAuth2AuthorizationCodeHeader(
     authentication.redirectUrl,
     authentication.scope,
     authentication.state,
+    authentication.audience,
+    authentication.resource,
   );
 
   return _updateOAuth2Token(requestId, results);
@@ -153,7 +155,7 @@ async function _getAccessToken(
   // See if we have a token already //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  let token: OAuth2Token | null = await models.oAuth2Token.getByParentId(requestId);
+  const token: OAuth2Token | null = await models.oAuth2Token.getByParentId(requestId);
 
   if (!token) {
     return null;

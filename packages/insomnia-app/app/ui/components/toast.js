@@ -10,6 +10,7 @@ import * as constants from '../../common/constants';
 import * as db from '../../common/database';
 import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
+import appIconSrc from '../images/logo.png';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
@@ -18,7 +19,7 @@ export type ToastNotification = {
   url: string,
   cta: string,
   message: string,
-  email: string,
+  email?: string,
 };
 
 type Props = {};
@@ -92,7 +93,7 @@ class Toast extends React.PureComponent<Props, State> {
         updateChannel: !settings.updateChannel,
       };
 
-      notification = await fetch.post(`/notification`, data, session.getCurrentSessionId());
+      notification = await fetch.post('/notification', data, session.getCurrentSessionId());
     } catch (err) {
       console.warn('[toast] Failed to fetch user notifications', err);
     }
@@ -173,7 +174,7 @@ class Toast extends React.PureComponent<Props, State> {
           'toast--show': visible,
         })}>
         <div className="toast__image">
-          <GravatarImg email={notification.email || 'gschier1990@gmail.com'} size={100} />
+          <GravatarImg email={notification.email} fallback={appIconSrc} size={100} />
         </div>
         <div className="toast__content">
           <p className="toast__message">{notification ? notification.message : 'Unknown'}</p>

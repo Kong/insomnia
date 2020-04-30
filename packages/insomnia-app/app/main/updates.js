@@ -38,7 +38,7 @@ async function getUpdateUrl(force: boolean): Promise<string | null> {
   console.log(`[updater] Using url ${fullUrl}`);
 
   if (process.env.INSOMNIA_DISABLE_AUTOMATIC_UPDATES) {
-    console.log(`[updater] Disabled by INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable`);
+    console.log('[updater] Disabled by INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable');
     return null;
   }
 

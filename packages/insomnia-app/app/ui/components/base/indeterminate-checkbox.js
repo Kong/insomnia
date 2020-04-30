@@ -4,6 +4,7 @@ import autobind from 'autobind-decorator';
 
 type Props = {
   indeterminate: boolean,
+  checked: boolean,
 };
 
 @autobind
@@ -34,7 +35,7 @@ class IndeterminateCheckbox extends React.PureComponent<Props> {
       ...otherProps
     } = this.props;
 
-    return <input ref={this._setRef} type="checkbox" {...otherProps} />;
+    return <input ref={this._setRef} type="checkbox" {...(otherProps: Object)} />;
   }
 }
 

@@ -49,7 +49,9 @@ export function reducer(state = initialState, action) {
       }
       return freshState;
     case ENTITY_CHANGES:
-      const newState = clone(state);
+      // NOTE: We hade clone(state) here before but it has a huge perf impact
+      //   and it's not actually necessary.
+      const newState = { ...state };
       const { changes } = action;
 
       for (const [event, doc] of changes) {
@@ -81,14 +83,6 @@ export function reducer(state = initialState, action) {
 // ~~~~~~~ //
 
 export function addChanges(changes) {
-  return dispatch => {
-    setTimeout(() => {
-      dispatch(addChangesSync(changes));
-    });
-  };
-}
-
-export function addChangesSync(changes) {
   return { type: ENTITY_CHANGES, changes };
 }
 
@@ -109,6 +103,7 @@ export async function allDocs() {
     ...(await models.settings.all()),
     ...(await models.workspace.all()),
     ...(await models.workspaceMeta.all()),
+    ...(await models.gitRepository.all()),
     ...(await models.environment.all()),
     ...(await models.cookieJar.all()),
     ...(await models.requestGroup.all()),
@@ -119,5 +114,6 @@ export async function allDocs() {
     ...(await models.response.all()),
     ...(await models.oAuth2Token.all()),
     ...(await models.clientCertificate.all()),
+    ...(await models.apiSpec.all()),
   ];
 }

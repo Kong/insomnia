@@ -9,11 +9,12 @@ type Props = {
   // Optional
   small?: boolean,
   className?: string,
+  tooltipDelay?: number,
 };
 
 class TimeTag extends React.PureComponent<Props> {
   render() {
-    const { milliseconds, small, className } = this.props;
+    const { milliseconds, small, className, tooltipDelay } = this.props;
 
     let unit = 'ms';
     let number = milliseconds;
@@ -35,11 +36,11 @@ class TimeTag extends React.PureComponent<Props> {
       number = Math.round(number * 100) / 100;
     }
 
-    let description = `${milliseconds.toFixed(3)} milliseconds`;
+    const description = `${milliseconds.toFixed(3)} milliseconds`;
     return (
       <div className={classnames('tag', { 'tag--small': small }, className)}>
-        <Tooltip message={description} position="bottom">
-          <strong>TIME</strong> {number} {unit}
+        <Tooltip message={description} position="bottom" delay={tooltipDelay}>
+          {number}&nbsp;{unit}
         </Tooltip>
       </div>
     );

@@ -1,0 +1,51 @@
+.document-listing {
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-bg);
+  grid-template-rows: auto auto minmax(0, 1fr);
+
+  &__body {
+    padding: var(--padding-md);
+    padding-top: 0;
+    overflow-y: auto;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+  }
+
+  &__header {
+    padding: var(--padding-lg);
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    input {
+      border-radius: 3px;
+    }
+
+    h1 {
+      // Fill space after H1 until the next element
+      margin-right: auto;
+    }
+
+    & > * {
+      // Fit the children properly
+      width: auto;
+      margin: 0;
+
+      // Ensure small space between children
+      &:not(:first-child) {
+        margin-left: var(--padding-sm);
+      }
+    }
+
+    // Remove weird margin that is there by default
+    input {
+      margin: 0;
+      width: 15rem;
+    }
+  }
+}

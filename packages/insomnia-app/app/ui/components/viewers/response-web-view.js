@@ -1,50 +1,67 @@
-import React, { PureComponent } from 'react';
+// @flow
+import * as React from 'react';
 import { EventEmitter } from 'events';
-import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import contextMenu from 'electron-context-menu';
 
+type Props = {
+  body: string,
+  contentType: string,
+  url: string,
+  webpreferences: string,
+};
+
 @autobind
-class ResponseWebView extends PureComponent {
-  _handleSetWebViewRef(n) {
+class ResponseWebView extends React.PureComponent<Props> {
+  _webview: ?HTMLElement;
+
+  _handleSetWebViewRef(n: ?HTMLElement) {
     this._webview = n;
+
+    if (this._webview) {
+      this._webview.addEventListener('dom-ready', this._handleDOMReady);
+    }
   }
 
   _handleDOMReady() {
+    if (!this._webview) {
+      return;
+    }
+
     this._webview.removeEventListener('dom-ready', this._handleDOMReady);
     contextMenu({ window: this._webview });
     this._setBody();
   }
 
   _setBody() {
+    const webview: Object = this._webview;
+
+    if (!webview) {
+      return;
+    }
+
     const { body, contentType, url } = this.props;
-    this._webview.loadURL(`data:${contentType},${encodeURIComponent(body)}`, {
+    webview.loadURL(`data:${contentType},${encodeURIComponent(body)}`, {
       baseURLForDataURL: url,
     });
 
     // This is kind of hacky but electron-context-menu fails to save images if
     // this isn't here.
-    this._webview.webContents = this._webview;
-    this._webview.webContents.session = new EventEmitter();
+    webview.webContents = webview;
+    webview.webContents.session = new EventEmitter();
   }
 
   componentDidUpdate() {
     this._setBody();
   }
 
-  componentDidMount() {
-    this._webview.addEventListener('dom-ready', this._handleDOMReady);
-  }
-
   render() {
-    return <webview ref={this._handleSetWebViewRef} src="about:blank" />;
+    const { webpreferences } = this.props;
+
+    return (
+      <webview ref={this._handleSetWebViewRef} src="about:blank" webpreferences={webpreferences} />
+    );
   }
 }
-
-ResponseWebView.propTypes = {
-  body: PropTypes.string.isRequired,
-  contentType: PropTypes.string.isRequired,
-  url: PropTypes.string.isRequired,
-};
 
 export default ResponseWebView;

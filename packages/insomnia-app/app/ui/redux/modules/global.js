@@ -1,3 +1,4 @@
+// @flow
 import electron from 'electron';
 import * as React from 'react';
 import { combineReducers } from 'redux';
@@ -14,8 +15,22 @@ import * as models from '../../../models';
 import SelectModal from '../../components/modals/select-modal';
 import { showError, showModal } from '../../components/modals/index';
 import * as db from '../../../common/database';
+import { trackEvent } from '../../../common/analytics';
+import SettingsModal, {
+  TAB_INDEX_PLUGINS,
+  TAB_INDEX_THEMES,
+} from '../../components/modals/settings-modal';
+import install from '../../../plugins/install';
+import type { ForceToWorkspace } from './helpers';
+import { askToImportIntoWorkspace, ensureActivityIsForApp } from './helpers';
+import type { GlobalActivity } from '../../components/activity-bar/activity-bar';
+import { createPlugin } from '../../../plugins/create';
+import { reloadPlugins } from '../../../plugins';
+import { setTheme } from '../../../plugins/misc';
+import { setActivityAttribute } from '../../../common/misc';
+import { isDevelopment } from '../../../common/constants';
 
-const LOCALSTORAGE_PREFIX = `insomnia::meta`;
+const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
 const LOAD_START = 'global/load-start';
@@ -23,14 +38,26 @@ const LOAD_STOP = 'global/load-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
 const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
+const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
 const COMMAND_IMPORT_URI = 'app/import';
+const COMMAND_PLUGIN_INSTALL = 'plugins/install';
+const COMMAND_PLUGIN_THEME = 'plugins/theme';
 
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
+
+function activeActivityReducer(state = null, action) {
+  switch (action.type) {
+    case SET_ACTIVE_ACTIVITY:
+      return action.activity;
+    default:
+      return state;
+  }
+}
 
 function activeWorkspaceReducer(state = null, action) {
   switch (action.type) {
@@ -76,6 +103,7 @@ export const reducer = combineReducers({
   isLoading: loadingReducer,
   loadingRequestIds: loadingRequestsReducer,
   activeWorkspaceId: activeWorkspaceReducer,
+  activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
 });
 
@@ -100,13 +128,75 @@ export function newCommand(command, args) {
           title: 'Confirm Data Import',
           message: (
             <span>
-              Do you really want to import <code>{args.uri}</code>?
+              Do you really want to import <code>{args.name || args.uri}</code>?
             </span>
           ),
           addCancel: true,
         });
         dispatch(importUri(args.workspaceId, args.uri));
         break;
+      case COMMAND_PLUGIN_INSTALL:
+        showModal(AskModal, {
+          title: 'Plugin Install',
+          message: (
+            <React.Fragment>
+              Do you want to install <code>{args.name}</code>?
+            </React.Fragment>
+          ),
+          yesText: 'Install',
+          noText: 'Cancel',
+          onDone: async isYes => {
+            if (!isYes) {
+              return;
+            }
+
+            try {
+              await install(args.name);
+              showModal(SettingsModal, TAB_INDEX_PLUGINS);
+            } catch (err) {
+              showError({
+                title: 'Plugin Install',
+                message: 'Failed to install plugin',
+                error: err.message,
+              });
+            }
+          },
+        });
+        break;
+      case COMMAND_PLUGIN_THEME:
+        const parsedTheme = JSON.parse(decodeURIComponent(args.theme));
+        showModal(AskModal, {
+          title: 'Install Theme',
+          message: (
+            <React.Fragment>
+              Do you want to install <code>{parsedTheme.displayName}</code>?
+            </React.Fragment>
+          ),
+          yesText: 'Install',
+          noText: 'Cancel',
+          onDone: async isYes => {
+            if (!isYes) {
+              return;
+            }
+
+            const mainJsContent = `module.exports.themes = [${JSON.stringify(
+              parsedTheme,
+              null,
+              2,
+            )}];`;
+
+            await createPlugin(`theme-${parsedTheme.name}`, '0.0.1', mainJsContent);
+
+            const settings = await models.settings.getOrCreate();
+            await models.settings.update(settings, { theme: parsedTheme.name });
+            await reloadPlugins(true);
+            await setTheme(parsedTheme.name);
+            showModal(SettingsModal, TAB_INDEX_THEMES);
+          },
+        });
+        break;
+      default:
+      // Nothing
     }
   };
 }
@@ -131,13 +221,27 @@ export function loadRequestStop(requestId) {
   return { type: LOAD_REQUEST_STOP, requestId };
 }
 
-export function setActiveWorkspace(workspaceId) {
+export function setActiveActivity(activity: GlobalActivity) {
+  let goToActivity = activity;
+
+  // If development, skip logic (to allow for real-time switching)
+  if (!isDevelopment()) {
+    goToActivity = ensureActivityIsForApp(activity);
+  }
+
+  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(goToActivity));
+  setActivityAttribute(goToActivity);
+  trackEvent('Activity', 'Change', goToActivity);
+  return { type: SET_ACTIVE_ACTIVITY, activity: goToActivity };
+}
+
+export function setActiveWorkspace(workspaceId: string) {
   const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
   window.localStorage.setItem(key, JSON.stringify(workspaceId));
   return { type: SET_ACTIVE_WORKSPACE, workspaceId };
 }
 
-export function importFile(workspaceId) {
+export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
   return async dispatch => {
     dispatch(loadStart());
 
@@ -148,7 +252,19 @@ export function importFile(workspaceId) {
       filters: [
         {
           name: 'Insomnia Import',
-          extensions: ['', 'sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell', 'yaml', 'yml'],
+          extensions: [
+            '',
+            'sh',
+            'txt',
+            'json',
+            'har',
+            'curl',
+            'bash',
+            'shell',
+            'yaml',
+            'yml',
+            'wsdl',
+          ],
         },
       ],
     };
@@ -165,7 +281,10 @@ export function importFile(workspaceId) {
       for (const p of paths) {
         try {
           const uri = `file://${p}`;
-          const result = await importUtils.importUri(askToImportIntoWorkspace(workspaceId), uri);
+          const result = await importUtils.importUri(
+            askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+            uri,
+          );
           importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
         } catch (err) {
           showModal(AlertModal, { title: 'Import Failed', message: err + '' });
@@ -181,14 +300,51 @@ export function importFile(workspaceId) {
   };
 }
 
-export function importUri(workspaceId, uri) {
+export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
+  return async dispatch => {
+    dispatch(loadStart());
+    const schema = electron.clipboard.readText();
+    if (!schema) {
+      showModal(AlertModal, {
+        title: 'Import Failed',
+        message: 'Your clipboard appears to be empty.',
+      });
+      return;
+    }
+    // Let's import all the paths!
+    let importedWorkspaces = [];
+    try {
+      const result = await importUtils.importRaw(
+        askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+        schema,
+      );
+      importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
+    } catch (err) {
+      showModal(AlertModal, {
+        title: 'Import Failed',
+        message: 'Your clipboard does not contain a valid specification.',
+      });
+    } finally {
+      dispatch(loadStop());
+    }
+    if (importedWorkspaces.length === 1) {
+      dispatch(setActiveWorkspace(importedWorkspaces[0]._id));
+    }
+  };
+}
+
+export function importUri(workspaceId: string, uri: string, forceToWorkspace?: ForceToWorkspace) {
   return async dispatch => {
     dispatch(loadStart());
 
     let importedWorkspaces = [];
     try {
-      const result = await importUtils.importUri(askToImportIntoWorkspace(workspaceId), uri);
-      importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
+      const result = await importUtils.importUri(
+        askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+        uri,
+      );
+      const workspaces = result.summary[models.workspace.type] || [];
+      importedWorkspaces = [...importedWorkspaces, ...workspaces];
     } catch (err) {
       showModal(AlertModal, { title: 'Import Failed', message: err + '' });
     } finally {
@@ -434,6 +590,7 @@ export function exportRequestsToFile(requestIds) {
 
 export function init() {
   let workspaceId = null;
+  let activity = null;
 
   try {
     const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
@@ -443,25 +600,16 @@ export function init() {
     // Nothing here...
   }
 
-  return setActiveWorkspace(workspaceId);
-}
+  try {
+    const key = `${LOCALSTORAGE_PREFIX}::activity`;
+    const item = window.localStorage.getItem(key);
+    activity = JSON.parse(item);
+  } catch (e) {
+    // Nothing here...
+  }
 
-// ~~~~~~~ //
-// HELPERS //
-// ~~~~~~~ //
+  // If the default app id is insomnia, then default to the insomnia view at initialization
+  activity = ensureActivityIsForApp(activity);
 
-function askToImportIntoWorkspace(workspaceId) {
-  return function() {
-    return new Promise(resolve => {
-      showModal(AskModal, {
-        title: 'Import',
-        message: 'Do you want to import into the current workspace or a new one?',
-        yesText: 'Current',
-        noText: 'New Workspace',
-        onDone: yes => {
-          resolve(yes ? workspaceId : null);
-        },
-      });
-    });
-  };
+  return [setActiveWorkspace(workspaceId), setActiveActivity(activity)];
 }
