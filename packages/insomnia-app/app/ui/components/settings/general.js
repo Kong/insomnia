@@ -181,32 +181,28 @@ class General extends React.PureComponent<Props, State> {
         {this.renderBooleanSetting('Validate certificates', 'validateSSL', '')}
         <div className="form-row pad-top-sm">
           <div className="form-control form-control--outlined">
-            <label>
-              Certificate Bundle
-              <select
-                name="caBundleType"
-                value={settings.caBundleType}
-                disabled={disabled}
-                onChange={this._handleUpdateSetting}>
-                {defaultOption}
-                {isWindows() ? windowsOption : null}
-                {userOption}
-              </select>
-            </label>
+            <label>Certificate Bundle</label>
+            <select
+              name="caBundleType"
+              value={settings.caBundleType}
+              disabled={disabled}
+              onChange={this._handleUpdateSetting}>
+              {defaultOption}
+              {isWindows() ? windowsOption : null}
+              {userOption}
+            </select>
           </div>
           {settings.caBundleType === CertificateBundleType.userProvided && (
             <div className="form-control form-control--outlined">
-              <label>
-                Custom Bundle
-                <FileInputButton
-                  className="btn btn--clicky"
-                  name="CA Bundle"
-                  onChange={this._handleCaBundlePathChange}
-                  path={settings.caBundlePath}
-                  showFileName
-                  disabled={disabled}
-                />
-              </label>
+              <label>Custom Bundle</label>
+              <FileInputButton
+                className="btn btn--clicky"
+                name="CA Bundle"
+                onChange={this._handleCaBundlePathChange}
+                path={settings.caBundlePath}
+                showFileName
+                disabled={disabled}
+              />
             </div>
           )}
         </div>
