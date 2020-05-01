@@ -29,7 +29,7 @@ export function filterParameters<T: Parameter>(parameters: Array<T>, name: strin
 }
 
 export function filterHeaders<T: Header>(headers: Array<T>, name: string): Array<T> {
-  if (!Array.isArray(headers) || !(typeof name === 'string')) {
+  if (!Array.isArray(headers) || !name || !(typeof name === 'string')) {
     return [];
   }
 
