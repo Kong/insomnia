@@ -29,6 +29,7 @@ export async function createPlugin(
         private: true,
         insomnia: {
           name: moduleName.replace(/^insomnia-plugin-/, ''),
+          description: '',
         },
         main: 'main.js',
       },
