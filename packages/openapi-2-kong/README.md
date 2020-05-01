@@ -1,16 +1,17 @@
 # openapi-2-kong
 
-This module generates Kong Declarative Config from OpenAPI 3.0 specification files.
+This module generates Kong Declarative Config and Kong for Kubernetes config, from OpenAPI 3.0 specifications.
 
 **Table of Contents**
 
 - [Library Usage](#library-usage)
-- [Behavior](#behavior)
+- [Kong Declarative Config](#kong-declarative-config)
     - [`$._format_version`](#_format_version)
     - [`$.services`](#services)
     - [`$.services[*].routes`](#servicesroutes)
     - [`$.upstreams`](#upstreams)
     - [`$..tags`](#tags)
+- [Kong for Kubernetes](#kong-for-kubernetes)
 - [Security Plugins](#security-plugins)
 - [Generic Plugins](#generic-plugins)
 - [Request Validation Plugin](#request-validation-plugin)
@@ -19,10 +20,12 @@ This module generates Kong Declarative Config from OpenAPI 3.0 specification fil
 
 This module exposes three methods of generating Kong declarative config.
 
-```js
-generateFromString (spec: string, tags: Array<string>) => Promise<Object>,
-generateFromSpec (spec: Object, tags: Array<string>) => Promise<Object>,
-generate (filename: string, tags: Array<string>) => Promise<Object>,
+```flow js
+type ConversionResultType = 'kong-declarative-config' | 'kong-for-kubernetes';
+
+generateFromString (spec: string, type: ConversionResultType, tags: Array<string>) => Promise<Object>,
+generateFromSpec (spec: Object, type: ConversionResultType, tags: Array<string>) => Promise<Object>,
+generate (filename: string, type: ConversionResultType, tags: Array<string>) => Promise<Object>,
 ```
 
 ### Usage Example
@@ -63,7 +66,7 @@ async function examples() {
 }
 ```
 
-## Behavior
+## Kong Declarative Config
 
 The following documents the behavior for generating Kong Declarative Config from OpenAPI v3.
 
@@ -176,6 +179,111 @@ Each generated entity will get the tags as specified as well as the following ta
 
 Tags can also be passed to this tool, which will be appended to the existing tags of
 all created resources.
+
+## Kong for Kubernetes
+
+### Output structure
+The Kong for Kubernetes config will contain at least one `Ingress` document per server. Depending on where
+Kong plugins (`x-kong-plugin-*`) exist in the specification, several `Ingress` documents may be created, in addition to
+`KongPlugin` and `KongIngress` documents.
+
+`KongPlugin` and `KongIngress` resource documents can be reused, and are applied via the
+`metadata.annotations` section on an `Ingress` document.
+
+### The `Ingress` document
+**At least** one `Ingress` document will be generated for each server. How many are required for each server, will be
+determined by the presence of `KongPlugin` and `KongIngress` resources that need to be applied to specific paths.
+
+<details>
+<summary>Example</summary>
+
+#### Source spec
+
+```yaml
+openapi: 3.0.0
+info:
+  title: Insomnia API
+servers:
+  - url: http://one.insomnia.rest/v1
+  - url: http://two.insomnia.rest/v2
+paths:
+```
+
+#### Generated config
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: insomnia-api
+spec:
+  rules:
+    - host: one.insomnia.rest
+      http:
+        paths:
+          - path: /v1/.*
+            backend:
+              serviceName: insomnia-api-s0
+              servicePort: 80
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: insomnia-api
+spec:
+  rules:
+    - host: two.insomnia.rest
+      http:
+        paths:
+          - path: /v2/.*
+            backend:
+              serviceName: insomnia-api-s1
+              servicePort: 80
+```
+</details>
+
+#### `metadata.name`
+
+The `Ingress` document `metadata.name` is derived from sections in the source specification. If several are present, then the highest priority is selected. If none are present, then the fallback name is `openapi`.
+
+Each of the following specifications generate an `Ingress` document with the following name:
+```yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: insomnia-api
+spec:
+...
+```
+
+In priority order, these sections are:
+
+- `x-kubernetes-ingress-metadata`
+
+  ```yaml
+  openapi: 3.0.0
+  info:
+    x-kubernetes-ingress-metadata:
+      name: Insomnia API
+  ...
+  ```
+
+- `x-kong-name`
+
+  ```yaml
+  openapi: 3.0.0
+  x-kong-name: Insomnia API
+  ...
+  ```
+
+- `info.title`
+
+  ```yaml
+  openapi: 3.0.0
+  info:
+    title: Insomnia API
+  ...
+  ```
 
 ## Security Plugins
 
