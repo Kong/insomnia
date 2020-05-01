@@ -12,6 +12,10 @@ export async function createPlugin(
 ): Promise<void> {
   const pluginDir = path.join(PLUGIN_PATH, moduleName);
 
+  if (fs.statSync(pluginDir)) {
+    throw new Error(`Plugin already exists at "${pluginDir}"`);
+  }
+
   rimraf.sync(pluginDir);
   mkdirp.sync(pluginDir);
 
