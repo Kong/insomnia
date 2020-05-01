@@ -125,14 +125,7 @@ class Plugins extends React.PureComponent<Props, State> {
           await createPlugin(
             `insomnia-plugin-${name}`,
             '0.0.1',
-            [
-              '// module.exports.workspaceActions = [];',
-              '// module.exports.requestGroupActions = [];',
-              '// module.exports.themes = [];',
-              '// module.exports.templateTags = [];',
-              '// module.exports.requestHooks = [];',
-              '// module.exports.responseHooks = [];',
-            ].join('\n'),
+            '// Plugin code here...\n',
           );
         } catch (err) {
           showAlert({

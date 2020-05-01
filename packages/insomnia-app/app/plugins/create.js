@@ -12,7 +12,7 @@ export async function createPlugin(
 ): Promise<void> {
   const pluginDir = path.join(PLUGIN_PATH, moduleName);
 
-  if (fs.statSync(pluginDir)) {
+  if (fs.existsSync(pluginDir)) {
     throw new Error(`Plugin already exists at "${pluginDir}"`);
   }
 
