@@ -7,7 +7,7 @@
 
 Insomnia is a cross-platform _REST client_, built on top of [Electron](http://electron.atom.io/).
 
-![Insomnia REST Client Screenshot](https://raw.githubusercontent.com/Kong/insomnia/master/screenshots/main.png)
+![Insomnia REST Client Screenshot](https://raw.githubusercontent.com/Kong/insomnia/develop/screenshots/main.png)
 
 ## Download
 
