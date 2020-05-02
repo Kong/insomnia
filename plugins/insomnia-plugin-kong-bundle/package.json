@@ -3,7 +3,6 @@
   "version": "2.2.3",
   "main": "index.js",
   "insomnia": {
-    "unlisted": true,
     "name": "kong-bundle",
     "description": "Bundle of all Kong plugins"
   },

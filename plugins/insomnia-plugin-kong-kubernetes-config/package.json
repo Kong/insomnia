@@ -3,7 +3,6 @@
   "version": "2.2.2",
   "main": "index.js",
   "insomnia": {
-    "unlisted": true,
     "name": "kong-kubernetes-config",
     "description": "Generate Kong For Kubernetes configuration"
   },
