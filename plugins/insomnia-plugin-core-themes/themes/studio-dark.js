@@ -37,23 +37,6 @@ module.exports = {
           default: '#003961',
         },
       },
-      activityBar: {
-        foreground: {
-          default: '#fff',
-        },
-        background: {
-          default: '#004572',
-        },
-        highlight: {
-          default: 'rgba(23, 130, 207, 1)',
-          xxs: 'rgba(23, 130, 207, 0.05)',
-          xs: 'rgba(23, 130, 207, 0.1)',
-          sm: 'rgba(23, 130, 207, 0.2)',
-          md: 'rgba(23, 130, 207, 0.3)',
-          lg: 'rgba(23, 130, 207, 0.5)',
-          xl: 'rgba(23, 130, 207, 0.8)',
-        },
-      },
       dialog: {
         background: {
           default: '#004672',
