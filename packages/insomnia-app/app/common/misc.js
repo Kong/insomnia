@@ -29,16 +29,17 @@ export function filterParameters<T: Parameter>(parameters: Array<T>, name: strin
 }
 
 export function filterHeaders<T: Header>(headers: Array<T>, name: string): Array<T> {
-  if (!Array.isArray(headers) || !name) {
+  if (!Array.isArray(headers) || !name || !(typeof name === 'string')) {
     return [];
   }
 
   return headers.filter(h => {
-    if (!h || !h.name) {
+    // Never match against invalid headers
+    if (!h || !h.name || typeof h.name !== 'string') {
       return false;
-    } else {
-      return h.name.toLowerCase() === name.toLowerCase();
     }
+
+    return h.name.toLowerCase() === name.toLowerCase();
   });
 }
 
@@ -166,7 +167,7 @@ export function describeByteSize(bytes: number, long: boolean = false): string {
   // NOTE: We multiply these by 2 so we don't end up with
   // values like 0 GB
 
-  let unit = long ? 'bytes' : 'B';
+  let unit;
   if (bytes < 1024 * 2) {
     size = bytes;
     unit = long ? 'bytes' : 'B';
@@ -253,16 +254,16 @@ export function escapeRegex(str: string): string {
 export function fuzzyMatch(
   searchString: string,
   text: string,
-  options: { splitSpace?: boolean, loose?: boolean } = {},
-): null | { score: number, indexes: Array<number> } {
+  options: {splitSpace?: boolean, loose?: boolean} = {},
+): null | {score: number, indexes: Array<number>} {
   return fuzzyMatchAll(searchString, [text], options);
 }
 
 export function fuzzyMatchAll(
   searchString: string,
   allText: Array<string>,
-  options: { splitSpace?: boolean, loose?: boolean } = {},
-): null | { score: number, indexes: Array<number> } {
+  options: {splitSpace?: boolean, loose?: boolean} = {},
+): null | {score: number, indexes: Array<number>} {
   if (!searchString || !searchString.trim()) {
     return null;
   }
@@ -308,7 +309,11 @@ export function fuzzyMatchAll(
     return null;
   }
 
-  return { score: maxScore, indexes, target: allText.join(' ') };
+  return {
+    score: maxScore,
+    indexes,
+    target: allText.join(' '),
+  };
 }
 
 export function getViewportSize(): string | null {
