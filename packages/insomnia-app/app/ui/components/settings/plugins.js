@@ -61,13 +61,14 @@ class Plugins extends React.PureComponent<Props, State> {
 
     this.setState({ isInstallingFromNpm: true });
 
-    const newState = {
+    const newState: $Shape<State> = {
       isInstallingFromNpm: false,
       error: '',
     };
     try {
       await installPlugin(this.state.npmPluginValue.trim());
       await this._handleRefreshPlugins();
+      newState.npmPluginValue = ''; // Clear input if successful install
     } catch (err) {
       newState.error = err.message;
     }
@@ -205,7 +206,7 @@ class Plugins extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { plugins, error, isInstallingFromNpm, isRefreshingPlugins } = this.state;
+    const { plugins, error, isInstallingFromNpm, isRefreshingPlugins, npmPluginValue } = this.state;
 
     return (
       <div>
@@ -282,6 +283,7 @@ class Plugins extends React.PureComponent<Props, State> {
                 disabled={isInstallingFromNpm}
                 type="text"
                 placeholder="npm-package-name"
+                value={npmPluginValue}
               />
             </div>
             <div className="form-control width-auto">
