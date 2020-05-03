@@ -1,6 +1,5 @@
-import React from 'react';
+import * as React from 'react';
 import ToggleSwitch from './toggle-switch';
-import '../../../../.storybook/index.less';
 
 export default { title: 'Toggle Switch' };
 

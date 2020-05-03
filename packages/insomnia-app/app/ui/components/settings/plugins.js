@@ -12,8 +12,7 @@ import Link from '../base/link';
 import { delay } from '../../../common/misc';
 import { PLUGIN_PATH } from '../../../common/constants';
 import type { PluginConfig, Settings } from '../../../models/settings';
-import ToggleSwitch from './toggle-switch';
-import { Button } from 'insomnia-components';
+import { Button, ToggleSwitch } from 'insomnia-components';
 import { createPlugin } from '../../../plugins/create';
 import { showAlert, showPrompt } from '../modals';
 
@@ -115,9 +114,8 @@ class Plugins extends React.PureComponent<Props, State> {
       submitName: 'Generate',
       label: 'Plugin Name',
       selectText: true,
-      validate: (name) => name.match(/^[a-z][a-z-]*[a-z]$/)
-        ? ''
-        : 'Plugin name must be of format my-plugin-name',
+      validate: name =>
+        name.match(/^[a-z][a-z-]*[a-z]$/) ? '' : 'Plugin name must be of format my-plugin-name',
       onComplete: async name => {
         // Remove insomnia-plugin- prefix if they accidentally typed it
         name = name.replace(/^insomnia-plugin-/, '');
@@ -203,45 +201,45 @@ class Plugins extends React.PureComponent<Props, State> {
         ) : (
           <table className="table--fancy table--striped table--valign-middle margin-top margin-bottom">
             <thead>
-            <tr>
-              <th>Enable?</th>
-              <th>Name</th>
-              <th>Version</th>
-              <th>Folder</th>
-            </tr>
+              <tr>
+                <th>Enable?</th>
+                <th>Name</th>
+                <th>Version</th>
+                <th>Folder</th>
+              </tr>
             </thead>
             <tbody>
-            {plugins.map(plugin =>
-              !plugin.directory ? null : (
-                <tr key={plugin.name}>
-                  <td style={{ width: '4rem' }}>{this.renderToggleSwitch(plugin)}</td>
-                  <td>
-                    {plugin.name}
-                    {plugin.description && (
-                      <HelpTooltip info className="space-left">
-                        {plugin.description}
-                      </HelpTooltip>
-                    )}
-                  </td>
-                  <td>{plugin.version}</td>
-                  <td className="no-wrap" style={{ width: '10rem' }}>
-                    <CopyButton
-                      size="small"
-                      variant="contained"
-                      title={plugin.directory}
-                      content={plugin.directory}>
-                      Copy Path
-                    </CopyButton>{' '}
-                    <Button
-                      size="small"
-                      variant="contained"
-                      onClick={Plugins._handleOpenDirectory.bind(this, plugin.directory)}>
-                      Reveal Folder
-                    </Button>
-                  </td>
-                </tr>
-              ),
-            )}
+              {plugins.map(plugin =>
+                !plugin.directory ? null : (
+                  <tr key={plugin.name}>
+                    <td style={{ width: '4rem' }}>{this.renderToggleSwitch(plugin)}</td>
+                    <td>
+                      {plugin.name}
+                      {plugin.description && (
+                        <HelpTooltip info className="space-left">
+                          {plugin.description}
+                        </HelpTooltip>
+                      )}
+                    </td>
+                    <td>{plugin.version}</td>
+                    <td className="no-wrap" style={{ width: '10rem' }}>
+                      <CopyButton
+                        size="small"
+                        variant="contained"
+                        title={plugin.directory}
+                        content={plugin.directory}>
+                        Copy Path
+                      </CopyButton>{' '}
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={Plugins._handleOpenDirectory.bind(this, plugin.directory)}>
+                        Reveal Folder
+                      </Button>
+                    </td>
+                  </tr>
+                ),
+              )}
             </tbody>
           </table>
         )}
@@ -277,12 +275,8 @@ class Plugins extends React.PureComponent<Props, State> {
         <hr />
 
         <div className="text-right">
-          <Button onClick={this._handleCreatePlugin}>
-            Generate New Plugin
-          </Button>
-          <Button
-            className="space-left"
-            onClick={Plugins._handleClickShowPluginsFolder}>
+          <Button onClick={this._handleCreatePlugin}>Generate New Plugin</Button>
+          <Button className="space-left" onClick={Plugins._handleClickShowPluginsFolder}>
             Reveal Plugins Folder
           </Button>
           <Button
