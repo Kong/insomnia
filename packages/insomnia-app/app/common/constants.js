@@ -137,6 +137,10 @@ export const UPDATE_URL_WINDOWS = 'https://updates.insomnia.rest/updates/win';
 // API
 export const API_BASE_URL = 'https://api.insomnia.rest';
 
+// PLUGINS
+export const PLUGIN_HUB_BASE = 'https://insomnia.rest/plugins';
+export const NPM_PACKAGE_BASE = 'https://www.npmjs.com/package';
+
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 45;
 export const MIN_SIDEBAR_REMS = 0.75;
@@ -318,7 +322,7 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   403: 'Client does not have access rights to the content, so the server is rejecting to give proper response.',
   404: 'Server cannot find requested resource. This response code is probably the most famous one due to how frequently it occurs on the web.',
   405: 'The request method is known by the server but has been disabled and cannot be used.',
-  406: 'This response is sent when the web server, after performing server-driven content negotiation, doesn\'t find any content following the criteria given by the user agent.',
+  406: "This response is sent when the web server, after performing server-driven content negotiation, doesn't find any content following the criteria given by the user agent.",
   407: 'This is similar to 401 but authentication is needed to be done by a proxy.',
   408: 'This response is sent on an idle connection by some servers, even without any previous request by the client. It means that the server would like to shut down this unused connection. This response is used much more since some browsers, like Chrome or IE9, use HTTP pre-connection mechanisms to speed up surfing (see bug 881804, which tracks the future implementation of such a mechanism in Firefox). Also, note that some servers merely shut down the connection without sending this message.',
   409: 'This response is sent when a request conflicts with the current state of the server.',
@@ -328,22 +332,22 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   413: 'Request entity is larger than limits defined by the server; the server might close the connection or return a Retry-After header field.',
   414: 'The URI requested by the client is longer than the server is willing to interpret.',
   415: 'The media format of the requested data is not supported by the server, so the server is rejecting the request.',
-  416: 'The range specified by the Range header field in the request can\'t be fulfilled; it\'s possible that the range is outside the size of the target URI\'s data.',
-  417: 'This response code means the expectation indicated by the Expect request header field can\'t be met by the server.',
+  416: "The range specified by the Range header field in the request can't be fulfilled; it's possible that the range is outside the size of the target URI's data.",
+  417: "This response code means the expectation indicated by the Expect request header field can't be met by the server.",
   418: 'Any attempt to brew coffee with a teapot should result in the error code "418 I\'m a teapot". The resulting entity body MAY be short and stout.',
   421: 'The request was directed at a server that is not able to produce a response. This can be sent by a server that is not configured to produce responses for the combination of scheme and authority that are included in the request URI.',
   422: 'The request was well-formed but was unable to be followed due to semantic errors.',
   423: 'The resource that is being accessed is locked.',
   424: 'The request failed due to failure of a previous request.',
   426: 'The server refuses to perform the request using the current protocol but might be willing to do so after the client upgrades to a different protocol. The server MUST send an Upgrade header field in a 426 response to indicate the required protocol(s) (Section 6.7 of [RFC7230]).',
-  428: 'The origin server requires the request to be conditional. Intended to prevent "the \'lost update\' problem, where a client GETs a resource\'s state, modifies it, and PUTs it back to the server, when meanwhile a third party has modified the state on the server, leading to a conflict."',
+  428: "The origin server requires the request to be conditional. Intended to prevent \"the 'lost update' problem, where a client GETs a resource's state, modifies it, and PUTs it back to the server, when meanwhile a third party has modified the state on the server, leading to a conflict.\"",
   429: 'The user has sent too many requests in a given amount of time ("rate limiting").',
   431: 'The server is unwilling to process the request because its header fields are too large. The request MAY be resubmitted after reducing the size of the request header fields.',
   451: 'The user requests an illegal resource, such as a web page censored by a government.',
 
   // 500s
 
-  500: 'The server has encountered a situation it doesn\'t know how to handle.',
+  500: "The server has encountered a situation it doesn't know how to handle.",
   501: 'The request method is not supported by the server and cannot be handled. The only methods that servers are required to support (and therefore that must not return this code) are GET and HEAD.',
   502: 'This error response means that the server, while working as a gateway to get a response needed to handle the request, got an invalid response.',
   503: 'The server is not ready to handle the request. Common causes are a server that is down for maintenance or that is overloaded. Note that together with this response, a user-friendly page explaining the problem should be sent. This responses should be used for temporary conditions and the Retry-After: HTTP header should, if possible, contain the estimated time before the recovery of the service. The webmaster must also take care about the caching-related headers that are sent along with this response, as these temporary condition responses should usually not be cached.',
