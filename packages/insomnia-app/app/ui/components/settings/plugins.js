@@ -192,10 +192,7 @@ class Plugins extends React.PureComponent<Props, State> {
   renderLink(plugin: Plugin) {
     const { name } = plugin;
 
-    let base = NPM_PACKAGE_BASE;
-    if (/^insomnia-plugin-/.test(name)) {
-      base = PLUGIN_HUB_BASE;
-    }
+    const base = /^insomnia-plugin-/.test(name) ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE;
     const link = path.join(base, name);
 
     return (
