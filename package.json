@@ -8,7 +8,7 @@
   },
   "scripts": {
     "lint": "eslint \"**/*.js\" \"**/*.html\" \"**/*.json\"",
-    "lint:fix": "eslint \"**/*.js\" \"**/*.html\" \"**/*.json\" --fix",
+    "lint": "eslint \"**/*.js\" \"**/*.html\" \"**/*.json\" --fix",
     "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap",
     "publish": "lerna publish",
     "clean": "lerna clean --yes && rimraf node_modules",
@@ -23,7 +23,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged && npm run lint:fix"
+      "pre-commit": "pretty-quick --staged && npm run lint"
     }
   },
   "devDependencies": {
