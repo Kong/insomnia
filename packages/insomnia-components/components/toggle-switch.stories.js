@@ -9,4 +9,9 @@ export const Checked = () => <ToggleSwitch checked onChange={defaultOnChange} />
 
 export const Unchecked = () => <ToggleSwitch onChange={defaultOnChange} />;
 
-export const Disabled = () => <ToggleSwitch disabled onChange={defaultOnChange} />;
+export const Disabled = () => (
+  <>
+    <ToggleSwitch disabled checked onChange={defaultOnChange} />
+    <ToggleSwitch disabled onChange={defaultOnChange} />
+  </>
+);
