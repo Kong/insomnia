@@ -1,4 +1,5 @@
 // @flow
+import * as path from 'path';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import * as React from 'react';
@@ -10,7 +11,7 @@ import installPlugin from '../../../plugins/install';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import { delay } from '../../../common/misc';
-import { PLUGIN_PATH } from '../../../common/constants';
+import { NPM_PACKAGE_BASE, PLUGIN_HUB_BASE, PLUGIN_PATH } from '../../../common/constants';
 import type { PluginConfig, Settings } from '../../../models/settings';
 import { Button, ToggleSwitch } from 'insomnia-components';
 import { createPlugin } from '../../../plugins/create';
@@ -59,13 +60,14 @@ class Plugins extends React.PureComponent<Props, State> {
 
     this.setState({ isInstallingFromNpm: true });
 
-    const newState = {
+    const newState: $Shape<State> = {
       isInstallingFromNpm: false,
       error: '',
     };
     try {
       await installPlugin(this.state.npmPluginValue.trim());
       await this._handleRefreshPlugins();
+      newState.npmPluginValue = ''; // Clear input if successful install
     } catch (err) {
       newState.error = err.message;
     }
@@ -186,8 +188,21 @@ class Plugins extends React.PureComponent<Props, State> {
     );
   }
 
+  renderLink(plugin: Plugin) {
+    const { name } = plugin;
+
+    const base = /^insomnia-plugin-/.test(name) ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE;
+    const link = path.join(base, name);
+
+    return (
+      <a className="space-left" href={link} title={link}>
+        <i className="fa fa-external-link-square" />
+      </a>
+    );
+  }
+
   render() {
-    const { plugins, error, isInstallingFromNpm, isRefreshingPlugins } = this.state;
+    const { plugins, error, isInstallingFromNpm, isRefreshingPlugins, npmPluginValue } = this.state;
 
     return (
       <div>
@@ -221,7 +236,10 @@ class Plugins extends React.PureComponent<Props, State> {
                         </HelpTooltip>
                       )}
                     </td>
-                    <td>{plugin.version}</td>
+                    <td>
+                      {plugin.version}
+                      {this.renderLink(plugin)}
+                    </td>
                     <td className="no-wrap" style={{ width: '10rem' }}>
                       <CopyButton
                         size="small"
@@ -261,6 +279,7 @@ class Plugins extends React.PureComponent<Props, State> {
                 disabled={isInstallingFromNpm}
                 type="text"
                 placeholder="npm-package-name"
+                value={npmPluginValue}
               />
             </div>
             <div className="form-control width-auto">
