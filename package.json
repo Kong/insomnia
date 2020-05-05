@@ -23,7 +23,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged && npm run lint:fix"
+      "pre-commit": "pretty-quick --staged && npm run lint"
     }
   },
   "devDependencies": {

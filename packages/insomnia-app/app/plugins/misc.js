@@ -91,13 +91,6 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
   if (renderedTheme.styles) {
     const styles = renderedTheme.styles;
 
-    // Activity Bar
-    css += wrapStyles(
-      n,
-      '.theme--activity-bar',
-      getThemeBlockCSS(styles.activityBar || styles.sidebar),
-    );
-
     // Dropdown Menus
     css += wrapStyles(
       n,

@@ -17,7 +17,6 @@
   "gaLocation": "https://designer.lytics.insomnia.rest",
   "gravatarEmail": "avatar.designer@insomnia.rest",
   "plugins": [
-    "kong-studio-themes",
     "insomnia-plugin-base64",
     "insomnia-plugin-hash",
     "insomnia-plugin-file",
