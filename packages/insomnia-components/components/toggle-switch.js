@@ -12,16 +12,16 @@ type Props = {
 
 const ThemedSwitch: React.ComponentType<{ checked: boolean }> = styled.div`
   .react-switch-bg {
-    background: ${props => (props.checked ? 'var(--color-surprise)' : 'var(--hl-xl)')};
+    background: ${({ checked }) => (checked ? 'var(--color-surprise)' : 'var(--hl-xl)')};
   }
 `;
 
-const ToggleSwitch: React.FC<Props> = ({ className, checked: checkedProp, onChange, disabled }) => {
-  const [checked, setChecked] = React.useState(checkedProp);
+const ToggleSwitch = ({ className, checked: checkedProp, onChange, disabled }: Props) => {
+  const [checked, setChecked] = React.useState<boolean>(!!checkedProp);
 
   // If prop changes and differs from state, update state
   React.useEffect(() => {
-    setChecked(checkedProp);
+    setChecked(!!checkedProp);
   }, [checkedProp]);
 
   const callback = React.useCallback(

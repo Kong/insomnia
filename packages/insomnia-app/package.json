@@ -83,7 +83,6 @@
     "react-tabs",
     "redux",
     "redux-thunk",
-    "react-switch",
     "reselect",
     "srp-js",
     "swagger-ui-react",
