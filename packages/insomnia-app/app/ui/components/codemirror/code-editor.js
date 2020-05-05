@@ -269,7 +269,7 @@ class CodeEditor extends React.Component {
     this.codeMirror.setSelections(selections, null, { scroll: false });
 
     // Restore marks one-by-one
-    for (const { from, to } in marks || []) {
+    for (const { from, to } of marks || []) {
       this.codeMirror.foldCode(from, to);
     }
   }
@@ -805,7 +805,8 @@ class CodeEditor extends React.Component {
     const value = this.codeMirror.getDoc().getValue();
 
     // Disable linting if the document reaches a maximum size or is empty
-    const shouldLint = (value.length > MAX_SIZE_FOR_LINTING || value.length === 0) ? false : !this.props.noLint;
+    const shouldLint =
+      value.length > MAX_SIZE_FOR_LINTING || value.length === 0 ? false : !this.props.noLint;
     const existingLint = this.codeMirror.options.lint || false;
     if (shouldLint !== existingLint) {
       const { lintOptions } = this.props;
