@@ -48,7 +48,7 @@ class ToggleSwitch extends React.PureComponent<Props, State> {
     const { className, disabled, onChange } = this.props;
 
     return (
-      <ThemedSwitch>
+      <ThemedSwitch checked={checked}>
         <Switch
           className={className}
           checked={checked}
