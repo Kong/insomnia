@@ -1,7 +1,7 @@
 {
   "parser": "babel-eslint",
-  "extends": ["semistandard", "plugin:flowtype/recommended", "plugin:react-hooks/recommended"],
-  "plugins": ["react", "jest", "html", "json", "filenames", "flowtype", "react-hooks"],
+  "extends": ["semistandard", "plugin:flowtype/recommended"],
+  "plugins": ["react", "jest", "html", "json", "filenames", "flowtype"],
   "parserOptions": {
     "ecmaFeatures": {
       "jsx": true
