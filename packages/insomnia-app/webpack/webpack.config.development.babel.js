@@ -37,7 +37,7 @@ module.exports = {
       __DEV__: true,
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.INSOMNIA_ENV': JSON.stringify('development'),
-      'process.env.RELEASE_DATE': JSON.stringify(date),
+      'process.env.RELEASE_DATE': JSON.stringify(new Date()),
     }),
   ],
 };

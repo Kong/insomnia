@@ -31,7 +31,7 @@ export function getAppEnvironment() {
 }
 
 export function getAppReleaseDate() {
-  return process.env.RELEASE_DATE;
+  return new Date(process.env.RELEASE_DATE).toLocaleDateString();
 }
 
 export function getTempDir() {
