@@ -6,6 +6,7 @@ import uuid from 'uuid';
 import zlib from 'zlib';
 import { join as pathJoin } from 'path';
 import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
+import type { GlobalActivity } from '../ui/components/activity-bar/activity-bar';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -28,16 +29,17 @@ export function filterParameters<T: Parameter>(parameters: Array<T>, name: strin
 }
 
 export function filterHeaders<T: Header>(headers: Array<T>, name: string): Array<T> {
-  if (!Array.isArray(headers) || !name) {
+  if (!Array.isArray(headers) || !name || !(typeof name === 'string')) {
     return [];
   }
 
   return headers.filter(h => {
-    if (!h || !h.name) {
+    // Never match against invalid headers
+    if (!h || !h.name || typeof h.name !== 'string') {
       return false;
-    } else {
-      return h.name.toLowerCase() === name.toLowerCase();
     }
+
+    return h.name.toLowerCase() === name.toLowerCase();
   });
 }
 
@@ -154,7 +156,7 @@ export function keyedDebounce(callback: Function, millis: number = DEBOUNCE_MILL
 export function debounce(callback: Function, millis: number = DEBOUNCE_MILLIS): Function {
   // For regular debounce, just use a keyed debounce with a fixed key
   return keyedDebounce(results => {
-    callback.apply(null, results['__key__']);
+    callback.apply(null, results.__key__);
   }, millis).bind(null, '__key__');
 }
 
@@ -165,7 +167,7 @@ export function describeByteSize(bytes: number, long: boolean = false): string {
   // NOTE: We multiply these by 2 so we don't end up with
   // values like 0 GB
 
-  let unit = long ? 'bytes' : 'B';
+  let unit;
   if (bytes < 1024 * 2) {
     size = bytes;
     unit = long ? 'bytes' : 'B';
@@ -235,7 +237,7 @@ export function jsonParseOr(str: string, fallback: any): any {
 }
 
 export function escapeHTML(unsafeText: string): string {
-  let div = document.createElement('div');
+  const div = document.createElement('div');
   div.innerText = unsafeText;
   return div.innerHTML;
 }
@@ -252,16 +254,16 @@ export function escapeRegex(str: string): string {
 export function fuzzyMatch(
   searchString: string,
   text: string,
-  options: { splitSpace?: boolean, loose?: boolean } = {},
-): null | { score: number, indexes: Array<number> } {
+  options: {splitSpace?: boolean, loose?: boolean} = {},
+): null | {score: number, indexes: Array<number>} {
   return fuzzyMatchAll(searchString, [text], options);
 }
 
 export function fuzzyMatchAll(
   searchString: string,
   allText: Array<string>,
-  options: { splitSpace?: boolean, loose?: boolean } = {},
-): null | { score: number, indexes: Array<number> } {
+  options: {splitSpace?: boolean, loose?: boolean} = {},
+): null | {score: number, indexes: Array<number>} {
   if (!searchString || !searchString.trim()) {
     return null;
   }
@@ -307,7 +309,11 @@ export function fuzzyMatchAll(
     return null;
   }
 
-  return { score: maxScore, indexes, target: allText.join(' ') };
+  return {
+    score: maxScore,
+    indexes,
+    target: allText.join(' '),
+  };
 }
 
 export function getViewportSize(): string | null {
@@ -366,4 +372,8 @@ export function chunkArray<T>(arr: Array<T>, chunkSize: number): Array<Array<T>>
   }
 
   return chunks;
+}
+
+export function setActivityAttribute(activity: GlobalActivity) {
+  document.body.setAttribute('data-activity', activity);
 }

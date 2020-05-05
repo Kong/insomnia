@@ -1,6 +1,6 @@
 module.exports = {
   name: 'default',
-  displayName: 'Default',
+  displayName: 'Core Default',
   theme: {
     background: {
       default: '#555',

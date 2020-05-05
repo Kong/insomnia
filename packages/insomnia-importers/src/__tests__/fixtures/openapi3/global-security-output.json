@@ -25,12 +25,14 @@
       "name": "OpenAPI env",
       "data": {
         "scheme": "https",
+        "apiKeyHere": "apiKeyHere",
+        "cookieName": "cookieName",
         "base_path": "/v1",
         "host": "api.server.test",
-        "apiKey": "apiKey",
         "httpUsername": "username",
         "httpPassword": "password",
-        "bearerToken": "bearerToken"
+        "bearerToken": "bearerToken",
+        "xApiKey": "xApiKey"
       },
       "_type": "environment",
       "_id": "env___BASE_ENVIRONMENT_ID___sub"
@@ -46,7 +48,7 @@
         {
           "name": "x-api_key",
           "disabled": false,
-          "value": "{{ apiKey }}"
+          "value": "{{ xApiKey }}"
         }
       ],
       "authentication": {
@@ -67,7 +69,7 @@
         {
           "name": "apiKeyHere",
           "disabled": false,
-          "value": "{{ apiKey }}"
+          "value": "{{ apiKeyHere }}"
         }
       ],
       "headers": [],

@@ -1,0 +1,29 @@
+// These are CSS overrides required to style wrapper-insomnia correctly. It allows for Designer to look like Insomnia Core.
+// These overrides were identified via a diff of CSS files between Designer and Core before merge.
+// We should remove as many as we can, because this is a bit of a hack.
+
+body[data-activity='insomnia'] {
+  --height-nav: var(--line-height-md);
+
+  .pane {
+    .pane__header {
+      border-top: 1px solid var(--hl-md);
+    }
+  }
+
+  .sidebar {
+    grid-template-rows: minmax(0, var(--height-nav)) auto auto fit-content(20%) auto minmax(0, 1fr) auto;
+
+    .sidebar__menu {
+      height: unset;
+    }
+
+    .sidebar__header {
+      height: 100%;
+    }
+
+    .sidebar__filter {
+      padding: 0 0 var(--padding-xxs) var(--padding-sm);
+    }
+  }
+}

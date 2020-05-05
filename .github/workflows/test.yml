@@ -1,0 +1,19 @@
+name: Test
+
+on: push
+
+jobs:
+  Test:
+    name: Test
+    runs-on: macOS-10.14
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v1
+      - name: Install NodeJS
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10
+      - name: Bootstrap packages
+        run: npm run bootstrap
+      - name: Run tests
+        run: npm test

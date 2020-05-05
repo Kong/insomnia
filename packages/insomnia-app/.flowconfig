@@ -10,5 +10,11 @@
 
 [options]
 esproposal.decorators=ignore
+module.file_ext=.css
+esproposal.optional_chaining=enable
 
 [lints]
+
+[untyped]
+<PROJECT_ROOT>/node_modules/graphql
+<PROJECT_ROOT>/node_modules/iterall

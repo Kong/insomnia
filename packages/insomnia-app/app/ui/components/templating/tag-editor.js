@@ -431,7 +431,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       if (reqGroup == null) {
         break;
       }
-      let name = typeof reqGroup.name === 'string' ? reqGroup.name : '';
+      const name = typeof reqGroup.name === 'string' ? reqGroup.name : '';
       prefix = `[${name}] ` + prefix;
       requestGroupId = reqGroup.parentId;
     } while (true);

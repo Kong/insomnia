@@ -79,10 +79,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
 
       const context = {
-        ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
-        ...pluginContexts.data.init(),
-        ...pluginContexts.store.init(p.plugin),
-        ...pluginContexts.network.init(activeEnvironmentId),
+        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER): Object),
+        ...(pluginContexts.data.init(): Object),
+        ...(pluginContexts.store.init(p.plugin): Object),
+        ...(pluginContexts.network.init(activeEnvironmentId): Object),
       };
 
       const docs = await db.withDescendants(activeWorkspace);
@@ -282,7 +282,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
           className={classes}
           onOpen={this._handleDropdownOpen}
           onHide={this._handleDropdownHide}
-          {...other}>
+          {...(other: Object)}>
           <DropdownButton className="btn wide">
             <h1 className="no-pad text-left">
               <div className="pull-right">

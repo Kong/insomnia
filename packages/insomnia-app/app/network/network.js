@@ -13,7 +13,7 @@ import mkdirp from 'mkdirp';
 import crypto from 'crypto';
 import clone from 'clone';
 import { parse as urlParse, resolve as urlResolve } from 'url';
-import { Curl } from 'insomnia-libcurl';
+import { Curl } from '../node-libcurl/curl';
 import { join as pathJoin } from 'path';
 import uuid from 'uuid';
 import * as models from '../models';
@@ -106,7 +106,7 @@ export async function _actuallySend(
   environment: Environment | null,
 ): Promise<ResponsePatch> {
   return new Promise(async resolve => {
-    let timeline: Array<ResponseTimelineEntry> = [];
+    const timeline: Array<ResponseTimelineEntry> = [];
 
     function addTimeline(name, value) {
       timeline.push({ name, value, timestamp: Date.now() });
@@ -329,7 +329,7 @@ export async function _actuallySend(
         addTimelineText(`Enable timeout of ${settings.timeout}ms`);
         setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
       } else {
-        addTimelineText(`Disable timeout`);
+        addTimelineText('Disable timeout');
         setOpt(Curl.option.TIMEOUT_MS, 0);
       }
 
@@ -915,10 +915,10 @@ async function _applyRequestPluginHooks(
   const newRenderedRequest = clone(renderedRequest);
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
-      ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
-      ...pluginContexts.data.init(),
-      ...pluginContexts.store.init(plugin),
-      ...pluginContexts.request.init(newRenderedRequest, renderedContext),
+      ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER): Object),
+      ...(pluginContexts.data.init(): Object),
+      ...(pluginContexts.store.init(plugin): Object),
+      ...(pluginContexts.request.init(newRenderedRequest, renderedContext): Object),
     };
 
     try {
@@ -942,11 +942,11 @@ async function _applyResponsePluginHooks(
 
   for (const { plugin, hook } of await plugins.getResponseHooks()) {
     const context = {
-      ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
-      ...pluginContexts.data.init(),
-      ...pluginContexts.store.init(plugin),
-      ...pluginContexts.response.init(newResponse),
-      ...pluginContexts.request.init(newRequest, renderContext, true),
+      ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER): Object),
+      ...(pluginContexts.data.init(): Object),
+      ...(pluginContexts.store.init(plugin): Object),
+      ...(pluginContexts.response.init(newResponse): Object),
+      ...(pluginContexts.request.init(newRequest, renderContext, true): Object),
     };
 
     try {

@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
+import KeydownBinder from '../keydown-binder';
 
 @autobind
 class Editable extends PureComponent {
@@ -38,11 +39,14 @@ class Editable extends PureComponent {
     const value = this._input.value.trim();
 
     if (!value) {
-      // Don't do anything if it's empty
+      // Don't do anything if it's empty.
       return;
     }
 
-    this.props.onSubmit(value);
+    if (value !== this.props.value) {
+      // Don't run onSubmit for values that haven't been changed.
+      this.props.onSubmit(value);
+    }
 
     // This timeout prevents the UI from showing the old value after submit.
     // It should give the UI enough time to redraw the new value.
@@ -55,9 +59,15 @@ class Editable extends PureComponent {
       this._handleEditEnd();
     } else if (e.keyCode === 27) {
       // Pressed Escape
-      // NOTE: This blur causes a save because we save on blur
-      // TODO: Make escape blur without saving
-      this._input && this._input.blur();
+
+      // Prevent bubbling to modals and other escape listeners.
+      e.stopPropagation();
+
+      if (this._input) {
+        // Set the input to the original value
+        this._input.value = this.props.value;
+        this._handleEditEnd();
+      }
     }
   }
 
@@ -74,15 +84,18 @@ class Editable extends PureComponent {
 
     if (editing) {
       return (
-        <input
-          {...extra}
-          className={`editable ${className || ''}`}
-          type="text"
-          ref={this._handleSetInputRef}
-          defaultValue={value}
-          onKeyDown={this._handleEditKeyDown}
-          onBlur={this._handleEditEnd}
-        />
+        // KeydownBinder must be used here to properly stop propagation
+        // from reaching other scoped KeydownBinders
+        <KeydownBinder onKeydown={this._handleEditKeyDown} scoped>
+          <input
+            {...extra}
+            className={`editable ${className || ''}`}
+            type="text"
+            ref={this._handleSetInputRef}
+            defaultValue={value}
+            onBlur={this._handleEditEnd}
+          />
+        </KeydownBinder>
       );
     } else {
       const readViewProps = {

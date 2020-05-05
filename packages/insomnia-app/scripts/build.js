@@ -1,3 +1,4 @@
+const { appConfig } = require('../config');
 const packageJson = require('../package.json');
 const childProcess = require('child_process');
 const webpack = require('webpack');
@@ -7,8 +8,7 @@ const ncp = require('ncp').ncp;
 const path = require('path');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
-const configRenderer = require('../webpack/webpack.config.production.babel');
-const configMain = require('../webpack/webpack.config.electron.babel');
+const { APP_ID_INSOMNIA, APP_ID_DESIGNER } = require('../config');
 
 // Start build if ran from CLI
 if (require.main === module) {
@@ -17,10 +17,37 @@ if (require.main === module) {
   });
 }
 
-module.exports.start = async function() {
-  console.log('[build] Starting build');
-  console.log('[build] npm: ' + childProcess.spawnSync('npm', ['--version']).stdout);
-  console.log('[build] node: ' + childProcess.spawnSync('node', ['--version']).stdout);
+module.exports.start = async function(forcedVersion = null) {
+  const buildContext = getBuildContext();
+  if (!buildContext.version) {
+    console.log(`[build] Skipping build for ref "${buildContext.gitRef}"`);
+    process.exit(0);
+  }
+
+  if (process.env.APP_ID) {
+    console.log('Should not set APP_ID for builds. Use Git tag instead');
+    process.exit(1);
+  }
+
+  // Configure APP_ID env based on what we detected
+  if (buildContext.app === 'designer') {
+    process.env.APP_ID = APP_ID_DESIGNER;
+  } else {
+    process.env.APP_ID = APP_ID_INSOMNIA;
+  }
+
+  if (appConfig().version !== buildContext.version) {
+    console.log(`[build] App version mismatch with Git tag ${appConfig().version} != ${buildContext.version}`);
+    process.exit(1);
+  }
+
+  // These must be required after APP_ID environment variable is set above
+  const configRenderer = require('../webpack/webpack.config.production.babel');
+  const configMain = require('../webpack/webpack.config.electron.babel');
+
+  console.log(`[build] Starting build for ref "${buildContext.gitRef}"`);
+  console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
+  console.log(`[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim());
 
   if (process.version.indexOf('v10.') !== 0) {
     console.log('[build] Node v10.x.x is required to build');
@@ -43,16 +70,21 @@ module.exports.start = async function() {
   console.log('[build] Copying files');
   await copyFiles('../bin', '../build/');
   await copyFiles('../app/static', '../build/static');
-  await copyFiles('../app/icons/', '../build/');
+  await copyFiles(`../app/icons/${appConfig().appId}`, '../build/');
 
   // Generate package.json
-  await generatePackageJson('../package.json', '../build/package.json');
+  await generatePackageJson(
+    '../package.json',
+    '../build/package.json',
+    forcedVersion,
+  );
 
   // Install Node modules
   console.log('[build] Installing dependencies');
   await install('../build/');
 
   console.log('[build] Complete!');
+  return buildContext;
 };
 
 async function buildWebpack(config) {
@@ -89,7 +121,7 @@ async function copyFiles(relSource, relDest) {
   return new Promise((resolve, reject) => {
     const source = path.resolve(__dirname, relSource);
     const dest = path.resolve(__dirname, relDest);
-    console.log(`[build] copy ${source} to ${dest}`);
+    console.log(`[build] copy "${relSource}" to "${relDest}"`);
     ncp(source, dest, err => {
       if (err) {
         reject(err);
@@ -150,37 +182,40 @@ async function install(relDir) {
   return new Promise(resolve => {
     const prefix = path.resolve(__dirname, relDir);
 
-    // // Link all plugins
-    // const plugins = path.resolve(__dirname, `../../../plugins`);
-    // for (const dir of fs.readdirSync(plugins)) {
-    //   if (dir.indexOf('.') === 0) {
-    //     continue;
-    //   }
-    //
-    //   console.log(`[build] Linking plugin ${dir}`);
-    //   const p = path.join(plugins, dir);
-    //   childProcess.spawnSync('npm', ['link', p], {
-    //     cwd: prefix,
-    //     shell: true,
-    //   });
-    // }
+    // Link all plugins
+    const plugins = path.resolve(__dirname, '../../../plugins');
+    for (const dir of fs.readdirSync(plugins)) {
+      if (dir.indexOf('.') === 0) {
+        continue;
+      }
 
-    // // Link all packages
-    // const packages = path.resolve(__dirname, `../../../packages`);
-    // for (const dir of fs.readdirSync(packages)) {
-    //   // Don't like ourselves
-    //   if (dir === packageJson.name) {
-    //     continue;
-    //   }
-    //
-    //   if (dir.indexOf('.') === 0) {
-    //     continue;
-    //   }
-    //
-    //   console.log(`[build] Linking local package ${dir}`);
-    //   const p = path.join(packages, dir);
-    //   childProcess.spawnSync('npm', ['link', p], { cwd: prefix, shell: true });
-    // }
+      console.log(`[build] Linking plugin ${dir}`);
+      const p = path.join(plugins, dir);
+      childProcess.spawnSync('npm', ['link', p], {
+        cwd: prefix,
+        shell: true,
+      });
+    }
+
+    // Link all packages
+    const packages = path.resolve(__dirname, '../../../packages');
+    for (const dir of fs.readdirSync(packages)) {
+      // Don't link ourselves
+      if (dir === packageJson.name) {
+        continue;
+      }
+
+      if (dir.indexOf('.') === 0) {
+        continue;
+      }
+
+      console.log(`[build] Linking local package ${dir}`);
+      const p = path.join(packages, dir);
+      childProcess.spawnSync('npm', ['link', p], {
+        cwd: prefix,
+        shell: true,
+      });
+    }
 
     const p = childProcess.spawn('npm', ['install', '--production', '--no-optional'], {
       cwd: prefix,
@@ -202,25 +237,29 @@ async function install(relDir) {
   });
 }
 
-function generatePackageJson(relBasePkg, relOutPkg) {
+function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
   // Read package.json's
   const basePath = path.resolve(__dirname, relBasePkg);
   const outPath = path.resolve(__dirname, relOutPkg);
 
   const basePkg = JSON.parse(fs.readFileSync(basePath));
 
+  const app = appConfig();
   const appPkg = {
-    name: packageJson.app.name,
-    version: basePkg.app.version,
-    productName: basePkg.app.productName,
-    longName: basePkg.app.longName,
+    name: app.name,
+    version: forcedVersion || app.version,
+    productName: app.productName,
+    longName: app.longName,
     description: basePkg.description,
     license: basePkg.license,
     homepage: basePkg.homepage,
     author: basePkg.author,
+    copyright: `Copyright © ${new Date().getFullYear()} ${basePkg.author}`,
     main: 'main.min.js',
     dependencies: {},
   };
+
+  console.log(`[build] Generated build config for ${appPkg.name} ${appPkg.version}`);
 
   for (const key of Object.keys(appPkg)) {
     if (key === undefined) {
@@ -234,14 +273,40 @@ function generatePackageJson(relBasePkg, relOutPkg) {
   const unpackedDependencies = allDependencies.filter(name => !packedDependencies.includes(name));
 
   // Add dependencies
+  console.log(`[build] Adding ${unpackedDependencies.length} node dependencies`);
   for (const name of unpackedDependencies) {
     const version = basePkg.dependencies[name];
     if (!version) {
       throw new Error(`Failed to find packed dep "${name}" in dependencies`);
     }
     appPkg.dependencies[name] = version;
-    console.log(`[build] Adding native Node dep ${name}`);
   }
 
   fs.writeFileSync(outPath, JSON.stringify(appPkg, null, 2));
+}
+
+// Only release if we're building a tag that ends in a version number
+function getBuildContext() {
+  const {
+    GITHUB_REF,
+    GITHUB_SHA,
+    TRAVIS_TAG,
+    TRAVIS_COMMIT,
+    TRAVIS_CURRENT_BRANCH,
+    GIT_TAG,
+  } = process.env;
+
+  const gitCommit = GITHUB_SHA || TRAVIS_COMMIT;
+  const gitRef = GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || GIT_TAG || '';
+  const tagMatch = gitRef.match(/(designer|core)@(\d{4}\.\d+\.\d+(-(alpha|beta)\.\d+)?)$/);
+
+  const app = tagMatch ? tagMatch[1] : null;
+  const version = tagMatch ? tagMatch[2] : null;
+
+  return {
+    app,
+    version,
+    gitRef,
+    gitCommit,
+  };
 }

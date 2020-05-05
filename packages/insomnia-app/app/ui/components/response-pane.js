@@ -102,7 +102,7 @@ class ResponsePane extends React.PureComponent<Props> {
       }
 
       const readStream = models.response.getBodyStream(response);
-      let dataBuffers = [];
+      const dataBuffers = [];
       if (readStream) {
         readStream.on('data', data => {
           dataBuffers.push(data);

@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
 import Button from './button';
 import styled from 'styled-components';
-import SvgIcon from './svg-icon';
+import SvgIcon, { IconEnum } from './svg-icon';
 
 type Notice = {|
   type: 'warning' | 'error',
@@ -25,7 +25,7 @@ type State = {
   collapsed: boolean,
 };
 
-const Wrapper: React.ComponentType<any> = styled.div`
+const Wrapper: React.ComponentType<{}> = styled.div`
   width: 100%;
 
   td {
@@ -37,11 +37,20 @@ const Wrapper: React.ComponentType<any> = styled.div`
   }
 `;
 
-const ErrorCount: React.ComponentType<any> = styled.div`
-  margin-right: var(--padding-md);
+const ScrollWrapperStyled: React.ComponentType<{}> = styled.div`
+  height: 100%;
+  width: 100%;
+  max-height: 13rem;
+  overflow-y: auto;
 `;
 
-const JumpButton: React.ComponentType<any> = styled.button`
+const ErrorCount: React.ComponentType<{}> = styled.div`
+  margin-right: var(--padding-md);
+  display: inline-flex;
+  align-items: center;
+`;
+
+const JumpButton: React.ComponentType<{}> = styled.button`
   outline: 0;
   border: 0;
   background: transparent;
@@ -76,7 +85,7 @@ const JumpButton: React.ComponentType<any> = styled.button`
   }
 `;
 
-const Header: React.ComponentType<any> = styled.header`
+const Header: React.ComponentType<{}> = styled.header`
   display: flex;
   align-items: center;
   flex-grow: 0;
@@ -85,15 +94,6 @@ const Header: React.ComponentType<any> = styled.header`
   border-left: 0;
   border-right: 0;
   padding-left: var(--padding-md);
-
-  & > * {
-    display: flex;
-    align-items: stretch;
-
-    svg {
-      margin-right: 0.2rem;
-    }
-  }
 `;
 
 class NoticeTable extends React.PureComponent<Props, State> {
@@ -126,7 +126,9 @@ class NoticeTable extends React.PureComponent<Props, State> {
     const { notices, compact } = this.props;
     const { collapsed } = this.state;
 
-    const caret = collapsed ? <SvgIcon icon="chevron-up" /> : <SvgIcon icon="chevron-down" />;
+    const caret = collapsed
+      ? <SvgIcon icon={IconEnum.chevronUp} />
+      : <SvgIcon icon={IconEnum.chevronDown} />;
 
     const errors = notices.filter(n => n.type === 'error');
     const warnings = notices.filter(n => n.type === 'warning');
@@ -137,12 +139,12 @@ class NoticeTable extends React.PureComponent<Props, State> {
           <div>
             {errors.length > 0 && (
               <ErrorCount>
-                <SvgIcon icon="error" /> {errors.length}
+                <SvgIcon icon={IconEnum.error} label={errors.length} />
               </ErrorCount>
             )}
             {warnings.length > 0 && (
               <ErrorCount>
-                <SvgIcon icon="warning" /> {warnings.length}
+                <SvgIcon icon={IconEnum.warning} label={warnings.length} />
               </ErrorCount>
             )}
           </div>
@@ -151,35 +153,37 @@ class NoticeTable extends React.PureComponent<Props, State> {
           </Button>
         </Header>
         {!collapsed && (
-          <Table striped compact={compact}>
-            <TableHead>
-              <TableRow>
-                <TableHeader align="center">Type</TableHeader>
-                <TableHeader style={{ minWidth: '3em' }} align="center">
-                  Line
-                </TableHeader>
-                <TableHeader style={{ width: '100%' }} align="left">
-                  Message
-                </TableHeader>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {notices.map((n, i) => (
-                <TableRow key={`${n.line}:${n.type}:${n.message}`}>
-                  <TableData align="center">
-                    <SvgIcon icon={n.type} />
-                  </TableData>
-                  <TableData align="center">
-                    {n.line}
-                    <JumpButton onClick={this.onClick.bind(this, n)}>
-                      <SvgIcon icon="arrow-right" />
-                    </JumpButton>
-                  </TableData>
-                  <TableData align="left">{n.message}</TableData>
+          <ScrollWrapperStyled>
+            <Table striped compact={compact}>
+              <TableHead>
+                <TableRow>
+                  <TableHeader align="center">Type</TableHeader>
+                  <TableHeader style={{ minWidth: '3em' }} align="center">
+                    Line
+                  </TableHeader>
+                  <TableHeader style={{ width: '100%' }} align="left">
+                    Message
+                  </TableHeader>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHead>
+              <TableBody>
+                {notices.map((n, i) => (
+                  <TableRow key={`${n.line}:${n.type}:${n.message}`}>
+                    <TableData align="center">
+                      <SvgIcon icon={n.type} />
+                    </TableData>
+                    <TableData align="center">
+                      {n.line}
+                      <JumpButton onClick={this.onClick.bind(this, n)}>
+                        <SvgIcon icon={IconEnum.arrowRight} />
+                      </JumpButton>
+                    </TableData>
+                    <TableData align="left">{n.message}</TableData>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollWrapperStyled>
         )}
       </Wrapper>
     );

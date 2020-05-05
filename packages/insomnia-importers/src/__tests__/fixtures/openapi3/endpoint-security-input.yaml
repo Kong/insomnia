@@ -17,13 +17,25 @@ components:
       type: apiKey
       name: x-api_key
       in: header
+    AnotherKey-Header:
+      type: apiKey
+      name: x-app-version
+      in: header
     Key-Cookie:
       type: apiKey
       name: CookieName
       in: cookie
+    AnotherKey-Cookie:
+      type: apiKey
+      name: AnotherCookieName
+      in: cookie
     Key-Query:
       type: apiKey
       name: key
+      in: query
+    AnotherKey-Query:
+      type: apiKey
+      name: another_key
       in: query
 
 paths:
@@ -45,6 +57,7 @@ paths:
     get:
       security:
         - Key-Header: []
+        - AnotherKey-Header: []
       responses:
         '200':
           description: OK
@@ -52,6 +65,7 @@ paths:
     get:
       security:
         - Key-Cookie: []
+        - AnotherKey-Cookie: []
       responses:
         '200':
           description: OK
@@ -59,6 +73,7 @@ paths:
     get:
       security:
         - Key-Query: []
+        - AnotherKey-Query: []
       responses:
         '200':
           description: OK

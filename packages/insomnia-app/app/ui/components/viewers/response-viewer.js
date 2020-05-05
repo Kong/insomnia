@@ -123,7 +123,7 @@ class ResponseViewer extends React.Component<Props, State> {
   }
 
   shouldComponentUpdate(nextProps: Props, nextState: State) {
-    for (let k of Object.keys(nextProps)) {
+    for (const k of Object.keys(nextProps)) {
       const next = nextProps[k];
       const current = this.props[k];
       if (typeof next === 'function') {
@@ -143,7 +143,7 @@ class ResponseViewer extends React.Component<Props, State> {
       }
     }
 
-    for (let k of Object.keys(nextState)) {
+    for (const k of Object.keys(nextState)) {
       const next = nextState[k];
       const current = this.state[k];
 

@@ -43,6 +43,9 @@ describe('filterHeaders()', () => {
     expect(misc.filterHeaders(['bad'], null)).toEqual([]);
     expect(misc.filterHeaders(['bad'], 'good')).toEqual([]);
     expect(misc.filterHeaders(null, 'good')).toEqual([]);
+    expect(misc.filterHeaders([{ name: '', value: 'valid' }], '')).toEqual([]);
+    expect(misc.filterHeaders([{ name: 123, value: 123 }], 123)).toEqual([]);
+    expect(misc.filterHeaders([{ name: 'good', value: 'valid' }], 123)).toEqual([]);
     expect(misc.filterHeaders([{ name: 'good', value: 'valid' }], null)).toEqual([]);
     expect(misc.filterHeaders([{ name: 'good', value: 'valid' }], 'good')).toEqual([
       { name: 'good', value: 'valid' },

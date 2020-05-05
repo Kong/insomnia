@@ -55,6 +55,7 @@ class GenerateCodeModal extends PureComponent {
   _setModalRef(n) {
     this.modal = n;
   }
+
   _setEditorRef(n) {
     this._editor = n;
   }
@@ -148,7 +149,7 @@ class GenerateCodeModal extends PureComponent {
               ))}
             </Dropdown>
             &nbsp;&nbsp;
-            <CopyButton content={cmd} className="pull-right btn btn--clicky" />
+            <CopyButton content={cmd} className="pull-right" />
           </div>
           <CodeEditor
             lineWrapping

@@ -12,3 +12,7 @@ screenshots/
 **/bin/
 **/__fixtures__/
 **/flow-typed/
+**/dist/
+**/.cache/
+**/svgr/
+**/storybook-static/

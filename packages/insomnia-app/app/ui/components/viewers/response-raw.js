@@ -31,7 +31,7 @@ class ResponseRaw extends PureComponent {
   }
 
   shouldComponentUpdate(nextProps) {
-    for (let key in nextProps) {
+    for (const key in nextProps) {
       if (nextProps.hasOwnProperty(key)) {
         if (nextProps[key] !== this.props[key]) {
           return true;

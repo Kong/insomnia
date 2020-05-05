@@ -52,6 +52,8 @@ import 'codemirror-graphql/variables/lint';
 import 'codemirror-graphql/variables/mode';
 import './modes/nunjucks';
 import './modes/curl';
+import './modes/openapi';
+import './lint/openapi';
 import './extensions/autocomplete';
 import './extensions/clickable';
 import './extensions/nunjucks-tags';

@@ -1,25 +1,49 @@
-import * as packageJSON from '../../package.json';
+// @flow
+
+import { appConfig } from '../../config';
 import * as electron from 'electron';
 import path from 'path';
 import mkdirp from 'mkdirp';
 import { getDataDirectory } from './misc';
+import type { GlobalActivity } from '../ui/components/activity-bar/activity-bar';
+import { ACTIVITY_INSOMNIA } from '../ui/components/activity-bar/activity-bar';
 
 // App Stuff
 
 export function getAppVersion() {
-  return packageJSON.app.version;
+  return appConfig().version;
 }
 
 export function getAppLongName() {
-  return packageJSON.app.longName;
+  return appConfig().longName;
 }
 
 export function getAppName() {
-  return packageJSON.app.productName;
+  return appConfig().productName;
+}
+
+export function getAppDefaultTheme() {
+  return appConfig().theme;
+}
+
+export function getAppSynopsis() {
+  return appConfig().synopsis;
+}
+
+export function getDefaultAppId() {
+  return process.env.APP_ID;
 }
 
 export function getAppId() {
-  return packageJSON.app.appId;
+  return appConfig().appId;
+}
+
+export function getGoogleAnalyticsId() {
+  return appConfig().gaId;
+}
+
+export function getGoogleAnalyticsLocation() {
+  return appConfig().gaLocation;
 }
 
 export function getAppPlatform() {
@@ -31,7 +55,16 @@ export function getAppEnvironment() {
 }
 
 export function getAppReleaseDate() {
-  return new Date(process.env.RELEASE_DATE).toLocaleDateString();
+  return new Date(process.env.RELEASE_DATE).toLocaleDateString(); 
+}
+
+export function getBrowserUserAgent() {
+  const ua = encodeURIComponent(
+    String(window.navigator.userAgent)
+      .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
+      .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
+  ).replace('%2C', ',');
+  return ua;
 }
 
 export function getTempDir() {
@@ -58,17 +91,27 @@ export function isDevelopment() {
   return getAppEnvironment() === 'development';
 }
 
+export function isInsomnia(activity: GlobalActivity): boolean {
+  return activity === ACTIVITY_INSOMNIA;
+}
+
 export function getClientString() {
   return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
+}
+
+export function getDocumentationUrl(slug: string): string {
+  return `https://support.insomnia.rest/${slug}`;
+}
+
+export function changelogUrl(): string {
+  const { changelogBaseUrl, version } = appConfig();
+  return `${changelogBaseUrl}/${version}`;
 }
 
 // Global Stuff
 export const DB_PERSIST_INTERVAL = 1000 * 60 * 30; // Compact every once in a while
 export const DEBOUNCE_MILLIS = 100;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
-export const GA_ID = 'UA-86416787-1';
-export const GA_LOCATION = 'https://desktop.insomnia.rest/';
-export const CHANGELOG_BASE_URL = 'https://insomnia.rest/changelog';
 export const STATUS_CODE_PLUGIN_ERROR = -222;
 export const LARGE_RESPONSE_MB = 5;
 export const HUGE_RESPONSE_MB = 100;
@@ -97,6 +140,10 @@ export const UPDATE_URL_WINDOWS = 'https://updates.insomnia.rest/updates/win';
 
 // API
 export const API_BASE_URL = 'https://api.insomnia.rest';
+
+// PLUGINS
+export const PLUGIN_HUB_BASE = 'https://insomnia.rest/plugins';
+export const NPM_PACKAGE_BASE = 'https://www.npmjs.com/package';
 
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 45;
@@ -183,7 +230,7 @@ export const HAWK_ALGORITHM_SHA1 = 'sha1';
 
 // json-order constants
 export const JSON_ORDER_PREFIX = '&';
-export const JSON_ORDER_SEPARATOR = `~|`;
+export const JSON_ORDER_SEPARATOR = '~|';
 
 const authTypesMap = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],

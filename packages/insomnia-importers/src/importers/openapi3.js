@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const changeCase = require('change-case');
 
 const SwaggerParser = require('swagger-parser');
 const { parse: urlParse } = require('url');
@@ -65,8 +66,9 @@ module.exports.convert = async function(rawData) {
     },
   };
 
-  const servers = api.servers.map(s => urlParse(s.url));
-  const defaultServer = servers[0] || urlParse('http://example.com/');
+  const servers = api.servers || [];
+  const serverUrls = servers.map(s => urlParse(s.url));
+  const defaultServer = serverUrls[0] || urlParse('http://example.com/');
   const securityVariables = getSecurityEnvVariables(
     api.components && api.components.securitySchemes,
   );
@@ -78,7 +80,7 @@ module.exports.convert = async function(rawData) {
 
   const openapiEnv = {
     _type: 'environment',
-    _id: `env___BASE_ENVIRONMENT_ID___sub`,
+    _id: 'env___BASE_ENVIRONMENT_ID___sub',
     parentId: baseEnv._id,
     name: 'OpenAPI env',
     data: {
@@ -129,7 +131,7 @@ function parseEndpoints(document) {
       const methods = Object.keys(schemasPerMethod);
 
       return methods
-        .filter(method => method !== 'parameters')
+        .filter(method => method !== 'parameters' && method.indexOf('x-') !== 0)
         .map(method => Object.assign({}, schemasPerMethod[method], { path, method }));
     })
     .reduce(
@@ -184,7 +186,7 @@ function importFolderItem(item, parentId) {
     parentId,
     _id: `fld___WORKSPACE_ID__${hash}`,
     _type: 'request_group',
-    name: item.name || `Folder {requestGroupCount}`,
+    name: item.name || 'Folder {requestGroupCount}',
     description: item.description || '',
   };
 }
@@ -289,23 +291,28 @@ function parseSecurity(security, securitySchemes) {
   const apiKeyHeaders = apiKeySchemes
     .filter(scheme => scheme.in === 'header')
     .map(scheme => {
+      const variableName = changeCase.camelCase(scheme.name);
       return {
         name: scheme.name,
         disabled: false,
-        value: '{{ apiKey }}',
+        value: `{{ ${variableName} }}`,
       };
     });
   const apiKeyCookies = apiKeySchemes
     .filter(scheme => scheme.in === 'cookie')
-    .map(scheme => `${scheme.name}={{ apiKey }}`);
+    .map(scheme => {
+      const variableName = changeCase.camelCase(scheme.name);
+      return `${scheme.name}={{ ${variableName} }}`;
+    });
   const apiKeyCookieHeader = { name: 'Cookie', disabled: false, value: apiKeyCookies.join('; ') };
   const apiKeyParams = apiKeySchemes
     .filter(scheme => scheme.in === 'query')
     .map(scheme => {
+      const variableName = changeCase.camelCase(scheme.name);
       return {
         name: scheme.name,
         disabled: false,
-        value: '{{ apiKey }}',
+        value: `{{ ${variableName} }}`,
       };
     });
 
@@ -340,9 +347,9 @@ function getSecurityEnvVariables(securitySchemes) {
 
   const variables = {};
   const securitySchemesArray = Object.values(securitySchemes);
-  const hasApiKeyScheme = securitySchemesArray.some(
-    scheme => scheme.type === SECURITY_TYPE.API_KEY,
-  );
+  const apiKeyVariableNames = securitySchemesArray
+    .filter(scheme => scheme.type === SECURITY_TYPE.API_KEY)
+    .map(scheme => changeCase.camelCase(scheme.name));
   const hasHttpBasicScheme = securitySchemesArray.some(
     scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
   );
@@ -350,9 +357,9 @@ function getSecurityEnvVariables(securitySchemes) {
     scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'bearer',
   );
 
-  if (hasApiKeyScheme) {
-    variables.apiKey = 'apiKey';
-  }
+  Array.from(new Set(apiKeyVariableNames)).forEach(name => {
+    variables[name] = name;
+  });
 
   if (hasHttpBasicScheme) {
     variables.httpUsername = 'username';

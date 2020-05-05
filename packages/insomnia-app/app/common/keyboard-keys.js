@@ -1,6 +1,6 @@
 // @flow
 
-export const keyboardKeys = {
+export const keyboardKeys: Object = {
   backspace: {
     keyCode: 8,
     label: 'Backspace',
@@ -81,43 +81,43 @@ export const keyboardKeys = {
     keyCode: 46,
     label: 'Delete',
   },
-  '0': {
+  num0: {
     keyCode: 48,
     label: '0',
   },
-  '1': {
+  num1: {
     keyCode: 49,
     label: '1',
   },
-  '2': {
+  num2: {
     keyCode: 50,
     label: '2',
   },
-  '3': {
+  num3: {
     keyCode: 51,
     label: '3',
   },
-  '4': {
+  num4: {
     keyCode: 52,
     label: '4',
   },
-  '5': {
+  num5: {
     keyCode: 53,
     label: '5',
   },
-  '6': {
+  num6: {
     keyCode: 54,
     label: '6',
   },
-  '7': {
+  num7: {
     keyCode: 55,
     label: '7',
   },
-  '8': {
+  num8: {
     keyCode: 56,
     label: '8',
   },
-  '9': {
+  num9: {
     keyCode: 57,
     label: '9',
   },

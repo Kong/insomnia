@@ -39,6 +39,10 @@
     width: var(--modal-width)-wide;
   }
 
+  &.modal--skinny .modal__content__wrapper {
+    width: var(--modal-width-skinny);
+  }
+
   .modal__content {
     display: grid;
     grid-template-columns: 100%;
@@ -103,7 +107,7 @@
   }
 
   .modal__footer {
-    border-top: 1px solid var(--hl-md);
+    border-top: 1px solid var(--hl-sm);
     background-color: var(--color-bg);
     color: var(--color-font);
     display: flex;
@@ -114,6 +118,18 @@
 
     button {
       padding: 0 var(--padding-md);
+      &.studio-action-btn {
+        color: #0084d5;
+        float: left;
+        .with-icon {
+          display: flex;
+          align-items: center;
+          svg,
+          div {
+            float: left;
+          }
+        }
+      }
     }
   }
 
@@ -131,6 +147,16 @@
   .modal__content > *:first-child {
     border-top-left-radius: var(--radius-md);
     border-top-right-radius: var(--radius-md);
+  }
+
+  .status-loading {
+    width: 30px;
+    height: 30px;
+    display: inline-block;
+
+    path {
+      fill: #004ec1;
+    }
   }
 }
 

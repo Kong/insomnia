@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-jsonpath",
-  "version": "2.1.4",
+  "version": "2.2.2",
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Template tag to pull data from JSON strings",
   "license": "MIT",
@@ -11,10 +11,12 @@
   "main": "index.js",
   "insomnia": {
     "name": "json-path",
-    "description": "Template tag to pull data out of JSON strings"
+    "description": "Template tag to pull data out of JSON strings",
+    "core": true,
+    "unlisted": true
   },
   "dependencies": {
-    "jsonpath": "^1.0.0"
+    "jsonpath": "^1.0.2"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
 }

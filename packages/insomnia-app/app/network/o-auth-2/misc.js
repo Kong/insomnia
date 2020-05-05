@@ -23,7 +23,7 @@ export function responseToObject(body, keys, defaults = {}) {
     data = {};
   }
 
-  let results = {};
+  const results = {};
   for (const key of keys) {
     if (data[key] !== undefined) {
       results[key] = data[key];
@@ -82,7 +82,7 @@ export function authorizeUserInWindow(
       if (finalUrl) {
         resolve(finalUrl);
       } else {
-        let errorDescription = 'Authorization window closed';
+        const errorDescription = 'Authorization window closed';
         reject(new Error(errorDescription));
       }
     });
