@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
 import SvgIcon, { IconEnum } from './svg-icon';
-import Dropdown from '../components/dropdown/dropdown';
-import DropdownItem from '../components/dropdown/dropdown-item';
 
 type Props = {|
   className?: string,
@@ -253,7 +251,6 @@ function Sidebar(props: Props) {
             transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
             <input placeholder='Filter...' />
         </StyledFilter>
-        
         <StyledItem>
           <div>
             <SvgIcon icon={IconEnum.indentation} />
