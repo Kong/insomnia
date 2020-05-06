@@ -4,6 +4,9 @@ const pkg = require('../package.json');
 
 const PORT = pkg.dev['dev-server-port'];
 
+const d = new Date();
+const date = d.toLocaleDateString();
+
 module.exports = {
   ...baseConfig,
   devtool: 'eval-source-map',
@@ -34,6 +37,7 @@ module.exports = {
       __DEV__: true,
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.INSOMNIA_ENV': JSON.stringify('development'),
+      'process.env.RELEASE_DATE': JSON.stringify(new Date()),
     }),
   ],
 };
