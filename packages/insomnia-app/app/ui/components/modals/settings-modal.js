@@ -13,7 +13,7 @@ import Plugins from '../settings/plugins';
 import Theme from '../settings/theme';
 import * as models from '../../../models/index';
 import { Curl } from '../../../node-libcurl/curl';
-import { getAppName, getAppVersion, isInsomnia } from '../../../common/constants';
+import { getAppName, getAppVersion, getAppReleaseDate, isInsomnia } from '../../../common/constants';
 import Tooltip from '../tooltip';
 import { setTheme } from '../../../plugins/misc';
 import * as session from '../../../account/session';
@@ -99,7 +99,7 @@ class SettingsModal extends PureComponent {
         <ModalHeader>
           {getAppName()} Preferences
           <span className="faint txt-sm">
-            &nbsp;&nbsp;–&nbsp; v{getAppVersion()}
+            &nbsp;&nbsp;–&nbsp; v{getAppVersion()} ({getAppReleaseDate()})
             <Tooltip position="bottom" message={Curl.getVersion()}>
               <i className="fa fa-info-circle" />
             </Tooltip>

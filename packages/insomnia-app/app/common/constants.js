@@ -54,6 +54,10 @@ export function getAppEnvironment() {
   return process.env.INSOMNIA_ENV || 'production';
 }
 
+export function getAppReleaseDate() {
+  return new Date(process.env.RELEASE_DATE).toLocaleDateString(); 
+}
+
 export function getBrowserUserAgent() {
   const ua = encodeURIComponent(
     String(window.navigator.userAgent)
