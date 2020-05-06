@@ -11,6 +11,7 @@ import _NoticeTable from './components/notice-table';
 import _SvgIcon from './components/svg-icon';
 import _Sidebar from './components/sidebar';
 import _Switch from './components/switch';
+import _ToggleSwitch from './components/toggle-switch';
 import * as table from './components/table';
 
 export const Breadcrumb = _Breadcrumb;
@@ -32,3 +33,4 @@ export const TableData = table.TableData;
 export const TableHead = table.TableHead;
 export const TableHeader = table.TableHeader;
 export const TableRow = table.TableRow;
+export const ToggleSwitch = _ToggleSwitch;
