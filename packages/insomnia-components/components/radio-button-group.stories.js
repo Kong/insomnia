@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import RadioButtonGroup from './radio-button-group';
 
-export default { title: 'Radio Button Group' };
+export default { title: '1st Party | Radio Button Group' };
 
 export const _default = () => <RadioButtonGroup>
 <label><input type="radio" name="specSrc" value="scratch" onClick={() => window.alert('Selected')} /><span>From Scratch</span></label>

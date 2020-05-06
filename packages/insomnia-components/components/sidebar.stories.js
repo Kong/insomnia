@@ -4,7 +4,7 @@ import { withKnobs } from '@storybook/addon-knobs';
 import { withDesign } from 'storybook-addon-designs';
 
 export default {
-  title: 'Sidebar',
+  title: '1st Party | Sidebar',
   decorators: [withKnobs, withDesign],
 };
 
