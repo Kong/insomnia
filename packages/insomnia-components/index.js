@@ -9,7 +9,6 @@ import _GravatarImg from './components/gravatar-img';
 import _Header from './components/header';
 import _NoticeTable from './components/notice-table';
 import _SvgIcon from './components/svg-icon';
-import _Sidebar from './components/sidebar';
 import _Switch from './components/switch';
 import * as table from './components/table';
 
@@ -25,7 +24,6 @@ export const Header = _Header;
 export const NoticeTable = _NoticeTable;
 export const SvgIcon = _SvgIcon;
 export const Switch = _Switch;
-export const Sidebar = _Sidebar;
 export const Table = table.Table;
 export const TableBody = table.TableBody;
 export const TableData = table.TableData;
