@@ -55,7 +55,7 @@ export function getAppEnvironment() {
 }
 
 export function getAppReleaseDate() {
-  return new Date(process.env.RELEASE_DATE).toLocaleDateString(); 
+  return new Date(process.env.RELEASE_DATE).toLocaleDateString();
 }
 
 export function getBrowserUserAgent() {
