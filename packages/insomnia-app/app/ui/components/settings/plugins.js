@@ -13,8 +13,7 @@ import Link from '../base/link';
 import { delay } from '../../../common/misc';
 import { NPM_PACKAGE_BASE, PLUGIN_HUB_BASE, PLUGIN_PATH } from '../../../common/constants';
 import type { PluginConfig, Settings } from '../../../models/settings';
-import ToggleSwitch from './toggle-switch';
-import { Button } from 'insomnia-components';
+import { Button, ToggleSwitch } from 'insomnia-components';
 import { createPlugin } from '../../../plugins/create';
 import { showAlert, showPrompt } from '../modals';
 
