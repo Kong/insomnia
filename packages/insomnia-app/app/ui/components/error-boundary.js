@@ -7,8 +7,10 @@ type Props = {
   children: React.Node,
   errorClassName?: string,
   showAlert?: boolean,
-  replaceWith?: React.Node,
+
+  // Avoid using invalidation with showAlert, otherwise an alert will be shown with every attempted re-render
   invalidateWith?: object,
+  replaceWith?: React.Node,
 };
 
 type State = {
