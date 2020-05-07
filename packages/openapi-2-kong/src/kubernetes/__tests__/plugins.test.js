@@ -678,7 +678,7 @@ describe('plugins', () => {
       // Note: the variable naming below is [applied-to][resolved-from]
       // IE: po implies it is applied to a path, but that plugin type should be resolved by the operation
       // Therefore, the result should only contain gg, ss, pp and oo. The others are duplicates
-      // of the same plugin type and should be filtered out due.
+      // of the same plugin type and should be filtered out due to prioritization.
       const gg = pluginDocWithName('gg', typeG);
 
       const gs = pluginDocWithName('gs', typeS);
