@@ -18,7 +18,6 @@ import designerLogo from '../images/insomnia-designer-logo.svg';
 import previewIcon from '../images/icn-eye.svg';
 import generateConfigIcon from '../images/icn-gear.svg';
 import * as models from '../../models/index';
-import { parseApiSpec } from '../../common/api-specs';
 import { getConfigGenerators } from '../../plugins';
 import AlertModal from './modals/alert-modal';
 
@@ -186,15 +185,9 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
     const { lintMessages, previewHidden, hasConfigPlugins } = this.state;
 
-    let swaggerUiSpec = {};
-    try {
-      const { contents } = parseApiSpec(activeApiSpec.contents);
-      swaggerUiSpec = contents;
-    } catch (err) {
-      // error in parsing swagger spec
-    }
-
     const lintErrorsExist = !!lintMessages.find(c => c.type === 'error');
+
+    const { contents } = activeApiSpec;
 
     return (
       <PageLayout
@@ -248,16 +241,16 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             })}>
             <div id="swagger-ui-wrapper">
               <ErrorBoundary
-                invalidateWith={swaggerUiSpec}
+                invalidateWith={contents}
                 replaceWith={
                   <div className="text-center margin">
                     <h3>An error occurred while trying to render Swagger UI 😢</h3>
                     This preview will automatically refresh, once you have a valid specification
-                    that can be previewed. If it doesn't, try re-opening the document.
+                    that can be previewed.
                   </div>
                 }>
                 <SwaggerUI
-                  spec={swaggerUiSpec}
+                  spec={contents}
                   supportedSubmitMethods={[
                     'get',
                     'put',

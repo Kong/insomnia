@@ -9,7 +9,7 @@ type Props = {
   showAlert?: boolean,
 
   // Avoid using invalidation with showAlert, otherwise an alert will be shown with every attempted re-render
-  invalidateWith?: object,
+  invalidateWith?: string,
   replaceWith?: React.Node,
 };
 
@@ -29,13 +29,13 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
 
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps: $ReadOnly<Props>) {
-    const clearState = { error: null, info: null };
+    const { error, info } = this.state;
 
-    if (nextProps.invalidateWith === undefined || this.state === clearState) {
+    if (nextProps.invalidateWith === undefined || (error === null && info === null)) {
       return;
     }
 
-    this.setState(clearState);
+    this.setState({ error: null, info: null });
   }
 
   componentDidCatch(error: Error, info: { componentStack: string }) {
