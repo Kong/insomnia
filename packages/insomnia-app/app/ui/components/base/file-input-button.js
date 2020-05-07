@@ -78,7 +78,10 @@ class FileInputButton extends React.PureComponent<Props> {
 
   render() {
     const { showFileName, showFileIcon, path, name, ...extraProps } = this.props;
-    const fileName = pathBasename(path);
+
+    // NOTE: Basename fails if path is not a string, so let's make sure it is
+    const fileName = typeof path === 'string' ? pathBasename(path) : null;
+
     return (
       <button
         type="button"
