@@ -18,7 +18,7 @@ export function generateKongForKubernetesConfigFromSpec(
   // Initialize document collections
   const ingressDocuments = [];
 
-  const methodsThatNeedKongIngressDocuments: { [HttpMethodType]: boolean } = {};
+  const methodsThatNeedKongIngressDocuments: Set<HttpMethodType> = new Set<HttpMethodType>();
 
   // Iterate all global servers
   plugins.servers.forEach((sp, serverIndex) => {
@@ -37,7 +37,7 @@ export function generateKongForKubernetesConfigFromSpec(
         const method = o.method;
         if (method) {
           annotations.overrideName = getMethodAnnotationName(method);
-          methodsThatNeedKongIngressDocuments[method] = true;
+          methodsThatNeedKongIngressDocuments.add(method);
         }
 
         // Create metadata
@@ -58,7 +58,7 @@ export function generateKongForKubernetesConfigFromSpec(
     });
   });
 
-  const methodDocuments = Object.keys(methodsThatNeedKongIngressDocuments).map(
+  const methodDocuments = Array.from(methodsThatNeedKongIngressDocuments).map(
     generateK8sMethodDocuments,
   );
   const pluginDocuments = flattenPluginDocuments(plugins);

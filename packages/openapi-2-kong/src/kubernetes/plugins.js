@@ -213,15 +213,15 @@ export function prioritizePlugins(
 
 export function distinctByProperty<T>(arr: Array<T>, propertySelector: (item: T) => any): Array<T> {
   const result: Array<T> = [];
-  const map = new Map();
+  const set = new Set();
 
   for (const item of arr.filter(i => i)) {
     const selector = propertySelector(item);
-    if (map.has(selector)) {
+    if (set.has(selector)) {
       continue;
     }
 
-    map.set(selector, true);
+    set.add(selector);
     result.push(item);
   }
   return result;
