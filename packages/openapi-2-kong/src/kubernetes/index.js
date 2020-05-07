@@ -7,6 +7,7 @@ import { pathVariablesToWildcard, resolveUrlVariables } from './variables';
 
 export function generateKongForKubernetesConfigFromSpec(
   api: OpenApi3Spec,
+  tags: Array<string>,
 ): KongForKubernetesResult {
   let _iterator = 0;
   const increment = (): number => _iterator++;
