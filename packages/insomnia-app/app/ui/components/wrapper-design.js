@@ -248,14 +248,14 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             })}>
             <div id="swagger-ui-wrapper">
               <ErrorBoundary
-                invalidateWith={activeApiSpec.contents}
-                replaceWith={
+                invalidationKey={activeApiSpec.contents}
+                renderError={() => (
                   <div className="text-center margin">
                     <h3>An error occurred while trying to render Swagger UI 😢</h3>
                     This preview will automatically refresh, once you have a valid specification
                     that can be previewed.
                   </div>
-                }>
+                )}>
                 <SwaggerUI
                   spec={swaggerUiSpec}
                   supportedSubmitMethods={[

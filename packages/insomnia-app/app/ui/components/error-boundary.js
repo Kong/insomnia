@@ -10,7 +10,7 @@ type Props = {
 
   // Avoid using invalidation with showAlert, otherwise an alert will be shown with every attempted re-render
   invalidationKey?: string,
-  error?: React.Node,
+  renderError?: (error: Error) => React.Node,
 };
 
 type State = {
@@ -73,11 +73,13 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
 
   render() {
     const { error, info } = this.state;
-    const { errorClassName, children, replaceWith } = this.props;
+    const { errorClassName, children, renderError } = this.props;
 
     if (error && info) {
       return (
-        replaceWith || <div className={errorClassName || null}>Render Failure: {error.message}</div>
+        renderError?.(error) || (
+          <div className={errorClassName || null}>Render Failure: {error.message}</div>
+        )
       );
     }
 
