@@ -253,11 +253,11 @@ class WrapperDesign extends React.PureComponent<Props, State> {
                   <div className="text-center margin">
                     <h3>An error occurred while trying to render Swagger UI 😢</h3>
                     This preview will automatically refresh, once you have a valid specification
-                    that can be previewed.
+                    that can be previewed. If it doesn't, try re-opening the document.
                   </div>
                 }>
                 <SwaggerUI
-                  spec={swaggerUiSpec}
+                  spec={swaggerUiSpec || {}}
                   supportedSubmitMethods={[
                     'get',
                     'put',
