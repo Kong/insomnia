@@ -8,6 +8,7 @@ type Props = {
   errorClassName?: string,
   showAlert?: boolean,
   replaceWith?: React.Node,
+  invalidateWith?: object,
 };
 
 type State = {
@@ -22,6 +23,17 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
       error: null,
       info: null,
     };
+  }
+
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: $ReadOnly<Props>) {
+    const clearState = { error: null, info: null };
+
+    if (nextProps.invalidateWith === undefined || this.state === clearState) {
+      return;
+    }
+
+    this.setState(clearState);
   }
 
   componentDidCatch(error: Error, info: { componentStack: string }) {
@@ -57,10 +69,12 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
 
   render() {
     const { error, info } = this.state;
-    const { errorClassName, children } = this.props;
+    const { errorClassName, children, replaceWith } = this.props;
 
     if (error && info) {
-      return <div className={errorClassName || null}>Render Failure: {error.message}</div>;
+      return (
+        replaceWith || <div className={errorClassName || null}>Render Failure: {error.message}</div>
+      );
     }
 
     return children;
