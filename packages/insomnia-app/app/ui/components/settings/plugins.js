@@ -293,7 +293,7 @@ class Plugins extends React.PureComponent<Props, State> {
 
         <hr />
 
-        <div key={} className="text-right">
+        <div className="text-right">
           <Button onClick={this._handleCreatePlugin}>Generate New Plugin</Button>
           <Button className="space-left" onClick={Plugins._handleClickShowPluginsFolder}>
             Reveal Plugins Folder

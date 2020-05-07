@@ -9,8 +9,8 @@ type Props = {
   showAlert?: boolean,
 
   // Avoid using invalidation with showAlert, otherwise an alert will be shown with every attempted re-render
-  invalidateWith?: string,
-  replaceWith?: React.Node,
+  invalidationKey?: string,
+  error?: React.Node,
 };
 
 type State = {
@@ -31,11 +31,13 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
   UNSAFE_componentWillReceiveProps(nextProps: $ReadOnly<Props>) {
     const { error, info } = this.state;
 
-    if (nextProps.invalidateWith === undefined || (error === null && info === null)) {
-      return;
-    }
+    const invalidationKeyChanged = nextProps.invalidationKey !== this.props.invalidationKey;
+    const isErrored = error !== null || info !== null;
+    const shouldResetError = invalidationKeyChanged && isErrored;
 
-    this.setState({ error: null, info: null });
+    if (shouldResetError) {
+      this.setState({ error: null, info: null });
+    }
   }
 
   componentDidCatch(error: Error, info: { componentStack: string }) {
