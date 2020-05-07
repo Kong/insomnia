@@ -206,3 +206,13 @@ declare type OpenApi3Spec = {
   externalDocs?: OA3ExternalDocs,
   'x-kong-name'?: string,
 };
+
+declare type HttpMethodType =
+  | 'GET'
+  | 'PUT'
+  | 'POST'
+  | 'DELETE'
+  | 'OPTIONS'
+  | 'HEAD'
+  | 'PATCH'
+  | 'TRACE';

@@ -2,13 +2,11 @@
 
 import { getMethodAnnotationName, getName, parseUrl } from '../common';
 import urlJoin from 'url-join';
-import { flattenPluginDocuments, getPlugins } from './plugins';
-import type { HttpMethodKeys } from '../common';
+import { flattenPluginDocuments, getPlugins, prioritizePlugins } from './plugins';
 import { pathVariablesToWildcard, resolveUrlVariables } from './variables';
 
 export function generateKongForKubernetesConfigFromSpec(
   api: OpenApi3Spec,
-  tags: Array<string>,
 ): KongForKubernetesResult {
   let _iterator = 0;
   const increment = (): number => _iterator++;
@@ -19,7 +17,7 @@ export function generateKongForKubernetesConfigFromSpec(
   // Initialize document collections
   const ingressDocuments = [];
 
-  const methodsThatNeedKongIngressDocuments: { [HttpMethodKeys]: boolean } = {};
+  const methodsThatNeedKongIngressDocuments: { [HttpMethodType]: boolean } = {};
 
   // Iterate all global servers
   plugins.servers.forEach((sp, serverIndex) => {
@@ -27,8 +25,8 @@ export function generateKongForKubernetesConfigFromSpec(
     plugins.paths.forEach(pp => {
       // Iterate methods
       pp.operations.forEach(o => {
-        // Collect plugins for document
-        const pluginsForDoc = [...plugins.global, ...sp.plugins, ...pp.plugins, ...o.plugins];
+        // Prioritize plugins for doc
+        const pluginsForDoc = prioritizePlugins(plugins.global, sp.plugins, pp.plugins, o.plugins);
 
         // Identify custom annotations
         const annotations: CustomAnnotations = {
@@ -74,7 +72,7 @@ export function generateKongForKubernetesConfigFromSpec(
   }: KongForKubernetesResult);
 }
 
-function generateK8sMethodDocuments(method: HttpMethodKeys): KubernetesMethodConfig {
+function generateK8sMethodDocuments(method: HttpMethodType): KubernetesMethodConfig {
   return {
     apiVersion: 'configuration.konghq.com/v1',
     kind: 'KongIngress',

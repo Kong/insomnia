@@ -1,7 +1,5 @@
 // @flow
 
-import type { HttpMethodKeys } from '../src/common';
-
 declare type K8sAnnotations = {
   [string]: string,
 };
@@ -40,7 +38,7 @@ declare type KubernetesMethodConfig = {
     name: string,
   },
   route: {
-    methods: Array<HttpMethodKeys>,
+    methods: Array<HttpMethodType>,
   },
 };
 
