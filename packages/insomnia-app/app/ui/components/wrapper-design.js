@@ -257,7 +257,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
                   </div>
                 }>
                 <SwaggerUI
-                  spec={swaggerUiSpec || {}}
+                  spec={swaggerUiSpec}
                   supportedSubmitMethods={[
                     'get',
                     'put',
