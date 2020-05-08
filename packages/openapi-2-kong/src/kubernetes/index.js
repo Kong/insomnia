@@ -116,7 +116,7 @@ export function generateMetadataAnnotations(
 
   // Only continue if metadata annotations, or plugins, or overrides exist
   if (metadata?.annotations || pluginNames.length || overrideName) {
-    const annotations = metadata?.annotations || {};
+    const annotations = { ...metadata?.annotations } || {};
 
     if (pluginNames.length) {
       annotations['konghq.com/plugins'] = pluginNames.join(', ');

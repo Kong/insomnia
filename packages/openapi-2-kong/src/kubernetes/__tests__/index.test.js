@@ -100,18 +100,20 @@ describe('index', () => {
       expect(result).toEqual({ 'konghq.com/override': 'name' });
     });
 
-    it('gets all annotations correctly', async () => {
-      const api: OpenApi3Spec = await parseSpec({
+    it('gets all annotations correctly', () => {
+      const originalAnnotations = {
+        'nginx.ingress.kubernetes.io/rewrite-target': '/',
+      };
+
+      const api: OpenApi3Spec = {
         ...spec,
         info: {
           'x-kubernetes-ingress-metadata': {
             name: 'info-name',
-            annotations: {
-              'nginx.ingress.kubernetes.io/rewrite-target': '/',
-            },
+            annotations: { ...originalAnnotations },
           },
         },
-      });
+      };
       const result = generateMetadataAnnotations(api, {
         pluginNames: ['one', 'two'],
         overrideName: 'name',
@@ -121,6 +123,11 @@ describe('index', () => {
         'konghq.com/plugins': 'one, two',
         'konghq.com/override': 'name',
       });
+
+      // Should not modify source metadata annotations object
+      expect(api.info['x-kubernetes-ingress-metadata'].annotations).toStrictEqual(
+        originalAnnotations,
+      );
     });
   });
 
