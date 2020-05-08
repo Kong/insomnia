@@ -59,7 +59,6 @@ const StyledSidebar: React.ComponentType<{}> = styled.div`
   /* END To constants */
   width: 260px;
   height: 100%;
-  min-height: 1100px;
 `;
 
 const StyledSection: React.ComponentType<{}> = styled(motion.ul)`
@@ -97,13 +96,13 @@ const StyledSection: React.ComponentType<{}> = styled(motion.ul)`
   &:last-child {
     border-top: 1px solid var(--color-border);
     border-bottom: none;
-    position: absolute;
     bottom: 0;
     width: 100%;
 
     li {
       justify-content: start;
       line-height: var(--font-line-height-sm);
+      margin-top: var(--spacing-xxxl);
 
       & > * {
         padding: var(--spacing-md) 0 var(--spacing-md) var(--spacing-sm);
