@@ -56,7 +56,7 @@ describe('index', () => {
         'x-kong-name': 'Kong Name',
         info: {
           'x-kubernetes-ingress-metadata': {
-            name: 'k8s-name',
+            name: 'K8s name',
           },
         },
       });
@@ -252,7 +252,7 @@ describe('index', () => {
     it('handles basic server at root', () => {
       const result = generateRulesForServer(0, { url: 'http://api.insomnia.rest' }, 'my-ingress');
 
-      expect(result).toEqual({
+      expect(result).toStrictEqual({
         host: 'api.insomnia.rest',
         http: {
           paths: [
@@ -454,7 +454,7 @@ describe('index', () => {
 
       const result = generateKongForKubernetesConfigFromSpec(api, []);
 
-      expect(result.documents).toEqual([
+      expect(result.documents).toStrictEqual([
         keyAuthPluginDoc('g0'),
         dummyPluginDoc('g1'),
         ingressDoc([keyAuthName('g0'), dummyName('g1')], 'api.insomnia.rest', 'my-api-s0'),
@@ -483,7 +483,7 @@ describe('index', () => {
 
       const result = generateKongForKubernetesConfigFromSpec(api, []);
 
-      expect(result.documents).toEqual([
+      expect(result.documents).toStrictEqual([
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('s1'),
         keyAuthPluginDoc('s2'),
@@ -512,7 +512,7 @@ describe('index', () => {
 
       const result = generateKongForKubernetesConfigFromSpec(api, []);
 
-      expect(result.documents).toEqual([
+      expect(result.documents).toStrictEqual([
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('p1'),
         keyAuthPluginDoc('p2'),
@@ -548,7 +548,7 @@ describe('index', () => {
 
       const result = generateKongForKubernetesConfigFromSpec(api, []);
 
-      expect(result.documents).toEqual([
+      expect(result.documents).toStrictEqual([
         methodDoc('get'),
         methodDoc('put'),
         methodDoc('post'),

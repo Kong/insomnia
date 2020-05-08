@@ -105,12 +105,7 @@ type CustomAnnotations = {
 };
 
 export function generateMetadataName(api: OpenApi3Spec): string {
-  const name = api.info?.['x-kubernetes-ingress-metadata']?.name;
-  if (name) {
-    return name;
-  }
-
-  return getName(api, 'openapi', { lower: true, replacement: '-' });
+  return getName(api, 'openapi', { lower: true, replacement: '-' }, true);
 }
 
 export function generateMetadataAnnotations(
@@ -152,10 +147,11 @@ export function generateRulesForServer(
   const backend = { serviceName, servicePort };
 
   const pathsToUse: Array<string> = (paths?.length && paths) || ['']; // Make flow happy
-  const k8sPaths: Array<K8sPath> = pathsToUse.map(p => ({
-    path: generateServicePath(pathname, p),
-    backend,
-  }));
+  const k8sPaths: Array<K8sPath> = pathsToUse.map(p => {
+    const path = generateServicePath(pathname, p);
+
+    return path ? { path, backend } : { backend };
+  });
 
   const tlsConfig = generateTlsConfig(server);
   if (tlsConfig) {
@@ -226,8 +222,8 @@ export function generateServicePath(
     return undefined;
   }
 
-  const fullPath = urlJoin(serverBasePath, specificPath);
+  const fullPath = urlJoin(serverBasePath, specificPath, specificPath ? '' : '.*');
   const pathname = pathVariablesToWildcard(fullPath);
 
-  return pathname + (specificPath ? '' : '/.*');
+  return pathname;
 }
