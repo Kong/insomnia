@@ -10,11 +10,14 @@ import {
   getServerPlugins,
   normalizeOperationPlugins,
   normalizePathPlugins,
+  distinctByProperty,
+  prioritizePlugins,
 } from '../plugins';
 import { HttpMethod } from '../../common';
 import {
   dummyPluginDoc,
   keyAuthPluginDoc,
+  pluginDocWithName,
   pluginDummy,
   pluginKeyAuth,
 } from './util/plugin-helpers';
@@ -592,6 +595,147 @@ describe('plugins', () => {
         keyAuthPluginDoc('p2'),
         keyAuthPluginDoc('m3'),
       ]);
+    });
+  });
+
+  describe('prioritizePlugins', () => {
+    it('should return empty array if no plugins', () => {
+      const global = [];
+      const server = [];
+      const path = [];
+      const operation = [];
+
+      const result = prioritizePlugins(global, server, path, operation);
+      expect(result).toHaveLength(0);
+    });
+
+    it('should return all plugins if no two plugins are the same type', () => {
+      const p1 = pluginDocWithName('p1', 'custom-plugin-1');
+      const p2 = pluginDocWithName('p2', 'custom-plugin-2');
+      const p3 = pluginDocWithName('p3', 'custom-plugin-3');
+      const p4 = pluginDocWithName('p4', 'custom-plugin-4');
+
+      const global = [p1];
+      const server = [p2];
+      const path = [p3];
+      const operation = [p4];
+
+      const result = prioritizePlugins(global, server, path, operation);
+      expect(result).toEqual([...operation, ...path, ...server, ...global]);
+    });
+
+    it('should return operation plugin if same type exists in path, server and global', () => {
+      const pluginType = 'custom-plugin';
+      const p1 = pluginDocWithName('p1', pluginType);
+      const p2 = pluginDocWithName('p2', pluginType);
+      const p3 = pluginDocWithName('p3', pluginType);
+      const p4 = pluginDocWithName('p4', pluginType);
+
+      const global = [p1];
+      const server = [p2];
+      const path = [p3];
+      const operation = [p4];
+
+      const result = prioritizePlugins(global, server, path, operation);
+      expect(result).toEqual([...operation]);
+    });
+
+    it('should return path plugin if same type exists in server and global', () => {
+      const pluginType = 'custom-plugin';
+      const p1 = pluginDocWithName('p1', pluginType);
+      const p2 = pluginDocWithName('p2', pluginType);
+      const p3 = pluginDocWithName('p3', pluginType);
+
+      const global = [p1];
+      const server = [p2];
+      const path = [p3];
+      const operation = [];
+
+      const result = prioritizePlugins(global, server, path, operation);
+      expect(result).toEqual([...path]);
+    });
+
+    it('should return server plugin if same type exists in global', () => {
+      const pluginType = 'custom-plugin';
+      const p1 = pluginDocWithName('p1', pluginType);
+      const p2 = pluginDocWithName('p2', pluginType);
+
+      const global = [p1];
+      const server = [p2];
+      const path = [];
+      const operation = [];
+
+      const result = prioritizePlugins(global, server, path, operation);
+      expect(result).toEqual([...server]);
+    });
+
+    it('should prioritize as expected', () => {
+      const typeG = 'custom-plugin-1';
+      const typeS = 'custom-plugin-2';
+      const typeP = 'custom-plugin-3';
+      const typeO = 'custom-plugin-4';
+
+      // Note: the variable naming below is [applied-to][resolved-from]
+      // IE: po implies it is applied to a path, but that plugin type should be resolved by the operation
+      // Therefore, the result should only contain gg, ss, pp and oo. The others are duplicates
+      // of the same plugin type and should be filtered out due to prioritization.
+      const gg = pluginDocWithName('gg', typeG);
+
+      const gs = pluginDocWithName('gs', typeS);
+      const ss = pluginDocWithName('ss', typeS);
+
+      const gp = pluginDocWithName('gp', typeP);
+      const sp = pluginDocWithName('sp', typeP);
+      const pp = pluginDocWithName('pp', typeP);
+
+      const go = pluginDocWithName('go', typeO);
+      const so = pluginDocWithName('so', typeO);
+      const po = pluginDocWithName('po', typeO);
+      const oo = pluginDocWithName('oo', typeO);
+
+      const global = [gg, gs, gp, go];
+      const server = [ss, sp, so];
+      const path = [pp, po];
+      const operation = [oo];
+
+      const result = prioritizePlugins(global, server, path, operation);
+      expect(result).toEqual([oo, pp, ss, gg]);
+    });
+  });
+
+  describe('distinctByProperty()', () => {
+    it('returns empty array if no truthy items', () => {
+      expect(distinctByProperty([], i => i)).toHaveLength(0);
+      expect(distinctByProperty([undefined], i => i)).toHaveLength(0);
+      expect(distinctByProperty([null, undefined, ''], i => i)).toHaveLength(0);
+    });
+
+    it('should remove objects with the same property selector - removes 2/4', () => {
+      const item1 = { name: 'a', value: 'first' };
+      const item2 = { name: 'a', value: 'second' };
+      const item3 = { name: 'b', value: 'third' };
+      const item4 = { name: 'b', value: 'fourth' };
+      const items = [item1, item2, item3, item4];
+
+      // distinct by the name property
+      const filtered = distinctByProperty(items, i => i.name);
+
+      // Should remove item2 and item4
+      expect(filtered).toEqual([item1, item3]);
+    });
+
+    it('should remove objects with the same property selector - removes none', () => {
+      const item1 = { name: 'a', value: 'first' };
+      const item2 = { name: 'a', value: 'second' };
+      const item3 = { name: 'b', value: 'third' };
+      const item4 = { name: 'b', value: 'fourth' };
+      const items = [item1, item2, item3, item4];
+
+      // distinct by the value property
+      const filtered = distinctByProperty(items, i => i.value);
+
+      // Should remove no items
+      expect(filtered).toEqual(items);
     });
   });
 });

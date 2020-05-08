@@ -17,6 +17,14 @@ export const pluginDummy = {
   },
 };
 
+export const pluginDocWithName = (name: string, pluginType: string) => ({
+  apiVersion: 'configuration.konghq.com/v1',
+  kind: 'KongPlugin',
+  metadata: {
+    name,
+  },
+  plugin: pluginType,
+});
 export const keyAuthPluginDoc = (suffix: string) => ({
   apiVersion: 'configuration.konghq.com/v1',
   config: {
