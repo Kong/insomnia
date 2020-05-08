@@ -8,14 +8,14 @@ import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
 import {
   Breadcrumb,
+  Button,
   Card,
   CardContainer,
+  Dropdown,
+  DropdownDivider,
+  DropdownItem,
   Header,
   SvgIcon,
-  Button,
-  Dropdown,
-  DropdownItem,
-  DropdownDivider,
 } from 'insomnia-components';
 import DocumentCardDropdown from './dropdowns/document-card-dropdown';
 import KeydownBinder from './keydown-binder';
@@ -29,7 +29,7 @@ import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
 import type { GlobalActivity } from './activity-bar/activity-bar';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from './activity-bar/activity-bar';
-import { fuzzyMatch } from '../../common/misc';
+import { fuzzyMatchAll } from '../../common/misc';
 import type { WrapperProps } from './wrapper';
 import Notice from './notice';
 import GitRepositorySettingsModal from '../components/modals/git-repository-settings-modal';
@@ -125,7 +125,14 @@ class WrapperHome extends React.PureComponent<Props, State> {
         // Pull settings returned from dialog and shallow-clone the repo
         const { credentials, uri: url } = repoSettingsPatch;
         const token = credentials ? credentials.token : null;
-        await git.clone({ core, dir: '/', singleBranch: true, url, token, depth: 1 });
+        await git.clone({
+          core,
+          dir: '/',
+          singleBranch: true,
+          url,
+          token,
+          depth: 1,
+        });
 
         const f = fsPlugin.promises;
         const ensureDir = async (base: string, name: string): Promise<boolean> => {
@@ -245,24 +252,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
     });
   }
 
-  _filterWorkspaces(): Array<Workspace> {
-    const { workspaces } = this.props.wrapperProps;
-    const { filter } = this.state;
-
-    if (!filter) {
-      return workspaces;
-    }
-
-    return workspaces.filter(w => {
-      const result = fuzzyMatch(filter, w.name, {
-        splitSpace: true,
-        loose: true,
-      });
-
-      return !!result;
-    });
-  }
-
   _handleKeyDown(e) {
     executeHotKey(e, hotKeyRefs.FILTER_DOCUMENTS, () => {
       if (this._filterInput) {
@@ -280,7 +269,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     handleSetActiveWorkspace(id);
   }
 
-  renderWorkspace(w: Workspace) {
+  renderCard(w: Workspace) {
     const {
       apiSpecs,
       handleSetActiveWorkspace,
@@ -362,15 +351,26 @@ class WrapperHome extends React.PureComponent<Props, State> {
       defaultActivity = ACTIVITY_SPEC;
     }
 
+    // Filter the card by multiple different properties
+    const matchResults = fuzzyMatchAll(filter, [apiSpec.fileName, label, branch, version], {
+      splitSpace: true,
+      loose: true,
+    });
+
+    // Return null if we don't match the filter
+    if (filter && !matchResults) {
+      return null;
+    }
+
     return <Card
       key={apiSpec._id}
-      docBranch={branch}
+      docBranch={branch && <Highlight search={filter} text={branch} />}
+      docTitle={apiSpec.fileName && <Highlight search={filter} text={apiSpec.fileName} />}
+      docVersion={version && <Highlight search={filter} text={version} />}
+      tagLabel={label && <Highlight search={filter} text={label} />}
       docLog={log}
-      docTitle={<Highlight search={filter} text={apiSpec.fileName} />}
-      docVersion={version}
-      onClick={() => this._handleSetActiveWorkspace(w._id, defaultActivity)}
-      tagLabel={label}
       docMenu={docMenu}
+      onClick={() => this._handleSetActiveWorkspace(w._id, defaultActivity)}
     />;
   }
 
@@ -406,8 +406,11 @@ class WrapperHome extends React.PureComponent<Props, State> {
   }
 
   render() {
+    const { workspaces } = this.props.wrapperProps;
     const { filter } = this.state;
-    const filteredWorkspaces = this._filterWorkspaces();
+
+    // Render each card, removing all the ones that don't match the filter
+    const cards = workspaces.map(this.renderCard).filter(c => c !== null);
 
     return (
       <PageLayout
@@ -431,7 +434,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
                     onChange={this._handleFilterChange}
                     className="no-margin"
                   />
-                  <span className="fa fa-search filter-icon"></span>
+                  <span className="fa fa-search filter-icon" />
                 </KeydownBinder>
               </div>
             }
@@ -441,8 +444,8 @@ class WrapperHome extends React.PureComponent<Props, State> {
         renderPageBody={() => (
           <div className="document-listing theme--pane layout-body pad-top">
             <div className="document-listing__body">
-              <CardContainer>{filteredWorkspaces.map(this.renderWorkspace)}</CardContainer>
-              {filteredWorkspaces.length === 0 && (
+              <CardContainer>{cards}</CardContainer>
+              {filter && cards.length === 0 && (
                 <Notice color="subtle">
                   No documents found for <strong>{filter}</strong>
                 </Notice>
