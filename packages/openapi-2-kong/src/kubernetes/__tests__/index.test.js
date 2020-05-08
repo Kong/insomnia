@@ -108,6 +108,7 @@ describe('index', () => {
       const api: OpenApi3Spec = {
         ...spec,
         info: {
+          ...spec.info,
           'x-kubernetes-ingress-metadata': {
             name: 'info-name',
             annotations: { ...originalAnnotations },
@@ -125,7 +126,7 @@ describe('index', () => {
       });
 
       // Should not modify source metadata annotations object
-      expect(api.info['x-kubernetes-ingress-metadata'].annotations).toStrictEqual(
+      expect(api.info['x-kubernetes-ingress-metadata']?.annotations).toStrictEqual(
         originalAnnotations,
       );
     });
