@@ -58,3 +58,6 @@ not get accepted into the project.
 
 **IMPORTANT**: By submitting a patch, you agree to allow the project owner to
 license your work under the same license as that used by the project.
+
+## Contributor T-shirt
+If your pull request to [Kong/insomnia](https://github.com/Kong/insomnia) was accepted, and it fixes a bug, adds functionality, or makes it significantly easier to use or understand Insomnia, congratulations! You are eligible to receive the very special contributor t-shirt! Go ahead and fill out the [contributor submission form](https://goo.gl/forms/5w6mxLaE4tz2YM0L2).
