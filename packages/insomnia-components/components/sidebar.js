@@ -3,6 +3,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
+import Tooltip from './tooltip';
 import SvgIcon, { IconEnum } from './svg-icon';
 
 type Props = {|
@@ -46,6 +47,11 @@ const StyledSidebar: React.ComponentType<{}> = styled.div`
 
   h6 {
     font-size: var(--font-size-xs);
+    display: flex;
+    flex-grow: 1;
+    &:hover {
+      cursor: default;
+    }
   }
   h5 {
     font-size: var(--font-size-sm);
@@ -66,6 +72,10 @@ const StyledSection: React.ComponentType<{}> = styled(motion.ul)`
     display: flex;
     justify-content: space-between;
     align-items: center;
+
+    &:hover {
+    background-color: var(--hl-xs);
+  }
 
     & > * {
       padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) var(--spacing-md);
@@ -212,7 +222,6 @@ function Sidebar(props: Props) {
       <StyledSection>
         <li>
           <h6>INFO</h6>
-          <SvgIcon icon={IconEnum.plus} />
         </li>
       </StyledSection>
 
@@ -240,7 +249,9 @@ function Sidebar(props: Props) {
               initial={{ opacity: visible2 ? 0.6 : 0.4 }}
               animate={{ opacity: visible2 ? 0.6 : 0.4 }}
               transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.1 }}>
-              <SvgIcon icon={IconEnum.plus} />
+              <Tooltip message="Add" position="top">
+                  <SvgIcon icon={IconEnum.plus} />
+              </Tooltip>
             </motion.span>
           </div>
         </li>
@@ -295,7 +306,9 @@ function Sidebar(props: Props) {
               initial={{ opacity: visible ? 0.6 : 0.4 }}
               animate={{ opacity: visible ? 0.6 : 0.4 }}
               transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.1 }}>
-              <SvgIcon icon={IconEnum.plus} />
+              <Tooltip message="Add" position="top">
+                  <SvgIcon icon={IconEnum.plus} />
+              </Tooltip>
             </motion.span>
           </div>
         </li>
