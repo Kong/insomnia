@@ -182,43 +182,7 @@ function Sidebar(props: Props) {
   const toggleVisible4 = () => setVisible4(!visible4);
 
   return (
-    <StyledSidebar>
-      {/*
-      <StyledSection>
-        <li>
-          <h6>DOCUMENT</h6><SvgIcon icon={IconEnum.chevronUp} />
-        </li>
-        <StyledItem>
-          <div>
-            <SvgIcon icon={IconEnum.gui} />
-          </div>
-          <div className="inline-icon">
-            No Environment
-            <Dropdown renderButton={() => <SvgIcon icon={IconEnum.triangle} />}>
-              <DropdownItem>Item 1</DropdownItem>
-              <DropdownItem>Item 2</DropdownItem>
-              <DropdownItem>Item 3</DropdownItem>
-            </Dropdown>
-          </div>
-        </StyledItem>
-        <StyledItem>
-          <div>
-            <SvgIcon icon={IconEnum.cookie} />
-          </div>
-          <div>
-            No Cookies (<a href="#">Add</a>)
-          </div>
-        </StyledItem>
-        <StyledItem>
-          <div>
-            <SvgIcon icon={IconEnum.secCert} />
-          </div>
-          <div>
-            No Client Certificates (<a href="#">Add</a>)
-          </div>
-        </StyledItem>
-      </StyledSection>
-      */}
+    <StyledSidebar className="theme--sidebar">
       <StyledSection>
         <li>
           <h6>INFO</h6>
