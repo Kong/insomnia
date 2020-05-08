@@ -86,14 +86,12 @@ export const HttpMethod = {
   trace: 'TRACE',
 };
 
-export type HttpMethodKeys = $Values<typeof HttpMethod>;
-
 export function isHttpMethodKey(key: string): boolean {
   const uppercaseKey = key.toUpperCase();
   return Object.values(HttpMethod).some(m => m === uppercaseKey);
 }
 
-export function getMethodAnnotationName(method: HttpMethodKeys): string {
+export function getMethodAnnotationName(method: HttpMethodType): string {
   return `${method}-method`.toLowerCase();
 }
 
