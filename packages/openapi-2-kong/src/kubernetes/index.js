@@ -116,17 +116,18 @@ export function generateMetadataAnnotations(
 
   // Only continue if metadata annotations, or plugins, or overrides exist
   if (metadata?.annotations || pluginNames.length || overrideName) {
-    const annotations = { ...metadata?.annotations } || {};
+    const customAnnotations = {};
 
     if (pluginNames.length) {
-      annotations['konghq.com/plugins'] = pluginNames.join(', ');
+      customAnnotations['konghq.com/plugins'] = pluginNames.join(', ');
     }
 
     if (overrideName) {
-      annotations['konghq.com/override'] = overrideName;
+      customAnnotations['konghq.com/override'] = overrideName;
     }
 
-    return annotations;
+    const originalAnnotations = metadata?.annotations || {};
+    return { ...originalAnnotations, ...customAnnotations };
   }
 
   return null;
