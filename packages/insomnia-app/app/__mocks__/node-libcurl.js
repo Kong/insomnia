@@ -1,6 +1,12 @@
 import { EventEmitter } from 'events';
 import fs from 'fs';
 
+import { CurlAuth } from 'node-libcurl/dist/enum/CurlAuth';
+import { CurlCode } from 'node-libcurl/dist/enum/CurlCode';
+import { CurlInfoDebug } from 'node-libcurl/dist/enum/CurlInfoDebug';
+import { CurlFeature } from 'node-libcurl/dist/enum/CurlFeature';
+import { CurlNetrc } from 'node-libcurl/dist/enum/CurlNetrc';
+
 class Curl extends EventEmitter {
   constructor() {
     super();
@@ -15,10 +21,6 @@ class Curl extends EventEmitter {
 
   enable(name) {
     this._features[name] = true;
-  }
-
-  setUrl(url) {
-    this.setOpt(Curl.option.URL, url);
   }
 
   setOpt(name, value) {
@@ -107,33 +109,13 @@ class Curl extends EventEmitter {
   close() {}
 }
 
+// cannot include these from node-libcurl because they come from the native library
+//  and it's not possible to load it while testing (as it was built to run with Electron)
 Curl.info = {
   COOKIELIST: 'COOKIELIST',
   EFFECTIVE_URL: 'EFFECTIVE_URL',
   SIZE_DOWNLOAD: 'SIZE_DOWNLOAD',
   TOTAL_TIME: 'TOTAL_TIME',
-  debug: {
-    DATA_IN: 'DATA_IN',
-    DATA_OUT: 'DATA_OUT',
-    SSL_DATA_IN: 'SSL_DATA_IN',
-    SSL_DATA_OUT: 'SSL_DATA_OUT',
-    TEXT: 'TEXT',
-  },
-};
-
-Curl.auth = {
-  ANY: 'ANY',
-};
-
-Curl.netrc = {
-  IGNORED: 0,
-  OPTIONAL: 1,
-  REQUIRED: 2,
-};
-
-Curl.feature = {
-  NO_HEADER_PARSING: 'NO_HEADER_PARSING',
-  NO_DATA_PARSING: 'NO_DATA_PARSING',
 };
 
 Curl.option = {
@@ -178,6 +160,29 @@ Curl.option = {
   XFERINFOFUNCTION: 'XFERINFOFUNCTION',
 };
 
+// This is just to make it easier to test
+// node-libcurl Enum exports (CurlAuth, CurlCode, etc) are TypeScript enums, which are
+//  converted to an object with format:
+// { EnumKey: 0, 0: EnumKey }
+// We only want the named members (non-number ones)
+const getTsEnumOnlyWithNamedMembers = enumObj => {
+  let obj = {};
+  for (const member in enumObj) {
+    if (typeof enumObj[member] === 'number') {
+      obj = {
+        ...obj,
+        [member]: member,
+      };
+    }
+  }
+  return obj;
+};
+
 module.exports = {
   Curl: Curl,
+  CurlAuth: getTsEnumOnlyWithNamedMembers(CurlAuth),
+  CurlCode: getTsEnumOnlyWithNamedMembers(CurlCode),
+  CurlInfoDebug: getTsEnumOnlyWithNamedMembers(CurlInfoDebug),
+  CurlFeature: getTsEnumOnlyWithNamedMembers(CurlFeature),
+  CurlNetrc: getTsEnumOnlyWithNamedMembers(CurlNetrc),
 };

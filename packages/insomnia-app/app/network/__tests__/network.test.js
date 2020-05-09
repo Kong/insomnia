@@ -55,7 +55,10 @@ describe('actuallySend()', () => {
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
-      headers: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Empty', value: '' }],
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Empty', value: '' },
+      ],
       parameters: [{ name: 'foo bar', value: 'hello&world' }],
       method: 'POST',
       body: {
@@ -83,8 +86,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         COOKIELIST: [
@@ -94,6 +96,7 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
+        HTTPAUTH: 'Basic',
         HTTPHEADER: [
           'Content-Type: application/json',
           'Empty;',
@@ -148,8 +151,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         POST: 1,
@@ -238,13 +240,13 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
+        HTTPAUTH: 'Basic',
         HTTPHEADER: [
           'Content-Type: application/json',
           'Expect:',
@@ -294,8 +296,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         POST: 1,
@@ -360,8 +361,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         POST: 1,
@@ -425,8 +425,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -469,8 +468,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         NOBODY: 1,
@@ -512,8 +510,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -556,8 +553,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -568,7 +564,7 @@ describe('actuallySend()', () => {
         NOPROGRESS: true,
         PROXY: '',
         TIMEOUT_MS: 0,
-        NETRC: 2,
+        NETRC: 'Required',
         URL: '',
         USERAGENT: `insomnia/${getAppVersion()}`,
         VERBOSE: true,
