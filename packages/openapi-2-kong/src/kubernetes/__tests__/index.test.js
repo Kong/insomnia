@@ -233,8 +233,6 @@ describe('index', () => {
       expect(generateServicePath(basePath)).toBe('/api/v1/.*');
     });
 
-    // This state arises when a serverUrl is https://api.insomnia.rest/api/{var} and no paths exist on spec.
-    // Is this correct?
     it('adds closing wildcard if basePath ends with wildcard and no specific path exists', () => {
       const serverBasePath = '/api/.*';
       expect(generateServicePath(serverBasePath)).toBe('/api/.*/.*');
