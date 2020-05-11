@@ -12,13 +12,13 @@ type Props = {|
 
 const StyledSidebar: React.ComponentType<{}> = styled.div`
   /* To constants */
-  background-color: #fafafa;
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
+  background-color: var(--color-bg);
+  border: 1px solid var(--hl-md);
+  color: var(--color-font);
   position: relative;
   svg {
     font-size: var(--font-size-xl);
-    fill: #737373;
+    fill: var(--hl-lg);
   }
   .method {
     h6 {
@@ -64,54 +64,33 @@ const StyledSidebar: React.ComponentType<{}> = styled.div`
 const StyledSection: React.ComponentType<{}> = styled(motion.ul)`
   overflow: hidden;
   box-sizing: border-box;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--hl-md);
+  }
+`;
 
-  /* Header */
-  li:nth-child(1) {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+const StyledHeader: React.ComponentType<{}> = styled.li`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
-    &:hover {
+
+  &:hover {
     background-color: var(--hl-xs);
   }
 
-    & > * {
-      padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) var(--spacing-md);
-      font-size: var(--font-size-md);
+  & > * {
+    padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) var(--spacing-md);
+    font-size: var(--font-size-md);
 
-      svg {
-        margin-left: var(--spacing-sm);
-        
-        &:hover {
-          fill:#000;
-          opacity: 1;
-        }
-        
+    svg {
+      margin-left: var(--spacing-sm);
+      
+      &:hover {
+        fill:var(--color-font);
+        opacity: 1;
       }
+      
     }
-  }
-
-  /* Footer */
-  &:last-child {
-    border-top: 1px solid var(--color-border);
-    border-bottom: none;
-    bottom: 0;
-    width: 100%;
-
-    li {
-      justify-content: start;
-      line-height: var(--font-line-height-sm);
-      margin-top: var(--spacing-xxxl);
-
-      & > * {
-        padding: var(--spacing-md) 0 var(--spacing-md) var(--spacing-sm);
-        margin-left: 0px;
-        font-weight: var(--font-weight-regular);
-      }
-    }
-  }
-
   }
 `;
 
@@ -126,13 +105,6 @@ const StyledItem: React.ComponentType<{}> = styled.li`
   white-space: nowrap;
   font-size: var(--font-size-md);
   line-height: var(--font-line-height-md);
-
-  .inline-icon {
-    svg {
-      font-size: var(--font-line-height-sm);
-      margin-left: var(--spacing-xs);
-    }
-  }
 
   a {
     color: var(--hl-xl);
@@ -153,46 +125,44 @@ const StyledItem: React.ComponentType<{}> = styled.li`
 `;
 
 const StyledFilter: React.ComponentType<{}> = styled(motion.div)`
-text-align: left;
-padding: 0;
-width:100%;
-display:block;
-overflow:hidden;
-input {
-  box-sizing:border-box;
-  font-size: var(--font-size-md);
-  min-width: 88%;
-  padding: var(--padding-sm);
-  margin: 0 var(--padding-md);
-  }
+  padding-left: var(--padding-md);
+  padding-right: var(--padding-md);
+  overflow:hidden;
+    input {
+      box-sizing:border-box;
+      width:100%;
+      font-size: var(--font-size-md);
+      padding: var(--padding-sm);
+      margin-top: var(--padding-md);
+      margin-bottom: var(--padding-sm);
+    }
+`;
+
+const StyledPanel: React.ComponentType<{}> = styled(motion.div)`
+height: 0px;
 `;
 
 function Sidebar(props: Props) {
   // Temp garbage for easing/transition/sequencing dial-in
-  const toggleVisible = () => setVisible(!visible);
-  const toggleVisible2 = () => setVisible2(!visible2);
   const [visible, setVisible] = useState(false);
   const [visible2, setVisible2] = useState(false);
-
   const [visible3, setVisible3] = useState(true);
-  const toggleVisible3 = () => setVisible3(!visible3);
-
   const [visible4, setVisible4] = useState(true);
+  const toggleVisible = () => setVisible(!visible);
+  const toggleVisible2 = () => setVisible2(!visible2);
+  const toggleVisible3 = () => setVisible3(!visible3);
   const toggleVisible4 = () => setVisible4(!visible4);
 
   return (
     <StyledSidebar className="theme--sidebar">
       <StyledSection>
-        <li>
+        <StyledHeader>
           <h6>INFO</h6>
-        </li>
+        </StyledHeader>
       </StyledSection>
 
-      <StyledSection
-        initial={{ height: visible2 ? '100%' : '45px' }}
-        animate={{ height: visible2 ? '100%' : '45px' }}
-        transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-        <li>
+      <StyledSection>
+        <StyledHeader>
           <h6 onClick={toggleVisible2}>SERVERS</h6>
           <div>
             <motion.span
@@ -217,39 +187,42 @@ function Sidebar(props: Props) {
               </Tooltip>
             </motion.span>
           </div>
-        </li>
+        </StyledHeader>
 
-        <StyledFilter
-            initial={{ height: visible3 ? '0px' : '45px' }}
-            animate={{ height: visible3 ? '0px' : '45px' }}
-            transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-            <input placeholder='Filter...' />
-        </StyledFilter>
-        <StyledItem>
-          <div>
-            <SvgIcon icon={IconEnum.indentation} />
-          </div>
-          <div>development.konghq.com</div>
-        </StyledItem>
-        <StyledItem>
-          <div>
-            <SvgIcon icon={IconEnum.indentation} />
-          </div>
-          <div>staging.konghq.com</div>
-        </StyledItem>
-        <StyledItem>
-          <div>
-            <SvgIcon icon={IconEnum.indentation} />
-          </div>
-          <div>production.konghq.com</div>
-        </StyledItem>
+        <StyledPanel
+          initial={{ height: visible2 ? '100%' : '0px' }}
+          animate={{ height: visible2 ? '100%' : '0px' }}
+          transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}
+        >
+          <StyledFilter
+              initial={{ height: visible3 ? '0px' : '100%' }}
+              animate={{ height: visible3 ? '0px' : '100%' }}
+              transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
+              <input placeholder='Filter...' />
+          </StyledFilter>
+          <StyledItem>
+            <div>
+              <SvgIcon icon={IconEnum.indentation} />
+            </div>
+            <div>development.konghq.com</div>
+          </StyledItem>
+          <StyledItem>
+            <div>
+              <SvgIcon icon={IconEnum.indentation} />
+            </div>
+            <div>staging.konghq.com</div>
+          </StyledItem>
+          <StyledItem>
+            <div>
+              <SvgIcon icon={IconEnum.indentation} />
+            </div>
+            <div>production.konghq.com</div>
+          </StyledItem>
+        </StyledPanel>
       </StyledSection>
 
-      <StyledSection
-        initial={{ height: visible ? '100%' : '45px' }}
-        animate={{ height: visible ? '100%' : '45px' }}
-        transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-        <li>
+      <StyledSection>
+        <StyledHeader>
           <h6 onClick={toggleVisible}>PATHS</h6>
           <div>
             <motion.span
@@ -274,105 +247,103 @@ function Sidebar(props: Props) {
               </Tooltip>
             </motion.span>
           </div>
-        </li>
-        <StyledFilter
-            initial={{ height: visible4 ? '0px' : '45px' }}
-            animate={{ height: visible4 ? '0px' : '45px' }}
-            transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-            <input placeholder='Filter...' />
-        </StyledFilter>
-        <StyledItem>
-          <div>
-            <SvgIcon icon={IconEnum.folderOpen} />
-          </div>
-          <h5>pet</h5>
-        </StyledItem>
-        <StyledItem>
-          <div></div>
-          <h6 className="method-post">POST</h6>
-          <p>/store/inventory/(orderId)</p>
-        </StyledItem>
-        <StyledItem>
-          <div></div>
-          <h6 className="method-get">GET</h6>
-          <p>/store/inventory/(orderId)</p>
-        </StyledItem>
-        <StyledItem>
-          <div></div>
-          <h6 className="method-put">PUT</h6>
-          <p>/store/inventory/(orderId)</p>
-        </StyledItem>
-        <StyledItem>
-          <div></div>
-          <h6 className="method-del">DEL</h6>
-          <p>/store/inventory/(orderId)</p>
-        </StyledItem>
-        <StyledItem>
-          <div></div>
-          <h6 className="method-post">POST</h6>
-          <p>/store/inventory/(orderId)</p>
-        </StyledItem>
-        <StyledItem>
-          <div></div>
-          <h6 className="method-put">PUT</h6>
-          <p>/store/inventory/(orderId)</p>
-        </StyledItem>
-        <StyledItem>
-          <div>
-            <SvgIcon icon={IconEnum.folderOpen} />
-          </div>
-          <h5>store</h5>
-        </StyledItem>
-        <StyledItem>
-          <div></div>
-          <h6 className="method-put">PUT</h6>
-          <p>/store/inventory/(orderId)</p>
-        </StyledItem>
-        <StyledItem>
-          <div></div>
-          <h6 className="method-del">DEL</h6>
-          <p>/store/inventory/(orderId)</p>
-        </StyledItem>
-        <StyledItem>
-          <div></div>
-          <h6 className="method-post">POST</h6>
-          <p>/store/inventory/(orderId)</p>
-        </StyledItem>
-        <StyledItem>
-          <div></div>
-          <h6 className="method-put">PUT</h6>
-          <p>/store/inventory/(orderId)</p>
-        </StyledItem>
-        <StyledItem>
-          <div>
-            <SvgIcon icon={IconEnum.folder} />
-          </div>
-          <h5>user</h5>
-        </StyledItem>
+        </StyledHeader>
+        <StyledPanel
+          initial={{ height: visible ? '100%' : '0px' }}
+          animate={{ height: visible ? '100%' : '0px' }}
+          transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}
+        >
+          <StyledFilter
+              initial={{ height: visible4 ? '0px' : '100%' }}
+              animate={{ height: visible4 ? '0px' : '100%' }}
+              transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
+              <input placeholder='Filter...' />
+          </StyledFilter>
+          <StyledItem>
+            <div>
+              <SvgIcon icon={IconEnum.folderOpen} />
+            </div>
+            <h5>pet</h5>
+          </StyledItem>
+          <StyledItem>
+            <div></div>
+            <h6 className="method-post">POST</h6>
+            <p>/store/inventory/(orderId)</p>
+          </StyledItem>
+          <StyledItem>
+            <div></div>
+            <h6 className="method-get">GET</h6>
+            <p>/store/inventory/(orderId)</p>
+          </StyledItem>
+          <StyledItem>
+            <div></div>
+            <h6 className="method-put">PUT</h6>
+            <p>/store/inventory/(orderId)</p>
+          </StyledItem>
+          <StyledItem>
+            <div></div>
+            <h6 className="method-del">DEL</h6>
+            <p>/store/inventory/(orderId)</p>
+          </StyledItem>
+          <StyledItem>
+            <div></div>
+            <h6 className="method-post">POST</h6>
+            <p>/store/inventory/(orderId)</p>
+          </StyledItem>
+          <StyledItem>
+            <div></div>
+            <h6 className="method-put">PUT</h6>
+            <p>/store/inventory/(orderId)</p>
+          </StyledItem>
+          <StyledItem>
+            <div>
+              <SvgIcon icon={IconEnum.folderOpen} />
+            </div>
+            <h5>store</h5>
+          </StyledItem>
+          <StyledItem>
+            <div></div>
+            <h6 className="method-put">PUT</h6>
+            <p>/store/inventory/(orderId)</p>
+          </StyledItem>
+          <StyledItem>
+            <div></div>
+            <h6 className="method-del">DEL</h6>
+            <p>/store/inventory/(orderId)</p>
+          </StyledItem>
+          <StyledItem>
+            <div></div>
+            <h6 className="method-post">POST</h6>
+            <p>/store/inventory/(orderId)</p>
+          </StyledItem>
+          <StyledItem>
+            <div></div>
+            <h6 className="method-put">PUT</h6>
+            <p>/store/inventory/(orderId)</p>
+          </StyledItem>
+          <StyledItem>
+            <div>
+              <SvgIcon icon={IconEnum.folder} />
+            </div>
+            <h5>user</h5>
+          </StyledItem>
+        </StyledPanel>
       </StyledSection>
 
       <StyledSection>
-        <li>
+        <StyledHeader>
           <h6>MODELS</h6>
           <SvgIcon icon={IconEnum.plus} />
-        </li>
+        </StyledHeader>
       </StyledSection>
 
       <StyledSection>
-        <li>
+        <StyledHeader>
           <h6>SECURITY</h6>
           <SvgIcon icon={IconEnum.plus} />
-        </li>
+        </StyledHeader>
       </StyledSection>
 
-      <StyledSection>
-        <li>
-          <div>
-            <SvgIcon icon={IconEnum.gear} />
-          </div>
-          <h5>Settings</h5>
-        </li>
-      </StyledSection>
     </StyledSidebar>
   );
 }
