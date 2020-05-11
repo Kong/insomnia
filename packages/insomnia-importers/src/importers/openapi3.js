@@ -102,15 +102,24 @@ module.exports.convert = async function(rawData) {
   return [workspace, baseEnv, openapiEnv, ...endpoints];
 };
 
+/**
+ * Gets a server to use as the default
+ * Either the first server defined in the specification, or an example if none are specified
+ *
+ * @param {Object} api - openapi3 object
+ * @returns {UrlWithStringQuery} the resolved server URL
+ */
 function getDefaultServerUrl(api) {
   const exampleServer = 'http://example.com/';
   const servers = api.servers || [];
-  if (!servers.length) {
+  const firstServer = servers[0];
+  const foundServer = firstServer && firstServer.url;
+
+  if (!foundServer) {
     return urlParse(exampleServer);
   }
 
-  const firstServer = servers[0];
-  const url = firstServer.url || exampleServer;
+  const url = firstServer.url;
 
   const protocolResolved = resolveVariables(
     url,
@@ -127,6 +136,15 @@ function getDefaultServerUrl(api) {
   return urlParse(pathResolved);
 }
 
+/**
+ * Resolve default variables for a server url
+ *
+ * @param {string} str - the source url
+ * @param {RegExp} regExp - the regexp to use to identify variables
+ * @param {Object} variables - the variables object from $.servers.*.variables in an openapi3 object
+ * @param {string} fallback - the default string to apply
+ * @returns {string} - the resolved url
+ */
 function resolveVariables(str, regExp, variables, fallback) {
   let resolved = str;
   let shouldContinue = true;
@@ -139,10 +157,7 @@ function resolveVariables(str, regExp, variables, fallback) {
     const value = (variable && variable.default) || fallback;
 
     shouldContinue = !!name;
-    resolved =
-      replace && value
-        ? resolved.replace(replace, value)
-        : resolved.replace(replace, `{${replace}}`);
+    resolved = replace && value ? resolved.replace(replace, value) : resolved;
   } while (shouldContinue);
 
   return resolved;
@@ -286,7 +301,7 @@ function importRequest(endpointSchema, parentId, security, securitySchemes) {
  * @returns {string}
  */
 function pathWithParamsAsVariables(path) {
-  return path.replace(/{([^}]+)}/g, '{{ $1 }}');
+  return path.replace(PATH_VARIABLE_SEARCH_VALUE, '{{ $1 }}');
 }
 
 /**
