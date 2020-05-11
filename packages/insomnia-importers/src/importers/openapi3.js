@@ -30,7 +30,8 @@ const OAUTH_FLOWS = {
 };
 const SUPPORTED_SECURITY_TYPES = [SECURITY_TYPE.HTTP, SECURITY_TYPE.API_KEY, SECURITY_TYPE.OAUTH];
 const SUPPORTED_HTTP_AUTH_SCHEMES = [HTTP_AUTH_SCHEME.BASIC, HTTP_AUTH_SCHEME.BEARER];
-
+const PROTOCOL_VARIABLE_SEARCH_VALUE = /{([^}]+)}(?=:\/\/)/g; // positive lookahead for ://
+const PATH_VARIABLE_SEARCH_VALUE = /{([^}]+)}(?!:\/\/)/g; // negative lookahead for ://
 let requestCounts = {};
 
 module.exports.id = 'openapi3';
@@ -72,17 +73,15 @@ module.exports.convert = async function(rawData) {
     },
   };
 
-  const servers = api.servers || [];
-  const serverUrls = servers.map(s => urlParse(s.url));
-  const defaultServer = serverUrls[0] || urlParse('http://example.com/');
+  const defaultServerUrl = getDefaultServerUrl(api);
   const securityVariables = getSecurityEnvVariables(
     api.components && api.components.securitySchemes,
   );
 
-  const protocol = defaultServer.protocol || '';
+  const protocol = defaultServerUrl.protocol || '';
 
   // Base path is pulled out of the URL, and the trailing slash is removed
-  const basePath = (defaultServer.pathname || '').replace(/\/$/, '');
+  const basePath = (defaultServerUrl.pathname || '').replace(/\/$/, '');
 
   const openapiEnv = {
     _type: 'environment',
@@ -93,7 +92,7 @@ module.exports.convert = async function(rawData) {
       // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
       scheme: protocol.replace(/:$/, '') || ['http'],
       base_path: basePath,
-      host: defaultServer.host || '',
+      host: defaultServerUrl.host || '',
       ...securityVariables,
     },
   };
@@ -102,6 +101,52 @@ module.exports.convert = async function(rawData) {
 
   return [workspace, baseEnv, openapiEnv, ...endpoints];
 };
+
+function getDefaultServerUrl(api) {
+  const exampleServer = 'http://example.com/';
+  const servers = api.servers || [];
+  if (!servers.length) {
+    return urlParse(exampleServer);
+  }
+
+  const firstServer = servers[0];
+  const url = firstServer.url || exampleServer;
+
+  const protocolResolved = resolveVariables(
+    url,
+    PROTOCOL_VARIABLE_SEARCH_VALUE,
+    firstServer.variables,
+    'http',
+  );
+  const pathResolved = resolveVariables(
+    protocolResolved,
+    PATH_VARIABLE_SEARCH_VALUE,
+    firstServer.variables,
+  );
+
+  return urlParse(pathResolved);
+}
+
+function resolveVariables(str, regExp, variables, fallback) {
+  let resolved = str;
+  let shouldContinue = true;
+
+  do {
+    // Regexp contain the global flag (g), meaning we must execute our regex on the original string.
+    // https://stackoverflow.com/a/27753327
+    const [replace, name] = regExp.exec(str) || [];
+    const variable = variables && variables[name];
+    const value = (variable && variable.default) || fallback;
+
+    shouldContinue = !!name;
+    resolved =
+      replace && value
+        ? resolved.replace(replace, value)
+        : resolved.replace(replace, `{${replace}}`);
+  } while (shouldContinue);
+
+  return resolved;
+}
 
 /**
  * Parse string data into openapi 3 object (https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md#oasObject)
