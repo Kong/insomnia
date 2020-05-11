@@ -149,7 +149,7 @@ class GenerateCodeModal extends PureComponent {
               ))}
             </Dropdown>
             &nbsp;&nbsp;
-            <CopyButton content={cmd} className="pull-right btn btn--clicky" />
+            <CopyButton content={cmd} className="pull-right" />
           </div>
           <CodeEditor
             lineWrapping

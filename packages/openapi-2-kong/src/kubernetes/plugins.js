@@ -197,3 +197,32 @@ export function normalizeOperationPlugins(operationPlugins: OperationPlugins): O
   const pluginsExist = operationPlugins.some(o => o.plugins.length);
   return pluginsExist ? operationPlugins : [blankOperation];
 }
+
+export function prioritizePlugins(
+  global: Array<KubernetesPluginConfig>,
+  server: Array<KubernetesPluginConfig>,
+  path: Array<KubernetesPluginConfig>,
+  operation: Array<KubernetesPluginConfig>,
+): Array<KubernetesPluginConfig> {
+  // Order in priority: operation > path > server > global
+  const plugins: Array<KubernetesPluginConfig> = [...operation, ...path, ...server, ...global];
+
+  // Select first of each type of plugin
+  return distinctByProperty(plugins, p => p.plugin);
+}
+
+export function distinctByProperty<T>(arr: Array<T>, propertySelector: (item: T) => any): Array<T> {
+  const result: Array<T> = [];
+  const set = new Set();
+
+  for (const item of arr.filter(i => i)) {
+    const selector = propertySelector(item);
+    if (set.has(selector)) {
+      continue;
+    }
+
+    set.add(selector);
+    result.push(item);
+  }
+  return result;
+}

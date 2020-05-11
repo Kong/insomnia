@@ -126,7 +126,7 @@ class CodePromptModal extends PureComponent {
             : { minHeight: '10rem' }
           }>
           {showCopyButton
-           ? <div className="pad-top-sm pad-right-sm"><CopyButton content={defaultValue} className="pull-right btn btn--clicky" /></div>
+           ? <div className="pad-top-sm pad-right-sm"><CopyButton content={defaultValue} className="pull-right" /></div>
            : null
           }
           {mode === 'text/x-markdown' ? (

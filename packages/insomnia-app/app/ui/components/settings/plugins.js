@@ -1,19 +1,21 @@
 // @flow
+import * as path from 'path';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import * as electron from 'electron';
-import Button from '../base/button';
 import CopyButton from '../base/copy-button';
 import { reload } from '../../../templating/index';
 import installPlugin from '../../../plugins/install';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import { delay } from '../../../common/misc';
-import { PLUGIN_PATH } from '../../../common/constants';
-import type { Settings, PluginConfig } from '../../../models/settings';
-import ToggleSwitch from './toggle-switch';
+import { NPM_PACKAGE_BASE, PLUGIN_HUB_BASE, PLUGIN_PATH } from '../../../common/constants';
+import type { PluginConfig, Settings } from '../../../models/settings';
+import { Button, ToggleSwitch } from 'insomnia-components';
+import { createPlugin } from '../../../plugins/create';
+import { showAlert, showPrompt } from '../modals';
 
 type State = {
   plugins: Array<Plugin>,
@@ -58,10 +60,14 @@ class Plugins extends React.PureComponent<Props, State> {
 
     this.setState({ isInstallingFromNpm: true });
 
-    const newState = { isInstallingFromNpm: false, error: '' };
+    const newState: $Shape<State> = {
+      isInstallingFromNpm: false,
+      error: '',
+    };
     try {
       await installPlugin(this.state.npmPluginValue.trim());
       await this._handleRefreshPlugins();
+      newState.npmPluginValue = ''; // Clear input if successful install
     } catch (err) {
       newState.error = err.message;
     }
@@ -87,7 +93,10 @@ class Plugins extends React.PureComponent<Props, State> {
     await delay(500 - delta);
 
     if (this._isMounted) {
-      this.setState({ plugins, isRefreshingPlugins: false });
+      this.setState({
+        plugins,
+        isRefreshingPlugins: false,
+      });
     }
   }
 
@@ -97,6 +106,41 @@ class Plugins extends React.PureComponent<Props, State> {
 
   static _handleClickShowPluginsFolder() {
     electron.remote.shell.showItemInFolder(PLUGIN_PATH);
+  }
+
+  _handleCreatePlugin() {
+    showPrompt({
+      title: 'New Plugin',
+      defaultValue: 'demo-example',
+      placeholder: 'example-name',
+      submitName: 'Generate',
+      label: 'Plugin Name',
+      selectText: true,
+      validate: name =>
+        name.match(/^[a-z][a-z-]*[a-z]$/) ? '' : 'Plugin name must be of format my-plugin-name',
+      onComplete: async name => {
+        // Remove insomnia-plugin- prefix if they accidentally typed it
+        name = name.replace(/^insomnia-plugin-/, '');
+        try {
+          await createPlugin(
+            `insomnia-plugin-${name}`,
+            '0.0.1',
+            [
+              '// For help writing plugins, visit the documentation to get started:',
+              '//   https://support.insomnia.rest/article/26-plugins',
+              '',
+              '// TODO: Add plugin code here...',
+            ].join('\n'),
+          );
+        } catch (err) {
+          showAlert({
+            title: 'Failed to Create Plugin',
+            message: err.message,
+          });
+        }
+        await this._handleRefreshPlugins();
+      },
+    });
   }
 
   componentDidMount() {
@@ -128,7 +172,7 @@ class Plugins extends React.PureComponent<Props, State> {
     }
 
     await this._handleUpdatePluginConfig(name, newConfig);
-    this._handleRefreshPlugins();
+    await this._handleRefreshPlugins();
   }
 
   renderToggleSwitch(plugin: Plugin) {
@@ -144,8 +188,21 @@ class Plugins extends React.PureComponent<Props, State> {
     );
   }
 
+  renderLink(plugin: Plugin) {
+    const { name } = plugin;
+
+    const base = /^insomnia-plugin-/.test(name) ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE;
+    const link = path.join(base, name);
+
+    return (
+      <a className="space-left" href={link} title={link}>
+        <i className="fa fa-external-link-square" />
+      </a>
+    );
+  }
+
   render() {
-    const { plugins, error, isInstallingFromNpm, isRefreshingPlugins } = this.state;
+    const { plugins, error, isInstallingFromNpm, isRefreshingPlugins, npmPluginValue } = this.state;
 
     return (
       <div>
@@ -179,19 +236,23 @@ class Plugins extends React.PureComponent<Props, State> {
                         </HelpTooltip>
                       )}
                     </td>
-                    <td>{plugin.version}</td>
+                    <td>
+                      {plugin.version}
+                      {this.renderLink(plugin)}
+                    </td>
                     <td className="no-wrap" style={{ width: '10rem' }}>
                       <CopyButton
-                        className="btn btn--outlined btn--super-duper-compact"
+                        size="small"
+                        variant="contained"
                         title={plugin.directory}
                         content={plugin.directory}>
                         Copy Path
                       </CopyButton>{' '}
                       <Button
-                        className="btn btn--outlined btn--super-duper-compact"
-                        onClick={Plugins._handleOpenDirectory}
-                        value={plugin.directory}>
-                        Show Folder
+                        size="small"
+                        variant="contained"
+                        onClick={Plugins._handleOpenDirectory.bind(this, plugin.directory)}>
+                        Reveal Folder
                       </Button>
                     </td>
                   </tr>
@@ -218,13 +279,14 @@ class Plugins extends React.PureComponent<Props, State> {
                 disabled={isInstallingFromNpm}
                 type="text"
                 placeholder="npm-package-name"
+                value={npmPluginValue}
               />
             </div>
             <div className="form-control width-auto">
-              <button className="btn btn--clicky" disabled={isInstallingFromNpm}>
+              <Button variant="contained" bg="surprise" disabled={isInstallingFromNpm}>
                 {isInstallingFromNpm && <i className="fa fa-refresh fa-spin space-right" />}
                 Install Plugin
-              </button>
+              </Button>
             </div>
           </div>
         </form>
@@ -232,20 +294,17 @@ class Plugins extends React.PureComponent<Props, State> {
         <hr />
 
         <div className="text-right">
-          <button
-            type="button"
-            className="btn btn--clicky"
-            onClick={Plugins._handleClickShowPluginsFolder}>
-            Show Plugins Folder
-          </button>
-          <button
-            type="button"
+          <Button onClick={this._handleCreatePlugin}>Generate New Plugin</Button>
+          <Button className="space-left" onClick={Plugins._handleClickShowPluginsFolder}>
+            Reveal Plugins Folder
+          </Button>
+          <Button
             disabled={isRefreshingPlugins}
-            className="btn btn--clicky space-left"
+            className="space-left"
             onClick={this._handleClickRefreshPlugins}>
-            Reload Plugin List
+            Reload Plugins
             {isRefreshingPlugins && <i className="fa fa-refresh fa-spin space-left" />}
-          </button>
+          </Button>
         </div>
       </div>
     );

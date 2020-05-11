@@ -914,8 +914,8 @@ class App extends PureComponent {
   async _handleReloadPlugins() {
     const { settings } = this.props;
     await plugins.reloadPlugins();
+    await themes.setTheme(settings.theme);
     templating.reload();
-    themes.setTheme(settings.theme);
     console.log('[plugins] reloaded');
   }
 

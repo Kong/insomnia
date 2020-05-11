@@ -215,11 +215,11 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             }
             gridRight={
               <React.Fragment>
-                <Button onClick={this._handleTogglePreview} className="btn-utility-reverse">
+                <Button variant="contained" onClick={this._handleTogglePreview}>
                   <img src={previewIcon} alt="Preview" width="15" />&nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
                 </Button>
                 {hasConfigPlugins && (
-                  <Button onClick={this._handleGenerateConfig} className="margin-left btn-utility-reverse">
+                  <Button variant="contained" onClick={this._handleGenerateConfig} className="margin-left">
                     <img src={generateConfigIcon} alt="Generate Config" width="15" />&nbsp; Generate
                     Config
                   </Button>

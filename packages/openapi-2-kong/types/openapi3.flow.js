@@ -206,3 +206,16 @@ declare type OpenApi3Spec = {
   externalDocs?: OA3ExternalDocs,
   'x-kong-name'?: string,
 };
+
+const HttpMethod = {
+  get: 'GET',
+  put: 'PUT',
+  post: 'POST',
+  delete: 'DELETE',
+  options: 'OPTIONS',
+  head: 'HEAD',
+  patch: 'PATCH',
+  trace: 'TRACE',
+};
+
+declare type HttpMethodType = $Values<typeof HttpMethod>;
