@@ -75,16 +75,23 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     if (errors) {
       showModal(AlertModal, {
         title: 'Error Generating Configuration',
-        message: 'Some requests may not be available due to errors found in the specification. We recommend fixing errors before proceeding. 🤗',
+        message:
+          'Some requests may not be available due to errors found in the specification. We recommend fixing errors before proceeding. 🤗',
         okLabel: 'Proceed',
         addCancel: true,
         onConfirm: () => {
-          const { handleSetDebugActivity, wrapperProps: { activeApiSpec } } = this.props;
+          const {
+            handleSetDebugActivity,
+            wrapperProps: { activeApiSpec },
+          } = this.props;
           handleSetDebugActivity(activeApiSpec);
         },
       });
     } else {
-      const { handleSetDebugActivity, wrapperProps: { activeApiSpec } } = this.props;
+      const {
+        handleSetDebugActivity,
+        wrapperProps: { activeApiSpec },
+      } = this.props;
       handleSetDebugActivity(activeApiSpec);
     }
   }
@@ -101,7 +108,10 @@ class WrapperDesign extends React.PureComponent<Props, State> {
   }
 
   _handleOnChange(v: string) {
-    const { wrapperProps: { activeApiSpec }, handleUpdateApiSpec } = this.props;
+    const {
+      wrapperProps: { activeApiSpec },
+      handleUpdateApiSpec,
+    } = this.props;
 
     // Debounce the update because these specs can get pretty large
     clearTimeout(this.debounceTimeout);
@@ -120,7 +130,8 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     editor.setSelection(chStart, chEnd, lineStart, lineEnd);
   }
 
-  _handleLintClick(notice: {}) { // TODO: Export Notice from insomnia-components and use here, instead of {}
+  _handleLintClick(notice: {}) {
+    // TODO: Export Notice from insomnia-components and use here, instead of {}
     const { start, end } = notice._range;
     this._handleSetSelection(start.character, end.character, start.line, end.line);
   }
@@ -169,21 +180,11 @@ class WrapperDesign extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const {
-      gitSyncDropdown,
-      wrapperProps,
-    } = this.props;
+    const { gitSyncDropdown, wrapperProps } = this.props;
 
-    const {
-      activeApiSpec,
-      settings,
-    } = wrapperProps;
+    const { activeApiSpec, settings } = wrapperProps;
 
-    const {
-      lintMessages,
-      previewHidden,
-      hasConfigPlugins,
-    } = this.state;
+    const { lintMessages, previewHidden, hasConfigPlugins } = this.state;
 
     let swaggerUiSpec;
     try {
@@ -204,24 +205,35 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             gridLeft={
               <React.Fragment>
                 <img src={designerLogo} alt="Insomnia" width="32" height="32" />
-                <Breadcrumb className="breadcrumb" crumbs={['Documents', activeApiSpec.fileName]} onClick={this._handleBreadcrumb} />
+                <Breadcrumb
+                  className="breadcrumb"
+                  crumbs={['Documents', activeApiSpec.fileName]}
+                  onClick={this._handleBreadcrumb}
+                />
               </React.Fragment>
             }
             gridCenter={
               <Switch
                 onClick={this._handleDebugSpec.bind(this, lintErrorsExist)}
-                optionItems={[{ label: 'DESIGN', selected: true }, { label: 'DEBUG', selected: false }]}
+                optionItems={[
+                  { label: 'DESIGN', selected: true },
+                  { label: 'DEBUG', selected: false },
+                ]}
               />
             }
             gridRight={
               <React.Fragment>
                 <Button variant="contained" onClick={this._handleTogglePreview}>
-                  <img src={previewIcon} alt="Preview" width="15" />&nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
+                  <img src={previewIcon} alt="Preview" width="15" />
+                  &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
                 </Button>
                 {hasConfigPlugins && (
-                  <Button variant="contained" onClick={this._handleGenerateConfig} className="margin-left">
-                    <img src={generateConfigIcon} alt="Generate Config" width="15" />&nbsp; Generate
-                    Config
+                  <Button
+                    variant="contained"
+                    onClick={this._handleGenerateConfig}
+                    className="margin-left">
+                    <img src={generateConfigIcon} alt="Generate Config" width="15" />
+                    &nbsp; Generate Config
                   </Button>
                 )}
                 {gitSyncDropdown}
@@ -235,7 +247,29 @@ class WrapperDesign extends React.PureComponent<Props, State> {
               'preview-hidden': previewHidden,
             })}>
             <div id="swagger-ui-wrapper">
-              <SwaggerUI spec={swaggerUiSpec || {}} supportedSubmitMethods={['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace']} />
+              <ErrorBoundary
+                invalidationKey={activeApiSpec.contents}
+                renderError={() => (
+                  <div className="text-center margin">
+                    <h3>An error occurred while trying to render Swagger UI 😢</h3>
+                    This preview will automatically refresh, once you have a valid specification
+                    that can be previewed.
+                  </div>
+                )}>
+                <SwaggerUI
+                  spec={swaggerUiSpec}
+                  supportedSubmitMethods={[
+                    'get',
+                    'put',
+                    'post',
+                    'delete',
+                    'options',
+                    'head',
+                    'patch',
+                    'trace',
+                  ]}
+                />
+              </ErrorBoundary>
             </div>
             <div className="spec-editor__body theme--pane__body">
               <CodeEditor
@@ -252,10 +286,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
                 uniquenessKey={activeApiSpec._id}
               />
               {lintMessages.length > 0 && (
-                <NoticeTable
-                  notices={lintMessages}
-                  onClick={this._handleLintClick}
-                />
+                <NoticeTable notices={lintMessages} onClick={this._handleLintClick} />
               )}
             </div>
           </div>
