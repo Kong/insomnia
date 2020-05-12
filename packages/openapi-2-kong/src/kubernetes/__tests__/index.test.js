@@ -489,12 +489,8 @@ describe('index', () => {
         keyAuthPluginDoc('s2'),
         dummyPluginDoc('s3'),
         ingressDoc([keyAuthName('g0')], 'api-0.insomnia.rest', 'my-api-s0'),
-        ingressDoc([keyAuthName('g0'), keyAuthName('s1')], 'api-1.insomnia.rest', 'my-api-s1'),
-        ingressDoc(
-          [keyAuthName('g0'), keyAuthName('s2'), dummyName('s3')],
-          'api-2.insomnia.rest',
-          'my-api-s2',
-        ),
+        ingressDoc([keyAuthName('s1')], 'api-1.insomnia.rest', 'my-api-s1'),
+        ingressDoc([keyAuthName('s2'), dummyName('s3')], 'api-2.insomnia.rest', 'my-api-s2'),
       ]);
     });
 
@@ -522,14 +518,9 @@ describe('index', () => {
         keyAuthPluginDoc('p2'),
         dummyPluginDoc('p3'),
         ingressDoc([keyAuthName('g0')], 'api.insomnia.rest', 'my-api-s0', '/no-plugin'),
+        ingressDoc([keyAuthName('p1')], 'api.insomnia.rest', 'my-api-s0', '/plugin-0'),
         ingressDoc(
-          [keyAuthName('g0'), keyAuthName('p1')],
-          'api.insomnia.rest',
-          'my-api-s0',
-          '/plugin-0',
-        ),
-        ingressDoc(
-          [keyAuthName('g0'), keyAuthName('p2'), dummyName('p3')],
+          [keyAuthName('p2'), dummyName('p3')],
           'api.insomnia.rest',
           'my-api-s0',
           '/plugin-1',
@@ -573,14 +564,14 @@ describe('index', () => {
           '/path',
         ),
         ingressDocWithOverride(
-          [keyAuthName('g0'), keyAuthName('m1')],
+          [keyAuthName('m1')],
           'put-method',
           'api.insomnia.rest',
           'my-api-s0',
           '/path',
         ),
         ingressDocWithOverride(
-          [keyAuthName('g0'), keyAuthName('m2'), dummyName('m3')],
+          [keyAuthName('m2'), dummyName('m3')],
           'post-method',
           'api.insomnia.rest',
           'my-api-s0',

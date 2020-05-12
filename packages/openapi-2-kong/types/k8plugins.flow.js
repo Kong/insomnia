@@ -1,9 +1,7 @@
 // @flow
 
-import type { HttpMethodKeys } from '../src/common';
-
 declare type OperationPlugins = Array<{
-  method: ?HttpMethodKeys,
+  method: ?HttpMethodType,
   plugins: Array<KubernetesPluginConfig>,
 }>;
 
