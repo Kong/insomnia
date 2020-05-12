@@ -5,9 +5,11 @@ import fs from 'fs';
 import LocalStorage from './local-storage';
 import {
   changelogUrl,
+  DocumentationArticle,
   getAppLongName,
   getAppName,
-  getAppVersion, getDocumentationUrl,
+  getAppVersion,
+  getDocumentationUrl,
   isDevelopment,
   isMac,
   MNEMONIC_SYM,
@@ -241,7 +243,7 @@ export function createWindow() {
         label: `${MNEMONIC_SYM}Help and Support`,
         accelerator: !isMac() ? 'F1' : null,
         click: () => {
-          shell.openExternal(getDocumentationUrl(''));
+          shell.openExternal(getDocumentationUrl(DocumentationArticle.base));
         },
       },
       {

@@ -16,7 +16,7 @@ import GitLogModal from '../modals/git-log-modal';
 import GitBranchesModal from '../modals/git-branches-modal';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
-import { getDocumentationUrl } from '../../../common/constants';
+import { DocumentationArticle, getDocumentationUrl } from '../../../common/constants';
 import { trackEvent } from '../../../common/analytics';
 
 type Props = {|
@@ -224,11 +224,13 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     const { branch } = this.state;
     const { vcs, renderDropdownButton } = this.props;
 
-    const renderBtn = renderDropdownButton || (children => (
-      <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
-        {children}
-      </DropdownButton>
-    ));
+    const renderBtn =
+      renderDropdownButton ||
+      (children => (
+        <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
+          {children}
+        </DropdownButton>
+      ));
 
     if (!vcs.isInitialized()) {
       return renderBtn(
@@ -280,7 +282,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
             Git Sync
             <HelpTooltip>
               Sync and collaborate with Git{' '}
-              <Link href={getDocumentationUrl('git-sync')}>
+              <Link href={getDocumentationUrl(DocumentationArticle.base)}>
                 <span className="no-wrap">
                   <br />
                   Documentation <i className="fa fa-external-link" />

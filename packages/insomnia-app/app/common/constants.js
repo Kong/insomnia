@@ -99,8 +99,8 @@ export function getClientString() {
   return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
 }
 
-export function getDocumentationUrl(slug: string): string {
-  return `https://support.insomnia.rest/${slug}`;
+export function getDocumentationUrl(article: $Keys<typeof DocumentationArticle>): string {
+  return `https://support.insomnia.rest${DocumentationArticle[article]}`;
 }
 
 export function changelogUrl(): string {
@@ -144,6 +144,12 @@ export const API_BASE_URL = 'https://api.insomnia.rest';
 // PLUGINS
 export const PLUGIN_HUB_BASE = 'https://insomnia.rest/plugins';
 export const NPM_PACKAGE_BASE = 'https://www.npmjs.com/package';
+
+// DOCUMENTATION
+export const DocumentationArticle = {
+  base: '',
+  gitSync: '/article/96-git-sync',
+};
 
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 45;

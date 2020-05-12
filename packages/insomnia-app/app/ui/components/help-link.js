@@ -3,20 +3,21 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { getDocumentationUrl } from '../../common/constants';
 import Link from './base/link';
+import type { DocumentationArticle } from '../../common/constants';
 
 type Props = {
-  slug: string,
+  article: $Keys<DocumentationArticle>,
 };
 
 @autobind
 class HelpLink extends React.PureComponent<Props> {
   render() {
-    const { slug } = this.props;
+    const { article } = this.props;
     return (
       <Link
         noTheme
         className="help-link theme--dialog"
-        href={getDocumentationUrl(slug)}
+        href={getDocumentationUrl(article)}
         title="Read documentation">
         <i className="fa fa-question-circle" />
       </Link>
