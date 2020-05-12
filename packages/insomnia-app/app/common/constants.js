@@ -140,16 +140,6 @@ export const API_BASE_URL = 'https://api.insomnia.rest';
 export const PLUGIN_HUB_BASE = 'https://insomnia.rest/plugins';
 export const NPM_PACKAGE_BASE = 'https://www.npmjs.com/package';
 
-// DOCUMENTATION
-export const DocumentationArticle = {
-  base: '',
-  gitSync: '/article/96-git-sync',
-};
-
-export function getDocumentationUrl(article: $Values<typeof DocumentationArticle>): string {
-  return `https://support.insomnia.rest${article || ''}`;
-}
-
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 45;
 export const MIN_SIDEBAR_REMS = 0.75;

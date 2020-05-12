@@ -16,8 +16,8 @@ import GitLogModal from '../modals/git-log-modal';
 import GitBranchesModal from '../modals/git-branches-modal';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
-import { DocumentationArticle, getDocumentationUrl } from '../../../common/constants';
 import { trackEvent } from '../../../common/analytics';
+import { DocumentationArticle, getDocumentationUrl } from '../../../common/documentation';
 
 type Props = {|
   handleInitializeEntities: () => void,
@@ -110,7 +110,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     try {
       await vcs.pull(gitRepository.credentials);
     } catch (err) {
-      showError({ title: 'Error Pulling Repository', message: err.message, error: err });
+      showError({ title: 'Error Pulling Repository', error: err });
     }
     await db.flushChanges(bufferId);
 
@@ -131,7 +131,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     try {
       canPush = await vcs.canPush(gitRepository.credentials);
     } catch (err) {
-      showError({ title: 'Error Pushing Repository', message: err.message, error: err });
+      showError({ title: 'Error Pushing Repository', error: err });
       this.setState({ loadingPush: false });
       return;
     }
@@ -162,7 +162,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           },
         });
       } else {
-        showError({ title: 'Error Pushing Repository', message: err.message, error: err });
+        showError({ title: 'Error Pushing Repository', error: err });
       }
     }
 
@@ -208,7 +208,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     try {
       await vcs.checkout(branch);
     } catch (err) {
-      showError({ title: 'Checkout Error', message: err.message, error: err });
+      showError({ title: 'Checkout Error', error: err });
     }
     await db.flushChanges(bufferId, true);
 

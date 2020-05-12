@@ -1,12 +1,12 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import { getDocumentationUrl } from '../../common/constants';
 import Link from './base/link';
-import type { DocumentationArticle } from '../../common/constants';
+import type { DocumentationArticleType } from '../../common/documentation';
+import { getDocumentationUrl } from '../../common/documentation';
 
 type Props = {
-  article: $Keys<DocumentationArticle>,
+  article: DocumentationArticleType,
 };
 
 @autobind

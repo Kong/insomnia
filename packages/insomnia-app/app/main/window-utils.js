@@ -5,16 +5,15 @@ import fs from 'fs';
 import LocalStorage from './local-storage';
 import {
   changelogUrl,
-  DocumentationArticle,
   getAppLongName,
   getAppName,
   getAppVersion,
-  getDocumentationUrl,
   isDevelopment,
   isMac,
   MNEMONIC_SYM,
 } from '../common/constants';
 import * as misc from '../common/misc';
+import { DocumentationArticle, getDocumentationUrl } from '../common/documentation';
 
 const { app, Menu, BrowserWindow, shell, dialog } = electron;
 
