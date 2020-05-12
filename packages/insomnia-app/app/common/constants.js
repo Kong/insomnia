@@ -1,5 +1,4 @@
 // @flow
-
 import { appConfig } from '../../config';
 import * as electron from 'electron';
 import path from 'path';
@@ -99,10 +98,6 @@ export function getClientString() {
   return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
 }
 
-export function getDocumentationUrl(article: $Keys<typeof DocumentationArticle>): string {
-  return `https://support.insomnia.rest${DocumentationArticle[article]}`;
-}
-
 export function changelogUrl(): string {
   const { changelogBaseUrl, version } = appConfig();
   return `${changelogBaseUrl}/${version}`;
@@ -150,6 +145,10 @@ export const DocumentationArticle = {
   base: '',
   gitSync: '/article/96-git-sync',
 };
+
+export function getDocumentationUrl(article: $Values<typeof DocumentationArticle>): string {
+  return `https://support.insomnia.rest${article || ''}`;
+}
 
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 45;

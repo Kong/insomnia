@@ -110,7 +110,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     try {
       await vcs.pull(gitRepository.credentials);
     } catch (err) {
-      showError({ title: 'Pull Error', error: err });
+      showError({ title: 'Error Pulling Repository', message: err.message, error: err });
     }
     await db.flushChanges(bufferId);
 
@@ -162,7 +162,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           },
         });
       } else {
-        showError({ title: 'Push Error', error: err });
+        showError({ title: 'Error Pushing Repository', message: err.message, error: err });
       }
     }
 
@@ -208,7 +208,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     try {
       await vcs.checkout(branch);
     } catch (err) {
-      showError({ title: 'Checkout Error', error: err });
+      showError({ title: 'Checkout Error', message: err.message, error: err });
     }
     await db.flushChanges(bufferId, true);
 
@@ -282,7 +282,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
             Git Sync
             <HelpTooltip>
               Sync and collaborate with Git{' '}
-              <Link href={getDocumentationUrl(DocumentationArticle.base)}>
+              <Link href={getDocumentationUrl(DocumentationArticle.gitSync)}>
                 <span className="no-wrap">
                   <br />
                   Documentation <i className="fa fa-external-link" />
