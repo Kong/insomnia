@@ -9,6 +9,7 @@ type CredentialsPassword = {
 };
 
 type CredentialsToken = {
+  username?: string,
   token: string,
 };
 
@@ -48,11 +49,11 @@ export function migrate<T>(doc: T): T {
   return doc;
 }
 
-export function create(patch: Object = {}): Promise<GitRepository> {
+export function create(patch: $Shape<GitRepository> = {}): Promise<GitRepository> {
   return db.docCreate(type, patch);
 }
 
-export function update(repo: GitRepository, patch: Object): Promise<GitRepository> {
+export function update(repo: GitRepository, patch: $Shape<GitRepository>): Promise<GitRepository> {
   return db.docUpdate(repo, patch);
 }
 

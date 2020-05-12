@@ -54,7 +54,9 @@ class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
   }
 
   render() {
-    const { error, message, title, addCancel } = this.state;
+    const { error, title, addCancel } = this.state;
+
+    const message = this.state.message || error?.message;
 
     return (
       <Modal ref={this._setModalRef}>
@@ -63,7 +65,7 @@ class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
           {message ? <div className="notice error">{message}</div> : null}
           {error && (
             <details>
-              <summary>See More</summary>
+              <summary>Stack trace</summary>
               <pre className="pad-top-sm force-wrap selectable">
                 <code>{error.stack || error}</code>
               </pre>

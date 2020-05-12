@@ -131,7 +131,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     try {
       canPush = await vcs.canPush(gitRepository.credentials);
     } catch (err) {
-      showAlert({ title: 'Push Rejected', message: err.message });
+      showError({ title: 'Error Pushing Repository', message: err.message, error: err });
       this.setState({ loadingPush: false });
       return;
     }
