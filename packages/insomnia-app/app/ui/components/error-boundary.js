@@ -7,7 +7,10 @@ type Props = {
   children: React.Node,
   errorClassName?: string,
   showAlert?: boolean,
-  replaceWith?: React.Node,
+
+  // Avoid using invalidation with showAlert, otherwise an alert will be shown with every attempted re-render
+  invalidationKey?: string,
+  renderError?: (error: Error) => React.Node,
 };
 
 type State = {
@@ -22,6 +25,19 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
       error: null,
       info: null,
     };
+  }
+
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: $ReadOnly<Props>) {
+    const { error, info } = this.state;
+
+    const invalidationKeyChanged = nextProps.invalidationKey !== this.props.invalidationKey;
+    const isErrored = error !== null || info !== null;
+    const shouldResetError = invalidationKeyChanged && isErrored;
+
+    if (shouldResetError) {
+      this.setState({ error: null, info: null });
+    }
   }
 
   componentDidCatch(error: Error, info: { componentStack: string }) {
@@ -57,10 +73,14 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
 
   render() {
     const { error, info } = this.state;
-    const { errorClassName, children } = this.props;
+    const { errorClassName, children, renderError } = this.props;
 
     if (error && info) {
-      return <div className={errorClassName || null}>Render Failure: {error.message}</div>;
+      return (
+        renderError ? renderError(error) : (
+          <div className={errorClassName || null}>Render Failure: {error.message}</div>
+        )
+      );
     }
 
     return children;
