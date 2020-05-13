@@ -11,7 +11,8 @@
     "build-storybook": "build-storybook --quiet",
     "storybook": "start-storybook --port 3223",
     "bootstrap": "rimraf node_modules/fsevents && npm run convert-svg && npm run build",
-    "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js"
+    "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js",
+    "prepublish": "npm run convert-svg && npm run build"
   },
   "husky": {
     "hooks": {

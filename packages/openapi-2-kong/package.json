@@ -6,7 +6,8 @@
     "typecheck": "flow check",
     "test": "npm run typecheck && jest",
     "build": "webpack --config webpack.config.js --display errors-only",
-    "bootstrap": "npm run build"
+    "bootstrap": "npm run build",
+    "prepublish": "npm run build"
   },
   "husky": {
     "hooks": {
