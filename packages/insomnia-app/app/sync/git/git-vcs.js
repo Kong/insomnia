@@ -2,6 +2,7 @@
 import * as git from 'isomorphic-git';
 import { trackEvent } from '../../common/analytics';
 import { httpPlugin } from './http';
+import type { GitCredentials } from '../../models/git-repository';
 
 export type GitAuthor = {|
   name: string,
@@ -12,17 +13,6 @@ export type GitRemoteConfig = {|
   remote: string,
   url: string,
 |};
-
-type GitCredentialsPassword = {
-  username: string,
-  password: string,
-};
-
-type GitCredentialsToken = {
-  token: string,
-};
-
-export type GitCredentials = GitCredentialsPassword | GitCredentialsToken;
 
 export type GitLogEntry = {|
   oid: string,
@@ -37,7 +27,7 @@ export const GIT_NAMESPACE_DIR = '.insomnia';
 
 export default class GitVCS {
   _git: Object;
-  _baseOpts: {dir: string, gitdir?: string};
+  _baseOpts: { dir: string, gitdir?: string };
   _initialized: boolean;
 
   constructor() {
@@ -181,7 +171,7 @@ export default class GitVCS {
    * @param creds
    * @returns {Promise<boolean>}
    */
-  async canPush(creds?: GitCredentials | null) {
+  async canPush(creds: GitCredentials) {
     const branch = await this.getBranch();
 
     const remote = await this.getRemote('origin');
@@ -208,14 +198,14 @@ export default class GitVCS {
     return true;
   }
 
-  async push(creds?: GitCredentials | null, force?: boolean = false): Promise<boolean> {
+  async push(creds: GitCredentials, force?: boolean = false): Promise<boolean> {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
     trackEvent('Git', 'Push');
 
     return git.push({ ...this._baseOpts, remote: 'origin', ...creds, force });
   }
 
-  async pull(creds?: GitCredentials | null): Promise<void> {
+  async pull(creds: GitCredentials): Promise<void> {
     console.log('[git] Pull remote=origin', await this.getBranch());
     trackEvent('Git', 'Pull');
 
@@ -235,11 +225,7 @@ export default class GitVCS {
     return git.merge({ ...this._baseOpts, ours, theirs: theirBranch });
   }
 
-  async fetch(
-    singleBranch: boolean,
-    depth: number | null,
-    creds?: GitCredentials | null,
-  ): Promise<void> {
+  async fetch(singleBranch: boolean, depth: number | null, creds: GitCredentials): Promise<void> {
     console.log('[git] Fetch remote=origin');
 
     return git.fetch({

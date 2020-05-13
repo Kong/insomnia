@@ -3,17 +3,17 @@ import type { BaseModel } from './index';
 
 import * as db from '../common/database';
 
-type CredentialsPassword = {
+type GitCredentialsPassword = {
   username: string,
   password: string,
 };
 
-type CredentialsToken = {
-  username?: string,
+type GitCredentialsToken = {
+  username: string,
   token: string,
 };
 
-type GitCredentials = null | CredentialsPassword | CredentialsToken;
+export type GitCredentials = null | GitCredentialsPassword | GitCredentialsToken;
 
 type BaseGitRepository = {
   needsFullClone: boolean,
