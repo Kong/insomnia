@@ -1,32 +1,28 @@
 import React from 'react';
 import Header from './header';
-import GravatarImg from './gravatar-img';
 import Breadcrumb from './breadcrumb';
 import Switch from './switch';
+import Button from './button';
 
 export default { title: '1st Party | Header' };
 
 export const _default = () => <Header />;
 
-export const _primary = () =>
+export const _withElements = () =>
     <Header
         gridLeft={(
             <React.Fragment>
-                <GravatarImg
-                    className="gravatar breadcrumbs"
-                    rounded
-                    email="support@insomnia.rest"
-                    size={24}
-                />
                 <Breadcrumb className="breadcrumb" crumbs={['Documents', 'Deployment']} />
             </React.Fragment>
         )}
         gridCenter={(
-                <Switch />
+                <Switch optionItems={[{ label: 'DESIGN', selected: true }, { label: 'DEBUG', selected: false }]} />
         )}
         gridRight={(
             <React.Fragment>
-                <div>right</div>
+                <Button variant="contained">
+                    Some Button
+                </Button>
             </React.Fragment>
         )}
     />;
