@@ -28,6 +28,7 @@ app.on('ready', async () => {
   // Init some important things first
   await database.init(models.types());
   await errorHandling.init();
+
   await windowUtils.init();
 
   // Init the app
