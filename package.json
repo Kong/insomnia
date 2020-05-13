@@ -22,8 +22,7 @@
   },
   "lint-staged": {
     "{packages,plugins}/**/*.{js,html,json}": [
-      "eslint . --fix",
-      "jest --bail --findRelatedTests"
+      "eslint . --fix"
     ]
   },
   "husky": {
