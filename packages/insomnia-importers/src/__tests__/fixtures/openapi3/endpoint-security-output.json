@@ -1,173 +1,201 @@
 {
-  "_type": "export",
+  "__export_date": "2020-05-13T23:55:24.712Z",
   "__export_format": 4,
-  "__export_date": "2020-02-19T03:47:33.193Z",
   "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
   "resources": [
     {
-      "_type": "workspace",
       "_id": "__WORKSPACE_ID__",
-      "parentId": null,
+      "_type": "workspace",
+      "description": "",
       "name": "Endpoint Security 1.2",
-      "description": ""
+      "parentId": null
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "Base environment",
+      "_id": "__BASE_ENVIRONMENT_ID__",
+      "_type": "environment",
       "data": {
         "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
       },
-      "_type": "environment",
-      "_id": "__BASE_ENVIRONMENT_ID__"
+      "name": "Base environment",
+      "parentId": "__WORKSPACE_ID__"
     },
     {
-      "parentId": "__BASE_ENVIRONMENT_ID__",
-      "name": "OpenAPI env",
+      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_type": "environment",
       "data": {
-        "scheme": "https",
-        "base_path": "/v1",
-        "cookieName": "cookieName",
         "anotherCookieName": "anotherCookieName",
-        "key": "key",
         "anotherKey": "anotherKey",
+        "base_path": "/v1",
+        "bearerToken": "bearerToken",
+        "cookieName": "cookieName",
         "host": "api.server.test",
-        "httpUsername": "username",
         "httpPassword": "password",
+        "httpUsername": "username",
+        "key": "key",
+        "scheme": "https",
         "xApiKey": "xApiKey",
-        "xAppVersion": "xAppVersion",
-        "bearerToken": "bearerToken"
+        "xAppVersion": "xAppVersion"
       },
-      "_type": "environment",
-      "_id": "env___BASE_ENVIRONMENT_ID___sub"
+      "name": "OpenAPI env",
+      "parentId": "__BASE_ENVIRONMENT_ID__"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "/basic",
-      "url": "{{ base_url }}/basic",
+      "_id": "req___WORKSPACE_ID__05bfadcb",
+      "_type": "request",
+      "authentication": {},
       "body": {},
-      "method": "GET",
-      "parameters": [],
       "headers": [],
+      "method": "GET",
+      "name": "/none",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/none"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__4112dc81",
+      "_type": "request",
       "authentication": {
+        "password": "{{ httpPassword }}",
         "type": "basic",
-        "username": "{{ httpUsername }}",
-        "password": "{{ httpPassword }}"
+        "username": "{{ httpUsername }}"
       },
-      "_type": "request",
-      "_id": "req___WORKSPACE_ID__4a563129"
-    },
-    {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "/bearer",
-      "url": "{{ base_url }}/bearer",
       "body": {},
-      "method": "GET",
-      "parameters": [],
       "headers": [],
-      "authentication": {
-        "type": "bearer",
-        "token": "{{bearerToken}}",
-        "prefix": ""
-      },
-      "_type": "request",
-      "_id": "req___WORKSPACE_ID__6ecf1fc2"
+      "method": "GET",
+      "name": "/none/basic",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/none/basic"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "/key/header",
-      "url": "{{ base_url }}/key/header",
+      "_id": "req___WORKSPACE_ID__4a563129",
+      "_type": "request",
+      "authentication": {
+        "password": "{{ httpPassword }}",
+        "type": "basic",
+        "username": "{{ httpUsername }}"
+      },
       "body": {},
+      "headers": [],
       "method": "GET",
+      "name": "/basic",
       "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/basic"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__6ecf1fc2",
+      "_type": "request",
+      "authentication": {
+        "prefix": "",
+        "token": "{{bearerToken}}",
+        "type": "bearer"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/bearer",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/bearer"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__48bba8a5",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
       "headers": [
         {
-          "name": "x-api_key",
           "disabled": false,
+          "name": "x-api_key",
           "value": "{{ xApiKey }}"
         },
         {
-          "name": "x-app-version",
           "disabled": false,
+          "name": "x-app-version",
           "value": "{{ xAppVersion }}"
         }
       ],
-      "authentication": {},
-      "_type": "request",
-      "_id": "req___WORKSPACE_ID__48bba8a5"
+      "method": "GET",
+      "name": "/key/header",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/key/header"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "/key/cookie",
-      "url": "{{ base_url }}/key/cookie",
+      "_id": "req___WORKSPACE_ID__2ea006cf",
+      "_type": "request",
+      "authentication": {},
       "body": {},
-      "method": "GET",
-      "parameters": [],
       "headers": [
         {
-          "name": "Cookie",
           "disabled": false,
+          "name": "Cookie",
           "value": "CookieName={{ cookieName }}; AnotherCookieName={{ anotherCookieName }}"
         }
       ],
-      "authentication": {},
-      "_type": "request",
-      "_id": "req___WORKSPACE_ID__2ea006cf"
+      "method": "GET",
+      "name": "/key/cookie",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/key/cookie"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "/key/query",
-      "url": "{{ base_url }}/key/query",
+      "_id": "req___WORKSPACE_ID__0a8d5285",
+      "_type": "request",
+      "authentication": {},
       "body": {},
+      "headers": [],
       "method": "GET",
+      "name": "/key/query",
       "parameters": [
         {
-          "name": "key",
           "disabled": false,
+          "name": "key",
           "value": "{{ key }}"
         },
         {
-          "name": "another_key",
           "disabled": false,
+          "name": "another_key",
           "value": "{{ anotherKey }}"
         }
       ],
-      "headers": [],
-      "authentication": {},
-      "_type": "request",
-      "_id": "req___WORKSPACE_ID__0a8d5285"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/key/query"
     },
     {
-      "parentId": "__WORKSPACE_ID__",
-      "name": "/all",
-      "url": "{{ base_url }}/all",
+      "_id": "req___WORKSPACE_ID__e285189c",
+      "_type": "request",
+      "authentication": {
+        "password": "{{ httpPassword }}",
+        "type": "basic",
+        "username": "{{ httpUsername }}"
+      },
       "body": {},
-      "method": "GET",
-      "parameters": [
-        {
-          "name": "key",
-          "disabled": false,
-          "value": "{{ key }}"
-        }
-      ],
       "headers": [
         {
-          "name": "x-api_key",
           "disabled": false,
+          "name": "x-api_key",
           "value": "{{ xApiKey }}"
         },
         {
-          "name": "Cookie",
           "disabled": false,
+          "name": "Cookie",
           "value": "CookieName={{ cookieName }}"
         }
       ],
-      "authentication": {
-        "type": "basic",
-        "username": "{{ httpUsername }}",
-        "password": "{{ httpPassword }}"
-      },
-      "_type": "request",
-      "_id": "req___WORKSPACE_ID__e285189c"
+      "method": "GET",
+      "name": "/all",
+      "parameters": [
+        {
+          "disabled": false,
+          "name": "key",
+          "value": "{{ key }}"
+        }
+      ],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/all"
     }
   ]
 }
