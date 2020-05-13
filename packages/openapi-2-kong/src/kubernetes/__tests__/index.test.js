@@ -125,10 +125,10 @@ describe('index', () => {
   });
 
   describe('generateServiceName()', () => {
-    it('defaults to ingress name', () => {
+    it('defaults to service', () => {
       const server: OA3Server = { url: 'https://insomnia.rest' };
-      expect(generateServiceName(server, 'ingrs', 0)).toBe('ingrs-s0');
-      expect(generateServiceName(server, 'ingrs', 3)).toBe('ingrs-s3');
+      expect(generateServiceName(server, 0)).toBe('service-0');
+      expect(generateServiceName(server, 3)).toBe('service-3');
     });
 
     it('uses x-kubernetes-backend.serviceName', () => {
@@ -139,7 +139,7 @@ describe('index', () => {
           servicePort: 123,
         },
       };
-      expect(generateServiceName(server, 'ingrs', 0)).toBe('b-name');
+      expect(generateServiceName(server, 0)).toBe('b-name');
     });
 
     it('uses x-kubernetes-service.metadata.name', () => {
@@ -151,7 +151,7 @@ describe('index', () => {
           },
         },
       };
-      expect(generateServiceName(server, 'ingrs', 0)).toBe('s-name');
+      expect(generateServiceName(server, 0)).toBe('s-name');
     });
   });
 
@@ -250,7 +250,7 @@ describe('index', () => {
 
   describe('generateRulesForServer()', () => {
     it('handles basic server at root', () => {
-      const result = generateRulesForServer(0, { url: 'http://api.insomnia.rest' }, 'my-ingress');
+      const result = generateRulesForServer(0, { url: 'http://api.insomnia.rest' });
 
       expect(result).toEqual({
         host: 'api.insomnia.rest',
@@ -258,7 +258,7 @@ describe('index', () => {
           paths: [
             {
               backend: {
-                serviceName: 'my-ingress-s0',
+                serviceName: 'service-0',
                 servicePort: 80,
               },
             },
@@ -268,11 +268,7 @@ describe('index', () => {
     });
 
     it('handles basic server with base path', () => {
-      const result = generateRulesForServer(
-        0,
-        { url: 'http://api.insomnia.rest/v1' },
-        'my-ingress',
-      );
+      const result = generateRulesForServer(0, { url: 'http://api.insomnia.rest/v1' });
 
       expect(result).toEqual({
         host: 'api.insomnia.rest',
@@ -281,7 +277,7 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-s0',
+                serviceName: 'service-0',
                 servicePort: 80,
               },
             },
@@ -294,7 +290,7 @@ describe('index', () => {
       const result = generateRulesForServer(
         1,
         { url: 'http://api.insomnia.rest/v1' },
-        'my-ingress',
+
         ['/{parameter}/{another}/path'],
       );
 
@@ -305,7 +301,7 @@ describe('index', () => {
             {
               path: '/v1/.*/.*/path',
               backend: {
-                serviceName: 'my-ingress-s1',
+                serviceName: 'service-1',
                 servicePort: 80,
               },
             },
@@ -318,7 +314,7 @@ describe('index', () => {
       const result = generateRulesForServer(
         1,
         { url: 'http://api.insomnia.rest/v1' },
-        'my-ingress',
+
         [],
       );
 
@@ -329,7 +325,7 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-s1',
+                serviceName: 'service-1',
                 servicePort: 80,
               },
             },
@@ -339,16 +335,12 @@ describe('index', () => {
     });
 
     it('handles TLS', () => {
-      const result = generateRulesForServer(
-        0,
-        {
-          url: 'http://api.insomnia.rest/v1',
-          'x-kubernetes-tls': {
-            secretName: 'my-secret',
-          },
+      const result = generateRulesForServer(0, {
+        url: 'http://api.insomnia.rest/v1',
+        'x-kubernetes-tls': {
+          secretName: 'my-secret',
         },
-        'my-ingress',
-      );
+      });
 
       expect(result).toEqual({
         host: 'api.insomnia.rest',
@@ -357,7 +349,7 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-s0',
+                serviceName: 'service-0',
                 servicePort: 443,
               },
             },
@@ -369,7 +361,7 @@ describe('index', () => {
 
     it('handles server url with protocol variable - no default', () => {
       const server = { url: '{protocol}://api.insomnia.rest/v1' };
-      const result = generateRulesForServer(1, server, 'my-ingress', []);
+      const result = generateRulesForServer(1, server, []);
 
       expect(result).toEqual({
         host: 'api.insomnia.rest',
@@ -378,7 +370,7 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-s1',
+                serviceName: 'service-1',
                 servicePort: 80,
               },
             },
@@ -394,7 +386,7 @@ describe('index', () => {
         url: '{protocol}://api.insomnia.rest/v1',
         variables: { protocol: { default: 'https' } },
       };
-      const result = generateRulesForServer(1, server, 'my-ingress', []);
+      const result = generateRulesForServer(1, server, []);
 
       expect(result).toEqual({
         host: 'api.insomnia.rest',
@@ -403,7 +395,7 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-s1',
+                serviceName: 'service-1',
                 servicePort: 80,
               },
             },
@@ -423,7 +415,7 @@ describe('index', () => {
           },
         },
       };
-      const result = generateRulesForServer(1, server, 'my-ingress', []);
+      const result = generateRulesForServer(1, server, []);
 
       expect(result).toEqual({
         host: 'api.insomnia.rest',
@@ -432,7 +424,7 @@ describe('index', () => {
             {
               path: '/.*/v1/.*',
               backend: {
-                serviceName: 'my-ingress-s1',
+                serviceName: 'service-1',
                 servicePort: 80,
               },
             },
@@ -457,7 +449,7 @@ describe('index', () => {
       expect(result.documents).toEqual([
         keyAuthPluginDoc('g0'),
         dummyPluginDoc('g1'),
-        ingressDoc([keyAuthName('g0'), dummyName('g1')], 'api.insomnia.rest', 'my-api-s0'),
+        ingressDoc(0, [keyAuthName('g0'), dummyName('g1')], 'api.insomnia.rest', 'service-0'),
       ]);
     });
 
@@ -488,9 +480,9 @@ describe('index', () => {
         keyAuthPluginDoc('s1'),
         keyAuthPluginDoc('s2'),
         dummyPluginDoc('s3'),
-        ingressDoc([keyAuthName('g0')], 'api-0.insomnia.rest', 'my-api-s0'),
-        ingressDoc([keyAuthName('s1')], 'api-1.insomnia.rest', 'my-api-s1'),
-        ingressDoc([keyAuthName('s2'), dummyName('s3')], 'api-2.insomnia.rest', 'my-api-s2'),
+        ingressDoc(0, [keyAuthName('g0')], 'api-0.insomnia.rest', 'service-0'),
+        ingressDoc(1, [keyAuthName('s1')], 'api-1.insomnia.rest', 'service-1'),
+        ingressDoc(2, [keyAuthName('s2'), dummyName('s3')], 'api-2.insomnia.rest', 'service-2'),
       ]);
     });
 
@@ -517,12 +509,13 @@ describe('index', () => {
         keyAuthPluginDoc('p1'),
         keyAuthPluginDoc('p2'),
         dummyPluginDoc('p3'),
-        ingressDoc([keyAuthName('g0')], 'api.insomnia.rest', 'my-api-s0', '/no-plugin'),
-        ingressDoc([keyAuthName('p1')], 'api.insomnia.rest', 'my-api-s0', '/plugin-0'),
+        ingressDoc(0, [keyAuthName('g0')], 'api.insomnia.rest', 'service-0', '/no-plugin'),
+        ingressDoc(1, [keyAuthName('p1')], 'api.insomnia.rest', 'service-0', '/plugin-0'),
         ingressDoc(
+          2,
           [keyAuthName('p2'), dummyName('p3')],
           'api.insomnia.rest',
-          'my-api-s0',
+          'service-0',
           '/plugin-1',
         ),
       ]);
@@ -557,24 +550,27 @@ describe('index', () => {
         keyAuthPluginDoc('m2'),
         dummyPluginDoc('m3'),
         ingressDocWithOverride(
+          0,
           [keyAuthName('g0')],
           'get-method',
           'api.insomnia.rest',
-          'my-api-s0',
+          'service-0',
           '/path',
         ),
         ingressDocWithOverride(
+          1,
           [keyAuthName('m1')],
           'put-method',
           'api.insomnia.rest',
-          'my-api-s0',
+          'service-0',
           '/path',
         ),
         ingressDocWithOverride(
+          2,
           [keyAuthName('m2'), dummyName('m3')],
           'post-method',
           'api.insomnia.rest',
-          'my-api-s0',
+          'service-0',
           '/path',
         ),
       ]);

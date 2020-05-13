@@ -9,16 +9,15 @@ export function generateKongForKubernetesConfigFromSpec(
   api: OpenApi3Spec,
   tags: Array<string>,
 ): KongForKubernetesResult {
-  let _iterator = 0;
-  const increment = (): number => _iterator++;
-
   // Extract global, server, and path plugins upfront
-  const plugins = getPlugins(api, increment);
+  const plugins = getPlugins(api);
 
   // Initialize document collections
   const ingressDocuments = [];
 
   const methodsThatNeedKongIngressDocuments: Set<HttpMethodType> = new Set<HttpMethodType>();
+  let _iterator = 0;
+  const increment = (): number => _iterator++;
 
   // Iterate all global servers
   plugins.servers.forEach((sp, serverIndex) => {
@@ -41,7 +40,7 @@ export function generateKongForKubernetesConfigFromSpec(
         }
 
         // Create metadata
-        const metadata = generateMetadata(api, annotations);
+        const metadata = generateMetadata(api, annotations, increment);
 
         // Generate Kong ingress document for a server and path in the doc
         const doc: KubernetesConfig = {
@@ -49,7 +48,7 @@ export function generateKongForKubernetesConfigFromSpec(
           kind: 'Ingress',
           metadata,
           spec: {
-            rules: [generateRulesForServer(serverIndex, sp.server, metadata.name, [pp.path])],
+            rules: [generateRulesForServer(serverIndex, sp.server, [pp.path])],
           },
         };
 
@@ -86,9 +85,13 @@ function generateK8sMethodDocuments(method: HttpMethodType): KubernetesMethodCon
   };
 }
 
-function generateMetadata(api: OpenApi3Spec, customAnnotations: CustomAnnotations): K8sMetadata {
+function generateMetadata(
+  api: OpenApi3Spec,
+  customAnnotations: CustomAnnotations,
+  increment: IndexIncrement,
+): K8sMetadata {
   const metadata: K8sMetadata = {
-    name: generateMetadataName(api),
+    name: `${generateMetadataName(api)}-${increment()}`,
   };
 
   const annotations = generateMetadataAnnotations(api, customAnnotations);
@@ -140,14 +143,13 @@ export function generateMetadataAnnotations(
 export function generateRulesForServer(
   index: number,
   server: OA3Server,
-  ingressName: string,
   paths?: Array<string>,
 ): K8sIngressRule {
   // Resolve serverUrl variables and update the source object so it only needs to be done once per server loop.
   server.url = resolveUrlVariables(server.url, server.variables);
 
   const { hostname, pathname } = parseUrl(server.url);
-  const serviceName = generateServiceName(server, ingressName, index);
+  const serviceName = generateServiceName(server, index);
   const servicePort = generateServicePort(server);
   const backend = { serviceName, servicePort };
 
@@ -174,7 +176,7 @@ export function generateRulesForServer(
   };
 }
 
-export function generateServiceName(server: OA3Server, ingressName: string, index: number): string {
+export function generateServiceName(server: OA3Server, index: number): string {
   // x-kubernetes-backend.serviceName
   const serviceName = server['x-kubernetes-backend']?.serviceName;
   if (serviceName) {
@@ -188,7 +190,7 @@ export function generateServiceName(server: OA3Server, ingressName: string, inde
   }
 
   // <ingress-name>-s<server index>
-  return `${ingressName}-s${index}`;
+  return `service-${index}`;
 }
 
 export function generateTlsConfig(server: OA3Server): Object | null {

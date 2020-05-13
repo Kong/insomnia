@@ -29,7 +29,10 @@ export function flattenPluginDocuments(plugins: Plugins): Array<KubernetesPlugin
   return all;
 }
 
-export function getPlugins(api: OpenApi3Spec, increment: IndexIncrement): Plugins {
+export function getPlugins(api: OpenApi3Spec): Plugins {
+  let _iterator = 0;
+  const increment = (): number => _iterator++;
+
   const servers = getServers(api);
 
   // if no global servers
