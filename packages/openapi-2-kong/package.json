@@ -4,6 +4,7 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "flow check && jest",
+    "test:affected": "jest --bail --findRelatedTests",
     "build": "webpack --config webpack.config.js --display errors-only"
   },
   "husky": {

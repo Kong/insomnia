@@ -13,6 +13,7 @@
     "publish": "lerna publish",
     "clean": "lerna clean --yes && rimraf node_modules",
     "test": "npm run lint && lerna run --stream --parallel test",
+    "test:affected": "lerna run --stream --parallel test:affected",
     "app-start": "npm start --prefix packages/insomnia-app",
     "app-build": "npm run build --prefix packages/insomnia-app",
     "app-package": "npm run package --prefix packages/insomnia-app",
@@ -21,7 +22,10 @@
     "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app"
   },
   "lint-staged": {
-    "{packages,plugins}/**/*.{js,html,json}": [ "eslint . --fix" ]
+    "{packages,plugins}/**/*.{js,html,json}": [
+      "eslint . --fix",
+      "jest --bail --findRelatedTests"
+    ]
   },
   "husky": {
     "hooks": {
