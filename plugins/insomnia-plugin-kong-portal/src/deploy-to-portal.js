@@ -5,7 +5,9 @@ import autobind from 'autobind-decorator';
 import { Button } from 'insomnia-components';
 
 type Props = {
-  axios: (config: Object) => Promise<{
+  axios: (
+    config: Object,
+  ) => Promise<{
     statusText: string,
     data: Object,
     status: number,
@@ -86,11 +88,7 @@ class DeployToPortal extends React.Component<Props, State> {
       e.preventDefault();
     }
 
-    const {
-      spec,
-      axios,
-      trackEvent,
-    } = this.props;
+    const { spec, axios, trackEvent } = this.props;
 
     const {
       kongSpecFileName,
@@ -164,25 +162,15 @@ class DeployToPortal extends React.Component<Props, State> {
   async _handleConnectKong(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const {
-      axios,
-      trackEvent,
-    } = this.props;
+    const { axios, trackEvent } = this.props;
 
-    const {
-      kongPortalUserWorkspace,
-      kongPortalApiUrl,
-      kongPortalRbacToken,
-    } = this.state;
+    const { kongPortalUserWorkspace, kongPortalApiUrl, kongPortalRbacToken } = this.state;
 
     // Show loading animation
     this._handleLoadingToggle(true);
     try {
       // Check connection
-      const apiUrl = urlJoin(
-        kongPortalApiUrl,
-        kongPortalUserWorkspace + '/kong',
-      );
+      const apiUrl = urlJoin(kongPortalApiUrl, kongPortalUserWorkspace + '/kong');
 
       const response = await axios({
         method: 'get',
@@ -338,9 +326,7 @@ class DeployToPortal extends React.Component<Props, State> {
             </a>
           </p>
           {showUploadError && (
-            <p className="notice error margin-top-sm">
-              The file already exists on this workspace.
-            </p>
+            <p className="notice error margin-top-sm">The file already exists on this workspace.</p>
           )}
           <div className="form-control form-control--outlined margin-top">
             <label>
@@ -381,9 +367,7 @@ class DeployToPortal extends React.Component<Props, State> {
             )}
           </p>
           <div>
-            <Button data-close-modal="true">
-              Close
-            </Button>
+            <Button data-close-modal="true">Close</Button>
           </div>
         </div>
       );
@@ -404,9 +388,7 @@ class DeployToPortal extends React.Component<Props, State> {
               disabled={!uploadIsEnabled}>
               Try Again
             </Button>
-            <button onClick={this._handleReturnToUpload}>
-              Go Back
-            </button>
+            <button onClick={this._handleReturnToUpload}>Go Back</button>
           </div>
         </div>
       );
@@ -427,9 +409,7 @@ class DeployToPortal extends React.Component<Props, State> {
               disabled={!uploadIsEnabled}>
               Overwrite Existing Spec
             </Button>
-            <Button onClick={this._handleReturnToUpload}>
-              Go Back
-            </Button>
+            <Button onClick={this._handleReturnToUpload}>Go Back</Button>
           </div>
         </div>
       );

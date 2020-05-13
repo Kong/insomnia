@@ -165,10 +165,10 @@ async function _getDefaultParams(): Promise<Array<RequestParameter>> {
   viewport && params.push({ name: KEY_VIEWPORT_SIZE, value: viewport });
 
   global.document &&
-  params.push({
-    name: KEY_DOCUMENT_ENCODING,
-    value: global.document.inputEncoding,
-  });
+    params.push({
+      name: KEY_DOCUMENT_ENCODING,
+      value: global.document.inputEncoding,
+    });
 
   return params;
 }

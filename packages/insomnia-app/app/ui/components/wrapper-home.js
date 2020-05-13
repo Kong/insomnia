@@ -330,8 +330,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         apiSpec={apiSpec}
         workspace={w}
         handleSetActiveWorkspace={handleSetActiveWorkspace}
-        isLastWorkspace={workspaces.length === 1}
-      >
+        isLastWorkspace={workspaces.length === 1}>
         <SvgIcon icon="ellipsis" />
       </DocumentCardDropdown>
     );
@@ -362,16 +361,18 @@ class WrapperHome extends React.PureComponent<Props, State> {
       return null;
     }
 
-    return <Card
-      key={apiSpec._id}
-      docBranch={branch && <Highlight search={filter} text={branch} />}
-      docTitle={apiSpec.fileName && <Highlight search={filter} text={apiSpec.fileName} />}
-      docVersion={version && <Highlight search={filter} text={version} />}
-      tagLabel={label && <Highlight search={filter} text={label} />}
-      docLog={log}
-      docMenu={docMenu}
-      onClick={() => this._handleSetActiveWorkspace(w._id, defaultActivity)}
-    />;
+    return (
+      <Card
+        key={apiSpec._id}
+        docBranch={branch && <Highlight search={filter} text={branch} />}
+        docTitle={apiSpec.fileName && <Highlight search={filter} text={apiSpec.fileName} />}
+        docVersion={version && <Highlight search={filter} text={version} />}
+        tagLabel={label && <Highlight search={filter} text={label} />}
+        docLog={log}
+        docMenu={docMenu}
+        onClick={() => this._handleSetActiveWorkspace(w._id, defaultActivity)}
+      />
+    );
   }
 
   renderMenu() {

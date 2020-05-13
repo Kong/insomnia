@@ -147,7 +147,7 @@ async function _trackStats() {
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
       url: changelogUrl(),
-      cta: 'See What\'s New',
+      cta: "See What's New",
       email: appConfig().gravatarEmail,
       message: `Updated to ${currentVersion}`,
     };

@@ -43,7 +43,7 @@ export async function importUri(
 ): Promise<{
   source: string,
   error: Error | null,
-  summary: {[string]: Array<BaseModel>},
+  summary: { [string]: Array<BaseModel> },
 }> {
   let rawText;
 
@@ -103,7 +103,7 @@ export async function importRaw(
 ): Promise<{
   source: string,
   error: Error | null,
-  summary: {[string]: Array<BaseModel>},
+  summary: { [string]: Array<BaseModel> },
 }> {
   let results;
   try {
@@ -119,7 +119,7 @@ export async function importRaw(
   const { data } = results;
 
   // Generate all the ids we may need
-  const generatedIds: {[string]: string | Function} = {};
+  const generatedIds: { [string]: string | Function } = {};
   for (const r of data.resources) {
     for (const key of r._id.match(REPLACE_ID_REGEX) || []) {
       generatedIds[key] = generateId(MODELS[r._type].prefix);

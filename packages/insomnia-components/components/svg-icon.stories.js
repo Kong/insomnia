@@ -20,7 +20,9 @@ Wrapper.displayName = '...';
 
 export const _default = () => <SvgIcon icon={IconEnum.arrowRight} />;
 
-export const labelled = () => <SvgIcon icon={IconEnum.warning} label={text('Label', '3 Warnings')} />;
+export const labelled = () => (
+  <SvgIcon icon={IconEnum.warning} label={text('Label', '3 Warnings')} />
+);
 
 export const reference = () => (
   <React.Fragment>

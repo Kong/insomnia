@@ -69,7 +69,7 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
     return config;
   }
 
-  async show(options: {apiSpec: ApiSpec}) {
+  async show(options: { apiSpec: ApiSpec }) {
     const configs = [];
 
     for (const p of await plugins.getConfigGenerators()) {
@@ -119,9 +119,7 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
   renderConfigTab(config: Config) {
     return (
       <Tab key={config.label} tabIndex="-1">
-        <button>
-          {config.label}
-        </button>
+        <button>{config.label}</button>
       </Tab>
     );
   }
@@ -136,9 +134,7 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
         <ModalHeader>Generate Config</ModalHeader>
         <ModalBody className="wide">
           <Tabs forceRenderTabPanel defaultIndex={activeTab} onSelect={this._handleTabSelect}>
-            <TabList>
-              {configs.map(this.renderConfigTab)}
-            </TabList>
+            <TabList>{configs.map(this.renderConfigTab)}</TabList>
             {configs.map(this.renderConfigTabPanel)}
           </Tabs>
         </ModalBody>

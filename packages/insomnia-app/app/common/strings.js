@@ -1,6 +1,4 @@
-import {
-getAppId,
-} from './constants';
+import { getAppId } from './constants';
 import { APP_ID_INSOMNIA } from '../../config';
 
 export default {

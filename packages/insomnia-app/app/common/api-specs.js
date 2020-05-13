@@ -2,7 +2,9 @@
 
 import YAML from 'yaml';
 
-export function parseApiSpec(rawDocument: string): {
+export function parseApiSpec(
+  rawDocument: string,
+): {
   contents: Object | null,
   rawContents: string,
   format: 'openapi' | 'swagger' | null,

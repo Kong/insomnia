@@ -49,7 +49,7 @@ export const IconEnum = {
 type IconKeys = $Values<typeof IconEnum>;
 
 type Props = {
-  icon: IconKeys;
+  icon: IconKeys,
   label?: React.Node,
 };
 
@@ -63,27 +63,27 @@ const SvgIconStyled: React.ComponentType<{ theme: ThemeKeys, hasLabel: boolean }
     user-select: none;
     ${({ hasLabel }) => (hasLabel ? 'margin-right: var(--padding-xs);' : null)}
     ${({ theme }) => {
-  switch (theme) {
-    case ThemeEnum.danger:
-    case ThemeEnum.info:
-    case ThemeEnum.notice:
-    case ThemeEnum.success:
-    case ThemeEnum.surprise:
-    case ThemeEnum.warning:
-      return `fill: var(--color-${theme}); color: var(--color-font-${theme});`;
-    case ThemeEnum.highlight:
-      return 'fill: var(--hl); color: var(--color-font-danger);';
-    case ThemeEnum.default:
-    default:
-      return 'fill: var(--color-font); color: var(--color-font);';
-  }
-}}
+      switch (theme) {
+        case ThemeEnum.danger:
+        case ThemeEnum.info:
+        case ThemeEnum.notice:
+        case ThemeEnum.success:
+        case ThemeEnum.surprise:
+        case ThemeEnum.warning:
+          return `fill: var(--color-${theme}); color: var(--color-font-${theme});`;
+        case ThemeEnum.highlight:
+          return 'fill: var(--hl); color: var(--color-font-danger);';
+        case ThemeEnum.default:
+        default:
+          return 'fill: var(--color-font); color: var(--color-font);';
+      }
+    }}
   }
 `;
 
 type IconDictionary = {
-  [IconKeys]: [ThemeKeys, React.ComponentType<any>];
-}
+  [IconKeys]: [ThemeKeys, React.ComponentType<any>],
+};
 
 class SvgIcon extends React.Component<Props> {
   static icons: IconDictionary = {
