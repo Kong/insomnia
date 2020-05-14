@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "scripts": {
     "typecheck": "flow check",
-    "test": "npm run typecheck && jest",
+    "test": "jest",
     "build": "webpack --config webpack.config.js --display errors-only",
     "bootstrap": "npm run build",
     "prepublish": "npm run build"
