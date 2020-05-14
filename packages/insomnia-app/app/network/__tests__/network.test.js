@@ -55,7 +55,10 @@ describe('actuallySend()', () => {
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
-      headers: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Empty', value: '' }],
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Empty', value: '' },
+      ],
       parameters: [{ name: 'foo bar', value: 'hello&world' }],
       method: 'POST',
       body: {

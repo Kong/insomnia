@@ -86,7 +86,10 @@ function keyBinds(
  */
 // Not using dot, because NeDB prohibits field names to contain dots.
 export const hotKeyRefs: { [string]: HotKeyDefinition } = {
-  WORKSPACE_SHOW_SETTINGS: defineHotKey('workspace_showSettings', `Show ${AppContext.workspace} Settings`),
+  WORKSPACE_SHOW_SETTINGS: defineHotKey(
+    'workspace_showSettings',
+    `Show ${AppContext.workspace} Settings`,
+  ),
 
   REQUEST_SHOW_SETTINGS: defineHotKey('request_showSettings', 'Show Request Settings'),
 

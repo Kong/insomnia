@@ -1,3 +1,1 @@
-module.exports.configGenerators = [
-  require('./src/generate'),
-];
+module.exports.configGenerators = [require('./src/generate')];

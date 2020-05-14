@@ -27,8 +27,8 @@ type Props = {
 
 type State = {
   actionPlugins: Array<DocumentAction>,
-  loadingActions: {[string]: boolean},
-}
+  loadingActions: { [string]: boolean },
+};
 
 @autobind
 class DocumentCardDropdown extends React.PureComponent<Props, State> {
@@ -76,7 +76,9 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
 
     const messages = [
       `Do you really want to delete "${apiSpec.fileName}"?`,
-      isLastWorkspace ? ` This is the only ${Strings.apiSpec.toLowerCase()} so a new one will be created for you.` : null,
+      isLastWorkspace
+        ? ` This is the only ${Strings.apiSpec.toLowerCase()} so a new one will be created for you.`
+        : null,
     ];
 
     showModal(AskModal, {
@@ -105,7 +107,8 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
   async _handlePluginClick(p: DocumentAction) {
     this.setState(state => ({
       loadingActions: {
-        ...state.loadingActions, [p.label]: true,
+        ...state.loadingActions,
+        [p.label]: true,
       },
     }));
 
@@ -141,23 +144,14 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
       ...extraProps
     } = this.props;
 
-    const {
-      actionPlugins,
-      loadingActions,
-    } = this.state;
+    const { actionPlugins, loadingActions } = this.state;
 
     return (
       <Dropdown beside onOpen={this._onOpen} {...extraProps}>
-        <DropdownButton className={className}>
-          {children}
-        </DropdownButton>
+        <DropdownButton className={className}>{children}</DropdownButton>
 
-        <DropdownItem onClick={this._handleDuplicate}>
-          Duplicate
-        </DropdownItem>
-        <DropdownItem onClick={this._handleRename}>
-          Rename
-        </DropdownItem>
+        <DropdownItem onClick={this._handleDuplicate}>Duplicate</DropdownItem>
+        <DropdownItem onClick={this._handleRename}>Rename</DropdownItem>
 
         {/* Render actions from plugins */}
         {actionPlugins.map((p: DocumentAction) => (

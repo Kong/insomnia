@@ -7,6 +7,7 @@
   "main": "dist/index.js",
   "scripts": {
     "typecheck": "flow check",
+    "test": "npm run typecheck",
     "build": "webpack --config webpack.config.js --display errors-only",
     "build-storybook": "build-storybook --quiet",
     "storybook": "start-storybook --port 3223",

@@ -30,22 +30,22 @@ class ResponseHeadersViewer extends React.PureComponent<Props> {
       <React.Fragment>
         <table className="table--fancy table--striped table--compact">
           <thead>
-          <tr>
-            <th>Name</th>
-            <th>Value</th>
-          </tr>
+            <tr>
+              <th>Name</th>
+              <th>Value</th>
+            </tr>
           </thead>
           <tbody>
-          {headers.map((h, i) => (
-            <tr className="selectable" key={i}>
-              <td style={{ width: '50%' }} className="force-wrap">
-                {h.name}
-              </td>
-              <td style={{ width: '50%' }} className="force-wrap">
-                {validateURL(h.value) ? <Link href={h.value}>{h.value}</Link> : h.value}
-              </td>
-            </tr>
-          ))}
+            {headers.map((h, i) => (
+              <tr className="selectable" key={i}>
+                <td style={{ width: '50%' }} className="force-wrap">
+                  {h.name}
+                </td>
+                <td style={{ width: '50%' }} className="force-wrap">
+                  {validateURL(h.value) ? <Link href={h.value}>{h.value}</Link> : h.value}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
         <p key="copy" className="pad-top">

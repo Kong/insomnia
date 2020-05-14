@@ -76,10 +76,10 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
     const { errorClassName, children, renderError } = this.props;
 
     if (error && info) {
-      return (
-        renderError ? renderError(error) : (
-          <div className={errorClassName || null}>Render Failure: {error.message}</div>
-        )
+      return renderError ? (
+        renderError(error)
+      ) : (
+        <div className={errorClassName || null}>Render Failure: {error.message}</div>
       );
     }
 

@@ -28,7 +28,7 @@ const StyledButton = styled.button`
   }
 
   &:disabled {
-     opacity: 0.5;
+    opacity: 0.5;
   }
 `;
 
@@ -100,9 +100,7 @@ class DropdownItem extends PureComponent {
 
     const inner = (
       <StyledInner className={className}>
-        <StyledText style={styles}>
-          {children}
-        </StyledText>
+        <StyledText style={styles}>{children}</StyledText>
       </StyledInner>
     );
 
@@ -115,11 +113,7 @@ class DropdownItem extends PureComponent {
         {...props}>
         {icon && <StyledIconContainer>{icon}</StyledIconContainer>}
         {inner}
-        {right && (
-          <StyledRightNode>
-            {right}
-          </StyledRightNode>
-        )}
+        {right && <StyledRightNode>{right}</StyledRightNode>}
       </StyledButton>
     );
   }

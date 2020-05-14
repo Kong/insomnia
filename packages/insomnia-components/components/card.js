@@ -111,8 +111,6 @@ const CardHeader: React.ComponentType<{}> = styled.div`
         background-color: var(--hl-xxs);
       }
     }
-
-
   }
 
   .card-checkbox-label {
@@ -237,7 +235,16 @@ class Card extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { tagLabel, docTitle, docVersion, docBranch, docLog, docMenu, selectable, onClick } = this.props;
+    const {
+      tagLabel,
+      docTitle,
+      docVersion,
+      docBranch,
+      docLog,
+      docMenu,
+      selectable,
+      onClick,
+    } = this.props;
     return (
       <StyledCard className={this.state.selected ? 'selected' : 'deselected'} onClick={onClick}>
         <CardHeader>
@@ -245,17 +252,12 @@ class Card extends React.PureComponent<Props, State> {
           {selectable ? (
             <div className="header-item card-menu">
               <label className="card-checkbox-label">
-                <input
-                  type="checkbox"
-                  onChange={this._handleOnChange.bind(this)}
-                />
+                <input type="checkbox" onChange={this._handleOnChange.bind(this)} />
                 <span className="card-checkbox" />
               </label>
             </div>
           ) : (
-            <div className="header-item card-menu">
-              {docMenu}
-            </div>
+            <div className="header-item card-menu">{docMenu}</div>
           )}
         </CardHeader>
         <CardBody>
@@ -263,14 +265,18 @@ class Card extends React.PureComponent<Props, State> {
           {docVersion && <div className="version">{docVersion}</div>}
         </CardBody>
         <CardFooter>
-          {docBranch && <span>
-            <SvgIcon icon={IconEnum.gitBranch} />
-            <div className="icoLabel">{docBranch}</div>
-          </span>}
-          {docLog && <span>
-            <SvgIcon icon={IconEnum.clock} />
-            <div className="icoLabel">{docLog}</div>
-          </span>}
+          {docBranch && (
+            <span>
+              <SvgIcon icon={IconEnum.gitBranch} />
+              <div className="icoLabel">{docBranch}</div>
+            </span>
+          )}
+          {docLog && (
+            <span>
+              <SvgIcon icon={IconEnum.clock} />
+              <div className="icoLabel">{docLog}</div>
+            </span>
+          )}
         </CardFooter>
       </StyledCard>
     );
