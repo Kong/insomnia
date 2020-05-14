@@ -9,6 +9,8 @@ export function generateKongForKubernetesConfigFromSpec(
   api: OpenApi3Spec,
   tags: Array<string>,
 ): KongForKubernetesResult {
+  const specName = getSpecName(api);
+
   // Extract global, server, and path plugins upfront
   const plugins = getPlugins(api);
 
@@ -48,7 +50,7 @@ export function generateKongForKubernetesConfigFromSpec(
           kind: 'Ingress',
           metadata,
           spec: {
-            rules: [generateRulesForServer(serverIndex, sp.server, [pp.path])],
+            rules: [generateRulesForServer(serverIndex, sp.server, specName, [pp.path])],
           },
         };
 
@@ -91,7 +93,7 @@ function generateMetadata(
   increment: IndexIncrement,
 ): K8sMetadata {
   const metadata: K8sMetadata = {
-    name: `${generateMetadataName(api)}-${increment()}`,
+    name: `${getSpecName(api)}-${increment()}`,
   };
 
   const annotations = generateMetadataAnnotations(api, customAnnotations);
@@ -107,7 +109,7 @@ type CustomAnnotations = {
   overrideName?: string,
 };
 
-export function generateMetadataName(api: OpenApi3Spec): string {
+export function getSpecName(api: OpenApi3Spec): string {
   const name = api.info?.['x-kubernetes-ingress-metadata']?.name;
   if (name) {
     return name;
@@ -143,13 +145,14 @@ export function generateMetadataAnnotations(
 export function generateRulesForServer(
   index: number,
   server: OA3Server,
+  specName: string,
   paths?: Array<string>,
 ): K8sIngressRule {
   // Resolve serverUrl variables and update the source object so it only needs to be done once per server loop.
   server.url = resolveUrlVariables(server.url, server.variables);
 
   const { hostname, pathname } = parseUrl(server.url);
-  const serviceName = generateServiceName(server, index);
+  const serviceName = generateServiceName(server, specName, index);
   const servicePort = generateServicePort(server);
   const backend = { serviceName, servicePort };
 
@@ -176,7 +179,7 @@ export function generateRulesForServer(
   };
 }
 
-export function generateServiceName(server: OA3Server, index: number): string {
+export function generateServiceName(server: OA3Server, specName: string, index: number): string {
   // x-kubernetes-backend.serviceName
   const serviceName = server['x-kubernetes-backend']?.serviceName;
   if (serviceName) {
@@ -190,7 +193,7 @@ export function generateServiceName(server: OA3Server, index: number): string {
   }
 
   // <ingress-name>-s<server index>
-  return `service-${index}`;
+  return `${specName}-service-${index}`;
 }
 
 export function generateTlsConfig(server: OA3Server): Object | null {
