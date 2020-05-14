@@ -3,7 +3,7 @@ import { parseSpec } from '../../index';
 import {
   generateKongForKubernetesConfigFromSpec,
   generateMetadataAnnotations,
-  generateMetadataName,
+  getSpecName,
   generateRulesForServer,
   generateServiceName,
   generateServicePath,
@@ -33,21 +33,21 @@ describe('index', () => {
     paths: {},
   };
 
-  describe('generateMetadataName()', () => {
+  describe('getSpecName()', () => {
     it('with info.title', async () => {
       const api: OpenApi3Spec = await parseSpec({ ...spec });
-      expect(generateMetadataName(api)).toBe('my-api');
+      expect(getSpecName(api)).toBe('my-api');
     });
 
     it('no name', async () => {
       const api: OpenApi3Spec = await parseSpec({ ...spec, info: undefined });
-      expect(generateMetadataName(api)).toBe('openapi');
+      expect(getSpecName(api)).toBe('openapi');
     });
 
     it('with x-kong-name', () => {
       const api: OpenApi3Spec = { ...spec, 'x-kong-name': 'kong-name' };
 
-      expect(generateMetadataName(api)).toBe('kong-name');
+      expect(getSpecName(api)).toBe('kong-name');
     });
 
     it('with x-kubernetes-ingress-metadata.name', async () => {
@@ -60,7 +60,7 @@ describe('index', () => {
           },
         },
       });
-      expect(generateMetadataName(api)).toBe('k8s-name');
+      expect(getSpecName(api)).toBe('k8s-name');
     });
   });
 
@@ -135,8 +135,8 @@ describe('index', () => {
   describe('generateServiceName()', () => {
     it('defaults to ingress name', () => {
       const server: OA3Server = { url: 'https://insomnia.rest' };
-      expect(generateServiceName(server, 'ingrs', 0)).toBe('ingrs-s0');
-      expect(generateServiceName(server, 'ingrs', 3)).toBe('ingrs-s3');
+      expect(generateServiceName(server, 'my-api', 0)).toBe('my-api-service-0');
+      expect(generateServiceName(server, 'my-api', 3)).toBe('my-api-service-3');
     });
 
     it('uses x-kubernetes-backend.serviceName', () => {
@@ -147,7 +147,7 @@ describe('index', () => {
           servicePort: 123,
         },
       };
-      expect(generateServiceName(server, 'ingrs', 0)).toBe('b-name');
+      expect(generateServiceName(server, 'my-api', 0)).toBe('b-name');
     });
 
     it('uses x-kubernetes-service.metadata.name', () => {
@@ -159,7 +159,7 @@ describe('index', () => {
           },
         },
       };
-      expect(generateServiceName(server, 'ingrs', 0)).toBe('s-name');
+      expect(generateServiceName(server, 'my-api', 0)).toBe('s-name');
     });
   });
 
@@ -264,7 +264,7 @@ describe('index', () => {
           paths: [
             {
               backend: {
-                serviceName: 'my-ingress-s0',
+                serviceName: 'my-ingress-service-0',
                 servicePort: 80,
               },
             },
@@ -287,7 +287,7 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-s0',
+                serviceName: 'my-ingress-service-0',
                 servicePort: 80,
               },
             },
@@ -311,7 +311,7 @@ describe('index', () => {
             {
               path: '/v1/.*/.*/path',
               backend: {
-                serviceName: 'my-ingress-s1',
+                serviceName: 'my-ingress-service-1',
                 servicePort: 80,
               },
             },
@@ -335,7 +335,7 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-s1',
+                serviceName: 'my-ingress-service-1',
                 servicePort: 80,
               },
             },
@@ -363,7 +363,7 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-s0',
+                serviceName: 'my-ingress-service-0',
                 servicePort: 443,
               },
             },
@@ -384,7 +384,7 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-s1',
+                serviceName: 'my-ingress-service-1',
                 servicePort: 80,
               },
             },
@@ -409,7 +409,7 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-s1',
+                serviceName: 'my-ingress-service-1',
                 servicePort: 80,
               },
             },
@@ -438,7 +438,7 @@ describe('index', () => {
             {
               path: '/.*/v1/.*',
               backend: {
-                serviceName: 'my-ingress-s1',
+                serviceName: 'my-ingress-service-1',
                 servicePort: 80,
               },
             },
@@ -463,7 +463,12 @@ describe('index', () => {
       expect(result.documents).toStrictEqual([
         keyAuthPluginDoc('g0'),
         dummyPluginDoc('g1'),
-        ingressDoc([keyAuthName('g0'), dummyName('g1')], 'api.insomnia.rest', 'my-api-s0'),
+        ingressDoc(
+          0,
+          [keyAuthName('g0'), dummyName('g1')],
+          'api.insomnia.rest',
+          'my-api-service-0',
+        ),
       ]);
     });
 
@@ -494,9 +499,14 @@ describe('index', () => {
         keyAuthPluginDoc('s1'),
         keyAuthPluginDoc('s2'),
         dummyPluginDoc('s3'),
-        ingressDoc([keyAuthName('g0')], 'api-0.insomnia.rest', 'my-api-s0'),
-        ingressDoc([keyAuthName('s1')], 'api-1.insomnia.rest', 'my-api-s1'),
-        ingressDoc([keyAuthName('s2'), dummyName('s3')], 'api-2.insomnia.rest', 'my-api-s2'),
+        ingressDoc(0, [keyAuthName('g0')], 'api-0.insomnia.rest', 'my-api-service-0'),
+        ingressDoc(1, [keyAuthName('s1')], 'api-1.insomnia.rest', 'my-api-service-1'),
+        ingressDoc(
+          2,
+          [keyAuthName('s2'), dummyName('s3')],
+          'api-2.insomnia.rest',
+          'my-api-service-2',
+        ),
       ]);
     });
 
@@ -523,12 +533,13 @@ describe('index', () => {
         keyAuthPluginDoc('p1'),
         keyAuthPluginDoc('p2'),
         dummyPluginDoc('p3'),
-        ingressDoc([keyAuthName('g0')], 'api.insomnia.rest', 'my-api-s0', '/no-plugin'),
-        ingressDoc([keyAuthName('p1')], 'api.insomnia.rest', 'my-api-s0', '/plugin-0'),
+        ingressDoc(0, [keyAuthName('g0')], 'api.insomnia.rest', 'my-api-service-0', '/no-plugin'),
+        ingressDoc(1, [keyAuthName('p1')], 'api.insomnia.rest', 'my-api-service-0', '/plugin-0'),
         ingressDoc(
+          2,
           [keyAuthName('p2'), dummyName('p3')],
           'api.insomnia.rest',
-          'my-api-s0',
+          'my-api-service-0',
           '/plugin-1',
         ),
       ]);
@@ -563,24 +574,27 @@ describe('index', () => {
         keyAuthPluginDoc('m2'),
         dummyPluginDoc('m3'),
         ingressDocWithOverride(
+          0,
           [keyAuthName('g0')],
           'get-method',
           'api.insomnia.rest',
-          'my-api-s0',
+          'my-api-service-0',
           '/path',
         ),
         ingressDocWithOverride(
+          1,
           [keyAuthName('m1')],
           'put-method',
           'api.insomnia.rest',
-          'my-api-s0',
+          'my-api-service-0',
           '/path',
         ),
         ingressDocWithOverride(
+          2,
           [keyAuthName('m2'), dummyName('m3')],
           'post-method',
           'api.insomnia.rest',
-          'my-api-s0',
+          'my-api-service-0',
           '/path',
         ),
       ]);

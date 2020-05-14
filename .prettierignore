@@ -3,3 +3,4 @@
 **/dist/*
 **/__fixtures__/*
 **/flow-typed/*
+*.md

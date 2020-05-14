@@ -81,7 +81,7 @@ describe('plugins', () => {
 
   describe('getPlugins()', () => {
     it('should return expected result if no plugins on spec', () => {
-      const result = getPlugins(spec, increment);
+      const result = getPlugins(spec);
 
       const globalPlugins = result.global;
       expect(globalPlugins).toHaveLength(0);
@@ -115,7 +115,7 @@ describe('plugins', () => {
         },
       };
 
-      const result = getPlugins(api, increment);
+      const result = getPlugins(api);
 
       const globalPlugins = result.global;
       expect(globalPlugins).toEqual([keyAuthPluginDoc('g0')]);
@@ -130,7 +130,7 @@ describe('plugins', () => {
       expect(operationPlugins).toEqual([keyAuthPluginDoc('m3')]);
     });
     it('should throw error if no servers on api', () => {
-      const action = () => getPlugins({ ...spec, servers: [] }, increment);
+      const action = () => getPlugins({ ...spec, servers: [] });
 
       expect(action).toThrowError('Failed to generate spec: no servers defined in spec.');
     });
@@ -586,7 +586,7 @@ describe('plugins', () => {
         },
       };
 
-      const plugins = getPlugins(api, increment);
+      const plugins = getPlugins(api);
       const flattened = flattenPluginDocuments(plugins);
 
       expect(flattened).toEqual([

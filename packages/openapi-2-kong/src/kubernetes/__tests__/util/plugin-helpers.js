@@ -62,6 +62,7 @@ export const keyAuthName = (suffix: string) => `add-key-auth-${suffix}`;
 export const dummyName = (suffix: string) => `add-dummy-thing-${suffix}`;
 
 export const ingressDoc = (
+  index: number,
   plugins: Array<string>,
   host: string,
   serviceName: string,
@@ -76,7 +77,7 @@ export const ingressDoc = (
       annotations: {
         'konghq.com/plugins': plugins.join(', '),
       },
-      name: 'my-api',
+      name: `my-api-${index}`,
     },
     spec: {
       rules: [
@@ -92,6 +93,7 @@ export const ingressDoc = (
 };
 
 export const ingressDocWithOverride = (
+  index: number,
   plugins: Array<string>,
   override: string,
   host: string,
@@ -105,7 +107,7 @@ export const ingressDocWithOverride = (
       'konghq.com/plugins': plugins.join(', '),
       'konghq.com/override': override,
     },
-    name: 'my-api',
+    name: `my-api-${index}`,
   },
   spec: {
     rules: [
