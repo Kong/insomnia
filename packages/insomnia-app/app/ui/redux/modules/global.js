@@ -7,6 +7,7 @@ import path from 'path';
 import AskModal from '../../../ui/components/modals/ask-modal';
 import * as moment from 'moment';
 
+import type { ImportResult } from '../../../common/import';
 import * as importUtils from '../../../common/import';
 import AlertModal from '../../components/modals/alert-modal';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
@@ -29,6 +30,7 @@ import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
 import { setActivityAttribute } from '../../../common/misc';
 import { isDevelopment } from '../../../common/constants';
+import type { Workspace } from '../../../models/workspace';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
@@ -285,7 +287,10 @@ export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorksp
             askToImportIntoWorkspace(workspaceId, forceToWorkspace),
             uri,
           );
-          importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
+          importedWorkspaces = handleImportResult(
+            result,
+            'The file does not contain a valid specification.',
+          );
         } catch (err) {
           showModal(AlertModal, { title: 'Import Failed', message: err + '' });
         } finally {
@@ -298,6 +303,17 @@ export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorksp
       }
     });
   };
+}
+
+function handleImportResult(result: ImportResult, errorMessage: string): Array<Workspace> {
+  const { error, summary } = result;
+
+  if (error) {
+    showError({ title: 'Import Failed', message: errorMessage, error });
+    return [];
+  }
+
+  return summary[models.workspace.type] || [];
 }
 
 export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
@@ -318,7 +334,10 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
         askToImportIntoWorkspace(workspaceId, forceToWorkspace),
         schema,
       );
-      importedWorkspaces = [...importedWorkspaces, ...result.summary[models.workspace.type]];
+      importedWorkspaces = handleImportResult(
+        result,
+        'Your clipboard does not contain a valid specification.',
+      );
     } catch (err) {
       showModal(AlertModal, {
         title: 'Import Failed',
@@ -343,8 +362,10 @@ export function importUri(workspaceId: string, uri: string, forceToWorkspace?: F
         askToImportIntoWorkspace(workspaceId, forceToWorkspace),
         uri,
       );
-      const workspaces = result.summary[models.workspace.type] || [];
-      importedWorkspaces = [...importedWorkspaces, ...workspaces];
+      importedWorkspaces = handleImportResult(
+        result,
+        'The URI does not contain a valid specification.',
+      );
     } catch (err) {
       showModal(AlertModal, { title: 'Import Failed', message: err + '' });
     } finally {
