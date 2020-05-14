@@ -23,13 +23,12 @@
   },
   "lint-staged": {
     "{packages,plugins}/**/*.{js,html,json}": [
-      "eslint --fix",
-      "npm run --silent typecheck"
+      "eslint --fix"
     ]
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "npm run --silent typecheck && lint-staged"
     }
   },
   "devDependencies": {

@@ -10,6 +10,7 @@ export function generateKongForKubernetesConfigFromSpec(
   tags: Array<string>,
 ): KongForKubernetesResult {
   let _iterator = 0;
+
   const increment = (): number => _iterator++;
 
   // Extract global, server, and path plugins upfront
