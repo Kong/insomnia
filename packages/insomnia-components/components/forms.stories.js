@@ -3,7 +3,7 @@ import * as React from 'react';
 import styled from 'styled-components';
 import IndeterminateCheckbox from './helpers/indeterminate-checkbox';
 
-export default { title: 'Forms' };
+export default { title: 'Form Elements | Input' };
 const StyledFormRow: React.ComponentType<any> = styled.div`
   display: flex;
   align-items: center;

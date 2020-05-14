@@ -2,7 +2,7 @@
 import * as React from 'react';
 import NoticeTable from './notice-table';
 
-export default { title: '1st Party | NoticeTable' };
+export default { title: 'Tables | NoticeTable' };
 
 const notices = [
   { type: 'error', line: 3, message: 'This must be fixed now!' },

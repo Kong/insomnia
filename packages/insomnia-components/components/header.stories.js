@@ -4,7 +4,7 @@ import Breadcrumb from './breadcrumb';
 import Switch from './switch';
 import Button from './button';
 
-export default { title: '1st Party | Header' };
+export default { title: 'Layout | Header' };
 
 export const _default = () => <Header />;
 

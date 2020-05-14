@@ -1,7 +1,7 @@
 import React from 'react';
 import GravatarImg from './gravatar-img';
 
-export default { title: '1st Party | Gravatar' };
+export default { title: 'Iconography | Gravatar' };
 
 export const _default = () => <GravatarImg email="support@insomnia.rest" size={200} />;
 

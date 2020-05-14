@@ -1,7 +1,7 @@
 import React from 'react';
 import Notice from './notice';
 
-export default { title: 'Notice' };
+export default { title: 'Helpers | Notice' };
 
 export const _default = () => (
   <Notice>This is a notice. It is a bright block of text, meant to stand out from the rest!</Notice>

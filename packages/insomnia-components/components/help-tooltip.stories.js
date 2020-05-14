@@ -1,7 +1,7 @@
 import React from 'react';
 import HelpTooltip from './help-tooltip';
 
-export default { title: '1st Party | Help Tooltip' };
+export default { title: 'Helpers | Help Tooltip' };
 
 export const _default = () => (
   <p>
