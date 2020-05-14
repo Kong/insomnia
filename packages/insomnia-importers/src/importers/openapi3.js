@@ -22,7 +22,13 @@ const HTTP_AUTH_SCHEME = {
   BASIC: 'basic',
   BEARER: 'bearer',
 };
-const SUPPORTED_SECURITY_TYPES = [SECURITY_TYPE.HTTP, SECURITY_TYPE.API_KEY];
+const OAUTH_FLOWS = {
+  AUTHORIZATION_CODE: 'authorization_code',
+  CLIENT_CREDENTIALS: 'clientCredentials',
+  IMPLICIT: 'implicit',
+  PASSWORD: 'password',
+};
+const SUPPORTED_SECURITY_TYPES = [SECURITY_TYPE.HTTP, SECURITY_TYPE.API_KEY, SECURITY_TYPE.OAUTH];
 const SUPPORTED_HTTP_AUTH_SCHEMES = [HTTP_AUTH_SCHEME.BASIC, HTTP_AUTH_SCHEME.BEARER];
 
 let requestCounts = {};
@@ -322,15 +328,24 @@ function parseSecurity(security, securitySchemes) {
     apiKeyHeaders.push(apiKeyCookieHeader);
   }
 
-  const httpAuthScheme = supportedSchemes.find(
-    scheme =>
-      scheme.type === SECURITY_TYPE.HTTP && SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.scheme),
-  );
+  const authentication = (() => {
+    const authScheme = supportedSchemes.find(
+      scheme =>
+        [SECURITY_TYPE.HTTP, SECURITY_TYPE.OAUTH].includes(scheme.type) && SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.scheme),
+    );
 
-  const httpAuth = httpAuthScheme ? parseHttpAuth(httpAuthScheme.scheme) : {};
+    switch (authScheme.type) {
+      case SECURITY_TYPE.HTTP:
+        return parseHttpAuth(authScheme);
+      case SECURITY_TYPE.OAUTH:
+        return parseOAuth2(authScheme);
+      default:
+        return {};
+    }
+  })();
 
   return {
-    authentication: httpAuth,
+    authentication,
     headers: apiKeyHeaders,
     parameters: apiKeyParams,
   };
@@ -541,6 +556,55 @@ function parseHttpAuth(scheme) {
       return importBasicAuthentication();
     case HTTP_AUTH_SCHEME.BEARER:
       return importBearerAuthentication();
+    default:
+      return {};
+  }
+}
+
+function parseOauthScopes(flow) {
+  const scopes = Object.keys(flow.scopes || {});
+  return scopes.join(' ');
+}
+
+function importPasswordFlow () {
+  return  {
+    accessTokenUrl: flow.tokenUrl,
+    username: '{{username}}',
+    password: '{{password}}',
+    clientId: '{{clientId}}',
+    clientSecret: '{{clientSecret}}',
+    grantType: 'password',
+    scope: parseOauthScopes(flow),
+    type: 'oauth2',
+  };
+}
+
+function importClientCredentialsFlow(flow) {
+  return {
+    accessTokenUrl: flow.tokenUrl,
+    clientId: '{{clientId}}',
+    clientSecret: '{{clientSecret}}',
+    grantType: 'client_credentials',
+    scope: parseOauthScopes(flow),
+    type: 'oauth2',
+  }
+}
+
+function parseOAuth2(scheme) {
+  const flows = Object.keys(scheme.flows)
+
+  if (!flows.length) {
+    return {};
+  }
+
+  const type = flows[0];
+  const flow = scheme.flows[type];
+
+  switch (type) {
+    case OAUTH_FLOWS.CLIENT_CREDENTIALS:
+      return importClientCredentialsFlow(flow)
+    case OAUTH_FLOWS.PASSWORD:
+      return importPasswordFlow(flow)
     default:
       return {};
   }
