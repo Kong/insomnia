@@ -16,3 +16,4 @@ screenshots/
 **/.cache/
 **/svgr/
 **/storybook-static/
+*.md

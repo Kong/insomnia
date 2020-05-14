@@ -126,9 +126,11 @@ class NoticeTable extends React.PureComponent<Props, State> {
     const { notices, compact } = this.props;
     const { collapsed } = this.state;
 
-    const caret = collapsed
-      ? <SvgIcon icon={IconEnum.chevronUp} />
-      : <SvgIcon icon={IconEnum.chevronDown} />;
+    const caret = collapsed ? (
+      <SvgIcon icon={IconEnum.chevronUp} />
+    ) : (
+      <SvgIcon icon={IconEnum.chevronDown} />
+    );
 
     const errors = notices.filter(n => n.type === 'error');
     const warnings = notices.filter(n => n.type === 'warning');

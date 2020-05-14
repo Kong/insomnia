@@ -224,11 +224,13 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     const { branch } = this.state;
     const { vcs, renderDropdownButton } = this.props;
 
-    const renderBtn = renderDropdownButton || (children => (
-      <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
-        {children}
-      </DropdownButton>
-    ));
+    const renderBtn =
+      renderDropdownButton ||
+      (children => (
+        <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
+          {children}
+        </DropdownButton>
+      ));
 
     if (!vcs.isInitialized()) {
       return renderBtn(

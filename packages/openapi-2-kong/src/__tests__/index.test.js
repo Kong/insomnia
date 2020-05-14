@@ -7,7 +7,9 @@ describe('index', () => {
   describe('generate()', () => {
     it('generates DC from file', async () => {
       const p = path.join(__dirname, '../__fixtures__/uspto.yaml');
-      const { documents: [dc] } = await generate(p, 'kong-declarative-config');
+      const {
+        documents: [dc],
+      } = await generate(p, 'kong-declarative-config');
       expect(dc._format_version).toBe('1.1');
       expect(dc.services.length).toBe(1);
       expect(dc.upstreams.length).toBe(1);
@@ -15,7 +17,9 @@ describe('index', () => {
 
     it('generates DC from file with extra tags', async () => {
       const p = path.join(__dirname, '../__fixtures__/uspto.yaml');
-      const { documents: [dc] } = await generate(p, 'kong-declarative-config', ['MyTag']);
+      const {
+        documents: [dc],
+      } = await generate(p, 'kong-declarative-config', ['MyTag']);
       expect(dc._format_version).toBe('1.1');
       expect(dc.services.length).toBe(1);
       expect(dc.services[0].tags).toEqual(['OAS3_import', 'OAS3file_uspto.yaml', 'MyTag']);
@@ -25,7 +29,9 @@ describe('index', () => {
   describe('generateFromString()', () => {
     it('generates DC from string', async () => {
       const s = fs.readFileSync(path.join(__dirname, '../__fixtures__/uspto.yaml'), 'utf8');
-      const { documents: [dc] } = await generateFromString(s, 'kong-declarative-config');
+      const {
+        documents: [dc],
+      } = await generateFromString(s, 'kong-declarative-config');
       expect(dc._format_version).toBe('1.1');
     });
   });
@@ -35,7 +41,9 @@ describe('index', () => {
       const s = YAML.parse(
         fs.readFileSync(path.join(__dirname, '../__fixtures__/uspto.yaml'), 'utf8'),
       );
-      const { documents: [dc] } = await generateFromString(s, 'kong-declarative-config');
+      const {
+        documents: [dc],
+      } = await generateFromString(s, 'kong-declarative-config');
       expect(dc._format_version).toBe('1.1');
     });
   });

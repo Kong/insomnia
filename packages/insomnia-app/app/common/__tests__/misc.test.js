@@ -178,12 +178,18 @@ describe('fuzzyMatchAll()', () => {
 describe('chunkArray()', () => {
   it('works with exact divisor', () => {
     const chunks = misc.chunkArray([1, 2, 3, 4, 5, 6], 3);
-    expect(chunks).toEqual([[1, 2, 3], [4, 5, 6]]);
+    expect(chunks).toEqual([
+      [1, 2, 3],
+      [4, 5, 6],
+    ]);
   });
 
   it('works with weird divisor', () => {
     const chunks = misc.chunkArray([1, 2, 3, 4, 5, 6], 4);
-    expect(chunks).toEqual([[1, 2, 3, 4], [5, 6]]);
+    expect(chunks).toEqual([
+      [1, 2, 3, 4],
+      [5, 6],
+    ]);
   });
 
   it('works with empty', () => {

@@ -6,16 +6,18 @@
   "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
-    "test": "flow check",
+    "typecheck": "flow check",
+    "test": "npm run typecheck",
     "build": "webpack --config webpack.config.js --display errors-only",
     "build-storybook": "build-storybook --quiet",
     "storybook": "start-storybook --port 3223",
-    "bootstrap": "rimraf node_modules/fsevents && npm run convert-svg",
-    "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js"
+    "bootstrap": "rimraf node_modules/fsevents && npm run convert-svg && npm run build",
+    "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js",
+    "prepublish": "npm run convert-svg && npm run build"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged && npm run build"
+      "pre-commit": "pretty-quick --staged && npm run typecheck"
     }
   },
   "devDependencies": {
@@ -24,6 +26,7 @@
     "@storybook/addon-contexts": "^5.3.10",
     "@storybook/addon-info": "^5.3.9",
     "@storybook/addon-knobs": "^5.3.10",
+    "storybook-addon-designs": "^5.2.0",
     "@storybook/react": "^5.3.9",
     "@svgr/cli": "^5.3.0",
     "babel-loader": "^8.0.6",
@@ -35,6 +38,7 @@
     "autobind-decorator": "^2.4.0",
     "classnames": "^2.2.6",
     "fuzzysort": "^1.1.4",
+    "framer-motion": "^1.10.3",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",

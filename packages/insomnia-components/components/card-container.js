@@ -10,9 +10,7 @@ const Cards: React.ComponentType<{}> = styled.div`
 
 class CardContainer extends React.PureComponent<{}> {
   render() {
-    return (
-          <Cards {...this.props} />
-    );
+    return <Cards {...this.props} />;
   }
 }
 

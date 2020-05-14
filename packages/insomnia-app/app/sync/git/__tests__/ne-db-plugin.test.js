@@ -32,7 +32,10 @@ describe('NeDBPlugin', () => {
         'RequestGroup',
         'Workspace',
       ]);
-      expect(await pNeDB.readdir(`/${GIT_NAMESPACE_DIR}/Request`)).toEqual(['req_1.yml', 'req_2.yml']);
+      expect(await pNeDB.readdir(`/${GIT_NAMESPACE_DIR}/Request`)).toEqual([
+        'req_1.yml',
+        'req_2.yml',
+      ]);
       expect(await pNeDB.readdir(`/${GIT_NAMESPACE_DIR}/Workspace`)).toEqual(['wrk_1.yml']);
     });
   });
@@ -41,13 +44,13 @@ describe('NeDBPlugin', () => {
     it('reads file from model/id folders', async () => {
       const pNeDB = new NeDBPlugin('wrk_1');
 
-      expect(YAML.parse(await pNeDB.readFile(`/${GIT_NAMESPACE_DIR}/Workspace/wrk_1.yml`, 'utf8'))).toEqual(
-        expect.objectContaining({ _id: 'wrk_1', parentId: null }),
-      );
+      expect(
+        YAML.parse(await pNeDB.readFile(`/${GIT_NAMESPACE_DIR}/Workspace/wrk_1.yml`, 'utf8')),
+      ).toEqual(expect.objectContaining({ _id: 'wrk_1', parentId: null }));
 
-      expect(YAML.parse(await pNeDB.readFile(`/${GIT_NAMESPACE_DIR}/Request/req_1.yml`, 'utf8'))).toEqual(
-        expect.objectContaining({ _id: 'req_1', parentId: 'wrk_1' }),
-      );
+      expect(
+        YAML.parse(await pNeDB.readFile(`/${GIT_NAMESPACE_DIR}/Request/req_1.yml`, 'utf8')),
+      ).toEqual(expect.objectContaining({ _id: 'req_1', parentId: 'wrk_1' }));
 
       await assertAsyncError(pNeDB.readFile(`/${GIT_NAMESPACE_DIR}/Request/req_x.yml`));
     });
@@ -58,7 +61,9 @@ describe('NeDBPlugin', () => {
       const pNeDB = new NeDBPlugin('wrk_1');
 
       expect(await pNeDB.stat('/')).toEqual(expect.objectContaining({ type: 'dir' }));
-      expect(await pNeDB.stat(`/${GIT_NAMESPACE_DIR}`)).toEqual(expect.objectContaining({ type: 'dir' }));
+      expect(await pNeDB.stat(`/${GIT_NAMESPACE_DIR}`)).toEqual(
+        expect.objectContaining({ type: 'dir' }),
+      );
       expect(await pNeDB.stat(`/${GIT_NAMESPACE_DIR}/Workspace/wrk_1.yml`)).toEqual(
         expect.objectContaining({ type: 'file' }),
       );

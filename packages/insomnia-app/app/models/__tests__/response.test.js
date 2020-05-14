@@ -115,27 +115,33 @@ describe('migrate()', () => {
 
   it('migrates leaves bodyCompression for null', async () => {
     expect(
-      (await models.initModel(models.response.type, {
-        bodyPath: '/foo/bar',
-        bodyCompression: null,
-      })).bodyCompression,
+      (
+        await models.initModel(models.response.type, {
+          bodyPath: '/foo/bar',
+          bodyCompression: null,
+        })
+      ).bodyCompression,
     ).toBe(null);
   });
 
   it('migrates sets bodyCompression to zip if does not have one yet', async () => {
     expect(
-      (await models.initModel(models.response.type, {
-        bodyPath: '/foo/bar',
-      })).bodyCompression,
+      (
+        await models.initModel(models.response.type, {
+          bodyPath: '/foo/bar',
+        })
+      ).bodyCompression,
     ).toBe('zip');
   });
 
   it('migrates leaves bodyCompression if string', async () => {
     expect(
-      (await models.initModel(models.response.type, {
-        bodyPath: '/foo/bar',
-        bodyCompression: 'zip',
-      })).bodyCompression,
+      (
+        await models.initModel(models.response.type, {
+          bodyPath: '/foo/bar',
+          bodyCompression: 'zip',
+        })
+      ).bodyCompression,
     ).toBe('zip');
   });
 });

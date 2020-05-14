@@ -285,7 +285,9 @@ function parseSecurity(security, securitySchemes) {
       const securityName = Object.keys(securityPolicy)[0];
       return securitySchemes[securityName];
     })
-    .filter(schemeDetails => SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type));
+    .filter(
+      schemeDetails => schemeDetails && SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type),
+    );
 
   const apiKeySchemes = supportedSchemes.filter(scheme => scheme.type === SECURITY_TYPE.API_KEY);
   const apiKeyHeaders = apiKeySchemes

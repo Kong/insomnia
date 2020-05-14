@@ -71,7 +71,10 @@ export function update(
   return db.docUpdate(workspaceMeta, patch);
 }
 
-export async function updateByParentId(workspaceId: string, patch: Object = {}): Promise<WorkspaceMeta> {
+export async function updateByParentId(
+  workspaceId: string,
+  patch: Object = {},
+): Promise<WorkspaceMeta> {
   const meta = await getByParentId(workspaceId);
   return db.docUpdate(meta, patch);
 }
