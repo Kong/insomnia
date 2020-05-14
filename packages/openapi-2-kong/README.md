@@ -230,7 +230,7 @@ spec:
         paths:
           - path: /v1/.*
             backend:
-              serviceName: service-0
+              serviceName: insomnia-api-service-0
               servicePort: 80
 ---
 apiVersion: extensions/v1beta1
@@ -244,7 +244,7 @@ spec:
         paths:
           - path: /v2/.*
             backend:
-              serviceName: service-1
+              serviceName: insomnia-api-service-1
               servicePort: 80
 ```
 </details>
@@ -414,7 +414,7 @@ spec:
         paths:
           - path: /v1/path
             backend:
-              serviceName: service-0
+              serviceName: insomnia-api-service-0
               servicePort: 80
 ---
 apiVersion: extensions/v1beta1
@@ -432,7 +432,7 @@ spec:
         paths:
           - path: /v1/another
             backend:
-              serviceName: service-0
+              serviceName: insomnia-api-service-0
               servicePort: 80
 ---
 apiVersion: extensions/v1beta1
@@ -449,7 +449,7 @@ spec:
         paths:
           - path: /v2/path
             backend:
-              serviceName: service-1
+              serviceName: insomnia-api-service-1
               servicePort: 80
 ---
 apiVersion: extensions/v1beta1
@@ -467,7 +467,7 @@ spec:
         paths:
           - path: /v2/another
             backend:
-              serviceName: service-1
+              serviceName: insomnia-api-service-1
               servicePort: 80
 ```
 </details>

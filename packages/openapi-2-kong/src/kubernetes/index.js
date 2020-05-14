@@ -42,7 +42,7 @@ export function generateKongForKubernetesConfigFromSpec(
         }
 
         // Create metadata
-        const metadata = generateMetadata(api, annotations, increment);
+        const metadata = generateMetadata(api, annotations, increment, specName);
 
         // Generate Kong ingress document for a server and path in the doc
         const doc: KubernetesConfig = {
@@ -91,9 +91,10 @@ function generateMetadata(
   api: OpenApi3Spec,
   customAnnotations: CustomAnnotations,
   increment: IndexIncrement,
+  specName: string,
 ): K8sMetadata {
   const metadata: K8sMetadata = {
-    name: `${getSpecName(api)}-${increment()}`,
+    name: `${specName}-${increment()}`,
   };
 
   const annotations = generateMetadataAnnotations(api, customAnnotations);
