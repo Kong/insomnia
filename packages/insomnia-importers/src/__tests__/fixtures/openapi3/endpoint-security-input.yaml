@@ -39,6 +39,20 @@ components:
       in: query
 
 paths:
+  /none:
+    get:
+      security: []
+      responses:
+        '200':
+          description: OK
+  /none/basic:
+    get:
+      security:
+        - {}
+        - Basic: []
+      responses:
+        '200':
+          description: OK
   /basic:
     get:
       security:
@@ -80,6 +94,7 @@ paths:
   /all:
     get:
       security:
+        - {}
         - Basic: []
         - Key-Query: []
         - Key-Header: []

@@ -37,14 +37,16 @@ const MODELS = {
   [EXPORT_TYPE_API_SPEC]: models.apiSpec,
 };
 
+export type ImportResult = {
+  source: string,
+  error: Error | null,
+  summary: { [string]: Array<BaseModel> },
+};
+
 export async function importUri(
   getWorkspaceId: () => Promise<string | null>,
   uri: string,
-): Promise<{
-  source: string,
-  error: Error | null,
-  summary: {[string]: Array<BaseModel>},
-}> {
+): Promise<ImportResult> {
   let rawText;
 
   // If GH preview, force raw
@@ -100,11 +102,7 @@ export async function importUri(
 export async function importRaw(
   getWorkspaceId: () => Promise<string | null>,
   rawContent: string,
-): Promise<{
-  source: string,
-  error: Error | null,
-  summary: {[string]: Array<BaseModel>},
-}> {
+): Promise<ImportResult> {
   let results;
   try {
     results = await convert(rawContent);
@@ -119,7 +117,7 @@ export async function importRaw(
   const { data } = results;
 
   // Generate all the ids we may need
-  const generatedIds: {[string]: string | Function} = {};
+  const generatedIds: { [string]: string | Function } = {};
   for (const r of data.resources) {
     for (const key of r._id.match(REPLACE_ID_REGEX) || []) {
       generatedIds[key] = generateId(MODELS[r._type].prefix);
