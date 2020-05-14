@@ -254,16 +254,16 @@ export function escapeRegex(str: string): string {
 export function fuzzyMatch(
   searchString: string,
   text: string,
-  options: {splitSpace?: boolean, loose?: boolean} = {},
-): null | {score: number, indexes: Array<number>} {
+  options: { splitSpace?: boolean, loose?: boolean } = {},
+): null | { score: number, indexes: Array<number> } {
   return fuzzyMatchAll(searchString, [text], options);
 }
 
 export function fuzzyMatchAll(
   searchString: string,
   allText: Array<string>,
-  options: {splitSpace?: boolean, loose?: boolean} = {},
-): null | {score: number, indexes: Array<number>} {
+  options: { splitSpace?: boolean, loose?: boolean } = {},
+): null | { score: number, indexes: Array<number> } {
   if (!searchString || !searchString.trim()) {
     return null;
   }

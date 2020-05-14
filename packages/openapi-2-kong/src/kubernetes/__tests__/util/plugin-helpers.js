@@ -67,26 +67,30 @@ export const ingressDoc = (
   host: string,
   serviceName: string,
   path: ?string,
-) => ({
-  apiVersion: 'extensions/v1beta1',
-  kind: 'Ingress',
-  metadata: {
-    annotations: {
-      'konghq.com/plugins': plugins.join(', '),
-    },
-    name: `my-api-${index}`,
-  },
-  spec: {
-    rules: [
-      {
-        host,
-        http: {
-          paths: [{ backend: { serviceName, servicePort: 80 }, path }],
-        },
+) => {
+  const backend = { serviceName, servicePort: 80 };
+  const paths = path ? { path, backend } : { backend };
+  return {
+    apiVersion: 'extensions/v1beta1',
+    kind: 'Ingress',
+    metadata: {
+      annotations: {
+        'konghq.com/plugins': plugins.join(', '),
       },
-    ],
-  },
-});
+      name: `my-api-${index}`,
+    },
+    spec: {
+      rules: [
+        {
+          host,
+          http: {
+            paths: [paths],
+          },
+        },
+      ],
+    },
+  };
+};
 
 export const ingressDocWithOverride = (
   index: number,

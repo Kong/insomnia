@@ -25,8 +25,8 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
   }
 
   _handleScrollEditor(pos: {
-    start: {line: number, col: number},
-    end: {line: number, col: number},
+    start: { line: number, col: number },
+    end: { line: number, col: number },
   }) {
     trackEvent('Spec Sidebar', 'Navigate');
     const { handleSetSelection } = this.props;

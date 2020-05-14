@@ -2,7 +2,10 @@
 
 import { getSecurity } from '../common';
 
-export function generateSecurityPlugins(op: OA3Operation | null, api: OpenApi3Spec): Array<DCPlugin> {
+export function generateSecurityPlugins(
+  op: OA3Operation | null,
+  api: OpenApi3Spec,
+): Array<DCPlugin> {
   const plugins = [];
   const components = api.components || {};
   const securitySchemes = components.securitySchemes || {};

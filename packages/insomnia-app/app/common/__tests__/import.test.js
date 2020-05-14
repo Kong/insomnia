@@ -261,7 +261,10 @@ describe('export', () => {
   });
   it('exports correct models', async () => {
     const w = await models.workspace.create({ name: 'Workspace' });
-    const spec = await models.apiSpec.getOrCreateForParentId(w._id, { type: 'yaml', contents: 'openapi: "3.0.0"' });
+    const spec = await models.apiSpec.getOrCreateForParentId(w._id, {
+      type: 'yaml',
+      contents: 'openapi: "3.0.0"',
+    });
     const jar = await models.cookieJar.getOrCreateForParentId(w._id);
     const r1 = await models.request.create({
       name: 'Request 1',

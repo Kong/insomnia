@@ -15,7 +15,10 @@ module.exports.templateTags = [
       {
         displayName: 'Kind',
         type: 'enum',
-        options: [{ displayName: 'Normal', value: 'normal' }, { displayName: 'URL', value: 'url' }],
+        options: [
+          { displayName: 'Normal', value: 'normal' },
+          { displayName: 'URL', value: 'url' },
+        ],
       },
       {
         displayName: 'Value',

@@ -41,20 +41,26 @@ describe('ensureActivityIsForApp()', () => {
   const insomniaActivities = [ACTIVITY_INSOMNIA];
 
   it.each([...designerActivities, ...insomniaActivities])(
-    'should return ACTIVITY_INSOMNIA if default app id is insomnia: %o', activity => {
+    'should return ACTIVITY_INSOMNIA if default app id is insomnia: %o',
+    activity => {
       jest.spyOn(constants, 'getDefaultAppId').mockReturnValue(APP_ID_INSOMNIA);
       expect(ensureActivityIsForApp(activity)).toBe(ACTIVITY_INSOMNIA);
-    });
+    },
+  );
 
   it.each(insomniaActivities)(
-    'should return ACTIVITY_HOME if default app id is designer: %o', activity => {
+    'should return ACTIVITY_HOME if default app id is designer: %o',
+    activity => {
       jest.spyOn(constants, 'getDefaultAppId').mockReturnValue(APP_ID_DESIGNER);
       expect(ensureActivityIsForApp(activity)).toBe(ACTIVITY_HOME);
-    });
+    },
+  );
 
   it.each(designerActivities)(
-    'should return source activity if default app id is designer: %o', activity => {
+    'should return source activity if default app id is designer: %o',
+    activity => {
       jest.spyOn(constants, 'getDefaultAppId').mockReturnValue(APP_ID_DESIGNER);
       expect(ensureActivityIsForApp(activity)).toBe(activity);
-    });
+    },
+  );
 });

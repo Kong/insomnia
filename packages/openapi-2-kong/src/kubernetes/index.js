@@ -111,12 +111,7 @@ type CustomAnnotations = {
 };
 
 export function getSpecName(api: OpenApi3Spec): string {
-  const name = api.info?.['x-kubernetes-ingress-metadata']?.name;
-  if (name) {
-    return name;
-  }
-
-  return getName(api, 'openapi', { lower: true, replacement: '-' });
+  return getName(api, 'openapi', { lower: true, replacement: '-' }, true);
 }
 
 export function generateMetadataAnnotations(
@@ -127,17 +122,18 @@ export function generateMetadataAnnotations(
 
   // Only continue if metadata annotations, or plugins, or overrides exist
   if (metadata?.annotations || pluginNames.length || overrideName) {
-    const annotations = metadata?.annotations || {};
+    const customAnnotations = {};
 
     if (pluginNames.length) {
-      annotations['konghq.com/plugins'] = pluginNames.join(', ');
+      customAnnotations['konghq.com/plugins'] = pluginNames.join(', ');
     }
 
     if (overrideName) {
-      annotations['konghq.com/override'] = overrideName;
+      customAnnotations['konghq.com/override'] = overrideName;
     }
 
-    return annotations;
+    const originalAnnotations = metadata?.annotations || {};
+    return { ...originalAnnotations, ...customAnnotations };
   }
 
   return null;
@@ -158,10 +154,11 @@ export function generateRulesForServer(
   const backend = { serviceName, servicePort };
 
   const pathsToUse: Array<string> = (paths?.length && paths) || ['']; // Make flow happy
-  const k8sPaths: Array<K8sPath> = pathsToUse.map(p => ({
-    path: generateServicePath(pathname, p),
-    backend,
-  }));
+  const k8sPaths: Array<K8sPath> = pathsToUse.map(p => {
+    const path = generateServicePath(pathname, p);
+
+    return path ? { path, backend } : { backend };
+  });
 
   const tlsConfig = generateTlsConfig(server);
   if (tlsConfig) {
@@ -232,8 +229,8 @@ export function generateServicePath(
     return undefined;
   }
 
-  const fullPath = urlJoin(serverBasePath, specificPath);
+  const fullPath = urlJoin(serverBasePath, specificPath, specificPath ? '' : '.*');
   const pathname = pathVariablesToWildcard(fullPath);
 
-  return pathname + (specificPath ? '' : '/.*');
+  return pathname;
 }
