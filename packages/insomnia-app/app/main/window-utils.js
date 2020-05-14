@@ -13,7 +13,7 @@ import {
   MNEMONIC_SYM,
 } from '../common/constants';
 import * as misc from '../common/misc';
-import documentation from '../common/documentation';
+import { docsBase } from '../common/documentation';
 
 const { app, Menu, BrowserWindow, shell, dialog } = electron;
 
@@ -242,7 +242,7 @@ export function createWindow() {
         label: `${MNEMONIC_SYM}Help and Support`,
         accelerator: !isMac() ? 'F1' : null,
         click: () => {
-          shell.openExternal(documentation.getGitSync());
+          shell.openExternal(docsBase);
         },
       },
       {

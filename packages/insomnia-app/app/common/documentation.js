@@ -3,7 +3,5 @@ function insomniaDocs(slug: string): string {
   return `https://support.insomnia.rest${slug}`;
 }
 
-export default {
-  getBase: () => insomniaDocs('/'),
-  getGitSync: () => insomniaDocs('/article/96-git-sync'),
-};
+export const docsBase = insomniaDocs('/');
+export const docsGitSync = insomniaDocs('/article/96-git-sync');
