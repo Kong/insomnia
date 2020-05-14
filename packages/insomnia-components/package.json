@@ -6,16 +6,17 @@
   "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
-    "test": "flow check",
+    "typecheck": "flow check",
     "build": "webpack --config webpack.config.js --display errors-only",
     "build-storybook": "build-storybook --quiet",
     "storybook": "start-storybook --port 3223",
-    "bootstrap": "rimraf node_modules/fsevents && npm run convert-svg",
-    "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js"
+    "bootstrap": "rimraf node_modules/fsevents && npm run convert-svg && npm run build",
+    "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js",
+    "prepublish": "npm run convert-svg && npm run build"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged && npm run build"
+      "pre-commit": "pretty-quick --staged && npm run typecheck"
     }
   },
   "devDependencies": {
