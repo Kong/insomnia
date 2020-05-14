@@ -72,7 +72,6 @@ const StyledHeader: React.ComponentType<{}> = styled.li`
   justify-content: space-between;
   align-items: center;
 
-
   &:hover {
     background-color: var(--hl-xs);
   }
@@ -83,12 +82,11 @@ const StyledHeader: React.ComponentType<{}> = styled.li`
 
     svg {
       margin-left: var(--padding-sm);
-      
+
       &:hover {
-        fill:var(--color-font);
+        fill: var(--color-font);
         opacity: 1;
       }
-      
     }
   }
 `;
@@ -126,19 +124,19 @@ const StyledItem: React.ComponentType<{}> = styled.li`
 const StyledFilter: React.ComponentType<{}> = styled(motion.div)`
   padding-left: var(--padding-md);
   padding-right: var(--padding-md);
-  overflow:hidden;
-    input {
-      box-sizing:border-box;
-      width:100%;
-      font-size: var(--font-size-md);
-      padding: var(--padding-sm);
-      margin-top: var(--padding-md);
-      margin-bottom: var(--padding-sm);
-    }
+  overflow: hidden;
+  input {
+    box-sizing: border-box;
+    width: 100%;
+    font-size: var(--font-size-md);
+    padding: var(--padding-sm);
+    margin-top: var(--padding-md);
+    margin-bottom: var(--padding-sm);
+  }
 `;
 
 const StyledPanel: React.ComponentType<{}> = styled(motion.div)`
-height: 0px;
+  height: 0px;
 `;
 
 function Sidebar(props: Props) {
@@ -182,7 +180,7 @@ function Sidebar(props: Props) {
               animate={{ opacity: visible2 ? 0.6 : 0.4 }}
               transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.1 }}>
               <Tooltip message="Add" position="top">
-                  <SvgIcon icon={IconEnum.plus} />
+                <SvgIcon icon={IconEnum.plus} />
               </Tooltip>
             </motion.span>
           </div>
@@ -191,13 +189,12 @@ function Sidebar(props: Props) {
         <StyledPanel
           initial={{ height: visible2 ? '100%' : '0px' }}
           animate={{ height: visible2 ? '100%' : '0px' }}
-          transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}
-        >
+          transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
           <StyledFilter
-              initial={{ height: visible3 ? '0px' : '100%' }}
-              animate={{ height: visible3 ? '0px' : '100%' }}
-              transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-              <input placeholder='Filter...' />
+            initial={{ height: visible3 ? '0px' : '100%' }}
+            animate={{ height: visible3 ? '0px' : '100%' }}
+            transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
+            <input placeholder="Filter..." />
           </StyledFilter>
           <StyledItem>
             <div>
@@ -231,7 +228,7 @@ function Sidebar(props: Props) {
               <SvgIcon icon={IconEnum.trashcan} />
             </motion.span>
             <motion.span
-            onClick={toggleVisible4}
+              onClick={toggleVisible4}
               initial={{ opacity: visible ? 0.6 : 0 }}
               animate={{ opacity: visible ? 0.6 : 0 }}
               transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.15 }}>
@@ -242,7 +239,7 @@ function Sidebar(props: Props) {
               animate={{ opacity: visible ? 0.6 : 0.4 }}
               transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.1 }}>
               <Tooltip message="Add" position="top">
-                  <SvgIcon icon={IconEnum.plus} />
+                <SvgIcon icon={IconEnum.plus} />
               </Tooltip>
             </motion.span>
           </div>
@@ -250,13 +247,12 @@ function Sidebar(props: Props) {
         <StyledPanel
           initial={{ height: visible ? '100%' : '0px' }}
           animate={{ height: visible ? '100%' : '0px' }}
-          transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}
-        >
+          transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
           <StyledFilter
-              initial={{ height: visible4 ? '0px' : '100%' }}
-              animate={{ height: visible4 ? '0px' : '100%' }}
-              transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-              <input placeholder='Filter...' />
+            initial={{ height: visible4 ? '0px' : '100%' }}
+            animate={{ height: visible4 ? '0px' : '100%' }}
+            transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
+            <input placeholder="Filter..." />
           </StyledFilter>
           <StyledItem>
             <div>
@@ -342,7 +338,6 @@ function Sidebar(props: Props) {
           <SvgIcon icon={IconEnum.plus} />
         </StyledHeader>
       </StyledSection>
-
     </StyledSidebar>
   );
 }

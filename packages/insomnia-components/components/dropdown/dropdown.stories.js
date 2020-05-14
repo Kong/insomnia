@@ -12,37 +12,34 @@ export default {
 };
 
 export const _default = () => (
-  <Dropdown renderButton={({ open }) => (
-    <Button>
-      Dropdown <SvgIcon icon={open ? 'chevron-up' : 'chevron-down'} />
-    </Button>
-  )}>
+  <Dropdown
+    renderButton={({ open }) => (
+      <Button>
+        Dropdown <SvgIcon icon={open ? 'chevron-up' : 'chevron-down'} />
+      </Button>
+    )}>
     <DropdownDivider>Awesome Dropdown</DropdownDivider>
-    <DropdownItem icon={<SvgIcon icon="clock" />}>
-      Check Time
-    </DropdownItem>
+    <DropdownItem icon={<SvgIcon icon="clock" />}>Check Time</DropdownItem>
     <DropdownItem icon={<SvgIcon icon="git-branch" />} right="CTRL+A">
       Create Branch
     </DropdownItem>
     <DropdownItem icon={<SvgIcon icon="github" />} disabled>
       Disabled Action
     </DropdownItem>
-    <DropdownItem icon={<SvgIcon icon="empty" />}>
-      Other Action
-    </DropdownItem>
+    <DropdownItem icon={<SvgIcon icon="empty" />}>Other Action</DropdownItem>
     <DropdownDivider />
-    <DropdownItem icon={<SvgIcon icon="warning" />}>
-      Don't Do it!
-    </DropdownItem>
+    <DropdownItem icon={<SvgIcon icon="warning" />}>Don't Do it!</DropdownItem>
   </Dropdown>
 );
 
 export const rightAlign = () => (
-  <Dropdown right renderButton={() => (
-    <Button>
-      Right Align <SvgIcon icon="chevron-down" />
-    </Button>
-  )}>
+  <Dropdown
+    right
+    renderButton={() => (
+      <Button>
+        Right Align <SvgIcon icon="chevron-down" />
+      </Button>
+    )}>
     <DropdownItem>Item 1</DropdownItem>
     <DropdownItem>Item 2</DropdownItem>
     <DropdownItem>Item 3</DropdownItem>
@@ -57,11 +54,13 @@ export const manyItems = () => {
   }
 
   return (
-    <Dropdown right renderButton={() => (
-      <Button>
-        {numItems} Items <SvgIcon icon="chevron-down" />
-      </Button>
-    )}>
+    <Dropdown
+      right
+      renderButton={() => (
+        <Button>
+          {numItems} Items <SvgIcon icon="chevron-down" />
+        </Button>
+      )}>
       {items}
     </Dropdown>
   );

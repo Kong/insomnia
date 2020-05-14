@@ -8,25 +8,24 @@ export default { title: '1st Party | Header' };
 
 export const _default = () => <Header />;
 
-export const _primary = () =>
-    <Header
-        gridLeft={(
-            <React.Fragment>
-                <GravatarImg
-                    className="gravatar breadcrumbs"
-                    rounded
-                    email="support@insomnia.rest"
-                    size={24}
-                />
-                <Breadcrumb className="breadcrumb" crumbs={['Documents', 'Deployment']} />
-            </React.Fragment>
-        )}
-        gridCenter={(
-                <Switch />
-        )}
-        gridRight={(
-            <React.Fragment>
-                <div>right</div>
-            </React.Fragment>
-        )}
-    />;
+export const _primary = () => (
+  <Header
+    gridLeft={
+      <React.Fragment>
+        <GravatarImg
+          className="gravatar breadcrumbs"
+          rounded
+          email="support@insomnia.rest"
+          size={24}
+        />
+        <Breadcrumb className="breadcrumb" crumbs={['Documents', 'Deployment']} />
+      </React.Fragment>
+    }
+    gridCenter={<Switch />}
+    gridRight={
+      <React.Fragment>
+        <div>right</div>
+      </React.Fragment>
+    }
+  />
+);

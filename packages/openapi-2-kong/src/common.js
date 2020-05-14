@@ -37,15 +37,24 @@ export function getName(
   api: OpenApi3Spec,
   defaultValue?: string,
   slugifyOptions?: SlugifyOptions,
+  isKubernetes?: boolean,
 ): string {
-  let name = api['x-kong-name'] || '';
+  let rawName = '';
 
-  if (!name && typeof api.info?.title === 'string') {
-    name = api.info.title;
-  }
+  // Get $.info.x-kubernetes-ingress-metadata.name
+  rawName = isKubernetes && api.info?.['x-kubernetes-ingress-metadata']?.name;
 
-  name = name || defaultValue || 'openapi';
+  // Get $.x-kong-name
+  rawName = rawName || api['x-kong-name'];
 
+  // Get $.info.title
+  rawName = rawName || api.info?.title;
+
+  // Make sure the name is a string
+  const defaultName = defaultValue || 'openapi';
+  const name = typeof rawName === 'string' && rawName ? rawName : defaultName;
+
+  // Sluggify
   return generateSlug(name, slugifyOptions);
 }
 
