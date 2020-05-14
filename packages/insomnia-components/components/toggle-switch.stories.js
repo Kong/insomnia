@@ -1,7 +1,7 @@
 import * as React from 'react';
 import ToggleSwitch from './toggle-switch';
 
-export default { title: '1 | 2 / Toggle Switch' };
+export default { title: '3rd Party | Toggle Switch' };
 
 const defaultOnChange = () => {};
 

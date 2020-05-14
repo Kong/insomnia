@@ -6,7 +6,7 @@ import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from '.
 import styled from 'styled-components';
 
 export default {
-  title: 'SvgIcon',
+  title: '1st Party | SvgIcon',
   decorators: [withKnobs],
 };
 
