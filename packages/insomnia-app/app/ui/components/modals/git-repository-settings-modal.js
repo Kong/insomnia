@@ -189,7 +189,7 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
                     required
                     type="text"
                     name="username"
-                    placeholder="Username"
+                    placeholder="MyUser"
                     defaultValue={inputs.username}
                     onChange={this._handleInputChange}
                   />

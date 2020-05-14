@@ -2,23 +2,12 @@
 import type { BaseModel } from './index';
 
 import * as db from '../common/database';
-
-type GitCredentialsPassword = {
-  username: string,
-  password: string,
-};
-
-type GitCredentialsToken = {
-  username: string,
-  token: string,
-};
-
-export type GitCredentials = null | GitCredentialsPassword | GitCredentialsToken;
+import type { GitCredentials } from '../sync/git/git-vcs';
 
 type BaseGitRepository = {
   needsFullClone: boolean,
   uri: string,
-  credentials: GitCredentials,
+  credentials: GitCredentials | null,
   author: {
     name: string,
     email: string,

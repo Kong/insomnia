@@ -1,5 +1,4 @@
 // @flow
-
 import PromptModal from './prompt-modal';
 import AlertModal from './alert-modal';
 import ErrorModal from './error-modal';

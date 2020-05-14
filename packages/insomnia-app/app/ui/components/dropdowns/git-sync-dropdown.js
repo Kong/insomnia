@@ -17,7 +17,7 @@ import GitBranchesModal from '../modals/git-branches-modal';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import { trackEvent } from '../../../common/analytics';
-import { DocumentationArticle, getDocumentationUrl } from '../../../common/documentation';
+import documentation from '../../../common/documentation';
 
 type Props = {|
   handleInitializeEntities: () => void,
@@ -282,7 +282,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
             Git Sync
             <HelpTooltip>
               Sync and collaborate with Git{' '}
-              <Link href={getDocumentationUrl(DocumentationArticle.gitSync)}>
+              <Link href={documentation.getGitSync()}>
                 <span className="no-wrap">
                   <br />
                   Documentation <i className="fa fa-external-link" />
