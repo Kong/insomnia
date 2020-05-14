@@ -1,9 +1,10 @@
-import React from 'react';
+// @flow
+import * as React from 'react';
 import styled from 'styled-components';
 import IndeterminateCheckbox from './helpers/indeterminate-checkbox';
 
 export default { title: 'Forms' };
-const StyledFormRow: React.ComponentType<Props> = styled.div`
+const StyledFormRow: React.ComponentType<any> = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,7 +30,7 @@ const StyledFormRow: React.ComponentType<Props> = styled.div`
   }
 `;
 
-const StyledFormControl: React.ComponentType<Props> = styled.div`
+const StyledFormControl: React.ComponentType<any> = styled.div`
   outline: none;
   border: 0;
   margin-bottom: var(--padding-sm);
