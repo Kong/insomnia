@@ -65,7 +65,6 @@ const StyledSection: React.ComponentType<{}> = styled(motion.ul)`
   overflow: hidden;
   box-sizing: border-box;
   border-bottom: 1px solid var(--hl-md);
-  }
 `;
 
 const StyledHeader: React.ComponentType<{}> = styled.li`
@@ -79,11 +78,11 @@ const StyledHeader: React.ComponentType<{}> = styled.li`
   }
 
   & > * {
-    padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) var(--spacing-md);
+    padding: var(--padding-md) var(--padding-md) var(--padding-md) var(--padding-md);
     font-size: var(--font-size-md);
 
     svg {
-      margin-left: var(--spacing-sm);
+      margin-left: var(--padding-sm);
       
       &:hover {
         fill:var(--color-font);
@@ -95,16 +94,16 @@ const StyledHeader: React.ComponentType<{}> = styled.li`
 `;
 
 const StyledItem: React.ComponentType<{}> = styled.li`
-  padding: var(--spacing-sm) 0 var(--spacing-sm) 0;
+  padding: var(--padding-sm) 0 var(--padding-sm) 0;
   margin: 0px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--spacing-xxl), 1fr));
-  column-gap: var(--spacing-sm);
+  grid-template-columns: repeat(auto-fill, minmax(var(--padding-lg), 1fr));
+  column-gap: var(--padding-sm);
   grid-template-rows: 1fr;
   align-items: start;
   white-space: nowrap;
   font-size: var(--font-size-md);
-  line-height: var(--font-line-height-md);
+  line-height: calc(var(--font-size) * 1.25);
 
   a {
     color: var(--hl-xl);
@@ -120,7 +119,7 @@ const StyledItem: React.ComponentType<{}> = styled.li`
   }
 
   &:last-child {
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--padding-md);
   }
 `;
 
