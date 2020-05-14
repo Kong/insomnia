@@ -7,7 +7,7 @@ import SvgIcon from '../svg-icon';
 import Button from '../button';
 
 export default {
-  title: 'Dropdown',
+  title: '1st Party | Dropdown',
   decorators: [withKnobs],
 };
 

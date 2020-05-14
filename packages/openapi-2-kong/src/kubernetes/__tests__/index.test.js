@@ -56,7 +56,7 @@ describe('index', () => {
         'x-kong-name': 'Kong Name',
         info: {
           'x-kubernetes-ingress-metadata': {
-            name: 'k8s-name',
+            name: 'K8s name',
           },
         },
       });
@@ -100,18 +100,21 @@ describe('index', () => {
       expect(result).toEqual({ 'konghq.com/override': 'name' });
     });
 
-    it('gets all annotations correctly', async () => {
-      const api: OpenApi3Spec = await parseSpec({
+    it('gets all annotations correctly', () => {
+      const originalAnnotations = {
+        'nginx.ingress.kubernetes.io/rewrite-target': '/',
+      };
+
+      const api: OpenApi3Spec = {
         ...spec,
         info: {
+          ...spec.info,
           'x-kubernetes-ingress-metadata': {
             name: 'info-name',
-            annotations: {
-              'nginx.ingress.kubernetes.io/rewrite-target': '/',
-            },
+            annotations: { ...originalAnnotations },
           },
         },
-      });
+      };
       const result = generateMetadataAnnotations(api, {
         pluginNames: ['one', 'two'],
         overrideName: 'name',
@@ -121,6 +124,11 @@ describe('index', () => {
         'konghq.com/plugins': 'one, two',
         'konghq.com/override': 'name',
       });
+
+      // Should not modify source metadata annotations object
+      expect(api.info['x-kubernetes-ingress-metadata']?.annotations).toStrictEqual(
+        originalAnnotations,
+      );
     });
   });
 
@@ -225,8 +233,6 @@ describe('index', () => {
       expect(generateServicePath(basePath)).toBe('/api/v1/.*');
     });
 
-    // This state arises when a serverUrl is https://api.insomnia.rest/api/{var} and no paths exist on spec.
-    // Is this correct?
     it('adds closing wildcard if basePath ends with wildcard and no specific path exists', () => {
       const serverBasePath = '/api/.*';
       expect(generateServicePath(serverBasePath)).toBe('/api/.*/.*');
@@ -252,7 +258,7 @@ describe('index', () => {
     it('handles basic server at root', () => {
       const result = generateRulesForServer(0, { url: 'http://api.insomnia.rest' }, 'my-ingress');
 
-      expect(result).toEqual({
+      expect(result).toStrictEqual({
         host: 'api.insomnia.rest',
         http: {
           paths: [
@@ -454,7 +460,7 @@ describe('index', () => {
 
       const result = generateKongForKubernetesConfigFromSpec(api, []);
 
-      expect(result.documents).toEqual([
+      expect(result.documents).toStrictEqual([
         keyAuthPluginDoc('g0'),
         dummyPluginDoc('g1'),
         ingressDoc([keyAuthName('g0'), dummyName('g1')], 'api.insomnia.rest', 'my-api-s0'),
@@ -483,7 +489,7 @@ describe('index', () => {
 
       const result = generateKongForKubernetesConfigFromSpec(api, []);
 
-      expect(result.documents).toEqual([
+      expect(result.documents).toStrictEqual([
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('s1'),
         keyAuthPluginDoc('s2'),
@@ -512,7 +518,7 @@ describe('index', () => {
 
       const result = generateKongForKubernetesConfigFromSpec(api, []);
 
-      expect(result.documents).toEqual([
+      expect(result.documents).toStrictEqual([
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('p1'),
         keyAuthPluginDoc('p2'),
@@ -548,7 +554,7 @@ describe('index', () => {
 
       const result = generateKongForKubernetesConfigFromSpec(api, []);
 
-      expect(result.documents).toEqual([
+      expect(result.documents).toStrictEqual([
         methodDoc('get'),
         methodDoc('put'),
         methodDoc('post'),
