@@ -64,8 +64,8 @@ class Tooltip extends React.PureComponent<Props, State> {
   _hideTimeout: TimeoutID;
 
   // TODO: Figure out what type these should be
-  _tooltip: ?HTMLDivElement;
-  _bubble: ?HTMLDivElement;
+  _tooltip: ?any;
+  _bubble: ?any;
   _id: string;
 
   constructor(props: any) {
@@ -84,11 +84,11 @@ class Tooltip extends React.PureComponent<Props, State> {
     this._id = Math.random() + '';
   }
 
-  _setTooltipRef(n: ?HTMLDivElement) {
+  _setTooltipRef(n: ?any) {
     this._tooltip = n;
   }
 
-  _setBubbleRef(n: ?HTMLDivElement) {
+  _setBubbleRef(n: ?any) {
     this._bubble = n;
   }
 
