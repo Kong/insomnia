@@ -187,7 +187,6 @@ Each generated entity will get the tags as specified as well as the following ta
 Tags can also be passed to this tool, which will be appended to the existing tags of
 all created resources.
 
-
 ## Kong for Kubernetes
 
 ### Output structure
@@ -223,7 +222,7 @@ paths:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: insomnia-api
+  name: insomnia-api-1
 spec:
   rules:
     - host: one.insomnia.rest
@@ -231,13 +230,13 @@ spec:
         paths:
           - path: /v1/.*
             backend:
-              serviceName: insomnia-api-s0
+              serviceName: insomnia-api-service-0
               servicePort: 80
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: insomnia-api
+  name: insomnia-api-2
 spec:
   rules:
     - host: two.insomnia.rest
@@ -245,7 +244,7 @@ spec:
         paths:
           - path: /v2/.*
             backend:
-              serviceName: insomnia-api-s1
+              serviceName: insomnia-api-service-1
               servicePort: 80
 ```
 </details>
@@ -404,7 +403,7 @@ config:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: insomnia-api
+  name: insomnia-api-0
   annotations:
     example: example                            # annotation from x-kong-ingress-metadata
     konghq.com/plugins: add-custom-global-g0    # only global plugin
@@ -415,13 +414,13 @@ spec:
         paths:
           - path: /v1/path
             backend:
-              serviceName: insomnia-api-s0
+              serviceName: insomnia-api-service-0
               servicePort: 80
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: insomnia-api
+  name: insomnia-api-1
   annotations:
     example: example
     konghq.com/plugins: add-custom-global-g0, add-key-auth-m2   # global and operation plugin, no server or path
@@ -433,13 +432,13 @@ spec:
         paths:
           - path: /v1/another
             backend:
-              serviceName: insomnia-api-s0
+              serviceName: insomnia-api-service-0
               servicePort: 80
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: insomnia-api
+  name: insomnia-api-2
   annotations:
     example: example
     konghq.com/plugins: add-custom-global-g0, add-custom-server-s1    # global and server 1 plugin, no path or operation
@@ -450,13 +449,13 @@ spec:
         paths:
           - path: /v2/path
             backend:
-              serviceName: insomnia-api-s1
+              serviceName: insomnia-api-service-1
               servicePort: 80
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: insomnia-api
+  name: insomnia-api-3
   annotations:
     example: example
     konghq.com/plugins: add-custom-global-g0, add-custom-server-s1, add-key-auth-m2   # global, server 1, and operation plugin, no path
@@ -468,7 +467,7 @@ spec:
         paths:
           - path: /v2/another
             backend:
-              serviceName: insomnia-api-s1
+              serviceName: insomnia-api-service-1
               servicePort: 80
 ```
 </details>
@@ -581,5 +580,5 @@ paths:
             anyOf:
               - type: string
       x-kong-plugin-request-validator:
-         enabled: true
+        enabled: true
 ```
