@@ -10,6 +10,7 @@
     "lint": "eslint . --ext .js,.html,.json",
     "lint:fix": "npm run lint -- --fix",
     "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap",
+    "typecheck": "lerna run --parallel --stream typecheck",
     "publish": "lerna publish",
     "clean": "lerna clean --yes && rimraf node_modules",
     "test": "npm run lint && lerna run --stream --parallel test",
@@ -22,7 +23,8 @@
   },
   "lint-staged": {
     "{packages,plugins}/**/*.{js,html,json}": [
-      "eslint . --fix"
+      "eslint --fix",
+      "npm run --silent typecheck"
     ]
   },
   "husky": {
