@@ -7,6 +7,7 @@ import path from 'path';
 import AskModal from '../../../ui/components/modals/ask-modal';
 import * as moment from 'moment';
 
+import type { ImportResult } from '../../../common/import';
 import * as importUtils from '../../../common/import';
 import AlertModal from '../../components/modals/alert-modal';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
@@ -29,7 +30,6 @@ import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
 import { setActivityAttribute } from '../../../common/misc';
 import { isDevelopment } from '../../../common/constants';
-import type { ImportResult } from '../../../common/import';
 import type { Workspace } from '../../../models/workspace';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
@@ -279,7 +279,7 @@ export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorksp
       }
 
       // Let's import all the paths!
-      const importedWorkspaces = [];
+      let importedWorkspaces = [];
       for (const p of paths) {
         try {
           const uri = `file://${p}`;
@@ -287,11 +287,10 @@ export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorksp
             askToImportIntoWorkspace(workspaceId, forceToWorkspace),
             uri,
           );
-          const workspaces = handleImportResult(
+          importedWorkspaces = handleImportResult(
             result,
             'The file does not contain a valid specification.',
           );
-          importedWorkspaces.push(workspaces);
         } catch (err) {
           showModal(AlertModal, { title: 'Import Failed', message: err + '' });
         } finally {
@@ -329,17 +328,16 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
       return;
     }
     // Let's import all the paths!
-    const importedWorkspaces = [];
+    let importedWorkspaces = [];
     try {
       const result = await importUtils.importRaw(
         askToImportIntoWorkspace(workspaceId, forceToWorkspace),
         schema,
       );
-      const workspaces = handleImportResult(
+      importedWorkspaces = handleImportResult(
         result,
         'Your clipboard does not contain a valid specification.',
       );
-      importedWorkspaces.push(workspaces);
     } catch (err) {
       showModal(AlertModal, {
         title: 'Import Failed',
@@ -358,17 +356,16 @@ export function importUri(workspaceId: string, uri: string, forceToWorkspace?: F
   return async dispatch => {
     dispatch(loadStart());
 
-    const importedWorkspaces = [];
+    let importedWorkspaces = [];
     try {
       const result = await importUtils.importUri(
         askToImportIntoWorkspace(workspaceId, forceToWorkspace),
         uri,
       );
-      const workspaces = handleImportResult(
+      importedWorkspaces = handleImportResult(
         result,
         'The URI does not contain a valid specification.',
       );
-      importedWorkspaces.push(workspaces);
     } catch (err) {
       showModal(AlertModal, { title: 'Import Failed', message: err + '' });
     } finally {
