@@ -102,7 +102,10 @@ describe('request.*', () => {
         { name: 'hello', value: 'world' },
         { name: 'Content-Type', value: 'application/json' },
       ],
-      parameters: [{ name: 'foo', value: 'bar' }, { name: 'message', value: 'Hello World!' }],
+      parameters: [
+        { name: 'foo', value: 'bar' },
+        { name: 'message', value: 'Hello World!' },
+      ],
     });
   });
 

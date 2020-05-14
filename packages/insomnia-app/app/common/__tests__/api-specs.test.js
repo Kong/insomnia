@@ -74,10 +74,7 @@ describe('parseApiSpec()', () => {
   });
 
   it('Fails on malformed JSON/YAML', () => {
-    const rawSpec = [
-      'openapi: 3.0.0',
-      'info: {{{',
-    ].join('\n');
+    const rawSpec = ['openapi: 3.0.0', 'info: {{{'].join('\n');
 
     expect(() => parseApiSpec(rawSpec)).toThrowError('Failed to parse API spec');
   });

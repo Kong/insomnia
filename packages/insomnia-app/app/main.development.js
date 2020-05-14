@@ -28,6 +28,7 @@ app.on('ready', async () => {
   // Init some important things first
   await database.init(models.types());
   await errorHandling.init();
+
   await windowUtils.init();
 
   // Init the app
@@ -147,7 +148,7 @@ async function _trackStats() {
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
       url: changelogUrl(),
-      cta: 'See What\'s New',
+      cta: "See What's New",
       email: appConfig().gravatarEmail,
       message: `Updated to ${currentVersion}`,
     };

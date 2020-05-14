@@ -8,37 +8,35 @@ type Props = {|
 |};
 
 const StyledBreadcrumb: React.ComponentType<{}> = styled.ul`
-    font-size: var(--font-size-md);
-    font-weight: 600;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-font);
+  grid-area: breadcrumbs;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  a,
+  a::before,
+  li > ::before {
     color: var(--color-font);
-    grid-area: breadcrumbs;
-    display:flex;
-    align-items: center;
-    justify-content: center;
+    font-weight: 400 !important;
+  }
 
-    a,
-    a::before,
-    li > ::before {
-        color: var(--color-font);
-        font-weight:400 !important;
+  li {
+    a {
+      cursor: pointer;
     }
 
-    li {
-
-        a {
-            cursor: pointer;
-        }
-
-        &::before {
-            margin: 0 var(--padding-xs);
-            content: "/";
-        }
-
-        &:first-child::before {
-            content: "";
-        }
-
+    &::before {
+      margin: 0 var(--padding-xs);
+      content: '/';
     }
+
+    &:first-child::before {
+      content: '';
+    }
+  }
 `;
 
 class Breadcrumb extends React.PureComponent<Props> {

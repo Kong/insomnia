@@ -30,7 +30,12 @@ export default class BaseExtension {
   }
 
   getLiveDisplayName() {
-    return this._ext.liveDisplayName || function(args) { return ''; };
+    return (
+      this._ext.liveDisplayName ||
+      function(args) {
+        return '';
+      }
+    );
   }
 
   getDisablePreview() {

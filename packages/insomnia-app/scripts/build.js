@@ -37,7 +37,9 @@ module.exports.start = async function(forcedVersion = null) {
   }
 
   if (appConfig().version !== buildContext.version) {
-    console.log(`[build] App version mismatch with Git tag ${appConfig().version} != ${buildContext.version}`);
+    console.log(
+      `[build] App version mismatch with Git tag ${appConfig().version} != ${buildContext.version}`,
+    );
     process.exit(1);
   }
 
@@ -73,11 +75,7 @@ module.exports.start = async function(forcedVersion = null) {
   await copyFiles(`../app/icons/${appConfig().appId}`, '../build/');
 
   // Generate package.json
-  await generatePackageJson(
-    '../package.json',
-    '../build/package.json',
-    forcedVersion,
-  );
+  await generatePackageJson('../package.json', '../build/package.json', forcedVersion);
 
   // Install Node modules
   console.log('[build] Installing dependencies');

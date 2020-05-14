@@ -1,6 +1,6 @@
 {
   "parser": "babel-eslint",
-  "extends": ["semistandard", "plugin:flowtype/recommended"],
+  "extends": ["semistandard", "plugin:flowtype/recommended", "plugin:prettier/recommended"],
   "plugins": ["react", "jest", "html", "json", "filenames", "flowtype"],
   "parserOptions": {
     "ecmaFeatures": {

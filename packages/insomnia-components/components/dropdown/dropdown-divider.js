@@ -7,7 +7,11 @@ const StyledDivider = styled.div`
   overflow: visible !important;
   height: 0;
   margin: var(--padding-md) var(--padding-md) var(--padding-md) var(--padding-md);
-  ${({ hasName }) => !hasName && css`margin: var(--padding-xs) 0`}
+  ${({ hasName }) =>
+    !hasName &&
+    css`
+      margin: var(--padding-xs) 0;
+    `}
 `;
 
 const StyledLabel = styled.span`
