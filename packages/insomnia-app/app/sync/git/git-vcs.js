@@ -19,6 +19,7 @@ type GitCredentialsPassword = {
 };
 
 type GitCredentialsToken = {
+  username: string,
   token: string,
 };
 

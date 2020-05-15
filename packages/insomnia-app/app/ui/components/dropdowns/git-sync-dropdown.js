@@ -16,8 +16,8 @@ import GitLogModal from '../modals/git-log-modal';
 import GitBranchesModal from '../modals/git-branches-modal';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
-import { getDocumentationUrl } from '../../../common/constants';
 import { trackEvent } from '../../../common/analytics';
+import { docsGitSync } from '../../../common/documentation';
 
 type Props = {|
   handleInitializeEntities: () => void,
@@ -110,7 +110,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     try {
       await vcs.pull(gitRepository.credentials);
     } catch (err) {
-      showError({ title: 'Pull Error', error: err });
+      showError({ title: 'Error Pulling Repository', error: err });
     }
     await db.flushChanges(bufferId);
 
@@ -131,7 +131,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     try {
       canPush = await vcs.canPush(gitRepository.credentials);
     } catch (err) {
-      showAlert({ title: 'Push Rejected', message: err.message });
+      showError({ title: 'Error Pushing Repository', error: err });
       this.setState({ loadingPush: false });
       return;
     }
@@ -162,7 +162,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           },
         });
       } else {
-        showError({ title: 'Push Error', error: err });
+        showError({ title: 'Error Pushing Repository', error: err });
       }
     }
 
@@ -282,7 +282,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
             Git Sync
             <HelpTooltip>
               Sync and collaborate with Git{' '}
-              <Link href={getDocumentationUrl('git-sync')}>
+              <Link href={docsGitSync}>
                 <span className="no-wrap">
                   <br />
                   Documentation <i className="fa fa-external-link" />
