@@ -23,7 +23,7 @@ const HTTP_AUTH_SCHEME = {
   BEARER: 'bearer',
 };
 const OAUTH_FLOWS = {
-  AUTHORIZATION_CODE: 'authorization_code',
+  AUTHORIZATION_CODE: 'authorizationCode',
   CLIENT_CREDENTIALS: 'clientCredentials',
   IMPLICIT: 'implicit',
   PASSWORD: 'password',
@@ -331,8 +331,13 @@ function parseSecurity(security, securitySchemes) {
   const authentication = (() => {
     const authScheme = supportedSchemes.find(
       scheme =>
-        [SECURITY_TYPE.HTTP, SECURITY_TYPE.OAUTH].includes(scheme.type) && SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.scheme),
+        [SECURITY_TYPE.HTTP, SECURITY_TYPE.OAUTH].includes(scheme.type) &&
+        SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.scheme),
     );
+
+    if (!authScheme) {
+      return {};
+    }
 
     switch (authScheme.type) {
       case SECURITY_TYPE.HTTP:
@@ -561,53 +566,47 @@ function parseHttpAuth(scheme) {
   }
 }
 
-function parseOauthScopes(flow) {
+function parseOAuth2Scopes(flow) {
   const scopes = Object.keys(flow.scopes || {});
   return scopes.join(' ');
 }
 
-function importPasswordFlow () {
-  return  {
-    accessTokenUrl: flow.tokenUrl,
-    username: '{{username}}',
-    password: '{{password}}',
-    clientId: '{{clientId}}',
-    clientSecret: '{{clientSecret}}',
-    grantType: 'password',
-    scope: parseOauthScopes(flow),
-    type: 'oauth2',
+function mapOAuth2GrantType(grantType) {
+  const types = {
+    [OAUTH_FLOWS.AUTHORIZATION_CODE]: 'authorization_code',
+    [OAUTH_FLOWS.CLIENT_CREDENTIALS]: 'client_credentials',
+    [OAUTH_FLOWS.IMPLICIT]: 'implicit',
+    [OAUTH_FLOWS.PASSWORD]: 'password',
   };
-}
 
-function importClientCredentialsFlow(flow) {
-  return {
-    accessTokenUrl: flow.tokenUrl,
-    clientId: '{{clientId}}',
-    clientSecret: '{{clientSecret}}',
-    grantType: 'client_credentials',
-    scope: parseOauthScopes(flow),
-    type: 'oauth2',
-  }
+  return types[grantType];
 }
 
 function parseOAuth2(scheme) {
-  const flows = Object.keys(scheme.flows)
+  const flows = Object.keys(scheme.flows);
 
   if (!flows.length) {
     return {};
   }
 
-  const type = flows[0];
-  const flow = scheme.flows[type];
+  const grantType = flows[0];
+  const flow = scheme.flows[grantType];
 
-  switch (type) {
-    case OAUTH_FLOWS.CLIENT_CREDENTIALS:
-      return importClientCredentialsFlow(flow)
-    case OAUTH_FLOWS.PASSWORD:
-      return importPasswordFlow(flow)
-    default:
-      return {};
+  if (!flow) {
+    return {};
   }
+
+  return {
+    clientId: '{{ clientId }}',
+    clientSecret: '{{ clientSecret }}',
+    username: '{{ username }}',
+    password: '{{ password }}',
+    accessTokenUrl: flow.tokenUrl,
+    authorizationUrl: flow.authorizationUrl,
+    grantType: mapOAuth2GrantType(grantType),
+    scope: parseOAuth2Scopes(flow),
+    type: 'oauth2',
+  };
 }
 
 function importBearerAuthentication() {
