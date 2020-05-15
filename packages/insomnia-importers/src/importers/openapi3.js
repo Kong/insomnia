@@ -597,8 +597,8 @@ function parseOAuth2(scheme) {
   }
 
   return {
-    clientId: '{{ clientId }}',
-    clientSecret: '{{ clientSecret }}',
+    clientId: '{{ client_id }}',
+    clientSecret: '{{ client_secret }}',
     username: '{{ username }}',
     password: '{{ password }}',
     accessTokenUrl: flow.tokenUrl,
