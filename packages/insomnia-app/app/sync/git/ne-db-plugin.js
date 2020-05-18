@@ -111,7 +111,7 @@ export default class NeDBPlugin {
 
     let docs = [];
     let otherFolders = [];
-    if (root === null && id === null && type === null) {
+    if ((root === null || root === 'repo') && id === null && type === null) {
       otherFolders = [GIT_NAMESPACE_DIR];
     } else if (id === null && type === null) {
       otherFolders = [
