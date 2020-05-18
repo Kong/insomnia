@@ -111,7 +111,7 @@ export default class NeDBPlugin {
 
     let docs = [];
     let otherFolders = [];
-    if ((root === null || root === 'repo') && id === null && type === null) {
+    if (root === null && id === null && type === null) {
       otherFolders = [GIT_NAMESPACE_DIR];
     } else if (id === null && type === null) {
       otherFolders = [
@@ -201,7 +201,10 @@ export default class NeDBPlugin {
   _parsePath(filePath: string): { root: string | null, type: string | null, id: string | null } {
     filePath = path.normalize(filePath);
 
-    const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '');
+    const [idRaw, type, ...root] = filePath
+      .split(path.sep)
+      .filter(s => s !== '')
+      .reverse();
 
     const id = typeof idRaw === 'string' ? idRaw.replace(/\.(json|yml)$/, '') : idRaw;
 
