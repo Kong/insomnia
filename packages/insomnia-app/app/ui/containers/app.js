@@ -29,6 +29,7 @@ import {
   PREVIEW_MODE_SOURCE,
   getAppName,
   getAppId,
+  getGitSyncRepoDir,
 } from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as entitiesActions from '../redux/modules/entities';
@@ -999,6 +1000,7 @@ class App extends PureComponent {
       const pGitData = FSPlugin.createPlugin(baseDir);
       const pOtherData = FSPlugin.createPlugin(path.join(baseDir, 'other'));
       const gitSubDir = '/git';
+      const repoDir = getGitSyncRepoDir();
 
       const fsPlugin = routableFSPlugin(
         // All data outside the directories listed below will be stored in an 'other'
@@ -1008,7 +1010,7 @@ class App extends PureComponent {
         {
           // All app data is stored within the a namespaced directory at the root of the
           // repository and is read/written from the local NeDB database
-          [`/${GIT_NAMESPACE_DIR}`]: pNeDb,
+          [path.join(repoDir, GIT_NAMESPACE_DIR)]: pNeDb,
 
           // All git metadata is stored in a git/ directory on the filesystem
           [gitSubDir]: pGitData,
@@ -1019,9 +1021,9 @@ class App extends PureComponent {
       if (activeGitRepository.needsFullClone) {
         await models.gitRepository.update(activeGitRepository, { needsFullClone: false });
         const { credentials, uri } = activeGitRepository;
-        await gitVCS.initFromClone(uri, credentials, '/', fsPlugin, gitSubDir);
+        await gitVCS.initFromClone(uri, credentials, repoDir, fsPlugin, gitSubDir);
       } else {
-        await gitVCS.init('/', fsPlugin, gitSubDir);
+        await gitVCS.init(repoDir, fsPlugin, gitSubDir);
       }
 
       // Configure basic info

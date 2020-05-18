@@ -13,6 +13,7 @@ import { withDescendants } from '../../../common/database';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import ModalFooter from '../base/modal-footer';
 import Tooltip from '../tooltip';
+import { getGitSyncRepoDir } from '../../../common/constants';
 
 type Props = {|
   workspace: Workspace,
@@ -129,7 +130,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     const { vcs } = this.props;
 
     const f = vcs.getFs().promises;
-    const rootDir = path.join('/', GIT_NAMESPACE_DIR);
+    const rootDir = path.join(getGitSyncRepoDir(), GIT_NAMESPACE_DIR);
 
     const fsPaths = [];
     for (const type of await f.readdir(rootDir)) {

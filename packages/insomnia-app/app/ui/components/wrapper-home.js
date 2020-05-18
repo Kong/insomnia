@@ -40,6 +40,7 @@ import designerLogo from '../images/insomnia-designer-logo.svg';
 import { MemPlugin } from '../../sync/git/mem-plugin';
 import GitVCS, { GIT_NAMESPACE_DIR } from '../../sync/git/git-vcs';
 import { parseApiSpec } from '../../common/api-specs';
+import { getGitSyncRepoDir } from '../../common/constants';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -115,7 +116,8 @@ class WrapperHome extends React.PureComponent<Props, State> {
         trackEvent('Git', 'Clone');
 
         const core = Math.random() + '';
-        const rootDir = path.join('/', GIT_NAMESPACE_DIR);
+        const repoDir = getGitSyncRepoDir();
+        const rootDir = path.join(repoDir, GIT_NAMESPACE_DIR);
 
         // Create in-memory filesystem to perform clone
         const plugins = git.cores.create(core);
@@ -127,7 +129,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         try {
           await git.clone({
             core,
-            dir: '/',
+            dir: repoDir,
             singleBranch: true,
             url,
             ...credentials,
@@ -161,7 +163,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           return false;
         };
 
-        if (!(await ensureDir('/', GIT_NAMESPACE_DIR))) {
+        if (!(await ensureDir(repoDir, GIT_NAMESPACE_DIR))) {
           return;
         }
 

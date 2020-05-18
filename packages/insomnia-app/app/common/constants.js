@@ -74,6 +74,10 @@ export function getTempDir() {
   return dir;
 }
 
+export function getGitSyncRepoDir() {
+  return isWindows() ? '/repo' : '/';
+}
+
 export function isMac() {
   return getAppPlatform() === 'darwin';
 }
