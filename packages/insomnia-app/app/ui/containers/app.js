@@ -996,11 +996,11 @@ class App extends PureComponent {
         getDataDirectory(),
         `version-control/git/${activeGitRepository._id}`,
       );
-      const pNeDb = NeDBPlugin.createPlugin(activeWorkspace._id);
+      const repoDir = getGitSyncRepoDir();
+      const pNeDb = NeDBPlugin.createPlugin(activeWorkspace._id, repoDir);
       const pGitData = FSPlugin.createPlugin(baseDir);
       const pOtherData = FSPlugin.createPlugin(path.join(baseDir, 'other'));
       const gitSubDir = '/git';
-      const repoDir = getGitSyncRepoDir();
 
       const fsPlugin = routableFSPlugin(
         // All data outside the directories listed below will be stored in an 'other'

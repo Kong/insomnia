@@ -8,17 +8,20 @@ import { GIT_NAMESPACE_DIR } from './git-vcs';
 
 export default class NeDBPlugin {
   _workspaceId: string;
+  _parentDirRegExp: RegExp;
 
-  constructor(workspaceId: string) {
+  constructor(workspaceId: string, parentDir: string = '/') {
     if (!workspaceId) {
       throw new Error('Cannot use NeDBPlugin without workspace ID');
     }
+
     this._workspaceId = workspaceId;
+    this._parentDirRegExp = new RegExp(`^${parentDir}`);
   }
 
-  static createPlugin(workspaceId: string) {
+  static createPlugin(workspaceId: string, repoDir: string = '/') {
     return {
-      promises: new NeDBPlugin(workspaceId),
+      promises: new NeDBPlugin(workspaceId, repoDir),
     };
   }
 
@@ -200,11 +203,9 @@ export default class NeDBPlugin {
 
   _parsePath(filePath: string): { root: string | null, type: string | null, id: string | null } {
     filePath = path.normalize(filePath);
+    filePath = filePath.replace(this._parentDirRegExp, '');
 
-    const [idRaw, type, ...root] = filePath
-      .split(path.sep)
-      .filter(s => s !== '')
-      .reverse();
+    const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '');
 
     const id = typeof idRaw === 'string' ? idRaw.replace(/\.(json|yml)$/, '') : idRaw;
 
