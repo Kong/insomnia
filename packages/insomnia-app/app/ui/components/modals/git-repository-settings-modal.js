@@ -16,6 +16,7 @@ type State = {|
     uri?: string,
     authorName?: string,
     authorEmail?: string,
+    username?: string,
     token?: string,
   },
 |};
@@ -82,6 +83,7 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
     const credentials = inputs.token
       ? {
           type: 'token',
+          username: inputs.username,
           token: inputs.token,
         }
       : null;
@@ -179,17 +181,33 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
                 </label>
               </div>
             </div>
-            <div className="form-control form-control--outlined">
-              <label>
-                Authentication Token
-                <input
-                  type="password"
-                  name="token"
-                  defaultValue={inputs.token}
-                  onChange={this._handleInputChange}
-                  placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
-                />
-              </label>
+            <div className="form-row">
+              <div className="form-control form-control--outlined">
+                <label>
+                  Username
+                  <input
+                    required
+                    type="text"
+                    name="username"
+                    placeholder="MyUser"
+                    defaultValue={inputs.username}
+                    onChange={this._handleInputChange}
+                  />
+                </label>
+              </div>
+              <div className="form-control form-control--outlined">
+                <label>
+                  Authentication Token
+                  <input
+                    required
+                    type="password"
+                    name="token"
+                    defaultValue={inputs.token}
+                    onChange={this._handleInputChange}
+                    placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
+                  />
+                </label>
+              </div>
             </div>
           </ModalBody>
           <ModalFooter>

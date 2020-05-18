@@ -32,10 +32,7 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
           reject(err);
         });
 
-        stream.pipe(
-          writeStream,
-          { end: false },
-        );
+        stream.pipe(writeStream, { end: false });
         totalSize += size;
       });
     }

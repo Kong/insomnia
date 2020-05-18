@@ -19,6 +19,7 @@ type GitCredentialsPassword = {
 };
 
 type GitCredentialsToken = {
+  username: string,
   token: string,
 };
 
@@ -37,7 +38,7 @@ export const GIT_NAMESPACE_DIR = '.insomnia';
 
 export default class GitVCS {
   _git: Object;
-  _baseOpts: {dir: string, gitdir?: string};
+  _baseOpts: { dir: string, gitdir?: string };
   _initialized: boolean;
 
   constructor() {

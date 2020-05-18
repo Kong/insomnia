@@ -3,13 +3,11 @@
   "version": "2.2.4",
   "main": "dist/index.js",
   "scripts": {
-    "test": "flow check && jest",
-    "build": "webpack --config webpack.config.js --display errors-only"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run build"
-    }
+    "typecheck": "flow check",
+    "test": "jest",
+    "build": "webpack --config webpack.config.js --display errors-only",
+    "bootstrap": "npm run build",
+    "prepublish": "npm run build"
   },
   "jest": {
     "testMatch": [

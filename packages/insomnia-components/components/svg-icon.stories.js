@@ -6,7 +6,7 @@ import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from '.
 import styled from 'styled-components';
 
 export default {
-  title: 'SvgIcon',
+  title: '1st Party | SvgIcon',
   decorators: [withKnobs],
 };
 
@@ -20,7 +20,9 @@ Wrapper.displayName = '...';
 
 export const _default = () => <SvgIcon icon={IconEnum.arrowRight} />;
 
-export const labelled = () => <SvgIcon icon={IconEnum.warning} label={text('Label', '3 Warnings')} />;
+export const labelled = () => (
+  <SvgIcon icon={IconEnum.warning} label={text('Label', '3 Warnings')} />
+);
 
 export const reference = () => (
   <React.Fragment>

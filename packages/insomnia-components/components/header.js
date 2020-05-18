@@ -10,32 +10,32 @@ type Props = {|
 |};
 
 const StyledHeader: React.ComponentType<{}> = styled.div`
-      border-bottom:1px solid var(--hl-md);
-      padding: var(--padding-md);
-      display: grid;
-      grid-template-columns: 2fr 1.5fr 2fr;
-      grid-template-rows: 1fr;
-      grid-template-areas: "header_left header_center header_right";
-      .header_left { 
-        grid-area: header_left;
-        text-align: left;
-        display:flex;
-        align-items: center;
-      }
-      .header_center { 
-        grid-area: header_center;
-        text-align: center;
-        display:flex;
-        align-items: center;
-      }
-      .header_right { 
-        grid-area: header_right;
-        text-align: right;
-        display:flex;
-        align-items: center;
-        justify-content: flex-end;
-      }
-    `;
+  border-bottom: 1px solid var(--hl-md);
+  padding: var(--padding-md);
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 2fr;
+  grid-template-rows: 1fr;
+  grid-template-areas: 'header_left header_center header_right';
+  .header_left {
+    grid-area: header_left;
+    text-align: left;
+    display: flex;
+    align-items: center;
+  }
+  .header_center {
+    grid-area: header_center;
+    text-align: center;
+    display: flex;
+    align-items: center;
+  }
+  .header_right {
+    grid-area: header_right;
+    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+`;
 
 class Header extends React.PureComponent<Props> {
   render() {

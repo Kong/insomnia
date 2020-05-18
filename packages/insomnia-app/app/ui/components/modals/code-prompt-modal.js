@@ -121,14 +121,20 @@ class CodePromptModal extends PureComponent {
         <ModalBody
           noScroll
           className="wide tall"
-          style={showCopyButton
-            ? { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gridTemplateRows: 'auto minmax(0, 1fr)' }
-            : { minHeight: '10rem' }
+          style={
+            showCopyButton
+              ? {
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr)',
+                  gridTemplateRows: 'auto minmax(0, 1fr)',
+                }
+              : { minHeight: '10rem' }
           }>
-          {showCopyButton
-           ? <div className="pad-top-sm pad-right-sm"><CopyButton content={defaultValue} className="pull-right" /></div>
-           : null
-          }
+          {showCopyButton ? (
+            <div className="pad-top-sm pad-right-sm">
+              <CopyButton content={defaultValue} className="pull-right" />
+            </div>
+          ) : null}
           {mode === 'text/x-markdown' ? (
             <div className="pad-sm tall">
               <MarkdownEditor

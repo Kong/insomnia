@@ -99,7 +99,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
   _handleImportPetstore() {
     this._handleImportUri(
       'https://gist.githubusercontent.com/gschier/4e2278d5a50b4bbf1110755d9b48a9f9' +
-      '/raw/801c05266ae102bcb9288ab92c60f52d45557425/petstore-spec.yaml',
+        '/raw/801c05266ae102bcb9288ab92c60f52d45557425/petstore-spec.yaml',
     );
   }
 
@@ -116,8 +116,8 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
         </p>
         <img src={chartSrc} alt="Demonstration chart" />
         <p>
-          Help us understand how <strong>you</strong> use {getAppLongName()} so we can make
-          it better.
+          Help us understand how <strong>you</strong> use {getAppLongName()} so we can make it
+          better.
         </p>
         <button key="enable" className="btn btn--clicky" onClick={this._handleClickEnableAnalytics}>
           Share Usage Analytics

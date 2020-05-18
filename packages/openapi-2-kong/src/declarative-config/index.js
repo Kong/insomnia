@@ -20,10 +20,12 @@ export function generateDeclarativeConfigFromSpec(
   // This remover any circular references or weirdness that might result
   // from the JS objects used.
   // SEE: https://github.com/Kong/studio/issues/93
-  return JSON.parse(JSON.stringify({
-    type: 'kong-declarative-config',
-    label: 'Kong Declarative Config',
-    documents: [document],
-    warnings: [],
-  }));
+  return JSON.parse(
+    JSON.stringify({
+      type: 'kong-declarative-config',
+      label: 'Kong Declarative Config',
+      documents: [document],
+      warnings: [],
+    }),
+  );
 }

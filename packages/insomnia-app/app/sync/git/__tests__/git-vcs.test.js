@@ -151,8 +151,12 @@ describe('Git-VCS', () => {
       await vcs.commit('Second');
 
       const log = await vcs.log();
-      expect(await vcs.readObjFromTree(log[0].tree, `${GIT_NAMESPACE_DIR}/dir/foo.txt`)).toBe('foo bar');
-      expect(await vcs.readObjFromTree(log[1].tree, `${GIT_NAMESPACE_DIR}/dir/foo.txt`)).toBe('foo');
+      expect(await vcs.readObjFromTree(log[0].tree, `${GIT_NAMESPACE_DIR}/dir/foo.txt`)).toBe(
+        'foo bar',
+      );
+      expect(await vcs.readObjFromTree(log[1].tree, `${GIT_NAMESPACE_DIR}/dir/foo.txt`)).toBe(
+        'foo',
+      );
 
       // Some extra checks
       expect(await vcs.readObjFromTree(log[1].tree, 'missing')).toBe(null);

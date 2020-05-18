@@ -6,7 +6,7 @@ import { SvgIcon } from '../index';
 import { IconEnum } from './svg-icon';
 
 export default {
-  title: 'Card',
+  title: '1st Party | Card',
   decorators: [withKnobs],
 };
 
