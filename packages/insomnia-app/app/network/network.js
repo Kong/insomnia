@@ -108,7 +108,7 @@ export async function _actuallySend(
   settings: Settings,
   environment: Environment | null,
 ): Promise<ResponsePatch> {
-  return new Promise(async resolve => {
+  return new Promise(async (resolve, reject) => {
     const timeline: Array<ResponseTimelineEntry> = [];
 
     function addTimeline(name, value) {
@@ -364,19 +364,29 @@ export async function _actuallySend(
             store: ['root'],
             save: fullCAPath,
             onsave: folder => {
-              caFile = folder + '/roots.pem';
-              console.log(
-                '[net] Saved CA from Windows Certificates to folder ',
-                folder,
-                ' and set CA file to ',
-                caFile,
-              );
+              if (!folder) {
+                console.log(
+                  '[net] Failed to save CA from Windows Certificates to folder ',
+                  folder,
+                  '. CA information for this request has not been set.',
+                );
+              } else {
+                caFile = folder + '/roots.pem';
+                console.log(
+                  '[net] Saved CA from Windows Certificates to folder ',
+                  folder,
+                  ' and set CA file to ',
+                  caFile,
+                );
+              }
               resolve();
             },
           });
         });
 
-        setOpt(Curl.option.CAINFO, caFile);
+        if (caFile) {
+          setOpt(Curl.option.CAINFO, caFile);
+        }
       } else if (settings.caBundleType === CertificateBundleType.userProvided) {
         setOpt(Curl.option.CAINFO, settings.caBundlePath);
         console.log('[net] Set CA to user provided file ', settings.caBundlePath);
