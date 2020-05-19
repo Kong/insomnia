@@ -8,7 +8,7 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import type { Workspace } from '../../../models/workspace';
-import GitVCS, { GIT_NAMESPACE_DIR } from '../../../sync/git/git-vcs';
+import GitVCS, { GIT_ROOT_DIR, GIT_NAMESPACE_DIR } from '../../../sync/git/git-vcs';
 import { withDescendants } from '../../../common/database';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import ModalFooter from '../base/modal-footer';
@@ -129,7 +129,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     const { vcs } = this.props;
 
     const f = vcs.getFs().promises;
-    const rootDir = path.join('/', GIT_NAMESPACE_DIR);
+    const rootDir = path.join(GIT_ROOT_DIR, GIT_NAMESPACE_DIR);
 
     const fsPaths = [];
     for (const type of await f.readdir(rootDir)) {
