@@ -1008,7 +1008,7 @@ class App extends PureComponent {
         {
           // All app data is stored within the a namespaced directory at the root of the
           // repository and is read/written from the local NeDB database
-          [path.join(GIT_ROOT_DIR, GIT_NAMESPACE_DIR)]: pNeDb,
+          [`/${GIT_NAMESPACE_DIR}`]: pNeDb,
 
           // All git metadata is stored in a git/ directory on the filesystem
           [gitSubDir]: pGitData,
