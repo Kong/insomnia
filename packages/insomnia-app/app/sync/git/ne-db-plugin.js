@@ -201,7 +201,7 @@ export default class NeDBPlugin {
   _parsePath(filePath: string): { root: string | null, type: string | null, id: string | null } {
     filePath = path.normalize(filePath);
 
-    const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '');
+    const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '' && s !== '.');
 
     const id = typeof idRaw === 'string' ? idRaw.replace(/\.(json|yml)$/, '') : idRaw;
 

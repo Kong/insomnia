@@ -1019,9 +1019,9 @@ class App extends PureComponent {
       if (activeGitRepository.needsFullClone) {
         await models.gitRepository.update(activeGitRepository, { needsFullClone: false });
         const { credentials, uri } = activeGitRepository;
-        await gitVCS.initFromClone(uri, credentials, '/', fsPlugin, gitSubDir);
+        await gitVCS.initFromClone(uri, credentials, '.', fsPlugin, gitSubDir);
       } else {
-        await gitVCS.init('/', fsPlugin, gitSubDir);
+        await gitVCS.init('.', fsPlugin, gitSubDir);
       }
 
       // Configure basic info
