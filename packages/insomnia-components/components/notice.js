@@ -155,7 +155,7 @@ class Notice extends React.PureComponent<Props, State> {
       <StyledNotice className={classnames('notice', color, className)}>
         {localStorageKey && (
           <button className="icon pull-right" onClick={this._dismissNotification}>
-            <SvgIcon icon='x' />
+            <SvgIcon icon="x" />
           </button>
         )}
         {children}
