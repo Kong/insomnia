@@ -78,7 +78,7 @@ import ExportRequestsModal from '../components/modals/export-requests-modal';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import VCS from '../../sync/vcs';
 import SyncMergeModal from '../components/modals/sync-merge-modal';
-import GitVCS, { GIT_NAMESPACE_DIR } from '../../sync/git/git-vcs';
+import GitVCS, { GIT_NAMESPACE_DIR, GIT_ROOT_DIR } from '../../sync/git/git-vcs';
 import NeDBPlugin from '../../sync/git/ne-db-plugin';
 import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
@@ -1008,7 +1008,7 @@ class App extends PureComponent {
         {
           // All app data is stored within the a namespaced directory at the root of the
           // repository and is read/written from the local NeDB database
-          [`/${GIT_NAMESPACE_DIR}`]: pNeDb,
+          [path.join(GIT_ROOT_DIR, GIT_NAMESPACE_DIR)]: pNeDb,
 
           // All git metadata is stored in a git/ directory on the filesystem
           [gitSubDir]: pGitData,
@@ -1019,9 +1019,9 @@ class App extends PureComponent {
       if (activeGitRepository.needsFullClone) {
         await models.gitRepository.update(activeGitRepository, { needsFullClone: false });
         const { credentials, uri } = activeGitRepository;
-        await gitVCS.initFromClone(uri, credentials, '.', fsPlugin, gitSubDir);
+        await gitVCS.initFromClone(uri, credentials, GIT_ROOT_DIR, fsPlugin, gitSubDir);
       } else {
-        await gitVCS.init('.', fsPlugin, gitSubDir);
+        await gitVCS.init(GIT_ROOT_DIR, fsPlugin, gitSubDir);
       }
 
       // Configure basic info

@@ -35,6 +35,7 @@ export type GitLogEntry = {|
 |};
 
 export const GIT_NAMESPACE_DIR = '.insomnia';
+export const GIT_ROOT_DIR = '.';
 
 export default class GitVCS {
   _git: Object;

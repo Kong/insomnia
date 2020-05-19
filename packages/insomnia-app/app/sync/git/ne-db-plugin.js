@@ -4,7 +4,7 @@ import * as db from '../../common/database';
 import * as models from '../../models';
 import YAML from 'yaml';
 import Stat from './stat';
-import { GIT_NAMESPACE_DIR } from './git-vcs';
+import { GIT_NAMESPACE_DIR, GIT_ROOT_DIR } from './git-vcs';
 
 export default class NeDBPlugin {
   _workspaceId: string;
@@ -201,7 +201,9 @@ export default class NeDBPlugin {
   _parsePath(filePath: string): { root: string | null, type: string | null, id: string | null } {
     filePath = path.normalize(filePath);
 
-    const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '' && s !== '.');
+    const [root, type, idRaw] = filePath
+      .split(path.sep)
+      .filter(s => s !== '' && s !== GIT_ROOT_DIR);
 
     const id = typeof idRaw === 'string' ? idRaw.replace(/\.(json|yml)$/, '') : idRaw;
 

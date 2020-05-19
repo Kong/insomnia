@@ -38,7 +38,7 @@ import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import { MemPlugin } from '../../sync/git/mem-plugin';
-import GitVCS, { GIT_NAMESPACE_DIR } from '../../sync/git/git-vcs';
+import GitVCS, { GIT_NAMESPACE_DIR, GIT_ROOT_DIR } from '../../sync/git/git-vcs';
 import { parseApiSpec } from '../../common/api-specs';
 
 type Props = {|
@@ -115,7 +115,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         trackEvent('Git', 'Clone');
 
         const core = Math.random() + '';
-        const rootDir = path.join('/', GIT_NAMESPACE_DIR);
+        const rootDir = path.join(GIT_ROOT_DIR, GIT_NAMESPACE_DIR);
 
         // Create in-memory filesystem to perform clone
         const plugins = git.cores.create(core);
@@ -127,7 +127,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         try {
           await git.clone({
             core,
-            dir: '.',
+            dir: GIT_ROOT_DIR,
             singleBranch: true,
             url,
             ...credentials,
@@ -161,7 +161,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           return false;
         };
 
-        if (!(await ensureDir('/', GIT_NAMESPACE_DIR))) {
+        if (!(await ensureDir(GIT_ROOT_DIR, GIT_NAMESPACE_DIR))) {
           return;
         }
 
