@@ -38,8 +38,6 @@ export const _onLeft = () => (
 export const _withDelay = () => (
   <div>
     Hover over the info mark to view
-    <HelpTooltip position="left" delay={900}>
-      This tooltip had a 900ms delay
-    </HelpTooltip>
+    <HelpTooltip delay={900}> This tooltip had a 900ms delay</HelpTooltip>
   </div>
 );
