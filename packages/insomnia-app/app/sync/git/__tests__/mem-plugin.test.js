@@ -1,7 +1,12 @@
 import { assertAsyncError, setupDateMocks } from './util';
 import { MemPlugin } from '../mem-plugin';
+import path from 'path';
+import { GIT_ROOT_DIR } from '../git-vcs';
+jest.mock('path');
 
-describe('MemPlugin', () => {
+describe.each(['win32', 'posix'])('Memlugin - %o', type => {
+  beforeAll(() => path.__mockPath(type));
+  afterAll(() => jest.restoreAllMocks());
   beforeEach(setupDateMocks);
 
   describe('readfile()', () => {
@@ -90,12 +95,12 @@ describe('MemPlugin', () => {
       const p = new MemPlugin();
 
       // Root dir should always exist
-      expect(await p.readdir('/')).toEqual([]);
+      expect(await p.readdir(GIT_ROOT_DIR)).toEqual([]);
 
       // Write a file and list it again
       await p.writeFile('/foo.txt', 'Hello World!');
       await p.writeFile('/bar.txt', 'Bar!');
-      expect(await p.readdir('/')).toEqual(['bar.txt', 'foo.txt']);
+      expect(await p.readdir(GIT_ROOT_DIR)).toEqual(['bar.txt', 'foo.txt']);
     });
 
     it('errors on file', async () => {
@@ -117,21 +122,21 @@ describe('MemPlugin', () => {
       await p.mkdir('/foo');
       await p.mkdir('/foo/bar');
 
-      expect(await p.readdir('/')).toEqual(['foo']);
-      expect(await p.readdir('/foo')).toEqual(['bar']);
+      expect(await p.readdir(GIT_ROOT_DIR)).toEqual(['foo']);
+      expect(await p.readdir(`${GIT_ROOT_DIR}/foo`)).toEqual(['bar']);
     });
 
     it('creates directory recursively', async () => {
       const p = new MemPlugin();
 
-      await p.mkdir('/foo/bar/baz', { recursive: true });
-      expect(await p.readdir('/foo/bar/baz')).toEqual([]);
+      await p.mkdir(`${GIT_ROOT_DIR}/foo/bar/baz`, { recursive: true });
+      expect(await p.readdir(`${GIT_ROOT_DIR}/foo/bar/baz`)).toEqual([]);
     });
 
     it('fails to create if no parent', async () => {
       const p = new MemPlugin();
 
-      await assertAsyncError(p.mkdir('/foo/bar/baz'), 'ENOENT');
+      await assertAsyncError(p.mkdir(`${GIT_ROOT_DIR}/foo/bar/baz`), 'ENOENT');
     });
   });
 
@@ -167,7 +172,7 @@ describe('MemPlugin', () => {
     it('stats root dir', async () => {
       const p = new MemPlugin();
 
-      const stat = await p.stat('/');
+      const stat = await p.stat(GIT_ROOT_DIR);
 
       expect(stat).toEqual({
         ctimeMs: 1000000000000,
