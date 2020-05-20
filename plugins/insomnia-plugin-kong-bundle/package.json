@@ -3,7 +3,7 @@
   "version": "2.2.4",
   "main": "index.js",
   "insomnia": {
-    "name": "kong-plugin",
+    "name": "kong-bundle",
     "displayName": "Kong Plugin Bundle",
     "description": "Bundle of all Kong functionality",
     "bundle": true,
