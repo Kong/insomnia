@@ -3,8 +3,17 @@
   "version": "2.2.4",
   "main": "index.js",
   "insomnia": {
-    "name": "kong-bundle",
-    "description": "Bundle of all Kong plugins"
+    "name": "kong-plugin",
+    "displayName": "Kong Plugin Bundle",
+    "description": "Bundle of all Kong functionality",
+    "bundle": true,
+    "applications": {
+      "designer": "*"
+    },
+    "images": {
+      "icon": "icon.svg",
+      "cover": "cover.svg"
+    }
   },
   "dependencies": {
     "insomnia-plugin-kong-declarative-config": "^2.2.4",
