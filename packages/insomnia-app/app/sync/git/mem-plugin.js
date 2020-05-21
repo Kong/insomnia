@@ -1,7 +1,6 @@
 // @flow
 import path from 'path';
 import Stat from './stat';
-import { GIT_ROOT_DIR } from './git-vcs';
 
 type FSFile = {|
   +type: 'file',
@@ -280,7 +279,7 @@ export class MemPlugin {
 
     let current = this.__fs;
 
-    const pathSegments = filePath.split(path.sep).filter(s => s !== '' && s !== GIT_ROOT_DIR);
+    const pathSegments = filePath.split(path.sep).filter(s => s !== '' && s !== '.');
     for (const expectedName of pathSegments) {
       const e = (current.children || []).find(c => c.name === expectedName);
 
