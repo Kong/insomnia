@@ -1,4 +1,4 @@
-import GitVCS, { GIT_NAMESPACE_DIR, GIT_ROOT_DIR } from '../git-vcs';
+import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR } from '../git-vcs';
 import { setupDateMocks } from './util';
 import { MemPlugin } from '../mem-plugin';
 import path from 'path';
@@ -8,14 +8,13 @@ describe.each(['win32', 'posix'])('Git-VCS - %o', type => {
   beforeAll(() => path.__mockPath(type));
   afterAll(() => jest.restoreAllMocks());
   beforeEach(setupDateMocks);
-  const namespaceDir = `${GIT_ROOT_DIR}/${GIT_NAMESPACE_DIR}`;
 
   describe('common operations', () => {
     it('listFiles()', async () => {
       const fs = MemPlugin.createPlugin();
 
       const vcs = new GitVCS();
-      await vcs.init(GIT_ROOT_DIR, fs);
+      await vcs.init(GIT_CLONE_DIR, fs);
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
       // No files exist yet
@@ -29,33 +28,33 @@ describe.each(['win32', 'posix'])('Git-VCS - %o', type => {
 
     it('stage and unstage file', async () => {
       const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(namespaceDir);
-      await fs.promises.writeFile(`${namespaceDir}/foo.txt`, 'foo');
-      await fs.promises.writeFile(`${namespaceDir}/bar.txt`, 'bar');
+      await fs.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fs.promises.writeFile(`${GIT_INSOMNIA_DIR}/foo.txt`, 'foo');
+      await fs.promises.writeFile(`${GIT_INSOMNIA_DIR}/bar.txt`, 'bar');
 
       // Files outside namespace should be ignored
       await fs.promises.writeFile('/other.txt', 'other');
 
       const vcs = new GitVCS();
-      await vcs.init(GIT_ROOT_DIR, fs);
+      await vcs.init(GIT_CLONE_DIR, fs);
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/bar.txt`)).toBe('*added');
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/foo.txt`)).toBe('*added');
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/bar.txt`)).toBe('*added');
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/foo.txt`)).toBe('*added');
 
-      await vcs.add(`${GIT_NAMESPACE_DIR}/foo.txt`);
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/bar.txt`)).toBe('*added');
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/foo.txt`)).toBe('added');
+      await vcs.add(`${GIT_INSOMNIA_DIR}/foo.txt`);
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/bar.txt`)).toBe('*added');
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/foo.txt`)).toBe('added');
 
-      await vcs.remove(`${GIT_NAMESPACE_DIR}/foo.txt`);
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/bar.txt`)).toBe('*added');
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/foo.txt`)).toBe('*added');
+      await vcs.remove(`${GIT_INSOMNIA_DIR}/foo.txt`);
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/bar.txt`)).toBe('*added');
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/foo.txt`)).toBe('*added');
     });
 
     it('Returns empty log without first commit', async () => {
       const fs = MemPlugin.createPlugin();
       const vcs = new GitVCS();
-      await vcs.init(GIT_ROOT_DIR, fs);
+      await vcs.init(GIT_CLONE_DIR, fs);
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
       expect(await vcs.log()).toEqual([]);
@@ -63,20 +62,20 @@ describe.each(['win32', 'posix'])('Git-VCS - %o', type => {
 
     it('commit file', async () => {
       const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(`${namespaceDir}`);
-      await fs.promises.writeFile(`${namespaceDir}/foo.txt`, 'foo');
-      await fs.promises.writeFile(`${namespaceDir}/bar.txt`, 'bar');
+      await fs.promises.mkdir(`${GIT_INSOMNIA_DIR}`);
+      await fs.promises.writeFile(`${GIT_INSOMNIA_DIR}/foo.txt`, 'foo');
+      await fs.promises.writeFile(`${GIT_INSOMNIA_DIR}/bar.txt`, 'bar');
 
       await fs.promises.writeFile('/other.txt', 'should be ignored');
 
       const vcs = new GitVCS();
-      await vcs.init(GIT_ROOT_DIR, fs);
+      await vcs.init(GIT_CLONE_DIR, fs);
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
-      await vcs.add(`${GIT_NAMESPACE_DIR}/foo.txt`);
+      await vcs.add(`${GIT_INSOMNIA_DIR}/foo.txt`);
       await vcs.commit('First commit!');
 
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/bar.txt`)).toBe('*added');
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/foo.txt`)).toBe('unmodified');
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/bar.txt`)).toBe('*added');
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/foo.txt`)).toBe('unmodified');
 
       expect(await vcs.log()).toEqual([
         {
@@ -99,36 +98,36 @@ describe.each(['win32', 'posix'])('Git-VCS - %o', type => {
         },
       ]);
 
-      await fs.promises.unlink(`${namespaceDir}/foo.txt`);
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/bar.txt`)).toBe('*added');
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/foo.txt`)).toBe('*deleted');
+      await fs.promises.unlink(`${GIT_INSOMNIA_DIR}/foo.txt`);
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/bar.txt`)).toBe('*added');
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/foo.txt`)).toBe('*deleted');
 
-      await vcs.remove(`${GIT_NAMESPACE_DIR}/foo.txt`);
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/bar.txt`)).toBe('*added');
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/foo.txt`)).toBe('deleted');
+      await vcs.remove(`${GIT_INSOMNIA_DIR}/foo.txt`);
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/bar.txt`)).toBe('*added');
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/foo.txt`)).toBe('deleted');
 
-      await vcs.remove(`${GIT_NAMESPACE_DIR}/foo.txt`);
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/bar.txt`)).toBe('*added');
-      expect(await vcs.status(`${GIT_NAMESPACE_DIR}/foo.txt`)).toBe('deleted');
+      await vcs.remove(`${GIT_INSOMNIA_DIR}/foo.txt`);
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/bar.txt`)).toBe('*added');
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/foo.txt`)).toBe('deleted');
     });
 
     it('create branch', async () => {
       const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(`${namespaceDir}`);
-      await fs.promises.writeFile(`${namespaceDir}/foo.txt`, 'foo');
-      await fs.promises.writeFile(`${namespaceDir}/bar.txt`, 'bar');
+      await fs.promises.mkdir(`${GIT_INSOMNIA_DIR}`);
+      await fs.promises.writeFile(`${GIT_INSOMNIA_DIR}/foo.txt`, 'foo');
+      await fs.promises.writeFile(`${GIT_INSOMNIA_DIR}/bar.txt`, 'bar');
 
       const vcs = new GitVCS();
-      await vcs.init(GIT_ROOT_DIR, fs);
+      await vcs.init(GIT_CLONE_DIR, fs);
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
-      await vcs.add(`${GIT_NAMESPACE_DIR}/foo.txt`);
+      await vcs.add(`${GIT_INSOMNIA_DIR}/foo.txt`);
       await vcs.commit('First commit!');
 
       expect((await vcs.log()).length).toBe(1);
 
       await vcs.checkout('new-branch');
       expect((await vcs.log()).length).toBe(1);
-      await vcs.add(`${GIT_NAMESPACE_DIR}/bar.txt`);
+      await vcs.add(`${GIT_INSOMNIA_DIR}/bar.txt`);
       await vcs.commit('Second commit!');
       expect((await vcs.log()).length).toBe(2);
 
@@ -140,28 +139,26 @@ describe.each(['win32', 'posix'])('Git-VCS - %o', type => {
   describe('readObjectFromTree()', () => {
     it('reads an object from tree', async () => {
       const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(`${namespaceDir}`);
-      await fs.promises.mkdir(`${namespaceDir}/dir`);
-      await fs.promises.writeFile(`${namespaceDir}/dir/foo.txt`, 'foo');
+      await fs.promises.mkdir(`${GIT_INSOMNIA_DIR}`);
+      await fs.promises.mkdir(`${GIT_INSOMNIA_DIR}/dir`);
+      await fs.promises.writeFile(`${GIT_INSOMNIA_DIR}/dir/foo.txt`, 'foo');
 
       const vcs = new GitVCS();
-      await vcs.init(GIT_ROOT_DIR, fs);
+      await vcs.init(GIT_CLONE_DIR, fs);
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
-      await vcs.add(`${GIT_NAMESPACE_DIR}/dir/foo.txt`);
+      await vcs.add(`${GIT_INSOMNIA_DIR}/dir/foo.txt`);
       await vcs.commit('First');
 
-      await fs.promises.writeFile(`${GIT_NAMESPACE_DIR}/dir/foo.txt`, 'foo bar');
-      await vcs.add(`${GIT_NAMESPACE_DIR}/dir/foo.txt`);
+      await fs.promises.writeFile(`${GIT_INSOMNIA_DIR}/dir/foo.txt`, 'foo bar');
+      await vcs.add(`${GIT_INSOMNIA_DIR}/dir/foo.txt`);
       await vcs.commit('Second');
 
       const log = await vcs.log();
-      expect(await vcs.readObjFromTree(log[0].tree, `${GIT_NAMESPACE_DIR}/dir/foo.txt`)).toBe(
+      expect(await vcs.readObjFromTree(log[0].tree, `${GIT_INSOMNIA_DIR}/dir/foo.txt`)).toBe(
         'foo bar',
       );
-      expect(await vcs.readObjFromTree(log[1].tree, `${GIT_NAMESPACE_DIR}/dir/foo.txt`)).toBe(
-        'foo',
-      );
+      expect(await vcs.readObjFromTree(log[1].tree, `${GIT_INSOMNIA_DIR}/dir/foo.txt`)).toBe('foo');
 
       // Some extra checks
       expect(await vcs.readObjFromTree(log[1].tree, 'missing')).toBe(null);

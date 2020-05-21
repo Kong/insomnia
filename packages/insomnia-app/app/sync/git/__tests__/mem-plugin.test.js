@@ -1,7 +1,7 @@
 import { assertAsyncError, setupDateMocks } from './util';
 import { MemPlugin } from '../mem-plugin';
 import path from 'path';
-import { GIT_ROOT_DIR } from '../git-vcs';
+import { GIT_CLONE_DIR } from '../git-vcs';
 jest.mock('path');
 
 describe.each(['win32', 'posix'])('Memlugin - %o', type => {
@@ -95,12 +95,12 @@ describe.each(['win32', 'posix'])('Memlugin - %o', type => {
       const p = new MemPlugin();
 
       // Root dir should always exist
-      expect(await p.readdir(GIT_ROOT_DIR)).toEqual([]);
+      expect(await p.readdir(GIT_CLONE_DIR)).toEqual([]);
 
       // Write a file and list it again
       await p.writeFile('/foo.txt', 'Hello World!');
       await p.writeFile('/bar.txt', 'Bar!');
-      expect(await p.readdir(GIT_ROOT_DIR)).toEqual(['bar.txt', 'foo.txt']);
+      expect(await p.readdir(GIT_CLONE_DIR)).toEqual(['bar.txt', 'foo.txt']);
     });
 
     it('errors on file', async () => {
@@ -122,21 +122,21 @@ describe.each(['win32', 'posix'])('Memlugin - %o', type => {
       await p.mkdir('/foo');
       await p.mkdir('/foo/bar');
 
-      expect(await p.readdir(GIT_ROOT_DIR)).toEqual(['foo']);
-      expect(await p.readdir(`${GIT_ROOT_DIR}/foo`)).toEqual(['bar']);
+      expect(await p.readdir(GIT_CLONE_DIR)).toEqual(['foo']);
+      expect(await p.readdir(`${GIT_CLONE_DIR}/foo`)).toEqual(['bar']);
     });
 
     it('creates directory recursively', async () => {
       const p = new MemPlugin();
 
-      await p.mkdir(`${GIT_ROOT_DIR}/foo/bar/baz`, { recursive: true });
-      expect(await p.readdir(`${GIT_ROOT_DIR}/foo/bar/baz`)).toEqual([]);
+      await p.mkdir(`${GIT_CLONE_DIR}/foo/bar/baz`, { recursive: true });
+      expect(await p.readdir(`${GIT_CLONE_DIR}/foo/bar/baz`)).toEqual([]);
     });
 
     it('fails to create if no parent', async () => {
       const p = new MemPlugin();
 
-      await assertAsyncError(p.mkdir(`${GIT_ROOT_DIR}/foo/bar/baz`), 'ENOENT');
+      await assertAsyncError(p.mkdir(`${GIT_CLONE_DIR}/foo/bar/baz`), 'ENOENT');
     });
   });
 
@@ -172,7 +172,7 @@ describe.each(['win32', 'posix'])('Memlugin - %o', type => {
     it('stats root dir', async () => {
       const p = new MemPlugin();
 
-      const stat = await p.stat(GIT_ROOT_DIR);
+      const stat = await p.stat(GIT_CLONE_DIR);
 
       expect(stat).toEqual({
         ctimeMs: 1000000000000,

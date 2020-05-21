@@ -1,10 +1,11 @@
+// @flow
 import YAML from 'yaml';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
 import { assertAsyncError, setupDateMocks } from './util';
 import NeDBPlugin from '../ne-db-plugin';
-import { GIT_NAMESPACE_DIR, GIT_ROOT_DIR } from '../git-vcs';
 import path from 'path';
+import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';
 jest.mock('path');
 
 describe.each(['win32', 'posix'])('NeDBPlugin - %o', type => {
@@ -25,22 +26,23 @@ describe.each(['win32', 'posix'])('NeDBPlugin - %o', type => {
     await models.request.create({ id: 'req_x', isPrivate: true, parentId: 'wrk_1' });
   });
 
-  const namespaceDir = `${GIT_ROOT_DIR}/${GIT_NAMESPACE_DIR}`;
-
   describe('readdir()', () => {
     it('reads model IDs from model type folders', async () => {
       const pNeDB = new NeDBPlugin('wrk_1');
 
-      expect(await pNeDB.readdir(GIT_ROOT_DIR)).toEqual([GIT_NAMESPACE_DIR]);
-      expect(await pNeDB.readdir(namespaceDir)).toEqual([
+      expect(await pNeDB.readdir(GIT_CLONE_DIR)).toEqual([GIT_INSOMNIA_DIR_NAME]);
+      expect(await pNeDB.readdir(GIT_INSOMNIA_DIR)).toEqual([
         'ApiSpec',
         'Environment',
         'Request',
         'RequestGroup',
         'Workspace',
       ]);
-      expect(await pNeDB.readdir(`${namespaceDir}/Request`)).toEqual(['req_1.yml', 'req_2.yml']);
-      expect(await pNeDB.readdir(`${namespaceDir}/Workspace`)).toEqual(['wrk_1.yml']);
+      expect(await pNeDB.readdir(`${GIT_INSOMNIA_DIR}/Request`)).toEqual([
+        'req_1.yml',
+        'req_2.yml',
+      ]);
+      expect(await pNeDB.readdir(`${GIT_INSOMNIA_DIR}/Workspace`)).toEqual(['wrk_1.yml']);
     });
   });
 
@@ -49,14 +51,14 @@ describe.each(['win32', 'posix'])('NeDBPlugin - %o', type => {
       const pNeDB = new NeDBPlugin('wrk_1');
 
       expect(
-        YAML.parse(await pNeDB.readFile(`${namespaceDir}/Workspace/wrk_1.yml`, 'utf8')),
+        YAML.parse(await pNeDB.readFile(`${GIT_INSOMNIA_DIR}/Workspace/wrk_1.yml`, 'utf8')),
       ).toEqual(expect.objectContaining({ _id: 'wrk_1', parentId: null }));
 
-      expect(YAML.parse(await pNeDB.readFile(`${namespaceDir}/Request/req_1.yml`, 'utf8'))).toEqual(
-        expect.objectContaining({ _id: 'req_1', parentId: 'wrk_1' }),
-      );
+      expect(
+        YAML.parse(await pNeDB.readFile(`${GIT_INSOMNIA_DIR}/Request/req_1.yml`, 'utf8')),
+      ).toEqual(expect.objectContaining({ _id: 'req_1', parentId: 'wrk_1' }));
 
-      await assertAsyncError(pNeDB.readFile(`${namespaceDir}/Request/req_x.yml`));
+      await assertAsyncError(pNeDB.readFile(`${GIT_INSOMNIA_DIR}/Request/req_x.yml`));
     });
   });
 
@@ -64,15 +66,17 @@ describe.each(['win32', 'posix'])('NeDBPlugin - %o', type => {
     it('stats a dir', async () => {
       const pNeDB = new NeDBPlugin('wrk_1');
 
-      expect(await pNeDB.stat(GIT_ROOT_DIR)).toEqual(expect.objectContaining({ type: 'dir' }));
-      expect(await pNeDB.stat(`${namespaceDir}`)).toEqual(expect.objectContaining({ type: 'dir' }));
-      expect(await pNeDB.stat(`${namespaceDir}/Workspace/wrk_1.yml`)).toEqual(
-        expect.objectContaining({ type: 'file' }),
-      );
-      expect(await pNeDB.stat(`${namespaceDir}/Request`)).toEqual(
+      expect(await pNeDB.stat(GIT_CLONE_DIR)).toEqual(expect.objectContaining({ type: 'dir' }));
+      expect(await pNeDB.stat(`${GIT_INSOMNIA_DIR}`)).toEqual(
         expect.objectContaining({ type: 'dir' }),
       );
-      expect(await pNeDB.stat(`${namespaceDir}/Request/req_2.yml`)).toEqual(
+      expect(await pNeDB.stat(`${GIT_INSOMNIA_DIR}/Workspace/wrk_1.yml`)).toEqual(
+        expect.objectContaining({ type: 'file' }),
+      );
+      expect(await pNeDB.stat(`${GIT_INSOMNIA_DIR}/Request`)).toEqual(
+        expect.objectContaining({ type: 'dir' }),
+      );
+      expect(await pNeDB.stat(`${GIT_INSOMNIA_DIR}/Request/req_2.yml`)).toEqual(
         expect.objectContaining({ type: 'file' }),
       );
     });
