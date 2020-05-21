@@ -4,7 +4,7 @@ import { MemPlugin } from '../mem-plugin';
 import path from 'path';
 jest.mock('path');
 
-describe.each(['win32', 'posix'])('Git-VCS - %o', type => {
+describe.each(['win32', 'posix'])('Git-VCS using path.%s', type => {
   beforeAll(() => path.__mockPath(type));
   afterAll(() => jest.restoreAllMocks());
   beforeEach(setupDateMocks);

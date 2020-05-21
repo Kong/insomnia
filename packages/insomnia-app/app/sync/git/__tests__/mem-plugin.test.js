@@ -4,7 +4,7 @@ import path from 'path';
 import { GIT_CLONE_DIR } from '../git-vcs';
 jest.mock('path');
 
-describe.each(['win32', 'posix'])('Memlugin - %o', type => {
+describe.each(['win32', 'posix'])('Memlugin using path.%s', type => {
   beforeAll(() => path.__mockPath(type));
   afterAll(() => jest.restoreAllMocks());
   beforeEach(setupDateMocks);
@@ -124,6 +124,14 @@ describe.each(['win32', 'posix'])('Memlugin - %o', type => {
 
       expect(await p.readdir(GIT_CLONE_DIR)).toEqual(['foo']);
       expect(await p.readdir(`${GIT_CLONE_DIR}/foo`)).toEqual(['bar']);
+    });
+
+    it('creates directory non-recursively', async () => {
+      const p = new MemPlugin();
+
+      await p.mkdir(`${GIT_CLONE_DIR}/foo`, { recursive: true });
+      await p.mkdir(`${GIT_CLONE_DIR}/foo/bar`);
+      expect(await p.readdir(`${GIT_CLONE_DIR}/foo/bar`)).toEqual([]);
     });
 
     it('creates directory recursively', async () => {

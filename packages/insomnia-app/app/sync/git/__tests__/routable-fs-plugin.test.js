@@ -4,7 +4,7 @@ import { GIT_CLONE_DIR } from '../git-vcs';
 import path from 'path';
 jest.mock('path');
 
-describe.each(['win32', 'posix'])('routableFSPlugin - %o', type => {
+describe.each(['win32', 'posix'])('routableFSPlugin using path.%s', type => {
   beforeAll(() => path.__mockPath(type));
   afterAll(() => jest.restoreAllMocks());
   it('routes .git and other files to separate places', async () => {
