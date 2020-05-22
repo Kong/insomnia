@@ -132,7 +132,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           await git.clone({
             core,
             dir: GIT_CLONE_DIR,
-            gitDir: GIT_INTERNAL_DIR,
+            gitdir: GIT_INTERNAL_DIR,
             singleBranch: true,
             url,
             ...credentials,
