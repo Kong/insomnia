@@ -279,6 +279,7 @@ export class MemPlugin {
 
     let current = this.__fs;
 
+    // Ignore empty and current directory '.' segments
     const pathSegments = filePath.split(path.sep).filter(s => s !== '' && s !== '.');
     for (const expectedName of pathSegments) {
       const e = (current.children || []).find(c => c.name === expectedName);

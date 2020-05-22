@@ -2,6 +2,7 @@
 import YAML from 'yaml';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
+import * as db from '../../../common/database';
 import { assertAsyncError, setupDateMocks } from './util';
 import NeDBPlugin from '../ne-db-plugin';
 import path from 'path';
@@ -79,6 +80,93 @@ describe.each(['win32', 'posix'])('NeDBPlugin using path.%s', type => {
       expect(await pNeDB.stat(`${GIT_INSOMNIA_DIR}/Request/req_2.yml`)).toEqual(
         expect.objectContaining({ type: 'file' }),
       );
+    });
+  });
+
+  describe('writeFile()', () => {
+    it('should ignore files not in GIT_INSOMNIA_DIR directory', async () => {
+      // Assemble
+      const upsertSpy = jest.spyOn(db, 'upsert');
+      const workspaceId = 'wrk_1';
+      const pNeDB = new NeDBPlugin(workspaceId);
+
+      const env = { _id: 'env_1', type: 'Environment', parentId: workspaceId };
+      const filePath = `anotherDir/${env.type}/${env._id}.yml`;
+
+      // Act
+      await pNeDB.writeFile(filePath, YAML.stringify(env));
+
+      // Assert
+      expect(upsertSpy).not.toBeCalled();
+
+      // Cleanup
+      upsertSpy.mockRestore();
+    });
+
+    it('should write files in GIT_INSOMNIA_DIR directory to db', async () => {
+      // Assemble
+      const workspaceId = 'wrk_1';
+      const pNeDB = new NeDBPlugin(workspaceId);
+      const upsertSpy = jest.spyOn(db, 'upsert');
+
+      const env = { _id: 'env_1', type: 'Environment', parentId: workspaceId };
+      const filePath = `${GIT_INSOMNIA_DIR}/${env.type}/${env._id}.yml`;
+
+      // Act
+      await pNeDB.writeFile(filePath, YAML.stringify(env));
+
+      // Assert
+      expect(upsertSpy).toHaveBeenCalledTimes(1);
+      expect(upsertSpy).toHaveBeenCalledWith(env, true);
+
+      // Cleanup
+      upsertSpy.mockRestore();
+    });
+
+    it('should throw error if id does not match', async () => {
+      // Assemble
+      const workspaceId = 'wrk_1';
+      const pNeDB = new NeDBPlugin(workspaceId);
+
+      const env = { _id: 'env_1', type: 'Environment', parentId: workspaceId };
+      const filePath = `${GIT_INSOMNIA_DIR}/${env.type}/env_2.yml`;
+
+      // Act
+      const promiseResult = pNeDB.writeFile(filePath, YAML.stringify(env));
+
+      // Assert
+      await expect(promiseResult).rejects.toThrowError(
+        `Doc _id does not match file path [env_1 != env_2]`,
+      );
+    });
+
+    it('should throw error if type does not match', async () => {
+      // Assemble
+      const workspaceId = 'wrk_1';
+      const pNeDB = new NeDBPlugin(workspaceId);
+
+      const env = { _id: 'env_1', type: 'Environment', parentId: workspaceId };
+      const filePath = `${GIT_INSOMNIA_DIR}/Request/${env._id}.yml`;
+
+      // Act
+      const promiseResult = pNeDB.writeFile(filePath, YAML.stringify(env));
+
+      // Assert
+      await expect(promiseResult).rejects.toThrowError(
+        `Doc type does not match file path [Environment != Request]`,
+      );
+    });
+  });
+
+  describe('mkdir()', () => {
+    it('should throw error', async () => {
+      const workspaceId = 'wrk_1';
+      const pNeDB = new NeDBPlugin(workspaceId);
+
+      const promiseResult = pNeDB.mkdir('', '');
+
+      // Assert
+      await expect(promiseResult).rejects.toThrowError('NeDBPlugin is not writable');
     });
   });
 });

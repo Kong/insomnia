@@ -15,7 +15,7 @@ export default class NeDBPlugin {
       throw new Error('Cannot use NeDBPlugin without workspace ID');
     }
     this._workspaceId = workspaceId;
-    this._cloneDirRegExp = new RegExp(`^${GIT_CLONE_DIR}`);
+    this._cloneDirRegExp = new RegExp(`^${GIT_CLONE_DIR}/`);
   }
 
   static createPlugin(workspaceId: string) {
@@ -79,11 +79,11 @@ export default class NeDBPlugin {
     const doc = YAML.parse(data.toString());
 
     if (id !== doc._id) {
-      throw new Error(`Doc _id does not match file path ${doc._id} != ${id || 'null'}`);
+      throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);
     }
 
     if (type !== doc.type) {
-      throw new Error(`Doc type does not match file path ${doc.type} != ${type || 'null'}`);
+      throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
     }
 
     await db.upsert(doc, true);
