@@ -54,7 +54,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
     // Check for invalid key names
     if (value) {
-      for (const key of Object.keys(value)) {
+      for (const key of Object.keys(value.object)) {
         if (!key.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
           warning = `"${key}" must only contain letters, numbers, and underscores`;
           break;
