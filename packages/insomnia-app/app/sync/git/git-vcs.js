@@ -2,7 +2,7 @@
 import * as git from 'isomorphic-git';
 import { trackEvent } from '../../common/analytics';
 import { httpPlugin } from './http';
-import path from 'path';
+import { convertToOsSep, convertToPosixSep } from './misc';
 
 export type GitAuthor = {|
   name: string,
@@ -97,7 +97,8 @@ export default class GitVCS {
 
   async listFiles(): Promise<Array<string>> {
     console.log('[git] List files');
-    return git.listFiles({ ...this._baseOpts });
+    const files = await git.listFiles({ ...this._baseOpts });
+    return files.map(convertToOsSep);
   }
 
   async getBranch(): Promise<string> {
@@ -129,24 +130,23 @@ export default class GitVCS {
   }
 
   async status(filepath: string) {
-    const pathSep = path.sep === path.win32.sep ? '\\\\' : path.sep;
-
     return git.status({
       ...this._baseOpts,
-      filepath: filepath.replace(new RegExp(pathSep, 'g'), path.posix.sep),
+      filepath: convertToPosixSep(filepath),
     });
   }
 
   async add(relPath: string): Promise<void> {
-    const pathSep = path.sep === path.win32.sep ? '\\\\' : path.sep;
+    relPath = convertToPosixSep(relPath);
     console.log(`[git] Add ${relPath}`);
     return git.add({
       ...this._baseOpts,
-      filepath: relPath.replace(new RegExp(pathSep, 'g'), path.posix.sep),
+      filepath: relPath,
     });
   }
 
   async remove(relPath: string): Promise<void> {
+    relPath = convertToPosixSep(relPath);
     console.log(`[git] Remove relPath=${relPath}`);
     return git.remove({ ...this._baseOpts, filepath: relPath });
   }
@@ -321,7 +321,7 @@ export default class GitVCS {
       const obj = await git.readObject({
         ...this._baseOpts,
         oid: treeOid,
-        filepath: objPath,
+        filepath: convertToPosixSep(objPath),
         encoding: 'utf8',
       });
 

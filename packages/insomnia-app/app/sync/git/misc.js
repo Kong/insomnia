@@ -1,9 +1,19 @@
 // @flow
 import path from 'path';
 
-const pathSep = path.sep === path.win32.sep ? '\\\\' : path.posix.sep;
-const regExp = new RegExp(pathSep, 'g');
+const win32SepRegex = /\\\\/g;
+const posixSepRegex = /\//g;
 
-export function convertToPosix(filePath: string) {
-  return filePath.replace(regExp, path.posix.sep);
+export function convertToPosixSep(filePath: string) {
+  return filePath.replace(win32SepRegex, path.posix.sep);
+}
+
+export function convertToOsSep(filePath: string) {
+  // is windows, so convert posix sep to windows sep
+  if (path.sep === path.win32.sep) {
+    return filePath.replace(posixSepRegex, path.win32.sep);
+  }
+
+  // is posix, so convert win32 sep to posix sep
+  return filePath.replace(win32SepRegex, path.posix.sep);
 }
