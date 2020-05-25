@@ -203,7 +203,8 @@ export default class NeDBPlugin {
   _parsePath(filePath: string): { root: string | null, type: string | null, id: string | null } {
     filePath = path.normalize(filePath);
 
-    // FilePath will start with the clone directory. We want to remove the clone dir.
+    // FilePath will start with the clone directory. We want to remove the clone dir, so that the
+    // segments can be extracted correctly.
     filePath = filePath.replace(this._cloneDirRegExp, '');
 
     const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '');
