@@ -145,7 +145,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     // with the paths on the FS. This is required to cover the case where a
     // file can be deleted from FS or from Git.
     const gitPaths = await vcs.listFiles();
-    const uniquePaths = new Set([...fsPaths.map(path.normalize), ...gitPaths.map(path.normalize)]);
+    const uniquePaths = new Set([...fsPaths, ...gitPaths]);
 
     return Array.from(uniquePaths).sort();
   }
