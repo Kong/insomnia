@@ -170,10 +170,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
 
     this.statusNames = {};
     for (const doc of docs) {
-      this.statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.json`)] =
-        (doc: any).name || '';
-      this.statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.yml`)] =
-        (doc: any).name || '';
+      const name = (doc.type === models.apiSpec.type && doc.fileName) || doc.name || '';
+      this.statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.json`)] = name;
+      this.statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.yml`)] = name;
     }
 
     // Create status items
