@@ -129,12 +129,21 @@ export default class GitVCS {
   }
 
   async status(filepath: string) {
-    return git.status({ ...this._baseOpts, filepath });
+    const pathSep = path.sep === path.win32.sep ? '\\\\' : path.sep;
+
+    return git.status({
+      ...this._baseOpts,
+      filepath: filepath.replace(new RegExp(pathSep, 'g'), path.posix.sep),
+    });
   }
 
   async add(relPath: string): Promise<void> {
+    const pathSep = path.sep === path.win32.sep ? '\\\\' : path.sep;
     console.log(`[git] Add ${relPath}`);
-    return git.add({ ...this._baseOpts, filepath: relPath });
+    return git.add({
+      ...this._baseOpts,
+      filepath: relPath.replace(new RegExp(pathSep, 'g'), path.posix.sep),
+    });
   }
 
   async remove(relPath: string): Promise<void> {
