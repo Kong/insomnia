@@ -1,7 +1,7 @@
 // @flow
 import path from 'path';
 
-const win32SepRegex = /\\\\/g;
+const win32SepRegex = /\\/g;
 const posixSepRegex = /\//g;
 
 export function convertToPosixSep(filePath: string) {
