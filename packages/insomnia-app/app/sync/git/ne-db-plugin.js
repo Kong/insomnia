@@ -207,7 +207,8 @@ export default class NeDBPlugin {
     // segments can be extracted correctly.
     filePath = filePath.replace(this._cloneDirRegExp, '');
 
-    const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '');
+    // Ignore empty and current directory '.' segments
+    const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '' && s !== '.');
 
     const id = typeof idRaw === 'string' ? idRaw.replace(/\.(json|yml)$/, '') : idRaw;
 
