@@ -9,7 +9,6 @@ import {
 
 export class Curl {
   constructor() {
-    this._handle = null;
     this._options = [];
     this._features = [];
     this._handle = new _Curl();
@@ -75,7 +74,8 @@ export class Curl {
 
 Curl.option = _Curl.option;
 Curl.info = _Curl.info;
-// Those were removed from node-libcurl >=v2
+
+// These were removed from node-libcurl >= v2
 Curl.auth = CurlAuth;
 Curl.code = CurlCode;
 Curl.feature = CurlFeature;

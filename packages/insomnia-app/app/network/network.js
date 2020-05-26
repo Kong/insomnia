@@ -121,7 +121,11 @@ export async function _actuallySend(
     const timeline: Array<ResponseTimelineEntry> = [];
 
     function addTimeline(name, value) {
-      timeline.push({ name, value, timestamp: Date.now() });
+      timeline.push({
+        name,
+        value,
+        timestamp: Date.now(),
+      });
     }
 
     function addTimelineText(value) {
@@ -280,9 +284,8 @@ export async function _actuallySend(
       // Setup debug handler
       setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, contentBuffer: Buffer) => {
         const content = contentBuffer.toString('utf8');
-        const rawName =
-          Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType) || '';
-        const name = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
+        const rawName = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
+        const name = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName || '';
 
         if (infoType === Curl.info.debug.SslDataIn || infoType === Curl.info.debug.SslDataOut) {
           return 0;
@@ -290,18 +293,18 @@ export async function _actuallySend(
 
         // Ignore the possibly large data messages
         if (infoType === Curl.info.debug.DataOut) {
-          if (content.length === 0) {
+          if (contentBuffer.length === 0) {
             // Sometimes this happens, but I'm not sure why. Just ignore it.
-          } else if (content.length / 1024 < settings.maxTimelineDataSizeKB) {
+          } else if (contentBuffer.length / 1024 < settings.maxTimelineDataSizeKB) {
             addTimeline(name, content);
           } else {
-            addTimeline(name, `(${describeByteSize(content.length)} hidden)`);
+            addTimeline(name, `(${describeByteSize(contentBuffer.length)} hidden)`);
           }
           return 0;
         }
 
         if (infoType === Curl.info.debug.DataIn) {
-          addTimelineText(`Received ${describeByteSize(content.length)} chunk`);
+          addTimelineText(`Received ${describeByteSize(contentBuffer.length)} chunk`);
           return 0;
         }
 
@@ -556,7 +559,10 @@ export async function _actuallySend(
 
       if (!noBody) {
         // Don't chunk uploads
-        headers.push({ name: 'Expect', value: DISABLE_HEADER_VALUE });
+        headers.push({
+          name: 'Expect',
+          value: DISABLE_HEADER_VALUE,
+        });
         headers.push({
           name: 'Transfer-Encoding',
           value: DISABLE_HEADER_VALUE,
@@ -627,12 +633,18 @@ export async function _actuallySend(
 
       // Send a default Accept headers of anything
       if (!hasAcceptHeader(headers)) {
-        headers.push({ name: 'Accept', value: '*/*' }); // Default to anything
+        headers.push({
+          name: 'Accept',
+          value: '*/*',
+        }); // Default to anything
       }
 
       // Don't auto-send Accept-Encoding header
       if (!hasAcceptEncodingHeader(headers)) {
-        headers.push({ name: 'Accept-Encoding', value: DISABLE_HEADER_VALUE });
+        headers.push({
+          name: 'Accept-Encoding',
+          value: DISABLE_HEADER_VALUE,
+        });
       }
 
       // Set User-Agent if it't not already in headers
@@ -642,7 +654,10 @@ export async function _actuallySend(
 
       // Prevent curl from adding default content-type header
       if (!hasContentTypeHeader(headers)) {
-        headers.push({ name: 'content-type', value: DISABLE_HEADER_VALUE });
+        headers.push({
+          name: 'content-type',
+          value: DISABLE_HEADER_VALUE,
+        });
       }
 
       // NOTE: This is last because headers might be modified multiple times
@@ -1008,7 +1023,10 @@ export function _parseHeaders(
       };
     } else {
       const [name, value] = line.split(/:\s(.+)/);
-      const header: ResponseHeader = { name, value: value || '' };
+      const header: ResponseHeader = {
+        name,
+        value: value || '',
+      };
       currentResult.headers.push(header);
     }
   }
@@ -1051,7 +1069,10 @@ export function _getAwsAuthHeaders(
 
   return Object.keys(signature.headers)
     .filter(name => name !== 'content-type') // Don't add this because we already have it
-    .map(name => ({ name, value: signature.headers[name] }));
+    .map(name => ({
+      name,
+      value: signature.headers[name],
+    }));
 }
 
 function storeTimeline(timeline: Array<ResponseTimelineEntry>): Promise<string> {
