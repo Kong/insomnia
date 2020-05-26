@@ -1,5 +1,4 @@
 // @flow
-
 import { appConfig } from '../../config';
 import * as electron from 'electron';
 import path from 'path';
@@ -97,10 +96,6 @@ export function isInsomnia(activity: GlobalActivity): boolean {
 
 export function getClientString() {
   return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
-}
-
-export function getDocumentationUrl(slug: string): string {
-  return `https://support.insomnia.rest/${slug}`;
 }
 
 export function changelogUrl(): string {

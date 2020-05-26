@@ -21,7 +21,7 @@ import DocumentCardDropdown from './dropdowns/document-card-dropdown';
 import KeydownBinder from './keydown-binder';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
-import { showAlert, showModal, showPrompt } from './modals';
+import { showAlert, showError, showModal, showPrompt } from './modals';
 import * as models from '../../models';
 import { trackEvent } from '../../common/analytics';
 import YAML from 'yaml';
@@ -124,15 +124,19 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
         // Pull settings returned from dialog and shallow-clone the repo
         const { credentials, uri: url } = repoSettingsPatch;
-        const token = credentials ? credentials.token : null;
-        await git.clone({
-          core,
-          dir: '/',
-          singleBranch: true,
-          url,
-          token,
-          depth: 1,
-        });
+        try {
+          await git.clone({
+            core,
+            dir: '/',
+            singleBranch: true,
+            url,
+            ...credentials,
+            depth: 1,
+          });
+        } catch (err) {
+          showError({ title: 'Error Cloning Repository', message: err.message, error: err });
+          return false;
+        }
 
         const f = fsPlugin.promises;
         const ensureDir = async (base: string, name: string): Promise<boolean> => {

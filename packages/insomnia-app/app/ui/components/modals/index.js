@@ -1,7 +1,9 @@
+// @flow
 import PromptModal from './prompt-modal';
 import AlertModal from './alert-modal';
 import ErrorModal from './error-modal';
 import { trackEvent } from '../../../common/analytics';
+import type { ErrorModalOptions } from './error-modal';
 
 const modals = {};
 
@@ -21,7 +23,7 @@ export function showAlert(config) {
   return showModal(AlertModal, config);
 }
 
-export function showError(config) {
+export function showError(config: ErrorModalOptions) {
   try {
     return showModal(ErrorModal, config);
   } catch (err) {

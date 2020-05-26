@@ -2,22 +2,12 @@
 import type { BaseModel } from './index';
 
 import * as db from '../common/database';
-
-type CredentialsPassword = {
-  username: string,
-  password: string,
-};
-
-type CredentialsToken = {
-  token: string,
-};
-
-type GitCredentials = null | CredentialsPassword | CredentialsToken;
+import type { GitCredentials } from '../sync/git/git-vcs';
 
 type BaseGitRepository = {
   needsFullClone: boolean,
   uri: string,
-  credentials: GitCredentials,
+  credentials: GitCredentials | null,
   author: {
     name: string,
     email: string,
@@ -48,11 +38,11 @@ export function migrate<T>(doc: T): T {
   return doc;
 }
 
-export function create(patch: Object = {}): Promise<GitRepository> {
+export function create(patch: $Shape<GitRepository> = {}): Promise<GitRepository> {
   return db.docCreate(type, patch);
 }
 
-export function update(repo: GitRepository, patch: Object): Promise<GitRepository> {
+export function update(repo: GitRepository, patch: $Shape<GitRepository>): Promise<GitRepository> {
   return db.docUpdate(repo, patch);
 }
 
