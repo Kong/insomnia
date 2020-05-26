@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import * as fontScanner from 'font-scanner';
+import * as fontScanner from 'font-manager';
 import * as electron from 'electron';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
@@ -47,20 +47,23 @@ class General extends React.PureComponent<Props, State> {
     };
   }
 
-  async componentDidMount() {
-    const allFonts = await fontScanner.getAvailableFonts();
+  componentDidMount() {
+    fontScanner.getAvailableFonts(allFonts => {
+      // Find regular fonts
+      const fonts = allFonts
+        .filter(i => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)
+        .sort((a, b) => (a.family > b.family ? 1 : -1));
 
-    // Find regular fonts
-    const fonts = allFonts
-      .filter(i => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)
-      .sort((a, b) => (a.family > b.family ? 1 : -1));
+      // Find monospaced fonts
+      // NOTE: Also include some others:
+      //  - https://github.com/Kong/insomnia/issues/1835
+      const fontsMono = fonts.filter(i => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX));
 
-    // Find monospaced fonts
-    // NOTE: Also include some others:
-    //  - https://github.com/Kong/insomnia/issues/1835
-    const fontsMono = fonts.filter(i => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX));
-
-    this.setState({ fonts, fontsMono });
+      this.setState({
+        fonts,
+        fontsMono,
+      });
+    });
   }
 
   async _handleUpdateSetting(e: SyntheticEvent<HTMLInputElement>): Promise<Settings> {
@@ -155,7 +158,10 @@ class General extends React.PureComponent<Props, State> {
   }
 
   renderNumberSetting(label: string, name: string, help: string, props: Object) {
-    return this.renderTextSetting(label, name, help, { ...props, type: 'number' });
+    return this.renderTextSetting(label, name, help, {
+      ...props,
+      type: 'number',
+    });
   }
 
   render() {
@@ -352,7 +358,10 @@ class General extends React.PureComponent<Props, State> {
           HTTP Network Proxy
           <HelpTooltip
             className="space-left txt-md"
-            style={{ maxWidth: '20rem', lineWrap: 'word' }}>
+            style={{
+              maxWidth: '20rem',
+              lineWrap: 'word',
+            }}>
             Enable global network proxy. Supports authentication via Basic Auth, digest, or NTLM
           </HelpTooltip>
         </h2>
