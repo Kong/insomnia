@@ -2,7 +2,7 @@
 import * as git from 'isomorphic-git';
 import { trackEvent } from '../../common/analytics';
 import { httpPlugin } from './http';
-import { convertToOsSep, convertToPosixSep } from './misc';
+import { convertToOsSep, convertToPosixSep } from './path-sep';
 import path from 'path';
 
 export type GitAuthor = {|
