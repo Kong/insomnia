@@ -30,8 +30,6 @@ cache:
     - packages/insomnia-app/build/node_modules
 
 script:
-  - node --version
-  - npm --version
   - npm run bootstrap
   - npm test
   # Setup branch because Travis doesn't provide a good way to get it

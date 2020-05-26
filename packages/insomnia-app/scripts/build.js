@@ -75,7 +75,6 @@ module.exports.start = async function(forcedVersion = null) {
   await copyFiles(`../app/icons/${appConfig().appId}`, '../build/');
 
   // Generate necessary files needed by `electron-builder`
-  await generateNpmRc('../build/.npmrc');
   await generatePackageJson('../package.json', '../build/package.json', forcedVersion);
 
   // Install Node modules
@@ -240,26 +239,6 @@ async function install(relDir) {
       resolve();
     });
   });
-}
-
-/**
- * Generates a .npmrc file that tells NPM to build native addons targeting
- * the Electron version being used.
- *
- * @param relOutPath - Relative path to output .npmrc to
- */
-function generateNpmRc(relOutPath) {
-  const outPath = path.resolve(__dirname, relOutPath);
-  const sanitizedElectronVersion = packageJson.devDependencies.electron.replace(/^[^~]/, '');
-
-  const npmrc = [
-    'runtime = electron',
-    `target = ${sanitizedElectronVersion}`,
-    `target_arch = ${process.arch}`,
-    'dist_url = https://atom.io/download/atom-shell',
-  ].join('\n');
-
-  fs.writeFileSync(outPath, npmrc);
 }
 
 function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
