@@ -19,7 +19,7 @@
     "build": "node ./scripts/build.js",
     "package": "node ./scripts/package.js",
     "release": "node ./scripts/release.js",
-    "bootstrap": "rimraf ./**/node_modules/fsevents && rimraf node_modules/graphql-language-service-interface/dist/*.flow && electron-rebuild -f -w node-libcurl"
+    "bootstrap": "rimraf ./**/node_modules/fsevents && rimraf node_modules/graphql-language-service-interface/dist/*.flow"
   },
   "dev": {
     "dev-server-port": 3334
@@ -180,11 +180,10 @@
     "concurrently": "^3.5.0",
     "cross-env": "^2.0.0",
     "css-loader": "^2.1.1",
-    "electron": "^3.0.4",
+    "electron": "^3.1.13",
     "electron-builder": "^22.5.1",
     "electron-builder-squirrel-windows": "^22.5.1",
     "electron-notarize": "^0.3.0",
-    "electron-rebuild": "^1.10.1",
     "fast-glob": "^3.1.0",
     "file-loader": "^3.0.1",
     "less": "^3.8.1",
