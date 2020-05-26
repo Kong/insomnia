@@ -9,68 +9,72 @@ describe.each(['win32', 'posix'])('Memlugin using path.%s', type => {
   afterAll(() => jest.restoreAllMocks());
   beforeEach(setupDateMocks);
 
+  const fooTxt = 'foo.txt';
+  const barTxt = 'bar.txt';
+
   describe('readfile()', () => {
     it('fails to read', async () => {
       const p = new MemPlugin();
-      await assertAsyncError(p.readFile('/foo.txt'), 'ENOENT');
+      await assertAsyncError(p.readFile(fooTxt), 'ENOENT');
     });
 
     it('reads a file', async () => {
       const p = new MemPlugin();
-      await p.writeFile('/foo.txt', 'Hello World!');
-      expect((await p.readFile('/foo.txt')).toString()).toBe('Hello World!');
+      await p.writeFile(fooTxt, 'Hello World!');
+      expect((await p.readFile(fooTxt)).toString()).toBe('Hello World!');
     });
   });
 
   describe('writeFile()', () => {
     it('fails to write over directory', async () => {
       const p = new MemPlugin();
+      const dirName = 'foo';
 
-      await p.mkdir('/foo');
-      await assertAsyncError(p.writeFile('/foo', 'Hello World 2!'), 'EISDIR');
+      await p.mkdir(dirName);
+      await assertAsyncError(p.writeFile(dirName, 'Hello World 2!'), 'EISDIR');
     });
 
     it('overwrites file', async () => {
       const p = new MemPlugin();
 
-      await p.writeFile('/foo.txt', 'Hello World!');
-      await p.writeFile('/foo.txt', 'Hello World 2!');
-      expect((await p.readFile('/foo.txt')).toString()).toBe('Hello World 2!');
+      await p.writeFile(fooTxt, 'Hello World!');
+      await p.writeFile(fooTxt, 'Hello World 2!');
+      expect((await p.readFile(fooTxt)).toString()).toBe('Hello World 2!');
     });
 
     it('flag "a" file', async () => {
       const p = new MemPlugin();
 
-      await p.writeFile('/foo.txt', 'Hello World!', { flag: 'a' });
-      await p.writeFile('/foo.txt', 'xxx', { flag: 'a' });
-      expect((await p.readFile('/foo.txt')).toString()).toBe('Hello World!xxx');
+      await p.writeFile(fooTxt, 'Hello World!', { flag: 'a' });
+      await p.writeFile(fooTxt, 'xxx', { flag: 'a' });
+      expect((await p.readFile(fooTxt)).toString()).toBe('Hello World!xxx');
     });
 
     it('flags "ax" and "wx" fail if path exists', async () => {
       const p = new MemPlugin();
 
-      await p.writeFile('/foo.txt', 'Hello World!');
-      await assertAsyncError(p.writeFile('/foo.txt', 'aaa', { flag: 'ax' }), 'EEXIST');
-      await assertAsyncError(p.writeFile('/foo.txt', 'aaa', { flag: 'wx' }), 'EEXIST');
+      await p.writeFile(fooTxt, 'Hello World!');
+      await assertAsyncError(p.writeFile(fooTxt, 'aaa', { flag: 'ax' }), 'EEXIST');
+      await assertAsyncError(p.writeFile(fooTxt, 'aaa', { flag: 'wx' }), 'EEXIST');
     });
 
     it('fails if flag "r"', async () => {
       const p = new MemPlugin();
-      await assertAsyncError(p.writeFile('/foo.txt', 'aaa', { flag: 'r' }), 'EBADF');
+      await assertAsyncError(p.writeFile(fooTxt, 'aaa', { flag: 'r' }), 'EBADF');
     });
 
     it('fails if dir missing', async () => {
       const p = new MemPlugin();
 
-      await assertAsyncError(p.writeFile('/foo.txt', 'aaa', { flag: 'r' }), 'EBADF');
+      await assertAsyncError(p.writeFile(fooTxt, 'aaa', { flag: 'r' }), 'EBADF');
     });
 
     it('works with flags', async () => {
       const p = new MemPlugin();
 
-      await p.writeFile('/foo.txt', 'Hello World!', { flag: 'a' });
-      await p.writeFile('/foo.txt', 'xxx', { flag: 'a' });
-      expect((await p.readFile('/foo.txt')).toString()).toBe('Hello World!xxx');
+      await p.writeFile(fooTxt, 'Hello World!', { flag: 'a' });
+      await p.writeFile(fooTxt, 'xxx', { flag: 'a' });
+      expect((await p.readFile(fooTxt)).toString()).toBe('Hello World!xxx');
     });
   });
 
@@ -78,15 +82,15 @@ describe.each(['win32', 'posix'])('Memlugin using path.%s', type => {
     it('unlinks file', async () => {
       const p = new MemPlugin();
 
-      await p.writeFile('/foo.txt', 'xxx');
-      await p.unlink('/foo.txt');
-      await assertAsyncError(p.readFile('/foo.txt'), 'ENOENT');
+      await p.writeFile(fooTxt, 'xxx');
+      await p.unlink(fooTxt);
+      await assertAsyncError(p.readFile(fooTxt), 'ENOENT');
     });
 
     it('fails to unlinks missing file', async () => {
       const p = new MemPlugin();
 
-      await assertAsyncError(p.unlink('/not/exist.txt'), 'ENOENT');
+      await assertAsyncError(p.unlink(path.join('not', 'exist.txt')), 'ENOENT');
     });
   });
 
@@ -98,81 +102,90 @@ describe.each(['win32', 'posix'])('Memlugin using path.%s', type => {
       expect(await p.readdir(GIT_CLONE_DIR)).toEqual([]);
 
       // Write a file and list it again
-      await p.writeFile('/foo.txt', 'Hello World!');
-      await p.writeFile('/bar.txt', 'Bar!');
+      await p.writeFile(fooTxt, 'Hello World!');
+      await p.writeFile(barTxt, 'Bar!');
       expect(await p.readdir(GIT_CLONE_DIR)).toEqual(['bar.txt', 'foo.txt']);
     });
 
     it('errors on file', async () => {
       const p = new MemPlugin();
-      await p.writeFile('/foo.txt', 'Bar!');
-      await assertAsyncError(p.readdir('/foo.txt'), 'ENOTDIR');
+      await p.writeFile(fooTxt, 'Bar!');
+      await assertAsyncError(p.readdir(fooTxt), 'ENOTDIR');
     });
 
     it('errors on missing directory', async () => {
       const p = new MemPlugin();
-      await assertAsyncError(p.readdir('/invalid'), 'ENOENT');
+      await assertAsyncError(p.readdir(path.join('/', 'invalid')), 'ENOENT');
     });
   });
 
   describe('mkdir()', () => {
+    const fooDir = 'foo';
+    const fooBarDir = path.join(fooDir, 'bar');
+    const cloneFooDir = path.join(GIT_CLONE_DIR, 'foo');
+    const cloneFooBarDir = path.join(GIT_CLONE_DIR, 'foo', 'bar');
+    const cloneFooBarBazDir = path.join(GIT_CLONE_DIR, 'foo', 'bar', 'baz');
+
     it('creates directory', async () => {
       const p = new MemPlugin();
 
-      await p.mkdir('/foo');
-      await p.mkdir('/foo/bar');
+      await p.mkdir(fooDir);
+      await p.mkdir(fooBarDir);
 
       expect(await p.readdir(GIT_CLONE_DIR)).toEqual(['foo']);
-      expect(await p.readdir(`${GIT_CLONE_DIR}/foo`)).toEqual(['bar']);
+      expect(await p.readdir(cloneFooDir)).toEqual(['bar']);
     });
 
     it('creates directory non-recursively', async () => {
       const p = new MemPlugin();
 
-      await p.mkdir(`${GIT_CLONE_DIR}/foo`, { recursive: true });
-      await p.mkdir(`${GIT_CLONE_DIR}/foo/bar`);
-      expect(await p.readdir(`${GIT_CLONE_DIR}/foo/bar`)).toEqual([]);
+      await p.mkdir(cloneFooDir, { recursive: true });
+      await p.mkdir(cloneFooBarDir);
+      expect(await p.readdir(cloneFooBarDir)).toEqual([]);
     });
 
     it('creates directory recursively', async () => {
       const p = new MemPlugin();
 
-      await p.mkdir(`${GIT_CLONE_DIR}/foo/bar/baz`, { recursive: true });
-      expect(await p.readdir(`${GIT_CLONE_DIR}/foo/bar/baz`)).toEqual([]);
+      await p.mkdir(cloneFooBarBazDir, { recursive: true });
+      expect(await p.readdir(cloneFooBarBazDir)).toEqual([]);
     });
 
     it('fails to create if no parent', async () => {
       const p = new MemPlugin();
 
-      await assertAsyncError(p.mkdir(`${GIT_CLONE_DIR}/foo/bar/baz`), 'ENOENT');
+      await assertAsyncError(p.mkdir(cloneFooBarBazDir), 'ENOENT');
     });
   });
 
   describe('rmdir()', () => {
+    const abDir = path.join('a', 'b');
+    const abcDir = path.join('a', 'b', 'c');
+
     it('removes a dir', async () => {
       const p = new MemPlugin();
 
-      await p.mkdir('/a/b/c', { recursive: true });
-      expect(await p.readdir('/a/b')).toEqual(['c']);
-      await p.rmdir('/a/b/c');
-      expect(await p.readdir('/a/b')).toEqual([]);
+      await p.mkdir(abcDir, { recursive: true });
+      expect(await p.readdir(abDir)).toEqual(['c']);
+      await p.rmdir(abcDir);
+      expect(await p.readdir(abDir)).toEqual([]);
     });
 
     it('fails on non-empty dir', async () => {
       const p = new MemPlugin();
 
-      await p.mkdir('/a/b/c', { recursive: true });
-      await p.writeFile('/a/b/c/foo.txt', 'xxx');
+      await p.mkdir(abcDir, { recursive: true });
+      await p.writeFile(path.join(abcDir, 'foo.txt'), 'xxx');
 
-      await assertAsyncError(p.rmdir('/a/b'), 'ENOTEMPTY');
-      await assertAsyncError(p.rmdir('/a/b/c'), 'ENOTEMPTY');
+      await assertAsyncError(p.rmdir(abDir), 'ENOTEMPTY');
+      await assertAsyncError(p.rmdir(abcDir), 'ENOTEMPTY');
     });
 
     it('fails on file', async () => {
       const p = new MemPlugin();
 
-      await p.writeFile('/foo.txt', 'xxx');
-      await assertAsyncError(p.rmdir('/foo.txt'), 'ENOTDIR');
+      await p.writeFile(fooTxt, 'xxx');
+      await assertAsyncError(p.rmdir(fooTxt), 'ENOTDIR');
     });
   });
 
@@ -202,8 +215,8 @@ describe.each(['win32', 'posix'])('Memlugin using path.%s', type => {
     it('stats file', async () => {
       const p = new MemPlugin();
 
-      await p.writeFile('/foo.txt', 'xxx');
-      const stat = await p.stat('/foo.txt');
+      await p.writeFile(fooTxt, 'xxx');
+      const stat = await p.stat(fooTxt);
 
       expect(stat).toEqual({
         ctimeMs: 1000000000001,
@@ -224,7 +237,7 @@ describe.each(['win32', 'posix'])('Memlugin using path.%s', type => {
 
     it('fails to stat missing', async () => {
       const p = new MemPlugin();
-      await assertAsyncError(p.stat('/bar.txt'), 'ENOENT');
+      await assertAsyncError(p.stat(barTxt), 'ENOENT');
     });
   });
 });
