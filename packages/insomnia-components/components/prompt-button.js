@@ -1,5 +1,6 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
+import styled from 'styled-components';
 import autobind from 'autobind-decorator';
 import Button from './button';
 
@@ -7,9 +8,29 @@ const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
 
+type Props = {
+  onClick: Function,
+  addIcon: boolean,
+  children: React.Element<*>,
+  disabled: boolean,
+  confirmMessage: string,
+  doneMessage: string,
+  value: any,
+  tabIndex: number,
+  _triggerTimeout: Function,
+};
+
+type State = {
+  state: string,
+};
+
+const StyledPromptMessage: React.ComponentType<{}> = styled.span`
+  color: var(--color-warning);
+`;
+
 @autobind
-class PromptButton extends PureComponent {
-  constructor(props) {
+class PromptButton extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props);
 
     this.state = {
@@ -90,16 +111,16 @@ class PromptButton extends PureComponent {
     let innerMsg;
     if (state === STATE_ASK && addIcon) {
       innerMsg = (
-        <span className="warning" title="Click again to confirm">
+        <StyledPromptMessage className="warning" title="Click again to confirm">
           <i className="fa fa-exclamation-circle" />
           {finalConfirmMessage ? <span className="space-left">{finalConfirmMessage}</span> : ''}
-        </span>
+        </StyledPromptMessage>
       );
     } else if (state === STATE_ASK) {
       innerMsg = (
-        <span className="warning" title="Click again to confirm">
+        <StyledPromptMessage className="warning" title="Click again to confirm">
           {finalConfirmMessage}
-        </span>
+        </StyledPromptMessage>
       );
     } else if (state === STATE_DONE) {
       innerMsg = finalDoneMessage;
@@ -114,16 +135,5 @@ class PromptButton extends PureComponent {
     );
   }
 }
-
-PromptButton.propTypes = {
-  onClick: PropTypes.func,
-  addIcon: PropTypes.bool,
-  children: PropTypes.node,
-  disabled: PropTypes.bool,
-  confirmMessage: PropTypes.string,
-  doneMessage: PropTypes.string,
-  value: PropTypes.any,
-  tabIndex: PropTypes.number,
-};
 
 export default PromptButton;
