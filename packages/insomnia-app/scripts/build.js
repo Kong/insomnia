@@ -74,7 +74,8 @@ module.exports.start = async function(forcedVersion = null) {
   await copyFiles('../app/static', '../build/static');
   await copyFiles(`../app/icons/${appConfig().appId}`, '../build/');
 
-  // Generate package.json
+  // Generate necessary files needed by `electron-builder`
+  await generateNpmRc('../build/.npmrc');
   await generatePackageJson('../package.json', '../build/package.json', forcedVersion);
 
   // Install Node modules
@@ -136,43 +137,49 @@ async function buildLicenseList(relSource, relDest) {
     const dest = path.resolve(__dirname, relDest);
     mkdirp.sync(path.dirname(dest));
 
-    licenseChecker.init({ start: source, production: true }, (err, packages) => {
-      if (err) {
-        return reject(err);
-      }
+    licenseChecker.init(
+      {
+        start: source,
+        production: true,
+      },
+      (err, packages) => {
+        if (err) {
+          return reject(err);
+        }
 
-      const out = [];
-      for (const pkgName of Object.keys(packages)) {
-        const { licenses, repository, publisher, email, licenseFile: lf } = packages[pkgName];
-        const licenseFile = (lf || '').includes('README') ? null : lf;
-        const txt = licenseFile ? fs.readFileSync(licenseFile) : '[no license file]';
-        const body = [
+        const out = [];
+        for (const pkgName of Object.keys(packages)) {
+          const { licenses, repository, publisher, email, licenseFile: lf } = packages[pkgName];
+          const licenseFile = (lf || '').includes('README') ? null : lf;
+          const txt = licenseFile ? fs.readFileSync(licenseFile) : '[no license file]';
+          const body = [
+            '-------------------------------------------------------------------------',
+            '',
+            `PACKAGE: ${pkgName}`,
+            licenses ? `LICENSES: ${licenses}` : null,
+            repository ? `REPOSITORY: ${repository}` : null,
+            publisher ? `PUBLISHER: ${publisher}` : null,
+            email ? `EMAIL: ${email}` : null,
+            '\n' + txt,
+          ]
+            .filter(v => v !== null)
+            .join('\n');
+
+          out.push(`${body}\n\n`);
+        }
+
+        const header = [
+          'This application bundles the following third-party packages in ',
+          'accordance with the following licenses:',
           '-------------------------------------------------------------------------',
           '',
-          `PACKAGE: ${pkgName}`,
-          licenses ? `LICENSES: ${licenses}` : null,
-          repository ? `REPOSITORY: ${repository}` : null,
-          publisher ? `PUBLISHER: ${publisher}` : null,
-          email ? `EMAIL: ${email}` : null,
-          '\n' + txt,
-        ]
-          .filter(v => v !== null)
-          .join('\n');
+          '',
+        ].join('\n');
 
-        out.push(`${body}\n\n`);
-      }
-
-      const header = [
-        'This application bundles the following third-party packages in ',
-        'accordance with the following licenses:',
-        '-------------------------------------------------------------------------',
-        '',
-        '',
-      ].join('\n');
-
-      fs.writeFileSync(dest, header + out.join('\n\n'));
-      resolve();
-    });
+        fs.writeFileSync(dest, header + out.join('\n\n'));
+        resolve();
+      },
+    );
   });
 }
 
@@ -233,6 +240,26 @@ async function install(relDir) {
       resolve();
     });
   });
+}
+
+/**
+ * Generates a .npmrc file that tells NPM to build native addons targeting
+ * the Electron version being used.
+ *
+ * @param relOutPath - Relative path to output .npmrc to
+ */
+function generateNpmRc(relOutPath) {
+  const outPath = path.resolve(__dirname, relOutPath);
+  const sanitizedElectronVersion = packageJson.devDependencies.electron.replace(/^[^~]/, '');
+
+  const npmrc = [
+    'runtime = electron',
+    `target = ${sanitizedElectronVersion}`,
+    `target_arch = ${process.arch}`,
+    'dist_url = https://atom.io/download/atom-shell',
+  ].join('\n');
+
+  fs.writeFileSync(outPath, npmrc);
 }
 
 function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
