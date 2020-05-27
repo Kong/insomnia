@@ -18,7 +18,7 @@
     "test": "jest --silent"
   },
   "dependencies": {
-    "insomnia-cookies": "^0.0.5"
+    "insomnia-cookies": "^2.1.4"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
 }
