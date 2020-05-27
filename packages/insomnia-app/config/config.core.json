@@ -3,7 +3,7 @@
   "name": "insomnia",
   "executableName": "insomnia",
   "appId": "com.insomnia.app",
-  "productName": "Insomnia",
+  "productName": "Insomnia Core",
   "binaryPrefix": "Insomnia.Core",
   "longName": "Insomnia",
   "synopsis": "A simple, beautiful, and free REST API client",
