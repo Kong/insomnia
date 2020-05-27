@@ -22,11 +22,11 @@ matrix:
         - APPLE_ID_PASSWORD=$DESIGNER_APPLE_ID_PASSWORD
         - CSC_LINK=$DESIGNER_MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$DESIGNER_MAC_CSC_KEY_PASSWORD
-        - npm_config_target=3.1.13
-        - npm_config_arch=x64
-        - npm_config_target_arch=x64
-        - npm_config_disturl=https://electronjs.org/headers
-        - npm_config_runtime=electron
+        - NPM_CONFIG_TARGET=3.1.13
+        - NPM_CONFIG_ARCH=x64
+        - NPM_CONFIG_TARGET_ARCH=x64
+        - NPM_CONFIG_DISTURL=https://electronjs.org/headers
+        - NPM_CONFIG_RUNTIME=electron
 cache:
   directories:
     - node_modules

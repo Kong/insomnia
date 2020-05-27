@@ -51,3 +51,9 @@ jobs:
           # Don't build Snap for Designer (yet)
           # BUILD_TARGETS: AppImage,Snap
           # SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
+env:
+  NPM_CONFIG_TARGET: 3.1.13
+  NPM_CONFIG_ARCH: x64
+  NPM_CONFIG_TARGET_ARCH: x64
+  NPM_CONFIG_DISTURL: https://electronjs.org/headers
+  NPM_CONFIG_RUNTIME: electron
