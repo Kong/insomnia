@@ -27,26 +27,33 @@ jobs:
       - name: Run tests
         run: npm test
       - name: Release app
+        run: npm run app-release
         env:
           GITHUB_REF: ${{ github.ref }}
           GITHUB_SHA: ${{ github.sha }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           CSC_LINK: ${{ secrets.DESIGNER_WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_WINDOWS_CSC_KEY_PASSWORD }}
-        run: npm run app-release
   Linux:
     name: Linux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-16.04
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Run Docker
-        uses: ./.github/actions/release-linux
+      - name: Install NodeJS
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10
+      - name: Bootstrap packages
+        run: npm run bootstrap
+      - name: Run tests
+        run: npm test
+      - name: Release app
+        run: npm run app-release
         env:
           GITHUB_REF: ${{ github.ref }}
           GITHUB_SHA: ${{ github.sha }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          NODELIBCURL_BUILD_STATIC: yes
           BUILD_TARGETS: AppImage,deb,tar.gz,rpm
           # Don't build Snap for Designer (yet)
           # BUILD_TARGETS: AppImage,Snap

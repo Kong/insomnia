@@ -40,13 +40,20 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Run Docker
-        uses: ./.github/actions/release-linux
+      - name: Install NodeJS
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10
+      - name: Bootstrap packages
+        run: npm run bootstrap
+      - name: Run tests
+        run: npm test
+      - name: Release app
+        run: npm run app-release
         env:
           GITHUB_REF: ${{ github.ref }}
           GITHUB_SHA: ${{ github.sha }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          NODELIBCURL_BUILD_STATIC: yes
           BUILD_TARGETS: AppImage,Snap,deb,tar.gz,rpm
           SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
 env:
