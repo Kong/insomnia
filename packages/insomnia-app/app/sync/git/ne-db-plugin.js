@@ -15,7 +15,7 @@ export default class NeDBPlugin {
       throw new Error('Cannot use NeDBPlugin without workspace ID');
     }
     this._workspaceId = workspaceId;
-    const pathSep = path.sep === path.win32.sep ? '\\' : '/';
+    const pathSep = path.sep === path.win32.sep ? '\\\\' : '/';
     this._cloneDirRegExp = new RegExp(`^${GIT_CLONE_DIR}${pathSep}`);
   }
 
