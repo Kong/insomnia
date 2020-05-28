@@ -3,6 +3,7 @@
   "name": "insomnia",
   "executableName": "insomnia",
   "appId": "com.insomnia.app",
+  "userDataFolder": "Insomnia",
   "productName": "Insomnia Core",
   "binaryPrefix": "Insomnia.Core",
   "longName": "Insomnia",

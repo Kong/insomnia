@@ -1,3 +1,5 @@
+// @flow
+
 import {
   Curl as _Curl,
   CurlAuth,
@@ -8,13 +10,9 @@ import {
 } from 'node-libcurl';
 
 export class Curl {
-  constructor() {
-    this._options = [];
-    this._features = [];
-    this._handle = new _Curl();
-  }
+  _handle = new _Curl();
 
-  setOpt(option, value) {
+  setOpt(option: number, value: any) {
     if (!Object.keys(Curl.option).find(k => Curl.option[k])) {
       throw new Error(`Cannot setOpt for unknown option ${option}`);
     }

@@ -3,6 +3,7 @@
   "name": "insomnia-designer",
   "executableName": "designer",
   "appId": "com.insomnia.designer",
+  "userDataFolder": "Insomnia Designer",
   "productName": "Insomnia Designer",
   "binaryPrefix": "Insomnia.Designer",
   "longName": "Insomnia Designer",
