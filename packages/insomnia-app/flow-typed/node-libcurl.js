@@ -2,9 +2,21 @@
 
 declare class Curl {
   constructor(config: Object): Curl;
-  option: {
+  enable(number): void;
+  perform(): void;
+  close(): void;
+  setOpt(number, any): void;
+  on(string, Function): void;
+  getInfo(number): any;
+  static getVersion(): string;
+  static option: {
     [string]: number,
-  }
+  };
+  static info: {
+    SIZE_DOWNLOAD: number,
+    TOTAL_TIME: number,
+    EFFECTIVE_URL: number,
+  };
 }
 
 declare module 'node-libcurl' {

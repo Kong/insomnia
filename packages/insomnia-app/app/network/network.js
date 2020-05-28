@@ -13,7 +13,7 @@ import mkdirp from 'mkdirp';
 import crypto from 'crypto';
 import clone from 'clone';
 import { parse as urlParse, resolve as urlResolve } from 'url';
-import { Curl } from '../node-libcurl/curl';
+import { Curl, CurlAuth, CurlCode, CurlInfoDebug, CurlFeature, CurlNetrc } from 'node-libcurl';
 import { join as pathJoin } from 'path';
 import uuid from 'uuid';
 import * as models from '../models';
@@ -180,7 +180,7 @@ export async function _actuallySend(
     }
 
     /** Helper function to respond with an error */
-    async function handleError(err: Error): void {
+    async function handleError(err: Error): Promise<void> {
       await respond(
         {
           url: renderedRequest.url,
@@ -237,7 +237,7 @@ export async function _actuallySend(
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, true); // True so curl doesn't print progress
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
-      enable(Curl.feature.Raw);
+      enable(CurlFeature.Raw);
 
       // Set follow redirects setting
       switch (renderedRequest.settingFollowRedirects) {
@@ -284,15 +284,15 @@ export async function _actuallySend(
       // Setup debug handler
       setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, contentBuffer: Buffer) => {
         const content = contentBuffer.toString('utf8');
-        const rawName = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
-        const name = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName || '';
+        const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
+        const name = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
 
-        if (infoType === Curl.info.debug.SslDataIn || infoType === Curl.info.debug.SslDataOut) {
+        if (infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut) {
           return 0;
         }
 
         // Ignore the possibly large data messages
-        if (infoType === Curl.info.debug.DataOut) {
+        if (infoType === CurlInfoDebug.DataOut) {
           if (contentBuffer.length === 0) {
             // Sometimes this happens, but I'm not sure why. Just ignore it.
           } else if (contentBuffer.length / 1024 < settings.maxTimelineDataSizeKB) {
@@ -303,13 +303,13 @@ export async function _actuallySend(
           return 0;
         }
 
-        if (infoType === Curl.info.debug.DataIn) {
+        if (infoType === CurlInfoDebug.DataIn) {
           addTimelineText(`Received ${describeByteSize(contentBuffer.length)} chunk`);
           return 0;
         }
 
         // Don't show cookie setting because this will display every domain in the jar
-        if (infoType === Curl.info.debug.Text && content.indexOf('Added cookie') === 0) {
+        if (infoType === CurlInfoDebug.Text && content.indexOf('Added cookie') === 0) {
           return 0;
         }
 
@@ -417,8 +417,9 @@ export async function _actuallySend(
         }
 
         addTimelineText(
-          'Enable cookie sending with jar of ' +
-            `${cookies.length} cookie${cookies.length !== 1 ? 's' : ''}`,
+          `Enable cookie sending with jar of ${cookies.length} cookie${
+            cookies.length !== 1 ? 's' : ''
+          }`,
         );
       } else {
         addTimelineText('Disable cookie sending due to user setting');
@@ -433,7 +434,7 @@ export async function _actuallySend(
         addTimelineText(`Enable network proxy for ${protocol || ''}`);
         if (proxy) {
           setOpt(Curl.option.PROXY, proxy);
-          setOpt(Curl.option.PROXYAUTH, Curl.auth.Any);
+          setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
         }
         if (noProxy) {
           setOpt(Curl.option.NOPROXY, noProxy);
@@ -530,7 +531,9 @@ export async function _actuallySend(
 
         const fn = () => {
           fs.closeSync(fd);
-          fs.unlink(multipartBodyPath, () => {});
+          fs.unlink(multipartBodyPath, () => {
+            // Pass
+          });
         };
 
         curl.on('end', fn);
@@ -578,17 +581,17 @@ export async function _actuallySend(
       if (!hasAuthHeader(headers) && !renderedRequest.authentication.disabled) {
         if (renderedRequest.authentication.type === AUTH_BASIC) {
           const { username, password } = renderedRequest.authentication;
-          setOpt(Curl.option.HTTPAUTH, Curl.auth.Basic);
+          setOpt(Curl.option.HTTPAUTH, CurlAuth.Basic);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_DIGEST) {
           const { username, password } = renderedRequest.authentication;
-          setOpt(Curl.option.HTTPAUTH, Curl.auth.Digest);
+          setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_NTLM) {
           const { username, password } = renderedRequest.authentication;
-          setOpt(Curl.option.HTTPAUTH, Curl.auth.Ntlm);
+          setOpt(Curl.option.HTTPAUTH, CurlAuth.Ntlm);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
@@ -618,7 +621,7 @@ export async function _actuallySend(
             headers.push(header);
           }
         } else if (renderedRequest.authentication.type === AUTH_NETRC) {
-          setOpt(Curl.option.NETRC, Curl.netrc.Required);
+          setOpt(Curl.option.NETRC, CurlNetrc.Required);
         } else {
           const authHeader = await getAuthHeader(renderedRequest, finalUrl);
 
@@ -778,7 +781,7 @@ export async function _actuallySend(
         let error = err + '';
         let statusMessage = 'Error';
 
-        if (code === Curl.code.CURLE_ABORTED_BY_CALLBACK) {
+        if (code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
           error = 'Request aborted';
           statusMessage = 'Abort';
         }
