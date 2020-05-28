@@ -172,7 +172,7 @@ export default class NeDBPlugin {
         type: 'file',
         mode: 0o777,
         size: fileBuff.length,
-        ino: doc._id,
+        ino: doc._id, // should be number instead of string https://nodejs.org/api/fs.html#fs_stats_ino I think flow should have detected this
         mtimeMs: doc.modified,
       });
     } else {
