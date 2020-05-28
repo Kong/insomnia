@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "eslint . --ext .js,.html,.json",
     "lint:fix": "npm run lint -- --fix",
-    "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap",
+    "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap && rimraf node_modules/fsevents",
     "publish": "lerna publish",
     "clean": "lerna clean --yes && rimraf node_modules",
     "typecheck": "lerna run --parallel --stream typecheck",
@@ -61,7 +61,7 @@
     "flow-bin": "^0.122.0",
     "husky": "^1.0.0-rc.9",
     "jest": "^25.3.0",
-    "lerna": "^3.19.0",
+    "lerna": "^3.22.0",
     "lint-staged": "^10.2.2",
     "prettier": "^1.16.4",
     "rimraf": "^2.6.3"

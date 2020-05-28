@@ -174,7 +174,7 @@ class Toast extends React.PureComponent<Props, State> {
           'toast--show': visible,
         })}>
         <div className="toast__image">
-          <GravatarImg email={notification.email} fallback={appIconSrc} size={100} />
+          <GravatarImg email={notification.email} fallback={appIconSrc} size={100} rounded />
         </div>
         <div className="toast__content">
           <p className="toast__message">{notification ? notification.message : 'Unknown'}</p>

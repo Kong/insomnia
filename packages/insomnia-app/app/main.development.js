@@ -1,6 +1,7 @@
 // @flow
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import { appConfig } from '../config';
+import path from 'path';
 import * as electron from 'electron';
 import * as errorHandling from './main/error-handling';
 import * as updates from './main/updates';
@@ -19,6 +20,15 @@ if (checkIfRestartNeeded()) {
 
 const { app, ipcMain, session } = electron;
 const commandLineArgs = process.argv.slice(1);
+
+// Explicitly set userData folder from config because it's sketchy to
+// rely on electron-builder to use productName, which could be changed
+// by accident.
+if (!isDevelopment()) {
+  const defaultPath = app.getPath('userData');
+  const newPath = path.join(defaultPath, '../', appConfig().userDataFolder);
+  app.setPath('userData', newPath);
+}
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
@@ -111,7 +121,10 @@ function _launchApp() {
   // Don't send origin header from Insomnia app because we're not technically using CORS
   session.defaultSession.webRequest.onBeforeSendHeaders((details, fn) => {
     delete details.requestHeaders.Origin;
-    fn({ cancel: false, requestHeaders: details.requestHeaders });
+    fn({
+      cancel: false,
+      requestHeaders: details.requestHeaders,
+    });
   });
 }
 
