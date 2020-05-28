@@ -9,6 +9,7 @@ on:
     types:
       - opened
       - edited
+      - synchronize
 
 env:
   NPM_CONFIG_TARGET: 3.1.13
