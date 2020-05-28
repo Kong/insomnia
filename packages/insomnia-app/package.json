@@ -19,7 +19,7 @@
     "build": "node ./scripts/build.js",
     "package": "node ./scripts/package.js",
     "release": "node ./scripts/release.js",
-    "bootstrap": "rimraf node_modules/fsevents && rimraf node_modules/graphql-language-service-interface/dist/*.flow"
+    "bootstrap": "rimraf ./**/node_modules/fsevents && rimraf node_modules/graphql-language-service-interface/dist/*.flow"
   },
   "dev": {
     "dev-server-port": 3334

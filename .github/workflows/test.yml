@@ -10,9 +10,9 @@ env:
   NPM_CONFIG_RUNTIME: electron
 
 jobs:
-  Test:
-    name: Test
-    runs-on: macOS-latest
+  Windows:
+    name: Test Windows
+    runs-on: windows-latest
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
@@ -24,4 +24,17 @@ jobs:
         run: npm run bootstrap
       - name: Run tests
         run: npm test
-
+  Linux:
+    name: Test Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v1
+      - name: Install NodeJS
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10
+      - name: Bootstrap packages
+        run: npm run bootstrap
+      - name: Run tests
+        run: npm test
