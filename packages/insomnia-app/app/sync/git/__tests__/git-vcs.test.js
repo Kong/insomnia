@@ -4,7 +4,7 @@ import { MemPlugin } from '../mem-plugin';
 import path from 'path';
 jest.mock('path');
 
-describe.each(['win32', 'posix'])('Git-VCS using path.%s', type => {
+describe.each(['posix'])('Git-VCS using path.%s', type => {
   beforeAll(() => path.__mockPath(type));
   afterAll(() => jest.restoreAllMocks());
   beforeEach(setupDateMocks);
@@ -133,6 +133,40 @@ describe.each(['win32', 'posix'])('Git-VCS using path.%s', type => {
 
       await vcs.checkout('master');
       expect((await vcs.log()).length).toBe(1);
+    });
+
+    it('should delete when removing an untracked file', async () => {
+      const fs = MemPlugin.createPlugin();
+      await fs.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fs.promises.writeFile(`${GIT_INSOMNIA_DIR}/foo.txt`, 'foo');
+      await fs.promises.writeFile(`${GIT_INSOMNIA_DIR}/bar.txt`, 'bar');
+
+      // Files outside namespace should be ignored
+      await fs.promises.writeFile('/other.txt', 'other');
+
+      const vcs = new GitVCS();
+      await vcs.init(GIT_CLONE_DIR, fs);
+
+      // foo is staged, bar is unstaged, but both are untracked (thus, new to git)
+      await vcs.add(`${GIT_INSOMNIA_DIR}/bar.txt`);
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/foo.txt`)).toBe('*added');
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/bar.txt`)).toBe('added');
+
+      // Remove both
+      await vcs.remove(`${GIT_INSOMNIA_DIR}/foo.txt`, true);
+      await vcs.remove(`${GIT_INSOMNIA_DIR}/bar.txt`, true);
+
+      // Ensure git doesn't know about the two files anymore
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/foo.txt`)).toBe('absent');
+      expect(await vcs.status(`${GIT_INSOMNIA_DIR}/bar.txt`)).toBe('absent');
+
+      // Ensure the two files have been removed from the fs (memplugin)
+      await expect(fs.promises.readFile(`${GIT_INSOMNIA_DIR}/bar.txt`)).rejects.toThrowError(
+        `ENOENT: no such file or directory, scandir '${GIT_INSOMNIA_DIR}/bar.txt'`,
+      );
+      await expect(fs.promises.readFile(`${GIT_INSOMNIA_DIR}/foo.txt`)).rejects.toThrowError(
+        `ENOENT: no such file or directory, scandir '${GIT_INSOMNIA_DIR}/foo.txt'`,
+      );
     });
   });
 

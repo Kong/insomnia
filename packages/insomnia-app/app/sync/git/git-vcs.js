@@ -137,9 +137,13 @@ export default class GitVCS {
     return git.add({ ...this._baseOpts, filepath: relPath });
   }
 
-  async remove(relPath: string): Promise<void> {
+  async remove(relPath: string, deletePath: boolean = false): Promise<void> {
     console.log(`[git] Remove relPath=${relPath}`);
-    return git.remove({ ...this._baseOpts, filepath: relPath });
+    await git.remove({ ...this._baseOpts, filepath: relPath });
+
+    if (deletePath) {
+      await this.getFs().promises.unlink(relPath);
+    }
   }
 
   async addRemote(url: string): Promise<GitRemoteConfig> {
