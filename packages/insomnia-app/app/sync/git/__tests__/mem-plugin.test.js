@@ -2,9 +2,12 @@ import { assertAsyncError, setupDateMocks } from './util';
 import { MemPlugin } from '../mem-plugin';
 import path from 'path';
 import { GIT_CLONE_DIR } from '../git-vcs';
+import { isWindows } from '../../../common/constants';
 jest.mock('path');
 
-describe.each(['win32', 'posix'])('Memlugin using path.%s', type => {
+const paths = isWindows() ? ['win32'] : ['win32', 'posix'];
+
+describe.each([paths])('Memlugin using path.%s', type => {
   beforeAll(() => path.__mockPath(type));
   afterAll(() => jest.restoreAllMocks());
   beforeEach(setupDateMocks);
