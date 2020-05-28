@@ -1,8 +1,14 @@
 name: Test
 
 on:
+  push:
+    branches:
+      - develop
+      - master
   pull_request:
-    types: [opened, edited]
+    types:
+      - opened
+      - edited
 
 env:
   NPM_CONFIG_TARGET: 3.1.13
