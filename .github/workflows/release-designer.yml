@@ -57,5 +57,6 @@ jobs:
       - run: npm run app-release
         env:
           BUILD_TARGETS: AppImage,deb,tar.gz,rpm
+          # TODO: Figure out Snap deploys
           # BUILD_TARGETS: AppImage,Snap,deb,tar.gz,rpm
           # SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
