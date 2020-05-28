@@ -2,6 +2,7 @@
 import * as git from 'isomorphic-git';
 import { trackEvent } from '../../common/analytics';
 import { httpPlugin } from './http';
+import path from 'path';
 
 export type GitAuthor = {|
   name: string,
@@ -34,7 +35,16 @@ export type GitLogEntry = {|
   },
 |};
 
-export const GIT_NAMESPACE_DIR = '.insomnia';
+// isomorphic-git internally will default an empty ('') clone directory to '.'
+// Ref: https://github.com/isomorphic-git/isomorphic-git/blob/4e66704d05042624bbc78b85ee5110d5ee7ec3e2/src/utils/normalizePath.js#L10
+// We should set this explicitly (even if set to an empty string), because we have other code (such as fs plugins
+// and unit tests) that depend on the clone directory.
+export const GIT_CLONE_DIR = '.';
+const _gitInternalDirName = 'git';
+export const GIT_INSOMNIA_DIR_NAME = '.insomnia';
+
+export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, _gitInternalDirName);
+export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME);
 
 export default class GitVCS {
   _git: Object;
