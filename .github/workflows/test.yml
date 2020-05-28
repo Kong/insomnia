@@ -2,10 +2,17 @@ name: Test
 
 on: [push, pull_request]
 
+env:
+  NPM_CONFIG_TARGET: 3.1.13
+  NPM_CONFIG_ARCH: x64
+  NPM_CONFIG_TARGET_ARCH: x64
+  NPM_CONFIG_DISTURL: https://electronjs.org/headers
+  NPM_CONFIG_RUNTIME: electron
+
 jobs:
   Test:
     name: Test
-    runs-on: macOS-10.14
+    runs-on: macOS-latest
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
@@ -17,3 +24,4 @@ jobs:
         run: npm run bootstrap
       - name: Run tests
         run: npm test
+
