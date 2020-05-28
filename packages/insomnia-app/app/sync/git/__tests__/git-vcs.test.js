@@ -156,8 +156,7 @@ describe.each(['win32', 'posix'])('Git-VCS using path.%s', type => {
       expect(await vcs.status(barTxt)).toBe('added');
 
       // Remove both
-      await vcs.removeUntracked(fooTxt);
-      await vcs.removeUntracked(barTxt);
+      await vcs.removeUntracked([fooTxt, barTxt]);
 
       // Ensure git doesn't know about the two files anymore
       expect(await vcs.status(fooTxt)).toBe('absent');

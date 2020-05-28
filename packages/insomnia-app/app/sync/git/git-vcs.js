@@ -142,11 +142,15 @@ export default class GitVCS {
     git.remove({ ...this._baseOpts, filepath: relPath });
   }
 
-  async removeUntracked(relPath: string): Promise<void> {
-    await this.remove(relPath);
+  async removeUntracked(paths: Array<string>): Promise<void> {
+    await Promise.all(
+      paths.map(async p => {
+        await this.remove(p);
 
-    console.log(`[fs] Unlink relPath=${relPath}`);
-    await this.getFs().promises.unlink(relPath);
+        console.log(`[fs] Unlink relPath=${p}`);
+        await this.getFs().promises.unlink(p);
+      }),
+    );
   }
 
   async resetIndex(relPath: string): Promise<void> {

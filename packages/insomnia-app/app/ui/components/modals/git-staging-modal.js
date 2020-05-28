@@ -13,6 +13,8 @@ import { withDescendants } from '../../../common/database';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import ModalFooter from '../base/modal-footer';
 import Tooltip from '../tooltip';
+import PromptButton from '../base/prompt-button';
+import { SvgIcon } from 'insomnia-components';
 
 type Props = {|
   workspace: Workspace,
@@ -155,11 +157,15 @@ class GitStagingModal extends React.PureComponent<Props, State> {
   }
 
   async show(options: { onCommit?: () => void }) {
-    const { vcs, workspace } = this.props;
-
     this.onCommit = options.onCommit || null;
 
     this.modal && this.modal.show();
+
+    await this._refresh();
+  }
+
+  async _refresh() {
+    const { vcs, workspace } = this.props;
 
     // Reset state
     this.setState(INITIAL_STATE);
@@ -268,6 +274,31 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     );
   }
 
+  async _handleDiscard(item: Item) {
+    const { vcs } = this.props;
+    const { path: gitPath, status } = item;
+
+    if (status.includes('added')) {
+      await vcs.removeUntracked(gitPath);
+    } else {
+      await vcs.undoPendingChanges([gitPath]);
+    }
+
+    await this._refresh();
+  }
+
+  async _handleDiscardAll(items: Array<Item>, tracked?: boolean) {
+    const { vcs } = this.props;
+
+    if (tracked) {
+      await vcs.undoPendingChanges(items.map(t => t.path));
+    } else {
+      await vcs.removeUntracked(items.map(t => t.path));
+    }
+
+    await this._refresh();
+  }
+
   renderItem(item: Item) {
     const { path: gitPath, staged, editable } = item;
 
@@ -288,12 +319,17 @@ class GitStagingModal extends React.PureComponent<Props, State> {
             {docName}
           </label>
         </td>
-        <td className="text-right">{this.renderOperation(item)}</td>
+        <td className="text-right">
+          <button className="btn btn--micro space-right" onClick={() => this._handleDiscard(item)}>
+            <SvgIcon icon="sync" />
+          </button>
+          {this.renderOperation(item)}
+        </td>
       </tr>
     );
   }
 
-  renderTable(title: string, items: Array<Item>) {
+  renderTable(title: string, items: Array<Item>, discardAll: Function) {
     if (items.length === 0) {
       return null;
     }
@@ -304,6 +340,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     return (
       <div className="pad-top">
         <strong>{title}</strong>
+        <PromptButton className="btn pull-right btn--micro" onClick={discardAll}>
+          Discard all changes
+        </PromptButton>
         <table className="table--fancy table--outlined margin-top-sm">
           <thead>
             <tr className="table--no-outline-row">
@@ -370,8 +409,12 @@ class GitStagingModal extends React.PureComponent<Props, State> {
                 onChange={this._handleMessageChange}
               />
             </div>
-            {this.renderTable('Modified Objects', nonAddedItems)}
-            {this.renderTable('Unversioned Objects', addedItems)}
+            {this.renderTable('Modified Objects', nonAddedItems, () =>
+              this._handleDiscardAll(nonAddedItems, true),
+            )}
+            {this.renderTable('Unversioned Objects', addedItems, () =>
+              this._handleDiscardAll(addedItems, false),
+            )}
           </ModalBody>
           <ModalFooter>
             <div className="margin-left italic txt-sm tall">
