@@ -110,6 +110,8 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
     const inputs = {};
 
     if (gitRepository) {
+      const creds = gitRepository.credentials || {};
+      inputs.token = typeof creds.token === 'string' ? creds.token : '';
       inputs.authorEmail = gitRepository.author.email;
       inputs.authorName = gitRepository.author.name;
       inputs.username = gitRepository.credentials?.username || '';

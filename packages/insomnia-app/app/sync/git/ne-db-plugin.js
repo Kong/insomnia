@@ -15,6 +15,8 @@ export default class NeDBPlugin {
       throw new Error('Cannot use NeDBPlugin without workspace ID');
     }
     this._workspaceId = workspaceId;
+
+    // The win32 separator is a single backslash (\), but we have to escape both the JS string and RegExp.
     const pathSep = path.sep === path.win32.sep ? '\\\\' : '/';
     this._cloneDirRegExp = new RegExp(`^${GIT_CLONE_DIR}${pathSep}`);
   }
