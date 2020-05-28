@@ -22,9 +22,6 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 10
-      - run: npm install --global --production windows-build-tools@4
-      - run: npm config set python python2.7
-      - run: npm config set msvs_version 2015
       - run: npm run bootstrap
       - run: npm test
       - run: npm run app-release
