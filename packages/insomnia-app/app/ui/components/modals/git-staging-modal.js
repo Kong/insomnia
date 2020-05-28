@@ -178,7 +178,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
 
     // Create status items
     const items = {};
-    const log = (await vcs.log()) || [];
+    const log = (await vcs.log(1)) || [];
     for (const gitPath of allPaths) {
       const status = await vcs.status(gitPath);
       if (status === 'unmodified') {

@@ -137,13 +137,21 @@ export default class GitVCS {
     return git.add({ ...this._baseOpts, filepath: relPath });
   }
 
-  async remove(relPath: string, deletePath: boolean = false): Promise<void> {
+  remove(relPath: string): void {
     console.log(`[git] Remove relPath=${relPath}`);
-    await git.remove({ ...this._baseOpts, filepath: relPath });
+    git.remove({ ...this._baseOpts, filepath: relPath });
+  }
 
-    if (deletePath) {
-      await this.getFs().promises.unlink(relPath);
-    }
+  async removeUntracked(relPath: string): Promise<void> {
+    await this.remove(relPath);
+
+    console.log(`[fs] Unlink relPath=${relPath}`);
+    await this.getFs().promises.unlink(relPath);
+  }
+
+  async resetIndex(relPath: string): Promise<void> {
+    console.log(`[git] Reset index relPath=${relPath}`);
+    await git.resetIndex({ ...this._baseOpts, filepath: relPath });
   }
 
   async addRemote(url: string): Promise<GitRemoteConfig> {
@@ -309,6 +317,18 @@ export default class GitVCS {
     } else {
       await this.branch(branch, true);
     }
+  }
+
+  async undoPendingChanges(filepaths?: Array<String>): Promise<void> {
+    console.log('[git] Undo pending changes');
+
+    await git.fastCheckout({
+      ...this._baseOpts,
+      ref: await git.currentBranch(this._baseOpts),
+      remote: 'origin',
+      force: true,
+      filepaths,
+    });
   }
 
   async readObjFromTree(treeOid: string, objPath: string): Object | null {
