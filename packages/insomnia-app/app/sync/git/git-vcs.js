@@ -341,7 +341,7 @@ export default class GitVCS {
       ref: await git.currentBranch(this._baseOpts),
       remote: 'origin',
       force: true,
-      filepaths,
+      filepaths: filepaths?.map(convertToPosixSep),
     });
   }
 

@@ -147,9 +147,6 @@ describe.each(['win32', 'posix'])('Git-VCS using path.%s', type => {
 
   describe('remove pending changes', () => {
     it('should delete when removing an untracked file', async () => {
-      const fooTxt = `${GIT_INSOMNIA_DIR}/foo.txt`;
-      const barTxt = `${GIT_INSOMNIA_DIR}/bar.txt`;
-
       const fs = MemPlugin.createPlugin();
       await fs.promises.mkdir(GIT_INSOMNIA_DIR);
       await fs.promises.writeFile(fooTxt, 'foo');
@@ -180,9 +177,8 @@ describe.each(['win32', 'posix'])('Git-VCS using path.%s', type => {
     });
 
     it('should remove pending changes from all tracked files', async () => {
-      const fooTxt = `${GIT_INSOMNIA_DIR}/foo.txt`;
-      const folder = `${GIT_INSOMNIA_DIR}/folder`;
-      const folderBarTxt = `${folder}/bar.txt`;
+      const folder = path.join(GIT_INSOMNIA_DIR, 'folder');
+      const folderBarTxt = path.join(folder, 'bar.txt');
       const originalContent = 'content';
 
       const fs = MemPlugin.createPlugin();
@@ -220,9 +216,9 @@ describe.each(['win32', 'posix'])('Git-VCS using path.%s', type => {
     });
 
     it('should remove pending changes from select tracked files', async () => {
-      const foo1Txt = `${GIT_INSOMNIA_DIR}/foo1.txt`;
-      const foo2Txt = `${GIT_INSOMNIA_DIR}/foo2.txt`;
-      const foo3Txt = `${GIT_INSOMNIA_DIR}/foo3.txt`;
+      const foo1Txt = path.join(GIT_INSOMNIA_DIR, 'foo1.txt');
+      const foo2Txt = path.join(GIT_INSOMNIA_DIR, 'foo2.txt');
+      const foo3Txt = path.join(GIT_INSOMNIA_DIR, 'foo3.txt');
       const files = [foo1Txt, foo2Txt, foo3Txt];
       const originalContent = 'content';
       const changedContent = 'changedContent';
