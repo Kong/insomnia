@@ -14,7 +14,6 @@ import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import ModalFooter from '../base/modal-footer';
 import Tooltip from '../tooltip';
 import PromptButton from '../base/prompt-button';
-import { SvgIcon } from 'insomnia-components';
 
 type Props = {|
   workspace: Workspace,
@@ -37,7 +36,7 @@ type State = {|
   },
 |};
 
-const INITIAL_STATE = {
+const INITIAL_STATE: State = {
   branch: '',
   message: '',
   items: {},
@@ -161,6 +160,8 @@ class GitStagingModal extends React.PureComponent<Props, State> {
 
     this.modal && this.modal.show();
 
+    // Reset state
+    this.setState(INITIAL_STATE);
     await this._refresh();
   }
 
@@ -273,7 +274,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     );
   }
 
-  async _handleDiscard(item: Item) {
+  async _handleRollback(item: Item) {
     const { vcs } = this.props;
     const { path: gitPath, status } = item;
 
@@ -286,7 +287,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     await this._refresh();
   }
 
-  async _handleDiscardAll(items: Array<Item>, tracked?: boolean) {
+  async _handleRollbackAll(items: Array<Item>, tracked?: boolean) {
     const { vcs } = this.props;
 
     if (tracked) {
@@ -319,8 +320,10 @@ class GitStagingModal extends React.PureComponent<Props, State> {
           </label>
         </td>
         <td className="text-right">
-          <button className="btn btn--micro space-right" onClick={() => this._handleDiscard(item)}>
-            <SvgIcon icon="sync" />
+          <button className="btn btn--micro space-right" onClick={() => this._handleRollback(item)}>
+            <Tooltip message="Rollback">
+              <i className="fa fa-undo" />
+            </Tooltip>
           </button>
           {this.renderOperation(item)}
         </td>
@@ -340,7 +343,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
       <div className="pad-top">
         <strong>{title}</strong>
         <PromptButton className="btn pull-right btn--micro" onClick={discardAll}>
-          Discard all changes
+          Rollback all
         </PromptButton>
         <table className="table--fancy table--outlined margin-top-sm">
           <thead>
@@ -391,8 +394,8 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         </>
       );
     } else {
-      const addedItems = itemsList.filter(i => i.status.includes('added'));
-      const nonAddedItems = itemsList.filter(i => !i.status.includes('added'));
+      const newItems = itemsList.filter(i => i.status.includes('added'));
+      const existingItems = itemsList.filter(i => !i.status.includes('added'));
 
       body = (
         <>
@@ -408,11 +411,11 @@ class GitStagingModal extends React.PureComponent<Props, State> {
                 onChange={this._handleMessageChange}
               />
             </div>
-            {this.renderTable('Modified Objects', nonAddedItems, () =>
-              this._handleDiscardAll(nonAddedItems, true),
+            {this.renderTable('Modified Objects', existingItems, () =>
+              this._handleRollbackAll(existingItems, true),
             )}
-            {this.renderTable('Unversioned Objects', addedItems, () =>
-              this._handleDiscardAll(addedItems, false),
+            {this.renderTable('Unversioned Objects', newItems, () =>
+              this._handleRollbackAll(newItems, false),
             )}
           </ModalBody>
           <ModalFooter>
