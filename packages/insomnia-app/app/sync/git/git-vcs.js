@@ -163,11 +163,6 @@ export default class GitVCS {
     );
   }
 
-  async resetIndex(relPath: string): Promise<void> {
-    console.log(`[git] Reset index relPath=${relPath}`);
-    await git.resetIndex({ ...this._baseOpts, filepath: relPath });
-  }
-
   async addRemote(url: string): Promise<GitRemoteConfig> {
     console.log(`[git] Add Remote url=${url}`);
     await git.addRemote({ ...this._baseOpts, remote: 'origin', url, force: true });
@@ -245,7 +240,7 @@ export default class GitVCS {
     return true;
   }
 
-  async push(creds?: GitCredentials | null, force?: boolean = false): Promise<boolean> {
+  async push(creds?: GitCredentials | null, force: boolean = false): Promise<boolean> {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
     trackEvent('Git', 'Push');
 
