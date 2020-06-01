@@ -21,6 +21,7 @@ import { docsGitSync } from '../../../common/documentation';
 
 type Props = {|
   handleInitializeEntities: () => void,
+  handleGitBranchChanged: (branch: string) => void,
   workspace: Workspace,
   vcs: GitVCS,
   gitRepository: GitRepository | null,
@@ -60,7 +61,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _refreshState(otherState?: Object) {
-    const { vcs, workspace } = this.props;
+    const { vcs, workspace, handleGitBranchChanged } = this.props;
 
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
@@ -78,6 +79,8 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     const branches = await vcs.listBranches();
     const log = (await vcs.log()) || [];
     this.setState({ ...(otherState || {}), log, branch, branches });
+    console.log(branch);
+    handleGitBranchChanged(branch);
 
     const author = log[0] ? log[0].author : null;
     const cachedGitRepositoryBranch = branch;

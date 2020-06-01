@@ -101,6 +101,7 @@ class App extends PureComponent {
       isVariableUncovered: props.isVariableUncovered || false,
       vcs: null,
       gitVCS: null,
+      activeGitBranch: 'no-vcs',
       forceRefreshCounter: 0,
       forceRefreshHeaderCounter: 0,
       isMigratingChildren: false,
@@ -1035,6 +1036,10 @@ class App extends PureComponent {
     this.setState({ gitVCS });
   }
 
+  _handleGitBranchChanged(branch) {
+    this.setState({ activeGitBranch: branch || 'no-vcs' });
+  }
+
   async _updateVCS() {
     const { activeWorkspace } = this.props;
 
@@ -1249,13 +1254,14 @@ class App extends PureComponent {
       sidebarWidth,
       isVariableUncovered,
       gitVCS,
+      activeGitBranch,
       vcs,
       forceRefreshCounter,
       forceRefreshHeaderCounter,
     } = this.state;
 
-    const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace._id}`;
-
+    const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace._id}::${activeGitBranch}`;
+    console.log(uniquenessKey);
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <div className="app" key={uniquenessKey}>
@@ -1312,6 +1318,7 @@ class App extends PureComponent {
               headerEditorKey={forceRefreshHeaderCounter + ''}
               vcs={vcs}
               gitVCS={gitVCS}
+              handleGitBranchChanged={this._handleGitBranchChanged}
             />
           </ErrorBoundary>
 

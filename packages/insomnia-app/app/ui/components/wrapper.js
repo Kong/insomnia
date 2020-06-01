@@ -143,6 +143,7 @@ export type WrapperProps = {
   handleUpdateRequestMimeType: Function,
   handleUpdateDownloadPath: Function,
   handleSetActiveActivity: (activity: GlobalActivity) => void,
+  handleGitBranchChanged: (branch: string) => void,
 
   // Properties
   activity: GlobalActivity,
@@ -227,7 +228,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     return this._handleForceUpdateRequest(r, { headers });
   }
 
-  async _handleUpdateApiSpec(s: ApiSpec) {
+  async _handleUpdateApiSpec(s: ApiSpec): Promise<void> {
     await models.apiSpec.update(s);
   }
 
@@ -297,11 +298,11 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: updatedActivity });
   }
 
-  async _handleSetDesignActivity(workspaceId: string) {
+  async _handleSetDesignActivity(workspaceId: string): Promise<void> {
     await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_SPEC);
   }
 
-  async _handleSetDebugActivity(apiSpec: ApiSpec) {
+  async _handleSetDebugActivity(apiSpec: ApiSpec): Promise<void> {
     const workspaceId = apiSpec.parentId;
     await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_DEBUG);
 
@@ -498,6 +499,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       handleExportFile,
       handleExportRequestsToFile,
       handleGetRenderContext,
+      handleGitBranchChanged,
       handleInitializeEntities,
       handleRender,
       handleSetActiveWorkspace,
@@ -524,6 +526,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
           gitRepository={activeGitRepository}
           vcs={gitVCS}
           handleInitializeEntities={handleInitializeEntities}
+          handleGitBranchChanged={handleGitBranchChanged}
           renderDropdownButton={children => (
             <DropdownButton className="btn--clicky-small btn-sync btn-utility">
               {children}
