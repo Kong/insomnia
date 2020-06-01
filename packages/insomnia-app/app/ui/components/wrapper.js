@@ -101,7 +101,7 @@ export type WrapperProps = {
     uri: string,
     forceToWorkspace?: ForceToWorkspace,
   ) => void,
-  handleInitializeEntities: Function,
+  handleInitializeEntities: () => Promise<void>,
   handleExportFile: Function,
   handleShowExportRequestsModal: Function,
   handleShowSettingsModal: Function,

@@ -20,7 +20,7 @@ import { trackEvent } from '../../../common/analytics';
 import { docsGitSync } from '../../../common/documentation';
 
 type Props = {|
-  handleInitializeEntities: () => void,
+  handleInitializeEntities: () => Promise<void>,
   handleGitBranchChanged: (branch: string) => void,
   workspace: Workspace,
   vcs: GitVCS,
@@ -215,7 +215,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     }
     await db.flushChanges(bufferId, true);
 
-    handleInitializeEntities();
+    await handleInitializeEntities();
     await this._refreshState();
   }
 

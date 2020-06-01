@@ -1261,7 +1261,6 @@ class App extends PureComponent {
     } = this.state;
 
     const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace._id}::${activeGitBranch}`;
-    console.log(uniquenessKey);
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <div className="app" key={uniquenessKey}>
