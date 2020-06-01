@@ -60,6 +60,7 @@ class SidebarRequestGroupRow extends PureComponent {
       handleCreateRequestGroup,
       handleDuplicateRequestGroup,
       handleMoveRequestGroup,
+      handleRender,
       isDragging,
       isDraggingOver,
       workspace,
@@ -144,6 +145,7 @@ class SidebarRequestGroupRow extends PureComponent {
               handleGenerateCode={misc.nullFn}
               handleCopyAsCurl={misc.nullFn}
               handleSetRequestPinned={misc.nullFn}
+              handleRender={handleRender}
               moveDoc={moveDoc}
               isActive={false}
               request={null}
@@ -170,6 +172,7 @@ SidebarRequestGroupRow.propTypes = {
   handleActivateRequest: PropTypes.func.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
   handleCreateRequestGroup: PropTypes.func.isRequired,
+  handleRender: PropTypes.func.isRequired,
 
   // Other
   filter: PropTypes.string.isRequired,

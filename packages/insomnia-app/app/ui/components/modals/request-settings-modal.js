@@ -245,7 +245,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
             <DebouncedInput
               delay={500}
               type="text"
-              placeholder="My Request"
+              placeholder={request.url || 'My Request'}
               defaultValue={request.name}
               onChange={this._handleNameChange}
             />

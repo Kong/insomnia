@@ -21,7 +21,9 @@ class SidebarRequestRow extends PureComponent {
     this.state = {
       dragDirection: 0,
       isEditing: false,
+      renderedUrl: '',
     };
+    this._urlUpdateInterval = null;
   }
 
   _setRequestActionsDropdownRef(n) {
@@ -78,10 +80,51 @@ class SidebarRequestRow extends PureComponent {
     return null;
   }
 
+  async _debouncedUpdateRenderedUrl(props) {
+    clearTimeout(this._urlUpdateInterval);
+
+    this._urlUpdateInterval = setTimeout(() => {
+      this._updateRenderedUrl(props);
+    }, 300);
+  }
+
+  async _updateRenderedUrl(props) {
+    let renderedUrl;
+
+    try {
+      renderedUrl = await props.handleRender(props.request.url);
+    } catch (e) {
+      // Certain things, such as invalid variable tags and Prompts
+      // without titles will result in a failure to parse. Can't do
+      // much else, so let's just give them the unrendered URL
+      renderedUrl = props.request.url;
+    }
+
+    this.setState({
+      renderedUrl,
+    });
+  }
+
   setDragDirection(dragDirection) {
     if (dragDirection !== this.state.dragDirection) {
       this.setState({ dragDirection });
     }
+  }
+
+  componentDidMount() {
+    if (!this.props.request.name) {
+      this._debouncedUpdateRenderedUrl(this.props);
+    }
+  }
+
+  componentWillUpdate(nextProps) {
+    if (nextProps.request.url !== this.props.request.url) {
+      this._debouncedUpdateRenderedUrl(nextProps);
+    }
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this._urlUpdateInterval);
   }
 
   render() {
@@ -141,6 +184,8 @@ class SidebarRequestRow extends PureComponent {
                 />
                 <Editable
                   value={request.name}
+                  fallbackValue={this.state.renderedUrl}
+                  emptyValue="Empty"
                   className="inline-block"
                   onEditStart={this._handleEditStart}
                   onSubmit={this._handleRequestUpdateName}
@@ -197,6 +242,7 @@ SidebarRequestRow.propTypes = {
   handleDuplicateRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
   handleCopyAsCurl: PropTypes.func.isRequired,
+  handleRender: PropTypes.func.isRequired,
   requestCreate: PropTypes.func.isRequired,
   moveDoc: PropTypes.func.isRequired,
 

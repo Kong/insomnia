@@ -36,6 +36,7 @@ class RequestCreateModal extends PureComponent {
     this._input = n;
     if (this._input) {
       this._input.value = 'My Request';
+      this._input.placeholder = 'My Request';
     }
   }
 
@@ -114,6 +115,9 @@ class RequestCreateModal extends PureComponent {
               <div className="form-control form-control--outlined">
                 <label>
                   Name
+                  <span class="txt-sm faint italic space-left">
+                    (defaults to your request URL if left empty)
+                  </span>
                   <input ref={this._setInputRef} type="text" />
                 </label>
               </div>
