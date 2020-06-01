@@ -52,7 +52,7 @@ class WrapperDebug extends React.PureComponent<Props> {
     this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
-  async _handleDesign() {
+  async _handleDesign(): Promise<void> {
     const {
       handleSetDesignActivity,
       wrapperProps: { activeWorkspace },

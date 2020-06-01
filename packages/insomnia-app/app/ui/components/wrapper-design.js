@@ -71,7 +71,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     showModal(GenerateConfigModal, { apiSpec: activeApiSpec });
   }
 
-  async _handleDebugSpec(errors, e) {
+  async _handleDebugSpec(errors, e): Pomise<void> {
     e.preventDefault();
     if (errors) {
       showModal(AlertModal, {
@@ -80,12 +80,12 @@ class WrapperDesign extends React.PureComponent<Props, State> {
           'Some requests may not be available due to errors found in the specification. We recommend fixing errors before proceeding. 🤗',
         okLabel: 'Proceed',
         addCancel: true,
-        onConfirm: () => {
+        onConfirm: async () => {
           const {
             handleSetDebugActivity,
             wrapperProps: { activeApiSpec },
           } = this.props;
-          handleSetDebugActivity(activeApiSpec);
+          await handleSetDebugActivity(activeApiSpec);
         },
       });
     } else {

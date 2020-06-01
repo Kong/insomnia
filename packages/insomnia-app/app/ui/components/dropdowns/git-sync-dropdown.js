@@ -79,7 +79,6 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     const branches = await vcs.listBranches();
     const log = (await vcs.log()) || [];
     this.setState({ ...(otherState || {}), log, branch, branches });
-    console.log(branch);
     handleGitBranchChanged(branch);
 
     const author = log[0] ? log[0].author : null;
