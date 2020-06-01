@@ -66,7 +66,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
     // Clear cached items and return if no state
     if (!vcs.isInitialized() || !workspaceMeta.gitRepositoryId) {
-      await models.workspaceMeta.update(workspaceMeta, {
+      await models.workspaceMeta.updateByParentId(workspace._id, {
         cachedGitRepositoryBranch: null,
         cachedGitLastAuthor: null,
         cachedGitLastCommitTime: null,
@@ -85,7 +85,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
     // NOTE: We're converting timestamp to ms here
     const cachedGitLastCommitTime = author ? author.timestamp * 1000 : null;
-    await models.workspaceMeta.update(workspaceMeta, {
+    await models.workspaceMeta.updateByParentId(workspace._id, {
       cachedGitRepositoryBranch,
       cachedGitLastAuthor,
       cachedGitLastCommitTime,
