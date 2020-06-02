@@ -267,7 +267,9 @@ class Plugins extends React.PureComponent<Props, State> {
             <button className="pull-right icon" onClick={this._handleClearError}>
               <i className="fa fa-times" />
             </button>
-            <div className="selectable force-pre-wrap">{error}</div>
+            <div className="selectable force-pre-wrap">
+              {`Search, discover, and install plugins from the Insomnia Plugin Hub: https://insomnia.rest/plugins/`}
+            </div>
           </div>
         )}
 
