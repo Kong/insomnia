@@ -1255,6 +1255,7 @@ class App extends PureComponent {
     } = this.state;
 
     const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace._id}`;
+
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <div className="app" key={uniquenessKey}>
@@ -1311,7 +1312,6 @@ class App extends PureComponent {
               headerEditorKey={forceRefreshHeaderCounter + ''}
               vcs={vcs}
               gitVCS={gitVCS}
-              handleGitBranchChanged={this._handleGitBranchChanged}
             />
           </ErrorBoundary>
 
