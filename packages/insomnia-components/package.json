@@ -1,6 +1,6 @@
 {
   "name": "insomnia-components",
-  "version": "2.2.4",
+  "version": "2.2.7",
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Insomnia UI component library",
   "license": "MIT",
@@ -11,7 +11,7 @@
     "build": "webpack --config webpack.config.js --display errors-only",
     "build-storybook": "build-storybook --quiet",
     "storybook": "start-storybook --port 3223",
-    "bootstrap": "rimraf node_modules/fsevents && npm run convert-svg && npm run build",
+    "bootstrap": "npm run convert-svg && npm run build",
     "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js",
     "prepublish": "npm run convert-svg && npm run build"
   },
@@ -26,19 +26,19 @@
     "@storybook/addon-contexts": "^5.3.10",
     "@storybook/addon-info": "^5.3.9",
     "@storybook/addon-knobs": "^5.3.10",
-    "storybook-addon-designs": "^5.2.0",
     "@storybook/react": "^5.3.9",
     "@svgr/cli": "^5.3.0",
     "babel-loader": "^8.0.6",
     "babel-plugin-inline-react-svg": "^1.1.1",
+    "storybook-addon-designs": "^5.2.0",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "autobind-decorator": "^2.4.0",
     "classnames": "^2.2.6",
-    "fuzzysort": "^1.1.4",
     "framer-motion": "^1.10.3",
+    "fuzzysort": "^1.1.4",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",

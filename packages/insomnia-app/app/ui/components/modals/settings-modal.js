@@ -12,7 +12,7 @@ import ImportExport from '../settings/import-export';
 import Plugins from '../settings/plugins';
 import Theme from '../settings/theme';
 import * as models from '../../../models/index';
-import { Curl } from '../../../node-libcurl/curl';
+import { Curl } from 'node-libcurl';
 import {
   getAppName,
   getAppVersion,
