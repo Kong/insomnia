@@ -153,6 +153,28 @@ describe('unTokenizeTag()', () => {
     expect(result).toEqual('{% name bar, "baz \\"qux\\"", 1 + 5, \'hi\' %}');
   });
 
+  it('quotes for all necessary types', () => {
+    const tagData = {
+      name: 'name',
+      args: [
+        { type: 'boolean', value: 'true' },
+        { type: 'enum', value: 'foo' },
+        { type: 'expression', value: 'foo.length' },
+        { type: 'file', value: 'foo/bar/baz' },
+        { type: 'model', value: 'id_123' },
+        { type: 'number', value: '10' },
+        { type: 'string', value: 'foo' },
+        { type: 'variable', value: 'var' },
+      ],
+    };
+
+    const result = utils.unTokenizeTag(tagData);
+
+    expect(result).toEqual(
+      "{% name true, 'foo', foo.length, 'foo/bar/baz', 'id_123', 10, 'foo', var %}",
+    );
+  });
+
   it('fixes missing quotedBy attribute', () => {
     const tagData = {
       name: 'name',
