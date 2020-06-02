@@ -341,7 +341,7 @@ function parseSecurity(security, securitySchemes) {
 
     switch (authScheme.type) {
       case SECURITY_TYPE.HTTP:
-        return parseHttpAuth(authScheme);
+        return parseHttpAuth(authScheme.scheme);
       case SECURITY_TYPE.OAUTH:
         return parseOAuth2(authScheme);
       default:
@@ -378,6 +378,23 @@ function getSecurityEnvVariables(securitySchemes) {
   const hasHttpBearerScheme = securitySchemesArray.some(
     scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'bearer',
   );
+  const oauth2Variables = securitySchemesArray.reduce(
+    (acc, scheme) => {
+      if (scheme.type === SECURITY_TYPE.OAUTH && scheme.scheme === 'bearer') {
+        acc.oauth2ClientId = 'clientId';
+        const flows = scheme.flows || {};
+        if (flows.authorizationCode || flows.clientCredentials || flows.password) {
+          acc.oauth2ClientSecret = 'clientSecret';
+        }
+        if (flows.password) {
+          acc.oauth2Username = 'username';
+          acc.oauth2Password = 'password';
+        }
+      }
+      return acc;
+    },
+    {},
+  );
 
   Array.from(new Set(apiKeyVariableNames)).forEach(name => {
     variables[name] = name;
@@ -392,7 +409,7 @@ function getSecurityEnvVariables(securitySchemes) {
     variables.bearerToken = 'bearerToken';
   }
 
-  return variables;
+  return { ...variables, ...oauth2Variables };
 }
 
 /**
@@ -596,17 +613,41 @@ function parseOAuth2(scheme) {
     return {};
   }
 
-  return {
-    clientId: '{{ client_id }}',
-    clientSecret: '{{ client_secret }}',
-    username: '{{ username }}',
-    password: '{{ password }}',
-    accessTokenUrl: flow.tokenUrl,
-    authorizationUrl: flow.authorizationUrl,
+  const base = {
+    clientId: '{{ oauth2ClientId }}',
     grantType: mapOAuth2GrantType(grantType),
     scope: parseOAuth2Scopes(flow),
     type: 'oauth2',
   };
+
+  switch (grantType) {
+    case OAUTH_FLOWS.AUTHORIZATION_CODE:
+      return {
+        ...base,
+        clientSecret: '{{ oauth2ClientSecret }}',
+        accessTokenUrl: flow.tokenUrl,
+        authorizationUrl: flow.authorizationUrl,
+      };
+    case OAUTH_FLOWS.CLIENT_CREDENTIALS:
+      return {
+        ...base,
+        clientSecret: '{{ oauth2ClientSecret }}',
+        accessTokenUrl: flow.tokenUrl,
+      };
+    case OAUTH_FLOWS.IMPLICIT:
+      return {
+        ...base,
+        authorizationUrl: flow.authorizationUrl,
+      };
+    case OAUTH_FLOWS.PASSWORD:
+      return {
+        ...base,
+        clientSecret: '{{ oauth2ClientSecret }}',
+        username: '{{ oauth2Username }}',
+        password: '{{ oauth2Password }}',
+        accessTokenUrl: flow.tokenUrl,
+      };
+  }
 }
 
 function importBearerAuthentication() {
