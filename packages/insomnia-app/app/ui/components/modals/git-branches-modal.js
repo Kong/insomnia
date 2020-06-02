@@ -15,6 +15,7 @@ type Props = {|
   vcs: GitVCS,
   gitRepository: GitRepository,
   handleInitializeEntities: () => Promise<void>,
+  handleGitBranchChanged: (branch: string) => void,
 |};
 
 type State = {|
@@ -72,7 +73,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
   }
 
   async _refreshState(newState?: Object) {
-    const { vcs } = this.props;
+    const { vcs, handleGitBranchChanged } = this.props;
 
     const branch = await vcs.getBranch();
     const branches = await vcs.listBranches();
@@ -84,6 +85,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
       remoteBranches,
       ...newState,
     });
+    handleGitBranchChanged(branch);
   }
 
   _handleClearError() {

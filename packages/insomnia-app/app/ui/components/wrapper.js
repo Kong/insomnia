@@ -143,7 +143,6 @@ export type WrapperProps = {
   handleUpdateRequestMimeType: Function,
   handleUpdateDownloadPath: Function,
   handleSetActiveActivity: (activity: GlobalActivity) => void,
-  handleGitBranchChanged: (branch: string) => void,
 
   // Properties
   activity: GlobalActivity,
@@ -191,6 +190,7 @@ export type WrapperProps = {
 
 type State = {
   forceRefreshKey: number,
+  activeGitBranch: string,
 };
 
 const rUpdate = (request, ...args) => {
@@ -209,6 +209,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     super(props);
     this.state = {
       forceRefreshKey: Date.now(),
+      activeGitBranch: 'no-vcs',
     };
   }
 
@@ -470,6 +471,10 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     this.setState({ forceRefreshKey: Date.now() });
   }
 
+  _handleGitBranchChanged(branch) {
+    this.setState({ activeGitBranch: branch || 'no-vcs' });
+  }
+
   componentDidMount() {
     const { activity } = this.props;
     trackPageView(`/${activity || ''}`);
@@ -499,7 +504,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       handleExportFile,
       handleExportRequestsToFile,
       handleGetRenderContext,
-      handleGitBranchChanged,
       handleInitializeEntities,
       handleRender,
       handleSetActiveWorkspace,
@@ -526,7 +530,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
           gitRepository={activeGitRepository}
           vcs={gitVCS}
           handleInitializeEntities={handleInitializeEntities}
-          handleGitBranchChanged={handleGitBranchChanged}
+          handleGitBranchChanged={this._handleGitBranchChanged}
           renderDropdownButton={children => (
             <DropdownButton className="btn--clicky-small btn-sync btn-utility">
               {children}
@@ -690,6 +694,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
                     vcs={gitVCS}
                     gitRepository={activeGitRepository}
                     handleInitializeEntities={handleInitializeEntities}
+                    handleGitBranchChanged={this._handleGitBranchChanged}
                   />
                 )}
               </React.Fragment>
@@ -742,67 +747,70 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             />
           </ErrorBoundary>
         </div>
+        <React.Fragment key={`views::${this.state.activeGitBranch}`}>
+          {activity === ACTIVITY_HOME && (
+            <WrapperHome
+              wrapperProps={this.props}
+              handleImportFile={this._handleImportFile}
+              handleImportUri={this._handleImportUri}
+              handleImportClipboard={this._handleImportClipBoard}
+            />
+          )}
 
-        {activity === ACTIVITY_HOME && (
-          <WrapperHome
-            wrapperProps={this.props}
-            handleImportFile={this._handleImportFile}
-            handleImportUri={this._handleImportUri}
-            handleImportClipboard={this._handleImportClipBoard}
-          />
-        )}
+          {activity === ACTIVITY_SPEC && (
+            <WrapperDesign
+              gitSyncDropdown={gitSyncDropdown}
+              handleSetDebugActivity={this._handleSetDebugActivity}
+              handleUpdateApiSpec={this._handleUpdateApiSpec}
+              wrapperProps={this.props}
+            />
+          )}
 
-        {activity === ACTIVITY_SPEC && (
-          <WrapperDesign
-            gitSyncDropdown={gitSyncDropdown}
-            handleSetDebugActivity={this._handleSetDebugActivity}
-            handleUpdateApiSpec={this._handleUpdateApiSpec}
-            wrapperProps={this.props}
-          />
-        )}
+          {(activity === ACTIVITY_DEBUG || activity === ACTIVITY_INSOMNIA) && (
+            <WrapperDebug
+              forceRefreshKey={this.state.forceRefreshKey}
+              gitSyncDropdown={gitSyncDropdown}
+              handleSetDesignActivity={this._handleSetDesignActivity}
+              handleChangeEnvironment={this._handleChangeEnvironment}
+              handleDeleteResponse={this._handleDeleteResponse}
+              handleDeleteResponses={this._handleDeleteResponses}
+              handleForceUpdateRequest={this._handleForceUpdateRequest}
+              handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
+              handleImport={this._handleImport}
+              handleImportFile={this._handleImportFile}
+              handleRequestCreate={this._handleCreateRequestInWorkspace}
+              handleRequestGroupCreate={this._handleCreateRequestGroupInWorkspace}
+              handleSendAndDownloadRequestWithActiveEnvironment={
+                this._handleSendAndDownloadRequestWithActiveEnvironment
+              }
+              handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
+              handleSetActiveResponse={this._handleSetActiveResponse}
+              handleSetPreviewMode={this._handleSetPreviewMode}
+              handleSetResponseFilter={this._handleSetResponseFilter}
+              handleShowCookiesModal={this._handleShowCookiesModal}
+              handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
+              handleUpdateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
+              handleUpdateRequestBody={Wrapper._handleUpdateRequestBody}
+              handleUpdateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
+              handleUpdateRequestMethod={Wrapper._handleUpdateRequestMethod}
+              handleUpdateRequestParameters={Wrapper._handleUpdateRequestParameters}
+              handleUpdateRequestUrl={Wrapper._handleUpdateRequestUrl}
+              handleUpdateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
+              handleUpdateSettingsUseBulkHeaderEditor={
+                this._handleUpdateSettingsUseBulkHeaderEditor
+              }
+              wrapperProps={this.props}
+            />
+          )}
 
-        {(activity === ACTIVITY_DEBUG || activity === ACTIVITY_INSOMNIA) && (
-          <WrapperDebug
-            forceRefreshKey={this.state.forceRefreshKey}
-            gitSyncDropdown={gitSyncDropdown}
-            handleSetDesignActivity={this._handleSetDesignActivity}
-            handleChangeEnvironment={this._handleChangeEnvironment}
-            handleDeleteResponse={this._handleDeleteResponse}
-            handleDeleteResponses={this._handleDeleteResponses}
-            handleForceUpdateRequest={this._handleForceUpdateRequest}
-            handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
-            handleImport={this._handleImport}
-            handleImportFile={this._handleImportFile}
-            handleRequestCreate={this._handleCreateRequestInWorkspace}
-            handleRequestGroupCreate={this._handleCreateRequestGroupInWorkspace}
-            handleSendAndDownloadRequestWithActiveEnvironment={
-              this._handleSendAndDownloadRequestWithActiveEnvironment
-            }
-            handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
-            handleSetActiveResponse={this._handleSetActiveResponse}
-            handleSetPreviewMode={this._handleSetPreviewMode}
-            handleSetResponseFilter={this._handleSetResponseFilter}
-            handleShowCookiesModal={this._handleShowCookiesModal}
-            handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
-            handleUpdateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
-            handleUpdateRequestBody={Wrapper._handleUpdateRequestBody}
-            handleUpdateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
-            handleUpdateRequestMethod={Wrapper._handleUpdateRequestMethod}
-            handleUpdateRequestParameters={Wrapper._handleUpdateRequestParameters}
-            handleUpdateRequestUrl={Wrapper._handleUpdateRequestUrl}
-            handleUpdateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
-            handleUpdateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
-            wrapperProps={this.props}
-          />
-        )}
-
-        {activity === null && (
-          <WrapperOnboarding
-            wrapperProps={this.props}
-            handleImportFile={this._handleImportFile}
-            handleImportUri={this._handleImportUri}
-          />
-        )}
+          {activity === null && (
+            <WrapperOnboarding
+              wrapperProps={this.props}
+              handleImportFile={this._handleImportFile}
+              handleImportUri={this._handleImportUri}
+            />
+          )}
+        </React.Fragment>
       </React.Fragment>
     );
   }

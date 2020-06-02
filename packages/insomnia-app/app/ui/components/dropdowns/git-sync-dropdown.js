@@ -79,7 +79,6 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     const branches = await vcs.listBranches();
     const log = (await vcs.log()) || [];
     this.setState({ ...(otherState || {}), log, branch, branches });
-    handleGitBranchChanged(branch);
 
     const author = log[0] ? log[0].author : null;
     const cachedGitRepositoryBranch = branch;
@@ -92,6 +91,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
       cachedGitLastAuthor,
       cachedGitLastCommitTime,
     });
+    handleGitBranchChanged(branch);
   }
 
   async _handleOpen() {
