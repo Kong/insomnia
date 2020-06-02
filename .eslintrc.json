@@ -1,7 +1,7 @@
 {
   "parser": "babel-eslint",
-  "extends": ["semistandard", "plugin:flowtype/recommended", "plugin:prettier/recommended"],
-  "plugins": ["react", "jest", "html", "json", "filenames", "flowtype"],
+  "extends": ["semistandard", "plugin:flowtype/recommended", "plugin:prettier/recommended", "plugin:react-hooks/recommended"],
+  "plugins": ["react", "jest", "html", "json", "filenames", "flowtype", "react-hooks"],
   "parserOptions": {
     "ecmaFeatures": {
       "jsx": true
@@ -30,6 +30,8 @@
     "react/jsx-uses-react": "error",
     "react/jsx-uses-vars": "error",
     "space-in-parens": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "error",
     "space-before-function-paren": [
       "error",
       {
