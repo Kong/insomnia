@@ -145,36 +145,6 @@ describe.each(['win32', 'posix'])('Git-VCS using path.%s', type => {
   });
 
   describe('remove pending changes', () => {
-    it('should delete when removing an untracked file', async () => {
-      const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fs.promises.writeFile(fooTxt, 'foo');
-      await fs.promises.writeFile(barTxt, 'bar');
-
-      const vcs = new GitVCS();
-      await vcs.init(GIT_CLONE_DIR, fs);
-
-      // foo is staged, bar is unstaged, but both are untracked (thus, new to git)
-      await vcs.add(`${GIT_INSOMNIA_DIR}/bar.txt`);
-      expect(await vcs.status(fooTxt)).toBe('*added');
-      expect(await vcs.status(barTxt)).toBe('added');
-
-      // Remove both
-      await vcs.removeUntracked([fooTxt, barTxt]);
-
-      // Ensure git doesn't know about the two files anymore
-      expect(await vcs.status(fooTxt)).toBe('absent');
-      expect(await vcs.status(barTxt)).toBe('absent');
-
-      // Ensure the two files have been removed from the fs (memplugin)
-      await expect(fs.promises.readFile(fooTxt)).rejects.toThrowError(
-        `ENOENT: no such file or directory, scandir '${fooTxt}'`,
-      );
-      await expect(fs.promises.readFile(barTxt)).rejects.toThrowError(
-        `ENOENT: no such file or directory, scandir '${barTxt}'`,
-      );
-    });
-
     it('should remove pending changes from all tracked files', async () => {
       const folder = path.join(GIT_INSOMNIA_DIR, 'folder');
       const folderBarTxt = path.join(folder, 'bar.txt');

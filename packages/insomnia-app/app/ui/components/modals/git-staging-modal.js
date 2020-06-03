@@ -14,6 +14,8 @@ import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import ModalFooter from '../base/modal-footer';
 import Tooltip from '../tooltip';
 import PromptButton from '../base/prompt-button';
+import { gitRollback } from '../../../sync/git/git-rollback';
+import classnames from 'classnames';
 
 type Props = {|
   workspace: Workspace,
@@ -25,6 +27,7 @@ type Item = {|
   type: string,
   status: string,
   staged: boolean,
+  added: boolean,
   editable: boolean,
 |};
 
@@ -215,13 +218,14 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         }
       }
 
-      let staged = !status.includes('added');
+      const added = status.includes('added');
+      let staged = !added;
 
       // We want to enforce that the workspace is committed because otherwise
       // others won't be able to clone from it. So here we're preventing
       // people from un-staging the workspace if it's not added yet.
       let editable = true;
-      if (type === models.workspace.type && status.includes('added')) {
+      if (type === models.workspace.type && added) {
         editable = false;
         staged = true;
       }
@@ -231,6 +235,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         staged,
         editable,
         status,
+        added,
         path: gitPath,
       };
     }
@@ -276,26 +281,18 @@ class GitStagingModal extends React.PureComponent<Props, State> {
 
   async _handleRollback(item: Item) {
     const { vcs } = this.props;
-    const { path: gitPath, status } = item;
+    const { path: filePath, status } = item;
 
-    if (status.includes('added')) {
-      await vcs.removeUntracked(gitPath);
-    } else {
-      await vcs.undoPendingChanges([gitPath]);
-    }
-
+    await gitRollback(vcs, { filePath, status });
     await this._refresh();
   }
 
-  async _handleRollbackAll(items: Array<Item>, tracked?: boolean) {
+  async _handleRollbackAll(items: Array<Item>) {
     const { vcs } = this.props;
 
-    if (tracked) {
-      await vcs.undoPendingChanges(items.map(t => t.path));
-    } else {
-      await vcs.removeUntracked(items.map(t => t.path));
-    }
+    const files = items.map(({ path: filePath, status }) => ({ filePath, status }));
 
+    await gitRollback(vcs, files);
     await this._refresh();
   }
 
@@ -322,7 +319,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         <td className="text-right">
           <button className="btn btn--micro space-right" onClick={() => this._handleRollback(item)}>
             <Tooltip message="Rollback">
-              <i className="fa fa-undo" />
+              <i className={classnames('fa', item.added ? 'fa-trash' : 'fa-undo')} />
             </Tooltip>
           </button>
           {this.renderOperation(item)}
@@ -331,7 +328,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     );
   }
 
-  renderTable(title: string, items: Array<Item>, discardAll: Function) {
+  renderTable(title: string, items: Array<Item>) {
     if (items.length === 0) {
       return null;
     }
@@ -342,7 +339,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     return (
       <div className="pad-top">
         <strong>{title}</strong>
-        <PromptButton className="btn pull-right btn--micro" onClick={discardAll}>
+        <PromptButton
+          className="btn pull-right btn--micro"
+          onClick={() => this._handleRollbackAll(items)}>
           Rollback all
         </PromptButton>
         <table className="table--fancy table--outlined margin-top-sm">
@@ -411,12 +410,8 @@ class GitStagingModal extends React.PureComponent<Props, State> {
                 onChange={this._handleMessageChange}
               />
             </div>
-            {this.renderTable('Modified Objects', existingItems, () =>
-              this._handleRollbackAll(existingItems, true),
-            )}
-            {this.renderTable('Unversioned Objects', newItems, () =>
-              this._handleRollbackAll(newItems, false),
-            )}
+            {this.renderTable('Modified Objects', existingItems)}
+            {this.renderTable('Unversioned Objects', newItems)}
           </ModalBody>
           <ModalFooter>
             <div className="margin-left italic txt-sm tall">
