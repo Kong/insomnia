@@ -146,10 +146,10 @@ export default class GitVCS {
     });
   }
 
-  remove(relPath: string): void {
+  async remove(relPath: string): Promise<void> {
     relPath = convertToPosixSep(relPath);
     console.log(`[git] Remove relPath=${relPath}`);
-    git.remove({ ...this._baseOpts, filepath: relPath });
+    return git.remove({ ...this._baseOpts, filepath: relPath });
   }
 
   async addRemote(url: string): Promise<GitRemoteConfig> {
