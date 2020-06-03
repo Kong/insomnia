@@ -13,7 +13,7 @@ type Suite = {
   tests?: Array<Test>,
 };
 
-export async function generate(suites: Array<Suite>): Promise<string> {
+export async function index(suites: Array<Suite>): Promise<string> {
   const lines = [];
 
   // Require necessary dependencies

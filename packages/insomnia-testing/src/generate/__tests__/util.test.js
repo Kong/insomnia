@@ -7,7 +7,6 @@ describe('util', () => {
     it('skips indent on <= 0', () => {
       expect(indent(0, 'hello')).toBe('hello');
       expect(indent(-1, 'hello')).toBe('hello');
-      expect(indent(null, 'hello')).toBe('hello');
     });
 
     it('indents single lines', () => {
@@ -32,7 +31,6 @@ describe('util', () => {
 
   describe('tabs()', () => {
     it('makes a tab', () => {
-      expect(tabs(null)).toBe('');
       expect(tabs(-1)).toBe('');
       expect(tabs(0)).toBe('');
       expect(tabs(1)).toBe('  ');
