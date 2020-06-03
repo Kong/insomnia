@@ -165,10 +165,12 @@ class GitStagingModal extends React.PureComponent<Props, State> {
 
     // Reset state
     this.setState(INITIAL_STATE);
-    await this._refresh();
+    await this._refresh(() => {
+      this.textarea && this.textarea.focus();
+    });
   }
 
-  async _refresh() {
+  async _refresh(callback?: () => void) {
     const { vcs, workspace } = this.props;
 
     // Cache status names
@@ -238,15 +240,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     }
 
     const branch = await vcs.getBranch();
-    this.setState(
-      {
-        items,
-        branch,
-      },
-      () => {
-        this.textarea && this.textarea.focus();
-      },
-    );
+    this.setState({ items, branch }, callback);
   }
 
   renderOperation(item: Item) {
