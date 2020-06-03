@@ -171,9 +171,6 @@ class GitStagingModal extends React.PureComponent<Props, State> {
   async _refresh() {
     const { vcs, workspace } = this.props;
 
-    // Reset state
-    this.setState(INITIAL_STATE);
-
     // Cache status names
     const docs = await withDescendants(workspace);
     const allPaths = await this.getAllPaths();
@@ -279,18 +276,10 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     );
   }
 
-  async _handleRollback(item: Item) {
-    const { vcs } = this.props;
-    const { path: filePath, status } = item;
-
-    await gitRollback(vcs, { filePath, status });
-    await this._refresh();
-  }
-
-  async _handleRollbackAll(items: Array<Item>) {
+  async _handleRollback(items: Array<Item>) {
     const { vcs } = this.props;
 
-    const files = items.map(({ path: filePath, status }) => ({ filePath, status }));
+    const files = items.map(i => ({ filePath: i.path, status: i.status }));
 
     await gitRollback(vcs, files);
     await this._refresh();
@@ -317,7 +306,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
           </label>
         </td>
         <td className="text-right">
-          <button className="btn btn--micro space-right" onClick={() => this._handleRollback(item)}>
+          <button
+            className="btn btn--micro space-right"
+            onClick={() => this._handleRollback([item])}>
             <Tooltip message="Rollback">
               <i className={classnames('fa', item.added ? 'fa-trash' : 'fa-undo')} />
             </Tooltip>
@@ -341,7 +332,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         <strong>{title}</strong>
         <PromptButton
           className="btn pull-right btn--micro"
-          onClick={() => this._handleRollbackAll(items)}>
+          onClick={() => this._handleRollback(items)}>
           Rollback all
         </PromptButton>
         <table className="table--fancy table--outlined margin-top-sm">
