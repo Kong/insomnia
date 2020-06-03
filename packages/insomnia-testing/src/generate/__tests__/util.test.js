@@ -1,6 +1,6 @@
 // @flow
 
-import { escapeJsStr, indent, tabs } from '../util';
+import { escapeJsStr, indent } from '../util';
 
 describe('util', () => {
   describe('indent()', () => {
@@ -26,15 +26,6 @@ describe('util', () => {
     });
     it('escapes something with quotes', () => {
       expect(escapeJsStr(`"Hello" 'World'`)).toBe(`"Hello" \\'World\\'`);
-    });
-  });
-
-  describe('tabs()', () => {
-    it('makes a tab', () => {
-      expect(tabs(-1)).toBe('');
-      expect(tabs(0)).toBe('');
-      expect(tabs(1)).toBe('  ');
-      expect(tabs(8)).toBe('                ');
     });
   });
 });

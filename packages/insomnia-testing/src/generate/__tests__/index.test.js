@@ -1,5 +1,5 @@
 // @flow
-import { generate } from '../generate';
+import { generate } from '../index';
 import fs from 'fs';
 import path from 'path';
 
