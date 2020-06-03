@@ -20,7 +20,8 @@ import { showAlert, showPrompt } from '../modals';
 type State = {
   plugins: Array<Plugin>,
   npmPluginValue: string,
-  error: string,
+  error: Object,
+  installPluginErrMsg: string,
   isInstallingFromNpm: boolean,
   isRefreshingPlugins: boolean,
 };
@@ -39,14 +40,15 @@ class Plugins extends React.PureComponent<Props, State> {
     this.state = {
       plugins: [],
       npmPluginValue: '',
-      error: '',
+      error: null,
+      installPluginErrMsg: '',
       isInstallingFromNpm: false,
       isRefreshingPlugins: false,
     };
   }
 
   _handleClearError() {
-    this.setState({ error: '' });
+    this.setState({ error: null });
   }
 
   _handleAddNpmPluginChange(e: Event) {
@@ -62,14 +64,16 @@ class Plugins extends React.PureComponent<Props, State> {
 
     const newState: $Shape<State> = {
       isInstallingFromNpm: false,
-      error: '',
+      error: null,
+      installPluginErrMsg: ''
     };
     try {
       await installPlugin(this.state.npmPluginValue.trim());
       await this._handleRefreshPlugins();
       newState.npmPluginValue = ''; // Clear input if successful install
     } catch (err) {
-      newState.error = `Failed to install ${this.state.npmPluginValue}`;
+      newState.installPluginErrMsg = `Failed to install ${this.state.npmPluginValue}`
+      newState.error = err;
     }
 
     this.setState(newState);
@@ -202,7 +206,7 @@ class Plugins extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { plugins, error, isInstallingFromNpm, isRefreshingPlugins, npmPluginValue } = this.state;
+    const { plugins, error, installPluginErrMsg, isInstallingFromNpm, isRefreshingPlugins, npmPluginValue } = this.state;
 
     return (
       <div>
@@ -268,9 +272,15 @@ class Plugins extends React.PureComponent<Props, State> {
               <i className="fa fa-times" />
             </button>
             <div className="selectable force-pre-wrap">
-              <b>{error}</b>
+              <b>{installPluginErrMsg}</b>
               {`\n\nThere may be an issue with the plugin itself, as a note you can discover and install plugins from the `}
               <a href="https://insomnia.rest/plugins/">Plugin Hub.</a>
+              <details>
+                <summary>{`Additional Information`}</summary>
+                  <pre className="pad-top-sm force-wrap selectable">
+                    <code>{error.stack || error}</code>
+                  </pre>
+              </details>
             </div>
           </div>
         )}
