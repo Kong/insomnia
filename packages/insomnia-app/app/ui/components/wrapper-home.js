@@ -38,7 +38,7 @@ import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import { MemPlugin } from '../../sync/git/mem-plugin';
-import GitVCS, {
+import {
   GIT_CLONE_DIR,
   GIT_INSOMNIA_DIR,
   GIT_INSOMNIA_DIR_NAME,
@@ -51,7 +51,6 @@ type Props = {|
   handleImportFile: (forceToWorkspace: ForceToWorkspace) => void,
   handleImportUri: (uri: string, forceToWorkspace: ForceToWorkspace) => void,
   handleImportClipboard: (forceToWorkspace: ForceToWorkspace) => void,
-  gitVCS: GitVCS | null,
 |};
 
 type State = {|

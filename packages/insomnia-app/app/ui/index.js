@@ -8,12 +8,13 @@ import { init as initStore } from './redux/modules';
 import * as legacySync from '../sync-legacy';
 import { init as initPlugins } from '../plugins';
 import './css/index.less';
-import { getAppLongName, isDevelopment } from '../common/constants';
+import { getAppId, getAppLongName, isDevelopment } from '../common/constants';
 import { setFont, setTheme } from '../plugins/misc';
 import { AppContainer } from 'react-hot-loader';
 import { DragDropContext } from 'react-dnd';
 import DNDBackend from './dnd-backend';
 import { trackEvent } from '../common/analytics';
+import { APP_ID_DESIGNER, APP_ID_INSOMNIA } from '../../config';
 
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
@@ -52,17 +53,21 @@ document.title = getAppLongName();
     // });
   }
 
-  // Legacy sync not part of Designer
-  legacySync.disableForSession();
+  const appId = getAppId();
 
-  // // Do things that can wait
-  // const { enableSyncBeta } = await models.settings.getOrCreate();
-  // if (enableSyncBeta) {
-  //   console.log('[app] Enabling sync beta');
-  //   legacySync.disableForSession();
-  // } else {
-  //   process.nextTick(legacySync.init);
-  // }
+  // Legacy sync not part of Designer
+  if (appId === APP_ID_DESIGNER) {
+    legacySync.disableForSession();
+  } else if (appId === APP_ID_INSOMNIA) {
+    // Do things that can wait
+    const { enableSyncBeta } = await models.settings.getOrCreate();
+    if (enableSyncBeta) {
+      console.log('[app] Enabling sync beta');
+      legacySync.disableForSession();
+    } else {
+      process.nextTick(legacySync.init);
+    }
+  }
 })();
 
 // Export some useful things for dev
