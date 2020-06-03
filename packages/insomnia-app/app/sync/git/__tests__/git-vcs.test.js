@@ -144,7 +144,7 @@ describe.each(['win32', 'posix'])('Git-VCS using path.%s', type => {
     });
   });
 
-  describe('remove pending changes', () => {
+  describe('undoPendingChanges()', () => {
     it('should remove pending changes from all tracked files', async () => {
       const folder = path.join(GIT_INSOMNIA_DIR, 'folder');
       const folderBarTxt = path.join(folder, 'bar.txt');

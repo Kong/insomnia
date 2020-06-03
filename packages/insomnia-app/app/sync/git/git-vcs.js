@@ -152,17 +152,6 @@ export default class GitVCS {
     git.remove({ ...this._baseOpts, filepath: relPath });
   }
 
-  async removeUntracked(paths: Array<string>): Promise<void> {
-    await Promise.all(
-      paths.map(async p => {
-        await this.remove(p);
-
-        console.log(`[fs] Unlink relPath=${p}`);
-        await this.getFs().promises.unlink(p);
-      }),
-    );
-  }
-
   async addRemote(url: string): Promise<GitRemoteConfig> {
     console.log(`[git] Add Remote url=${url}`);
     await git.addRemote({ ...this._baseOpts, remote: 'origin', url, force: true });

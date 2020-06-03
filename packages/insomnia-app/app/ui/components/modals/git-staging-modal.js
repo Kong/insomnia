@@ -102,7 +102,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async _toggleAll(items: Array<Item>, forceAdd?: boolean = false) {
+  async _toggleAll(items: Array<Item>, forceAdd: boolean = false) {
     const allStaged = items.every(i => i.staged);
     const doStage = !allStaged;
 
@@ -300,20 +300,20 @@ class GitStagingModal extends React.PureComponent<Props, State> {
           </label>
         </td>
         <td className="text-right">
-          <button
-            className="btn btn--micro space-right"
-            onClick={() => this._handleRollback([item])}>
-            <Tooltip message="Rollback">
+          <Tooltip message={item.added ? 'Delete' : 'Rollback'}>
+            <button
+              className="btn btn--micro space-right"
+              onClick={() => this._handleRollback([item])}>
               <i className={classnames('fa', item.added ? 'fa-trash' : 'fa-undo')} />
-            </Tooltip>
-          </button>
+            </button>
+          </Tooltip>
           {this.renderOperation(item)}
         </td>
       </tr>
     );
   }
 
-  renderTable(title: string, items: Array<Item>) {
+  renderTable(title: string, items: Array<Item>, rollbackLabel: string) {
     if (items.length === 0) {
       return null;
     }
@@ -327,7 +327,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         <PromptButton
           className="btn pull-right btn--micro"
           onClick={() => this._handleRollback(items)}>
-          Rollback all
+          {rollbackLabel}
         </PromptButton>
         <table className="table--fancy table--outlined margin-top-sm">
           <thead>
@@ -395,8 +395,8 @@ class GitStagingModal extends React.PureComponent<Props, State> {
                 onChange={this._handleMessageChange}
               />
             </div>
-            {this.renderTable('Modified Objects', existingItems)}
-            {this.renderTable('Unversioned Objects', newItems)}
+            {this.renderTable('Modified Objects', existingItems, 'Rollback all')}
+            {this.renderTable('Unversioned Objects', newItems, 'Delete all')}
           </ModalBody>
           <ModalFooter>
             <div className="margin-left italic txt-sm tall">
