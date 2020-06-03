@@ -65,14 +65,14 @@ class Plugins extends React.PureComponent<Props, State> {
     const newState: $Shape<State> = {
       isInstallingFromNpm: false,
       error: null,
-      installPluginErrMsg: ''
+      installPluginErrMsg: '',
     };
     try {
       await installPlugin(this.state.npmPluginValue.trim());
       await this._handleRefreshPlugins();
       newState.npmPluginValue = ''; // Clear input if successful install
     } catch (err) {
-      newState.installPluginErrMsg = `Failed to install ${this.state.npmPluginValue}`
+      newState.installPluginErrMsg = `Failed to install ${this.state.npmPluginValue}`;
       newState.error = err;
     }
 
@@ -206,7 +206,14 @@ class Plugins extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { plugins, error, installPluginErrMsg, isInstallingFromNpm, isRefreshingPlugins, npmPluginValue } = this.state;
+    const {
+      plugins,
+      error,
+      installPluginErrMsg,
+      isInstallingFromNpm,
+      isRefreshingPlugins,
+      npmPluginValue,
+    } = this.state;
 
     return (
       <div>
@@ -276,10 +283,10 @@ class Plugins extends React.PureComponent<Props, State> {
               {`\n\nThere may be an issue with the plugin itself, as a note you can discover and install plugins from the `}
               <a href="https://insomnia.rest/plugins/">Plugin Hub.</a>
               <details>
-                <summary>{`Additional Information`}</summary>
-                  <pre className="pad-top-sm force-wrap selectable">
-                    <code>{error.stack || error}</code>
-                  </pre>
+                <summary>Additionl Information</summary>
+                <pre className="pad-top-sm force-wrap selectable">
+                  <code>{error.stack || error}</code>
+                </pre>
               </details>
             </div>
           </div>
