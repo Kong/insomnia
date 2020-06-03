@@ -378,23 +378,20 @@ function getSecurityEnvVariables(securitySchemes) {
   const hasHttpBearerScheme = securitySchemesArray.some(
     scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'bearer',
   );
-  const oauth2Variables = securitySchemesArray.reduce(
-    (acc, scheme) => {
-      if (scheme.type === SECURITY_TYPE.OAUTH && scheme.scheme === 'bearer') {
-        acc.oauth2ClientId = 'clientId';
-        const flows = scheme.flows || {};
-        if (flows.authorizationCode || flows.clientCredentials || flows.password) {
-          acc.oauth2ClientSecret = 'clientSecret';
-        }
-        if (flows.password) {
-          acc.oauth2Username = 'username';
-          acc.oauth2Password = 'password';
-        }
+  const oauth2Variables = securitySchemesArray.reduce((acc, scheme) => {
+    if (scheme.type === SECURITY_TYPE.OAUTH && scheme.scheme === 'bearer') {
+      acc.oauth2ClientId = 'clientId';
+      const flows = scheme.flows || {};
+      if (flows.authorizationCode || flows.clientCredentials || flows.password) {
+        acc.oauth2ClientSecret = 'clientSecret';
       }
-      return acc;
-    },
-    {},
-  );
+      if (flows.password) {
+        acc.oauth2Username = 'username';
+        acc.oauth2Password = 'password';
+      }
+    }
+    return acc;
+  }, {});
 
   Array.from(new Set(apiKeyVariableNames)).forEach(name => {
     variables[name] = name;
