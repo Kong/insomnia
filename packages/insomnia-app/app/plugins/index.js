@@ -64,7 +64,7 @@ export type SpecInfo = {
 
 export type ConfigGenerator = {
   plugin: Plugin,
-  generate: (info: SpecInfo) => Promise<{document?: string, error?: string}>,
+  generate: (info: SpecInfo) => Promise<{ document?: string, error?: string }>,
 };
 
 export type DocumentAction = {
@@ -182,7 +182,7 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
     // Store plugins in a map so that plugins with the same
     // name only get added once
     // TODO: Make this more complex and have the latest version always win
-    const pluginMap: {[string]: Plugin} = {
+    const pluginMap: { [string]: Plugin } = {
       // "name": "module"
     };
 

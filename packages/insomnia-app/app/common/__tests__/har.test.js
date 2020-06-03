@@ -193,7 +193,10 @@ describe('exportHar()', () => {
         entries: [
           {
             request: {
-              headers: [{ name: 'X-Environment', value: '' }, { name: 'X-Request', value: '1' }],
+              headers: [
+                { name: 'X-Environment', value: '' },
+                { name: 'X-Request', value: '1' },
+              ],
             },
             response: {
               status: 204,

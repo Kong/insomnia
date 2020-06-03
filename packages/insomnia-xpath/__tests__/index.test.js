@@ -12,7 +12,10 @@ describe('query()', () => {
   q(
     'handles basic query',
     ['<x><y>foo</y><y>bar</y></x>', '//y'],
-    [{ inner: 'foo', outer: '<y>foo</y>' }, { inner: 'bar', outer: '<y>bar</y>' }],
+    [
+      { inner: 'foo', outer: '<y>foo</y>' },
+      { inner: 'bar', outer: '<y>bar</y>' },
+    ],
   );
 
   q(

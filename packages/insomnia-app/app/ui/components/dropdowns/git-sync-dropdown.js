@@ -16,11 +16,12 @@ import GitLogModal from '../modals/git-log-modal';
 import GitBranchesModal from '../modals/git-branches-modal';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
-import { getDocumentationUrl } from '../../../common/constants';
 import { trackEvent } from '../../../common/analytics';
+import { docsGitSync } from '../../../common/documentation';
 
 type Props = {|
-  handleInitializeEntities: () => void,
+  handleInitializeEntities: () => Promise<void>,
+  handleGitBranchChanged: (branch: string) => void,
   workspace: Workspace,
   vcs: GitVCS,
   gitRepository: GitRepository | null,
@@ -60,7 +61,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _refreshState(otherState?: Object) {
-    const { vcs, workspace } = this.props;
+    const { vcs, workspace, handleGitBranchChanged } = this.props;
 
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
@@ -90,6 +91,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
       cachedGitLastAuthor,
       cachedGitLastCommitTime,
     });
+    handleGitBranchChanged(branch);
   }
 
   async _handleOpen() {
@@ -110,7 +112,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     try {
       await vcs.pull(gitRepository.credentials);
     } catch (err) {
-      showError({ title: 'Pull Error', error: err });
+      showError({ title: 'Error Pulling Repository', error: err });
     }
     await db.flushChanges(bufferId);
 
@@ -131,7 +133,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     try {
       canPush = await vcs.canPush(gitRepository.credentials);
     } catch (err) {
-      showAlert({ title: 'Push Rejected', message: err.message });
+      showError({ title: 'Error Pushing Repository', error: err });
       this.setState({ loadingPush: false });
       return;
     }
@@ -162,7 +164,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           },
         });
       } else {
-        showError({ title: 'Push Error', error: err });
+        showError({ title: 'Error Pushing Repository', error: err });
       }
     }
 
@@ -212,7 +214,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     }
     await db.flushChanges(bufferId, true);
 
-    handleInitializeEntities();
+    await handleInitializeEntities();
     await this._refreshState();
   }
 
@@ -224,11 +226,13 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     const { branch } = this.state;
     const { vcs, renderDropdownButton } = this.props;
 
-    const renderBtn = renderDropdownButton || (children => (
-      <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
-        {children}
-      </DropdownButton>
-    ));
+    const renderBtn =
+      renderDropdownButton ||
+      (children => (
+        <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
+          {children}
+        </DropdownButton>
+      ));
 
     if (!vcs.isInitialized()) {
       return renderBtn(
@@ -280,7 +284,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
             Git Sync
             <HelpTooltip>
               Sync and collaborate with Git{' '}
-              <Link href={getDocumentationUrl('git-sync')}>
+              <Link href={docsGitSync}>
                 <span className="no-wrap">
                   <br />
                   Documentation <i className="fa fa-external-link" />

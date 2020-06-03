@@ -65,7 +65,10 @@ describe('tokenizeTag()', () => {
 
     const expected = {
       name: 'name',
-      args: [{ type: 'string', value: 'foo', quotedBy: "'" }, { type: 'variable', value: 'bar' }],
+      args: [
+        { type: 'string', value: 'foo', quotedBy: "'" },
+        { type: 'variable', value: 'bar' },
+      ],
     };
 
     expect(minimal).toEqual(expected);
@@ -103,7 +106,10 @@ describe('tokenizeTag()', () => {
 
     const expected = {
       name: 'name',
-      args: [{ type: 'boolean', value: true }, { type: 'boolean', value: false }],
+      args: [
+        { type: 'boolean', value: true },
+        { type: 'boolean', value: false },
+      ],
     };
 
     expect(actual).toEqual(expected);
@@ -150,7 +156,10 @@ describe('unTokenizeTag()', () => {
   it('fixes missing quotedBy attribute', () => {
     const tagData = {
       name: 'name',
-      args: [{ type: 'file', value: 'foo/bar/baz' }, { type: 'model', value: 'foo' }],
+      args: [
+        { type: 'file', value: 'foo/bar/baz' },
+        { type: 'model', value: 'foo' },
+      ],
     };
 
     const result = utils.unTokenizeTag(tagData);

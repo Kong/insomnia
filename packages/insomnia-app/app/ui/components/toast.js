@@ -3,6 +3,7 @@ import * as React from 'react';
 import * as electron from 'electron';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
+import { appConfig } from '../../../config';
 import GravatarImg from './gravatar-img';
 import Link from './base/link';
 import * as models from '../../models/index';
@@ -90,7 +91,7 @@ class Toast extends React.PureComponent<Props, State> {
         updatesNotSupported: constants.isLinux(),
         autoUpdatesDisabled: !settings.updateAutomatically,
         disableUpdateNotification: settings.disableUpdateNotification,
-        updateChannel: !settings.updateChannel,
+        updateChannel: settings.updateChannel,
       };
 
       notification = await fetch.post('/notification', data, session.getCurrentSessionId());
@@ -105,6 +106,11 @@ class Toast extends React.PureComponent<Props, State> {
     // No new notifications
     if (!notification || this._hasSeenNotification(notification)) {
       return;
+    }
+
+    // Set default properties
+    if (!notification.email) {
+      notification.email = appConfig().gravatarEmail;
     }
 
     // Remember that we've seen it
@@ -174,7 +180,7 @@ class Toast extends React.PureComponent<Props, State> {
           'toast--show': visible,
         })}>
         <div className="toast__image">
-          <GravatarImg email={notification.email} fallback={appIconSrc} size={100} />
+          <GravatarImg email={notification.email} fallback={appIconSrc} size={100} rounded />
         </div>
         <div className="toast__content">
           <p className="toast__message">{notification ? notification.message : 'Unknown'}</p>

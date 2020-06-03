@@ -1,21 +1,23 @@
 {
   "name": "insomnia-components",
-  "version": "2.2.4",
+  "version": "2.2.7",
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Insomnia UI component library",
   "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
-    "test": "flow check",
+    "typecheck": "flow check",
+    "test": "npm run typecheck",
     "build": "webpack --config webpack.config.js --display errors-only",
     "build-storybook": "build-storybook --quiet",
     "storybook": "start-storybook --port 3223",
-    "bootstrap": "rimraf node_modules/fsevents && npm run convert-svg",
-    "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js"
+    "bootstrap": "npm run convert-svg && npm run build",
+    "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js",
+    "prepublish": "npm run convert-svg && npm run build"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged && npm run build"
+      "pre-commit": "pretty-quick --staged && npm run typecheck"
     }
   },
   "devDependencies": {
@@ -28,12 +30,14 @@
     "@svgr/cli": "^5.3.0",
     "babel-loader": "^8.0.6",
     "babel-plugin-inline-react-svg": "^1.1.1",
+    "storybook-addon-designs": "^5.2.0",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "autobind-decorator": "^2.4.0",
     "classnames": "^2.2.6",
+    "framer-motion": "^1.10.3",
     "fuzzysort": "^1.1.4",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",

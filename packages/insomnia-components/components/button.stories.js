@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import SvgIcon, { IconEnum } from './svg-icon';
 
 export default {
-  title: 'Button',
+  title: '1st Party | Button',
   decorators: [withKnobs],
 };
 
@@ -90,7 +90,9 @@ export const reference = () => (
   <React.Fragment>
     {['default', 'small'].map(s => (
       <Padded>
-        <h2><code>size={s}</code></h2>
+        <h2>
+          <code>size={s}</code>
+        </h2>
         <Wrapper>
           <Button variant="contained" size={s}>
             Default

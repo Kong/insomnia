@@ -1,0 +1,7 @@
+# Ignore everything by default
+# NOTE: NPM publish will never ignore package.json, package-lock.json, README, LICENSE, CHANGELOG
+# https://npm.github.io/publishing-pkgs-docs/publishing/the-npmignore-file.html
+*
+
+# Don't ignore dist folder
+!dist/*
