@@ -173,7 +173,7 @@ describe.each(['win32', 'posix'])('Git-VCS using path.%s', type => {
       expect(await vcs.status(folderBarTxt)).toBe('*modified');
 
       // Undo
-      await vcs.undoPendingChanges();
+      await vcs.undoAllPendingChanges();
 
       // Ensure git doesn't recognize a change anymore
       expect(await vcs.status(fooTxt)).toBe('unmodified');
