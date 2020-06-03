@@ -12,7 +12,7 @@ export const gitRollback = async (vcs: GitVCS, files: Array<FileWithStatus>): Pr
   // Remove and delete added (unversioned) files
   const promises: Array<Promise<void>> = addedFiles.map(async ({ filePath }) => {
     await vcs.remove(filePath);
-    console.log(`[fs] Unlink relPath=${filePath}`);
+    console.log(`[git-rollback] Delete relPath=${filePath}`);
     await vcs.getFs().promises.unlink(filePath);
   });
 
