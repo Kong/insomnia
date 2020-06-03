@@ -69,7 +69,7 @@ class Plugins extends React.PureComponent<Props, State> {
       await this._handleRefreshPlugins();
       newState.npmPluginValue = ''; // Clear input if successful install
     } catch (err) {
-      newState.error = err.message;
+      newState.error = `Failed to install ${this.state.npmPluginValue}`;
     }
 
     this.setState(newState);
@@ -268,7 +268,9 @@ class Plugins extends React.PureComponent<Props, State> {
               <i className="fa fa-times" />
             </button>
             <div className="selectable force-pre-wrap">
-              {`Search, discover, and install plugins from the Insomnia Plugin Hub: https://insomnia.rest/plugins/`}
+              <b>{error}</b>
+              {`\n\nThere may be an issue with the plugin itself, as a note you can discover and install plugins from the `}
+              <a href="https://insomnia.rest/plugins/">Plugin Hub.</a>
             </div>
           </div>
         )}
