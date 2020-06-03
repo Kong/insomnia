@@ -317,12 +317,7 @@ export default class GitVCS {
     }
   }
 
-  async undoAllPendingChanges(): Promise<void> {
-    console.log('[git] Undo pending changes');
-    return this.undoPendingChanges(null);
-  }
-
-  async undoPendingChanges(filepaths: Array<String> | null): Promise<void> {
+  async undoPendingChanges(fileFilter?: Array<String>): Promise<void> {
     console.log('[git] Undo pending changes');
 
     await git.fastCheckout({
@@ -330,7 +325,7 @@ export default class GitVCS {
       ref: await this.getBranch(),
       remote: 'origin',
       force: true,
-      filepaths: filepaths?.map(convertToPosixSep),
+      filepaths: fileFilter?.map(convertToPosixSep),
     });
   }
 
