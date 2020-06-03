@@ -3,16 +3,7 @@
 import type { PluginArgumentEnumOption } from './extensions';
 
 export type NunjucksParsedTagArg = {
-  type:
-    | 'string'
-    | 'number'
-    | 'boolean'
-    | 'number'
-    | 'variable'
-    | 'expression'
-    | 'enum'
-    | 'file'
-    | 'model',
+  type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model',
   encoding?: 'base64',
   value: string | number | boolean,
   defaultValue?: string | number | boolean,
@@ -169,7 +160,7 @@ export function tokenizeTag(tagStr: string): NunjucksParsedTag {
 export function unTokenizeTag(tagData: NunjucksParsedTag): string {
   const args = [];
   for (const arg of tagData.args) {
-    if (['string', 'model', 'file'].includes(arg.type)) {
+    if (['string', 'model', 'file', 'enum'].includes(arg.type)) {
       const q = arg.quotedBy || "'";
       const re = new RegExp(`([^\\\\])${q}`, 'g');
       const str = arg.value.toString().replace(re, `$1\\${q}`);
