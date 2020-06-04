@@ -9,7 +9,7 @@ export function indent(level: number, code: string, tab: string = '  '): string 
     return code;
   }
 
-  const prefix = new Array(level+1).join('  ');
+  const prefix = new Array(level + 1).join('  ');
   return code
     .split('\n')
     .map(line => prefix + line)
