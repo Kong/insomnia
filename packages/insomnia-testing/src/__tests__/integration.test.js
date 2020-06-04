@@ -1,6 +1,6 @@
 // @flow
 import { generateToTmpFile } from '../generate';
-import { runSuite } from '../run';
+import { runMochaTests } from '../run';
 
 describe('integration', () => {
   it('generates and runs basic tests', async () => {
@@ -21,7 +21,7 @@ describe('integration', () => {
       },
     ]);
 
-    const { stats } = await runSuite(testFilename);
+    const { stats } = await runMochaTests(testFilename);
 
     expect(stats.passes).toBe(2);
     expect(stats.tests).toBe(2);

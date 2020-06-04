@@ -9,7 +9,7 @@ import { Reporter } from './reporter';
  * @param filename
  * @returns {Promise<R>}
  */
-export async function runSuite(...filename: Array<string>): Promise<Object> {
+export async function runMochaTests(...filename: Array<string>): Promise<Object> {
   return new Promise(resolve => {
     const m = new Mocha();
 
