@@ -36,6 +36,6 @@ describe('run', () => {
 
 function writeToTmp(contents: string): string {
   const tmpPath = path.join(os.tmpdir(), `${Math.random()}.test.js`);
-  fs.writeFileSync(tmpPath, exampleTest);
+  fs.writeFileSync(tmpPath, contents);
   return tmpPath;
 }
