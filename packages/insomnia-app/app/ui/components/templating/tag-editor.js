@@ -115,7 +115,10 @@ class TagEditor extends React.PureComponent<Props, State> {
       allDocs[doc.type].push(doc);
     }
 
-    this.setState({ allDocs, loadingDocs: false });
+    this.setState({
+      allDocs,
+      loadingDocs: false,
+    });
   }
 
   async _updateArg(
@@ -155,7 +158,10 @@ class TagEditor extends React.PureComponent<Props, State> {
 
     if (!argData) {
       // Should never happen
-      console.warn('Could not find arg data to update', { tagData, argIndex });
+      console.warn('Could not find arg data to update', {
+        tagData,
+        argIndex,
+      });
       return;
     }
 
@@ -400,8 +406,15 @@ class TagEditor extends React.PureComponent<Props, State> {
 
   renderArgEnum(value: string, options: Array<PluginArgumentEnumOption>) {
     const argDatas = this.state.activeTagData ? this.state.activeTagData.args : [];
+
+    let unsetOption = null;
+    if (!options.find(o => o.value === value)) {
+      unsetOption = <option value="">-- Select Option --</option>;
+    }
+
     return (
       <select value={value} onChange={this._handleChange}>
+        {unsetOption}
         {options.map(option => {
           let label: string;
           const { description } = option;
@@ -591,12 +604,18 @@ class TagEditor extends React.PureComponent<Props, State> {
               </DropdownButton>
               <DropdownDivider>Input Type</DropdownDivider>
               <DropdownItem
-                value={{ variable: false, argIndex }}
+                value={{
+                  variable: false,
+                  argIndex,
+                }}
                 onClick={this._handleChangeArgVariable}>
                 <i className={'fa ' + (isVariable ? '' : 'fa-check')} /> Static Value
               </DropdownItem>
               <DropdownItem
-                value={{ variable: true, argIndex }}
+                value={{
+                  variable: true,
+                  argIndex,
+                }}
                 onClick={this._handleChangeArgVariable}>
                 <i className={'fa ' + (isVariable ? 'fa-check' : '')} /> Environment Variable
               </DropdownItem>
@@ -669,7 +688,10 @@ class TagEditor extends React.PureComponent<Props, State> {
           <div className="form-control form-control--outlined">
             <button
               type="button"
-              style={{ zIndex: 10, position: 'relative' }}
+              style={{
+                zIndex: 10,
+                position: 'relative',
+              }}
               className="txt-sm pull-right icon inline-block"
               onClick={this._handleRefresh}>
               refresh{' '}
