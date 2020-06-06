@@ -13,6 +13,9 @@ import { withDescendants } from '../../../common/database';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import ModalFooter from '../base/modal-footer';
 import Tooltip from '../tooltip';
+import PromptButton from '../base/prompt-button';
+import { gitRollback } from '../../../sync/git/git-rollback';
+import classnames from 'classnames';
 
 type Props = {|
   workspace: Workspace,
@@ -24,6 +27,7 @@ type Item = {|
   type: string,
   status: string,
   staged: boolean,
+  added: boolean,
   editable: boolean,
 |};
 
@@ -35,7 +39,7 @@ type State = {|
   },
 |};
 
-const INITIAL_STATE = {
+const INITIAL_STATE: State = {
   branch: '',
   message: '',
   items: {},
@@ -98,7 +102,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async _toggleAll(items: Array<Item>, forceAdd?: boolean = false) {
+  async _toggleAll(items: Array<Item>, forceAdd: boolean = false) {
     const allStaged = items.every(i => i.staged);
     const doStage = !allStaged;
 
@@ -155,14 +159,19 @@ class GitStagingModal extends React.PureComponent<Props, State> {
   }
 
   async show(options: { onCommit?: () => void }) {
-    const { vcs, workspace } = this.props;
-
     this.onCommit = options.onCommit || null;
 
     this.modal && this.modal.show();
 
     // Reset state
     this.setState(INITIAL_STATE);
+    await this._refresh(() => {
+      this.textarea && this.textarea.focus();
+    });
+  }
+
+  async _refresh(callback?: () => void) {
+    const { vcs, workspace } = this.props;
 
     // Cache status names
     const docs = await withDescendants(workspace);
@@ -177,7 +186,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
 
     // Create status items
     const items = {};
-    const log = (await vcs.log()) || [];
+    const log = (await vcs.log(1)) || [];
     for (const gitPath of allPaths) {
       const status = await vcs.status(gitPath);
       if (status === 'unmodified') {
@@ -208,13 +217,14 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         }
       }
 
-      let staged = !status.includes('added');
+      const added = status.includes('added');
+      let staged = !added;
 
       // We want to enforce that the workspace is committed because otherwise
       // others won't be able to clone from it. So here we're preventing
       // people from un-staging the workspace if it's not added yet.
       let editable = true;
-      if (type === models.workspace.type && status.includes('added')) {
+      if (type === models.workspace.type && added) {
         editable = false;
         staged = true;
       }
@@ -224,20 +234,13 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         staged,
         editable,
         status,
+        added,
         path: gitPath,
       };
     }
 
     const branch = await vcs.getBranch();
-    this.setState(
-      {
-        items,
-        branch,
-      },
-      () => {
-        this.textarea && this.textarea.focus();
-      },
-    );
+    this.setState({ items, branch }, callback);
   }
 
   renderOperation(item: Item) {
@@ -267,6 +270,15 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     );
   }
 
+  async _handleRollback(items: Array<Item>) {
+    const { vcs } = this.props;
+
+    const files = items.map(i => ({ filePath: i.path, status: i.status }));
+
+    await gitRollback(vcs, files);
+    await this._refresh();
+  }
+
   renderItem(item: Item) {
     const { path: gitPath, staged, editable } = item;
 
@@ -287,12 +299,21 @@ class GitStagingModal extends React.PureComponent<Props, State> {
             {docName}
           </label>
         </td>
-        <td className="text-right">{this.renderOperation(item)}</td>
+        <td className="text-right">
+          <Tooltip message={item.added ? 'Delete' : 'Rollback'}>
+            <button
+              className="btn btn--micro space-right"
+              onClick={() => this._handleRollback([item])}>
+              <i className={classnames('fa', item.added ? 'fa-trash' : 'fa-undo')} />
+            </button>
+          </Tooltip>
+          {this.renderOperation(item)}
+        </td>
       </tr>
     );
   }
 
-  renderTable(title: string, items: Array<Item>) {
+  renderTable(title: string, items: Array<Item>, rollbackLabel: string) {
     if (items.length === 0) {
       return null;
     }
@@ -303,6 +324,11 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     return (
       <div className="pad-top">
         <strong>{title}</strong>
+        <PromptButton
+          className="btn pull-right btn--micro"
+          onClick={() => this._handleRollback(items)}>
+          {rollbackLabel}
+        </PromptButton>
         <table className="table--fancy table--outlined margin-top-sm">
           <thead>
             <tr className="table--no-outline-row">
@@ -352,8 +378,8 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         </>
       );
     } else {
-      const addedItems = itemsList.filter(i => i.status.includes('added'));
-      const nonAddedItems = itemsList.filter(i => !i.status.includes('added'));
+      const newItems = itemsList.filter(i => i.status.includes('added'));
+      const existingItems = itemsList.filter(i => !i.status.includes('added'));
 
       body = (
         <>
@@ -369,8 +395,8 @@ class GitStagingModal extends React.PureComponent<Props, State> {
                 onChange={this._handleMessageChange}
               />
             </div>
-            {this.renderTable('Modified Objects', nonAddedItems)}
-            {this.renderTable('Unversioned Objects', addedItems)}
+            {this.renderTable('Modified Objects', existingItems, 'Rollback all')}
+            {this.renderTable('Unversioned Objects', newItems, 'Delete all')}
           </ModalBody>
           <ModalFooter>
             <div className="margin-left italic txt-sm tall">
