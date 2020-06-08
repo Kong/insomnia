@@ -29,6 +29,7 @@
     "@babel/preset-env": "^7.10.2",
     "@babel/preset-flow": "^7.10.1",
     "husky": "^3.1.0",
+    "jest": "^26.0.1",
     "rimraf": "^3.0.2"
   },
   "dependencies": {
