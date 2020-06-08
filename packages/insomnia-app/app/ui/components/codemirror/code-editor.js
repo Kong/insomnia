@@ -310,8 +310,7 @@ class CodeEditor extends React.Component {
         try {
           const parsed = JSON.parse(toParse);
           count = Object.keys(parsed).length;
-        } catch (e) {
-        }
+        } catch (e) {}
         return count ? `\u21A4 ${count} \u21A6` : '\u2194';
       },
     };
