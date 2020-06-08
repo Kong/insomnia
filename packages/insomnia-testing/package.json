@@ -25,6 +25,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
+    "chai": "^4.2.0",
     "mocha": "^6.2.3"
   }
 }

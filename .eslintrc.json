@@ -26,6 +26,7 @@
     "no-case-declarations": "off",
     "no-prototype-builtins": "off",
     "no-duplicate-imports": "off",
+    "no-unused-expressions": "off",
     "flowtype/space-after-type-colon": "off",
     "react/jsx-uses-react": "error",
     "react/jsx-uses-vars": "error",
