@@ -29,8 +29,6 @@
     "@babel/preset-env": "^7.10.2",
     "@babel/preset-flow": "^7.10.1",
     "husky": "^3.1.0",
-    "ink": "^2.7.1",
-    "react": "^16.13.1",
     "rimraf": "^3.0.2"
   },
   "dependencies": {
