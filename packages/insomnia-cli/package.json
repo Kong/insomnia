@@ -8,10 +8,10 @@
   "scripts": {
     "typecheck": "flow check",
     "test": "jest",
-    "clean": "rimraf dist",
+    "start": "npm run watch",
     "build": "babel ./src --out-dir=./dist",
     "watch": "babel --source-maps --watch=./src --out-dir=./dist",
-    "bootstrap": "npm run build",
+    "bootstrap": "chmod +x src/index.js && npm run build",
     "prepublish": "npm run build"
   },
   "jest": {
@@ -29,8 +29,7 @@
     "@babel/preset-env": "^7.10.2",
     "@babel/preset-flow": "^7.10.1",
     "husky": "^3.1.0",
-    "rimraf": "^3.0.2",
-    "webpack-cli": "^3.3.11"
+    "rimraf": "^3.0.2"
   },
   "dependencies": {
     "commander": "^5.1.0"

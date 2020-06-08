@@ -2,7 +2,7 @@
 // @flow
 
 import { program } from 'commander';
-import { generateConfig } from './config';
+import generateConfig from './commands/generate-config';
 
 // Print coffee drinks menu
 // $ coffee-shop list
