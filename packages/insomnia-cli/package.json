@@ -2,10 +2,15 @@
   "name": "insomnia-cli",
   "version": "1.0.0",
   "main": "dist/index.js",
+  "bin": {
+    "insomnia": "dist/index.js"
+  },
   "scripts": {
     "typecheck": "flow check",
     "test": "jest",
-    "build": "webpack --config webpack.config.js --display errors-only",
+    "clean": "rimraf dist",
+    "build": "babel ./src --out-dir=./dist",
+    "watch": "babel --source-maps --watch=./src --out-dir=./dist",
     "bootstrap": "npm run build",
     "prepublish": "npm run build"
   },
@@ -18,10 +23,13 @@
     "resetModules": true
   },
   "devDependencies": {
+    "@babel/cli": "^7.10.1",
     "@babel/core": "^7.9.0",
     "@babel/plugin-proposal-optional-chaining": "^7.9.0",
+    "@babel/preset-env": "^7.10.2",
+    "@babel/preset-flow": "^7.10.1",
     "husky": "^3.1.0",
-    "webpack": "^4.42.1",
+    "rimraf": "^3.0.2",
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
