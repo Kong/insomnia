@@ -11,7 +11,7 @@
     "start": "npm run watch",
     "build": "babel ./src --out-dir=./dist",
     "watch": "babel --source-maps --watch=./src --out-dir=./dist",
-    "bootstrap": "chmod +x src/index.js && npm run build",
+    "bootstrap": "npm run build",
     "prepublish": "npm run build"
   },
   "jest": {
@@ -28,7 +28,10 @@
     "@babel/plugin-proposal-optional-chaining": "^7.9.0",
     "@babel/preset-env": "^7.10.2",
     "@babel/preset-flow": "^7.10.1",
+    "@babel/preset-react": "^7.10.1",
     "husky": "^3.1.0",
+    "ink": "^2.7.1",
+    "react": "^16.13.1",
     "rimraf": "^3.0.2"
   },
   "dependencies": {
