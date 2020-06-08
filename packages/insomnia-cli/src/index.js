@@ -2,16 +2,12 @@
 // @flow
 
 import { program } from 'commander';
-import generateConfig from './commands/generate-config';
+import { makeConfigCommand } from './commands/config';
+import * as packageJson from '../package.json';
 
-// Print coffee drinks menu
-// $ coffee-shop list
-// $ coffee-shop ls
 program
-  .command('generate-config')
-  .alias('gc')
-  .description('Generate configuration')
-  .action(generateConfig);
-
-// allow commander to parse `process.argv`
-program.parse(process.argv);
+  .storeOptionsAsProperties(false)
+  .passCommandToAction(false)
+  .version(packageJson.version)
+  .addCommand(makeConfigCommand())
+  .parse(process.argv);
