@@ -213,7 +213,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   }
 
   async _handleDeleteEnvironment(environment: Environment) {
-    const { handleChangeEnvironment } = this.props;
+    const { handleChangeEnvironment, activeEnvironmentId } = this.props;
     const { rootEnvironment, workspace } = this.state;
 
     // Don't delete the root environment
@@ -221,9 +221,14 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    // Delete the current one, then unset active environment
+    // Unset active environment if it's being deleted
+    if (activeEnvironmentId === environment._id) {
+      await handleChangeEnvironment(null);
+    }
+
+    // Delete the current one
     await models.environment.remove(environment);
-    await handleChangeEnvironment(null);
+
     await this._load(workspace, rootEnvironment);
   }
 
