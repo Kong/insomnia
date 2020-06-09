@@ -1,4 +1,4 @@
-name: Release Core
+name: Snapcraft Test
 
 on:
   push:
@@ -14,7 +14,6 @@ env:
 
 jobs:
   Core:
-    name: Linux
     runs-on: ubuntu-latest
     container: electronuserland/builder:latest
     steps:
@@ -26,7 +25,6 @@ jobs:
           BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap
           GITHUB_REF: core@2020.2.2
   Designer:
-    name: Linux
     runs-on: ubuntu-latest
     container: electronuserland/builder:latest
     steps:
