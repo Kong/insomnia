@@ -15,12 +15,12 @@ env:
 jobs:
   Core:
     runs-on: ubuntu-latest
-    container: electronuserland/builder:latest
+    container:
+      image: electronuserland/builder:latest
+      env:
+        NODE_VESRION: 10.20.1
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 10
       - run: apt-get update && apt-get install --yes libfontconfig1-dev
       - run: npm run bootstrap
       - run: npm run app-release
@@ -32,7 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: electronuserland/builder:latest
-      NODE_VESRION: 10.20.1
+      env:
+        NODE_VESRION: 10.20.1
     steps:
       - uses: actions/checkout@v1
       - run: apt-get update && apt-get install --yes libfontconfig1-dev
