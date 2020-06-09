@@ -78,5 +78,10 @@
     "target": [
       "AppImage"
     ]
+  },
+  "snap": {
+    "publish": {
+      "channels": ["stable"]
+    }
   }
 }
