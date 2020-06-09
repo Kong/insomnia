@@ -1,0 +1,39 @@
+name: Release Core
+
+on:
+  push:
+    branches:
+      - release/snap
+
+env:
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  GITHUB_SHA: ${{ github.sha }}
+  NPM_CONFIG_TARGET: 3.1.13
+  NPM_CONFIG_DISTURL: https://electronjs.org/headers
+  NPM_CONFIG_RUNTIME: electron
+
+jobs:
+  Core:
+    name: Linux
+    runs-on: ubuntu-latest
+    container: electronuserland/builder:latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: npm run bootstrap
+      - run: npm run app-release
+        env:
+          SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
+          BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap
+          GITHUB_REF: core@2020.2.2
+  Designer:
+    name: Linux
+    runs-on: ubuntu-latest
+    container: electronuserland/builder:latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: npm run bootstrap
+      - run: npm run app-release
+        env:
+          SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
+          BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap
+          GITHUB_REF: designer@2020.2.2
