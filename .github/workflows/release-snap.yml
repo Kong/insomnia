@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 10
-      - run: apt-get install --yes libfontconfig1-dev
+      - run: apt-get update && apt-get install --yes libfontconfig1-dev
       - run: npm run bootstrap
       - run: npm run app-release
         env:
@@ -33,13 +33,11 @@ jobs:
     container: electronuserland/builder:latest
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 10
-      - run: apt-get install --yes libfontconfig1-dev
+      - run: apt-get update && apt-get install --yes libfontconfig1-dev
       - run: npm run bootstrap
       - run: npm run app-release
         env:
+          NODE_VERSION: 10.20.1
           SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
           BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap
           GITHUB_REF: designer@2020.2.2
