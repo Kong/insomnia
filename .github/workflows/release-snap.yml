@@ -27,7 +27,7 @@ jobs:
         env:
           SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
           BUILD_TARGETS: snap
-          GIT_REF: core@2020.2.2
+          GIT_TAG: core@2020.2.2
   Designer:
     runs-on: ubuntu-latest
     container:
@@ -43,4 +43,4 @@ jobs:
           NODE_VERSION: 10.20.1
           SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
           BUILD_TARGETS: snap
-          GIT_REF: designer@2020.2.2
+          GIT_TAG: designer@2020.2.2
