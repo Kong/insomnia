@@ -8,7 +8,7 @@ const fixturesPath = path.join(__dirname, './fixtures');
 const fixtures = fs.readdirSync(fixturesPath);
 
 describe('Fixtures', () => {
-  for (const name of fixtures) {
+  describe.each(fixtures)('Import %s', name => {
     const dir = path.join(fixturesPath, `./${name}`);
     const inputs = fs.readdirSync(dir).filter(name => !!name.match(/^(.+)-?input\.[^.]+$/));
 
@@ -20,7 +20,7 @@ describe('Fixtures', () => {
         continue;
       }
 
-      it(`Import ${name} ${input}`, async () => {
+      it(input, async () => {
         expect.assertions(5);
         expect(typeof input).toBe('string');
         expect(typeof output).toBe('string');
@@ -49,5 +49,5 @@ describe('Fixtures', () => {
         }
       });
     }
-  }
+  });
 });
