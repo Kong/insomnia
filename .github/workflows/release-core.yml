@@ -47,7 +47,6 @@ jobs:
   Linux:
     name: Linux
     runs-on: ubuntu-latest
-    container: electronuserland/builder:latest
     steps:
       - run: |
           sudo snap install snapcraft --classic
