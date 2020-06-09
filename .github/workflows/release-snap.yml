@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     container: electronuserland/builder:latest
     steps:
-      - run: sudo apt-get install --yes snapcraft
       - uses: actions/checkout@v1
+      - run: sudo apt-get install snapcraft
       - run: npm run bootstrap
       - run: npm run app-release
         env:
@@ -28,7 +28,7 @@ jobs:
   Designer:
     runs-on: ubuntu-latest
     steps:
-      - run: sudo apt-get install --yes snapcraft
+      - run: apt-get install snapcraft
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
