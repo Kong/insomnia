@@ -15,10 +15,7 @@ env:
 jobs:
   Core:
     runs-on: ubuntu-latest
-    container:
-      image: electronuserland/builder:latest
-      env:
-        NODE_VESRION: 10.20.1
+    container: electronuserland/builder:latest
     steps:
       - uses: actions/checkout@v1
       - run: apt-get update && apt-get install --yes libfontconfig1-dev
@@ -30,10 +27,7 @@ jobs:
           GIT_TAG: core@2020.2.2
   Designer:
     runs-on: ubuntu-latest
-    container:
-      image: electronuserland/builder:latest
-      env:
-        NODE_VESRION: 10.20.1
+    container: electronuserland/builder:latest
     steps:
       - uses: actions/checkout@v1
       - run: apt-get update && apt-get install --yes libfontconfig1-dev

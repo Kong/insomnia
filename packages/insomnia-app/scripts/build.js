@@ -50,11 +50,6 @@ module.exports.start = async function(forcedVersion = null) {
   console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
   console.log(`[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim());
 
-  if (process.version.indexOf('v10.') !== 0) {
-    console.log('[build] Node v10.x.x is required to build');
-    process.exit(1);
-  }
-
   // Remove folders first
   console.log('[build] Removing existing directories');
   await emptyDir('../build');
@@ -265,7 +260,7 @@ function getBuildContext() {
   } = process.env;
 
   const gitCommit = GITHUB_SHA || TRAVIS_COMMIT;
-  const gitRef = GIT_TAG || GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || '';
+  const gitRef = GIT_TAG || GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || h';
   const tagMatch = gitRef.match(/(designer|core)@(\d{4}\.\d+\.\d+(-(alpha|beta)\.\d+)?)$/);
 
   const app = tagMatch ? tagMatch[1] : null;
