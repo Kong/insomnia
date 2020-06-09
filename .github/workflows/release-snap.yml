@@ -16,18 +16,21 @@ jobs:
   Core:
     runs-on: ubuntu-latest
     steps:
-      - run: sudo apt-get install snapcraft
+      - run: |
+          sudo apt-get install snapcraft
+          echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
       - uses: actions/checkout@v1
       - run: npm run bootstrap
       - run: npm run app-release
         env:
-          SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
           BUILD_TARGETS: snap
           GIT_TAG: core@2020.2.2
   Designer:
     runs-on: ubuntu-latest
     steps:
-      - run: sudo apt-get install snapcraft
+      - run: |
+          sudo apt-get install snapcraft
+          echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
