@@ -18,6 +18,9 @@ jobs:
     container: electronuserland/builder:latest
     steps:
       - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 10
       - run: apt-get update && apt-get install --yes libfontconfig1-dev
       - run: npm run bootstrap
       - run: npm run app-release
@@ -25,11 +28,17 @@ jobs:
           SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
           BUILD_TARGETS: snap
           GIT_TAG: core@2020.2.2
+          NPM_CONFIG_TARGET: 3.1.13
+          NPM_CONFIG_DISTURL: https://electronjs.org/headers
+          NPM_CONFIG_RUNTIME: electron
   Designer:
     runs-on: ubuntu-latest
     container: electronuserland/builder:latest
     steps:
       - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 10
       - run: apt-get update && apt-get install --yes libfontconfig1-dev
       - run: npm run bootstrap
       - run: npm run app-release
@@ -38,3 +47,6 @@ jobs:
           SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
           BUILD_TARGETS: snap
           GIT_TAG: designer@2020.2.2
+          NPM_CONFIG_TARGET: 3.1.13
+          NPM_CONFIG_DISTURL: https://electronjs.org/headers
+          NPM_CONFIG_RUNTIME: electron
