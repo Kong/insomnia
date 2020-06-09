@@ -10,14 +10,12 @@ const PLATFORM_MAP = {
   win32: 'win',
 };
 
-let buildContext = null;
-
 // Start package if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      buildContext = await buildTask.start();
-      await module.exports.start();
+      const buildContext = await buildTask.start();
+      await module.exports.start(buildContext);
     } catch (err) {
       console.log('[package] ERROR:', err);
       process.exit(1);
@@ -25,7 +23,7 @@ if (require.main === module) {
   });
 }
 
-module.exports.start = async function() {
+module.exports.start = async function(buildContext) {
   console.log('[package] Removing existing directories');
 
   if (process.env.KEEP_DIST_FOLDER !== 'yes') {
@@ -33,12 +31,12 @@ module.exports.start = async function() {
   }
 
   console.log('[package] Packaging app');
-  await pkg(electronBuilderConfig());
+  await pkg(electronBuilderConfig(), buildContext);
 
   console.log('[package] Complete!');
 };
 
-async function pkg(electronBuilderConfig) {
+async function pkg(electronBuilderConfig, buildContext) {
   const app = appConfig();
 
   // Replace some things
@@ -73,6 +71,9 @@ async function pkg(electronBuilderConfig) {
 
   return electronBuilder.build({
     config,
+
+    // Example:
+    //   "mac": [ "snap" ]
     [targetPlatform]: target,
   });
 }
