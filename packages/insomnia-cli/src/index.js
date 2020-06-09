@@ -10,4 +10,4 @@ program
   .passCommandToAction(false)
   .version(packageJson.version, '-v, --version')
   .addCommand(makeGenerateCommand())
-  .parse(process.argv);
+  .parseAsync(process.argv);
