@@ -49,6 +49,9 @@ jobs:
     runs-on: ubuntu-latest
     container: electronuserland/builder:latest
     steps:
+      - run: |
+          sudo snap install snapcraft --classic
+          echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
