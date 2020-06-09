@@ -14,8 +14,8 @@ const PLATFORM_MAP = {
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      const buildContext = await buildTask.start();
-      await module.exports.start(buildContext);
+      await buildTask.start();
+      await module.exports.start();
     } catch (err) {
       console.log('[package] ERROR:', err);
       process.exit(1);
@@ -23,7 +23,7 @@ if (require.main === module) {
   });
 }
 
-module.exports.start = async function(buildContext) {
+module.exports.start = async function() {
   console.log('[package] Removing existing directories');
 
   if (process.env.KEEP_DIST_FOLDER !== 'yes') {
@@ -31,12 +31,12 @@ module.exports.start = async function(buildContext) {
   }
 
   console.log('[package] Packaging app');
-  await pkg(electronBuilderConfig(), buildContext);
+  await pkg(electronBuilderConfig());
 
   console.log('[package] Complete!');
 };
 
-async function pkg(electronBuilderConfig, buildContext) {
+async function pkg(electronBuilderConfig) {
   const app = appConfig();
 
   // Replace some things
@@ -56,24 +56,8 @@ async function pkg(electronBuilderConfig, buildContext) {
     ? process.env.BUILD_TARGETS.split(',')
     : config[targetPlatform].target;
 
-  // Set snap channel based on semver
-  let snapChannel = buildContext.channel;
-  if (snapChannel !== 'stable' || snapChannel !== 'beta') {
-    snapChannel = 'edge';
-  }
-
-  config.snap = {
-    publish: {
-      provider: 'snapStore',
-      channels: [snapChannel],
-    },
-  };
-
   return electronBuilder.build({
     config,
-
-    // Example:
-    //   "mac": [ "snap" ]
     [targetPlatform]: target,
   });
 }

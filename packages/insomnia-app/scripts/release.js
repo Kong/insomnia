@@ -16,7 +16,7 @@ if (require.main === module) {
   process.nextTick(async () => {
     try {
       const buildContext = await buildTask.start();
-      await packageTask.start(buildContext);
+      await packageTask.start();
       await start(buildContext.app, buildContext.version);
     } catch (err) {
       console.log('[package] ERROR:', err);
