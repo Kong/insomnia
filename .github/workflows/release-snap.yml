@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          sudo apt-get install snapcraft --classic
+          sudo snap install snapcraft --classic
           echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
       - uses: actions/checkout@v1
       - run: npm run bootstrap
@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          sudo apt-get install snapcraft --classic
+          sudo snap install snapcraft --classic
           echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
