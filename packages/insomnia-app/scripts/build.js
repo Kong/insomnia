@@ -256,16 +256,16 @@ function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
 // Only release if we're building a tag that ends in a version number
 function getBuildContext() {
   const {
+    GIT_TAG,
     GITHUB_REF,
     GITHUB_SHA,
     TRAVIS_TAG,
     TRAVIS_COMMIT,
     TRAVIS_CURRENT_BRANCH,
-    GIT_TAG,
   } = process.env;
 
   const gitCommit = GITHUB_SHA || TRAVIS_COMMIT;
-  const gitRef = GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || GIT_TAG || '';
+  const gitRef = GIT_TAG || GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || '';
   const tagMatch = gitRef.match(/(designer|core)@(\d{4}\.\d+\.\d+(-(alpha|beta)\.\d+)?)$/);
 
   const app = tagMatch ? tagMatch[1] : null;

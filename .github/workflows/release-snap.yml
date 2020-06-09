@@ -26,11 +26,13 @@ jobs:
       - run: npm run app-release
         env:
           SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
-          BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap
+          BUILD_TARGETS: snap
           GITHUB_REF: core@2020.2.2
   Designer:
     runs-on: ubuntu-latest
-    container: electronuserland/builder:latest
+    container:
+      image: electronuserland/builder:latest
+      NODE_VESRION: 10.20.1
     steps:
       - uses: actions/checkout@v1
       - run: apt-get update && apt-get install --yes libfontconfig1-dev
@@ -39,5 +41,5 @@ jobs:
         env:
           NODE_VERSION: 10.20.1
           SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
-          BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap
-          GITHUB_REF: designer@2020.2.2
+          BUILD_TARGETS: snap
+          FORCED_REF: designer@2020.2.2
