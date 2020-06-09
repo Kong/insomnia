@@ -1,7 +1,12 @@
 # insomnia-cli
 
+### Usage
+```
+npm install -g insomnia-cli
+insomnia --version
+```
+
 ### Development
 - Bootstrap: `npm run bootstrap`
 - Start in watch mode: `npm run watch`
-- Navigate to dist: `cd packages/insomnia-cli/dist`
-- Run: `node index.js -h`
+- Run: `node dist/index -h`

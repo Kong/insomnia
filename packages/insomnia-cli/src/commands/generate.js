@@ -9,6 +9,7 @@ const ConversionTypeMap: { [string]: o2k.ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
   declarative: 'kong-declarative-config',
 };
+const conversionTypes = Object.keys(ConversionTypeMap).join(', ');
 
 type GenerateConfigOptions = {|
   type: $Keys<typeof ConversionTypeMap>,
@@ -20,9 +21,7 @@ async function handleGenerateConfig(
   { type, output }: GenerateConfigOptions,
 ): Promise<void> {
   if (!ConversionTypeMap[type]) {
-    console.log(
-      `--type ${type} not recognized. Options are: [${Object.keys(ConversionTypeMap).join(', ')}]`,
-    );
+    console.log(`--type ${type} not recognized. Options are [${conversionTypes}]`);
     return;
   }
 
@@ -46,11 +45,11 @@ export function makeGenerateCommand() {
 
   generate
     .command('config <filePath>')
-    .option(
-      '-t, --type <type>',
-      `type of configuration - options: [${Object.keys(ConversionTypeMap).join(', ')}]`,
+    .requiredOption(
+      '--type <value>',
+      `the type of configuration to generate, options are [${conversionTypes}]`,
     )
-    .option('-o, --output <name>', 'output path')
+    .option('-o, --output <path>', 'the output path')
     .description('Generate configuration from an api spec')
     .action(handleGenerateConfig);
 
