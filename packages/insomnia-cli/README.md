@@ -3,10 +3,12 @@
 ### Usage
 ```
 npm install -g insomnia-cli
-insomnia --version
+inso --version
 ```
 
 ### Development
 - Bootstrap: `npm run bootstrap`
-- Start in watch mode: `npm run watch`
-- Run: `node dist/index -h`
+- Start the compiler in watch mode: `npm run watch`
+- Run: `node bin/inso -v`
+
+> You can also set `bin/inso` as an executable (`chmod +x bin/inso`) and run as `./bin/inso -v`

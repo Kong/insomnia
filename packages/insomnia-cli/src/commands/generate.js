@@ -41,16 +41,16 @@ async function handleGenerateConfig(
 }
 
 export function makeGenerateCommand() {
-  const generate = createCommand('generate');
+  const generate = createCommand('generate').description('Code generation utilities');
 
   generate
     .command('config <filePath>')
+    .description('Generate configuration from an api spec')
     .requiredOption(
       '--type <value>',
       `the type of configuration to generate, options are [${conversionTypes}]`,
     )
     .option('-o, --output <path>', 'the output path')
-    .description('Generate configuration from an api spec')
     .action(handleGenerateConfig);
 
   return generate;
