@@ -10,11 +10,13 @@ const PLATFORM_MAP = {
   win32: 'win',
 };
 
+let buildContext = null;
+
 // Start package if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      await buildTask.start();
+      buildContext = await buildTask.start();
       await module.exports.start();
     } catch (err) {
       console.log('[package] ERROR:', err);
@@ -55,6 +57,19 @@ async function pkg(electronBuilderConfig) {
   const target = process.env.BUILD_TARGETS
     ? process.env.BUILD_TARGETS.split(',')
     : config[targetPlatform].target;
+
+  // Set snap channel based on semver
+  let snapChannel = buildContext.channel;
+  if (snapChannel !== 'stable' || snapChannel !== 'beta') {
+    snapChannel = 'edge';
+  }
+
+  config.snap = {
+    publish: {
+      provider: 'snapStore',
+      channels: [snapChannel],
+    },
+  };
 
   return electronBuilder.build({
     config,

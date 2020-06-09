@@ -265,9 +265,11 @@ function getBuildContext() {
 
   const app = tagMatch ? tagMatch[1] : null;
   const version = tagMatch ? tagMatch[2] : null;
+  const channel = tagMatch ? tagMatch[4] : 'stable';
 
   return {
     app,
+    channel,
     version,
     gitRef,
     gitCommit,
