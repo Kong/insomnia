@@ -17,7 +17,7 @@ function makeGenerateCommand() {
       `the type of configuration to generate, options are [${conversionTypes}]`,
     )
     .option('-o, --output <path>', 'the output path')
-    .action(generateConfig);
+    .action(generateConfig); // parse known options
 
   return generate;
 }

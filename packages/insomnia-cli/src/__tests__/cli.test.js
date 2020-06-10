@@ -1,6 +1,8 @@
 import * as cli from '../cli';
 import execa from 'execa-wrap';
 import * as packageJson from '../../package.json';
+import { generateConfig } from '../commands/generate';
+jest.mock('../commands/generate');
 
 const initInso = () => {
   return args => {
@@ -14,6 +16,11 @@ const insoSnapshot = async args =>
   expect(await execa('bin/inso', args.split(' '))).toMatchSnapshot();
 
 describe('inso', () => {
+  let inso = initInso();
+  beforeEach(() => {
+    inso = initInso();
+  });
+
   it.each(['-h', '--help', 'help', 'generate -h', 'generate config -h'])(
     'shows help page with "%s"',
     async args => {
@@ -32,6 +39,14 @@ describe('inso', () => {
 
     it('should error when filePath is missing', async () => {
       await insoSnapshot('generate config -t declarative');
+    });
+
+    it('should call generateConfig', async () => {
+      inso('generate config -t declarative file.yaml');
+      expect(generateConfig).toHaveBeenCalledWith('file.yaml', {
+        type: 'declarative',
+        output: undefined,
+      });
     });
   });
 });
