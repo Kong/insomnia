@@ -1,10 +1,10 @@
 // @flow
-import * as o2k from 'openapi-2-kong';
+import o2k from 'openapi-2-kong';
 import YAML from 'yaml';
 import path from 'path';
 import fs from 'fs';
 
-export const ConversionTypeMap: { [string]: o2k.ConversionResultType } = {
+export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
   declarative: 'kong-declarative-config',
 };
