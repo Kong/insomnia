@@ -10,6 +10,7 @@
     "prepublish": "npm run build"
   },
   "jest": {
+    "testEnvironment": "node",
     "testMatch": [
       "**/__tests__/**/*.test.js"
     ],
@@ -25,6 +26,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
+    "axios": "^0.19.2",
     "chai": "^4.2.0",
     "mocha": "^6.2.3"
   }

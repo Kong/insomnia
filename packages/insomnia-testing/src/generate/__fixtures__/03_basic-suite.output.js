@@ -1,9 +1,9 @@
-const assert = require('assert');
+const { expect } = chai;
 
 describe('Example Suite', () => {
   it('should return -1 when the value is not present', async () => {
-    assert.equal([1, 2, 3].indexOf(4), -1);
-    assert.equal(true, true);
+    expect([1, 2, 3].indexOf(4)).toBe(-1);
+    expect(true).toBe(true);
   });
 
   it('is an empty test', async () => {

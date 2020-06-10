@@ -2,6 +2,7 @@
 
 import Mocha from 'mocha';
 import { Reporter } from './reporter';
+import Insomnia from './insomnia';
 
 type TestErr = {
   generatedMessage: boolean,
@@ -46,7 +47,14 @@ type TestResults = {
  */
 export async function runTests(...filename: Array<string>): Promise<TestResults> {
   return new Promise(resolve => {
-    const m = new Mocha();
+    // Add global `insomnia` helper.
+    // This is the only way to add new globals to the Mocha environment as far
+    // as I can tell
+    global.insomnia = new Insomnia();
+
+    const m = new Mocha({
+      global: ['insomnia'],
+    });
 
     m.reporter(Reporter);
 
@@ -56,6 +64,9 @@ export async function runTests(...filename: Array<string>): Promise<TestResults>
 
     const runner = m.run(() => {
       resolve(runner.testResults);
+
+      // Remove global since we don't need it anymore
+      delete global.insomnia;
     });
   });
 }

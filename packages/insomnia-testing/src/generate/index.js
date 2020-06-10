@@ -19,10 +19,6 @@ type Suite = {
 export async function generate(suites: Array<Suite>): Promise<string> {
   const lines = [];
 
-  // Require necessary dependencies
-  lines.push(`const assert = require('assert');`);
-  lines.push('');
-
   for (const s of suites || []) {
     lines.push(...generateSuiteLines(0, s));
   }
