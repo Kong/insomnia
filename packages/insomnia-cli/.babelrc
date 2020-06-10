@@ -12,8 +12,5 @@
   ],
   "plugins": [
     ["@babel/plugin-proposal-optional-chaining"]
-  ],
-  "ignore": [
-    "**/*.test.js"
   ]
 }

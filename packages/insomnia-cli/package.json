@@ -8,10 +8,11 @@
   "scripts": {
     "typecheck": "flow check",
     "test": "jest",
+    "test:snapshots": "jest -u",
     "start": "npm run watch",
     "clean": "rimraf dist",
-    "build": "babel ./src --out-dir=./dist",
-    "watch": "babel --source-maps --watch=./src --out-dir=./dist",
+    "build": "babel ./src --out-dir=./dist --ignore '**/*/__tests__/**'",
+    "watch": "babel --source-maps --watch=./src --out-dir=./dist --ignore '**/*/__tests__/**'",
     "bootstrap": "npm run build",
     "prepublish": "npm run build"
   },
@@ -21,7 +22,10 @@
     ],
     "verbose": false,
     "resetMocks": true,
-    "resetModules": true
+    "resetModules": true,
+    "transform": {
+      "^.+\\.[t|j]sx?$": "babel-jest"
+    }
   },
   "devDependencies": {
     "@babel/cli": "^7.10.1",
@@ -29,6 +33,7 @@
     "@babel/plugin-proposal-optional-chaining": "^7.9.0",
     "@babel/preset-env": "^7.10.2",
     "@babel/preset-flow": "^7.10.1",
+    "execa-wrap": "^1.4.0",
     "flow-bin": "^0.126.1",
     "husky": "^3.1.0",
     "jest": "^26.0.1",

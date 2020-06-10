@@ -1,29 +1,38 @@
 // @flow
-import { createCommand } from 'commander';
 import * as o2k from 'openapi-2-kong';
 import YAML from 'yaml';
 import path from 'path';
 import fs from 'fs';
 
-const ConversionTypeMap: { [string]: o2k.ConversionResultType } = {
+export const ConversionTypeMap: { [string]: o2k.ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
   declarative: 'kong-declarative-config',
 };
 const conversionTypes = Object.keys(ConversionTypeMap).join(', ');
 
-type GenerateConfigOptions = {|
+export type GenerateConfigOptions = {|
   type: $Keys<typeof ConversionTypeMap>,
   output?: string,
 |};
 
-async function handleGenerateConfig(
-  filePath: string,
-  { type, output }: GenerateConfigOptions,
-): Promise<void> {
+function validateOptions({ type }: GenerateConfigOptions): boolean {
   if (!ConversionTypeMap[type]) {
-    console.log(`--type ${type} not recognized. Options are [${conversionTypes}]`);
+    console.log(`Config type "${type}" not unrecognized. Options are [${conversionTypes}].`);
+    return false;
+  }
+
+  return true;
+}
+
+export async function generateConfig(
+  filePath: string,
+  options: GenerateConfigOptions,
+): Promise<void> {
+  if (!validateOptions(options)) {
     return;
   }
+
+  const { type, output } = options;
 
   const result = await o2k.generate(filePath, ConversionTypeMap[type]);
 
@@ -38,20 +47,4 @@ async function handleGenerateConfig(
   } else {
     console.log(document);
   }
-}
-
-export function makeGenerateCommand() {
-  const generate = createCommand('generate').description('Code generation utilities');
-
-  generate
-    .command('config <filePath>')
-    .description('Generate configuration from an api spec')
-    .requiredOption(
-      '--type <value>',
-      `the type of configuration to generate, options are [${conversionTypes}]`,
-    )
-    .option('-o, --output <path>', 'the output path')
-    .action(handleGenerateConfig);
-
-  return generate;
 }
