@@ -227,6 +227,17 @@ export const HAWK_ALGORITHM_SHA1 = 'sha1';
 export const JSON_ORDER_PREFIX = '&';
 export const JSON_ORDER_SEPARATOR = '~|';
 
+// HTTP version codes
+export const HttpVersions = {
+  V1_0: 'V1_0',
+  V1_1: 'V1_1',
+  V2_0: 'V2_0',
+  v3: 'v3',
+  default: 'default',
+};
+
+export type HttpVersion = $Keys<typeof HttpVersions>;
+
 const authTypesMap = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
