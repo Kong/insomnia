@@ -9,6 +9,7 @@ export async function go() {
     .storeOptionsAsProperties(false)
     .passCommandToAction(false)
     .version(packageJson.version, '-v, --version')
+    .description('A CLI for Insomnia!')
     .addCommand(makeGenerateCommand())
     .parseAsync(process.argv);
 }
