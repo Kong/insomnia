@@ -22,10 +22,7 @@
     ],
     "verbose": false,
     "resetMocks": true,
-    "resetModules": true,
-    "transform": {
-      "^.+\\.[t|j]sx?$": "babel-jest"
-    }
+    "resetModules": true
   },
   "devDependencies": {
     "@babel/cli": "^7.10.1",
