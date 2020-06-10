@@ -13,7 +13,15 @@ import mkdirp from 'mkdirp';
 import crypto from 'crypto';
 import clone from 'clone';
 import { parse as urlParse, resolve as urlResolve } from 'url';
-import { Curl, CurlAuth, CurlCode, CurlInfoDebug, CurlFeature, CurlNetrc } from 'node-libcurl';
+import {
+  Curl,
+  CurlAuth,
+  CurlCode,
+  CurlInfoDebug,
+  CurlFeature,
+  CurlNetrc,
+  CurlHttpVersion,
+} from 'node-libcurl';
 import { join as pathJoin } from 'path';
 import uuid from 'uuid';
 import * as models from '../models';
@@ -61,6 +69,7 @@ import { urlMatchesCertHost } from './url-matches-cert-host';
 import aws4 from 'aws4';
 import { buildMultipart } from './multipart';
 import type { Environment } from '../models/environment';
+import type { HttpVersion } from '../common/constants';
 
 export type ResponsePatch = {|
   bodyCompression?: 'zip' | null,
@@ -338,8 +347,32 @@ export async function _actuallySend(
         setOpt(Curl.option.URL, finalUrl);
       }
       addTimelineText('Preparing request to ' + finalUrl);
-      addTimelineText(`Using ${Curl.getVersion()}`);
       addTimelineText('Current time is ' + new Date().toISOString());
+      addTimelineText(`Using ${Curl.getVersion()}`);
+
+      // Set HTTP version
+      switch (settings.preferredHttpVersion) {
+        case ('V1_0': HttpVersion):
+          addTimelineText('Using HTTP 1.0');
+          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V1_0);
+          break;
+        case ('V1_1': HttpVersion):
+          addTimelineText('Using HTTP 1.1');
+          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V1_1);
+          break;
+        case ('V2_0': HttpVersion):
+          addTimelineText('Using HTTP/2');
+          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V2_0);
+          break;
+        case ('v3': HttpVersion):
+          addTimelineText('Using HTTP/3');
+          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.v3);
+          break;
+        default:
+          // Fallback to Curl's default
+          addTimelineText('Using default HTTP version');
+          break;
+      }
 
       // Set timeout
       if (settings.timeout > 0) {
