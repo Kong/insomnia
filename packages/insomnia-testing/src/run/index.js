@@ -3,6 +3,7 @@
 import Mocha from 'mocha';
 import { Reporter } from './reporter';
 import Insomnia from './insomnia';
+import type { Request } from './insomnia';
 
 type TestErr = {
   generatedMessage: boolean,
@@ -41,16 +42,16 @@ type TestResults = {
 
 /**
  * Run a test file using Mocha
- *
- * @param filename
- * @returns {Promise<R>}
  */
-export async function runTests(...filename: Array<string>): Promise<TestResults> {
+export async function runTests(
+  filename: string | Array<string>,
+  options: { requests?: { [string]: Request } } = {},
+): Promise<TestResults> {
   return new Promise(resolve => {
     // Add global `insomnia` helper.
     // This is the only way to add new globals to the Mocha environment as far
     // as I can tell
-    global.insomnia = new Insomnia();
+    global.insomnia = new Insomnia(options.requests);
 
     const m = new Mocha({
       global: ['insomnia'],
@@ -58,7 +59,8 @@ export async function runTests(...filename: Array<string>): Promise<TestResults>
 
     m.reporter(Reporter);
 
-    for (const f of filename) {
+    const filenames = Array.isArray(filename) ? filename : [filename];
+    for (const f of filenames) {
       m.addFile(f);
     }
 

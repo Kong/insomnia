@@ -27,7 +27,7 @@ describe('run', () => {
     const testPath1 = writeToTmp(exampleTest);
     const testPath2 = writeToTmp(exampleTest);
 
-    const { stats } = await runTests(testPath1, testPath2);
+    const { stats } = await runTests([testPath1, testPath2]);
     expect(stats.passes).toBe(2);
     expect(stats.tests).toBe(4);
     expect(stats.failures).toBe(2);

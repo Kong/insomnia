@@ -24,12 +24,33 @@ export type Response = {
  * requests, etc.
  */
 export default class Insomnia {
-  async send(req: Request): Promise<Response> {
+  requests: { [string]: $Shape<Request> };
+
+  /**
+   * @param requests - map of ID -> Request to be used when referencing requests by Id
+   */
+  constructor(requests?: { [string]: $Shape<Request> }) {
+    this.requests = requests || {};
+  }
+
+  /**
+   *
+   * @param req - raw request object or an ID to reference a request
+   * @returns {Promise<{headers: *, data: *, statusText: (string|string), status: *}>}
+   */
+  async send(req: string | Request): Promise<Response> {
+    if (typeof req === 'string' && !this.requests.hasOwnProperty(req)) {
+      throw new Error(`Failed to find request by ID ${req}`);
+    }
+
+    if (typeof req === 'string' && this.requests.hasOwnProperty(req)) {
+      req = this.requests[req];
+    }
+
     const options = {
       url: req.url || '',
       method: req.method || 'GET',
       headers: req.headers || {},
-
 
       // Don't follow redirects,
       maxRedirects: 0,

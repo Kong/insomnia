@@ -58,9 +58,9 @@ describe('integration', () => {
             ].join('\n'),
           },
           {
-            name: 'Tests sending a request',
+            name: 'Tests referencing request by ID',
             code: [
-              `const resp = await insomnia.send({ url: '301.insomnia.rest' });`,
+              `const resp = await insomnia.send('req_123');`,
               `expect(resp.status).toBe(301);`,
             ].join('\n'),
           },
@@ -68,7 +68,14 @@ describe('integration', () => {
       },
     ]);
 
-    const { stats } = await runTests(testFilename);
+    const { stats } = await runTests(testFilename, {
+      requests: {
+        req_123: {
+          url: '301.insomnia.rest',
+          method: 'get',
+        },
+      },
+    });
 
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
