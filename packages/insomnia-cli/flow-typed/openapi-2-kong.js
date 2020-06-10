@@ -5,7 +5,7 @@ declare type ConversionResultType = 'kong-declarative-config' | 'kong-for-kubern
 declare type DeclarativeConfigResult = {
   type: 'kong-declarative-config',
   label: string,
-  documents: DeclarativeConfig,
+  documents: Object,
   warnings: Array<{
     severity: number,
     message: string,
@@ -18,7 +18,7 @@ declare type DeclarativeConfigResult = {
 declare type KongForKubernetesResult = {
   type: 'kong-for-kubernetes',
   label: string,
-  documents: Array<KubernetesConfig | KubernetesPluginConfig | KubernetesMethodConfig>,
+  documents: Array<Object>,
   warnings: Array<{
     severity: number,
     message: string,

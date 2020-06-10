@@ -28,8 +28,8 @@ describe('inso', () => {
     },
   );
 
-  it('should print version from package.json', async () => {
-    expect(await execa('bin/inso', ['-v'], { filter: ['stdout'] })).toContain(packageJson.version);
+  it.each(['-v', '--version'])('should print version from package.json - "%s"', async arg => {
+    expect(await execa('bin/inso', [arg], { filter: ['stdout'] })).toContain(packageJson.version);
   });
 
   describe('generate config', () => {
