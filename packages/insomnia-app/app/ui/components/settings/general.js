@@ -8,7 +8,8 @@ import {
   EDITOR_KEY_MAP_DEFAULT,
   EDITOR_KEY_MAP_EMACS,
   EDITOR_KEY_MAP_SUBLIME,
-  EDITOR_KEY_MAP_VIM, HttpVersions,
+  EDITOR_KEY_MAP_VIM,
+  HttpVersions,
   isLinux,
   isMac,
   isWindows,
@@ -333,8 +334,8 @@ class General extends React.PureComponent<Props, State> {
               'Filter responses by environment',
               'filterResponsesByEnv',
               'Only show responses that were sent under the currently-active environment. This ' +
-              'adds additional separation when working with Development, Staging, Production ' +
-              'environments, for example.',
+                'adds additional separation when working with Development, Staging, Production ' +
+                'environments, for example.',
             )}
           </div>
           <div>
@@ -361,7 +362,7 @@ class General extends React.PureComponent<Props, State> {
               // { name: 'HTTP/3', value: HttpVersions.v3 },
             ]: Array<{ name: string, value: HttpVersion }>),
             'Preferred HTTP version to use for requests which will fall back if it cannot be' +
-            'negotiated',
+              'negotiated',
           )}
         </div>
 

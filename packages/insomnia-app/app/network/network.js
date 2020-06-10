@@ -34,7 +34,8 @@ import {
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   getAppVersion,
-  getTempDir, HttpVersions,
+  getTempDir,
+  HttpVersions,
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
 import {
@@ -69,7 +70,6 @@ import { urlMatchesCertHost } from './url-matches-cert-host';
 import aws4 from 'aws4';
 import { buildMultipart } from './multipart';
 import type { Environment } from '../models/environment';
-import type { HttpVersion } from '../common/constants';
 
 export type ResponsePatch = {|
   bodyCompression?: 'zip' | null,
