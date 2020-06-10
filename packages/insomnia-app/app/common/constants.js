@@ -233,7 +233,7 @@ export const HttpVersions = {
   V1_1: 'V1_1',
   V2_0: 'V2_0',
   v3: 'v3',
-  default: 'Default',
+  default: 'default',
 };
 
 export type HttpVersion = $Keys<typeof HttpVersions>;

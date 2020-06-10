@@ -34,7 +34,7 @@ import {
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   getAppVersion,
-  getTempDir,
+  getTempDir, HttpVersions,
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
 import {
@@ -352,25 +352,27 @@ export async function _actuallySend(
 
       // Set HTTP version
       switch (settings.preferredHttpVersion) {
-        case ('V1_0': HttpVersion):
+        case HttpVersions.V1_0:
           addTimelineText('Using HTTP 1.0');
           setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V1_0);
           break;
-        case ('V1_1': HttpVersion):
+        case HttpVersions.V1_1:
           addTimelineText('Using HTTP 1.1');
           setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V1_1);
           break;
-        case ('V2_0': HttpVersion):
+        case HttpVersions.V2_0:
           addTimelineText('Using HTTP/2');
           setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V2_0);
           break;
-        case ('v3': HttpVersion):
+        case HttpVersions.v3:
           addTimelineText('Using HTTP/3');
           setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.v3);
           break;
-        default:
-          // Fallback to Curl's default
+        case HttpVersions.default:
           addTimelineText('Using default HTTP version');
+          break;
+        default:
+          addTimelineText(`Unknown HTTP version specified ${settings.preferredHttpVersion}`);
           break;
       }
 
