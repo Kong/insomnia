@@ -43,7 +43,8 @@ describe('inso', () => {
 
     it('should call generateConfig', async () => {
       inso('generate config -t declarative file.yaml');
-      expect(generateConfig).toHaveBeenCalledWith('file.yaml', {
+      expect(generateConfig).toHaveBeenCalledWith({
+        filePath: 'file.yaml',
         type: 'declarative',
         output: undefined,
       });

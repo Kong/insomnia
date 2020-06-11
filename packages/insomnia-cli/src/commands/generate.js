@@ -11,6 +11,7 @@ export const ConversionTypeMap: { [string]: ConversionResultType } = {
 const conversionTypes = Object.keys(ConversionTypeMap).join(', ');
 
 export type GenerateConfigOptions = {|
+  filePath: string,
   type: $Keys<typeof ConversionTypeMap>,
   output?: string,
 |};
@@ -24,15 +25,12 @@ function validateOptions({ type }: GenerateConfigOptions): boolean {
   return true;
 }
 
-export async function generateConfig(
-  filePath: string,
-  options: GenerateConfigOptions,
-): Promise<void> {
+export async function generateConfig(options: GenerateConfigOptions): Promise<void> {
   if (!validateOptions(options)) {
     return;
   }
 
-  const { type, output } = options;
+  const { type, output, filePath } = options;
 
   const result = await o2k.generate(filePath, ConversionTypeMap[type]);
 

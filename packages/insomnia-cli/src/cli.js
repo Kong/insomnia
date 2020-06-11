@@ -17,7 +17,7 @@ function makeGenerateCommand() {
       `the type of configuration to generate, options are [${conversionTypes}]`,
     )
     .option('-o, --output <path>', 'the output path')
-    .action(generateConfig); // parse known options
+    .action((filePath, cmd) => generateConfig({ filePath, ...cmd.opts() }));
 
   return generate;
 }
@@ -28,8 +28,8 @@ export function go(args?: Array<string>): void {
   }
 
   program
-    .storeOptionsAsProperties(false)
-    .passCommandToAction(false)
+    .storeOptionsAsProperties(true)
+    .passCommandToAction(true)
     .version(packageJson.version, '-v, --version')
     .description('A CLI for Insomnia!')
     .addCommand(makeGenerateCommand())
