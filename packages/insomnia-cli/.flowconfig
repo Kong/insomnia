@@ -7,7 +7,6 @@
 
 [libs]
 ./flow-typed
-./types
 
 [options]
 esproposal.optional_chaining=enable

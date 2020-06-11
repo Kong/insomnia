@@ -6,7 +6,7 @@
     "inso": "dist/inso.js"
   },
   "scripts": {
-    "typecheck": "flow check",
+    "typecheck": "",
     "test": "jest",
     "test:snapshots": "jest -u",
     "start": "npm run watch",
