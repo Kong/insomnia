@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "eslint . --ext .js,.html,.json",
     "lint:fix": "npm run lint -- --fix",
-    "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap && rimraf ./**/node_modules/fsevents",
+    "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap",
     "publish": "lerna publish",
     "clean": "lerna clean --yes && rimraf node_modules",
     "typecheck": "lerna run --parallel --stream typecheck",

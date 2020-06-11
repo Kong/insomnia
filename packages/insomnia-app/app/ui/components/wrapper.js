@@ -106,7 +106,7 @@ export type WrapperProps = {
   handleShowExportRequestsModal: Function,
   handleShowSettingsModal: Function,
   handleExportRequestsToFile: Function,
-  handleSetActiveWorkspace: (workspaceId: string) => void,
+  handleSetActiveWorkspace: (workspaceId: string | null) => void,
   handleSetActiveEnvironment: Function,
   handleMoveDoc: Function,
   handleCreateRequest: Function,
@@ -462,7 +462,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     handleCreateRequestGroup(activeWorkspace._id);
   }
 
-  _handleChangeEnvironment(id: string) {
+  _handleChangeEnvironment(id: string | null) {
     const { handleSetActiveEnvironment } = this.props;
     handleSetActiveEnvironment(id);
   }
@@ -727,7 +727,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
             <WorkspaceEnvironmentsEditModal
               ref={registerModal}
-              onChange={models.workspace.update}
+              handleChangeEnvironment={this._handleChangeEnvironment}
               lineWrapping={settings.editorLineWrapping}
               editorFontSize={settings.editorFontSize}
               editorIndentSize={settings.editorIndentSize}

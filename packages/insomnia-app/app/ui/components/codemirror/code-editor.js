@@ -649,23 +649,39 @@ class CodeEditor extends React.Component {
     }
 
     // Strip of charset if there is one
-    const cm = this.codeMirror;
     Object.keys(options).map(key => {
-      let shouldSetOption = false;
-
-      if (key === 'jump' || key === 'info' || key === 'lint' || key === 'hintOptions') {
-        // Use stringify here because these could be infinitely recursive due to GraphQL
-        // schemas
-        shouldSetOption = JSON.stringify(options[key]) !== JSON.stringify(cm.options[key]);
-      } else if (!deepEqual(options[key], cm.options[key])) {
-        // Don't set the option if it hasn't changed
-        shouldSetOption = true;
-      }
-
-      if (shouldSetOption) {
-        cm.setOption(key, options[key]);
-      }
+      this._codemirrorSmartSetOption(key, options[key]);
     });
+  }
+
+  /**
+   * Set option if it's different than in the current Codemirror instance
+   */
+  _codemirrorSmartSetOption(key, value) {
+    const cm = this.codeMirror;
+    let shouldSetOption = false;
+
+    if (key === 'jump' || key === 'info' || key === 'lint' || key === 'hintOptions') {
+      // Use stringify here because these could be infinitely recursive due to GraphQL
+      // schemas
+      shouldSetOption = JSON.stringify(value) !== JSON.stringify(cm.options[key]);
+    } else if (!deepEqual(value, cm.options[key])) {
+      // Don't set the option if it hasn't changed
+      shouldSetOption = true;
+    }
+
+    // Don't set the option if it hasn't changed
+    if (!shouldSetOption) {
+      return;
+    }
+
+    // Set the option safely. When setting "lint", for example, it can throw an exception
+    // and cause the editor to break.
+    try {
+      cm.setOption(key, value);
+    } catch (err) {
+      console.log('Failed to set CodeMirror option', err.message, { key, value });
+    }
   }
 
   static _normalizeMode(mode) {
@@ -761,9 +777,9 @@ class CodeEditor extends React.Component {
     const value = this.codeMirror.getDoc().getValue();
     // Suppress lint on empty doc or single space exists (default value)
     if (value.trim() === '') {
-      this.codeMirror.setOption('lint', false);
+      this._codemirrorSmartSetOption('lint', false);
     } else {
-      this.codeMirror.setOption('lint', true);
+      this._codemirrorSmartSetOption('lint', true);
       // If we're in single-line mode, merge all changed lines into one
       if (this.props.singleLine && change.text && change.text.length > 1) {
         const text = change.text
@@ -811,7 +827,7 @@ class CodeEditor extends React.Component {
     if (shouldLint !== existingLint) {
       const { lintOptions } = this.props;
       const lint = shouldLint ? lintOptions || true : false;
-      this.codeMirror.setOption('lint', lint);
+      this._codemirrorSmartSetOption('lint', lint);
     }
 
     this.props.onChange(value);

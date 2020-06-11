@@ -9,6 +9,7 @@ import {
   EDITOR_KEY_MAP_EMACS,
   EDITOR_KEY_MAP_SUBLIME,
   EDITOR_KEY_MAP_VIM,
+  HttpVersions,
   isLinux,
   isMac,
   isWindows,
@@ -20,6 +21,7 @@ import { setFont } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
+import type { HttpVersion } from '../../../common/constants';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -81,21 +83,11 @@ class General extends React.PureComponent<Props, State> {
     return this.props.updateSetting(el.name, value);
   }
 
-  async _handleToggleMenuBar(e: SyntheticEvent<HTMLInputElement>) {
-    const settings = await this._handleUpdateSetting(e);
-    this.props.handleToggleMenuBar(settings.autoHideMenuBar);
-  }
-
   async _handleUpdateSettingAndRestart(e: SyntheticEvent<HTMLInputElement>) {
     await this._handleUpdateSetting(e);
     const { app } = electron.remote || electron;
     app.relaunch();
     app.exit();
-  }
-
-  async _handleFontLigatureChange(el: SyntheticEvent<HTMLInputElement>) {
-    const settings = await this._handleUpdateSetting(el);
-    setFont(settings);
   }
 
   async _handleFontSizeChange(el: SyntheticEvent<HTMLInputElement>) {
@@ -106,6 +98,32 @@ class General extends React.PureComponent<Props, State> {
   async _handleFontChange(el: SyntheticEvent<HTMLInputElement>) {
     const settings = await this._handleUpdateSetting(el);
     setFont(settings);
+  }
+
+  renderEnumSetting(
+    label: string,
+    name: string,
+    values: Array<{ name: string, value: any }>,
+    help: string,
+    forceRestart?: boolean,
+  ) {
+    const { settings } = this.props;
+    const onChange = forceRestart ? this._handleUpdateSettingAndRestart : this._handleUpdateSetting;
+    return (
+      <div className="form-control form-control--outlined pad-top-sm">
+        <label>
+          {label}
+          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
+          <select value={settings[name] || '__NULL__'} name={name} onChange={onChange}>
+            {values.map(({ name, value }) => (
+              <option key={value} value={value}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    );
   }
 
   renderBooleanSetting(label: string, name: string, help: string, forceRestart?: boolean) {
@@ -328,6 +346,24 @@ class General extends React.PureComponent<Props, State> {
               '',
             )}
           </div>
+        </div>
+
+        <div className="form-row pad-top-sm">
+          {this.renderEnumSetting(
+            'Preferred HTTP version',
+            'preferredHttpVersion',
+            ([
+              { name: 'Default', value: HttpVersions.default },
+              { name: 'HTTP 1.0', value: HttpVersions.V1_0 },
+              { name: 'HTTP 1.1', value: HttpVersions.V1_1 },
+              { name: 'HTTP/2', value: HttpVersions.V2_0 },
+
+              // Enable when our version of libcurl supports HTTP/3
+              // { name: 'HTTP/3', value: HttpVersions.v3 },
+            ]: Array<{ name: string, value: HttpVersion }>),
+            'Preferred HTTP version to use for requests which will fall back if it cannot be' +
+              'negotiated',
+          )}
         </div>
 
         <div className="form-row pad-top-sm">

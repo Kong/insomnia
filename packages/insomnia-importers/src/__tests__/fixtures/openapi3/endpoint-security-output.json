@@ -32,6 +32,10 @@
         "host": "api.server.test",
         "httpPassword": "password",
         "httpUsername": "username",
+        "oauth2ClientId": "clientId",
+        "oauth2ClientSecret": "clientSecret",
+        "oauth2Username": "username",
+        "oauth2Password": "password",
         "key": "key",
         "scheme": "https",
         "xApiKey": "xApiKey",
@@ -163,6 +167,84 @@
       ],
       "parentId": "__WORKSPACE_ID__",
       "url": "{{ base_url }}/key/query"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__028b5fb7",
+      "_type": "request",
+      "authentication": {
+          "clientId": "{{ oauth2ClientId }}",
+          "clientSecret": "{{ oauth2ClientSecret }}",
+          "accessTokenUrl": "https://api.server.test/v1/token",
+          "authorizationUrl": "https://api.server.test/v1/auth",
+          "grantType": "authorization_code",
+          "scope": "read:something write:something",
+          "type": "oauth2"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/oauth2/authorization-code",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/oauth2/authorization-code"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__e5d224de",
+      "_type": "request",
+      "authentication": {
+          "clientId": "{{ oauth2ClientId }}",
+          "authorizationUrl": "https://api.server.test/v1/auth",
+          "grantType": "implicit",
+          "scope": "read:something write:something",
+          "type": "oauth2"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/oauth2/implicit",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/oauth2/implicit"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__ef33c6a4",
+      "_type": "request",
+      "authentication": {
+          "clientId": "{{ oauth2ClientId }}",
+          "clientSecret": "{{ oauth2ClientSecret }}",
+          "accessTokenUrl": "https://api.server.test/v1/token",
+          "grantType": "client_credentials",
+          "scope": "read:something write:something",
+          "type": "oauth2"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/oauth2/client-credentials",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/oauth2/client-credentials"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__06ba5946",
+      "_type": "request",
+      "authentication": {
+          "clientId": "{{ oauth2ClientId }}",
+          "clientSecret": "{{ oauth2ClientSecret }}",
+          "username": "{{ oauth2Username }}",
+          "password": "{{ oauth2Password }}",
+          "accessTokenUrl": "https://api.server.test/v1/token",
+          "grantType": "password",
+          "scope": "read:something write:something",
+          "type": "oauth2"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/oauth2/password",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/oauth2/password"
     },
     {
       "_id": "req___WORKSPACE_ID__e285189c",
