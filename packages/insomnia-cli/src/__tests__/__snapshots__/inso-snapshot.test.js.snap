@@ -1,148 +1,68 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`bin/inso snapshots base shows help page with "--help" 1`] = `
-"
-  command: bin/inso --help
-  code: 0
-  failed: false
-  killed: false
-  signal: null
-  timedOut: false
+exports[`Snapshot for "inso --help" 1`] = `
+"Usage: inso [options] [command]
 
-  stdout:
-  -------
-  Usage: inso [options] [command]
+A CLI for Insomnia!
 
-  A CLI for Insomnia!
+Options:
+  -v, --version   output the version number
+  -h, --help      display help for command
 
-  Options:
-    -v, --version   output the version number
-    -h, --help      display help for command
-
-  Commands:
-    generate        Code generation utilities
-    help [command]  display help for command
-  -------
-  stderr:
-  -------
-  
-  -------
-  "
+Commands:
+  generate        Code generation utilities
+  help [command]  display help for command"
 `;
 
-exports[`bin/inso snapshots base shows help page with "-h" 1`] = `
-"
-  command: bin/inso -h
-  code: 0
-  failed: false
-  killed: false
-  signal: null
-  timedOut: false
+exports[`Snapshot for "inso -h" 1`] = `
+"Usage: inso [options] [command]
 
-  stdout:
-  -------
-  Usage: inso [options] [command]
+A CLI for Insomnia!
 
-  A CLI for Insomnia!
+Options:
+  -v, --version   output the version number
+  -h, --help      display help for command
 
-  Options:
-    -v, --version   output the version number
-    -h, --help      display help for command
-
-  Commands:
-    generate        Code generation utilities
-    help [command]  display help for command
-  -------
-  stderr:
-  -------
-  
-  -------
-  "
+Commands:
+  generate        Code generation utilities
+  help [command]  display help for command"
 `;
 
-exports[`bin/inso snapshots base shows help page with "generate -h" 1`] = `
-"
-  command: bin/inso generate -h
-  code: 0
-  failed: false
-  killed: false
-  signal: null
-  timedOut: false
+exports[`Snapshot for "inso generate -h" 1`] = `
+"Usage: inso generate [options] [command]
 
-  stdout:
-  -------
-  Usage: inso generate [options] [command]
+Code generation utilities
 
-  Code generation utilities
+Options:
+  -h, --help                   display help for command
 
-  Options:
-    -h, --help                   display help for command
-
-  Commands:
-    config [options] <filePath>  Generate configuration from an api spec
-    help [command]               display help for command
-  -------
-  stderr:
-  -------
-  
-  -------
-  "
+Commands:
+  config [options] <filePath>  Generate configuration from an api spec
+  help [command]               display help for command"
 `;
 
-exports[`bin/inso snapshots base shows help page with "generate config -h" 1`] = `
-"
-  command: bin/inso generate config -h
-  code: 0
-  failed: false
-  killed: false
-  signal: null
-  timedOut: false
+exports[`Snapshot for "inso generate config -h" 1`] = `
+"Usage: inso generate config [options] <filePath>
 
-  stdout:
-  -------
-  Usage: inso generate config [options] <filePath>
+Generate configuration from an api spec
 
-  Generate configuration from an api spec
-
-  Options:
-    -t, --type <value>   the type of configuration to generate, options are
-                         [kubernetes, declarative]
-    -o, --output <path>  the output path
-    -h, --help           display help for command
-  -------
-  stderr:
-  -------
-  
-  -------
-  "
+Options:
+  -t, --type <value>   the type of configuration to generate, options are
+                       [kubernetes, declarative]
+  -o, --output <path>  the output path
+  -h, --help           display help for command"
 `;
 
-exports[`bin/inso snapshots base shows help page with "help" 1`] = `
-"
-  command: bin/inso help
-  code: 0
-  failed: false
-  killed: false
-  signal: null
-  timedOut: false
+exports[`Snapshot for "inso help" 1`] = `
+"Usage: inso [options] [command]
 
-  stdout:
-  -------
-  Usage: inso [options] [command]
+A CLI for Insomnia!
 
-  A CLI for Insomnia!
+Options:
+  -v, --version   output the version number
+  -h, --help      display help for command
 
-  Options:
-    -v, --version   output the version number
-    -h, --help      display help for command
-
-  Commands:
-    generate        Code generation utilities
-    help [command]  display help for command
-  -------
-  stderr:
-  -------
-  
-  -------
-  "
+Commands:
+  generate        Code generation utilities
+  help [command]  display help for command"
 `;

@@ -2,7 +2,7 @@
   "name": "insomnia-cli",
   "version": "0.0.1",
   "bin": {
-    "inso": "dist/inso"
+    "inso": "bin/inso"
   },
   "scripts": {
     "typecheck": "",
@@ -29,8 +29,9 @@
     "@babel/plugin-proposal-optional-chaining": "^7.9.0",
     "@babel/preset-env": "^7.10.2",
     "@babel/preset-flow": "^7.10.1",
-    "execa-wrap": "^1.4.0",
+    "execa": "^4.0.2",
     "flow-bin": "^0.126.1",
+    "get-bin-path": "^5.1.0",
     "husky": "^3.1.0",
     "jest": "^26.0.1",
     "rimraf": "^3.0.2"
