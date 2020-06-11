@@ -31,7 +31,7 @@ describe('cli', () => {
   });
 
   it.each(['-v', '--version'])('should print version from package.json - "%s"', async arg =>
-    expect(await execa('bin/inso', [arg], { filter: ['stdout'] })).toContain(packageJson.version),
+    expect(await execa('bin/inso', [arg])).toContain(packageJson.version),
   );
 
   it('should error when required --type option is missing', () =>

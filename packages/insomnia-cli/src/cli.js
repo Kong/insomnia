@@ -1,12 +1,10 @@
 // @flow
-import * as packageJson from '../package.json';
 import { ConversionTypeMap, generateConfig } from './commands/generate';
-import util from './util';
+import { getVersion, createCommand } from './util';
 
-function makeGenerateCommand(exitOverride?: boolean) {
-  const generate = util
-    .createCommand('generate', exitOverride)
-    .description('Code generation utilities');
+function makeGenerateCommand(exitOverride: boolean) {
+  // generate command
+  const generate = createCommand(exitOverride, 'generate').description('Code generation utilities');
 
   const conversionTypes = Object.keys(ConversionTypeMap).join(', ');
 
@@ -29,10 +27,9 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     args = process.argv;
   }
 
-  util
-    .createCommand(null, exitOverride)
-    .version(packageJson.version, '-v, --version')
+  createCommand(!!exitOverride)
+    .version(getVersion(), '-v, --version')
     .description('A CLI for Insomnia!')
-    .addCommand(makeGenerateCommand(exitOverride))
+    .addCommand(makeGenerateCommand(!!exitOverride))
     .parse(args);
 }

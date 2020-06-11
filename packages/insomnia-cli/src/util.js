@@ -1,7 +1,8 @@
 // @flow
 import commander from 'commander';
+import * as packageJson from '../package.json';
 
-function createCommand(cmd: string | null, exitOverride?: boolean) {
+export function createCommand(exitOverride: boolean, cmd?: string) {
   const command = new commander.Command(cmd)
     .storeOptionsAsProperties(false)
     .passCommandToAction(false);
@@ -13,6 +14,6 @@ function createCommand(cmd: string | null, exitOverride?: boolean) {
   return command;
 }
 
-export default {
-  createCommand,
-};
+export function getVersion() {
+  return packageJson.version;
+}
