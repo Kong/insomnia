@@ -11,18 +11,23 @@ describe('Snapshot for', () => {
     '"inso %s"',
     async args => {
       const { stdout } = await execa(getBinPathSync(), args.split(' '), {
-        timeout: 5000,
+        timeout: 25000,
       });
       expect(stdout).toMatchSnapshot();
     },
+    30000,
   );
 });
 
 describe('Inso version', () => {
-  it.each(['-v', '--version'])('inso %s should print version from package.json', async args => {
-    const { stdout } = await execa(getBinPathSync(), args.split(' '), {
-      timeout: 5000,
-    });
-    expect(stdout).toBe(packageJson.version);
-  });
+  it.each(['-v', '--version'])(
+    'inso %s should print version from package.json',
+    async args => {
+      const { stdout } = await execa(getBinPathSync(), args.split(' '), {
+        timeout: 25000,
+      });
+      expect(stdout).toBe(packageJson.version);
+    },
+    30000,
+  );
 });
