@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`inso base shows help page with "--help" 1`] = `
+exports[`bin/inso snapshots base shows help page with "--help" 1`] = `
 "
   command: bin/inso --help
   code: 0
@@ -30,7 +30,7 @@ exports[`inso base shows help page with "--help" 1`] = `
   "
 `;
 
-exports[`inso base shows help page with "-h" 1`] = `
+exports[`bin/inso snapshots base shows help page with "-h" 1`] = `
 "
   command: bin/inso -h
   code: 0
@@ -60,7 +60,7 @@ exports[`inso base shows help page with "-h" 1`] = `
   "
 `;
 
-exports[`inso base shows help page with "generate -h" 1`] = `
+exports[`bin/inso snapshots base shows help page with "generate -h" 1`] = `
 "
   command: bin/inso generate -h
   code: 0
@@ -89,7 +89,7 @@ exports[`inso base shows help page with "generate -h" 1`] = `
   "
 `;
 
-exports[`inso base shows help page with "generate config -h" 1`] = `
+exports[`bin/inso snapshots base shows help page with "generate config -h" 1`] = `
 "
   command: bin/inso generate config -h
   code: 0
@@ -117,7 +117,7 @@ exports[`inso base shows help page with "generate config -h" 1`] = `
   "
 `;
 
-exports[`inso base shows help page with "help" 1`] = `
+exports[`bin/inso snapshots base shows help page with "help" 1`] = `
 "
   command: bin/inso help
   code: 0
@@ -147,7 +147,7 @@ exports[`inso base shows help page with "help" 1`] = `
   "
 `;
 
-exports[`inso generate config should error when filePath is missing 1`] = `
+exports[`bin/inso snapshots generate config should error when filePath is missing 1`] = `
 "
   command: bin/inso generate config -t declarative
   code: 1
@@ -167,7 +167,7 @@ exports[`inso generate config should error when filePath is missing 1`] = `
   "
 `;
 
-exports[`inso generate config should error when required --type option is missing 1`] = `
+exports[`bin/inso snapshots generate config should error when required --type option is missing 1`] = `
 "
   command: bin/inso generate config
   code: 1
