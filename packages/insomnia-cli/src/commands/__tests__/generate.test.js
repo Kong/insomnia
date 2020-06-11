@@ -1,7 +1,7 @@
 // @flow
 import { generateConfig } from '../generate';
 import type { GenerateConfigOptions } from '../generate';
-import { generate } from 'openapi-2-kong';
+import o2k from 'openapi-2-kong';
 
 jest.mock('openapi-2-kong');
 
@@ -14,6 +14,6 @@ const base: GenerateConfigOptions = {
 describe('generateConfig()', () => {
   it('should should not generate if type arg is invalid', async () => {
     await generateConfig({ ...base, type: 'invalid' });
-    expect(generate).not.toHaveBeenCalled();
+    expect(o2k.generate).not.toHaveBeenCalled();
   });
 });

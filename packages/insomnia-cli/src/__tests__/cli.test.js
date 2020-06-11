@@ -6,9 +6,13 @@ jest.mock('../commands/generate');
 
 const initInso = () => {
   return (args): void => {
-    const cliArgs = `node test ${args}`.split(' ');
+    const cliArgs = `node test ${args}`
+      .split(' ')
+      .map(t => t.trim())
+      .filter(t => t);
+
     // console.log('calling cli.go with: %o', cliArgs);
-    return cli.go(cliArgs);
+    return cli.go(cliArgs, true);
   };
 };
 

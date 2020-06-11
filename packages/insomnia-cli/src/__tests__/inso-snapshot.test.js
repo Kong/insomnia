@@ -6,7 +6,15 @@ import * as packageJson from '../../package.json';
 // These tests use the executable /bin/inso, which relies on /dist.
 describe('bin/inso snapshots', () => {
   const insoSnapshot = async (args): Promise<void> =>
-    expect(await execa('bin/inso', args.split(' '))).toMatchSnapshot();
+    expect(
+      await execa(
+        'bin/inso',
+        args
+          .split(' ')
+          .map(t => t.trim())
+          .filter(t => t),
+      ),
+    ).toMatchSnapshot();
 
   describe('base', () => {
     it.each(['-h', '--help', 'help', 'generate -h', 'generate config -h'])(

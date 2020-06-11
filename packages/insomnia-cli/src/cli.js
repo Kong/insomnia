@@ -1,11 +1,11 @@
 // @flow
 
-import { createCommand } from 'commander';
+import commander from 'commander';
 import * as packageJson from '../package.json';
 import { ConversionTypeMap, generateConfig } from './commands/generate';
 
 function makeGenerateCommand() {
-  const generate = createCommand('generate').description('Code generation utilities');
+  const generate = new commander.Command('generate').description('Code generation utilities');
   const conversionTypes = Object.keys(ConversionTypeMap).join(', ');
 
   // generate config sub-command
@@ -22,17 +22,25 @@ function makeGenerateCommand() {
   return generate;
 }
 
-export function go(args?: Array<string>): void {
+export function go(args?: Array<string>, exitOverride?: boolean): void {
   if (!args) {
     args = process.argv;
   }
 
-  createCommand()
+  const program = new commander.Command();
+
+  // if (exitOverride) {
+  //   program.exitOverride(() => {
+  //     console.log('error');
+  //   });
+  // }
+
+  program
+    .exitOverride()
     .storeOptionsAsProperties(true)
     .passCommandToAction(true)
     .version(packageJson.version, '-v, --version')
     .description('A CLI for Insomnia!')
     .addCommand(makeGenerateCommand())
-    .parseAsync(args)
-    .catch(err => console.error(err));
+    .parse(args);
 }
