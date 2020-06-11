@@ -1,7 +1,6 @@
 // @flow
 import execa from 'execa';
 import { getBinPathSync } from 'get-bin-path';
-import * as packageJson from '../../package.json';
 
 // MAKE SURE YOU BUILD THE PROJECT BEFORE RUNNING THESE TESTS.
 // These tests use the executable /bin/inso, which relies on /dist.
@@ -16,13 +15,4 @@ describe('Snapshot for', () => {
       expect(stdout).toMatchSnapshot();
     },
   );
-});
-
-describe('Inso version', () => {
-  it.each(['-v', '--version'])('inso %s should print version from package.json', async args => {
-    const { stdout } = await execa(getBinPathSync(), args.split(' '), {
-      env: { NO_UPDATE_NOTIFIER: true },
-    });
-    expect(stdout).toBe(packageJson.version);
-  });
 });
