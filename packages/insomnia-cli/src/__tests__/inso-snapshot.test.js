@@ -9,9 +9,7 @@ describe('Snapshot for', () => {
   it.each(['-h', '--help', 'help', 'generate -h', 'generate config -h'])(
     '"inso %s"',
     async args => {
-      const { stdout } = await execa(getBinPathSync(), args.split(' '), {
-        env: { NO_UPDATE_NOTIFIER: true },
-      });
+      const { stdout } = await execa.node(getBinPathSync(), args.split(' '));
       expect(stdout).toMatchSnapshot();
     },
   );
