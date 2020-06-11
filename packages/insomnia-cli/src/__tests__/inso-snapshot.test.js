@@ -13,7 +13,7 @@ describe('Snapshot for', () => {
       const { stdout } = await execa(getBinPathSync(), args.split(' '));
       expect(stdout).toMatchSnapshot();
     },
-    10000,
+    30000,
   );
 });
 
@@ -24,6 +24,6 @@ describe('Inso version', () => {
       const { stdout } = await execa(getBinPathSync(), args.split(' '));
       expect(stdout).toBe(packageJson.version);
     },
-    10000,
+    30000,
   );
 });
