@@ -1,9 +1,8 @@
 {
   "name": "insomnia-cli",
   "version": "0.0.1",
-  "main": "dist/inso.js",
   "bin": {
-    "inso": "dist/inso.js"
+    "inso": "dist/inso"
   },
   "scripts": {
     "typecheck": "",
