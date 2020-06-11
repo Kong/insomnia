@@ -5,14 +5,16 @@ import * as packageJson from '../../package.json';
 
 // MAKE SURE YOU BUILD THE PROJECT BEFORE RUNNING THESE TESTS.
 // These tests use the executable /bin/inso, which relies on /dist.
-describe('Snapshot for', () => {
-  const exec = (args: string): Promise<Object> =>
-    execa(getBinPathSync(), args.split(' '), { all: true, stripFinalNewline: true });
+const exec = (args: string): Promise<Object> =>
+  execa(getBinPathSync(), args.split(' '), { all: true, stripFinalNewline: true });
 
+describe('Snapshot for', () => {
   it.each(['-h', '--help', 'help', 'generate -h', 'generate config -h'])('"inso %s"', async args =>
     expect((await exec(args)).all).toMatchSnapshot(),
   );
+});
 
+describe('Inso version', () => {
   it.each(['-v', '--version'])('inso %s should print version from package.json', async args => {
     expect((await exec(args)).all).toBe(packageJson.version);
   });
