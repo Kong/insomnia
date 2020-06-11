@@ -11,8 +11,8 @@
     "test:watch": "jest --watch",
     "test:snapshots": "npm run build && jest -u",
     "start": "npm run build:watch",
-    "build": "rimraf dist && babel ./src --out-dir=./dist --ignore '**/*/__tests__/**'",
-    "build:watch": "rimraf dist && babel --source-maps --watch=./src --out-dir=./dist --ignore '**/*/__tests__/**'",
+    "build": "rimraf dist && babel ./src --out-dir=./dist --ignore='**/*/__tests__/**'",
+    "build:watch": "rimraf dist && babel --source-maps --watch=./src --out-dir=./dist --ignore='**/*/__tests__/**'",
     "bootstrap": "npm run build",
     "prepublish": "npm run build"
   },
