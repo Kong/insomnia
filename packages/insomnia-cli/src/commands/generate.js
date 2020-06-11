@@ -8,7 +8,6 @@ export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
   declarative: 'kong-declarative-config',
 };
-const conversionTypes = Object.keys(ConversionTypeMap).join(', ');
 
 export type GenerateConfigOptions = {|
   filePath: string,
@@ -18,6 +17,7 @@ export type GenerateConfigOptions = {|
 
 function validateOptions({ type }: GenerateConfigOptions): boolean {
   if (!ConversionTypeMap[type]) {
+    const conversionTypes = Object.keys(ConversionTypeMap).join(', ');
     console.log(`Config type "${type}" not unrecognized. Options are [${conversionTypes}].`);
     return false;
   }
