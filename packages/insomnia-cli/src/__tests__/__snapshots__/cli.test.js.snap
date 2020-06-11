@@ -147,6 +147,153 @@ exports[`inso Help page: inso generate config -h 1`] = `
   "
 `;
 
+exports[`inso base shows help page with "--help" 1`] = `
+"
+  command: bin/inso --help
+  code: 0
+  failed: false
+  killed: false
+  signal: null
+  timedOut: false
+
+  stdout:
+  -------
+  Usage: inso [options] [command]
+
+  A CLI for Insomnia!
+
+  Options:
+    -v, --version   output the version number
+    -h, --help      display help for command
+
+  Commands:
+    generate        Code generation utilities
+    help [command]  display help for command
+  -------
+  stderr:
+  -------
+  
+  -------
+  "
+`;
+
+exports[`inso base shows help page with "-h" 1`] = `
+"
+  command: bin/inso -h
+  code: 0
+  failed: false
+  killed: false
+  signal: null
+  timedOut: false
+
+  stdout:
+  -------
+  Usage: inso [options] [command]
+
+  A CLI for Insomnia!
+
+  Options:
+    -v, --version   output the version number
+    -h, --help      display help for command
+
+  Commands:
+    generate        Code generation utilities
+    help [command]  display help for command
+  -------
+  stderr:
+  -------
+  
+  -------
+  "
+`;
+
+exports[`inso base shows help page with "generate -h" 1`] = `
+"
+  command: bin/inso generate -h
+  code: 0
+  failed: false
+  killed: false
+  signal: null
+  timedOut: false
+
+  stdout:
+  -------
+  Usage: inso generate [options] [command]
+
+  Code generation utilities
+
+  Options:
+    -h, --help                   display help for command
+
+  Commands:
+    config [options] <filePath>  Generate configuration from an api spec
+    help [command]               display help for command
+  -------
+  stderr:
+  -------
+  
+  -------
+  "
+`;
+
+exports[`inso base shows help page with "generate config -h" 1`] = `
+"
+  command: bin/inso generate config -h
+  code: 0
+  failed: false
+  killed: false
+  signal: null
+  timedOut: false
+
+  stdout:
+  -------
+  Usage: inso generate config [options] <filePath>
+
+  Generate configuration from an api spec
+
+  Options:
+    -t, --type <value>   the type of configuration to generate, options are
+                         [kubernetes, declarative]
+    -o, --output <path>  the output path
+    -h, --help           display help for command
+  -------
+  stderr:
+  -------
+  
+  -------
+  "
+`;
+
+exports[`inso base shows help page with "help" 1`] = `
+"
+  command: bin/inso help
+  code: 0
+  failed: false
+  killed: false
+  signal: null
+  timedOut: false
+
+  stdout:
+  -------
+  Usage: inso [options] [command]
+
+  A CLI for Insomnia!
+
+  Options:
+    -v, --version   output the version number
+    -h, --help      display help for command
+
+  Commands:
+    generate        Code generation utilities
+    help [command]  display help for command
+  -------
+  stderr:
+  -------
+  
+  -------
+  "
+`;
+
 exports[`inso generate -h shows help page 1`] = `
 "
   command: bin/inso generate -h

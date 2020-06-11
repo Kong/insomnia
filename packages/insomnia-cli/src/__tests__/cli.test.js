@@ -21,15 +21,17 @@ describe('inso', () => {
     inso = initInso();
   });
 
-  it.each(['-h', '--help', 'help', 'generate -h', 'generate config -h'])(
-    'shows help page with "%s"',
-    async args => {
-      await insoSnapshot(args);
-    },
-  );
+  describe('base', () => {
+    it.each(['-h', '--help', 'help', 'generate -h', 'generate config -h'])(
+      'shows help page with "%s"',
+      async args => {
+        await insoSnapshot(args);
+      },
+    );
 
-  it.each(['-v', '--version'])('should print version from package.json - "%s"', async arg => {
-    expect(await execa('bin/inso', [arg], { filter: ['stdout'] })).toContain(packageJson.version);
+    it.each(['-v', '--version'])('should print version from package.json - "%s"', async arg => {
+      expect(await execa('bin/inso', [arg], { filter: ['stdout'] })).toContain(packageJson.version);
+    });
   });
 
   describe('generate config', () => {
@@ -41,12 +43,21 @@ describe('inso', () => {
       await insoSnapshot('generate config -t declarative');
     });
 
-    it('should call generateConfig', async () => {
+    it('should call generateConfig with undefined output argument', async () => {
       inso('generate config -t declarative file.yaml');
       expect(generateConfig).toHaveBeenCalledWith({
         filePath: 'file.yaml',
         type: 'declarative',
         output: undefined,
+      });
+    });
+
+    it('should call generateConfig with all expected arguments', async () => {
+      inso('generate config -t declarative -o output.yaml file.yaml');
+      expect(generateConfig).toHaveBeenCalledWith({
+        filePath: 'file.yaml',
+        type: 'declarative',
+        output: 'output.yaml',
       });
     });
   });

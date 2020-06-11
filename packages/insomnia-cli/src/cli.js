@@ -1,6 +1,6 @@
 // @flow
 
-import { createCommand, program } from 'commander';
+import { createCommand } from 'commander';
 import * as packageJson from '../package.json';
 import { ConversionTypeMap, generateConfig } from './commands/generate';
 
@@ -27,7 +27,7 @@ export function go(args?: Array<string>): void {
     args = process.argv;
   }
 
-  program
+  createCommand()
     .storeOptionsAsProperties(true)
     .passCommandToAction(true)
     .version(packageJson.version, '-v, --version')
