@@ -6,8 +6,6 @@ import execa from 'execa-wrap';
 describe('bin/inso snapshots', () => {
   describe('base', () => {
     it.each([
-      '-v',
-      '--version',
       '-h',
       '--help',
       'help',
