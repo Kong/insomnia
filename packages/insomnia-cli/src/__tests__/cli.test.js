@@ -1,14 +1,12 @@
 // @flow
 import * as cli from '../cli';
 import { generateConfig } from '../commands/generate';
-import * as packageJson from '../../package.json';
-import execa from 'execa-wrap';
 
 jest.mock('../commands/generate');
 const originalError = console.error;
 
 const initInso = () => {
-  return (args): void => {
+  return (args: string): void => {
     const cliArgs = `node test ${args}`
       .split(' ')
       .map(t => t.trim())
@@ -29,10 +27,6 @@ describe('cli', () => {
   afterEach(() => {
     (console: any).error = originalError;
   });
-
-  it.each(['-v', '--version'])('should print version from package.json - "%s"', async arg =>
-    expect(await execa('bin/inso', [arg])).toContain(packageJson.version),
-  );
 
   it('should error when required --type option is missing', () =>
     expect(() => inso('generate config file.yaml')).toThrowError());

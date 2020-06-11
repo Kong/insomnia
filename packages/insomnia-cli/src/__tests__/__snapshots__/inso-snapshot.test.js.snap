@@ -30,6 +30,26 @@ exports[`bin/inso snapshots base shows help page with "--help" 1`] = `
   "
 `;
 
+exports[`bin/inso snapshots base shows help page with "--version" 1`] = `
+"
+  command: bin/inso --version
+  code: 0
+  failed: false
+  killed: false
+  signal: null
+  timedOut: false
+
+  stdout:
+  -------
+  0.0.1
+  -------
+  stderr:
+  -------
+  
+  -------
+  "
+`;
+
 exports[`bin/inso snapshots base shows help page with "-h" 1`] = `
 "
   command: bin/inso -h
@@ -52,6 +72,26 @@ exports[`bin/inso snapshots base shows help page with "-h" 1`] = `
   Commands:
     generate        Code generation utilities
     help [command]  display help for command
+  -------
+  stderr:
+  -------
+  
+  -------
+  "
+`;
+
+exports[`bin/inso snapshots base shows help page with "-v" 1`] = `
+"
+  command: bin/inso -v
+  code: 0
+  failed: false
+  killed: false
+  signal: null
+  timedOut: false
+
+  stdout:
+  -------
+  0.0.1
   -------
   stderr:
   -------
