@@ -28,10 +28,10 @@ describe('cli', () => {
   });
 
   it('should call generateConfig with all expected arguments', () => {
-    inso('generate config -t declarative -o output.yaml file.yaml');
+    inso('generate config -t kubernetes -o output.yaml file.yaml');
     expect(generateConfig).toHaveBeenCalledWith({
       filePath: 'file.yaml',
-      type: 'declarative',
+      type: 'kubernetes',
       output: 'output.yaml',
     });
   });
