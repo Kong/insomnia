@@ -3,12 +3,12 @@ import { ConversionTypeMap, generateConfig } from './commands/generate';
 import { getVersion, createCommand } from './util';
 
 function makeGenerateCommand(exitOverride: boolean) {
-  // generate command
+  // inso generate
   const generate = createCommand(exitOverride, 'generate').description('Code generation utilities');
 
   const conversionTypes = Object.keys(ConversionTypeMap).join(', ');
 
-  // generate config sub-command
+  // inso generate config -t kubernetes config.yaml
   generate
     .command('config <filePath>')
     .description('Generate configuration from an api spec')
@@ -27,6 +27,7 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     args = process.argv;
   }
 
+  // inso -v
   createCommand(!!exitOverride)
     .version(getVersion(), '-v, --version')
     .description('A CLI for Insomnia!')
