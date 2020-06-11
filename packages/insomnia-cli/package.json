@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "insomnia-cli",
   "version": "0.0.1",
   "bin": {
