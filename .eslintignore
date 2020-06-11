@@ -11,6 +11,7 @@ screenshots/
 **/webpack/
 **/bin/
 **/__fixtures__/
+**/__snapshots__/
 **/flow-typed/
 **/dist/
 **/.cache/

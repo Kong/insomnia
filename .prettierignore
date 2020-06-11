@@ -4,3 +4,4 @@
 **/__fixtures__/*
 **/flow-typed/*
 *.md
+**/__snapshots__/
