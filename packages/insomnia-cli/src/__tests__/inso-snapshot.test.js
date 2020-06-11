@@ -10,12 +10,10 @@ describe('Snapshot for', () => {
   it.each(['-h', '--help', 'help', 'generate -h', 'generate config -h'])(
     '"inso %s"',
     async args => {
-      const { stdout } = await execa(getBinPathSync(), args.split(' '), {
-        timeout: 25000,
-      });
+      const { stdout } = await execa(getBinPathSync(), args.split(' '));
       expect(stdout).toMatchSnapshot();
     },
-    30000,
+    10000,
   );
 });
 
@@ -23,11 +21,9 @@ describe('Inso version', () => {
   it.each(['-v', '--version'])(
     'inso %s should print version from package.json',
     async args => {
-      const { stdout } = await execa(getBinPathSync(), args.split(' '), {
-        timeout: 25000,
-      });
+      const { stdout } = await execa(getBinPathSync(), args.split(' '));
       expect(stdout).toBe(packageJson.version);
     },
-    30000,
+    10000,
   );
 });
