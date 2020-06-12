@@ -16,7 +16,6 @@ import {
   DropdownItem,
   Header,
   SvgIcon,
-  ExampleToo,
 } from 'insomnia-components';
 import DocumentCardDropdown from './dropdowns/document-card-dropdown';
 import KeydownBinder from './keydown-binder';
@@ -46,7 +45,6 @@ import {
   GIT_INTERNAL_DIR,
 } from '../../sync/git/git-vcs';
 import { parseApiSpec } from '../../common/api-specs';
-import { Example } from './example';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -435,8 +433,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
               <React.Fragment>
                 <img src={designerLogo} alt="Insomnia" width="32" height="32" />
                 <Breadcrumb className="breadcrumb" crumbs={['Documents']} />
-                <Example />
-                <ExampleToo />
               </React.Fragment>
             }
             gridCenter={

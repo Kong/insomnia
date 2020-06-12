@@ -2,7 +2,8 @@ const path = require('path');
 
 module.exports = {
   entry: { index: './index.js' },
-  mode: 'development',
+  target: 'web',
+  mode: 'production',
   devtool: 'source-map',
   output: {
     path: path.resolve(__dirname, 'dist'),
