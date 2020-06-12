@@ -77,6 +77,7 @@
     "react-animated-tree",
     "react-dnd",
     "react-dnd-html5-backend",
+    "@hot-loader/react-dom",
     "react-redux",
     "react-sortable-hoc",
     "react-tabs",
