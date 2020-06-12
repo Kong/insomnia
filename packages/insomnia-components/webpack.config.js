@@ -2,8 +2,7 @@ const path = require('path');
 
 module.exports = {
   entry: { index: './index.js' },
-  target: 'web',
-  mode: 'production',
+  mode: 'development',
   devtool: 'source-map',
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -11,6 +10,7 @@ module.exports = {
     library: 'insomniaComponents',
     libraryTarget: 'commonjs2',
   },
+  externals: ['react'],
   module: {
     rules: [
       {
