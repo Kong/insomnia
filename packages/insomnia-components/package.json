@@ -39,6 +39,7 @@
     "classnames": "^2.2.6",
     "framer-motion": "^1.10.3",
     "fuzzysort": "^1.1.4",
+    "md5": "^2.2.1",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
