@@ -30,6 +30,8 @@
     "@svgr/cli": "^5.3.0",
     "babel-loader": "^8.0.6",
     "babel-plugin-inline-react-svg": "^1.1.1",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
     "storybook-addon-designs": "^5.2.0",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
@@ -41,10 +43,12 @@
     "fuzzysort": "^1.1.4",
     "md5": "^2.2.1",
     "prop-types": "^15.7.2",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
     "react-switch": "^5.0.1",
     "styled-components": "^4.4.1"
+  },
+  "peerDependencies": {
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
 }
