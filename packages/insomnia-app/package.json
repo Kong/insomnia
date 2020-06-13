@@ -74,6 +74,7 @@
     "nunjucks",
     "pdfjs-dist",
     "prop-types",
+    "react",
     "react-animated-tree",
     "react-dnd",
     "react-dnd-html5-backend",
