@@ -8,6 +8,16 @@ const db = ({
   _empty: true,
 }: Object);
 
+export async function tryInit(dir: string = '.'): Promise<boolean> {
+  try {
+    await init(dir);
+    return true;
+  } catch (err) {
+    console.log('Could not initialize db', err);
+    return false;
+  }
+}
+
 export async function init(dir: string = '.'): Promise<void> {
   const insomniaDir = path.normalize(path.join(dir, '.insomnia'));
   const types: Array<string> = await fs.promises.readdir(insomniaDir);
@@ -50,6 +60,7 @@ async function _dbNotInitialized<T>(): Promise<T> {
   });
 }
 
+// Other than empty db handling, the following functions are practically copy-paste from database.js
 export async function find<T>(
   type: string,
   query: Object = {},
@@ -79,4 +90,11 @@ export async function all<T>(type: string): Promise<Array<T>> {
   if (db._empty) return _dbNotInitialized();
 
   return find(type);
+}
+
+export async function getWhere<T>(type: string, query: Object): Promise<T | null> {
+  if (db._empty) return _dbNotInitialized();
+
+  const docs = await find(type, query);
+  return docs.length ? docs[0] : null;
 }

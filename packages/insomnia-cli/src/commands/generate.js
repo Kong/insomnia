@@ -4,6 +4,7 @@ import YAML from 'yaml';
 import path from 'path';
 import fs from 'fs';
 import type { GlobalOptions } from '../util';
+import * as db from './git-nedb';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
@@ -26,7 +27,7 @@ function validateOptions({ type }: GenerateConfigOptions): boolean {
 }
 
 export async function generateConfig(
-  filePath: string,
+  identifier: string,
   options: GenerateConfigOptions,
 ): Promise<void> {
   if (!validateOptions(options)) {
@@ -35,7 +36,21 @@ export async function generateConfig(
 
   const { type, output } = options;
 
-  const result = await o2k.generate(filePath, ConversionTypeMap[type]);
+  let result: ConversionResult;
+
+  await db.tryInit(options.workingDir);
+  const specFromDb = await db.getWhere('ApiSpec', { _id: identifier });
+
+  if (specFromDb?.contents) {
+    result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
+  } else {
+    result = await o2k.generate(identifier, ConversionTypeMap[type]);
+  }
+
+  if (!result) {
+    console.log('Could not find identifier');
+    return;
+  }
 
   const yamlDocs = result.documents.map(d => YAML.stringify(d));
 

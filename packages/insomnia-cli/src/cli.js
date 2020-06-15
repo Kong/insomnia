@@ -10,14 +10,14 @@ function makeGenerateCommand(exitOverride: boolean) {
 
   // inso generate config -t kubernetes config.yaml
   generate
-    .command('config <filePath>')
+    .command('config <identifier>')
     .description('Generate configuration from an api spec')
     .requiredOption(
       '-t, --type <value>',
       `the type of configuration to generate, options are [${conversionTypes}]`,
     )
     .option('-o, --output <path>', 'the output path')
-    .action((filePath, cmd) => generateConfig(filePath, getAllOptions(cmd)));
+    .action((identifier, cmd) => generateConfig(identifier, getAllOptions(cmd)));
 
   return generate;
 }
