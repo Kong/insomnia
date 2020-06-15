@@ -3,17 +3,17 @@ import o2k from 'openapi-2-kong';
 import YAML from 'yaml';
 import path from 'path';
 import fs from 'fs';
+import type { GlobalOptions } from '../util';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
   declarative: 'kong-declarative-config',
 };
 
-export type GenerateConfigOptions = {|
-  filePath: string,
+export type GenerateConfigOptions = GlobalOptions<{|
   type: $Keys<typeof ConversionTypeMap>,
   output?: string,
-|};
+|}>;
 
 function validateOptions({ type }: GenerateConfigOptions): boolean {
   if (!ConversionTypeMap[type]) {
@@ -25,12 +25,15 @@ function validateOptions({ type }: GenerateConfigOptions): boolean {
   return true;
 }
 
-export async function generateConfig(options: GenerateConfigOptions): Promise<void> {
+export async function generateConfig(
+  filePath: string,
+  options: GenerateConfigOptions,
+): Promise<void> {
   if (!validateOptions(options)) {
     return;
   }
 
-  const { type, output, filePath } = options;
+  const { type, output } = options;
 
   const result = await o2k.generate(filePath, ConversionTypeMap[type]);
 

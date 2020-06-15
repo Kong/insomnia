@@ -1,6 +1,6 @@
 // @flow
 import { ConversionTypeMap, generateConfig } from './commands/generate';
-import { getVersion, createCommand } from './util';
+import { getVersion, createCommand, getAllOptions } from './util';
 
 function makeGenerateCommand(exitOverride: boolean) {
   // inso generate
@@ -17,7 +17,7 @@ function makeGenerateCommand(exitOverride: boolean) {
       `the type of configuration to generate, options are [${conversionTypes}]`,
     )
     .option('-o, --output <path>', 'the output path')
-    .action((filePath, opts) => generateConfig({ filePath, ...opts }));
+    .action((filePath, cmd) => generateConfig(filePath, getAllOptions(cmd)));
 
   return generate;
 }
@@ -31,6 +31,7 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
   createCommand(!!exitOverride)
     .version(getVersion(), '-v, --version')
     .description('A CLI for Insomnia!')
+    .option('--workingDir <dir>', 'Working directory')
     .addCommand(makeGenerateCommand(!!exitOverride))
     .parse(args);
 }

@@ -9,7 +9,9 @@ const db = ({
 }: Object);
 
 export async function init(dir: string = '.'): Promise<void> {
-  const insomniaDir = path.normalize(path.join(dir, '.insomnia'));
+  const insomniaDir = path.normalize(
+    path.dirname(dir) === '.insomnia' ? dir : path.join(dir, '.insomnia'),
+  );
   const types: Array<string> = await fs.promises.readdir(insomniaDir);
 
   for (const type of types) {
