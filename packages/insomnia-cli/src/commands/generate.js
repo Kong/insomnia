@@ -38,10 +38,10 @@ export async function generateConfig(
 
   let result: ConversionResult;
 
-  await db.init(workingDir);
-
   try {
+    await db.seedGitDataDir(workingDir);
     const specFromDb = await db.getWhere('ApiSpec', { _id: identifier });
+
     if (specFromDb?.contents) {
       result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
     } else {

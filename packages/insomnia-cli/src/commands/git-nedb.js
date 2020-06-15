@@ -8,15 +8,39 @@ const db = ({
   _empty: true,
 }: Object);
 
-export async function init(dir: string): Promise<void> {
-  const insomniaDir = path.normalize(path.join(dir || '.', '.insomnia'));
-  const types: Array<string> = await fs.promises.readdir(insomniaDir);
+// TODO: Should not be hardcoded and should come from model types
+export const SUPPORTED_TYPES = ['ApiSpec', 'Workspace', 'Request', 'RequestGroup', 'Environment'];
+
+export async function init(types: Array<string>, forceReset: boolean = false) {
+  if (forceReset) {
+    for (const attr of Object.keys(db)) {
+      if (attr === '_empty') {
+        continue;
+      }
+
+      delete db[attr];
+    }
+  }
 
   for (const type of types) {
+    if (db[type]) {
+      continue;
+    }
+
     db[type] = new NeDB();
   }
 
   delete db._empty;
+}
+
+export async function seedGitDataDir(dir?: string): Promise<void> {
+  if (db._empty) return _dbNotInitialized();
+
+  const insomniaDir = path.normalize(path.join(dir || '.', '.insomnia'));
+
+  if (!fs.existsSync(insomniaDir)) {
+    throw new Error(`Directory not found: ${insomniaDir}`);
+  }
 
   const readAndInsertDoc = (fileName: string): Promise<void> =>
     new Promise(async (resolve, reject) => {
@@ -33,9 +57,14 @@ export async function init(dir: string): Promise<void> {
     });
 
   await Promise.all(
-    types.map(async type => {
+    Object.keys(db).map(async type => {
       // Get all files in type dir
-      const files = await fs.promises.readdir(path.join(insomniaDir, type));
+      const typeDir = path.join(insomniaDir, type);
+      if (!fs.existsSync(typeDir)) {
+        return;
+      }
+
+      const files = await fs.promises.readdir(typeDir);
       return Promise.all(
         // Insert each file from each type
         files.map(file => readAndInsertDoc(path.join(insomniaDir, type, file))),
@@ -45,9 +74,7 @@ export async function init(dir: string): Promise<void> {
 }
 
 async function _dbNotInitialized<T>(): Promise<T> {
-  return new Promise((resolve, reject) => {
-    reject(new Error('Db has not been initialized.'));
-  });
+  throw new Error('Db has not been initialized.');
 }
 
 // Other than empty db handling, the following functions are practically copy-paste from database.js
