@@ -11,7 +11,7 @@ const db = ({
 // TODO: Should not be hardcoded and should come from model types
 export const SUPPORTED_TYPES = ['ApiSpec', 'Workspace', 'Request', 'RequestGroup', 'Environment'];
 
-export async function init(types: Array<string>, forceReset: boolean = false) {
+export function init(types: Array<string>, forceReset: boolean = false) {
   if (forceReset) {
     for (const attr of Object.keys(db)) {
       if (attr === '_empty') {

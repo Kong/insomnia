@@ -38,23 +38,13 @@ export async function generateConfig(
 
   let result: ConversionResult;
 
-  try {
-    await db.seedGitDataDir(workingDir);
-    const specFromDb = await db.getWhere('ApiSpec', { _id: identifier });
+  await db.seedGitDataDir(workingDir);
+  const specFromDb = await db.getWhere('ApiSpec', { _id: identifier });
 
-    if (specFromDb?.contents) {
-      result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
-    } else {
-      result = await o2k.generate(identifier, ConversionTypeMap[type]);
-    }
-  } catch (err) {
-    console.log('Failed to generate', err);
-    return;
-  }
-
-  if (!result) {
-    console.log('Could not find identifier');
-    return;
+  if (specFromDb?.contents) {
+    result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
+  } else {
+    result = await o2k.generate(identifier, ConversionTypeMap[type]);
   }
 
   const yamlDocs = result.documents.map(d => YAML.stringify(d));
