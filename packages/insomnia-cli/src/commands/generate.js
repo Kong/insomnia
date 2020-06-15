@@ -41,10 +41,15 @@ export async function generateConfig(
   await db.tryInit(options.workingDir);
   const specFromDb = await db.getWhere('ApiSpec', { _id: identifier });
 
-  if (specFromDb?.contents) {
-    result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
-  } else {
-    result = await o2k.generate(identifier, ConversionTypeMap[type]);
+  try {
+    if (specFromDb?.contents) {
+      result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
+    } else {
+      result = await o2k.generate(identifier, ConversionTypeMap[type]);
+    }
+  } catch (err) {
+    console.log('Failed to generate', err);
+    return;
   }
 
   if (!result) {
