@@ -2,8 +2,9 @@
 import commander from 'commander';
 import * as packageJson from '../package.json';
 
-export type GlobalOptions = {|
+export type GlobalOptions<T> = {|
   workingDir: string,
+  ...T,
 |};
 
 export function createCommand(exitOverride: boolean, cmd?: string) {

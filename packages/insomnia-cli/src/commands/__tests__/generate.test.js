@@ -4,10 +4,13 @@ import type { GenerateConfigOptions } from '../generate';
 import o2k from 'openapi-2-kong';
 import fs from 'fs';
 import path from 'path';
+import { globalBeforeEach } from '../../__jest__/before-each';
 
 jest.mock('openapi-2-kong');
 
 describe('generateConfig()', () => {
+  beforeEach(globalBeforeEach);
+
   // make flow happy
   const mock = (mockFn: any) => mockFn;
   afterEach(() => {
@@ -19,6 +22,7 @@ describe('generateConfig()', () => {
     output: undefined,
     workingDir: 'src/commands/__fixtures__/git-repo',
   };
+
   const filePath = 'file.yaml';
 
   it('should should not generate if type arg is invalid', async () => {

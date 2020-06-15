@@ -1,13 +1,13 @@
 // @flow
 import path from 'path';
 import * as db from '../git-nedb';
+import { globalBeforeEach } from '../../__jest__/before-each';
 
 describe('git-nedb', () => {
+  beforeEach(globalBeforeEach);
+
   describe('seedGitDataDir()', () => {
     const fixturesPath = 'src/commands/__fixtures__';
-    beforeEach(() => {
-      db.init(db.SUPPORTED_TYPES, true);
-    });
 
     it('should seed with git-repo directory', async () => {
       const dir = path.join(fixturesPath, 'git-repo');

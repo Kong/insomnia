@@ -11,10 +11,10 @@ export const ConversionTypeMap: { [string]: ConversionResultType } = {
   declarative: 'kong-declarative-config',
 };
 
-export type GenerateConfigOptions = GlobalOptions & {|
+export type GenerateConfigOptions = GlobalOptions<{|
   type: $Keys<typeof ConversionTypeMap>,
   output?: string,
-|};
+|}>;
 
 function validateOptions({ type }: GenerateConfigOptions): boolean {
   if (!ConversionTypeMap[type]) {
