@@ -18,6 +18,7 @@ describe('generateConfig()', () => {
   const base: GenerateConfigOptions = {
     type: 'kubernetes',
     output: undefined,
+    workingDir: 'src/commands/__fixtures__/git-repo',
   };
   const filePath = 'file.yaml';
 

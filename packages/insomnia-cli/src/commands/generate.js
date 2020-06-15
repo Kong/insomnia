@@ -34,11 +34,11 @@ export async function generateConfig(
     return;
   }
 
-  const { type, output } = options;
+  const { type, output, workingDir } = options;
 
   let result: ConversionResult;
 
-  await db.tryInit(options.workingDir);
+  await db.init(workingDir);
   const specFromDb = await db.getWhere('ApiSpec', { _id: identifier });
 
   try {

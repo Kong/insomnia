@@ -8,18 +8,8 @@ const db = ({
   _empty: true,
 }: Object);
 
-export async function tryInit(dir: string = '.'): Promise<boolean> {
-  try {
-    await init(dir);
-    return true;
-  } catch (err) {
-    console.log('Could not initialize db', err);
-    return false;
-  }
-}
-
-export async function init(dir: string = '.'): Promise<void> {
-  const insomniaDir = path.normalize(path.join(dir, '.insomnia'));
+export async function init(dir?: string): Promise<void> {
+  const insomniaDir = path.normalize(path.join(dir || '.', '.insomnia'));
   const types: Array<string> = await fs.promises.readdir(insomniaDir);
 
   for (const type of types) {
