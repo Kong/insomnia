@@ -33,6 +33,7 @@ export function init(types: Array<string>, forceReset: boolean = false) {
   delete db._empty;
 }
 
+// TODO: Add db seeding functions for electron insomnia dir, insomnia export format
 export async function seedGitDataDir(dir: string): Promise<void> {
   if (db._empty) return _dbNotInitialized();
 
