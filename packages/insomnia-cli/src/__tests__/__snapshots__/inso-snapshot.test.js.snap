@@ -7,7 +7,7 @@ A CLI for Insomnia!
 
 Options:
   -v, --version       output the version number
-  --workingDir <dir>  Working directory
+  --workingDir <dir>  Working directory (default: \\".\\")
   -h, --help          display help for command
 
 Commands:
@@ -22,7 +22,7 @@ A CLI for Insomnia!
 
 Options:
   -v, --version       output the version number
-  --workingDir <dir>  Working directory
+  --workingDir <dir>  Working directory (default: \\".\\")
   -h, --help          display help for command
 
 Commands:
@@ -62,7 +62,7 @@ A CLI for Insomnia!
 
 Options:
   -v, --version       output the version number
-  --workingDir <dir>  Working directory
+  --workingDir <dir>  Working directory (default: \\".\\")
   -h, --help          display help for command
 
 Commands:

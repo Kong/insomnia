@@ -8,7 +8,7 @@ const db = ({
   _empty: true,
 }: Object);
 
-export async function init(dir?: string): Promise<void> {
+export async function init(dir: string): Promise<void> {
   const insomniaDir = path.normalize(path.join(dir || '.', '.insomnia'));
   const types: Array<string> = await fs.promises.readdir(insomniaDir);
 
