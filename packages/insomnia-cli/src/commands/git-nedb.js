@@ -33,10 +33,10 @@ export function init(types: Array<string>, forceReset: boolean = false) {
   delete db._empty;
 }
 
-export async function seedGitDataDir(dir?: string): Promise<void> {
+export async function seedGitDataDir(dir: string): Promise<void> {
   if (db._empty) return _dbNotInitialized();
 
-  const insomniaDir = path.normalize(path.join(dir || '.', '.insomnia'));
+  const insomniaDir = path.normalize(path.join(dir, '.insomnia'));
 
   if (!fs.existsSync(insomniaDir)) {
     throw new Error(`Directory not found: ${insomniaDir}`);
