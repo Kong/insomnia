@@ -9,9 +9,7 @@ const db = ({
 }: Object);
 
 export async function init(dir: string = '.'): Promise<void> {
-  const insomniaDir = path.normalize(
-    path.dirname(dir) === '.insomnia' ? dir : path.join(dir, '.insomnia'),
-  );
+  const insomniaDir = path.normalize(path.join(dir, '.insomnia'));
   const types: Array<string> = await fs.promises.readdir(insomniaDir);
 
   for (const type of types) {
@@ -30,7 +28,6 @@ export async function init(dir: string = '.'): Promise<void> {
         if (err) {
           return reject(err);
         }
-
         resolve(newDoc);
       });
     });
@@ -76,4 +73,10 @@ export async function find<T>(
         resolve(docs);
       });
   });
+}
+
+export async function all<T>(type: string): Promise<Array<T>> {
+  if (db._empty) return _dbNotInitialized();
+
+  return find(type);
 }
