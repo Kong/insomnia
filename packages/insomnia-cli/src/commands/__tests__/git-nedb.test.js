@@ -8,8 +8,8 @@ describe('git-nedb', () => {
 
     expect(await gitDb.all('ApiSpec')).toHaveLength(1);
     expect(await gitDb.all('Environment')).toHaveLength(2);
-    expect(await gitDb.all('Request')).toHaveLength(19);
-    expect(await gitDb.all('RequestGroup')).toHaveLength(3);
+    expect(await gitDb.all('Request')).toHaveLength(2);
+    expect(await gitDb.all('RequestGroup')).toHaveLength(1);
     expect(await gitDb.all('Workspace')).toHaveLength(1);
   });
 });

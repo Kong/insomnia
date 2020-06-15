@@ -1,16 +1,16 @@
-_id: req_wrk_012d4860c7da418a85ffea7406e1292a3d1a51d3
+_id: req_wrk_012d4860c7da418a85ffea7406e1292a21946b60
 authentication: {}
 body: {}
-created: 1589852034303
+created: 1592254074764
 description: ""
 headers: []
 isPrivate: false
-metaSortKey: -1589852034303
+metaSortKey: -1592254074764
 method: GET
-modified: 1589852199604
-name: Find pet by ID
+modified: 1592254074764
+name: /global
 parameters: []
-parentId: fld_wrk_012d4860c7da418a85ffea7406e1292a1b034c38
+parentId: fld_wrk_012d4860c7da418a85ffea7406e1292a30baa249
 settingDisableRenderRequestBody: false
 settingEncodeUrl: true
 settingFollowRedirects: global
@@ -18,4 +18,4 @@ settingRebuildPath: true
 settingSendCookies: true
 settingStoreCookies: true
 type: Request
-url: "{{ base_url }}/pet/{{ petId }}"
+url: "{{ base_url }}/global"
