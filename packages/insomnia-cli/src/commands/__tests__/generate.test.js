@@ -6,7 +6,6 @@ import fs from 'fs';
 import path from 'path';
 
 jest.mock('openapi-2-kong');
-jest.mock('fs');
 
 describe('generateConfig()', () => {
   // make flow happy
@@ -43,14 +42,25 @@ describe('generateConfig()', () => {
     expect(consoleSpy).toHaveBeenCalledWith('a\n---\nb\n');
   });
 
+  it('should load identifier from database', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    mock(o2k.generateFromString).mockResolvedValue({ documents: ['a', 'b'] });
+
+    await generateConfig('spc_46c5a4a40e83445a9bd9d9758b86c16c', base);
+
+    expect(o2k.generateFromString).toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith('a\n---\nb\n');
+  });
+
   it('should write converted documents to file system', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const writeFileSpy = jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
 
     await generateConfig(filePath, { ...base, output: 'output.yaml' });
 
     expect(o2k.generate).toHaveBeenCalledWith(filePath, ConversionTypeMap[base.type]);
-    expect(fs.writeFileSync).toHaveBeenCalledWith(path.resolve('output.yaml'), 'a\n---\nb\n');
+    expect(writeFileSpy).toHaveBeenCalledWith(path.resolve('output.yaml'), 'a\n---\nb\n');
     expect(consoleSpy).not.toHaveBeenCalled();
   });
 });

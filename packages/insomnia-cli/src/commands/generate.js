@@ -1,5 +1,5 @@
 // @flow
-import o2k from 'openapi-2-kong';
+import * as o2k from 'openapi-2-kong';
 import YAML from 'yaml';
 import path from 'path';
 import fs from 'fs';
@@ -39,9 +39,9 @@ export async function generateConfig(
   let result: ConversionResult;
 
   await db.init(workingDir);
-  const specFromDb = await db.getWhere('ApiSpec', { _id: identifier });
 
   try {
+    const specFromDb = await db.getWhere('ApiSpec', { _id: identifier });
     if (specFromDb?.contents) {
       result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
     } else {
