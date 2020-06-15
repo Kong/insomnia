@@ -35,10 +35,10 @@ export async function init(dir: string): Promise<void> {
   await Promise.all(
     types.map(async type => {
       // Get all files in type dir
-      const entries = await fs.promises.readdir(path.join(insomniaDir, type));
+      const files = await fs.promises.readdir(path.join(insomniaDir, type));
       return Promise.all(
         // Insert each file from each type
-        entries.map(entry => readAndInsertDoc(path.join(insomniaDir, type, entry))),
+        files.map(file => readAndInsertDoc(path.join(insomniaDir, type, file))),
       );
     }),
   );
