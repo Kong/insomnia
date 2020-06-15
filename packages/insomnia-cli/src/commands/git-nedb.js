@@ -34,13 +34,15 @@ export function init(types: Array<string>, forceReset: boolean = false) {
 }
 
 // TODO: Add db seeding functions for electron insomnia dir, insomnia export format
-export async function seedGitDataDir(dir: string): Promise<void> {
+export async function seedGitDataDir(dir?: string): Promise<void> {
   if (db._empty) return _dbNotInitialized();
 
-  const insomniaDir = path.normalize(path.join(dir, '.insomnia'));
+  const insomniaDir = path.normalize(path.join(dir || '.', '.insomnia'));
 
   if (!fs.existsSync(insomniaDir)) {
-    throw new Error(`Directory not found: ${insomniaDir}`);
+    // TODO: control logging with verbose flag
+    // console.log(`Directory not found: ${insomniaDir}`);
+    return;
   }
 
   const readAndInsertDoc = (fileName: string): Promise<void> =>

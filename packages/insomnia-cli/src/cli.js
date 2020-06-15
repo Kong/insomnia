@@ -34,7 +34,7 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
   createCommand(!!exitOverride)
     .version(getVersion(), '-v, --version')
     .description('A CLI for Insomnia!')
-    .option('--workingDir <dir>', 'Working directory', '.')
+    .option('--workingDir <dir>', 'Working directory')
     .addCommand(makeGenerateCommand(!!exitOverride))
     .parseAsync(args)
     .catch(err => console.log('An error occurred', err));

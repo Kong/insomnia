@@ -20,7 +20,6 @@ describe('generateConfig()', () => {
   const base: GenerateConfigOptions = {
     type: 'kubernetes',
     output: undefined,
-    workingDir: 'src/commands/__fixtures__/git-repo',
   };
 
   const filePath = 'file.yaml';
@@ -50,7 +49,10 @@ describe('generateConfig()', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     mock(o2k.generateFromString).mockResolvedValue({ documents: ['a', 'b'] });
 
-    await generateConfig('spc_46c5a4a40e83445a9bd9d9758b86c16c', base);
+    await generateConfig('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
+      ...base,
+      workingDir: 'src/commands/__fixtures__/git-repo',
+    });
 
     expect(o2k.generateFromString).toHaveBeenCalled();
     expect(consoleSpy).toHaveBeenCalledWith('a\n---\nb\n');

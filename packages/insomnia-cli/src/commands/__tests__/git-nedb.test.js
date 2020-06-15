@@ -20,10 +20,10 @@ describe('git-nedb', () => {
       expect(await db.all('Workspace')).toHaveLength(1);
     });
 
-    it('should throw error if .insomnia directory is not found', async () => {
+    it('should safely continue if data directory not found', async () => {
       const dir = path.join(fixturesPath, 'git-repo-without-insomnia');
-      const action = () => db.seedGitDataDir(dir);
-      expect(action).rejects.toThrowError(`Directory not found: ${path.join(dir, '.insomnia')}`);
+      await db.seedGitDataDir(dir);
+      expect(await db.all('Workspace')).toHaveLength(0);
     });
 
     it('should ignore unexpected type directories', async () => {

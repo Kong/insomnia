@@ -3,7 +3,7 @@ import commander from 'commander';
 import * as packageJson from '../package.json';
 
 export type GlobalOptions<T> = {|
-  workingDir: string,
+  workingDir?: string,
   ...T,
 |};
 

@@ -38,7 +38,6 @@ describe('cli', () => {
     inso('generate config -t declarative file.yaml');
     expect(generateConfig).toHaveBeenCalledWith('file.yaml', {
       type: 'declarative',
-      workingDir: '.',
     });
   });
 
