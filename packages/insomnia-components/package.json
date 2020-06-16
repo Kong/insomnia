@@ -9,7 +9,7 @@
     "typecheck": "flow check",
     "test": "npm run typecheck",
     "build": "webpack --config webpack/webpack.prod.js --display errors-only",
-    "build:dev": "webpack --config webpack/webpack.dev.js",
+    "watch": "webpack --config webpack/webpack.dev.js --watch",
     "build-storybook": "build-storybook --quiet",
     "storybook": "start-storybook --port 3223",
     "bootstrap": "npm run convert-svg && npm run build",

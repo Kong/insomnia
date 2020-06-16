@@ -51,6 +51,7 @@ module.exports = {
     ],
   },
   stats: {
+    // https://webpack.js.org/loaders/source-map-loader/#ignoring-warnings
     warningsFilter: [/Failed to parse source map/],
   },
   resolve: {
