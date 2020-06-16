@@ -20,6 +20,12 @@ module.exports = {
     rules: [
       {
         test: /\.(js)$/,
+        enforce: 'pre',
+        use: ['source-map-loader'],
+        include: [/insomnia-components/],
+      },
+      {
+        test: /\.(js)$/,
         use: ['babel-loader'],
         exclude: [/node_modules/, /__fixtures__/, /__tests__/],
       },
@@ -43,6 +49,9 @@ module.exports = {
         loader: 'url-loader',
       },
     ],
+  },
+  stats: {
+    warningsFilter: [/Failed to parse source map/],
   },
   resolve: {
     alias: {
