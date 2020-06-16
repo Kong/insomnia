@@ -16,3 +16,6 @@ paths:
         hide_credentials: true
     get:
       description: 'test'
+      responses:
+        '200':
+          description: OK

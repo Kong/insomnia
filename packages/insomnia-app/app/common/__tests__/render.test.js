@@ -23,6 +23,13 @@ describe('render()', () => {
     expect(rendered).toMatch(/Hello \d{13}!/);
   });
 
+  it('renders nested object', async () => {
+    const rendered = await renderUtils.render('Hello {{ users[0].name }}!', {
+      users: [{ name: 'Niji' }],
+    });
+    expect(rendered).toBe('Hello Niji!');
+  });
+
   it('fails on invalid template', async () => {
     try {
       await renderUtils.render('Hello {{ msg }!', { msg: 'World' });
@@ -68,22 +75,34 @@ describe('buildRenderContext()', () => {
     const ancestors = [
       {
         type: models.requestGroup.type,
-        environment: { foo: 'parent', ancestor: true },
+        environment: {
+          foo: 'parent',
+          ancestor: true,
+        },
       },
       {
         type: models.requestGroup.type,
-        environment: { foo: 'grandparent', ancestor: true },
+        environment: {
+          foo: 'grandparent',
+          ancestor: true,
+        },
       },
     ];
 
     const rootEnvironment = {
       type: models.environment.type,
-      data: { foo: 'root', root: true },
+      data: {
+        foo: 'root',
+        root: true,
+      },
     };
 
     const subEnvironment = {
       type: models.environment.type,
-      data: { foo: 'sub', sub: true },
+      data: {
+        foo: 'sub',
+        sub: true,
+      },
     };
 
     const context = await renderUtils.buildRenderContext(
@@ -229,7 +248,10 @@ describe('buildRenderContext()', () => {
 
     const context = await renderUtils.buildRenderContext(ancestors);
 
-    expect(context).toEqual({ sibling: 'sibling', test: 'sibling/hello' });
+    expect(context).toEqual({
+      sibling: 'sibling',
+      test: 'sibling/hello',
+    });
   });
 
   it('rendered parent environment variables', async () => {
@@ -337,7 +359,83 @@ describe('buildRenderContext()', () => {
 
     const context = await renderUtils.buildRenderContext(ancestors);
 
-    expect(context).toEqual({ parent: 'parent', test: 'parent grandparent' });
+    expect(context).toEqual({
+      parent: 'parent',
+      test: 'parent grandparent',
+    });
+  });
+
+  it('works with object arrays', async () => {
+    const ancestors = [
+      {
+        name: 'Parent',
+        type: models.requestGroup.type,
+        environment: {},
+      },
+      {
+        name: 'Grandparent',
+        type: models.requestGroup.type,
+        environment: {
+          users: [{ name: 'Mike' }, { name: 'Opender' }],
+        },
+      },
+    ];
+
+    const context = await renderUtils.buildRenderContext(ancestors);
+
+    expect(context).toEqual({
+      users: [{ name: 'Mike' }, { name: 'Opender' }],
+    });
+  });
+
+  it('works with ordered objects', async () => {
+    const obj = {
+      users: [
+        { name: 'Mike', id: 1 },
+        { name: 'Opender', id: 2 },
+      ],
+    };
+    const order = {
+      '&': ['users'],
+      '&~|users~|0': ['id', 'name'],
+      '&~|users~|1': ['id', 'name'],
+    };
+
+    const requestGroup = {
+      name: 'Parent',
+      type: models.requestGroup.type,
+      environment: obj,
+      environmentPropertyOrder: order,
+    };
+
+    const rootEnvironment = {
+      name: 'Parent',
+      type: models.environment.type,
+      data: obj,
+      dataPropertyOrder: order,
+    };
+
+    const subEnvironment = {
+      name: 'Sub',
+      type: models.environment.type,
+      data: obj,
+      dataPropertyOrder: order,
+    };
+
+    const groupCtx = await renderUtils.buildRenderContext([requestGroup]);
+    const rootCtx = await renderUtils.buildRenderContext([], rootEnvironment);
+    const subCtx = await renderUtils.buildRenderContext([], null, subEnvironment);
+
+    const expected = {
+      users: [
+        { id: 1, name: 'Mike' },
+        { id: 2, name: 'Opender' },
+      ],
+    };
+
+    expect(groupCtx).toEqual(expected);
+    expect(rootCtx).toEqual(expected);
+    expect(subCtx).toEqual(expected);
   });
 
   it('merges nested properties when rendering', async () => {
@@ -404,12 +502,20 @@ describe('buildRenderContext()', () => {
 
     const subEnvironment = {
       type: models.environment.type,
-      data: { winner: 'sub', sub: true, base_url: 'https://insomnia.rest' },
+      data: {
+        winner: 'sub',
+        sub: true,
+        base_url: 'https://insomnia.rest',
+      },
     };
 
     const rootEnvironment = {
       type: models.environment.type,
-      data: { winner: 'root', root: true, base_url: 'ignore this' },
+      data: {
+        winner: 'root',
+        root: true,
+        base_url: 'ignore this',
+      },
     };
 
     const context = await renderUtils.buildRenderContext(
@@ -503,7 +609,10 @@ describe('render()', () => {
         bar: 'bar',
         baz: '{{ bad }}',
       },
-      { foo: 'bar', bad: 'hi' },
+      {
+        foo: 'bar',
+        bad: 'hi',
+      },
     );
 
     expect(newObj).toEqual({
@@ -626,7 +735,12 @@ describe('getRenderedRequest()', () => {
       parentId: workspace._id,
       name: 'hi {{ foo }}',
       url: '{{ foo }}/bar',
-      parameters: [{ name: 'foo', value: '{{ foo }}' }],
+      parameters: [
+        {
+          name: 'foo',
+          value: '{{ foo }}',
+        },
+      ],
       description: 'hi {{ foo }}',
     });
 
@@ -635,7 +749,12 @@ describe('getRenderedRequest()', () => {
       expect.objectContaining({
         name: 'hi bar',
         url: 'http://bar/bar',
-        parameters: [{ name: 'foo', value: 'bar' }],
+        parameters: [
+          {
+            name: 'foo',
+            value: 'bar',
+          },
+        ],
         description: 'hi bar',
       }),
     );
@@ -653,7 +772,12 @@ describe('getRenderedRequest()', () => {
       parentId: workspace._id,
       name: 'hi {{ foo }}',
       url: '{{ foo }}/bar',
-      parameters: [{ name: 'foo', value: '{{ foo }}' }],
+      parameters: [
+        {
+          name: 'foo',
+          value: '{{ foo }}',
+        },
+      ],
       description: 'hi {{ some error }}',
     });
 
@@ -662,7 +786,12 @@ describe('getRenderedRequest()', () => {
       expect.objectContaining({
         name: 'hi bar',
         url: 'http://bar/bar',
-        parameters: [{ name: 'foo', value: 'bar' }],
+        parameters: [
+          {
+            name: 'foo',
+            value: 'bar',
+          },
+        ],
         description: 'hi {{ some error }}',
       }),
     );

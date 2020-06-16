@@ -5,7 +5,7 @@ import type { BaseModel } from '../models/index';
 import { setDefaultProtocol } from 'insomnia-url';
 import clone from 'clone';
 import * as models from '../models';
-import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_PREFIX } from '../common/constants';
+import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import * as db from './database';
 import * as templating from '../templating';
 import type { CookieJar } from '../models/cookie-jar';
@@ -44,7 +44,7 @@ export async function buildRenderContext(
     const ordered = orderedJSON.order(
       rootEnvironment.data,
       rootEnvironment.dataPropertyOrder,
-      JSON_ORDER_PREFIX,
+      JSON_ORDER_SEPARATOR,
     );
 
     envObjects.push(ordered);
@@ -54,7 +54,7 @@ export async function buildRenderContext(
     const ordered = orderedJSON.order(
       subEnvironment.data,
       subEnvironment.dataPropertyOrder,
-      JSON_ORDER_PREFIX,
+      JSON_ORDER_SEPARATOR,
     );
 
     envObjects.push(ordered);
@@ -64,7 +64,11 @@ export async function buildRenderContext(
     const ancestor: any = doc;
     const { environment, environmentPropertyOrder } = ancestor;
     if (typeof environment === 'object' && environment !== null) {
-      const ordered = orderedJSON.order(environment, environmentPropertyOrder, JSON_ORDER_PREFIX);
+      const ordered = orderedJSON.order(
+        environment,
+        environmentPropertyOrder,
+        JSON_ORDER_SEPARATOR,
+      );
       envObjects.push(ordered);
     }
   }

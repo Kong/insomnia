@@ -65,38 +65,32 @@ const StyledSwitch: React.ComponentType<{}> = styled.div`
   }
 `;
 
-class Switch extends React.PureComponent<Props> {
-  render() {
-    const { className, onClick, optionItems } = this.props;
-
-    return (
-      <StyledSwitch className={className}>
-        <div className="switch">
-          {optionItems.map((item, i) => {
-            return (
-              <React.Fragment key={item.label}>
-                <input
-                  type="radio"
-                  className="switch-input"
-                  name="switch"
-                  onClick={onClick}
-                  value={item.label}
-                  id={item.label}
-                  defaultChecked={item.selected ? 'defaultChecked' : ''}
-                />
-                <label
-                  htmlFor={item.label}
-                  className={`switch-label ${i === 0 ? 'switch-label-off' : 'switch-label-on'}`}>
-                  {item.label}
-                </label>
-              </React.Fragment>
-            );
-          })}
-          <span className="switch-selection"></span>
-        </div>
-      </StyledSwitch>
-    );
-  }
-}
+const Switch = ({ className, onClick, optionItems }: Props) => (
+  <StyledSwitch className={className}>
+    <div className="switch">
+      {optionItems.map((item, i) => {
+        return (
+          <React.Fragment key={item.label}>
+            <input
+              type="radio"
+              className="switch-input"
+              name="switch"
+              onClick={onClick}
+              value={item.label}
+              id={item.label}
+              defaultChecked={item.selected ? 'defaultChecked' : ''}
+            />
+            <label
+              htmlFor={item.label}
+              className={`switch-label ${i === 0 ? 'switch-label-off' : 'switch-label-on'}`}>
+              {item.label}
+            </label>
+          </React.Fragment>
+        );
+      })}
+      <span className="switch-selection"></span>
+    </div>
+  </StyledSwitch>
+);
 
 export default Switch;

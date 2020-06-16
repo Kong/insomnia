@@ -27,8 +27,8 @@ const spectral = new Spectral();
 type Props = {|
   gitSyncDropdown: React.Node,
   wrapperProps: WrapperProps,
-  handleUpdateApiSpec: (s: ApiSpec) => any,
-  handleSetDebugActivity: (s: ApiSpec) => any,
+  handleUpdateApiSpec: (s: ApiSpec) => Promise<void>,
+  handleSetDebugActivity: (s: ApiSpec) => Promise<void>,
 |};
 
 type State = {|
@@ -52,6 +52,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     this.state = {
       previewHidden: props.wrapperProps.activeWorkspaceMeta.previewHidden || false,
       lintMessages: [],
+      hasConfigPlugins: false,
     };
   }
 
@@ -70,7 +71,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     showModal(GenerateConfigModal, { apiSpec: activeApiSpec });
   }
 
-  _handleDebugSpec(errors, e) {
+  async _handleDebugSpec(errors, e): Pomise<void> {
     e.preventDefault();
     if (errors) {
       showModal(AlertModal, {
@@ -79,12 +80,12 @@ class WrapperDesign extends React.PureComponent<Props, State> {
           'Some requests may not be available due to errors found in the specification. We recommend fixing errors before proceeding. 🤗',
         okLabel: 'Proceed',
         addCancel: true,
-        onConfirm: () => {
+        onConfirm: async () => {
           const {
             handleSetDebugActivity,
             wrapperProps: { activeApiSpec },
           } = this.props;
-          handleSetDebugActivity(activeApiSpec);
+          await handleSetDebugActivity(activeApiSpec);
         },
       });
     } else {
@@ -92,7 +93,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
         handleSetDebugActivity,
         wrapperProps: { activeApiSpec },
       } = this.props;
-      handleSetDebugActivity(activeApiSpec);
+      await handleSetDebugActivity(activeApiSpec);
     }
   }
 

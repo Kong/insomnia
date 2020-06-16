@@ -14,7 +14,8 @@ import ModalFooter from '../base/modal-footer';
 type Props = {|
   vcs: GitVCS,
   gitRepository: GitRepository,
-  handleInitializeEntities: () => void,
+  handleInitializeEntities: () => Promise<void>,
+  handleGitBranchChanged: (branch: string) => void,
 |};
 
 type State = {|
@@ -72,7 +73,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
   }
 
   async _refreshState(newState?: Object) {
-    const { vcs } = this.props;
+    const { vcs, handleGitBranchChanged } = this.props;
 
     const branch = await vcs.getBranch();
     const branches = await vcs.listBranches();
@@ -84,6 +85,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
       remoteBranches,
       ...newState,
     });
+    handleGitBranchChanged(branch);
   }
 
   _handleClearError() {
@@ -155,7 +157,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
       await vcs.checkout(branch);
       await db.flushChanges(bufferId, true);
 
-      handleInitializeEntities();
+      await handleInitializeEntities();
       await this._refreshState();
     });
   }

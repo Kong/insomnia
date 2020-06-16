@@ -6,6 +6,7 @@ import { CurlCode } from 'node-libcurl/dist/enum/CurlCode';
 import { CurlInfoDebug } from 'node-libcurl/dist/enum/CurlInfoDebug';
 import { CurlFeature } from 'node-libcurl/dist/enum/CurlFeature';
 import { CurlNetrc } from 'node-libcurl/dist/enum/CurlNetrc';
+import { CurlHttpVersion } from 'node-libcurl/dist/enum/CurlHttpVersion';
 
 class Curl extends EventEmitter {
   constructor() {
@@ -130,6 +131,7 @@ Curl.option = {
   HTTPGET: 'HTTPGET',
   HTTPHEADER: 'HTTPHEADER',
   HTTPPOST: 'HTTPPOST',
+  HTTP_VERSION: 'HTTP_VERSION',
   INFILESIZE_LARGE: 'INFILESIZE_LARGE',
   KEYPASSWD: 'KEYPASSWD',
   MAXREDIRS: 'MAXREDIRS',
@@ -185,4 +187,5 @@ module.exports = {
   CurlInfoDebug: getTsEnumOnlyWithNamedMembers(CurlInfoDebug),
   CurlFeature: getTsEnumOnlyWithNamedMembers(CurlFeature),
   CurlNetrc: getTsEnumOnlyWithNamedMembers(CurlNetrc),
+  CurlHttpVersion: getTsEnumOnlyWithNamedMembers(CurlHttpVersion),
 };

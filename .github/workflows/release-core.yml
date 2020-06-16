@@ -48,6 +48,9 @@ jobs:
     name: Linux
     runs-on: ubuntu-latest
     steps:
+      - run: |
+          sudo snap install snapcraft --classic
+          echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
@@ -56,7 +59,4 @@ jobs:
       - run: npm test
       - run: npm run app-release
         env:
-          BUILD_TARGETS: AppImage,deb,tar.gz,rpm
-          # TODO: Figure out Snap deploys
-          # BUILD_TARGETS: AppImage,Snap,deb,tar.gz,rpm
-          # SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
+          BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap

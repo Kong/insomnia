@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import classnames from 'classnames';
-import { RESPONSE_CODE_DESCRIPTIONS } from '../../../common/constants';
+import { RESPONSE_CODE_DESCRIPTIONS, RESPONSE_CODE_REASONS } from '../../../common/constants';
 import Tooltip from '../tooltip';
 
 type Props = {
@@ -52,7 +52,8 @@ class StatusTag extends React.PureComponent<Props> {
     return (
       <div className={classnames('tag', colorClass, { 'tag--small': small })}>
         <Tooltip message={description} position="bottom" delay={tooltipDelay}>
-          <strong>{statusCodeToDisplay}</strong> {statusMessage}
+          <strong>{statusCodeToDisplay}</strong>{' '}
+          {statusMessage || RESPONSE_CODE_REASONS[statusCode]}
         </Tooltip>
       </div>
     );

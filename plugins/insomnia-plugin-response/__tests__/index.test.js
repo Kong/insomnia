@@ -470,6 +470,45 @@ describe('Response tag', () => {
       );
     });
 
+    it('sends when behavior=when-expired and no responses', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'when-expired', 60)).toBe('Response res_1');
+    });
+
+    it('sends when behavior=when-expired and response is old', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [
+        {
+          created: Date.now() - 60000,
+        },
+      ];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'when-expired', 30)).toBe('Response res_2');
+    });
+
+    it('does not send when behavior=when-expired and response is new', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [
+        {
+          _id: 'res_existing',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'text/plain',
+          _body: 'Response res_existing',
+          created: Date.now() - 60000,
+        },
+      ];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'when-expired', 90)).toBe(
+        'Response res_existing',
+      );
+    });
+
     it('does not send when behavior=never and no responses', async () => {
       const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
       const responses = [];

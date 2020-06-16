@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import crypto from 'crypto';
+import md5 from 'md5';
 
 type Props = {|
   email?: string,
@@ -19,10 +19,7 @@ class GravatarImg extends React.PureComponent<Props> {
     let src = fallback;
 
     if (email) {
-      const hash = crypto
-        .createHash('md5')
-        .update(email.trim().toLowerCase())
-        .digest('hex');
+      const hash = md5(email.trim().toLowerCase());
       src = `https://www.gravatar.com/avatar/${hash}?s=${size * 2}`;
     }
 

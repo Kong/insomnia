@@ -32,6 +32,15 @@ declare module 'node-libcurl' {
     CurlCode: {|
       CURLE_ABORTED_BY_CALLBACK: number,
     |};
+    CurlHttpVersion: {|
+      None: number,
+      V1_0: number,
+      V1_1: number,
+      V2PriorKnowledge: number,
+      V2Tls: number,
+      V2_0: number,
+      v3: number,
+    |};
     CurlInfoDebug: {|
       Text: number,
       HeaderIn: number,

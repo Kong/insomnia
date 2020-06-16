@@ -74,15 +74,27 @@ module.exports.templateTags = [
             value: 'no-history',
           },
           {
+            displayName: 'When Expired',
+            description: 'resend when existing response has expired',
+            value: 'when-expired',
+          },
+          {
             displayName: 'Always',
             description: 'resend request when needed',
             value: 'always',
           },
         ],
       },
+      {
+        displayName: 'Max age (seconds)',
+        help: 'The maximum age of a response to use before it expires',
+        type: 'number',
+        hide: args => args[3].value !== 'when-expired',
+        defaultValue: 60,
+      },
     ],
 
-    async run(context, field, id, filter, resendBehavior) {
+    async run(context, field, id, filter, resendBehavior, maxAgeSeconds) {
       filter = filter || '';
       resendBehavior = (resendBehavior || 'never').toLowerCase();
 
@@ -109,6 +121,13 @@ module.exports.templateTags = [
         shouldResend = false;
       } else if (resendBehavior === 'no-history') {
         shouldResend = !response;
+      } else if (resendBehavior === 'when-expired') {
+        if (!response) {
+          shouldResend = true;
+        } else {
+          const ageSeconds = (Date.now() - response.created) / 1000;
+          shouldResend = ageSeconds > maxAgeSeconds;
+        }
       } else if (resendBehavior === 'always') {
         shouldResend = true;
       }

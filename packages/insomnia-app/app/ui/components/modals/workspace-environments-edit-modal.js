@@ -24,6 +24,7 @@ import Tooltip from '../tooltip';
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
 type Props = {
+  handleChangeEnvironment: (id: string | null) => Promise<void>,
   activeEnvironmentId: string | null,
   editorFontSize: number,
   editorIndentSize: number,
@@ -208,10 +209,11 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   async _handleDuplicateEnvironment(environment: Environment) {
     const { workspace } = this.state;
     const newEnvironment = await models.environment.duplicate(environment);
-    this._load(workspace, newEnvironment);
+    await this._load(workspace, newEnvironment);
   }
 
   async _handleDeleteEnvironment(environment: Environment) {
+    const { handleChangeEnvironment, activeEnvironmentId } = this.props;
     const { rootEnvironment, workspace } = this.state;
 
     // Don't delete the root environment
@@ -219,8 +221,14 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    // Delete the current one, then activate the root environment
+    // Unset active environment if it's being deleted
+    if (activeEnvironmentId === environment._id) {
+      await handleChangeEnvironment(null);
+    }
+
+    // Delete the current one
     await models.environment.remove(environment);
+
     await this._load(workspace, rootEnvironment);
   }
 
