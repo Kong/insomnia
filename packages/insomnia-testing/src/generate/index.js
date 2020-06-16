@@ -2,21 +2,19 @@
 
 import { escapeJsStr, indent } from './util';
 import fs from 'fs';
-import path from 'path';
-import os from 'os';
 
-type Test = {
+export type Test = {
   name: string,
   code: string,
 };
 
-type Suite = {
+export type TestSuite = {
   name: string,
-  suites: Array<Suite>,
+  suites: Array<TestSuite>,
   tests?: Array<Test>,
 };
 
-export async function generate(suites: Array<Suite>): Promise<string> {
+export function generate(suites: Array<TestSuite>): string {
   const lines = [];
 
   for (const s of suites || []) {
@@ -26,23 +24,12 @@ export async function generate(suites: Array<Suite>): Promise<string> {
   return lines.join('\n');
 }
 
-export async function generateToFile(filepath: string, suites: Array<Suite>): Promise<void> {
-  const js = await generate(suites);
+export async function generateToFile(filepath: string, suites: Array<TestSuite>): Promise<void> {
+  const js = generate(suites);
   return fs.promises.writeFile(filepath, js);
 }
 
-/**
- * Generate test to a temporary file and return path. This is useful for testing
- * @param suites
- * @returns {Promise<void>}
- */
-export async function generateToTmpFile(suites: Array<Suite>): Promise<string> {
-  const p = path.join(os.tmpdir(), `${Math.random()}.test.js`);
-  await generateToFile(p, suites);
-  return p;
-}
-
-function generateSuiteLines(n: number, suite: ?Suite): Array<string> {
+function generateSuiteLines(n: number, suite: ?TestSuite): Array<string> {
   if (!suite) {
     return [];
   }

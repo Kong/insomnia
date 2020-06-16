@@ -1,7 +1,10 @@
 // @flow
 import axios from 'axios';
-import { generateToTmpFile } from '../generate';
+import type { TestSuite } from '../generate';
+import { generateToFile } from '../generate';
 import { runTests } from '../run';
+import path from 'path';
+import os from 'os';
 
 jest.mock('axios');
 
@@ -9,7 +12,7 @@ describe('integration', () => {
   it('generates and runs basic tests', async () => {
     const testFilename = await generateToTmpFile([
       {
-        name: 'Example Suite',
+        name: 'Example TestSuite',
         suites: [],
         tests: [
           {
@@ -45,7 +48,7 @@ describe('integration', () => {
 
     const testFilename = await generateToTmpFile([
       {
-        name: 'Example Suite',
+        name: 'Example TestSuite',
         suites: [],
         tests: [
           {
@@ -82,3 +85,9 @@ describe('integration', () => {
     expect(stats.passes).toBe(2);
   });
 });
+
+export async function generateToTmpFile(suites: Array<TestSuite>): Promise<string> {
+  const p = path.join(os.tmpdir(), `${Math.random()}.test.js`);
+  await generateToFile(p, suites);
+  return p;
+}

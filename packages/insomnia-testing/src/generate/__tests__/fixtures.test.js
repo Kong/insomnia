@@ -29,7 +29,7 @@ describe('fixtures', () => {
       expect(typeof inputContents).toBe('string');
       expect(typeof outputContents).toBe('string');
 
-      const expected = await generate(JSON.parse(inputContents));
+      const expected = generate(JSON.parse(inputContents));
       expect(expected.trim()).toBe(outputContents.trim());
     });
   }

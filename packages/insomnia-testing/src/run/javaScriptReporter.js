@@ -1,10 +1,12 @@
 /**
  * NOTE: This is a straight copy of the default Mocha JSON reporter, except
  * stdout logging is removed.
+ *
+ * https://github.com/mochajs/mocha/blob/9d4a8ec2d22ee154aecb1f8eeb25af8e6309faa8/lib/reporters/json.js
  */
 import Mocha from 'mocha';
 
-export function Reporter(runner, options) {
+export function JavaScriptReporter(runner, options) {
   Mocha.reporters.Base.call(this, runner, options);
 
   const self = this;
@@ -37,6 +39,9 @@ export function Reporter(runner, options) {
       failures: failures.map(clean),
       passes: passes.map(clean),
     };
+
+    // This is the main change from the original JSONReporter
+    // process.stdout.write(JSON.stringify(obj, null, 2));
   });
 }
 
@@ -103,4 +108,4 @@ function errorJSON(err) {
   return res;
 }
 
-Reporter.description = 'single JSON object';
+JavaScriptReporter.description = 'single JS object';

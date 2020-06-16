@@ -1,7 +1,7 @@
 // @flow
 
 import Mocha from 'mocha';
-import { Reporter } from './reporter';
+import { JavaScriptReporter } from './javaScriptReporter';
 import Insomnia from './insomnia';
 import type { Request } from './insomnia';
 
@@ -53,18 +53,18 @@ export async function runTests(
     // as I can tell
     global.insomnia = new Insomnia(options.requests);
 
-    const m = new Mocha({
+    const mocha = new Mocha({
       global: ['insomnia'],
     });
 
-    m.reporter(Reporter);
+    mocha.reporter(JavaScriptReporter);
 
     const filenames = Array.isArray(filename) ? filename : [filename];
     for (const f of filenames) {
-      m.addFile(f);
+      mocha.addFile(f);
     }
 
-    const runner = m.run(() => {
+    const runner = mocha.run(() => {
       resolve(runner.testResults);
 
       // Remove global since we don't need it anymore
