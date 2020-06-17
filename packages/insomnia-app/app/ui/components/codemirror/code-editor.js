@@ -20,6 +20,7 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import { query as queryXPath } from 'insomnia-xpath';
 import deepEqual from 'deep-equal';
 import zprint from 'zprint-clj';
+import PrettifyDropdown from '../dropdowns/prettify-dropdown';
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -917,13 +918,13 @@ class CodeEditor extends React.Component {
   }
 
   /**
-   * Toggles the autoPrettify of the state.
-   * When enabled, the value is prettified immediately and when text is pasted, or code mirror is blurred.
+   * Set the autoPrettify state of the component
+   * When true, the value is prettified immediately and when text is pasted, or code mirror is blurred.
    */
-  _toggleAutoPrettify() {
+  _setAutoPrettify(autoPrettify) {
     this.setState(
       {
-        autoPrettify: !this.state.autoPrettify,
+        autoPrettify: autoPrettify,
       },
       () => {
         this._handleBeautify();
@@ -1002,27 +1003,23 @@ class CodeEditor extends React.Component {
 
       toolbarChildren.push(
         <button
-          className="btn btn--super-duper-compact"
-          key="toggleAutoBeautify"
-          onClick={this._toggleAutoPrettify}
-          title={this.state.autoPrettify ? 'Disable auto beautify' : 'Enable auto beautify'}>
-          {this.state.autoPrettify ? (
-            <i className="fa fa-check-square-o" />
-          ) : (
-            <i className="fa fa-square-o" />
-          )}
-          Auto
+          key="prettify"
+          className="btn btn--compact"
+          title={!this.state.autoPrettify ? 'Auto-format request body whitespace' : ''}
+          style={this.state.autoPrettify ? { backgroundColor: 'transparent' } : null}
+          onClick={!this.state.autoPrettify ? this._handleBeautify : null}>
+          {(this.state.autoPrettify ? 'Auto' : 'Manual') + ' beautify ' + contentTypeName}
         </button>,
       );
 
       toolbarChildren.push(
-        <button
-          key="prettify"
-          className="btn btn--compact"
-          title="Auto-format request body whitespace"
-          onClick={this._handleBeautify}>
-          Beautify {contentTypeName}
-        </button>,
+        <PrettifyDropdown
+          key="dropdownBeautify"
+          title="Toggle between auto or manual beautify"
+          contentTypeName={contentTypeName}
+          autoPrettify={this.state.autoPrettify}
+          onChange={this._setAutoPrettify}
+        />,
       );
     }
 
