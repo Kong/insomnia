@@ -3,7 +3,6 @@ import { ConversionTypeMap, generateConfig } from '../generate';
 import type { GenerateConfigOptions } from '../generate';
 import o2k from 'openapi-2-kong';
 import fs from 'fs';
-import path from 'path';
 
 jest.mock('openapi-2-kong');
 
@@ -55,7 +54,7 @@ describe('generateConfig()', () => {
     expect(consoleSpy).toHaveBeenCalledWith('a\n---\nb\n');
   });
 
-  it('should write converted documents to file system', async () => {
+  it('should write generated documents to file system', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const writeFileSpy = jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
@@ -63,7 +62,24 @@ describe('generateConfig()', () => {
     await generateConfig(filePath, { ...base, output: 'output.yaml' });
 
     expect(o2k.generate).toHaveBeenCalledWith(filePath, ConversionTypeMap[base.type]);
-    expect(writeFileSpy).toHaveBeenCalledWith(path.resolve('output.yaml'), 'a\n---\nb\n');
+    expect(writeFileSpy).toHaveBeenCalledWith('output.yaml', 'a\n---\nb\n');
+    expect(consoleSpy).not.toHaveBeenCalled();
+  });
+
+  it('should generate documents using workingDir', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const writeFileSpy = jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
+    mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
+
+    await generateConfig('file.yaml', {
+      ...base,
+      workingDir: 'test/dir',
+      output: 'output.yaml',
+    });
+
+    // Read from workingDir
+    expect(o2k.generate).toHaveBeenCalledWith('test/dir/file.yaml', ConversionTypeMap[base.type]);
+    expect(writeFileSpy).toHaveBeenCalledWith('test/dir/output.yaml', 'a\n---\nb\n');
     expect(consoleSpy).not.toHaveBeenCalled();
   });
 });
