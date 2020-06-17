@@ -82,6 +82,7 @@ class CodeEditor extends React.Component {
 
     this.state = {
       filter: props.filter || '',
+      autoPrettify: false,
     };
 
     this._originalCode = '';
@@ -113,13 +114,19 @@ class CodeEditor extends React.Component {
     }
   }
 
-  shouldComponentUpdate(nextProps) {
+  shouldComponentUpdate(nextProps, nextState) {
     // Update if any properties changed, except value. We ignore value.
     for (const key of Object.keys(nextProps)) {
       if (key === 'defaultValue') {
         continue;
       }
       if (this.props[key] !== nextProps[key]) {
+        return true;
+      }
+    }
+
+    for (const key of Object.keys(nextState)) {
+      if (this.state[key] !== nextState[key]) {
         return true;
       }
     }
@@ -336,6 +343,7 @@ class CodeEditor extends React.Component {
     this.codeMirror.on('fold', this._codemirrorToggleFold);
     this.codeMirror.on('unfold', this._codemirrorToggleFold);
     this.codeMirror.on('keyHandled', this._codemirrorKeyHandled);
+    this.codeMirror.on('inputRead', this._codemirrorInputRead);
 
     // Prevent these things if we're type === "password"
     this.codeMirror.on('copy', this._codemirrorPreventWhenTypePassword);
@@ -445,12 +453,12 @@ class CodeEditor extends React.Component {
       : new Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
   }
 
-  _handleBeautify() {
-    this._prettify(this.codeMirror.getValue());
-  }
-
-  _prettify(code) {
-    this._codemirrorSetValue(code, true);
+  /**
+   * Handles prettification of the code in the editor. By default forces the code to prettify
+   * @param forcePrettify Whether or not to force prettify. If false, prettification will be applied depending on state. Defaults to true.
+   */
+  _handleBeautify(forcePrettify = true) {
+    this._codemirrorSetValue(this.codeMirror.getValue(), forcePrettify);
   }
 
   _prettifyJSON(code) {
@@ -747,6 +755,8 @@ class CodeEditor extends React.Component {
   }
 
   _codemirrorBlur(doc, e) {
+    this._handleBeautify(false);
+
     this._persistState();
     if (this.props.onBlur) {
       this.props.onBlur(e);
@@ -792,6 +802,15 @@ class CodeEditor extends React.Component {
       if (doc.options.mode === 'graphql' && change.text && change.text.length > 1) {
         change.text = change.text.map(text => text.replace(/\u00A0/g, ' '));
       }
+    }
+  }
+
+  _codemirrorInputRead(cm, e) {
+    if (e.origin === 'paste') {
+      if (this._previousUniquenessKey !== this.props.uniquenessKey) {
+        this._previousUniquenessKey = this.props.uniquenessKey;
+      }
+      this._handleBeautify(false);
     }
   }
 
@@ -852,7 +871,7 @@ class CodeEditor extends React.Component {
       this._ignoreNextChange = true;
     }
 
-    const shouldPrettify = forcePrettify || this.props.autoPrettify;
+    const shouldPrettify = forcePrettify || this.props.autoPrettify || this.state.autoPrettify;
 
     if (shouldPrettify && this._canPrettify()) {
       if (CodeEditor._isXML(this.props.mode)) {
@@ -895,6 +914,21 @@ class CodeEditor extends React.Component {
   _showFilterHelp() {
     const isJson = CodeEditor._isJSON(this.props.mode);
     showModal(FilterHelpModal, isJson);
+  }
+
+  /**
+   * Toggles the autoPrettify of the state.
+   * When enabled, the value is prettified immediately and when text is pasted, or code mirror is blurred.
+   */
+  _toggleAutoPrettify() {
+    this.setState(
+      {
+        autoPrettify: !this.state.autoPrettify,
+      },
+      () => {
+        this._handleBeautify();
+      },
+    );
   }
 
   render() {
@@ -965,6 +999,21 @@ class CodeEditor extends React.Component {
       } else if (CodeEditor._isEDN(mode)) {
         contentTypeName = 'EDN';
       }
+
+      toolbarChildren.push(
+        <button
+          className="btn btn--super-duper-compact"
+          key="toggleAutoBeautify"
+          onClick={this._toggleAutoPrettify}
+          title={this.state.autoPrettify ? 'Disable auto beautify' : 'Enable auto beautify'}>
+          {this.state.autoPrettify ? (
+            <i className="fa fa-check-square-o" />
+          ) : (
+            <i className="fa fa-square-o" />
+          )}
+          Auto
+        </button>,
+      );
 
       toolbarChildren.push(
         <button
