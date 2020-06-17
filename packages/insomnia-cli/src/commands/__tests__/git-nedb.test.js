@@ -1,6 +1,6 @@
 // @flow
 import path from 'path';
-import * as db from '../git-nedb';
+import * as db from '../../db/mem-db';
 import { globalBeforeEach } from '../../__jest__/before-each';
 
 describe('git-nedb', () => {

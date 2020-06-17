@@ -39,7 +39,6 @@
   },
   "dependencies": {
     "commander": "^5.1.0",
-    "nedb": "^1.8.0",
     "openapi-2-kong": "^2.2.6",
     "yaml": "^1.10.0"
   }

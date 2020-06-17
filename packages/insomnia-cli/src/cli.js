@@ -1,7 +1,7 @@
 // @flow
 import { ConversionTypeMap, generateConfig } from './commands/generate';
 import { getVersion, createCommand, getAllOptions } from './util';
-import * as db from './commands/git-nedb';
+import * as db from './db/mem-db';
 
 function makeGenerateCommand(exitOverride: boolean) {
   // inso generate
@@ -28,7 +28,7 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     args = process.argv;
   }
 
-  db.init(db.SUPPORTED_TYPES);
+  db.init();
 
   // inso -v
   createCommand(!!exitOverride)

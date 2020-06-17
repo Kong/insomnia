@@ -4,7 +4,8 @@ import YAML from 'yaml';
 import path from 'path';
 import fs from 'fs';
 import type { GlobalOptions } from '../util';
-import * as db from './git-nedb';
+import * as db from '../db/mem-db';
+import * as models from '../db/models';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
@@ -36,11 +37,11 @@ export async function generateConfig(
 
   const { type, output, workingDir } = options;
 
+  await db.seedGitDataDir(workingDir);
+
   let result: ConversionResult;
 
-  await db.seedGitDataDir(workingDir);
-  const specFromDb = await db.getWhere('ApiSpec', { _id: identifier });
-
+  const specFromDb = models.apiSpec.getById(identifier);
   try {
     if (specFromDb?.contents) {
       result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
