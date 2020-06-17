@@ -12,7 +12,7 @@ type Props = {
 
 const ThemedSwitch: React.ComponentType<{ checked: boolean }> = styled.div`
   .react-switch-bg {
-    background: ${({ checked }) => (checked ? 'var(--color-surprise)' : 'var(--hl-xl)')};
+    background: ${({ checked }) => (checked ? 'var(--color-surprise)' : 'var(--hl-xl)')} !important;
   }
 `;
 
@@ -42,8 +42,6 @@ const ToggleSwitch: React.StatelessFunctionalComponent<Props> = ({
       <Switch
         className={className}
         checked={checked}
-        onColor="" // Linked to insomnia themes via ThemedSwitch
-        offColor="" // Linked to insomnia themes via ThemedSwitch
         disabled={disabled}
         onChange={callback}
         height={20}

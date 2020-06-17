@@ -4,9 +4,6 @@ const pkg = require('../package.json');
 
 const PORT = pkg.dev['dev-server-port'];
 
-const d = new Date();
-const date = d.toLocaleDateString();
-
 module.exports = {
   ...baseConfig,
   devtool: 'eval-source-map',
@@ -16,6 +13,22 @@ module.exports = {
     'webpack/hot/only-dev-server',
     ...baseConfig.entry,
   ],
+  module: {
+    ...baseConfig.module,
+    rules: [
+      ...baseConfig.module.rules,
+      {
+        test: /\.js$/,
+        enforce: 'pre',
+        use: ['source-map-loader'],
+        include: [/insomnia-components/],
+      },
+    ],
+  },
+  stats: {
+    // https://webpack.js.org/loaders/source-map-loader/#ignoring-warnings
+    warningsFilter: [/Failed to parse source map/],
+  },
   output: {
     ...baseConfig.output,
     publicPath: '/',

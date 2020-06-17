@@ -8,17 +8,13 @@
   "scripts": {
     "typecheck": "flow check",
     "test": "npm run typecheck",
-    "build": "webpack --config webpack.config.js --display errors-only",
+    "build": "webpack --config webpack/webpack.prod.js --display errors-only",
+    "watch": "webpack --config webpack/webpack.dev.js --watch",
     "build-storybook": "build-storybook --quiet",
     "storybook": "start-storybook --port 3223",
     "bootstrap": "npm run convert-svg && npm run build",
     "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js",
     "prepublish": "npm run convert-svg && npm run build"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged && npm run typecheck"
-    }
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",
@@ -34,7 +30,8 @@
     "react-dom": "^16.8.6",
     "storybook-addon-designs": "^5.2.0",
     "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
+    "webpack-cli": "^3.3.11",
+    "webpack-merge": "^4.2.2"
   },
   "dependencies": {
     "autobind-decorator": "^2.4.0",
