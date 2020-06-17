@@ -57,8 +57,10 @@
   .nostyle,
   .renderedMarkdown,
   h2,
+  h3,
   h4,
   p,
+  li,
   .model-box,
   .model-title,
   .opblock-summary-description,
@@ -74,6 +76,10 @@
   .parameter__type {
     color: var(--color-font);
     font-weight: inherit;
+  }
+
+  .microlight {
+    user-select: all;
   }
 
   .model {
@@ -110,6 +116,14 @@
 
     .auth-wrapper {
       padding-top: var(--padding-sm);
+    }
+  }
+
+  ul {
+    padding-left: var(--padding-md);
+
+    li {
+      list-style-type: disc;
     }
   }
 

@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Snapshot for "inso --help" 1`] = `
+"Usage: inso [options] [command]
+
+A CLI for Insomnia!
+
+Options:
+  -v, --version       output the version number
+  --workingDir <dir>  Working directory
+  -h, --help          display help for command
+
+Commands:
+  generate            Code generation utilities
+  help [command]      display help for command"
+`;
+
+exports[`Snapshot for "inso -h" 1`] = `
+"Usage: inso [options] [command]
+
+A CLI for Insomnia!
+
+Options:
+  -v, --version       output the version number
+  --workingDir <dir>  Working directory
+  -h, --help          display help for command
+
+Commands:
+  generate            Code generation utilities
+  help [command]      display help for command"
+`;
+
+exports[`Snapshot for "inso generate -h" 1`] = `
+"Usage: inso generate [options] [command]
+
+Code generation utilities
+
+Options:
+  -h, --help                     display help for command
+
+Commands:
+  config [options] <identifier>  Generate configuration from an api spec
+  help [command]                 display help for command"
+`;
+
+exports[`Snapshot for "inso generate config -h" 1`] = `
+"Usage: inso generate config [options] <identifier>
+
+Generate configuration from an api spec
+
+Options:
+  -t, --type <value>   the type of configuration to generate, options are
+                       [kubernetes, declarative]
+  -o, --output <path>  the output path
+  -h, --help           display help for command"
+`;
+
+exports[`Snapshot for "inso help" 1`] = `
+"Usage: inso [options] [command]
+
+A CLI for Insomnia!
+
+Options:
+  -v, --version       output the version number
+  --workingDir <dir>  Working directory
+  -h, --help          display help for command
+
+Commands:
+  generate            Code generation utilities
+  help [command]      display help for command"
+`;
