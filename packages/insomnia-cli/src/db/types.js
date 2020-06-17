@@ -1,7 +1,5 @@
 // @flow
 
-export type ModelEnum = 'ApiSpec' | 'Workspace' | 'Request' | 'RequestGroup' | 'Environment';
-
 // These types should come from a shared location (maybe insomnia-importers?)
 // They represent the models that are read from an Insomnia data source
 // eg. git data directory, insomnia export format, etc
@@ -19,5 +17,7 @@ type BaseApiSpec = {
   contentType: 'json' | 'yaml',
   contents: string,
 };
+
+export const SpecName = 'ApiSpec';
 
 export type ApiSpec = BaseModel & BaseApiSpec;
