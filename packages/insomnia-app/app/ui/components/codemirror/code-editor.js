@@ -1001,6 +1001,9 @@ class CodeEditor extends React.Component {
         contentTypeName = 'EDN';
       }
 
+      const beautifyButtonLabel = this.state.autoPrettify
+        ? 'Auto beautify ' + contentTypeName + ' enabled'
+        : 'Beautify ' + contentTypeName;
       toolbarChildren.push(
         <button
           key="prettify"
@@ -1008,7 +1011,7 @@ class CodeEditor extends React.Component {
           title={!this.state.autoPrettify ? 'Auto-format request body whitespace' : ''}
           style={this.state.autoPrettify ? { backgroundColor: 'transparent' } : null}
           onClick={!this.state.autoPrettify ? this._handleBeautify : null}>
-          {(this.state.autoPrettify ? 'Auto' : 'Manual') + ' beautify ' + contentTypeName}
+          {beautifyButtonLabel}
         </button>,
       );
 
