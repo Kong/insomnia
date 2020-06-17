@@ -2,56 +2,40 @@
 import fs from 'fs';
 import path from 'path';
 import YAML from 'yaml';
-import type { ModelEnum } from './types';
+import type { ApiSpec } from './types';
 
-type DB = {|
-  [type: ModelEnum]: Array<Object>,
-  _empty: ?boolean,
+type Database = {|
+  ApiSpec: Map<string, ApiSpec>,
+  Environment: Map<string, Object>,
+  Request: Map<string, Object>,
+  RequestGroup: Map<string, Object>,
+  Workspace: Map<string, Object>,
 |};
 
-const db: DB = {
-  _empty: true,
-};
+export const emptyDb = (): Database => ({
+  ApiSpec: new Map(),
+  Environment: new Map(),
+  Request: new Map(),
+  RequestGroup: new Map(),
+  Workspace: new Map(),
+});
 
-export function init(forceReset: boolean = false) {
-  if (forceReset) {
-    for (const attr of Object.keys(db)) {
-      if (attr === '_empty') {
-        continue;
-      }
-
-      delete db[attr];
-    }
-  }
-
-  for (const type of ['ApiSpec', 'Workspace', 'Request', 'RequestGroup', 'Environment']) {
-    if (db[type]) {
-      continue;
-    }
-
-    db[type] = [];
-  }
-
-  delete db._empty;
-}
-
-export async function seedGitDataDir(dir?: string): Promise<void> {
-  if (db._empty) return _dbNotInitialized();
-
+export const gitDataDirDb = async (dir?: string): Promise<Database> => {
+  const db = emptyDb();
   const insomniaDir = path.normalize(path.join(dir || '.', '.insomnia'));
 
   if (!fs.existsSync(insomniaDir)) {
     // TODO: control logging with verbose flag
     // console.log(`Directory not found: ${insomniaDir}`);
-    return;
+    return db;
   }
 
-  const readAndInsertDoc = async (fileName: string): Promise<void> => {
-    // Get contents of each file in type dir and insert into db
+  const readAndInsertDoc = async (type: $Keys<Database>, fileName: string): Promise<void> => {
+    // Get contents of each file in type dir and insert into data
     const contents = await fs.promises.readFile(fileName);
     const obj = YAML.parse(contents.toString());
 
-    db[obj.type].push(obj);
+    db[type].set(obj._id, obj);
   };
 
   await Promise.all(
@@ -65,24 +49,10 @@ export async function seedGitDataDir(dir?: string): Promise<void> {
       const files = await fs.promises.readdir(typeDir);
       return Promise.all(
         // Insert each file from each type
-        files.map(file => readAndInsertDoc(path.join(insomniaDir, type, file))),
+        files.map(file => readAndInsertDoc(type, path.join(insomniaDir, type, file))),
       );
     }),
   );
-}
 
-function _dbNotInitialized<T>(): T {
-  throw new Error('Db has not been initialized.');
-}
-
-export function getWhere<T>(type: ModelEnum, query: (value: T) => boolean): T | void {
-  if (db._empty) return _dbNotInitialized();
-
-  return db[type].find(query);
-}
-
-export function all<T>(type: ModelEnum): Array<T> {
-  if (db._empty) return _dbNotInitialized();
-
-  return db[type];
-}
+  return db;
+};
