@@ -71,7 +71,7 @@ export async function seedGitDataDir(dir?: string): Promise<void> {
   );
 }
 
-async function _dbNotInitialized<T>(): T {
+function _dbNotInitialized<T>(): T {
   throw new Error('Db has not been initialized.');
 }
 
