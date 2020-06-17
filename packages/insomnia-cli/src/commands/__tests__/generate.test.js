@@ -51,7 +51,7 @@ describe('generateConfig()', () => {
 
     await generateConfig('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
       ...base,
-      workingDir: 'src/commands/__fixtures__/git-repo',
+      workingDir: 'src/db/__fixtures__/git-repo',
     });
 
     expect(o2k.generateFromString).toHaveBeenCalled();
