@@ -20,7 +20,12 @@ export const emptyDb = (): Database => ({
   Workspace: new Map(),
 });
 
-export const gitDataDirDb = async (dir?: string): Promise<Database> => {
+type Options = {
+  dir?: string,
+  filterTypes?: Array<$Keys<Database>>,
+};
+
+export const gitDataDirDb = async ({ dir, filterTypes }: Options): Promise<Database> => {
   const db = emptyDb();
   const insomniaDir = path.normalize(path.join(dir || '.', '.insomnia'));
 
@@ -38,8 +43,10 @@ export const gitDataDirDb = async (dir?: string): Promise<Database> => {
     db[type].set(obj._id, obj);
   };
 
+  const types = filterTypes?.length ? filterTypes : Object.keys(db);
+
   await Promise.all(
-    Object.keys(db).map(async type => {
+    types.map(async type => {
       // Get all files in type dir
       const typeDir = path.join(insomniaDir, type);
       if (!fs.existsSync(typeDir)) {

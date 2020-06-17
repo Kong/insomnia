@@ -36,7 +36,7 @@ export async function generateConfig(
 
   const { type, output, workingDir } = options;
 
-  const db = await gitDataDirDb(workingDir);
+  const db = await gitDataDirDb({ dir: workingDir, filterTypes: ['ApiSpec'] });
 
   let result: ConversionResult;
 
