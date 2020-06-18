@@ -355,7 +355,16 @@ function matchSegments(listOfThings, segment, type, limit = -1) {
     const name = typeof t === 'string' ? t : t.name;
     const value = typeof t === 'string' ? '' : t.value;
     const displayName = t.displayName || name;
-    const defaultFill = typeof t === 'string' ? name : getDefaultFill(t.name, t.args);
+
+    // Generate the value we'll fill it with
+    let defaultFill;
+    if (t.args) {
+      defaultFill = getDefaultFill(t.name, t.args);
+    } else if (t.value) {
+      defaultFill = t.value;
+    } else {
+      defaultFill = name;
+    }
 
     const matchSegment = segment.toLowerCase();
     const matchName = displayName.toLowerCase();

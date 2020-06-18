@@ -28,6 +28,6 @@
   "dependencies": {
     "axios": "^0.19.2",
     "chai": "^4.2.0",
-    "mocha": "^6.2.3"
+    "mocha": "^8.0.1"
   }
 }

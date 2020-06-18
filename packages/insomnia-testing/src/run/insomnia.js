@@ -2,6 +2,7 @@
 import axios from 'axios';
 
 export type Request = {
+  _id: string,
   url?: string,
   method?: string,
   headers?: {
@@ -24,27 +25,29 @@ export type Response = {
  * requests, etc.
  */
 export default class Insomnia {
-  requests: { [string]: $Shape<Request> };
+  requests: Array<$Shape<Request>>;
 
   /**
    * @param requests - map of ID -> Request to be used when referencing requests by Id
    */
-  constructor(requests?: { [string]: $Shape<Request> }) {
-    this.requests = requests || {};
+  constructor(requests?: Array<$Shape<Request>>) {
+    this.requests = requests || [];
   }
 
   /**
    *
-   * @param req - raw request object or an ID to reference a request
+   * @param reqOrId - raw request object or an ID to reference a request
    * @returns {Promise<{headers: *, data: *, statusText: (string|string), status: *}>}
    */
-  async send(req: string | Request): Promise<Response> {
-    if (typeof req === 'string' && !this.requests.hasOwnProperty(req)) {
-      throw new Error(`Failed to find request by ID ${req}`);
+  async send(reqOrId: string | Request): Promise<Response> {
+    const req = typeof reqOrId === 'string' ? this.requests.find(r => r._id === reqOrId) : reqOrId;
+
+    if (typeof reqOrId === 'string' && !req) {
+      throw new Error(`Failed to find request by ID ${reqOrId}`);
     }
 
-    if (typeof req === 'string' && this.requests.hasOwnProperty(req)) {
-      req = this.requests[req];
+    if (!req) {
+      throw new Error('Request not provided to test');
     }
 
     const options = {
@@ -56,7 +59,7 @@ export default class Insomnia {
       maxRedirects: 0,
 
       // Don't throw errors on status != 200
-      validateStatus: status => true,
+      validateStatus: () => true,
     };
 
     const resp = await axios.request(options);

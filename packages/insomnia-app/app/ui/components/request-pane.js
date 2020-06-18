@@ -13,7 +13,7 @@ import autobind from 'autobind-decorator';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
 import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import { getAuthTypeName, getContentTypeName } from '../../common/constants';
+import { getAppId, getAuthTypeName, getContentTypeName } from '../../common/constants';
 import * as db from '../../common/database';
 import { hotKeyRefs } from '../../common/hotkeys';
 import * as models from '../../models';
@@ -31,6 +31,9 @@ import RenderedQueryString from './rendered-query-string';
 import RequestUrlBar from './request-url-bar.js';
 import type { Settings } from '../../models/settings';
 import RequestParametersEditor from './editors/request-parameters-editor';
+import { APP_ID_DESIGNER } from '../../../config';
+import CodeEditor from './codemirror/code-editor';
+import { generateToFile, runTests } from 'insomnia-testing';
 
 type Props = {
   // Functions
@@ -187,39 +190,39 @@ class RequestPane extends React.PureComponent<Props> {
             <div>
               <table className="table--fancy">
                 <tbody>
-                  <tr>
-                    <td>New Request</td>
-                    <td className="text-right">
-                      <code>
-                        <Hotkey
-                          keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]}
-                          useFallbackMessage
-                        />
-                      </code>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Switch Requests</td>
-                    <td className="text-right">
-                      <code>
-                        <Hotkey
-                          keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_QUICK_SWITCH.id]}
-                          useFallbackMessage
-                        />
-                      </code>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Edit Environments</td>
-                    <td className="text-right">
-                      <code>
-                        <Hotkey
-                          keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]}
-                          useFallbackMessage
-                        />
-                      </code>
-                    </td>
-                  </tr>
+                <tr>
+                  <td>New Request</td>
+                  <td className="text-right">
+                    <code>
+                      <Hotkey
+                        keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]}
+                        useFallbackMessage
+                      />
+                    </code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Switch Requests</td>
+                  <td className="text-right">
+                    <code>
+                      <Hotkey
+                        keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_QUICK_SWITCH.id]}
+                        useFallbackMessage
+                      />
+                    </code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Edit Environments</td>
+                  <td className="text-right">
+                    <code>
+                      <Hotkey
+                        keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]}
+                        useFallbackMessage
+                      />
+                    </code>
+                  </td>
+                </tr>
                 </tbody>
               </table>
 
@@ -320,6 +323,40 @@ class RequestPane extends React.PureComponent<Props> {
                 )}
               </button>
             </Tab>
+            {getAppId() === APP_ID_DESIGNER && (
+              <Tab tabIndex="-1">
+                <button>Tests</button>
+                <a
+                  href="#"
+                  onClick={async e => {
+                    e.preventDefault();
+                    const p = '/Users/greg.schier/Desktop/test.js';
+                    await generateToFile(p, [
+                      {
+                        name: request.name + ' Suite',
+                        suites: [],
+                        tests: [
+                          {
+                            name: 'Default test',
+                            code: await handleRender(request.test),
+                          },
+                        ],
+                      },
+                    ]);
+                    const results = await runTests(p, {
+                      requests: [
+                        {
+                          ...request,
+                          headers: {},
+                        },
+                      ],
+                    });
+                    console.log(results);
+                  }}>
+                  Run
+                </a>
+              </Tab>
+            )}
           </TabList>
           <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
             <BodyEditor
@@ -458,6 +495,40 @@ class RequestPane extends React.PureComponent<Props> {
                 </p>
               </div>
             )}
+          </TabPanel>
+          <TabPanel key={`tests::${uniqueKey}`} className="react-tabs__tab-panel tall scrollable">
+            <CodeEditor
+              manualPrettify
+              fontSize={settings.editorFontSize}
+              indentSize={settings.editorIndentSize}
+              indentWithTabs={settings.editorIndentWithTabs}
+              keyMap={settings.editorKeyMap}
+              render={handleRender}
+              defaultValue={request.test}
+              getAutocompleteConstants={() => [
+                { name: 'Send Current Request', value: `const resp = insomnia.send('req_123');` },
+                { name: 'Get Env Variable', value: `const value = insomnia.env('foo');` },
+              ]}
+              lintOptions={{
+                globals: { // https://jshint.com/docs/options/
+                  insomnia: true,
+                  expect: true,
+                  chai: true,
+                  await: true,
+                },
+                asi: true, // Don't require semicolons
+                undef: true, // Prevent undefined usages
+                node: true, // Enable NodeJS globals
+                esversion: 8, // ES8 syntax (async/await, etc)
+              }}
+              onChange={v => models.request.update(request, { test: v })}
+              getRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
+              mode="javascript"
+              lineWrapping={settings.editorLineWrapping}
+              placeholder=""
+            />
           </TabPanel>
         </Tabs>
       </section>

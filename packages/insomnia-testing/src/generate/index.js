@@ -17,6 +17,8 @@ export type TestSuite = {
 export function generate(suites: Array<TestSuite>): string {
   const lines = [];
 
+  lines.push(`const expect = chai.expect`);
+
   for (const s of suites || []) {
     lines.push(...generateSuiteLines(0, s));
   }
@@ -25,8 +27,16 @@ export function generate(suites: Array<TestSuite>): string {
 }
 
 export async function generateToFile(filepath: string, suites: Array<TestSuite>): Promise<void> {
-  const js = generate(suites);
-  return fs.promises.writeFile(filepath, js);
+  return new Promise((resolve, reject) => {
+    const js = generate(suites);
+    return fs.writeFile(filepath, js, err => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
 }
 
 function generateSuiteLines(n: number, suite: ?TestSuite): Array<string> {

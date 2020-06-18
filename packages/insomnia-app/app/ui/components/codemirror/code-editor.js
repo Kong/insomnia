@@ -779,7 +779,7 @@ class CodeEditor extends React.Component {
     if (value.trim() === '') {
       this._codemirrorSmartSetOption('lint', false);
     } else {
-      this._codemirrorSmartSetOption('lint', true);
+      this._codemirrorSmartSetOption('lint', this.props.lintOptions || true);
       // If we're in single-line mode, merge all changed lines into one
       if (this.props.singleLine && change.text && change.text.length > 1) {
         const text = change.text

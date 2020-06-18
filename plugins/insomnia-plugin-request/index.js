@@ -50,6 +50,11 @@ module.exports.templateTags = [
             value: 'oauth2',
             description: 'access token',
           },
+          {
+            displayName: 'ID',
+            value: 'id',
+            description: 'ID of request',
+          },
         ],
       },
       {
@@ -157,6 +162,8 @@ module.exports.templateTags = [
           return token.accessToken;
         case 'name':
           return request.name;
+        case 'id':
+          return request._id;
         case 'folder':
           const ancestors = await context.util.models.request.getAncestors(request);
           const doc = ancestors[folderIndex || 0];

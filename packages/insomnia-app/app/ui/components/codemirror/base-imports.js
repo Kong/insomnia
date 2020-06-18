@@ -38,6 +38,7 @@ import 'codemirror/addon/selection/active-line';
 import 'codemirror/addon/selection/selection-pointer';
 import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/lint/lint';
+import 'codemirror/addon/lint/javascript-lint';
 import 'codemirror/addon/lint/json-lint';
 import 'codemirror/addon/lint/lint.css';
 import 'codemirror/keymap/vim';
@@ -62,6 +63,10 @@ import './extensions/nunjucks-tags';
 import 'codemirror/lib/codemirror.css';
 import '../../css/editor/index.less';
 
-// Make jsonlint available to the jsonlint plugin
+// Make jsonlint available to the jsonlint addon
 import { parser as jsonlint } from 'jsonlint';
 global.jsonlint = jsonlint;
+
+// Make jshint available to the lint-javascirpt addon
+import { JSHINT } from 'jshint';
+global.JSHINT = JSHINT;
