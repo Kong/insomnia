@@ -1,5 +1,3 @@
-const { expect } = chai;
-
 describe('Parent Suite', () => {
   describe('Nested Suite', () => {
     it('should return -1 when the value is not present', async () => {

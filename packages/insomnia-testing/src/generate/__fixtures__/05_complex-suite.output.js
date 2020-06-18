@@ -1,5 +1,3 @@
-const { expect } = chai;
-
 describe('Parent Suite', () => {
   describe('Nested Suite', () => {
     describe('Nested Again Suite', () => {
