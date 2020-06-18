@@ -1001,9 +1001,20 @@ class CodeEditor extends React.Component {
         contentTypeName = 'EDN';
       }
 
+      toolbarChildren.push(
+        <PrettifyDropdown
+          key="dropdownBeautify"
+          title="Toggle between auto or manual beautify"
+          contentTypeName={contentTypeName}
+          autoPrettify={this.state.autoPrettify}
+          onChange={this._setAutoPrettify}
+        />,
+      );
+
       const beautifyButtonLabel = this.state.autoPrettify
         ? 'Auto beautify ' + contentTypeName + ' enabled'
         : 'Beautify ' + contentTypeName;
+
       toolbarChildren.push(
         <button
           key="prettify"
@@ -1013,16 +1024,6 @@ class CodeEditor extends React.Component {
           onClick={!this.state.autoPrettify ? this._handleBeautify : null}>
           {beautifyButtonLabel}
         </button>,
-      );
-
-      toolbarChildren.push(
-        <PrettifyDropdown
-          key="dropdownBeautify"
-          title="Toggle between auto or manual beautify"
-          contentTypeName={contentTypeName}
-          autoPrettify={this.state.autoPrettify}
-          onChange={this._setAutoPrettify}
-        />,
       );
     }
 

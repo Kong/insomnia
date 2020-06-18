@@ -22,8 +22,8 @@ class PrettifyDropdown extends React.Component {
   render() {
     return (
       <Dropdown beside debug="true">
-        <DropdownButton style={{ margin: '0px 0px 0px -20px' }}>
-          <i className="fa fa-caret-up space-left" />
+        <DropdownButton>
+          <i className="fa fa-cog" />
         </DropdownButton>
         <DropdownDivider>Beautify mode</DropdownDivider>
         <DropdownItem onClick={this._handleChange} value={true}>
