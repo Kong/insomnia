@@ -3,6 +3,7 @@ import { ConversionTypeMap, generateConfig } from '../generate';
 import type { GenerateConfigOptions } from '../generate';
 import o2k from 'openapi-2-kong';
 import fs from 'fs';
+import path from 'path';
 
 jest.mock('openapi-2-kong');
 
@@ -78,8 +79,14 @@ describe('generateConfig()', () => {
     });
 
     // Read from workingDir
-    expect(o2k.generate).toHaveBeenCalledWith('test/dir/file.yaml', ConversionTypeMap[base.type]);
-    expect(writeFileSpy).toHaveBeenCalledWith('test/dir/output.yaml', 'a\n---\nb\n');
+    expect(o2k.generate).toHaveBeenCalledWith(
+      path.normalize('test/dir/file.yaml'),
+      ConversionTypeMap[base.type],
+    );
+    expect(writeFileSpy).toHaveBeenCalledWith(
+      path.normalize('test/dir/output.yaml'),
+      'a\n---\nb\n',
+    );
     expect(consoleSpy).not.toHaveBeenCalled();
   });
 });
