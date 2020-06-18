@@ -14,7 +14,7 @@ function makeGenerateCommand(exitOverride: boolean) {
     .description('Generate configuration from an api spec')
     .requiredOption(
       '-t, --type <value>',
-      `the type of configuration ajkhsd sdffsdffk to generate, options are [${conversionTypes}]`,
+      `the type of configuration to generate, options are [${conversionTypes}]`,
     )
     .option('-o, --output <path>', 'the output path')
     .action((identifier, cmd) => generateConfig(identifier, getAllOptions(cmd)));
