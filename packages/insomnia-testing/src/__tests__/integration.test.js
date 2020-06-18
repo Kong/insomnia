@@ -5,8 +5,15 @@ import { generateToFile } from '../generate';
 import { runTests } from '../run';
 import path from 'path';
 import os from 'os';
+import * as config from '../../webpack.config';
 
 jest.mock('axios');
+
+describe('webpack config', () => {
+  it('should set mocha as external', () => {
+    expect(config.externals.mocha).toBe('mocha');
+  });
+});
 
 describe('integration', () => {
   it('generates and runs basic tests', async () => {
