@@ -195,6 +195,7 @@
     "node-gyp": "^6.0.1",
     "prompt-run": "^1.4.5",
     "react-hot-loader": "^4.8.3",
+    "source-map-loader": "^1.0.0",
     "style-loader": "^0.23.1",
     "url-loader": "^1.1.2",
     "webpack": "^4.42.1",
