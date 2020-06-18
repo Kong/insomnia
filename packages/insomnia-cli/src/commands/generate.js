@@ -1,19 +1,20 @@
 // @flow
-import o2k from 'openapi-2-kong';
+import * as o2k from 'openapi-2-kong';
 import YAML from 'yaml';
 import path from 'path';
 import fs from 'fs';
+import type { GlobalOptions } from '../util';
+import { gitDataDirDb } from '../db/mem-db';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
   declarative: 'kong-declarative-config',
 };
 
-export type GenerateConfigOptions = {|
-  filePath: string,
+export type GenerateConfigOptions = GlobalOptions<{|
   type: $Keys<typeof ConversionTypeMap>,
   output?: string,
-|};
+|}>;
 
 function validateOptions({ type }: GenerateConfigOptions): boolean {
   if (!ConversionTypeMap[type]) {
@@ -25,14 +26,31 @@ function validateOptions({ type }: GenerateConfigOptions): boolean {
   return true;
 }
 
-export async function generateConfig(options: GenerateConfigOptions): Promise<void> {
+export async function generateConfig(
+  identifier: string,
+  options: GenerateConfigOptions,
+): Promise<void> {
   if (!validateOptions(options)) {
     return;
   }
 
-  const { type, output, filePath } = options;
+  const { type, output, workingDir } = options;
 
-  const result = await o2k.generate(filePath, ConversionTypeMap[type]);
+  const db = await gitDataDirDb({ dir: workingDir, filterTypes: ['ApiSpec'] });
+
+  let result: ConversionResult;
+
+  const specFromDb = db.ApiSpec.get(identifier);
+  try {
+    if (specFromDb?.contents) {
+      result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
+    } else {
+      result = await o2k.generate(identifier, ConversionTypeMap[type]);
+    }
+  } catch (err) {
+    console.log('Config failed to generate', err);
+    return;
+  }
 
   const yamlDocs = result.documents.map(d => YAML.stringify(d));
 

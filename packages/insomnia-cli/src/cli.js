@@ -1,6 +1,6 @@
 // @flow
 import { ConversionTypeMap, generateConfig } from './commands/generate';
-import { getVersion, createCommand } from './util';
+import { getVersion, createCommand, getAllOptions } from './util';
 
 function makeGenerateCommand(exitOverride: boolean) {
   // inso generate
@@ -10,14 +10,14 @@ function makeGenerateCommand(exitOverride: boolean) {
 
   // inso generate config -t kubernetes config.yaml
   generate
-    .command('config <filePath>')
+    .command('config <identifier>')
     .description('Generate configuration from an api spec')
     .requiredOption(
       '-t, --type <value>',
       `the type of configuration to generate, options are [${conversionTypes}]`,
     )
     .option('-o, --output <path>', 'the output path')
-    .action((filePath, opts) => generateConfig({ filePath, ...opts }));
+    .action((identifier, cmd) => generateConfig(identifier, getAllOptions(cmd)));
 
   return generate;
 }
@@ -31,6 +31,8 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
   createCommand(!!exitOverride)
     .version(getVersion(), '-v, --version')
     .description('A CLI for Insomnia!')
+    .option('--workingDir <dir>', 'Working directory')
     .addCommand(makeGenerateCommand(!!exitOverride))
-    .parse(args);
+    .parseAsync(args)
+    .catch(err => console.log('An error occurred', err));
 }
