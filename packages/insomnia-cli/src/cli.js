@@ -1,6 +1,7 @@
 // @flow
 import { ConversionTypeMap, generateConfig } from './commands/generate';
 import { getVersion, createCommand, getAllOptions } from './util';
+import { runInsomniaTests } from './commands/run';
 
 function makeGenerateCommand(exitOverride: boolean) {
   // inso generate
@@ -22,6 +23,19 @@ function makeGenerateCommand(exitOverride: boolean) {
   return generate;
 }
 
+function makeTestCommand(exitOverride: boolean) {
+  // inso test
+  const test = createCommand(exitOverride, 'test').description('Unit testing utilities');
+
+  // inso test run
+  test
+    .command('run')
+    .description('Run tests')
+    .action(cmd => runInsomniaTests(getAllOptions(cmd)));
+
+  return test;
+}
+
 export function go(args?: Array<string>, exitOverride?: boolean): void {
   if (!args) {
     args = process.argv;
@@ -33,6 +47,7 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     .description('A CLI for Insomnia!')
     .option('--workingDir <dir>', 'Working directory')
     .addCommand(makeGenerateCommand(!!exitOverride))
+    .addCommand(makeTestCommand(!!exitOverride))
     .parseAsync(args)
     .catch(err => console.log('An error occurred', err));
 }
