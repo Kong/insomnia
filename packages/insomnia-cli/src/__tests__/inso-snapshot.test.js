@@ -7,7 +7,7 @@ import * as packageJson from '../../package.json';
 // These tests use the executable /bin/inso, which relies on /dist.
 
 describe('Snapshot for', () => {
-  it.each(['-h', '--help', 'help', 'generate -h', 'generate config -h'])(
+  it.each(['-h', '--help', 'help', 'generate -h', 'generate config -h', 'test -h', 'test run -h'])(
     '"inso %s"',
     async args => {
       const { stdout } = await execa(getBinPathSync(), args.split(' '));

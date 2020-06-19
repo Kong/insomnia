@@ -1,7 +1,7 @@
 // @flow
 import { ConversionTypeMap, generateConfig } from './commands/generate';
 import { getVersion, createCommand, getAllOptions } from './util';
-import { runInsomniaTests, TestReporterEnum } from './commands/run';
+import { runInsomniaTests, TestReporterEnum } from './commands/test';
 
 function makeGenerateCommand(exitOverride: boolean) {
   // inso generate

@@ -12,6 +12,7 @@ Options:
 
 Commands:
   generate            Code generation utilities
+  test                Unit testing utilities
   help [command]      display help for command"
 `;
 
@@ -27,6 +28,7 @@ Options:
 
 Commands:
   generate            Code generation utilities
+  test                Unit testing utilities
   help [command]      display help for command"
 `;
 
@@ -67,5 +69,30 @@ Options:
 
 Commands:
   generate            Code generation utilities
+  test                Unit testing utilities
   help [command]      display help for command"
+`;
+
+exports[`Snapshot for "inso test -h" 1`] = `
+"Usage: inso test [options] [command]
+
+Unit testing utilities
+
+Options:
+  -h, --help      display help for command
+
+Commands:
+  run [options]   Run tests
+  help [command]  display help for command"
+`;
+
+exports[`Snapshot for "inso test run -h" 1`] = `
+"Usage: inso test run [options]
+
+Run tests
+
+Options:
+  -r, --reporter <reporter>  the Mocha reporter to use, options are [dot, list,
+                             spec, min, progress] (default: \\"spec\\")
+  -h, --help                 display help for command"
 `;
