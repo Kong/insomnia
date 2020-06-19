@@ -9,7 +9,7 @@ import fs from 'fs';
 export type RunTestsOptions = GlobalOptions<{||}>;
 
 export async function runInsomniaTests(_: RunTestsOptions): Promise<void> {
-  const suite = [
+  const suites = [
     {
       name: 'Parent Suite',
       suites: [
@@ -26,7 +26,7 @@ export async function runInsomniaTests(_: RunTestsOptions): Promise<void> {
     },
   ];
 
-  const testFileContents = generate(suite);
+  const testFileContents = generate(suites);
 
   const tmpPath = path.join(os.tmpdir(), `${Math.random()}.test.js`);
   fs.writeFileSync(tmpPath, testFileContents);
