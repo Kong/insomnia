@@ -6,9 +6,35 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs';
 
-export type RunTestsOptions = GlobalOptions<{||}>;
+export const TestReporterEnum = {
+  dot: 'dot',
+  list: 'list',
+  spec: 'spec',
+  min: 'min',
+  progress: 'progress',
+};
 
-export async function runInsomniaTests(_: RunTestsOptions): Promise<void> {
+export type RunTestsOptions = GlobalOptions<{|
+  reporter?: $Keys<typeof TestReporterEnum>,
+|}>;
+
+function validateOptions({ reporter }: RunTestsOptions): boolean {
+  if (reporter && !TestReporterEnum[reporter]) {
+    const reporterTypes = Object.keys(TestReporterEnum).join(', ');
+    console.log(`Reporter "${reporter}" not unrecognized. Options are [${reporterTypes}].`);
+    return false;
+  }
+
+  return true;
+}
+
+export async function runInsomniaTests(options: RunTestsOptions): Promise<void> {
+  if (!validateOptions(options)) {
+    return;
+  }
+
+  const { reporter } = options;
+
   const suites = [
     {
       name: 'Parent Suite',
@@ -31,9 +57,7 @@ export async function runInsomniaTests(_: RunTestsOptions): Promise<void> {
   const tmpPath = path.join(os.tmpdir(), `${Math.random()}.test.js`);
   fs.writeFileSync(tmpPath, testFileContents);
 
-  const results = await runTests(tmpPath);
-
-  console.log(results.failures[0].err);
+  await runTests(tmpPath, { reporter });
 
   fs.unlinkSync(tmpPath);
 }

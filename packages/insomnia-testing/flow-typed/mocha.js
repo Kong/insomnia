@@ -8,6 +8,11 @@ declare class Mocha {
   static reporters: {
     Base: Object;
     JSON: Object;
+    Spec: Object;
+    List: Object;
+    Dot: Object;
+    Min: Object;
+    Progress: Object;
   };
   reporter(reporter: Object, options: Object): void;
   addFile(filename: string): void;

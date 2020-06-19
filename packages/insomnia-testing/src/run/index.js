@@ -45,7 +45,10 @@ type TestResults = {
  */
 export async function runTests(
   filename: string | Array<string>,
-  options: { requests?: { [string]: Request } } = {},
+  options: {
+    requests?: { [string]: Request },
+    reporter?: 'js' | 'dot' | 'list' | 'spec' | 'min' | 'progress',
+  } = {},
 ): Promise<TestResults> {
   return new Promise(resolve => {
     // Add global `insomnia` helper.
@@ -57,7 +60,27 @@ export async function runTests(
       global: ['insomnia'],
     });
 
-    mocha.reporter(JavaScriptReporter);
+    switch (options.reporter) {
+      case 'dot':
+        mocha.reporter(Mocha.reporters.Dot);
+        break;
+      case 'min':
+        mocha.reporter(Mocha.reporters.Min);
+        break;
+      case 'progress':
+        mocha.reporter(Mocha.reporters.Progress);
+        break;
+      case 'list':
+        mocha.reporter(Mocha.reporters.List);
+        break;
+      case 'js':
+        mocha.reporter(JavaScriptReporter);
+        break;
+      case 'spec':
+      default:
+        mocha.reporter(Mocha.reporters.Spec);
+        break;
+    }
 
     const filenames = Array.isArray(filename) ? filename : [filename];
     for (const f of filenames) {
@@ -65,7 +88,7 @@ export async function runTests(
     }
 
     const runner = mocha.run(() => {
-      resolve(runner.testResults);
+      resolve(runner.testResults || { stats: runner.stats });
 
       // Remove global since we don't need it anymore
       delete global.insomnia;

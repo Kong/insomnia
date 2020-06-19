@@ -1,7 +1,7 @@
 // @flow
 import { ConversionTypeMap, generateConfig } from './commands/generate';
 import { getVersion, createCommand, getAllOptions } from './util';
-import { runInsomniaTests } from './commands/run';
+import { runInsomniaTests, TestReporterEnum } from './commands/run';
 
 function makeGenerateCommand(exitOverride: boolean) {
   // inso generate
@@ -27,10 +27,17 @@ function makeTestCommand(exitOverride: boolean) {
   // inso test
   const test = createCommand(exitOverride, 'test').description('Unit testing utilities');
 
+  const reporterTypes = Object.keys(TestReporterEnum).join(', ');
+
   // inso test run
   test
     .command('run')
     .description('Run tests')
+    .option(
+      '-r, --reporter <reporter>',
+      `the Mocha reporter to use, options are [${reporterTypes}]`,
+      'spec',
+    )
     .action(cmd => runInsomniaTests(getAllOptions(cmd)));
 
   return test;

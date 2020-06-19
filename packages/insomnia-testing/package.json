@@ -6,6 +6,7 @@
     "typecheck": "flow check",
     "test": "jest",
     "build": "webpack --config webpack.config.js --display errors-only",
+    "watch": "npm run build -- --watch",
     "bootstrap": "npm run build",
     "prepublish": "npm run build"
   },
