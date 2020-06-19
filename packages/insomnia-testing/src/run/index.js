@@ -48,19 +48,22 @@ export async function runTests(
   options: {
     requests?: { [string]: Request },
     reporter?: 'js' | 'dot' | 'list' | 'spec' | 'min' | 'progress',
+    bail?: boolean,
   } = {},
 ): Promise<TestResults> {
   return new Promise(resolve => {
+    const { requests, bail, reporter } = options;
     // Add global `insomnia` helper.
     // This is the only way to add new globals to the Mocha environment as far
     // as I can tell
-    global.insomnia = new Insomnia(options.requests);
+    global.insomnia = new Insomnia(requests);
 
     const mocha = new Mocha({
       global: ['insomnia'],
+      bail,
     });
 
-    switch (options.reporter) {
+    switch (reporter) {
       case 'dot':
         mocha.reporter(Mocha.reporters.Dot);
         break;

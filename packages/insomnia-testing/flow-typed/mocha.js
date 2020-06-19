@@ -1,7 +1,7 @@
 // @flow
 
 declare class Mocha {
-  constructor(options?: { global?: Array<string> }): Mocha;
+  constructor(options?: { global?: Array<string>, bail?: boolean }): Mocha;
   static Runner: {
     constants: Object;
   };
