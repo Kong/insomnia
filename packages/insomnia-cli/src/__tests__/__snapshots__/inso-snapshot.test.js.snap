@@ -6,14 +6,14 @@ exports[`Snapshot for "inso --help" 1`] = `
 A CLI for Insomnia!
 
 Options:
-  -v, --version       output the version number
-  --workingDir <dir>  Working directory
-  -h, --help          display help for command
+  -v, --version        output the version number
+  --working-dir <dir>  set working directory
+  -h, --help           display help for command
 
 Commands:
-  generate            Code generation utilities
-  test                Unit testing utilities
-  help [command]      display help for command"
+  generate             Code generation utilities
+  test                 Unit testing utilities
+  help [command]       display help for command"
 `;
 
 exports[`Snapshot for "inso -h" 1`] = `
@@ -22,14 +22,14 @@ exports[`Snapshot for "inso -h" 1`] = `
 A CLI for Insomnia!
 
 Options:
-  -v, --version       output the version number
-  --workingDir <dir>  Working directory
-  -h, --help          display help for command
+  -v, --version        output the version number
+  --working-dir <dir>  set working directory
+  -h, --help           display help for command
 
 Commands:
-  generate            Code generation utilities
-  test                Unit testing utilities
-  help [command]      display help for command"
+  generate             Code generation utilities
+  test                 Unit testing utilities
+  help [command]       display help for command"
 `;
 
 exports[`Snapshot for "inso generate -h" 1`] = `
@@ -51,9 +51,9 @@ exports[`Snapshot for "inso generate config -h" 1`] = `
 Generate configuration from an api spec
 
 Options:
-  -t, --type <value>   the type of configuration to generate, options are
+  -t, --type <value>   type of configuration to generate, options are
                        [kubernetes, declarative]
-  -o, --output <path>  the output path
+  -o, --output <path>  save the generated config to a file
   -h, --help           display help for command"
 `;
 
@@ -63,14 +63,14 @@ exports[`Snapshot for "inso help" 1`] = `
 A CLI for Insomnia!
 
 Options:
-  -v, --version       output the version number
-  --workingDir <dir>  Working directory
-  -h, --help          display help for command
+  -v, --version        output the version number
+  --working-dir <dir>  set working directory
+  -h, --help           display help for command
 
 Commands:
-  generate            Code generation utilities
-  test                Unit testing utilities
-  help [command]      display help for command"
+  generate             Code generation utilities
+  test                 Unit testing utilities
+  help [command]       display help for command"
 `;
 
 exports[`Snapshot for "inso test -h" 1`] = `
@@ -92,7 +92,8 @@ exports[`Snapshot for "inso test run -h" 1`] = `
 Run tests
 
 Options:
-  -r, --reporter <reporter>  the Mocha reporter to use, options are [dot, list,
-                             spec, min, progress] (default: \\"spec\\")
+  -r, --reporter <reporter>  reporter to use, options are [dot, list, spec,
+                             min, progress] (default: \\"spec\\")
+  -b, --bail                 abort (\\"bail\\") after first test failure
   -h, --help                 display help for command"
 `;

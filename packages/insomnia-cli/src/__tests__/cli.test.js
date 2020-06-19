@@ -53,7 +53,7 @@ describe('cli', () => {
   });
 
   it('should call generateConfig with global option', () => {
-    inso('generate config -t kubernetes --workingDir testing/dir file.yaml');
+    inso('generate config -t kubernetes --working-dir testing/dir file.yaml');
     expect(generateConfig).toHaveBeenCalledWith(
       'file.yaml',
       expect.objectContaining({

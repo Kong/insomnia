@@ -15,9 +15,9 @@ function makeGenerateCommand(exitOverride: boolean) {
     .description('Generate configuration from an api spec')
     .requiredOption(
       '-t, --type <value>',
-      `the type of configuration to generate, options are [${conversionTypes}]`,
+      `type of configuration to generate, options are [${conversionTypes}]`,
     )
-    .option('-o, --output <path>', 'the output path')
+    .option('-o, --output <path>', 'save the generated config to a file')
     .action((identifier, cmd) => generateConfig(identifier, getAllOptions(cmd)));
 
   return generate;
@@ -35,9 +35,10 @@ function makeTestCommand(exitOverride: boolean) {
     .description('Run tests')
     .option(
       '-r, --reporter <reporter>',
-      `the Mocha reporter to use, options are [${reporterTypes}]`,
-      'spec',
+      `reporter to use, options are [${reporterTypes}]`,
+      TestReporterEnum.spec,
     )
+    .option('-b, --bail', 'abort ("bail") after first test failure')
     .action(cmd => runInsomniaTests(getAllOptions(cmd)));
 
   return test;
@@ -52,7 +53,7 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
   createCommand(!!exitOverride)
     .version(getVersion(), '-v, --version')
     .description('A CLI for Insomnia!')
-    .option('--workingDir <dir>', 'Working directory')
+    .option('--working-dir <dir>', 'set working directory')
     .addCommand(makeGenerateCommand(!!exitOverride))
     .addCommand(makeTestCommand(!!exitOverride))
     .parseAsync(args)

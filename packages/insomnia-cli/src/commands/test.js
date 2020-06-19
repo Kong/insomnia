@@ -16,6 +16,7 @@ export const TestReporterEnum = {
 
 export type RunTestsOptions = GlobalOptions<{|
   reporter?: $Keys<typeof TestReporterEnum>,
+  bail?: boolean,
 |}>;
 
 function validateOptions({ reporter }: RunTestsOptions): boolean {
@@ -33,7 +34,7 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
     return;
   }
 
-  const { reporter } = options;
+  const { reporter, bail } = options;
 
   const suites = [
     {
@@ -57,7 +58,9 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
   const tmpPath = path.join(os.tmpdir(), `${Math.random()}.test.js`);
   fs.writeFileSync(tmpPath, testFileContents);
 
-  await runTests(tmpPath, { reporter });
-
-  fs.unlinkSync(tmpPath);
+  try {
+    await runTests(tmpPath, { reporter, bail });
+  } finally {
+    fs.unlinkSync(tmpPath);
+  }
 }
