@@ -55,6 +55,7 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
 
   const testFileContents = generate(suites);
 
+  // TODO: Should this generate the test file at the working-dir? I think not
   const tmpPath = path.join(os.tmpdir(), `${Math.random()}.test.js`);
   fs.writeFileSync(tmpPath, testFileContents);
 
