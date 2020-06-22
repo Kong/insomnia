@@ -1,6 +1,6 @@
 // @flow
-import { ConversionTypeMap, generateConfig } from '../generate';
-import type { GenerateConfigOptions } from '../generate';
+import { ConversionTypeMap, generateConfig } from '../generate-config';
+import type { GenerateConfigOptions } from '../generate-config';
 import o2k from 'openapi-2-kong';
 import fs from 'fs';
 import path from 'path';

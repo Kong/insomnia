@@ -1,8 +1,8 @@
 // @flow
 import * as cli from '../cli';
-import { generateConfig } from '../commands/generate';
+import { generateConfig } from '../commands/generate-config';
 
-jest.mock('../commands/generate');
+jest.mock('../commands/generate-config');
 const originalError = console.error;
 
 const initInso = () => {

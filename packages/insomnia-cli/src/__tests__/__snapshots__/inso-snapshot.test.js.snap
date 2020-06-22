@@ -12,7 +12,7 @@ Options:
 
 Commands:
   generate             Code generation utilities
-  test                 Unit testing utilities
+  run                  Execution utilities
   help [command]       display help for command"
 `;
 
@@ -28,7 +28,7 @@ Options:
 
 Commands:
   generate             Code generation utilities
-  test                 Unit testing utilities
+  run                  Execution utilities
   help [command]       display help for command"
 `;
 
@@ -69,27 +69,27 @@ Options:
 
 Commands:
   generate             Code generation utilities
-  test                 Unit testing utilities
+  run                  Execution utilities
   help [command]       display help for command"
 `;
 
-exports[`Snapshot for "inso test -h" 1`] = `
-"Usage: inso test [options] [command]
+exports[`Snapshot for "inso run -h" 1`] = `
+"Usage: inso run [options] [command]
 
-Unit testing utilities
+Execution utilities
 
 Options:
   -h, --help      display help for command
 
 Commands:
-  run [options]   Run tests
+  test [options]  Run Insomnia unit tests
   help [command]  display help for command"
 `;
 
-exports[`Snapshot for "inso test run -h" 1`] = `
-"Usage: inso test run [options]
+exports[`Snapshot for "inso run test -h" 1`] = `
+"Usage: inso run test [options]
 
-Run tests
+Run Insomnia unit tests
 
 Options:
   -r, --reporter <reporter>  reporter to use, options are [dot, list, spec,

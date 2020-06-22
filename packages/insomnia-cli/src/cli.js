@@ -1,7 +1,7 @@
 // @flow
-import { ConversionTypeMap, generateConfig } from './commands/generate';
+import { ConversionTypeMap, generateConfig } from './commands/generate-config';
 import { getVersion, createCommand, getAllOptions } from './util';
-import { runInsomniaTests, TestReporterEnum } from './commands/test';
+import { runInsomniaTests, TestReporterEnum } from './commands/run-tests';
 
 function makeGenerateCommand(exitOverride: boolean) {
   // inso generate
@@ -24,15 +24,15 @@ function makeGenerateCommand(exitOverride: boolean) {
 }
 
 function makeTestCommand(exitOverride: boolean) {
-  // inso test
-  const test = createCommand(exitOverride, 'test').description('Unit testing utilities');
+  // inso run
+  const run = createCommand(exitOverride, 'run').description('Execution utilities');
 
   const reporterTypes = Object.keys(TestReporterEnum).join(', ');
 
-  // inso test run
-  test
-    .command('run')
-    .description('Run tests')
+  // inso run tests
+  run
+    .command('test')
+    .description('Run Insomnia unit tests')
     .option(
       '-r, --reporter <reporter>',
       `reporter to use, options are [${reporterTypes}]`,
@@ -41,7 +41,7 @@ function makeTestCommand(exitOverride: boolean) {
     .option('-b, --bail', 'abort ("bail") after first test failure')
     .action(cmd => runInsomniaTests(getAllOptions(cmd)));
 
-  return test;
+  return run;
 }
 
 export function go(args?: Array<string>, exitOverride?: boolean): void {
