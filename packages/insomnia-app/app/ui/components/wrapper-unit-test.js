@@ -129,12 +129,8 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     });
   }
 
-  async _handleOnChange(unitTest: UnitTest, v: string) {
-    const { activeWorkspace } = this.props.wrapperProps;
-    await models.unitTest.update(unitTest, {
-      parentId: activeWorkspace._id,
-      code: v,
-    });
+  async _handleUnitTestCodeChange(unitTest: UnitTest, v: string) {
+    await models.unitTest.update(unitTest, { code: v });
   }
 
   async _handleDebugSpec() {
@@ -328,7 +324,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           defaultValue={unitTest ? unitTest.code : ''}
           getAutocompleteSnippets={() => this.autocompleteConstants()}
           lintOptions={WrapperUnitTest.lintOptions}
-          onChange={this._handleOnChange.bind(this, unitTest)}
+          onChange={this._handleUnitTestCodeChange.bind(this, unitTest)}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           isVariableUncovered={settings.isVariableUncovered}
           mode="javascript"
