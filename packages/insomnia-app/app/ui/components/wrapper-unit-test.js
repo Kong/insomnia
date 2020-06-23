@@ -354,7 +354,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       <div className="unit-tests layout-body--sidebar theme--pane">
         <div className="unit-tests__tests theme--pane__body">
           {activeUnitTests.map(this.renderUnitTest)}
-          <div>
+          <div className="pad">
             <Button variant="contained" bg="surprise" onClick={this._handleCreateTest}>
               Create Test
             </Button>

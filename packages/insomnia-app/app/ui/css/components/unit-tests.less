@@ -105,15 +105,19 @@
     display: flex;
     flex-direction: column;
 
-    li button {
-      width: 100%;
-      padding: var(--padding-sm) var(--padding-md);
-      box-sizing: border-box;
-      color: var(--hl);
+    li {
+      button {
+        width: 100%;
+        padding: var(--padding-sm) var(--padding-md);
+        box-sizing: border-box;
+        color: var(--hl);
+      }
 
-      &:hover, &.active {
-        background-color: var(--hl-sm);
-        color: var(--color-font);
+      &:hover , &.active {
+        button {
+          background-color: var(--hl-sm);
+          color: var(--color-font);
+        }
       }
     }
   }
