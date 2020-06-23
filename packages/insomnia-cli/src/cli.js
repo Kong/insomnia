@@ -2,6 +2,7 @@
 import { ConversionTypeMap, generateConfig } from './commands/generate-config';
 import { getVersion, createCommand, getAllOptions } from './util';
 import { runInsomniaTests, TestReporterEnum } from './commands/run-tests';
+import { lintSpecification } from './commands/lint-specification';
 
 function makeGenerateCommand(exitOverride: boolean) {
   // inso generate
@@ -44,6 +45,17 @@ function makeTestCommand(exitOverride: boolean) {
   return run;
 }
 
+function makeLintCommand(exitOverride: boolean) {
+  // inso lint
+  const lint = createCommand(exitOverride, 'lint').description('Linting capabilities');
+
+  // inso lint spec
+  lint
+    .command('spec <identifier>')
+    .description('Lint an API Specification')
+    .action((identifier, cmd) => lintSpecification(identifier, getAllOptions(cmd)));
+}
+
 export function go(args?: Array<string>, exitOverride?: boolean): void {
   if (!args) {
     args = process.argv;
@@ -56,6 +68,7 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     .option('--working-dir <dir>', 'set working directory')
     .addCommand(makeGenerateCommand(!!exitOverride))
     .addCommand(makeTestCommand(!!exitOverride))
+    .addCommand(makeLintCommand(!!exitOverride))
     .parseAsync(args)
     .catch(err => console.log('An error occurred', err));
 }
