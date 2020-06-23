@@ -6,6 +6,7 @@ import fs from 'fs';
 export type Test = {
   name: string,
   code: string,
+  defaultRequestId: string,
 };
 
 export type TestSuite = {
@@ -45,6 +46,7 @@ function generateSuiteLines(n: number, suite: ?TestSuite): Array<string> {
   }
 
   const lines = [];
+  lines.push(indent(n, `beforeEach(() => insomnia.clearActiveRequest());`));
   lines.push(indent(n, `describe('${escapeJsStr(suite.name)}', () => {`));
 
   const suites = suite.suites || [];
@@ -79,8 +81,18 @@ function generateTestLines(n: number, test: ?Test): Array<string> {
 
   const lines = [];
 
+  // Define test it() block (all test cases are async by default)
   lines.push(indent(n, `it('${escapeJsStr(test.name)}', async () => {`));
+
+  // Add helper variables that are necessary
+  if (test.defaultRequestId) {
+    lines.push(indent(n, `insomnia.setActiveRequestId('${test.defaultRequestId}');`));
+  }
+
+  // Add user-defined test source
   test.code && lines.push(indent(n + 1, test.code));
+
+  // Close the it() block
   lines.push(indent(n, `});`));
 
   return lines;

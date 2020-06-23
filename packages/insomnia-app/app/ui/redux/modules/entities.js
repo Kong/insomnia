@@ -115,5 +115,7 @@ export async function allDocs() {
     ...(await models.oAuth2Token.all()),
     ...(await models.clientCertificate.all()),
     ...(await models.apiSpec.all()),
+    ...(await models.unitTest.all()),
+    ...(await models.unitTestResult.all()),
   ];
 }

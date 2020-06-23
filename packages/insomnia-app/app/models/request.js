@@ -80,7 +80,6 @@ type BaseRequest = {
   authentication: RequestAuthentication,
   metaSortKey: number,
   isPrivate: boolean,
-  test: string,
 
   // Settings
   settingStoreCookies: boolean,
@@ -105,7 +104,6 @@ export function init(): BaseRequest {
     authentication: {},
     metaSortKey: -1 * Date.now(),
     isPrivate: false,
-    test: '',
 
     // Settings
     settingStoreCookies: true,

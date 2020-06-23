@@ -31,6 +31,8 @@ import type { RequestVersion } from '../../models/request-version';
 import { showError } from '../components/modals/index';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import type { Environment } from '../../models/environment';
+import TestResultsViewer from './unit-testing/TestResultsViewer';
+import type { UnitTestResult } from '../../models/unit-test-result';
 
 type Props = {
   // Functions
@@ -61,6 +63,7 @@ type Props = {
   request: ?Request,
   response: ?Response,
   environment: ?Environment,
+  unitTestResult: ?UnitTestResult,
 };
 
 @autobind
@@ -337,6 +340,9 @@ class ResponsePane extends React.PureComponent<Props> {
             <Tab tabIndex="-1">
               <Button>Timeline</Button>
             </Tab>
+            <Tab tabIndex="-1">
+              <Button>Tests</Button>
+            </Tab>
           </TabList>
           <TabPanel className="react-tabs__tab-panel">
             <ResponseViewer
@@ -384,6 +390,17 @@ class ResponsePane extends React.PureComponent<Props> {
             <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseTimelineViewer
                 response={response}
+                editorLineWrapping={editorLineWrapping}
+                editorFontSize={editorFontSize}
+                editorIndentSize={editorIndentSize}
+              />
+            </ErrorBoundary>
+          </TabPanel>
+          <TabPanel className="react-tabs__tab-panel">
+            <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+              <TestResultsViewer
+                test={response.test}
+                testResults={response.testResults}
                 editorLineWrapping={editorLineWrapping}
                 editorFontSize={editorFontSize}
                 editorIndentSize={editorIndentSize}

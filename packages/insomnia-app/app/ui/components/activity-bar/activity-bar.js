@@ -7,11 +7,11 @@ import type { HotKeyDefinition, HotKeyRegistry } from '../../../common/hotkeys';
 
 export type GlobalActivity = 'spec' | 'debug' | 'monitor' | 'home';
 
-export const ACTIVITY_SPEC: GlobalActivity = 'spec';
 export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
-export const ACTIVITY_MONITOR: GlobalActivity = 'monitor';
 export const ACTIVITY_HOME: GlobalActivity = 'home';
 export const ACTIVITY_INSOMNIA: GlobalActivity = 'insomnia';
+export const ACTIVITY_SPEC: GlobalActivity = 'spec';
+export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
 
 type Props = {|
   activity: GlobalActivity,

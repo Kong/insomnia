@@ -20,6 +20,8 @@ import {
   DEFAULT_PANE_HEIGHT,
   DEFAULT_PANE_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
+  getAppId,
+  getAppName,
   MAX_PANE_HEIGHT,
   MAX_PANE_WIDTH,
   MAX_SIDEBAR_REMS,
@@ -27,8 +29,6 @@ import {
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
   PREVIEW_MODE_SOURCE,
-  getAppName,
-  getAppId,
 } from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as entitiesActions from '../redux/modules/entities';
@@ -48,6 +48,8 @@ import {
   selectEntitiesLists,
   selectSidebarChildren,
   selectSyncItems,
+  selectUnitTestResults,
+  selectUnitTests,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
 } from '../redux/selectors';
@@ -1416,6 +1418,10 @@ function mapStateToProps(state, props) {
   // Api spec stuff
   const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace._id);
 
+  // Test stuff
+  const activeUnitTests = selectUnitTests(state, props);
+  const activeUnitTestResults = selectUnitTestResults(state, props);
+
   return Object.assign({}, state, {
     activity: activeActivity,
     activeApiSpec,
@@ -1425,6 +1431,8 @@ function mapStateToProps(state, props) {
     activeRequest,
     activeRequestResponses,
     activeResponse,
+    activeUnitTests,
+    activeUnitTestResults,
     activeWorkspace,
     activeWorkspaceClientCertificates,
     activeWorkspaceMeta,

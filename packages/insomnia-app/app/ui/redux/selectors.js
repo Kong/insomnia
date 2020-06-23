@@ -324,6 +324,22 @@ export const selectActiveResponse = createSelector(
   },
 );
 
+export const selectUnitTestResults = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspace,
+  (entities, activeWorkspace) => {
+    return entities.unitTestResults.filter(t => t.parentId === activeWorkspace._id);
+  },
+);
+
+export const selectUnitTests = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspace,
+  (entities, activeWorkspace) => {
+    return entities.unitTests.filter(t => t.parentId === activeWorkspace._id);
+  },
+);
+
 export const selectSyncItems = createSelector(selectActiveWorkspaceEntities, workspaceEntities =>
   workspaceEntities.filter(models.canSync).map(doc => ({
     key: doc._id,

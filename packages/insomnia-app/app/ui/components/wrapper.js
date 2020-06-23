@@ -71,6 +71,7 @@ import {
   ACTIVITY_HOME,
   ACTIVITY_INSOMNIA,
   ACTIVITY_SPEC,
+  ACTIVITY_UNIT_TEST,
 } from './activity-bar/activity-bar';
 import type { ApiSpec } from '../../models/api-spec';
 import GitVCS from '../../sync/git/git-vcs';
@@ -78,6 +79,7 @@ import { trackPageView } from '../../common/analytics';
 import type { GitRepository } from '../../models/git-repository';
 import WrapperHome from './wrapper-home';
 import WrapperDesign from './wrapper-design';
+import WrapperUnitTest from './wrapper-unit-test';
 import WrapperOnboarding from './wrapper-onboarding';
 import WrapperDebug from './wrapper-debug';
 import { importRaw } from '../../common/import';
@@ -85,6 +87,8 @@ import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { DropdownButton } from './base/dropdown';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { getAppName } from '../../common/constants';
+import type { UnitTest } from '../../models/unit-test';
+import type { UnitTestResult } from '../../models/unit-test-result';
 
 export type WrapperProps = {
   // Helper Functions
@@ -174,6 +178,8 @@ export type WrapperProps = {
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
   activeGitRepository: GitRepository | null,
+  activeUnitTests: Array<UnitTest>,
+  activeUnitTestResults: Array<UnitTestResult>,
   activeWorkspaceClientCertificates: Array<ClientCertificate>,
   isVariableUncovered: boolean,
   headerEditorKey: string,
@@ -301,6 +307,10 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
   async _handleSetDesignActivity(workspaceId: string): Promise<void> {
     await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_SPEC);
+  }
+
+  async _handleSetUnitTestActivity(workspaceId: string): Promise<void> {
+    await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_UNIT_TEST);
   }
 
   async _handleSetDebugActivity(apiSpec: ApiSpec): Promise<void> {
@@ -761,8 +771,16 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             <WrapperDesign
               gitSyncDropdown={gitSyncDropdown}
               handleSetDebugActivity={this._handleSetDebugActivity}
+              handleSetUnitTestActivity={this._handleSetUnitTestActivity}
               handleUpdateApiSpec={this._handleUpdateApiSpec}
               wrapperProps={this.props}
+            />
+          )}
+
+          {activity === ACTIVITY_UNIT_TEST && (
+            <WrapperUnitTest
+              wrapperProps={this.props}
+              handleSetDebugActivity={this._handleSetDebugActivity}
             />
           )}
 

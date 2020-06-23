@@ -29,6 +29,7 @@ type Props = {|
   wrapperProps: WrapperProps,
   handleUpdateApiSpec: (s: ApiSpec) => Promise<void>,
   handleSetDebugActivity: (s: ApiSpec) => Promise<void>,
+  handleSetUnitTestActivity: (id: workspaceId) => Promise<void>,
 |};
 
 type State = {|
@@ -71,7 +72,15 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     showModal(GenerateConfigModal, { apiSpec: activeApiSpec });
   }
 
-  async _handleDebugSpec(errors, e): Pomise<void> {
+  async _handleUnitTest() {
+    const {
+      handleSetUnitTestActivity,
+      wrapperProps: { activeWorkspace },
+    } = this.props;
+    handleSetUnitTestActivity(activeWorkspace._id);
+  }
+
+  async _handleDebugSpec(errors, e): Promise<void> {
     e.preventDefault();
     if (errors) {
       showModal(AlertModal, {
@@ -214,13 +223,18 @@ class WrapperDesign extends React.PureComponent<Props, State> {
               </React.Fragment>
             }
             gridCenter={
-              <Switch
-                onClick={this._handleDebugSpec.bind(this, lintErrorsExist)}
-                optionItems={[
-                  { label: 'DESIGN', selected: true },
-                  { label: 'DEBUG', selected: false },
-                ]}
-              />
+              <>
+                <Switch
+                  onClick={this._handleDebugSpec.bind(this, lintErrorsExist)}
+                  optionItems={[
+                    { label: 'DESIGN', selected: true },
+                    { label: 'DEBUG', selected: false },
+                  ]}
+                />
+                <Button bg="surprise" onClick={this._handleUnitTest}>
+                  Test
+                </Button>
+              </>
             }
             gridRight={
               <React.Fragment>
