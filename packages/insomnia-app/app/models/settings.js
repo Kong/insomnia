@@ -1,8 +1,9 @@
 // @flow
 import type { BaseModel } from './index';
 import * as db from '../common/database';
-import { getAppDefaultTheme, UPDATE_CHANNEL_STABLE } from '../common/constants';
+import { getAppDefaultTheme, HttpVersions, UPDATE_CHANNEL_STABLE } from '../common/constants';
 import * as hotkeys from '../common/hotkeys';
+import type { HttpVersion } from '../common/constants';
 
 export type PluginConfig = {
   disabled: boolean,
@@ -25,8 +26,8 @@ type BaseSettings = {
   autocompleteDelay: number,
   deviceId: string | null,
   disableHtmlPreviewJs: boolean,
-  disableUpdateNotification: boolean,
   disableResponsePreviewLinks: boolean,
+  disableUpdateNotification: boolean,
   editorFontSize: number,
   editorIndentSize: number,
   editorIndentWithTabs: boolean,
@@ -34,6 +35,7 @@ type BaseSettings = {
   editorLineWrapping: boolean,
   enableAnalytics: boolean,
   environmentHighlightColorStyle: string,
+  filterResponsesByEnv: boolean,
   followRedirects: boolean,
   fontInterface: string | null,
   fontMonospace: string | null,
@@ -48,9 +50,10 @@ type BaseSettings = {
   maxTimelineDataSizeKB: number,
   noProxy: string,
   nunjucksPowerUserMode: boolean,
+  pluginConfig: PluginConfigMap,
   pluginPath: string,
+  preferredHttpVersion: HttpVersion,
   proxyEnabled: boolean,
-  filterResponsesByEnv: boolean,
   showPasswords: boolean,
   theme: string,
   timeout: number,
@@ -61,7 +64,6 @@ type BaseSettings = {
   validateSSL: boolean,
   caBundleType: CertificateBundleTypeKeys,
   caBundlePath: string,
-  pluginConfig: PluginConfigMap,
 
   // Feature flags
   enableSyncBeta: boolean,
@@ -90,6 +92,7 @@ export function init(): BaseSettings {
     editorLineWrapping: true,
     enableAnalytics: false,
     environmentHighlightColorStyle: 'sidebar-indicator',
+    filterResponsesByEnv: false,
     followRedirects: true,
     fontInterface: null,
     fontMonospace: null,
@@ -106,8 +109,8 @@ export function init(): BaseSettings {
     nunjucksPowerUserMode: false,
     pluginConfig: {},
     pluginPath: '',
+    preferredHttpVersion: HttpVersions.default,
     proxyEnabled: false,
-    filterResponsesByEnv: false,
     showPasswords: false,
     theme: getAppDefaultTheme(),
     timeout: 0,

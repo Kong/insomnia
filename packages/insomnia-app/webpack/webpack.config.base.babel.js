@@ -46,7 +46,11 @@ module.exports = {
   },
   resolve: {
     alias: {
-      'react-dom': '@hot-loader/react-dom',
+      // Create aliases for react-hot-loader
+      // https://github.com/gaearon/react-hot-loader/tree/92961be0b44260d3d3f1b8864aa699766572a67c#linking
+      'react-hot-loader': path.resolve(path.join(__dirname, '../node_modules/react-hot-loader')),
+      'react': path.resolve(path.join(__dirname, '../node_modules/react')),
+      'react-dom': path.resolve(path.join(__dirname, '../node_modules/@hot-loader/react-dom')),
     },
     extensions: ['.js', '.json'],
     mainFields: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main'],
@@ -66,6 +70,7 @@ module.exports = {
     new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
     new webpack.DefinePlugin({
       'process.env.APP_ID': JSON.stringify(process.env.APP_ID),
+      'process.env.RELEASE_DATE': JSON.stringify(new Date()),
     }),
   ],
   target: 'electron-renderer',

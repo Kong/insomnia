@@ -39,6 +39,10 @@ export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, ent
   return parentLookupMap;
 });
 
+export const selectSettings = createSelector(selectEntitiesLists, entities => {
+  return entities.settings[0] || models.settings.init();
+});
+
 export const selectActiveWorkspace = createSelector(
   state => selectEntitiesLists(state).workspaces,
   state => state.entities,
@@ -54,6 +58,18 @@ export const selectActiveWorkspaceMeta = createSelector(
   (activeWorkspace, entities) => {
     const id = activeWorkspace ? activeWorkspace._id : 'n/a';
     return entities.workspaceMetas.find(m => m.parentId === id);
+  },
+);
+
+export const selectActiveEnvironment = createSelector(
+  selectActiveWorkspaceMeta,
+  selectEntitiesLists,
+  (meta, entities) => {
+    if (!meta) {
+      return null;
+    }
+
+    return entities.environments.find(e => e._id === meta.activeEnvironmentId) || null;
   },
 );
 
@@ -271,10 +287,10 @@ export const selectActiveRequestMeta = createSelector(
 export const selectActiveRequestResponses = createSelector(
   selectActiveRequest,
   selectEntitiesLists,
-  selectActiveWorkspaceMeta,
-  (activeRequest, entities, meta) => {
+  selectActiveEnvironment,
+  selectSettings,
+  (activeRequest, entities, activeEnvironment, settings) => {
     const requestId = activeRequest ? activeRequest._id : 'n/a';
-    const settings = entities.settings[0];
 
     // Filter responses down if the setting is enabled
     return entities.responses
@@ -282,7 +298,7 @@ export const selectActiveRequestResponses = createSelector(
         const requestMatches = requestId === response.parentId;
 
         if (settings.filterResponsesByEnv) {
-          const activeEnvironmentId = meta ? meta.activeEnvironmentId : 'n/a';
+          const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
           const environmentMatches = response.environmentId === activeEnvironmentId;
           return requestMatches && environmentMatches;
         } else {

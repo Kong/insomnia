@@ -1,5 +1,4 @@
 const { appConfig } = require('../config');
-const packageJson = require('../package.json');
 const childProcess = require('child_process');
 const webpack = require('webpack');
 const licenseChecker = require('license-checker');
@@ -74,7 +73,7 @@ module.exports.start = async function(forcedVersion = null) {
   await copyFiles('../app/static', '../build/static');
   await copyFiles(`../app/icons/${appConfig().appId}`, '../build/');
 
-  // Generate package.json
+  // Generate necessary files needed by `electron-builder`
   await generatePackageJson('../package.json', '../build/package.json', forcedVersion);
 
   // Install Node modules
@@ -136,84 +135,55 @@ async function buildLicenseList(relSource, relDest) {
     const dest = path.resolve(__dirname, relDest);
     mkdirp.sync(path.dirname(dest));
 
-    licenseChecker.init({ start: source, production: true }, (err, packages) => {
-      if (err) {
-        return reject(err);
-      }
+    licenseChecker.init(
+      {
+        start: source,
+        production: true,
+      },
+      (err, packages) => {
+        if (err) {
+          return reject(err);
+        }
 
-      const out = [];
-      for (const pkgName of Object.keys(packages)) {
-        const { licenses, repository, publisher, email, licenseFile: lf } = packages[pkgName];
-        const licenseFile = (lf || '').includes('README') ? null : lf;
-        const txt = licenseFile ? fs.readFileSync(licenseFile) : '[no license file]';
-        const body = [
+        const out = [];
+        for (const pkgName of Object.keys(packages)) {
+          const { licenses, repository, publisher, email, licenseFile: lf } = packages[pkgName];
+          const licenseFile = (lf || '').includes('README') ? null : lf;
+          const txt = licenseFile ? fs.readFileSync(licenseFile) : '[no license file]';
+          const body = [
+            '-------------------------------------------------------------------------',
+            '',
+            `PACKAGE: ${pkgName}`,
+            licenses ? `LICENSES: ${licenses}` : null,
+            repository ? `REPOSITORY: ${repository}` : null,
+            publisher ? `PUBLISHER: ${publisher}` : null,
+            email ? `EMAIL: ${email}` : null,
+            '\n' + txt,
+          ]
+            .filter(v => v !== null)
+            .join('\n');
+
+          out.push(`${body}\n\n`);
+        }
+
+        const header = [
+          'This application bundles the following third-party packages in ',
+          'accordance with the following licenses:',
           '-------------------------------------------------------------------------',
           '',
-          `PACKAGE: ${pkgName}`,
-          licenses ? `LICENSES: ${licenses}` : null,
-          repository ? `REPOSITORY: ${repository}` : null,
-          publisher ? `PUBLISHER: ${publisher}` : null,
-          email ? `EMAIL: ${email}` : null,
-          '\n' + txt,
-        ]
-          .filter(v => v !== null)
-          .join('\n');
+          '',
+        ].join('\n');
 
-        out.push(`${body}\n\n`);
-      }
-
-      const header = [
-        'This application bundles the following third-party packages in ',
-        'accordance with the following licenses:',
-        '-------------------------------------------------------------------------',
-        '',
-        '',
-      ].join('\n');
-
-      fs.writeFileSync(dest, header + out.join('\n\n'));
-      resolve();
-    });
+        fs.writeFileSync(dest, header + out.join('\n\n'));
+        resolve();
+      },
+    );
   });
 }
 
 async function install(relDir) {
   return new Promise(resolve => {
     const prefix = path.resolve(__dirname, relDir);
-
-    // Link all plugins
-    const plugins = path.resolve(__dirname, '../../../plugins');
-    for (const dir of fs.readdirSync(plugins)) {
-      if (dir.indexOf('.') === 0) {
-        continue;
-      }
-
-      console.log(`[build] Linking plugin ${dir}`);
-      const p = path.join(plugins, dir);
-      childProcess.spawnSync('npm', ['link', p], {
-        cwd: prefix,
-        shell: true,
-      });
-    }
-
-    // Link all packages
-    const packages = path.resolve(__dirname, '../../../packages');
-    for (const dir of fs.readdirSync(packages)) {
-      // Don't link ourselves
-      if (dir === packageJson.name) {
-        continue;
-      }
-
-      if (dir.indexOf('.') === 0) {
-        continue;
-      }
-
-      console.log(`[build] Linking local package ${dir}`);
-      const p = path.join(packages, dir);
-      childProcess.spawnSync('npm', ['link', p], {
-        cwd: prefix,
-        shell: true,
-      });
-    }
 
     const p = childProcess.spawn('npm', ['install', '--production', '--no-optional'], {
       cwd: prefix,
@@ -286,23 +256,25 @@ function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
 // Only release if we're building a tag that ends in a version number
 function getBuildContext() {
   const {
+    GIT_TAG,
     GITHUB_REF,
     GITHUB_SHA,
     TRAVIS_TAG,
     TRAVIS_COMMIT,
     TRAVIS_CURRENT_BRANCH,
-    GIT_TAG,
   } = process.env;
 
   const gitCommit = GITHUB_SHA || TRAVIS_COMMIT;
-  const gitRef = GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || GIT_TAG || '';
+  const gitRef = GIT_TAG || GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || '';
   const tagMatch = gitRef.match(/(designer|core)@(\d{4}\.\d+\.\d+(-(alpha|beta)\.\d+)?)$/);
 
   const app = tagMatch ? tagMatch[1] : null;
   const version = tagMatch ? tagMatch[2] : null;
+  const channel = tagMatch ? tagMatch[4] : 'stable';
 
   return {
     app,
+    channel,
     version,
     gitRef,
     gitCommit,

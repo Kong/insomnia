@@ -1,6 +1,6 @@
 import electron from 'electron';
 import path from 'path';
-import { Curl } from '../node-libcurl/curl';
+import { Curl } from 'node-libcurl';
 import fs from 'fs';
 import LocalStorage from './local-storage';
 import {

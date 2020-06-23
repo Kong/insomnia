@@ -13,7 +13,15 @@ import mkdirp from 'mkdirp';
 import crypto from 'crypto';
 import clone from 'clone';
 import { parse as urlParse, resolve as urlResolve } from 'url';
-import { Curl } from '../node-libcurl/curl';
+import {
+  Curl,
+  CurlAuth,
+  CurlCode,
+  CurlInfoDebug,
+  CurlFeature,
+  CurlNetrc,
+  CurlHttpVersion,
+} from 'node-libcurl';
 import { join as pathJoin } from 'path';
 import uuid from 'uuid';
 import * as models from '../models';
@@ -27,6 +35,7 @@ import {
   CONTENT_TYPE_FORM_URLENCODED,
   getAppVersion,
   getTempDir,
+  HttpVersions,
   STATUS_CODE_PLUGIN_ERROR,
   isWindows,
   isMac,
@@ -92,12 +101,24 @@ const MAX_DELAY_TIME = 1000;
 // Special header value that will prevent the header being sent
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
 
+// Because node-libcurl changed some names that we used in the timeline
+const LIBCURL_DEBUG_MIGRATION_MAP = {
+  HeaderIn: 'HEADER_IN',
+  DataIn: 'DATA_IN',
+  SslDataIn: 'SSL_DATA_IN',
+  HeaderOut: 'HEADER_OUT',
+  DataOut: 'DATA_OUT',
+  SslDataOut: 'SSL_DATA_OUT',
+  Text: 'TEXT',
+  '': '',
+};
+
 let cancelRequestFunction = null;
 let lastUserInteraction = Date.now();
 
-export function cancelCurrentRequest() {
+export async function cancelCurrentRequest() {
   if (typeof cancelRequestFunction === 'function') {
-    cancelRequestFunction();
+    return cancelRequestFunction();
   }
 }
 
@@ -112,7 +133,11 @@ export async function _actuallySend(
     const timeline: Array<ResponseTimelineEntry> = [];
 
     function addTimeline(name, value) {
-      timeline.push({ name, value, timestamp: Date.now() });
+      timeline.push({
+        name,
+        value,
+        timestamp: Date.now(),
+      });
     }
 
     function addTimelineText(value) {
@@ -157,7 +182,7 @@ export async function _actuallySend(
           renderContext,
         );
       } catch (err) {
-        handleError(
+        await handleError(
           new Error(`[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`),
         );
         return;
@@ -167,8 +192,8 @@ export async function _actuallySend(
     }
 
     /** Helper function to respond with an error */
-    function handleError(err: Error): void {
-      respond(
+    async function handleError(err: Error): Promise<void> {
+      await respond(
         {
           url: renderedRequest.url,
           parentId: renderedRequest._id,
@@ -203,8 +228,8 @@ export async function _actuallySend(
 
     try {
       // Setup the cancellation logic
-      cancelRequestFunction = () => {
-        respond(
+      cancelRequestFunction = async () => {
+        await respond(
           {
             elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
             bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
@@ -224,8 +249,7 @@ export async function _actuallySend(
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, true); // True so curl doesn't print progress
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
-      enable(Curl.feature.NO_HEADER_PARSING);
-      enable(Curl.feature.NO_DATA_PARSING);
+      enable(CurlFeature.Raw);
 
       // Set follow redirects setting
       switch (renderedRequest.settingFollowRedirects) {
@@ -270,32 +294,34 @@ export async function _actuallySend(
       }
 
       // Setup debug handler
-      setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, content: string) => {
-        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType) || '';
+      setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, contentBuffer: Buffer) => {
+        const content = contentBuffer.toString('utf8');
+        const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
+        const name = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
 
-        if (infoType === Curl.info.debug.SSL_DATA_IN || infoType === Curl.info.debug.SSL_DATA_OUT) {
+        if (infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut) {
           return 0;
         }
 
         // Ignore the possibly large data messages
-        if (infoType === Curl.info.debug.DATA_OUT) {
-          if (content.length === 0) {
+        if (infoType === CurlInfoDebug.DataOut) {
+          if (contentBuffer.length === 0) {
             // Sometimes this happens, but I'm not sure why. Just ignore it.
-          } else if (content.length / 1024 < settings.maxTimelineDataSizeKB) {
+          } else if (contentBuffer.length / 1024 < settings.maxTimelineDataSizeKB) {
             addTimeline(name, content);
           } else {
-            addTimeline(name, `(${describeByteSize(content.length)} hidden)`);
+            addTimeline(name, `(${describeByteSize(contentBuffer.length)} hidden)`);
           }
           return 0;
         }
 
-        if (infoType === Curl.info.debug.DATA_IN) {
-          addTimelineText(`Received ${describeByteSize(content.length)} chunk`);
+        if (infoType === CurlInfoDebug.DataIn) {
+          addTimelineText(`Received ${describeByteSize(contentBuffer.length)} chunk`);
           return 0;
         }
 
         // Don't show cookie setting because this will display every domain in the jar
-        if (infoType === Curl.info.debug.TEXT && content.indexOf('Added cookie') === 0) {
+        if (infoType === CurlInfoDebug.Text && content.indexOf('Added cookie') === 0) {
           return 0;
         }
 
@@ -318,14 +344,40 @@ export async function _actuallySend(
         const protocol = (match && match[1]) || '';
         const socketPath = (match && match[2]) || '';
         const socketUrl = (match && match[3]) || '';
-        curl.setUrl(`${protocol}//${socketUrl}`);
+        setOpt(Curl.option.URL, `${protocol}//${socketUrl}`);
         setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
       } else {
-        curl.setUrl(finalUrl);
+        setOpt(Curl.option.URL, finalUrl);
       }
       addTimelineText('Preparing request to ' + finalUrl);
-      addTimelineText(`Using ${Curl.getVersion()}`);
       addTimelineText('Current time is ' + new Date().toISOString());
+      addTimelineText(`Using ${Curl.getVersion()}`);
+
+      // Set HTTP version
+      switch (settings.preferredHttpVersion) {
+        case HttpVersions.V1_0:
+          addTimelineText('Using HTTP 1.0');
+          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V1_0);
+          break;
+        case HttpVersions.V1_1:
+          addTimelineText('Using HTTP 1.1');
+          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V1_1);
+          break;
+        case HttpVersions.V2_0:
+          addTimelineText('Using HTTP/2');
+          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V2_0);
+          break;
+        case HttpVersions.v3:
+          addTimelineText('Using HTTP/3');
+          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.v3);
+          break;
+        case HttpVersions.default:
+          addTimelineText('Using default HTTP version');
+          break;
+        default:
+          addTimelineText(`Unknown HTTP version specified ${settings.preferredHttpVersion}`);
+          break;
+      }
 
       // Set timeout
       if (settings.timeout > 0) {
@@ -441,8 +493,9 @@ export async function _actuallySend(
         }
 
         addTimelineText(
-          'Enable cookie sending with jar of ' +
-            `${cookies.length} cookie${cookies.length !== 1 ? 's' : ''}`,
+          `Enable cookie sending with jar of ${cookies.length} cookie${
+            cookies.length !== 1 ? 's' : ''
+          }`,
         );
       } else {
         addTimelineText('Disable cookie sending due to user setting');
@@ -457,7 +510,7 @@ export async function _actuallySend(
         addTimelineText(`Enable network proxy for ${protocol || ''}`);
         if (proxy) {
           setOpt(Curl.option.PROXY, proxy);
-          setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
+          setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
         }
         if (noProxy) {
           setOpt(Curl.option.NOPROXY, noProxy);
@@ -554,7 +607,9 @@ export async function _actuallySend(
 
         const fn = () => {
           fs.closeSync(fd);
-          fs.unlink(multipartBodyPath, () => {});
+          fs.unlink(multipartBodyPath, () => {
+            // Pass
+          });
         };
 
         curl.on('end', fn);
@@ -583,7 +638,10 @@ export async function _actuallySend(
 
       if (!noBody) {
         // Don't chunk uploads
-        headers.push({ name: 'Expect', value: DISABLE_HEADER_VALUE });
+        headers.push({
+          name: 'Expect',
+          value: DISABLE_HEADER_VALUE,
+        });
         headers.push({
           name: 'Transfer-Encoding',
           value: DISABLE_HEADER_VALUE,
@@ -599,17 +657,17 @@ export async function _actuallySend(
       if (!hasAuthHeader(headers) && !renderedRequest.authentication.disabled) {
         if (renderedRequest.authentication.type === AUTH_BASIC) {
           const { username, password } = renderedRequest.authentication;
-          setOpt(Curl.option.HTTPAUTH, Curl.auth.BASIC);
+          setOpt(Curl.option.HTTPAUTH, CurlAuth.Basic);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_DIGEST) {
           const { username, password } = renderedRequest.authentication;
-          setOpt(Curl.option.HTTPAUTH, Curl.auth.DIGEST);
+          setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_NTLM) {
           const { username, password } = renderedRequest.authentication;
-          setOpt(Curl.option.HTTPAUTH, Curl.auth.NTLM);
+          setOpt(Curl.option.HTTPAUTH, CurlAuth.Ntlm);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
@@ -639,7 +697,7 @@ export async function _actuallySend(
             headers.push(header);
           }
         } else if (renderedRequest.authentication.type === AUTH_NETRC) {
-          setOpt(Curl.option.NETRC, Curl.netrc.REQUIRED);
+          setOpt(Curl.option.NETRC, CurlNetrc.Required);
         } else {
           const authHeader = await getAuthHeader(renderedRequest, finalUrl);
 
@@ -654,12 +712,18 @@ export async function _actuallySend(
 
       // Send a default Accept headers of anything
       if (!hasAcceptHeader(headers)) {
-        headers.push({ name: 'Accept', value: '*/*' }); // Default to anything
+        headers.push({
+          name: 'Accept',
+          value: '*/*',
+        }); // Default to anything
       }
 
       // Don't auto-send Accept-Encoding header
       if (!hasAcceptEncodingHeader(headers)) {
-        headers.push({ name: 'Accept-Encoding', value: DISABLE_HEADER_VALUE });
+        headers.push({
+          name: 'Accept-Encoding',
+          value: DISABLE_HEADER_VALUE,
+        });
       }
 
       // Set User-Agent if it't not already in headers
@@ -669,7 +733,10 @@ export async function _actuallySend(
 
       // Prevent curl from adding default content-type header
       if (!hasContentTypeHeader(headers)) {
-        headers.push({ name: 'content-type', value: DISABLE_HEADER_VALUE });
+        headers.push({
+          name: 'content-type',
+          value: DISABLE_HEADER_VALUE,
+        });
       }
 
       // NOTE: This is last because headers might be modified multiple times
@@ -786,16 +853,16 @@ export async function _actuallySend(
         await respond(responsePatch, responseBodyPath);
       });
 
-      curl.on('error', function(err, code) {
+      curl.on('error', async function(err, code) {
         let error = err + '';
         let statusMessage = 'Error';
 
-        if (code === Curl.code.CURLE_ABORTED_BY_CALLBACK) {
+        if (code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
           error = 'Request aborted';
           statusMessage = 'Abort';
         }
 
-        respond(
+        await respond(
           {
             statusMessage,
             error,
@@ -807,7 +874,8 @@ export async function _actuallySend(
 
       curl.perform();
     } catch (err) {
-      handleError(err);
+      console.log('[network] Error', err);
+      await handleError(err);
     }
   });
 }
@@ -1034,7 +1102,10 @@ export function _parseHeaders(
       };
     } else {
       const [name, value] = line.split(/:\s(.+)/);
-      const header: ResponseHeader = { name, value: value || '' };
+      const header: ResponseHeader = {
+        name,
+        value: value || '',
+      };
       currentResult.headers.push(header);
     }
   }
@@ -1077,7 +1148,10 @@ export function _getAwsAuthHeaders(
 
   return Object.keys(signature.headers)
     .filter(name => name !== 'content-type') // Don't add this because we already have it
-    .map(name => ({ name, value: signature.headers[name] }));
+    .map(name => ({
+      name,
+      value: signature.headers[name],
+    }));
 }
 
 function storeTimeline(timeline: Array<ResponseTimelineEntry>): Promise<string> {

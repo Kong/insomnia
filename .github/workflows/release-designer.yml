@@ -5,49 +5,58 @@ on:
     tags:
       - designer@*
 
+env:
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  GITHUB_REF: ${{ github.ref }}
+  GITHUB_SHA: ${{ github.sha }}
+  NPM_CONFIG_TARGET: 3.1.13
+  NPM_CONFIG_DISTURL: https://electronjs.org/headers
+  NPM_CONFIG_RUNTIME: electron
+
 jobs:
   Windows:
     name: Windows
     runs-on: windows-2016
     steps:
-      - name: Checkout branch
-        uses: actions/checkout@v1
-      - name: Install NodeJS
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
         with:
           node-version: 10
-      - name: Install node tools
-        run: npm install --global --production windows-build-tools@4
-      - name: Set node config to use python2.7
-        run: npm config set python python2.7
-      - name: Set node config to set msvs_version to 2015
-        run: npm config set msvs_version 2015
-      - name: Bootstrap packages
-        run: npm run bootstrap
-      - name: Run tests
-        run: npm test
-      - name: Release app
+      - run: npm run bootstrap
+      - run: npm test
+      - run: npm run app-release
         env:
-          GITHUB_REF: ${{ github.ref }}
-          GITHUB_SHA: ${{ github.sha }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           CSC_LINK: ${{ secrets.DESIGNER_WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_WINDOWS_CSC_KEY_PASSWORD }}
-        run: npm run app-release
+  Mac:
+    name: Mac
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 10
+      - run: npm run bootstrap
+      - run: npm test
+      - run: npm run app-release
+        env:
+          APPLE_ID: ${{ secrets.DESIGNER_APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+          CSC_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
   Linux:
     name: Linux
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout branch
-        uses: actions/checkout@v1
-      - name: Run Docker
-        uses: ./.github/actions/release-linux
+      - run: |
+          sudo snap install snapcraft --classic
+          echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 10
+      - run: npm run bootstrap
+      - run: npm test
+      - run: npm run app-release
         env:
-          GITHUB_REF: ${{ github.ref }}
-          GITHUB_SHA: ${{ github.sha }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          NODELIBCURL_BUILD_STATIC: yes
-          BUILD_TARGETS: AppImage,deb,tar.gz,rpm
-          # Don't build Snap for Designer (yet)
-          # BUILD_TARGETS: AppImage,Snap
-          # SNAPCRAFT_LOGIN_FILE: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
+          BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap

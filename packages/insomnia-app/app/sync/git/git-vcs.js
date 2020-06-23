@@ -2,6 +2,8 @@
 import * as git from 'isomorphic-git';
 import { trackEvent } from '../../common/analytics';
 import { httpPlugin } from './http';
+import { convertToOsSep, convertToPosixSep } from './path-sep';
+import path from 'path';
 
 export type GitAuthor = {|
   name: string,
@@ -34,7 +36,16 @@ export type GitLogEntry = {|
   },
 |};
 
-export const GIT_NAMESPACE_DIR = '.insomnia';
+// isomorphic-git internally will default an empty ('') clone directory to '.'
+// Ref: https://github.com/isomorphic-git/isomorphic-git/blob/4e66704d05042624bbc78b85ee5110d5ee7ec3e2/src/utils/normalizePath.js#L10
+// We should set this explicitly (even if set to an empty string), because we have other code (such as fs plugins
+// and unit tests) that depend on the clone directory.
+export const GIT_CLONE_DIR = '.';
+const _gitInternalDirName = 'git';
+export const GIT_INSOMNIA_DIR_NAME = '.insomnia';
+
+export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, _gitInternalDirName);
+export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME);
 
 export default class GitVCS {
   _git: Object;
@@ -87,7 +98,8 @@ export default class GitVCS {
 
   async listFiles(): Promise<Array<string>> {
     console.log('[git] List files');
-    return git.listFiles({ ...this._baseOpts });
+    const files = await git.listFiles({ ...this._baseOpts });
+    return files.map(convertToOsSep);
   }
 
   async getBranch(): Promise<string> {
@@ -119,15 +131,23 @@ export default class GitVCS {
   }
 
   async status(filepath: string) {
-    return git.status({ ...this._baseOpts, filepath });
+    return git.status({
+      ...this._baseOpts,
+      filepath: convertToPosixSep(filepath),
+    });
   }
 
   async add(relPath: string): Promise<void> {
+    relPath = convertToPosixSep(relPath);
     console.log(`[git] Add ${relPath}`);
-    return git.add({ ...this._baseOpts, filepath: relPath });
+    return git.add({
+      ...this._baseOpts,
+      filepath: relPath,
+    });
   }
 
   async remove(relPath: string): Promise<void> {
+    relPath = convertToPosixSep(relPath);
     console.log(`[git] Remove relPath=${relPath}`);
     return git.remove({ ...this._baseOpts, filepath: relPath });
   }
@@ -209,7 +229,7 @@ export default class GitVCS {
     return true;
   }
 
-  async push(creds?: GitCredentials | null, force?: boolean = false): Promise<boolean> {
+  async push(creds?: GitCredentials | null, force: boolean = false): Promise<boolean> {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
     trackEvent('Git', 'Push');
 
@@ -297,12 +317,24 @@ export default class GitVCS {
     }
   }
 
+  async undoPendingChanges(fileFilter?: Array<String>): Promise<void> {
+    console.log('[git] Undo pending changes');
+
+    await git.fastCheckout({
+      ...this._baseOpts,
+      ref: await this.getBranch(),
+      remote: 'origin',
+      force: true,
+      filepaths: fileFilter?.map(convertToPosixSep),
+    });
+  }
+
   async readObjFromTree(treeOid: string, objPath: string): Object | null {
     try {
       const obj = await git.readObject({
         ...this._baseOpts,
         oid: treeOid,
-        filepath: objPath,
+        filepath: convertToPosixSep(objPath),
         encoding: 'utf8',
       });
 

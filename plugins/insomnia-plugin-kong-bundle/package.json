@@ -1,14 +1,23 @@
 {
   "name": "insomnia-plugin-kong-bundle",
-  "version": "2.2.4",
+  "version": "2.2.8",
   "main": "index.js",
   "insomnia": {
     "name": "kong-bundle",
-    "description": "Bundle of all Kong plugins"
+    "displayName": "Kong Plugin Bundle",
+    "description": "Bundle of all Kong functionality",
+    "bundle": true,
+    "applications": {
+      "designer": "*"
+    },
+    "images": {
+      "icon": "icon.svg",
+      "cover": "cover.svg"
+    }
   },
   "dependencies": {
-    "insomnia-plugin-kong-declarative-config": "^2.2.4",
-    "insomnia-plugin-kong-kubernetes-config": "^2.2.4",
-    "insomnia-plugin-kong-portal": "^2.2.4"
+    "insomnia-plugin-kong-declarative-config": "^2.2.6",
+    "insomnia-plugin-kong-kubernetes-config": "^2.2.6",
+    "insomnia-plugin-kong-portal": "^2.2.8"
   }
 }

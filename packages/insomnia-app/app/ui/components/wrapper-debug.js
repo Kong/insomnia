@@ -42,7 +42,7 @@ type Props = {
   handleUpdateRequestUrl: Function,
   handleUpdateSettingsShowPasswords: Function,
   handleUpdateSettingsUseBulkHeaderEditor: Function,
-  handleSetDesignActivity: (workspaceId: string) => void,
+  handleSetDesignActivity: (workspaceId: string) => Promise<void>,
   wrapperProps: WrapperProps,
 };
 
@@ -52,12 +52,12 @@ class WrapperDebug extends React.PureComponent<Props> {
     this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
-  _handleDesign() {
+  async _handleDesign(): Promise<void> {
     const {
       handleSetDesignActivity,
       wrapperProps: { activeWorkspace },
     } = this.props;
-    handleSetDesignActivity(activeWorkspace._id);
+    await handleSetDesignActivity(activeWorkspace._id);
   }
 
   _renderPageHeader() {

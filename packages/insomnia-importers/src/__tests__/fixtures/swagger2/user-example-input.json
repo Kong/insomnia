@@ -32,10 +32,15 @@
         },
         "security": [
           {
-            "Bearer": [null, "Role"]
+            "Bearer": ["Role"]
           }
         ]
       }
+    }
+  },
+  "definitions": {
+    "Dto.Document.DocumetnDto": {
+      "type": "number"
     }
   }
 }

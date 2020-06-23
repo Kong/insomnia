@@ -20,7 +20,8 @@ import { trackEvent } from '../../../common/analytics';
 import { docsGitSync } from '../../../common/documentation';
 
 type Props = {|
-  handleInitializeEntities: () => void,
+  handleInitializeEntities: () => Promise<void>,
+  handleGitBranchChanged: (branch: string) => void,
   workspace: Workspace,
   vcs: GitVCS,
   gitRepository: GitRepository | null,
@@ -60,13 +61,13 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _refreshState(otherState?: Object) {
-    const { vcs, workspace } = this.props;
+    const { vcs, workspace, handleGitBranchChanged } = this.props;
 
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
     // Clear cached items and return if no state
     if (!vcs.isInitialized() || !workspaceMeta.gitRepositoryId) {
-      await models.workspaceMeta.update(workspaceMeta, {
+      await models.workspaceMeta.updateByParentId(workspace._id, {
         cachedGitRepositoryBranch: null,
         cachedGitLastAuthor: null,
         cachedGitLastCommitTime: null,
@@ -85,11 +86,12 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
     // NOTE: We're converting timestamp to ms here
     const cachedGitLastCommitTime = author ? author.timestamp * 1000 : null;
-    await models.workspaceMeta.update(workspaceMeta, {
+    await models.workspaceMeta.updateByParentId(workspace._id, {
       cachedGitRepositoryBranch,
       cachedGitLastAuthor,
       cachedGitLastCommitTime,
     });
+    handleGitBranchChanged(branch);
   }
 
   async _handleOpen() {
@@ -212,7 +214,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     }
     await db.flushChanges(bufferId, true);
 
-    handleInitializeEntities();
+    await handleInitializeEntities();
     await this._refreshState();
   }
 

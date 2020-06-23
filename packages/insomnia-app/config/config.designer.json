@@ -1,8 +1,9 @@
 {
-  "version": "2020.1.3",
+  "version": "2020.2.2",
   "name": "insomnia-designer",
-  "executableName": "designer",
+  "executableName": "insomnia-designer",
   "appId": "com.insomnia.designer",
+  "userDataFolder": "Insomnia Designer",
   "productName": "Insomnia Designer",
   "binaryPrefix": "Insomnia.Designer",
   "longName": "Insomnia Designer",

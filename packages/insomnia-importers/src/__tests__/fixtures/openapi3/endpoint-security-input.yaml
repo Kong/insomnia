@@ -37,6 +37,43 @@ components:
       type: apiKey
       name: another_key
       in: query
+    OAuth2-AuthorizationCode:
+      type: oauth2
+      scheme: bearer
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.server.test/v1/auth
+          tokenUrl: https://api.server.test/v1/token
+          scopes:
+            read:something: Read all the data
+            write:something: Write all the data
+    OAuth2-Implicit:
+      type: oauth2
+      scheme: bearer
+      flows:
+        implicit:
+          authorizationUrl: https://api.server.test/v1/auth
+          scopes:
+            read:something: Read all the data
+            write:something: Write all the data
+    OAuth2-ClientCredentials:
+      type: oauth2
+      scheme: bearer
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.server.test/v1/token
+          scopes:
+            read:something: Read all the data
+            write:something: Write all the data
+    OAuth2-Password:
+      type: oauth2
+      scheme: bearer
+      flows:
+        password:
+          tokenUrl: https://api.server.test/v1/token
+          scopes:
+            read:something: Read all the data
+            write:something: Write all the data
 
 paths:
   /none:
@@ -91,6 +128,34 @@ paths:
       responses:
         '200':
           description: OK
+  /oauth2/authorization-code:
+    get:
+      security:
+        - OAuth2-AuthorizationCode: []
+      responses:
+        '200':
+          description: OK
+  /oauth2/implicit:
+    get:
+      security:
+        - OAuth2-Implicit: []
+      responses:
+        '200':
+          description: OK
+  /oauth2/client-credentials:
+    get:
+      security:
+        - OAuth2-ClientCredentials: []
+      responses:
+        '200':
+          description: OK
+  /oauth2/password:
+    get:
+      security:
+        - OAuth2-Password: []
+      responses:
+        '200':
+          description: OK
   /all:
     get:
       security:
@@ -99,6 +164,10 @@ paths:
         - Key-Query: []
         - Key-Header: []
         - Key-Cookie: []
+        - OAuth2-AuthorizationCode: []
+        - OAuth2-Implicit: []
+        - OAuth2-ClientCredentials: []
+        - OAuth2-Password: []
       responses:
         '200':
           description: OK

@@ -11,6 +11,7 @@ import {
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   getAppVersion,
+  HttpVersions,
 } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
 import { globalBeforeEach } from '../../__jest__/before-each';
@@ -86,8 +87,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         COOKIELIST: [
@@ -97,6 +97,7 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
+        HTTPAUTH: 'Basic',
         HTTPHEADER: [
           'Content-Type: application/json',
           'Empty;',
@@ -151,8 +152,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         POST: 1,
@@ -241,13 +241,13 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
+        HTTPAUTH: 'Basic',
         HTTPHEADER: [
           'Content-Type: application/json',
           'Expect:',
@@ -297,8 +297,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         POST: 1,
@@ -363,8 +362,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         POST: 1,
@@ -428,8 +426,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -472,8 +469,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         NOBODY: 1,
@@ -515,8 +511,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -559,8 +554,7 @@ describe('actuallySend()', () => {
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true,
-        NO_DATA_PARSING: true,
+        Raw: true,
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -571,12 +565,56 @@ describe('actuallySend()', () => {
         NOPROGRESS: true,
         PROXY: '',
         TIMEOUT_MS: 0,
-        NETRC: 2,
+        NETRC: 'Required',
         URL: '',
         USERAGENT: `insomnia/${getAppVersion()}`,
         VERBOSE: true,
       },
     });
+  });
+
+  it('sets HTTP version', async () => {
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.create();
+
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_123',
+      parentId: workspace._id,
+    });
+
+    const renderedRequest = await getRenderedRequest(request);
+    const responseV1 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
+      ...settings,
+      preferredHttpVersion: HttpVersions.V1_0,
+    });
+    const responseV11 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
+      ...settings,
+      preferredHttpVersion: HttpVersions.V1_1,
+    });
+    const responseV2 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
+      ...settings,
+      preferredHttpVersion: HttpVersions.V2_0,
+    });
+    const responseV3 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
+      ...settings,
+      preferredHttpVersion: HttpVersions.v3,
+    });
+    const responseDefault = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
+      ...settings,
+      preferredHttpVersion: HttpVersions.default,
+    });
+    const responseInvalid = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
+      ...settings,
+      preferredHttpVersion: 'blah',
+    });
+
+    const r = models.response;
+    expect(JSON.parse(r.getBodyBuffer(responseV1)).options.HTTP_VERSION).toBe('V1_0');
+    expect(JSON.parse(r.getBodyBuffer(responseV11)).options.HTTP_VERSION).toBe('V1_1');
+    expect(JSON.parse(r.getBodyBuffer(responseV2)).options.HTTP_VERSION).toBe('V2_0');
+    expect(JSON.parse(r.getBodyBuffer(responseV3)).options.HTTP_VERSION).toBe('v3');
+    expect(JSON.parse(r.getBodyBuffer(responseDefault)).options.HTTP_VERSION).toBe(undefined);
+    expect(JSON.parse(r.getBodyBuffer(responseInvalid)).options.HTTP_VERSION).toBe(undefined);
   });
 });
 

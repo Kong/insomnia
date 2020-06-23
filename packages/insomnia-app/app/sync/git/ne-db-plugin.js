@@ -4,16 +4,21 @@ import * as db from '../../common/database';
 import * as models from '../../models';
 import YAML from 'yaml';
 import Stat from './stat';
-import { GIT_NAMESPACE_DIR } from './git-vcs';
+import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 
 export default class NeDBPlugin {
   _workspaceId: string;
+  _cloneDirRegExp: RegExp;
 
   constructor(workspaceId: string) {
     if (!workspaceId) {
       throw new Error('Cannot use NeDBPlugin without workspace ID');
     }
     this._workspaceId = workspaceId;
+
+    // The win32 separator is a single backslash (\), but we have to escape both the JS string and RegExp.
+    const pathSep = path.sep === path.win32.sep ? '\\\\' : '/';
+    this._cloneDirRegExp = new RegExp(`^${GIT_CLONE_DIR}${pathSep}`);
   }
 
   static createPlugin(workspaceId: string) {
@@ -69,7 +74,7 @@ export default class NeDBPlugin {
     filePath = path.normalize(filePath);
     const { root, id, type } = this._parsePath(filePath);
 
-    if (root !== GIT_NAMESPACE_DIR) {
+    if (root !== GIT_INSOMNIA_DIR_NAME) {
       console.log(`[git] Ignoring external file ${filePath}`);
       return;
     }
@@ -77,11 +82,11 @@ export default class NeDBPlugin {
     const doc = YAML.parse(data.toString());
 
     if (id !== doc._id) {
-      throw new Error(`Doc _id does not match file path ${doc._id} != ${id || 'null'}`);
+      throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);
     }
 
     if (type !== doc.type) {
-      throw new Error(`Doc type does not match file path ${doc.type} != ${type || 'null'}`);
+      throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
     }
 
     await db.upsert(doc, true);
@@ -112,7 +117,7 @@ export default class NeDBPlugin {
     let docs = [];
     let otherFolders = [];
     if (root === null && id === null && type === null) {
-      otherFolders = [GIT_NAMESPACE_DIR];
+      otherFolders = [GIT_INSOMNIA_DIR_NAME];
     } else if (id === null && type === null) {
       otherFolders = [
         models.workspace.type,
@@ -167,7 +172,7 @@ export default class NeDBPlugin {
         type: 'file',
         mode: 0o777,
         size: fileBuff.length,
-        ino: doc._id,
+        ino: doc._id, // should be number instead of string https://nodejs.org/api/fs.html#fs_stats_ino I think flow should have detected this
         mtimeMs: doc.modified,
       });
     } else {
@@ -201,7 +206,12 @@ export default class NeDBPlugin {
   _parsePath(filePath: string): { root: string | null, type: string | null, id: string | null } {
     filePath = path.normalize(filePath);
 
-    const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '');
+    // FilePath will start with the clone directory. We want to remove the clone dir, so that the
+    // segments can be extracted correctly.
+    filePath = filePath.replace(this._cloneDirRegExp, '');
+
+    // Ignore empty and current directory '.' segments
+    const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '' && s !== '.');
 
     const id = typeof idRaw === 'string' ? idRaw.replace(/\.(json|yml)$/, '') : idRaw;
 

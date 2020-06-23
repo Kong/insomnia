@@ -38,7 +38,12 @@ import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import { MemPlugin } from '../../sync/git/mem-plugin';
-import GitVCS, { GIT_NAMESPACE_DIR } from '../../sync/git/git-vcs';
+import {
+  GIT_CLONE_DIR,
+  GIT_INSOMNIA_DIR,
+  GIT_INSOMNIA_DIR_NAME,
+  GIT_INTERNAL_DIR,
+} from '../../sync/git/git-vcs';
 import { parseApiSpec } from '../../common/api-specs';
 
 type Props = {|
@@ -46,7 +51,6 @@ type Props = {|
   handleImportFile: (forceToWorkspace: ForceToWorkspace) => void,
   handleImportUri: (uri: string, forceToWorkspace: ForceToWorkspace) => void,
   handleImportClipboard: (forceToWorkspace: ForceToWorkspace) => void,
-  gitVCS: GitVCS | null,
 |};
 
 type State = {|
@@ -115,7 +119,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
         trackEvent('Git', 'Clone');
 
         const core = Math.random() + '';
-        const rootDir = path.join('/', GIT_NAMESPACE_DIR);
 
         // Create in-memory filesystem to perform clone
         const plugins = git.cores.create(core);
@@ -127,7 +130,8 @@ class WrapperHome extends React.PureComponent<Props, State> {
         try {
           await git.clone({
             core,
-            dir: '/',
+            dir: GIT_CLONE_DIR,
+            gitdir: GIT_INTERNAL_DIR,
             singleBranch: true,
             url,
             ...credentials,
@@ -161,15 +165,15 @@ class WrapperHome extends React.PureComponent<Props, State> {
           return false;
         };
 
-        if (!(await ensureDir('/', GIT_NAMESPACE_DIR))) {
+        if (!(await ensureDir(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME))) {
           return;
         }
 
-        if (!(await ensureDir(rootDir, models.workspace.type))) {
+        if (!(await ensureDir(GIT_INSOMNIA_DIR, models.workspace.type))) {
           return;
         }
 
-        const workspaceBase = path.join(rootDir, models.workspace.type);
+        const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
         const workspaceDirs = await f.readdir(workspaceBase);
 
         if (workspaceDirs.length > 1) {
@@ -219,14 +223,16 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
           // Import all docs to the DB
           onConfirm: async () => {
-            const { handleSetActiveWorkspace } = this.props;
+            const {
+              wrapperProps: { handleSetActiveWorkspace },
+            } = this.props;
 
             // Stop the DB from pushing updates to the UI temporarily
             const bufferId = await db.bufferChanges();
 
             // Loop over all model folders in root
-            for (const modelType of await f.readdir(rootDir)) {
-              const modelDir = path.join(rootDir, modelType);
+            for (const modelType of await f.readdir(GIT_INSOMNIA_DIR)) {
+              const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
 
               // Loop over all documents in model folder and save them
               for (const docFileName of await f.readdir(modelDir)) {
