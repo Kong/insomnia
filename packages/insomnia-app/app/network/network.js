@@ -64,7 +64,7 @@ import {
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
-import * as winCa from 'win-ca';
+import winCa from 'win-ca';
 import * as plugins from '../plugins/index';
 import * as pluginContexts from '../plugins/context/index';
 import { getAuthHeader } from './authentication';
