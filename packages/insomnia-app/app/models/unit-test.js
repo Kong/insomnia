@@ -9,7 +9,7 @@ export const canDuplicate = true;
 export const canSync = true;
 
 type BaseUnitTest = {
-  // Points to Workspace
+  /** Parent UnitTestSuite **/
   parentId: string,
 
   /** Name of the test */
@@ -47,14 +47,6 @@ export function create(patch: $Shape<UnitTest> = {}) {
 
 export function update(unitTest: UnitTest, patch: $Shape<UnitTest> = {}) {
   return db.docUpdate(unitTest, patch);
-}
-
-export function createOrUpdate(unitTest: UnitTest | null, patch: $Shape<UnitTest>) {
-  if (unitTest) {
-    return update(unitTest, patch);
-  } else {
-    return create(patch);
-  }
 }
 
 export function getByParentId(parentId: string) {

@@ -89,6 +89,7 @@ import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { getAppName } from '../../common/constants';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestResult } from '../../models/unit-test-result';
+import type { UnitTestSuite } from '../../models/unit-test-suite';
 
 export type WrapperProps = {
   // Helper Functions
@@ -178,11 +179,12 @@ export type WrapperProps = {
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
   activeGitRepository: GitRepository | null,
+  activeUnitTestResult: UnitTestResult | null,
+  activeUnitTestSuites: Array<UnitTestSuite>,
   activeUnitTests: Array<UnitTest>,
-  activeUnitTestResults: Array<UnitTestResult>,
   activeWorkspaceClientCertificates: Array<ClientCertificate>,
-  isVariableUncovered: boolean,
   headerEditorKey: string,
+  isVariableUncovered: boolean,
   vcs: VCS | null,
   gitVCS: GitVCS | null,
   gitRepositories: Array<GitRepository>,
@@ -781,6 +783,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             <WrapperUnitTest
               wrapperProps={this.props}
               handleSetDebugActivity={this._handleSetDebugActivity}
+              children={sidebarChildren}
             />
           )}
 

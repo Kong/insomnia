@@ -50,7 +50,8 @@
     &__block {
       height: auto;
       width: 100%;
-      border-bottom: 1px solid var(--hl-md);
+      border-bottom: 1px dashed var(--hl-md);
+      padding-bottom: var(--padding-md);
 
       .editor {
         overflow-y: hidden !important;
@@ -60,16 +61,25 @@
         display: flex;
         flex-direction: row;
         align-items: center;
-        padding: 0 var(--padding-md);
+        margin-bottom: var(--padding-sm);
 
-        h2 {
-          font-size: var(--font-size-lg);
-          white-space: nowrap;
+        & > * {
+          margin-top:  var(--padding-md);
+          margin-bottom: var(--padding-md);
+          margin-right: var(--padding-md);
         }
 
-        select {
-          margin-left: auto;
-          max-width: 14rem;
+        & > *:first-child {
+          margin-right: auto;
+          margin-left: var(--padding-md);
+        }
+
+        .form-control {
+          width: 100%;
+          max-width: 18rem;
+          * {
+            margin: 0;
+          }
         }
       }
     }
@@ -84,6 +94,7 @@
     display: grid;
     grid-template-columns: 100%;
     grid-template-rows: 1fr auto;
+
     li {
       display: block;
       padding: var(--padding-xs) 0;
@@ -94,13 +105,15 @@
     display: flex;
     flex-direction: column;
 
-    li {
+    li button {
       width: 100%;
-      padding: var(--padding-xs) var(--padding-sm);
+      padding: var(--padding-sm) var(--padding-md);
       box-sizing: border-box;
+      color: var(--hl);
 
-      &:hover {
-        background-color: var(--hl-xs);
+      &:hover, &.active {
+        background-color: var(--hl-sm);
+        color: var(--color-font);
       }
     }
   }

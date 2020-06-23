@@ -324,19 +324,60 @@ export const selectActiveResponse = createSelector(
   },
 );
 
-export const selectUnitTestResults = createSelector(
+export const selectActiveUnitTestResult = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
   (entities, activeWorkspace) => {
-    return entities.unitTestResults.filter(t => t.parentId === activeWorkspace._id);
+    let recentResult = null;
+    for (const r of entities.unitTestResults) {
+      if (r.parentId !== activeWorkspace._id) {
+        continue;
+      }
+
+      if (!recentResult) {
+        recentResult = r;
+        continue;
+      }
+
+      if (r.created > recentResult.created) {
+        recentResult = r;
+      }
+    }
+
+    return recentResult;
   },
 );
 
-export const selectUnitTests = createSelector(
+export const selectActiveUnitTestSuite = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspaceMeta,
+  (entities, activeWorkspaceMeta) => {
+    if (!activeWorkspaceMeta) {
+      return null;
+    }
+
+    const id = activeWorkspaceMeta.activeUnitTestSuiteId;
+    return entities.unitTestSuites.find(s => s._id === id) || null;
+  },
+);
+
+export const selectActiveUnitTests = createSelector(
+  selectEntitiesLists,
+  selectActiveUnitTestSuite,
+  (entities, activeUnitTestSuite) => {
+    if (!activeUnitTestSuite) {
+      return [];
+    }
+
+    return entities.unitTests.filter(s => s.parentId === activeUnitTestSuite._id);
+  },
+);
+
+export const selectActiveUnitTestSuites = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
   (entities, activeWorkspace) => {
-    return entities.unitTests.filter(t => t.parentId === activeWorkspace._id);
+    return entities.unitTestSuites.filter(s => s.parentId === activeWorkspace._id);
   },
 );
 

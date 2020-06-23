@@ -48,8 +48,10 @@ import {
   selectEntitiesLists,
   selectSidebarChildren,
   selectSyncItems,
-  selectUnitTestResults,
-  selectUnitTests,
+  selectActiveUnitTestResult,
+  selectActiveUnitTestSuite,
+  selectActiveUnitTestSuites,
+  selectActiveUnitTests,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
 } from '../redux/selectors';
@@ -1358,15 +1360,16 @@ function mapStateToProps(state, props) {
   // Entities
   const entitiesLists = selectEntitiesLists(state, props);
   const {
-    workspaces,
-    workspaceMetas,
+    apiSpecs,
     environments,
-    requests,
+    gitRepositories,
     requestGroups,
     requestMetas,
     requestVersions,
-    apiSpecs,
-    gitRepositories,
+    requests,
+    unitTests,
+    workspaceMetas,
+    workspaces,
   } = entitiesLists;
 
   const settings = entitiesLists.settings[0];
@@ -1419,8 +1422,10 @@ function mapStateToProps(state, props) {
   const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace._id);
 
   // Test stuff
-  const activeUnitTests = selectUnitTests(state, props);
-  const activeUnitTestResults = selectUnitTestResults(state, props);
+  const activeUnitTests = selectActiveUnitTests(state, props);
+  const activeUnitTestSuite = selectActiveUnitTestSuite(state, props);
+  const activeUnitTestSuites = selectActiveUnitTestSuites(state, props);
+  const activeUnitTestResult = selectActiveUnitTestResult(state, props);
 
   return Object.assign({}, state, {
     activity: activeActivity,
@@ -1431,8 +1436,10 @@ function mapStateToProps(state, props) {
     activeRequest,
     activeRequestResponses,
     activeResponse,
+    activeUnitTestResult,
+    activeUnitTestSuite,
+    activeUnitTestSuites,
     activeUnitTests,
-    activeUnitTestResults,
     activeWorkspace,
     activeWorkspaceClientCertificates,
     activeWorkspaceMeta,

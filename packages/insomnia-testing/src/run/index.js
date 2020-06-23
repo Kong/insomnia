@@ -59,6 +59,7 @@ export async function runTests(
     global.chai = chai;
 
     const mocha = new Mocha({
+      timeout: 5000,
       global: ['insomnia', 'chai'],
     });
 
