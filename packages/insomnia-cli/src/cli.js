@@ -1,6 +1,6 @@
 // @flow
 import { ConversionTypeMap, generateConfig } from './commands/generate-config';
-import { getVersion, createCommand, getAllOptions, logErrorExit1, exitWrap } from './util';
+import { getVersion, createCommand, getAllOptions, logErrorExit1, exit } from './util';
 import { runInsomniaTests, TestReporterEnum } from './commands/run-tests';
 import { lintSpecification } from './commands/lint-specification';
 
@@ -19,7 +19,7 @@ function makeGenerateCommand(exitOverride: boolean) {
       `type of configuration to generate, options are [${conversionTypes}]`,
     )
     .option('-o, --output <path>', 'save the generated config to a file')
-    .action((identifier, cmd) => exitWrap(generateConfig(identifier, getAllOptions(cmd))));
+    .action((identifier, cmd) => exit(generateConfig(identifier, getAllOptions(cmd))));
 
   return generate;
 }
@@ -41,7 +41,7 @@ function makeTestCommand(exitOverride: boolean) {
     )
     .option('-b, --bail', 'abort ("bail") after first test failure')
     .option('--keep-file', 'do not delete the generated test file')
-    .action(cmd => exitWrap(runInsomniaTests(getAllOptions(cmd))));
+    .action(cmd => exit(runInsomniaTests(getAllOptions(cmd))));
 
   return run;
 }
@@ -54,7 +54,7 @@ function makeLintCommand(exitOverride: boolean) {
   lint
     .command('spec <identifier>')
     .description('Lint an API Specification')
-    .action((identifier, cmd) => exitWrap(lintSpecification(identifier, getAllOptions(cmd))));
+    .action((identifier, cmd) => exit(lintSpecification(identifier, getAllOptions(cmd))));
 
   return lint;
 }
