@@ -34,12 +34,12 @@ export function getAllOptions<T>(cmd: Object): T {
   return opts;
 }
 
-export function exit(result: boolean) {
-  process.exit(result ? 1 : 0);
-}
-
 export function logErrorExit1(err: Error) {
   console.error(err);
 
   process.exit(1);
+}
+
+export async function exitWrap(result: Promise<boolean>): Promise<void> {
+  return result.then(r => process.exit(r ? 1 : 0)).catch(logErrorExit1);
 }
