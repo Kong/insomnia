@@ -56,7 +56,7 @@ function makeTestCommand(exitOverride: boolean) {
 
 function makeLintCommand(exitOverride: boolean) {
   // inso lint
-  const lint = createCommand(exitOverride, 'lint').description('Linting capabilities');
+  const lint = createCommand(exitOverride, 'lint').description('Linting utilities');
 
   // inso lint spec
   lint
