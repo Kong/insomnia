@@ -11,11 +11,11 @@ export const TestReporterEnum = {
   progress: 'progress',
 };
 
-export type RunTestsOptions = GlobalOptions<{|
+export type RunTestsOptions = GlobalOptions & {
   reporter: $Keys<typeof TestReporterEnum>,
   bail?: boolean,
   keepFile?: boolean,
-|}>;
+};
 
 function validateOptions({ reporter }: RunTestsOptions): boolean {
   if (reporter && !TestReporterEnum[reporter]) {

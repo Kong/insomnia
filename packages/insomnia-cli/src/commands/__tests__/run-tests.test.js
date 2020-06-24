@@ -7,7 +7,12 @@ import type { RunTestsOptions } from '../run-tests';
 
 jest.mock('insomnia-testing');
 jest.mock('os');
-jest.mock('console');
+jest.mock('fs', () => ({
+  promises: {
+    mkdir: jest.fn(),
+    unlink: jest.fn(),
+  },
+}));
 
 describe('runInsomniaTests()', () => {
   // make flow happy
@@ -43,5 +48,21 @@ describe('runInsomniaTests()', () => {
     await runInsomniaTests(options);
 
     expect(insomniaTesting.runTestsCli).toHaveBeenCalledWith(contents, options);
+  });
+
+  it('should return false if test results have any failures', async function() {
+    mock(insomniaTesting.runTests).mockResolvedValue(false);
+
+    const result = await runInsomniaTests(base);
+
+    expect(result).toBe(false);
+  });
+
+  it('should return true if test results have no failures', async function() {
+    mock(insomniaTesting.runTests).mockResolvedValue(true);
+
+    const result = await runInsomniaTests(base);
+
+    expect(result).toBe(true);
   });
 });
