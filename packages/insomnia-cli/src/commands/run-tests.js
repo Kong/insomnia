@@ -14,6 +14,7 @@ export const TestReporterEnum = {
 export type RunTestsOptions = GlobalOptions<{|
   reporter: $Keys<typeof TestReporterEnum>,
   bail?: boolean,
+  keepFile?: boolean,
 |}>;
 
 function validateOptions({ reporter }: RunTestsOptions): boolean {
@@ -31,7 +32,7 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
     return;
   }
 
-  const { reporter, bail } = options;
+  const { reporter, bail, keepFile } = options;
 
   const suites = [
     {
@@ -55,5 +56,5 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
   ];
 
   const testFileContents = await generate(suites);
-  await runTestsCli(testFileContents, { reporter, bail });
+  return await runTestsCli(testFileContents, { reporter, bail, keepFile });
 }

@@ -3,7 +3,6 @@ import * as cli from '../cli';
 import { generateConfig } from '../commands/generate-config';
 
 jest.mock('../commands/generate-config');
-const originalError = console.error;
 
 const initInso = () => {
   return (args: string): void => {
@@ -21,11 +20,13 @@ describe('cli', () => {
   let inso = initInso();
   beforeEach(() => {
     inso = initInso();
-    (console: any).error = jest.fn();
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(process, 'exit').mockImplementation(() => {});
+    (generateConfig: any).mockResolvedValue(true);
   });
 
   afterEach(() => {
-    (console: any).error = originalError;
+    jest.restoreAllMocks();
   });
 
   it('should error when required --type option is missing', () =>

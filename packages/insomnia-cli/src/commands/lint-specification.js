@@ -9,7 +9,7 @@ export type LintSpecificationOptions = GlobalOptions<{||}>;
 export async function lintSpecification(
   identifier: string,
   options: LintSpecificationOptions,
-): Promise<void> {
+): Promise<boolean> {
   const { workingDir } = options;
 
   const db = await gitDataDirDb({ dir: workingDir, filterTypes: ['ApiSpec'] });
@@ -19,5 +19,5 @@ export async function lintSpecification(
   const spectral = new Spectral();
   const results = await spectral.run(specFromDb?.contents);
 
-  console.log(JSON.stringify(results));
+  return !!results.length;
 }

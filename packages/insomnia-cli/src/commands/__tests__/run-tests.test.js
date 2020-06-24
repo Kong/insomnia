@@ -39,7 +39,7 @@ describe('runInsomniaTests()', () => {
     const contents = 'generated test contents';
     mock(insomniaTesting.generate).mockResolvedValue(contents);
 
-    const options = { ...base, reporter: 'min', bail: true };
+    const options = { ...base, reporter: 'min', bail: true, keepFile: false };
     await runInsomniaTests(options);
 
     expect(insomniaTesting.runTestsCli).toHaveBeenCalledWith(contents, options);

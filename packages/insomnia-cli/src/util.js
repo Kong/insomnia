@@ -10,6 +10,7 @@ export type GlobalOptions<T> = {|
 export function createCommand(exitOverride: boolean, cmd?: string) {
   const command = new commander.Command(cmd).storeOptionsAsProperties(false);
 
+  // TODO: can probably remove this
   if (exitOverride) {
     return command.exitOverride();
   }
@@ -32,4 +33,14 @@ export function getAllOptions<T>(cmd: Object): T {
   } while (command);
 
   return opts;
+}
+
+export function exit(result: boolean) {
+  process.exit(result ? 1 : 0);
+}
+
+export function logErrorExit1(err: Error) {
+  console.error(err);
+
+  process.exit(1);
 }
