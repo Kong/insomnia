@@ -19,5 +19,12 @@ export async function lintSpecification(
   const spectral = new Spectral();
   const results = await spectral.run(specFromDb?.contents);
 
-  return !results.length;
+  if (results.length) {
+    results.forEach(r =>
+      console.log(`${r.range.start.line}:${r.range.start.character} - ${r.message}`),
+    );
+    return false;
+  }
+
+  return true;
 }
