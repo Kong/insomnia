@@ -19,5 +19,5 @@ export async function lintSpecification(
   const spectral = new Spectral();
   const results = await spectral.run(specFromDb?.contents);
 
-  return !!results.length;
+  return !results.length;
 }
