@@ -4,7 +4,7 @@ import { Spectral } from '@stoplight/spectral';
 import type { GlobalOptions } from '../util';
 import { gitDataDirDb } from '../db/mem-db';
 
-export type LintSpecificationOptions = GlobalOptions<{||}>;
+export type LintSpecificationOptions = GlobalOptions;
 
 export async function lintSpecification(
   identifier: string,

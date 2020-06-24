@@ -85,5 +85,5 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     .addCommand(makeTestCommand(!!exitOverride))
     .addCommand(makeLintCommand(!!exitOverride))
     .parseAsync(args)
-    .catch(err => console.log('An error occurred', err));
+    .catch(logErrorExit1);
 }

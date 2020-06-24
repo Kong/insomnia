@@ -1,7 +1,7 @@
 // @flow
 
 import type { GlobalOptions } from '../util';
-import { runTestsCli, generate } from 'insomnia-testing';
+import { runTestsCli, generateToFile } from 'insomnia-testing';
 import path from 'path';
 import os from 'os';
 import fs from 'fs';
@@ -14,11 +14,11 @@ export const TestReporterEnum = {
   progress: 'progress',
 };
 
-export type RunTestsOptions = GlobalOptions<{|
+export type RunTestsOptions = GlobalOptions & {
   reporter: $Keys<typeof TestReporterEnum>,
   bail?: boolean,
   keepFile?: boolean,
-|}>;
+};
 
 function validateOptions({ reporter }: RunTestsOptions): boolean {
   if (reporter && !TestReporterEnum[reporter]) {
@@ -30,20 +30,20 @@ function validateOptions({ reporter }: RunTestsOptions): boolean {
   return true;
 }
 
-function deleteTestFile(filePath: string, { keepFile }: RunTestsOptions) {
+async function deleteTestFile(filePath: string, { keepFile }: RunTestsOptions): Promise<void> {
   if (!filePath) {
     return;
   }
 
   if (!keepFile) {
-    fs.unlinkSync(filePath);
+    await fs.promises.unlink(filePath);
     return;
   }
 
   console.log(`Test file at ${path.normalize(filePath)}`);
 }
 
-function generateTestFile(_: RunTestsOptions): string {
+async function generateTestFile(_: RunTestsOptions): Promise<string> {
   // TODO: Read from database
   const suites = [
     {
@@ -68,12 +68,10 @@ function generateTestFile(_: RunTestsOptions): string {
     },
   ];
 
-  const testFileContents = generate(suites);
-
   // TODO: Should this generate the test file at the working-dir? I think not
   const tmpPath = path.join(os.tmpdir(), 'insomnia-cli', `${Math.random()}.test.js`);
-  fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
-  fs.writeFileSync(tmpPath, testFileContents);
+  await fs.promises.mkdir(path.dirname(tmpPath), { recursive: true });
+  await generateToFile(tmpPath, suites);
 
   return tmpPath;
 }
@@ -88,7 +86,7 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<boolea
   let tmpPath = '';
 
   try {
-    tmpPath = generateTestFile(options);
+    tmpPath = await generateTestFile(options);
 
     const results = await runTestsCli(tmpPath, { reporter, bail });
 
@@ -96,7 +94,7 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<boolea
       return false;
     }
   } finally {
-    deleteTestFile(tmpPath, options);
+    await deleteTestFile(tmpPath, options);
   }
 
   return true;

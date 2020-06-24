@@ -9,7 +9,12 @@ import type { RunTestsOptions } from '../run-tests';
 
 jest.mock('insomnia-testing');
 jest.mock('os');
-jest.mock('console');
+jest.mock('fs', () => ({
+  promises: {
+    mkdir: jest.fn(),
+    unlink: jest.fn(),
+  },
+}));
 
 describe('runInsomniaTests()', () => {
   // make flow happy
@@ -38,39 +43,37 @@ describe('runInsomniaTests()', () => {
   });
 
   it('should generate and delete temporary test file', async () => {
-    // Mock test generation
-    const contents = 'generated test contents';
-    mock(insomniaTesting.generate).mockReturnValue(contents);
-
-    const mkdirSpy = jest.spyOn(fs, 'mkdirSync').mockImplementation(() => {});
-    const writeFileSpy = jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
-    const unlinkSpy = jest.spyOn(fs, 'unlinkSync').mockImplementation(() => {});
-
     await runInsomniaTests(base);
 
     // RegExp catering for both Windows and Mac :(
     const pathRegex = /\/|\\tmpDir\/|\\0\.\d+\.test\.js/;
-    expect(mkdirSpy).toHaveBeenCalledWith(path.normalize('/tmpDir/insomnia-cli'), {
+    expect(fs.promises.mkdir).toHaveBeenCalledWith(path.normalize('/tmpDir/insomnia-cli'), {
       recursive: true,
     });
-    expect(writeFileSpy).toHaveBeenCalledWith(expect.stringMatching(pathRegex), contents);
 
+    expect(insomniaTesting.generateToFile).toHaveBeenCalledWith(
+      expect.stringMatching(pathRegex),
+      expect.anything(),
+    );
     expect(insomniaTesting.runTestsCli).toHaveBeenCalledWith(
       expect.stringMatching(pathRegex),
       base,
     );
 
-    expect(unlinkSpy).toHaveBeenCalledWith(expect.stringMatching(pathRegex));
+    expect(fs.promises.unlink).toHaveBeenCalledWith(expect.stringMatching(pathRegex));
+  });
+
+  it('should keep the generated test file', async function() {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+    await runInsomniaTests({ ...base, keepFile: true });
+
+    const pathRegex = /\/tmpDir\/insomnia-cli\/0.\d+.test.js/;
+    expect(fs.promises.unlink).not.toHaveBeenCalledWith(expect.stringMatching(pathRegex));
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Test file at'));
   });
 
   it('should forward options to insomnia-testing', async () => {
-    jest.spyOn(fs, 'mkdirSync').mockImplementation(() => {});
-    jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
-    jest.spyOn(fs, 'unlinkSync').mockImplementation(() => {});
-
-    const contents = 'generated test contents';
-    mock(insomniaTesting.generate).mockResolvedValue(contents);
-
     const options = { ...base, reporter: 'min', bail: true };
     await runInsomniaTests(options);
 
@@ -78,5 +81,21 @@ describe('runInsomniaTests()', () => {
       expect.stringContaining('.test.js'),
       options,
     );
+  });
+
+  it('should return false if test results have any failures', async function() {
+    mock(insomniaTesting.runTests).mockResolvedValue({ stats: { failures: 2 } });
+
+    const result = await runInsomniaTests(base);
+
+    expect(result).toBe(false);
+  });
+
+  it('should return true if test results have no failures', async function() {
+    mock(insomniaTesting.runTests).mockResolvedValue({ stats: { failures: 0 } });
+
+    const result = await runInsomniaTests(base);
+
+    expect(result).toBe(true);
   });
 });
