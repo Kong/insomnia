@@ -275,6 +275,8 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     const { settings } = this.props.wrapperProps;
     const { testsRunning } = this.state;
 
+    const selectableRequests = this.buildSelectableRequests();
+
     return (
       <div key={unitTest._id} className="unit-tests__tests__block">
         <div className="unit-tests__tests__block__header">
@@ -291,8 +293,10 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               id="request"
               onChange={this._handleSetActiveRequest.bind(this, unitTest)}
               value={unitTest.requestId || '__NULL__'}>
-              <option value="__NULL__">-- Select Request --</option>
-              {this.buildSelectableRequests().map(({ name, request }) => (
+              <option value="__NULL__">
+                {selectableRequests.length ? '-- Select Request --' : '-- No Requests --'}
+              </option>
+              {selectableRequests.map(({ name, request }) => (
                 <option key={request._id} value={request._id}>
                   {name}
                 </option>
@@ -303,7 +307,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
             variant="outlined"
             disabled={testsRunning && testsRunning.find(t => t._id === unitTest._id)}
             onClick={() => this._handleRunTest(unitTest)}>
-            {testsRunning && testsRunning.find(t => t._id === unitTest._id) ? 'Running... ' : 'Run'}
+            Run
           </Button>
         </div>
         <CodeEditor

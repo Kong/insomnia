@@ -23,7 +23,7 @@ const ThemedButtonGroup: React.ComponentType<RadioButtonGroupProps> = styled(Rad
     background: transparent;
     font-size: var(--font-size-sm);
     margin: 0 auto;
-    width: 4rem;
+    min-width: 4rem;
   }
 
   input:checked + span {
