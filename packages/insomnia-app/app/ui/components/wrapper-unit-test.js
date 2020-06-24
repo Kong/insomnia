@@ -3,31 +3,27 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
-import { Breadcrumb, Button, Header, RadioButtonGroup, SvgIcon } from 'insomnia-components';
+import { Breadcrumb, Button, Header, SvgIcon } from 'insomnia-components';
 import ErrorBoundary from './error-boundary';
 import CodeEditor from './codemirror/code-editor';
-import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_SPEC,
-  ACTIVITY_UNIT_TEST,
-} from './activity-bar/activity-bar';
+import type { GlobalActivity } from './activity-bar/activity-bar';
+import { ACTIVITY_HOME } from './activity-bar/activity-bar';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import type { WrapperProps } from './wrapper';
 import * as models from '../../models';
 import type { UnitTest } from '../../models/unit-test';
-import type { ApiSpec } from '../../models/api-spec';
 import { generateToFile, runTests } from 'insomnia-testing';
 import { showModal, showPrompt } from './modals';
 import Editable from './base/editable';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import SelectModal from './modals/select-modal';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
+import ActivityToggle from './activity-toggle';
 
 type Props = {|
-  wrapperProps: WrapperProps,
-  handleSetDebugActivity: (s: ApiSpec) => Promise<void>,
   children: SidebarChildObjects,
+  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>,
+  wrapperProps: WrapperProps,
 |};
 
 type State = {|
@@ -133,16 +129,12 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     await models.unitTest.update(unitTest, { code: v });
   }
 
-  async _handleDebugSpec() {
-    const {
-      handleSetDebugActivity,
-      wrapperProps: { activeApiSpec },
-    } = this.props;
-    await handleSetDebugActivity(activeApiSpec);
-  }
-
   _handleBreadcrumb() {
-    this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
+    const {
+      handleActivityChange,
+      wrapperProps: { activeWorkspace },
+    } = this.props;
+    handleActivityChange(activeWorkspace._id, ACTIVITY_HOME);
   }
 
   async _handleRunTests() {
@@ -388,7 +380,8 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { activeWorkspace, activity } = this.props.wrapperProps;
+    const { handleActivityChange } = this.props;
+    const { activeWorkspace, activity, settings } = this.props.wrapperProps;
     const { testsRunning } = this.state;
     return (
       <PageLayout
@@ -409,15 +402,11 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               </React.Fragment>
             }
             gridCenter={
-              <RadioButtonGroup
-                defaultValue={activity}
-                name="activity-toggle"
-                onChange={this._handleDebugSpec}
-                choices={[
-                  { label: 'Design', value: ACTIVITY_SPEC },
-                  { label: 'Debug', value: ACTIVITY_DEBUG },
-                  { label: 'Test', value: ACTIVITY_UNIT_TEST },
-                ]}
+              <ActivityToggle
+                activity={activity}
+                handleActivityChange={handleActivityChange}
+                settings={settings}
+                workspace={activeWorkspace}
               />
             }
             gridRight={

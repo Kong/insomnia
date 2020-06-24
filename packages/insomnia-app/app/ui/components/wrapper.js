@@ -303,33 +303,24 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
   }
 
   async _handleWorkspaceActivityChange(workspaceId: string, activeActivity: GlobalActivity) {
-    const { activity: updatedActivity } = this.props.handleSetActiveActivity(activeActivity);
-    await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: updatedActivity });
-  }
+    const { activeApiSpec, handleSetActiveActivity } = this.props;
+    const { activity: updatedActivity } = handleSetActiveActivity(activeActivity);
 
-  async _handleSetDesignActivity(workspaceId: string): Promise<void> {
-    await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_SPEC);
-  }
+    // Remember last activity on workspace for later, but only if it isn't HOME
+    if (activeActivity !== ACTIVITY_HOME) {
+      await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: updatedActivity });
+    }
 
-  async _handleSetUnitTestActivity(workspaceId: string): Promise<void> {
-    await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_UNIT_TEST);
-  }
-
-  async _handleSetDebugActivity(apiSpec: ApiSpec): Promise<void> {
-    const workspaceId = apiSpec.parentId;
-    await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_DEBUG);
-
-    setTimeout(() => {
-      // Delaying generation so design to debug mode is smooth
-      importRaw(
-        () => Promise.resolve(workspaceId), // Always import into current workspace
-        apiSpec.contents,
-      );
-    }, 1000);
-  }
-
-  _handleSetHomeActivity(): void {
-    this.props.handleSetActiveActivity(ACTIVITY_HOME);
+    // Run import for workspace if we're switching to debug mode
+    if (activeActivity === ACTIVITY_DEBUG) {
+      setTimeout(() => {
+        // Delaying generation so design to debug mode is smooth
+        importRaw(
+          () => Promise.resolve(workspaceId), // Always import into current workspace
+          activeApiSpec.contents,
+        );
+      }, 1000);
+    }
   }
 
   // Settings updaters
@@ -343,12 +334,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
   _handleImportFile(forceToWorkspace?: ForceToWorkspace): void {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
-  }
-
-  _handleUpdateSettingsUseBulkParametersEditor(
-    useBulkParametersEditor: boolean,
-  ): Promise<Settings> {
-    return sUpdate(this.props.settings, { useBulkParametersEditor });
   }
 
   _handleImportUri(uri: string, forceToWorkspace?: ForceToWorkspace): void {
@@ -772,8 +757,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
           {activity === ACTIVITY_SPEC && (
             <WrapperDesign
               gitSyncDropdown={gitSyncDropdown}
-              handleSetDebugActivity={this._handleSetDebugActivity}
-              handleSetUnitTestActivity={this._handleSetUnitTestActivity}
+              handleActivityChange={this._handleWorkspaceActivityChange}
               handleUpdateApiSpec={this._handleUpdateApiSpec}
               wrapperProps={this.props}
             />
@@ -782,7 +766,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
           {activity === ACTIVITY_UNIT_TEST && (
             <WrapperUnitTest
               wrapperProps={this.props}
-              handleSetDebugActivity={this._handleSetDebugActivity}
+              handleActivityChange={this._handleWorkspaceActivityChange}
               children={sidebarChildren}
             />
           )}
@@ -791,7 +775,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             <WrapperDebug
               forceRefreshKey={this.state.forceRefreshKey}
               gitSyncDropdown={gitSyncDropdown}
-              handleSetDesignActivity={this._handleSetDesignActivity}
+              handleActivityChange={this._handleWorkspaceActivityChange}
               handleChangeEnvironment={this._handleChangeEnvironment}
               handleDeleteResponse={this._handleDeleteResponse}
               handleDeleteResponses={this._handleDeleteResponses}

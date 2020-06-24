@@ -1,0 +1,40 @@
+// @flow
+
+import { ActivityToggleSwitch } from 'insomnia-components';
+import type { GlobalActivity } from './activity-bar/activity-bar';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from './activity-bar/activity-bar';
+import React from 'react';
+import type { Settings } from '../../models/settings';
+import type { Workspace } from '../../models/workspace';
+
+type Props = {
+  activity: GlobalActivity,
+  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => any,
+  settings: Settings,
+  workspace: Workspace,
+};
+
+export default function ActivityToggle({
+  activity,
+  handleActivityChange,
+  settings,
+  workspace,
+}: Props) {
+  const choices = [
+    { label: 'Design', value: ACTIVITY_SPEC },
+    { label: 'Debug', value: ACTIVITY_DEBUG },
+  ];
+
+  if (settings.enableUnitTestingBeta || activity === ACTIVITY_UNIT_TEST) {
+    choices.push({ label: 'Test', value: ACTIVITY_UNIT_TEST });
+  }
+
+  return (
+    <ActivityToggleSwitch
+      defaultValue={activity}
+      name="activity-toggle"
+      onChange={a => handleActivityChange(workspace._id, a)}
+      choices={choices}
+    />
+  );
+}

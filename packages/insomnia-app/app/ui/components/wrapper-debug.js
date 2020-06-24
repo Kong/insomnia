@@ -1,9 +1,10 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import { Breadcrumb, Switch, Header } from 'insomnia-components';
+import { Breadcrumb, Header } from 'insomnia-components';
 import PageLayout from './page-layout';
 import type { WrapperProps } from './wrapper';
+import type { GlobalActivity } from './activity-bar/activity-bar';
 import { ACTIVITY_HOME } from './activity-bar/activity-bar';
 import RequestPane from './request-pane';
 import ErrorBoundary from './error-boundary';
@@ -14,6 +15,7 @@ import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
 import { isInsomnia } from '../../common/constants';
+import ActivityToggle from './activity-toggle';
 
 type Props = {
   forceRefreshKey: string,
@@ -42,7 +44,7 @@ type Props = {
   handleUpdateRequestUrl: Function,
   handleUpdateSettingsShowPasswords: Function,
   handleUpdateSettingsUseBulkHeaderEditor: Function,
-  handleSetDesignActivity: (workspaceId: string) => Promise<void>,
+  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>,
   wrapperProps: WrapperProps,
 };
 
@@ -52,18 +54,11 @@ class WrapperDebug extends React.PureComponent<Props> {
     this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
-  async _handleDesign(): Promise<void> {
-    const {
-      handleSetDesignActivity,
-      wrapperProps: { activeWorkspace },
-    } = this.props;
-    await handleSetDesignActivity(activeWorkspace._id);
-  }
-
   _renderPageHeader() {
     const {
       gitSyncDropdown,
-      wrapperProps: { activeApiSpec },
+      handleActivityChange,
+      wrapperProps: { activeApiSpec, activeWorkspace, settings, activity },
     } = this.props;
 
     return (
@@ -80,12 +75,11 @@ class WrapperDebug extends React.PureComponent<Props> {
           </React.Fragment>
         }
         gridCenter={
-          <Switch
-            onClick={this._handleDesign}
-            optionItems={[
-              { label: 'DESIGN', selected: false },
-              { label: 'DEBUG', selected: true },
-            ]}
+          <ActivityToggle
+            activity={activity}
+            handleActivityChange={handleActivityChange}
+            settings={settings}
+            workspace={activeWorkspace}
           />
         }
         gridRight={gitSyncDropdown}
