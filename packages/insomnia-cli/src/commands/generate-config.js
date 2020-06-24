@@ -29,9 +29,9 @@ function validateOptions({ type }: GenerateConfigOptions): boolean {
 export async function generateConfig(
   identifier: string,
   options: GenerateConfigOptions,
-): Promise<void> {
+): Promise<boolean> {
   if (!validateOptions(options)) {
-    return;
+    return false;
   }
 
   const { type, output } = options;
@@ -44,17 +44,13 @@ export async function generateConfig(
 
   // try get from db
   const specFromDb = db.ApiSpec.get(identifier);
-  try {
-    if (specFromDb?.contents) {
-      result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
-    } else {
-      // try load as a file
-      const fileName = path.join(workingDir, identifier);
-      result = await o2k.generate(fileName, ConversionTypeMap[type]);
-    }
-  } catch (err) {
-    console.log('Config failed to generate:', err.message);
-    return;
+
+  if (specFromDb?.contents) {
+    result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
+  } else {
+    // try load as a file
+    const fileName = path.join(workingDir, identifier);
+    result = await o2k.generate(fileName, ConversionTypeMap[type]);
   }
 
   const yamlDocs = result.documents.map(d => YAML.stringify(d));
@@ -68,4 +64,6 @@ export async function generateConfig(
   } else {
     console.log(document);
   }
+
+  return true;
 }

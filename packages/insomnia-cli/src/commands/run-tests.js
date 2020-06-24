@@ -17,6 +17,7 @@ export const TestReporterEnum = {
 export type RunTestsOptions = GlobalOptions<{|
   reporter: $Keys<typeof TestReporterEnum>,
   bail?: boolean,
+  keepFile?: boolean,
 |}>;
 
 function validateOptions({ reporter }: RunTestsOptions): boolean {
@@ -29,13 +30,21 @@ function validateOptions({ reporter }: RunTestsOptions): boolean {
   return true;
 }
 
-export async function runInsomniaTests(options: RunTestsOptions): Promise<void> {
-  if (!validateOptions(options)) {
+function deleteTestFile(filePath: string, { keepFile }: RunTestsOptions) {
+  if (!filePath) {
     return;
   }
 
-  const { reporter, bail } = options;
+  if (!keepFile) {
+    fs.unlinkSync(filePath);
+    return;
+  }
 
+  console.log(`Test file at ${path.normalize(filePath)}`);
+}
+
+function generateTestFile(_: RunTestsOptions): string {
+  // TODO: Read from database
   const suites = [
     {
       name: 'Parent Suite',
@@ -50,18 +59,45 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
           ],
         },
       ],
+      tests: [
+        {
+          name: 'should return index when value is present',
+          code: 'expect([1, 2, 3].indexOf(3)).toBe(2);\nexpect(true).toBe(true);',
+        },
+      ],
     },
   ];
 
   const testFileContents = generate(suites);
 
   // TODO: Should this generate the test file at the working-dir? I think not
-  const tmpPath = path.join(os.tmpdir(), `${Math.random()}.test.js`);
+  const tmpPath = path.join(os.tmpdir(), 'insomnia-cli', `${Math.random()}.test.js`);
+  fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
   fs.writeFileSync(tmpPath, testFileContents);
 
-  try {
-    await runTestsCli(tmpPath, { reporter, bail });
-  } finally {
-    fs.unlinkSync(tmpPath);
+  return tmpPath;
+}
+
+export async function runInsomniaTests(options: RunTestsOptions): Promise<boolean> {
+  if (!validateOptions(options)) {
+    return true;
   }
+
+  const { reporter, bail } = options;
+
+  let tmpPath = '';
+
+  try {
+    tmpPath = generateTestFile(options);
+
+    const results = await runTestsCli(tmpPath, { reporter, bail });
+
+    if (!results || results.stats.failures) {
+      return false;
+    }
+  } finally {
+    deleteTestFile(tmpPath, options);
+  }
+
+  return true;
 }

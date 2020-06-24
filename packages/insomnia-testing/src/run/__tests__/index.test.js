@@ -14,6 +14,15 @@ describe('Example', () => {
 `;
 
 describe('run', () => {
+  let generatedFiles = [];
+  beforeEach(() => {
+    generatedFiles = [];
+  });
+
+  afterEach(() => {
+    generatedFiles.forEach(deleteTmp);
+  });
+
   it('runs a mocha suite', async () => {
     const testPath = writeToTmp(exampleTest);
 
@@ -35,7 +44,11 @@ describe('run', () => {
 });
 
 function writeToTmp(contents: string): string {
-  const tmpPath = path.join(os.tmpdir(), `${Math.random()}.test.js`);
+  const tmpPath = path.join(os.tmpdir(), 'insomnia-testing', `${Math.random()}.test.js`);
   fs.writeFileSync(tmpPath, contents);
   return tmpPath;
+}
+
+function deleteTmp(filePath: string): void {
+  fs.unlinkSync(filePath);
 }

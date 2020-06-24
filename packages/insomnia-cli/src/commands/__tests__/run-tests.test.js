@@ -4,6 +4,7 @@ import insomniaTesting from 'insomnia-testing';
 import { runInsomniaTests, TestReporterEnum } from '../run-tests';
 import fs from 'fs';
 import os from 'os';
+import path from 'path';
 import type { RunTestsOptions } from '../run-tests';
 
 jest.mock('insomnia-testing');
@@ -41,6 +42,7 @@ describe('runInsomniaTests()', () => {
     const contents = 'generated test contents';
     mock(insomniaTesting.generate).mockReturnValue(contents);
 
+    const mkdirSpy = jest.spyOn(fs, 'mkdirSync').mockImplementation(() => {});
     const writeFileSpy = jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
     const unlinkSpy = jest.spyOn(fs, 'unlinkSync').mockImplementation(() => {});
 
@@ -48,6 +50,9 @@ describe('runInsomniaTests()', () => {
 
     // RegExp catering for both Windows and Mac :(
     const pathRegex = /\/|\\tmpDir\/|\\0\.\d+\.test\.js/;
+    expect(mkdirSpy).toHaveBeenCalledWith(path.normalize('/tmpDir/insomnia-cli'), {
+      recursive: true,
+    });
     expect(writeFileSpy).toHaveBeenCalledWith(expect.stringMatching(pathRegex), contents);
 
     expect(insomniaTesting.runTestsCli).toHaveBeenCalledWith(
@@ -59,6 +64,7 @@ describe('runInsomniaTests()', () => {
   });
 
   it('should forward options to insomnia-testing', async () => {
+    jest.spyOn(fs, 'mkdirSync').mockImplementation(() => {});
     jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
     jest.spyOn(fs, 'unlinkSync').mockImplementation(() => {});
 
