@@ -1,0 +1,21 @@
+_id: req_wrk_012d4860c7da418a85ffea7406e1292ab410454b
+authentication: {}
+body: {}
+created: 1592254074762
+description: ""
+headers: []
+isPrivate: false
+metaSortKey: -1592254074762
+method: GET
+modified: 1592254074762
+name: /override
+parameters: []
+parentId: wrk_012d4860c7da418a85ffea7406e1292a
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingFollowRedirects: global
+settingRebuildPath: true
+settingSendCookies: true
+settingStoreCookies: true
+type: Request
+url: "{{ base_url }}/override"
