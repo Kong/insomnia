@@ -163,8 +163,6 @@ export const hotKeyRefs: { [string]: HotKeyDefinition } = {
 
   ENVIRONMENT_UNCOVER_VARIABLES: defineHotKey('environment_uncoverVariables', 'Uncover Variables'),
 
-  SHOW_DEVTOOLS: defineHotKey('showDevTools', 'Show Developer Tools'),
-
   // Designer-specific
   SHOW_SPEC_EDITOR: defineHotKey('activity_specEditor', 'Show Spec Activity'),
   SHOW_TEST: defineHotKey('activity_test', 'Show Test Activity'),
@@ -363,11 +361,6 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.FILTER_DOCUMENTS.id]: keyBinds(
     keyComb(false, false, false, true, keyboardKeys.f.keyCode),
     keyComb(true, false, false, false, keyboardKeys.f.keyCode),
-  ),
-
-  [hotKeyRefs.SHOW_DEVTOOLS.id]: keyBinds(
-    keyComb(false, true, false, true, keyboardKeys.i.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.i.keyCode),
   ),
 };
 
