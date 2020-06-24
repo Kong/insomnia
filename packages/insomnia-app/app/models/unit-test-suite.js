@@ -34,11 +34,15 @@ export function create(patch: $Shape<UnitTestSuite> = {}) {
   return db.docCreate(type, patch);
 }
 
-export function update(unitTestSuite: UnitTestSuite, patch: $Shape<UnitTestSuite> = {}) {
+export function update(unitTestSuite: UnitTestSuite, patch: $Shape<UnitTestSuite> = {}): Promise<UnitTestSuite> {
   return db.docUpdate(unitTestSuite, patch);
 }
 
-export function getByParentId(parentId: string) {
+export function remove(unitTestSuite: UnitTestSuite): Promise<void> {
+  return db.remove(unitTestSuite);
+}
+
+export function getByParentId(parentId: string): Promise<UnitTestSuite | null> {
   return db.getWhere(type, { parentId });
 }
 

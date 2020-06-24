@@ -3,7 +3,7 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
-import { Breadcrumb, Button, Header, SvgIcon } from 'insomnia-components';
+import { Breadcrumb, Button, Dropdown, DropdownItem, Header, SvgIcon } from 'insomnia-components';
 import ErrorBoundary from './error-boundary';
 import CodeEditor from './codemirror/code-editor';
 import type { GlobalActivity } from './activity-bar/activity-bar';
@@ -13,7 +13,7 @@ import type { WrapperProps } from './wrapper';
 import * as models from '../../models';
 import type { UnitTest } from '../../models/unit-test';
 import { generateToFile, runTests } from 'insomnia-testing';
-import { showModal, showPrompt } from './modals';
+import { showAlert, showModal, showPrompt } from './modals';
 import Editable from './base/editable';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import SelectModal from './modals/select-modal';
@@ -22,6 +22,7 @@ import ActivityToggle from './activity-toggle';
 
 type Props = {|
   children: SidebarChildObjects,
+  gitSyncDropdown: React.Node,
   handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>,
   wrapperProps: WrapperProps,
 |};
@@ -92,15 +93,16 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     const { activeWorkspace } = this.props.wrapperProps;
     showPrompt({
       title: 'New Test Suite',
-      defaultValue: 'My Test Suite',
-      submitName: 'Create',
-      label: 'Suite Name',
+      defaultValue: activeWorkspace.name + ' Suite',
+      submitName: 'Create Suite',
+      label: 'Test Suite Name',
       selectText: true,
       onComplete: async name => {
-        await models.unitTestSuite.create({
+        const unitTestSuite = await models.unitTestSuite.create({
           parentId: activeWorkspace._id,
           name,
         });
+        await this._handleSetActiveUnitTestSuite(unitTestSuite);
       },
     });
   }
@@ -109,7 +111,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     const { activeUnitTestSuite } = this.props.wrapperProps;
     showPrompt({
       title: 'New Test',
-      defaultValue: 'My Test',
+      defaultValue: 'Returns 200',
       submitName: 'Create Test',
       label: 'Test Name',
       selectText: true,
@@ -146,14 +148,32 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     await this._runTests([unitTest]);
   }
 
+  async _handleDeleteTest(unitTest: UnitTest) {
+    await models.unitTest.remove(unitTest);
+  }
+
   async _handleSetActiveRequest(unitTest: UnitTest, e: SyntheticEvent<HTMLSelectElement>) {
     const requestId = e.currentTarget.value === '__NULL__' ? null : e.currentTarget.value;
     await models.unitTest.update(unitTest, { requestId });
   }
 
+  async _handleDeleteUnitTestSuite(unitTestSuite: UnitTestSuite) {
+    showAlert({
+      title: `Delete ${unitTestSuite.name}`,
+      message: (
+        <span>
+          Really delete <strong>{unitTestSuite.name}</strong>?
+        </span>
+      ),
+      addCancel: true,
+      onConfirm: async () => {
+        await models.unitTestSuite.remove(unitTestSuite);
+      },
+    });
+  }
+
   async _handleSetActiveUnitTestSuite(unitTestSuite: UnitTestSuite) {
     const { activeWorkspace } = this.props.wrapperProps;
-    console.log('UPDATE', unitTestSuite);
     await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
       activeUnitTestSuiteId: unitTestSuite._id,
     });
@@ -303,12 +323,19 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               ))}
             </select>
           </div>
-          <Button
-            variant="outlined"
-            disabled={testsRunning && testsRunning.find(t => t._id === unitTest._id)}
-            onClick={() => this._handleRunTest(unitTest)}>
-            Run
-          </Button>
+          <Dropdown
+            renderButton={() => (
+              <Button variant="outlined">
+                <SvgIcon icon="gear" />
+              </Button>
+            )}>
+            <DropdownItem
+              disabled={testsRunning && testsRunning.find(t => t._id === unitTest._id)}
+              onClick={() => this._handleRunTest(unitTest)}>
+              Run Test
+            </DropdownItem>
+            <DropdownItem onClick={() => this._handleDeleteTest(unitTest)}>Delete</DropdownItem>
+          </Dropdown>
         </div>
         <CodeEditor
           dynamicHeight
@@ -375,6 +402,17 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                 <button key={s._id} onClick={this._handleSetActiveUnitTestSuite.bind(this, s)}>
                   {s.name}
                 </button>
+                <Dropdown
+                  right
+                  renderButton={() => (
+                    <button className="unit-tests__sidebar__action">
+                      <i className="fa fa-caret-down" />
+                    </button>
+                  )}>
+                  <DropdownItem onClick={this._handleDeleteUnitTestSuite.bind(this, s)}>
+                    Delete Suite
+                  </DropdownItem>
+                </Dropdown>
               </li>
             ))}
           </ul>
@@ -384,7 +422,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { handleActivityChange } = this.props;
+    const { handleActivityChange, gitSyncDropdown } = this.props;
     const { activeWorkspace, activity, settings } = this.props.wrapperProps;
     const { testsRunning } = this.state;
     return (
@@ -414,14 +452,16 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               />
             }
             gridRight={
-              <Button
-                variant="contained"
-                bg="surprise"
-                onClick={this._handleRunTests}
-                size="default"
-                disabled={testsRunning}>
-                {testsRunning ? 'Running... ' : 'Run Tests'}
-              </Button>
+              <>
+                <Button
+                  variant="contained"
+                  onClick={this._handleRunTests}
+                  size="default"
+                  disabled={testsRunning}>
+                  {testsRunning ? 'Running... ' : 'Run Tests'}
+                </Button>
+                {gitSyncDropdown}
+              </>
             }
           />
         )}

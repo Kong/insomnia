@@ -68,7 +68,7 @@
         }
 
         & > * {
-          margin-top:  var(--padding-md);
+          margin-top: var(--padding-md);
           margin-bottom: var(--padding-md);
           margin-right: var(--padding-md);
         }
@@ -81,6 +81,7 @@
         .form-control {
           width: 100%;
           max-width: 18rem;
+
           * {
             margin: 0;
           }
@@ -110,18 +111,42 @@
     flex-direction: column;
 
     li {
-      button {
+      display: flex;
+      color: var(--hl);
+
+      &:first-child {
         width: 100%;
-        padding: var(--padding-sm) var(--padding-md);
-        box-sizing: border-box;
-        color: var(--hl);
+        align-items: center;
       }
 
-      &:hover , &.active {
-        button {
-          background-color: var(--hl-sm);
+      .unit-tests__sidebar__action {
+        display: none;
+        color: var(--hl);
+
+        &:hover {
           color: var(--color-font);
         }
+      }
+
+      &:hover .unit-tests__sidebar__action {
+        display: block;
+      }
+
+      &:hover {
+        background-color: var(--hl-sm);
+        color: var(--color-font);
+      }
+
+      &.active {
+        background-color: var(--hl-xs);
+        color: var(--color-font);
+      }
+
+      button {
+        padding: 0 var(--padding-sm);
+        height: var(--line-height-xs);
+        width: 100%;
+        box-sizing: border-box;
       }
     }
   }

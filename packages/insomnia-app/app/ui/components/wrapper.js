@@ -765,6 +765,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
           {activity === ACTIVITY_UNIT_TEST && (
             <WrapperUnitTest
+              gitSyncDropdown={gitSyncDropdown}
               wrapperProps={this.props}
               handleActivityChange={this._handleWorkspaceActivityChange}
               children={sidebarChildren}

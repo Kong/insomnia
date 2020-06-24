@@ -37,7 +37,7 @@ export function migrate(doc: UnitTest): UnitTest {
   return doc;
 }
 
-export function create(patch: $Shape<UnitTest> = {}) {
+export function create(patch: $Shape<UnitTest> = {}): Promise<UnitTest> {
   if (!patch.parentId) {
     throw new Error('New UnitTest missing `parentId` ' + JSON.stringify(patch));
   }
@@ -45,11 +45,16 @@ export function create(patch: $Shape<UnitTest> = {}) {
   return db.docCreate(type, patch);
 }
 
-export function update(unitTest: UnitTest, patch: $Shape<UnitTest> = {}) {
+
+export function remove(unitTest: UnitTest): Promise<void> {
+  return db.remove(unitTest);
+}
+
+export function update(unitTest: UnitTest, patch: $Shape<UnitTest> = {}): Promise<UnitTest> {
   return db.docUpdate(unitTest, patch);
 }
 
-export function getByParentId(parentId: string) {
+export function getByParentId(parentId: string): Promise<UnitTest | null> {
   return db.getWhere(type, { parentId });
 }
 
