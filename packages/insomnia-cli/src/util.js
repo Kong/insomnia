@@ -40,6 +40,6 @@ export function logErrorExit1(err: Error) {
   process.exit(1);
 }
 
-export async function exitWrap(result: Promise<boolean>): Promise<void> {
+export async function exit(result: Promise<boolean>): Promise<void> {
   return result.then(r => process.exit(r ? 1 : 0)).catch(logErrorExit1);
 }
