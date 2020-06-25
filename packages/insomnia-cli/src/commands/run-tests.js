@@ -35,12 +35,12 @@ async function deleteTestFile(filePath: string, { keepFile }: RunTestsOptions): 
     return;
   }
 
-  if (!keepFile) {
-    await fs.promises.unlink(filePath);
+  if (keepFile) {
+    console.log(`Test file at ${path.normalize(filePath)}`);
     return;
   }
 
-  console.log(`Test file at ${path.normalize(filePath)}`);
+  await fs.promises.unlink(filePath);
 }
 
 async function generateTestFile(_: RunTestsOptions): Promise<string> {
