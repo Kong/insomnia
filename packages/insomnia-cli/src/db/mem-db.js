@@ -5,7 +5,7 @@ import YAML from 'yaml';
 import type { ApiSpec, BaseModel } from './types';
 
 export type Database = {|
-  ApiSpec: Map<string, ApiSpec>,
+  ApiSpec: Map<string, ApiSpec>, // Convert to arrays instead of Map
   Environment: Map<string, BaseModel>,
   Request: Map<string, BaseModel>,
   RequestGroup: Map<string, BaseModel>,

@@ -39,6 +39,7 @@
   "dependencies": {
     "@stoplight/spectral": "^5.4.0",
     "commander": "^5.1.0",
+    "enquirer": "^2.3.5",
     "insomnia-testing": "^2.2.9",
     "openapi-2-kong": "^2.2.9",
     "yaml": "^1.10.0"
