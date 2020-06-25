@@ -46,7 +46,7 @@ describe('runInsomniaTests()', () => {
     await runInsomniaTests(base);
 
     // RegExp catering for both Windows and Mac :(
-    const pathRegex = /\/|\\tmpDir\/|\\0\.\d+\.test\.js/;
+    const pathRegex = /\/|\\tmpDir\/|\\insomnia-cli\/|\\0\.\d+\.test\.js/;
     expect(fs.promises.mkdir).toHaveBeenCalledWith(path.normalize('/tmpDir/insomnia-cli'), {
       recursive: true,
     });
