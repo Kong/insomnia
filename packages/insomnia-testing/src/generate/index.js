@@ -18,7 +18,11 @@ export type TestSuite = {
 export function generate(suites: Array<TestSuite>): string {
   const lines = [];
 
-  lines.push(`const expect = chai.expect`);
+  lines.push(`const { expect } = chai;`);
+  lines.push('');
+  lines.push('// Clear active request before test starts (will be set inside test)');
+  lines.push(`beforeEach(() => insomnia.clearActiveRequest());`);
+  lines.push('');
 
   for (const s of suites || []) {
     lines.push(...generateSuiteLines(0, s));
@@ -46,7 +50,6 @@ function generateSuiteLines(n: number, suite: ?TestSuite): Array<string> {
   }
 
   const lines = [];
-  lines.push(indent(n, `beforeEach(() => insomnia.clearActiveRequest());`));
   lines.push(indent(n, `describe('${escapeJsStr(suite.name)}', () => {`));
 
   const suites = suite.suites || [];
@@ -86,6 +89,7 @@ function generateTestLines(n: number, test: ?Test): Array<string> {
 
   // Add helper variables that are necessary
   if (test.defaultRequestId) {
+    lines.push(indent(n, '// Set active request on global insomnia object'));
     lines.push(indent(n, `insomnia.setActiveRequestId('${test.defaultRequestId}');`));
   }
 

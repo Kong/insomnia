@@ -1,5 +1,8 @@
 const { expect } = chai;
 
+// Clear active request before test starts (will be set inside test)
+beforeEach(() => insomnia.clearActiveRequest());
+
 describe('Parent Suite', () => {
   describe('Nested Suite', () => {
     describe('Nested Again Suite', () => {
