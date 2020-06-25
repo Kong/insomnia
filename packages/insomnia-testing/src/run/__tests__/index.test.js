@@ -14,14 +14,6 @@ describe('Example', () => {
 `;
 
 describe('run', () => {
-  beforeEach(() => {
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
   it('runs a mocha suite', async () => {
     const testPath = writeToTmp(exampleTest);
 

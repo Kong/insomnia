@@ -16,14 +16,6 @@ describe('webpack config', () => {
 });
 
 describe('integration', () => {
-  beforeEach(() => {
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
   it('generates and runs basic tests', async () => {
     const testFilename = await generateToTmpFile([
       {
