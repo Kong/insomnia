@@ -1,0 +1,33 @@
+{
+  "name": "insomnia-testing",
+  "version": "2.2.6",
+  "main": "dist/index.js",
+  "scripts": {
+    "typecheck": "flow check",
+    "test": "jest",
+    "build": "webpack --config webpack.config.js --display errors-only",
+    "bootstrap": "npm run build",
+    "prepublish": "npm run build"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "verbose": false,
+    "resetMocks": true,
+    "resetModules": true
+  },
+  "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/plugin-proposal-optional-chaining": "^7.9.0",
+    "jest": "^26.0.1",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.3"
+  }
+}

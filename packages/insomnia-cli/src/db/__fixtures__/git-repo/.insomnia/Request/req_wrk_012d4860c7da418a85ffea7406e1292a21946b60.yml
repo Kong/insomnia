@@ -1,0 +1,21 @@
+_id: req_wrk_012d4860c7da418a85ffea7406e1292a21946b60
+authentication: {}
+body: {}
+created: 1592254074764
+description: ""
+headers: []
+isPrivate: false
+metaSortKey: -1592254074764
+method: GET
+modified: 1592254074764
+name: /global
+parameters: []
+parentId: fld_wrk_012d4860c7da418a85ffea7406e1292a30baa249
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingFollowRedirects: global
+settingRebuildPath: true
+settingSendCookies: true
+settingStoreCookies: true
+type: Request
+url: "{{ base_url }}/global"

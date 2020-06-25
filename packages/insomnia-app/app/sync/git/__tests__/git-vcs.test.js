@@ -144,6 +144,87 @@ describe.each(['win32', 'posix'])('Git-VCS using path.%s', type => {
     });
   });
 
+  describe('undoPendingChanges()', () => {
+    it('should remove pending changes from all tracked files', async () => {
+      const folder = path.join(GIT_INSOMNIA_DIR, 'folder');
+      const folderBarTxt = path.join(folder, 'bar.txt');
+      const originalContent = 'content';
+
+      const fs = MemPlugin.createPlugin();
+      await fs.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fs.promises.writeFile(fooTxt, originalContent);
+
+      await fs.promises.mkdir(folder);
+      await fs.promises.writeFile(folderBarTxt, originalContent);
+
+      const vcs = new GitVCS();
+      await vcs.init(GIT_CLONE_DIR, fs);
+
+      // Commit
+      await vcs.setAuthor('Karen Brown', 'karen@example.com');
+      await vcs.add(fooTxt);
+      await vcs.add(folderBarTxt);
+      await vcs.commit('First commit!');
+
+      // Change the file
+      await fs.promises.writeFile(fooTxt, 'changedContent');
+      await fs.promises.writeFile(folderBarTxt, 'changedContent');
+      expect(await vcs.status(fooTxt)).toBe('*modified');
+      expect(await vcs.status(folderBarTxt)).toBe('*modified');
+
+      // Undo
+      await vcs.undoPendingChanges();
+
+      // Ensure git doesn't recognize a change anymore
+      expect(await vcs.status(fooTxt)).toBe('unmodified');
+      expect(await vcs.status(folderBarTxt)).toBe('unmodified');
+
+      // Expect original doc to have reverted
+      expect((await fs.promises.readFile(fooTxt)).toString()).toBe(originalContent);
+      expect((await fs.promises.readFile(folderBarTxt)).toString()).toBe(originalContent);
+    });
+
+    it('should remove pending changes from select tracked files', async () => {
+      const foo1Txt = path.join(GIT_INSOMNIA_DIR, 'foo1.txt');
+      const foo2Txt = path.join(GIT_INSOMNIA_DIR, 'foo2.txt');
+      const foo3Txt = path.join(GIT_INSOMNIA_DIR, 'foo3.txt');
+      const files = [foo1Txt, foo2Txt, foo3Txt];
+      const originalContent = 'content';
+      const changedContent = 'changedContent';
+
+      const fs = MemPlugin.createPlugin();
+      await fs.promises.mkdir(GIT_INSOMNIA_DIR);
+      const vcs = new GitVCS();
+      await vcs.init(GIT_CLONE_DIR, fs);
+
+      // Write to all files
+      await Promise.all(files.map(f => fs.promises.writeFile(f, originalContent)));
+
+      // Commit all files
+      await vcs.setAuthor('Karen Brown', 'karen@example.com');
+      await Promise.all(files.map(f => vcs.add(f, originalContent)));
+      await vcs.commit('First commit!');
+
+      // Change all files
+      await Promise.all(files.map(f => fs.promises.writeFile(f, changedContent)));
+      await Promise.all(files.map(f => expect(vcs.status(foo1Txt)).resolves.toBe('*modified')));
+
+      // Undo foo1 and foo2, but not foo3
+      await vcs.undoPendingChanges([foo1Txt, foo2Txt]);
+
+      expect(await vcs.status(foo1Txt)).toBe('unmodified');
+      expect(await vcs.status(foo2Txt)).toBe('unmodified');
+
+      // Expect original doc to have reverted for foo1 and foo2
+      expect((await fs.promises.readFile(foo1Txt)).toString()).toBe(originalContent);
+      expect((await fs.promises.readFile(foo2Txt)).toString()).toBe(originalContent);
+
+      // Expect changed content for foo3
+      expect(await vcs.status(foo3Txt)).toBe('*modified');
+      expect((await fs.promises.readFile(foo3Txt)).toString()).toBe(changedContent);
+    });
+  });
+
   describe('readObjectFromTree()', () => {
     it('reads an object from tree', async () => {
       const fs = MemPlugin.createPlugin();

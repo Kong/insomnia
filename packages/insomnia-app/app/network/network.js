@@ -13,7 +13,15 @@ import mkdirp from 'mkdirp';
 import crypto from 'crypto';
 import clone from 'clone';
 import { parse as urlParse, resolve as urlResolve } from 'url';
-import { Curl, CurlAuth, CurlCode, CurlInfoDebug, CurlFeature, CurlNetrc } from 'node-libcurl';
+import {
+  Curl,
+  CurlAuth,
+  CurlCode,
+  CurlInfoDebug,
+  CurlFeature,
+  CurlNetrc,
+  CurlHttpVersion,
+} from 'node-libcurl';
 import { join as pathJoin } from 'path';
 import uuid from 'uuid';
 import * as models from '../models';
@@ -27,6 +35,7 @@ import {
   CONTENT_TYPE_FORM_URLENCODED,
   getAppVersion,
   getTempDir,
+  HttpVersions,
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
 import {
@@ -338,8 +347,34 @@ export async function _actuallySend(
         setOpt(Curl.option.URL, finalUrl);
       }
       addTimelineText('Preparing request to ' + finalUrl);
-      addTimelineText(`Using ${Curl.getVersion()}`);
       addTimelineText('Current time is ' + new Date().toISOString());
+      addTimelineText(`Using ${Curl.getVersion()}`);
+
+      // Set HTTP version
+      switch (settings.preferredHttpVersion) {
+        case HttpVersions.V1_0:
+          addTimelineText('Using HTTP 1.0');
+          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V1_0);
+          break;
+        case HttpVersions.V1_1:
+          addTimelineText('Using HTTP 1.1');
+          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V1_1);
+          break;
+        case HttpVersions.V2_0:
+          addTimelineText('Using HTTP/2');
+          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V2_0);
+          break;
+        case HttpVersions.v3:
+          addTimelineText('Using HTTP/3');
+          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.v3);
+          break;
+        case HttpVersions.default:
+          addTimelineText('Using default HTTP version');
+          break;
+        default:
+          addTimelineText(`Unknown HTTP version specified ${settings.preferredHttpVersion}`);
+          break;
+      }
 
       // Set timeout
       if (settings.timeout > 0) {

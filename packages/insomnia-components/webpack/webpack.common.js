@@ -1,16 +1,16 @@
 const path = require('path');
 
 module.exports = {
-  entry: { index: './index.js' },
+  entry: {index: './index.js'},
   target: 'web',
-  mode: 'production',
-  devtool: 'source-map',
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, '../dist'),
     filename: '[name].js',
+    sourceMapFilename: '[name].js.map',
     library: 'insomniaComponents',
     libraryTarget: 'commonjs2',
   },
+  externals: ['react', 'react-dom'],
   module: {
     rules: [
       {

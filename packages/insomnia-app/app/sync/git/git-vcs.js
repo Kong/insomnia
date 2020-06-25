@@ -229,7 +229,7 @@ export default class GitVCS {
     return true;
   }
 
-  async push(creds?: GitCredentials | null, force?: boolean = false): Promise<boolean> {
+  async push(creds?: GitCredentials | null, force: boolean = false): Promise<boolean> {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
     trackEvent('Git', 'Push');
 
@@ -315,6 +315,18 @@ export default class GitVCS {
     } else {
       await this.branch(branch, true);
     }
+  }
+
+  async undoPendingChanges(fileFilter?: Array<String>): Promise<void> {
+    console.log('[git] Undo pending changes');
+
+    await git.fastCheckout({
+      ...this._baseOpts,
+      ref: await this.getBranch(),
+      remote: 'origin',
+      force: true,
+      filepaths: fileFilter?.map(convertToPosixSep),
+    });
   }
 
   async readObjFromTree(treeOid: string, objPath: string): Object | null {
