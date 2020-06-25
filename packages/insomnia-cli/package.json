@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "commander": "^5.1.0",
-    "insomnia-testing": "file:../insomnia-testing",
+    "insomnia-testing": "^2.2.9",
     "openapi-2-kong": "^2.2.6",
     "yaml": "^1.10.0"
   }

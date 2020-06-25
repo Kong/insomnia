@@ -15,7 +15,7 @@ export const TestReporterEnum = {
 };
 
 export type RunTestsOptions = GlobalOptions<{|
-  reporter?: $Keys<typeof TestReporterEnum>,
+  reporter: $Keys<typeof TestReporterEnum>,
   bail?: boolean,
 |}>;
 
