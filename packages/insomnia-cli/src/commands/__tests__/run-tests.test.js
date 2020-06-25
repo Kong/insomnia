@@ -48,9 +48,7 @@ describe('runInsomniaTests()', () => {
     await runInsomniaTests(base);
 
     // RegExp catering for both Windows and Mac :(
-    const pathRegex = new RegExp(
-      ['', 'tmpDir', '0.\\d+.test.js'].join(`${path.posix.sep}|${path.win32.sep}`),
-    );
+    const pathRegex = new RegExp(path.normalize('/tmpDir/0.*.test.js').replace('*', '\\d+'));
     expect(writeFileSpy).toHaveBeenCalledWith(expect.stringMatching(pathRegex), contents);
 
     expect(insomniaTesting.runTests).toHaveBeenCalledWith(expect.stringMatching(pathRegex), base);
