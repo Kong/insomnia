@@ -19,6 +19,7 @@ import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import SelectModal from './modals/select-modal';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import ActivityToggle from './activity-toggle';
+import * as network from '../../network/network';
 
 type Props = {|
   children: SidebarChildObjects,
@@ -53,20 +54,24 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     esversion: 8, // ES8 syntax (async/await, etc)
   };
 
-  autocompleteConstants(): Array<{ name: string, value: () => Promise<string> }> {
-    const requestPromptOptions = this.buildSelectableRequests().map(({ name, request }) => ({
-      name: name,
-      value:
-        `const response = await insomnia.send('${request._id}');\n` +
-        'expect(response.status).to.equal(200);',
-    }));
+  autocompleteConstants(unitTest: UnitTest): Array<{ name: string, value: () => Promise<string> }> {
+    const sendReqSnippet = (requestId: string) => {
+      for (let i = 1; i < 10; i++) {
+        const variableName = `response${i}`;
+        if (!unitTest.code.includes(`const ${variableName}`)) {
+          return (
+            `const ${variableName} = await insomnia.send(${requestId});\n` +
+            `expect(${variableName}.status).to.equal(200);`
+          );
+        }
+      }
+    };
 
     return [
       {
         name: 'Send Current Request',
-        value:
-          'const response = await insomnia.send();\n' + 'expect(response.status).to.equal(200);',
         displayValue: '',
+        value: sendReqSnippet(''),
       },
       {
         name: 'Send Request By ID',
@@ -79,7 +84,11 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               value: '__NULL__',
               options: [
                 { name: '-- Select Request --', value: '__NULL__' },
-                ...requestPromptOptions,
+                ...this.buildSelectableRequests().map(({ name, request }) => ({
+                  name: name,
+                  displayValue: '',
+                  value: sendReqSnippet(`'${request._id}'`),
+                })),
               ],
               onDone: v => resolve(v),
             });
@@ -184,7 +193,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
   }
 
   async _runTests(unitTests: Array<UnitTest>) {
-    const { requests, activeWorkspace } = this.props.wrapperProps;
+    const { requests, activeWorkspace, activeEnvironment } = this.props.wrapperProps;
 
     this.setState({ testsRunning: unitTests });
 
@@ -206,7 +215,25 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       },
     ]);
     const results = await runTests(p, {
-      requests: [...requests],
+      requests,
+      sendRequest: async requestId => {
+        const res = await network.send(requestId, activeEnvironment ? activeEnvironment._id : null);
+
+        const headersObj = {};
+        for (const h of res.headers || []) {
+          const name = h.name || '';
+          headersObj[name.toLowerCase()] = h.value || '';
+        }
+
+        const bodyBuffer = await models.response.getBodyBuffer(res);
+
+        return {
+          status: res.statusCode,
+          statusMessage: res.statusMessage,
+          data: bodyBuffer ? bodyBuffer.toString('utf8') : undefined,
+          headers: headersObj,
+        };
+      },
     });
 
     await models.unitTestResult.create({
@@ -345,7 +372,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           indentWithTabs={settings.editorIndentWithTabs}
           keyMap={settings.editorKeyMap}
           defaultValue={unitTest ? unitTest.code : ''}
-          getAutocompleteSnippets={() => this.autocompleteConstants()}
+          getAutocompleteSnippets={() => this.autocompleteConstants(unitTest)}
           lintOptions={WrapperUnitTest.lintOptions}
           onChange={this._handleUnitTestCodeChange.bind(this, unitTest)}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}

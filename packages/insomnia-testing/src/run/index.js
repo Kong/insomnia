@@ -6,7 +6,7 @@ import os from 'os';
 import fs from 'fs';
 import path from 'path';
 import { JavaScriptReporter } from './javaScriptReporter';
-import type { Request } from './insomnia';
+import type { InsomniaOptions, Request, Response } from './insomnia';
 import Insomnia from './insomnia';
 
 type TestErr = {
@@ -49,13 +49,13 @@ type TestResults = {
  */
 export async function runTests(
   filename: string | Array<string>,
-  options: { requests?: Array<Request> } = {},
+  options: InsomniaOptions = {},
 ): Promise<TestResults> {
   return new Promise(resolve => {
     // Add global `insomnia` helper.
     // This is the only way to add new globals to the Mocha environment as far
     // as I can tell
-    global.insomnia = new Insomnia(options.requests);
+    global.insomnia = new Insomnia(options);
     global.chai = chai;
 
     const mocha = new Mocha({

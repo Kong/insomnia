@@ -5,6 +5,9 @@ export type Request = {
   _id: string,
   url?: string,
   method?: string,
+  body?: {
+    text?: string,
+  },
   headers?: Array<{
     name: string,
     value: string,
@@ -22,6 +25,11 @@ export type Response = {
   },
 };
 
+export type InsomniaOptions = {
+  requests?: Array<Request>,
+  sendRequest?: (requestId: string) => Promise<Response>,
+};
+
 /**
  * An instance of Insomnia will be exposed as a global variable during
  * tests, and will provide a bunch of utility functions for sending
@@ -30,12 +38,14 @@ export type Response = {
 export default class Insomnia {
   requests: Array<$Shape<Request>>;
   activeRequestId: string | null;
+  sendRequest: ((requestId: string) => Promise<Response>) | null;
 
-  /**
-   * @param requests - map of ID -> Request to be used when referencing requests by Id
-   */
-  constructor(requests?: Array<$Shape<Request>>) {
-    this.requests = requests || [];
+  constructor(options: InsomniaOptions = {}) {
+    console.log('RUNNING TEST WITH', options);
+    this.requests = options.requests || [];
+    this.sendRequest = options.sendRequest || null;
+
+    // Things that are set per test
     this.activeRequestId = null;
   }
 
@@ -66,6 +76,11 @@ export default class Insomnia {
       throw new Error('Request not provided to test');
     }
 
+    if (this.sendRequest) {
+      console.log('Using send helper');
+      return this.sendRequest(req._id);
+    }
+
     const axiosHeaders = {};
     for (const h of req.headers || []) {
       if (h.disabled) {
@@ -78,6 +93,7 @@ export default class Insomnia {
     const options = {
       url: req.url || '',
       method: req.method || 'GET',
+      data: req.body ? req.body.text : null,
       headers: axiosHeaders,
 
       // Don't follow redirects,

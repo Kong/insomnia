@@ -302,17 +302,17 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     return null;
   }
 
-  async _handleWorkspaceActivityChange(workspaceId: string, activeActivity: GlobalActivity) {
-    const { activeApiSpec, handleSetActiveActivity } = this.props;
-    const { activity: updatedActivity } = handleSetActiveActivity(activeActivity);
+  async _handleWorkspaceActivityChange(workspaceId: string, nextActivity: GlobalActivity) {
+    const { activity, activeApiSpec, handleSetActiveActivity } = this.props;
+    handleSetActiveActivity(nextActivity);
 
     // Remember last activity on workspace for later, but only if it isn't HOME
-    if (activeActivity !== ACTIVITY_HOME) {
-      await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: updatedActivity });
+    if (nextActivity !== ACTIVITY_HOME) {
+      await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: nextActivity });
     }
 
-    // Run import for workspace if we're switching to debug mode
-    if (activeActivity === ACTIVITY_DEBUG) {
+    // Import the spec if we're switching away from the spec editing activity
+    if (activity === ACTIVITY_SPEC) {
       setTimeout(() => {
         // Delaying generation so design to debug mode is smooth
         importRaw(
