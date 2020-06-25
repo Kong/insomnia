@@ -4,7 +4,6 @@ import insomniaTesting from 'insomnia-testing';
 import { runInsomniaTests, TestReporterEnum } from '../run-tests';
 import fs from 'fs';
 import os from 'os';
-import path from 'path';
 import type { RunTestsOptions } from '../run-tests';
 
 jest.mock('insomnia-testing');
@@ -48,7 +47,7 @@ describe('runInsomniaTests()', () => {
     await runInsomniaTests(base);
 
     // RegExp catering for both Windows and Mac :(
-    const pathRegex = new RegExp(path.normalize('/tmpDir/0.*.test.js').replace('*', '\\d+'));
+    const pathRegex = /\/|\\tmpDir\/|\\0\.\d+\.test\.js/;
     expect(writeFileSpy).toHaveBeenCalledWith(expect.stringMatching(pathRegex), contents);
 
     expect(insomniaTesting.runTests).toHaveBeenCalledWith(expect.stringMatching(pathRegex), base);
