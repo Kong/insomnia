@@ -76,12 +76,12 @@ export async function runTests(
       case 'list':
         mocha.reporter(Mocha.reporters.List);
         break;
-      case 'js':
-        mocha.reporter(JavaScriptReporter);
-        break;
       case 'spec':
-      default:
         mocha.reporter(Mocha.reporters.Spec);
+        break;
+      case 'js':
+      default:
+        mocha.reporter(JavaScriptReporter);
         break;
     }
 
