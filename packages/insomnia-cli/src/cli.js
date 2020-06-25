@@ -12,7 +12,7 @@ function makeGenerateCommand(exitOverride: boolean) {
 
   // inso generate config -t kubernetes config.yaml
   generate
-    .command('config [identifier]')
+    .command('config <identifier>')
     .description('Generate configuration from an api spec')
     .requiredOption(
       '-t, --type <value>',
