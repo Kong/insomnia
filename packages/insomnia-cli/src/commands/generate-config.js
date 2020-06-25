@@ -5,6 +5,9 @@ import path from 'path';
 import fs from 'fs';
 import type { GlobalOptions } from '../util';
 import { gitDataDirDb } from '../db/mem-db';
+import type { ApiSpec } from '../db/types';
+import type { Database } from '../db/mem-db';
+import { AutoComplete } from 'enquirer';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
@@ -26,8 +29,28 @@ function validateOptions({ type }: GenerateConfigOptions): boolean {
   return true;
 }
 
+async function getApiSpecFromIdentifier(db: Database, identifier?: string): Promise<?ApiSpec> {
+  const allSpecs = Array.from(db.ApiSpec.values());
+
+  if (identifier) {
+    const result = allSpecs.find(s => s.fileName === identifier || s._id.startsWith(identifier));
+    return result;
+  }
+
+  const prompt = new AutoComplete({
+    name: 'apiSpec',
+    message: 'Select an API Specification',
+    choices: ['Dummy spec - spc_123456', 'I exist (not) - spc_789123'].concat(
+      allSpecs.map(s => `${s.fileName} - ${s._id.substr(0, 10)}`),
+    ),
+  });
+
+  const [, idIsh] = (await prompt.run()).split(' - ');
+  return allSpecs.find(s => s._id.startsWith(idIsh));
+}
+
 export async function generateConfig(
-  identifier: string,
+  identifier?: string,
   options: GenerateConfigOptions,
 ): Promise<boolean> {
   if (!validateOptions(options)) {
@@ -43,14 +66,16 @@ export async function generateConfig(
   let result: ConversionResult;
 
   // try get from db
-  const specFromDb = db.ApiSpec.get(identifier);
+  const specFromDb = await getApiSpecFromIdentifier(db, identifier);
 
   if (specFromDb?.contents) {
     result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
-  } else {
+  } else if (identifier) {
     // try load as a file
     const fileName = path.join(workingDir, identifier);
     result = await o2k.generate(fileName, ConversionTypeMap[type]);
+  } else {
+    return false;
   }
 
   const yamlDocs = result.documents.map(d => YAML.stringify(d));
