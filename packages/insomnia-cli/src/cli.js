@@ -12,11 +12,12 @@ function makeGenerateCommand(exitOverride: boolean) {
 
   // inso generate config -t kubernetes config.yaml
   generate
-    .command('config <identifier>')
+    .command('config [identifier]')
     .description('Generate configuration from an api spec')
     .requiredOption(
       '-t, --type <value>',
       `type of configuration to generate, options are [${conversionTypes}]`,
+      'declarative',
     )
     .option('-o, --output <path>', 'save the generated config to a file')
     .action((identifier, cmd) => exit(generateConfig(identifier, getAllOptions(cmd))));
@@ -68,7 +69,7 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
   createCommand(!!exitOverride)
     .version(getVersion(), '-v, --version')
     .description('A CLI for Insomnia!')
-    .option('--working-dir <dir>', 'set working directory')
+    .option('-w, --working-dir <dir>', 'set working directory')
     .addCommand(makeGenerateCommand(!!exitOverride))
     .addCommand(makeTestCommand(!!exitOverride))
     .addCommand(makeLintCommand(!!exitOverride))

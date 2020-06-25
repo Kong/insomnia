@@ -27,7 +27,7 @@ function validateOptions({ type }: GenerateConfigOptions): boolean {
 }
 
 export async function generateConfig(
-  identifier: string,
+  identifier?: string,
   options: GenerateConfigOptions,
 ): Promise<boolean> {
   if (!validateOptions(options)) {
