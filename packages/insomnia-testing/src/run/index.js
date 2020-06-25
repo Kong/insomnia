@@ -6,7 +6,7 @@ import os from 'os';
 import fs from 'fs';
 import path from 'path';
 import { JavaScriptReporter } from './javaScriptReporter';
-import type { InsomniaOptions, Request, Response } from './insomnia';
+import type { InsomniaOptions } from './insomnia';
 import Insomnia from './insomnia';
 
 type TestErr = {

@@ -11,7 +11,7 @@ export const canSync = true;
 type BaseUnitTestResult = {
   test: string,
 
-  // Points to UnitTest
+  // Points to Workspace
   parentId: string,
 
   // Points to Response that triggered it. Will be null if it was run

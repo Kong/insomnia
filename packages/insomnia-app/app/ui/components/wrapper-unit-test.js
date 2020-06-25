@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import path from 'path';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
@@ -20,6 +21,7 @@ import SelectModal from './modals/select-modal';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import ActivityToggle from './activity-toggle';
 import * as network from '../../network/network';
+import { getTempDir } from '../../common/constants';
 
 type Props = {|
   children: SidebarChildObjects,
@@ -56,9 +58,9 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
 
   autocompleteConstants(unitTest: UnitTest): Array<{ name: string, value: () => Promise<string> }> {
     const sendReqSnippet = (requestId: string) => {
-      for (let i = 1; i < 10; i++) {
+      for (let i = 1; i < 100; i++) {
         const variableName = `response${i}`;
-        if (!unitTest.code.includes(`const ${variableName}`)) {
+        if (!unitTest.code.includes(`const ${variableName} =`)) {
           return (
             `const ${variableName} = await insomnia.send(${requestId});\n` +
             `expect(${variableName}.status).to.equal(200);`
@@ -197,7 +199,6 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
 
     this.setState({ testsRunning: unitTests });
 
-    const p = '/Users/greg.schier/Desktop/test.js';
     const tests = [];
     for (const t of unitTests) {
       tests.push({
@@ -207,13 +208,9 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       });
     }
 
-    await generateToFile(p, [
-      {
-        name: 'My Suite',
-        suites: [],
-        tests,
-      },
-    ]);
+    const p = path.join(getTempDir(), `${Math.random()}.test.js`);
+    await generateToFile(p, [{ name: 'My Suite', suites: [], tests }]);
+
     const results = await runTests(p, {
       requests,
       sendRequest: async requestId => {

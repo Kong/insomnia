@@ -41,7 +41,6 @@ export default class Insomnia {
   sendRequest: ((requestId: string) => Promise<Response>) | null;
 
   constructor(options: InsomniaOptions = {}) {
-    console.log('RUNNING TEST WITH', options);
     this.requests = options.requests || [];
     this.sendRequest = options.sendRequest || null;
 
@@ -76,9 +75,9 @@ export default class Insomnia {
       throw new Error('Request not provided to test');
     }
 
-    if (this.sendRequest) {
-      console.log('Using send helper');
-      return this.sendRequest(req._id);
+    const { sendRequest } = this;
+    if (typeof sendRequest === 'function') {
+      return sendRequest(req._id);
     }
 
     const axiosHeaders = {};
@@ -107,7 +106,7 @@ export default class Insomnia {
     };
 
     const resp = await axios.request(options);
-    console.log('RESPONSE', resp);
+    console.log('[tests] Received response', { response: resp });
 
     return {
       status: resp.status,
