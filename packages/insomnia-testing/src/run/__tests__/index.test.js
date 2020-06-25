@@ -45,6 +45,7 @@ describe('run', () => {
 
 function writeToTmp(contents: string): string {
   const tmpPath = path.join(os.tmpdir(), 'insomnia-testing', `${Math.random()}.test.js`);
+  fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
   fs.writeFileSync(tmpPath, contents);
   return tmpPath;
 }
