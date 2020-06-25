@@ -205,8 +205,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
       swaggerUiSpec = {};
     }
 
-    const lintErrorsExist = !!lintMessages.find(c => c.type === 'error');
-
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}

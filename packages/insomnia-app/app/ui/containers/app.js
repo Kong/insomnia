@@ -1367,7 +1367,6 @@ function mapStateToProps(state, props) {
     requestMetas,
     requestVersions,
     requests,
-    unitTests,
     workspaceMetas,
     workspaces,
   } = entitiesLists;

@@ -47,7 +47,13 @@ const StyledRadioButtonBtn: React.ComponentType<{}> = styled.label`
   }
 `;
 
-export default function RadioButtonGroup({ name, choices, defaultValue, onChange, className }: Props) {
+export default function RadioButtonGroup({
+  name,
+  choices,
+  defaultValue,
+  onChange,
+  className,
+}: Props) {
   const handleChange = e => {
     if (typeof onChange !== 'function') {
       return;

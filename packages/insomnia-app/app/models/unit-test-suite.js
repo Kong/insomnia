@@ -34,7 +34,10 @@ export function create(patch: $Shape<UnitTestSuite> = {}) {
   return db.docCreate(type, patch);
 }
 
-export function update(unitTestSuite: UnitTestSuite, patch: $Shape<UnitTestSuite> = {}): Promise<UnitTestSuite> {
+export function update(
+  unitTestSuite: UnitTestSuite,
+  patch: $Shape<UnitTestSuite> = {},
+): Promise<UnitTestSuite> {
   return db.docUpdate(unitTestSuite, patch);
 }
 

@@ -39,6 +39,8 @@ describe.each(['win32', 'posix'])('NeDBPlugin using path.%s', type => {
         models.environment.type,
         models.request.type,
         models.requestGroup.type,
+        models.unitTest.type,
+        models.unitTestSuite.type,
         models.workspace.type,
       ]);
 

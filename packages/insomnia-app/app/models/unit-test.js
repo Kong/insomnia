@@ -45,7 +45,6 @@ export function create(patch: $Shape<UnitTest> = {}): Promise<UnitTest> {
   return db.docCreate(type, patch);
 }
 
-
 export function remove(unitTest: UnitTest): Promise<void> {
   return db.remove(unitTest);
 }

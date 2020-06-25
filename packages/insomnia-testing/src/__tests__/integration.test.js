@@ -103,11 +103,13 @@ describe('integration', () => {
     ]);
 
     const { stats } = await runTests(testFilename, {
-      requests: [{
-        _id: 'req_123',
-        url: '301.insomnia.rest',
-        method: 'get',
-      }],
+      requests: [
+        {
+          _id: 'req_123',
+          url: '301.insomnia.rest',
+          method: 'get',
+        },
+      ],
     });
 
     expect(stats.tests).toBe(2);
