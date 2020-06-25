@@ -13,7 +13,7 @@ Options:
 Commands:
   generate             Code generation utilities
   run                  Execution utilities
-  lint                 Linting capabilities
+  lint                 Linting utilities
   help [command]       display help for command"
 `;
 
@@ -30,7 +30,7 @@ Options:
 Commands:
   generate             Code generation utilities
   run                  Execution utilities
-  lint                 Linting capabilities
+  lint                 Linting utilities
   help [command]       display help for command"
 `;
 
@@ -72,14 +72,14 @@ Options:
 Commands:
   generate             Code generation utilities
   run                  Execution utilities
-  lint                 Linting capabilities
+  lint                 Linting utilities
   help [command]       display help for command"
 `;
 
 exports[`Snapshot for "inso lint -h" 1`] = `
 "Usage: inso lint [options] [command]
 
-Linting capabilities
+Linting utilities
 
 Options:
   -h, --help         display help for command
