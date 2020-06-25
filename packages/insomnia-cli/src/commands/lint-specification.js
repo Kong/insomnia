@@ -25,10 +25,10 @@ export async function lintSpecification(
   const results = await spectral.run(specFromDb?.contents);
 
   if (results.length) {
+    console.log(`${results.length} lint errors found. \n`);
+
     results.forEach(r =>
-      console.log(
-        `${r.range.start.line}:${r.range.start.character} - ${r.message} - severity: ${r.severity}`,
-      ),
+      console.log(`${r.range.start.line}:${r.range.start.character} - ${r.message}`),
     );
     return false;
   }
