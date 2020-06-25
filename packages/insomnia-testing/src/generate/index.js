@@ -6,7 +6,7 @@ import fs from 'fs';
 export type Test = {
   name: string,
   code: string,
-  defaultRequestId: string,
+  defaultRequestId: string | null,
 };
 
 export type TestSuite = {
@@ -88,9 +88,10 @@ function generateTestLines(n: number, test: ?Test): Array<string> {
   lines.push(indent(n, `it('${escapeJsStr(test.name)}', async () => {`));
 
   // Add helper variables that are necessary
-  if (test.defaultRequestId) {
+  const { defaultRequestId } = test;
+  if (typeof defaultRequestId === 'string') {
     lines.push(indent(n, '// Set active request on global insomnia object'));
-    lines.push(indent(n, `insomnia.setActiveRequestId('${test.defaultRequestId}');`));
+    lines.push(indent(n, `insomnia.setActiveRequestId('${defaultRequestId}');`));
   }
 
   // Add user-defined test source

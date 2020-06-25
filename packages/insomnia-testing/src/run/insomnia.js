@@ -87,7 +87,7 @@ export default class Insomnia {
       validateStatus: () => true,
 
       // Force NodeJS adapter or Electron will default to XMLHttpRequest
-      adapter: global.require('axios/lib/adapters/http'),
+      adapter: require('axios/lib/adapters/http'),
     };
 
     const resp = await axios.request(options);

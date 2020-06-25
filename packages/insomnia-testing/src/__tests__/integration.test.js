@@ -18,10 +18,12 @@ describe('integration', () => {
           {
             name: 'should return -1 when the value is not present',
             code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.equal(true);',
+            defaultRequestId: null,
           },
           {
             name: 'is an empty test',
             code: '',
+            defaultRequestId: null,
           },
         ],
       },
@@ -43,10 +45,12 @@ describe('integration', () => {
           {
             name: 'should return -1 when the value is not present',
             code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.be.true;',
+            defaultRequestId: null,
           },
           {
             name: 'is an empty test',
             code: '',
+            defaultRequestId: null,
           },
         ],
       },
@@ -84,6 +88,7 @@ describe('integration', () => {
         tests: [
           {
             name: 'Tests sending a request',
+            defaultRequestId: null,
             code: [
               `const resp = await insomnia.send({ url: '200.insomnia.rest' });`,
               `expect(resp.status).to.equal(200);`,
@@ -93,8 +98,17 @@ describe('integration', () => {
           },
           {
             name: 'Tests referencing request by ID',
+            defaultRequestId: null,
             code: [
               `const resp = await insomnia.send('req_123');`,
+              `expect(resp.status).to.equal(301);`,
+            ].join('\n'),
+          },
+          {
+            name: 'Tests referencing default request',
+            defaultRequestId: 'req_123',
+            code: [
+              `const resp = await insomnia.send();`,
               `expect(resp.status).to.equal(301);`,
             ].join('\n'),
           },
@@ -102,7 +116,7 @@ describe('integration', () => {
       },
     ]);
 
-    const { stats } = await runTests(testFilename, {
+    const { stats, failures, passes } = await runTests(testFilename, {
       requests: [
         {
           _id: 'req_123',
@@ -112,9 +126,11 @@ describe('integration', () => {
       ],
     });
 
-    expect(stats.tests).toBe(2);
+    expect(failures).toEqual([]);
+    expect(passes.length).toBe(3);
+    expect(stats.tests).toBe(3);
     expect(stats.failures).toBe(0);
-    expect(stats.passes).toBe(2);
+    expect(stats.passes).toBe(3);
   });
 });
 
