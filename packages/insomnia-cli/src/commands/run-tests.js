@@ -88,14 +88,8 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<boolea
   try {
     tmpPath = await generateTestFile(options);
 
-    const results = await runTestsCli(tmpPath, { reporter, bail });
-
-    if (!results || results.stats.failures) {
-      return false;
-    }
+    return await runTestsCli(tmpPath, { reporter, bail });
   } finally {
     await deleteTestFile(tmpPath, options);
   }
-
-  return true;
 }

@@ -84,7 +84,7 @@ describe('runInsomniaTests()', () => {
   });
 
   it('should return false if test results have any failures', async function() {
-    mock(insomniaTesting.runTests).mockResolvedValue({ stats: { failures: 2 } });
+    mock(insomniaTesting.runTestsCli).mockResolvedValue(false);
 
     const result = await runInsomniaTests(base);
 
@@ -92,7 +92,7 @@ describe('runInsomniaTests()', () => {
   });
 
   it('should return true if test results have no failures', async function() {
-    mock(insomniaTesting.runTests).mockResolvedValue({ stats: { failures: 0 } });
+    mock(insomniaTesting.runTestsCli).mockResolvedValue(true);
 
     const result = await runInsomniaTests(base);
 
