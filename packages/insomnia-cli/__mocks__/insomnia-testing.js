@@ -4,4 +4,5 @@ module.exports = {
   ...mod,
   generate: jest.fn(),
   runTests: jest.fn(),
+  runTestsCli: jest.fn(),
 };

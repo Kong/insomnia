@@ -30,7 +30,7 @@ describe('runInsomniaTests()', () => {
 
     await runInsomniaTests(({ reporter: 'invalid' }: Object));
 
-    expect(insomniaTesting.runTests).not.toHaveBeenCalled();
+    expect(insomniaTesting.runTestsCli).not.toHaveBeenCalled();
     expect(consoleSpy).toHaveBeenCalledWith(
       'Reporter "invalid" not unrecognized. Options are [dot, list, spec, min, progress].',
     );
@@ -50,7 +50,10 @@ describe('runInsomniaTests()', () => {
     const pathRegex = /\/|\\tmpDir\/|\\0\.\d+\.test\.js/;
     expect(writeFileSpy).toHaveBeenCalledWith(expect.stringMatching(pathRegex), contents);
 
-    expect(insomniaTesting.runTests).toHaveBeenCalledWith(expect.stringMatching(pathRegex), base);
+    expect(insomniaTesting.runTestsCli).toHaveBeenCalledWith(
+      expect.stringMatching(pathRegex),
+      base,
+    );
 
     expect(unlinkSpy).toHaveBeenCalledWith(expect.stringMatching(pathRegex));
   });
@@ -65,7 +68,7 @@ describe('runInsomniaTests()', () => {
     const options = { ...base, reporter: 'min', bail: true };
     await runInsomniaTests(options);
 
-    expect(insomniaTesting.runTests).toHaveBeenCalledWith(
+    expect(insomniaTesting.runTestsCli).toHaveBeenCalledWith(
       expect.stringContaining('.test.js'),
       options,
     );
