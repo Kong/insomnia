@@ -34,21 +34,26 @@ export async function generateConfig(
     return;
   }
 
-  const { type, output, workingDir } = options;
+  const { type, output } = options;
+
+  const workingDir = options.workingDir || '.';
 
   const db = await gitDataDirDb({ dir: workingDir, filterTypes: ['ApiSpec'] });
 
   let result: ConversionResult;
 
+  // try get from db
   const specFromDb = db.ApiSpec.get(identifier);
   try {
     if (specFromDb?.contents) {
       result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
     } else {
-      result = await o2k.generate(identifier, ConversionTypeMap[type]);
+      // try load as a file
+      const fileName = path.join(workingDir, identifier);
+      result = await o2k.generate(fileName, ConversionTypeMap[type]);
     }
   } catch (err) {
-    console.log('Config failed to generate', err);
+    console.log('Config failed to generate:', err.message);
     return;
   }
 
@@ -58,7 +63,7 @@ export async function generateConfig(
   const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
 
   if (output) {
-    const fullOutputPath = path.resolve(output);
+    const fullOutputPath = path.join(workingDir, output);
     fs.writeFileSync(fullOutputPath, document);
   } else {
     console.log(document);
