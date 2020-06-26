@@ -10,7 +10,7 @@ export async function lintSpecification(
   identifier?: string,
   options: LintSpecificationOptions,
 ): Promise<boolean> {
-  const { workingDir } = options;
+  const workingDir = options.workingDir || '.';
 
   const db = await gitDataDirDb({ dir: workingDir, filterTypes: ['ApiSpec'] });
 
