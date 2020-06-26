@@ -517,8 +517,10 @@ function Sidebar(props: Props) {
                     </StyledItem>
                     <StyledBlockItem>
                       <span></span>&nbsp;&nbsp;
-                      {Object.keys(path[1]).map((method, index) => (
-                        <span key={index} className={`method-${method}`}>{method}</span>
+                      {Object.keys((path[1]: any)).map((method, index) => (
+                        <span key={index} className={`method-${method}`}>
+                          {method}
+                        </span>
                       ))}
                     </StyledBlockItem>
                   </React.Fragment>
