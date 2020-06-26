@@ -2,14 +2,14 @@
 import fs from 'fs';
 import path from 'path';
 import YAML from 'yaml';
-import type { ApiSpec } from './types';
+import type { ApiSpec, BaseModel } from './types';
 
-type Database = {|
+export type Database = {|
   ApiSpec: Map<string, ApiSpec>,
-  Environment: Map<string, Object>,
-  Request: Map<string, Object>,
-  RequestGroup: Map<string, Object>,
-  Workspace: Map<string, Object>,
+  Environment: Map<string, BaseModel>,
+  Request: Map<string, BaseModel>,
+  RequestGroup: Map<string, BaseModel>,
+  Workspace: Map<string, BaseModel>,
 |};
 
 export const emptyDb = (): Database => ({
@@ -21,13 +21,13 @@ export const emptyDb = (): Database => ({
 });
 
 type Options = {
-  dir?: string,
+  dir: string,
   filterTypes?: Array<$Keys<Database>>,
 };
 
 export const gitDataDirDb = async ({ dir, filterTypes }: Options): Promise<Database> => {
   const db = emptyDb();
-  const insomniaDir = path.normalize(path.join(dir || '.', '.insomnia'));
+  const insomniaDir = path.join(dir, '.insomnia');
 
   if (!fs.existsSync(insomniaDir)) {
     // TODO: control logging with verbose flag
