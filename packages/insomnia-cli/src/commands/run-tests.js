@@ -1,7 +1,7 @@
 // @flow
 
 import type { GlobalOptions } from '../util';
-import { runTests, generate } from 'insomnia-testing';
+import { runTestsCli, generate } from 'insomnia-testing';
 import path from 'path';
 import os from 'os';
 import fs from 'fs';
@@ -60,7 +60,7 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
   fs.writeFileSync(tmpPath, testFileContents);
 
   try {
-    await runTests(tmpPath, { reporter, bail });
+    await runTestsCli(tmpPath, { reporter, bail });
   } finally {
     fs.unlinkSync(tmpPath);
   }
