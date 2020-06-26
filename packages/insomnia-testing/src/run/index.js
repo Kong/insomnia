@@ -53,7 +53,7 @@ export type TestResults = {
  * Run a test file using Mocha
  */
 export async function runTests(
-  generatedTestSource: string | Array<string>,
+  testSrc: string | Array<string>,
   options: InsomniaOptions = {},
 ): Promise<TestResults> {
   return new Promise(resolve => {
@@ -70,7 +70,7 @@ export async function runTests(
 
     mocha.reporter(JavaScriptReporter);
 
-    for (const src of generatedTestSource) {
+    for (const src of Array.isArray(testSrc) ? testSrc : [testSrc]) {
       mocha.addFile(writeTempFile(src));
     }
 
