@@ -4,10 +4,7 @@ import YAML from 'yaml';
 import path from 'path';
 import fs from 'fs';
 import type { GlobalOptions } from '../util';
-import { gitDataDirDb } from '../db/mem-db';
-import type { ApiSpec } from '../db/types';
-import type { Database } from '../db/mem-db';
-import { AutoComplete } from 'enquirer';
+import { getApiSpecFromIdentifier, gitDataDirDb } from '../db/mem-db';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
@@ -27,26 +24,6 @@ function validateOptions({ type }: GenerateConfigOptions): boolean {
   }
 
   return true;
-}
-
-async function getApiSpecFromIdentifier(db: Database, identifier?: string): Promise<?ApiSpec> {
-  const allSpecs = Array.from(db.ApiSpec.values());
-
-  if (identifier) {
-    const result = allSpecs.find(s => s.fileName === identifier || s._id.startsWith(identifier));
-    return result;
-  }
-
-  const prompt = new AutoComplete({
-    name: 'apiSpec',
-    message: 'Select an API Specification',
-    choices: ['Dummy spec - spc_123456', 'I exist (not) - spc_789123'].concat(
-      allSpecs.map(s => `${s.fileName} - ${s._id.substr(0, 10)}`),
-    ),
-  });
-
-  const [, idIsh] = (await prompt.run()).split(' - ');
-  return allSpecs.find(s => s._id.startsWith(idIsh));
 }
 
 export async function generateConfig(

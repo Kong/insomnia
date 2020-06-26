@@ -53,7 +53,7 @@ function makeLintCommand(exitOverride: boolean) {
 
   // inso lint spec
   lint
-    .command('spec <identifier>')
+    .command('spec [identifier]')
     .description('Lint an API Specification')
     .action((identifier, cmd) => exit(lintSpecification(identifier, getAllOptions(cmd))));
 
