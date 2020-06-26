@@ -1,3 +1,3 @@
 // @flow
-export { generate } from './src/generate';
+export { generate, generateToFile } from './src/generate';
 export { runTests } from './src/run';
