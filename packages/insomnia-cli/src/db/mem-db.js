@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import YAML from 'yaml';
 import type { ApiSpec, BaseModel } from './types';
+import { AutoComplete } from 'enquirer';
 
 export type Database = {|
   ApiSpec: Map<string, ApiSpec>, // Convert to arrays instead of Map
@@ -63,3 +64,26 @@ export const gitDataDirDb = async ({ dir, filterTypes }: Options): Promise<Datab
 
   return db;
 };
+
+export async function getApiSpecFromIdentifier(
+  db: Database,
+  identifier?: string,
+): Promise<?ApiSpec> {
+  const allSpecs = Array.from(db.ApiSpec.values());
+
+  if (identifier) {
+    const result = allSpecs.find(s => s.fileName === identifier || s._id.startsWith(identifier));
+    return result;
+  }
+
+  const prompt = new AutoComplete({
+    name: 'apiSpec',
+    message: 'Select an API Specification',
+    choices: ['Dummy spec - spc_123456', 'I exist (not) - spc_789123'].concat(
+      allSpecs.map(s => `${s.fileName} - ${s._id.substr(0, 10)}`),
+    ),
+  });
+
+  const [, idIsh] = (await prompt.run()).split(' - ');
+  return allSpecs.find(s => s._id.startsWith(idIsh));
+}

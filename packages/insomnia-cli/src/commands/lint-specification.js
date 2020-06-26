@@ -2,29 +2,37 @@
 
 import { Spectral } from '@stoplight/spectral';
 import type { GlobalOptions } from '../util';
-import { gitDataDirDb } from '../db/mem-db';
+import { getApiSpecFromIdentifier, gitDataDirDb } from '../db/mem-db';
 
 export type LintSpecificationOptions = GlobalOptions;
 
 export async function lintSpecification(
-  identifier: string,
+  identifier?: string,
   options: LintSpecificationOptions,
 ): Promise<boolean> {
   const { workingDir } = options;
 
   const db = await gitDataDirDb({ dir: workingDir, filterTypes: ['ApiSpec'] });
 
-  const specFromDb = db.ApiSpec.get(identifier);
+  const specFromDb = await getApiSpecFromIdentifier(db, identifier);
+
+  if (!specFromDb) {
+    console.log(`Specification not found. :(`);
+    return false;
+  }
 
   const spectral = new Spectral();
   const results = await spectral.run(specFromDb?.contents);
 
   if (results.length) {
     results.forEach(r =>
-      console.log(`${r.range.start.line}:${r.range.start.character} - ${r.message}`),
+      console.log(
+        `${r.range.start.line}:${r.range.start.character} - ${r.message} - severity: ${r.severity}`,
+      ),
     );
     return false;
   }
 
+  console.log(`No linting errors. Yay!`);
   return true;
 }
