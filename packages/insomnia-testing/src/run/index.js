@@ -53,7 +53,7 @@ export type TestResults = {
  * Run a test file using Mocha
  */
 export async function runTests(
-  filename: string | Array<string>,
+  generatedTestSource: string | Array<string>,
   options: InsomniaOptions = {},
 ): Promise<TestResults> {
   return new Promise(resolve => {
@@ -70,9 +70,8 @@ export async function runTests(
 
     mocha.reporter(JavaScriptReporter);
 
-    const filenames = Array.isArray(filename) ? filename : [filename];
-    for (const f of filenames) {
-      mocha.addFile(writeTempFile(f));
+    for (const src of generatedTestSource) {
+      mocha.addFile(writeTempFile(src));
     }
 
     const runner = mocha.run(() => {
@@ -87,10 +86,10 @@ export async function runTests(
 
 /**
  * Copy test to tmp dir and return the file path
- * @param filename
+ * @param src - source code to write to file
  */
-function writeTempFile(filename: string): string {
+function writeTempFile(src: string): string {
   const p = path.join(os.tmpdir(), `${Math.random()}-test.js`);
-  fs.copyFileSync(filename, p);
+  fs.writeFileSync(p, src);
   return p;
 }

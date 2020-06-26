@@ -1,16 +1,13 @@
 // @flow
 import axios from 'axios';
-import type { TestSuite } from '../generate';
-import { generateToFile } from '../generate';
+import { generate } from '../generate';
 import { runTests } from '../run';
-import path from 'path';
-import os from 'os';
 
 jest.mock('axios');
 
 describe('integration', () => {
   it('generates and runs basic tests', async () => {
-    const testFilename = await generateToTmpFile([
+    const testSrc = await generate([
       {
         name: 'Example TestSuite',
         suites: [],
@@ -29,7 +26,7 @@ describe('integration', () => {
       },
     ]);
 
-    const { stats } = await runTests(testFilename);
+    const { stats } = await runTests(testSrc);
 
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
@@ -37,7 +34,7 @@ describe('integration', () => {
   });
 
   it('generates and runs more than once', async () => {
-    const testFilename = await generateToTmpFile([
+    const testSrc = await generate([
       {
         name: 'Example TestSuite',
         suites: [],
@@ -56,13 +53,13 @@ describe('integration', () => {
       },
     ]);
 
-    const { stats, failures } = await runTests(testFilename);
+    const { stats, failures } = await runTests(testSrc);
     expect(failures).toEqual([]);
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
     expect(stats.passes).toBe(2);
 
-    const { stats: stats2 } = await runTests(testFilename);
+    const { stats: stats2 } = await runTests(testSrc);
     expect(failures).toEqual([]);
     expect(stats2.tests).toBe(2);
     expect(stats2.failures).toBe(0);
@@ -81,7 +78,7 @@ describe('integration', () => {
       headers: { location: '/blog' },
     });
 
-    const testFilename = await generateToTmpFile([
+    const testSrc = await generate([
       {
         name: 'Example TestSuite',
         suites: [],
@@ -116,7 +113,7 @@ describe('integration', () => {
       },
     ]);
 
-    const { stats, failures, passes } = await runTests(testFilename, {
+    const { stats, failures, passes } = await runTests(testSrc, {
       requests: [
         {
           _id: 'req_123',
@@ -133,9 +130,3 @@ describe('integration', () => {
     expect(stats.passes).toBe(3);
   });
 });
-
-export async function generateToTmpFile(suites: Array<TestSuite>): Promise<string> {
-  const p = path.join(os.tmpdir(), `${Math.random()}.test.js`);
-  await generateToFile(p, suites);
-  return p;
-}
