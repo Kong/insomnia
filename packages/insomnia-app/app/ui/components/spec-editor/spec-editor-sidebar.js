@@ -2,9 +2,11 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import YAML from 'yaml';
+import SpecEditorSidebarItem from './spec-editor-sidebar-item';
+import { Sidebar } from 'insomnia-components';
 import type { ApiSpec } from '../../../models/api-spec';
 import { trackEvent } from '../../../common/analytics';
-import SpecEditorSidebarItem from './spec-editor-sidebar-item';
+const jsyaml = require('js-yaml');
 
 type Props = {|
   apiSpec: ApiSpec,
@@ -36,9 +38,14 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     handleSetSelection(pos.start.col - 1, pos.end.col - 1, pos.start.line - 1, pos.end.line - 1);
   }
 
+  componentDidMount() {
+    // const { apiSpec } = this.props;
+  }
+
   componentDidUpdate() {
     const { apiSpec } = this.props;
     const { error } = this.state;
+
     if (apiSpec.type === 'json') {
       this.setState({
         error:
@@ -118,12 +125,21 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
 
   render() {
     const { error } = this.state;
+
     if (error) {
       return <p className="notice error margin-sm">{error}</p>;
     }
 
     const { apiSpec } = this.props;
     const specCst = YAML.parseCST(apiSpec.contents);
+
+    let specJSON = {};
+
+    if (apiSpec.contentType === 'yaml') {
+      specJSON = YAML.parse(apiSpec.contents);
+    } else {
+      specJSON = jsyaml.safeLoad(apiSpec.contents);
+    }
 
     if (!specCst) {
       return null;
@@ -135,9 +151,14 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
       return null;
     }
 
-    const navigationEl = document.contents.map(v => this.renderNext(v, '$'));
+    // const navigationEl = document.contents.map(v => this.renderNext(v, '$'));
 
-    return <div className="spec-editor-sidebar">{navigationEl}</div>;
+    return (
+      <div className="spec-editor-sidebar">
+        <Sidebar jsonData={specJSON} />
+        {/* navigationEl */}
+      </div>
+    );
   }
 }
 
