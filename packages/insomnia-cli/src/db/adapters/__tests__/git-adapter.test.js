@@ -27,16 +27,9 @@ describe('gitAdapter()', () => {
     expect(db?.Workspace.length).toBe(0);
   });
 
-  it('should return null if data directory not found', async () => {
-    const workingDir = path.join(fixturesPath, 'git-repo-without-insomnia');
+  it('should return null if data directory is invalid', async () => {
+    const workingDir = path.join(fixturesPath, 'nedb');
     const db = await gitAdapter(workingDir);
     expect(db).toBe(null);
-  });
-
-  it('should ignore unexpected type directories', async () => {
-    const workingDir = path.join(fixturesPath, 'git-repo-malformed-insomnia');
-    const db = await gitAdapter(workingDir);
-
-    expect(db?.Workspace.length).toBe(1);
   });
 });
