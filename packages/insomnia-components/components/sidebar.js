@@ -214,67 +214,71 @@ const StyledPanel: React.ComponentType<{}> = styled(motion.div)`
 
 function Sidebar(props: Props) {
   // Section Expansion & Filtering
+  const useToggle = (state, set) => React.useCallback(() => set(!state), [set, state]);
+
   // Info
   const [infoSec, setInfoSec] = useState(false);
-  const toggleInfoSec = () => setInfoSec(!infoSec);
+  const toggleInfoSec = useToggle(infoSec, setInfoSec);
 
   // Servers
   const [serversSec, setServersSec] = useState(false);
-  const toggleServersSec = () => setServersSec(!serversSec);
+  const toggleServersSec = useToggle(serversSec, setServersSec);
   const [serversFilter, setServersFilter] = useState(false);
-  const toggleServersFilter = () => setServersFilter(!serversFilter);
+  const toggleServersFilter = useToggle(serversFilter, setServersFilter);
   const [serverFilter, setServerFilter] = useState('');
 
   // Paths
   const [pathsSec, setPathsSec] = useState(false);
-  const togglePathsSec = () => setPathsSec(!pathsSec);
+  const togglePathsSec = useToggle(pathsSec, setPathsSec);
   const [pathsFilter, setPathsFilter] = useState(false);
-  const togglePathsFilter = () => setPathsFilter(!pathsFilter);
+  const togglePathsFilter = useToggle(pathsFilter, setPathsFilter);
   const [pathFilter, setPathFilter] = useState('');
 
   // Schemas
   const [schemasSec, setSchemasSec] = useState(false);
-  const toggleSchemasSec = () => setSchemasSec(!schemasSec);
+  const toggleSchemasSec = useToggle(schemasSec, setSchemasSec);
   const [schemasFilter, setSchemasFilter] = useState(false);
-  const toggleSchemasFilter = () => setSchemasFilter(!schemasFilter);
+  const toggleSchemasFilter = useToggle(schemasFilter, setSchemasFilter);
   const [schemaFilter, setSchemaFilter] = useState('');
 
   // Requests
   const [requestsSec, setRequestsSec] = useState(false);
-  const toggleRequestsSec = () => setRequestsSec(!requestsSec);
+  const toggleRequestsSec = useToggle(requestsSec, setRequestsSec);
   const [requestsFilter, setRequestsFilter] = useState(false);
-  const toggleRequestsFilter = () => setRequestsFilter(!requestsFilter);
+  const toggleRequestsFilter = useToggle(requestsFilter, setRequestsFilter);
   const [requestFilter, setRequestFilter] = useState('');
 
   // Responses
   const [responsesSec, setResponsesSec] = useState(false);
-  const toggleResponsesSec = () => setResponsesSec(!responsesSec);
+  const toggleResponsesSec = useToggle(responsesSec, setResponsesSec);
   const [responsesFilter, setResponsesFilter] = useState(false);
-  const toggleResponsesFilter = () => setResponsesFilter(!responsesFilter);
+  const toggleResponsesFilter = useToggle(responsesFilter, setResponsesFilter);
   const [responseFilter, setResponseFilter] = useState('');
 
   // Parameters
   const [parametersSec, setParametersSec] = useState(false);
-  const toggleParametersSec = () => setParametersSec(!parametersSec);
+  const toggleParametersSec = useToggle(parametersSec, setParametersSec);
   const [parametersFilter, setParametersFilter] = useState(false);
-  const toggleParametersFilter = () => setParametersFilter(!parametersFilter);
+  const toggleParametersFilter = useToggle(parametersFilter, setParametersFilter);
   const [parameterFilter, setParameterFilter] = useState('');
 
   // Headers
   const [headersSec, setHeadersSec] = useState(false);
-  const toggleHeadersSec = () => setHeadersSec(!headersSec);
+  const toggleHeadersSec = useToggle(headersSec, setHeadersSec);
   const [headersFilter, setHeadersFilter] = useState(false);
-  const toggleHeadersFilter = () => setHeadersFilter(!headersFilter);
+  const toggleHeadersFilter = useToggle(headersFilter, setHeadersFilter);
   const [headerFilter, setHeaderFilter] = useState('');
 
   // Security
   const [securitiesSec, setSecuritiesSec] = useState(false);
-  const toggleSecuritiesSec = () => setSecuritiesSec(!securitiesSec);
+  const toggleSecuritiesSec = useToggle(securitiesSec, setSecuritiesSec);
   const [securitiesFilter, setSecuritiesFilter] = useState(false);
-  const toggleSecuritiesFilter = () => setSecuritiesFilter(!securitiesFilter);
+  const toggleSecuritiesFilter = useToggle(securitiesFilter, setSecuritiesFilter);
   const [securityFilter, setSecurityFilter] = useState('');
 
   // Section Visibility
+
+
   const [pathsVisible, setPathsVisible] = useState(true);
   const handlePathsVisibleClick = e => {
     e.stopPropagation();
@@ -459,8 +463,8 @@ function Sidebar(props: Props) {
                 placeholder="Filter..."
               />
             </StyledFilter>
-            {servers.map((server, index) => (
-              <React.Fragment key={index}>
+            {servers.map(server => (
+              <React.Fragment key={server.url}>
                 {server.url.includes(serverFilter) && (
                   <StyledItem>
                     <div></div>
@@ -504,8 +508,8 @@ function Sidebar(props: Props) {
                 placeholder="Filter..."
               />
             </StyledFilter>
-            {paths.map((path, index) => (
-              <React.Fragment key={index}>
+            {paths.map(path => (
+              <React.Fragment key={path[0]}>
                 {path[0].includes(pathFilter) && (
                   <React.Fragment>
                     <StyledItem>
@@ -517,8 +521,8 @@ function Sidebar(props: Props) {
                     </StyledItem>
                     <StyledBlockItem>
                       <span></span>&nbsp;&nbsp;
-                      {Object.keys((path[1]: any)).map((method, index) => (
-                        <span key={index} className={`method-${method}`}>
+                      {Object.keys((path[1]: any)).map(method => (
+                        <span key={method} className={`method-${method}`}>
                           {method}
                         </span>
                       ))}
@@ -559,8 +563,8 @@ function Sidebar(props: Props) {
                 placeholder="Filter..."
               />
             </StyledFilter>
-            {Object.keys(requestBodies).map((requestName, index, value) => (
-              <React.Fragment key={index}>
+            {Object.keys(requestBodies).map((requestName, value) => (
+              <React.Fragment key={requestName}>
                 {requestName.toLowerCase().includes(requestFilter) && (
                   <React.Fragment>
                     <StyledItem>
@@ -574,8 +578,8 @@ function Sidebar(props: Props) {
                         </Tooltip>
                       </span>
                     </StyledItem>
-                    {Object.keys(requestBodies[requestName].content).map((requestFormat, index) => (
-                      <React.Fragment key={index}>
+                    {Object.keys(requestBodies[requestName].content).map(requestFormat => (
+                      <React.Fragment key={requestFormat}>
                         <StyledItem>
                           <div></div>
                           <div>
@@ -587,8 +591,8 @@ function Sidebar(props: Props) {
                         <StyledBlockItem>
                           {Object.keys(
                             requestBodies[requestName].content[requestFormat].examples,
-                          ).map((requestExample, index) => (
-                            <div className="method-post" key={index}>
+                          ).map(requestExample => (
+                            <div className="method-post" key={requestExample}>
                               {requestExample}
                             </div>
                           ))}
@@ -632,8 +636,8 @@ function Sidebar(props: Props) {
                 placeholder="Filter..."
               />
             </StyledFilter>
-            {Object.keys(responses).map((response, index) => (
-              <React.Fragment key={index}>
+            {Object.keys(responses).map(response => (
+              <React.Fragment key={response}>
                 {response.toLowerCase().includes(responseFilter) && (
                   <StyledItem>
                     <div></div>
@@ -683,8 +687,8 @@ function Sidebar(props: Props) {
               />
             </StyledFilter>
 
-            {Object.keys(parameters).map((parameter, index) => (
-              <React.Fragment key={index}>
+            {Object.keys(parameters).map(parameter => (
+              <React.Fragment key={parameter}>
                 {parameter.toLowerCase().includes(parameterFilter) && (
                   <StyledItem>
                     <div></div>
@@ -734,8 +738,8 @@ function Sidebar(props: Props) {
               />
             </StyledFilter>
 
-            {Object.keys(headers).map((header, index) => (
-              <React.Fragment key={index}>
+            {Object.keys(headers).map(header => (
+              <React.Fragment key={header}>
                 {header.toLowerCase().includes(headerFilter) && (
                   <StyledItem>
                     <div></div>
@@ -783,8 +787,8 @@ function Sidebar(props: Props) {
                 placeholder="Filter..."
               />
             </StyledFilter>
-            {Object.keys(props.jsonData.components.schemas).map((schema, index) => (
-              <React.Fragment key={index}>
+            {Object.keys(props.jsonData.components.schemas).map(schema => (
+              <React.Fragment key={schema}>
                 {schema.toLowerCase().includes(schemaFilter) && (
                   <StyledItem>
                     <div></div>
@@ -828,8 +832,8 @@ function Sidebar(props: Props) {
                 placeholder="Filter..."
               />
             </StyledFilter>
-            {Object.keys(props.jsonData.components.securitySchemes).map((scheme, index) => (
-              <React.Fragment key={index}>
+            {Object.keys(props.jsonData.components.securitySchemes).map(scheme => (
+              <React.Fragment key={scheme}>
                 {scheme.toLowerCase().includes(securityFilter) && (
                   <StyledItem>
                     <div></div>
