@@ -1,12 +1,4 @@
-import { send } from '../app/network/network';
-import { init as initDb } from '../app/common/database';
-import { types as modelTypes } from '../app/models';
-
-initDb(modelTypes()).then(
-  () => {},
-  err => {
-    console.log('Failed to initialize DB', err);
-  },
-);
-
-export { send };
+export { send } from '../app/network/network';
+export { init as initDb } from '../app/common/database';
+export { types as modelTypes } from '../app/models';
+export { getBodyBuffer } from '../app/models/response';

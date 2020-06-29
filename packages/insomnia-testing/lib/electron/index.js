@@ -10,7 +10,6 @@ function getPath(name) {
   throw new Error('Invalid path:' + name);
 }
 
-console.log('HELLO');
 module.exports = {
   app: {
     getPath,

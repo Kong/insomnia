@@ -1,6 +1,5 @@
 // @flow
 import axios from 'axios';
-import { send } from '../../lib';
 
 export type Request = {
   _id: string,
@@ -43,7 +42,7 @@ export default class Insomnia {
 
   constructor(options: InsomniaOptions = {}) {
     this.requests = options.requests || [];
-    this.sendRequest = options.sendRequest || sendInsomniaRequest;
+    this.sendRequest = options.sendRequest || null;
 
     // Things that are set per test
     this.activeRequestId = null;
@@ -66,6 +65,11 @@ export default class Insomnia {
     // Default to active request if nothing is specified
     reqOrId = reqOrId || this.activeRequestId;
 
+    const { sendRequest } = this;
+    if (typeof sendRequest === 'function' && typeof reqOrId === 'string') {
+      return sendRequest(reqOrId);
+    }
+
     const req = typeof reqOrId === 'string' ? this.requests.find(r => r._id === reqOrId) : reqOrId;
 
     if (typeof reqOrId === 'string' && !req) {
@@ -74,11 +78,6 @@ export default class Insomnia {
 
     if (!req) {
       throw new Error('Request not provided to test');
-    }
-
-    const { sendRequest } = this;
-    if (typeof sendRequest === 'function') {
-      return sendRequest(req._id);
     }
 
     const axiosHeaders = {};
@@ -116,9 +115,4 @@ export default class Insomnia {
       headers: resp.headers,
     };
   }
-}
-
-export async function sendInsomniaRequest(requestId: string): Promise<$Shape<Response>> {
-  const response = await send(requestId, 'env_env_91c8596946272a35b2fd5a0bab565ef4350297a8_sub');
-  return response;
 }
