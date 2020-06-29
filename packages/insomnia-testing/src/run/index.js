@@ -1,9 +1,14 @@
 // @flow
 
 import Mocha from 'mocha';
-import { JavaScriptReporter } from './javaScriptReporter';
+import chai from 'chai';
+import os from 'os';
+import fs from 'fs';
+import mkdirp from 'mkdirp';
+import path from 'path';
+import { JavaScriptReporter } from './java-script-reporter';
+import type { InsomniaOptions } from './insomnia';
 import Insomnia from './insomnia';
-import type { Request } from './insomnia';
 
 type TestErr = {
   generatedMessage: boolean,
@@ -14,16 +19,21 @@ type TestErr = {
   operator: string,
 };
 
+type NodeErr = {
+  message: string,
+  stack: string,
+};
+
 type TestResult = {
   title: string,
   fullTitle: string,
   file: string,
   duration: number,
   currentRetry: number,
-  err: TestErr | {},
+  err: TestErr | NodeErr | {},
 };
 
-type TestResults = {
+export type TestResults = {
   stats: {
     suites: number,
     tests: number,
@@ -44,24 +54,26 @@ type TestResults = {
  * Run a test file using Mocha
  */
 export async function runTests(
-  filename: string | Array<string>,
-  options: { requests?: { [string]: Request } } = {},
+  testSrc: string | Array<string>,
+  options: InsomniaOptions = {},
 ): Promise<TestResults> {
   return new Promise(resolve => {
     // Add global `insomnia` helper.
     // This is the only way to add new globals to the Mocha environment as far
     // as I can tell
-    global.insomnia = new Insomnia(options.requests);
+    global.insomnia = new Insomnia(options);
+    global.chai = chai;
 
     const mocha = new Mocha({
-      global: ['insomnia'],
+      timeout: 5000,
+      global: ['insomnia', 'chai'],
     });
 
     mocha.reporter(JavaScriptReporter);
 
-    const filenames = Array.isArray(filename) ? filename : [filename];
-    for (const f of filenames) {
-      mocha.addFile(f);
+    const sources = Array.isArray(testSrc) ? testSrc : [testSrc];
+    for (const src of sources) {
+      mocha.addFile(writeTempFile(src));
     }
 
     const runner = mocha.run(() => {
@@ -69,6 +81,28 @@ export async function runTests(
 
       // Remove global since we don't need it anymore
       delete global.insomnia;
+      delete global.chai;
+
+      // Clean up temp files
+      for (const f of mocha.files) {
+        fs.unlink(f, err => {
+          if (err) {
+            console.log('Failed to clean up test file', f, err);
+          }
+        });
+      }
     });
   });
+}
+
+/**
+ * Copy test to tmp dir and return the file path
+ * @param src - source code to write to file
+ */
+function writeTempFile(src: string): string {
+  const root = path.join(os.tmpdir(), 'insomnia-testing');
+  mkdirp.sync(root);
+  const p = path.join(root, `${Math.random()}-test.js`);
+  fs.writeFileSync(p, src);
+  return p;
 }
