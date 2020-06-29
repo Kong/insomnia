@@ -4,7 +4,8 @@ import YAML from 'yaml';
 import path from 'path';
 import fs from 'fs';
 import type { GlobalOptions } from '../util';
-import { getApiSpecFromIdentifier, gitDataDirDb } from '../db/mem-db';
+import { loadDb } from '../db';
+import { getApiSpecFromIdentifier } from '../db/prompts';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
@@ -34,11 +35,9 @@ export async function generateConfig(
     return false;
   }
 
-  const { type, output } = options;
+  const { type, output, appDataDir, workingDir } = options;
 
-  const workingDir = options.workingDir || '.';
-
-  const db = await gitDataDirDb({ dir: workingDir, filterTypes: ['ApiSpec'] });
+  const db = await loadDb({ workingDir, appDataDir, filterTypes: ['ApiSpec'] });
 
   let result: ConversionResult;
 
@@ -49,7 +48,7 @@ export async function generateConfig(
     result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
   } else if (identifier) {
     // try load as a file
-    const fileName = path.join(workingDir, identifier);
+    const fileName = path.join(workingDir || '.', identifier);
     result = await o2k.generate(fileName, ConversionTypeMap[type]);
   } else {
     return false;
@@ -61,7 +60,7 @@ export async function generateConfig(
   const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
 
   if (output) {
-    const fullOutputPath = path.join(workingDir, output);
+    const fullOutputPath = path.join(workingDir || '.', output);
     await fs.promises.writeFile(fullOutputPath, document);
   } else {
     console.log(document);

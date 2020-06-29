@@ -3,6 +3,7 @@ import commander from 'commander';
 import * as packageJson from '../package.json';
 
 export type GlobalOptions = {
+  appDataDir?: string,
   workingDir?: string,
 };
 

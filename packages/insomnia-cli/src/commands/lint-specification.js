@@ -1,18 +1,16 @@
 // @flow
-
 import { Spectral } from '@stoplight/spectral';
 import type { GlobalOptions } from '../util';
-import { getApiSpecFromIdentifier, gitDataDirDb } from '../db/mem-db';
+import { loadDb } from '../db';
+import { getApiSpecFromIdentifier } from '../db/prompts';
 
 export type LintSpecificationOptions = GlobalOptions;
 
 export async function lintSpecification(
   identifier?: string,
-  options: LintSpecificationOptions,
+  { workingDir, appDataDir }: LintSpecificationOptions,
 ): Promise<boolean> {
-  const workingDir = options.workingDir || '.';
-
-  const db = await gitDataDirDb({ dir: workingDir, filterTypes: ['ApiSpec'] });
+  const db = await loadDb({ workingDir, appDataDir, filterTypes: ['ApiSpec'] });
 
   const specFromDb = await getApiSpecFromIdentifier(db, identifier);
 
