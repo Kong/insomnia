@@ -1,15 +1,11 @@
 // @flow
 
-// These types should come from a shared location (maybe insomnia-importers?)
-// They represent the models that are read from an Insomnia data source
-// eg. git data directory, insomnia export format, etc
+// Simplified and extracted from insomnia-app/app/models/*
 
 export type BaseModel = {
   _id: string,
   type: string,
   parentId: string,
-  modified: number,
-  created: number,
 };
 
 type BaseApiSpec = {
@@ -17,7 +13,5 @@ type BaseApiSpec = {
   contentType: 'json' | 'yaml',
   contents: string,
 };
-
-export const SpecName = 'ApiSpec';
 
 export type ApiSpec = BaseModel & BaseApiSpec;
