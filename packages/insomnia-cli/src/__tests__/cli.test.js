@@ -1,8 +1,8 @@
 // @flow
 import * as cli from '../cli';
-import { generateConfig } from '../commands/generate';
+import { generateConfig } from '../commands/generate-config';
 
-jest.mock('../commands/generate');
+jest.mock('../commands/generate-config');
 const originalError = console.error;
 
 const initInso = () => {
@@ -53,7 +53,7 @@ describe('cli', () => {
   });
 
   it('should call generateConfig with global option', () => {
-    inso('generate config -t kubernetes --workingDir testing/dir file.yaml');
+    inso('generate config -t kubernetes --working-dir testing/dir file.yaml');
     expect(generateConfig).toHaveBeenCalledWith(
       'file.yaml',
       expect.objectContaining({
