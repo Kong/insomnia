@@ -33,7 +33,7 @@ type TestResult = {
   err: TestErr | NodeErr | {},
 };
 
-export type JavascriptTestResults = {
+export type TestResults = {
   stats: {
     suites: number,
     tests: number,
@@ -129,6 +129,6 @@ export async function runTestsCli(
 export async function runTests(
   testSrc: string | Array<string>,
   options: InsomniaOptions = {},
-): Promise<JavascriptTestResults> {
+): Promise<TestResults> {
   return await runInternal(testSrc, options, JavaScriptReporter, runner => runner.testResults);
 }
