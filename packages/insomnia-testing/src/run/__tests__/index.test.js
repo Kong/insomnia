@@ -4,19 +4,19 @@ import type { TestResults } from '../index';
 import { runTests } from '../index';
 
 const exampleTest = `
-const assert = require('assert');
+const { expect } = chai;
 describe('Example', () => {
-  it('should be true', async () => assert.equal(true, true));
-  it('should fail', async () => assert.equal(true, false));
+  it('should be true', async () => expect(true).to.equal(true));
+  it('should fail', async () => expect(true).to.equal(false));
 });
 `;
 
 const exampleTestWithRequest = `
-const assert = require('assert');
+const { expect } = chai;
 describe('Example', () => {
   it('should be true', async () => {
     const resp = await insomnia.send('req_123');
-    assert.equal(resp.status, 200);
+    expect(resp.status).to.equal(200);
   });
 });
 `;

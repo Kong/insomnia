@@ -4,6 +4,7 @@ import Mocha from 'mocha';
 import chai from 'chai';
 import os from 'os';
 import fs from 'fs';
+import mkdirp from 'mkdirp';
 import path from 'path';
 import { JavaScriptReporter } from './java-script-reporter';
 import type { InsomniaOptions } from './insomnia';
@@ -70,7 +71,8 @@ export async function runTests(
 
     mocha.reporter(JavaScriptReporter);
 
-    for (const src of Array.isArray(testSrc) ? testSrc : [testSrc]) {
+    const sources = Array.isArray(testSrc) ? testSrc : [testSrc];
+    for (const src of sources) {
       mocha.addFile(writeTempFile(src));
     }
 
@@ -80,6 +82,15 @@ export async function runTests(
       // Remove global since we don't need it anymore
       delete global.insomnia;
       delete global.chai;
+
+      // Clean up temp files
+      for (const f of mocha.files) {
+        fs.unlink(f, err => {
+          if (err) {
+            console.log('Failed to clean up test file', f, err);
+          }
+        });
+      }
     });
   });
 }
@@ -89,7 +100,9 @@ export async function runTests(
  * @param src - source code to write to file
  */
 function writeTempFile(src: string): string {
-  const p = path.join(os.tmpdir(), `${Math.random()}-test.js`);
+  const root = path.join(os.tmpdir(), 'insomnia-testing');
+  mkdirp.sync(root);
+  const p = path.join(root, `${Math.random()}-test.js`);
   fs.writeFileSync(p, src);
   return p;
 }

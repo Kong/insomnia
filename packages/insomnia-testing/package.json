@@ -28,6 +28,7 @@
   "dependencies": {
     "axios": "^0.19.2",
     "chai": "^4.2.0",
+    "mkdirp": "^1.0.4",
     "mocha": "^8.0.1"
   }
 }
