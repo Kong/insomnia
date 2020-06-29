@@ -4,8 +4,9 @@ import Mocha from 'mocha';
 import chai from 'chai';
 import os from 'os';
 import fs from 'fs';
+import mkdirp from 'mkdirp';
 import path from 'path';
-import { JavaScriptReporter } from './javaScriptReporter';
+import { JavaScriptReporter } from './java-script-reporter';
 import type { InsomniaOptions } from './insomnia';
 import Insomnia from './insomnia';
 
@@ -18,16 +19,21 @@ type TestErr = {
   operator: string,
 };
 
+type NodeErr = {
+  message: string,
+  stack: string,
+};
+
 type TestResult = {
   title: string,
   fullTitle: string,
   file: string,
   duration: number,
   currentRetry: number,
-  err: TestErr | {},
+  err: TestErr | NodeErr | {},
 };
 
-type TestResults = {
+export type TestResults = {
   stats: {
     suites: number,
     tests: number,
@@ -48,7 +54,7 @@ type TestResults = {
  * Run a test file using Mocha
  */
 export async function runTests(
-  filename: string | Array<string>,
+  testSrc: string | Array<string>,
   options: InsomniaOptions = {},
 ): Promise<TestResults> {
   return new Promise(resolve => {
@@ -65,9 +71,9 @@ export async function runTests(
 
     mocha.reporter(JavaScriptReporter);
 
-    const filenames = Array.isArray(filename) ? filename : [filename];
-    for (const f of filenames) {
-      mocha.addFile(writeTempFile(f));
+    const sources = Array.isArray(testSrc) ? testSrc : [testSrc];
+    for (const src of sources) {
+      mocha.addFile(writeTempFile(src));
     }
 
     const runner = mocha.run(() => {
@@ -76,16 +82,27 @@ export async function runTests(
       // Remove global since we don't need it anymore
       delete global.insomnia;
       delete global.chai;
+
+      // Clean up temp files
+      for (const f of mocha.files) {
+        fs.unlink(f, err => {
+          if (err) {
+            console.log('Failed to clean up test file', f, err);
+          }
+        });
+      }
     });
   });
 }
 
 /**
  * Copy test to tmp dir and return the file path
- * @param filename
+ * @param src - source code to write to file
  */
-function writeTempFile(filename: string): string {
-  const p = path.join(os.tmpdir(), `${Math.random()}-test.js`);
-  fs.copyFileSync(filename, p);
+function writeTempFile(src: string): string {
+  const root = path.join(os.tmpdir(), 'insomnia-testing');
+  mkdirp.sync(root);
+  const p = path.join(root, `${Math.random()}-test.js`);
+  fs.writeFileSync(p, src);
   return p;
 }

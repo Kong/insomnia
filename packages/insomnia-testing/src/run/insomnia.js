@@ -26,8 +26,8 @@ export type Response = {
 };
 
 export type InsomniaOptions = {
-  requests?: Array<Request>,
-  sendRequest?: (requestId: string) => Promise<Response>,
+  requests?: Array<$Shape<Request>>,
+  sendRequest?: (requestId: string) => Promise<$Shape<Response>>,
 };
 
 /**
