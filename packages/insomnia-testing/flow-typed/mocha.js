@@ -9,6 +9,7 @@ declare class Mocha {
     Base: Object;
     JSON: Object;
   };
+  files: Array<string>,
   reporter(reporter: Object, options: Object): void;
   addFile(filename: string): void;
   run(callback: (failures: number) => void): Object;
