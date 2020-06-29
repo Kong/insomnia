@@ -2,9 +2,6 @@
 
 import type { GlobalOptions } from '../util';
 import { runTestsCli, generate } from 'insomnia-testing';
-import path from 'path';
-import os from 'os';
-import fs from 'fs';
 
 export const TestReporterEnum = {
   dot: 'dot',
@@ -53,15 +50,6 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
     },
   ];
 
-  const testFileContents = generate(suites);
-
-  // TODO: Should this generate the test file at the working-dir? I think not
-  const tmpPath = path.join(os.tmpdir(), `${Math.random()}.test.js`);
-  fs.writeFileSync(tmpPath, testFileContents);
-
-  try {
-    await runTestsCli(tmpPath, { reporter, bail });
-  } finally {
-    fs.unlinkSync(tmpPath);
-  }
+  const testFileContents = await generate(suites);
+  await runTestsCli(testFileContents, { reporter, bail });
 }
