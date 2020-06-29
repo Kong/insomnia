@@ -28,6 +28,7 @@ export type Response = {
 export type InsomniaOptions = {
   requests?: Array<$Shape<Request>>,
   sendRequest?: (requestId: string) => Promise<$Shape<Response>>,
+  bail?: boolean,
 };
 
 /**
