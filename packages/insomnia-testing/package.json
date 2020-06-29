@@ -1,6 +1,6 @@
 {
   "name": "insomnia-testing",
-  "version": "2.2.9",
+  "version": "2.2.10",
   "main": "dist/index.js",
   "scripts": {
     "typecheck": "flow check",
@@ -29,6 +29,7 @@
   "dependencies": {
     "axios": "^0.19.2",
     "chai": "^4.2.0",
+    "mkdirp": "^1.0.4",
     "mocha": "^8.0.1"
   }
 }
