@@ -1,5 +1,6 @@
 // @flow
 import axios from 'axios';
+import { send } from '../../lib';
 
 export type Request = {
   _id: string,
@@ -42,7 +43,7 @@ export default class Insomnia {
 
   constructor(options: InsomniaOptions = {}) {
     this.requests = options.requests || [];
-    this.sendRequest = options.sendRequest || null;
+    this.sendRequest = options.sendRequest || sendInsomniaRequest;
 
     // Things that are set per test
     this.activeRequestId = null;
@@ -115,4 +116,9 @@ export default class Insomnia {
       headers: resp.headers,
     };
   }
+}
+
+export async function sendInsomniaRequest(requestId: string): Promise<$Shape<Response>> {
+  const response = await send(requestId, 'env_env_91c8596946272a35b2fd5a0bab565ef4350297a8_sub');
+  return response;
 }

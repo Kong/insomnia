@@ -28,7 +28,21 @@
   "dependencies": {
     "axios": "^0.19.2",
     "chai": "^4.2.0",
+    "insomnia-importers": "^2.2.10",
+    "insomnia-plugin-base64": "^2.2.10",
+    "insomnia-plugin-cookie-jar": "^2.2.10",
+    "insomnia-plugin-core-themes": "^2.2.10",
+    "insomnia-plugin-file": "^2.2.10",
+    "insomnia-plugin-hash": "^2.2.10",
+    "insomnia-plugin-jsonpath": "^2.2.10",
+    "insomnia-plugin-now": "^2.2.10",
+    "insomnia-plugin-prompt": "^2.2.10",
+    "insomnia-plugin-request": "^2.2.10",
+    "insomnia-plugin-response": "^2.2.10",
+    "insomnia-plugin-uuid": "^2.2.10",
     "mkdirp": "^1.0.4",
-    "mocha": "^8.0.1"
+    "mocha": "^8.0.1",
+    "node-libcurl": "^2.1.3",
+    "nunjucks": "^3.2.1"
   }
 }

@@ -17,6 +17,7 @@
     "storybook": "start-storybook --port 3222",
     "start": "node ./scripts/start.js",
     "build": "node ./scripts/build.js",
+    "build-lib": "webpack --config ./webpack/lib/webpack.config.babel.js",
     "package": "node ./scripts/package.js",
     "release": "node ./scripts/release.js",
     "bootstrap": "rimraf ./**/node_modules/fsevents && rimraf node_modules/graphql-language-service-interface/dist/*.flow"
