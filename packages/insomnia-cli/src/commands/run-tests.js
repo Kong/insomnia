@@ -42,7 +42,11 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
           tests: [
             {
               name: 'should return -1 when the value is not present',
-              code: 'expect([1, 2, 3].indexOf(4)).toBe(-1);\nexpect(true).toBe(true);',
+              code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.equal(true);',
+            },
+            {
+              name: 'should fail',
+              code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.equal(false);',
             },
           ],
         },
