@@ -1,6 +1,6 @@
 // @flow
 
-import { ActivityToggleSwitch } from 'insomnia-components';
+import { MultiSwitch } from 'insomnia-components';
 import type { GlobalActivity } from './activity-bar/activity-bar';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from './activity-bar/activity-bar';
 import React from 'react';
@@ -30,7 +30,7 @@ export default function ActivityToggle({
   }
 
   return (
-    <ActivityToggleSwitch
+    <MultiSwitch
       defaultValue={activity}
       name="activity-toggle"
       onChange={a => handleActivityChange(workspace._id, a)}
