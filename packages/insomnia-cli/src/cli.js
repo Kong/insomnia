@@ -70,6 +70,7 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     .version(getVersion(), '-v, --version')
     .description('A CLI for Insomnia!')
     .option('-w, --working-dir <dir>', 'set working directory')
+    .option('-a, --app-data-dit <dir>', 'set the app data directory') // Does this need to be an option? I think Linux requires it?
     .addCommand(makeGenerateCommand(!!exitOverride))
     .addCommand(makeTestCommand(!!exitOverride))
     .addCommand(makeLintCommand(!!exitOverride))
