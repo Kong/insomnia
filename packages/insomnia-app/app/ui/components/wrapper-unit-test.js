@@ -1,6 +1,5 @@
 // @flow
 import * as React from 'react';
-import path from 'path';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
@@ -13,7 +12,7 @@ import designerLogo from '../images/insomnia-designer-logo.svg';
 import type { WrapperProps } from './wrapper';
 import * as models from '../../models';
 import type { UnitTest } from '../../models/unit-test';
-import { generateToFile, runTests } from 'insomnia-testing';
+import { generate, runTests } from 'insomnia-testing';
 import { showAlert, showModal, showPrompt } from './modals';
 import Editable from './base/editable';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
@@ -21,7 +20,6 @@ import SelectModal from './modals/select-modal';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import ActivityToggle from './activity-toggle';
 import * as network from '../../network/network';
-import { getTempDir } from '../../common/constants';
 
 type Props = {|
   children: SidebarChildObjects,
@@ -208,10 +206,8 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       });
     }
 
-    const p = path.join(getTempDir(), `${Math.random()}.test.js`);
-    await generateToFile(p, [{ name: 'My Suite', suites: [], tests }]);
-
-    const results = await runTests(p, {
+    const src = await generate([{ name: 'My Suite', suites: [], tests }]);
+    const results = await runTests(src, {
       requests,
       sendRequest: async requestId => {
         const res = await network.send(requestId, activeEnvironment ? activeEnvironment._id : null);
