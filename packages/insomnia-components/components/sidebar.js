@@ -337,7 +337,7 @@ function Sidebar(props: Props) {
         <StyledHeader>
           <h6 onClick={toggleInfoSec}>INFO</h6>
           <div>
-            <Dropdown renderButton={({ open }) => <SvgIcon icon={IconEnum.ellipsesCircle} />}>
+            <Dropdown renderButton={DropdownElipsis}>
               <DropdownDivider>VISIBILITY</DropdownDivider>
               <DropdownItem>
                 <input
