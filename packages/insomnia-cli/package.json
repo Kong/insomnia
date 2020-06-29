@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-cli",
-  "version": "2.2.9",
+  "version": "2.2.10",
   "bin": {
     "inso": "bin/inso"
   },
@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "commander": "^5.1.0",
-    "openapi-2-kong": "^2.2.9",
+    "openapi-2-kong": "^2.2.10",
     "yaml": "^1.10.0"
   }
 }
