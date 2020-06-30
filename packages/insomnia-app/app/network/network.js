@@ -23,7 +23,7 @@ import {
   CurlHttpVersion,
 } from 'node-libcurl';
 import { join as pathJoin } from 'path';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import * as models from '../models';
 import {
   AUTH_AWS_IAM,
@@ -893,7 +893,7 @@ export async function send(
   environmentId?: string,
   extraInfo?: ExtraRenderInfo,
 ): Promise<ResponsePatch> {
-  console.log(`[network] Sending req=${requestId}`);
+  console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
 
   // HACK: wait for all debounces to finish
   /*
@@ -1133,14 +1133,16 @@ function storeTimeline(timeline: Array<ResponseTimelineEntry>): Promise<string> 
   });
 }
 
-document.addEventListener('keydown', (e: KeyboardEvent) => {
-  if (e.ctrlKey || e.metaKey || e.altKey) {
-    return;
-  }
+if (global.document) {
+  document.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) {
+      return;
+    }
 
-  lastUserInteraction = Date.now();
-});
+    lastUserInteraction = Date.now();
+  });
 
-document.addEventListener('paste', (e: Event) => {
-  lastUserInteraction = Date.now();
-});
+  document.addEventListener('paste', (e: Event) => {
+    lastUserInteraction = Date.now();
+  });
+}

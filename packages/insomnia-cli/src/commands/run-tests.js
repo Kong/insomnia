@@ -1,7 +1,9 @@
 // @flow
 
+import { generate, runTestsCli } from 'insomnia-testing';
+import { getSendRequestCallback } from 'insomnia-send-request';
 import type { GlobalOptions } from '../util';
-import { runTestsCli, generate } from 'insomnia-testing';
+import { loadDb } from '../db';
 
 export const TestReporterEnum = {
   dot: 'dot',
@@ -27,12 +29,12 @@ function validateOptions({ reporter }: RunTestsOptions): boolean {
   return true;
 }
 
-export async function runInsomniaTests(options: RunTestsOptions): Promise<void> {
+export async function runInsomniaTests(options: RunTestsOptions): Promise<boolean> {
   if (!validateOptions(options)) {
-    return;
+    return false;
   }
 
-  const { reporter, bail, keepFile } = options;
+  const { reporter, bail, keepFile, appDataDir, workingDir } = options;
 
   const suites = [
     {
@@ -43,11 +45,9 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
           tests: [
             {
               name: 'should return -1 when the value is not present',
-              code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.equal(true);',
-            },
-            {
-              name: 'should fail',
-              code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.equal(false);',
+              code:
+                `const resp = await insomnia.send('req_wrk_012d4860c7da418a85ffea7406e1292a21946b60');\n` +
+                'expect(resp.status).to.equal(200);',
             },
           ],
         },
@@ -55,6 +55,14 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
     },
   ];
 
+  const db = await loadDb({
+    workingDir,
+    appDataDir,
+    filterTypes: ['Environment', 'Request', 'RequestGroup', 'Workspace'],
+  });
+
+  const environmentId = 'env_env_ca046a738f001eb3090261a537b1b78f86c2094c_sub';
   const testFileContents = await generate(suites);
-  return await runTestsCli(testFileContents, { reporter, bail, keepFile });
+  const sendRequest = await getSendRequestCallback(environmentId, db);
+  return await runTestsCli(testFileContents, { reporter, bail, keepFile, sendRequest });
 }
