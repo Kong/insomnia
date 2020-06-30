@@ -22,11 +22,11 @@ module.exports = {
       },
     ],
   },
-  externals: {
+  externals: [
     // Don't bundle Mocha because it needs to use require() to
     // load tests. If it's bundled in the Webpack build, it will
     // try to use Webpack's require() function and fail to
     // import the test file because it lives outside the bundle.
-    mocha: 'mocha',
-  },
+    'mocha',
+  ],
 };

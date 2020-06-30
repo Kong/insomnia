@@ -117,16 +117,6 @@ describe('integration', () => {
         suites: [],
         tests: [
           {
-            name: 'Tests sending a request',
-            defaultRequestId: null,
-            code: [
-              `const resp = await insomnia.send({ url: '200.insomnia.rest' });`,
-              `expect(resp.status).to.equal(200);`,
-              `expect(resp.headers['content-type']).to.equal('application/json');`,
-              `expect(resp.data.foo).to.equal('bar');`,
-            ].join('\n'),
-          },
-          {
             name: 'Tests referencing request by ID',
             defaultRequestId: null,
             code: [
@@ -157,9 +147,9 @@ describe('integration', () => {
     });
 
     expect(failures).toEqual([]);
-    expect(passes.length).toBe(3);
-    expect(stats.tests).toBe(3);
+    expect(passes.length).toBe(2);
+    expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
-    expect(stats.passes).toBe(3);
+    expect(stats.passes).toBe(2);
   });
 });

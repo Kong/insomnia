@@ -25,9 +25,12 @@ export type Response = {
   },
 };
 
+type SendRequestCallback = (requestId: string) => Promise<$Shape<Response>>;
+
 export type InsomniaOptions = {
   requests?: Array<$Shape<Request>>,
-  sendRequest?: (requestId: string) => Promise<$Shape<Response>>,
+  sendRequest?: SendRequestCallback,
+  bail?: boolean,
 };
 
 /**
@@ -38,7 +41,8 @@ export type InsomniaOptions = {
 export default class Insomnia {
   requests: Array<$Shape<Request>>;
   activeRequestId: string | null;
-  sendRequest: ((requestId: string) => Promise<Response>) | null;
+  activeEnvironmentId: string | null;
+  sendRequest: SendRequestCallback | null;
 
   constructor(options: InsomniaOptions = {}) {
     this.requests = options.requests || [];
@@ -58,26 +62,22 @@ export default class Insomnia {
 
   /**
    *
-   * @param reqOrId - raw request object or an ID to reference a request
+   * @param reqId - request ID to send. Specifying nothing will send the active request
    * @returns {Promise<{headers: *, data: *, statusText: (string|string), status: *}>}
    */
-  async send(reqOrId: string | Request | null = null): Promise<Response> {
+  async send(reqId: string | null = null): Promise<Response> {
     // Default to active request if nothing is specified
-    reqOrId = reqOrId || this.activeRequestId;
+    reqId = reqId || this.activeRequestId;
 
-    const req = typeof reqOrId === 'string' ? this.requests.find(r => r._id === reqOrId) : reqOrId;
-
-    if (typeof reqOrId === 'string' && !req) {
-      throw new Error(`Failed to find request by ID ${reqOrId}`);
+    const { sendRequest } = this;
+    if (typeof sendRequest === 'function' && typeof reqId === 'string') {
+      return sendRequest(reqId);
     }
+
+    const req = this.requests.find(r => r._id === reqId);
 
     if (!req) {
       throw new Error('Request not provided to test');
-    }
-
-    const { sendRequest } = this;
-    if (typeof sendRequest === 'function') {
-      return sendRequest(req._id);
     }
 
     const axiosHeaders = {};

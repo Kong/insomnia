@@ -1,6 +1,6 @@
 // @flow
-import { ConversionTypeMap, generateConfig } from '../generate';
-import type { GenerateConfigOptions } from '../generate';
+import { ConversionTypeMap, generateConfig } from '../generate-config';
+import type { GenerateConfigOptions } from '../generate-config';
 import o2k from 'openapi-2-kong';
 import fs from 'fs';
 import path from 'path';
@@ -57,7 +57,7 @@ describe('generateConfig()', () => {
 
   it('should write generated documents to file system', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const writeFileSpy = jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
+    const writeFileSpy = jest.spyOn(fs.promises, 'writeFile').mockImplementation(() => {});
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
 
     await generateConfig(filePath, { ...base, output: 'output.yaml' });
@@ -69,7 +69,7 @@ describe('generateConfig()', () => {
 
   it('should generate documents using workingDir', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const writeFileSpy = jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
+    const writeFileSpy = jest.spyOn(fs.promises, 'writeFile').mockImplementation(() => {});
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
 
     await generateConfig('file.yaml', {

@@ -1,9 +1,8 @@
 // @flow
 import * as cli from '../cli';
-import { generateConfig } from '../commands/generate';
+import { generateConfig } from '../commands/generate-config';
 
-jest.mock('../commands/generate');
-const originalError = console.error;
+jest.mock('../commands/generate-config');
 
 const initInso = () => {
   return (args: string): void => {
@@ -21,18 +20,14 @@ describe('cli', () => {
   let inso = initInso();
   beforeEach(() => {
     inso = initInso();
-    (console: any).error = jest.fn();
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(process, 'exit').mockImplementation(() => {});
+    (generateConfig: any).mockResolvedValue(true);
   });
 
   afterEach(() => {
-    (console: any).error = originalError;
+    jest.restoreAllMocks();
   });
-
-  it('should error when required --type option is missing', () =>
-    expect(() => inso('generate config file.yaml')).toThrowError());
-
-  it('should error when filePath is missing', () =>
-    expect(() => inso('generate config -t declarative')).toThrowError());
 
   it('should call generateConfig with undefined output argument', () => {
     inso('generate config -t declarative file.yaml');
@@ -53,7 +48,7 @@ describe('cli', () => {
   });
 
   it('should call generateConfig with global option', () => {
-    inso('generate config -t kubernetes --workingDir testing/dir file.yaml');
+    inso('generate config -t kubernetes --working-dir testing/dir file.yaml');
     expect(generateConfig).toHaveBeenCalledWith(
       'file.yaml',
       expect.objectContaining({

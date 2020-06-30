@@ -45,15 +45,4 @@ describe('run', () => {
     expect(sendRequest).toHaveBeenCalledWith('req_123');
     expect(stats.passes).toBe(1);
   });
-
-  it('fails sendRequest() with invalid request', async () => {
-    const sendRequest = jest.fn();
-    const { stats, failures }: TestResults = await runTests(exampleTestWithRequest, {
-      requests: [{ _id: 'blah' }],
-      sendRequest,
-    });
-    expect(sendRequest).toHaveBeenCalledTimes(0);
-    expect(stats.failures).toBe(1);
-    expect(failures[0].err.message || '').toBe('Failed to find request by ID req_123');
-  });
 });

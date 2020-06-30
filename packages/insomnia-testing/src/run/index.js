@@ -50,14 +50,16 @@ export type TestResults = {
   passes: Array<TestResult>,
 };
 
-/**
- * Run a test file using Mocha
- */
-export async function runTests(
+type Reporter = 'dot' | 'list' | 'spec' | 'min' | 'progress';
+
+async function runInternal<T>(
   testSrc: string | Array<string>,
-  options: InsomniaOptions = {},
-): Promise<TestResults> {
+  options: InsomniaOptions,
+  reporter: Reporter | Function,
+  extractResult: (runner: Object) => T,
+): Promise<T> {
   return new Promise(resolve => {
+    const { bail } = options;
     // Add global `insomnia` helper.
     // This is the only way to add new globals to the Mocha environment as far
     // as I can tell
@@ -67,9 +69,9 @@ export async function runTests(
     const mocha = new Mocha({
       timeout: 5000,
       global: ['insomnia', 'chai'],
+      bail,
+      reporter,
     });
-
-    mocha.reporter(JavaScriptReporter);
 
     const sources = Array.isArray(testSrc) ? testSrc : [testSrc];
     for (const src of sources) {
@@ -77,7 +79,7 @@ export async function runTests(
     }
 
     const runner = mocha.run(() => {
-      resolve(runner.testResults);
+      resolve(extractResult(runner));
 
       // Remove global since we don't need it anymore
       delete global.insomnia;
@@ -105,4 +107,28 @@ function writeTempFile(src: string): string {
   const p = path.join(root, `${Math.random()}-test.js`);
   fs.writeFileSync(p, src);
   return p;
+}
+
+type CliOptions = InsomniaOptions & {
+  reporter?: Reporter,
+};
+
+/**
+ * Run a test file using Mocha
+ */
+export async function runTestsCli(
+  testSrc: string | Array<string>,
+  { reporter, ...options }: CliOptions = {},
+): Promise<boolean> {
+  return await runInternal(testSrc, options, reporter, runner => runner.stats.failures !== 0);
+}
+
+/**
+ * Run a test file using Mocha and returns JS results
+ */
+export async function runTests(
+  testSrc: string | Array<string>,
+  options: InsomniaOptions = {},
+): Promise<TestResults> {
+  return await runInternal(testSrc, options, JavaScriptReporter, runner => runner.testResults);
 }
