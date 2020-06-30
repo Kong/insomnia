@@ -212,11 +212,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       sendRequest: getSendRequestCallback(activeEnvironment ? activeEnvironment._id : null),
     });
 
-    await models.unitTestResult.create({
-      results,
-      parentId: activeWorkspace._id,
-      code: '',
-    });
+    await models.unitTestResult.create({ results, parentId: activeWorkspace._id });
 
     this.setState({ testsRunning: null });
   }

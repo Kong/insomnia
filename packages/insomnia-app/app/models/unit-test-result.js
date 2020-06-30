@@ -9,15 +9,7 @@ export const canDuplicate = true;
 export const canSync = true;
 
 type BaseUnitTestResult = {
-  test: string,
-
-  // Points to Workspace
   parentId: string,
-
-  // Points to Response that triggered it. Will be null if it was run
-  // manually on its own.
-  responseId: string | null,
-
   results: Object,
 };
 
@@ -26,8 +18,6 @@ export type UnitTestResult = BaseModel & BaseUnitTestResult;
 export function init() {
   return {
     parentId: null,
-    responseId: null,
-    test: '',
     results: null,
   };
 }

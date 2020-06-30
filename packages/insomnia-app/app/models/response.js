@@ -43,12 +43,10 @@ type BaseResponse = {
   bodyCompression: 'zip' | null | '__NEEDS_MIGRATION__',
   error: string,
   requestVersionId: string | null,
-  testResults: Object | null,
 
   // Things from the request
   settingStoreCookies: boolean | null,
   settingSendCookies: boolean | null,
-  test: Object | null,
 };
 
 export type Response = BaseModel & BaseResponse;
@@ -69,12 +67,10 @@ export function init(): BaseResponse {
     bodyCompression: '__NEEDS_MIGRATION__', // For legacy bodies
     error: '',
     requestVersionId: null,
-    testResults: null,
 
     // Things from the request
     settingStoreCookies: null,
     settingSendCookies: null,
-    test: null,
 
     // Responses sent before environment filtering will have a special value
     // so they don't show up at all when filtering is on.

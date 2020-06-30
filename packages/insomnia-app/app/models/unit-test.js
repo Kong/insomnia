@@ -9,16 +9,9 @@ export const canDuplicate = true;
 export const canSync = true;
 
 type BaseUnitTest = {
-  /** Parent UnitTestSuite **/
   parentId: string,
-
-  /** Name of the test */
   name: string,
-
-  /** JavaScript source code for test */
   code: string,
-
-  /** Default request to send during test */
   requestId: string | null,
 };
 
