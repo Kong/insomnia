@@ -31,7 +31,7 @@ export const gitDataDirDb = async ({ dir, filterTypes }: Options): Promise<Datab
 
   if (!fs.existsSync(insomniaDir)) {
     // TODO: control logging with verbose flag
-    console.log(`Directory not found: ${insomniaDir}`);
+    // console.log(`Directory not found: ${insomniaDir}`);
     return db;
   }
 
