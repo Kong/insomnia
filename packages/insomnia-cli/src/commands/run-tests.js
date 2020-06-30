@@ -1,7 +1,7 @@
 // @flow
 
 import { generate, runTestsCli } from 'insomnia-testing';
-import { getSendRequestCallback } from 'insomnia-send-request';
+import { getSendRequestCallbackMemDb } from 'insomnia-send-request';
 import type { GlobalOptions } from '../util';
 import { loadDb } from '../db';
 
@@ -63,6 +63,6 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<boolea
 
   const environmentId = 'env_env_ca046a738f001eb3090261a537b1b78f86c2094c_sub';
   const testFileContents = await generate(suites);
-  const sendRequest = await getSendRequestCallback(environmentId, db);
+  const sendRequest = await getSendRequestCallbackMemDb(environmentId, db);
   return await runTestsCli(testFileContents, { reporter, bail, keepFile, sendRequest });
 }
