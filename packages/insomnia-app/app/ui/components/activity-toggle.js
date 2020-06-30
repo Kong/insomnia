@@ -9,7 +9,7 @@ import type { Workspace } from '../../models/workspace';
 
 type Props = {
   activity: GlobalActivity,
-  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => any,
+  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>,
   settings: Settings,
   workspace: Workspace,
 };

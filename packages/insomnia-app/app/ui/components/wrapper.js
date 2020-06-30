@@ -323,7 +323,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
           'specification. We recommend fixing errors before proceeding. 🤗',
         okLabel: 'Proceed',
         addCancel: true,
-        onConfirm: async () => {
+        onConfirm: () => {
           handleSetActiveActivity(nextActivity);
         },
       });
