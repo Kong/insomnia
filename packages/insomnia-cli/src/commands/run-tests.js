@@ -29,9 +29,9 @@ function validateOptions({ reporter }: RunTestsOptions): boolean {
   return true;
 }
 
-export async function runInsomniaTests(options: RunTestsOptions): Promise<void> {
+export async function runInsomniaTests(options: RunTestsOptions): Promise<boolean> {
   if (!validateOptions(options)) {
-    return;
+    return false;
   }
 
   const { reporter, bail, keepFile, appDataDir, workingDir } = options;
