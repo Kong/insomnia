@@ -41,11 +41,8 @@
   "dependencies": {
     "@stoplight/spectral": "^5.4.0",
     "commander": "^5.1.0",
-    "insomnia-send-request": "^2.2.10",
-    "insomnia-testing": "^2.2.9",
-    "nedb": "^1.8.0",
-    "openapi-2-kong": "^2.2.10",
-    "yaml": "^1.10.0",
+    "enquirer": "^2.3.5",
+    "env-paths": "^2.2.0",
     "insomnia-plugin-base64": "^2.2.10",
     "insomnia-plugin-cookie-jar": "^2.2.10",
     "insomnia-plugin-core-themes": "^2.2.10",
@@ -57,6 +54,11 @@
     "insomnia-plugin-prompt": "^2.2.10",
     "insomnia-plugin-request": "^2.2.10",
     "insomnia-plugin-response": "^2.2.10",
-    "insomnia-plugin-uuid": "^2.2.10"
+    "insomnia-plugin-uuid": "^2.2.10",
+    "insomnia-send-request": "^2.2.10",
+    "insomnia-testing": "^2.2.9",
+    "nedb": "^1.8.0",
+    "openapi-2-kong": "^2.2.10",
+    "yaml": "^1.10.0"
   }
 }
