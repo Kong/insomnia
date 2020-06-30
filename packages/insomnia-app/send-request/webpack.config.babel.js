@@ -15,7 +15,7 @@ module.exports = {
   },
   output: {
     filename: 'index.js',
-    library: 'insomnialib',
+    library: 'insomniasendrequest',
     libraryTarget: 'commonjs2',
 
     // Export directly where we need it for now
