@@ -3,7 +3,7 @@ import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url'
 import * as electron from 'electron';
 import * as models from '../models/index';
 import * as db from '../common/database';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import {
   getAppId,
   getAppName,

@@ -1,6 +1,8 @@
 // @flow
-import { ConversionTypeMap, generateConfig } from './commands/generate';
-import { getVersion, createCommand, getAllOptions } from './util';
+import { ConversionTypeMap, generateConfig } from './commands/generate-config';
+import { getVersion, createCommand, getAllOptions, logErrorExit1, exit } from './util';
+import { runInsomniaTests, TestReporterEnum } from './commands/run-tests';
+import { lintSpecification } from './commands/lint-specification';
 
 function makeGenerateCommand(exitOverride: boolean) {
   // inso generate
@@ -10,16 +12,52 @@ function makeGenerateCommand(exitOverride: boolean) {
 
   // inso generate config -t kubernetes config.yaml
   generate
-    .command('config <identifier>')
-    .description('Generate configuration from an api spec')
+    .command('config [identifier]')
+    .description('Generate configuration from an api spec.')
     .requiredOption(
       '-t, --type <value>',
-      `the type of configuration to generate, options are [${conversionTypes}]`,
+      `type of configuration to generate, options are [${conversionTypes}]`,
+      'declarative',
     )
-    .option('-o, --output <path>', 'the output path')
-    .action((identifier, cmd) => generateConfig(identifier, getAllOptions(cmd)));
+    .option('-o, --output <path>', 'save the generated config to a file')
+    .action((identifier, cmd) => exit(generateConfig(identifier, getAllOptions(cmd))));
 
   return generate;
+}
+
+function makeTestCommand(exitOverride: boolean) {
+  // inso run
+  const run = createCommand(exitOverride, 'run').description('Execution utilities');
+
+  const reporterTypes = Object.keys(TestReporterEnum).join(', ');
+
+  // inso run tests
+  run
+    .command('test')
+    .description('Run Insomnia unit tests')
+    .option(
+      '-r, --reporter <reporter>',
+      `reporter to use, options are [${reporterTypes}]`,
+      TestReporterEnum.spec,
+    )
+    .option('-b, --bail', 'abort ("bail") after first test failure')
+    .option('--keep-file', 'do not delete the generated test file')
+    .action(cmd => exit(runInsomniaTests(getAllOptions(cmd))));
+
+  return run;
+}
+
+function makeLintCommand(exitOverride: boolean) {
+  // inso lint
+  const lint = createCommand(exitOverride, 'lint').description('Linting utilities');
+
+  // inso lint spec
+  lint
+    .command('spec [identifier]')
+    .description('Lint an API Specification')
+    .action((identifier, cmd) => exit(lintSpecification(identifier, getAllOptions(cmd))));
+
+  return lint;
 }
 
 export function go(args?: Array<string>, exitOverride?: boolean): void {
@@ -31,8 +69,11 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
   createCommand(!!exitOverride)
     .version(getVersion(), '-v, --version')
     .description('A CLI for Insomnia!')
-    .option('--workingDir <dir>', 'Working directory')
+    .option('-w, --working-dir <dir>', 'set working directory')
+    .option('-a, --app-data-dit <dir>', 'set the app data directory') // Does this need to be an option? I think Linux requires it?
     .addCommand(makeGenerateCommand(!!exitOverride))
+    .addCommand(makeTestCommand(!!exitOverride))
+    .addCommand(makeLintCommand(!!exitOverride))
     .parseAsync(args)
-    .catch(err => console.log('An error occurred', err));
+    .catch(logErrorExit1);
 }

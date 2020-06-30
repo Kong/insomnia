@@ -10,7 +10,7 @@ contents: |
   tags:
     - name: Folder
 
-  paths:
+    paths:
     /global:
       get:
         tags:
