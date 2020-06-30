@@ -1,3 +1,5 @@
+// This file implements just enough of the electron module to get sending requests to work
+
 const os = require('os');
 const path = require('path');
 
