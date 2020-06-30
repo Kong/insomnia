@@ -5,6 +5,7 @@ import type { RunTestsOptions } from '../run-tests';
 import { runInsomniaTests, TestReporterEnum } from '../run-tests';
 
 jest.mock('insomnia-testing');
+jest.mock('node-libcurl');
 
 describe('runInsomniaTests()', () => {
   // make flow happy
@@ -15,6 +16,7 @@ describe('runInsomniaTests()', () => {
 
   const base: RunTestsOptions = {
     reporter: TestReporterEnum.spec,
+    appDataDir: '/this/does/not/exist',
   };
 
   it('should should not generate if type arg is invalid', async () => {
@@ -37,11 +39,15 @@ describe('runInsomniaTests()', () => {
       reporter: 'min',
       bail: true,
       keepFile: false,
-      sendRequest: expect.any(Function),
     };
     await runInsomniaTests(options);
 
-    expect(insomniaTesting.runTestsCli).toHaveBeenCalledWith(contents, options);
+    expect(insomniaTesting.runTestsCli).toHaveBeenCalledWith(contents, {
+      reporter: 'min',
+      bail: true,
+      keepFile: false,
+      sendRequest: expect.any(Function),
+    });
   });
 
   it('should return false if test results have any failures', async function() {

@@ -5,16 +5,16 @@ import { getBodyBuffer } from '../models/response';
 
 export async function getSendRequestCallback(environmentId, memDB) {
   // Initialize the DB in-memory and fill it with data
-  await db.init(modelTypes(), { inMemoryOnly: true });
+  await db.init(modelTypes(), { inMemoryOnly: true }, true);
 
-  const promises = [];
+  const docs = [];
   for (const type of Object.keys(memDB)) {
     for (const doc of memDB[type]) {
-      promises.push(db.insert(doc));
+      docs.push(doc);
     }
   }
 
-  await Promise.all(promises);
+  await db.batchModifyDocs({ upsert: docs });
 
   // Return callback helper to send requests
   return async function sendRequest(requestId) {
