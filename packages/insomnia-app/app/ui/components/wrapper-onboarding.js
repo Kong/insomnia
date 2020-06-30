@@ -5,7 +5,7 @@ import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { ACTIVITY_HOME } from './activity-bar/activity-bar';
+import { ACTIVITY_HOME, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
 import * as db from '../../common/database';
@@ -13,7 +13,6 @@ import chartSrc from '../images/chart.svg';
 import imgSrc from '../images/logo.png';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
-import { getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
 
 type Props = {|
   wrapperProps: WrapperProps,

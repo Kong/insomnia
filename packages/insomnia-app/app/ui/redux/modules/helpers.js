@@ -1,9 +1,8 @@
 // @flow
 import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';
-import type { GlobalActivity } from '../../components/activity-bar/activity-bar';
-import { ACTIVITY_HOME, ACTIVITY_INSOMNIA } from '../../components/activity-bar/activity-bar';
-import { getDefaultAppId } from '../../../common/constants';
+import type { GlobalActivity } from '../../../common/constants';
+import { ACTIVITY_HOME, ACTIVITY_INSOMNIA, getDefaultAppId } from '../../../common/constants';
 import { APP_ID_INSOMNIA } from '../../../../config';
 
 export const ForceToWorkspaceKeys = {
