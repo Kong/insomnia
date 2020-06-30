@@ -5,9 +5,6 @@ module.exports = {
   target: 'node',
   mode: 'production',
   devtool: 'source-map',
-  optimization: {
-    minimize: false,
-  },
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].js',

@@ -74,11 +74,7 @@ export default class Insomnia {
       return sendRequest(reqId);
     }
 
-    const req = typeof reqId === 'string' ? this.requests.find(r => r._id === reqId) : reqId;
-
-    if (typeof reqId === 'string' && !req) {
-      throw new Error(`Failed to find request by ID ${reqId}`);
-    }
+    const req = this.requests.find(r => r._id === reqId);
 
     if (!req) {
       throw new Error('Request not provided to test');
