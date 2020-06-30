@@ -1,26 +1,14 @@
 // @flow
 
 import insomniaTesting from 'insomnia-testing';
-import { runInsomniaTests, TestReporterEnum } from '../run-tests';
-import os from 'os';
 import type { RunTestsOptions } from '../run-tests';
+import { runInsomniaTests, TestReporterEnum } from '../run-tests';
 
 jest.mock('insomnia-testing');
-jest.mock('os');
-jest.mock('fs', () => ({
-  promises: {
-    mkdir: jest.fn(),
-    unlink: jest.fn(),
-  },
-}));
 
 describe('runInsomniaTests()', () => {
   // make flow happy
   const mock = (mockFn: any) => mockFn;
-  beforeEach(() => {
-    mock(os.tmpdir).mockReturnValue('/tmpDir');
-  });
-
   afterEach(() => {
     jest.restoreAllMocks();
   });
@@ -44,7 +32,13 @@ describe('runInsomniaTests()', () => {
     const contents = 'generated test contents';
     mock(insomniaTesting.generate).mockResolvedValue(contents);
 
-    const options = { ...base, reporter: 'min', bail: true, keepFile: false };
+    const options = {
+      ...base,
+      reporter: 'min',
+      bail: true,
+      keepFile: false,
+      sendRequest: expect.any(Function),
+    };
     await runInsomniaTests(options);
 
     expect(insomniaTesting.runTestsCli).toHaveBeenCalledWith(contents, options);
