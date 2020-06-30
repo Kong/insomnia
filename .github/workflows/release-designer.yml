@@ -23,8 +23,7 @@ jobs:
         with:
           node-version: 10
       - run: npm run bootstrap
-      # Don't run tests until we can get node-libcurl working with them
-      # - run: npm test
+      - run: npm test:pre-release
       - run: npm run app-release
         env:
           CSC_LINK: ${{ secrets.DESIGNER_WINDOWS_CSC_LINK }}
@@ -38,8 +37,7 @@ jobs:
         with:
           node-version: 10
       - run: npm run bootstrap
-      # Don't run tests until we can get node-libcurl working with them
-      # - run: npm test
+      - run: npm test:pre-release
       - run: npm run app-release
         env:
           APPLE_ID: ${{ secrets.DESIGNER_APPLE_ID }}
@@ -58,8 +56,7 @@ jobs:
         with:
           node-version: 10
       - run: npm run bootstrap
-      # Don't run tests until we can get node-libcurl working with them
-      # - run: npm test
+      - run: npm test:pre-release
       - run: npm run app-release
         env:
           BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap
