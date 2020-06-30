@@ -23,7 +23,7 @@ import {
   CurlHttpVersion,
 } from 'node-libcurl';
 import { join as pathJoin } from 'path';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import * as models from '../models';
 import {
   AUTH_AWS_IAM,

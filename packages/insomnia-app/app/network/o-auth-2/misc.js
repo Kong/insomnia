@@ -1,5 +1,5 @@
 import electron from 'electron';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import querystring from 'querystring';
 
 const AUTH_WINDOW_SESSION_ID = uuid.v4();

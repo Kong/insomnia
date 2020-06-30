@@ -1,5 +1,4 @@
 const path = require('path');
-const webpack = require('webpack');
 
 module.exports = {
   entry: { index: './index.js' },
@@ -32,17 +31,5 @@ module.exports = {
     // try to use Webpack's require() function and fail to
     // import the test file because it lives outside the bundle.
     'mocha',
-    'node-libcurl',
-    'fsevents',
-  ],
-  resolve: {
-    alias: {
-      electron: path.resolve(path.join(__dirname, './lib/electron')),
-    },
-  },
-  plugins: [
-    new webpack.DefinePlugin({
-      'process.env.APP_ID': JSON.stringify('com.insomnia.app'),
-    }),
   ],
 };

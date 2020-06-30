@@ -68,7 +68,7 @@ async function runInternal<T>(
 
     const mocha = new Mocha({
       timeout: 5000,
-      global: ['insomnia', 'chai'],
+      global: ['insomnia', 'chai', 'require'],
       bail,
       reporter,
     });

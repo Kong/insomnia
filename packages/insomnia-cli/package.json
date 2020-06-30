@@ -11,7 +11,7 @@
     "test:watch": "jest --watch",
     "test:snapshots": "npm run build && jest -u",
     "start": "npm run build:watch",
-    "build": "rimraf dist && babel src --out-dir dist --ignore \"src/**/*.test.js\",\"src/**/*.test.js.snap\"",
+    "build": "webpack --config webpack.config.js --display errors-only --ignore \"src/**/*.test.js\",\"src/**/*.test.js.snap\"",
     "build:watch": "npm run build -- --watch",
     "bootstrap": "npm run build",
     "prepublish": "npm run build"
@@ -28,18 +28,36 @@
     "@babel/cli": "^7.10.1",
     "@babel/core": "^7.9.0",
     "@babel/plugin-proposal-optional-chaining": "^7.9.0",
+    "@babel/plugin-transform-modules-commonjs": "^7.10.1",
     "@babel/preset-env": "^7.10.2",
     "@babel/preset-flow": "^7.10.1",
+    "babel-plugin-add-module-exports": "^1.0.2",
     "execa": "^4.0.2",
     "flow-bin": "^0.126.1",
     "get-bin-path": "^5.1.0",
     "jest": "^26.0.1",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
     "commander": "^5.1.0",
+    "insomnia-send-request": "^2.2.10",
     "insomnia-testing": "^2.2.9",
     "openapi-2-kong": "^2.2.10",
-    "yaml": "^1.10.0"
+    "yaml": "^1.10.0",
+    "insomnia-plugin-base64": "^2.2.10",
+    "insomnia-plugin-cookie-jar": "^2.2.10",
+    "insomnia-plugin-core-themes": "^2.2.10",
+    "insomnia-plugin-file": "^2.2.10",
+    "insomnia-plugin-hash": "^2.2.10",
+    "insomnia-plugin-jsonpath": "^2.2.10",
+    "insomnia-plugin-now": "^2.2.10",
+    "insomnia-plugin-os": "^2.2.10",
+    "insomnia-plugin-prompt": "^2.2.10",
+    "insomnia-plugin-request": "^2.2.10",
+    "insomnia-plugin-response": "^2.2.10",
+    "insomnia-plugin-uuid": "^2.2.10"
   }
 }

@@ -19,4 +19,7 @@ module.exports = {
       // Don't need this yet
     },
   },
+  BrowserWindow: {
+    getAllWindows: () => [],
+  },
 };

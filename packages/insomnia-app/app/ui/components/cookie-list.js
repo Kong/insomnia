@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import * as toughCookie from 'tough-cookie';
 import autobind from 'autobind-decorator';
 import { cookieToString } from 'insomnia-cookies';

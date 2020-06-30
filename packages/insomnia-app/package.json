@@ -17,7 +17,7 @@
     "storybook": "start-storybook --port 3222",
     "start": "node ./scripts/start.js",
     "build": "node ./scripts/build.js",
-    "build-lib": "webpack --config ./webpack/lib/webpack.config.babel.js",
+    "build-send-request": "webpack --config send-request/webpack.config.babel.js",
     "package": "node ./scripts/package.js",
     "release": "node ./scripts/release.js",
     "bootstrap": "rimraf ./**/node_modules/fsevents && rimraf node_modules/graphql-language-service-interface/dist/*.flow"
@@ -64,7 +64,6 @@
     "graphql",
     "insomnia-components",
     "insomnia-cookies",
-    "insomnia-importers",
     "insomnia-prettify",
     "insomnia-url",
     "insomnia-xpath",
@@ -72,7 +71,6 @@
     "json-order",
     "jwt-authentication",
     "moment",
-    "nunjucks",
     "pdfjs-dist",
     "prop-types",
     "react",
@@ -202,6 +200,7 @@
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.3.1",
+    "webpack-node-externals": "^1.7.2",
     "webpack-target-electron-renderer": "^0.4.0",
     "worker-loader": "^2.0.0"
   }

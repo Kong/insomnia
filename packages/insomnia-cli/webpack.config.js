@@ -1,37 +1,30 @@
 const path = require('path');
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
-  context: path.join(__dirname, '../../lib'),
-  entry: {
-    index: './index.js' ,
-  },
+  entry: { index: './src/cli.js' },
   target: 'node',
   mode: 'production',
   devtool: 'source-map',
   optimization: {
-    minimize: false
+    minimize: false,
   },
   output: {
-    path: path.resolve(__dirname, '../../../insomnia-testing/lib'),
+    path: path.resolve(__dirname, 'dist'),
     filename: '[name].js',
-    library: 'insomnialib',
+    library: 'insomniacli',
     libraryTarget: 'commonjs2',
   },
   module: {
     rules: [
       {
         test: /\.js$/,
-        exclude: /node_modules/,
+        exclude: [/node_modules/],
         use: {
           loader: 'babel-loader',
         },
       },
     ],
   },
-  externals: [
-    'insomnia-importers',
-    'node-libcurl',
-    'nunjucks',
-    'electron',
-  ],
+  externals: [nodeExternals()],
 };

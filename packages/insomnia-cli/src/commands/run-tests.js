@@ -1,7 +1,9 @@
 // @flow
 
+import { generate, runTestsCli } from 'insomnia-testing';
+import { getSendRequestCallback } from 'insomnia-lib';
 import type { GlobalOptions } from '../util';
-import { runTestsCli, generate } from 'insomnia-testing';
+import { gitDataDirDb } from '../db/mem-db';
 
 export const TestReporterEnum = {
   dot: 'dot',
@@ -33,6 +35,13 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
 
   const { reporter, bail } = options;
 
+  const workingDir = options.workingDir || '.';
+
+  const db = await gitDataDirDb({
+    dir: workingDir,
+    filterTypes: ['Environment', 'Request', 'RequestGroup', 'Workspace'],
+  });
+
   const suites = [
     {
       name: 'Parent Suite',
@@ -42,11 +51,9 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
           tests: [
             {
               name: 'should return -1 when the value is not present',
-              code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.equal(true);',
-            },
-            {
-              name: 'should fail',
-              code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.equal(false);',
+              code:
+                `const resp = await insomnia.send('req_wrk_012d4860c7da418a85ffea7406e1292a21946b60');\n` +
+                'expect(resp.status).to.equal(200);',
             },
           ],
         },
@@ -54,6 +61,15 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
     },
   ];
 
+  const dbObj = {};
+  for (const type of Object.keys(db)) {
+    dbObj[type] = {};
+    for (const [id, doc] of db[type].entries()) {
+      dbObj[type][id] = doc;
+    }
+  }
+
   const testFileContents = await generate(suites);
-  await runTestsCli(testFileContents, { reporter, bail });
+  const sendRequest = getSendRequestCallback('env_123', dbObj);
+  await runTestsCli(testFileContents, { reporter, bail, sendRequest });
 }
