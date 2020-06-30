@@ -344,7 +344,9 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           indentWithTabs={settings.editorIndentWithTabs}
           keyMap={settings.editorKeyMap}
           defaultValue={unitTest ? unitTest.code : ''}
-          getAutocompleteSnippets={() => this.autocompleteConstants(unitTest)}
+          getAutocompleteSnippets={() => [
+            { name: 'Snippet', displayValue: '', value: async () => 'Can do anything here' },
+          ]}
           lintOptions={WrapperUnitTest.lintOptions}
           onChange={this._handleUnitTestCodeChange.bind(this, unitTest)}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
