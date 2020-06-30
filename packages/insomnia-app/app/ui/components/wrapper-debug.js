@@ -4,8 +4,6 @@ import autobind from 'autobind-decorator';
 import { Breadcrumb, Header } from 'insomnia-components';
 import PageLayout from './page-layout';
 import type { WrapperProps } from './wrapper';
-import type { GlobalActivity } from './activity-bar/activity-bar';
-import { ACTIVITY_HOME } from './activity-bar/activity-bar';
 import RequestPane from './request-pane';
 import ErrorBoundary from './error-boundary';
 import ResponsePane from './response-pane';
@@ -14,12 +12,13 @@ import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
-import { isInsomnia } from '../../common/constants';
+import { ACTIVITY_HOME, isInsomnia } from '../../common/constants';
 import ActivityToggle from './activity-toggle';
 
 type Props = {
   forceRefreshKey: string,
   gitSyncDropdown: React.Node,
+  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>,
   handleChangeEnvironment: Function,
   handleDeleteResponse: Function,
   handleDeleteResponses: Function,
@@ -44,7 +43,6 @@ type Props = {
   handleUpdateRequestUrl: Function,
   handleUpdateSettingsShowPasswords: Function,
   handleUpdateSettingsUseBulkHeaderEditor: Function,
-  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>,
   wrapperProps: WrapperProps,
 };
 

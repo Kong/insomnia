@@ -2,14 +2,10 @@
 
 import { askToImportIntoWorkspace, ensureActivityIsForApp, ForceToWorkspaceKeys } from '../helpers';
 import * as modals from '../../../components/modals';
-import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_INSOMNIA,
-  ACTIVITY_SPEC,
-} from '../../../components/activity-bar/activity-bar';
 import * as constants from '../../../../common/constants';
 import { APP_ID_DESIGNER, APP_ID_INSOMNIA } from '../../../../../config';
+
+const { ACTIVITY_DEBUG, ACTIVITY_HOME, ACTIVITY_INSOMNIA, ACTIVITY_SPEC } = constants;
 
 describe('askToImportIntoWorkspace', () => {
   it('should return null if forcing to a new workspace', () => {

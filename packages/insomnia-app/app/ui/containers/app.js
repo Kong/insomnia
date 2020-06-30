@@ -15,6 +15,8 @@ import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import {
+  ACTIVITY_HOME,
+  ACTIVITY_INSOMNIA,
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
   DEFAULT_PANE_WIDTH,
@@ -41,16 +43,16 @@ import {
   selectActiveRequestMeta,
   selectActiveRequestResponses,
   selectActiveResponse,
+  selectActiveUnitTestResult,
+  selectActiveUnitTests,
+  selectActiveUnitTestSuite,
+  selectActiveUnitTestSuites,
   selectActiveWorkspace,
   selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
   selectEntitiesLists,
   selectSidebarChildren,
   selectSyncItems,
-  selectActiveUnitTestResult,
-  selectActiveUnitTestSuite,
-  selectActiveUnitTestSuites,
-  selectActiveUnitTests,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
 } from '../redux/selectors';
@@ -87,7 +89,6 @@ import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
-import { ACTIVITY_HOME, ACTIVITY_INSOMNIA } from '../components/activity-bar/activity-bar';
 
 @autobind
 class App extends PureComponent {

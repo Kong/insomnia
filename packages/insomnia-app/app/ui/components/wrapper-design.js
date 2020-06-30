@@ -12,8 +12,6 @@ import { showModal } from './modals';
 import GenerateConfigModal from './modals/generate-config-modal';
 import classnames from 'classnames';
 import SwaggerUI from 'swagger-ui-react';
-import type { GlobalActivity } from './activity-bar/activity-bar';
-import { ACTIVITY_HOME } from './activity-bar/activity-bar';
 import type { ApiSpec } from '../../models/api-spec';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import previewIcon from '../images/icn-eye.svg';
@@ -21,15 +19,17 @@ import generateConfigIcon from '../images/icn-gear.svg';
 import * as models from '../../models/index';
 import { parseApiSpec } from '../../common/api-specs';
 import { getConfigGenerators } from '../../plugins';
+import type { GlobalActivity } from '../../common/constants';
+import { ACTIVITY_HOME } from '../../common/constants';
 import ActivityToggle from './activity-toggle';
 
 const spectral = new Spectral();
 
 type Props = {|
   gitSyncDropdown: React.Node,
-  wrapperProps: WrapperProps,
-  handleUpdateApiSpec: (s: ApiSpec) => Promise<void>,
   handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>,
+  handleUpdateApiSpec: (s: ApiSpec) => Promise<void>,
+  wrapperProps: WrapperProps,
 |};
 
 type State = {|
@@ -172,9 +172,10 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
     let swaggerUiSpec;
     try {
-      const { contents } = parseApiSpec(activeApiSpec.contents);
-      swaggerUiSpec = contents;
-    } catch (err) {
+      swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
+    } catch (err) {}
+
+    if (!swaggerUiSpec) {
       swaggerUiSpec = {};
     }
 

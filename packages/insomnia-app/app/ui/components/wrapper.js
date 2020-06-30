@@ -64,14 +64,6 @@ import VCS from '../../sync/vcs';
 import type { StatusCandidate } from '../../sync/types';
 import type { RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
-import type { GlobalActivity } from './activity-bar/activity-bar';
-import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_INSOMNIA,
-  ACTIVITY_SPEC,
-  ACTIVITY_UNIT_TEST,
-} from './activity-bar/activity-bar';
 import type { ApiSpec } from '../../models/api-spec';
 import GitVCS from '../../sync/git/git-vcs';
 import { trackPageView } from '../../common/analytics';
@@ -85,10 +77,21 @@ import { importRaw } from '../../common/import';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { DropdownButton } from './base/dropdown';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
-import { getAppName } from '../../common/constants';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestResult } from '../../models/unit-test-result';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
+import type { GlobalActivity } from '../../common/constants';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_INSOMNIA,
+  ACTIVITY_SPEC,
+  ACTIVITY_UNIT_TEST,
+  getAppName,
+} from '../../common/constants';
+import { Spectral } from '@stoplight/spectral';
+
+const spectral = new Spectral();
 
 export type WrapperProps = {
   // Helper Functions
@@ -303,23 +306,42 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
   async _handleWorkspaceActivityChange(workspaceId: string, nextActivity: GlobalActivity) {
     const { activity, activeApiSpec, handleSetActiveActivity } = this.props;
-    handleSetActiveActivity(nextActivity);
 
     // Remember last activity on workspace for later, but only if it isn't HOME
     if (nextActivity !== ACTIVITY_HOME) {
       await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: nextActivity });
     }
 
-    // Import the spec if we're switching away from the spec editing activity
-    if (activity === ACTIVITY_SPEC) {
-      setTimeout(() => {
-        // Delaying generation so design to debug mode is smooth
-        importRaw(
-          () => Promise.resolve(workspaceId), // Always import into current workspace
-          activeApiSpec.contents,
-        );
-      }, 1000);
+    if (activity !== ACTIVITY_SPEC) {
+      handleSetActiveActivity(nextActivity);
+      return;
     }
+
+    // Handle switching away from the spec design activity. For this, we want to generate
+    // requests that can be accessed from debug or test.
+
+    // If there are errors in the spec, show the user a warning first
+    const results = await spectral.run(activeApiSpec.contents);
+    if (activeApiSpec.contents && results && results.length) {
+      showModal(AlertModal, {
+        title: 'Error Generating Configuration',
+        message:
+          'Some requests may not be available due to errors found in the ' +
+          'specification. We recommend fixing errors before proceeding. 🤗',
+        okLabel: 'Proceed',
+        addCancel: true,
+        onConfirm: async () => {
+          handleSetActiveActivity(nextActivity);
+        },
+      });
+      return;
+    }
+
+    // Delaying generation so design to debug mode is smooth
+    handleSetActiveActivity(nextActivity);
+    setTimeout(() => {
+      importRaw(() => Promise.resolve(workspaceId), activeApiSpec.contents);
+    }, 1000);
   }
 
   // Settings updaters

@@ -6,8 +6,6 @@ import PageLayout from './page-layout';
 import { Breadcrumb, Button, Dropdown, DropdownItem, Header, SvgIcon } from 'insomnia-components';
 import ErrorBoundary from './error-boundary';
 import CodeEditor from './codemirror/code-editor';
-import type { GlobalActivity } from './activity-bar/activity-bar';
-import { ACTIVITY_HOME } from './activity-bar/activity-bar';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import type { WrapperProps } from './wrapper';
 import * as models from '../../models';
@@ -20,6 +18,8 @@ import SelectModal from './modals/select-modal';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import ActivityToggle from './activity-toggle';
 import { getSendRequestCallback } from '../../common/send-request';
+import type { GlobalActivity } from '../../common/constants';
+import { ACTIVITY_HOME } from '../../common/constants';
 
 type Props = {|
   children: SidebarChildObjects,

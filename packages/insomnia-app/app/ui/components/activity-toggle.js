@@ -1,9 +1,9 @@
 // @flow
 
-import { MultiSwitch } from 'insomnia-components';
-import type { GlobalActivity } from './activity-bar/activity-bar';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from './activity-bar/activity-bar';
 import React from 'react';
+import { MultiSwitch } from 'insomnia-components';
+import type { GlobalActivity } from '../../common/constants';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../common/constants';
 import type { Settings } from '../../models/settings';
 import type { Workspace } from '../../models/workspace';
 
