@@ -14,7 +14,7 @@ export async function getSendRequestCallback(environmentId, memDB) {
     }
   }
 
-  await db.batchModifyDocs({ upsert: docs });
+  await db.batchModifyDocs({ upsert: docs, remove: [] });
 
   // Return callback helper to send requests
   return async function sendRequest(requestId) {
