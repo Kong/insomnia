@@ -5,7 +5,6 @@ import type { RunTestsOptions } from '../run-tests';
 import { runInsomniaTests, TestReporterEnum } from '../run-tests';
 
 jest.mock('insomnia-testing');
-jest.mock('node-libcurl');
 
 describe('runInsomniaTests()', () => {
   // make flow happy

@@ -17,6 +17,9 @@
     "prepublish": "npm run build"
   },
   "jest": {
+    "setupFiles": [
+      "./__jest__/setup.js"
+    ],
     "testMatch": [
       "**/__tests__/**/*.test.js"
     ],
