@@ -70,7 +70,7 @@ class Editable extends PureComponent {
     const {
       value,
       fallbackValue,
-      emptyValue,
+      blankValue,
       singleClick,
       onEditStart, // eslint-disable-line no-unused-vars
       className,
@@ -101,14 +101,14 @@ class Editable extends PureComponent {
         title: singleClick ? 'Click to edit' : 'Double click to edit',
         onClick: this._handleSingleClickEditStart,
         onDoubleClick: this._handleEditStart,
-        emptyValue,
+        blankValue,
         ...extra,
       };
 
       if (renderReadView) {
         return renderReadView(initialValue, readViewProps);
       } else {
-        return <span {...readViewProps}>{initialValue || emptyValue}</span>;
+        return <span {...readViewProps}>{initialValue || blankValue}</span>;
       }
     }
   }
@@ -120,7 +120,7 @@ Editable.propTypes = {
 
   // Optional
   fallbackValue: PropTypes.string,
-  emptyValue: PropTypes.string,
+  blankValue: PropTypes.string,
   renderReadView: PropTypes.func,
   singleClick: PropTypes.bool,
   onEditStart: PropTypes.func,

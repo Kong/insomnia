@@ -191,7 +191,7 @@ class SidebarRequestRow extends PureComponent {
                 <Editable
                   value={request.name}
                   fallbackValue={this.state.renderedUrl}
-                  emptyValue="Empty"
+                  blankValue="Empty"
                   className="inline-block"
                   onEditStart={this._handleEditStart}
                   onSubmit={this._handleRequestUpdateName}
