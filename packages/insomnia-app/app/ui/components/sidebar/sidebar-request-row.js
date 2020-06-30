@@ -112,13 +112,19 @@ class SidebarRequestRow extends PureComponent {
   }
 
   componentDidMount() {
-    if (!this.props.request.name) {
+    const { request } = this.props;
+    if (request && !request.name) {
       this._debouncedUpdateRenderedUrl(this.props);
     }
   }
 
   componentWillUpdate(nextProps) {
-    if (nextProps.request.url !== this.props.request.url) {
+    if (!nextProps.request) {
+      return;
+    }
+
+    const requestUrl = this.props.request ? this.props.request.url : '';
+    if (nextProps.request.url !== requestUrl) {
       this._debouncedUpdateRenderedUrl(nextProps);
     }
   }

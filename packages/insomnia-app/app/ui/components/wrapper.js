@@ -12,7 +12,6 @@ import type {
   RequestParameter,
 } from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
-
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { registerModal, showModal } from './modals/index';

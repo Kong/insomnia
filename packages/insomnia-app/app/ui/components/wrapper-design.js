@@ -12,6 +12,7 @@ import { showModal } from './modals';
 import GenerateConfigModal from './modals/generate-config-modal';
 import classnames from 'classnames';
 import SwaggerUI from 'swagger-ui-react';
+import type { GlobalActivity } from './activity-bar/activity-bar';
 import { ACTIVITY_HOME } from './activity-bar/activity-bar';
 import type { ApiSpec } from '../../models/api-spec';
 import designerLogo from '../images/insomnia-designer-logo.svg';
@@ -20,9 +21,7 @@ import generateConfigIcon from '../images/icn-gear.svg';
 import * as models from '../../models/index';
 import { parseApiSpec } from '../../common/api-specs';
 import { getConfigGenerators } from '../../plugins';
-import AlertModal from './modals/alert-modal';
 import ActivityToggle from './activity-toggle';
-import type { GlobalActivity } from './activity-bar/activity-bar';
 
 const spectral = new Spectral();
 
@@ -79,32 +78,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
       wrapperProps: { activeWorkspace },
     } = this.props;
     handleSetUnitTestActivity(activeWorkspace._id);
-  }
-
-  async _handleDebugSpec(errors, e): Promise<void> {
-    e.preventDefault();
-    if (errors) {
-      showModal(AlertModal, {
-        title: 'Error Generating Configuration',
-        message:
-          'Some requests may not be available due to errors found in the specification. We recommend fixing errors before proceeding. 🤗',
-        okLabel: 'Proceed',
-        addCancel: true,
-        onConfirm: async () => {
-          const {
-            handleSetDebugActivity,
-            wrapperProps: { activeApiSpec },
-          } = this.props;
-          await handleSetDebugActivity(activeApiSpec);
-        },
-      });
-    } else {
-      const {
-        handleSetDebugActivity,
-        wrapperProps: { activeApiSpec },
-      } = this.props;
-      await handleSetDebugActivity(activeApiSpec);
-    }
   }
 
   async _handleTogglePreview() {

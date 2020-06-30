@@ -14,7 +14,6 @@ import Toast from '../components/toast';
 import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
-import { ACTIVITY_HOME, ACTIVITY_INSOMNIA } from '../components/activity-bar/activity-bar';
 import {
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
@@ -88,6 +87,7 @@ import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
+import { ACTIVITY_HOME, ACTIVITY_INSOMNIA } from '../components/activity-bar/activity-bar';
 
 @autobind
 class App extends PureComponent {
@@ -935,11 +935,17 @@ class App extends PureComponent {
    * @private
    */
   _updateDocumentTitle() {
-    const { activeWorkspace, activeApiSpec, activeEnvironment, activeRequest } = this.props;
+    const {
+      activeWorkspace,
+      activeApiSpec,
+      activeEnvironment,
+      activeRequest,
+      activity,
+    } = this.props;
 
     let title;
 
-    if (this.props.activity === ACTIVITY_HOME) {
+    if (activity === ACTIVITY_HOME) {
       title = getAppName();
     } else {
       title = getAppId() === APP_ID_INSOMNIA ? activeWorkspace.name : activeApiSpec.fileName;
