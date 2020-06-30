@@ -29,12 +29,6 @@ describe('cli', () => {
     jest.restoreAllMocks();
   });
 
-  it('should error when required --type option is missing', () =>
-    expect(() => inso('generate config file.yaml')).toThrowError());
-
-  it('should error when filePath is missing', () =>
-    expect(() => inso('generate config -t declarative')).toThrowError());
-
   it('should call generateConfig with undefined output argument', () => {
     inso('generate config -t declarative file.yaml');
     expect(generateConfig).toHaveBeenCalledWith('file.yaml', {

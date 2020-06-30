@@ -3,7 +3,7 @@
 import { generate, runTestsCli } from 'insomnia-testing';
 import { getSendRequestCallback } from 'insomnia-send-request';
 import type { GlobalOptions } from '../util';
-import { gitDataDirDb } from '../db/mem-db';
+import { loadDb } from '../db';
 
 export const TestReporterEnum = {
   dot: 'dot',
@@ -34,14 +34,7 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
     return;
   }
 
-  const { reporter, bail, keepFile } = options;
-
-  const workingDir = options.workingDir || '.';
-
-  const db = await gitDataDirDb({
-    dir: workingDir,
-    filterTypes: ['Environment', 'Request', 'RequestGroup', 'Workspace'],
-  });
+  const { reporter, bail, keepFile, appDataDir, workingDir } = options;
 
   const suites = [
     {
@@ -62,18 +55,14 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
     },
   ];
 
-  const dbObj = {};
-  for (const type of Object.keys(db)) {
-    dbObj[type] = {};
-    for (const [id, doc] of db[type].entries()) {
-      dbObj[type][id] = doc;
-    }
-  }
+  const db = await loadDb({
+    workingDir,
+    appDataDir,
+    filterTypes: ['Environment', 'Request', 'RequestGroup', 'Workspace'],
+  });
 
+  const environmentId = 'env_env_ca046a738f001eb3090261a537b1b78f86c2094c_sub';
   const testFileContents = await generate(suites);
-  const sendRequest = getSendRequestCallback(
-    'env_env_ca046a738f001eb3090261a537b1b78f86c2094c_sub',
-    dbObj,
-  );
+  const sendRequest = await getSendRequestCallback(environmentId, db);
   return await runTestsCli(testFileContents, { reporter, bail, keepFile, sendRequest });
 }

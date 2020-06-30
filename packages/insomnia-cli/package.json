@@ -25,13 +25,10 @@
     "resetModules": true
   },
   "devDependencies": {
-    "@babel/cli": "^7.10.1",
     "@babel/core": "^7.9.0",
     "@babel/plugin-proposal-optional-chaining": "^7.9.0",
-    "@babel/plugin-transform-modules-commonjs": "^7.10.1",
     "@babel/preset-env": "^7.10.2",
     "@babel/preset-flow": "^7.10.1",
-    "babel-plugin-add-module-exports": "^1.0.2",
     "execa": "^4.0.2",
     "flow-bin": "^0.126.1",
     "get-bin-path": "^5.1.0",
@@ -46,6 +43,7 @@
     "commander": "^5.1.0",
     "insomnia-send-request": "^2.2.10",
     "insomnia-testing": "^2.2.9",
+    "nedb": "^1.8.0",
     "openapi-2-kong": "^2.2.10",
     "yaml": "^1.10.0",
     "insomnia-plugin-base64": "^2.2.10",

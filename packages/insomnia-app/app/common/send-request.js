@@ -3,16 +3,21 @@ import { types as modelTypes } from '../models';
 import { send } from '../network/network';
 import { getBodyBuffer } from '../models/response';
 
-export function getSendRequestCallback(environmentId, memDB) {
-  return async function sendRequest(requestId) {
-    // Initialize the DB in-memory and fill it with data
-    await db.init(modelTypes(), { inMemoryOnly: true });
-    for (const type of Object.keys(memDB)) {
-      for (const doc of Object.values(memDB[type])) {
-        await db.insert(doc);
-      }
-    }
+export async function getSendRequestCallback(environmentId, memDB) {
+  // Initialize the DB in-memory and fill it with data
+  await db.init(modelTypes(), { inMemoryOnly: true });
 
+  const promises = [];
+  for (const type of Object.keys(memDB)) {
+    for (const doc of memDB[type]) {
+      promises.push(db.insert(doc));
+    }
+  }
+
+  await Promise.all(promises);
+
+  // Return callback helper to send requests
+  return async function sendRequest(requestId) {
     const res = await send(requestId, environmentId);
     const headersObj = {};
     for (const h of res.headers || []) {
