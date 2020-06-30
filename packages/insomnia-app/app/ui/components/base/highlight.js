@@ -12,13 +12,13 @@ type Props = {|
 @autobind
 class Highlight extends React.PureComponent<Props> {
   render() {
-    const { search, text, ...otherProps } = this.props;
+    const { search, text, emptyValue, ...otherProps } = this.props;
 
     // Match loose here to make sure our highlighting always works
     const result = fuzzyMatch(search, text, { splitSpace: true, loose: true });
 
     if (!result) {
-      return <span {...otherProps}>{text}</span>;
+      return <span {...otherProps}>{text || emptyValue || ''}</span>;
     }
 
     return (

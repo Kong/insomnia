@@ -233,6 +233,7 @@ class WrapperDebug extends React.PureComponent<Props> {
               handleMoveRequestGroup={handleMoveRequestGroup}
               handleGenerateCode={handleGenerateCode}
               handleCopyAsCurl={handleCopyAsCurl}
+              handleRender={handleRender}
               moveDoc={handleMoveDoc}
               hidden={sidebarHidden}
               width={sidebarWidth}
