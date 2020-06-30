@@ -11,7 +11,7 @@
     "test:watch": "jest --watch",
     "test:snapshots": "npm run build && jest -u",
     "start": "npm run build:watch",
-    "build": "webpack --config webpack.config.js --display errors-only --ignore \"src/**/*.test.js\",\"src/**/*.test.js.snap\"",
+    "build": "webpack --config webpack.config.js --display errors-only",
     "build:watch": "npm run build -- --watch",
     "bootstrap": "npm run build",
     "prepublish": "npm run build"
