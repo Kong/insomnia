@@ -6,15 +6,16 @@ exports[`Snapshot for "inso --help" 1`] = `
 A CLI for Insomnia!
 
 Options:
-  -v, --version        output the version number
-  --working-dir <dir>  set working directory
-  -h, --help           display help for command
+  -v, --version             output the version number
+  -w, --working-dir <dir>   set working directory
+  -a, --app-data-dit <dir>  set the app data directory
+  -h, --help                display help for command
 
 Commands:
-  generate             Code generation utilities
-  run                  Execution utilities
-  lint                 Linting utilities
-  help [command]       display help for command"
+  generate                  Code generation utilities
+  run                       Execution utilities
+  lint                      Linting utilities
+  help [command]            display help for command"
 `;
 
 exports[`Snapshot for "inso -h" 1`] = `
@@ -23,15 +24,16 @@ exports[`Snapshot for "inso -h" 1`] = `
 A CLI for Insomnia!
 
 Options:
-  -v, --version        output the version number
-  --working-dir <dir>  set working directory
-  -h, --help           display help for command
+  -v, --version             output the version number
+  -w, --working-dir <dir>   set working directory
+  -a, --app-data-dit <dir>  set the app data directory
+  -h, --help                display help for command
 
 Commands:
-  generate             Code generation utilities
-  run                  Execution utilities
-  lint                 Linting utilities
-  help [command]       display help for command"
+  generate                  Code generation utilities
+  run                       Execution utilities
+  lint                      Linting utilities
+  help [command]            display help for command"
 `;
 
 exports[`Snapshot for "inso generate -h" 1`] = `
@@ -43,18 +45,18 @@ Options:
   -h, --help                     display help for command
 
 Commands:
-  config [options] <identifier>  Generate configuration from an api spec
+  config [options] [identifier]  Generate configuration from an api spec.
   help [command]                 display help for command"
 `;
 
 exports[`Snapshot for "inso generate config -h" 1`] = `
-"Usage: inso generate config [options] <identifier>
+"Usage: inso generate config [options] [identifier]
 
-Generate configuration from an api spec
+Generate configuration from an api spec.
 
 Options:
   -t, --type <value>   type of configuration to generate, options are
-                       [kubernetes, declarative]
+                       [kubernetes, declarative] (default: \\"declarative\\")
   -o, --output <path>  save the generated config to a file
   -h, --help           display help for command"
 `;
@@ -65,15 +67,16 @@ exports[`Snapshot for "inso help" 1`] = `
 A CLI for Insomnia!
 
 Options:
-  -v, --version        output the version number
-  --working-dir <dir>  set working directory
-  -h, --help           display help for command
+  -v, --version             output the version number
+  -w, --working-dir <dir>   set working directory
+  -a, --app-data-dit <dir>  set the app data directory
+  -h, --help                display help for command
 
 Commands:
-  generate             Code generation utilities
-  run                  Execution utilities
-  lint                 Linting utilities
-  help [command]       display help for command"
+  generate                  Code generation utilities
+  run                       Execution utilities
+  lint                      Linting utilities
+  help [command]            display help for command"
 `;
 
 exports[`Snapshot for "inso lint -h" 1`] = `
@@ -85,12 +88,12 @@ Options:
   -h, --help         display help for command
 
 Commands:
-  spec <identifier>  Lint an API Specification
+  spec [identifier]  Lint an API Specification
   help [command]     display help for command"
 `;
 
 exports[`Snapshot for "inso lint spec -h" 1`] = `
-"Usage: inso lint spec [options] <identifier>
+"Usage: inso lint spec [options] [identifier]
 
 Lint an API Specification
 
