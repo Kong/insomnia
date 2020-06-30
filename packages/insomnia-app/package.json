@@ -200,7 +200,6 @@
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.3.1",
-    "webpack-node-externals": "^1.7.2",
     "webpack-target-electron-renderer": "^0.4.0",
     "worker-loader": "^2.0.0"
   }
