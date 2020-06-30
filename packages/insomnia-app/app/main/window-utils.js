@@ -219,7 +219,7 @@ export function createWindow() {
       },
       {
         label: `Toggle ${MNEMONIC_SYM}DevTools`,
-        accelerator: 'AltOrShift+CmdOrCtrl+I',
+        accelerator: 'Alt+CmdOrCtrl+I',
         click: () => mainWindow.toggleDevTools(),
       },
     ],
