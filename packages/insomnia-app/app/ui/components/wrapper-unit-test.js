@@ -19,7 +19,7 @@ import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import SelectModal from './modals/select-modal';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import ActivityToggle from './activity-toggle';
-import * as network from '../../network/network';
+import { getSendRequestCallback } from '../../common/send-request';
 
 type Props = {|
   children: SidebarChildObjects,
@@ -46,7 +46,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       insomnia: true,
       expect: true,
       chai: true,
-      await: true,
+      debugger: true,
     },
     asi: true, // Don't require semicolons
     undef: true, // Prevent undefined usages
@@ -209,24 +209,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     const src = await generate([{ name: 'My Suite', suites: [], tests }]);
     const results = await runTests(src, {
       requests,
-      sendRequest: async requestId => {
-        const res = await network.send(requestId, activeEnvironment ? activeEnvironment._id : null);
-
-        const headersObj = {};
-        for (const h of res.headers || []) {
-          const name = h.name || '';
-          headersObj[name.toLowerCase()] = h.value || '';
-        }
-
-        const bodyBuffer = await models.response.getBodyBuffer(res);
-
-        return {
-          status: res.statusCode,
-          statusMessage: res.statusMessage,
-          data: bodyBuffer ? bodyBuffer.toString('utf8') : undefined,
-          headers: headersObj,
-        };
-      },
+      sendRequest: getSendRequestCallback(activeEnvironment ? activeEnvironment._id : null),
     });
 
     await models.unitTestResult.create({

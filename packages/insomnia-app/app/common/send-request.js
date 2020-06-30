@@ -3,8 +3,8 @@ import { types as modelTypes } from '../models';
 import { send } from '../network/network';
 import { getBodyBuffer } from '../models/response';
 
-export async function getSendRequestCallback(environmentId, memDB) {
-  // Initialize the DB in-memory and fill it with data
+export async function getSendRequestCallbackMemDb(environmentId, memDB) {
+  // Initialize the DB in-memory and fill it with data if we're given one
   await db.init(modelTypes(), { inMemoryOnly: true }, true);
 
   const docs = [];
@@ -18,20 +18,30 @@ export async function getSendRequestCallback(environmentId, memDB) {
 
   // Return callback helper to send requests
   return async function sendRequest(requestId) {
-    const res = await send(requestId, environmentId);
-    const headersObj = {};
-    for (const h of res.headers || []) {
-      const name = h.name || '';
-      headersObj[name.toLowerCase()] = h.value || '';
-    }
+    return sendAndTransform(requestId, environmentId);
+  };
+}
 
-    const bodyBuffer = await getBodyBuffer(res);
+export function getSendRequestCallback(environmentId) {
+  return async function sendRequest(requestId) {
+    return sendAndTransform(requestId, environmentId);
+  };
+}
 
-    return {
-      status: res.statusCode,
-      statusMessage: res.statusMessage,
-      data: bodyBuffer ? bodyBuffer.toString('utf8') : undefined,
-      headers: headersObj,
-    };
+async function sendAndTransform(requestId, environmentId) {
+  const res = await send(requestId, environmentId);
+  const headersObj = {};
+  for (const h of res.headers || []) {
+    const name = h.name || '';
+    headersObj[name.toLowerCase()] = h.value || '';
+  }
+
+  const bodyBuffer = await getBodyBuffer(res);
+
+  return {
+    status: res.statusCode,
+    statusMessage: res.statusMessage,
+    data: bodyBuffer ? bodyBuffer.toString('utf8') : undefined,
+    headers: headersObj,
   };
 }
