@@ -2,7 +2,8 @@
 
 declare module 'insomnia-send-request' {
   declare module.exports: {
-    getSendRequestCallback: (
+    getSendRequestCallback: ( environmentId: string ) => Promise<Object>,
+    getSendRequestCallbackMemDb: (
       environmentId: string,
       memDb: { [string]: Array<Object> },
     ) => Promise<Object>,
