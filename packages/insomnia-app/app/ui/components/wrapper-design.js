@@ -3,7 +3,7 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
-import { Breadcrumb, Button, Header, NoticeTable, Switch } from 'insomnia-components';
+import { Breadcrumb, Button, Header, NoticeTable } from 'insomnia-components';
 import ErrorBoundary from './error-boundary';
 import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
 import CodeEditor from './codemirror/code-editor';
@@ -12,7 +12,6 @@ import { showModal } from './modals';
 import GenerateConfigModal from './modals/generate-config-modal';
 import classnames from 'classnames';
 import SwaggerUI from 'swagger-ui-react';
-import { ACTIVITY_HOME } from './activity-bar/activity-bar';
 import type { ApiSpec } from '../../models/api-spec';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import previewIcon from '../images/icn-eye.svg';
@@ -21,14 +20,17 @@ import * as models from '../../models/index';
 import { parseApiSpec } from '../../common/api-specs';
 import { getConfigGenerators } from '../../plugins';
 import AlertModal from './modals/alert-modal';
+import { ACTIVITY_HOME } from '../../common/constants';
+import type { GlobalActivity } from '../../common/constants';
+import ActivityToggle from './activity-toggle';
 
 const spectral = new Spectral();
 
 type Props = {|
   gitSyncDropdown: React.Node,
-  wrapperProps: WrapperProps,
+  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>,
   handleUpdateApiSpec: (s: ApiSpec) => Promise<void>,
-  handleSetDebugActivity: (s: ApiSpec) => Promise<void>,
+  wrapperProps: WrapperProps,
 |};
 
 type State = {|
@@ -181,21 +183,20 @@ class WrapperDesign extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { gitSyncDropdown, wrapperProps } = this.props;
+    const { gitSyncDropdown, wrapperProps, handleActivityChange } = this.props;
 
-    const { activeApiSpec, settings } = wrapperProps;
+    const { activeApiSpec, settings, activity, activeWorkspace } = wrapperProps;
 
     const { lintMessages, previewHidden, hasConfigPlugins } = this.state;
 
     let swaggerUiSpec;
     try {
-      const { contents } = parseApiSpec(activeApiSpec.contents);
-      swaggerUiSpec = contents;
-    } catch (err) {
+      swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
+    } catch (err) {}
+
+    if (!swaggerUiSpec) {
       swaggerUiSpec = {};
     }
-
-    const lintErrorsExist = !!lintMessages.find(c => c.type === 'error');
 
     return (
       <PageLayout
@@ -214,12 +215,11 @@ class WrapperDesign extends React.PureComponent<Props, State> {
               </React.Fragment>
             }
             gridCenter={
-              <Switch
-                onClick={this._handleDebugSpec.bind(this, lintErrorsExist)}
-                optionItems={[
-                  { label: 'DESIGN', selected: true },
-                  { label: 'DEBUG', selected: false },
-                ]}
+              <ActivityToggle
+                activity={activity}
+                handleActivityChange={handleActivityChange}
+                settings={settings}
+                workspace={activeWorkspace}
               />
             }
             gridRight={
