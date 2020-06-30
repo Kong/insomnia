@@ -42,6 +42,7 @@
     "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
+    "@stoplight/spectral": "^5.4.0",
     "commander": "^5.1.0",
     "insomnia-send-request": "^2.2.10",
     "insomnia-testing": "^2.2.9",

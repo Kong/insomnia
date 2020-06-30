@@ -1,7 +1,8 @@
 // @flow
 import { ConversionTypeMap, generateConfig } from './commands/generate-config';
-import { getVersion, createCommand, getAllOptions } from './util';
+import { getVersion, createCommand, getAllOptions, logErrorExit1, exit } from './util';
 import { runInsomniaTests, TestReporterEnum } from './commands/run-tests';
+import { lintSpecification } from './commands/lint-specification';
 
 function makeGenerateCommand(exitOverride: boolean) {
   // inso generate
@@ -18,7 +19,7 @@ function makeGenerateCommand(exitOverride: boolean) {
       `type of configuration to generate, options are [${conversionTypes}]`,
     )
     .option('-o, --output <path>', 'save the generated config to a file')
-    .action((identifier, cmd) => generateConfig(identifier, getAllOptions(cmd)));
+    .action((identifier, cmd) => exit(generateConfig(identifier, getAllOptions(cmd))));
 
   return generate;
 }
@@ -39,9 +40,23 @@ function makeTestCommand(exitOverride: boolean) {
       TestReporterEnum.spec,
     )
     .option('-b, --bail', 'abort ("bail") after first test failure')
-    .action(cmd => runInsomniaTests(getAllOptions(cmd)));
+    .option('--keep-file', 'do not delete the generated test file')
+    .action(cmd => exit(runInsomniaTests(getAllOptions(cmd))));
 
   return run;
+}
+
+function makeLintCommand(exitOverride: boolean) {
+  // inso lint
+  const lint = createCommand(exitOverride, 'lint').description('Linting utilities');
+
+  // inso lint spec
+  lint
+    .command('spec <identifier>')
+    .description('Lint an API Specification')
+    .action((identifier, cmd) => exit(lintSpecification(identifier, getAllOptions(cmd))));
+
+  return lint;
 }
 
 export function go(args?: Array<string>, exitOverride?: boolean): void {
@@ -56,6 +71,7 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     .option('--working-dir <dir>', 'set working directory')
     .addCommand(makeGenerateCommand(!!exitOverride))
     .addCommand(makeTestCommand(!!exitOverride))
+    .addCommand(makeLintCommand(!!exitOverride))
     .parseAsync(args)
-    .catch(err => console.log('An error occurred', err));
+    .catch(logErrorExit1);
 }

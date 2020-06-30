@@ -1366,7 +1366,7 @@ function getAppSynopsis() {
   return Object(_config__WEBPACK_IMPORTED_MODULE_0__["appConfig"])().synopsis;
 }
 function getDefaultAppId() {
-  return "com.insomnia.app";
+  return "com.insomnia.designer";
 }
 function getAppId() {
   return Object(_config__WEBPACK_IMPORTED_MODULE_0__["appConfig"])().appId;
@@ -2837,7 +2837,10 @@ module.exports = {
 /* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
+// This file implements just enough of the electron module to get sending requests to work
 const os = __webpack_require__(162);
+
+const path = __webpack_require__(13);
 
 function getPath(name) {
   switch (name) {
@@ -2845,7 +2848,8 @@ function getPath(name) {
       return os.tmpdir();
 
     case 'userData':
-      return '/Users/greg.schier/Library/Application Support/insomnia-app';
+      // Will be used to store response bodies and things
+      return path.join(os.tmpdir(), 'insomnia-send-request');
   }
 
   throw new Error('Invalid path:' + name);
@@ -3579,7 +3583,7 @@ module.exports.APP_ID_INSOMNIA = 'com.insomnia.app';
 module.exports.APP_ID_DESIGNER = 'com.insomnia.designer';
 
 module.exports.appConfig = function () {
-  switch ("com.insomnia.app") {
+  switch ("com.insomnia.designer") {
     case module.exports.APP_ID_DESIGNER:
       return designerConfig;
 
@@ -3587,12 +3591,12 @@ module.exports.appConfig = function () {
       return coreConfig;
 
     default:
-      throw new Error(`APP_ID invalid value "${"com.insomnia.app"}"`);
+      throw new Error(`APP_ID invalid value "${"com.insomnia.designer"}"`);
   }
 };
 
 module.exports.electronBuilderConfig = function () {
-  switch ("com.insomnia.app") {
+  switch ("com.insomnia.designer") {
     case module.exports.APP_ID_DESIGNER:
       return designerBuildConfig;
 
@@ -3600,7 +3604,7 @@ module.exports.electronBuilderConfig = function () {
       return coreBuildConfig;
 
     default:
-      throw new Error(`APP_ID invalid value "${"com.insomnia.app"}"`);
+      throw new Error(`APP_ID invalid value "${"com.insomnia.designer"}"`);
   }
 };
 
@@ -4940,7 +4944,7 @@ async function sendWithSettings(requestId, requestPatch) {
   return _actuallySend(renderResult.request, renderResult.context, workspace, settings, environment);
 }
 async function send(requestId, environmentId, extraInfo) {
-  console.log(`[network] Sending req=${requestId}`); // HACK: wait for all debounces to finish
+  console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`); // HACK: wait for all debounces to finish
 
   /*
    * TODO: Do this in a more robust way

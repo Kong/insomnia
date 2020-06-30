@@ -13,10 +13,11 @@ export const TestReporterEnum = {
   progress: 'progress',
 };
 
-export type RunTestsOptions = GlobalOptions<{|
+export type RunTestsOptions = GlobalOptions & {
   reporter: $Keys<typeof TestReporterEnum>,
   bail?: boolean,
-|}>;
+  keepFile?: boolean,
+};
 
 function validateOptions({ reporter }: RunTestsOptions): boolean {
   if (reporter && !TestReporterEnum[reporter]) {
@@ -33,7 +34,7 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
     return;
   }
 
-  const { reporter, bail } = options;
+  const { reporter, bail, keepFile } = options;
 
   const workingDir = options.workingDir || '.';
 
@@ -74,5 +75,5 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
     'env_env_ca046a738f001eb3090261a537b1b78f86c2094c_sub',
     dbObj,
   );
-  await runTestsCli(testFileContents, { reporter, bail, sendRequest });
+  return await runTestsCli(testFileContents, { reporter, bail, keepFile, sendRequest });
 }
