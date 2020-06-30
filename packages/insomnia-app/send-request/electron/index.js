@@ -1,11 +1,13 @@
 const os = require('os');
+const path = require('path');
 
 function getPath(name) {
   switch (name) {
     case 'temp':
       return os.tmpdir();
     case 'userData':
-      return '/Users/greg.schier/Library/Application Support/insomnia-app';
+      // Will be used to store response bodies and things
+      return path.join(os.tmpdir(), 'insomnia-send-request');
   }
   throw new Error('Invalid path:' + name);
 }

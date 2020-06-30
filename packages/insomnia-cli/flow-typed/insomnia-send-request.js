@@ -1,5 +1,5 @@
 // @flow
 
-declare module 'insomnia-lib' {
+declare module 'insomnia-send-request' {
   declare module.exports: *;
 }

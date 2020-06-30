@@ -1,7 +1,7 @@
 // @flow
 
 import { generate, runTestsCli } from 'insomnia-testing';
-import { getSendRequestCallback } from 'insomnia-lib';
+import { getSendRequestCallback } from 'insomnia-send-request';
 import type { GlobalOptions } from '../util';
 import { gitDataDirDb } from '../db/mem-db';
 
@@ -70,6 +70,9 @@ export async function runInsomniaTests(options: RunTestsOptions): Promise<void> 
   }
 
   const testFileContents = await generate(suites);
-  const sendRequest = getSendRequestCallback('env_123', dbObj);
+  const sendRequest = getSendRequestCallback(
+    'env_env_ca046a738f001eb3090261a537b1b78f86c2094c_sub',
+    dbObj,
+  );
   await runTestsCli(testFileContents, { reporter, bail, sendRequest });
 }
