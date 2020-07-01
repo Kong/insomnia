@@ -36,19 +36,30 @@ describe('cli', () => {
 
   it('should call generateConfig with undefined output argument', () => {
     inso('generate config -t declarative file.yaml');
-    expect(generateConfig).toHaveBeenCalledWith({
-      filePath: 'file.yaml',
+    expect(generateConfig).toHaveBeenCalledWith('file.yaml', {
       type: 'declarative',
-      output: undefined,
     });
   });
 
   it('should call generateConfig with all expected arguments', () => {
     inso('generate config -t kubernetes -o output.yaml file.yaml');
-    expect(generateConfig).toHaveBeenCalledWith({
-      filePath: 'file.yaml',
-      type: 'kubernetes',
-      output: 'output.yaml',
-    });
+    expect(generateConfig).toHaveBeenCalledWith(
+      'file.yaml',
+      expect.objectContaining({
+        type: 'kubernetes',
+        output: 'output.yaml',
+      }),
+    );
+  });
+
+  it('should call generateConfig with global option', () => {
+    inso('generate config -t kubernetes --workingDir testing/dir file.yaml');
+    expect(generateConfig).toHaveBeenCalledWith(
+      'file.yaml',
+      expect.objectContaining({
+        type: 'kubernetes',
+        workingDir: 'testing/dir',
+      }),
+    );
   });
 });
