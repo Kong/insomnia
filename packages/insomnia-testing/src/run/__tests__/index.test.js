@@ -45,4 +45,15 @@ describe('run', () => {
     expect(sendRequest).toHaveBeenCalledWith('req_123');
     expect(stats.passes).toBe(1);
   });
+
+  it('throws on invalid JavaScript', async () => {
+    let err;
+    try {
+      await runTests('this is invalid');
+    } catch (e) {
+      err = e;
+    }
+
+    expect(err).not.toBeNull();
+  });
 });
