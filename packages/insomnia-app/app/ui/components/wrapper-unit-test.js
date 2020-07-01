@@ -56,24 +56,33 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     esversion: 8, // ES8 syntax (async/await, etc)
   };
 
-  autocompleteSnippets(unitTest: UnitTest): Array<{ name: string, value: () => Promise<string> }> {
-    const sendReqSnippet = (requestId: string) => {
-      for (let i = 1; i < 100; i++) {
-        const variableName = `response${i}`;
-        if (!unitTest.code.includes(`const ${variableName} =`)) {
-          return (
-            `const ${variableName} = await insomnia.send(${requestId});\n` +
-            `expect(${variableName}.status).to.equal(200);`
-          );
-        }
-      }
-    };
+  generateSendReqSnippet(existingCode: string, requestId: string): string {
+    let variableName = 'response';
 
+    for (let i = 1; i < 100; i++) {
+      variableName = `response${i}`;
+
+      // Try next one if code already contains this variable
+      if (existingCode.includes(`const ${variableName} =`)) {
+        continue;
+      }
+
+      // Found variable that doesn't exist in code yet
+      break;
+    }
+
+    return (
+      `const ${variableName} = await insomnia.send(${requestId});\n` +
+      `expect(${variableName}.status).to.equal(200);`
+    );
+  }
+
+  autocompleteSnippets(unitTest: UnitTest): Array<{ name: string, value: () => Promise<string> }> {
     return [
       {
         name: 'Send Current Request',
         displayValue: '',
-        value: sendReqSnippet(''),
+        value: this.generateSendReqSnippet(unitTest.code, ''),
       },
       {
         name: 'Send Request By ID',
@@ -89,7 +98,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                 ...this.buildSelectableRequests().map(({ name, request }) => ({
                   name: name,
                   displayValue: '',
-                  value: sendReqSnippet(`'${request._id}'`),
+                  value: this.generateSendReqSnippet(unitTest.code, `'${request._id}'`),
                 })),
               ],
               onDone: v => resolve(v),
@@ -104,7 +113,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     const { activeWorkspace } = this.props.wrapperProps;
     showPrompt({
       title: 'New Test Suite',
-      defaultValue: activeWorkspace.name + ' Suite',
+      defaultValue: 'New Suite',
       submitName: 'Create Suite',
       label: 'Test Suite Name',
       selectText: true,
@@ -129,9 +138,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       onComplete: async name => {
         await models.unitTest.create({
           parentId: activeUnitTestSuite._id,
-          code:
-            'const response = await insomnia.send();\n' +
-            'expect(response.status).to.equal(200);\n\n// TODO: Add test code here',
+          code: this.generateSendReqSnippet('', ''),
           name,
         });
       },
@@ -142,12 +149,12 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     await models.unitTest.update(unitTest, { code: v });
   }
 
-  _handleBreadcrumb(): void {
+  async _handleBreadcrumb(): void {
     const {
       handleActivityChange,
       wrapperProps: { activeWorkspace },
     } = this.props;
-    handleActivityChange(activeWorkspace._id, ACTIVITY_HOME);
+    await handleActivityChange(activeWorkspace._id, ACTIVITY_HOME);
   }
 
   async _handleRunTests(): Promise<void> {
@@ -393,7 +400,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           indentWithTabs={settings.editorIndentWithTabs}
           keyMap={settings.editorKeyMap}
           defaultValue={unitTest ? unitTest.code : ''}
-          getAutocompleteSnippets={this.autocompleteSnippets}
+          getAutocompleteSnippets={() => this.autocompleteSnippets(unitTest)}
           lintOptions={WrapperUnitTest.lintOptions}
           onChange={this._handleUnitTestCodeChange.bind(this, unitTest)}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
