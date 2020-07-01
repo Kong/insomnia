@@ -312,7 +312,8 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: nextActivity });
     }
 
-    if (activity !== ACTIVITY_SPEC) {
+    const notEditingASpec = activity !== ACTIVITY_SPEC;
+    if (notEditingASpec) {
       handleSetActiveActivity(nextActivity);
       return;
     }
@@ -330,7 +331,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
           'specification. We recommend fixing errors before proceeding. 🤗',
         okLabel: 'Proceed',
         addCancel: true,
-        onConfirm: async () => {
+        onConfirm: () => {
           handleSetActiveActivity(nextActivity);
         },
       });
