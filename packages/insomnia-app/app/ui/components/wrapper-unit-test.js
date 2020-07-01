@@ -387,7 +387,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
             <DropdownItem
               disabled={testsRunning && testsRunning.find(t => t._id === unitTest._id)}
               onClick={() => this._handleRunTest(unitTest)}>
-              Run
+              Run Test
             </DropdownItem>
             <DropdownItem onClick={() => this._handleDeleteTest(unitTest)}>Delete</DropdownItem>
           </Dropdown>
