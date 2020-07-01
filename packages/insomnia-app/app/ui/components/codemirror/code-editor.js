@@ -520,6 +520,7 @@ class CodeEditor extends React.Component {
       autoCloseBrackets,
       dynamicHeight,
       getAutocompleteConstants,
+      getAutocompleteSnippets,
       getRenderContext,
       hideGutters,
       hideLineNumbers,
@@ -614,7 +615,7 @@ class CodeEditor extends React.Component {
     }
 
     // Setup the hint options
-    if (getRenderContext || getAutocompleteConstants) {
+    if (getRenderContext || getAutocompleteConstants || getAutocompleteSnippets) {
       let getVariables = null;
       let getTags = null;
       if (getRenderContext) {
@@ -650,6 +651,7 @@ class CodeEditor extends React.Component {
         getVariables,
         getTags,
         getConstants: getAutocompleteConstants,
+        getSnippets: getAutocompleteSnippets,
       };
     }
 
@@ -790,7 +792,7 @@ class CodeEditor extends React.Component {
     if (value.trim() === '') {
       this._codemirrorSmartSetOption('lint', false);
     } else {
-      this._codemirrorSmartSetOption('lint', true);
+      this._codemirrorSmartSetOption('lint', this.props.lintOptions || true);
       // If we're in single-line mode, merge all changed lines into one
       if (this.props.singleLine && change.text && change.text.length > 1) {
         const text = change.text
@@ -1081,6 +1083,7 @@ CodeEditor.propTypes = {
   nunjucksPowerUserMode: PropTypes.bool,
   getRenderContext: PropTypes.func,
   getAutocompleteConstants: PropTypes.func,
+  getAutocompleteSnippets: PropTypes.func,
   keyMap: PropTypes.string,
   mode: PropTypes.string,
   id: PropTypes.string,

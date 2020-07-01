@@ -4,17 +4,18 @@ import YAML from 'yaml';
 import path from 'path';
 import fs from 'fs';
 import type { GlobalOptions } from '../util';
-import { gitDataDirDb } from '../db/mem-db';
+import { loadDb } from '../db';
+import { getApiSpecFromIdentifier } from '../db/prompts';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
   declarative: 'kong-declarative-config',
 };
 
-export type GenerateConfigOptions = GlobalOptions<{|
+export type GenerateConfigOptions = GlobalOptions & {
   type: $Keys<typeof ConversionTypeMap>,
   output?: string,
-|}>;
+};
 
 function validateOptions({ type }: GenerateConfigOptions): boolean {
   if (!ConversionTypeMap[type]) {
@@ -27,29 +28,30 @@ function validateOptions({ type }: GenerateConfigOptions): boolean {
 }
 
 export async function generateConfig(
-  identifier: string,
+  identifier?: string,
   options: GenerateConfigOptions,
-): Promise<void> {
+): Promise<boolean> {
   if (!validateOptions(options)) {
-    return;
+    return false;
   }
 
-  const { type, output, workingDir } = options;
+  const { type, output, appDataDir, workingDir } = options;
 
-  const db = await gitDataDirDb({ dir: workingDir, filterTypes: ['ApiSpec'] });
+  const db = await loadDb({ workingDir, appDataDir, filterTypes: ['ApiSpec'] });
 
   let result: ConversionResult;
 
-  const specFromDb = db.ApiSpec.get(identifier);
-  try {
-    if (specFromDb?.contents) {
-      result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
-    } else {
-      result = await o2k.generate(identifier, ConversionTypeMap[type]);
-    }
-  } catch (err) {
-    console.log('Config failed to generate', err);
-    return;
+  // try get from db
+  const specFromDb = await getApiSpecFromIdentifier(db, identifier);
+
+  if (specFromDb?.contents) {
+    result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
+  } else if (identifier) {
+    // try load as a file
+    const fileName = path.join(workingDir || '.', identifier);
+    result = await o2k.generate(fileName, ConversionTypeMap[type]);
+  } else {
+    return false;
   }
 
   const yamlDocs = result.documents.map(d => YAML.stringify(d));
@@ -58,9 +60,11 @@ export async function generateConfig(
   const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
 
   if (output) {
-    const fullOutputPath = path.resolve(output);
-    fs.writeFileSync(fullOutputPath, document);
+    const fullOutputPath = path.join(workingDir || '.', output);
+    await fs.promises.writeFile(fullOutputPath, document);
   } else {
     console.log(document);
   }
+
+  return true;
 }

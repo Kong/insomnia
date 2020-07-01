@@ -4,8 +4,6 @@ import * as electron from 'electron';
 import path from 'path';
 import mkdirp from 'mkdirp';
 import { getDataDirectory } from './misc';
-import type { GlobalActivity } from '../ui/components/activity-bar/activity-bar';
-import { ACTIVITY_INSOMNIA } from '../ui/components/activity-bar/activity-bar';
 
 // App Stuff
 
@@ -152,6 +150,14 @@ export const MIN_PANE_HEIGHT = 0.01;
 export const DEFAULT_PANE_WIDTH = 0.5;
 export const DEFAULT_PANE_HEIGHT = 0.5;
 export const DEFAULT_SIDEBAR_WIDTH = 19;
+
+// Activities
+export type GlobalActivity = 'spec' | 'debug' | 'monitor' | 'home';
+export const ACTIVITY_SPEC: GlobalActivity = 'spec';
+export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
+export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
+export const ACTIVITY_HOME: GlobalActivity = 'home';
+export const ACTIVITY_INSOMNIA: GlobalActivity = 'insomnia';
 
 // HTTP Methods
 export const METHOD_GET = 'GET';

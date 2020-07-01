@@ -7,13 +7,14 @@
     "url": "https://github.com/kong/insomnia"
   },
   "scripts": {
-    "lint": "eslint . --ext .js,.html,.json",
+    "lint": "eslint . --ext .js,.json",
     "lint:fix": "npm run lint -- --fix",
     "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap",
     "publish": "lerna publish",
     "clean": "lerna clean --yes && rimraf node_modules",
     "typecheck": "lerna run --parallel --stream typecheck",
     "test": "npm run lint && npm run typecheck && lerna run --stream --parallel test",
+    "test:pre-release": "npm run test -- --ignore insomnia-cli",
     "cli-start": "npm start --prefix packages/insomnia-cli",
     "app-start": "npm start --prefix packages/insomnia-app",
     "app-build": "npm run build --prefix packages/insomnia-app",
@@ -23,7 +24,7 @@
     "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app"
   },
   "lint-staged": {
-    "{packages,plugins}/**/*.{js,html,json}": [
+    "{packages,plugins}/**/*.{js,json}": [
       "eslint --fix"
     ]
   },
@@ -44,7 +45,7 @@
     "babel-loader": "^8.0.5",
     "babel-plugin-inline-react-svg": "^1.1.0",
     "babel-plugin-styled-components": "^1.10.6",
-    "eslint": "^6.8.0",
+    "eslint": "^7.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-config-semistandard": "^15.0.0",
     "eslint-config-standard": "^14.1.1",
@@ -61,7 +62,7 @@
     "eslint-plugin-react-hooks": "^4.0.4",
     "eslint-plugin-standard": "^4.0.1",
     "flow-bin": "^0.122.0",
-    "husky": "^1.0.0-rc.9",
+    "husky": "^4.2.5",
     "jest": "^25.3.0",
     "lerna": "^3.22.0",
     "lint-staged": "^10.2.2",

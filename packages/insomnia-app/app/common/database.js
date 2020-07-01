@@ -5,7 +5,7 @@ import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
 import { DB_PERSIST_INTERVAL } from './constants';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import { generateId, getDataDirectory } from './misc';
 import { mustGetModel } from '../models';
 import type { Workspace } from '../models/workspace';

@@ -39,7 +39,6 @@ type ThemeInner = {
   ...ThemeBlock,
   rawCss?: string,
   styles: ?{
-    activityBar?: ThemeBlock,
     dialog?: ThemeBlock,
     dialogFooter?: ThemeBlock,
     dialogHeader?: ThemeBlock,

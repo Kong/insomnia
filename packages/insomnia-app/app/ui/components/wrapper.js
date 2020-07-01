@@ -65,13 +65,6 @@ import VCS from '../../sync/vcs';
 import type { StatusCandidate } from '../../sync/types';
 import type { RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
-import type { GlobalActivity } from './activity-bar/activity-bar';
-import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_INSOMNIA,
-  ACTIVITY_SPEC,
-} from './activity-bar/activity-bar';
 import type { ApiSpec } from '../../models/api-spec';
 import GitVCS from '../../sync/git/git-vcs';
 import { trackPageView } from '../../common/analytics';
@@ -84,7 +77,17 @@ import { importRaw } from '../../common/import';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { DropdownButton } from './base/dropdown';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
-import { getAppName } from '../../common/constants';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_INSOMNIA,
+  ACTIVITY_SPEC,
+  getAppName,
+} from '../../common/constants';
+import { Spectral } from '@stoplight/spectral';
+import type { GlobalActivity } from '../../common/constants';
+
+const spectral = new Spectral();
 
 export type WrapperProps = {
   // Helper Functions
@@ -294,30 +297,44 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     return null;
   }
 
-  async _handleWorkspaceActivityChange(workspaceId: string, activeActivity: GlobalActivity) {
-    const { activity: updatedActivity } = this.props.handleSetActiveActivity(activeActivity);
-    await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: updatedActivity });
-  }
+  async _handleWorkspaceActivityChange(workspaceId: string, nextActivity: GlobalActivity) {
+    const { activity, activeApiSpec, handleSetActiveActivity } = this.props;
 
-  async _handleSetDesignActivity(workspaceId: string): Promise<void> {
-    await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_SPEC);
-  }
+    // Remember last activity on workspace for later, but only if it isn't HOME
+    if (nextActivity !== ACTIVITY_HOME) {
+      await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: nextActivity });
+    }
 
-  async _handleSetDebugActivity(apiSpec: ApiSpec): Promise<void> {
-    const workspaceId = apiSpec.parentId;
-    await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_DEBUG);
+    if (activity !== ACTIVITY_SPEC) {
+      handleSetActiveActivity(nextActivity);
+      return;
+    }
 
+    // Handle switching away from the spec design activity. For this, we want to generate
+    // requests that can be accessed from debug or test.
+
+    // If there are errors in the spec, show the user a warning first
+    const results = await spectral.run(activeApiSpec.contents);
+    if (activeApiSpec.contents && results && results.length) {
+      showModal(AlertModal, {
+        title: 'Error Generating Configuration',
+        message:
+          'Some requests may not be available due to errors found in the ' +
+          'specification. We recommend fixing errors before proceeding. 🤗',
+        okLabel: 'Proceed',
+        addCancel: true,
+        onConfirm: () => {
+          handleSetActiveActivity(nextActivity);
+        },
+      });
+      return;
+    }
+
+    // Delaying generation so design to debug mode is smooth
+    handleSetActiveActivity(nextActivity);
     setTimeout(() => {
-      // Delaying generation so design to debug mode is smooth
-      importRaw(
-        () => Promise.resolve(workspaceId), // Always import into current workspace
-        apiSpec.contents,
-      );
+      importRaw(() => Promise.resolve(workspaceId), activeApiSpec.contents);
     }, 1000);
-  }
-
-  _handleSetHomeActivity(): void {
-    this.props.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
   // Settings updaters
@@ -760,7 +777,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
           {activity === ACTIVITY_SPEC && (
             <WrapperDesign
               gitSyncDropdown={gitSyncDropdown}
-              handleSetDebugActivity={this._handleSetDebugActivity}
+              handleActivityChange={this._handleWorkspaceActivityChange}
               handleUpdateApiSpec={this._handleUpdateApiSpec}
               wrapperProps={this.props}
             />
@@ -770,7 +787,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             <WrapperDebug
               forceRefreshKey={this.state.forceRefreshKey}
               gitSyncDropdown={gitSyncDropdown}
-              handleSetDesignActivity={this._handleSetDesignActivity}
+              handleActivityChange={this._handleWorkspaceActivityChange}
               handleChangeEnvironment={this._handleChangeEnvironment}
               handleDeleteResponse={this._handleDeleteResponse}
               handleDeleteResponses={this._handleDeleteResponses}

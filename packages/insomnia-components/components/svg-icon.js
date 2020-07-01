@@ -35,6 +35,7 @@ import MemoSvgIcnQuestionFill from '../assets/svgr/IcnQuestionFill';
 import MemoSvgIcnQuestion from '../assets/svgr/IcnQuestion';
 import MemoSvgIcnSearch from '../assets/svgr/IcnSearch';
 import MemoSvgIcnSecCert from '../assets/svgr/IcnSecCert';
+import MemoSvgIcnSuccess from '../assets/svgr/IcnSuccess';
 import MemoSvgIcnSync from '../assets/svgr/IcnSync';
 import MemoSvgIcnTrashcan from '../assets/svgr/IcnTrashcan';
 import MemoSvgIcnTriangle from '../assets/svgr/IcnTriangle';
@@ -93,6 +94,7 @@ export const IconEnum = {
   questionFill: 'question-fill',
   question: 'question',
   secCert: 'sec-cert',
+  success: 'success',
   sync: 'sync',
   trashcan: 'trashcan',
   triangle: 'triangle',
@@ -181,6 +183,7 @@ class SvgIcon extends React.Component<Props> {
     [IconEnum.question]: [ThemeEnum.default, MemoSvgIcnQuestion],
     [IconEnum.questionFill]: [ThemeEnum.default, MemoSvgIcnQuestionFill],
     [IconEnum.secCert]: [ThemeEnum.default, MemoSvgIcnSecCert],
+    [IconEnum.success]: [ThemeEnum.success, MemoSvgIcnSuccess],
     [IconEnum.sync]: [ThemeEnum.default, MemoSvgIcnSync],
     [IconEnum.trashcan]: [ThemeEnum.default, MemoSvgIcnTrashcan],
     [IconEnum.triangle]: [ThemeEnum.default, MemoSvgIcnTriangle],
@@ -194,7 +197,7 @@ class SvgIcon extends React.Component<Props> {
 
     if (!SvgIcon.icons[icon]) {
       throw new Error(
-        `Invalid icon "${icon}" used. Must be one of ${Object.values(SvgIcon.icons).join('|')}`,
+        `Invalid icon "${icon}" used. Must be one of ${Object.values(IconEnum).join('|')}`,
       );
     }
 
