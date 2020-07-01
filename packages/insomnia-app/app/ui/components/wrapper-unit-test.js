@@ -54,7 +54,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     esversion: 8, // ES8 syntax (async/await, etc)
   };
 
-  autocompleteConstants(unitTest: UnitTest): Array<{ name: string, value: () => Promise<string> }> {
+  autocompleteSnippets(unitTest: UnitTest): Array<{ name: string, value: () => Promise<string> }> {
     const sendReqSnippet = (requestId: string) => {
       for (let i = 1; i < 100; i++) {
         const variableName = `response${i}`;
@@ -344,9 +344,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           indentWithTabs={settings.editorIndentWithTabs}
           keyMap={settings.editorKeyMap}
           defaultValue={unitTest ? unitTest.code : ''}
-          getAutocompleteSnippets={() => [
-            { name: 'Snippet', displayValue: '', value: async () => 'Can do anything here' },
-          ]}
+          getAutocompleteSnippets={this.autocompleteSnippets}
           lintOptions={WrapperUnitTest.lintOptions}
           onChange={this._handleUnitTestCodeChange.bind(this, unitTest)}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
