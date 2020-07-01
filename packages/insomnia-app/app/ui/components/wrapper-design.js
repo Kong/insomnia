@@ -72,14 +72,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     showModal(GenerateConfigModal, { apiSpec: activeApiSpec });
   }
 
-  async _handleUnitTest() {
-    const {
-      handleSetUnitTestActivity,
-      wrapperProps: { activeWorkspace },
-    } = this.props;
-    handleSetUnitTestActivity(activeWorkspace._id);
-  }
-
   async _handleTogglePreview() {
     await this.setState(
       prevState => ({ previewHidden: !prevState.previewHidden }),
