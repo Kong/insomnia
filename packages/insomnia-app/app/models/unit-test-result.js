@@ -5,11 +5,10 @@ import type { BaseModel } from './index';
 export const name = 'Unit Test Result';
 export const type = 'UnitTestResult';
 export const prefix = 'utr';
-export const canDuplicate = true;
-export const canSync = true;
+export const canDuplicate = false;
+export const canSync = false;
 
 type BaseUnitTestResult = {
-  parentId: string,
   results: Object,
 };
 
@@ -17,7 +16,6 @@ export type UnitTestResult = BaseModel & BaseUnitTestResult;
 
 export function init() {
   return {
-    parentId: null,
     results: null,
   };
 }

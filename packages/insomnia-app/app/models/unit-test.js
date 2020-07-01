@@ -9,7 +9,6 @@ export const canDuplicate = true;
 export const canSync = true;
 
 type BaseUnitTest = {
-  parentId: string,
   name: string,
   code: string,
   requestId: string | null,
@@ -19,7 +18,6 @@ export type UnitTest = BaseModel & BaseUnitTest;
 
 export function init() {
   return {
-    parentId: null,
     requestId: null,
     name: 'My Test',
     code: '',

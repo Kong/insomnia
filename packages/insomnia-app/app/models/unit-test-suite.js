@@ -9,7 +9,6 @@ export const canDuplicate = true;
 export const canSync = true;
 
 type BaseUnitTestSuite = {
-  parentId: string,
   name: string,
 };
 
@@ -17,7 +16,6 @@ export type UnitTestSuite = BaseModel & BaseUnitTestSuite;
 
 export function init() {
   return {
-    parentId: null,
     name: 'My Test',
   };
 }

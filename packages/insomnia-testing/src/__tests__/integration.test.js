@@ -92,8 +92,8 @@ describe('integration', () => {
     expect(stats.failures).toBe(0);
     expect(stats.passes).toBe(2);
 
-    const { stats: stats2 } = await runTests(testSrc);
-    expect(failures).toEqual([]);
+    const { stats: stats2, failures: failures2 } = await runTests(testSrc);
+    expect(failures2).toEqual([]);
     expect(stats2.tests).toBe(2);
     expect(stats2.failures).toBe(0);
     expect(stats2.passes).toBe(2);
