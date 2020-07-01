@@ -87,22 +87,6 @@ describe('plugin', () => {
     });
   });
 
-  describe('RequestExtension id', () => {
-    it('should get id', async () => {
-      const requests = [
-        {
-          _id: 'req_1',
-          parameters: [{ name: 'foo', value: '{{ foo }}' }],
-          url: 'https://insomnia.rest/foo/bar',
-        },
-      ];
-      const context = _getTestContext([{ _id: 'wrk_1' }], requests);
-      const result = await tag.run(context, 'id');
-
-      expect(result).toBe('req_1');
-    });
-  });
-
   describe('RequestExtension name', () => {
     it('should get name', async () => {
       const requests = [
