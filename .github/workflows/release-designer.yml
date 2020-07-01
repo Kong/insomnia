@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 10
       - run: npm run bootstrap
-      - run: npm test:pre-release
+      - run: npm run test:pre-release
       - run: npm run app-release
         env:
           CSC_LINK: ${{ secrets.DESIGNER_WINDOWS_CSC_LINK }}

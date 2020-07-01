@@ -1,4 +1,6 @@
-# insomnia-cli
+# insomnia-inso
+
+This is the CLI for Insomnia.
 
 ### Usage
 ```

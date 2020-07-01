@@ -1,6 +1,9 @@
 {
   "name": "insomnia-inso",
   "version": "2.2.13",
+  "homepage": "https://insomnia.rest",
+  "description": "A CLI for Insomnia Designer - the collaborative API design tool.",
+  "author": "Kong <office@konghq.com>",
   "bin": {
     "inso": "bin/inso"
   },
