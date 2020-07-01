@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "insomnia-send-request",
   "version": "2.2.12",
   "main": "dist/index.js",
