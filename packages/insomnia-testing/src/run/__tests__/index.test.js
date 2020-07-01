@@ -46,7 +46,7 @@ describe('run', () => {
     expect(stats.passes).toBe(1);
   });
 
-  it('handles invalid JavaScript', async () => {
+  it('throws on invalid JavaScript', async () => {
     let err;
     try {
       await runTests('this is invalid');
