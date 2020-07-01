@@ -14,41 +14,43 @@ export const canDuplicate = false;
 export const canSync = false;
 
 type BaseWorkspaceMeta = {
-  activeRequestId: string | null,
-  activeEnvironmentId: string | null,
   activeActivity: string | null,
-  sidebarFilter: string,
-  sidebarHidden: boolean,
-  previewHidden: boolean,
-  sidebarWidth: number,
-  paneWidth: number,
-  paneHeight: number,
-  hasSeen: boolean,
-  gitRepositoryId: string | null,
-  cachedGitRepositoryBranch: string | null,
+  activeEnvironmentId: string | null,
+  activeRequestId: string | null,
+  activeUnitTestSuiteId: string | null,
   cachedGitLastAuthor: string | null,
   cachedGitLastCommitTime: number | null,
+  cachedGitRepositoryBranch: string | null,
+  gitRepositoryId: string | null,
+  hasSeen: boolean,
+  paneHeight: number,
+  paneWidth: number,
+  previewHidden: boolean,
+  sidebarFilter: string,
+  sidebarHidden: boolean,
+  sidebarWidth: number,
 };
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
 
 export function init(): BaseWorkspaceMeta {
   return {
-    parentId: null,
-    activeRequestId: null,
-    activeEnvironmentId: null,
     activeActivity: null,
-    sidebarFilter: '',
-    sidebarHidden: false,
-    previewHidden: false,
-    sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-    paneWidth: DEFAULT_PANE_WIDTH,
-    paneHeight: DEFAULT_PANE_HEIGHT,
-    hasSeen: true,
-    gitRepositoryId: null,
-    cachedGitRepositoryBranch: null,
+    activeEnvironmentId: null,
+    activeRequestId: null,
+    activeUnitTestSuiteId: null,
     cachedGitLastAuthor: null,
     cachedGitLastCommitTime: null,
+    cachedGitRepositoryBranch: null,
+    gitRepositoryId: null,
+    hasSeen: true,
+    paneHeight: DEFAULT_PANE_HEIGHT,
+    paneWidth: DEFAULT_PANE_WIDTH,
+    parentId: null,
+    previewHidden: false,
+    sidebarFilter: '',
+    sidebarHidden: false,
+    sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   };
 }
 

@@ -120,6 +120,8 @@ class WrapperDebug extends React.PureComponent<Props> {
       activeRequest,
       activeRequestResponses,
       activeResponse,
+      activeUnitTest,
+      activeUnitTestResult,
       activeWorkspace,
       environments,
       enableSyncBeta,
@@ -265,6 +267,7 @@ class WrapperDebug extends React.PureComponent<Props> {
                 nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                 oAuth2Token={oAuth2Token}
                 request={activeRequest}
+                unitTest={activeUnitTest}
                 settings={settings}
                 updateRequestAuthentication={handleUpdateRequestAuthentication}
                 updateRequestBody={handleUpdateRequestBody}
@@ -320,6 +323,7 @@ class WrapperDebug extends React.PureComponent<Props> {
                 requestVersions={requestVersions}
                 response={activeResponse}
                 responses={activeRequestResponses}
+                unitTestResult={activeUnitTestResult}
               />
             </ErrorBoundary>
           </React.Fragment>

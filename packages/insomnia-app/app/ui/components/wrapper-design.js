@@ -19,9 +19,8 @@ import generateConfigIcon from '../images/icn-gear.svg';
 import * as models from '../../models/index';
 import { parseApiSpec } from '../../common/api-specs';
 import { getConfigGenerators } from '../../plugins';
-import AlertModal from './modals/alert-modal';
-import { ACTIVITY_HOME } from '../../common/constants';
 import type { GlobalActivity } from '../../common/constants';
+import { ACTIVITY_HOME } from '../../common/constants';
 import ActivityToggle from './activity-toggle';
 
 const spectral = new Spectral();
@@ -71,32 +70,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
   async _handleGenerateConfig() {
     const { activeApiSpec } = this.props.wrapperProps;
     showModal(GenerateConfigModal, { apiSpec: activeApiSpec });
-  }
-
-  async _handleDebugSpec(errors, e): Pomise<void> {
-    e.preventDefault();
-    if (errors) {
-      showModal(AlertModal, {
-        title: 'Error Generating Configuration',
-        message:
-          'Some requests may not be available due to errors found in the specification. We recommend fixing errors before proceeding. 🤗',
-        okLabel: 'Proceed',
-        addCancel: true,
-        onConfirm: async () => {
-          const {
-            handleSetDebugActivity,
-            wrapperProps: { activeApiSpec },
-          } = this.props;
-          await handleSetDebugActivity(activeApiSpec);
-        },
-      });
-    } else {
-      const {
-        handleSetDebugActivity,
-        wrapperProps: { activeApiSpec },
-      } = this.props;
-      await handleSetDebugActivity(activeApiSpec);
-    }
   }
 
   async _handleTogglePreview() {

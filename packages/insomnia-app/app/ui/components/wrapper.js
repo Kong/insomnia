@@ -12,7 +12,6 @@ import type {
   RequestParameter,
 } from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
-
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { registerModal, showModal } from './modals/index';
@@ -71,21 +70,26 @@ import { trackPageView } from '../../common/analytics';
 import type { GitRepository } from '../../models/git-repository';
 import WrapperHome from './wrapper-home';
 import WrapperDesign from './wrapper-design';
+import WrapperUnitTest from './wrapper-unit-test';
 import WrapperOnboarding from './wrapper-onboarding';
 import WrapperDebug from './wrapper-debug';
 import { importRaw } from '../../common/import';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { DropdownButton } from './base/dropdown';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
+import type { UnitTest } from '../../models/unit-test';
+import type { UnitTestResult } from '../../models/unit-test-result';
+import type { UnitTestSuite } from '../../models/unit-test-suite';
+import type { GlobalActivity } from '../../common/constants';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_INSOMNIA,
   ACTIVITY_SPEC,
+  ACTIVITY_UNIT_TEST,
   getAppName,
 } from '../../common/constants';
 import { Spectral } from '@stoplight/spectral';
-import type { GlobalActivity } from '../../common/constants';
 
 const spectral = new Spectral();
 
@@ -177,9 +181,12 @@ export type WrapperProps = {
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
   activeGitRepository: GitRepository | null,
+  activeUnitTestResult: UnitTestResult | null,
+  activeUnitTestSuites: Array<UnitTestSuite>,
+  activeUnitTests: Array<UnitTest>,
   activeWorkspaceClientCertificates: Array<ClientCertificate>,
-  isVariableUncovered: boolean,
   headerEditorKey: string,
+  isVariableUncovered: boolean,
   vcs: VCS | null,
   gitVCS: GitVCS | null,
   gitRepositories: Array<GitRepository>,
@@ -305,7 +312,8 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: nextActivity });
     }
 
-    if (activity !== ACTIVITY_SPEC) {
+    const notEditingASpec = activity !== ACTIVITY_SPEC;
+    if (notEditingASpec) {
       handleSetActiveActivity(nextActivity);
       return;
     }
@@ -348,12 +356,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
   _handleImportFile(forceToWorkspace?: ForceToWorkspace): void {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
-  }
-
-  _handleUpdateSettingsUseBulkParametersEditor(
-    useBulkParametersEditor: boolean,
-  ): Promise<Settings> {
-    return sUpdate(this.props.settings, { useBulkParametersEditor });
   }
 
   _handleImportUri(uri: string, forceToWorkspace?: ForceToWorkspace): void {
@@ -780,6 +782,15 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleActivityChange={this._handleWorkspaceActivityChange}
               handleUpdateApiSpec={this._handleUpdateApiSpec}
               wrapperProps={this.props}
+            />
+          )}
+
+          {activity === ACTIVITY_UNIT_TEST && (
+            <WrapperUnitTest
+              gitSyncDropdown={gitSyncDropdown}
+              wrapperProps={this.props}
+              handleActivityChange={this._handleWorkspaceActivityChange}
+              children={sidebarChildren}
             />
           )}
 

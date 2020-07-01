@@ -24,6 +24,8 @@ const WHITE_LIST = {
   [models.request.type]: true,
   [models.requestGroup.type]: true,
   [models.environment.type]: true,
+  [models.unitTest.type]: true,
+  [models.unitTestSuite.type]: true,
 
   // These can be overridden in sync config
   [models.cookieJar.type]: true,

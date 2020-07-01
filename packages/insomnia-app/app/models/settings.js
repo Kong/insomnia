@@ -57,6 +57,7 @@ type BaseSettings = {
 
   // Feature flags
   enableSyncBeta: boolean,
+  enableUnitTestingBeta: boolean,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -112,6 +113,7 @@ export function init(): BaseSettings {
 
     // Feature flags
     enableSyncBeta: false,
+    enableUnitTestingBeta: false,
   };
 }
 
