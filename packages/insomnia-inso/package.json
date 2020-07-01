@@ -1,6 +1,5 @@
 {
-  "private": true,
-  "name": "insomnia-cli",
+  "name": "insomnia-inso",
   "version": "2.2.11",
   "bin": {
     "inso": "bin/inso"

@@ -15,7 +15,7 @@
     "typecheck": "lerna run --parallel --stream typecheck",
     "test": "npm run lint && npm run typecheck && lerna run --stream --parallel test",
     "test:pre-release": "npm run test -- --ignore insomnia-cli",
-    "cli-start": "npm start --prefix packages/insomnia-cli",
+    "inso-start": "npm start --prefix packages/insomnia-inso",
     "app-start": "npm start --prefix packages/insomnia-app",
     "app-build": "npm run build --prefix packages/insomnia-app",
     "app-package": "npm run package --prefix packages/insomnia-app",

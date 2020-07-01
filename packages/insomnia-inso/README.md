@@ -2,7 +2,7 @@
 
 ### Usage
 ```
-npm install -g insomnia-cli
+npm install -g insomnia-inso
 inso --version
 ```
 
