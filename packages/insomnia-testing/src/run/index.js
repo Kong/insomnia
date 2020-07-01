@@ -58,7 +58,7 @@ async function runInternal<T>(
   reporter: Reporter | Function,
   extractResult: (runner: Object) => T,
 ): Promise<T> {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const { bail } = options;
     // Add global `insomnia` helper.
     // This is the only way to add new globals to the Mocha environment as far
@@ -78,22 +78,26 @@ async function runInternal<T>(
       mocha.addFile(writeTempFile(src));
     }
 
-    const runner = mocha.run(() => {
-      resolve(extractResult(runner));
+    try {
+      const runner = mocha.run(() => {
+        resolve(extractResult(runner));
 
-      // Remove global since we don't need it anymore
-      delete global.insomnia;
-      delete global.chai;
+        // Remove global since we don't need it anymore
+        delete global.insomnia;
+        delete global.chai;
 
-      // Clean up temp files
-      for (const f of mocha.files) {
-        fs.unlink(f, err => {
-          if (err) {
-            console.log('Failed to clean up test file', f, err);
-          }
-        });
-      }
-    });
+        // Clean up temp files
+        for (const f of mocha.files) {
+          fs.unlink(f, err => {
+            if (err) {
+              console.log('Failed to clean up test file', f, err);
+            }
+          });
+        }
+      });
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 

@@ -30,12 +30,14 @@ type Props = {|
 
 type State = {|
   testsRunning: Array<UnitTest> | null,
+  resultsError: string | null,
 |};
 
 @autobind
 class WrapperUnitTest extends React.PureComponent<Props, State> {
   state = {
     testsRunning: null,
+    resultsError: null,
   };
 
   // Defining it here instead of in render() so it won't act as a changed prop
@@ -121,7 +123,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     showPrompt({
       title: 'New Test',
       defaultValue: 'Returns 200',
-      submitName: 'Create Test',
+      submitName: 'New Test',
       label: 'Test Name',
       selectText: true,
       onComplete: async name => {
@@ -158,7 +160,18 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
   }
 
   async _handleDeleteTest(unitTest: UnitTest): Promise<void> {
-    await models.unitTest.remove(unitTest);
+    showAlert({
+      title: `Delete ${unitTest.name}`,
+      message: (
+        <span>
+          Really delete <strong>{unitTest.name}</strong>?
+        </span>
+      ),
+      addCancel: true,
+      onConfirm: async () => {
+        await models.unitTest.remove(unitTest);
+      },
+    });
   }
 
   async _handleSetActiveRequest(
@@ -195,10 +208,15 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     await models.unitTest.update(unitTest, { name });
   }
 
+  async _handleChangeActiveSuiteName(name: string): Promise<void> {
+    const { activeUnitTestSuite } = this.props.wrapperProps;
+    await models.unitTestSuite.update(activeUnitTestSuite, { name });
+  }
+
   async _runTests(unitTests: Array<UnitTest>): Promise<void> {
     const { requests, activeWorkspace, activeEnvironment } = this.props.wrapperProps;
 
-    this.setState({ testsRunning: unitTests });
+    this.setState({ testsRunning: unitTests, resultsError: null });
 
     const tests = [];
     for (const t of unitTests) {
@@ -210,10 +228,18 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     }
 
     const src = await generate([{ name: 'My Suite', suites: [], tests }]);
-    const results = await runTests(src, {
-      requests,
-      sendRequest: getSendRequestCallback(activeEnvironment ? activeEnvironment._id : null),
-    });
+    const sendRequest = getSendRequestCallback(activeEnvironment ? activeEnvironment._id : null);
+
+    let results;
+    try {
+      results = await runTests(src, { requests, sendRequest });
+    } catch (err) {
+      // Set the state after a timeout so the user still sees the loading state
+      setTimeout(() => {
+        this.setState({ resultsError: err.message, testsRunning: null });
+      }, 400);
+      return;
+    }
 
     await models.unitTestResult.create({ results, parentId: activeWorkspace._id });
 
@@ -244,18 +270,37 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
 
   renderResults(): React.Node {
     const { activeUnitTestResult } = this.props.wrapperProps;
-    const { testsRunning } = this.state;
+    const { testsRunning, resultsError } = this.state;
+
+    if (resultsError) {
+      return (
+        <div className="unit-tests__results">
+          <div className="unit-tests__top-header">
+            <h2>Run Failed</h2>
+          </div>
+          <div className="danger pad">{resultsError}</div>
+        </div>
+      );
+    }
 
     if (testsRunning) {
       return (
         <div className="unit-tests__results">
-          <h2>Running {testsRunning.length} Tests...</h2>
+          <div className="unit-tests__top-header">
+            <h2>Running {testsRunning.length} Tests...</h2>
+          </div>
         </div>
       );
     }
 
     if (!activeUnitTestResult) {
-      return null;
+      return (
+        <div className="unit-tests__results">
+          <div className="unit-tests__top-header">
+            <h2>No Results</h2>
+          </div>
+        </div>
+      );
     }
 
     const { stats, tests } = activeUnitTestResult.results;
@@ -264,20 +309,21 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       <div className="unit-tests__results">
         {activeUnitTestResult && (
           <div key={activeUnitTestResult._id}>
-            {stats.failures ? (
-              <h2 className="warning">
-                Tests Failed {stats.failures}/{stats.tests}
-              </h2>
-            ) : (
-              <h2 className="success">
-                Tests Passed {stats.passes}/{stats.tests}
-              </h2>
-            )}
+            <div className="unit-tests__top-header">
+              {stats.failures ? (
+                <h2 className="warning">
+                  Tests Failed {stats.failures}/{stats.tests}
+                </h2>
+              ) : (
+                <h2 className="success">
+                  Tests Passed {stats.passes}/{stats.tests}
+                </h2>
+              )}
+            </div>
             <ul>
               {tests.map((t, i) => (
                 <li key={i}>
-                  <SvgIcon icon={t.err.message ? 'error' : 'success'} /> {t.fullTitle} ({t.duration}{' '}
-                  ms)
+                  <SvgIcon icon={t.err.message ? 'error' : 'success'} /> {t.title} ({t.duration} ms)
                   {t.err.message && (
                     <>
                       <br />
@@ -334,7 +380,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
             <DropdownItem
               disabled={testsRunning && testsRunning.find(t => t._id === unitTest._id)}
               onClick={() => this._handleRunTest(unitTest)}>
-              Run Test
+              Run
             </DropdownItem>
             <DropdownItem onClick={() => this._handleDeleteTest(unitTest)}>Delete</DropdownItem>
           </Dropdown>
@@ -362,11 +408,12 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
 
   renderPageBody(): React.Node {
     const { activeUnitTests, activeUnitTestSuite } = this.props.wrapperProps;
+    const { testsRunning } = this.state;
 
     if (!activeUnitTestSuite) {
       return (
         <div className="unit-tests layout-body--sidebar theme--pane">
-          <div className="unit-tests__tests theme--pane__body">No test suite selected</div>
+          <div className="unit-tests__tests theme--pane__body pad">No test suite selected</div>
         </div>
       );
     }
@@ -374,12 +421,27 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     return (
       <div className="unit-tests layout-body--sidebar theme--pane">
         <div className="unit-tests__tests theme--pane__body">
-          {activeUnitTests.map(this.renderUnitTest)}
-          <div className="pad">
-            <Button variant="contained" bg="surprise" onClick={this._handleCreateTest}>
-              Create Test
+          <div className="unit-tests__top-header">
+            <h2>
+              <Editable
+                singleClick
+                onSubmit={this._handleChangeActiveSuiteName}
+                value={activeUnitTestSuite.name}
+              />
+            </h2>
+            <Button variant="outlined" onClick={this._handleCreateTest}>
+              New Test
+            </Button>
+            <Button
+              variant="contained"
+              bg="surprise"
+              onClick={this._handleRunTests}
+              size="default"
+              disabled={testsRunning}>
+              {testsRunning ? 'Running... ' : 'Run Tests'}
             </Button>
           </div>
+          {activeUnitTests.map(this.renderUnitTest)}
         </div>
         {this.renderResults()}
       </div>
@@ -388,6 +450,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
 
   renderPageSidebar(): React.Node {
     const { activeUnitTestSuites, activeUnitTestSuite } = this.props.wrapperProps;
+    const { testsRunning } = this.state;
     const activeId = activeUnitTestSuite ? activeUnitTestSuite._id : 'n/a';
 
     return (
@@ -411,6 +474,12 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                       <i className="fa fa-caret-down" />
                     </button>
                   )}>
+                  <DropdownItem
+                    stayOpenAfterClick
+                    onClick={this._handleRunTests}
+                    disabled={testsRunning}>
+                    {testsRunning ? 'Running... ' : 'Run Tests'}
+                  </DropdownItem>
                   <DropdownItem onClick={this._handleDeleteUnitTestSuite.bind(this, s)}>
                     Delete Suite
                   </DropdownItem>
@@ -426,7 +495,6 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
   render() {
     const { handleActivityChange, gitSyncDropdown } = this.props;
     const { activeWorkspace, activity, settings, activeApiSpec } = this.props.wrapperProps;
-    const { testsRunning } = this.state;
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
@@ -453,18 +521,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                 workspace={activeWorkspace}
               />
             }
-            gridRight={
-              <>
-                <Button
-                  variant="contained"
-                  onClick={this._handleRunTests}
-                  size="default"
-                  disabled={testsRunning}>
-                  {testsRunning ? 'Running... ' : 'Run Tests'}
-                </Button>
-                {gitSyncDropdown}
-              </>
-            }
+            gridRight={gitSyncDropdown}
           />
         )}
       />
