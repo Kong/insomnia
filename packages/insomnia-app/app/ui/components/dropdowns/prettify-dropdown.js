@@ -23,7 +23,7 @@ class PrettifyDropdown extends React.Component {
     return (
       <Dropdown beside debug="true">
         <DropdownButton>
-          <i className="fa fa-cog" />
+          <i class="fa fa-wrench" aria-hidden="true"></i>
         </DropdownButton>
         <DropdownDivider>Beautify mode</DropdownDivider>
         <DropdownItem onClick={this._handleChange} value={true}>
