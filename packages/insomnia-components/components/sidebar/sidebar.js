@@ -3,18 +3,16 @@ import * as React from 'react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
-import Tooltip from './tooltip';
-import Dropdown from './dropdown/dropdown';
-import DropdownItem from './dropdown/dropdown-item';
-import DropdownDivider from './dropdown/dropdown-divider';
-import SvgIcon, { IconEnum } from './svg-icon';
+import Tooltip from '../tooltip';
+import FilterInput from './filter-input';
+import Dropdown from '../dropdown/dropdown';
+import DropdownItem from '../dropdown/dropdown-item';
+import DropdownDivider from '../dropdown/dropdown-divider';
+import SvgIcon, { IconEnum } from '../svg-icon';
 
 type Props = {|
   className?: string,
   jsonData: Object,
-  onChange?: (e: SyntheticEvent<HTMLInputElement>) => any,
-  filter: string,
-  placeholder: string,
 |};
 
 const StyledSidebar: React.ComponentType<{}> = styled.div`
@@ -217,22 +215,7 @@ const StyledPanel: React.ComponentType<{}> = styled(motion.div)`
 
 const DropdownEllipsis = () => <SvgIcon icon={IconEnum.ellipsesCircle} />;
 
-function FilterInput(props) {
-  const [inputValue, setInputValue] = useState('');
-  function handleChange(event) {
-    setInputValue(event.target.value);
-    if (props.onChange) props.onChange(inputValue);
-    // e => setServerFilter(e.target.value)
-  }
-  return (
-    <input type="text" value={inputValue} onChange={handleChange} placeholder={props.placeholder} />
-  );
-}
-
-
-
 function Sidebar(props: Props) {
-
   // Section Expansion & Filtering
   const useToggle = (state, set) => React.useCallback(() => set(!state), [set, state]);
 
@@ -354,6 +337,10 @@ function Sidebar(props: Props) {
   const { requestBodies, responses, parameters, headers } = props.jsonData.components;
   const { servers } = props.jsonData;
   const paths = Object.entries(props.jsonData.paths);
+
+  function handleChange(event) {
+    console.log(event.target.value);
+  }
 
   return (
     <StyledSidebar className="theme--sidebar">
@@ -480,7 +467,12 @@ function Sidebar(props: Props) {
               initial={{ height: serversFilter ? '100%' : '0px' }}
               animate={{ height: serversFilter ? '100%' : '0px' }}
               transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-              <FilterInput placeholder={'Filter...'} />
+              <FilterInput
+                onChange={e => setServerFilter(e.target.value)}
+                placeholder="Filter..."
+                value={serverFilter}
+              />
+
               <input
                 type="text"
                 value={serverFilter}
