@@ -3,13 +3,12 @@ contentType: yaml
 contents: |
   openapi: '3.0.2'
   info:
-    title: Global Security
+    title: Sample Spec
     version: '1.2'
   servers:
-    - url: https://api.server.test/v1
+    - url: https://200.insomnia.rest
   tags:
     - name: Folder
-
   paths:
     /global:
       get:
@@ -20,13 +19,11 @@ contents: |
             description: OK
     /override:
       get:
-        security:
-          - Key-Query: []
         responses:
           '200':
             description: OK
 created: 1589851906273
-fileName: Global Security
-modified: 1592254074772
+fileName: Sample Specification
+modified: 1593669699123
 parentId: wrk_012d4860c7da418a85ffea7406e1292a
 type: ApiSpec
