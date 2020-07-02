@@ -10,6 +10,8 @@ export type Database = {|
   Request: Array<BaseModel>,
   RequestGroup: Array<BaseModel>,
   Workspace: Array<BaseModel>,
+  UnitTestSuite: Array<BaseModel>,
+  UnitTest: Array<BaseModel>,
 |};
 
 export function emptyDb(): Database {
@@ -19,6 +21,8 @@ export function emptyDb(): Database {
     Request: [],
     RequestGroup: [],
     Workspace: [],
+    UnitTest: [],
+    UnitTestSuite: [],
   };
 }
 
