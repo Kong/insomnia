@@ -16,7 +16,6 @@ type Props = {|
   children: React.Node,
   enableSyncBeta: boolean,
   environmentHighlightColorStyle: string,
-  handleNavigateHome: () => any,
   handleSetActiveEnvironment: Function,
   handleSetActiveWorkspace: Function,
   hidden: boolean,

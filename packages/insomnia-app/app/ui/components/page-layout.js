@@ -107,7 +107,6 @@ class PageLayout extends React.PureComponent<Props, State> {
               enableSyncBeta={settings.enableSyncBeta}
               environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
               handleInitializeEntities={handleInitializeEntities}
-              handleNavigateHome={this._handleSetHomeActivity}
               handleSetActiveEnvironment={handleSetActiveEnvironment}
               handleSetActiveWorkspace={handleSetActiveWorkspace}
               hidden={sidebarHidden || false}

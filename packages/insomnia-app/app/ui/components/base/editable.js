@@ -101,7 +101,6 @@ class Editable extends PureComponent {
         title: singleClick ? 'Click to edit' : 'Double click to edit',
         onClick: this._handleSingleClickEditStart,
         onDoubleClick: this._handleEditStart,
-        blankValue,
         ...extra,
       };
 

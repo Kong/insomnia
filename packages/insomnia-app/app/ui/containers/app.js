@@ -15,6 +15,8 @@ import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import {
+  ACTIVITY_HOME,
+  ACTIVITY_INSOMNIA,
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
   DEFAULT_PANE_WIDTH,
@@ -26,10 +28,8 @@ import {
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
   PREVIEW_MODE_SOURCE,
-  getAppName,
   getAppId,
-  ACTIVITY_INSOMNIA,
-  ACTIVITY_HOME,
+  getAppName,
 } from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as entitiesActions from '../redux/modules/entities';
@@ -43,6 +43,10 @@ import {
   selectActiveRequestMeta,
   selectActiveRequestResponses,
   selectActiveResponse,
+  selectActiveUnitTestResult,
+  selectActiveUnitTests,
+  selectActiveUnitTestSuite,
+  selectActiveUnitTestSuites,
   selectActiveWorkspace,
   selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
@@ -1363,15 +1367,15 @@ function mapStateToProps(state, props) {
   // Entities
   const entitiesLists = selectEntitiesLists(state, props);
   const {
-    workspaces,
-    workspaceMetas,
+    apiSpecs,
     environments,
-    requests,
+    gitRepositories,
     requestGroups,
     requestMetas,
     requestVersions,
-    apiSpecs,
-    gitRepositories,
+    requests,
+    workspaceMetas,
+    workspaces,
   } = entitiesLists;
 
   const settings = entitiesLists.settings[0];
@@ -1423,6 +1427,12 @@ function mapStateToProps(state, props) {
   // Api spec stuff
   const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace._id);
 
+  // Test stuff
+  const activeUnitTests = selectActiveUnitTests(state, props);
+  const activeUnitTestSuite = selectActiveUnitTestSuite(state, props);
+  const activeUnitTestSuites = selectActiveUnitTestSuites(state, props);
+  const activeUnitTestResult = selectActiveUnitTestResult(state, props);
+
   return Object.assign({}, state, {
     activity: activeActivity,
     activeApiSpec,
@@ -1432,6 +1442,10 @@ function mapStateToProps(state, props) {
     activeRequest,
     activeRequestResponses,
     activeResponse,
+    activeUnitTestResult,
+    activeUnitTestSuite,
+    activeUnitTestSuites,
+    activeUnitTests,
     activeWorkspace,
     activeWorkspaceClientCertificates,
     activeWorkspaceMeta,

@@ -1,7 +1,9 @@
 {
-  "private": true,
-  "name": "insomnia-cli",
-  "version": "2.2.10",
+  "name": "insomnia-inso",
+  "version": "2.2.14",
+  "homepage": "https://insomnia.rest",
+  "description": "A CLI for Insomnia Designer - the collaborative API design tool.",
+  "author": "Kong <office@konghq.com>",
   "bin": {
     "inso": "bin/inso"
   },
@@ -48,20 +50,20 @@
     "env-paths": "^2.2.0",
     "insomnia-plugin-base64": "^2.2.10",
     "insomnia-plugin-cookie-jar": "^2.2.10",
-    "insomnia-plugin-core-themes": "^2.2.10",
+    "insomnia-plugin-core-themes": "^2.2.12",
     "insomnia-plugin-file": "^2.2.10",
     "insomnia-plugin-hash": "^2.2.10",
     "insomnia-plugin-jsonpath": "^2.2.10",
     "insomnia-plugin-now": "^2.2.10",
     "insomnia-plugin-os": "^2.2.10",
     "insomnia-plugin-prompt": "^2.2.10",
-    "insomnia-plugin-request": "^2.2.10",
+    "insomnia-plugin-request": "^2.2.12",
     "insomnia-plugin-response": "^2.2.10",
     "insomnia-plugin-uuid": "^2.2.10",
-    "insomnia-send-request": "^2.2.10",
-    "insomnia-testing": "^2.2.9",
+    "insomnia-send-request": "^2.2.13",
+    "insomnia-testing": "^2.2.12",
     "nedb": "^1.8.0",
-    "openapi-2-kong": "^2.2.10",
+    "openapi-2-kong": "^2.2.12",
     "yaml": "^1.10.0"
   }
 }

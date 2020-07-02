@@ -98,11 +98,6 @@ const StyledButton: React.ComponentType<Props> = styled.button`
   &:disabled {
     opacity: 60%;
   }
-
-  svg {
-    display: inline-block !important;
-    margin-left: 0.4em;
-  }
 `;
 
 const Button = ({ variant, bg, size, ...props }: Props) => (

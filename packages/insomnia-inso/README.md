@@ -1,8 +1,10 @@
-# insomnia-cli
+# insomnia-inso
+
+This is the CLI for Insomnia.
 
 ### Usage
 ```
-npm install -g insomnia-cli
+npm install -g insomnia-inso
 inso --version
 ```
 
