@@ -15,3 +15,17 @@ type BaseApiSpec = {
 };
 
 export type ApiSpec = BaseModel & BaseApiSpec;
+
+type BaseUnitTestSuite = {
+  name: string,
+};
+
+export type UnitTestSuite = BaseModel & BaseUnitTestSuite;
+
+type BaseUnitTest = {
+  name: string,
+  code: string,
+  requestId: string | null,
+};
+
+export type UnitTest = BaseModel & BaseUnitTest;

@@ -3,7 +3,9 @@
 import { generate, runTestsCli } from 'insomnia-testing';
 import { getSendRequestCallbackMemDb } from 'insomnia-send-request';
 import type { GlobalOptions } from '../util';
-import { loadDb } from '../db';
+import { findFirst, findSingle, loadDb } from '../db';
+import { getTestSuiteFromIdentifier } from '../db/prompts';
+import type { UnitTest, UnitTestSuite } from '../db/types';
 
 export const TestReporterEnum = {
   dot: 'dot',
@@ -29,40 +31,45 @@ function validateOptions({ reporter }: RunTestsOptions): boolean {
   return true;
 }
 
-export async function runInsomniaTests(options: RunTestsOptions): Promise<boolean> {
+const createTestSuite = (dbSuite: UnitTestSuite, dbTests: Array<UnitTest>) => ({
+  name: dbSuite.name,
+  tests: dbTests.map(({ name, code, requestId }) => ({ name, code, requestId })),
+});
+
+export async function runInsomniaTests(
+  identifier?: string,
+  options: RunTestsOptions,
+): Promise<boolean> {
   if (!validateOptions(options)) {
     return false;
   }
 
   const { reporter, bail, keepFile, appDataDir, workingDir } = options;
 
-  const suites = [
-    {
-      name: 'Parent Suite',
-      suites: [
-        {
-          name: 'Nested Suite',
-          tests: [
-            {
-              name: 'should return -1 when the value is not present',
-              code:
-                `const resp = await insomnia.send('req_wrk_012d4860c7da418a85ffea7406e1292a21946b60');\n` +
-                'expect(resp.status).to.equal(200);',
-            },
-          ],
-        },
-      ],
-    },
-  ];
+  const db = await loadDb({ workingDir, appDataDir });
 
-  const db = await loadDb({
-    workingDir,
-    appDataDir,
-    filterTypes: ['Environment', 'Request', 'RequestGroup', 'Workspace'],
-  });
+  // Find suite
+  const suite = await getTestSuiteFromIdentifier(db, identifier);
 
-  const environmentId = 'env_env_ca046a738f001eb3090261a537b1b78f86c2094c_sub';
-  const testFileContents = await generate(suites);
-  const sendRequest = await getSendRequestCallbackMemDb(environmentId, db);
+  if (!suite) {
+    console.log('No test suite identified.');
+    return false;
+  }
+
+  // Find tests in suite
+  const tests = db.UnitTest.filter(t => t.parentId === suite._id);
+
+  if (!tests.length) {
+    console.log(`Test suite "${suite.name}" contains no tests.`);
+    return false;
+  }
+
+  // Make this nicer, I think...
+  const workspaceId = suite.parentId;
+  const baseEnv = findSingle(db.Environment, ({ parentId }) => parentId === workspaceId);
+  const firstSubEnv = findFirst(db.Environment, ({ parentId }) => parentId === baseEnv._id);
+
+  const testFileContents = await generate([createTestSuite(suite, tests)]);
+  const sendRequest = await getSendRequestCallbackMemDb(firstSubEnv._id, db);
   return await runTestsCli(testFileContents, { reporter, bail, keepFile, sendRequest });
 }

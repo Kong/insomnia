@@ -33,8 +33,8 @@ function makeTestCommand(exitOverride: boolean) {
 
   // inso run tests
   run
-    .command('test')
-    .description('Run Insomnia unit tests')
+    .command('test [identifier]')
+    .description('Run Insomnia unit test suites')
     .option(
       '-r, --reporter <reporter>',
       `reporter to use, options are [${reporterTypes}]`,
@@ -42,7 +42,7 @@ function makeTestCommand(exitOverride: boolean) {
     )
     .option('-b, --bail', 'abort ("bail") after first test failure')
     .option('--keep-file', 'do not delete the generated test file')
-    .action(cmd => exit(runInsomniaTests(getAllOptions(cmd))));
+    .action((identifier, cmd) => exit(runInsomniaTests(identifier, getAllOptions(cmd))));
 
   return run;
 }
