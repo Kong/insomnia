@@ -15,6 +15,7 @@ export const TestReporterEnum = {
 };
 
 export type RunTestsOptions = GlobalOptions & {
+  env?: string,
   reporter: $Keys<typeof TestReporterEnum>,
   bail?: boolean,
   keepFile?: boolean,
@@ -43,7 +44,7 @@ export async function runInsomniaTests(
     return false;
   }
 
-  const { reporter, bail, keepFile, appDataDir, workingDir } = options;
+  const { reporter, bail, keepFile, appDataDir, workingDir, env } = options;
 
   const db = await loadDb({ workingDir, appDataDir });
 
@@ -65,9 +66,9 @@ export async function runInsomniaTests(
 
   // Find environment
   const workspaceId = suite.parentId;
-  const env = await getEnvironmentFromIdentifier(db, workspaceId);
+  const environment = await getEnvironmentFromIdentifier(db, workspaceId, env);
 
-  if (!env) {
+  if (!environment) {
     console.log('No environment found.');
     return false;
   }
@@ -75,6 +76,6 @@ export async function runInsomniaTests(
   const testFileContents = await generate([createTestSuite(suite, tests)]);
 
   const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
-  const sendRequest = await getSendRequestCallbackMemDb(env._id, db);
+  const sendRequest = await getSendRequestCallbackMemDb(environment._id, db);
   return await runTestsCli(testFileContents, { reporter, bail, keepFile, sendRequest });
 }

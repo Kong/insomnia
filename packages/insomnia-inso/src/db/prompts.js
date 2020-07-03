@@ -69,20 +69,31 @@ export async function getEnvironmentFromIdentifier(
   const baseWorkspaceEnv = findSingle(db.Environment, e => e.parentId === workspaceId);
   const subEnvs = db.Environment.filter(e => e.parentId === baseWorkspaceEnv._id);
 
-  if (!subEnvs.length) {
-    return null;
+  if (identifier) {
+    const result =
+      findSingle(subEnvs, e => matchIdIsh(e, identifier) || e.name === identifier) ||
+      baseWorkspaceEnv;
+
+    return result;
   }
 
-  if (identifier) {
-    return findSingle(subEnvs, e => matchIdIsh(e, identifier) || e.name === identifier);
+  if (!subEnvs.length) {
+    return baseWorkspaceEnv;
   }
+
+  const baseEnv = 'No environment';
 
   const prompt = new AutoComplete({
     name: 'environment',
     message: `Select an environment`,
-    choices: subEnvs.map(e => `${e.name} - ${generateIdIsh(e, 14)}`),
+    choices: subEnvs.map(e => `${e.name} - ${generateIdIsh(e, 14)}`).concat(baseEnv),
   });
 
-  const [idIsh] = (await prompt.run()).split(' - ').reverse();
+  const selection = await prompt.run();
+  if (selection === baseEnv) {
+    return baseWorkspaceEnv;
+  }
+
+  const [idIsh] = selection.split(' - ').reverse();
   return findSingle(db.Environment, e => matchIdIsh(e, idIsh));
 }

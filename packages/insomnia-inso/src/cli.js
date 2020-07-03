@@ -35,6 +35,7 @@ function makeTestCommand(exitOverride: boolean) {
   run
     .command('test [identifier]')
     .description('Run Insomnia unit test suites')
+    .option('-e, --env <identifier>', 'environment to use')
     .option(
       '-r, --reporter <reporter>',
       `reporter to use, options are [${reporterTypes}]`,
@@ -70,7 +71,7 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     .version(getVersion(), '-v, --version')
     .description('A CLI for Insomnia!')
     .option('-w, --working-dir <dir>', 'set working directory')
-    .option('-a, --app-data-dit <dir>', 'set the app data directory') // Does this need to be an option? I think Linux requires it?
+    .option('-a, --app-data-dit <dir>', 'set the app data directory')
     .addCommand(makeGenerateCommand(!!exitOverride))
     .addCommand(makeTestCommand(!!exitOverride))
     .addCommand(makeLintCommand(!!exitOverride))
