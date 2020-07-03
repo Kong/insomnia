@@ -29,3 +29,17 @@ type BaseUnitTest = {
 };
 
 export type UnitTest = BaseModel & BaseUnitTest;
+
+type BaseEnvironment = {
+  name: string,
+  metaSortKey: number,
+};
+
+export type Environment = BaseModel & BaseEnvironment;
+
+type BaseWorkspace = {
+  name: string,
+  description: string,
+};
+
+export type Workspace = BaseModel & BaseWorkspace;

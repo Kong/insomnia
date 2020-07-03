@@ -1,15 +1,15 @@
 // @flow
-import type { ApiSpec, BaseModel, UnitTest, UnitTestSuite } from './types';
+import type { ApiSpec, BaseModel, Environment, UnitTest, UnitTestSuite, Workspace } from './types';
 import envPaths from 'env-paths';
 import gitAdapter from './adapters/git-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
 
 export type Database = {|
   ApiSpec: Array<ApiSpec>,
-  Environment: Array<BaseModel>,
+  Environment: Array<Environment>,
   Request: Array<BaseModel>,
   RequestGroup: Array<BaseModel>,
-  Workspace: Array<BaseModel>,
+  Workspace: Array<Workspace>,
   UnitTestSuite: Array<UnitTestSuite>,
   UnitTest: Array<UnitTest>,
 |};

@@ -1,10 +1,9 @@
 // @flow
 
 import { generate, runTestsCli } from 'insomnia-testing';
-import { getSendRequestCallbackMemDb } from 'insomnia-send-request';
 import type { GlobalOptions } from '../util';
-import { findFirst, findSingle, loadDb } from '../db';
-import { getTestSuiteFromIdentifier } from '../db/prompts';
+import { loadDb } from '../db';
+import { getEnvironmentFromIdentifier, getTestSuiteFromIdentifier } from '../db/prompts';
 import type { UnitTest, UnitTestSuite } from '../db/types';
 
 export const TestReporterEnum = {
@@ -64,12 +63,18 @@ export async function runInsomniaTests(
     return false;
   }
 
-  // Make this nicer, I think...
+  // Find environment
   const workspaceId = suite.parentId;
-  const baseEnv = findSingle(db.Environment, ({ parentId }) => parentId === workspaceId);
-  const firstSubEnv = findFirst(db.Environment, ({ parentId }) => parentId === baseEnv._id);
+  const env = await getEnvironmentFromIdentifier(db, workspaceId);
+
+  if (!env) {
+    console.log('No environment found.');
+    return false;
+  }
 
   const testFileContents = await generate([createTestSuite(suite, tests)]);
-  const sendRequest = await getSendRequestCallbackMemDb(firstSubEnv._id, db);
+
+  const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
+  const sendRequest = await getSendRequestCallbackMemDb(env._id, db);
   return await runTestsCli(testFileContents, { reporter, bail, keepFile, sendRequest });
 }
