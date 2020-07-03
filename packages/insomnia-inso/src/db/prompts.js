@@ -5,7 +5,7 @@ import type { Database } from './index';
 import { findSingle } from './index';
 
 const matchIdIsh = ({ _id }: BaseModel, identifier: string) => _id.startsWith(identifier);
-const generateIdIsh = ({ _id }: BaseModel) => _id.substr(0, 10);
+const generateIdIsh = ({ _id }: BaseModel, count: number = 10) => _id.substr(0, count);
 
 export async function getApiSpecFromIdentifier(
   db: Database,
@@ -65,26 +65,22 @@ export async function getEnvironmentFromIdentifier(
     return null;
   }
 
-  const workspace = findSingle(db.Workspace, e => e._id === workspaceId);
+  // Get the sub environments
   const baseWorkspaceEnv = findSingle(db.Environment, e => e.parentId === workspaceId);
+  const subEnvs = db.Environment.filter(e => e.parentId === baseWorkspaceEnv._id);
 
-  // Get the base and sub environments for the WorkspaceId
-  const filteredEnv = db.Environment.filter(
-    e => e.parentId === baseWorkspaceEnv._id || e.parentId === workspaceId,
-  );
-
-  if (!filteredEnv.length) {
+  if (!subEnvs.length) {
     return null;
   }
 
   if (identifier) {
-    return findSingle(filteredEnv, e => matchIdIsh(e, identifier) || e.name === identifier);
+    return findSingle(subEnvs, e => matchIdIsh(e, identifier) || e.name === identifier);
   }
 
   const prompt = new AutoComplete({
     name: 'environment',
-    message: `Select an environment in the "${workspace.name}" workspace.`,
-    choices: filteredEnv.map(e => `${e.name} - ${generateIdIsh(e)}`),
+    message: `Select an environment`,
+    choices: subEnvs.map(e => `${e.name} - ${generateIdIsh(e, 14)}`),
   });
 
   const [idIsh] = (await prompt.run()).split(' - ').reverse();

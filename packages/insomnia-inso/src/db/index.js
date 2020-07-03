@@ -60,16 +60,6 @@ export const loadDb = async ({
   return db || emptyDb();
 };
 
-export const findFirst = <T: BaseModel>(arr: Array<T>, predicate: T => boolean): T => {
-  const matched = arr.filter(predicate);
-
-  if (matched.length === 0) {
-    throw new Error('Could not find any entries matching the predicate.');
-  }
-
-  return matched[0];
-};
-
 export const findSingle = <T>(arr: Array<T>, predicate: T => boolean): T => {
   const matched = arr.filter(predicate);
 
