@@ -31,7 +31,7 @@ export async function getApiSpecFromIdentifier(
     choices: db.ApiSpec.map(s => `${s.fileName} - ${generateIdIsh(s)}`),
   });
 
-  const [, idIsh] = (await prompt.run()).split(' - ');
+  const [idIsh] = (await prompt.run()).split(' - ').reverse();
   return findSingle(db.ApiSpec, s => matchIdIsh(s, idIsh));
 }
 
@@ -99,19 +99,12 @@ export async function getEnvironmentFromIdentifier(
     return null;
   }
 
-  const baseEnv = 'No environment';
-
   const prompt = new AutoComplete({
     name: 'environment',
     message: `Select an environment`,
-    choices: subEnvs.map(e => `${e.name} - ${generateIdIsh(e, 14)}`).concat(baseEnv),
+    choices: subEnvs.map(e => `${e.name} - ${generateIdIsh(e, 14)}`),
   });
 
-  const selection = await prompt.run();
-  if (selection === baseEnv) {
-    return baseWorkspaceEnv;
-  }
-
-  const [idIsh] = selection.split(' - ').reverse();
+  const [idIsh] = (await prompt.run()).split(' - ').reverse();
   return findSingle(db.Environment, e => matchIdIsh(e, idIsh));
 }
