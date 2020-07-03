@@ -9,6 +9,7 @@ const generateIdIsh = ({ _id }: BaseModel, count: number = 10) => _id.substr(0, 
 
 export async function getApiSpecFromIdentifier(
   db: Database,
+  ci: boolean,
   identifier?: string,
 ): Promise<?ApiSpec> {
   if (!db.ApiSpec.length) {
@@ -17,6 +18,11 @@ export async function getApiSpecFromIdentifier(
 
   if (identifier) {
     return findSingle(db.ApiSpec, s => matchIdIsh(s, identifier) || s.fileName === identifier);
+  }
+
+  // No identifier present, and ci disables prompts, so return null
+  if (ci) {
+    return null;
   }
 
   const prompt = new AutoComplete({
@@ -31,6 +37,7 @@ export async function getApiSpecFromIdentifier(
 
 export async function getTestSuiteFromIdentifier(
   db: Database,
+  ci: boolean,
   identifier?: string,
 ): Promise<?UnitTestSuite> {
   if (!db.UnitTestSuite.length) {
@@ -39,6 +46,11 @@ export async function getTestSuiteFromIdentifier(
 
   if (identifier) {
     return findSingle(db.UnitTestSuite, s => matchIdIsh(s, identifier) || s.name === identifier);
+  }
+
+  // No identifier present, and ci disables prompts, so return null
+  if (ci) {
+    return null;
   }
 
   const prompt = new AutoComplete({
@@ -58,6 +70,7 @@ export async function getTestSuiteFromIdentifier(
 
 export async function getEnvironmentFromIdentifier(
   db: Database,
+  ci: boolean,
   workspaceId: string,
   identifier?: string,
 ): Promise<?Environment> {
@@ -79,6 +92,11 @@ export async function getEnvironmentFromIdentifier(
 
   if (!subEnvs.length) {
     return baseWorkspaceEnv;
+  }
+
+  // No identifier present, and ci disables prompts, so return null
+  if (ci) {
+    return null;
   }
 
   const baseEnv = 'No environment';

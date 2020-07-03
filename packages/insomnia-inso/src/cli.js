@@ -72,6 +72,7 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     .description('A CLI for Insomnia!')
     .option('-w, --working-dir <dir>', 'set working directory')
     .option('-a, --app-data-dit <dir>', 'set the app data directory')
+    .option('--ci', 'run in CI, disables all prompts')
     .addCommand(makeGenerateCommand(!!exitOverride))
     .addCommand(makeTestCommand(!!exitOverride))
     .addCommand(makeLintCommand(!!exitOverride))

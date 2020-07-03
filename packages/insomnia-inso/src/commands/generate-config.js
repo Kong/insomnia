@@ -35,14 +35,14 @@ export async function generateConfig(
     return false;
   }
 
-  const { type, output, appDataDir, workingDir } = options;
+  const { type, output, appDataDir, workingDir, ci } = options;
 
   const db = await loadDb({ workingDir, appDataDir, filterTypes: ['ApiSpec'] });
 
   let result: ConversionResult;
 
   // try get from db
-  const specFromDb = await getApiSpecFromIdentifier(db, identifier);
+  const specFromDb = await getApiSpecFromIdentifier(db, !!ci, identifier);
 
   if (specFromDb?.contents) {
     result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);

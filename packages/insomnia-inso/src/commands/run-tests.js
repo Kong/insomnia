@@ -44,12 +44,12 @@ export async function runInsomniaTests(
     return false;
   }
 
-  const { reporter, bail, keepFile, appDataDir, workingDir, env } = options;
+  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci } = options;
 
   const db = await loadDb({ workingDir, appDataDir });
 
   // Find suite
-  const suite = await getTestSuiteFromIdentifier(db, identifier);
+  const suite = await getTestSuiteFromIdentifier(db, !!ci, identifier);
 
   if (!suite) {
     console.log('No test suite identified.');
@@ -66,7 +66,7 @@ export async function runInsomniaTests(
 
   // Find environment
   const workspaceId = suite.parentId;
-  const environment = await getEnvironmentFromIdentifier(db, workspaceId, env);
+  const environment = await getEnvironmentFromIdentifier(db, !!ci, workspaceId, env);
 
   if (!environment) {
     console.log('No environment found.');

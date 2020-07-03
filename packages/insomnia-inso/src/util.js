@@ -5,6 +5,7 @@ import * as packageJson from '../package.json';
 export type GlobalOptions = {
   appDataDir?: string,
   workingDir?: string,
+  ci?: boolean,
 };
 
 export function createCommand(exitOverride: boolean, cmd?: string) {

@@ -8,11 +8,11 @@ export type LintSpecificationOptions = GlobalOptions;
 
 export async function lintSpecification(
   identifier?: string,
-  { workingDir, appDataDir }: LintSpecificationOptions,
+  { workingDir, appDataDir, ci }: LintSpecificationOptions,
 ): Promise<boolean> {
   const db = await loadDb({ workingDir, appDataDir, filterTypes: ['ApiSpec'] });
 
-  const specFromDb = await getApiSpecFromIdentifier(db, identifier);
+  const specFromDb = await getApiSpecFromIdentifier(db, !!ci, identifier);
 
   if (!specFromDb) {
     console.log(`Specification not found. :(`);
