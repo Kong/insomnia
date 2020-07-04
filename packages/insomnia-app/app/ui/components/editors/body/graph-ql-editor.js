@@ -360,10 +360,29 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     window.localStorage.setItem('graphql.automaticFetch', automaticFetch);
   }
 
+  _prettifyQuery(query: string): string {
+    if (query) {
+      const prettifyQuery = print(parse(query));
+      const indentSize = this.props.settings.editorIndentSize;
+      // graphql comes with a default 2 space indentation,
+      // if the user had a different tab space setting, then we should apply it
+      if (indentSize !== 2) {
+        const indentQuery = this._applyIndentation(prettifyQuery, indentSize);
+        return indentQuery;
+      }
+    }
+    return '';
+  }
+
+  _applyIndentation(query: string, indentSize: number): string {
+    const indentationSpace = Array(indentSize).join(' ');
+    return query.replace(/\n\s\s/g, `\n${indentationSpace}`);
+  }
+
   _handlePrettify() {
     const { body } = this.state;
     const { variables, query } = body;
-    const prettyQuery = query && print(parse(query));
+    const prettyQuery = this._prettifyQuery(query);
     const prettyVariables = variables && JSON.parse(prettify.json(JSON.stringify(variables)));
     this._handleBodyChange(prettyQuery, prettyVariables, this.state.body.operationName);
 
