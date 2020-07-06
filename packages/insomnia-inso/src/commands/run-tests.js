@@ -39,7 +39,7 @@ function validateOptions({ reporter }: RunTestsOptions): boolean {
 
 const createTestSuite = (dbSuite: UnitTestSuite, dbTests: Array<UnitTest>) => ({
   name: dbSuite.name,
-  tests: dbTests.map(({ name, code, requestId }) => ({ name, code, requestId })),
+  tests: dbTests.map(({ name, code, requestId }) => ({ name, code, defaultRequestId: requestId })),
 });
 
 // Identifier can be the id or name of a workspace, apiSpec, or unit test suite
