@@ -5,7 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import type { GlobalOptions } from '../util';
 import { loadDb } from '../db';
-import { getApiSpecFromIdentifier } from '../db/prompts';
+import { loadApiSpec, promptApiSpec } from '../db/prompts';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
@@ -42,7 +42,7 @@ export async function generateConfig(
   let result: ConversionResult;
 
   // try get from db
-  const specFromDb = await getApiSpecFromIdentifier(db, !!ci, identifier);
+  const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 
   if (specFromDb?.contents) {
     result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);

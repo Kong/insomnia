@@ -2,7 +2,7 @@
 import { Spectral } from '@stoplight/spectral';
 import type { GlobalOptions } from '../util';
 import { loadDb } from '../db';
-import { getApiSpecFromIdentifier } from '../db/prompts';
+import { loadApiSpec, promptApiSpec } from '../db/prompts';
 
 export type LintSpecificationOptions = GlobalOptions;
 
@@ -12,10 +12,10 @@ export async function lintSpecification(
 ): Promise<boolean> {
   const db = await loadDb({ workingDir, appDataDir, filterTypes: ['ApiSpec'] });
 
-  const specFromDb = await getApiSpecFromIdentifier(db, !!ci, identifier);
+  const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 
   if (!specFromDb) {
-    console.log(`Specification not found. :(`);
+    console.log(`Specification not found.`);
     return false;
   }
 

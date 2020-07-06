@@ -28,21 +28,19 @@ const getDbChoice = (
   hint: config.hint || `${idIsh}`,
 });
 
-export async function getApiSpecFromIdentifier(
-  db: Database,
-  ci: boolean,
-  identifier?: string,
-): Promise<?ApiSpec> {
+export function loadApiSpec(db: Database, identifier: string): ?ApiSpec {
   if (!db.ApiSpec.length) {
     return null;
   }
 
-  if (identifier) {
-    return mustFindSingle(db.ApiSpec, s => matchIdIsh(s, identifier) || s.fileName === identifier);
-  }
+  return mustFindSingleOrNone(
+    db.ApiSpec,
+    s => matchIdIsh(s, identifier) || s.fileName === identifier,
+  );
+}
 
-  // No identifier present, and ci disables prompts, so return null
-  if (ci) {
+export async function promptApiSpec(db: Database, ci: boolean): Promise<?ApiSpec> {
+  if (ci || !db.ApiSpec.length) {
     return null;
   }
 
@@ -53,7 +51,7 @@ export async function getApiSpecFromIdentifier(
   });
 
   const [idIsh] = (await prompt.run()).split(' - ').reverse();
-  return mustFindSingle(db.ApiSpec, s => matchIdIsh(s, idIsh));
+  return loadApiSpec(db, idIsh);
 }
 
 export function loadTestSuites(db: Database, identifier: string): Array<UnitTestSuite> {
