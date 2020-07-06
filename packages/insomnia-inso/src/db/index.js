@@ -50,7 +50,8 @@ export const loadDb = async ({
   // try load from nedb
   if (!db) {
     db = await neDbAdapter(
-      appDataDir || envPaths(process.env.DEFAULT_APP_DATA_DIR, { suffix: '' }).data,
+      appDataDir ||
+        envPaths(process.env.DEFAULT_APP_DATA_DIR || 'insomnia-app', { suffix: '' }).data,
       filterTypes,
     );
   }
