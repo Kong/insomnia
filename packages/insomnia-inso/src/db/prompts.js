@@ -2,11 +2,11 @@
 import type { ApiSpec, BaseModel, Environment, UnitTestSuite } from './types';
 import { AutoComplete } from 'enquirer';
 import type { Database } from './index';
-import { mustFindSingle } from './index';
+import { mustFindSingle, mustFindSingleOrNone } from './index';
 import flattenDeep from 'lodash.flattendeep';
 
 export const matchIdIsh = ({ _id }: BaseModel, identifier: string) => _id.startsWith(identifier);
-export const generateIdIsh = (id: string, length: number) => id.substr(0, length);
+export const generateIdIsh = ({ _id }: BaseModel, length: number = 10) => _id.substr(0, length);
 
 export function indent(level: number, code: string, tab: string = '  |'): string {
   if (!level || level < 0) {
@@ -18,14 +18,14 @@ export function indent(level: number, code: string, tab: string = '  |'): string
 }
 
 const getDbChoice = (
-  id: string,
+  idIsh: string,
   message: string,
-  config: { indent?: number, hint?: string, idIshLength?: number } = {},
+  config: { indent?: number, hint?: string } = {},
 ) => ({
-  name: id,
+  name: idIsh,
   message: indent(config?.indent || 0, message),
-  value: `${message} - ${generateIdIsh(id, config.idIshLength || 10)}`,
-  hint: config.hint,
+  value: `${message} - ${idIsh}`,
+  hint: config.hint || `${idIsh}`,
 });
 
 export async function getApiSpecFromIdentifier(
@@ -49,7 +49,7 @@ export async function getApiSpecFromIdentifier(
   const prompt = new AutoComplete({
     name: 'apiSpec',
     message: 'Select an API Specification',
-    choices: db.ApiSpec.map(s => getDbChoice(s._id, s.fileName)),
+    choices: db.ApiSpec.map(s => getDbChoice(generateIdIsh(s), s.fileName)),
   });
 
   const [idIsh] = (await prompt.run()).split(' - ').reverse();
@@ -57,8 +57,12 @@ export async function getApiSpecFromIdentifier(
 }
 
 export function loadTestSuites(db: Database, identifier: string): Array<UnitTestSuite> {
-  const apiSpec = db.ApiSpec.find(s => matchIdIsh(s, identifier) || s.fileName === identifier);
-  const workspace = db.Workspace.find(
+  const apiSpec = mustFindSingleOrNone(
+    db.ApiSpec,
+    s => matchIdIsh(s, identifier) || s.fileName === identifier,
+  );
+  const workspace = mustFindSingleOrNone(
+    db.Workspace,
     s => matchIdIsh(s, identifier) || s.name === identifier || s._id === apiSpec?.parentId,
   );
 
@@ -67,7 +71,10 @@ export function loadTestSuites(db: Database, identifier: string): Array<UnitTest
     return db.UnitTestSuite.filter(s => s.parentId === workspace._id);
   }
 
-  return db.UnitTestSuite.filter(s => matchIdIsh(s, identifier) || s.name === identifier);
+  // Identifier is for one specific suite; find it
+  return [
+    mustFindSingle(db.UnitTestSuite, s => matchIdIsh(s, identifier) || s.name === identifier),
+  ];
 }
 
 export async function promptTestSuites(db: Database, ci: boolean): Promise<Array<UnitTestSuite>> {
@@ -76,9 +83,9 @@ export async function promptTestSuites(db: Database, ci: boolean): Promise<Array
   }
 
   const choices = db.ApiSpec.map(spec => [
-    getDbChoice(spec._id, spec.fileName, { hint: 'All suites' }),
+    getDbChoice(generateIdIsh(spec), spec.fileName),
     ...db.UnitTestSuite.filter(suite => suite.parentId === spec.parentId).map(suite =>
-      getDbChoice(suite._id, suite.name, { indent: 1 }),
+      getDbChoice(generateIdIsh(suite), suite.name, { indent: 1 }),
     ),
   ]);
 
@@ -131,7 +138,7 @@ export async function promptEnvironment(
   const prompt = new AutoComplete({
     name: 'environment',
     message: `Select an environment`,
-    choices: subEnvs.map(e => getDbChoice(e._id, e.name, { idIshLength: 14 })),
+    choices: subEnvs.map(e => getDbChoice(generateIdIsh(e, 14), e.name)),
   });
 
   const [idIsh] = (await prompt.run()).split(' - ').reverse();

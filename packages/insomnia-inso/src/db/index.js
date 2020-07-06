@@ -60,6 +60,20 @@ export const loadDb = async ({
   return db || emptyDb();
 };
 
+export const mustFindSingleOrNone = <T>(arr: Array<T>, predicate: T => boolean): ?T => {
+  const matched = arr.filter(predicate);
+
+  if (matched.length === 1) {
+    return matched[0];
+  }
+
+  if (matched.length === 0) {
+    return null;
+  }
+
+  throw new Error(`Expected one or none, but found multiple matching entries`);
+};
+
 export const mustFindSingle = <T>(arr: Array<T>, predicate: T => boolean): T => {
   const matched = arr.filter(predicate);
 
