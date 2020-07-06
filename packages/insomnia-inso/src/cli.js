@@ -36,6 +36,7 @@ function makeTestCommand(exitOverride: boolean) {
     .command('test [identifier]')
     .description('Run Insomnia unit test suites')
     .option('-e, --env <identifier>', 'environment to use')
+    .option('-t, --testNamePattern <regex>', 'run tests that match the regex')
     .option(
       '-r, --reporter <reporter>',
       `reporter to use, options are [${reporterTypes}]`,

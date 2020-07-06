@@ -24,6 +24,7 @@ export type RunTestsOptions = GlobalOptions & {
   reporter: $Keys<typeof TestReporterEnum>,
   bail?: boolean,
   keepFile?: boolean,
+  testNamePattern?: string,
 };
 
 function validateOptions({ reporter }: RunTestsOptions): boolean {
@@ -43,14 +44,14 @@ const createTestSuite = (dbSuite: UnitTestSuite, dbTests: Array<UnitTest>) => ({
 
 // Identifier can be the id or name of a workspace, apiSpec, or unit test suite
 export async function runInsomniaTests(
-  identifier?: string,
+  identifier: ?string,
   options: RunTestsOptions,
 ): Promise<boolean> {
   if (!validateOptions(options)) {
     return false;
   }
 
-  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci } = options;
+  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern } = options;
 
   const db = await loadDb({ workingDir, appDataDir });
 
@@ -75,16 +76,22 @@ export async function runInsomniaTests(
 
   // Generate test file
   const testFileContents = await generate(
-    suites.map(suite => {
-      return createTestSuite(
+    suites.map(suite =>
+      createTestSuite(
         suite,
         db.UnitTest.filter(t => t.parentId === suite._id),
-      );
-    }),
+      ),
+    ),
   );
 
   // Load lazily when needed, otherwise this require slows down the entire CLI.
   const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
   const sendRequest = await getSendRequestCallbackMemDb(environment._id, db);
-  return await runTestsCli(testFileContents, { reporter, bail, keepFile, sendRequest });
+  return await runTestsCli(testFileContents, {
+    reporter,
+    bail,
+    keepFile,
+    sendRequest,
+    testFilter: testNamePattern,
+  });
 }

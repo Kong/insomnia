@@ -7,7 +7,7 @@ import { loadApiSpec, promptApiSpec } from '../db/prompts';
 export type LintSpecificationOptions = GlobalOptions;
 
 export async function lintSpecification(
-  identifier?: string,
+  identifier: ?string,
   { workingDir, appDataDir, ci }: LintSpecificationOptions,
 ): Promise<boolean> {
   const db = await loadDb({ workingDir, appDataDir, filterTypes: ['ApiSpec'] });

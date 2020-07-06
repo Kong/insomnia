@@ -9,6 +9,7 @@ Options:
   -v, --version             output the version number
   -w, --working-dir <dir>   set working directory
   -a, --app-data-dit <dir>  set the app data directory
+  --ci                      run in CI, disables all prompts
   -h, --help                display help for command
 
 Commands:
@@ -27,6 +28,7 @@ Options:
   -v, --version             output the version number
   -w, --working-dir <dir>   set working directory
   -a, --app-data-dit <dir>  set the app data directory
+  --ci                      run in CI, disables all prompts
   -h, --help                display help for command
 
 Commands:
@@ -70,6 +72,7 @@ Options:
   -v, --version             output the version number
   -w, --working-dir <dir>   set working directory
   -a, --app-data-dit <dir>  set the app data directory
+  --ci                      run in CI, disables all prompts
   -h, --help                display help for command
 
 Commands:
@@ -107,22 +110,24 @@ exports[`Snapshot for "inso run -h" 1`] = `
 Execution utilities
 
 Options:
-  -h, --help      display help for command
+  -h, --help                   display help for command
 
 Commands:
-  test [options]  Run Insomnia unit tests
-  help [command]  display help for command"
+  test [options] [identifier]  Run Insomnia unit test suites
+  help [command]               display help for command"
 `;
 
 exports[`Snapshot for "inso run test -h" 1`] = `
-"Usage: inso run test [options]
+"Usage: inso run test [options] [identifier]
 
-Run Insomnia unit tests
+Run Insomnia unit test suites
 
 Options:
-  -r, --reporter <reporter>  reporter to use, options are [dot, list, spec,
-                             min, progress] (default: \\"spec\\")
-  -b, --bail                 abort (\\"bail\\") after first test failure
-  --keep-file                do not delete the generated test file
-  -h, --help                 display help for command"
+  -e, --env <identifier>         environment to use
+  -t, --testNamePattern <regex>  run tests that match the regex
+  -r, --reporter <reporter>      reporter to use, options are [dot, list, spec,
+                                 min, progress] (default: \\"spec\\")
+  -b, --bail                     abort (\\"bail\\") after first test failure
+  --keep-file                    do not delete the generated test file
+  -h, --help                     display help for command"
 `;

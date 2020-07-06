@@ -32,6 +32,7 @@ export type InsomniaOptions = {
   sendRequest?: SendRequestCallback,
   bail?: boolean,
   keepFile?: boolean,
+  testFilter?: string,
 };
 
 /**

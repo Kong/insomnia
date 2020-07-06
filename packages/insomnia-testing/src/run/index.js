@@ -59,7 +59,7 @@ async function runInternal<T>(
   extractResult: (runner: Object) => T,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
-    const { bail, keepFile } = options;
+    const { bail, keepFile, testFilter } = options;
     // Add global `insomnia` helper.
     // This is the only way to add new globals to the Mocha environment as far
     // as I can tell
@@ -71,6 +71,7 @@ async function runInternal<T>(
       global: ['insomnia', 'chai'],
       bail,
       reporter,
+      fgrep: testFilter,
     });
 
     const sources = Array.isArray(testSrc) ? testSrc : [testSrc];
