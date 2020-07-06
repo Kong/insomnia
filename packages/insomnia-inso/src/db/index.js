@@ -49,9 +49,8 @@ export const loadDb = async ({
 
   // try load from nedb
   if (!db) {
-    // TODO: Note, unit tests will also try to access the Insomnia Designer app data directory. We should configure this depending on development or production.
     db = await neDbAdapter(
-      appDataDir || envPaths('insomnia-app', { suffix: '' }).data,
+      appDataDir || envPaths(process.env.DEFAULT_APP_DATA_DIR, { suffix: '' }).data,
       filterTypes,
     );
   }
