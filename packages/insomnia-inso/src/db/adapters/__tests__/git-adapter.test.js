@@ -14,6 +14,8 @@ describe('gitAdapter()', () => {
     expect(db?.Request.length).toBe(2);
     expect(db?.RequestGroup.length).toBe(1);
     expect(db?.Workspace.length).toBe(1);
+    expect(db?.UnitTestSuite.length).toBe(2);
+    expect(db?.UnitTest.length).toBe(4);
   });
 
   it('should seed with git-repo directory with filter', async () => {
@@ -25,6 +27,8 @@ describe('gitAdapter()', () => {
     expect(db?.Request.length).toBe(0);
     expect(db?.RequestGroup.length).toBe(0);
     expect(db?.Workspace.length).toBe(0);
+    expect(db?.UnitTestSuite.length).toBe(0);
+    expect(db?.UnitTest.length).toBe(0);
   });
 
   it('should return null if data directory is invalid', async () => {
