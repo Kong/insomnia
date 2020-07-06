@@ -12,11 +12,11 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:snapshots": "npm run build && jest -u",
-    "start": "npm run build:watch",
-    "build": "webpack --config webpack.config.js --display errors-only",
-    "build:watch": "npm run build -- --watch",
+    "build": "webpack --config webpack/webpack.config.development.js --display errors-only",
+    "build:production": "webpack --config webpack/webpack.config.production.js --display errors-only",
+    "start": "npm run build -- --watch",
     "bootstrap": "npm run build",
-    "prepublish": "npm run build"
+    "prepare": "npm run build:production"
   },
   "jest": {
     "setupFiles": [
@@ -41,6 +41,7 @@
     "rimraf": "^3.0.2",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.12",
+    "webpack-merge": "^4.2.2",
     "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
@@ -62,6 +63,7 @@
     "insomnia-plugin-uuid": "^2.2.10",
     "insomnia-send-request": "^2.2.13",
     "insomnia-testing": "^2.2.12",
+    "lodash.flattendeep": "^4.4.0",
     "nedb": "^1.8.0",
     "openapi-2-kong": "^2.2.12",
     "yaml": "^1.10.0"

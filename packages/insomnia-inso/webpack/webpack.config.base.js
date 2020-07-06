@@ -4,13 +4,9 @@ const nodeExternals = require('webpack-node-externals');
 module.exports = {
   entry: { index: './src/cli.js' },
   target: 'node',
-  mode: 'production',
   devtool: 'source-map',
-  optimization: {
-    minimize: false,
-  },
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, '..', 'dist'),
     filename: '[name].js',
     library: 'insomniacli',
     libraryTarget: 'commonjs2',
