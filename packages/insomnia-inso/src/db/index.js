@@ -1,28 +1,26 @@
 // @flow
-import type { ApiSpec, BaseModel, Environment, UnitTest, UnitTestSuite, Workspace } from './types';
+import type { ApiSpec, BaseModel } from './types';
 import envPaths from 'env-paths';
 import gitAdapter from './adapters/git-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
 
 export type Database = {|
   ApiSpec: Array<ApiSpec>,
-  Environment: Array<Environment>,
+  Environment: Array<BaseModel>,
   Request: Array<BaseModel>,
   RequestGroup: Array<BaseModel>,
-  Workspace: Array<Workspace>,
-  UnitTestSuite: Array<UnitTestSuite>,
-  UnitTest: Array<UnitTest>,
+  Workspace: Array<BaseModel>,
 |};
 
-export const emptyDb = (): Database => ({
-  ApiSpec: [],
-  Environment: [],
-  Request: [],
-  RequestGroup: [],
-  Workspace: [],
-  UnitTest: [],
-  UnitTestSuite: [],
-});
+export function emptyDb(): Database {
+  return {
+    ApiSpec: [],
+    Environment: [],
+    Request: [],
+    RequestGroup: [],
+    Workspace: [],
+  };
+}
 
 export type DbAdapter = (
   dir: string,
@@ -35,11 +33,11 @@ type Options = {
   filterTypes?: Array<$Keys<Database>>,
 };
 
-export const loadDb = async ({
+export async function loadDb({
   workingDir,
   appDataDir,
   filterTypes,
-}: Options = {}): Promise<Database> => {
+}: Options = {}): Promise<Database> {
   let db = null;
 
   // try load from git
@@ -58,32 +56,4 @@ export const loadDb = async ({
 
   // return empty db
   return db || emptyDb();
-};
-
-export const mustFindSingleOrNone = <T>(arr: Array<T>, predicate: T => boolean): ?T => {
-  const matched = arr.filter(predicate);
-
-  if (matched.length === 1) {
-    return matched[0];
-  }
-
-  if (matched.length === 0) {
-    return null;
-  }
-
-  throw new Error(`Expected one or none, but found multiple matching entries`);
-};
-
-export const mustFindSingle = <T>(arr: Array<T>, predicate: T => boolean): T => {
-  const matched = arr.filter(predicate);
-
-  if (matched.length === 1) {
-    return matched[0];
-  }
-
-  if (matched.length === 0) {
-    throw new Error('Expected one but found no matching entries');
-  }
-
-  throw new Error('Expected one but found multiple matching entries');
-};
+}
