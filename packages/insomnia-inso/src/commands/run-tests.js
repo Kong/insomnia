@@ -3,7 +3,12 @@
 import { generate, runTestsCli } from 'insomnia-testing';
 import type { GlobalOptions } from '../util';
 import { loadDb } from '../db';
-import { getEnvironmentFromIdentifier, getTestSuiteFromIdentifier } from '../db/prompts';
+import {
+  loadEnvironment,
+  loadTestSuites,
+  promptEnvironment,
+  promptTestSuites,
+} from '../db/prompts';
 import type { UnitTest, UnitTestSuite } from '../db/types';
 
 export const TestReporterEnum = {
@@ -36,6 +41,7 @@ const createTestSuite = (dbSuite: UnitTestSuite, dbTests: Array<UnitTest>) => ({
   tests: dbTests.map(({ name, code, requestId }) => ({ name, code, requestId })),
 });
 
+// Identifier can be the id or name of a workspace, apiSpec, or unit test suite
 export async function runInsomniaTests(
   identifier?: string,
   options: RunTestsOptions,
@@ -48,33 +54,36 @@ export async function runInsomniaTests(
 
   const db = await loadDb({ workingDir, appDataDir });
 
-  // Find suite
-  const suite = await getTestSuiteFromIdentifier(db, !!ci, identifier);
+  // Find suites
+  const suites = identifier ? loadTestSuites(db, identifier) : await promptTestSuites(db, !!ci);
 
-  if (!suite) {
-    console.log('No test suite identified.');
-    return false;
-  }
-
-  // Find tests in suite
-  const tests = db.UnitTest.filter(t => t.parentId === suite._id);
-
-  if (!tests.length) {
-    console.log(`Test suite "${suite.name}" contains no tests.`);
+  if (!suites.length) {
+    console.log('No test suites identified.');
     return false;
   }
 
   // Find environment
-  const workspaceId = suite.parentId;
-  const environment = await getEnvironmentFromIdentifier(db, !!ci, workspaceId, env);
+  const workspaceId = suites[0].parentId;
+  const environment = env
+    ? loadEnvironment(db, workspaceId, env)
+    : await promptEnvironment(db, !!ci, workspaceId);
 
   if (!environment) {
-    console.log('No environment found.');
+    console.log('No environment identified.');
     return false;
   }
 
-  const testFileContents = await generate([createTestSuite(suite, tests)]);
+  // Generate test file
+  const testFileContents = await generate(
+    suites.map(suite => {
+      return createTestSuite(
+        suite,
+        db.UnitTest.filter(t => t.parentId === suite._id),
+      );
+    }),
+  );
 
+  // Load lazily when needed, otherwise this require slows down the entire CLI.
   const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
   const sendRequest = await getSendRequestCallbackMemDb(environment._id, db);
   return await runTestsCli(testFileContents, { reporter, bail, keepFile, sendRequest });

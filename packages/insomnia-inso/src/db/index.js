@@ -60,7 +60,7 @@ export const loadDb = async ({
   return db || emptyDb();
 };
 
-export const findSingle = <T>(arr: Array<T>, predicate: T => boolean): T => {
+export const mustFindSingle = <T>(arr: Array<T>, predicate: T => boolean): T => {
   const matched = arr.filter(predicate);
 
   if (matched.length === 1) {
@@ -68,8 +68,8 @@ export const findSingle = <T>(arr: Array<T>, predicate: T => boolean): T => {
   }
 
   if (matched.length === 0) {
-    throw new Error('Could not find any entries matching the predicate.');
+    throw new Error('Expected one but found no matching entries');
   }
 
-  throw new Error('Multiple entries found matching the predicate.');
+  throw new Error('Expected one but found multiple matching entries');
 };

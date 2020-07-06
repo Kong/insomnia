@@ -1,5 +1,5 @@
 // @flow
 
-declare module 'insomnia-testing' {
+declare module 'lodash.flattendeep' {
   declare module.exports: *;
 }

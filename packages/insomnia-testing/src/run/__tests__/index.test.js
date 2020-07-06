@@ -21,12 +21,25 @@ describe('Example', () => {
 });
 `;
 
+const exampleEmptySuite = `
+const { expect } = chai;
+describe('Example', () => {
+});
+`;
+
 describe('run', () => {
   it('runs a mocha suite', async () => {
     const { stats } = await runTests(exampleTest);
     expect(stats.passes).toBe(1);
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(1);
+  });
+
+  it('runs empty mocha suite', async () => {
+    const { stats } = await runTests(exampleEmptySuite);
+    expect(stats.passes).toBe(0);
+    expect(stats.tests).toBe(0);
+    expect(stats.failures).toBe(0);
   });
 
   it('works on multiple files', async () => {

@@ -2,10 +2,31 @@
 import type { ApiSpec, BaseModel, Environment, UnitTestSuite } from './types';
 import { AutoComplete } from 'enquirer';
 import type { Database } from './index';
-import { findSingle } from './index';
+import { mustFindSingle } from './index';
+import flattenDeep from 'lodash.flattendeep';
 
-const matchIdIsh = ({ _id }: BaseModel, identifier: string) => _id.startsWith(identifier);
-const generateIdIsh = ({ _id }: BaseModel, count: number = 10) => _id.substr(0, count);
+export const matchIdIsh = ({ _id }: BaseModel, identifier: string) => _id.startsWith(identifier);
+export const generateIdIsh = (id: string, length: number) => id.substr(0, length);
+
+export function indent(level: number, code: string, tab: string = '  |'): string {
+  if (!level || level < 0) {
+    return code;
+  }
+
+  const prefix = new Array(level + 1).join(tab);
+  return `${prefix} ${code}`;
+}
+
+const getDbChoice = (
+  id: string,
+  message: string,
+  config: { indent?: number, hint?: string, idIshLength?: number } = {},
+) => ({
+  name: id,
+  message: indent(config?.indent || 0, message),
+  value: `${message} - ${generateIdIsh(id, config.idIshLength || 10)}`,
+  hint: config.hint,
+});
 
 export async function getApiSpecFromIdentifier(
   db: Database,
@@ -17,7 +38,7 @@ export async function getApiSpecFromIdentifier(
   }
 
   if (identifier) {
-    return findSingle(db.ApiSpec, s => matchIdIsh(s, identifier) || s.fileName === identifier);
+    return mustFindSingle(db.ApiSpec, s => matchIdIsh(s, identifier) || s.fileName === identifier);
   }
 
   // No identifier present, and ci disables prompts, so return null
@@ -28,83 +49,91 @@ export async function getApiSpecFromIdentifier(
   const prompt = new AutoComplete({
     name: 'apiSpec',
     message: 'Select an API Specification',
-    choices: db.ApiSpec.map(s => `${s.fileName} - ${generateIdIsh(s)}`),
+    choices: db.ApiSpec.map(s => getDbChoice(s._id, s.fileName)),
   });
 
   const [idIsh] = (await prompt.run()).split(' - ').reverse();
-  return findSingle(db.ApiSpec, s => matchIdIsh(s, idIsh));
+  return mustFindSingle(db.ApiSpec, s => matchIdIsh(s, idIsh));
 }
 
-export async function getTestSuiteFromIdentifier(
-  db: Database,
-  ci: boolean,
-  identifier?: string,
-): Promise<?UnitTestSuite> {
-  if (!db.UnitTestSuite.length) {
-    return null;
+export function loadTestSuites(db: Database, identifier: string): Array<UnitTestSuite> {
+  const apiSpec = db.ApiSpec.find(s => matchIdIsh(s, identifier) || s.fileName === identifier);
+  const workspace = db.Workspace.find(
+    s => matchIdIsh(s, identifier) || s.name === identifier || s._id === apiSpec?.parentId,
+  );
+
+  // if identifier is for an apiSpec or a workspace, return all suites for that workspace
+  if (workspace) {
+    return db.UnitTestSuite.filter(s => s.parentId === workspace._id);
   }
 
-  if (identifier) {
-    return findSingle(db.UnitTestSuite, s => matchIdIsh(s, identifier) || s.name === identifier);
-  }
+  return db.UnitTestSuite.filter(s => matchIdIsh(s, identifier) || s.name === identifier);
+}
 
-  // No identifier present, and ci disables prompts, so return null
+export async function promptTestSuites(db: Database, ci: boolean): Promise<Array<UnitTestSuite>> {
   if (ci) {
-    return null;
+    return [];
   }
+
+  const choices = db.ApiSpec.map(spec => [
+    getDbChoice(spec._id, spec.fileName, { hint: 'All suites' }),
+    ...db.UnitTestSuite.filter(suite => suite.parentId === spec.parentId).map(suite =>
+      getDbChoice(suite._id, suite.name, { indent: 1 }),
+    ),
+  ]);
 
   const prompt = new AutoComplete({
     name: 'testSuite',
-    message: 'Select a Unit Test Suite',
-    choices: db.UnitTestSuite.map(suite => {
-      // Find the ApiSpec that has the same parent as the Unit Test (ie. under the same workspace)
-      const apiSpec = findSingle(db.ApiSpec, ({ parentId }) => parentId === suite.parentId);
-
-      return `${apiSpec.fileName} / ${suite.name} - ${generateIdIsh(suite)}`;
-    }),
+    message: 'Select a document or unit test suite',
+    choices: flattenDeep(choices),
   });
 
   const [idIsh] = (await prompt.run()).split(' - ').reverse();
-  return findSingle(db.UnitTestSuite, s => matchIdIsh(s, idIsh));
+  return loadTestSuites(db, idIsh);
 }
 
-export async function getEnvironmentFromIdentifier(
+export function loadEnvironment(
   db: Database,
-  ci: boolean,
   workspaceId: string,
   identifier?: string,
-): Promise<?Environment> {
+): ?Environment {
   if (!db.Environment.length) {
     return null;
   }
 
   // Get the sub environments
-  const baseWorkspaceEnv = findSingle(db.Environment, e => e.parentId === workspaceId);
+  const baseWorkspaceEnv = mustFindSingle(db.Environment, e => e.parentId === workspaceId);
   const subEnvs = db.Environment.filter(e => e.parentId === baseWorkspaceEnv._id);
 
-  if (identifier) {
-    const result =
-      findSingle(subEnvs, e => matchIdIsh(e, identifier) || e.name === identifier) ||
-      baseWorkspaceEnv;
+  // try to find a sub env, otherwise return the base env
+  return identifier && subEnvs.length
+    ? subEnvs.find(e => matchIdIsh(e, identifier) || e.name === identifier)
+    : baseWorkspaceEnv;
+}
 
-    return result;
+export async function promptEnvironment(
+  db: Database,
+  ci: boolean,
+  workspaceId: string,
+): Promise<?Environment> {
+  if (ci || !db.Environment.length) {
+    return null;
   }
+
+  // Get the sub environments
+  const baseWorkspaceEnv = mustFindSingle(db.Environment, e => e.parentId === workspaceId);
+  const subEnvs = db.Environment.filter(e => e.parentId === baseWorkspaceEnv._id);
 
   if (!subEnvs.length) {
     return baseWorkspaceEnv;
   }
 
-  // No identifier present, and ci disables prompts, so return null
-  if (ci) {
-    return null;
-  }
-
   const prompt = new AutoComplete({
     name: 'environment',
     message: `Select an environment`,
-    choices: subEnvs.map(e => `${e.name} - ${generateIdIsh(e, 14)}`),
+    choices: subEnvs.map(e => getDbChoice(e._id, e.name, { idIshLength: 14 })),
   });
 
   const [idIsh] = (await prompt.run()).split(' - ').reverse();
-  return findSingle(db.Environment, e => matchIdIsh(e, idIsh));
+  return mustFindSingle(db.Environment, e => matchIdIsh(e, idIsh));
 }

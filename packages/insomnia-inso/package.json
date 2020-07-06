@@ -62,6 +62,7 @@
     "insomnia-plugin-uuid": "^2.2.10",
     "insomnia-send-request": "^2.2.13",
     "insomnia-testing": "^2.2.12",
+    "lodash.flattendeep": "^4.4.0",
     "nedb": "^1.8.0",
     "openapi-2-kong": "^2.2.12",
     "yaml": "^1.10.0"
