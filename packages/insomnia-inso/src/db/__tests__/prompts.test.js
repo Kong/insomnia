@@ -153,6 +153,10 @@ describe('loaders', () => {
       db.UnitTestSuite.push(suite2);
     });
 
+    it('should return empty array if no suites matched', () => {
+      expect(loadTestSuites(db, 'not-found')).toHaveLength(0);
+    });
+
     it.each([generateIdIsh(workspace), workspace._id, workspace.name])(
       'should load all suites that match by workspace id: %o',
       identifier => {

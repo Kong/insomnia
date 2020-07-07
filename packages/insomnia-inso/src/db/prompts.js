@@ -67,9 +67,12 @@ export function loadTestSuites(db: Database, identifier: string): Array<UnitTest
   }
 
   // Identifier is for one specific suite; find it
-  return [
-    mustFindSingle(db.UnitTestSuite, s => matchIdIsh(s, identifier) || s.name === identifier),
-  ];
+  const result = mustFindSingleOrNone(
+    db.UnitTestSuite,
+    s => matchIdIsh(s, identifier) || s.name === identifier,
+  );
+
+  return result ? [result] : [];
 }
 
 export async function promptTestSuites(db: Database, ci: boolean): Promise<Array<UnitTestSuite>> {
