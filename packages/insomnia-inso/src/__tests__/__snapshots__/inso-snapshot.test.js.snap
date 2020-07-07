@@ -8,7 +8,7 @@ A CLI for Insomnia!
 Options:
   -v, --version             output the version number
   -w, --working-dir <dir>   set working directory
-  -a, --app-data-dit <dir>  set the app data directory
+  -a, --app-data-dir <dir>  set the app data directory
   --ci                      run in CI, disables all prompts
   -h, --help                display help for command
 
@@ -27,7 +27,7 @@ A CLI for Insomnia!
 Options:
   -v, --version             output the version number
   -w, --working-dir <dir>   set working directory
-  -a, --app-data-dit <dir>  set the app data directory
+  -a, --app-data-dir <dir>  set the app data directory
   --ci                      run in CI, disables all prompts
   -h, --help                display help for command
 
@@ -71,7 +71,7 @@ A CLI for Insomnia!
 Options:
   -v, --version             output the version number
   -w, --working-dir <dir>   set working directory
-  -a, --app-data-dit <dir>  set the app data directory
+  -a, --app-data-dir <dir>  set the app data directory
   --ci                      run in CI, disables all prompts
   -h, --help                display help for command
 
@@ -123,11 +123,11 @@ exports[`Snapshot for "inso run test -h" 1`] = `
 Run Insomnia unit test suites
 
 Options:
-  -e, --env <identifier>         environment to use
-  -t, --testNamePattern <regex>  run tests that match the regex
-  -r, --reporter <reporter>      reporter to use, options are [dot, list, spec,
-                                 min, progress] (default: \\"spec\\")
-  -b, --bail                     abort (\\"bail\\") after first test failure
-  --keep-file                    do not delete the generated test file
-  -h, --help                     display help for command"
+  -e, --env <identifier>           environment to use
+  -t, --test-name-pattern <regex>  run tests that match the regex
+  -r, --reporter <reporter>        reporter to use, options are [dot, list,
+                                   spec, min, progress] (default: \\"spec\\")
+  -b, --bail                       abort (\\"bail\\") after first test failure
+  --keep-file                      do not delete the generated test file
+  -h, --help                       display help for command"
 `;
