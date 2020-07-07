@@ -1,10 +1,10 @@
 // @flow
-
-import { emptyDb } from '../index';
-import type { Database } from '../index';
-import { generateIdIsh, loadEnvironment, promptEnvironment } from '../prompts';
-import type { Environment, Workspace } from '../types';
+import type { Database } from '../../index';
+import { emptyDb } from '../../index';
+import type { Environment, Workspace } from '../../types';
+import { generateIdIsh } from '../../prompts';
 import enquirer from 'enquirer';
+import { loadEnvironment, promptEnvironment } from '../environment';
 
 jest.mock('enquirer');
 
