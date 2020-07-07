@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
 import Tooltip from '../tooltip';
-import FilterInput from './filter-input';
+import SidebarHeader from './sidebar-header';
+import SidebarPanel from './sidebar-panel';
+import SidebarFilter from './sidebar-filter';
 import Dropdown from '../dropdown/dropdown';
 import DropdownItem from '../dropdown/dropdown-item';
 import DropdownDivider from '../dropdown/dropdown-divider';
@@ -16,10 +18,8 @@ type Props = {|
 |};
 
 const StyledSidebar: React.ComponentType<{}> = styled.div`
-  /* END To constants */
   width: 100%;
   height: 100%;
-
   background-color: var(--color-bg);
   border: none;
   color: var(--color-font);
@@ -55,7 +55,6 @@ const StyledSidebar: React.ComponentType<{}> = styled.div`
   .method-put {
     color: var(--color-warning);
   }
-
   h6 {
     font-size: var(--font-size-xs);
     display: flex;
@@ -67,7 +66,6 @@ const StyledSidebar: React.ComponentType<{}> = styled.div`
   h5 {
     font-size: var(--font-size-sm);
   }
-
   ul:first-child {
     border-top: none;
   }
@@ -82,45 +80,10 @@ const StyledSection: React.ComponentType<{}> = styled(motion.ul)`
   border-bottom: 1px solid var(--hl-md);
 `;
 
-const StyledHeader: React.ComponentType<{}> = styled.li`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  &:hover {
-    background-color: var(--hl-xs);
-  }
-
-  h6:hover {
-    text-decoration: underline;
-  }
-
-  label {
-    color: red !important;
-    position: absolute;
-    padding-top: var(--padding-xs);
-  }
-
-  & > * {
-    padding: var(--padding-md) var(--padding-md) var(--padding-md) var(--padding-md);
-    font-size: var(--font-size-md);
-
-    svg {
-      margin-left: var(--padding-sm);
-
-      &:hover {
-        fill: var(--color-font);
-        opacity: 1;
-      }
-    }
-  }
-`;
-
 const StyledItem: React.ComponentType<{}> = styled.li`
   padding: 0 0 0 0;
-  margin: 0px;
+  margin: 0;
   display: grid;
-  /* grid-template-columns: repeat(auto-fill, minmax(var(--padding-lg), 1fr)); */
   grid-template-columns: 0.2fr 0.25fr 5fr;
   column-gap: var(--padding-sm);
   grid-template-rows: 1fr;
@@ -128,35 +91,30 @@ const StyledItem: React.ComponentType<{}> = styled.li`
   white-space: nowrap;
   font-size: var(--font-size-md);
   line-height: var(--font-size-sm);
-
   span {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
     padding: 4px var(--padding-sm) var(--padding-xs) 0px;
   }
-
   a {
     color: var(--hl-xl);
   }
-
   div:nth-child(1) {
     text-align: right;
   }
-
   &:hover {
     background-color: var(--hl-xxs);
     cursor: default;
   }
-
   &:last-child {
     margin-bottom: var(--padding-md);
   }
 `;
 
 const StyledBlockItem: React.ComponentType<{}> = styled.div`
-  padding: 0px var(--padding-md) var(--padding-sm) var(--padding-md);
-  margin: 0px;
+  padding: 0 var(--padding-md) var(--padding-sm) var(--padding-md);
+  margin: 0;
   display: block;
   font-size: var(--font-size-md);
   line-height: var(--font-size-sm);
@@ -167,18 +125,15 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
     background-color: var(--hl-xxs);
     cursor: default;
   }
-
   &:last-child {
     margin-bottom: var(--padding-md);
   }
-
   span {
-    margin: 0px var(--padding-sm) 0px var(--padding-sm);
+    margin: 0 var(--padding-sm) 0 var(--padding-sm);
   }
-
   div {
     display: inline;
-    margin: 0px var(--padding-sm) 0px var(--padding-sm);
+    margin: 0 var(--padding-sm) 0 var(--padding-sm);
 
     &:first-of-type {
       margin-left: var(--padding-lg);
@@ -186,39 +141,12 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
   }
 `;
 
-const StyledFilter: React.ComponentType<{}> = styled(motion.div)`
-  padding-left: var(--padding-md);
-  padding-right: var(--padding-md);
-  overflow: hidden;
-  input {
-    box-sizing: border-box;
-    width: 100%;
-    font-size: var(--font-size-sm);
-    padding: var(--padding-xs);
-    margin-top: 0;
-    margin-bottom: var(--padding-sm);
-    outline-style: none;
-    box-shadow: none;
-    border: 1px solid var(--hl-md);
-    color: var(--color-font);
-    background: transparent;
-
-    ::placeholder {
-      color: var(--color-font);
-    }
-  }
-`;
-
-const StyledPanel: React.ComponentType<{}> = styled(motion.div)`
-  height: 0px;
-`;
-
 const DropdownEllipsis = () => <SvgIcon icon={IconEnum.ellipsesCircle} />;
+const panelMotion = { duration: 0.2, ease: 'easeInOut', delay: 0 };
+// Section Expansion & Filtering
+const useToggle = (state, set) => React.useCallback(() => set(!state), [set, state]);
 
 function Sidebar(props: Props) {
-  // Section Expansion & Filtering
-  const useToggle = (state, set) => React.useCallback(() => set(!state), [set, state]);
-
   // Info
   const [infoSec, setInfoSec] = useState(false);
   const toggleInfoSec = useToggle(infoSec, setInfoSec);
@@ -280,8 +208,6 @@ function Sidebar(props: Props) {
   const [securityFilter, setSecurityFilter] = useState('');
 
   // Section Visibility
-
-
   const [pathsVisible, setPathsVisible] = useState(true);
   const handlePathsVisibleClick = e => {
     e.stopPropagation();
@@ -338,89 +264,84 @@ function Sidebar(props: Props) {
   const { servers } = props.jsonData;
   const paths = Object.entries(props.jsonData.paths);
 
-  function handleChange(event) {
-    console.log(event.target.value);
-  }
+  const handleOnChange = (targetFilter: Function) => (e: SyntheticInputEvent<HTMLInputElement>) => {
+    targetFilter(e.target.value);
+    setServerFilter(e.target.value);
+  };
 
   return (
     <StyledSidebar className="theme--sidebar">
       <StyledSection>
-        <StyledHeader>
-          <h6 onClick={toggleInfoSec}>INFO</h6>
-          <div>
-            <Dropdown renderButton={DropdownEllipsis}>
-              <DropdownDivider>VISIBILITY</DropdownDivider>
-              <DropdownItem>
-                <input
-                  type="checkbox"
-                  onClick={handleServersVisibleClick}
-                  defaultChecked={serversVisible}
-                />
-                <label htmlFor="servers">Servers</label>
-              </DropdownItem>
-              <DropdownItem>
-                <input
-                  type="checkbox"
-                  onClick={handlePathsVisibleClick}
-                  defaultChecked={pathsVisible}
-                />
-                <label htmlFor="paths">Paths</label>
-              </DropdownItem>
-              <DropdownItem>
-                <input
-                  type="checkbox"
-                  onClick={handleRequestsVisibleClick}
-                  defaultChecked={requestsVisible}
-                />
-                <label htmlFor="requests">Requests</label>
-              </DropdownItem>
-              <DropdownItem>
-                <input
-                  type="checkbox"
-                  onClick={handleResponsesVisibleClick}
-                  defaultChecked={responsesVisible}
-                />
-                <label htmlFor="responses">Responses</label>
-              </DropdownItem>
-              <DropdownItem>
-                <input
-                  type="checkbox"
-                  onClick={handleParametersVisibleClick}
-                  defaultChecked={parametersVisible}
-                />
-                <label htmlFor="parameters">Parameters</label>
-              </DropdownItem>
-              <DropdownItem>
-                <input
-                  type="checkbox"
-                  onClick={handleHeadersVisibleClick}
-                  defaultChecked={headersVisible}
-                />
-                <label htmlFor="headers">Headers</label>
-              </DropdownItem>
-              <DropdownItem>
-                <input
-                  type="checkbox"
-                  onClick={handleSchemasVisibleClick}
-                  defaultChecked={schemasVisible}
-                />
-                <label htmlFor="schemas">Schemas</label>
-              </DropdownItem>
-              <DropdownItem>
-                <input
-                  type="checkbox"
-                  onClick={handleSecurityVisibleClick}
-                  defaultChecked={securityVisible}
-                />
-                <label htmlFor="security">Security</label>
-              </DropdownItem>
-            </Dropdown>
-          </div>
-        </StyledHeader>
-        <StyledPanel
-          initial={{ height: infoSec ? '100%' : '0px' }}
-          animate={{ height: infoSec ? '100%' : '0px' }}
-          transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
+        <SidebarHeader headerTitle="INFO" section={infoSec} toggleSection={toggleInfoSec}>
+          <Dropdown renderButton={DropdownEllipsis}>
+            <DropdownDivider>VISIBILITY</DropdownDivider>
+            <DropdownItem>
+              <input
+                type="checkbox"
+                onClick={handleServersVisibleClick}
+                defaultChecked={serversVisible}
+              />
+              <label htmlFor="servers">Servers</label>
+            </DropdownItem>
+            <DropdownItem>
+              <input
+                type="checkbox"
+                onClick={handlePathsVisibleClick}
+                defaultChecked={pathsVisible}
+              />
+              <label htmlFor="paths">Paths</label>
+            </DropdownItem>
+            <DropdownItem>
+              <input
+                type="checkbox"
+                onClick={handleRequestsVisibleClick}
+                defaultChecked={requestsVisible}
+              />
+              <label htmlFor="requests">Requests</label>
+            </DropdownItem>
+            <DropdownItem>
+              <input
+                type="checkbox"
+                onClick={handleResponsesVisibleClick}
+                defaultChecked={responsesVisible}
+              />
+              <label htmlFor="responses">Responses</label>
+            </DropdownItem>
+            <DropdownItem>
+              <input
+                type="checkbox"
+                onClick={handleParametersVisibleClick}
+                defaultChecked={parametersVisible}
+              />
+              <label htmlFor="parameters">Parameters</label>
+            </DropdownItem>
+            <DropdownItem>
+              <input
+                type="checkbox"
+                onClick={handleHeadersVisibleClick}
+                defaultChecked={headersVisible}
+              />
+              <label htmlFor="headers">Headers</label>
+            </DropdownItem>
+            <DropdownItem>
+              <input
+                type="checkbox"
+                onClick={handleSchemasVisibleClick}
+                defaultChecked={schemasVisible}
+              />
+              <label htmlFor="schemas">Schemas</label>
+            </DropdownItem>
+            <DropdownItem>
+              <input
+                type="checkbox"
+                onClick={handleSecurityVisibleClick}
+                defaultChecked={securityVisible}
+              />
+              <label htmlFor="security">Security</label>
+            </DropdownItem>
+          </Dropdown>
+        </SidebarHeader>
+        <SidebarPanel parent={infoSec}>
           {props.jsonData.info.title && (
             <StyledBlockItem>
               <br />
@@ -442,44 +363,22 @@ function Sidebar(props: Props) {
               <strong>License: </strong> {props.jsonData.info.license.name}
             </StyledBlockItem>
           )}
-        </StyledPanel>
+        </SidebarPanel>
       </StyledSection>
       {serversVisible && servers && (
         <StyledSection>
-          <StyledHeader>
-            <h6 onClick={toggleServersSec}>SERVERS</h6>
-            <div>
-              <motion.span
-                onClick={toggleServersFilter}
-                initial={{ opacity: serversSec ? 0.6 : 0 }}
-                animate={{ opacity: serversSec ? 0.6 : 0 }}
-                transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.15 }}>
-                <SvgIcon icon={IconEnum.search} />
-              </motion.span>
-            </div>
-          </StyledHeader>
-
-          <StyledPanel
-            initial={{ height: serversSec ? '100%' : '0px' }}
-            animate={{ height: serversSec ? '100%' : '0px' }}
-            transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-            <StyledFilter
-              initial={{ height: serversFilter ? '100%' : '0px' }}
-              animate={{ height: serversFilter ? '100%' : '0px' }}
-              transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-              <FilterInput
-                onChange={e => setServerFilter(e.target.value)}
-                placeholder="Filter..."
-                value={serverFilter}
-              />
-
-              <input
-                type="text"
-                value={serverFilter}
-                onChange={e => setServerFilter(e.target.value)}
-                placeholder="Filter..."
-              />
-            </StyledFilter>
+          <SidebarHeader
+            headerTitle="SERVERS"
+            section={serversSec}
+            toggleSection={toggleServersSec}
+            toggleFilter={toggleServersFilter}
+            transitionStyle={panelMotion}
+          />
+          <SidebarPanel parent={serversSec}>
+            <SidebarFilter
+              filter={serversFilter}
+              transitionStyle={panelMotion}
+              onChange={handleOnChange(setServersFilter)}></SidebarFilter>
             {servers.map(server => (
               <React.Fragment key={server.url}>
                 {server.url.includes(serverFilter) && (
@@ -493,38 +392,23 @@ function Sidebar(props: Props) {
                 )}
               </React.Fragment>
             ))}
-          </StyledPanel>
+          </SidebarPanel>
         </StyledSection>
       )}
       {pathsVisible && paths && (
         <StyledSection>
-          <StyledHeader>
-            <h6 onClick={togglePathsSec}>PATHS</h6>
-            <div>
-              <motion.span
-                onClick={togglePathsFilter}
-                initial={{ opacity: pathsSec ? 0.6 : 0 }}
-                animate={{ opacity: pathsSec ? 0.6 : 0 }}
-                transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.15 }}>
-                <SvgIcon icon={IconEnum.search} />
-              </motion.span>
-            </div>
-          </StyledHeader>
-          <StyledPanel
-            initial={{ height: pathsSec ? '100%' : '0px' }}
-            animate={{ height: pathsSec ? '100%' : '0px' }}
-            transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-            <StyledFilter
-              initial={{ height: pathsFilter ? '100%' : '0px' }}
-              animate={{ height: pathsFilter ? '100%' : '0px' }}
-              transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-              <input
-                type="text"
-                value={pathFilter}
-                onChange={e => setPathFilter(e.target.value)}
-                placeholder="Filter..."
-              />
-            </StyledFilter>
+          <SidebarHeader
+            headerTitle="PATHS"
+            section={pathsSec}
+            toggleSection={togglePathsSec}
+            toggleFilter={togglePathsFilter}
+            transitionStyle={panelMotion}
+          />
+          <SidebarPanel parent={pathsSec}>
+            <SidebarFilter
+              filter={pathsFilter}
+              transitionStyle={panelMotion}
+              onChange={handleOnChange(setPathsFilter)}></SidebarFilter>
             {paths.map(path => (
               <React.Fragment key={path[0]}>
                 {path[0].includes(pathFilter) && (
@@ -548,38 +432,23 @@ function Sidebar(props: Props) {
                 )}
               </React.Fragment>
             ))}
-          </StyledPanel>
+          </SidebarPanel>
         </StyledSection>
       )}
       {requestsVisible && requestBodies && (
         <StyledSection>
-          <StyledHeader>
-            <h6 onClick={toggleRequestsSec}>REQUESTS</h6>
-            <div>
-              <motion.span
-                onClick={toggleRequestsFilter}
-                initial={{ opacity: requestsSec ? 0.6 : 0 }}
-                animate={{ opacity: requestsSec ? 0.6 : 0 }}
-                transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.15 }}>
-                <SvgIcon icon={IconEnum.search} />
-              </motion.span>
-            </div>
-          </StyledHeader>
-          <StyledPanel
-            initial={{ height: requestsSec ? '100%' : '0px' }}
-            animate={{ height: requestsSec ? '100%' : '0px' }}
-            transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-            <StyledFilter
-              initial={{ height: requestsFilter ? '100%' : '0px' }}
-              animate={{ height: requestsFilter ? '100%' : '0px' }}
-              transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-              <input
-                type="text"
-                value={requestFilter}
-                onChange={e => setRequestFilter(e.target.value.toLowerCase())}
-                placeholder="Filter..."
-              />
-            </StyledFilter>
+          <SidebarHeader
+            headerTitle="REQUESTS"
+            section={requestsSec}
+            toggleSection={toggleRequestsSec}
+            toggleFilter={toggleRequestsFilter}
+            transitionStyle={panelMotion}
+          />
+          <SidebarPanel parent={requestsSec}>
+            <SidebarFilter
+              filter={requestsFilter}
+              transitionStyle={panelMotion}
+              onChange={handleOnChange(setRequestsFilter)}></SidebarFilter>
             {Object.keys(requestBodies).map((requestName, value) => (
               <React.Fragment key={requestName}>
                 {requestName.toLowerCase().includes(requestFilter) && (
@@ -620,39 +489,23 @@ function Sidebar(props: Props) {
                 )}
               </React.Fragment>
             ))}
-          </StyledPanel>
+          </SidebarPanel>
         </StyledSection>
       )}
       {responsesVisible && responses && (
         <StyledSection>
-          <StyledHeader>
-            <h6 onClick={toggleResponsesSec}>RESPONSES</h6>
-            <div>
-              <motion.span
-                onClick={toggleResponsesFilter}
-                initial={{ opacity: responsesSec ? 0.6 : 0 }}
-                animate={{ opacity: responsesSec ? 0.6 : 0 }}
-                transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.15 }}>
-                <SvgIcon icon={IconEnum.search} />
-              </motion.span>
-            </div>
-          </StyledHeader>
-
-          <StyledPanel
-            initial={{ height: responsesSec ? '100%' : '0px' }}
-            animate={{ height: responsesSec ? '100%' : '0px' }}
-            transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-            <StyledFilter
-              initial={{ height: responsesFilter ? '100%' : '0px' }}
-              animate={{ height: responsesFilter ? '100%' : '0px' }}
-              transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-              <input
-                type="text"
-                value={responseFilter}
-                onChange={e => setResponseFilter(e.target.value.toLowerCase())}
-                placeholder="Filter..."
-              />
-            </StyledFilter>
+          <SidebarHeader
+            headerTitle="RESPONSES"
+            section={responsesSec}
+            toggleSection={toggleResponsesSec}
+            toggleFilter={toggleResponsesFilter}
+            transitionStyle={panelMotion}
+          />
+          <SidebarPanel parent={responsesSec}>
+            <SidebarFilter
+              filter={responsesFilter}
+              transitionStyle={panelMotion}
+              onChange={handleOnChange(setResponsesFilter)}></SidebarFilter>
             {Object.keys(responses).map(response => (
               <React.Fragment key={response}>
                 {response.toLowerCase().includes(responseFilter) && (
@@ -670,40 +523,23 @@ function Sidebar(props: Props) {
                 )}
               </React.Fragment>
             ))}
-          </StyledPanel>
+          </SidebarPanel>
         </StyledSection>
       )}
       {parametersVisible && parameters && (
         <StyledSection>
-          <StyledHeader>
-            <h6 onClick={toggleParametersSec}>PARAMETERS</h6>
-            <div>
-              <motion.span
-                onClick={toggleParametersFilter}
-                initial={{ opacity: parametersSec ? 0.6 : 0 }}
-                animate={{ opacity: parametersSec ? 0.6 : 0 }}
-                transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.15 }}>
-                <SvgIcon icon={IconEnum.search} />
-              </motion.span>
-            </div>
-          </StyledHeader>
-
-          <StyledPanel
-            initial={{ height: parametersSec ? '100%' : '0px' }}
-            animate={{ height: parametersSec ? '100%' : '0px' }}
-            transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-            <StyledFilter
-              initial={{ height: parametersFilter ? '100%' : '0px' }}
-              animate={{ height: parametersFilter ? '100%' : '0px' }}
-              transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-              <input
-                type="text"
-                value={parameterFilter}
-                onChange={e => setParameterFilter(e.target.value.toLowerCase())}
-                placeholder="Filter..."
-              />
-            </StyledFilter>
-
+          <SidebarHeader
+            headerTitle="PARAMETERS"
+            section={parametersSec}
+            toggleSection={toggleParametersSec}
+            toggleFilter={toggleParametersFilter}
+            transitionStyle={panelMotion}
+          />
+          <SidebarPanel parent={parametersSec}>
+            <SidebarFilter
+              filter={parametersFilter}
+              transitionStyle={panelMotion}
+              onChange={handleOnChange(setParametersFilter)}></SidebarFilter>
             {Object.keys(parameters).map(parameter => (
               <React.Fragment key={parameter}>
                 {parameter.toLowerCase().includes(parameterFilter) && (
@@ -721,40 +557,23 @@ function Sidebar(props: Props) {
                 )}
               </React.Fragment>
             ))}
-          </StyledPanel>
+          </SidebarPanel>
         </StyledSection>
       )}
       {headersVisible && headers && (
         <StyledSection>
-          <StyledHeader>
-            <h6 onClick={toggleHeadersSec}>HEADERS</h6>
-            <div>
-              <motion.span
-                onClick={toggleHeadersFilter}
-                initial={{ opacity: headersSec ? 0.6 : 0 }}
-                animate={{ opacity: headersSec ? 0.6 : 0 }}
-                transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.15 }}>
-                <SvgIcon icon={IconEnum.search} />
-              </motion.span>
-            </div>
-          </StyledHeader>
-
-          <StyledPanel
-            initial={{ height: headersSec ? '100%' : '0px' }}
-            animate={{ height: headersSec ? '100%' : '0px' }}
-            transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-            <StyledFilter
-              initial={{ height: headersFilter ? '100%' : '0px' }}
-              animate={{ height: headersFilter ? '100%' : '0px' }}
-              transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-              <input
-                type="text"
-                value={headerFilter}
-                onChange={e => setHeaderFilter(e.target.value.toLowerCase())}
-                placeholder="Filter..."
-              />
-            </StyledFilter>
-
+          <SidebarHeader
+            headerTitle="HEADERS"
+            section={headersSec}
+            toggleSection={toggleHeadersSec}
+            toggleFilter={toggleHeadersFilter}
+            transitionStyle={panelMotion}
+          />
+          <SidebarPanel parent={headersSec}>
+            <SidebarFilter
+              filter={headersFilter}
+              transitionStyle={panelMotion}
+              onChange={handleOnChange(setHeadersFilter)}></SidebarFilter>
             {Object.keys(headers).map(header => (
               <React.Fragment key={header}>
                 {header.toLowerCase().includes(headerFilter) && (
@@ -772,38 +591,23 @@ function Sidebar(props: Props) {
                 )}
               </React.Fragment>
             ))}
-          </StyledPanel>
+          </SidebarPanel>
         </StyledSection>
       )}
       {schemasVisible && props.jsonData.components.schemas && (
         <StyledSection>
-          <StyledHeader>
-            <h6 onClick={toggleSchemasSec}>SCHEMAS</h6>
-            <div>
-              <motion.span
-                onClick={toggleSchemasFilter}
-                initial={{ opacity: schemasSec ? 0.6 : 0 }}
-                animate={{ opacity: schemasSec ? 0.6 : 0 }}
-                transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.15 }}>
-                <SvgIcon icon={IconEnum.search} />
-              </motion.span>
-            </div>
-          </StyledHeader>
-          <StyledPanel
-            initial={{ height: schemasSec ? '100%' : '0px' }}
-            animate={{ height: schemasSec ? '100%' : '0px' }}
-            transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-            <StyledFilter
-              initial={{ height: schemasFilter ? '100%' : '0px' }}
-              animate={{ height: schemasFilter ? '100%' : '0px' }}
-              transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-              <input
-                type="text"
-                value={schemaFilter}
-                onChange={e => setSchemaFilter(e.target.value.toLowerCase())}
-                placeholder="Filter..."
-              />
-            </StyledFilter>
+          <SidebarHeader
+            headerTitle="SCHEMAS"
+            section={schemasSec}
+            toggleSection={toggleSchemasSec}
+            toggleFilter={toggleSchemasFilter}
+            transitionStyle={panelMotion}
+          />
+          <SidebarPanel parent={schemasSec}>
+            <SidebarFilter
+              filter={schemasFilter}
+              transitionStyle={panelMotion}
+              onChange={handleOnChange(setSchemasFilter)}></SidebarFilter>
             {Object.keys(props.jsonData.components.schemas).map(schema => (
               <React.Fragment key={schema}>
                 {schema.toLowerCase().includes(schemaFilter) && (
@@ -817,38 +621,23 @@ function Sidebar(props: Props) {
                 )}
               </React.Fragment>
             ))}
-          </StyledPanel>
+          </SidebarPanel>
         </StyledSection>
       )}
       {securityVisible && props.jsonData.components.securitySchemes && (
         <StyledSection>
-          <StyledHeader>
-            <h6 onClick={toggleSecuritiesSec}>SECURITY</h6>
-            <div>
-              <motion.span
-                onClick={toggleSecuritiesFilter}
-                initial={{ opacity: securitiesSec ? 0.6 : 0 }}
-                animate={{ opacity: securitiesSec ? 0.6 : 0 }}
-                transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.15 }}>
-                <SvgIcon icon={IconEnum.search} />
-              </motion.span>
-            </div>
-          </StyledHeader>
-          <StyledPanel
-            initial={{ height: securitiesSec ? '100%' : '0px' }}
-            animate={{ height: securitiesSec ? '100%' : '0px' }}
-            transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-            <StyledFilter
-              initial={{ height: securitiesFilter ? '100%' : '0px' }}
-              animate={{ height: securitiesFilter ? '100%' : '0px' }}
-              transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-              <input
-                type="text"
-                value={securityFilter}
-                onChange={e => setSecurityFilter(e.target.value.toLowerCase())}
-                placeholder="Filter..."
-              />
-            </StyledFilter>
+          <SidebarHeader
+            headerTitle="SECURITY"
+            section={securitiesSec}
+            toggleSection={toggleSecuritiesSec}
+            toggleFilter={toggleSecuritiesFilter}
+            transitionStyle={panelMotion}
+          />
+          <SidebarPanel parent={securitiesSec}>
+            <SidebarFilter
+              filter={securitiesFilter}
+              transitionStyle={panelMotion}
+              onChange={handleOnChange(setSecuritiesFilter)}></SidebarFilter>
             {Object.keys(props.jsonData.components.securitySchemes).map(scheme => (
               <React.Fragment key={scheme}>
                 {scheme.toLowerCase().includes(securityFilter) && (
@@ -862,7 +651,7 @@ function Sidebar(props: Props) {
                 )}
               </React.Fragment>
             ))}
-          </StyledPanel>
+          </SidebarPanel>
         </StyledSection>
       )}
     </StyledSidebar>
