@@ -3,6 +3,7 @@ import type { ApiSpec, BaseModel, Environment, UnitTest, UnitTestSuite, Workspac
 import envPaths from 'env-paths';
 import gitAdapter from './adapters/git-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
+import { getDefaultAppDataDir } from '../util';
 
 export type Database = {|
   ApiSpec: Array<ApiSpec>,
@@ -49,9 +50,8 @@ export const loadDb = async ({
 
   // try load from nedb
   if (!db) {
-    // TODO: Note, unit tests will also try to access the Insomnia Designer app data directory. We should configure this depending on development or production.
     db = await neDbAdapter(
-      appDataDir || envPaths('Insomnia Designer', { suffix: '' }).data,
+      appDataDir || envPaths(getDefaultAppDataDir(), { suffix: '' }).data,
       filterTypes,
     );
   }
