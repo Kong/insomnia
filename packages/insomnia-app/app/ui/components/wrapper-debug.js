@@ -56,7 +56,7 @@ class WrapperDebug extends React.PureComponent<Props> {
     const {
       gitSyncDropdown,
       handleActivityChange,
-      wrapperProps: { activeApiSpec, activeWorkspace, settings, activity },
+      wrapperProps: { activeApiSpec, activeWorkspace, activity },
     } = this.props;
 
     return (
@@ -76,7 +76,6 @@ class WrapperDebug extends React.PureComponent<Props> {
           <ActivityToggle
             activity={activity}
             handleActivityChange={handleActivityChange}
-            settings={settings}
             workspace={activeWorkspace}
           />
         }

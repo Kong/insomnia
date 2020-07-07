@@ -191,7 +191,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
               <ActivityToggle
                 activity={activity}
                 handleActivityChange={handleActivityChange}
-                settings={settings}
                 workspace={activeWorkspace}
               />
             }
