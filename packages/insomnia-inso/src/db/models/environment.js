@@ -1,9 +1,9 @@
 // @flow
 import type { Database } from '../index';
-import type { Environment } from '../types';
+import type { Environment } from './types';
 import { mustFindSingle } from '../index';
 import { AutoComplete } from 'enquirer';
-import { generateIdIsh, getDbChoice, matchIdIsh } from '../prompts';
+import { generateIdIsh, getDbChoice, matchIdIsh } from './utils';
 
 export const loadEnvironment = (
   db: Database,

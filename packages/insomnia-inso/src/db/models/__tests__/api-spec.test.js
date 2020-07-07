@@ -1,8 +1,8 @@
 // @flow
 import type { Database } from '../../index';
 import { emptyDb } from '../../index';
-import type { ApiSpec } from '../../types';
-import { generateIdIsh } from '../../prompts';
+import type { ApiSpec } from '../types';
+import { generateIdIsh } from '../utils';
 import enquirer from 'enquirer';
 import { loadApiSpec, promptApiSpec } from '../api-spec';
 

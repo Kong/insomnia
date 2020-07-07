@@ -3,7 +3,7 @@
 import { generate, runTestsCli } from 'insomnia-testing';
 import type { GlobalOptions } from '../util';
 import { loadDb } from '../db';
-import type { UnitTest, UnitTestSuite } from '../db/types';
+import type { UnitTest, UnitTestSuite } from '../db/models/types';
 import { noConsoleLog } from '../logger';
 import { loadTestSuites, promptTestSuites } from '../db/models/unit-test-suite';
 import { loadEnvironment, promptEnvironment } from '../db/models/environment';

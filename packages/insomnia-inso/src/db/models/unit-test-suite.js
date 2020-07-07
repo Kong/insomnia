@@ -1,11 +1,11 @@
 // @flow
 import type { Database } from '../index';
-import type { UnitTestSuite } from '../types';
+import type { UnitTestSuite } from './types';
 import { loadApiSpec } from './api-spec';
 import { mustFindSingleOrNone } from '../index';
 import { AutoComplete } from 'enquirer';
 import flattenDeep from 'lodash.flattendeep';
-import { generateIdIsh, getDbChoice, matchIdIsh } from '../prompts';
+import { generateIdIsh, getDbChoice, matchIdIsh } from './utils';
 import { loadWorkspace } from './workspace';
 
 export const loadTestSuites = (db: Database, identifier: string): Array<UnitTestSuite> => {

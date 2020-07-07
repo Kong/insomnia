@@ -1,8 +1,8 @@
 // @flow
 import type { Database } from '../index';
-import type { ApiSpec } from '../types';
+import type { ApiSpec } from './types';
 import { mustFindSingleOrNone } from '../index';
-import { generateIdIsh, getDbChoice, matchIdIsh } from '../prompts';
+import { generateIdIsh, getDbChoice, matchIdIsh } from './utils';
 import { AutoComplete } from 'enquirer';
 
 export const loadApiSpec = (db: Database, identifier: string): ?ApiSpec =>

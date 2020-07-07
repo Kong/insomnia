@@ -1,9 +1,9 @@
 // @flow
 import type { Database } from '../../index';
 import { emptyDb } from '../../index';
-import type { ApiSpec, UnitTestSuite, Workspace } from '../../types';
+import type { ApiSpec, UnitTestSuite, Workspace } from '../types';
 import enquirer from 'enquirer';
-import { generateIdIsh } from '../../prompts';
+import { generateIdIsh } from '../utils';
 import { loadTestSuites, promptTestSuites } from '../unit-test-suite';
 
 jest.mock('enquirer');
