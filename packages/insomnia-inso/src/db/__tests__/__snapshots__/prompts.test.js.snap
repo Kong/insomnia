@@ -1,20 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`prompts promptApiSpec() should load apiSpec after prompt result 1`] = `
-Object {
-  "choices": Array [
-    Object {
-      "hint": "spc_123456",
-      "message": "fileName",
-      "name": "spc_123456",
-      "value": "fileName - spc_123456",
-    },
-  ],
-  "message": "Select an API Specification",
-  "name": "apiSpec",
-}
-`;
-
 exports[`prompts promptApiSpec() should match snapshot of autocomplete config 1`] = `
 Object {
   "choices": Array [
@@ -42,33 +27,6 @@ Object {
   ],
   "message": "Select an environment",
   "name": "environment",
-}
-`;
-
-exports[`prompts promptTestSuites() should load suite 1 after prompt result 1`] = `
-Object {
-  "choices": Array [
-    Object {
-      "hint": "spc_123456",
-      "message": "spec name",
-      "name": "spc_123456",
-      "value": "spec name - spc_123456",
-    },
-    Object {
-      "hint": "uts_123456",
-      "message": "  | suite one",
-      "name": "uts_123456",
-      "value": "suite one - uts_123456",
-    },
-    Object {
-      "hint": "uts_987654",
-      "message": "  | suite two",
-      "name": "uts_987654",
-      "value": "suite two - uts_987654",
-    },
-  ],
-  "message": "Select a document or unit test suite",
-  "name": "testSuite",
 }
 `;
 
