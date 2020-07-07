@@ -2,7 +2,8 @@
 import type { Database } from '../../index';
 import { emptyDb } from '../../index';
 import type { Workspace } from '../../types';
-import { generateIdIsh, loadWorkspace } from '../../prompts';
+import { generateIdIsh } from '../../prompts';
+import { loadWorkspace } from '../workspace';
 
 describe('workspace', () => {
   let db: Database = emptyDb();

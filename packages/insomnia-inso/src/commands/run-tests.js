@@ -3,14 +3,10 @@
 import { generate, runTestsCli } from 'insomnia-testing';
 import type { GlobalOptions } from '../util';
 import { loadDb } from '../db';
-import {
-  loadEnvironment,
-  loadTestSuites,
-  promptEnvironment,
-  promptTestSuites,
-} from '../db/prompts';
+import { loadEnvironment, promptEnvironment } from '../db/prompts';
 import type { UnitTest, UnitTestSuite } from '../db/types';
 import { noConsoleLog } from '../logger';
+import { loadTestSuites, promptTestSuites } from '../db/models/unit-test-suite';
 
 export const TestReporterEnum = {
   dot: 'dot',
