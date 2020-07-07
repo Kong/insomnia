@@ -2,7 +2,7 @@
 import type { Database } from '../../index';
 import { emptyDb } from '../../index';
 import type { Environment, Workspace } from '../types';
-import { generateIdIsh } from '../utils';
+import { generateIdIsh } from '../util';
 import enquirer from 'enquirer';
 import { loadEnvironment, promptEnvironment } from '../environment';
 

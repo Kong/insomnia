@@ -3,7 +3,7 @@ import type { Database } from '../index';
 import type { Environment } from './types';
 import { mustFindSingle } from '../index';
 import { AutoComplete } from 'enquirer';
-import { generateIdIsh, getDbChoice, matchIdIsh } from './utils';
+import { generateIdIsh, getDbChoice, matchIdIsh } from './util';
 
 export const loadEnvironment = (
   db: Database,

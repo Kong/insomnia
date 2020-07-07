@@ -3,7 +3,7 @@ import type { Database } from '../../index';
 import { emptyDb } from '../../index';
 import type { ApiSpec, UnitTestSuite, Workspace } from '../types';
 import enquirer from 'enquirer';
-import { generateIdIsh } from '../utils';
+import { generateIdIsh } from '../util';
 import { loadTestSuites, promptTestSuites } from '../unit-test-suite';
 
 jest.mock('enquirer');

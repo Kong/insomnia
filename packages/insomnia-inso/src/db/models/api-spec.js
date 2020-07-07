@@ -2,7 +2,7 @@
 import type { Database } from '../index';
 import type { ApiSpec } from './types';
 import { mustFindSingleOrNone } from '../index';
-import { generateIdIsh, getDbChoice, matchIdIsh } from './utils';
+import { generateIdIsh, getDbChoice, matchIdIsh } from './util';
 import { AutoComplete } from 'enquirer';
 
 export const loadApiSpec = (db: Database, identifier: string): ?ApiSpec =>

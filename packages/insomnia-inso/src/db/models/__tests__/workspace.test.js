@@ -2,7 +2,7 @@
 import type { Database } from '../../index';
 import { emptyDb } from '../../index';
 import type { Workspace } from '../types';
-import { generateIdIsh } from '../utils';
+import { generateIdIsh } from '../util';
 import { loadWorkspace } from '../workspace';
 
 describe('workspace', () => {
