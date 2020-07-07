@@ -30,17 +30,56 @@ Object {
 }
 `;
 
-exports[`prompts promptApiSpec() test 1`] = `
+exports[`prompts promptTestSuites() should load suite 1 after prompt result 1`] = `
 Object {
   "choices": Array [
     Object {
       "hint": "spc_123456",
-      "message": "fileName",
+      "message": "spec name",
       "name": "spc_123456",
-      "value": "fileName - spc_123456",
+      "value": "spec name - spc_123456",
+    },
+    Object {
+      "hint": "uts_123456",
+      "message": "  | suite one",
+      "name": "uts_123456",
+      "value": "suite one - uts_123456",
+    },
+    Object {
+      "hint": "uts_987654",
+      "message": "  | suite two",
+      "name": "uts_987654",
+      "value": "suite two - uts_987654",
     },
   ],
-  "message": "Select an API Specification",
-  "name": "apiSpec",
+  "message": "Select a document or unit test suite",
+  "name": "testSuite",
+}
+`;
+
+exports[`prompts promptTestSuites() should match snapshot of autocomplete config 1`] = `
+Object {
+  "choices": Array [
+    Object {
+      "hint": "spc_123456",
+      "message": "spec name",
+      "name": "spc_123456",
+      "value": "spec name - spc_123456",
+    },
+    Object {
+      "hint": "uts_123456",
+      "message": "  | suite one",
+      "name": "uts_123456",
+      "value": "suite one - uts_123456",
+    },
+    Object {
+      "hint": "uts_987654",
+      "message": "  | suite two",
+      "name": "uts_987654",
+      "value": "suite two - uts_987654",
+    },
+  ],
+  "message": "Select a document or unit test suite",
+  "name": "testSuite",
 }
 `;

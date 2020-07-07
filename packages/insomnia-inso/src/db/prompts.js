@@ -87,6 +87,10 @@ export async function promptTestSuites(db: Database, ci: boolean): Promise<Array
     ),
   ]);
 
+  if (!choices.length) {
+    return [];
+  }
+
   const prompt = new AutoComplete({
     name: 'testSuite',
     message: 'Select a document or unit test suite',
