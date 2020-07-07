@@ -1,5 +1,5 @@
 // @flow
-import type { ApiSpec, BaseModel, Environment, UnitTestSuite } from './types';
+import type { ApiSpec, BaseModel, Environment, UnitTestSuite, Workspace } from './types';
 import { AutoComplete } from 'enquirer';
 import type { Database } from './index';
 import { mustFindSingle, mustFindSingleOrNone } from './index';
@@ -35,6 +35,13 @@ export function loadApiSpec(db: Database, identifier: string): ?ApiSpec {
   );
 }
 
+export function loadWorkspace(db: Database, identifier: string): ?Workspace {
+  return mustFindSingleOrNone(
+    db.Workspace,
+    s => matchIdIsh(s, identifier) || s.name === identifier,
+  );
+}
+
 export async function promptApiSpec(db: Database, ci: boolean): Promise<?ApiSpec> {
   if (ci || !db.ApiSpec.length) {
     return null;
@@ -51,14 +58,8 @@ export async function promptApiSpec(db: Database, ci: boolean): Promise<?ApiSpec
 }
 
 export function loadTestSuites(db: Database, identifier: string): Array<UnitTestSuite> {
-  const apiSpec = mustFindSingleOrNone(
-    db.ApiSpec,
-    s => matchIdIsh(s, identifier) || s.fileName === identifier,
-  );
-  const workspace = mustFindSingleOrNone(
-    db.Workspace,
-    s => matchIdIsh(s, identifier) || s.name === identifier || s._id === apiSpec?.parentId,
-  );
+  const apiSpec = loadApiSpec(db, identifier);
+  const workspace = loadWorkspace(db, apiSpec?.parentId || identifier);
 
   // if identifier is for an apiSpec or a workspace, return all suites for that workspace
   if (workspace) {
