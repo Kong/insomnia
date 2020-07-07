@@ -1,14 +1,15 @@
 // @flow
-import type { ApiSpec, BaseModel, Environment, UnitTestSuite, Workspace } from './types';
+import type { BaseModel, Environment, UnitTestSuite, Workspace } from './types';
 import { AutoComplete } from 'enquirer';
 import type { Database } from './index';
 import { mustFindSingle, mustFindSingleOrNone } from './index';
 import flattenDeep from 'lodash.flattendeep';
+import { loadApiSpec } from './models/api-spec';
 
 export const matchIdIsh = ({ _id }: BaseModel, identifier: string) => _id.startsWith(identifier);
 export const generateIdIsh = ({ _id }: BaseModel, length: number = 10) => _id.substr(0, length);
 
-export function indent(level: number, code: string, tab: string = '  |'): string {
+function indent(level: number, code: string, tab: string = '  |'): string {
   if (!level || level < 0) {
     return code;
   }
@@ -17,7 +18,7 @@ export function indent(level: number, code: string, tab: string = '  |'): string
   return `${prefix} ${code}`;
 }
 
-const getDbChoice = (
+export const getDbChoice = (
   idIsh: string,
   message: string,
   config: { indent?: number, hint?: string } = {},
@@ -28,33 +29,11 @@ const getDbChoice = (
   hint: config.hint || `${idIsh}`,
 });
 
-export function loadApiSpec(db: Database, identifier: string): ?ApiSpec {
-  return mustFindSingleOrNone(
-    db.ApiSpec,
-    s => matchIdIsh(s, identifier) || s.fileName === identifier,
-  );
-}
-
 export function loadWorkspace(db: Database, identifier: string): ?Workspace {
   return mustFindSingleOrNone(
     db.Workspace,
     s => matchIdIsh(s, identifier) || s.name === identifier,
   );
-}
-
-export async function promptApiSpec(db: Database, ci: boolean): Promise<?ApiSpec> {
-  if (ci || !db.ApiSpec.length) {
-    return null;
-  }
-
-  const prompt = new AutoComplete({
-    name: 'apiSpec',
-    message: 'Select an API Specification',
-    choices: db.ApiSpec.map(s => getDbChoice(generateIdIsh(s), s.fileName)),
-  });
-
-  const [idIsh] = (await prompt.run()).split(' - ').reverse();
-  return loadApiSpec(db, idIsh);
 }
 
 export function loadTestSuites(db: Database, identifier: string): Array<UnitTestSuite> {

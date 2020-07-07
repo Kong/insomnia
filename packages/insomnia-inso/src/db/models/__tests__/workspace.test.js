@@ -4,7 +4,7 @@ import { emptyDb } from '../../index';
 import type { Workspace } from '../../types';
 import { generateIdIsh, loadWorkspace } from '../../prompts';
 
-describe('Workspace', () => {
+describe('workspace', () => {
   let db: Database = emptyDb();
 
   const workspace: $Shape<Workspace> = {

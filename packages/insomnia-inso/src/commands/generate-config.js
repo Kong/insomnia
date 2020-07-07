@@ -5,7 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import type { GlobalOptions } from '../util';
 import { loadDb } from '../db';
-import { loadApiSpec, promptApiSpec } from '../db/prompts';
+import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
