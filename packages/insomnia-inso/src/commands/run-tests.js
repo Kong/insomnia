@@ -1,9 +1,12 @@
 // @flow
 
 import { generate, runTestsCli } from 'insomnia-testing';
-import { getSendRequestCallbackMemDb } from 'insomnia-send-request';
 import type { GlobalOptions } from '../util';
 import { loadDb } from '../db';
+import type { UnitTest, UnitTestSuite } from '../db/models/types';
+import { noConsoleLog } from '../logger';
+import { loadTestSuites, promptTestSuites } from '../db/models/unit-test-suite';
+import { loadEnvironment, promptEnvironment } from '../db/models/environment';
 
 export const TestReporterEnum = {
   dot: 'dot',
@@ -14,9 +17,11 @@ export const TestReporterEnum = {
 };
 
 export type RunTestsOptions = GlobalOptions & {
+  env?: string,
   reporter: $Keys<typeof TestReporterEnum>,
   bail?: boolean,
   keepFile?: boolean,
+  testNamePattern?: string,
 };
 
 function validateOptions({ reporter }: RunTestsOptions): boolean {
@@ -29,40 +34,64 @@ function validateOptions({ reporter }: RunTestsOptions): boolean {
   return true;
 }
 
-export async function runInsomniaTests(options: RunTestsOptions): Promise<boolean> {
+const createTestSuite = (dbSuite: UnitTestSuite, dbTests: Array<UnitTest>) => ({
+  name: dbSuite.name,
+  tests: dbTests.map(({ name, code, requestId }) => ({ name, code, defaultRequestId: requestId })),
+});
+
+// Identifier can be the id or name of a workspace, apiSpec, or unit test suite
+export async function runInsomniaTests(
+  identifier: ?string,
+  options: RunTestsOptions,
+): Promise<boolean> {
   if (!validateOptions(options)) {
     return false;
   }
 
-  const { reporter, bail, keepFile, appDataDir, workingDir } = options;
+  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern } = options;
 
-  const suites = [
-    {
-      name: 'Parent Suite',
-      suites: [
-        {
-          name: 'Nested Suite',
-          tests: [
-            {
-              name: 'should return -1 when the value is not present',
-              code:
-                `const resp = await insomnia.send('req_wrk_012d4860c7da418a85ffea7406e1292a21946b60');\n` +
-                'expect(resp.status).to.equal(200);',
-            },
-          ],
-        },
-      ],
-    },
-  ];
+  const db = await loadDb({ workingDir, appDataDir });
 
-  const db = await loadDb({
-    workingDir,
-    appDataDir,
-    filterTypes: ['Environment', 'Request', 'RequestGroup', 'Workspace'],
-  });
+  // Find suites
+  const suites = identifier ? loadTestSuites(db, identifier) : await promptTestSuites(db, !!ci);
 
-  const environmentId = 'env_env_ca046a738f001eb3090261a537b1b78f86c2094c_sub';
-  const testFileContents = await generate(suites);
-  const sendRequest = await getSendRequestCallbackMemDb(environmentId, db);
-  return await runTestsCli(testFileContents, { reporter, bail, keepFile, sendRequest });
+  if (!suites.length) {
+    console.log('No test suites identified.');
+    return false;
+  }
+
+  // Find environment
+  const workspaceId = suites[0].parentId;
+  const environment = env
+    ? loadEnvironment(db, workspaceId, env)
+    : await promptEnvironment(db, !!ci, workspaceId);
+
+  if (!environment) {
+    console.log('No environment identified.');
+    return false;
+  }
+
+  // Generate test file
+  const testFileContents = await generate(
+    suites.map(suite =>
+      createTestSuite(
+        suite,
+        db.UnitTest.filter(t => t.parentId === suite._id),
+      ),
+    ),
+  );
+
+  // Load lazily when needed, otherwise this require slows down the entire CLI.
+  const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
+  const sendRequest = await getSendRequestCallbackMemDb(environment._id, db);
+
+  return await noConsoleLog(() =>
+    runTestsCli(testFileContents, {
+      reporter,
+      bail,
+      keepFile,
+      sendRequest,
+      testFilter: testNamePattern,
+    }),
+  );
 }
