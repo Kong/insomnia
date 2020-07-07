@@ -7,7 +7,6 @@ import {
   loadApiSpec,
   loadEnvironment,
   loadTestSuites,
-  loadWorkspace,
   promptApiSpec,
   promptEnvironment,
   promptTestSuites,
@@ -302,48 +301,6 @@ describe('Environment', () => {
     it('should return the base environment if no sub envs exist', () => {
       db.Environment = [environment];
       expect(loadEnvironment(db, workspace._id, subEnvironment._id)).toBe(environment);
-    });
-  });
-});
-
-describe('Workspace', () => {
-  let db: Database = emptyDb();
-
-  const workspace: $Shape<Workspace> = {
-    _id: 'wrk_1234567890',
-    name: 'workspace name',
-  };
-
-  beforeEach(() => {
-    db = emptyDb();
-
-    const dummyWorkspace: $Shape<Workspace> = {
-      _id: 'wrk_dummy',
-      name: 'dummy workspace',
-    };
-
-    db.Workspace.push(workspace);
-    db.Workspace.push(dummyWorkspace);
-
-    jest.clearAllMocks();
-  });
-
-  describe('loadWorkspace()', () => {
-    it('should return null if workspace not found', () => {
-      expect(loadWorkspace(db, 'not-found')).toBeNull();
-    });
-
-    it.each([generateIdIsh(workspace), workspace._id, workspace.name])(
-      'should return workspace with identifier: %o',
-      identifier => {
-        expect(loadWorkspace(db, identifier)).toBe(workspace);
-      },
-    );
-
-    it('should throw error if multiple workspace matched', () => {
-      db.Workspace.push({ ...workspace });
-
-      expect(() => loadWorkspace(db, workspace._id)).toThrowError();
     });
   });
 });
