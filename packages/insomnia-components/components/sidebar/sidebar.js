@@ -7,6 +7,8 @@ import Tooltip from '../tooltip';
 import SidebarHeader from './sidebar-header';
 import SidebarPanel from './sidebar-panel';
 import SidebarFilter from './sidebar-filter';
+import SidebarServers from './sidebar-servers';
+import SidebarResponses from './sidebar-responses';
 import Dropdown from '../dropdown/dropdown';
 import DropdownItem from '../dropdown/dropdown-item';
 import DropdownDivider from '../dropdown/dropdown-divider';
@@ -215,46 +217,25 @@ function Sidebar(props: Props) {
   };
 
   const [serversVisible, setServersVisible] = useState(true);
-  const handleServersVisibleClick = e => {
-    e.stopPropagation();
-    setServersVisible(!serversVisible);
-  };
+  const handleServersVisibleClick = useToggle(serversVisible, setServersVisible);
 
   const [requestsVisible, setRequestsVisible] = useState(true);
-  const handleRequestsVisibleClick = e => {
-    e.stopPropagation();
-    setRequestsVisible(!requestsVisible);
-  };
+  const handleRequestsVisibleClick = useToggle(requestsVisible, setRequestsVisible);
 
   const [responsesVisible, setResponsesVisible] = useState(true);
-  const handleResponsesVisibleClick = e => {
-    e.stopPropagation();
-    setResponsesVisible(!responsesVisible);
-  };
+  const handleResponsesVisibleClick = useToggle(responsesVisible, setResponsesVisible);
 
   const [parametersVisible, setParametersVisible] = useState(true);
-  const handleParametersVisibleClick = e => {
-    e.stopPropagation();
-    setParametersVisible(!parametersVisible);
-  };
+  const handleParametersVisibleClick = useToggle(parametersVisible, setParametersVisible);
 
   const [headersVisible, setHeadersVisible] = useState(true);
-  const handleHeadersVisibleClick = e => {
-    e.stopPropagation();
-    setHeadersVisible(!headersVisible);
-  };
+  const handleHeadersVisibleClick = useToggle(headersVisible, setHeadersVisible);
 
   const [schemasVisible, setSchemasVisible] = useState(true);
-  const handleSchemasVisibleClick = e => {
-    e.stopPropagation();
-    setSchemasVisible(!schemasVisible);
-  };
+  const handleSchemasVisibleClick = useToggle(schemasVisible, setSchemasVisible);
 
   const [securityVisible, setSecurityVisible] = useState(true);
-  const handleSecurityVisibleClick = e => {
-    e.stopPropagation();
-    setSecurityVisible(!securityVisible);
-  };
+  const handleSecurityVisibleClick = useToggle(securityVisible, setSecurityVisible);
 
   // Sections
   if (props.jsonData === null) {
@@ -379,19 +360,7 @@ function Sidebar(props: Props) {
               filter={serversFilter}
               transitionStyle={panelMotion}
               onChange={handleOnChange(setServersFilter)}></SidebarFilter>
-            {servers.map(server => (
-              <React.Fragment key={server.url}>
-                {server.url.includes(serverFilter) && (
-                  <StyledItem>
-                    <div></div>
-                    <div>
-                      <SvgIcon icon={IconEnum.indentation} />
-                    </div>
-                    <span>{server.url}</span>
-                  </StyledItem>
-                )}
-              </React.Fragment>
-            ))}
+            <SidebarServers servers={servers} filter={serverFilter}></SidebarServers>
           </SidebarPanel>
         </StyledSection>
       )}
@@ -506,6 +475,10 @@ function Sidebar(props: Props) {
               filter={responsesFilter}
               transitionStyle={panelMotion}
               onChange={handleOnChange(setResponsesFilter)}></SidebarFilter>
+            <SidebarResponses
+              responses={responses}
+              filter={serverFilter}
+              filter={serverFilter}></SidebarResponses>
             {Object.keys(responses).map(response => (
               <React.Fragment key={response}>
                 {response.toLowerCase().includes(responseFilter) && (
