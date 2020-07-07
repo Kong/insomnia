@@ -1,0 +1,46 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`prompts promptApiSpec() should load apiSpec after prompt result 1`] = `
+Object {
+  "choices": Array [
+    Object {
+      "hint": "spc_123456",
+      "message": "fileName",
+      "name": "spc_123456",
+      "value": "fileName - spc_123456",
+    },
+  ],
+  "message": "Select an API Specification",
+  "name": "apiSpec",
+}
+`;
+
+exports[`prompts promptApiSpec() should match snapshot of autocomplete config 1`] = `
+Object {
+  "choices": Array [
+    Object {
+      "hint": "spc_123456",
+      "message": "fileName",
+      "name": "spc_123456",
+      "value": "fileName - spc_123456",
+    },
+  ],
+  "message": "Select an API Specification",
+  "name": "apiSpec",
+}
+`;
+
+exports[`prompts promptApiSpec() test 1`] = `
+Object {
+  "choices": Array [
+    Object {
+      "hint": "spc_123456",
+      "message": "fileName",
+      "name": "spc_123456",
+      "value": "fileName - spc_123456",
+    },
+  ],
+  "message": "Select an API Specification",
+  "name": "apiSpec",
+}
+`;

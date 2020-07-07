@@ -29,10 +29,6 @@ const getDbChoice = (
 });
 
 export function loadApiSpec(db: Database, identifier: string): ?ApiSpec {
-  if (!db.ApiSpec.length) {
-    return null;
-  }
-
   return mustFindSingleOrNone(
     db.ApiSpec,
     s => matchIdIsh(s, identifier) || s.fileName === identifier,

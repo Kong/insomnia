@@ -20,7 +20,7 @@ export async function lintSpecification(
   }
 
   const spectral = new Spectral();
-  const results = await spectral.run(specFromDb?.contents);
+  const results = await spectral.run(specFromDb.contents);
 
   if (results.length) {
     console.log(`${results.length} lint errors found. \n`);
