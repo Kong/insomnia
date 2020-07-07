@@ -10,7 +10,7 @@ import {
   promptTestSuites,
 } from '../db/prompts';
 import type { UnitTest, UnitTestSuite } from '../db/types';
-import { disableLogger, enableLogger } from '../logger';
+import { noConsoleLog } from '../logger';
 
 export const TestReporterEnum = {
   dot: 'dot',
@@ -89,16 +89,13 @@ export async function runInsomniaTests(
   const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
   const sendRequest = await getSendRequestCallbackMemDb(environment._id, db);
 
-  try {
-    disableLogger();
-    return await runTestsCli(testFileContents, {
+  return await noConsoleLog(() =>
+    runTestsCli(testFileContents, {
       reporter,
       bail,
       keepFile,
       sendRequest,
       testFilter: testNamePattern,
-    });
-  } finally {
-    enableLogger();
-  }
+    }),
+  );
 }
