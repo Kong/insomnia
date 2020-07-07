@@ -10,7 +10,6 @@ import {
   EDITOR_KEY_MAP_EMACS,
   EDITOR_KEY_MAP_SUBLIME,
   EDITOR_KEY_MAP_VIM,
-  getAppId,
   HttpVersions,
   isLinux,
   isMac,
@@ -23,7 +22,6 @@ import { setFont } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
-import { APP_ID_DESIGNER } from '../../../../config';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -509,18 +507,6 @@ class General extends React.PureComponent<Props, State> {
             <hr />
             {this.renderBooleanSetting('Enable version control beta', 'enableSyncBeta', '', true)}
           </React.Fragment>
-        )}
-
-        {getAppId() === APP_ID_DESIGNER && (
-          <>
-            <hr />
-            {this.renderBooleanSetting(
-              'Enable unit testing beta',
-              'enableUnitTestingBeta',
-              '',
-              false,
-            )}
-          </>
         )}
       </div>
     );

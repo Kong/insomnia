@@ -501,7 +501,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
 
   render() {
     const { handleActivityChange, gitSyncDropdown } = this.props;
-    const { activeWorkspace, activity, settings, activeApiSpec } = this.props.wrapperProps;
+    const { activeWorkspace, activity, activeApiSpec } = this.props.wrapperProps;
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
@@ -524,7 +524,6 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               <ActivityToggle
                 activity={activity}
                 handleActivityChange={handleActivityChange}
-                settings={settings}
                 workspace={activeWorkspace}
               />
             }
