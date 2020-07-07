@@ -10,6 +10,7 @@ import {
   promptTestSuites,
 } from '../db/prompts';
 import type { UnitTest, UnitTestSuite } from '../db/types';
+import { disableLogger, enableLogger } from '../logger';
 
 export const TestReporterEnum = {
   dot: 'dot',
@@ -87,11 +88,17 @@ export async function runInsomniaTests(
   // Load lazily when needed, otherwise this require slows down the entire CLI.
   const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
   const sendRequest = await getSendRequestCallbackMemDb(environment._id, db);
-  return await runTestsCli(testFileContents, {
-    reporter,
-    bail,
-    keepFile,
-    sendRequest,
-    testFilter: testNamePattern,
-  });
+
+  try {
+    disableLogger();
+    return await runTestsCli(testFileContents, {
+      reporter,
+      bail,
+      keepFile,
+      sendRequest,
+      testFilter: testNamePattern,
+    });
+  } finally {
+    enableLogger();
+  }
 }

@@ -23,7 +23,7 @@ const getDbChoice = (
   config: { indent?: number, hint?: string } = {},
 ) => ({
   name: idIsh,
-  message: indent(config?.indent || 0, message),
+  message: indent(config.indent || 0, message),
   value: `${message} - ${idIsh}`,
   hint: config.hint || `${idIsh}`,
 });
