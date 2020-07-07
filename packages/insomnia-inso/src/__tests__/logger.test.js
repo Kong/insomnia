@@ -3,7 +3,12 @@ import { noConsoleLog } from '../logger';
 
 describe('logger', () => {
   describe('noConsoleLog()', () => {
-    it('should overwrite console.log during callback', async () => {
+    const originalConsoleLog = console.log;
+    afterAll(() => {
+      (console: Object).log = originalConsoleLog;
+    });
+
+    it('should overwrite and reset console.log during callback', async () => {
       const consoleLogMock = jest.fn();
       (console: Object).log = consoleLogMock;
 
