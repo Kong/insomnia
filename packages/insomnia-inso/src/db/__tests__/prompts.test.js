@@ -9,6 +9,7 @@ import {
   loadTestSuites,
   loadWorkspace,
   promptApiSpec,
+  promptEnvironment,
   promptTestSuites,
 } from '../prompts';
 import type { ApiSpec, Environment, UnitTestSuite, Workspace } from '../types';
@@ -39,6 +40,12 @@ describe('prompts', () => {
 
     it('should return null if db.ApiSpec is empty', () => {
       db.ApiSpec = [];
+      expect(promptApiSpec(db, false)).resolves.toBeNull();
+    });
+
+    it('should return null if prompt result does not contain closing [ - id]', async () => {
+      enquirer.__mockPromptRun('malformed result');
+
       expect(promptApiSpec(db, false)).resolves.toBeNull();
     });
 
@@ -97,6 +104,12 @@ describe('prompts', () => {
       expect(promptTestSuites(db, false)).resolves.toHaveLength(0);
     });
 
+    it('should return empty array if prompt result does not contain closing [ - id]', async () => {
+      enquirer.__mockPromptRun('malformed result');
+
+      expect(promptTestSuites(db, false)).resolves.toHaveLength(0);
+    });
+
     it('should load suite 1 after prompt result', async () => {
       enquirer.__mockPromptRun('suite one - uts_123456');
 
@@ -108,6 +121,62 @@ describe('prompts', () => {
 
     it('should match snapshot of autocomplete config', async () => {
       await promptTestSuites(db, false);
+
+      expect(enquirer.__constructorMock.mock.calls[0][0]).toMatchSnapshot();
+    });
+  });
+
+  describe('promptEnvironment()', () => {
+    const workspace: $Shape<Workspace> = {
+      _id: 'wrk_1234567890',
+      name: 'workspace name',
+    };
+
+    const environment: $Shape<Environment> = {
+      _id: 'env_1234567890',
+      name: 'base env',
+      parentId: workspace._id,
+    };
+
+    const subEnvironment: $Shape<Environment> = {
+      _id: 'env_env_1234567890',
+      name: 'sub env',
+      parentId: environment._id,
+    };
+
+    beforeEach(() => {
+      db.Workspace.push(workspace);
+      db.Environment.push(environment);
+      db.Environment.push(subEnvironment);
+    });
+
+    it('should return null if ci', () => {
+      expect(promptEnvironment(db, true, workspace._id)).resolves.toBeNull();
+    });
+
+    it('should return null if no environments exist', () => {
+      db.Environment = [];
+
+      expect(promptEnvironment(db, false, workspace._id)).resolves.toBeNull();
+    });
+
+    it('should throw error if base env for workspace not found', () => {
+      expect(promptEnvironment(db, false, 'workspace-not-found')).rejects.toThrowError();
+    });
+
+    it('should throw error if multiple base env for workspace found', () => {
+      db.Environment.push({ ...environment });
+      expect(promptEnvironment(db, false, workspace._id)).rejects.toThrowError();
+    });
+
+    it('should load sub environment after prompt result', async () => {
+      enquirer.__mockPromptRun('environment - env_env_123456');
+
+      expect(promptEnvironment(db, false, workspace._id)).resolves.toBe(subEnvironment);
+    });
+
+    it('should match snapshot of autocomplete config', async () => {
+      await promptEnvironment(db, false, workspace._id);
 
       expect(enquirer.__constructorMock.mock.calls[0][0]).toMatchSnapshot();
     });

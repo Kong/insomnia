@@ -30,6 +30,21 @@ Object {
 }
 `;
 
+exports[`prompts promptEnvironment() should match snapshot of autocomplete config 1`] = `
+Object {
+  "choices": Array [
+    Object {
+      "hint": "env_env_123456",
+      "message": "sub env",
+      "name": "env_env_123456",
+      "value": "sub env - env_env_123456",
+    },
+  ],
+  "message": "Select an environment",
+  "name": "environment",
+}
+`;
+
 exports[`prompts promptTestSuites() should load suite 1 after prompt result 1`] = `
 Object {
   "choices": Array [
