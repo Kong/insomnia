@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "2.2.13",
+  "version": "2.2.15",
   "name": "insomnia-app",
   "homepage": "https://konghq.com",
   "description": "The Collaborative API Design Tool",
@@ -129,7 +129,7 @@
     "insomnia-plugin-response": "^2.2.10",
     "insomnia-plugin-uuid": "^2.2.10",
     "insomnia-prettify": "^2.2.10",
-    "insomnia-testing": "^2.2.12",
+    "insomnia-testing": "^2.2.15",
     "insomnia-url": "^2.2.10",
     "insomnia-xpath": "^2.2.10",
     "isomorphic-git": "^0.70.3",

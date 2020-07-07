@@ -1,5 +1,12 @@
 // @flow
-import type { ApiSpec, BaseModel, Environment, UnitTest, UnitTestSuite, Workspace } from './types';
+import type {
+  ApiSpec,
+  BaseModel,
+  Environment,
+  UnitTest,
+  UnitTestSuite,
+  Workspace,
+} from './models/types';
 import envPaths from 'env-paths';
 import gitAdapter from './adapters/git-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
@@ -58,4 +65,32 @@ export const loadDb = async ({
 
   // return empty db
   return db || emptyDb();
+};
+
+export const mustFindSingleOrNone = <T>(arr: Array<T>, predicate: T => boolean): ?T => {
+  const matched = arr.filter(predicate);
+
+  if (matched.length === 1) {
+    return matched[0];
+  }
+
+  if (matched.length === 0) {
+    return null;
+  }
+
+  throw new Error(`Expected one or none, but found multiple matching entries`);
+};
+
+export const mustFindSingle = <T>(arr: Array<T>, predicate: T => boolean): T => {
+  const matched = arr.filter(predicate);
+
+  if (matched.length === 1) {
+    return matched[0];
+  }
+
+  if (matched.length === 0) {
+    throw new Error('Expected one but found no matching entries');
+  }
+
+  throw new Error('Expected one but found multiple matching entries');
 };

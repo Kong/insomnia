@@ -1,7 +1,7 @@
 // @flow
 import path from 'path';
 import NeDB from 'nedb';
-import type { BaseModel } from '../types';
+import type { BaseModel } from '../models/types';
 import type { DbAdapter } from '../index';
 import { emptyDb } from '../index';
 import fs from 'fs';
