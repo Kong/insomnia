@@ -3,6 +3,7 @@ import type { ApiSpec, BaseModel, Environment, UnitTest, UnitTestSuite, Workspac
 import envPaths from 'env-paths';
 import gitAdapter from './adapters/git-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
+import { getDefaultAppDataDir } from '../util';
 
 export type Database = {|
   ApiSpec: Array<ApiSpec>,
@@ -50,8 +51,7 @@ export const loadDb = async ({
   // try load from nedb
   if (!db) {
     db = await neDbAdapter(
-      appDataDir ||
-        envPaths(process.env.DEFAULT_APP_DATA_DIR || 'insomnia-app', { suffix: '' }).data,
+      appDataDir || envPaths(getDefaultAppDataDir(), { suffix: '' }).data,
       filterTypes,
     );
   }

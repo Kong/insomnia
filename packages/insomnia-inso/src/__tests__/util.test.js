@@ -1,6 +1,6 @@
 // @flow
 import commander from 'commander';
-import { getAllOptions, exit, logErrorExit1 } from '../util';
+import { getAllOptions, exit, logErrorExit1, getDefaultAppDataDir } from '../util';
 
 describe('getAllOptions()', () => {
   it('should combine options from all commands into one object', () => {
@@ -61,5 +61,31 @@ describe('logErrorExit1()', () => {
 
     expect(errorSpy).toHaveBeenCalledWith(error);
     expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+});
+
+describe('getDefaultAppDataDir()', () => {
+  const OLD_ENV = process.env;
+
+  beforeEach(() => {
+    process.env = { ...OLD_ENV }; // make a copy
+  });
+
+  afterAll(() => {
+    process.env = OLD_ENV; // restore old env
+  });
+
+  it('should return value if set', () => {
+    const value = 'dir';
+    process.env.DEFAULT_APP_DATA_DIR = value;
+    expect(getDefaultAppDataDir()).toBe(value);
+  });
+
+  it('should throw error if not set', () => {
+    process.env.DEFAULT_APP_DATA_DIR = '';
+
+    expect(getDefaultAppDataDir).toThrowError(
+      'Environment variable DEFAULT_APP_DATA_DIR is not set.',
+    );
   });
 });
