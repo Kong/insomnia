@@ -41,7 +41,7 @@
     "rimraf": "^3.0.2",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.12",
-    "webpack-merge": "^4.2.2",
+    "webpack-merge": "^5.0.7",
     "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
