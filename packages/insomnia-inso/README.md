@@ -18,7 +18,7 @@ Typically, Insomnia database id's are quite long, for example: `wrk_012d4860c7da
 
 Additionally, if the `[identifier]` argument is ommitted from the command, `inso` will search in the database for the information it needs, and prompt the user. Prompts can be disabled with the `--ci` global option.
 
-![](/assets/ci-demo.gif)
+![](/packages/insomnia-inso/assets/ci-demo.gif)
 
 ## Commands
 
@@ -47,7 +47,7 @@ This can be a **document name, id, or a file path** relative to the working dire
 
 #### Examples
 
-When running in the [git-repo](/src/db/__fixtures__/git-repo) directory
+When running in the [git-repo](/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory
 
 ``` sh
 inso generate config # Will prompt
@@ -73,7 +73,7 @@ This can be a **document name, or id**. If unspecified, inso will prompt you wit
 
 #### Examples
 
-When running in the [git-repo](/src/db/__fixtures__/git-repo) directory
+When running in the [git-repo](/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory
 
 ``` sh
 inso lint spec # Will prompt
@@ -103,7 +103,7 @@ The test runner is built on top of Mocha, thus many of the options behave as the
 
 #### Examples
 
-When running in the [git-repo](/src/db/__fixtures__/git-repo) directory.
+When running in the [git-repo](/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory.
 
 ```sh
 inso run test # Will prompt
@@ -120,7 +120,7 @@ inso run test "Sample Specification" --test-name-pattern Math --env env_env_ca04
 inso run test spc_46c5a4 --reporter progress --bail --keep-file
 ```
 
-More examples [here](https://github.com/Kong/insomnia/pull/2338).
+More examples: [#2338](https://github.com/Kong/insomnia/pull/2338).
 
 ## Development
 
