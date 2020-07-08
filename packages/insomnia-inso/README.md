@@ -1,20 +1,10 @@
-# inso
-
-A CLI to accompany [Insomnia Designer](https://insomnia.rest).
-
 <div align="center">
+  <h1><code>inso</code></h1>
+  A CLI to accompany <a href="https://insomnia.rest">Insomnia Designer</a>
   <pre>npm i -g <a href="https://www.npmjs.com/package/insomnia-inso">insomnia-inso</a></pre>
 </div>
 
-### `$ inso [global options] [command]`
-
-|Global option|Alias|Description|
-|- |- |- |
-| `--working-dir <dir>` | `-w` |set working directory|
-| `--app-data-dir <dir>` | `-a` |set the app data directory|
-| `--ci` | | run in CI, disables all prompts |
-| `--version` | `-v` |output the version number|
-| `--help` | `-h` |display help for a command|
+---
 
 ## Data source
 
@@ -31,6 +21,16 @@ Additionally, if the `[identifier]` argument is ommitted from the command, `inso
 ![](/assets/ci-demo.gif)
 
 ## Commands
+
+### `$ inso [global options] [command]`
+
+|Global option|Alias|Description|
+|- |- |- |
+| `--working-dir <dir>` | `-w` |set working directory|
+| `--app-data-dir <dir>` | `-a` |set the app data directory|
+| `--ci` | | run in CI, disables all prompts |
+| `--version` | `-v` |output the version number|
+| `--help` | `-h` |display help for a command|
 
 ### `$ inso generate config [options] [identifier]`
 
