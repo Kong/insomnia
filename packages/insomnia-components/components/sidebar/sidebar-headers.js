@@ -9,6 +9,13 @@ type Props = {
   headers: Object,
 };
 
+let itemPath = [];
+const handleClick = items => {
+  itemPath.push('header');
+  itemPath.push.apply(itemPath, items);
+  console.log(itemPath);
+  itemPath = [];
+};
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarHeaders extends React.Component<Props> {
@@ -22,7 +29,7 @@ export default class SidebarHeaders extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span>
+              <span onClick={() => handleClick([header])}>
                 <Tooltip message={this.props.headers[header].description} position="right">
                   {header}
                 </Tooltip>

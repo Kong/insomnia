@@ -9,6 +9,14 @@ type Props = {
   parameters: Object,
 };
 
+let itemPath = [];
+const handleClick = items => {
+  itemPath.push('parameter');
+  itemPath.push.apply(itemPath, items);
+  console.log(itemPath);
+  itemPath = [];
+};
+
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarParameters extends React.Component<Props> {
@@ -22,7 +30,7 @@ export default class SidebarParameters extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span>
+              <span onClick={() => handleClick([parameter])}>
                 <Tooltip message={this.props.parameters[parameter].description} position="right">
                   {parameter}
                 </Tooltip>

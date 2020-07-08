@@ -10,6 +10,14 @@ type Props = {
   requests: Object,
 };
 
+let itemPath = [];
+const handleClick = items => {
+  itemPath.push('request');
+  itemPath.push.apply(itemPath, items);
+  console.log(itemPath);
+  itemPath = [];
+};
+
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarRequests extends React.Component<Props> {
@@ -24,7 +32,7 @@ export default class SidebarRequests extends React.Component<Props> {
                 <div>
                   <SvgIcon icon={IconEnum.folderOpen} />
                 </div>
-                <span>
+                <span onClick={() => handleClick([requestName])}>
                   <Tooltip message={this.props.requests[requestName].description} position="right">
                     {requestName}
                   </Tooltip>
@@ -38,13 +46,16 @@ export default class SidebarRequests extends React.Component<Props> {
                       &nbsp;
                       <SvgIcon icon={IconEnum.indentation} />
                     </div>
-                    <span>{requestFormat}</span>
+                    <span onClick={() => handleClick([requestFormat])}>{requestFormat}</span>
                   </SidebarItem>
                   <SidebarBlockItem>
                     {Object.keys(
                       this.props.requests[requestName].content[requestFormat].examples,
                     ).map(requestExample => (
-                      <div className="method-post" key={requestExample}>
+                      <div
+                        onClick={() => handleClick([requestExample])}
+                        className="method-post"
+                        key={requestExample}>
                         {requestExample}
                       </div>
                     ))}
