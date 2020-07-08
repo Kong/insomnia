@@ -98,29 +98,27 @@ const useToggle = (state, set) =>
   );
 
 function Sidebar(props: Props) {
-  // Info (Can't hide info section)
+  // Info
   const [infoSec, setInfoSec] = useState(false);
   const toggleInfoSec = useToggle(infoSec, setInfoSec);
 
   // Section Visibility
-  const [visible, setVisibility] = useState({
-    pathsVisible: true,
-    serversVisible: true,
-    requestsVisible: true,
-    responsesVisible: true,
-    parametersVisible: true,
-    headersVisible: true,
-    schemasVisible: true,
-    securityVisible: true,
-  });
-  const handlePathsVisibleClick = useToggle(visible.pathsVisible, setVisibility);
-  const handleServersVisibleClick = useToggle(visible.serversVisible, setVisibility);
-  const handleRequestsVisibleClick = useToggle(visible.requestsVisible, setVisibility);
-  const handleResponsesVisibleClick = useToggle(visible.responsesVisible, setVisibility);
-  const handleParametersVisibleClick = useToggle(visible.parametersVisible, setVisibility);
-  const handleHeadersVisibleClick = useToggle(visible.headersVisible, setVisibility);
-  const handleSchemasVisibleClick = useToggle(visible.schemasVisible, setVisibility);
-  const handleSecurityVisibleClick = useToggle(visible.securityVisible, setVisibility);
+  const [pathsVisible, setPathsVisible] = useState(true);
+  const handlePathsVisibleClick = useToggle(pathsVisible, setPathsVisible);
+  const [serversVisible, setServersVisible] = useState(true);
+  const handleServersVisibleClick = useToggle(serversVisible, setServersVisible);
+  const [requestsVisible, setRequestsVisible] = useState(true);
+  const handleRequestsVisibleClick = useToggle(requestsVisible, setRequestsVisible);
+  const [responsesVisible, setResponsesVisible] = useState(true);
+  const handleResponsesVisibleClick = useToggle(responsesVisible, setResponsesVisible);
+  const [parametersVisible, setParametersVisible] = useState(true);
+  const handleParametersVisibleClick = useToggle(parametersVisible, setParametersVisible);
+  const [headersVisible, setHeadersVisible] = useState(true);
+  const handleHeadersVisibleClick = useToggle(headersVisible, setHeadersVisible);
+  const [schemasVisible, setSchemasVisible] = useState(true);
+  const handleSchemasVisibleClick = useToggle(schemasVisible, setSchemasVisible);
+  const [securityVisible, setSecurityVisible] = useState(true);
+  const handleSecurityVisibleClick = useToggle(securityVisible, setSecurityVisible);
 
   // Sections
   if (props.jsonData === null) {
@@ -147,7 +145,7 @@ function Sidebar(props: Props) {
               <input
                 type="checkbox"
                 onClick={handleServersVisibleClick}
-                defaultChecked={visible.serversVisible}
+                defaultChecked={serversVisible}
               />
               <label htmlFor="servers">Servers</label>
             </DropdownItem>
@@ -155,7 +153,7 @@ function Sidebar(props: Props) {
               <input
                 type="checkbox"
                 onClick={handlePathsVisibleClick}
-                defaultChecked={visible.pathsVisible}
+                defaultChecked={pathsVisible}
               />
               <label htmlFor="paths">Paths</label>
             </DropdownItem>
@@ -163,7 +161,7 @@ function Sidebar(props: Props) {
               <input
                 type="checkbox"
                 onClick={handleRequestsVisibleClick}
-                defaultChecked={visible.requestsVisible}
+                defaultChecked={requestsVisible}
               />
               <label htmlFor="requests">Requests</label>
             </DropdownItem>
@@ -171,7 +169,7 @@ function Sidebar(props: Props) {
               <input
                 type="checkbox"
                 onClick={handleResponsesVisibleClick}
-                defaultChecked={visible.responsesVisible}
+                defaultChecked={responsesVisible}
               />
               <label htmlFor="responses">Responses</label>
             </DropdownItem>
@@ -179,7 +177,7 @@ function Sidebar(props: Props) {
               <input
                 type="checkbox"
                 onClick={handleParametersVisibleClick}
-                defaultChecked={visible.parametersVisible}
+                defaultChecked={parametersVisible}
               />
               <label htmlFor="parameters">Parameters</label>
             </DropdownItem>
@@ -187,7 +185,7 @@ function Sidebar(props: Props) {
               <input
                 type="checkbox"
                 onClick={handleHeadersVisibleClick}
-                defaultChecked={visible.headersVisible}
+                defaultChecked={headersVisible}
               />
               <label htmlFor="headers">Headers</label>
             </DropdownItem>
@@ -195,7 +193,7 @@ function Sidebar(props: Props) {
               <input
                 type="checkbox"
                 onClick={handleSchemasVisibleClick}
-                defaultChecked={visible.schemasVisible}
+                defaultChecked={schemasVisible}
               />
               <label htmlFor="schemas">Schemas</label>
             </DropdownItem>
@@ -203,7 +201,7 @@ function Sidebar(props: Props) {
               <input
                 type="checkbox"
                 onClick={handleSecurityVisibleClick}
-                defaultChecked={visible.securityVisible}
+                defaultChecked={securityVisible}
               />
               <label htmlFor="security">Security</label>
             </DropdownItem>
@@ -211,14 +209,14 @@ function Sidebar(props: Props) {
         </SidebarHeader>
         <SidebarInfo parent={infoSec} info={props.jsonData.info} />
       </StyledSection>
-      {visible.serversVisible && servers && <SidebarServers servers={servers} />}
-      {visible.pathsVisible && paths && <SidebarPaths paths={paths} />}
-      {visible.requestsVisible && requestBodies && <SidebarRequests requests={requestBodies} />}
-      {visible.responsesVisible && responses && <SidebarResponses responses={responses} />}
-      {visible.parametersVisible && parameters && <SidebarParameters parameters={parameters} />}
-      {visible.headersVisible && headers && <SidebarHeaders headers={headers} />}
-      {visible.schemasVisible && schemas && <SidebarSchemas schemas={schemas} />}
-      {visible.securityVisible && schemas && <SidebarSecurity security={securitySchemes} />}
+      {serversVisible && servers && <SidebarServers servers={servers} />}
+      {pathsVisible && paths && <SidebarPaths paths={paths} />}
+      {requestsVisible && requestBodies && <SidebarRequests requests={requestBodies} />}
+      {responsesVisible && responses && <SidebarResponses responses={responses} />}
+      {parametersVisible && parameters && <SidebarParameters parameters={parameters} />}
+      {headersVisible && headers && <SidebarHeaders headers={headers} />}
+      {schemasVisible && schemas && <SidebarSchemas schemas={schemas} />}
+      {securityVisible && schemas && <SidebarSecurity security={securitySchemes} />}
     </StyledSidebar>
   );
 }
