@@ -48,7 +48,8 @@ Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-k
 
 #### Examples
 
-When running in the [git-repo](/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory
+<details>
+  <summary>When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo">git-repo</a> directory</summary>
 
 ```
 inso generate config
@@ -63,6 +64,7 @@ inso generate config "Sample Specification" --type kubernetes
 
 inso generate config spec.yaml --working-dir another/dir
 ```
+</details>
 
 ### `$ inso lint spec [identifier]`
 
@@ -72,7 +74,8 @@ Designer has the ability to lint and validate your OpenAPI specification as you 
 
 #### Examples
 
-When running in the [git-repo](/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory
+<details>
+  <summary>When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo">git-repo</a> directory</summary>
 
 ```
 inso lint spec
@@ -81,6 +84,7 @@ inso lint spec spc_46c5a4
 
 inso lint spec "Sample Specification"
 ```
+</details>
 
 ### `$ inso run test [options] [identifier]`
 
@@ -100,24 +104,34 @@ The test runner is built on top of Mocha, thus many of the options behave as the
 
 #### Examples
 
-When running in the [git-repo](/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory.
+<details>
+  <summary>When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo">git-repo</a> directory</summary>
 
+Not specifying any arguments will prompt
 ```
 inso run test
+```
 
-# By document
+Scope by the document name or id
+```
 inso run test "Sample Specification" --env "OpenAPI env"
 inso run test spc_46c5a4 --env env_env_ca046a
+```
 
-# By suite
+Scope by the a test suite name or id
+```
 inso run test "Math Suite" --env "OpenAPI env"
 inso run test uts-7f0f85 --env env_env_ca046a
+```
 
+Scope by test name regex, and control test running and reporting
+```
 inso run test "Sample Specification" --test-name-pattern Math --env env_env_ca046a
 inso run test spc_46c5a4 --reporter progress --bail --keep-file
 ```
 
 More examples: [#2338](https://github.com/Kong/insomnia/pull/2338).
+</details>
 
 ## Development
 
