@@ -10,20 +10,25 @@ A CLI to accompany [Insomnia Designer](https://insomnia.rest).
 
 |Global option|Alias|Description|
 |- |- |- |
-| `--version` | `-v` |output the version number|
 | `--working-dir <dir>` | `-w` |set working directory|
 | `--app-data-dir <dir>` | `-a` |set the app data directory|
 | `--ci` | | run in CI, disables all prompts |
+| `--version` | `-v` |output the version number|
 | `--help` | `-h` |display help for a command|
 
-#### Data source
+## Data source
 
 `inso` will first try to find a `.insomnia` directory in it's working directory. This directory is generated in a git repository when using git sync in Designer. When `inso` is used in a CI environment, it will always run against the `.insomnia` directory.
 
 If `inso` cannot find the `.insomnia` directory, it will try to run against the Designer app data directory (if found). You can override both the working directory, and the app data directory, using the global options shown above.
 
-#### Identifiers
-Typically, Insomnia database id's are quite long, for example: `wrk_012d4860c7da418a85ffea7406e1292a`. When specifying an identifier for `inso`, similar to Git hashes, you may choose to concatenate and use the first x characters (for example, `wrk_012d486`), which is very likely to be unique. If in the rare chance the short id is _not_ unique against the data, `inso` will inform as such.
+## The `[identifier]` argument
+
+Typically, Insomnia database id's are quite long, for example: `wrk_012d4860c7da418a85ffea7406e1292a`. When specifying an identifier for `inso`, similar to Git hashes, you may choose to concatenate and use the first x characters (for example, `wrk_012d486` ), which is very likely to be unique. If in the rare chance the short id is _not_ unique against the data, `inso` will inform as such.
+
+Additionally, if the `[identifier]` argument is ommitted from the command, `inso` will search in the database for the information it needs, and prompt the user. Prompts can be disabled with the `--ci` global option.
+
+![](/assets/ci-demo.gif)
 
 ## Commands
 
@@ -31,19 +36,20 @@ Typically, Insomnia database id's are quite long, for example: `wrk_012d4860c7da
 
 Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-kong-kubernetes-config) and [Declarative](https://insomnia.rest/plugins/insomnia-plugin-kong-declarative-config) config plugins for Designer, this command can generate configuration from an API specification, using [openapi-2-kong](https://www.npmjs.com/package/openapi-2-kong).
 
-|Option|Alias|Description|
-|- |- |- |
-| `--type <type>` | `-t` |type of configuration to generate, options are `kubernetes` and `declarative` (default: `declarative`) |
-| `--output <path>` | `-o` |save the generated config to a file in the working directory|
-
 #### `[identifier]`
+
 This can be a **document name, id, or a file path** relative to the working directory. If unspecified, inso will prompt you with a searchable list of all documents (and the database ids) it has found in its data source.
 
-<details>
-<summary>Examples</summary>
+|Option|Alias|Description|
+|- |- |- |
+| `--type <type>` | `-t` |type of configuration to generate, options are `kubernetes` and `declarative` (default: `declarative` ) |
+| `--output <path>` | `-o` |save the generated config to a file in the working directory|
+
+#### Examples
 
 When running in the [git-repo](/src/db/__fixtures__/git-repo) directory
-```sh
+
+``` sh
 inso generate config # Will prompt
 
 inso generate config spc_46c5a4 --type declarative
@@ -56,29 +62,65 @@ inso generate config "Sample Specification" --type kubernetes
 
 inso generate config spec.yaml --working-dir another/dir
 ```
-</details>
 
 ### `$ inso lint spec [identifier]`
 
-Designer has the ability to lint and validate your OpenAPI specification as you write it. This command adds the same functionality to `inso`, in order to run linting during CI workflows. Lint results will be printed to the console, and `inso` will exit with an appropriate exit code.
+Designer has the ability to lint and validate your OpenAPI specification as you write it. This command adds the same functionality to `inso` , in order to run linting during CI workflows. Lint results will be printed to the console, and `inso` will exit with an appropriate exit code.
 
 #### `[identifier]`
+
 This can be a **document name, or id**. If unspecified, inso will prompt you with a searchable list of all documents (and the database ids) it has found in its data source.
 
-<details>
-<summary>Examples</summary>
+#### Examples
 
 When running in the [git-repo](/src/db/__fixtures__/git-repo) directory
-```sh
+
+``` sh
 inso lint spec # Will prompt
 
 inso lint spec spc_46c5a4
 
 inso lint spec "Sample Specification"
 ```
-</details>
 
+### `$ inso run test [options] [identifier]`
 
+API Unit Testing was introduced with Designer 2020.3.0, and this command adds the functionality to execute those unit tests via the command line, very useful for a CI environment. `inso` will report on test results, and exit with an appropriate exit code.
+
+#### `[identifier]`
+
+This can be the **name or id** of a **workspace, document, or unit test suite**. If unspecified, inso will prompt you with a searchable list of all documents and test suites (and the database ids) it has found in its data source.
+
+The test runner is built on top of Mocha, thus many of the options behave as they would in Mocha. The options currently supported are:
+
+|Option|Alias|Description|
+|- |- |- |
+| `--env <identifier>` | `-e` |the environment to use - an environment name or id |
+| `--reporter <value>` | `-r` |reporter to use, options are `dot, list, spec, min and progress` (default: `spec` )|
+| `--test-name-pattern <regex>` | `-t` | run tests that match the regex|
+| `--bail` | `-b` | abort ("bail") after the first test failure|
+| `--keep-file` | | do not delete the generated test file (useful for debugging)|
+
+#### Examples
+
+When running in the [git-repo](/src/db/__fixtures__/git-repo) directory.
+
+```sh
+inso run test # Will prompt
+
+# By document
+inso run test "Sample Specification" --env "OpenAPI env"
+inso run test spc_46c5a4 --env env_env_ca046a
+
+# By suite
+inso run test "Math Suite" --env "OpenAPI env"
+inso run test uts-7f0f85 --env env_env_ca046a
+
+inso run test "Sample Specification" --test-name-pattern Math --env env_env_ca046a
+inso run test spc_46c5a4 --reporter progress --bail --keep-file
+```
+
+More examples [here](https://github.com/Kong/insomnia/pull/2338).
 
 ## Development
 
