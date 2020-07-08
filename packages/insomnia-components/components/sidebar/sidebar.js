@@ -13,6 +13,7 @@ import Dropdown from '../dropdown/dropdown';
 import DropdownItem from '../dropdown/dropdown-item';
 import DropdownDivider from '../dropdown/dropdown-divider';
 import SvgIcon, { IconEnum } from '../svg-icon';
+import { useToggleState } from '../hooks';
 
 type Props = {|
   className?: string,
@@ -153,13 +154,6 @@ function Sidebar(props: Props) {
   const [infoSec, setInfoSec] = useState(false);
   const toggleInfoSec = useToggle(infoSec, setInfoSec);
 
-  // Servers
-  const [serversSec, setServersSec] = useState(false);
-  const toggleServersSec = useToggle(serversSec, setServersSec);
-  const [serversFilter, setServersFilter] = useState(false);
-  const toggleServersFilter = useToggle(serversFilter, setServersFilter);
-  const [serverFilter, setServerFilter] = useState('');
-
   // Paths
   const [pathsSec, setPathsSec] = useState(false);
   const togglePathsSec = useToggle(pathsSec, setPathsSec);
@@ -216,8 +210,7 @@ function Sidebar(props: Props) {
     setPathsVisible(!pathsVisible);
   };
 
-  const [serversVisible, setServersVisible] = useState(true);
-  const handleServersVisibleClick = useToggle(serversVisible, setServersVisible);
+  const [serversVisible, toggleServerVisibility] = useToggleState(true);
 
   const [requestsVisible, setRequestsVisible] = useState(true);
   const handleRequestsVisibleClick = useToggle(requestsVisible, setRequestsVisible);
@@ -247,7 +240,6 @@ function Sidebar(props: Props) {
 
   const handleOnChange = (targetFilter: Function) => (e: SyntheticInputEvent<HTMLInputElement>) => {
     targetFilter(e.target.value);
-    setServerFilter(e.target.value);
   };
 
   return (
@@ -259,7 +251,7 @@ function Sidebar(props: Props) {
             <DropdownItem>
               <input
                 type="checkbox"
-                onClick={handleServersVisibleClick}
+                onClick={toggleServerVisibility}
                 defaultChecked={serversVisible}
               />
               <label htmlFor="servers">Servers</label>
@@ -346,24 +338,7 @@ function Sidebar(props: Props) {
           )}
         </SidebarPanel>
       </StyledSection>
-      {serversVisible && servers && (
-        <StyledSection>
-          <SidebarHeader
-            headerTitle="SERVERS"
-            section={serversSec}
-            toggleSection={toggleServersSec}
-            toggleFilter={toggleServersFilter}
-            transitionStyle={panelMotion}
-          />
-          <SidebarPanel parent={serversSec}>
-            <SidebarFilter
-              filter={serversFilter}
-              transitionStyle={panelMotion}
-              onChange={handleOnChange(setServersFilter)}></SidebarFilter>
-            <SidebarServers servers={servers} filter={serverFilter}></SidebarServers>
-          </SidebarPanel>
-        </StyledSection>
-      )}
+      {serversVisible && servers && <SidebarServers servers={servers} />}
       {pathsVisible && paths && (
         <StyledSection>
           <SidebarHeader
@@ -477,8 +452,8 @@ function Sidebar(props: Props) {
               onChange={handleOnChange(setResponsesFilter)}></SidebarFilter>
             <SidebarResponses
               responses={responses}
-              filter={serverFilter}
-              filter={serverFilter}></SidebarResponses>
+              filter={responseFilter}
+              filter={responseFilter}></SidebarResponses>
             {Object.keys(responses).map(response => (
               <React.Fragment key={response}>
                 {response.toLowerCase().includes(responseFilter) && (
