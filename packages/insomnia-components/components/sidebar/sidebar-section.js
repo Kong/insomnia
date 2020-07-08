@@ -6,7 +6,7 @@ import SidebarPanel from './sidebar-panel';
 import SidebarFilter from './sidebar-filter';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { useToggleState } from '../hooks';
+import { useToggle } from 'react-use';
 
 type SectionProps = {
   title: string,
@@ -20,8 +20,8 @@ const StyledSection: React.ComponentType<{}> = styled(motion.ul)`
 `;
 
 const SidebarSection = ({ title, renderBody }: SectionProps) => {
-  const [bodyVisible, toggleBodyVisible] = useToggleState(false);
-  const [filterVisible, toggleFilterVisible] = useToggleState(false);
+  const [bodyVisible, toggleBodyVisible] = useToggle(false);
+  const [filterVisible, toggleFilterVisible] = useToggle(false);
   const [filterValue, setFilterValue] = React.useState('');
 
   const handleFilterChange = React.useCallback((e: SyntheticInputEvent<HTMLInputElement>) => {

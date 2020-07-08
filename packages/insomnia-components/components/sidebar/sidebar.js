@@ -13,7 +13,6 @@ import Dropdown from '../dropdown/dropdown';
 import DropdownItem from '../dropdown/dropdown-item';
 import DropdownDivider from '../dropdown/dropdown-divider';
 import SvgIcon, { IconEnum } from '../svg-icon';
-import { useToggleState } from '../hooks';
 
 type Props = {|
   className?: string,
@@ -159,49 +158,49 @@ function Sidebar(props: Props) {
   const togglePathsSec = useToggle(pathsSec, setPathsSec);
   const [pathsFilter, setPathsFilter] = useState(false);
   const togglePathsFilter = useToggle(pathsFilter, setPathsFilter);
-  const [pathFilter, setPathFilter] = useState('');
+  const [pathFilter] = useState('');
 
   // Schemas
   const [schemasSec, setSchemasSec] = useState(false);
   const toggleSchemasSec = useToggle(schemasSec, setSchemasSec);
   const [schemasFilter, setSchemasFilter] = useState(false);
   const toggleSchemasFilter = useToggle(schemasFilter, setSchemasFilter);
-  const [schemaFilter, setSchemaFilter] = useState('');
+  const [schemaFilter] = useState('');
 
   // Requests
   const [requestsSec, setRequestsSec] = useState(false);
   const toggleRequestsSec = useToggle(requestsSec, setRequestsSec);
   const [requestsFilter, setRequestsFilter] = useState(false);
   const toggleRequestsFilter = useToggle(requestsFilter, setRequestsFilter);
-  const [requestFilter, setRequestFilter] = useState('');
+  const [requestFilter] = useState('');
 
   // Responses
   const [responsesSec, setResponsesSec] = useState(false);
   const toggleResponsesSec = useToggle(responsesSec, setResponsesSec);
   const [responsesFilter, setResponsesFilter] = useState(false);
   const toggleResponsesFilter = useToggle(responsesFilter, setResponsesFilter);
-  const [responseFilter, setResponseFilter] = useState('');
+  const [responseFilter] = useState('');
 
   // Parameters
   const [parametersSec, setParametersSec] = useState(false);
   const toggleParametersSec = useToggle(parametersSec, setParametersSec);
   const [parametersFilter, setParametersFilter] = useState(false);
   const toggleParametersFilter = useToggle(parametersFilter, setParametersFilter);
-  const [parameterFilter, setParameterFilter] = useState('');
+  const [parameterFilter] = useState('');
 
   // Headers
   const [headersSec, setHeadersSec] = useState(false);
   const toggleHeadersSec = useToggle(headersSec, setHeadersSec);
   const [headersFilter, setHeadersFilter] = useState(false);
   const toggleHeadersFilter = useToggle(headersFilter, setHeadersFilter);
-  const [headerFilter, setHeaderFilter] = useState('');
+  const [headerFilter] = useState('');
 
   // Security
   const [securitiesSec, setSecuritiesSec] = useState(false);
   const toggleSecuritiesSec = useToggle(securitiesSec, setSecuritiesSec);
   const [securitiesFilter, setSecuritiesFilter] = useState(false);
   const toggleSecuritiesFilter = useToggle(securitiesFilter, setSecuritiesFilter);
-  const [securityFilter, setSecurityFilter] = useState('');
+  const [securityFilter] = useState('');
 
   // Section Visibility
   const [pathsVisible, setPathsVisible] = useState(true);
@@ -210,7 +209,8 @@ function Sidebar(props: Props) {
     setPathsVisible(!pathsVisible);
   };
 
-  const [serversVisible, toggleServerVisibility] = useToggleState(true);
+  const [serversVisible, setServersVisible] = useState(true);
+  const handleServersVisibleClick = useToggle(serversVisible, setServersVisible);
 
   const [requestsVisible, setRequestsVisible] = useState(true);
   const handleRequestsVisibleClick = useToggle(requestsVisible, setRequestsVisible);
@@ -251,7 +251,7 @@ function Sidebar(props: Props) {
             <DropdownItem>
               <input
                 type="checkbox"
-                onClick={toggleServerVisibility}
+                onClick={handleServersVisibleClick}
                 defaultChecked={serversVisible}
               />
               <label htmlFor="servers">Servers</label>
