@@ -5,7 +5,7 @@ import { getBodyBuffer } from '../models/response';
 
 export async function getSendRequestCallbackMemDb(environmentId, memDB) {
   // Initialize the DB in-memory and fill it with data if we're given one
-  await db.init(modelTypes(), { inMemoryOnly: true }, true);
+  await db.init(modelTypes(), { inMemoryOnly: true }, true, () => {});
 
   const docs = [];
   for (const type of Object.keys(memDB)) {

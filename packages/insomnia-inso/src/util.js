@@ -5,6 +5,7 @@ import * as packageJson from '../package.json';
 export type GlobalOptions = {
   appDataDir?: string,
   workingDir?: string,
+  ci?: boolean,
 };
 
 export function createCommand(exitOverride: boolean, cmd?: string) {
@@ -43,4 +44,14 @@ export function logErrorExit1(err: Error) {
 
 export async function exit(result: Promise<boolean>): Promise<void> {
   return result.then(r => process.exit(r ? 0 : 1)).catch(logErrorExit1);
+}
+
+export function getDefaultAppDataDir(): string {
+  const dir = process.env.DEFAULT_APP_DATA_DIR;
+
+  if (!dir) {
+    throw new Error('Environment variable DEFAULT_APP_DATA_DIR is not set.');
+  }
+
+  return dir;
 }
