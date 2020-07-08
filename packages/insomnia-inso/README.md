@@ -12,7 +12,7 @@ A CLI to accompany <a href="https://insomnia.rest">Insomnia Designer</a>
 
 `inso` will first try to find a `.insomnia` directory in it's working directory. This directory is generated in a git repository when using git sync in Designer. When `inso` is used in a CI environment, it will always run against the `.insomnia` directory.
 
-If `inso` cannot find the `.insomnia` directory, it will try to run against the Designer app data directory (if found). You can override both the working directory, and the app data directory, using the global options shown above.
+If `inso` cannot find the `.insomnia` directory, it will try to run against the Designer app data directory (if found). You can override both the working directory, and the app data directory, using the `--working-dir` and `--app-data-dir` global options.
 
 ## The `[identifier]` argument
 
