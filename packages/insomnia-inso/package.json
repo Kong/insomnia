@@ -4,6 +4,11 @@
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnia Designer - the collaborative API design tool.",
   "author": "Kong <office@konghq.com>",
+  "license": "Apache2",
+  "repository": "https://github.com/kong/insomnia/tree/develop/packages/insomnia-inso",
+  "bugs": {
+    "url": "https://github.com/kong/insomnia"
+  },
   "bin": {
     "inso": "bin/inso"
   },
