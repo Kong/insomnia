@@ -153,61 +153,54 @@ function Sidebar(props: Props) {
   const [infoSec, setInfoSec] = useState(false);
   const toggleInfoSec = useToggle(infoSec, setInfoSec);
 
-  // Servers
-  const [serversSec, setServersSec] = useState(false);
-  const toggleServersSec = useToggle(serversSec, setServersSec);
-  const [serversFilter, setServersFilter] = useState(false);
-  const toggleServersFilter = useToggle(serversFilter, setServersFilter);
-  const [serverFilter, setServerFilter] = useState('');
-
   // Paths
   const [pathsSec, setPathsSec] = useState(false);
   const togglePathsSec = useToggle(pathsSec, setPathsSec);
   const [pathsFilter, setPathsFilter] = useState(false);
   const togglePathsFilter = useToggle(pathsFilter, setPathsFilter);
-  const [pathFilter, setPathFilter] = useState('');
+  const [pathFilter] = useState('');
 
   // Schemas
   const [schemasSec, setSchemasSec] = useState(false);
   const toggleSchemasSec = useToggle(schemasSec, setSchemasSec);
   const [schemasFilter, setSchemasFilter] = useState(false);
   const toggleSchemasFilter = useToggle(schemasFilter, setSchemasFilter);
-  const [schemaFilter, setSchemaFilter] = useState('');
+  const [schemaFilter] = useState('');
 
   // Requests
   const [requestsSec, setRequestsSec] = useState(false);
   const toggleRequestsSec = useToggle(requestsSec, setRequestsSec);
   const [requestsFilter, setRequestsFilter] = useState(false);
   const toggleRequestsFilter = useToggle(requestsFilter, setRequestsFilter);
-  const [requestFilter, setRequestFilter] = useState('');
+  const [requestFilter] = useState('');
 
   // Responses
   const [responsesSec, setResponsesSec] = useState(false);
   const toggleResponsesSec = useToggle(responsesSec, setResponsesSec);
   const [responsesFilter, setResponsesFilter] = useState(false);
   const toggleResponsesFilter = useToggle(responsesFilter, setResponsesFilter);
-  const [responseFilter, setResponseFilter] = useState('');
+  const [responseFilter] = useState('');
 
   // Parameters
   const [parametersSec, setParametersSec] = useState(false);
   const toggleParametersSec = useToggle(parametersSec, setParametersSec);
   const [parametersFilter, setParametersFilter] = useState(false);
   const toggleParametersFilter = useToggle(parametersFilter, setParametersFilter);
-  const [parameterFilter, setParameterFilter] = useState('');
+  const [parameterFilter] = useState('');
 
   // Headers
   const [headersSec, setHeadersSec] = useState(false);
   const toggleHeadersSec = useToggle(headersSec, setHeadersSec);
   const [headersFilter, setHeadersFilter] = useState(false);
   const toggleHeadersFilter = useToggle(headersFilter, setHeadersFilter);
-  const [headerFilter, setHeaderFilter] = useState('');
+  const [headerFilter] = useState('');
 
   // Security
   const [securitiesSec, setSecuritiesSec] = useState(false);
   const toggleSecuritiesSec = useToggle(securitiesSec, setSecuritiesSec);
   const [securitiesFilter, setSecuritiesFilter] = useState(false);
   const toggleSecuritiesFilter = useToggle(securitiesFilter, setSecuritiesFilter);
-  const [securityFilter, setSecurityFilter] = useState('');
+  const [securityFilter] = useState('');
 
   // Section Visibility
   const [pathsVisible, setPathsVisible] = useState(true);
@@ -247,7 +240,6 @@ function Sidebar(props: Props) {
 
   const handleOnChange = (targetFilter: Function) => (e: SyntheticInputEvent<HTMLInputElement>) => {
     targetFilter(e.target.value);
-    setServerFilter(e.target.value);
   };
 
   return (
@@ -346,24 +338,7 @@ function Sidebar(props: Props) {
           )}
         </SidebarPanel>
       </StyledSection>
-      {serversVisible && servers && (
-        <StyledSection>
-          <SidebarHeader
-            headerTitle="SERVERS"
-            section={serversSec}
-            toggleSection={toggleServersSec}
-            toggleFilter={toggleServersFilter}
-            transitionStyle={panelMotion}
-          />
-          <SidebarPanel parent={serversSec}>
-            <SidebarFilter
-              filter={serversFilter}
-              transitionStyle={panelMotion}
-              onChange={handleOnChange(setServersFilter)}></SidebarFilter>
-            <SidebarServers servers={servers} filter={serverFilter}></SidebarServers>
-          </SidebarPanel>
-        </StyledSection>
-      )}
+      {serversVisible && servers && <SidebarServers servers={servers} />}
       {pathsVisible && paths && (
         <StyledSection>
           <SidebarHeader
@@ -477,8 +452,8 @@ function Sidebar(props: Props) {
               onChange={handleOnChange(setResponsesFilter)}></SidebarFilter>
             <SidebarResponses
               responses={responses}
-              filter={serverFilter}
-              filter={serverFilter}></SidebarResponses>
+              filter={responseFilter}
+              filter={responseFilter}></SidebarResponses>
             {Object.keys(responses).map(response => (
               <React.Fragment key={response}>
                 {response.toLowerCase().includes(responseFilter) && (

@@ -2944,7 +2944,11 @@ const apiSpec = {
   security: [],
 };
 
-export const _default = () => <Sidebar jsonData={apiSpec} />;
+export const _default = () => (
+  <div style={{ width: '400px' }}>
+    <Sidebar jsonData={apiSpec} />
+  </div>
+);
 
 _default.story = {
   parameters: {

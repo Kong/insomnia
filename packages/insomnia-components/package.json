@@ -28,6 +28,7 @@
     "babel-plugin-inline-react-svg": "^1.1.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
+    "react-use": "^15.3.2",
     "storybook-addon-designs": "^5.2.0",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
