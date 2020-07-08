@@ -20,8 +20,7 @@ Typically, Insomnia database id's are quite long, for example: `wrk_012d4860c7da
 
 Additionally, if the `[identifier]` argument is ommitted from the command, `inso` will search in the database for the information it needs, and prompt the user. Prompts can be disabled with the `--ci` global option.
 
-![](/packages/insomnia-inso/assets/ci-demo.gif)
-![](/assets/ci-demo.gif)
+![](https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/ci-demo.gif)
 
 ## Commands
 
