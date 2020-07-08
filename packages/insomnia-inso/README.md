@@ -1,7 +1,8 @@
+# `inso`
+
+A CLI to accompany <a href="https://insomnia.rest">Insomnia Designer</a>
+
 <div align="center">
-  <h1><code>inso</code></h1>
-  A CLI to accompany <a href="https://insomnia.rest">Insomnia Designer</a>
-  <br />
   <pre>npm i -g <a href="https://www.npmjs.com/package/insomnia-inso">insomnia-inso</a></pre>
 </div>
 
