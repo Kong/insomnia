@@ -24,12 +24,9 @@ const SidebarSection = ({ title, renderBody }: SectionProps) => {
   const [filterVisible, toggleFilterVisible] = useToggleState(false);
   const [filterValue, setFilterValue] = React.useState('');
 
-  const handleFilterChange = React.useCallback(
-    (e: SyntheticInputEvent<HTMLInputElement>) => {
-      setFilterValue(e.target.value);
-    },
-    [setFilterValue],
-  );
+  const handleFilterChange = React.useCallback((e: SyntheticInputEvent<HTMLInputElement>) => {
+    setFilterValue(e.target.value);
+  }, []);
 
   return (
     <StyledSection>
