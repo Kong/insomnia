@@ -1,5 +1,4 @@
 # `inso`
-
 A CLI to accompany <a href="https://insomnia.rest">Insomnia Designer</a>
 
 <div align="center">
@@ -16,23 +15,23 @@ If `inso` cannot find the `.insomnia` directory, it will try to run against the 
 
 ## The `[identifier]` argument
 
-Typically, Insomnia database id's are quite long, for example: `wrk_012d4860c7da418a85ffea7406e1292a`. When specifying an identifier for `inso`, similar to Git hashes, you may choose to concatenate and use the first x characters (for example, `wrk_012d486` ), which is very likely to be unique. If in the rare chance the short id is _not_ unique against the data, `inso` will inform as such.
+Typically, Insomnia database id's are quite long, for example: `wrk_012d4860c7da418a85ffea7406e1292a` . When specifying an identifier for `inso` , similar to Git hashes, you may choose to concatenate and use the first x characters (for example, `wrk_012d486` ), which is very likely to be unique. If in the rare chance the short id is _not_ unique against the data, `inso` will inform as such.
 
 Additionally, if the `[identifier]` argument is ommitted from the command, `inso` will search in the database for the information it needs, and prompt the user. Prompts can be disabled with the `--ci` global option.
 
-![](https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/ci-demo.gif)
+![https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/ci-demo.gif](https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/ci-demo.gif)
 
 ## Commands
 
 ### `$ inso [global options] [command]`
 
-|Global option|Alias|Description|
-|- |- |- |
-| `--working-dir <dir>` | `-w` |set working directory|
-| `--app-data-dir <dir>` | `-a` |set the app data directory|
-| `--ci` | | run in CI, disables all prompts |
-| `--version` | `-v` |output the version number|
-| `--help` | `-h` |display help for a command|
+| Global option          | Alias | Description                     |
+| ---------------------- | ----- | ------------------------------- |
+| `--working-dir <dir>` | `-w` | set working directory           |
+| `--app-data-dir <dir>` | `-a` | set the app data directory      |
+| `--ci` |       | run in CI, disables all prompts |
+| `--version` | `-v` | output the version number       |
+| `--help` | `-h` | display help for a command      |
 
 ### `$ inso generate config [options] [identifier]`
 
@@ -40,16 +39,17 @@ Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-k
 
 **`[identifier]`**: this can be a **document name, id, or a file path** relative to the working directory.
 
-|Option|Alias|Description|
-|- |- |- |
-| `--type <type>` | `-t` |type of configuration to generate, options are `kubernetes` and `declarative` (default: `declarative` ) |
-| `--output <path>` | `-o` |save the generated config to a file in the working directory|
+| Option            | Alias | Description                                                                                             |
+| ----------------- | ----- | ------------------------------------------------------------------------------------------------------- |
+| `--type <type>` | `-t` | type of configuration to generate, options are `kubernetes` and `declarative` (default: `declarative` ) |
+| `--output <path>` | `-o` | save the generated config to a file in the working directory                                            |
 
-#### Examples
+<details>
+  <summary>Examples</summary>
 
-When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory
+When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory.
 
-```
+``` 
 inso generate config
 
 inso generate config spc_46c5a4 --type declarative
@@ -63,6 +63,8 @@ inso generate config "Sample Specification" --type kubernetes
 inso generate config spec.yaml --working-dir another/dir
 ```
 
+</details>
+
 ### `$ inso lint spec [identifier]`
 
 Designer has the ability to lint and validate your OpenAPI specification as you write it. This command adds the same functionality to `inso` , in order to run linting during CI workflows. Lint results will be printed to the console, and `inso` will exit with an appropriate exit code.
@@ -73,7 +75,7 @@ Designer has the ability to lint and validate your OpenAPI specification as you 
 
 When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory
 
-```
+``` 
 inso lint spec
 
 inso lint spec spc_46c5a4
@@ -89,19 +91,21 @@ API Unit Testing was introduced with Designer 2020.3.0, and this command adds th
 
 The test runner is built on top of Mocha, thus many of the options behave as they would in Mocha. The options currently supported are:
 
-|Option|Alias|Description|
-|- |- |- |
-| `--env <identifier>` | `-e` |the environment to use - an environment name or id |
-| `--reporter <value>` | `-r` |reporter to use, options are `dot, list, spec, min and progress` (default: `spec` )|
-| `--test-name-pattern <regex>` | `-t` | run tests that match the regex|
-| `--bail` | `-b` | abort ("bail") after the first test failure|
-| `--keep-file` | | do not delete the generated test file (useful for debugging)|
+| Option                        | Alias | Description                                                                         |
+| ----------------------------- | ----- | ----------------------------------------------------------------------------------- |
+| `--env <identifier>` | `-e` | the environment to use - an environment name or id                                  |
+| `--reporter <value>` | `-r` | reporter to use, options are `dot, list, spec, min and progress` (default: `spec` ) |
+| `--test-name-pattern <regex>` | `-t` | run tests that match the regex                                                      |
+| `--bail` | `-b` | abort ("bail") after the first test failure                                         |
+| `--keep-file` |       | do not delete the generated test file (useful for debugging)                        |
+
+<se
 
 #### Examples
 
 When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory.
 
-```
+``` 
 inso run test
 
 # By document
