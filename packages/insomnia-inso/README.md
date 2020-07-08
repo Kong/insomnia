@@ -49,8 +49,8 @@ Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-k
 
 When running in the [git-repo](/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory
 
-``` sh
-inso generate config # Will prompt
+```
+inso generate config
 
 inso generate config spc_46c5a4 --type declarative
 
@@ -73,8 +73,8 @@ Designer has the ability to lint and validate your OpenAPI specification as you 
 
 When running in the [git-repo](/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory
 
-``` sh
-inso lint spec # Will prompt
+```
+inso lint spec
 
 inso lint spec spc_46c5a4
 
@@ -101,8 +101,8 @@ The test runner is built on top of Mocha, thus many of the options behave as the
 
 When running in the [git-repo](/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory.
 
-```sh
-inso run test # Will prompt
+```
+inso run test
 
 # By document
 inso run test "Sample Specification" --env "OpenAPI env"
