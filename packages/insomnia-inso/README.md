@@ -38,9 +38,7 @@ Additionally, if the `[identifier]` argument is ommitted from the command, `inso
 
 Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-kong-kubernetes-config) and [Declarative](https://insomnia.rest/plugins/insomnia-plugin-kong-declarative-config) config plugins for Designer, this command can generate configuration from an API specification, using [openapi-2-kong](https://www.npmjs.com/package/openapi-2-kong).
 
-#### `[identifier]`
-
-This can be a **document name, id, or a file path** relative to the working directory. If unspecified, inso will prompt you with a searchable list of all documents (and the database ids) it has found in its data source.
+**`[identifier]`**: this can be a **document name, id, or a file path** relative to the working directory.
 
 |Option|Alias|Description|
 |- |- |- |
@@ -69,9 +67,7 @@ inso generate config spec.yaml --working-dir another/dir
 
 Designer has the ability to lint and validate your OpenAPI specification as you write it. This command adds the same functionality to `inso` , in order to run linting during CI workflows. Lint results will be printed to the console, and `inso` will exit with an appropriate exit code.
 
-#### `[identifier]`
-
-This can be a **document name, or id**. If unspecified, inso will prompt you with a searchable list of all documents (and the database ids) it has found in its data source.
+**`[identifier]`**: this can be a **document name, or id**.
 
 #### Examples
 
@@ -89,9 +85,7 @@ inso lint spec "Sample Specification"
 
 API Unit Testing was introduced with Designer 2020.3.0, and this command adds the functionality to execute those unit tests via the command line, very useful for a CI environment. `inso` will report on test results, and exit with an appropriate exit code.
 
-#### `[identifier]`
-
-This can be the **name or id** of a **workspace, document, or unit test suite**. If unspecified, inso will prompt you with a searchable list of all documents and test suites (and the database ids) it has found in its data source.
+**`[identifier]`**: this can be the **name or id** of a **workspace, document, or unit test suite**.
 
 The test runner is built on top of Mocha, thus many of the options behave as they would in Mocha. The options currently supported are:
 
