@@ -36,14 +36,15 @@ Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-k
 | `--type <type>` | `-t` |type of configuration to generate, options are `kubernetes` and `declarative` (default: `declarative`) |
 | `--output <path>` | `-o` |save the generated config to a file in the working directory|
 
-The `identifier` argument is optional. It can be the API Specification name, or ID, or a file path relative to the working directory. If it is not specified, `inso` will prompt you with a searchable list of all API specifications (and database ids) it has found in its data source.
+#### `[identifier]`
+This can be a **document name, id, or a file path** relative to the working directory. If unspecified, inso will prompt you with a searchable list of all documents (and the database ids) it has found in its data source.
 
 <details>
 <summary>Examples</summary>
 
-When running against the [git-repo](/src/db/__fixtures__/git-repo) directory
+When running in the [git-repo](/src/db/__fixtures__/git-repo) directory
 ```sh
-inso generate config # Will prompt for spec
+inso generate config # Will prompt
 
 inso generate config spc_46c5a4 --type declarative
 
@@ -57,11 +58,29 @@ inso generate config spec.yaml --working-dir another/dir
 ```
 </details>
 
-### `$ inso lint spec [options] [identifier]`
+### `$ inso lint spec [identifier]`
+
+Designer has the ability to lint and validate your OpenAPI specification as you write it. This command adds the same functionality to `inso`, in order to run linting during CI workflows. Lint results will be printed to the console, and `inso` will exit with an appropriate exit code.
+
+#### `[identifier]`
+This can be a **document name, or id**. If unspecified, inso will prompt you with a searchable list of all documents (and the database ids) it has found in its data source.
+
+<details>
+<summary>Examples</summary>
+
+When running in the [git-repo](/src/db/__fixtures__/git-repo) directory
+```sh
+inso lint spec # Will prompt
+
+inso lint spec spc_46c5a4
+
+inso lint spec "Sample Specification"
+```
+</details>
 
 
 
-### Development
+## Development
 
 * Bootstrap: `npm run bootstrap`
 * Start the compiler in watch mode: `npm run watch`
