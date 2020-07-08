@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 type Props = {
   filter: boolean,
   children?: React.Node,
-  transitionStyle: Object,
   onChange?: (e: SyntheticInputEvent<HTMLInputElement>) => any,
 };
 
@@ -37,11 +36,10 @@ const StyledFilter: React.ComponentType<{}> = styled(motion.div)`
   }
 `;
 
-const SidebarFilter = ({ filter, children, transitionStyle, onChange }: Props) => (
+const SidebarFilter = ({ filter, children, onChange }: Props) => (
   <StyledFilter
     initial={{ height: filter ? '100%' : '0px' }}
-    animate={{ height: filter ? '100%' : '0px' }}
-    transition={transitionStyle}>
+    animate={{ height: filter ? '100%' : '0px' }}>
     <input type="text" placeholder="Filter..." onChange={onChange} />
     {children}
   </StyledFilter>

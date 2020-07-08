@@ -1,6 +1,5 @@
 // @flow
 import * as React from 'react';
-
 import SidebarHeader from './sidebar-header';
 import SidebarPanel from './sidebar-panel';
 import SidebarFilter from './sidebar-filter';
@@ -37,11 +36,7 @@ const SidebarSection = ({ title, renderBody }: SectionProps) => {
         toggleFilter={toggleFilterVisible}
       />
       <SidebarPanel parent={bodyVisible}>
-        <SidebarFilter
-          filter={filterVisible}
-          onChange={handleFilterChange}
-          transitionStyle={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}
-        />
+        <SidebarFilter filter={filterVisible} onChange={handleFilterChange} />
         {renderBody(filterValue)}
       </SidebarPanel>
     </StyledSection>

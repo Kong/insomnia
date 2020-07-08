@@ -55,8 +55,7 @@ const SidebarHeader = ({ headerTitle, toggleSection, toggleFilter, section, chil
         <motion.span
           onClick={toggleFilter}
           initial={{ opacity: section ? 0.6 : 0 }}
-          animate={{ opacity: section ? 0.6 : 0 }}
-          transition={{ duration: 0.2, ease: 'easeInOut', delay: 0.15 }}>
+          animate={{ opacity: section ? 0.6 : 0 }}>
           <SvgIcon icon={IconEnum.search} />
         </motion.span>
       )}

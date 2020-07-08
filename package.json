@@ -68,5 +68,7 @@
     "prettier": "^1.16.4",
     "rimraf": "^2.6.3"
   },
-  "dependencies": {}
+  "dependencies": {
+    "react-use": "^15.3.2"
+  }
 }

@@ -1,32 +1,27 @@
 // @flow
 import * as React from 'react';
-import Tooltip from '../tooltip';
 import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
 
 type Props = {
-  responses: Object,
+  schemas: Object,
 };
 
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
-export default class SidebarResponses extends React.Component<Props> {
+export default class SidebarSchemas extends React.Component<Props> {
   renderBody = (filter: string) => (
     <div>
-      {Object.keys(this.props.responses).map(response => (
-        <React.Fragment key={response}>
-          {response.toLowerCase().includes(filter) && (
+      {Object.keys(this.props.schemas).map(schema => (
+        <React.Fragment key={schema}>
+          {schema.toLowerCase().includes(filter) && (
             <SidebarItem>
               <div></div>
               <div>
-                <SvgIcon icon={IconEnum.indentation} />
+                <SvgIcon icon={IconEnum.brackets} />
               </div>
-              <span>
-                <Tooltip message={this.props.responses[response].description} position="right">
-                  {response}
-                </Tooltip>
-              </span>
+              <span>{schema}</span>
             </SidebarItem>
           )}
         </React.Fragment>
@@ -35,6 +30,6 @@ export default class SidebarResponses extends React.Component<Props> {
   );
 
   render() {
-    return <SidebarSection title="RESPONSES" renderBody={this.renderBody} />;
+    return <SidebarSection title="SCHEMAS" renderBody={this.renderBody} />;
   }
 }
