@@ -20,8 +20,7 @@ Typically, Insomnia database id's are quite long, for example: `wrk_012d4860c7da
 
 Additionally, if the `[identifier]` argument is ommitted from the command, `inso` will search in the database for the information it needs, and prompt the user. Prompts can be disabled with the `--ci` global option.
 
-![](/packages/insomnia-inso/assets/ci-demo.gif)
-![](/assets/ci-demo.gif)
+![](https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/ci-demo.gif)
 
 ## Commands
 
@@ -48,7 +47,7 @@ Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-k
 
 #### Examples
 
-When running in the [git-repo](/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory
+When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory
 
 ```
 inso generate config
@@ -72,7 +71,7 @@ Designer has the ability to lint and validate your OpenAPI specification as you 
 
 #### Examples
 
-When running in the [git-repo](/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory
+When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory
 
 ```
 inso lint spec
@@ -100,7 +99,7 @@ The test runner is built on top of Mocha, thus many of the options behave as the
 
 #### Examples
 
-When running in the [git-repo](/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory.
+When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo) directory.
 
 ```
 inso run test
