@@ -229,10 +229,7 @@ function FilterInput(props) {
   );
 }
 
-
-
 function Sidebar(props: Props) {
-
   // Section Expansion & Filtering
   const useToggle = (state, set) => React.useCallback(() => set(!state), [set, state]);
 
@@ -297,7 +294,6 @@ function Sidebar(props: Props) {
   const [securityFilter, setSecurityFilter] = useState('');
 
   // Section Visibility
-
 
   const [pathsVisible, setPathsVisible] = useState(true);
   const handlePathsVisibleClick = e => {
