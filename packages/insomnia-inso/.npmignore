@@ -5,4 +5,3 @@
 
 # Don't ignore dist folder
 !dist/*
-!assets/*
