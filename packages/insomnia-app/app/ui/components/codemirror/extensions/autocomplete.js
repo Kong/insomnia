@@ -184,10 +184,16 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
  * @returns {Promise.<{list: Array, from, to}>}
  */
 function hint(cm, options) {
-  const variablesToMatch = options.variables || [];
-  const constantsToMatch = options.constants || [];
-  const snippetsToMatch = options.snippets || [];
-  const tagsToMatch = options.tags || [];
+  // Add type to all things (except constants, which need to convert to an object)
+  const variablesToMatch = (options.variables || []).map(v => ({ ...v, type: TYPE_VARIABLE }));
+  const snippetsToMatch = (options.snippets || []).map(v => ({ ...v, type: TYPE_SNIPPET }));
+  const tagsToMatch = (options.tags || []).map(v => ({ ...v, type: TYPE_TAG }));
+  const constantsToMatch = (options.constants || []).map(s => ({
+    name: s,
+    value: s,
+    displayValue: '', // No display since name === value
+    type: TYPE_CONSTANT,
+  }));
 
   // Get the text from the cursor back
   const cur = cm.getCursor();
@@ -372,12 +378,19 @@ function matchSegments(listOfThings, segment, type, limit = -1) {
 
     // Generate the value we'll fill it with
     let defaultFill;
-    if (t.args) {
-      defaultFill = getDefaultFill(t.name, t.args);
-    } else if (t.value) {
+    if (t.type === TYPE_CONSTANT) {
       defaultFill = t.value;
+    } else if (t.type === TYPE_SNIPPET) {
+      defaultFill = t.value;
+    } else if (t.type === TYPE_VARIABLE) {
+      // Variables fill with variable name, not value (eg. {{ foo }})
+      // TODO: This is extremely confusing and does not make any sense so let's
+      //  refactor this to a single unified format for all types
+      defaultFill = t.name;
+    } else if (t.type === TYPE_TAG) {
+      defaultFill = getDefaultFill(t.name, t.args);
     } else {
-      defaultFill = name;
+      throw new Error('Unidentified autocomplete type: ' + t.type);
     }
 
     const matchSegment = segment.toLowerCase();
