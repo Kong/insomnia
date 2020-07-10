@@ -6,6 +6,7 @@ import fs from 'fs';
 import type { GlobalOptions } from '../util';
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
+import mkdirp from 'mkdirp';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
@@ -61,6 +62,7 @@ export async function generateConfig(
 
   if (output) {
     const fullOutputPath = path.join(workingDir || '.', output);
+    mkdirp.sync(path.dirname(fullOutputPath));
     await fs.promises.writeFile(fullOutputPath, document);
   } else {
     console.log(document);
