@@ -31,7 +31,7 @@ export async function exportSpecification(
 
     mkdirp.sync(path.dirname(fullOutputPath));
     await fs.promises.writeFile(fullOutputPath, specFromDb.contents);
-    console.log(`Specification exported to ${fullOutputPath}`);
+    console.log(`Specification exported to "${fullOutputPath}".`);
   } else {
     console.log(specFromDb.contents);
   }

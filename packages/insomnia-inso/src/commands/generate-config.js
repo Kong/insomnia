@@ -61,9 +61,15 @@ export async function generateConfig(
   const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
 
   if (output) {
-    const fullOutputPath = path.join(workingDir || '.', output);
+    const workingDirPath = path.join(workingDir || '.', output);
+    const fullOutputPath = path.extname(workingDirPath)
+      ? workingDirPath
+      : path.join(workingDirPath, specFromDb?.fileName || '.', `${type}.yaml`);
+
     mkdirp.sync(path.dirname(fullOutputPath));
     await fs.promises.writeFile(fullOutputPath, document);
+
+    console.log(`Generated to "${fullOutputPath}".`);
   } else {
     console.log(document);
   }

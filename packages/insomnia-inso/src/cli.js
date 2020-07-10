@@ -84,6 +84,9 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     args = process.argv;
   }
 
+  // Add a blank line below the command
+  console.log();
+
   // inso -v
   createCommand(!!exitOverride)
     .version(getVersion(), '-v, --version')
