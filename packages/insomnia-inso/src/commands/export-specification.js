@@ -2,9 +2,7 @@
 import type { GlobalOptions } from '../util';
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
-import path from 'path';
-import fs from 'fs';
-import mkdirp from 'mkdirp';
+import { writeFileWithCliOptions } from '../write-file';
 
 export type ExportSpecificationOptions = GlobalOptions & {
   output?: string,
@@ -24,14 +22,13 @@ export async function exportSpecification(
   }
 
   if (output) {
-    const workingDirPath = path.join(workingDir || '.', output);
-    const fullOutputPath = path.extname(workingDirPath)
-      ? workingDirPath
-      : path.join(workingDirPath, `${specFromDb.fileName}.${specFromDb.contentType}`);
-
-    mkdirp.sync(path.dirname(fullOutputPath));
-    await fs.promises.writeFile(fullOutputPath, specFromDb.contents);
-    console.log(`Specification exported to "${fullOutputPath}".`);
+    const outputPath = await writeFileWithCliOptions(
+      workingDir || '.',
+      output,
+      specFromDb.contents,
+      `${specFromDb.fileName}.${specFromDb.contentType}`,
+    );
+    console.log(`Specification exported to "${outputPath}".`);
   } else {
     console.log(specFromDb.contents);
   }
