@@ -2,11 +2,11 @@
 import * as electron from 'electron';
 import { Readable, Writable } from 'stream';
 import fuzzysort from 'fuzzysort';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import zlib from 'zlib';
 import { join as pathJoin } from 'path';
 import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
-import type { GlobalActivity } from '../ui/components/activity-bar/activity-bar';
+import type { GlobalActivity } from './constants';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 

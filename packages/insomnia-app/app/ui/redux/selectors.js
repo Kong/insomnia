@@ -324,6 +324,63 @@ export const selectActiveResponse = createSelector(
   },
 );
 
+export const selectActiveUnitTestResult = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspace,
+  (entities, activeWorkspace) => {
+    let recentResult = null;
+    for (const r of entities.unitTestResults) {
+      if (r.parentId !== activeWorkspace._id) {
+        continue;
+      }
+
+      if (!recentResult) {
+        recentResult = r;
+        continue;
+      }
+
+      if (r.created > recentResult.created) {
+        recentResult = r;
+      }
+    }
+
+    return recentResult;
+  },
+);
+
+export const selectActiveUnitTestSuite = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspaceMeta,
+  (entities, activeWorkspaceMeta) => {
+    if (!activeWorkspaceMeta) {
+      return null;
+    }
+
+    const id = activeWorkspaceMeta.activeUnitTestSuiteId;
+    return entities.unitTestSuites.find(s => s._id === id) || null;
+  },
+);
+
+export const selectActiveUnitTests = createSelector(
+  selectEntitiesLists,
+  selectActiveUnitTestSuite,
+  (entities, activeUnitTestSuite) => {
+    if (!activeUnitTestSuite) {
+      return [];
+    }
+
+    return entities.unitTests.filter(s => s.parentId === activeUnitTestSuite._id);
+  },
+);
+
+export const selectActiveUnitTestSuites = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspace,
+  (entities, activeWorkspace) => {
+    return entities.unitTestSuites.filter(s => s.parentId === activeWorkspace._id);
+  },
+);
+
 export const selectSyncItems = createSelector(selectActiveWorkspaceEntities, workspaceEntities =>
   workspaceEntities.filter(models.canSync).map(doc => ({
     key: doc._id,

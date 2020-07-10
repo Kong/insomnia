@@ -219,6 +219,7 @@ export function createWindow() {
       },
       {
         label: `Toggle ${MNEMONIC_SYM}DevTools`,
+        accelerator: 'Alt+CmdOrCtrl+I',
         click: () => mainWindow.toggleDevTools(),
       },
     ],
@@ -315,11 +316,6 @@ export function createWindow() {
         label: `${MNEMONIC_SYM}Reload`,
         accelerator: 'Shift+F5',
         click: () => mainWindow.reload(),
-      },
-      {
-        label: `Toggle ${MNEMONIC_SYM}DevTools`,
-        accelerator: 'Alt+CmdOrCtrl+I',
-        click: () => mainWindow.toggleDevTools(),
       },
       {
         label: `Resize to Defaul${MNEMONIC_SYM}t`,

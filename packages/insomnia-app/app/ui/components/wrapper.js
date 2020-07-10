@@ -12,7 +12,6 @@ import type {
   RequestParameter,
 } from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
-
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { registerModal, showModal } from './modals/index';
@@ -65,26 +64,34 @@ import VCS from '../../sync/vcs';
 import type { StatusCandidate } from '../../sync/types';
 import type { RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
-import type { GlobalActivity } from './activity-bar/activity-bar';
-import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_INSOMNIA,
-  ACTIVITY_SPEC,
-} from './activity-bar/activity-bar';
 import type { ApiSpec } from '../../models/api-spec';
 import GitVCS from '../../sync/git/git-vcs';
 import { trackPageView } from '../../common/analytics';
 import type { GitRepository } from '../../models/git-repository';
 import WrapperHome from './wrapper-home';
 import WrapperDesign from './wrapper-design';
+import WrapperUnitTest from './wrapper-unit-test';
 import WrapperOnboarding from './wrapper-onboarding';
 import WrapperDebug from './wrapper-debug';
 import { importRaw } from '../../common/import';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { DropdownButton } from './base/dropdown';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
-import { getAppName } from '../../common/constants';
+import type { UnitTest } from '../../models/unit-test';
+import type { UnitTestResult } from '../../models/unit-test-result';
+import type { UnitTestSuite } from '../../models/unit-test-suite';
+import type { GlobalActivity } from '../../common/constants';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_INSOMNIA,
+  ACTIVITY_SPEC,
+  ACTIVITY_UNIT_TEST,
+  getAppName,
+} from '../../common/constants';
+import { Spectral } from '@stoplight/spectral';
+
+const spectral = new Spectral();
 
 export type WrapperProps = {
   // Helper Functions
@@ -174,9 +181,12 @@ export type WrapperProps = {
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
   activeGitRepository: GitRepository | null,
+  activeUnitTestResult: UnitTestResult | null,
+  activeUnitTestSuites: Array<UnitTestSuite>,
+  activeUnitTests: Array<UnitTest>,
   activeWorkspaceClientCertificates: Array<ClientCertificate>,
-  isVariableUncovered: boolean,
   headerEditorKey: string,
+  isVariableUncovered: boolean,
   vcs: VCS | null,
   gitVCS: GitVCS | null,
   gitRepositories: Array<GitRepository>,
@@ -294,30 +304,45 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     return null;
   }
 
-  async _handleWorkspaceActivityChange(workspaceId: string, activeActivity: GlobalActivity) {
-    const { activity: updatedActivity } = this.props.handleSetActiveActivity(activeActivity);
-    await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: updatedActivity });
-  }
+  async _handleWorkspaceActivityChange(workspaceId: string, nextActivity: GlobalActivity) {
+    const { activity, activeApiSpec, handleSetActiveActivity } = this.props;
 
-  async _handleSetDesignActivity(workspaceId: string): Promise<void> {
-    await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_SPEC);
-  }
+    // Remember last activity on workspace for later, but only if it isn't HOME
+    if (nextActivity !== ACTIVITY_HOME) {
+      await models.workspaceMeta.updateByParentId(workspaceId, { activeActivity: nextActivity });
+    }
 
-  async _handleSetDebugActivity(apiSpec: ApiSpec): Promise<void> {
-    const workspaceId = apiSpec.parentId;
-    await this._handleWorkspaceActivityChange(workspaceId, ACTIVITY_DEBUG);
+    const notEditingASpec = activity !== ACTIVITY_SPEC;
+    if (notEditingASpec) {
+      handleSetActiveActivity(nextActivity);
+      return;
+    }
 
+    // Handle switching away from the spec design activity. For this, we want to generate
+    // requests that can be accessed from debug or test.
+
+    // If there are errors in the spec, show the user a warning first
+    const results = await spectral.run(activeApiSpec.contents);
+    if (activeApiSpec.contents && results && results.length) {
+      showModal(AlertModal, {
+        title: 'Error Generating Configuration',
+        message:
+          'Some requests may not be available due to errors found in the ' +
+          'specification. We recommend fixing errors before proceeding. 🤗',
+        okLabel: 'Proceed',
+        addCancel: true,
+        onConfirm: () => {
+          handleSetActiveActivity(nextActivity);
+        },
+      });
+      return;
+    }
+
+    // Delaying generation so design to debug mode is smooth
+    handleSetActiveActivity(nextActivity);
     setTimeout(() => {
-      // Delaying generation so design to debug mode is smooth
-      importRaw(
-        () => Promise.resolve(workspaceId), // Always import into current workspace
-        apiSpec.contents,
-      );
+      importRaw(() => Promise.resolve(workspaceId), activeApiSpec.contents);
     }, 1000);
-  }
-
-  _handleSetHomeActivity(): void {
-    this.props.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
   // Settings updaters
@@ -331,12 +356,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
   _handleImportFile(forceToWorkspace?: ForceToWorkspace): void {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
-  }
-
-  _handleUpdateSettingsUseBulkParametersEditor(
-    useBulkParametersEditor: boolean,
-  ): Promise<Settings> {
-    return sUpdate(this.props.settings, { useBulkParametersEditor });
   }
 
   _handleImportUri(uri: string, forceToWorkspace?: ForceToWorkspace): void {
@@ -760,9 +779,18 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
           {activity === ACTIVITY_SPEC && (
             <WrapperDesign
               gitSyncDropdown={gitSyncDropdown}
-              handleSetDebugActivity={this._handleSetDebugActivity}
+              handleActivityChange={this._handleWorkspaceActivityChange}
               handleUpdateApiSpec={this._handleUpdateApiSpec}
               wrapperProps={this.props}
+            />
+          )}
+
+          {activity === ACTIVITY_UNIT_TEST && (
+            <WrapperUnitTest
+              gitSyncDropdown={gitSyncDropdown}
+              wrapperProps={this.props}
+              handleActivityChange={this._handleWorkspaceActivityChange}
+              children={sidebarChildren}
             />
           )}
 
@@ -770,7 +798,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             <WrapperDebug
               forceRefreshKey={this.state.forceRefreshKey}
               gitSyncDropdown={gitSyncDropdown}
-              handleSetDesignActivity={this._handleSetDesignActivity}
+              handleActivityChange={this._handleWorkspaceActivityChange}
               handleChangeEnvironment={this._handleChangeEnvironment}
               handleDeleteResponse={this._handleDeleteResponse}
               handleDeleteResponses={this._handleDeleteResponses}

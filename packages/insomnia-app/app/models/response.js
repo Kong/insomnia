@@ -85,19 +85,19 @@ export async function migrate(doc: Object) {
   return doc;
 }
 
-export function hookDatabaseInit() {
-  console.log('Init responses DB');
+export function hookDatabaseInit(consoleLog: () => void = console.log) {
+  consoleLog('Init responses DB');
   process.nextTick(async () => {
     await models.response.cleanDeletedResponses();
   });
 }
 
-export function hookRemove(doc: Response) {
+export function hookRemove(doc: Response, consoleLog: () => void = console.log) {
   fs.unlink(doc.bodyPath, () => {
-    console.log(`[response] Delete body ${doc.bodyPath}`);
+    consoleLog(`[response] Delete body ${doc.bodyPath}`);
   });
   fs.unlink(doc.timelinePath, () => {
-    console.log(`[response] Delete timeline ${doc.timelinePath}`);
+    consoleLog(`[response] Delete timeline ${doc.timelinePath}`);
   });
 }
 

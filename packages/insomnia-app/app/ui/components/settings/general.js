@@ -4,6 +4,7 @@ import * as fontScanner from 'font-manager';
 import * as electron from 'electron';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
+import type { HttpVersion } from '../../../common/constants';
 import {
   EDITOR_KEY_MAP_DEFAULT,
   EDITOR_KEY_MAP_EMACS,
@@ -21,7 +22,6 @@ import { setFont } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
-import type { HttpVersion } from '../../../common/constants';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -479,13 +479,6 @@ class General extends React.PureComponent<Props, State> {
 
         <br />
 
-        {session.isLoggedIn() && (
-          <React.Fragment>
-            <hr />
-            {this.renderBooleanSetting('Enable version control beta', 'enableSyncBeta', '', true)}
-          </React.Fragment>
-        )}
-
         <hr className="pad-top" />
         <h2>Data Sharing</h2>
         <div className="form-control form-control--thin">
@@ -508,6 +501,13 @@ class General extends React.PureComponent<Props, State> {
             as request data, names, etc.
           </p>
         </div>
+
+        {session.isLoggedIn() && (
+          <React.Fragment>
+            <hr />
+            {this.renderBooleanSetting('Enable version control beta', 'enableSyncBeta', '', true)}
+          </React.Fragment>
+        )}
       </div>
     );
   }

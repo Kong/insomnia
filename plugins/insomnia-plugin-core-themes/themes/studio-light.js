@@ -37,7 +37,7 @@ module.exports = {
           notice: '#c18401',
           warning: '#c18401',
           danger: '#e45649',
-          surprise: '#a626a4',
+          surprise: '#6030BF',
           info: '#0184bc',
         },
         foreground: {

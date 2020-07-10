@@ -1,44 +1,102 @@
 // @flow
 import axios from 'axios';
-import type { TestSuite } from '../generate';
-import { generateToFile } from '../generate';
+import { generate } from '../generate';
 import { runTests } from '../run';
-import path from 'path';
-import os from 'os';
-import * as config from '../../webpack.config';
 
 jest.mock('axios');
 
-describe('webpack config', () => {
-  it('should set mocha as external', () => {
-    expect(config.externals.mocha).toBe('mocha');
-  });
-});
-
 describe('integration', () => {
   it('generates and runs basic tests', async () => {
-    const testFilename = await generateToTmpFile([
+    const testSrc = await generate([
       {
         name: 'Example TestSuite',
         suites: [],
         tests: [
           {
             name: 'should return -1 when the value is not present',
-            code: 'expect([1, 2, 3].indexOf(4)).toBe(-1);\nexpect(true).toBe(true);',
+            code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.equal(true);',
+            defaultRequestId: null,
           },
           {
             name: 'is an empty test',
             code: '',
+            defaultRequestId: null,
           },
         ],
       },
     ]);
 
-    const { stats } = await runTests(testFilename);
+    const { stats } = await runTests(testSrc);
 
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
     expect(stats.passes).toBe(2);
+  });
+
+  it('generates and runs more than once', async () => {
+    const testSrc = await generate([
+      {
+        name: 'Example TestSuite',
+        suites: [],
+        tests: [
+          {
+            name: 'should return -1 when the value is not present',
+            code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.be.true;',
+            defaultRequestId: null,
+          },
+          {
+            name: 'is an empty test',
+            code: '',
+            defaultRequestId: null,
+          },
+        ],
+      },
+    ]);
+
+    const { stats, failures } = await runTests(testSrc);
+    expect(failures).toEqual([]);
+    expect(stats.tests).toBe(2);
+    expect(stats.failures).toBe(0);
+    expect(stats.passes).toBe(2);
+
+    const { stats: stats2 } = await runTests(testSrc);
+    expect(failures).toEqual([]);
+    expect(stats2.tests).toBe(2);
+    expect(stats2.failures).toBe(0);
+    expect(stats2.passes).toBe(2);
+  });
+
+  it('generates and runs more than once', async () => {
+    const testSrc = await generate([
+      {
+        name: 'Example TestSuite',
+        suites: [],
+        tests: [
+          {
+            name: 'should return -1 when the value is not present',
+            code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.be.true;',
+            defaultRequestId: null,
+          },
+          {
+            name: 'is an empty test',
+            code: '',
+            defaultRequestId: null,
+          },
+        ],
+      },
+    ]);
+
+    const { stats, failures } = await runTests(testSrc);
+    expect(failures).toEqual([]);
+    expect(stats.tests).toBe(2);
+    expect(stats.failures).toBe(0);
+    expect(stats.passes).toBe(2);
+
+    const { stats: stats2, failures: failures2 } = await runTests(testSrc);
+    expect(failures2).toEqual([]);
+    expect(stats2.tests).toBe(2);
+    expect(stats2.failures).toBe(0);
+    expect(stats2.passes).toBe(2);
   });
 
   it('sends an HTTP request', async () => {
@@ -53,48 +111,45 @@ describe('integration', () => {
       headers: { location: '/blog' },
     });
 
-    const testFilename = await generateToTmpFile([
+    const testSrc = await generate([
       {
         name: 'Example TestSuite',
         suites: [],
         tests: [
           {
-            name: 'Tests sending a request',
+            name: 'Tests referencing request by ID',
+            defaultRequestId: null,
             code: [
-              `const resp = await insomnia.send({ url: '200.insomnia.rest' });`,
-              `expect(resp.status).toBe(200);`,
-              `expect(resp.headers['content-type']).toBe('application/json');`,
-              `expect(resp.data.foo).toBe('bar');`,
+              `const resp = await insomnia.send('req_123');`,
+              `expect(resp.status).to.equal(301);`,
             ].join('\n'),
           },
           {
-            name: 'Tests referencing request by ID',
+            name: 'Tests referencing default request',
+            defaultRequestId: 'req_123',
             code: [
-              `const resp = await insomnia.send('req_123');`,
-              `expect(resp.status).toBe(301);`,
+              `const resp = await insomnia.send();`,
+              `expect(resp.status).to.equal(301);`,
             ].join('\n'),
           },
         ],
       },
     ]);
 
-    const { stats } = await runTests(testFilename, {
-      requests: {
-        req_123: {
+    const { stats, failures, passes } = await runTests(testSrc, {
+      requests: [
+        {
+          _id: 'req_123',
           url: '301.insomnia.rest',
           method: 'get',
         },
-      },
+      ],
     });
 
+    expect(failures).toEqual([]);
+    expect(passes.length).toBe(2);
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
     expect(stats.passes).toBe(2);
   });
 });
-
-export async function generateToTmpFile(suites: Array<TestSuite>): Promise<string> {
-  const p = path.join(os.tmpdir(), `${Math.random()}.test.js`);
-  await generateToFile(p, suites);
-  return p;
-}

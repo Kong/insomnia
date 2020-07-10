@@ -38,11 +38,6 @@ class Editable extends PureComponent {
   _handleEditEnd() {
     const value = this._input.value.trim();
 
-    if (!value) {
-      // Don't do anything if it's empty.
-      return;
-    }
-
     if (value !== this.props.value) {
       // Don't run onSubmit for values that haven't been changed.
       this.props.onSubmit(value);
@@ -74,6 +69,8 @@ class Editable extends PureComponent {
   render() {
     const {
       value,
+      fallbackValue,
+      blankValue,
       singleClick,
       onEditStart, // eslint-disable-line no-unused-vars
       className,
@@ -81,6 +78,7 @@ class Editable extends PureComponent {
       ...extra
     } = this.props;
     const { editing } = this.state;
+    const initialValue = value || fallbackValue;
 
     if (editing) {
       return (
@@ -92,14 +90,14 @@ class Editable extends PureComponent {
             className={`editable ${className || ''}`}
             type="text"
             ref={this._handleSetInputRef}
-            defaultValue={value}
+            defaultValue={initialValue}
             onBlur={this._handleEditEnd}
           />
         </KeydownBinder>
       );
     } else {
       const readViewProps = {
-        className: `editable ${className}`,
+        className: `editable ${className} ${!initialValue && 'empty'}`,
         title: singleClick ? 'Click to edit' : 'Double click to edit',
         onClick: this._handleSingleClickEditStart,
         onDoubleClick: this._handleEditStart,
@@ -107,9 +105,9 @@ class Editable extends PureComponent {
       };
 
       if (renderReadView) {
-        return renderReadView(value, readViewProps);
+        return renderReadView(initialValue, readViewProps);
       } else {
-        return <span {...readViewProps}>{value}</span>;
+        return <span {...readViewProps}>{initialValue || blankValue}</span>;
       }
     }
   }
@@ -120,6 +118,8 @@ Editable.propTypes = {
   value: PropTypes.string.isRequired,
 
   // Optional
+  fallbackValue: PropTypes.string,
+  blankValue: PropTypes.string,
   renderReadView: PropTypes.func,
   singleClick: PropTypes.bool,
   onEditStart: PropTypes.func,

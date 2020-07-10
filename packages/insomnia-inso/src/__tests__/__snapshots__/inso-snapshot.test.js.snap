@@ -1,0 +1,133 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Snapshot for "inso --help" 1`] = `
+"Usage: inso [options] [command]
+
+A CLI for Insomnia!
+
+Options:
+  -v, --version             output the version number
+  -w, --working-dir <dir>   set working directory
+  -a, --app-data-dir <dir>  set the app data directory
+  --ci                      run in CI, disables all prompts
+  -h, --help                display help for command
+
+Commands:
+  generate                  Code generation utilities
+  run                       Execution utilities
+  lint                      Linting utilities
+  help [command]            display help for command"
+`;
+
+exports[`Snapshot for "inso -h" 1`] = `
+"Usage: inso [options] [command]
+
+A CLI for Insomnia!
+
+Options:
+  -v, --version             output the version number
+  -w, --working-dir <dir>   set working directory
+  -a, --app-data-dir <dir>  set the app data directory
+  --ci                      run in CI, disables all prompts
+  -h, --help                display help for command
+
+Commands:
+  generate                  Code generation utilities
+  run                       Execution utilities
+  lint                      Linting utilities
+  help [command]            display help for command"
+`;
+
+exports[`Snapshot for "inso generate -h" 1`] = `
+"Usage: inso generate [options] [command]
+
+Code generation utilities
+
+Options:
+  -h, --help                     display help for command
+
+Commands:
+  config [options] [identifier]  Generate configuration from an api spec.
+  help [command]                 display help for command"
+`;
+
+exports[`Snapshot for "inso generate config -h" 1`] = `
+"Usage: inso generate config [options] [identifier]
+
+Generate configuration from an api spec.
+
+Options:
+  -t, --type <value>   type of configuration to generate, options are
+                       [kubernetes, declarative] (default: \\"declarative\\")
+  -o, --output <path>  save the generated config to a file
+  -h, --help           display help for command"
+`;
+
+exports[`Snapshot for "inso help" 1`] = `
+"Usage: inso [options] [command]
+
+A CLI for Insomnia!
+
+Options:
+  -v, --version             output the version number
+  -w, --working-dir <dir>   set working directory
+  -a, --app-data-dir <dir>  set the app data directory
+  --ci                      run in CI, disables all prompts
+  -h, --help                display help for command
+
+Commands:
+  generate                  Code generation utilities
+  run                       Execution utilities
+  lint                      Linting utilities
+  help [command]            display help for command"
+`;
+
+exports[`Snapshot for "inso lint -h" 1`] = `
+"Usage: inso lint [options] [command]
+
+Linting utilities
+
+Options:
+  -h, --help         display help for command
+
+Commands:
+  spec [identifier]  Lint an API Specification
+  help [command]     display help for command"
+`;
+
+exports[`Snapshot for "inso lint spec -h" 1`] = `
+"Usage: inso lint spec [options] [identifier]
+
+Lint an API Specification
+
+Options:
+  -h, --help  display help for command"
+`;
+
+exports[`Snapshot for "inso run -h" 1`] = `
+"Usage: inso run [options] [command]
+
+Execution utilities
+
+Options:
+  -h, --help                   display help for command
+
+Commands:
+  test [options] [identifier]  Run Insomnia unit test suites
+  help [command]               display help for command"
+`;
+
+exports[`Snapshot for "inso run test -h" 1`] = `
+"Usage: inso run test [options] [identifier]
+
+Run Insomnia unit test suites
+
+Options:
+  -e, --env <identifier>           environment to use
+  -t, --test-name-pattern <regex>  run tests that match the regex
+  -r, --reporter <reporter>        reporter to use, options are [dot, list,
+                                   spec, min, progress] (default: \\"spec\\")
+  -b, --bail                       abort (\\"bail\\") after first test failure
+  --keep-file                      do not delete the generated test file
+  -h, --help                       display help for command"
+`;

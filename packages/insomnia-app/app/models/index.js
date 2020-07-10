@@ -14,6 +14,9 @@ import * as _requestVersion from './request-version';
 import * as _response from './response';
 import * as _settings from './settings';
 import * as _stats from './stats';
+import * as _unitTest from './unit-test';
+import * as _unitTestResult from './unit-test-result';
+import * as _unitTestSuite from './unit-test-suite';
 import * as _workspace from './workspace';
 import * as _workspaceMeta from './workspace-meta';
 import { generateId } from '../common/misc';
@@ -42,6 +45,9 @@ export const requestVersion = _requestVersion;
 export const response = _response;
 export const settings = _settings;
 export const stats = _stats;
+export const unitTest = _unitTest;
+export const unitTestSuite = _unitTestSuite;
+export const unitTestResult = _unitTestResult;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 
@@ -64,6 +70,9 @@ export function all() {
     oAuth2Token,
     clientCertificate,
     pluginData,
+    unitTestSuite,
+    unitTestResult,
+    unitTest,
   ];
 }
 

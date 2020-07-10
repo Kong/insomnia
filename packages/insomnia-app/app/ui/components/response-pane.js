@@ -31,6 +31,7 @@ import type { RequestVersion } from '../../models/request-version';
 import { showError } from '../components/modals/index';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import type { Environment } from '../../models/environment';
+import type { UnitTestResult } from '../../models/unit-test-result';
 
 type Props = {
   // Functions
@@ -61,6 +62,7 @@ type Props = {
   request: ?Request,
   response: ?Response,
   environment: ?Environment,
+  unitTestResult: ?UnitTestResult,
 };
 
 @autobind

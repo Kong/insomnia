@@ -38,6 +38,7 @@ type Props = {
   handleMoveRequestGroup: Function,
   handleGenerateCode: Function,
   handleCopyAsCurl: Function,
+  handleRender: Function,
   moveDoc: Function,
   childObjects: SidebarChildObjects,
   workspace: Workspace,
@@ -86,6 +87,7 @@ class SidebarChildren extends React.PureComponent<Props> {
       handleMoveRequestGroup,
       handleGenerateCode,
       handleCopyAsCurl,
+      handleRender,
       moveDoc,
       handleActivateRequest,
       activeRequest,
@@ -112,6 +114,7 @@ class SidebarChildren extends React.PureComponent<Props> {
             handleDuplicateRequest={handleDuplicateRequest}
             handleGenerateCode={handleGenerateCode}
             handleCopyAsCurl={handleCopyAsCurl}
+            handleRender={handleRender}
             requestCreate={handleCreateRequest}
             isActive={child.doc._id === activeRequestId}
             isPinned={child.pinned}
@@ -153,6 +156,7 @@ class SidebarChildren extends React.PureComponent<Props> {
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           handleMoveRequestGroup={handleMoveRequestGroup}
+          handleRender={handleRender}
           isCollapsed={child.collapsed}
           handleCreateRequest={handleCreateRequest}
           handleCreateRequestGroup={handleCreateRequestGroup}

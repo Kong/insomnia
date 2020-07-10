@@ -1,0 +1,76 @@
+{
+  "name": "insomnia-inso",
+  "version": "2.2.18",
+  "homepage": "https://insomnia.rest",
+  "description": "A CLI for Insomnia Designer - the collaborative API design tool.",
+  "author": "Kong <office@konghq.com>",
+  "license": "Apache2",
+  "repository": "https://github.com/kong/insomnia/tree/develop/packages/insomnia-inso",
+  "bugs": {
+    "url": "https://github.com/kong/insomnia"
+  },
+  "bin": {
+    "inso": "bin/inso"
+  },
+  "scripts": {
+    "typecheck": "",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:snapshots": "npm run build && jest -u",
+    "build": "webpack --config webpack/webpack.config.development.js --display errors-only",
+    "build:production": "webpack --config webpack/webpack.config.production.js --display errors-only",
+    "start": "npm run build -- --watch",
+    "bootstrap": "npm run build",
+    "prepare": "npm run build:production"
+  },
+  "jest": {
+    "setupFiles": [
+      "./__jest__/setup.js"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "verbose": false,
+    "resetMocks": true,
+    "resetModules": true
+  },
+  "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/plugin-proposal-optional-chaining": "^7.9.0",
+    "@babel/preset-env": "^7.10.2",
+    "@babel/preset-flow": "^7.10.1",
+    "execa": "^4.0.2",
+    "flow-bin": "^0.126.1",
+    "get-bin-path": "^5.1.0",
+    "jest": "^26.0.1",
+    "rimraf": "^3.0.2",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-merge": "^5.0.7",
+    "webpack-node-externals": "^1.7.2"
+  },
+  "dependencies": {
+    "@stoplight/spectral": "^5.4.0",
+    "commander": "^5.1.0",
+    "enquirer": "^2.3.5",
+    "env-paths": "^2.2.0",
+    "insomnia-plugin-base64": "^2.2.10",
+    "insomnia-plugin-cookie-jar": "^2.2.10",
+    "insomnia-plugin-core-themes": "^2.2.12",
+    "insomnia-plugin-file": "^2.2.10",
+    "insomnia-plugin-hash": "^2.2.10",
+    "insomnia-plugin-jsonpath": "^2.2.10",
+    "insomnia-plugin-now": "^2.2.10",
+    "insomnia-plugin-os": "^2.2.10",
+    "insomnia-plugin-prompt": "^2.2.10",
+    "insomnia-plugin-request": "^2.2.12",
+    "insomnia-plugin-response": "^2.2.10",
+    "insomnia-plugin-uuid": "^2.2.10",
+    "insomnia-send-request": "^2.2.15",
+    "insomnia-testing": "^2.2.15",
+    "lodash.flattendeep": "^4.4.0",
+    "nedb": "^1.8.0",
+    "openapi-2-kong": "^2.2.12",
+    "yaml": "^1.10.0"
+  }
+}
