@@ -264,10 +264,10 @@ class OneLineEditor extends PureComponent {
     }
 
     if (this._mayContainNunjucks(this.getValue())) {
-      return;
+      // return;
     }
-
-    this.setState({ mode: MODE_INPUT });
+    // NOTE: Temporary fix to address losing values when toggling between CM and traditional input instances
+    // this.setState({ mode: MODE_INPUT });
   }
 
   _setEditorRef(n) {
