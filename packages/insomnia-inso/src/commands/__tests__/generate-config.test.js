@@ -64,7 +64,7 @@ describe('generateConfig()', () => {
 
     expect(o2k.generate).toHaveBeenCalledWith(filePath, ConversionTypeMap[base.type]);
     expect(writeFileSpy).toHaveBeenCalledWith('output.yaml', 'a\n---\nb\n');
-    expect(consoleSpy).not.toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(`Generated to "output.yaml".`);
   });
 
   it('should generate documents using workingDir', async () => {
@@ -87,6 +87,8 @@ describe('generateConfig()', () => {
       path.normalize('test/dir/output.yaml'),
       'a\n---\nb\n',
     );
-    expect(consoleSpy).not.toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      `Generated to "${path.normalize('test/dir/output.yaml')}".`,
+    );
   });
 });
