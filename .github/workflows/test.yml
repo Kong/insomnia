@@ -20,7 +20,7 @@ jobs:
       - name: Install NodeJS
         uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 12
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Run tests
@@ -34,7 +34,7 @@ jobs:
       - name: Install NodeJS
         uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 12
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Run tests

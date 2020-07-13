@@ -9,7 +9,7 @@ env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
   GITHUB_REF: ${{ github.ref }}
   GITHUB_SHA: ${{ github.sha }}
-  NPM_CONFIG_TARGET: 3.1.13
+  NPM_CONFIG_TARGET: 8.1.0
   NPM_CONFIG_DISTURL: https://electronjs.org/headers
   NPM_CONFIG_RUNTIME: electron
 
@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 12
       - run: npm run bootstrap
       - run: npm run test:pre-release
       - run: npm run app-release
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 12
       - run: npm run bootstrap
       - run: npm run test:pre-release
       - run: npm run app-release
@@ -54,7 +54,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 12
       - run: npm run bootstrap
       - run: npm run test:pre-release
       - run: npm run app-release
