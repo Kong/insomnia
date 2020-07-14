@@ -132,6 +132,14 @@ inso run test spc_46c5a4 --reporter progress --bail --keep-file
 More examples: [#2338](https://github.com/Kong/insomnia/pull/2338).
 </details>
 
+## Git Bash
+
+If you are using Git Bash on Windows, by default it is not interactive and therefore prompts will not work as expected. You may choose to specify the id's explicitly, or run `inso` using `winpty`:
+
+```
+winpty inso.cmd generate config
+```
+
 ## Continuous Integration
 
 `inso` has been designed to run in a CI environment, disabling prompts and providing exit codes to pass or fail the CI workflow accordingly. An example workflow run in Github Actions is as follows. This example will checkout > install NodeJS > install inso > run linting > run unit tests > generate configuration. If any of these steps fail, the GH workflow will as well.
