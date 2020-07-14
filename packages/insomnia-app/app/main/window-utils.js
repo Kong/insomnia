@@ -65,6 +65,7 @@ export function createWindow() {
     icon: path.resolve(__dirname, 'static/icon.png'),
     webPreferences: {
       zoomFactor: zoomFactor,
+      nodeIntegration: true,
     },
   });
 
