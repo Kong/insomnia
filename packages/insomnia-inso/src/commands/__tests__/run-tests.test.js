@@ -65,6 +65,29 @@ describe('runInsomniaTests()', () => {
     expect(result).toBe(false);
   });
 
+  it('should return false if test suites could not be found', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const result = await runInsomniaTests('not-found', {
+      ...base,
+      workingDir: 'src/db/__fixtures__/git-repo',
+    });
+
+    expect(result).toBe(false);
+    expect(consoleSpy).toHaveBeenCalledWith('No test suites identified.');
+  });
+
+  it('should return false if environment could not be found', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const result = await runInsomniaTests('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
+      ...base,
+      workingDir: 'src/db/__fixtures__/git-repo',
+      env: 'not-found',
+    });
+
+    expect(result).toBe(false);
+    expect(consoleSpy).toHaveBeenCalledWith('No environment identified.');
+  });
+
   it('should return true if test results have no failures', async function() {
     mock(insomniaTesting.runTestsCli).mockResolvedValue(true);
 

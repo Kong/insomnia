@@ -32,7 +32,17 @@
     ],
     "verbose": false,
     "resetMocks": true,
-    "resetModules": true
+    "resetModules": true,
+    "collectCoverage": true,
+    "coveragePathIgnorePatterns": ["/node_modules/"],
+    "coverageThreshold": {
+      "global": {
+        "branches": 90,
+        "functions": 100,
+        "lines": 95,
+        "statements": 95
+      }
+    }
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

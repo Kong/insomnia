@@ -87,6 +87,7 @@ describe('generateConfig()', () => {
   });
 
   it('should generate documents using workingDir', async () => {
+    jest.spyOn(console, 'log').mockImplementation(() => {});
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
 
     const result = await generateConfig('file.yaml', {
