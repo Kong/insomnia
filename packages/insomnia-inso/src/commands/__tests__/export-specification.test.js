@@ -14,7 +14,9 @@ describe('exportSpecification()', () => {
   it('should load identifier from database', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
-    const result = await exportSpecification('spc_46c5a4a40e83445a9bd9d9758b86c16c', {});
+    const result = await exportSpecification('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
+      workingDir: 'src/db/__fixtures__/git-repo',
+    });
 
     expect(result).toBe(true);
     expect(writeFileWithCliOptions).not.toHaveBeenCalled();
@@ -29,7 +31,7 @@ describe('exportSpecification()', () => {
 
     const options = {
       output: 'output.yaml',
-      workingDir: 'working/dir',
+      workingDir: 'src/db/__fixtures__/git-repo',
     };
 
     const result = await exportSpecification('spc_46c5a4a40e83445a9bd9d9758b86c16c', options);
@@ -48,7 +50,10 @@ describe('exportSpecification()', () => {
 
   it('should return false if spec could not be found', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const result = await exportSpecification('not-found', {});
+    const result = await exportSpecification('not-found', {
+      workingDir: 'src/db/__fixtures__/git-repo',
+    });
+
     expect(result).toBe(false);
     expect(consoleSpy).toHaveBeenCalledWith('Specification not found.');
   });
