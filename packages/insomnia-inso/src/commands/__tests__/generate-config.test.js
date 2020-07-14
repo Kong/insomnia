@@ -11,6 +11,12 @@ jest.mock('../../write-file');
 describe('generateConfig()', () => {
   // make flow happy
   const mock = (mockFn: any) => mockFn;
+
+  const mockedOutputPath = 'this-is-the-output-path';
+  beforeEach(() => {
+    mock(writeFileWithCliOptions).mockResolvedValue(mockedOutputPath);
+  });
+
   afterEach(() => {
     jest.restoreAllMocks();
   });
@@ -58,8 +64,6 @@ describe('generateConfig()', () => {
 
   it('should output generated document to a file', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const outputPath = 'this-is-the-output-path';
-    mock(writeFileWithCliOptions).mockResolvedValue(outputPath);
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
 
     const options = {
@@ -79,7 +83,7 @@ describe('generateConfig()', () => {
       options.workingDir,
     );
 
-    expect(consoleSpy).toHaveBeenCalledWith(`Configuration generated to "${outputPath}".`);
+    expect(consoleSpy).toHaveBeenCalledWith(`Configuration generated to "${mockedOutputPath}".`);
   });
 
   it('should generate documents using workingDir', async () => {
