@@ -2,10 +2,11 @@
 import { ConversionTypeMap, generateConfig } from '../generate-config';
 import type { GenerateConfigOptions } from '../generate-config';
 import o2k from 'openapi-2-kong';
-import fs from 'fs';
 import path from 'path';
+import { writeFileWithCliOptions } from '../../write-file';
 
 jest.mock('openapi-2-kong');
+jest.mock('../../write-file');
 
 describe('generateConfig()', () => {
   // make flow happy
@@ -55,40 +56,47 @@ describe('generateConfig()', () => {
     expect(consoleSpy).toHaveBeenCalledWith('a\n---\nb\n');
   });
 
-  it('should write generated documents to file system', async () => {
+  it('should output generated document to a file', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const writeFileSpy = jest.spyOn(fs.promises, 'writeFile').mockImplementation(() => {});
+    const outputPath = 'this-is-the-output-path';
+    mock(writeFileWithCliOptions).mockResolvedValue(outputPath);
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
 
-    await generateConfig(filePath, { ...base, output: 'output.yaml' });
+    const options = {
+      ...base,
+      output: 'output.yaml',
+      workingDir: 'working/dir',
+    };
 
-    expect(o2k.generate).toHaveBeenCalledWith(filePath, ConversionTypeMap[base.type]);
-    expect(writeFileSpy).toHaveBeenCalledWith('output.yaml', 'a\n---\nb\n');
-    expect(consoleSpy).toHaveBeenCalledWith(`Generated to "output.yaml".`);
+    const result = await generateConfig(filePath, options);
+
+    expect(result).toBe(true);
+
+    expect(writeFileWithCliOptions).toHaveBeenCalledWith(
+      options.output,
+      'a\n---\nb\n',
+      'kubernetes.yaml',
+      options.workingDir,
+    );
+
+    expect(consoleSpy).toHaveBeenCalledWith(`Configuration generated to "${outputPath}".`);
   });
 
   it('should generate documents using workingDir', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const writeFileSpy = jest.spyOn(fs.promises, 'writeFile').mockImplementation(() => {});
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
 
-    await generateConfig('file.yaml', {
+    const result = await generateConfig('file.yaml', {
       ...base,
       workingDir: 'test/dir',
       output: 'output.yaml',
     });
 
+    expect(result).toBe(true);
+
     // Read from workingDir
     expect(o2k.generate).toHaveBeenCalledWith(
       path.normalize('test/dir/file.yaml'),
       ConversionTypeMap[base.type],
-    );
-    expect(writeFileSpy).toHaveBeenCalledWith(
-      path.normalize('test/dir/output.yaml'),
-      'a\n---\nb\n',
-    );
-    expect(consoleSpy).toHaveBeenCalledWith(
-      `Generated to "${path.normalize('test/dir/output.yaml')}".`,
     );
   });
 });

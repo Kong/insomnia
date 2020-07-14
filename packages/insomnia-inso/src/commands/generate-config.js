@@ -61,10 +61,10 @@ export async function generateConfig(
 
   if (output) {
     const outputPath = await writeFileWithCliOptions(
-      workingDir || '.',
       output,
       document,
       path.join(specFromDb?.fileName || '.', `${type}.yaml`),
+      workingDir,
     );
 
     console.log(`Configuration generated to "${outputPath}".`);

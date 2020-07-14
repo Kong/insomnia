@@ -23,10 +23,10 @@ export async function exportSpecification(
 
   if (output) {
     const outputPath = await writeFileWithCliOptions(
-      workingDir || '.',
       output,
       specFromDb.contents,
       `${specFromDb.fileName}.${specFromDb.contentType}`,
+      workingDir,
     );
     console.log(`Specification exported to "${outputPath}".`);
   } else {
