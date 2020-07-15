@@ -2,10 +2,10 @@
 import * as o2k from 'openapi-2-kong';
 import YAML from 'yaml';
 import path from 'path';
-import fs from 'fs';
 import type { GlobalOptions } from '../util';
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
+import { writeFileWithCliOptions } from '../write-file';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
@@ -60,8 +60,12 @@ export async function generateConfig(
   const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
 
   if (output) {
-    const fullOutputPath = path.join(workingDir || '.', output);
-    await fs.promises.writeFile(fullOutputPath, document);
+    const { outputPath, error } = await writeFileWithCliOptions(output, document, workingDir);
+    if (error) {
+      console.log(`Failed to write to "${outputPath}".\n`, error);
+      return false;
+    }
+    console.log(`Configuration generated to "${outputPath}".`);
   } else {
     console.log(document);
   }

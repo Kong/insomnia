@@ -17,6 +17,8 @@ describe('Snapshot for', () => {
     'run test -h',
     'lint -h',
     'lint spec -h',
+    'export -h',
+    'export spec -h',
   ])(
     '"inso %s"',
     async args => {

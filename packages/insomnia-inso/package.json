@@ -32,7 +32,17 @@
     ],
     "verbose": false,
     "resetMocks": true,
-    "resetModules": true
+    "resetModules": true,
+    "collectCoverage": true,
+    "coveragePathIgnorePatterns": ["/node_modules/"],
+    "coverageThreshold": {
+      "global": {
+        "branches": 90,
+        "functions": 100,
+        "lines": 95,
+        "statements": 95
+      }
+    }
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -69,6 +79,7 @@
     "insomnia-send-request": "^2.2.15",
     "insomnia-testing": "^2.2.15",
     "lodash.flattendeep": "^4.4.0",
+    "mkdirp": "^1.0.4",
     "nedb": "^1.8.0",
     "openapi-2-kong": "^2.2.12",
     "yaml": "^1.10.0"

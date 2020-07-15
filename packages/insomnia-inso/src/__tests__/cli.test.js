@@ -3,10 +3,12 @@ import * as cli from '../cli';
 import { generateConfig } from '../commands/generate-config';
 import { lintSpecification } from '../commands/lint-specification';
 import { runInsomniaTests } from '../commands/run-tests';
+import { exportSpecification } from '../commands/export-specification';
 
 jest.mock('../commands/generate-config');
 jest.mock('../commands/lint-specification');
 jest.mock('../commands/run-tests');
+jest.mock('../commands/export-specification');
 
 const initInso = () => {
   return (args: string): void => {
@@ -149,6 +151,28 @@ describe('cli', () => {
           workingDir: 'dir1',
           appDataDir: 'dir2',
           ci: true,
+        }),
+      );
+    });
+  });
+
+  describe('export spec', () => {
+    it('should call exportSpec with no arg', () => {
+      inso('export spec');
+      expect(exportSpecification).toHaveBeenCalledWith(undefined, {});
+    });
+
+    it('should call exportSpec with all expected arguments', () => {
+      inso('export spec spc_123 -o output.yaml');
+      expect(exportSpecification).toHaveBeenCalledWith('spc_123', { output: 'output.yaml' });
+    });
+
+    it('should call generateConfig with global options', () => {
+      inso('export spec spc_123 -w testing/dir');
+      expect(exportSpecification).toHaveBeenCalledWith(
+        'spc_123',
+        expect.objectContaining({
+          workingDir: 'testing/dir',
         }),
       );
     });

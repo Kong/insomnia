@@ -25,4 +25,14 @@ describe('lint specification', () => {
 
     expect(result).toBe(false);
   });
+
+  it('should return false if spec could not be found', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const result = await lintSpecification('not-found', {
+      workingDir: 'src/db/__fixtures__/git-repo',
+    });
+
+    expect(result).toBe(false);
+    expect(consoleSpy).toHaveBeenCalledWith('Specification not found.');
+  });
 });
