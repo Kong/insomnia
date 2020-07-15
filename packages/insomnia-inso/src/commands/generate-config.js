@@ -31,6 +31,7 @@ export async function generateConfig(
   identifier: ?string,
   options: GenerateConfigOptions,
 ): Promise<boolean> {
+  console.log(JSON.stringify(options));
   if (!validateOptions(options)) {
     return false;
   }

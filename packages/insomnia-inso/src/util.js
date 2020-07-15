@@ -1,6 +1,7 @@
 // @flow
 import commander from 'commander';
 import * as packageJson from '../package.json';
+import { cosmiconfigSync } from 'cosmiconfig';
 
 export type GlobalOptions = {
   appDataDir?: string,
@@ -33,7 +34,9 @@ export function getAllOptions<T>(cmd: Object): T {
     command = command.parent;
   } while (command);
 
-  return opts;
+  const { config, isEmpty } = cosmiconfigSync('inso').search();
+
+  return isEmpty ? opts : { ...config, ...opts };
 }
 
 export function logErrorExit1(err: Error) {

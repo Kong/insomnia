@@ -3,6 +3,7 @@ import { ConversionTypeMap, generateConfig } from './commands/generate-config';
 import { getVersion, createCommand, getAllOptions, logErrorExit1, exit } from './util';
 import { runInsomniaTests, TestReporterEnum } from './commands/run-tests';
 import { lintSpecification } from './commands/lint-specification';
+import { parseArgsStringToArgv } from 'string-argv';
 
 function makeGenerateCommand(exitOverride: boolean) {
   // inso generate
@@ -62,21 +63,45 @@ function makeLintCommand(exitOverride: boolean) {
   return lint;
 }
 
+function makeScriptCommand(exitOverride: boolean, originalCommand: Object) {
+  // inso script
+  const script = createCommand(exitOverride, 'scr').description('scripting utilities');
+
+  script
+    .command('scrRun <name>')
+    .description('Run scripts defined in .insorc')
+    .action((scriptName, cmd) => {
+      const options = getAllOptions(cmd);
+      const scriptTask = options.scripts[scriptName];
+      const args: Array<string> = parseArgsStringToArgv(scriptTask);
+      runWithArgs(originalCommand, args, true);
+    });
+
+  return script;
+}
+
 export function go(args?: Array<string>, exitOverride?: boolean): void {
   if (!args) {
     args = process.argv;
   }
 
   // inso -v
-  createCommand(!!exitOverride)
+  let cmd = createCommand(!!exitOverride)
     .version(getVersion(), '-v, --version')
-    .description('A CLI for Insomnia!')
+    .description('A CLI for Insomnia!');
+
+  cmd = cmd
     .option('-w, --working-dir <dir>', 'set working directory')
     .option('-a, --app-data-dir <dir>', 'set the app data directory')
     .option('--ci', 'run in CI, disables all prompts')
     .addCommand(makeGenerateCommand(!!exitOverride))
     .addCommand(makeTestCommand(!!exitOverride))
     .addCommand(makeLintCommand(!!exitOverride))
-    .parseAsync(args)
-    .catch(logErrorExit1);
+    .addCommand(makeScriptCommand(!!exitOverride, cmd));
+
+  runWithArgs(cmd, args);
+}
+
+function runWithArgs(cmd: Object, args: Array<string>, user?: boolean) {
+  cmd.parseAsync(args, user && { from: 'user' }).catch(logErrorExit1);
 }
