@@ -65,13 +65,17 @@ function makeLintCommand(exitOverride: boolean) {
 
 let passThroughArgs = [];
 
-function addScriptCommand(cmd: Object) {
+function addScriptCommand(originalCommand: Object) {
   // inso script
-  cmd
+  originalCommand
     .command('script <name>', { isDefault: true })
     .description('Run scripts defined in .insorc')
     .action(async (scriptName, cmd) => {
       const options = getAllOptions(cmd);
+
+      // if (!cmd.args.includes('--')) {
+      //   passThroughArgs = cmd.args.slice(1);
+      // }
 
       const scriptTask = options?.scripts[scriptName];
 
@@ -89,6 +93,7 @@ function addScriptCommand(cmd: Object) {
         argsToRunWith = argsToRunWith.slice(0, index);
       }
 
+      console.log(argsToRunWith);
       runWithArgs(makeCli(), argsToRunWith, true);
     });
 }
