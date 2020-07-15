@@ -60,13 +60,11 @@ export async function generateConfig(
   const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
 
   if (output) {
-    const outputPath = await writeFileWithCliOptions(
-      output,
-      document,
-      path.join(specFromDb?.fileName || '.', `${type}.yaml`),
-      workingDir,
-    );
-
+    const { outputPath, error } = await writeFileWithCliOptions(output, document, workingDir);
+    if (error) {
+      console.log(`Failed to write to "${outputPath}".\n`, error);
+      return false;
+    }
     console.log(`Configuration generated to "${outputPath}".`);
   } else {
     console.log(document);

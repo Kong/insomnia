@@ -27,7 +27,7 @@ describe('exportSpecification()', () => {
   it('should output document to a file', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const outputPath = 'this-is-the-output-path';
-    mock(writeFileWithCliOptions).mockResolvedValue(outputPath);
+    mock(writeFileWithCliOptions).mockResolvedValue({ outputPath });
 
     const options = {
       output: 'output.yaml',
@@ -41,11 +41,27 @@ describe('exportSpecification()', () => {
     expect(writeFileWithCliOptions).toHaveBeenCalledWith(
       options.output,
       expect.stringContaining("openapi: '3.0.2"),
-      'Sample Specification.yaml',
       options.workingDir,
     );
 
     expect(consoleSpy).toHaveBeenCalledWith(`Specification exported to "${outputPath}".`);
+  });
+
+  it('should return false if writing file returns error', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const outputPath = 'this-is-the-output-path';
+    const error = new Error('error message');
+    mock(writeFileWithCliOptions).mockResolvedValue({ outputPath, error });
+
+    const options = {
+      output: 'output.yaml',
+      workingDir: 'src/db/__fixtures__/git-repo',
+    };
+
+    const result = await exportSpecification('spc_46c5a4a40e83445a9bd9d9758b86c16c', options);
+
+    expect(result).toBe(false);
+    expect(consoleSpy).toHaveBeenCalledWith(`Failed to write to "${outputPath}".\n`, error);
   });
 
   it('should return false if spec could not be found', async () => {

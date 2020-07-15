@@ -15,6 +15,9 @@ jest.mock('fs', () => ({
 }));
 
 describe('writeFileWithCliOptions', () => {
+  // make flow happy
+  const mock = (mockFn: any) => mockFn;
+
   beforeEach(() => {
     jest.resetAllMocks();
   });
@@ -22,60 +25,57 @@ describe('writeFileWithCliOptions', () => {
   it('should write to output file', () => {
     const output = 'file.yaml';
     const contents = 'contents';
-    const fallback = 'fallback.yaml';
     const workingDir = undefined;
 
-    expect(writeFileWithCliOptions(output, contents, fallback, workingDir)).resolves.toBe(
-      'file.yaml',
-    );
+    expect(writeFileWithCliOptions(output, contents, workingDir)).resolves.toStrictEqual({
+      outputPath: 'file.yaml',
+    });
   });
 
   it('should write to output file under working dir', () => {
     const output = 'file.yaml';
     const contents = 'contents';
-    const fallback = 'fallback.yaml';
     const workingDir = 'working/dir';
 
-    expect(writeFileWithCliOptions(output, contents, fallback, workingDir)).resolves.toBe(
-      path.normalize('working/dir/file.yaml'),
-    );
-  });
-
-  it('should write to fallback file if output is a directory', () => {
-    const output = 'outputDir';
-    const contents = 'contents';
-    const fallback = 'fallback.yaml';
-    const workingDir = undefined;
-
-    expect(writeFileWithCliOptions(output, contents, fallback, workingDir)).resolves.toBe(
-      path.normalize('outputDir/fallback.yaml'),
-    );
-  });
-
-  it('should write to fallback file if output is a directory under working dir', () => {
-    const output = 'outputDir';
-    const contents = 'contents';
-    const fallback = 'fallback.yaml';
-    const workingDir = 'working/dir';
-
-    expect(writeFileWithCliOptions(output, contents, fallback, workingDir)).resolves.toBe(
-      path.normalize('working/dir/outputDir/fallback.yaml'),
-    );
+    expect(writeFileWithCliOptions(output, contents, workingDir)).resolves.toStrictEqual({
+      outputPath: path.normalize('working/dir/file.yaml'),
+    });
   });
 
   it('should ensure the output directory exists', async () => {
     const output = 'output/dir/file.yaml';
     const contents = 'contents';
-    const fallback = 'fallback.yaml';
     const workingDir = 'working/dir';
 
-    const result = await writeFileWithCliOptions(output, contents, fallback, workingDir);
-    expect(result).toBe(path.normalize('working/dir/output/dir/file.yaml'));
+    const result = await writeFileWithCliOptions(output, contents, workingDir);
+    expect(result).toStrictEqual({
+      outputPath: path.normalize('working/dir/output/dir/file.yaml'),
+    });
 
     expect(mkdirp.sync).toHaveBeenCalledWith(path.normalize('working/dir/output/dir'));
     expect(fs.promises.writeFile).toHaveBeenCalledWith(
       path.normalize('working/dir/output/dir/file.yaml'),
       contents,
     );
+  });
+
+  it('should return an error if mkdir.sync fails', () => {
+    const error = new Error('mkdir sync error');
+    mock(mkdirp.sync).mockRejectedValue(error);
+
+    expect(writeFileWithCliOptions('file.yaml', 'contents')).resolves.toStrictEqual({
+      outputPath: 'file.yaml',
+      error,
+    });
+  });
+
+  it('should return an error if mkdir.sync fails', () => {
+    const error = new Error('fs promises writeFile error');
+    mock(fs.promises.writeFile).mockRejectedValue(error);
+
+    expect(writeFileWithCliOptions('file.yaml', 'contents')).resolves.toStrictEqual({
+      outputPath: 'file.yaml',
+      error,
+    });
   });
 });

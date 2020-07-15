@@ -12,11 +12,6 @@ describe('generateConfig()', () => {
   // make flow happy
   const mock = (mockFn: any) => mockFn;
 
-  const mockedOutputPath = 'this-is-the-output-path';
-  beforeEach(() => {
-    mock(writeFileWithCliOptions).mockResolvedValue(mockedOutputPath);
-  });
-
   afterEach(() => {
     jest.restoreAllMocks();
   });
@@ -65,6 +60,8 @@ describe('generateConfig()', () => {
   it('should output generated document to a file', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
+    const outputPath = 'this-is-the-output-path';
+    mock(writeFileWithCliOptions).mockResolvedValue({ outputPath });
 
     const options = {
       ...base,
@@ -79,16 +76,36 @@ describe('generateConfig()', () => {
     expect(writeFileWithCliOptions).toHaveBeenCalledWith(
       options.output,
       'a\n---\nb\n',
-      'kubernetes.yaml',
       options.workingDir,
     );
 
-    expect(consoleSpy).toHaveBeenCalledWith(`Configuration generated to "${mockedOutputPath}".`);
+    expect(consoleSpy).toHaveBeenCalledWith(`Configuration generated to "${outputPath}".`);
+  });
+
+  it('should return false if failed to write file', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
+    const outputPath = 'this-is-the-output-path';
+    const error = new Error('error message');
+
+    mock(writeFileWithCliOptions).mockResolvedValue({ outputPath, error });
+
+    const options = {
+      ...base,
+      output: 'output.yaml',
+      workingDir: 'working/dir',
+    };
+
+    const result = await generateConfig(filePath, options);
+
+    expect(result).toBe(false);
+    expect(consoleSpy).toHaveBeenCalledWith(`Failed to write to "${outputPath}".\n`, error);
   });
 
   it('should generate documents using workingDir', async () => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
+    mock(writeFileWithCliOptions).mockResolvedValue({ outputPath: 'this-is-the-output-path' });
 
     const result = await generateConfig('file.yaml', {
       ...base,
