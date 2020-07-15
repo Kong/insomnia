@@ -134,7 +134,7 @@ More examples: [#2338](https://github.com/Kong/insomnia/pull/2338).
 
 ## Git Bash
 
-If you are using Git Bash on Windows, by default it is not interactive and therefore prompts will not work as expected. You may choose to specify the id's explicitly, or run `inso` using `winpty`:
+Git Bash on Windows is not interactive and therefore prompts from `inso` will not work as expected. You may choose to specify the identifiers for each command explicitly, or run `inso` using `winpty`:
 
 ```
 winpty inso.cmd generate config
