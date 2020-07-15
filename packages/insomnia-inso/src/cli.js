@@ -68,12 +68,19 @@ let passThroughArgs = [];
 function addScriptCommand(cmd: Object) {
   // inso script
   cmd
-    .command('script <name>')
+    .command('script <name>', { isDefault: true })
     .description('Run scripts defined in .insorc')
-    .action((scriptName, cmd) => {
+    .action(async (scriptName, cmd) => {
       const options = getAllOptions(cmd);
 
-      const scriptTask = options.scripts[scriptName];
+      const scriptTask = options?.scripts[scriptName];
+
+      if (!scriptTask) {
+        console.log(`Could not find inso script "${scriptName}" in the config file.`);
+        await exit(new Promise(resolve => resolve(false)));
+        return;
+      }
+
       let argsToRunWith: Array<string> = [...parseArgsStringToArgv(scriptTask), ...passThroughArgs];
 
       const index = argsToRunWith.indexOf('--');

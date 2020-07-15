@@ -1,6 +1,0 @@
-ci: false
-workingDir: /Users/opendersingh/dev/insomnia/packages/insomnia-inso/src/db/__fixtures__/git-repo
-scripts:
-  lint:pass: lint spec spc_46c5a4a40e83445a9bd9d9758b86c16c
-  lint:fail: script lint:pass -- -w /Users/opendersingh/dev/insomnia/packages/insomnia-inso/src/db/__fixtures__/git-repo-malformed-spec
-  lint:prompt: lint spec --ci
