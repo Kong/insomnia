@@ -63,28 +63,30 @@ function makeLintCommand(exitOverride: boolean) {
   return lint;
 }
 
-function makeScriptCommand(exitOverride: boolean, originalCommand: Object) {
-  // inso script
-  const script = createCommand(exitOverride, 'scr').description('scripting utilities');
+let passThroughArgs = [];
 
-  script
-    .command('scrRun <name>')
+function addScriptCommand(cmd: Object) {
+  // inso script
+  cmd
+    .command('script <name>')
     .description('Run scripts defined in .insorc')
     .action((scriptName, cmd) => {
       const options = getAllOptions(cmd);
-      const scriptTask = options.scripts[scriptName];
-      const args: Array<string> = parseArgsStringToArgv(scriptTask);
-      runWithArgs(originalCommand, args, true);
-    });
 
-  return script;
+      const scriptTask = options.scripts[scriptName];
+      let argsToRunWith: Array<string> = [...parseArgsStringToArgv(scriptTask), ...passThroughArgs];
+
+      const index = argsToRunWith.indexOf('--');
+      if (index !== -1) {
+        passThroughArgs = argsToRunWith.slice(index + 1);
+        argsToRunWith = argsToRunWith.slice(0, index);
+      }
+
+      runWithArgs(makeCli(), argsToRunWith, true);
+    });
 }
 
-export function go(args?: Array<string>, exitOverride?: boolean): void {
-  if (!args) {
-    args = process.argv;
-  }
-
+function makeCli(exitOverride?: boolean): Object {
   // inso -v
   let cmd = createCommand(!!exitOverride)
     .version(getVersion(), '-v, --version')
@@ -96,10 +98,18 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     .option('--ci', 'run in CI, disables all prompts')
     .addCommand(makeGenerateCommand(!!exitOverride))
     .addCommand(makeTestCommand(!!exitOverride))
-    .addCommand(makeLintCommand(!!exitOverride))
-    .addCommand(makeScriptCommand(!!exitOverride, cmd));
+    .addCommand(makeLintCommand(!!exitOverride));
 
-  runWithArgs(cmd, args);
+  addScriptCommand(cmd);
+  return cmd;
+}
+
+export function go(args?: Array<string>, exitOverride?: boolean): void {
+  if (!args) {
+    args = process.argv;
+  }
+
+  runWithArgs(makeCli(exitOverride), args);
 }
 
 function runWithArgs(cmd: Object, args: Array<string>, user?: boolean) {
