@@ -50,8 +50,7 @@ const SidebarHeader = ({
   headerTitle,
   toggleSection,
   toggleFilter,
-  sectionVisible,
-  children,
+      {children || (
 }: Props) => (
   <StyledHeader>
     <h6 onClick={toggleSection}>{headerTitle}</h6>
