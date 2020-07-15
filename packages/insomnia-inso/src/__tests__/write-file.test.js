@@ -59,7 +59,7 @@ describe('writeFileWithCliOptions', () => {
     );
   });
 
-  it('should return an error if mkdir.sync fails', () => {
+  it('should return an error if make directory fails', () => {
     const error = new Error('mkdir sync error');
     mock(mkdirp.sync).mockRejectedValue(error);
 
@@ -69,7 +69,7 @@ describe('writeFileWithCliOptions', () => {
     });
   });
 
-  it('should return an error if mkdir.sync fails', () => {
+  it('should return an error if write file fails', () => {
     const error = new Error('fs promises writeFile error');
     mock(fs.promises.writeFile).mockRejectedValue(error);
 
