@@ -22,7 +22,7 @@ export default class SidebarServers extends React.Component<Props> {
     <div>
       {this.props.servers.map(server => (
         <React.Fragment key={server.url}>
-          {server.url.includes(filter) && (
+          {server.url.includes(filter.toLocaleLowerCase()) && (
             <SidebarItem>
               <div></div>
               <div>

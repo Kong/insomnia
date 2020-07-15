@@ -34,44 +34,6 @@ const StyledSidebar: React.ComponentType<{}> = styled.div`
     font-size: var(--font-size-xl);
     fill: var(--hl-lg);
   }
-  .method {
-    h6 {
-      font-size: var(--font-size-xxs);
-    }
-  }
-  .method-post {
-    color: var(--color-success);
-  }
-  .method-get {
-    color: var(--color-surprise);
-  }
-  .method-delete {
-    color: var(--color-danger);
-  }
-  .method-parameters {
-    display: none;
-  }
-  .method-options-head,
-  .method-custom {
-    color: var(--color-info);
-  }
-  .method-patch {
-    color: var(--color-notice);
-  }
-  .method-put {
-    color: var(--color-warning);
-  }
-  h6 {
-    font-size: var(--font-size-xs);
-    display: flex;
-    flex-grow: 1;
-    &:hover {
-      cursor: default;
-    }
-  }
-  h5 {
-    font-size: var(--font-size-sm);
-  }
   ul:first-child {
     border-top: none;
   }

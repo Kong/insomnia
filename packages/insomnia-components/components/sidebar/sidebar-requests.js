@@ -25,7 +25,7 @@ export default class SidebarRequests extends React.Component<Props> {
     <div>
       {Object.keys(this.props.requests).map((requestName, value) => (
         <React.Fragment key={requestName}>
-          {requestName.toLowerCase().includes(filter) && (
+          {requestName.toLowerCase().includes(filter.toLocaleLowerCase()) && (
             <React.Fragment>
               <SidebarItem>
                 <div></div>

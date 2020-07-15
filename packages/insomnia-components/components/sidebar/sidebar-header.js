@@ -21,6 +21,15 @@ const StyledHeader: React.ComponentType<{}> = styled.li`
     background-color: var(--hl-xs);
   }
 
+  h6 {
+    font-size: var(--font-size-xs);
+    display: flex;
+    flex-grow: 1;
+    &:hover {
+      cursor: default;
+    }
+  }
+
   h6:hover {
     text-decoration: underline;
   }

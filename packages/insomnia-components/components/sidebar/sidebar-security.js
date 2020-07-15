@@ -22,7 +22,7 @@ export default class SidebarSecurity extends React.Component<Props> {
     <div>
       {Object.keys(this.props.security).map(scheme => (
         <React.Fragment key={scheme}>
-          {scheme.toLowerCase().includes(filter) && (
+          {scheme.toLowerCase().includes(filter.toLocaleLowerCase()) && (
             <SidebarItem>
               <div></div>
               <div>

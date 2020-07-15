@@ -24,7 +24,7 @@ export default class SidebarParameters extends React.Component<Props> {
     <div>
       {Object.keys(this.props.parameters).map(parameter => (
         <React.Fragment key={parameter}>
-          {parameter.toLowerCase().includes(filter) && (
+          {parameter.toLowerCase().includes(filter.toLocaleLowerCase()) && (
             <SidebarItem>
               <div></div>
               <div>

@@ -23,7 +23,7 @@ export default class SidebarHeaders extends React.Component<Props> {
     <div>
       {Object.keys(this.props.headers).map(header => (
         <React.Fragment key={header}>
-          {header.toLowerCase().includes(filter) && (
+          {header.toLowerCase().includes(filter.toLocaleLowerCase()) && (
             <SidebarItem>
               <div></div>
               <div>

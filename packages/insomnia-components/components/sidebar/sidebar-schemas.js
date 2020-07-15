@@ -23,7 +23,7 @@ export default class SidebarSchemas extends React.Component<Props> {
     <div>
       {Object.keys(this.props.schemas).map(schema => (
         <React.Fragment key={schema}>
-          {schema.toLowerCase().includes(filter) && (
+          {schema.toLowerCase().includes(filter.toLocaleLowerCase()) && (
             <SidebarItem>
               <div></div>
               <div>

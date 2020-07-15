@@ -24,7 +24,7 @@ export default class SidebarResponses extends React.Component<Props> {
     <div>
       {Object.keys(this.props.responses).map(response => (
         <React.Fragment key={response}>
-          {response.toLowerCase().includes(filter) && (
+          {response.toLowerCase().includes(filter.toLocaleLowerCase()) && (
             <SidebarItem>
               <div></div>
               <div>

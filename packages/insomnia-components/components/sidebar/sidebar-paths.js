@@ -24,7 +24,7 @@ export default class SidebarPaths extends React.Component<Props> {
     <div>
       {this.props.paths.map(path => (
         <React.Fragment key={path[0]}>
-          {path[0].includes(filter) && (
+          {path[0].includes(filter.toLocaleLowerCase()) && (
             <React.Fragment>
               <SidebarItem>
                 <div></div>
