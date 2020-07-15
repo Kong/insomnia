@@ -50,13 +50,13 @@ const SidebarHeader = ({
   headerTitle,
   toggleSection,
   toggleFilter,
-      {children || (
+  sectionVisible,
+  children,
 }: Props) => (
   <StyledHeader>
     <h6 onClick={toggleSection}>{headerTitle}</h6>
     <div>
-      {children}
-      {!children && (
+      {children || (
         <motion.span
           onClick={toggleFilter}
           initial={{ opacity: sectionVisible ? 0.6 : 0 }}
