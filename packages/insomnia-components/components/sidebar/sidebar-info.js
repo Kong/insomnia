@@ -15,43 +15,37 @@ const handleClick = items => {
   console.log(itemPath);
   itemPath = [];
 };
+
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarInfo extends React.Component<Props> {
   render() {
+    const { title, description, version, license } = this.props.info;
     return (
       <SidebarPanel parent={this.props.parent}>
         {this.props.info.title && (
           <SidebarBlockItem>
             <br />
             <strong>Title:</strong>
-            <span onClick={() => handleClick([this.props.info.title])}>
-              {this.props.info.title}
-            </span>
+            <span onClick={() => handleClick([title])}>{title}</span>
           </SidebarBlockItem>
         )}
-        {this.props.info.description && (
+        {description && (
           <SidebarBlockItem>
             <strong>Description:</strong>
-            <span onClick={() => handleClick([this.props.info.description])}>
-              {this.props.info.description}
-            </span>
+            <span onClick={() => handleClick([description])}>{description}</span>
           </SidebarBlockItem>
         )}
-        {this.props.info.version && (
+        {version && (
           <SidebarBlockItem>
             <strong>Version:</strong>
-            <span onClick={() => handleClick([this.props.info.version])}>
-              {this.props.info.version}
-            </span>
+            <span onClick={() => handleClick([version])}>{version}</span>
           </SidebarBlockItem>
         )}
-        {this.props.info.license.name && (
+        {license.name && (
           <SidebarBlockItem>
             <strong>License: </strong>
-            <span onClick={() => handleClick([this.props.info.license.name])}>
-              {this.props.info.license.name}
-            </span>
+            <span onClick={() => handleClick([license.name])}>{license.name}</span>
           </SidebarBlockItem>
         )}
       </SidebarPanel>

@@ -6,7 +6,6 @@ import SpecEditorSidebarItem from './spec-editor-sidebar-item';
 import { Sidebar } from 'insomnia-components';
 import type { ApiSpec } from '../../../models/api-spec';
 import { trackEvent } from '../../../common/analytics';
-const jsyaml = require('js-yaml');
 
 type Props = {|
   apiSpec: ApiSpec,
@@ -36,10 +35,6 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     // NOTE: We're subtracting 1 from everything because YAML CST uses
     //   1-based indexing and we use 0-based.
     handleSetSelection(pos.start.col - 1, pos.end.col - 1, pos.start.line - 1, pos.end.line - 1);
-  }
-
-  componentDidMount() {
-    // const { apiSpec } = this.props;
   }
 
   componentDidUpdate() {
@@ -137,8 +132,6 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
 
     if (apiSpec.contentType === 'yaml') {
       specJSON = YAML.parse(apiSpec.contents);
-    } else {
-      specJSON = jsyaml.safeLoad(apiSpec.contents);
     }
 
     if (!specCst) {

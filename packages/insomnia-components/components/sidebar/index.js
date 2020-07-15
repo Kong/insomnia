@@ -90,7 +90,7 @@ const DropdownEllipsis = () => <SvgIcon icon={IconEnum.ellipsesCircle} />;
 // Section Expansion & Filtering
 const useToggle = (state, set) =>
   React.useCallback(
-    e => {
+    (e: SyntheticKeyboardEvent<HTMLButtonElement>) => {
       e.stopPropagation();
       set(!state);
     },
@@ -138,7 +138,7 @@ function Sidebar(props: Props) {
   return (
     <StyledSidebar className="theme--sidebar">
       <StyledSection>
-        <SidebarHeader headerTitle="INFO" section={infoSec} toggleSection={toggleInfoSec}>
+        <SidebarHeader headerTitle="INFO" sectionVisible={infoSec} toggleSection={toggleInfoSec}>
           <Dropdown renderButton={DropdownEllipsis}>
             <DropdownDivider>VISIBILITY</DropdownDivider>
             <DropdownItem>

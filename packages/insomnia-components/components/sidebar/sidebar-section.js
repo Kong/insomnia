@@ -31,7 +31,7 @@ const SidebarSection = ({ title, renderBody }: SectionProps) => {
     <StyledSection>
       <SidebarHeader
         headerTitle={title}
-        section={bodyVisible}
+        sectionVisible={bodyVisible}
         toggleSection={toggleBodyVisible}
         toggleFilter={toggleFilterVisible}
       />

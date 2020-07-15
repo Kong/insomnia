@@ -9,7 +9,7 @@ import _GravatarImg from './components/gravatar-img';
 import _Header from './components/header';
 import _NoticeTable from './components/notice-table';
 import _SvgIcon from './components/svg-icon';
-import _Sidebar from './components/sidebar/sidebar';
+import _Sidebar from './components/sidebar/';
 import _Switch from './components/switch';
 import _ToggleSwitch from './components/toggle-switch';
 import * as table from './components/table';

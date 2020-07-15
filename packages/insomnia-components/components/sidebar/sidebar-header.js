@@ -6,9 +6,9 @@ import SvgIcon, { IconEnum } from '../svg-icon';
 
 type Props = {
   headerTitle: string,
-  toggleSection: Function,
-  toggleFilter?: Function,
-  section: boolean,
+  toggleSection: (toggle: SyntheticKeyboardEvent<HTMLButtonElement>) => void,
+  toggleFilter?: () => void,
+  sectionVisible: boolean,
   children?: React.Node,
 };
 
@@ -46,7 +46,13 @@ const StyledHeader: React.ComponentType<{}> = styled.li`
   }
 `;
 
-const SidebarHeader = ({ headerTitle, toggleSection, toggleFilter, section, children }: Props) => (
+const SidebarHeader = ({
+  headerTitle,
+  toggleSection,
+  toggleFilter,
+  sectionVisible,
+  children,
+}: Props) => (
   <StyledHeader>
     <h6 onClick={toggleSection}>{headerTitle}</h6>
     <div>
@@ -54,8 +60,8 @@ const SidebarHeader = ({ headerTitle, toggleSection, toggleFilter, section, chil
       {!children && (
         <motion.span
           onClick={toggleFilter}
-          initial={{ opacity: section ? 0.6 : 0 }}
-          animate={{ opacity: section ? 0.6 : 0 }}>
+          initial={{ opacity: sectionVisible ? 0.6 : 0 }}
+          animate={{ opacity: sectionVisible ? 0.6 : 0 }}>
           <SvgIcon icon={IconEnum.search} />
         </motion.span>
       )}
