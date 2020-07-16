@@ -97,15 +97,17 @@ function addScriptCommand(originalCommand: Object) {
     .description('Run scripts defined in .insorc')
     .allowUnknownOption()
     .action((scriptName, cmd) => {
+      // Load scripts
       const cosmiconfig = getCosmiConfig();
       if (!cosmiconfig || cosmiconfig.isEmpty) {
         console.log(`Could not find inso config file in the current directory tree.`);
         return exit(new Promise(resolve => resolve(false)));
       }
 
-      // Ignore the first arg because that will be scriptName
+      // Ignore the first arg because that will be scriptName, get the rest
       const passThroughArgs = cmd.args.slice(1);
 
+      // Find script
       const scriptTask = cosmiconfig.config.scripts?.[scriptName];
 
       if (!scriptTask) {
@@ -113,12 +115,15 @@ function addScriptCommand(originalCommand: Object) {
         return exit(new Promise(resolve => resolve(false)));
       }
 
+      // Collect args
       const scriptArgs: Array<string> = parseArgsStringToArgv(
         `${scriptTask} ${passThroughArgs.join(' ')}`,
       );
 
+      // Print command
       console.log(`> > inso ${scriptArgs.join(' ')}`);
 
+      // Run
       runWithArgs(originalCommand, scriptArgs, true);
     });
 }
