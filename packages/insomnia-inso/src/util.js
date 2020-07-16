@@ -1,5 +1,4 @@
 // @flow
-import commander from 'commander';
 import * as packageJson from '../package.json';
 import { cosmiconfigSync } from 'cosmiconfig';
 
@@ -9,19 +8,20 @@ export type GlobalOptions = {
   ci?: boolean,
 };
 
-export function createCommand(exitOverride: boolean, cmd?: string) {
-  const command = new commander.Command(cmd).storeOptionsAsProperties(false);
-
-  // TODO: can probably remove this
-  if (exitOverride) {
-    return command.exitOverride();
-  }
-
-  return command;
-}
-
 export function getVersion() {
   return packageJson.version;
+}
+
+export function isDevelopment() {
+  return process.env.NODE_ENV === 'development';
+}
+
+export function getCosmiConfig(): {
+  config: Object,
+  filepath: string,
+  isEmpty?: boolean,
+} | null {
+  return cosmiconfigSync('inso').search();
 }
 
 export function getAllOptions<T>(cmd: Object): T {
@@ -34,9 +34,15 @@ export function getAllOptions<T>(cmd: Object): T {
     command = command.parent;
   } while (command);
 
-  const { config, isEmpty } = cosmiconfigSync('inso').search();
+  try {
+    const config = getCosmiConfig()?.config?.settings || {};
+    return { ...config, ...opts };
+  } catch (e) {
+    // Fatal error when loading config file
+    console.error(e);
+  }
 
-  return isEmpty ? opts : { ...config, ...opts };
+  return opts;
 }
 
 export function logErrorExit1(err: Error) {

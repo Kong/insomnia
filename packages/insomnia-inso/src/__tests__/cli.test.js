@@ -4,6 +4,7 @@ import { generateConfig } from '../commands/generate-config';
 import { lintSpecification } from '../commands/lint-specification';
 import { runInsomniaTests } from '../commands/run-tests';
 import { exportSpecification } from '../commands/export-specification';
+import { parseArgsStringToArgv } from 'string-argv';
 
 jest.mock('../commands/generate-config');
 jest.mock('../commands/lint-specification');
@@ -12,13 +13,9 @@ jest.mock('../commands/export-specification');
 
 const initInso = () => {
   return (args: string): void => {
-    const cliArgs = `node test ${args}`
-      .split(' ')
-      .map(t => t.trim())
-      .filter(t => t);
+    const cliArgs = parseArgsStringToArgv(`node test ${args}`);
 
-    // console.log('calling cli.go with: %o', cliArgs);
-    return cli.go(cliArgs, true);
+    return cli.go(cliArgs);
   };
 };
 

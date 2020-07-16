@@ -1,14 +1,26 @@
 // @flow
 import { ConversionTypeMap, generateConfig } from './commands/generate-config';
-import { getVersion, createCommand, getAllOptions, logErrorExit1, exit } from './util';
+import {
+  getVersion,
+  getAllOptions,
+  logErrorExit1,
+  exit,
+  isDevelopment,
+  getCosmiConfig,
+} from './util';
 import { runInsomniaTests, TestReporterEnum } from './commands/run-tests';
 import { lintSpecification } from './commands/lint-specification';
 import { exportSpecification } from './commands/export-specification';
 import { parseArgsStringToArgv } from 'string-argv';
+import commander from 'commander';
 
-function makeGenerateCommand(exitOverride: boolean) {
+function createCommand(cmd?: string, options?: Object = {}) {
+  return new commander.Command(cmd, options).storeOptionsAsProperties(false);
+}
+
+function makeGenerateCommand() {
   // inso generate
-  const generate = createCommand(exitOverride, 'generate').description('Code generation utilities');
+  const generate = createCommand('generate').description('Code generation utilities');
 
   const conversionTypes = Object.keys(ConversionTypeMap).join(', ');
 
@@ -27,9 +39,9 @@ function makeGenerateCommand(exitOverride: boolean) {
   return generate;
 }
 
-function makeTestCommand(exitOverride: boolean) {
+function makeTestCommand() {
   // inso run
-  const run = createCommand(exitOverride, 'run').description('Execution utilities');
+  const run = createCommand('run').description('Execution utilities');
 
   const reporterTypes = Object.keys(TestReporterEnum).join(', ');
 
@@ -51,9 +63,9 @@ function makeTestCommand(exitOverride: boolean) {
   return run;
 }
 
-function makeLintCommand(exitOverride: boolean) {
+function makeLintCommand() {
   // inso lint
-  const lint = createCommand(exitOverride, 'lint').description('Linting utilities');
+  const lint = createCommand('lint').description('Linting utilities');
 
   // inso lint spec
   lint
@@ -64,11 +76,9 @@ function makeLintCommand(exitOverride: boolean) {
   return lint;
 }
 
-function makeExportCommand(exitOverride: boolean) {
+function makeExportCommand() {
   // inso export
-  const exportCmd = createCommand(exitOverride, 'export').description(
-    'Export data from insomnia models',
-  );
+  const exportCmd = createCommand('export').description('Export data from insomnia models');
 
   // inso export spec
   exportCmd
@@ -80,66 +90,99 @@ function makeExportCommand(exitOverride: boolean) {
   return exportCmd;
 }
 
-let passThroughArgs = [];
-
 function addScriptCommand(originalCommand: Object) {
   // inso script
   originalCommand
     .command('script <name>', { isDefault: true })
     .description('Run scripts defined in .insorc')
+    .allowUnknownOption()
     .action(async (scriptName, cmd) => {
-      const options = getAllOptions(cmd);
+      const cosmiconfig = getCosmiConfig();
+      if (!cosmiconfig || cosmiconfig.isEmpty) {
+        console.log(`Could not find inso config file in the current directory tree.`);
+        return await exit(new Promise(resolve => resolve(false)));
+      }
 
-      // if (!cmd.args.includes('--')) {
-      //   passThroughArgs = cmd.args.slice(1);
-      // }
+      // Ignore the first arg because that will be scriptName
+      const passThroughArgs = cmd.args.slice(1);
 
-      const scriptTask = options?.scripts[scriptName];
+      const scriptTask = cosmiconfig.config.scripts?.[scriptName];
 
       if (!scriptTask) {
         console.log(`Could not find inso script "${scriptName}" in the config file.`);
-        await exit(new Promise(resolve => resolve(false)));
-        return;
+        return await exit(new Promise(resolve => resolve(false)));
       }
 
-      let argsToRunWith: Array<string> = [...parseArgsStringToArgv(scriptTask), ...passThroughArgs];
+      const scriptArgs: Array<string> = parseArgsStringToArgv(
+        `${scriptTask} ${passThroughArgs.join(' ')}`,
+      );
 
-      const index = argsToRunWith.indexOf('--');
-      if (index !== -1) {
-        passThroughArgs = argsToRunWith.slice(index + 1);
-        argsToRunWith = argsToRunWith.slice(0, index);
-      }
+      console.log(`> > inso ${scriptArgs.join(' ')}`);
 
-      console.log(argsToRunWith);
-      runWithArgs(makeCli(), argsToRunWith, true);
+      runWithArgs(originalCommand, scriptArgs, true);
     });
 }
 
-function makeCli(exitOverride?: boolean): Object {
-  // inso -v
-  let cmd = createCommand(!!exitOverride)
-    .version(getVersion(), '-v, --version')
-    .description('A CLI for Insomnia!');
+function makeDebugCommand(): Object {
+  // inso export
+  const debug = createCommand('debug').description('Debugging commands');
 
-  cmd = cmd
+  // inso export spec
+  debug
+    .command('options')
+    .description('Print all options parsed')
+    .allowUnknownOption()
+    .action(cmd => {
+      const options = getAllOptions(cmd);
+
+      console.log(`getAllOptions resolves to:\n${JSON.stringify(options, null, 2)}`);
+      console.log(`cmd.args resolves to:\n${JSON.stringify(cmd.args)}`);
+
+      return exit(
+        new Promise<boolean>(resolve => resolve(false)),
+      );
+    });
+
+  return debug;
+}
+
+function makeCli(): Object {
+  // inso
+  const cmd = createCommand();
+
+  // Version and description
+  cmd.version(getVersion(), '-v, --version').description('A CLI for Insomnia!');
+
+  // Global options
+  cmd
     .option('-w, --working-dir <dir>', 'set working directory')
     .option('-a, --app-data-dir <dir>', 'set the app data directory')
-    .option('--ci', 'run in CI, disables all prompts')
-    .addCommand(makeGenerateCommand(!!exitOverride))
-    .addCommand(makeTestCommand(!!exitOverride))
-    .addCommand(makeLintCommand(!!exitOverride))
-    .addCommand(makeExportCommand(!!exitOverride));
+    .option('--ci', 'run in CI, disables all prompts');
 
+  // Add commands and sub commands
+  cmd
+    .addCommand(makeGenerateCommand())
+    .addCommand(makeTestCommand())
+    .addCommand(makeLintCommand())
+    .addCommand(makeExportCommand());
+
+  // Add script base command
   addScriptCommand(cmd);
+
+  // Debugging commands
+  if (isDevelopment()) {
+    cmd.addCommand(makeDebugCommand());
+  }
+
   return cmd;
 }
 
-export function go(args?: Array<string>, exitOverride?: boolean): void {
+export function go(args?: Array<string>): void {
   if (!args) {
     args = process.argv;
   }
 
-  runWithArgs(makeCli(exitOverride), args);
+  runWithArgs(makeCli(), args);
 }
 
 function runWithArgs(cmd: Object, args: Array<string>, user?: boolean) {
