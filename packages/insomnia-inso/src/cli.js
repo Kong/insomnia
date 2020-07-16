@@ -96,11 +96,11 @@ function addScriptCommand(originalCommand: Object) {
     .command('script <name>', { isDefault: true })
     .description('Run scripts defined in .insorc')
     .allowUnknownOption()
-    .action(async (scriptName, cmd) => {
+    .action((scriptName, cmd) => {
       const cosmiconfig = getCosmiConfig();
       if (!cosmiconfig || cosmiconfig.isEmpty) {
         console.log(`Could not find inso config file in the current directory tree.`);
-        return await exit(new Promise(resolve => resolve(false)));
+        return exit(new Promise(resolve => resolve(false)));
       }
 
       // Ignore the first arg because that will be scriptName
@@ -110,7 +110,7 @@ function addScriptCommand(originalCommand: Object) {
 
       if (!scriptTask) {
         console.log(`Could not find inso script "${scriptName}" in the config file.`);
-        return await exit(new Promise(resolve => resolve(false)));
+        return exit(new Promise(resolve => resolve(false)));
       }
 
       const scriptArgs: Array<string> = parseArgsStringToArgv(
