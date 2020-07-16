@@ -17,6 +17,8 @@ Commands:
   run                       Execution utilities
   lint                      Linting utilities
   export                    Export data from insomnia models
+  script <name>             Run scripts defined in .insorc
+  debug                     Debugging commands
   help [command]            display help for command"
 `;
 
@@ -37,6 +39,8 @@ Commands:
   run                       Execution utilities
   lint                      Linting utilities
   export                    Export data from insomnia models
+  script <name>             Run scripts defined in .insorc
+  debug                     Debugging commands
   help [command]            display help for command"
 `;
 
@@ -105,6 +109,8 @@ Commands:
   run                       Execution utilities
   lint                      Linting utilities
   export                    Export data from insomnia models
+  script <name>             Run scripts defined in .insorc
+  debug                     Debugging commands
   help [command]            display help for command"
 `;
 
