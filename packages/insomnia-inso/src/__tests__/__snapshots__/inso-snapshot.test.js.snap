@@ -16,6 +16,7 @@ Commands:
   generate                  Code generation utilities
   run                       Execution utilities
   lint                      Linting utilities
+  export                    Export data from insomnia models
   help [command]            display help for command"
 `;
 
@@ -35,7 +36,31 @@ Commands:
   generate                  Code generation utilities
   run                       Execution utilities
   lint                      Linting utilities
+  export                    Export data from insomnia models
   help [command]            display help for command"
+`;
+
+exports[`Snapshot for "inso export -h" 1`] = `
+"Usage: inso export [options] [command]
+
+Export data from insomnia models
+
+Options:
+  -h, --help                   display help for command
+
+Commands:
+  spec [options] [identifier]  Export an API Specification to a file
+  help [command]               display help for command"
+`;
+
+exports[`Snapshot for "inso export spec -h" 1`] = `
+"Usage: inso export spec [options] [identifier]
+
+Export an API Specification to a file
+
+Options:
+  -o, --output <path>  save the generated config to a file
+  -h, --help           display help for command"
 `;
 
 exports[`Snapshot for "inso generate -h" 1`] = `
@@ -79,6 +104,7 @@ Commands:
   generate                  Code generation utilities
   run                       Execution utilities
   lint                      Linting utilities
+  export                    Export data from insomnia models
   help [command]            display help for command"
 `;
 

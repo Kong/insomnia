@@ -3,6 +3,7 @@ import { ConversionTypeMap, generateConfig } from './commands/generate-config';
 import { getVersion, createCommand, getAllOptions, logErrorExit1, exit } from './util';
 import { runInsomniaTests, TestReporterEnum } from './commands/run-tests';
 import { lintSpecification } from './commands/lint-specification';
+import { exportSpecification } from './commands/export-specification';
 import { parseArgsStringToArgv } from 'string-argv';
 
 function makeGenerateCommand(exitOverride: boolean) {
@@ -63,6 +64,22 @@ function makeLintCommand(exitOverride: boolean) {
   return lint;
 }
 
+function makeExportCommand(exitOverride: boolean) {
+  // inso export
+  const exportCmd = createCommand(exitOverride, 'export').description(
+    'Export data from insomnia models',
+  );
+
+  // inso export spec
+  exportCmd
+    .command('spec [identifier]')
+    .description('Export an API Specification to a file')
+    .option('-o, --output <path>', 'save the generated config to a file')
+    .action((identifier, cmd) => exit(exportSpecification(identifier, getAllOptions(cmd))));
+
+  return exportCmd;
+}
+
 let passThroughArgs = [];
 
 function addScriptCommand(originalCommand: Object) {
@@ -110,7 +127,8 @@ function makeCli(exitOverride?: boolean): Object {
     .option('--ci', 'run in CI, disables all prompts')
     .addCommand(makeGenerateCommand(!!exitOverride))
     .addCommand(makeTestCommand(!!exitOverride))
-    .addCommand(makeLintCommand(!!exitOverride));
+    .addCommand(makeLintCommand(!!exitOverride))
+    .addCommand(makeExportCommand(!!exitOverride));
 
   addScriptCommand(cmd);
   return cmd;
