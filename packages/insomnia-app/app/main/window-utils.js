@@ -17,6 +17,11 @@ import { docsBase } from '../common/documentation';
 
 const { app, Menu, BrowserWindow, shell, dialog } = electron;
 
+// So we can use native modules in renderer
+// NOTE: This will be deprecated in Electron 10 and impossible in 11
+//   https://github.com/electron/electron/issues/18397
+app.allowRendererProcessReuse = false;
+
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 700;
 const MINIMUM_WIDTH = 500;
