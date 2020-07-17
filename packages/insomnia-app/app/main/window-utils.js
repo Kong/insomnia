@@ -66,6 +66,7 @@ export function createWindow() {
     webPreferences: {
       zoomFactor: zoomFactor,
       nodeIntegration: true,
+      webviewTag: true,
     },
   });
 
