@@ -893,7 +893,7 @@ class App extends PureComponent {
 
   _handleToggleMenuBar(hide) {
     for (const win of remote.BrowserWindow.getAllWindows()) {
-      if (win.isMenuBarAutoHide() !== hide) {
+      if (win.autoHideMenuBar !== hide) {
         win.setAutoHideMenuBar(hide);
         win.setMenuBarVisibility(!hide);
       }

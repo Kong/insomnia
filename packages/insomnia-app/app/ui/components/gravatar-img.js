@@ -31,7 +31,6 @@ class GravatarImg extends React.PureComponent<Props> {
         alt="Profile picture"
         title="Profile picture"
         className={className}
-        rounded
         style={{ width: cssSize, height: cssSize, borderRadius: rounded ? cssSize : null }}
       />
     );
