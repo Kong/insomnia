@@ -102,7 +102,8 @@ function addScriptCommand(originalCommand: Object) {
     .allowUnknownOption()
     .action((scriptName, cmd) => {
       // Load scripts
-      const cosmiconfig = getCosmiConfig();
+      const options = getAllOptions(cmd, {}, true);
+      const cosmiconfig = getCosmiConfig(options?.config);
       if (!cosmiconfig || cosmiconfig.isEmpty) {
         console.log(`Could not find inso config file in the current directory tree.`);
         return exit(new Promise(resolve => resolve(false)));
@@ -142,11 +143,24 @@ function makeDebugCommand(): Object {
     .description('Print all options parsed')
     .allowUnknownOption()
     .action(cmd => {
-      const options = getAllOptions(cmd);
+      const options = getAllOptions(cmd, {}, true);
 
       console.log(`getAllOptions resolves to:\n${JSON.stringify(options, null, 2)}`);
       console.log(`cmd.args resolves to:\n${JSON.stringify(cmd.args)}`);
 
+      return exit(
+        new Promise<boolean>(resolve => resolve(false)),
+      );
+    });
+
+  debug
+    .command('config-file')
+    .description('Load the config file')
+    .action(cmd => {
+      const options = getAllOptions(cmd, {}, true);
+      const cosmiconfig = getCosmiConfig(options?.config);
+
+      console.log(`Loaded config file:\n${JSON.stringify(cosmiconfig || {}, null, 2)}`);
       return exit(
         new Promise<boolean>(resolve => resolve(false)),
       );
@@ -166,6 +180,7 @@ function makeCli(): Object {
   cmd
     .option('-w, --workingDir <dir>', 'set working directory')
     .option('-a, --appDataDir <dir>', 'set the app data directory')
+    .option('--config <path>', 'path to configuration file')
     .option('--ci', 'run in CI, disables all prompts');
 
   // Add commands and sub commands

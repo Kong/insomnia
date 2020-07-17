@@ -16,15 +16,22 @@ export function isDevelopment() {
   return process.env.NODE_ENV === 'development';
 }
 
-export function getCosmiConfig(): {
+export function getCosmiConfig(
+  configPath?: string,
+): {
   config: Object,
   filepath: string,
   isEmpty?: boolean,
 } | null {
-  return cosmiconfigSync('inso').search();
+  const explorer = cosmiconfigSync('inso');
+  return configPath ? explorer.load(configPath) : explorer.search();
 }
 
-export function getAllOptions<T>(cmd: Object, defaultOptions: $Shape<T> = {}): T {
+export function getAllOptions<T>(
+  cmd: Object,
+  defaultOptions: $Shape<T> = {},
+  skipConfigFile: boolean = false,
+): T {
   let opts = {};
   let command = cmd;
 
@@ -34,12 +41,14 @@ export function getAllOptions<T>(cmd: Object, defaultOptions: $Shape<T> = {}): T
     command = command.parent;
   } while (command);
 
-  try {
-    const config = getCosmiConfig()?.config?.settings || {};
-    return { ...defaultOptions, ...config, ...opts };
-  } catch (e) {
-    // Fatal error when loading config file
-    console.error(e);
+  if (!skipConfigFile) {
+    try {
+      const config = getCosmiConfig(opts.config)?.config?.settings || {};
+      return { ...defaultOptions, ...config, ...opts };
+    } catch (e) {
+      // Fatal error when loading config file
+      console.error(e);
+    }
   }
 
   return { ...defaultOptions, ...opts };
