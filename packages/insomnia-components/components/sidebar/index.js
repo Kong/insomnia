@@ -1,6 +1,5 @@
 // @flow
 import * as React from 'react';
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
 import SidebarHeader from './sidebar-header';
@@ -17,6 +16,7 @@ import Dropdown from '../dropdown/dropdown';
 import DropdownItem from '../dropdown/dropdown-item';
 import DropdownDivider from '../dropdown/dropdown-divider';
 import SvgIcon, { IconEnum } from '../svg-icon';
+import { useToggle } from 'react-use';
 
 type Props = {|
   className?: string,
@@ -50,37 +50,18 @@ const StyledSection: React.ComponentType<{}> = styled(motion.ul)`
 
 const DropdownEllipsis = () => <SvgIcon icon={IconEnum.ellipsesCircle} />;
 // Section Expansion & Filtering
-const useToggle = (state, set) =>
-  React.useCallback(
-    (e: SyntheticKeyboardEvent<HTMLButtonElement>) => {
-      // e.stopPropagation();
-      set(!state);
-    },
-    [set, state],
-  );
 
 function Sidebar(props: Props) {
-  // Info
-  const [infoSec, setInfoSec] = useState(false);
-  const toggleInfoSec = useToggle(infoSec, setInfoSec);
-
   // Section Visibility
-  const [pathsVisible, setPathsVisible] = useState(true);
-  const handlePathsVisibleClick = useToggle(pathsVisible, setPathsVisible);
-  const [serversVisible, setServersVisible] = useState(true);
-  const handleServersVisibleClick = useToggle(serversVisible, setServersVisible);
-  const [requestsVisible, setRequestsVisible] = useState(true);
-  const handleRequestsVisibleClick = useToggle(requestsVisible, setRequestsVisible);
-  const [responsesVisible, setResponsesVisible] = useState(true);
-  const handleResponsesVisibleClick = useToggle(responsesVisible, setResponsesVisible);
-  const [parametersVisible, setParametersVisible] = useState(true);
-  const handleParametersVisibleClick = useToggle(parametersVisible, setParametersVisible);
-  const [headersVisible, setHeadersVisible] = useState(true);
-  const handleHeadersVisibleClick = useToggle(headersVisible, setHeadersVisible);
-  const [schemasVisible, setSchemasVisible] = useState(true);
-  const handleSchemasVisibleClick = useToggle(schemasVisible, setSchemasVisible);
-  const [securityVisible, setSecurityVisible] = useState(true);
-  const handleSecurityVisibleClick = useToggle(securityVisible, setSecurityVisible);
+  const [infoSec, setInfoSec] = useToggle(false);
+  const [pathsVisible, setPathsVisible] = useToggle(true);
+  const [serversVisible, setServersVisible] = useToggle(true);
+  const [requestsVisible, setRequestsVisible] = useToggle(true);
+  const [responsesVisible, setResponsesVisible] = useToggle(true);
+  const [parametersVisible, setParametersVisible] = useToggle(true);
+  const [headersVisible, setHeadersVisible] = useToggle(true);
+  const [schemasVisible, setSchemasVisible] = useToggle(true);
+  const [securityVisible, setSecurityVisible] = useToggle(true);
 
   // Sections
   if (props.jsonData === null) {
@@ -100,29 +81,21 @@ function Sidebar(props: Props) {
   return (
     <StyledSidebar className="theme--sidebar">
       <StyledSection>
-        <SidebarHeader headerTitle="INFO" sectionVisible={infoSec} toggleSection={toggleInfoSec}>
+        <SidebarHeader headerTitle="INFO" sectionVisible={infoSec} toggleSection={setInfoSec}>
           <Dropdown renderButton={DropdownEllipsis}>
             <DropdownDivider>VISIBILITY</DropdownDivider>
             <DropdownItem stayOpenAfterClick>
-              <input
-                type="checkbox"
-                onClick={handleServersVisibleClick}
-                defaultChecked={serversVisible}
-              />
+              <input type="checkbox" onClick={setServersVisible} defaultChecked={serversVisible} />
               <label htmlFor="servers">Servers</label>
             </DropdownItem>
             <DropdownItem stayOpenAfterClick>
-              <input
-                type="checkbox"
-                onClick={handlePathsVisibleClick}
-                defaultChecked={pathsVisible}
-              />
+              <input type="checkbox" onClick={setPathsVisible} defaultChecked={pathsVisible} />
               <label htmlFor="paths">Paths</label>
             </DropdownItem>
             <DropdownItem stayOpenAfterClick>
               <input
                 type="checkbox"
-                onClick={handleRequestsVisibleClick}
+                onClick={setRequestsVisible}
                 defaultChecked={requestsVisible}
               />
               <label htmlFor="requests">Requests</label>
@@ -130,7 +103,7 @@ function Sidebar(props: Props) {
             <DropdownItem stayOpenAfterClick>
               <input
                 type="checkbox"
-                onClick={handleResponsesVisibleClick}
+                onClick={setResponsesVisible}
                 defaultChecked={responsesVisible}
               />
               <label htmlFor="responses">Responses</label>
@@ -138,31 +111,23 @@ function Sidebar(props: Props) {
             <DropdownItem stayOpenAfterClick>
               <input
                 type="checkbox"
-                onClick={handleParametersVisibleClick}
+                onClick={setParametersVisible}
                 defaultChecked={parametersVisible}
               />
               <label htmlFor="parameters">Parameters</label>
             </DropdownItem>
             <DropdownItem stayOpenAfterClick>
-              <input
-                type="checkbox"
-                onClick={handleHeadersVisibleClick}
-                defaultChecked={headersVisible}
-              />
+              <input type="checkbox" onClick={setHeadersVisible} defaultChecked={headersVisible} />
               <label htmlFor="headers">Headers</label>
             </DropdownItem>
             <DropdownItem stayOpenAfterClick>
-              <input
-                type="checkbox"
-                onClick={handleSchemasVisibleClick}
-                defaultChecked={schemasVisible}
-              />
+              <input type="checkbox" onClick={setSchemasVisible} defaultChecked={schemasVisible} />
               <label htmlFor="schemas">Schemas</label>
             </DropdownItem>
             <DropdownItem stayOpenAfterClick>
               <input
                 type="checkbox"
-                onClick={handleSecurityVisibleClick}
+                onClick={setSecurityVisible}
                 defaultChecked={securityVisible}
               />
               <label htmlFor="security">Security</label>
