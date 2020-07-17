@@ -1,49 +1,37 @@
 // @flow
 import * as React from 'react';
 import SidebarPanel from './sidebar-panel';
-import SidebarBlockItem from './sidebar-block-item';
+import SidebarItem from './sidebar-item';
+import SidebarTextItem from './sidebar-text-item';
 
 type Props = {
   info: Object,
-  parent: boolean,
-};
-
-let itemPath = [];
-const handleClick = items => {
-  itemPath.push('info');
-  itemPath.push.apply(itemPath, items);
-  console.log(itemPath);
-  itemPath = [];
+  childrenVisible: boolean,
 };
 
 function SidebarInfo(props: Props) {
   const { title, description, version, license } = props.info;
   return (
-    <SidebarPanel parent={props.parent}>
-      {props.info.title && (
-        <SidebarBlockItem>
-          <br />
-          <strong>Title:</strong>
-          <span onClick={() => handleClick([title])}>{title}</span>
-        </SidebarBlockItem>
+    <SidebarPanel childrenVisible={props.childrenVisible}>
+      {title && (
+        <SidebarItem>
+          <SidebarTextItem label={'Title:'} headline={title} />
+        </SidebarItem>
       )}
       {description && (
-        <SidebarBlockItem>
-          <strong>Description:</strong>
-          <span onClick={() => handleClick([description])}>{description}</span>
-        </SidebarBlockItem>
+        <SidebarItem>
+          <SidebarTextItem label={'Description:'} headline={description} />
+        </SidebarItem>
       )}
       {version && (
-        <SidebarBlockItem>
-          <strong>Version:</strong>
-          <span onClick={() => handleClick([version])}>{version}</span>
-        </SidebarBlockItem>
+        <SidebarItem>
+          <SidebarTextItem label={'Version:'} headline={version} />
+        </SidebarItem>
       )}
       {license.name && (
-        <SidebarBlockItem>
-          <strong>License: </strong>
-          <span onClick={() => handleClick([license.name])}>{license.name}</span>
-        </SidebarBlockItem>
+        <SidebarItem>
+          <SidebarTextItem label={'License:'} headline={license.name} />
+        </SidebarItem>
       )}
     </SidebarPanel>
   );

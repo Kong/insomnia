@@ -53,7 +53,7 @@ const DropdownEllipsis = () => <SvgIcon icon={IconEnum.ellipsesCircle} />;
 const useToggle = (state, set) =>
   React.useCallback(
     (e: SyntheticKeyboardEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
+      // e.stopPropagation();
       set(!state);
     },
     [set, state],
@@ -103,7 +103,7 @@ function Sidebar(props: Props) {
         <SidebarHeader headerTitle="INFO" sectionVisible={infoSec} toggleSection={toggleInfoSec}>
           <Dropdown renderButton={DropdownEllipsis}>
             <DropdownDivider>VISIBILITY</DropdownDivider>
-            <DropdownItem>
+            <DropdownItem stayOpenAfterClick>
               <input
                 type="checkbox"
                 onClick={handleServersVisibleClick}
@@ -111,7 +111,7 @@ function Sidebar(props: Props) {
               />
               <label htmlFor="servers">Servers</label>
             </DropdownItem>
-            <DropdownItem>
+            <DropdownItem stayOpenAfterClick>
               <input
                 type="checkbox"
                 onClick={handlePathsVisibleClick}
@@ -119,7 +119,7 @@ function Sidebar(props: Props) {
               />
               <label htmlFor="paths">Paths</label>
             </DropdownItem>
-            <DropdownItem>
+            <DropdownItem stayOpenAfterClick>
               <input
                 type="checkbox"
                 onClick={handleRequestsVisibleClick}
@@ -127,7 +127,7 @@ function Sidebar(props: Props) {
               />
               <label htmlFor="requests">Requests</label>
             </DropdownItem>
-            <DropdownItem>
+            <DropdownItem stayOpenAfterClick>
               <input
                 type="checkbox"
                 onClick={handleResponsesVisibleClick}
@@ -135,7 +135,7 @@ function Sidebar(props: Props) {
               />
               <label htmlFor="responses">Responses</label>
             </DropdownItem>
-            <DropdownItem>
+            <DropdownItem stayOpenAfterClick>
               <input
                 type="checkbox"
                 onClick={handleParametersVisibleClick}
@@ -143,7 +143,7 @@ function Sidebar(props: Props) {
               />
               <label htmlFor="parameters">Parameters</label>
             </DropdownItem>
-            <DropdownItem>
+            <DropdownItem stayOpenAfterClick>
               <input
                 type="checkbox"
                 onClick={handleHeadersVisibleClick}
@@ -151,7 +151,7 @@ function Sidebar(props: Props) {
               />
               <label htmlFor="headers">Headers</label>
             </DropdownItem>
-            <DropdownItem>
+            <DropdownItem stayOpenAfterClick>
               <input
                 type="checkbox"
                 onClick={handleSchemasVisibleClick}
@@ -159,7 +159,7 @@ function Sidebar(props: Props) {
               />
               <label htmlFor="schemas">Schemas</label>
             </DropdownItem>
-            <DropdownItem>
+            <DropdownItem stayOpenAfterClick>
               <input
                 type="checkbox"
                 onClick={handleSecurityVisibleClick}
@@ -169,7 +169,7 @@ function Sidebar(props: Props) {
             </DropdownItem>
           </Dropdown>
         </SidebarHeader>
-        <SidebarInfo parent={infoSec} info={props.jsonData.info} />
+        <SidebarInfo childrenVisible={infoSec} info={props.jsonData.info} />
       </StyledSection>
       {serversVisible && servers && <SidebarServers servers={servers} />}
       {pathsVisible && paths && <SidebarPaths paths={paths} />}

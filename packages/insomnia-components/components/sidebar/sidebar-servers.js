@@ -18,23 +18,30 @@ const handleClick = items => {
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarServers extends React.Component<Props> {
-  renderBody = (filter: string) => (
-    <div>
-      {this.props.servers.map(server => (
-        <React.Fragment key={server.url}>
-          {server.url.includes(filter.toLocaleLowerCase()) && (
+  renderBody = (filter: string): null | React.Node => {
+    const filteredValues = this.props.servers.filter(server =>
+      server.url.includes(filter.toLocaleLowerCase()),
+    );
+
+    if (!filteredValues.length) {
+      return null;
+    }
+
+    return (
+      <div>
+        {filteredValues.map(server => (
+          <React.Fragment key={server.url}>
             <SidebarItem>
-              <div></div>
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
               <span onClick={() => handleClick([server.url])}>{server.url}</span>
             </SidebarItem>
-          )}
-        </React.Fragment>
-      ))}
-    </div>
-  );
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  };
 
   render() {
     return <SidebarSection title="SERVERS" renderBody={this.renderBody} />;

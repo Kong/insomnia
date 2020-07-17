@@ -22,7 +22,7 @@ const apiSpec = {
   },
   servers: [
     {
-      url: 'https://dev.konghq.com/v1',
+      url: 'https://dev.kongonghq.com/v1',
       description: 'Development server',
     },
     {
@@ -2945,7 +2945,7 @@ const apiSpec = {
 };
 
 export const _default = () => (
-  <div style={{ width: '400px' }}>
+  <div style={{ width: '350px' }}>
     <Sidebar jsonData={apiSpec} />
   </div>
 );

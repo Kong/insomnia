@@ -18,6 +18,11 @@ const StyledSection: React.ComponentType<{}> = styled(motion.ul)`
   border-bottom: 1px solid var(--hl-md);
 `;
 
+const StyledNoResults: React.ComponentType<{}> = styled.div`
+  padding: var(--padding-xs) var(--padding-xs) var(--padding-md) var(--padding-md);
+  color: var(--color-warning);
+`;
+
 const SidebarSection = ({ title, renderBody }: SectionProps) => {
   const [bodyVisible, toggleBodyVisible] = useToggle(false);
   const [filterVisible, toggleFilterVisible] = useToggle(false);
@@ -35,9 +40,11 @@ const SidebarSection = ({ title, renderBody }: SectionProps) => {
         toggleSection={toggleBodyVisible}
         toggleFilter={toggleFilterVisible}
       />
-      <SidebarPanel parent={bodyVisible}>
+      <SidebarPanel childrenVisible={bodyVisible}>
         <SidebarFilter filter={filterVisible} onChange={handleFilterChange} />
-        {renderBody(filterValue)}
+        {renderBody(filterValue) || (
+          <StyledNoResults>No results found for "{filterValue}"...</StyledNoResults>
+        )}
       </SidebarPanel>
     </StyledSection>
   );

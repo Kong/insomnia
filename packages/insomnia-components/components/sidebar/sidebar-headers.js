@@ -19,13 +19,20 @@ const handleClick = items => {
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarHeaders extends React.Component<Props> {
-  renderBody = (filter: string) => (
-    <div>
-      {Object.keys(this.props.headers).map(header => (
-        <React.Fragment key={header}>
-          {header.toLowerCase().includes(filter.toLocaleLowerCase()) && (
+  renderBody = (filter: string): null | React.Node => {
+    const filteredValues = Object.keys(this.props.headers).filter(header =>
+      header.toLowerCase().includes(filter.toLocaleLowerCase()),
+    );
+
+    if (!filteredValues.length) {
+      return null;
+    }
+
+    return (
+      <div>
+        {filteredValues.map(header => (
+          <React.Fragment key={header}>
             <SidebarItem>
-              <div></div>
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
@@ -35,11 +42,11 @@ export default class SidebarHeaders extends React.Component<Props> {
                 </Tooltip>
               </span>
             </SidebarItem>
-          )}
-        </React.Fragment>
-      ))}
-    </div>
-  );
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  };
 
   render() {
     return <SidebarSection title="HEADERS" renderBody={this.renderBody} />;

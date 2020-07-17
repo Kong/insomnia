@@ -4,8 +4,8 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 
 type Props = {
-  parent: boolean,
   children: React.Node,
+  childrenVisible: boolean,
 };
 
 const StyledPanel: React.ComponentType<{}> = styled(motion.div)`
@@ -39,10 +39,10 @@ const StyledPanel: React.ComponentType<{}> = styled(motion.div)`
   }
 `;
 
-const SidebarPanel = ({ parent, children }: Props) => (
+const SidebarPanel = ({ childrenVisible, children }: Props) => (
   <StyledPanel
-    initial={{ height: parent ? '100%' : '0px' }}
-    animate={{ height: parent ? '100%' : '0px' }}
+    initial={{ height: childrenVisible ? '100%' : '0px' }}
+    animate={{ height: childrenVisible ? '100%' : '0px' }}
     transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
     {children}
   </StyledPanel>

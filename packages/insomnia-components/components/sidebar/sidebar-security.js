@@ -18,23 +18,30 @@ const handleClick = items => {
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarSecurity extends React.Component<Props> {
-  renderBody = (filter: string) => (
-    <div>
-      {Object.keys(this.props.security).map(scheme => (
-        <React.Fragment key={scheme}>
-          {scheme.toLowerCase().includes(filter.toLocaleLowerCase()) && (
+  renderBody = (filter: string): null | React.Node => {
+    const filteredValues = Object.keys(this.props.security).filter(scheme =>
+      scheme.toLowerCase().includes(filter.toLocaleLowerCase()),
+    );
+
+    if (!filteredValues.length) {
+      return null;
+    }
+
+    return (
+      <div>
+        {filteredValues.map(scheme => (
+          <React.Fragment key={scheme}>
             <SidebarItem>
-              <div></div>
               <div>
                 <SvgIcon icon={IconEnum.key} />
               </div>
               <span onClick={() => handleClick([scheme])}>{scheme}</span>
             </SidebarItem>
-          )}
-        </React.Fragment>
-      ))}
-    </div>
-  );
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  };
 
   render() {
     return <SidebarSection title="SECURITY" renderBody={this.renderBody} />;
