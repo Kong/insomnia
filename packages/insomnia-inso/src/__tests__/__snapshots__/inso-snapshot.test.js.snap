@@ -6,20 +6,20 @@ exports[`Snapshot for "inso --help" 1`] = `
 A CLI for Insomnia!
 
 Options:
-  -v, --version             output the version number
-  -w, --working-dir <dir>   set working directory
-  -a, --app-data-dir <dir>  set the app data directory
-  --ci                      run in CI, disables all prompts
-  -h, --help                display help for command
+  -v, --version           output the version number
+  -w, --workingDir <dir>  set working directory
+  -a, --appDataDir <dir>  set the app data directory
+  --ci                    run in CI, disables all prompts
+  -h, --help              display help for command
 
 Commands:
-  generate                  Code generation utilities
-  run                       Execution utilities
-  lint                      Linting utilities
-  export                    Export data from insomnia models
-  script <name>             Run scripts defined in .insorc
-  debug                     Debugging commands
-  help [command]            display help for command"
+  generate                Code generation utilities
+  run                     Execution utilities
+  lint                    Linting utilities
+  export                  Export data from insomnia models
+  script <name>           Run scripts defined in .insorc
+  debug                   Debugging commands
+  help [command]          display help for command"
 `;
 
 exports[`Snapshot for "inso -h" 1`] = `
@@ -28,20 +28,20 @@ exports[`Snapshot for "inso -h" 1`] = `
 A CLI for Insomnia!
 
 Options:
-  -v, --version             output the version number
-  -w, --working-dir <dir>   set working directory
-  -a, --app-data-dir <dir>  set the app data directory
-  --ci                      run in CI, disables all prompts
-  -h, --help                display help for command
+  -v, --version           output the version number
+  -w, --workingDir <dir>  set working directory
+  -a, --appDataDir <dir>  set the app data directory
+  --ci                    run in CI, disables all prompts
+  -h, --help              display help for command
 
 Commands:
-  generate                  Code generation utilities
-  run                       Execution utilities
-  lint                      Linting utilities
-  export                    Export data from insomnia models
-  script <name>             Run scripts defined in .insorc
-  debug                     Debugging commands
-  help [command]            display help for command"
+  generate                Code generation utilities
+  run                     Execution utilities
+  lint                    Linting utilities
+  export                  Export data from insomnia models
+  script <name>           Run scripts defined in .insorc
+  debug                   Debugging commands
+  help [command]          display help for command"
 `;
 
 exports[`Snapshot for "inso export -h" 1`] = `
@@ -87,7 +87,7 @@ Generate configuration from an api spec.
 
 Options:
   -t, --type <value>   type of configuration to generate, options are
-                       [kubernetes, declarative] (default: \\"declarative\\")
+                       [kubernetes, declarative] (default: declarative)
   -o, --output <path>  save the generated config to a file
   -h, --help           display help for command"
 `;
@@ -98,20 +98,20 @@ exports[`Snapshot for "inso help" 1`] = `
 A CLI for Insomnia!
 
 Options:
-  -v, --version             output the version number
-  -w, --working-dir <dir>   set working directory
-  -a, --app-data-dir <dir>  set the app data directory
-  --ci                      run in CI, disables all prompts
-  -h, --help                display help for command
+  -v, --version           output the version number
+  -w, --workingDir <dir>  set working directory
+  -a, --appDataDir <dir>  set the app data directory
+  --ci                    run in CI, disables all prompts
+  -h, --help              display help for command
 
 Commands:
-  generate                  Code generation utilities
-  run                       Execution utilities
-  lint                      Linting utilities
-  export                    Export data from insomnia models
-  script <name>             Run scripts defined in .insorc
-  debug                     Debugging commands
-  help [command]            display help for command"
+  generate                Code generation utilities
+  run                     Execution utilities
+  lint                    Linting utilities
+  export                  Export data from insomnia models
+  script <name>           Run scripts defined in .insorc
+  debug                   Debugging commands
+  help [command]          display help for command"
 `;
 
 exports[`Snapshot for "inso lint -h" 1`] = `
@@ -155,11 +155,11 @@ exports[`Snapshot for "inso run test -h" 1`] = `
 Run Insomnia unit test suites
 
 Options:
-  -e, --env <identifier>           environment to use
-  -t, --test-name-pattern <regex>  run tests that match the regex
-  -r, --reporter <reporter>        reporter to use, options are [dot, list,
-                                   spec, min, progress] (default: \\"spec\\")
-  -b, --bail                       abort (\\"bail\\") after first test failure
-  --keep-file                      do not delete the generated test file
-  -h, --help                       display help for command"
+  -e, --env <identifier>         environment to use
+  -t, --testNamePattern <regex>  run tests that match the regex
+  -r, --reporter <reporter>      reporter to use, options are [dot, list, spec,
+                                 min, progress] (default: spec)
+  -b, --bail                     abort (\\"bail\\") after first test failure
+  --keepFile                     do not delete the generated test file
+  -h, --help                     display help for command"
 `;

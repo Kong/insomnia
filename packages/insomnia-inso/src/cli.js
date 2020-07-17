@@ -24,17 +24,19 @@ function makeGenerateCommand() {
 
   const conversionTypes = Object.keys(ConversionTypeMap).join(', ');
 
+  const defaultType = 'declarative';
   // inso generate config -t kubernetes config.yaml
   generate
     .command('config [identifier]')
     .description('Generate configuration from an api spec.')
-    .requiredOption(
+    .option(
       '-t, --type <value>',
-      `type of configuration to generate, options are [${conversionTypes}]`,
-      'declarative',
+      `type of configuration to generate, options are [${conversionTypes}] (default: ${defaultType})`,
     )
     .option('-o, --output <path>', 'save the generated config to a file')
-    .action((identifier, cmd) => exit(generateConfig(identifier, getAllOptions(cmd))));
+    .action((identifier, cmd) =>
+      exit(generateConfig(identifier, getAllOptions(cmd, { type: defaultType }))),
+    );
 
   return generate;
 }
@@ -45,20 +47,22 @@ function makeTestCommand() {
 
   const reporterTypes = Object.keys(TestReporterEnum).join(', ');
 
+  const defaultReporter = TestReporterEnum.spec;
   // inso run tests
   run
     .command('test [identifier]')
     .description('Run Insomnia unit test suites')
     .option('-e, --env <identifier>', 'environment to use')
-    .option('-t, --test-name-pattern <regex>', 'run tests that match the regex')
+    .option('-t, --testNamePattern <regex>', 'run tests that match the regex')
     .option(
       '-r, --reporter <reporter>',
-      `reporter to use, options are [${reporterTypes}]`,
-      TestReporterEnum.spec,
+      `reporter to use, options are [${reporterTypes}] (default: ${defaultReporter})`,
     )
     .option('-b, --bail', 'abort ("bail") after first test failure')
-    .option('--keep-file', 'do not delete the generated test file')
-    .action((identifier, cmd) => exit(runInsomniaTests(identifier, getAllOptions(cmd))));
+    .option('--keepFile', 'do not delete the generated test file')
+    .action((identifier, cmd) =>
+      exit(runInsomniaTests(identifier, getAllOptions(cmd, { reporter: defaultReporter }))),
+    );
 
   return run;
 }
@@ -160,8 +164,8 @@ function makeCli(): Object {
 
   // Global options
   cmd
-    .option('-w, --working-dir <dir>', 'set working directory')
-    .option('-a, --app-data-dir <dir>', 'set the app data directory')
+    .option('-w, --workingDir <dir>', 'set working directory')
+    .option('-a, --appDataDir <dir>', 'set the app data directory')
     .option('--ci', 'run in CI, disables all prompts');
 
   // Add commands and sub commands

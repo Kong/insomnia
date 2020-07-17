@@ -24,7 +24,7 @@ export function getCosmiConfig(): {
   return cosmiconfigSync('inso').search();
 }
 
-export function getAllOptions<T>(cmd: Object): T {
+export function getAllOptions<T>(cmd: Object, defaultOptions: $Shape<T> = {}): T {
   let opts = {};
   let command = cmd;
 
@@ -36,13 +36,13 @@ export function getAllOptions<T>(cmd: Object): T {
 
   try {
     const config = getCosmiConfig()?.config?.settings || {};
-    return { ...config, ...opts };
+    return { ...defaultOptions, ...config, ...opts };
   } catch (e) {
     // Fatal error when loading config file
     console.error(e);
   }
 
-  return opts;
+  return { ...defaultOptions, ...opts };
 }
 
 export function logErrorExit1(err: Error) {
