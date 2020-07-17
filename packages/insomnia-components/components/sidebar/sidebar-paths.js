@@ -25,10 +25,8 @@ const StyledMethods: React.ComponentType<{}> = styled.span`
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarPaths extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
-    // console.log(this.props.paths);
-    // const [route, method] = this.props.paths;
-    const filteredValues = this.props.paths.filter(xpath =>
-      xpath[0].toLowerCase().includes(filter.toLocaleLowerCase()),
+    const filteredValues = this.props.paths.filter(pathDetail =>
+      pathDetail[0].toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
     if (!filteredValues.length) {
@@ -37,23 +35,23 @@ export default class SidebarPaths extends React.Component<Props> {
 
     return (
       <div>
-        {filteredValues.map(path => (
-          <React.Fragment key={path[0]}>
-            {path[0].includes(filter.toLocaleLowerCase()) && (
+        {filteredValues.map(([route, method]) => (
+          <React.Fragment key={route}>
+            {route.includes(filter.toLocaleLowerCase()) && (
               <React.Fragment>
                 <SidebarItem gridLayout>
                   <div>
                     <SvgIcon icon={IconEnum.indentation} />
                   </div>
-                  <span onClick={() => handleClick([path[0]])}>{path[0]}</span>
+                  <span onClick={() => handleClick([route])}>{route}</span>
                 </SidebarItem>
                 <SidebarItem>
                   <StyledMethods>
-                    {Object.keys((path[1]: any)).map(method => (
+                    {Object.keys((method: any)).map(method => (
                       <span
                         key={method}
                         className={`method-${method}`}
-                        onClick={() => handleClick([path[0], method])}>
+                        onClick={() => handleClick([route, method])}>
                         {method}
                       </span>
                     ))}
