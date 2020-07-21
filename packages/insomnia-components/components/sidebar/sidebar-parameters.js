@@ -13,7 +13,6 @@ let itemPath = [];
 const handleClick = items => {
   itemPath.push('parameter');
   itemPath.push.apply(itemPath, items);
-  console.log(itemPath);
   itemPath = [];
 };
 

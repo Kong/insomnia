@@ -19,7 +19,6 @@ let itemPath = [];
 const handleClick = items => {
   itemPath.push('info');
   itemPath.push.apply(itemPath, items);
-  console.log(itemPath);
   itemPath = [];
 };
 

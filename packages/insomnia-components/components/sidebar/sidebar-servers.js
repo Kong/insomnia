@@ -12,7 +12,6 @@ let itemPath = [];
 const handleClick = items => {
   itemPath.push('server');
   itemPath.push.apply(itemPath, items);
-  console.log(itemPath);
   itemPath = [];
 };
 // Implemented as a class component because of a caveat with render props

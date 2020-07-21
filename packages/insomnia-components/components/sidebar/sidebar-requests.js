@@ -14,7 +14,6 @@ let itemPath = [];
 const handleClick = items => {
   itemPath.push('request');
   itemPath.push.apply(itemPath, items);
-  console.log(itemPath);
   itemPath = [];
 };
 
