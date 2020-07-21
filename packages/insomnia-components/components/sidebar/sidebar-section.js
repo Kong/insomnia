@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import { useLayoutEffect } from 'react';
 import SidebarHeader from './sidebar-header';
 import SidebarPanel from './sidebar-panel';
 import SidebarFilter from './sidebar-filter';
@@ -31,6 +32,11 @@ const SidebarSection = ({ title, renderBody }: SectionProps) => {
   const handleFilterChange = React.useCallback((e: SyntheticInputEvent<HTMLInputElement>) => {
     setFilterValue(e.target.value);
   }, []);
+
+  useLayoutEffect(() => {
+    toggleFilterVisible(false);
+    setFilterValue('');
+  }, [bodyVisible, toggleFilterVisible]);
 
   return (
     <StyledSection>
