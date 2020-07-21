@@ -42,41 +42,42 @@ export default class SidebarRequests extends React.Component<Props> {
 
     return (
       <div>
-        {filteredValues.map(requestName => (
-          <React.Fragment key={requestName}>
-            <SidebarItem gridLayout>
-              <div>
-                <SvgIcon icon={IconEnum.folderOpen} />
-              </div>
-              <span onClick={() => handleClick([requestName])}>
-                <Tooltip message={this.props.requests[requestName].description} position="right">
-                  {requestName}
-                </Tooltip>
-              </span>
-            </SidebarItem>
-            {Object.keys(this.props.requests[requestName].content).map(requestFormat => (
-              <React.Fragment key={requestFormat}>
-                <SidebarItem>
-                  <StyledRequestFormat>
-                    <SvgIcon icon={IconEnum.indentation} />
-                    <span onClick={() => handleClick([requestFormat])}>{requestFormat}</span>
-                  </StyledRequestFormat>
-                </SidebarItem>
-                <SidebarItem>
-                  {Object.keys(
-                    this.props.requests[requestName].content[requestFormat].examples,
-                  ).map(requestExample => (
-                    <StyledRequestExample
-                      onClick={() => handleClick([requestExample])}
-                      key={requestExample}>
-                      {requestExample}
-                    </StyledRequestExample>
-                  ))}
-                </SidebarItem>
-              </React.Fragment>
-            ))}
-          </React.Fragment>
-        ))}
+        {filteredValues.map(requestName => {
+          const { description, content } = this.props.requests[requestName];
+          return (
+            <React.Fragment key={requestName}>
+              <SidebarItem gridLayout>
+                <div>
+                  <SvgIcon icon={IconEnum.folderOpen} />
+                </div>
+                <span onClick={() => handleClick([requestName])}>
+                  <Tooltip message={description} position="right">
+                    {requestName}
+                  </Tooltip>
+                </span>
+              </SidebarItem>
+              {Object.keys(content).map(requestFormat => (
+                <React.Fragment key={requestFormat}>
+                  <SidebarItem>
+                    <StyledRequestFormat>
+                      <SvgIcon icon={IconEnum.indentation} />
+                      <span onClick={() => handleClick([requestFormat])}>{requestFormat}</span>
+                    </StyledRequestFormat>
+                  </SidebarItem>
+                  <SidebarItem>
+                    {Object.keys(content[requestFormat].examples).map(requestExample => (
+                      <StyledRequestExample
+                        onClick={() => handleClick([requestExample])}
+                        key={requestExample}>
+                        {requestExample}
+                      </StyledRequestExample>
+                    ))}
+                  </SidebarItem>
+                </React.Fragment>
+              ))}
+            </React.Fragment>
+          );
+        })}
       </div>
     );
   };

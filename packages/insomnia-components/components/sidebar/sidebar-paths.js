@@ -36,28 +36,24 @@ export default class SidebarPaths extends React.Component<Props> {
       <div>
         {filteredValues.map(([route, method]) => (
           <React.Fragment key={route}>
-            {route.includes(filter.toLocaleLowerCase()) && (
-              <React.Fragment>
-                <SidebarItem gridLayout>
-                  <div>
-                    <SvgIcon icon={IconEnum.indentation} />
-                  </div>
-                  <span onClick={() => handleClick([route])}>{route}</span>
-                </SidebarItem>
-                <SidebarItem>
-                  <StyledMethods>
-                    {Object.keys((method: any)).map(method => (
-                      <span
-                        key={method}
-                        className={`method-${method}`}
-                        onClick={() => handleClick([route, method])}>
-                        {method}
-                      </span>
-                    ))}
-                  </StyledMethods>
-                </SidebarItem>
-              </React.Fragment>
-            )}
+            <SidebarItem gridLayout>
+              <div>
+                <SvgIcon icon={IconEnum.indentation} />
+              </div>
+              <span onClick={() => handleClick([route])}>{route}</span>
+            </SidebarItem>
+            <SidebarItem>
+              <StyledMethods>
+                {Object.keys((method: any)).map(method => (
+                  <span
+                    key={method}
+                    className={`method-${method}`}
+                    onClick={() => handleClick([route, method])}>
+                    {method}
+                  </span>
+                ))}
+              </StyledMethods>
+            </SidebarItem>
           </React.Fragment>
         ))}
       </div>
