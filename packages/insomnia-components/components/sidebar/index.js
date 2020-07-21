@@ -67,7 +67,7 @@ function Sidebar(props: Props) {
   if (props.jsonData === null) {
     return null;
   }
-  const { servers } = props.jsonData;
+  const { servers, info } = props.jsonData;
   const {
     requestBodies,
     responses,
@@ -80,62 +80,76 @@ function Sidebar(props: Props) {
 
   return (
     <StyledSidebar className="theme--sidebar">
-      <StyledSection>
-        <SidebarHeader headerTitle="INFO" sectionVisible={infoSec} toggleSection={setInfoSec}>
-          <Dropdown renderButton={DropdownEllipsis}>
-            <DropdownDivider>VISIBILITY</DropdownDivider>
-            <DropdownItem stayOpenAfterClick>
-              <input type="checkbox" onClick={setServersVisible} defaultChecked={serversVisible} />
-              <label htmlFor="servers">Servers</label>
-            </DropdownItem>
-            <DropdownItem stayOpenAfterClick>
-              <input type="checkbox" onClick={setPathsVisible} defaultChecked={pathsVisible} />
-              <label htmlFor="paths">Paths</label>
-            </DropdownItem>
-            <DropdownItem stayOpenAfterClick>
-              <input
-                type="checkbox"
-                onClick={setRequestsVisible}
-                defaultChecked={requestsVisible}
-              />
-              <label htmlFor="requests">Requests</label>
-            </DropdownItem>
-            <DropdownItem stayOpenAfterClick>
-              <input
-                type="checkbox"
-                onClick={setResponsesVisible}
-                defaultChecked={responsesVisible}
-              />
-              <label htmlFor="responses">Responses</label>
-            </DropdownItem>
-            <DropdownItem stayOpenAfterClick>
-              <input
-                type="checkbox"
-                onClick={setParametersVisible}
-                defaultChecked={parametersVisible}
-              />
-              <label htmlFor="parameters">Parameters</label>
-            </DropdownItem>
-            <DropdownItem stayOpenAfterClick>
-              <input type="checkbox" onClick={setHeadersVisible} defaultChecked={headersVisible} />
-              <label htmlFor="headers">Headers</label>
-            </DropdownItem>
-            <DropdownItem stayOpenAfterClick>
-              <input type="checkbox" onClick={setSchemasVisible} defaultChecked={schemasVisible} />
-              <label htmlFor="schemas">Schemas</label>
-            </DropdownItem>
-            <DropdownItem stayOpenAfterClick>
-              <input
-                type="checkbox"
-                onClick={setSecurityVisible}
-                defaultChecked={securityVisible}
-              />
-              <label htmlFor="security">Security</label>
-            </DropdownItem>
-          </Dropdown>
-        </SidebarHeader>
-        <SidebarInfo childrenVisible={infoSec} info={props.jsonData.info} />
-      </StyledSection>
+      {info && (
+        <StyledSection>
+          <SidebarHeader headerTitle="INFO" sectionVisible={infoSec} toggleSection={setInfoSec}>
+            <Dropdown renderButton={DropdownEllipsis}>
+              <DropdownDivider>VISIBILITY</DropdownDivider>
+              <DropdownItem stayOpenAfterClick>
+                <input
+                  type="checkbox"
+                  onClick={setServersVisible}
+                  defaultChecked={serversVisible}
+                />
+                <label htmlFor="servers">Servers</label>
+              </DropdownItem>
+              <DropdownItem stayOpenAfterClick>
+                <input type="checkbox" onClick={setPathsVisible} defaultChecked={pathsVisible} />
+                <label htmlFor="paths">Paths</label>
+              </DropdownItem>
+              <DropdownItem stayOpenAfterClick>
+                <input
+                  type="checkbox"
+                  onClick={setRequestsVisible}
+                  defaultChecked={requestsVisible}
+                />
+                <label htmlFor="requests">Requests</label>
+              </DropdownItem>
+              <DropdownItem stayOpenAfterClick>
+                <input
+                  type="checkbox"
+                  onClick={setResponsesVisible}
+                  defaultChecked={responsesVisible}
+                />
+                <label htmlFor="responses">Responses</label>
+              </DropdownItem>
+              <DropdownItem stayOpenAfterClick>
+                <input
+                  type="checkbox"
+                  onClick={setParametersVisible}
+                  defaultChecked={parametersVisible}
+                />
+                <label htmlFor="parameters">Parameters</label>
+              </DropdownItem>
+              <DropdownItem stayOpenAfterClick>
+                <input
+                  type="checkbox"
+                  onClick={setHeadersVisible}
+                  defaultChecked={headersVisible}
+                />
+                <label htmlFor="headers">Headers</label>
+              </DropdownItem>
+              <DropdownItem stayOpenAfterClick>
+                <input
+                  type="checkbox"
+                  onClick={setSchemasVisible}
+                  defaultChecked={schemasVisible}
+                />
+                <label htmlFor="schemas">Schemas</label>
+              </DropdownItem>
+              <DropdownItem stayOpenAfterClick>
+                <input
+                  type="checkbox"
+                  onClick={setSecurityVisible}
+                  defaultChecked={securityVisible}
+                />
+                <label htmlFor="security">Security</label>
+              </DropdownItem>
+            </Dropdown>
+          </SidebarHeader>
+          <SidebarInfo childrenVisible={infoSec} info={info} />
+        </StyledSection>
+      )}
       {serversVisible && servers && <SidebarServers servers={servers} />}
       {pathsVisible && paths && <SidebarPaths paths={paths} />}
       {requestsVisible && requestBodies && <SidebarRequests requests={requestBodies} />}
