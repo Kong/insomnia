@@ -31,9 +31,7 @@ export default class SidebarResponses extends React.Component<Props> {
     return (
       <div>
         {filteredValues.map(response => (
-          <React.Fragment key={response}>
-            {response.toLowerCase().includes(filter.toLocaleLowerCase()) && (
-              <SidebarItem>
+          <SidebarItem key={response}>
                 <div>
                   <SvgIcon icon={IconEnum.indentation} />
                 </div>
