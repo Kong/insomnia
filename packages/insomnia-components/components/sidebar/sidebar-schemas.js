@@ -30,9 +30,7 @@ export default class SidebarSchemas extends React.Component<Props> {
     return (
       <div>
         {filteredValues.map(schema => (
-          <React.Fragment key={schema}>
-            {schema.toLowerCase().includes(filter.toLocaleLowerCase()) && (
-              <SidebarItem>
+          <SidebarItem key={schema}>
                 <div>
                   <SvgIcon icon={IconEnum.brackets} />
                 </div>
