@@ -154,7 +154,17 @@ function makeDebugCommand(createCommand: CreateCommandType): Object {
   return debug;
 }
 
-function makeCli(createCommand: CreateCommandType): Object {
+export function go(args?: Array<string>, exitOverride?: boolean): void {
+  const createCommand: CreateCommandType = (cmd?: string) => {
+    const command = new commander.Command(cmd).storeOptionsAsProperties(false);
+
+    if (exitOverride) {
+      return command.exitOverride();
+    }
+
+    return command;
+  };
+
   // inso
   const cmd = createCommand();
 
@@ -183,27 +193,9 @@ function makeCli(createCommand: CreateCommandType): Object {
     cmd.addCommand(makeDebugCommand(createCommand));
   }
 
-  return cmd;
+  runWithArgs(cmd, args || process.argv);
 }
 
-export function go(args?: Array<string>, exitOverride?: boolean): void {
-  if (!args) {
-    args = process.argv;
-  }
-
-  const createCommand: CreateCommandType = (cmd?: string) => {
-    const command = new commander.Command(cmd).storeOptionsAsProperties(false);
-
-    if (exitOverride) {
-      return command.exitOverride();
-    }
-
-    return command;
-  };
-
-  runWithArgs(makeCli(createCommand), args);
-}
-
-function runWithArgs(cmd: Object, args: Array<string>, parseAsIs?: boolean) {
-  cmd.parseAsync(args, parseAsIs && { from: 'user' }).catch(logErrorExit1);
+function runWithArgs(cmd: Object, args: Array<string>, userParametersOnly?: boolean) {
+  cmd.parseAsync(args, userParametersOnly && { from: 'user' }).catch(logErrorExit1);
 }
