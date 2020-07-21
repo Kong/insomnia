@@ -9,6 +9,7 @@ Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
   -a, --appDataDir <dir>  set the app data directory
+  --config <path>         path to configuration file
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command
 
@@ -31,6 +32,7 @@ Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
   -a, --appDataDir <dir>  set the app data directory
+  --config <path>         path to configuration file
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command
 
@@ -101,6 +103,7 @@ Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
   -a, --appDataDir <dir>  set the app data directory
+  --config <path>         path to configuration file
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command
 

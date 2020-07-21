@@ -14,11 +14,9 @@ import { exportSpecification } from './commands/export-specification';
 import { parseArgsStringToArgv } from 'string-argv';
 import commander from 'commander';
 
-function createCommand(cmd?: string, options?: Object = {}) {
-  return new commander.Command(cmd, options).storeOptionsAsProperties(false);
-}
+type CreateCommandType = (command?: string, options?: Object) => Object;
 
-function makeGenerateCommand() {
+function makeGenerateCommand(createCommand: CreateCommandType) {
   // inso generate
   const generate = createCommand('generate').description('Code generation utilities');
 
@@ -41,7 +39,7 @@ function makeGenerateCommand() {
   return generate;
 }
 
-function makeTestCommand() {
+function makeTestCommand(createCommand: CreateCommandType) {
   // inso run
   const run = createCommand('run').description('Execution utilities');
 
@@ -67,7 +65,7 @@ function makeTestCommand() {
   return run;
 }
 
-function makeLintCommand() {
+function makeLintCommand(createCommand: CreateCommandType) {
   // inso lint
   const lint = createCommand('lint').description('Linting utilities');
 
@@ -80,7 +78,7 @@ function makeLintCommand() {
   return lint;
 }
 
-function makeExportCommand() {
+function makeExportCommand(createCommand: CreateCommandType) {
   // inso export
   const exportCmd = createCommand('export').description('Export data from insomnia models');
 
@@ -102,18 +100,13 @@ function addScriptCommand(originalCommand: Object) {
     .allowUnknownOption()
     .action((scriptName, cmd) => {
       // Load scripts
-      const options = getAllOptions(cmd, {}, true);
-      const cosmiconfig = getCosmiConfig(options?.config);
-      if (!cosmiconfig || cosmiconfig.isEmpty) {
-        console.log(`Could not find inso config file in the current directory tree.`);
-        return exit(new Promise(resolve => resolve(false)));
-      }
+      const options = getAllOptions(cmd);
 
       // Ignore the first arg because that will be scriptName, get the rest
       const passThroughArgs = cmd.args.slice(1);
 
       // Find script
-      const scriptTask = cosmiconfig.config.scripts?.[scriptName];
+      const scriptTask = options.configFile?.scripts?.[scriptName];
 
       if (!scriptTask) {
         console.log(`Could not find inso script "${scriptName}" in the config file.`);
@@ -133,7 +126,7 @@ function addScriptCommand(originalCommand: Object) {
     });
 }
 
-function makeDebugCommand(): Object {
+function makeDebugCommand(createCommand: CreateCommandType): Object {
   // inso export
   const debug = createCommand('debug').description('Debugging commands');
 
@@ -169,7 +162,7 @@ function makeDebugCommand(): Object {
   return debug;
 }
 
-function makeCli(): Object {
+function makeCli(createCommand: CreateCommandType): Object {
   // inso
   const cmd = createCommand();
 
@@ -185,30 +178,40 @@ function makeCli(): Object {
 
   // Add commands and sub commands
   cmd
-    .addCommand(makeGenerateCommand())
-    .addCommand(makeTestCommand())
-    .addCommand(makeLintCommand())
-    .addCommand(makeExportCommand());
+    .addCommand(makeGenerateCommand(createCommand))
+    .addCommand(makeTestCommand(createCommand))
+    .addCommand(makeLintCommand(createCommand))
+    .addCommand(makeExportCommand(createCommand));
 
   // Add script base command
   addScriptCommand(cmd);
 
   // Debugging commands
   if (isDevelopment()) {
-    cmd.addCommand(makeDebugCommand());
+    cmd.addCommand(makeDebugCommand(createCommand));
   }
 
   return cmd;
 }
 
-export function go(args?: Array<string>): void {
+export function go(args?: Array<string>, exitOverride?: boolean): void {
   if (!args) {
     args = process.argv;
   }
 
-  runWithArgs(makeCli(), args);
+  const createCommand: CreateCommandType = (cmd?: string) => {
+    const command = new commander.Command(cmd).storeOptionsAsProperties(false);
+
+    if (exitOverride) {
+      return command.exitOverride();
+    }
+
+    return command;
+  };
+
+  runWithArgs(makeCli(createCommand), args);
 }
 
-function runWithArgs(cmd: Object, args: Array<string>, user?: boolean) {
-  cmd.parseAsync(args, user && { from: 'user' }).catch(logErrorExit1);
+function runWithArgs(cmd: Object, args: Array<string>, parseAsIs?: boolean) {
+  cmd.parseAsync(args, parseAsIs && { from: 'user' }).catch(logErrorExit1);
 }

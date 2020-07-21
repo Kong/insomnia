@@ -15,7 +15,7 @@ const initInso = () => {
   return (args: string): void => {
     const cliArgs = parseArgsStringToArgv(`node test ${args}`);
 
-    return cli.go(cliArgs);
+    return cli.go(cliArgs, true);
   };
 };
 
@@ -130,7 +130,7 @@ describe('cli', () => {
     });
 
     it('should call runInsomniaTests with expected options', () => {
-      inso('run test uts_123 -e env_123 -t name -r min -b --keep-file');
+      inso('run test uts_123 -e env_123 -t name -r min -b --keepFile');
       expect(runInsomniaTests).toHaveBeenCalledWith('uts_123', {
         reporter: 'min',
         keepFile: true,

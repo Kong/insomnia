@@ -1,6 +1,7 @@
 // @flow
 import * as packageJson from '../package.json';
 import { cosmiconfigSync } from 'cosmiconfig';
+import path from 'path';
 
 export type GlobalOptions = {
   appDataDir?: string,
@@ -16,22 +17,43 @@ export function isDevelopment() {
   return process.env.NODE_ENV === 'development';
 }
 
-export function getCosmiConfig(
-  configPath?: string,
-): {
-  config: Object,
-  filepath: string,
-  isEmpty?: boolean,
-} | null {
-  const explorer = cosmiconfigSync('inso');
-  return configPath ? explorer.load(configPath) : explorer.search();
+type ConfigFileOptions = {
+  configFile: {
+    settings?: Object,
+    scripts?: Object,
+    filePath: string,
+  },
+};
+
+function loadCosmiConfig(workingDir: string, configFile?: string): ?ConfigFileOptions {
+  try {
+    const explorer = cosmiconfigSync('inso');
+    const configPath = configFile ? path.join(workingDir, configFile) : undefined;
+    const results = configPath ? explorer.load(configPath) : explorer.search();
+
+    if (!results?.isEmpty) {
+      return {
+        configFile: {
+          settings: results.config?.settings || {},
+          scripts: results.config?.scripts || {},
+          filePath: results.filepath,
+        },
+      };
+    }
+  } catch (e) {
+    // Report fatal error when loading from explicitly defined config file
+    if (configFile) {
+      console.error(e);
+    }
+  }
+
+  return undefined;
 }
 
 export function getAllOptions<T>(
   cmd: Object,
   defaultOptions: $Shape<T> = {},
-  skipConfigFile: boolean = false,
-): T {
+): T & ConfigFileOptions {
   let opts = {};
   let command = cmd;
 
@@ -41,14 +63,15 @@ export function getAllOptions<T>(
     command = command.parent;
   } while (command);
 
-  if (!skipConfigFile) {
-    try {
-      const config = getCosmiConfig(opts.config)?.config?.settings || {};
-      return { ...defaultOptions, ...config, ...opts };
-    } catch (e) {
-      // Fatal error when loading config file
-      console.error(e);
-    }
+  const result = loadCosmiConfig(cmd.workingDir || '.', cmd.config);
+
+  if (result) {
+    return {
+      ...defaultOptions,
+      ...(result.configFile.settings || {}),
+      ...opts,
+      configFile: result.configFile,
+    };
   }
 
   return { ...defaultOptions, ...opts };
