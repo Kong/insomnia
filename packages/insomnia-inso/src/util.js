@@ -3,11 +3,19 @@ import * as packageJson from '../package.json';
 import { cosmiconfigSync } from 'cosmiconfig';
 import path from 'path';
 
+type ConfigFileOptions = {
+  __configFile?: {
+    settings?: Object,
+    scripts?: Object,
+    filePath: string,
+  },
+};
+
 export type GlobalOptions = {
   appDataDir?: string,
   workingDir?: string,
   ci?: boolean,
-};
+} & ConfigFileOptions;
 
 export function getVersion() {
   return packageJson.version;
@@ -17,15 +25,7 @@ export function isDevelopment() {
   return process.env.NODE_ENV === 'development';
 }
 
-type ConfigFileOptions = {
-  configFile: {
-    settings?: Object,
-    scripts?: Object,
-    filePath: string,
-  },
-};
-
-function loadCosmiConfig(workingDir: string, configFile?: string): ?ConfigFileOptions {
+function loadCosmiConfig(workingDir: string, configFile?: string): ConfigFileOptions {
   try {
     const explorer = cosmiconfigSync('inso');
     const configPath = configFile ? path.join(workingDir, configFile) : undefined;
@@ -33,7 +33,7 @@ function loadCosmiConfig(workingDir: string, configFile?: string): ?ConfigFileOp
 
     if (!results?.isEmpty) {
       return {
-        configFile: {
+        __configFile: {
           settings: results.config?.settings || {},
           scripts: results.config?.scripts || {},
           filePath: results.filepath,
@@ -47,13 +47,10 @@ function loadCosmiConfig(workingDir: string, configFile?: string): ?ConfigFileOp
     }
   }
 
-  return undefined;
+  return {};
 }
 
-export function getAllOptions<T>(
-  cmd: Object,
-  defaultOptions: $Shape<T> = {},
-): T & ConfigFileOptions {
+export function getAllOptions<T>(cmd: Object, defaultOptions: $Shape<T> = {}): T {
   let opts = {};
   let command = cmd;
 
@@ -63,14 +60,14 @@ export function getAllOptions<T>(
     command = command.parent;
   } while (command);
 
-  const result = loadCosmiConfig(cmd.workingDir || '.', cmd.config);
+  const { __configFile } = loadCosmiConfig(cmd.workingDir || '.', cmd.config);
 
-  if (result) {
+  if (__configFile) {
     return {
       ...defaultOptions,
-      ...(result.configFile.settings || {}),
+      ...(__configFile.settings || {}),
       ...opts,
-      configFile: result.configFile,
+      __configFile,
     };
   }
 

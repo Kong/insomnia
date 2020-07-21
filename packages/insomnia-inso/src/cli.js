@@ -1,13 +1,6 @@
 // @flow
 import { ConversionTypeMap, generateConfig } from './commands/generate-config';
-import {
-  getVersion,
-  getAllOptions,
-  logErrorExit1,
-  exit,
-  isDevelopment,
-  getCosmiConfig,
-} from './util';
+import { getVersion, getAllOptions, logErrorExit1, exit, isDevelopment } from './util';
 import { runInsomniaTests, TestReporterEnum } from './commands/run-tests';
 import { lintSpecification } from './commands/lint-specification';
 import { exportSpecification } from './commands/export-specification';
@@ -106,7 +99,7 @@ function addScriptCommand(originalCommand: Object) {
       const passThroughArgs = cmd.args.slice(1);
 
       // Find script
-      const scriptTask = options.configFile?.scripts?.[scriptName];
+      const scriptTask = options.__configFile?.scripts?.[scriptName];
 
       if (!scriptTask) {
         console.log(`Could not find inso script "${scriptName}" in the config file.`);
@@ -136,7 +129,7 @@ function makeDebugCommand(createCommand: CreateCommandType): Object {
     .description('Print all options parsed')
     .allowUnknownOption()
     .action(cmd => {
-      const options = getAllOptions(cmd, {}, true);
+      const { __configFile, ...options } = getAllOptions(cmd);
 
       console.log(`getAllOptions resolves to:\n${JSON.stringify(options, null, 2)}`);
       console.log(`cmd.args resolves to:\n${JSON.stringify(cmd.args)}`);
@@ -150,10 +143,9 @@ function makeDebugCommand(createCommand: CreateCommandType): Object {
     .command('config-file')
     .description('Load the config file')
     .action(cmd => {
-      const options = getAllOptions(cmd, {}, true);
-      const cosmiconfig = getCosmiConfig(options?.config);
+      const options = getAllOptions(cmd);
 
-      console.log(`Loaded config file:\n${JSON.stringify(cosmiconfig || {}, null, 2)}`);
+      console.log(`Loaded config file:\n${JSON.stringify(options.__configFile || {}, null, 2)}`);
       return exit(
         new Promise<boolean>(resolve => resolve(false)),
       );
