@@ -31,13 +31,11 @@ export default class SidebarSchemas extends React.Component<Props> {
       <div>
         {filteredValues.map(schema => (
           <SidebarItem key={schema}>
-                <div>
-                  <SvgIcon icon={IconEnum.brackets} />
-                </div>
-                <span onClick={() => handleClick([schema])}>{schema}</span>
-              </SidebarItem>
-            )}
-          </React.Fragment>
+            <div>
+              <SvgIcon icon={IconEnum.brackets} />
+            </div>
+            <span onClick={() => handleClick([schema])}>{schema}</span>
+          </SidebarItem>
         ))}
       </div>
     );

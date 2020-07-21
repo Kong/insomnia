@@ -32,17 +32,15 @@ export default class SidebarResponses extends React.Component<Props> {
       <div>
         {filteredValues.map(response => (
           <SidebarItem key={response}>
-                <div>
-                  <SvgIcon icon={IconEnum.indentation} />
-                </div>
-                <span onClick={() => handleClick([response])}>
-                  <Tooltip message={this.props.responses[response].description} position="right">
-                    {response}
-                  </Tooltip>
-                </span>
-              </SidebarItem>
-            )}
-          </React.Fragment>
+            <div>
+              <SvgIcon icon={IconEnum.indentation} />
+            </div>
+            <span onClick={() => handleClick([response])}>
+              <Tooltip message={this.props.responses[response].description} position="right">
+                {response}
+              </Tooltip>
+            </span>
+          </SidebarItem>
         ))}
       </div>
     );
