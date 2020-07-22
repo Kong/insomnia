@@ -1,0 +1,4 @@
+settings:
+  ci: true
+scripts:
+  lint: lint spec

@@ -20,7 +20,7 @@ export const loadCosmiConfig = (workingDir: string, configFile?: string): Config
   try {
     const explorer = cosmiconfigSync('inso');
     const configPath = configFile ? path.join(workingDir, configFile) : undefined;
-    const results = configPath ? explorer.load(configPath) : explorer.search();
+    const results = configPath ? explorer.load(configPath) : explorer.search(workingDir);
 
     if (results && !results?.isEmpty) {
       return {
