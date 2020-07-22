@@ -1,8 +1,8 @@
 // @flow
 import commander from 'commander';
-import getOptions from '../get-options';
+import { extractCommandOptions, loadCosmiConfig } from '../get-options';
 
-describe('loadOptions()', () => {
+describe('extractCommandOptions()', () => {
   it('should combine options from all commands into one object', () => {
     const command = new commander.Command('command').exitOverride();
 
@@ -10,7 +10,7 @@ describe('loadOptions()', () => {
       .command('subCommand')
       .option('-s, --subCmd')
       .action(cmd => {
-        expect(getOptions(cmd)).toEqual({
+        expect(extractCommandOptions(cmd)).toEqual({
           global: true,
           subCmd: true,
         });
@@ -22,5 +22,13 @@ describe('loadOptions()', () => {
       .addCommand(command);
 
     parent.parse('command subCommand --global --subCmd'.split(' '), { from: 'user' });
+  });
+});
+
+describe('loadCosmiConfig()', () => {
+  it('should call search if config file is not defined', () => {
+    const result = loadCosmiConfig('.', 'test');
+    // expect(cosmiconfig().loadSync).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({});
   });
 });
