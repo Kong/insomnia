@@ -21,7 +21,15 @@ import { useToggle } from 'react-use';
 type Props = {|
   className?: string,
   jsonData: Object,
+  onClick: (path: any) => any,
 |};
+
+let itemPath = [];
+const _handleItemClick = (section, item) => {
+  itemPath = [];
+  itemPath.push(section);
+  itemPath.push.apply(itemPath, item);
+};
 
 const StyledSidebar: React.ComponentType<{}> = styled.div`
   width: 100%;
@@ -150,8 +158,8 @@ function Sidebar(props: Props) {
           <SidebarInfo childrenVisible={infoSec} info={info} />
         </StyledSection>
       )}
-      {serversVisible && servers && <SidebarServers servers={servers} />}
-      {pathsVisible && paths && <SidebarPaths paths={paths} />}
+      {serversVisible && servers && <SidebarServers servers={servers} onClick={_handleItemClick} />}
+      {pathsVisible && paths && <SidebarPaths paths={paths} onClick={_handleItemClick} />}
       {requestsVisible && requestBodies && <SidebarRequests requests={requestBodies} />}
       {responsesVisible && responses && <SidebarResponses responses={responses} />}
       {parametersVisible && parameters && <SidebarParameters parameters={parameters} />}
