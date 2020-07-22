@@ -22,7 +22,7 @@ export const loadCosmiConfig = (workingDir: string, configFile?: string): Config
     const configPath = configFile ? path.join(workingDir, configFile) : undefined;
     const results = configPath ? explorer.load(configPath) : explorer.search();
 
-    if (!results?.isEmpty) {
+    if (results && !results?.isEmpty) {
       return {
         __configFile: {
           settings: results.config?.settings || {},

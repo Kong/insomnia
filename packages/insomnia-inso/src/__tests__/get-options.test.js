@@ -1,6 +1,9 @@
 // @flow
 import commander from 'commander';
 import { extractCommandOptions, loadCosmiConfig } from '../get-options';
+import { cosmiconfigSync } from 'cosmiconfig';
+
+jest.mock('cosmiconfig');
 
 describe('extractCommandOptions()', () => {
   it('should combine options from all commands into one object', () => {
@@ -26,9 +29,17 @@ describe('extractCommandOptions()', () => {
 });
 
 describe('loadCosmiConfig()', () => {
-  it('should call search if config file is not defined', () => {
-    const result = loadCosmiConfig('.', 'test');
-    // expect(cosmiconfig().loadSync).toHaveBeenCalledTimes(1);
+  it('should create cosmiconfig explorer with inso', () => {
+    loadCosmiConfig('.');
+
+    expect(cosmiconfigSync).toHaveBeenCalledWith('inso');
+  });
+
+  it('should try load defined config file', () => {
+    const result = loadCosmiConfig('dir', 'test');
+
+    expect(cosmiconfigSync().load).toHaveBeenCalledWith('dir/test');
+
     expect(result).toEqual({});
   });
 });

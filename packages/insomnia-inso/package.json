@@ -31,7 +31,7 @@
       "**/__tests__/**/*.test.js"
     ],
     "verbose": false,
-    "resetMocks": true,
+    "clearMocks": true,
     "resetModules": true,
     "collectCoverage": true,
     "coveragePathIgnorePatterns": ["/node_modules/"],
