@@ -1,6 +1,6 @@
 // @flow
 import commander from 'commander';
-import loadOptions from '../load-options';
+import getOptions from '../get-options';
 
 describe('loadOptions()', () => {
   it('should combine options from all commands into one object', () => {
@@ -10,7 +10,7 @@ describe('loadOptions()', () => {
       .command('subCommand')
       .option('-s, --subCmd')
       .action(cmd => {
-        expect(loadOptions(cmd)).toEqual({
+        expect(getOptions(cmd)).toEqual({
           global: true,
           subCmd: true,
         });

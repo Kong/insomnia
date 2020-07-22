@@ -6,7 +6,7 @@ import { lintSpecification } from './commands/lint-specification';
 import { exportSpecification } from './commands/export-specification';
 import { parseArgsStringToArgv } from 'string-argv';
 import commander from 'commander';
-import loadOptions from './load-options';
+import getOptions from './get-options';
 
 type CreateCommandType = (command?: string, options?: Object) => Object;
 
@@ -27,7 +27,7 @@ function makeGenerateCommand(createCommand: CreateCommandType) {
     )
     .option('-o, --output <path>', 'save the generated config to a file')
     .action((identifier, cmd) =>
-      exit(generateConfig(identifier, loadOptions(cmd, { type: defaultType }))),
+      exit(generateConfig(identifier, getOptions(cmd, { type: defaultType }))),
     );
 
   return generate;
@@ -53,7 +53,7 @@ function makeTestCommand(createCommand: CreateCommandType) {
     .option('-b, --bail', 'abort ("bail") after first test failure')
     .option('--keepFile', 'do not delete the generated test file')
     .action((identifier, cmd) =>
-      exit(runInsomniaTests(identifier, loadOptions(cmd, { reporter: defaultReporter }))),
+      exit(runInsomniaTests(identifier, getOptions(cmd, { reporter: defaultReporter }))),
     );
 
   return run;
@@ -67,7 +67,7 @@ function makeLintCommand(createCommand: CreateCommandType) {
   lint
     .command('spec [identifier]')
     .description('Lint an API Specification')
-    .action((identifier, cmd) => exit(lintSpecification(identifier, loadOptions(cmd))));
+    .action((identifier, cmd) => exit(lintSpecification(identifier, getOptions(cmd))));
 
   return lint;
 }
@@ -81,7 +81,7 @@ function makeExportCommand(createCommand: CreateCommandType) {
     .command('spec [identifier]')
     .description('Export an API Specification to a file')
     .option('-o, --output <path>', 'save the generated config to a file')
-    .action((identifier, cmd) => exit(exportSpecification(identifier, loadOptions(cmd))));
+    .action((identifier, cmd) => exit(exportSpecification(identifier, getOptions(cmd))));
 
   return exportCmd;
 }
@@ -94,7 +94,7 @@ function addScriptCommand(originalCommand: Object) {
     .allowUnknownOption()
     .action((scriptName, cmd) => {
       // Load scripts
-      const options = loadOptions(cmd);
+      const options = getOptions(cmd);
 
       // Ignore the first arg because that will be scriptName, get the rest
       const passThroughArgs = cmd.args.slice(1);
@@ -130,7 +130,7 @@ function makeDebugCommand(createCommand: CreateCommandType): Object {
     .description('Print all options parsed')
     .allowUnknownOption()
     .action(cmd => {
-      const { __configFile, ...options } = loadOptions(cmd);
+      const { __configFile, ...options } = getOptions(cmd);
 
       console.log(`loadOptions resolves to:\n${JSON.stringify(options, null, 2)}`);
       console.log(`cmd.args resolves to:\n${JSON.stringify(cmd.args)}`);
@@ -144,7 +144,7 @@ function makeDebugCommand(createCommand: CreateCommandType): Object {
     .command('config-file')
     .description('Load the config file')
     .action(cmd => {
-      const options = loadOptions(cmd);
+      const options = getOptions(cmd);
 
       console.log(`Loaded config file:\n${JSON.stringify(options.__configFile || {}, null, 2)}`);
       return exit(
