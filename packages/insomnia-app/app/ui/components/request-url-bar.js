@@ -125,7 +125,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     this.props.handleGenerateCode();
   }
 
-  _handleSetDownloadLocation() {
+  async _handleSetDownloadLocation() {
     const { request } = this.props;
 
     const options = {
@@ -134,13 +134,12 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
       properties: ['openDirectory'],
     };
 
-    remote.dialog.showOpenDialog(options, paths => {
-      if (!paths || paths.length === 0) {
-        return;
-      }
+    const { canceled, filePaths } = await remote.dialog.showOpenDialog(options);
+    if (canceled) {
+      return;
+    }
 
-      this.props.handleUpdateDownloadPath(request._id, paths[0]);
-    });
+    this.props.handleUpdateDownloadPath(request._id, filePaths[0]);
   }
 
   _handleClearDownloadLocation() {

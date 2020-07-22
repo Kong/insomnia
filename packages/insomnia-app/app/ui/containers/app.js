@@ -611,18 +611,15 @@ class App extends PureComponent {
   }
 
   async _getDownloadLocation() {
-    return new Promise(resolve => {
-      const options = {
-        title: 'Select Download Location',
-        buttonLabel: 'Send and Save',
-        defaultPath: window.localStorage.getItem('insomnia.sendAndDownloadLocation'),
-      };
+    const options = {
+      title: 'Select Download Location',
+      buttonLabel: 'Send and Save',
+      defaultPath: window.localStorage.getItem('insomnia.sendAndDownloadLocation'),
+    };
 
-      remote.dialog.showSaveDialog(options, filename => {
-        window.localStorage.setItem('insomnia.sendAndDownloadLocation', filename);
-        resolve(filename);
-      });
-    });
+    const { filePath } = await remote.dialog.showSaveDialog(options);
+    window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
+    return filePath || null;
   }
 
   async _handleSendAndDownloadRequestWithEnvironment(requestId, environmentId, dir) {
@@ -663,6 +660,10 @@ class App extends PureComponent {
           filename = path.join(dir, name);
         } else {
           filename = await this._getDownloadLocation();
+        }
+
+        if (!filename) {
+          return;
         }
 
         const to = fs.createWriteStream(filename);

@@ -296,8 +296,8 @@ export function createWindow() {
   if (!isMac()) {
     helpMenu.submenu.unshift({
       label: `${MNEMONIC_SYM}About`,
-      click: () => {
-        dialog.showMessageBox({
+      click: async () => {
+        await dialog.showMessageBox({
           type: 'info',
           title: getAppName(),
           message: getAppLongName(),
@@ -393,23 +393,20 @@ export function createWindow() {
   return mainWindow;
 }
 
-function showUnresponsiveModal() {
-  dialog.showMessageBox(
-    {
-      type: 'info',
-      buttons: ['Cancel', 'Reload'],
-      defaultId: 1,
-      cancelId: 0,
-      title: 'Unresponsive',
-      message: 'Insomnia has become unresponsive. Do you want to reload?',
-    },
-    id => {
-      if (id === 1) {
-        mainWindow.destroy();
-        createWindow();
-      }
-    },
-  );
+async function showUnresponsiveModal() {
+  const id = await dialog.showMessageBox({
+    type: 'info',
+    buttons: ['Cancel', 'Reload'],
+    defaultId: 1,
+    cancelId: 0,
+    title: 'Unresponsive',
+    message: 'Insomnia has become unresponsive. Do you want to reload?',
+  });
+
+  if (id === 1) {
+    mainWindow.destroy();
+    createWindow();
+  }
 }
 
 function saveBounds() {
