@@ -56,7 +56,7 @@ export const extractCommandOptions = <T>(cmd: Object): $Shape<T> => {
 
 const getOptions = <T>(cmd: Object, defaultOptions: $Shape<T> = {}): T => {
   const commandOptions = extractCommandOptions(cmd);
-  const { __configFile } = loadCosmiConfig(cmd.workingDir || '.', cmd.config);
+  const { __configFile } = loadCosmiConfig(commandOptions.workingDir || '.', commandOptions.config);
 
   if (__configFile) {
     return {

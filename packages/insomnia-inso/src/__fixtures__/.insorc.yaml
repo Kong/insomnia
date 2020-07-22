@@ -1,4 +1,5 @@
 settings:
-  ci: true
+  duplicate: configFile
+  fromConfig: configFile
 scripts:
   lint: lint spec
