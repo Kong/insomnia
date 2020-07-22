@@ -12,8 +12,6 @@ import _NoticeTable from './components/notice-table';
 import _SvgIcon from './components/svg-icon';
 import _Sidebar from './components/sidebar/';
 import _RadioButtonGroup from './components/radio-button-group';
-import _Sidebar from './components/sidebar';
-import _SvgIcon from './components/svg-icon';
 import _Switch from './components/switch';
 import _ToggleSwitch from './components/toggle-switch';
 import * as table from './components/table';
