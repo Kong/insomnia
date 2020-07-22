@@ -7,6 +7,7 @@ export default {
   title: '1st Party | Sidebar',
   decorators: [withKnobs, withDesign],
 };
+
 const apiSpec = {
   openapi: '3.0.0',
   info: {
@@ -2944,11 +2945,24 @@ const apiSpec = {
   security: [],
 };
 
-export const _default = () => (
-  <div style={{ width: '350px' }}>
-    <Sidebar jsonData={apiSpec} />
-  </div>
-);
+export const _default = () => {
+  const [targetPath, setTargetPath] = React.useState('Awaiting click...');
+
+  let itemPath = [];
+  const _handleItemClick = (section, item) => {
+    itemPath = [];
+    itemPath.push(section);
+    itemPath.push.apply(itemPath, item);
+    setTargetPath(itemPath.join(' > '));
+  };
+
+  return (
+    <div style={{ width: '350px' }}>
+      <div style={{ display: 'block', margin: '0px 0px 20px 0px' }}>Target: {targetPath}</div>
+      <Sidebar jsonData={apiSpec} onClick={_handleItemClick} />
+    </div>
+  );
+};
 
 _default.story = {
   parameters: {

@@ -21,15 +21,8 @@ import { useToggle } from 'react-use';
 type Props = {|
   className?: string,
   jsonData: Object,
-  onClick: (path: any) => any,
+  onClick: Function,
 |};
-
-let itemPath = [];
-const _handleItemClick = (section, item) => {
-  itemPath = [];
-  itemPath.push(section);
-  itemPath.push.apply(itemPath, item);
-};
 
 const StyledSidebar: React.ComponentType<{}> = styled.div`
   width: 100%;
@@ -158,14 +151,22 @@ function Sidebar(props: Props) {
           <SidebarInfo childrenVisible={infoSec} info={info} />
         </StyledSection>
       )}
-      {serversVisible && servers && <SidebarServers servers={servers} onClick={_handleItemClick} />}
-      {pathsVisible && paths && <SidebarPaths paths={paths} onClick={_handleItemClick} />}
-      {requestsVisible && requestBodies && <SidebarRequests requests={requestBodies} />}
-      {responsesVisible && responses && <SidebarResponses responses={responses} />}
-      {parametersVisible && parameters && <SidebarParameters parameters={parameters} />}
-      {headersVisible && headers && <SidebarHeaders headers={headers} />}
-      {schemasVisible && schemas && <SidebarSchemas schemas={schemas} />}
-      {securityVisible && schemas && <SidebarSecurity security={securitySchemes} />}
+      {serversVisible && servers && <SidebarServers servers={servers} onClick={props.onClick} />}
+      {pathsVisible && paths && <SidebarPaths paths={paths} onClick={props.onClick} />}
+      {requestsVisible && requestBodies && (
+        <SidebarRequests requests={requestBodies} onClick={props.onClick} />
+      )}
+      {responsesVisible && responses && (
+        <SidebarResponses responses={responses} onClick={props.onClick} />
+      )}
+      {parametersVisible && parameters && (
+        <SidebarParameters parameters={parameters} onClick={props.onClick} />
+      )}
+      {headersVisible && headers && <SidebarHeaders headers={headers} onClick={props.onClick} />}
+      {schemasVisible && schemas && <SidebarSchemas schemas={schemas} onClick={props.onClick} />}
+      {securityVisible && schemas && (
+        <SidebarSecurity security={securitySchemes} onClick={props.onClick} />
+      )}
     </StyledSidebar>
   );
 }

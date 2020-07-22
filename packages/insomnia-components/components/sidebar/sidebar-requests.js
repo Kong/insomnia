@@ -8,13 +8,7 @@ import SidebarSection from './sidebar-section';
 
 type Props = {
   requests: Object,
-};
-
-let itemPath = [];
-const handleClick = items => {
-  itemPath.push('request');
-  itemPath.push.apply(itemPath, items);
-  itemPath = [];
+  onClick: Function,
 };
 
 const StyledRequestExample: React.ComponentType<{}> = styled.span`
@@ -50,7 +44,7 @@ export default class SidebarRequests extends React.Component<Props> {
                 <div>
                   <SvgIcon icon={IconEnum.folderOpen} />
                 </div>
-                <span onClick={() => handleClick([requestName])}>
+                <span onClick={() => this.props.onClick('request', [requestName])}>
                   <Tooltip message={description} position="right">
                     {requestName}
                   </Tooltip>
@@ -61,13 +55,17 @@ export default class SidebarRequests extends React.Component<Props> {
                   <SidebarItem>
                     <StyledRequestFormat>
                       <SvgIcon icon={IconEnum.indentation} />
-                      <span onClick={() => handleClick([requestFormat])}>{requestFormat}</span>
+                      <span onClick={() => this.props.onClick('request', [requestFormat])}>
+                        {requestFormat}
+                      </span>
                     </StyledRequestFormat>
                   </SidebarItem>
                   <SidebarItem>
                     {Object.keys(content[requestFormat].examples).map(requestExample => (
                       <StyledRequestExample
-                        onClick={() => handleClick([requestExample])}
+                        onClick={() =>
+                          this.props.onClick('request', [requestFormat, requestExample])
+                        }
                         key={requestExample}>
                         {requestExample}
                       </StyledRequestExample>

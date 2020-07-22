@@ -6,13 +6,7 @@ import SidebarSection from './sidebar-section';
 
 type Props = {
   schemas: Object,
-};
-
-let itemPath = [];
-const handleClick = items => {
-  itemPath.push('schema');
-  itemPath.push.apply(itemPath, items);
-  itemPath = [];
+  onClick: Function,
 };
 
 // Implemented as a class component because of a caveat with render props
@@ -34,7 +28,7 @@ export default class SidebarSchemas extends React.Component<Props> {
             <div>
               <SvgIcon icon={IconEnum.brackets} />
             </div>
-            <span onClick={() => handleClick([schema])}>{schema}</span>
+            <span onClick={() => this.props.onClick('schema', [schema])}>{schema}</span>
           </SidebarItem>
         ))}
       </div>

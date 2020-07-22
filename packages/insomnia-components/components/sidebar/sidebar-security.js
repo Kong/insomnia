@@ -6,14 +6,9 @@ import SidebarSection from './sidebar-section';
 
 type Props = {
   security: Object,
+  onClick: Function,
 };
 
-let itemPath = [];
-const handleClick = items => {
-  itemPath.push('security');
-  itemPath.push.apply(itemPath, items);
-  itemPath = [];
-};
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarSecurity extends React.Component<Props> {
@@ -34,7 +29,7 @@ export default class SidebarSecurity extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.key} />
               </div>
-              <span onClick={() => handleClick([scheme])}>{scheme}</span>
+              <span onClick={() => this.props.onClick('security', [scheme])}>{scheme}</span>
             </SidebarItem>
           </React.Fragment>
         ))}
