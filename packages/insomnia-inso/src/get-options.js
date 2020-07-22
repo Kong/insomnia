@@ -1,6 +1,5 @@
 // @flow
 import { cosmiconfigSync } from 'cosmiconfig';
-import path from 'path';
 
 type ConfigFileOptions = {
   __configFile?: {
@@ -16,11 +15,11 @@ export type GlobalOptions = {
   ci?: boolean,
 } & ConfigFileOptions;
 
-export const loadCosmiConfig = (workingDir: string, configFile?: string): ConfigFileOptions => {
+export const loadCosmiConfig = (configFile?: string): ConfigFileOptions => {
   try {
     const explorer = cosmiconfigSync('inso');
-    const configPath = configFile ? path.join(workingDir, configFile) : undefined;
-    const results = configPath ? explorer.load(configPath) : explorer.search(workingDir);
+
+    const results = configFile ? explorer.load(configFile) : explorer.search();
 
     if (results && !results?.isEmpty) {
       return {
@@ -56,7 +55,8 @@ export const extractCommandOptions = <T>(cmd: Object): $Shape<T> => {
 
 const getOptions = <T>(cmd: Object, defaultOptions: $Shape<T> = {}): T => {
   const commandOptions = extractCommandOptions(cmd);
-  const { __configFile } = loadCosmiConfig(commandOptions.workingDir || '.', commandOptions.config);
+
+  const { __configFile } = loadCosmiConfig(commandOptions.config);
 
   if (__configFile) {
     return {

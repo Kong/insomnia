@@ -1,7 +1,7 @@
 // @flow
 
 import { generate, runTestsCli } from 'insomnia-testing';
-import type { GlobalOptions } from '../util';
+import type { GlobalOptions } from '../get-options';
 import { loadDb } from '../db';
 import type { UnitTest, UnitTestSuite } from '../db/models/types';
 import { noConsoleLog } from '../logger';

@@ -1,0 +1,16 @@
+settings:
+  ci: false
+  env: UnitTest
+  bail: true
+  reporter: progress
+scripts:
+  lint: lint spec "Designer Demo"
+
+  test: run test "Designer Demo"
+  test:200s: test --testNamePattern 200
+  test:404s: test --testNamePattern 404
+  test:suite:math: run test uts_8783c30a24b24e9a851d96cce48bd1f2
+  test:suite:requests: run test uts_bce4af
+
+  gen-conf: generate config "Designer Demo" --type declarative
+  gen-conf:k8s: gen-conf --type kubernetes

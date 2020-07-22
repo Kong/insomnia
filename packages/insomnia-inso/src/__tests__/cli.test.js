@@ -10,10 +10,11 @@ jest.mock('../commands/generate-config');
 jest.mock('../commands/lint-specification');
 jest.mock('../commands/run-tests');
 jest.mock('../commands/export-specification');
+jest.unmock('cosmiconfig');
 
 const initInso = () => {
-  return (args: string): void => {
-    const cliArgs = parseArgsStringToArgv(`node test ${args}`);
+  return (...args: Array<string>): void => {
+    const cliArgs = parseArgsStringToArgv(`node test ${args.join(' ')}`);
 
     return cli.go(cliArgs, true);
   };
@@ -171,6 +172,79 @@ describe('cli', () => {
         expect.objectContaining({
           workingDir: 'testing/dir',
         }),
+      );
+    });
+  });
+
+  describe('script', () => {
+    const insorcFilePath = '--config src/__fixtures__/.insorc-with-scripts.yaml';
+
+    it('should call script command by default', () => {
+      inso('gen-conf', insorcFilePath);
+
+      expect(generateConfig).toHaveBeenCalledWith(
+        'Designer Demo',
+        expect.objectContaining({ type: 'declarative' }),
+      );
+    });
+
+    it('should call script command', () => {
+      inso('script gen-conf', insorcFilePath);
+
+      expect(generateConfig).toHaveBeenCalledWith(
+        'Designer Demo',
+        expect.objectContaining({ type: 'declarative' }),
+      );
+    });
+
+    it('should call nested command', () => {
+      inso('gen-conf:k8s', insorcFilePath);
+
+      expect(generateConfig).toHaveBeenCalledWith(
+        'Designer Demo',
+        expect.objectContaining({ type: 'kubernetes' }),
+      );
+    });
+
+    it('should call nested command and pass through props', () => {
+      inso('gen-conf:k8s --type declarative', insorcFilePath);
+
+      expect(generateConfig).toHaveBeenCalledWith(
+        'Designer Demo',
+        expect.objectContaining({ type: 'declarative' }),
+      );
+    });
+
+    it('should get env setting from config for running tests', () => {
+      inso('test:200s', insorcFilePath);
+
+      expect(runInsomniaTests).toHaveBeenCalledWith(
+        'Designer Demo',
+        expect.objectContaining({
+          reporter: 'progress',
+          env: 'UnitTest',
+          bail: true,
+          testNamePattern: '200',
+        }),
+      );
+    });
+
+    it('should override env setting from command', () => {
+      inso('test:200s --env NewEnv', insorcFilePath);
+
+      expect(runInsomniaTests).toHaveBeenCalledWith(
+        'Designer Demo',
+        expect.objectContaining({
+          env: 'NewEnv',
+        }),
+      );
+    });
+
+    it('should fail if script not found', () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      inso('not-found-script', insorcFilePath);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Could not find inso script "not-found-script" in the config file.',
       );
     });
   });

@@ -1,6 +1,6 @@
 // @flow
 import { ConversionTypeMap, generateConfig } from './commands/generate-config';
-import { getVersion, logErrorExit1, exit, isDevelopment } from './util';
+import { getVersion, logErrorExit1, exit } from './util';
 import { runInsomniaTests, TestReporterEnum } from './commands/run-tests';
 import { lintSpecification } from './commands/lint-specification';
 import { exportSpecification } from './commands/export-specification';
@@ -113,46 +113,11 @@ function addScriptCommand(originalCommand: Object) {
       );
 
       // Print command
-      console.log(`> > inso ${scriptArgs.join(' ')}`);
+      // console.log(`> > inso ${scriptArgs.join(' ')}`);
 
       // Run
       runWithArgs(originalCommand, scriptArgs, true);
     });
-}
-
-function makeDebugCommand(createCommand: CreateCommandType): Object {
-  // inso export
-  const debug = createCommand('debug').description('Debugging commands');
-
-  // inso export spec
-  debug
-    .command('options')
-    .description('Print all options parsed')
-    .allowUnknownOption()
-    .action(cmd => {
-      const { __configFile, ...options } = getOptions(cmd);
-
-      console.log(`loadOptions resolves to:\n${JSON.stringify(options, null, 2)}`);
-      console.log(`cmd.args resolves to:\n${JSON.stringify(cmd.args)}`);
-
-      return exit(
-        new Promise<boolean>(resolve => resolve(false)),
-      );
-    });
-
-  debug
-    .command('config-file')
-    .description('Load the config file')
-    .action(cmd => {
-      const options = getOptions(cmd);
-
-      console.log(`Loaded config file:\n${JSON.stringify(options.__configFile || {}, null, 2)}`);
-      return exit(
-        new Promise<boolean>(resolve => resolve(false)),
-      );
-    });
-
-  return debug;
 }
 
 export function go(args?: Array<string>, exitOverride?: boolean): void {
@@ -188,11 +153,6 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
 
   // Add script base command
   addScriptCommand(cmd);
-
-  // Debugging commands
-  if (isDevelopment()) {
-    cmd.addCommand(makeDebugCommand(createCommand));
-  }
 
   runWithArgs(cmd, args || process.argv);
 }

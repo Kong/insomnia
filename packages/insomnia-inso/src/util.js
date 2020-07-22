@@ -5,10 +5,6 @@ export function getVersion() {
   return packageJson.version;
 }
 
-export function isDevelopment() {
-  return process.env.NODE_ENV === 'development';
-}
-
 export function logErrorExit1(err: Error) {
   console.error(err);
 
