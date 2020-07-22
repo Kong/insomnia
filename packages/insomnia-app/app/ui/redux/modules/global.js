@@ -24,13 +24,13 @@ import SettingsModal, {
 import install from '../../../plugins/install';
 import type { ForceToWorkspace } from './helpers';
 import { askToImportIntoWorkspace, ensureActivityIsForApp } from './helpers';
-import type { GlobalActivity } from '../../components/activity-bar/activity-bar';
 import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
 import { setActivityAttribute } from '../../../common/misc';
 import { isDevelopment } from '../../../common/constants';
 import type { Workspace } from '../../../models/workspace';
+import type { GlobalActivity } from '../../../common/constants';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 

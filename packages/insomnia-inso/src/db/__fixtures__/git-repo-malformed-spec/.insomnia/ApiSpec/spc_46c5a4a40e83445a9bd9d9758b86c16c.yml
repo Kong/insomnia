@@ -1,0 +1,32 @@
+_id: spc_46c5a4a40e83445a9bd9d9758b86c16c
+contentType: yaml
+contents: |
+  openapi: '3.0.2'
+  info:
+    title: Global Security
+    version: '1.2'
+  servers:
+    - url: https://api.server.test/v1
+  tags:
+    - name: Folder
+
+    paths:
+    /global:
+      get:
+        tags:
+          - Folder
+        responses:
+          '200':
+            description: OK
+    /override:
+      get:
+        security:
+          - Key-Query: []
+        responses:
+          '200':
+            description: OK
+created: 1589851906273
+fileName: Global Security
+modified: 1592254074772
+parentId: wrk_012d4860c7da418a85ffea7406e1292a
+type: ApiSpec

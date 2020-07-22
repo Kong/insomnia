@@ -27,8 +27,8 @@ import { trackEvent } from '../../common/analytics';
 import YAML from 'yaml';
 import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
-import type { GlobalActivity } from './activity-bar/activity-bar';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from './activity-bar/activity-bar';
+import type { GlobalActivity } from '../../common/constants';
+import { ACTIVITY_DEBUG, ACTIVITY_HOME, ACTIVITY_SPEC } from '../../common/constants';
 import { fuzzyMatchAll } from '../../common/misc';
 import type { WrapperProps } from './wrapper';
 import Notice from './notice';
@@ -273,8 +273,13 @@ class WrapperHome extends React.PureComponent<Props, State> {
   async _handleSetActiveWorkspace(id: string, defaultActivity: GlobalActivity) {
     const { handleSetActiveWorkspace, handleSetActiveActivity } = this.props.wrapperProps;
 
-    const selectedWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(id);
-    handleSetActiveActivity(selectedWorkspaceMeta.activeActivity || defaultActivity);
+    const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
+
+    if (!activeActivity || activeActivity === ACTIVITY_HOME) {
+      handleSetActiveActivity(defaultActivity);
+    } else {
+      handleSetActiveActivity(activeActivity);
+    }
 
     handleSetActiveWorkspace(id);
   }

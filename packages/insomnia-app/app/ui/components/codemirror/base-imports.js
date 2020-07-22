@@ -54,6 +54,7 @@ import './modes/nunjucks';
 import './modes/curl';
 import './modes/openapi';
 import './lint/openapi';
+import './lint/javascript-async-lint';
 import './extensions/autocomplete';
 import './extensions/clickable';
 import './extensions/nunjucks-tags';
@@ -62,6 +63,6 @@ import './extensions/nunjucks-tags';
 import 'codemirror/lib/codemirror.css';
 import '../../css/editor/index.less';
 
-// Make jsonlint available to the jsonlint plugin
+// Make jsonlint available to the jsonlint addon
 import { parser as jsonlint } from 'jsonlint';
 global.jsonlint = jsonlint;

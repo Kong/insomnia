@@ -1,10 +1,9 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import { Breadcrumb, Switch, Header } from 'insomnia-components';
+import { Breadcrumb, Header } from 'insomnia-components';
 import PageLayout from './page-layout';
 import type { WrapperProps } from './wrapper';
-import { ACTIVITY_HOME } from './activity-bar/activity-bar';
 import RequestPane from './request-pane';
 import ErrorBoundary from './error-boundary';
 import ResponsePane from './response-pane';
@@ -13,11 +12,13 @@ import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
-import { isInsomnia } from '../../common/constants';
+import { ACTIVITY_HOME, isInsomnia } from '../../common/constants';
+import ActivityToggle from './activity-toggle';
 
 type Props = {
   forceRefreshKey: string,
   gitSyncDropdown: React.Node,
+  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>,
   handleChangeEnvironment: Function,
   handleDeleteResponse: Function,
   handleDeleteResponses: Function,
@@ -42,7 +43,6 @@ type Props = {
   handleUpdateRequestUrl: Function,
   handleUpdateSettingsShowPasswords: Function,
   handleUpdateSettingsUseBulkHeaderEditor: Function,
-  handleSetDesignActivity: (workspaceId: string) => Promise<void>,
   wrapperProps: WrapperProps,
 };
 
@@ -52,18 +52,11 @@ class WrapperDebug extends React.PureComponent<Props> {
     this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
-  async _handleDesign(): Promise<void> {
-    const {
-      handleSetDesignActivity,
-      wrapperProps: { activeWorkspace },
-    } = this.props;
-    await handleSetDesignActivity(activeWorkspace._id);
-  }
-
   _renderPageHeader() {
     const {
       gitSyncDropdown,
-      wrapperProps: { activeApiSpec },
+      handleActivityChange,
+      wrapperProps: { activeApiSpec, activeWorkspace, activity },
     } = this.props;
 
     return (
@@ -80,12 +73,10 @@ class WrapperDebug extends React.PureComponent<Props> {
           </React.Fragment>
         }
         gridCenter={
-          <Switch
-            onClick={this._handleDesign}
-            optionItems={[
-              { label: 'DESIGN', selected: false },
-              { label: 'DEBUG', selected: true },
-            ]}
+          <ActivityToggle
+            activity={activity}
+            handleActivityChange={handleActivityChange}
+            workspace={activeWorkspace}
           />
         }
         gridRight={gitSyncDropdown}
@@ -128,6 +119,8 @@ class WrapperDebug extends React.PureComponent<Props> {
       activeRequest,
       activeRequestResponses,
       activeResponse,
+      activeUnitTest,
+      activeUnitTestResult,
       activeWorkspace,
       environments,
       enableSyncBeta,
@@ -237,6 +230,7 @@ class WrapperDebug extends React.PureComponent<Props> {
               handleMoveRequestGroup={handleMoveRequestGroup}
               handleGenerateCode={handleGenerateCode}
               handleCopyAsCurl={handleCopyAsCurl}
+              handleRender={handleRender}
               moveDoc={handleMoveDoc}
               hidden={sidebarHidden}
               width={sidebarWidth}
@@ -272,6 +266,7 @@ class WrapperDebug extends React.PureComponent<Props> {
                 nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                 oAuth2Token={oAuth2Token}
                 request={activeRequest}
+                unitTest={activeUnitTest}
                 settings={settings}
                 updateRequestAuthentication={handleUpdateRequestAuthentication}
                 updateRequestBody={handleUpdateRequestBody}
@@ -327,6 +322,7 @@ class WrapperDebug extends React.PureComponent<Props> {
                 requestVersions={requestVersions}
                 response={activeResponse}
                 responses={activeRequestResponses}
+                unitTestResult={activeUnitTestResult}
               />
             </ErrorBoundary>
           </React.Fragment>

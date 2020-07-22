@@ -1,6 +1,6 @@
 {
   "name": "insomnia-prettify",
-  "version": "2.2.2",
+  "version": "2.2.10",
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Prettification utilities for Insomnia",
   "license": "MIT",

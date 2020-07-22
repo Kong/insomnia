@@ -5,7 +5,7 @@ import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
 import { DB_PERSIST_INTERVAL } from './constants';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import { generateId, getDataDirectory } from './misc';
 import { mustGetModel } from '../models';
 import type { Workspace } from '../models/workspace';
@@ -41,7 +41,12 @@ export async function initClient() {
   console.log('[db] Initialized DB client');
 }
 
-export async function init(types: Array<string>, config: Object = {}, forceReset: boolean = false) {
+export async function init(
+  types: Array<string>,
+  config: Object = {},
+  forceReset: boolean = false,
+  consoleLog: () => void = console.log,
+) {
   if (forceReset) {
     changeListeners = [];
     for (const attr of Object.keys(db)) {
@@ -56,7 +61,7 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
   // Fill in the defaults
   for (const modelType of types) {
     if (db[modelType]) {
-      console.log(`[db] Already initialized DB.${modelType}`);
+      consoleLog(`[db] Already initialized DB.${modelType}`);
       continue;
     }
 
@@ -96,7 +101,7 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
   }
 
   if (!config.inMemoryOnly) {
-    console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
+    consoleLog(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
   }
 
   // This isn't the best place for this but w/e
@@ -111,25 +116,25 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
 
       if (type === CHANGE_REMOVE && typeof m.hookRemove === 'function') {
         try {
-          await m.hookRemove(doc);
+          await m.hookRemove(doc, consoleLog);
         } catch (err) {
-          console.log(`[db] Delete hook failed for ${type} ${doc._id}: ${err.message}`);
+          consoleLog(`[db] Delete hook failed for ${type} ${doc._id}: ${err.message}`);
         }
       }
 
       if (type === CHANGE_INSERT && typeof m.hookInsert === 'function') {
         try {
-          await m.hookInsert(doc);
+          await m.hookInsert(doc, consoleLog);
         } catch (err) {
-          console.log(`[db] Insert hook failed for ${type} ${doc._id}: ${err.message}`);
+          consoleLog(`[db] Insert hook failed for ${type} ${doc._id}: ${err.message}`);
         }
       }
 
       if (type === CHANGE_UPDATE && typeof m.hookUpdate === 'function') {
         try {
-          await m.hookUpdate(doc);
+          await m.hookUpdate(doc, consoleLog);
         } catch (err) {
-          console.log(`[db] Update hook failed for ${type} ${doc._id}: ${err.message}`);
+          consoleLog(`[db] Update hook failed for ${type} ${doc._id}: ${err.message}`);
         }
       }
     }
@@ -137,7 +142,7 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
 
   for (const model of models.all()) {
     if (typeof model.hookDatabaseInit === 'function') {
-      await model.hookDatabaseInit();
+      await model.hookDatabaseInit(consoleLog);
     }
   }
 }

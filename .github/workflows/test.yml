@@ -10,13 +10,6 @@ on:
       - opened
       - synchronize
 
-env:
-  NPM_CONFIG_TARGET: 3.1.13
-  NPM_CONFIG_ARCH: x64
-  NPM_CONFIG_TARGET_ARCH: x64
-  NPM_CONFIG_DISTURL: https://electronjs.org/headers
-  NPM_CONFIG_RUNTIME: electron
-
 jobs:
   Windows:
     name: Test Windows

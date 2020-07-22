@@ -1,6 +1,6 @@
 {
   "tagVersionPrefix": "lib@",
-  "version": "2.2.8",
+  "version": "2.2.18",
   "packages": [
     "packages/*",
     "plugins/*"

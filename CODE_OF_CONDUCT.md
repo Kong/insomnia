@@ -40,7 +40,7 @@ please see our Reporting Guidelines
   when dealing with other members as well as with people outside the Insomnia community.
 - **Be careful in the words that you choose.** We are a community of professionals, 
   and we conduct ourselves professionally. Be kind to others. Do not insult or put 
-  down other participants. Harassment and other exclusionary behavior aren't acceptable. 
+  down other participants. Harassment and other exclusionary behavior isn't acceptable. 
   This includes, but is not limited to:
   - Violent threats or language directed against another person.
   - Discriminatory jokes and language.
