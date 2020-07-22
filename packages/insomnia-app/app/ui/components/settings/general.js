@@ -198,7 +198,7 @@ class General extends React.PureComponent<Props, State> {
           </div>
           <div>
             {this.renderBooleanSetting('Reveal passwords', 'showPasswords', '')}
-            {!isMac() && this.renderBooleanSetting('Hide menu bar', 'autoHideMenuBar', '')}
+            {!isMac() && this.renderBooleanSetting('Hide menu bar', 'autoHideMenuBar', '', true)}
             {this.renderBooleanSetting('Raw template syntax', 'nunjucksPowerUserMode', '', true)}
           </div>
         </div>

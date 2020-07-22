@@ -181,7 +181,7 @@
     "concurrently": "^3.5.0",
     "cross-env": "^2.0.0",
     "css-loader": "^2.1.1",
-    "electron": "~9.0.0",
+    "electron": "^9.1.1",
     "electron-builder": "^22.5.1",
     "electron-builder-squirrel-windows": "^22.5.1",
     "electron-notarize": "^0.3.0",
