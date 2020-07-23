@@ -29,7 +29,7 @@ export default class SidebarResponses extends React.Component<Props> {
             <div>
               <SvgIcon icon={IconEnum.indentation} />
             </div>
-            <span onClick={() => this.props.onClick('response', [response])}>
+            <span onClick={() => this.props.onClick('components', ['responses', response])}>
               <Tooltip message={this.props.responses[response].description} position="right">
                 {response}
               </Tooltip>

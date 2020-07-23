@@ -34,7 +34,7 @@ export default class SidebarPaths extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => this.props.onClick('path', [route])}>{route}</span>
+              <span onClick={() => this.props.onClick('paths', [route])}>{route}</span>
             </SidebarItem>
             <SidebarItem>
               <StyledMethods>
@@ -42,7 +42,7 @@ export default class SidebarPaths extends React.Component<Props> {
                   <span
                     key={method}
                     className={`method-${method}`}
-                    onClick={() => this.props.onClick('path', [route, method])}>
+                    onClick={() => this.props.onClick('paths', [route, method])}>
                     {method}
                   </span>
                 ))}

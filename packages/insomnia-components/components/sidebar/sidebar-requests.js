@@ -44,7 +44,8 @@ export default class SidebarRequests extends React.Component<Props> {
                 <div>
                   <SvgIcon icon={IconEnum.folderOpen} />
                 </div>
-                <span onClick={() => this.props.onClick('request', [requestName])}>
+                <span
+                  onClick={() => this.props.onClick('components', ['requestBodies', requestName])}>
                   <Tooltip message={description} position="right">
                     {requestName}
                   </Tooltip>
@@ -55,7 +56,15 @@ export default class SidebarRequests extends React.Component<Props> {
                   <SidebarItem>
                     <StyledRequestFormat>
                       <SvgIcon icon={IconEnum.indentation} />
-                      <span onClick={() => this.props.onClick('request', [requestFormat])}>
+                      <span
+                        onClick={() =>
+                          this.props.onClick('components', [
+                            'requestBodies',
+                            requestName,
+                            'content',
+                            requestFormat,
+                          ])
+                        }>
                         {requestFormat}
                       </span>
                     </StyledRequestFormat>
@@ -64,7 +73,14 @@ export default class SidebarRequests extends React.Component<Props> {
                     {Object.keys(content[requestFormat].examples).map(requestExample => (
                       <StyledRequestExample
                         onClick={() =>
-                          this.props.onClick('request', [requestFormat, requestExample])
+                          this.props.onClick('components', [
+                            'requestBodies',
+                            requestName,
+                            'content',
+                            requestFormat,
+                            'examples',
+                            requestExample,
+                          ])
                         }
                         key={requestExample}>
                         {requestExample}

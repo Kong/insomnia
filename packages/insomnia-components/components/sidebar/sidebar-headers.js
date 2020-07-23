@@ -30,7 +30,7 @@ export default class SidebarHeaders extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => this.props.onClick('header', [header])}>
+              <span onClick={() => this.props.onClick('components', ['headers', header])}>
                 <Tooltip message={this.props.headers[header].description} position="right">
                   {header}
                 </Tooltip>

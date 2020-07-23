@@ -2,6 +2,7 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import YAML from 'yaml';
+import YAMLSourceMap from 'yaml-source-map';
 import SpecEditorSidebarItem from './spec-editor-sidebar-item';
 import { Sidebar } from 'insomnia-components';
 import type { ApiSpec } from '../../../models/api-spec';
@@ -9,6 +10,7 @@ import { trackEvent } from '../../../common/analytics';
 
 type Props = {|
   apiSpec: ApiSpec,
+  onClick: (path: any) => any,
   handleSetSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void,
 |};
 
@@ -68,7 +70,10 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
         <SpecEditorSidebarItem
           key={newPath}
           name={curr.strValue}
-          onClick={() => this._handleScrollEditor(curr.rangeAsLinePos)}>
+          onClick={() => {
+            this._handleScrollEditor(curr.rangeAsLinePos);
+            console.log(curr.rangeAsLinePos);
+          }}>
           {this.renderNext(next, newPath)}
         </SpecEditorSidebarItem>,
       );
@@ -144,12 +149,43 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
       return null;
     }
 
-    // const navigationEl = document.contents.map(v => this.renderNext(v, '$'));
+    const sourceMap = new YAMLSourceMap();
+    const specMap = sourceMap.index(
+      YAML.parseDocument(apiSpec.contents, { keepCstNodes: true /* must specify this */ }),
+    );
+
+    let itemPath = [];
+    const scrollPosition = {
+      start: {
+        line: 0,
+        col: 0,
+      },
+      end: {
+        line: 0,
+        col: 0,
+      },
+    };
+
+    const _handleItemClick = (section, item) => {
+      itemPath = [section];
+      itemPath.push.apply(itemPath, item);
+      const itemPosition = sourceMap.lookup(itemPath, specMap);
+      // Hack for servers array due to offest in YAML CST mapping
+      if (section === 'servers') {
+        scrollPosition.start.line = itemPosition.start.line;
+      } else {
+        scrollPosition.start.line = itemPosition.start.line - 1;
+      }
+      scrollPosition.end.line = scrollPosition.start.line;
+      scrollPosition.end.col = 200;
+
+      // Scroll to selection
+      this._handleScrollEditor(scrollPosition);
+    };
 
     return (
       <div className="spec-editor-sidebar">
-        <Sidebar jsonData={specJSON} />
-        {/* navigationEl */}
+        <Sidebar jsonData={specJSON} onClick={_handleItemClick} />
       </div>
     );
   }

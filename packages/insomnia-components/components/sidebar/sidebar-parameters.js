@@ -30,7 +30,7 @@ export default class SidebarParameters extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => this.props.onClick('parameter', [parameter])}>
+              <span onClick={() => this.props.onClick('components', ['parameters', parameter])}>
                 <Tooltip message={this.props.parameters[parameter].description} position="right">
                   {parameter}
                 </Tooltip>

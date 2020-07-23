@@ -69,5 +69,7 @@
     "prettier": "^1.16.4",
     "rimraf": "^2.6.3"
   },
-  "dependencies": {}
+  "dependencies": {
+    "yaml-source-map": "^2.1.1"
+  }
 }

@@ -28,7 +28,9 @@ export default class SidebarSchemas extends React.Component<Props> {
             <div>
               <SvgIcon icon={IconEnum.brackets} />
             </div>
-            <span onClick={() => this.props.onClick('schema', [schema])}>{schema}</span>
+            <span onClick={() => this.props.onClick('components', ['schemas', schema])}>
+              {schema}
+            </span>
           </SidebarItem>
         ))}
       </div>

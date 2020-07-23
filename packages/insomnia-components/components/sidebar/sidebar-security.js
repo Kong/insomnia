@@ -29,7 +29,9 @@ export default class SidebarSecurity extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.key} />
               </div>
-              <span onClick={() => this.props.onClick('security', [scheme])}>{scheme}</span>
+              <span onClick={() => this.props.onClick('components', ['securitySchemes', scheme])}>
+                {scheme}
+              </span>
             </SidebarItem>
           </React.Fragment>
         ))}
