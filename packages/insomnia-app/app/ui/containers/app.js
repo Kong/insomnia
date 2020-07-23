@@ -614,8 +614,13 @@ class App extends PureComponent {
     const options = {
       title: 'Select Download Location',
       buttonLabel: 'Send and Save',
-      defaultPath: window.localStorage.getItem('insomnia.sendAndDownloadLocation'),
     };
+
+    const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
+    if (defaultPath) {
+      // NOTE: An error will be thrown if defaultPath is supplied but not a String
+      options.defaultPath = defaultPath;
+    }
 
     const { filePath } = await remote.dialog.showSaveDialog(options);
     window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
