@@ -43,6 +43,8 @@ import MemoSvgIcnUser from '../assets/svgr/IcnUser';
 import MemoSvgIcnWarningCircle from '../assets/svgr/IcnWarningCircle';
 import MemoSvgIcnX from '../assets/svgr/IcnX';
 import MemoSvgIcnInfo from '../assets/svgr/IcnInfo';
+import MemoSvgIcnKey from '../assets/svgr/IcnKey';
+import MemoSvgIcnBrackets from '../assets/svgr/IcnBrackets';
 
 export const ThemeEnum = {
   default: 'default',
@@ -101,6 +103,8 @@ export const IconEnum = {
   user: 'user',
   warningCircle: 'warning-circle',
   x: 'x',
+  key: 'key',
+  brackets: 'brackets',
 
   // Blank icon
   empty: 'empty',
@@ -190,6 +194,8 @@ class SvgIcon extends React.Component<Props> {
     [IconEnum.user]: [ThemeEnum.default, MemoSvgIcnUser],
     [IconEnum.warningCircle]: [ThemeEnum.default, MemoSvgIcnWarningCircle],
     [IconEnum.x]: [ThemeEnum.default, MemoSvgIcnX],
+    [IconEnum.key]: [ThemeEnum.default, MemoSvgIcnKey],
+    [IconEnum.brackets]: [ThemeEnum.default, MemoSvgIcnBrackets],
   };
 
   render() {
