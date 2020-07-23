@@ -36,6 +36,12 @@ export type GitLogEntry = {|
   },
 |};
 
+export type PushResponse = {
+  ok?: string[],
+  errors?: string[],
+  headers?: object,
+};
+
 // isomorphic-git internally will default an empty ('') clone directory to '.'
 // Ref: https://github.com/isomorphic-git/isomorphic-git/blob/4e66704d05042624bbc78b85ee5110d5ee7ec3e2/src/utils/normalizePath.js#L10
 // We should set this explicitly (even if set to an empty string), because we have other code (such as fs plugins
@@ -229,7 +235,7 @@ export default class GitVCS {
     return true;
   }
 
-  async push(creds?: GitCredentials | null, force: boolean = false): Promise<boolean> {
+  async push(creds?: GitCredentials | null, force: boolean = false): Promise<PushResponse> {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
     trackEvent('Git', 'Push');
 
