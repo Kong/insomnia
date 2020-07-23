@@ -8,7 +8,7 @@ import SidebarSection from './sidebar-section';
 
 type Props = {
   requests: Object,
-  onClick: Function,
+  onClick: (section: string, path: Array<mixed>) => void,
 };
 
 const StyledRequestExample: React.ComponentType<{}> = styled.span`

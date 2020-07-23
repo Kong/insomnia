@@ -21,7 +21,7 @@ import { useToggle } from 'react-use';
 type Props = {|
   className?: string,
   jsonData: Object,
-  onClick: Function,
+  onClick: (section: string, path: Array<mixed>) => void,
 |};
 
 const StyledSidebar: React.ComponentType<{}> = styled.div`

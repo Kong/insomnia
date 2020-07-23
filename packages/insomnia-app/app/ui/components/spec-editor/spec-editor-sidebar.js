@@ -10,7 +10,6 @@ import { trackEvent } from '../../../common/analytics';
 
 type Props = {|
   apiSpec: ApiSpec,
-  onClick: (path: any) => any,
   handleSetSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void,
 |};
 

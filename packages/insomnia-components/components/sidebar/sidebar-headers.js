@@ -7,7 +7,7 @@ import SidebarSection from './sidebar-section';
 
 type Props = {
   headers: Object,
-  onClick: Function,
+  onClick: (section: string, path: Array<mixed>) => void,
 };
 
 // Implemented as a class component because of a caveat with render props
