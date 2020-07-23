@@ -158,7 +158,6 @@ class CodeEditor extends React.Component {
   }
 
   setSelection(chStart, chEnd, lineStart, lineEnd) {
-    console.log('SETTING SELECTION!');
     if (this.codeMirror) {
       this.codeMirror.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
       this.codeMirror.scrollIntoView({ line: lineStart, char: chStart }, 400);
