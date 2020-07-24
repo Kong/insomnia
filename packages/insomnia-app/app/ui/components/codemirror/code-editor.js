@@ -20,6 +20,7 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import { query as queryXPath } from 'insomnia-xpath';
 import deepEqual from 'deep-equal';
 import zprint from 'zprint-clj';
+import { remote } from 'electron';
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -158,9 +159,14 @@ class CodeEditor extends React.Component {
   }
 
   setSelection(chStart, chEnd, lineStart, lineEnd) {
+    const selectionFocusPos = remote.getCurrentWindow().getSize()[1] / 2 - 100;
     if (this.codeMirror) {
       this.codeMirror.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
-      this.codeMirror.scrollIntoView({ line: lineStart, char: chStart }, 400);
+      this.codeMirror.scrollIntoView(
+        { line: lineStart, char: chStart },
+        // If sizing permits, position selection just above center
+        selectionFocusPos,
+      );
     }
   }
 

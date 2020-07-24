@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import { remote } from 'electron';
 import autobind from 'autobind-decorator';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
@@ -75,7 +76,6 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
       }
       scrollPosition.end.line = scrollPosition.start.line;
       scrollPosition.end.col = 200;
-
       // Scroll to selection
       this._handleScrollEditor(scrollPosition);
     };

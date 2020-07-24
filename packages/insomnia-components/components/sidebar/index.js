@@ -69,14 +69,8 @@ function Sidebar(props: Props) {
     return null;
   }
   const { servers, info } = props.jsonData;
-  const {
-    requestBodies,
-    responses,
-    parameters,
-    headers,
-    schemas,
-    securitySchemes,
-  } = props.jsonData.components;
+  const { requestBodies, responses, parameters, headers, schemas, securitySchemes } =
+    props.jsonData.components || {};
   const paths = Object.entries(props.jsonData.paths);
 
   return (
