@@ -1,6 +1,6 @@
 {
   "name": "insomnia-inso",
-  "version": "2.2.18",
+  "version": "2.2.19",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnia Designer - the collaborative API design tool.",
   "author": "Kong <office@konghq.com>",
@@ -34,7 +34,9 @@
     "resetMocks": true,
     "resetModules": true,
     "collectCoverage": true,
-    "coveragePathIgnorePatterns": ["/node_modules/"],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
     "coverageThreshold": {
       "global": {
         "branches": 90,
@@ -76,7 +78,7 @@
     "insomnia-plugin-request": "^2.2.12",
     "insomnia-plugin-response": "^2.2.10",
     "insomnia-plugin-uuid": "^2.2.10",
-    "insomnia-send-request": "^2.2.15",
+    "insomnia-send-request": "^2.2.19",
     "insomnia-testing": "^2.2.15",
     "lodash.flattendeep": "^4.4.0",
     "mkdirp": "^1.0.4",
