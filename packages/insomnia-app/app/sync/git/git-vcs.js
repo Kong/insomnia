@@ -4,6 +4,7 @@ import { trackEvent } from '../../common/analytics';
 import { httpPlugin } from './http';
 import { convertToOsSep, convertToPosixSep } from './path-sep';
 import path from 'path';
+import EventEmitter from 'events';
 
 export type GitAuthor = {|
   name: string,
@@ -66,6 +67,12 @@ export default class GitVCS {
     this._git = git;
     git.plugins.set('fs', fsPlugin);
     git.plugins.set('http', httpPlugin);
+    const emitter = new EventEmitter();
+    git.plugins.set('emitter', emitter);
+
+    emitter.on('message', message => {
+      console.log(`[git-event] ${message}`);
+    });
 
     this._baseOpts = { dir: directory, gitdir: gitDirectory };
 

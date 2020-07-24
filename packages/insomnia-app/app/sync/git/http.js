@@ -25,8 +25,6 @@ export async function httpPlugin(config) {
     response = err.response;
   }
 
-  console.log(response.data.toString());
-
   return {
     url: response.request.res.responseUrl,
     method: response.request.method,

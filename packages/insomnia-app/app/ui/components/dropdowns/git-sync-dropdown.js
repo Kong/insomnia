@@ -151,9 +151,13 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     const bufferId = await db.bufferChanges();
     try {
       const response = await vcs.push(gitRepository.credentials, force);
-      console.info('[git] Push Response', response);
       if (response.errors?.length) {
-        throw new Error(`Push rejected with errors: ${JSON.stringify(response.errors)}`);
+        console.log(`[git] Push rejected`, response);
+        showAlert({
+          title: 'Push Rejected',
+          message: 'Go to View > Toggle DevTools > Console for more information.',
+          okLabel: 'Close',
+        });
       }
     } catch (err) {
       if (err.code === 'PushRejectedNonFastForward') {
