@@ -79,6 +79,9 @@ function Sidebar(props: Props) {
   } = props.jsonData.components;
   const paths = Object.entries(props.jsonData.paths);
 
+  console.log('Security Schemes');
+  console.log(securitySchemes);
+
   return (
     <StyledSidebar className="theme--sidebar">
       {info && (
@@ -164,7 +167,7 @@ function Sidebar(props: Props) {
       )}
       {headersVisible && headers && <SidebarHeaders headers={headers} onClick={props.onClick} />}
       {schemasVisible && schemas && <SidebarSchemas schemas={schemas} onClick={props.onClick} />}
-      {securityVisible && schemas && (
+      {securityVisible && securitySchemes && (
         <SidebarSecurity security={securitySchemes} onClick={props.onClick} />
       )}
     </StyledSidebar>

@@ -69,24 +69,26 @@ export default class SidebarRequests extends React.Component<Props> {
                       </span>
                     </StyledRequestFormat>
                   </SidebarItem>
-                  <SidebarItem>
-                    {Object.keys(content[requestFormat].examples).map(requestExample => (
-                      <StyledRequestExample
-                        onClick={() =>
-                          this.props.onClick('components', [
-                            'requestBodies',
-                            requestName,
-                            'content',
-                            requestFormat,
-                            'examples',
-                            requestExample,
-                          ])
-                        }
-                        key={requestExample}>
-                        {requestExample}
-                      </StyledRequestExample>
-                    ))}
-                  </SidebarItem>
+                  {content[requestFormat].examples && (
+                    <SidebarItem>
+                      {Object.keys(content[requestFormat].examples).map(requestExample => (
+                        <StyledRequestExample
+                          onClick={() =>
+                            this.props.onClick('components', [
+                              'requestBodies',
+                              requestName,
+                              'content',
+                              requestFormat,
+                              'examples',
+                              requestExample,
+                            ])
+                          }
+                          key={requestExample}>
+                          {requestExample}
+                        </StyledRequestExample>
+                      ))}
+                    </SidebarItem>
+                  )}
                 </React.Fragment>
               ))}
             </React.Fragment>

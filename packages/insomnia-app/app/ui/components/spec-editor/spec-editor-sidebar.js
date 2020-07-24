@@ -3,7 +3,6 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
-import SpecEditorSidebarItem from './spec-editor-sidebar-item';
 import { Sidebar } from 'insomnia-components';
 import type { ApiSpec } from '../../../models/api-spec';
 import { trackEvent } from '../../../common/analytics';
@@ -53,75 +52,6 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     }
   }
 
-  renderMap(collection: Object, path: string) {
-    const children = [];
-    for (let i = 0; i < collection.items.length; i++) {
-      const curr: Object = collection.items[i];
-      const next: ?Object = collection.items[i + 1];
-
-      // If the next one is a map value, we know we have a key in current
-      if (!next || next.type !== 'MAP_VALUE') {
-        continue;
-      }
-
-      const newPath = `${path}.${curr.strValue}`;
-      children.push(
-        <SpecEditorSidebarItem
-          key={newPath}
-          name={curr.strValue}
-          onClick={() => {
-            this._handleScrollEditor(curr.rangeAsLinePos);
-            console.log(curr.rangeAsLinePos);
-          }}>
-          {this.renderNext(next, newPath)}
-        </SpecEditorSidebarItem>,
-      );
-
-      // Bump one more since we used both curr and next
-      i++;
-    }
-
-    return <ul key={path}>{children}</ul>;
-  }
-
-  renderSequence(collection: Object, path: string) {
-    const children = [];
-
-    for (let i = 0; i < collection.items.length; i++) {
-      const item = collection.items[i];
-      if (item.type !== 'SEQ_ITEM') {
-        continue;
-      }
-
-      const newPath = `${path}[${i}]`;
-
-      children.push(
-        <SpecEditorSidebarItem
-          key={newPath}
-          name={String(i)}
-          onClick={() => this._handleScrollEditor(item.rangeAsLinePos)}>
-          {this.renderNext(item, newPath)}
-        </SpecEditorSidebarItem>,
-      );
-    }
-
-    return <ul key={path}>{children}</ul>;
-  }
-
-  renderNext(thing: Object, path: string) {
-    if (thing.type === 'MAP') {
-      return this.renderMap(thing, path);
-    } else if (thing.type === 'SEQ') {
-      return this.renderSequence(thing, path);
-    } else if (thing.node) {
-      // Try rendering child node if it has one
-      return this.renderNext(thing.node, path);
-    }
-
-    // Everything else terminates recursion (eg. FLOW_SEQ, MAP_SEQ)
-    return null;
-  }
-
   render() {
     const { error } = this.state;
 
@@ -132,11 +62,15 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     const { apiSpec } = this.props;
     const specCst = YAML.parseCST(apiSpec.contents);
 
+    // console.log(apiSpec);
+
     let specJSON = {};
 
     if (apiSpec.contentType === 'yaml') {
       specJSON = YAML.parse(apiSpec.contents);
     }
+
+    console.log(specJSON);
 
     if (!specCst) {
       return null;
