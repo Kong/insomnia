@@ -37,21 +37,6 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     handleSetSelection(pos.start.col - 1, pos.end.col - 1, pos.start.line - 1, pos.end.line - 1);
   }
 
-  componentDidUpdate() {
-    const { apiSpec } = this.props;
-    const { error } = this.state;
-
-    if (apiSpec.type === 'json') {
-      this.setState({
-        error:
-          'Tree navigation is not yet supported for JSON-formatted spec ' +
-          'files. Please use YAML instead.',
-      });
-    } else if (error) {
-      this.setState({ error: '' });
-    }
-  }
-
   render() {
     const { error } = this.state;
 
@@ -60,28 +45,7 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     }
 
     const { apiSpec } = this.props;
-    const specCst = YAML.parseCST(apiSpec.contents);
-
-    // console.log(apiSpec);
-
-    let specJSON = {};
-
-    if (apiSpec.contentType === 'yaml') {
-      specJSON = YAML.parse(apiSpec.contents);
-    }
-
-    console.log(specJSON);
-
-    if (!specCst) {
-      return null;
-    }
-
-    const [document] = specCst;
-
-    if (!document.contents) {
-      return null;
-    }
-
+    const specJSON = YAML.parse(apiSpec.contents);
     const sourceMap = new YAMLSourceMap();
     const specMap = sourceMap.index(
       YAML.parseDocument(apiSpec.contents, { keepCstNodes: true /* must specify this */ }),

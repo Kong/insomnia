@@ -79,9 +79,6 @@ function Sidebar(props: Props) {
   } = props.jsonData.components;
   const paths = Object.entries(props.jsonData.paths);
 
-  console.log('Security Schemes');
-  console.log(securitySchemes);
-
   return (
     <StyledSidebar className="theme--sidebar">
       {info && (
