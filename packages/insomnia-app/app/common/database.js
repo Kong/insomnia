@@ -4,7 +4,7 @@ import * as models from '../models/index';
 import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
-import { DB_PERSIST_INTERVAL, isDevelopment } from './constants';
+import { DB_PERSIST_INTERVAL } from './constants';
 import * as uuid from 'uuid';
 import { generateId, getDataDirectory } from './misc';
 import { mustGetModel } from '../models';
@@ -18,11 +18,6 @@ const database = {};
 const db = ({
   _empty: true,
 }: Object);
-
-// So we can debug in DevTools
-if (isDevelopment()) {
-  global.db = db;
-}
 
 // ~~~~~~~ //
 // HELPERS //

@@ -197,8 +197,8 @@
     "source-map-loader": "^1.0.0",
     "style-loader": "^0.23.1",
     "url-loader": "^1.1.2",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11",
+    "webpack": "^4.44.0",
+    "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.3.1",
     "webpack-target-electron-renderer": "^0.4.0",
     "worker-loader": "^2.0.0"
