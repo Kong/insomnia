@@ -1,6 +1,5 @@
 // @flow
 import * as React from 'react';
-import { remote } from 'electron';
 import autobind from 'autobind-decorator';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
