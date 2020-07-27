@@ -38,8 +38,8 @@ export type GitLogEntry = {|
 |};
 
 export type PushResponse = {
-  ok?: string[],
-  errors?: string[],
+  ok?: Array<string>,
+  errors?: Array<string>,
   headers?: object,
 };
 
