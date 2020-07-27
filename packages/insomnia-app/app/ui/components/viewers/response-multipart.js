@@ -112,7 +112,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
     });
   }
 
-  _handleSaveAsFile() {
+  async _handleSaveAsFile() {
     const { parts, activePart } = this.state;
     const part = parts[activePart];
 
@@ -139,21 +139,20 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
       ],
     };
 
-    electron.remote.dialog.showSaveDialog(options, outputPath => {
-      if (!outputPath) {
-        return;
-      }
+    const { canceled, filePath } = await electron.remote.dialog.showSaveDialog(options);
+    if (canceled) {
+      return;
+    }
 
-      // Remember last exported path
-      window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
+    // Remember last exported path
+    window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
 
-      // Save the file
-      fs.writeFile(outputPath, part.value, err => {
-        if (err) {
-          console.warn('Failed to save multipart to file', err);
-        }
-      });
-    });
+    // Save the file
+    try {
+      await fs.promises.writeFile(filePath, part.value);
+    } catch (err) {
+      console.warn('Failed to save multipart to file', err);
+    }
   }
 
   _getParts(): Promise<Array<Part>> {

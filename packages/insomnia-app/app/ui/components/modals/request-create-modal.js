@@ -115,7 +115,7 @@ class RequestCreateModal extends PureComponent {
               <div className="form-control form-control--outlined">
                 <label>
                   Name
-                  <span class="txt-sm faint italic space-left">
+                  <span className="txt-sm faint italic space-left">
                     (defaults to your request URL if left empty)
                   </span>
                   <input ref={this._setInputRef} type="text" />
