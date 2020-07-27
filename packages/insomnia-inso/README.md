@@ -5,25 +5,22 @@ A CLI to accompany <a href="https://insomnia.rest">Insomnia Designer</a>
   <pre>npm i -g <a href="https://www.npmjs.com/package/insomnia-inso">insomnia-inso</a></pre>
 </div>
 
----
-
 Table of Contents
 =================
 
-   * [inso](#inso)
-   * [Table of Contents](#table-of-contents)
-   * [Data source](#data-source)
-   * [The `[identifier]` argument](#the-identifier-argument)
-   * [Commands](#commands)
-      * [ `inso` ](#-inso-global-options-command)
-      * [ `inso generate config` ](#-inso-generate-config-options-identifier)
-      * [ `inso lint spec` ](#-inso-lint-spec-identifier)
-      * [ `inso run test` ](#-inso-run-test-options-identifier)
-      * [ `inso export spec` ](#-inso-export-spec-identifier)
-      * [ `inso script` ](#-inso-script-name)
-   * [Git Bash](#git-bash)
-   * [Continuous Integration](#continuous-integration)
-   * [Development](#development)
+* [Data source](#data-source)
+* [The `[identifier]` argument](#the-identifier-argument)
+* [Commands](#commands)
+  + [ `inso` ](#-inso-global-options-command)
+  + [ `inso generate config` ](#-inso-generate-config-options-identifier)
+  + [ `inso lint spec` ](#-inso-lint-spec-identifier)
+  + [ `inso run test` ](#-inso-run-test-options-identifier)
+  + [ `inso export spec` ](#-inso-export-spec-identifier)
+  + [ `inso script` ](#-inso-script-name)
+* [Configuration](#configuration)
+* [Git Bash](#git-bash)
+* [Continuous Integration](#continuous-integration)
+* [Development](#development)
 
 # Data source
 
@@ -52,7 +49,7 @@ Additionally, if the `[identifier]` argument is ommitted from the command, `inso
 | `--version` | `-v` |output the version number|
 | `--help` | `-h` |display help for a command|
 
-## `$ inso generate config [options] [identifier]`
+## `$ inso generate config [identifier]`
 
 Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-kong-kubernetes-config) and [Declarative](https://insomnia.rest/plugins/insomnia-plugin-kong-declarative-config) config plugins for Designer, this command can generate configuration from an API specification, using [openapi-2-kong](https://www.npmjs.com/package/openapi-2-kong).
 
@@ -120,7 +117,7 @@ inso lint spec spc_46c5a4
 inso lint spec "Sample Specification"
 ```
 
-## `$ inso run test [options] [identifier]`
+## `$ inso run test [identifier]`
 
 API Unit Testing was introduced with Designer 2020.3.0, and this command adds the functionality to execute those unit tests via the command line, very useful for a CI environment. `inso` will report on test results, and exit with an appropriate exit code.
 
@@ -142,27 +139,27 @@ When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packa
 
 Not specifying any arguments will prompt
 
-```sh
+``` sh
 inso run test
 ```
 
 Scope by the document name or id
 
-```sh
+``` sh
 inso run test "Sample Specification" --env "OpenAPI env"
 inso run test spc_46c5a4 --env env_env_ca046a
 ```
 
 Scope by the a test suite name or id
 
-```sh
+``` sh
 inso run test "Math Suite" --env "OpenAPI env"
 inso run test uts-7f0f85 --env env_env_ca046a
 ```
 
 Scope by test name regex, and control test running and reporting
 
-```sh
+``` sh
 inso run test "Sample Specification" --testNamePattern Math --env env_env_ca046a
 inso run test spc_46c5a4 --reporter progress --bail --keepFile
 ```
@@ -205,7 +202,7 @@ inso export spec spc_46c5a4 > output.yaml
 
 ## `$ inso script <name>`
 
-The `.insorc` config file supports scripts, akin to NPM scripts defined in a `package.json` file. These scripts can be executed by `inso` by running `inso script <name>` , or simply `inso <name>` as this is the default command. Any options passed to this command, will be forwarded to the script being executed.
+The `inso` [config file](#configuration) supports scripts, akin to NPM scripts defined in a `package.json` file. These scripts can be executed by `inso` by running `inso script <name>` , or simply `inso <name>` as this is the default command. Any options passed to this command, will be forwarded to the script being executed.
 
 ### Examples
 
@@ -237,10 +234,57 @@ inso lint # will not work
 Any options passed during script invocation will be forwarded to the script
 
 ``` bash
-inso gen-conf                       # generates declarative config by default
+inso gen-conf                       # generates declarative config (default)
 inso gen-conf:k8s                   # generates kubernetes config
-inso gen-conf:k8s -o output.yaml    # generates kubernetes config to output.yaml
 inso gen-conf:k8s -t declarative    # generates declarative config
+inso gen-conf:k8s -o output.yaml    # generates kubernetes config to output.yaml
+```
+
+# Configuration
+
+Inso can be configured with a configuration file, allowing you to specify options and scripts. For example, when running in a CI environment, you may choose to specify the steps as scripts in a config file, so that the same commands can be run both locally and in CI.
+
+Inso uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) for config file management, meaning any of the following items found in the working tree are automatically used:
+
+  + `inso` property in `package.json`
+  + `.insorc` file in JSON or YAML format
+  + `.insorc.json` file
+  + `.insorc.yaml` , `.insorc.yml` , or `.insorc.js` file
+  + `inso.config.js` file exporting a JS object
+
+Alternatively, you can use the `--config <file>` global option to specify an exact file to use, if it exists outside the directory tree.
+
+**Settings**
+
+Options (settings) from the config file are combined with option defaults and any explicit overrides specified in script or command invocations. This combination is in priority order: command options > config file options > default options.
+
+Any options (settings) specified in this file will apply to all scripts and manual commands. You can override these options by specifying them explicitly, when invoking a script or command. 
+
+**Scripts**
+
+Scripts can have any name, and can be nested. There is no need to specify an opening `inso` in the script definition, simply typing the command and and options is sufficient. Each command behaves the same way, as described in the sections above.
+
+### Example
+
+``` yaml
+# .insorc.yaml
+
+settings:
+  ci: false
+  env: UnitTest
+  bail: true
+  reporter: progress
+scripts:
+  lint: lint spec "Designer Demo"
+
+  test: run test "Designer Demo"
+  test:200s: test --testNamePattern 200
+  test:404s: test --testNamePattern 404
+  test:suite:math: run test uts_8783c30a24b24e9a851d96cce48bd1f2
+  test:suite:requests: run test uts_bce4af
+
+  gen-conf: generate config "Designer Demo" --type declarative
+  gen-conf:k8s: gen-conf --type kubernetes
 ```
 
 # Git Bash
