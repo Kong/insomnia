@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import styled from 'styled-components';
 import autobind from 'autobind-decorator';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
@@ -16,8 +17,15 @@ type State = {|
   error: string,
 |};
 
+const StyledParagraph: React.ComponentType<{}> = styled.span`
+  padding: 100px;
+  border: 1px solid red;
+  color: green;
+  font-weight: bold;
+`;
+
 @autobind
-class SpecEditorSidebar extends React.PureComponent<Props, State> {
+class SpecEditorSidebar extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -63,7 +71,7 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
       },
     };
 
-    const _handleItemClick = (section, item) => {
+    const _handleItemClick = (section: string, item: Array<string>): void => {
       itemPath = [section];
       itemPath.push.apply(itemPath, item);
       const itemPosition = sourceMap.lookup(itemPath, specMap);
@@ -80,9 +88,9 @@ class SpecEditorSidebar extends React.PureComponent<Props, State> {
     };
 
     return (
-      <div className="spec-editor-sidebar">
+      <StyledParagraph className="spec-editor-sidebar">
         <Sidebar jsonData={specJSON} onClick={_handleItemClick} />
-      </div>
+      </StyledParagraph>
     );
   }
 }

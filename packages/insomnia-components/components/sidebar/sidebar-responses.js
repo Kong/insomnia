@@ -14,7 +14,9 @@ type Props = {
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarResponses extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
-    const filteredValues = Object.keys(this.props.responses).filter(response =>
+    const { responses, onClick } = this.props;
+
+    const filteredValues = Object.keys(responses).filter(response =>
       response.toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -29,8 +31,8 @@ export default class SidebarResponses extends React.Component<Props> {
             <div>
               <SvgIcon icon={IconEnum.indentation} />
             </div>
-            <span onClick={() => this.props.onClick('components', ['responses', response])}>
-              <Tooltip message={this.props.responses[response].description} position="right">
+            <span onClick={() => onClick('components', ['responses', response])}>
+              <Tooltip message={responses[response].description} position="right">
                 {response}
               </Tooltip>
             </span>

@@ -18,7 +18,9 @@ const StyledMethods: React.ComponentType<{}> = styled.span`
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarPaths extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
-    const filteredValues = this.props.paths.filter(pathDetail =>
+    const { paths, onClick } = this.props;
+
+    const filteredValues = paths.filter(pathDetail =>
       pathDetail[0].toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -34,7 +36,7 @@ export default class SidebarPaths extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => this.props.onClick('paths', [route])}>{route}</span>
+              <span onClick={() => onClick('paths', [route])}>{route}</span>
             </SidebarItem>
             <SidebarItem>
               <StyledMethods>
@@ -42,7 +44,7 @@ export default class SidebarPaths extends React.Component<Props> {
                   <span
                     key={method}
                     className={`method-${method}`}
-                    onClick={() => this.props.onClick('paths', [route, method])}>
+                    onClick={() => onClick('paths', [route, method])}>
                     {method}
                   </span>
                 ))}

@@ -13,7 +13,9 @@ type Props = {
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarSchemas extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
-    const filteredValues = Object.keys(this.props.schemas).filter(schema =>
+    const { schemas, onClick } = this.props;
+
+    const filteredValues = Object.keys(schemas).filter(schema =>
       schema.toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -28,9 +30,7 @@ export default class SidebarSchemas extends React.Component<Props> {
             <div>
               <SvgIcon icon={IconEnum.brackets} />
             </div>
-            <span onClick={() => this.props.onClick('components', ['schemas', schema])}>
-              {schema}
-            </span>
+            <span onClick={() => onClick('components', ['schemas', schema])}>{schema}</span>
           </SidebarItem>
         ))}
       </div>

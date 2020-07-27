@@ -13,7 +13,9 @@ type Props = {
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarServers extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
-    const filteredValues = this.props.servers.filter(server =>
+    const { servers, onClick } = this.props;
+
+    const filteredValues = servers.filter(server =>
       server.url.includes(filter.toLocaleLowerCase()),
     );
 
@@ -29,7 +31,7 @@ export default class SidebarServers extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => this.props.onClick('servers', [index])}>{server.url}</span>
+              <span onClick={() => onClick('servers', [index])}>{server.url}</span>
             </SidebarItem>
           </React.Fragment>
         ))}

@@ -14,7 +14,9 @@ type Props = {
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarHeaders extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
-    const filteredValues = Object.keys(this.props.headers).filter(header =>
+    const { headers, onClick } = this.props;
+
+    const filteredValues = Object.keys(headers).filter(header =>
       header.toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -30,8 +32,8 @@ export default class SidebarHeaders extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => this.props.onClick('components', ['headers', header])}>
-                <Tooltip message={this.props.headers[header].description} position="right">
+              <span onClick={() => onClick('components', ['headers', header])}>
+                <Tooltip message={headers[header].description} position="right">
                   {header}
                 </Tooltip>
               </span>

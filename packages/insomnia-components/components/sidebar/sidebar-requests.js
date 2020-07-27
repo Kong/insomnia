@@ -26,7 +26,9 @@ const StyledRequestFormat: React.ComponentType<{}> = styled.span`
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarRequests extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
-    const filteredValues = Object.keys(this.props.requests).filter(requestName =>
+    const { requests, onClick } = this.props;
+
+    const filteredValues = Object.keys(requests).filter(requestName =>
       requestName.toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -37,15 +39,14 @@ export default class SidebarRequests extends React.Component<Props> {
     return (
       <div>
         {filteredValues.map(requestName => {
-          const { description, content } = this.props.requests[requestName];
+          const { description, content } = requests[requestName];
           return (
             <React.Fragment key={requestName}>
               <SidebarItem gridLayout>
                 <div>
                   <SvgIcon icon={IconEnum.folderOpen} />
                 </div>
-                <span
-                  onClick={() => this.props.onClick('components', ['requestBodies', requestName])}>
+                <span onClick={() => onClick('components', ['requestBodies', requestName])}>
                   <Tooltip message={description} position="right">
                     {requestName}
                   </Tooltip>
@@ -58,7 +59,7 @@ export default class SidebarRequests extends React.Component<Props> {
                       <SvgIcon icon={IconEnum.indentation} />
                       <span
                         onClick={() =>
-                          this.props.onClick('components', [
+                          onClick('components', [
                             'requestBodies',
                             requestName,
                             'content',
@@ -74,7 +75,7 @@ export default class SidebarRequests extends React.Component<Props> {
                       {Object.keys(content[requestFormat].examples).map(requestExample => (
                         <StyledRequestExample
                           onClick={() =>
-                            this.props.onClick('components', [
+                            onClick('components', [
                               'requestBodies',
                               requestName,
                               'content',

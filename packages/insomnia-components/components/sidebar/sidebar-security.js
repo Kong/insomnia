@@ -13,7 +13,9 @@ type Props = {
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarSecurity extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
-    const filteredValues = Object.keys(this.props.security).filter(scheme =>
+    const { security, onClick } = this.props;
+
+    const filteredValues = Object.keys(security).filter(scheme =>
       scheme.toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -29,7 +31,7 @@ export default class SidebarSecurity extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.key} />
               </div>
-              <span onClick={() => this.props.onClick('components', ['securitySchemes', scheme])}>
+              <span onClick={() => onClick('components', ['securitySchemes', scheme])}>
                 {scheme}
               </span>
             </SidebarItem>
