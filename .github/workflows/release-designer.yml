@@ -19,9 +19,12 @@ jobs:
     runs-on: windows-2016
     steps:
       - uses: actions/checkout@v1
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
       - run: npm run bootstrap
       - run: npm run test:pre-release
       - run: npm run app-release
@@ -33,9 +36,12 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
       - run: npm run bootstrap
       - run: npm run test:pre-release
       - run: npm run app-release
@@ -52,9 +58,12 @@ jobs:
           sudo snap install snapcraft --classic
           echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
       - uses: actions/checkout@v1
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
       - run: npm run bootstrap
       - run: npm run test:pre-release
       - run: npm run app-release
