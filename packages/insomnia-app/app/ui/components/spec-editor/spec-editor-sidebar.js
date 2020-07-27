@@ -1,6 +1,5 @@
 // @flow
 import * as React from 'react';
-import styled from 'styled-components';
 import autobind from 'autobind-decorator';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
@@ -16,13 +15,6 @@ type Props = {|
 type State = {|
   error: string,
 |};
-
-const StyledParagraph: React.ComponentType<{}> = styled.span`
-  padding: 100px;
-  border: 1px solid red;
-  color: green;
-  font-weight: bold;
-`;
 
 @autobind
 class SpecEditorSidebar extends React.Component<Props, State> {
@@ -59,7 +51,6 @@ class SpecEditorSidebar extends React.Component<Props, State> {
       YAML.parseDocument(apiSpec.contents, { keepCstNodes: true /* must specify this */ }),
     );
 
-    let itemPath = [];
     const scrollPosition = {
       start: {
         line: 0,
@@ -71,26 +62,25 @@ class SpecEditorSidebar extends React.Component<Props, State> {
       },
     };
 
-    const _handleItemClick = (section: string, item: Array<string>): void => {
-      itemPath = [section];
-      itemPath.push.apply(itemPath, item);
-      const itemPosition = sourceMap.lookup(itemPath, specMap);
-      // Hack for servers array due to offest in YAML CST mapping
-      if (section === 'servers') {
-        scrollPosition.start.line = itemPosition.start.line;
-      } else {
-        scrollPosition.start.line = itemPosition.start.line - 1;
-      }
+    const _handleItemClick = (...itemPath): void => {
+      // Buid up path (no arr.flat() support)
+      const itemPosition = [itemPath[0]].concat(...itemPath[1]);
+      const itemMappedPosition = sourceMap.lookup(itemPosition, specMap);
+      const isServersSection = itemPath[0] === 'servers';
+
+      isServersSection
+        ? (scrollPosition.start.line = itemMappedPosition.start.line)
+        : (scrollPosition.start.line = itemMappedPosition.start.line - 1);
+
       scrollPosition.end.line = scrollPosition.start.line;
       scrollPosition.end.col = 200;
-      // Scroll to selection
       this._handleScrollEditor(scrollPosition);
     };
 
     return (
-      <StyledParagraph className="spec-editor-sidebar">
+      <div className="spec-editor-sidebar">
         <Sidebar jsonData={specJSON} onClick={_handleItemClick} />
-      </StyledParagraph>
+      </div>
     );
   }
 }
