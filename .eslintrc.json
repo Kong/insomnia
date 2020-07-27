@@ -40,7 +40,9 @@
         "asyncArrow": "always"
       }
     ],
-    "filenames/match-exported": ["error", "kebab"]
+    "filenames/match-exported": ["error", "kebab"],
+    "flowtype/array-style-simple-type": "error",
+    "flowtype/array-style-complex-type": "error"
   },
   "settings": {
     "flowtype": {
