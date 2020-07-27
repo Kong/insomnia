@@ -242,11 +242,25 @@ export default class GitVCS {
     return true;
   }
 
-  async push(creds?: GitCredentials | null, force: boolean = false): Promise<PushResponse> {
+  async push(creds?: GitCredentials | null, force: boolean = false): Promise<void> {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
     trackEvent('Git', 'Push');
 
-    return git.push({ ...this._baseOpts, remote: 'origin', ...creds, force });
+    // eslint-disable-next-line no-unreachable
+    const response: PushResponse = await git.push({
+      ...this._baseOpts,
+      remote: 'origin',
+      ...creds,
+      force,
+    });
+
+    if (response.errors?.length) {
+      console.log(`[git] Push rejected`, response);
+      const errorsString = JSON.stringify(response.errors);
+      throw new Error(
+        `Push rejected with errors: ${errorsString}.\n\nGo to View > Toggle DevTools > Console for more information.`,
+      );
+    }
   }
 
   async pull(creds?: GitCredentials | null): Promise<void> {
