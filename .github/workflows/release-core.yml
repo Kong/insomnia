@@ -40,10 +40,10 @@ jobs:
       - run: npm run test:pre-release
       - run: npm run app-release
         env:
-          APPLE_ID: ${{ secrets.CORE_APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.CORE_APPLE_ID_PASSWORD }}
-          CSC_LINK: ${{ secrets.CORE_MAC_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CORE_MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.DESIGNER_APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+          CSC_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
   Linux:
     name: Linux
     runs-on: ubuntu-latest
