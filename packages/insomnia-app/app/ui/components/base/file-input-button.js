@@ -69,7 +69,7 @@ class FileInputButton extends React.PureComponent<Props> {
     const { canceled, filePaths } = await remote.dialog.showOpenDialog(options);
 
     // Only change the file if a new file was selected
-    if (canceled && filePaths.length) {
+    if (canceled) {
       return;
     }
 

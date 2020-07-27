@@ -148,11 +148,11 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
     window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
 
     // Save the file
-    fs.writeFile(filePath, part.value, err => {
-      if (err) {
-        console.warn('Failed to save multipart to file', err);
-      }
-    });
+    try {
+      await fs.promises.writeFile(filePath, part.value);
+    } catch (err) {
+      console.warn('Failed to save multipart to file', err);
+    }
   }
 
   _getParts(): Promise<Array<Part>> {
