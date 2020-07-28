@@ -30,7 +30,6 @@
   },
   "mac": {
     "hardenedRuntime": true,
-    "darkModeSupport": true,
     "category": "public.app-category.developer-tools",
     "entitlements": "./build/static/entitlements.mac.inherit.plist",
     "artifactName": "__BINARY_PREFIX__-${version}.${ext}",
