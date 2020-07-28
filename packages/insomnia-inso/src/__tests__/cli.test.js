@@ -177,6 +177,11 @@ describe('cli', () => {
   });
 
   describe('script', () => {
+    let consoleLogSpy;
+    beforeEach(() => {
+      consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    });
+
     const insorcFilePath = '--config src/__fixtures__/.insorc-with-scripts.yaml';
 
     it('should call script command by default', () => {
@@ -197,12 +202,25 @@ describe('cli', () => {
       );
     });
 
+    it('should warn if script task does not start with inso', () => {
+      inso('invalid-script', insorcFilePath);
+
+      expect(consoleLogSpy).toHaveBeenCalledWith("Tasks in the script should start with 'inso'.");
+      expect(generateConfig).not.toHaveBeenCalledWith();
+    });
+
     it('should call nested command', () => {
       inso('gen-conf:k8s', insorcFilePath);
 
       expect(generateConfig).toHaveBeenCalledWith(
         'Designer Demo',
         expect.objectContaining({ type: 'kubernetes' }),
+      );
+
+      expect(consoleLogSpy).toHaveBeenNthCalledWith(1, '>> inso gen-conf --type kubernetes');
+      expect(consoleLogSpy).toHaveBeenNthCalledWith(
+        2,
+        '>> inso generate config Designer Demo --type declarative --type kubernetes',
       );
     });
 
@@ -228,6 +246,7 @@ describe('cli', () => {
 
     it('should fail if script not found', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
       inso('not-found-script', insorcFilePath);
       expect(consoleSpy).toHaveBeenCalledWith(
         'Could not find inso script "not-found-script" in the config file.',

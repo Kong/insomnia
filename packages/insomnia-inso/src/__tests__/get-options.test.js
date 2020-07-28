@@ -26,7 +26,7 @@ describe('extractCommandOptions()', () => {
       .option('-g, --global')
       .addCommand(command);
 
-    parent.parse('command subCommand --global --subCmd'.split(' '), { from: 'user' });
+    parent.parse('self inso command subCommand --global --subCmd'.split(' '));
   });
 });
 
@@ -37,7 +37,7 @@ describe('loadCosmiConfig()', () => {
     expect(result).toEqual({
       __configFile: {
         options: { appDataDir: 'configFile', workingDir: 'workingDir', ci: true },
-        scripts: { lint: 'lint spec' },
+        scripts: { lint: 'inso lint spec' },
         filePath: path.resolve(fixturesDir, '.insorc.yaml'),
       },
     });
@@ -110,7 +110,7 @@ describe('getOptions', () => {
       config: path.join(fixturesDir, '.insorc.yaml'),
       __configFile: {
         options: { appDataDir: 'configFile', workingDir: 'workingDir', ci: true },
-        scripts: { lint: 'lint spec' },
+        scripts: { lint: 'inso lint spec' },
         filePath: path.resolve(fixturesDir, '.insorc.yaml'),
       },
     });

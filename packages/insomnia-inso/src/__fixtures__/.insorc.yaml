@@ -4,4 +4,4 @@ options:
   ci: true
   shouldBeIgnored: this should be ignored because it is not a global option
 scripts:
-  lint: lint spec
+  lint: inso lint spec

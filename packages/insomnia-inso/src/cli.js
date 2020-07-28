@@ -107,16 +107,21 @@ function addScriptCommand(originalCommand: Object) {
         return exit(new Promise(resolve => resolve(false)));
       }
 
+      if (!scriptTask.startsWith('inso')) {
+        console.log(`Tasks in the script should start with 'inso'.`);
+        return exit(new Promise(resolve => resolve(false)));
+      }
+
       // Collect args
       const scriptArgs: Array<string> = parseArgsStringToArgv(
-        `${scriptTask} ${passThroughArgs.join(' ')}`,
+        `self ${scriptTask} ${passThroughArgs.join(' ')}`,
       );
 
       // Print command
-      // console.log(`>> inso ${scriptArgs.join(' ')}`);
+      console.log(`>> ${scriptArgs.slice(1).join(' ')}`);
 
       // Run
-      runWithArgs(originalCommand, scriptArgs, true);
+      runWithArgs(originalCommand, scriptArgs, false);
     });
 }
 
@@ -157,6 +162,6 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
   runWithArgs(cmd, args || process.argv);
 }
 
-function runWithArgs(cmd: Object, args: Array<string>, userParametersOnly?: boolean) {
-  cmd.parseAsync(args, userParametersOnly && { from: 'user' }).catch(logErrorExit1);
+function runWithArgs(cmd: Object, args: Array<string>) {
+  cmd.parseAsync(args).catch(logErrorExit1);
 }
