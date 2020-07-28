@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import styled from 'styled-components';
 import autobind from 'autobind-decorator';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
@@ -15,6 +16,11 @@ type Props = {|
 type State = {|
   error: string,
 |};
+
+const StyledSpecEditorSidebar: React.ComponentType<{}> = styled.div`
+  overflow: hidden;
+  overflow-y: auto;
+`;
 
 @autobind
 class SpecEditorSidebar extends React.Component<Props, State> {
@@ -37,6 +43,29 @@ class SpecEditorSidebar extends React.Component<Props, State> {
     handleSetSelection(pos.start.col - 1, pos.end.col - 1, pos.start.line - 1, pos.end.line - 1);
   }
 
+  _mapPosition(itemPath: array<any>) {
+    const { apiSpec } = this.props;
+    const sourceMap = new YAMLSourceMap();
+    const specMap = sourceMap.index(YAML.parseDocument(apiSpec.contents, { keepCstNodes: true }));
+    const itemMappedPosition = sourceMap.lookup(itemPath, specMap);
+    const isServersSection = itemPath[0] === 'servers';
+    const scrollPosition = {
+      start: {
+        line: 0,
+        col: 0,
+      },
+      end: {
+        line: 0,
+        col: 200,
+      },
+    };
+    isServersSection
+      ? (scrollPosition.start.line = itemMappedPosition.start.line)
+      : (scrollPosition.start.line = itemMappedPosition.start.line - 1);
+    scrollPosition.end.line = scrollPosition.start.line;
+    return scrollPosition;
+  }
+
   render() {
     const { error } = this.state;
 
@@ -46,41 +75,17 @@ class SpecEditorSidebar extends React.Component<Props, State> {
 
     const { apiSpec } = this.props;
     const specJSON = YAML.parse(apiSpec.contents);
-    const sourceMap = new YAMLSourceMap();
-    const specMap = sourceMap.index(
-      YAML.parseDocument(apiSpec.contents, { keepCstNodes: true /* must specify this */ }),
-    );
-
-    const scrollPosition = {
-      start: {
-        line: 0,
-        col: 0,
-      },
-      end: {
-        line: 0,
-        col: 0,
-      },
-    };
 
     const _handleItemClick = (...itemPath): void => {
       // Buid up path (no arr.flat() support)
-      const itemPosition = [itemPath[0]].concat(...itemPath[1]);
-      const itemMappedPosition = sourceMap.lookup(itemPosition, specMap);
-      const isServersSection = itemPath[0] === 'servers';
-
-      isServersSection
-        ? (scrollPosition.start.line = itemMappedPosition.start.line)
-        : (scrollPosition.start.line = itemMappedPosition.start.line - 1);
-
-      scrollPosition.end.line = scrollPosition.start.line;
-      scrollPosition.end.col = 200;
-      this._handleScrollEditor(scrollPosition);
+      const mappedPosition = this._mapPosition([itemPath[0]].concat(...itemPath[1]));
+      this._handleScrollEditor(mappedPosition);
     };
 
     return (
-      <div className="spec-editor-sidebar">
+      <StyledSpecEditorSidebar>
         <Sidebar jsonData={specJSON} onClick={_handleItemClick} />
-      </div>
+      </StyledSpecEditorSidebar>
     );
   }
 }
