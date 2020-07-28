@@ -4,6 +4,7 @@ import { trackEvent } from '../../common/analytics';
 import { httpPlugin } from './http';
 import { convertToOsSep, convertToPosixSep } from './path-sep';
 import path from 'path';
+import EventEmitter from 'events';
 
 export type GitAuthor = {|
   name: string,
@@ -36,6 +37,12 @@ export type GitLogEntry = {|
   },
 |};
 
+export type PushResponse = {
+  ok?: Array<string>,
+  errors?: Array<string>,
+  headers?: object,
+};
+
 // isomorphic-git internally will default an empty ('') clone directory to '.'
 // Ref: https://github.com/isomorphic-git/isomorphic-git/blob/4e66704d05042624bbc78b85ee5110d5ee7ec3e2/src/utils/normalizePath.js#L10
 // We should set this explicitly (even if set to an empty string), because we have other code (such as fs plugins
@@ -60,6 +67,12 @@ export default class GitVCS {
     this._git = git;
     git.plugins.set('fs', fsPlugin);
     git.plugins.set('http', httpPlugin);
+    const emitter = new EventEmitter();
+    git.plugins.set('emitter', emitter);
+
+    emitter.on('message', message => {
+      console.log(`[git-event] ${message}`);
+    });
 
     this._baseOpts = { dir: directory, gitdir: gitDirectory };
 
@@ -229,11 +242,25 @@ export default class GitVCS {
     return true;
   }
 
-  async push(creds?: GitCredentials | null, force: boolean = false): Promise<boolean> {
+  async push(creds?: GitCredentials | null, force: boolean = false): Promise<void> {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
     trackEvent('Git', 'Push');
 
-    return git.push({ ...this._baseOpts, remote: 'origin', ...creds, force });
+    // eslint-disable-next-line no-unreachable
+    const response: PushResponse = await git.push({
+      ...this._baseOpts,
+      remote: 'origin',
+      ...creds,
+      force,
+    });
+
+    if (response.errors?.length) {
+      console.log(`[git] Push rejected`, response);
+      const errorsString = JSON.stringify(response.errors);
+      throw new Error(
+        `Push rejected with errors: ${errorsString}.\n\nGo to View > Toggle DevTools > Console for more information.`,
+      );
+    }
   }
 
   async pull(creds?: GitCredentials | null): Promise<void> {
