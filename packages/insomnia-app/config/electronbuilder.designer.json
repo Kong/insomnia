@@ -2,6 +2,7 @@
   "appId": "__APP_ID__",
   "publish": null,
   "afterSign": "./scripts/afterSignHook.js",
+  "darkModeSupport": true,
   "extraResources": [
     {
       "from": "./bin",
