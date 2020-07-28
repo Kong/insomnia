@@ -10,8 +10,8 @@ Table of Contents
 
 * [Data source](#data-source)
 * [The `[identifier]` argument](#the-identifier-argument)
+* [Global options](#global-options)
 * [Commands](#commands)
-  + [ `inso` ](#-inso-global-options-command)
   + [ `inso generate config` ](#-inso-generate-config-options-identifier)
   + [ `inso lint spec` ](#-inso-lint-spec-identifier)
   + [ `inso run test` ](#-inso-run-test-options-identifier)
@@ -36,10 +36,9 @@ Additionally, if the `[identifier]` argument is ommitted from the command, `inso
 
 ![](https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/ci-demo.gif)
 
-# Commands
+# Global options
 
-## `$ inso [global options] [command]`
-
+ `$ inso [global options] [command]`
 |Global option|Alias|Description|
 |- |- |- |
 | `--workingDir <dir>` | `-w` |set working directory|
@@ -48,6 +47,8 @@ Additionally, if the `[identifier]` argument is ommitted from the command, `inso
 | `--ci` | | run in CI, disables all prompts |
 | `--version` | `-v` |output the version number|
 | `--help` | `-h` |display help for a command|
+
+# Commands
 
 ## `$ inso generate config [identifier]`
 
@@ -254,37 +255,37 @@ Inso uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) for config
 
 Alternatively, you can use the `--config <file>` global option to specify an exact file to use, if it exists outside the directory tree.
 
-**Settings**
+**Options**
 
-Options (settings) from the config file are combined with option defaults and any explicit overrides specified in script or command invocations. This combination is in priority order: command options > config file options > default options.
+Options from the config file are combined with option defaults and any explicit overrides specified in script or command invocations. This combination is in priority order: command options > config file options > default options.
 
-Any options (settings) specified in this file will apply to all scripts and manual commands. You can override these options by specifying them explicitly, when invoking a script or command. 
+Any options specified in this file will apply to all scripts and manual commands. You can override these options by specifying them explicitly, when invoking a script or command. 
+
+Only [global options](#global-options) can be set in the config file.
 
 **Scripts**
 
-Scripts can have any name, and can be nested. There is no need to specify an opening `inso` in the script definition, simply typing the command and and options is sufficient. Each command behaves the same way, as described in the sections above.
+Scripts can have any name, and can be nested. Scripts must be prefixed with `inso` (see example below). Each command behaves the same way, as described in the sections above.
 
 ### Example
 
 ``` yaml
 # .insorc.yaml
 
-settings:
+options:
   ci: false
-  env: UnitTest
-  bail: true
-  reporter: progress
 scripts:
-  lint: lint spec "Designer Demo"
+  test-spec: inso run test Demo --env DemoEnv --reporter progress
+  test-spec:200s: inso testSpec --testNamePattern 200
+  test-spec:404s: inso testSpec --testNamePattern 404
 
-  test: run test "Designer Demo"
-  test:200s: test --testNamePattern 200
-  test:404s: test --testNamePattern 404
-  test:suite:math: run test uts_8783c30a24b24e9a851d96cce48bd1f2
-  test:suite:requests: run test uts_bce4af
+  test-math-suites: inso run test uts_8783c30a24b24e9a851d96cce48bd1f2 --env DemoEnv 
+  test-request-suite: inso run test uts_bce4af --env DemoEnv --bail
 
-  gen-conf: generate config "Designer Demo" --type declarative
-  gen-conf:k8s: gen-conf --type kubernetes
+  lint: inso lint spec Demo # must be invoked as `inso script lint`
+
+  gen-conf: inso generate config "Designer Demo" --type declarative
+  gen-conf:k8s: inso gen-conf --type kubernetes
 ```
 
 # Git Bash
