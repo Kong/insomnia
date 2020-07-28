@@ -1,6 +1,6 @@
 // @flow
 import { Spectral } from '@stoplight/spectral';
-import type { GlobalOptions } from '../util';
+import type { GlobalOptions } from '../get-options';
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
 

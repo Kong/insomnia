@@ -64,6 +64,7 @@
   "dependencies": {
     "@stoplight/spectral": "^5.4.0",
     "commander": "^5.1.0",
+    "cosmiconfig": "^6.0.0",
     "enquirer": "^2.3.5",
     "env-paths": "^2.2.0",
     "insomnia-plugin-base64": "^2.2.10",
@@ -84,6 +85,7 @@
     "mkdirp": "^1.0.4",
     "nedb": "^1.8.0",
     "openapi-2-kong": "^2.2.12",
+    "string-argv": "^0.3.1",
     "yaml": "^1.10.0"
   }
 }
