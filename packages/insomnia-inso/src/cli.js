@@ -121,7 +121,7 @@ function addScriptCommand(originalCommand: Object) {
       console.log(`>> ${scriptArgs.slice(1).join(' ')}`);
 
       // Run
-      runWithArgs(originalCommand, scriptArgs, false);
+      runWithArgs(originalCommand, scriptArgs);
     });
 }
 
