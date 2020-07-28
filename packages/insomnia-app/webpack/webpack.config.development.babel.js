@@ -25,10 +25,6 @@ module.exports = {
       },
     ],
   },
-  stats: {
-    // https://webpack.js.org/loaders/source-map-loader/#ignoring-warnings
-    warningsFilter: [/Failed to parse source map/],
-  },
   output: {
     ...baseConfig.output,
     publicPath: '/',
@@ -39,6 +35,9 @@ module.exports = {
     publicPath: '/',
     hot: true,
     disableHostCheck: true,
+
+    // This is needed for source-maps to resolve correctly
+    contentBase: '/',
   },
   plugins: [
     ...baseConfig.plugins,

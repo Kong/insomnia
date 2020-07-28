@@ -17,10 +17,12 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Install NodeJS
-        uses: actions/setup-node@v1
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
+      - uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Run tests
@@ -31,10 +33,12 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Install NodeJS
-        uses: actions/setup-node@v1
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
+      - uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Run tests

@@ -89,7 +89,7 @@ async function _isInsomniaPlugin(lookupName: string): Promise<Object> {
         } catch (ex) {
           // Output is not JSON. Check if yarn/electron terminated with non-zero exit code.
           // In certain environments electron can exit with error even if output is OK.
-          // Parsing is attemted before checking exit code as workaround for false errors.
+          // Parsing is attempted before checking exit code as workaround for false errors.
           if (err) {
             reject(new Error(`${lookupName} npm error: ${err.message}`));
           } else {
@@ -186,7 +186,7 @@ function escape(p) {
     // Quote for Windows paths
     return `"${p}"`;
   } else {
-    // Escape with backslashes for Unix paths
-    return p.replace(/(\s+)/g, '\\$1');
+    // Escape whitespace and parenthesis with backslashes for Unix paths
+    return p.replace(/([\s()])/g, '\\$1');
   }
 }
