@@ -41,9 +41,21 @@ class ResponseWebView extends React.PureComponent<Props> {
     }
 
     const { body, contentType, url } = this.props;
-    webview.loadURL(`data:${contentType},${encodeURIComponent(body)}`, {
-      baseURLForDataURL: url,
-    });
+    const bodyWithBase = body.replace('<head>', `<head><base href="${url}">`);
+    webview.loadURL(`data:${contentType},${encodeURIComponent(bodyWithBase)}`);
+
+    // NOTE: We *should* be setting the base URL by specifying the baseURLForDataURL
+    // option, but there is a bug in baseURLForDataURL since Electron 6 (still exists
+    // in 9) that makes it impossible.
+    //
+    // For now we inject the <base> tag to achieve a similar effect. This was actually the
+    // way we did it before discovering the baseURLForDataURL setting.
+    //
+    //    https://github.com/electron/electron/issues/20700
+    //
+    // webview.loadURL(`data:${contentType},${encodeURIComponent(body)}`, {
+    //   baseURLForDataURL: url,
+    // });
 
     // This is kind of hacky but electron-context-menu fails to save images if
     // this isn't here.

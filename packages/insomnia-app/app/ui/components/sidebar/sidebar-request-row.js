@@ -118,7 +118,8 @@ class SidebarRequestRow extends PureComponent {
     }
   }
 
-  componentWillUpdate(nextProps) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUpdate(nextProps) {
     if (!nextProps.request) {
       return;
     }

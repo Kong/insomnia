@@ -77,7 +77,7 @@ type State = {
 
 @autobind
 class GraphQLEditor extends React.PureComponent<Props, State> {
-  _disabledOperationMarkers: TextMarker[];
+  _disabledOperationMarkers: Array<TextMarker>;
   _documentAST: null | Object;
   _isMounted: boolean;
   _queryEditor: null | CodeMirror;
