@@ -113,7 +113,7 @@ function addScriptCommand(originalCommand: Object) {
       );
 
       // Print command
-      // console.log(`> > inso ${scriptArgs.join(' ')}`);
+      // console.log(`>> inso ${scriptArgs.join(' ')}`);
 
       // Run
       runWithArgs(originalCommand, scriptArgs, true);

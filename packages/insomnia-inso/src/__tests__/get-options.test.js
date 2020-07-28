@@ -36,18 +36,22 @@ describe('loadCosmiConfig()', () => {
 
     expect(result).toEqual({
       __configFile: {
-        settings: { duplicate: 'configFile', fromConfig: 'configFile' },
+        options: { appDataDir: 'configFile', workingDir: 'workingDir', ci: true },
         scripts: { lint: 'lint spec' },
         filePath: path.resolve(fixturesDir, '.insorc.yaml'),
       },
     });
+
+    expect(result.__configFile?.options?.shouldBeIgnored).toBe(undefined);
   });
 
   it('should return empty object and report error if specified config file not found', () => {
+    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const result = loadCosmiConfig('not-found.yaml');
 
     expect(result).toEqual({});
+    expect(consoleLogSpy).toHaveBeenCalledWith('Could not find config file at not-found.yaml.');
     expect(consoleErrorSpy).toHaveBeenCalled();
   });
 
@@ -60,7 +64,7 @@ describe('loadCosmiConfig()', () => {
     const result = loadCosmiConfig(path.join(fixturesDir, '.insorc-missing-properties.yaml'));
     expect(result).toEqual({
       __configFile: {
-        settings: {},
+        options: {},
         scripts: {},
         filePath: path.resolve(fixturesDir, '.insorc-missing-properties.yaml'),
       },
@@ -71,46 +75,70 @@ describe('loadCosmiConfig()', () => {
 describe('getOptions', () => {
   it('should load default options', () => {
     const commandOptions = { opts: () => ({}) };
-    const defaultOptions = { duplicate: 'default' };
+    const defaultOptions = { appDataDir: 'default' };
 
     const result = getOptions(commandOptions, defaultOptions);
 
-    expect(result).toEqual({ duplicate: 'default' });
+    expect(result).toEqual({ appDataDir: 'default' });
   });
 
   it('should combine default options with command options, favouring command', () => {
-    const commandOptions = { opts: () => ({ duplicate: 'command' }) };
-    const defaultOptions = { duplicate: 'default', fromDefault: 'default' };
+    const commandOptions = { opts: () => ({ appDataDir: 'command' }) };
+    const defaultOptions = { appDataDir: 'default', anotherDefault: '0' };
 
     const result = getOptions(commandOptions, defaultOptions);
 
-    expect(result).toEqual({ duplicate: 'command', fromDefault: 'default' });
+    expect(result).toEqual({ appDataDir: 'command', anotherDefault: '0' });
   });
 
-  it('should favour command options over config file over default', () => {
+  it('should combine config file options with default options, favouring config file', () => {
     // Will also load src/__fixtures__/.insorc.yaml
     const commandOptions = {
       opts: () => ({
-        duplicate: 'command',
-        fromCommand: 'command',
         config: path.join(fixturesDir, '.insorc.yaml'),
       }),
     };
-    const defaultOptions = { duplicate: 'default', fromDefault: 'default' };
+    const defaultOptions = { appDataDir: 'default', anotherDefault: '0' };
 
     const result = getOptions(commandOptions, defaultOptions);
 
     expect(result).toEqual({
-      duplicate: 'command',
-      fromCommand: 'command',
-      fromDefault: 'default',
-      fromConfig: 'configFile',
+      appDataDir: 'configFile',
+      workingDir: 'workingDir',
+      ci: true,
+      anotherDefault: '0',
       config: path.join(fixturesDir, '.insorc.yaml'),
       __configFile: {
-        settings: { duplicate: 'configFile', fromConfig: 'configFile' },
+        options: { appDataDir: 'configFile', workingDir: 'workingDir', ci: true },
         scripts: { lint: 'lint spec' },
         filePath: path.resolve(fixturesDir, '.insorc.yaml'),
       },
     });
+  });
+
+  it('should print error to console if config file not found', () => {
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const configFilePath = path.join(fixturesDir, '.insorc-not-found.yaml');
+
+    // Will also load src/__fixtures__/.insorc.yaml
+    const commandOptions = {
+      opts: () => ({
+        config: configFilePath,
+      }),
+    };
+    const defaultOptions = { appDataDir: 'default', anotherDefault: '0' };
+
+    const result = getOptions(commandOptions, defaultOptions);
+
+    expect(result).toEqual({
+      appDataDir: 'default',
+      anotherDefault: '0',
+      config: configFilePath,
+    });
+
+    expect(logSpy).toHaveBeenCalledWith(`Could not find config file at ${configFilePath}.`);
+    expect(errSpy).toHaveBeenCalled();
   });
 });

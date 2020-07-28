@@ -215,20 +215,6 @@ describe('cli', () => {
       );
     });
 
-    it('should get env setting from config for running tests', () => {
-      inso('test:200s', insorcFilePath);
-
-      expect(runInsomniaTests).toHaveBeenCalledWith(
-        'Designer Demo',
-        expect.objectContaining({
-          reporter: 'progress',
-          env: 'UnitTest',
-          bail: true,
-          testNamePattern: '200',
-        }),
-      );
-    });
-
     it('should override env setting from command', () => {
       inso('test:200s --env NewEnv', insorcFilePath);
 

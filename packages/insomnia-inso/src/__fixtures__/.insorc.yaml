@@ -1,5 +1,7 @@
-settings:
-  duplicate: configFile
-  fromConfig: configFile
+options:
+  appDataDir: configFile
+  workingDir: workingDir
+  ci: true
+  shouldBeIgnored: this should be ignored because it is not a global option
 scripts:
   lint: lint spec

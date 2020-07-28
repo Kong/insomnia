@@ -3,7 +3,7 @@ import { cosmiconfigSync } from 'cosmiconfig';
 
 type ConfigFileOptions = {
   __configFile?: {
-    settings?: Object,
+    options?: Object,
     scripts?: Object,
     filePath: string,
   },
@@ -13,7 +13,14 @@ export type GlobalOptions = {
   appDataDir?: string,
   workingDir?: string,
   ci?: boolean,
+  config?: string,
 } & ConfigFileOptions;
+
+const OptionsSupportedInConfigFile: Array<$Keys<GlobalOptions>> = [
+  'appDataDir',
+  'workingDir',
+  'ci',
+];
 
 export const loadCosmiConfig = (configFile?: string): ConfigFileOptions => {
   try {
@@ -22,9 +29,15 @@ export const loadCosmiConfig = (configFile?: string): ConfigFileOptions => {
     const results = configFile ? explorer.load(configFile) : explorer.search();
 
     if (results && !results?.isEmpty) {
+      const options = {};
+
+      OptionsSupportedInConfigFile.forEach(key => {
+        options[key] = results.config?.options?.[key];
+      });
+
       return {
         __configFile: {
-          settings: results.config?.settings || {},
+          options,
           scripts: results.config?.scripts || {},
           filePath: results.filepath,
         },
@@ -33,6 +46,7 @@ export const loadCosmiConfig = (configFile?: string): ConfigFileOptions => {
   } catch (e) {
     // Report fatal error when loading from explicitly defined config file
     if (configFile) {
+      console.log(`Could not find config file at ${configFile}.`);
       console.error(e);
     }
   }
@@ -61,7 +75,7 @@ const getOptions = <T>(cmd: Object, defaultOptions: $Shape<T> = {}): T => {
   if (__configFile) {
     return {
       ...defaultOptions,
-      ...(__configFile.settings || {}),
+      ...(__configFile.options || {}),
       ...commandOptions,
       __configFile,
     };
