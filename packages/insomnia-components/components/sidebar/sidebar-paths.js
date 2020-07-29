@@ -7,7 +7,7 @@ import SidebarSection from './sidebar-section';
 
 type Props = {
   paths: Array<any>,
-  onClick: (section: string, path: Array<mixed>) => void,
+  onClick: (section: string, ...args: any) => void,
 };
 
 const StyledMethods: React.ComponentType<{}> = styled.span`
@@ -36,7 +36,7 @@ export default class SidebarPaths extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => onClick('paths', [route])}>{route}</span>
+              <span onClick={() => onClick('paths', route)}>{route}</span>
             </SidebarItem>
             <SidebarItem>
               <StyledMethods>
@@ -44,7 +44,7 @@ export default class SidebarPaths extends React.Component<Props> {
                   <span
                     key={method}
                     className={`method-${method}`}
-                    onClick={() => onClick('paths', [route, method])}>
+                    onClick={() => onClick('paths', route, method)}>
                     {method}
                   </span>
                 ))}

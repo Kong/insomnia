@@ -8,7 +8,7 @@ import SidebarSection from './sidebar-section';
 
 type Props = {
   requests: Object,
-  onClick: (section: string, path: Array<mixed>) => void,
+  onClick: (section: string, ...args: any) => void,
 };
 
 const StyledRequestExample: React.ComponentType<{}> = styled.span`
@@ -46,7 +46,7 @@ export default class SidebarRequests extends React.Component<Props> {
                 <div>
                   <SvgIcon icon={IconEnum.folderOpen} />
                 </div>
-                <span onClick={() => onClick('components', ['requestBodies', requestName])}>
+                <span onClick={() => onClick('components', 'requestBodies', requestName)}>
                   <Tooltip message={description} position="right">
                     {requestName}
                   </Tooltip>
@@ -59,12 +59,13 @@ export default class SidebarRequests extends React.Component<Props> {
                       <SvgIcon icon={IconEnum.indentation} />
                       <span
                         onClick={() =>
-                          onClick('components', [
+                          onClick(
+                            'components',
                             'requestBodies',
                             requestName,
                             'content',
                             requestFormat,
-                          ])
+                          )
                         }>
                         {requestFormat}
                       </span>
@@ -75,14 +76,15 @@ export default class SidebarRequests extends React.Component<Props> {
                       {Object.keys(content[requestFormat].examples).map(requestExample => (
                         <StyledRequestExample
                           onClick={() =>
-                            onClick('components', [
+                            onClick(
+                              'components',
                               'requestBodies',
                               requestName,
                               'content',
                               requestFormat,
                               'examples',
                               requestExample,
-                            ])
+                            )
                           }
                           key={requestExample}>
                           {requestExample}

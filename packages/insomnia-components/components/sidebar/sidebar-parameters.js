@@ -7,7 +7,7 @@ import SidebarSection from './sidebar-section';
 
 type Props = {
   parameters: Object,
-  onClick: (section: string, path: Array<mixed>) => void,
+  onClick: (section: string, ...args: any) => void,
 };
 
 // Implemented as a class component because of a caveat with render props
@@ -32,7 +32,7 @@ export default class SidebarParameters extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => onClick('components', ['parameters', parameter])}>
+              <span onClick={() => onClick('components', 'parameters', parameter)}>
                 <Tooltip message={parameters[parameter].description} position="right">
                   {parameter}
                 </Tooltip>

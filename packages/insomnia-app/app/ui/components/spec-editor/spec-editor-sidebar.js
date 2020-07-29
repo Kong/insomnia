@@ -44,9 +44,10 @@ class SpecEditorSidebar extends React.Component<Props, State> {
   }
 
   _mapPosition(itemPath: array<any>) {
-    const { apiSpec } = this.props;
     const sourceMap = new YAMLSourceMap();
-    const specMap = sourceMap.index(YAML.parseDocument(apiSpec.contents, { keepCstNodes: true }));
+    const specMap = sourceMap.index(
+      YAML.parseDocument(this.props.apiSpec.contents, { keepCstNodes: true }),
+    );
     const itemMappedPosition = sourceMap.lookup(itemPath, specMap);
     const isServersSection = itemPath[0] === 'servers';
     const scrollPosition = {
@@ -68,17 +69,18 @@ class SpecEditorSidebar extends React.Component<Props, State> {
 
   render() {
     const { error } = this.state;
-
     if (error) {
       return <p className="notice error margin-sm">{error}</p>;
     }
 
-    const { apiSpec } = this.props;
-    const specJSON = YAML.parse(apiSpec.contents);
-
+    const specJSON = YAML.parse(this.props.apiSpec.contents);
     const _handleItemClick = (...itemPath): void => {
       // Buid up path (no arr.flat() support)
+      console.log('Path Before: ');
+      console.log(...itemPath);
       const mappedPosition = this._mapPosition([itemPath[0]].concat(...itemPath[1]));
+      console.log('Path After: ');
+      console.log(mappedPosition);
       this._handleScrollEditor(mappedPosition);
     };
 

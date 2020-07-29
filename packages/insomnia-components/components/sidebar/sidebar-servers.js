@@ -6,7 +6,7 @@ import SidebarSection from './sidebar-section';
 
 type Props = {
   servers: Array<any>,
-  onClick: (section: string, path: Array<mixed>) => void,
+  onClick: (section: string, path: string | number) => void,
 };
 
 // Implemented as a class component because of a caveat with render props
@@ -31,7 +31,7 @@ export default class SidebarServers extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => onClick('servers', [index])}>{server.url}</span>
+              <span onClick={() => onClick('servers', index)}>{server.url}</span>
             </SidebarItem>
           </React.Fragment>
         ))}

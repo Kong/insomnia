@@ -6,7 +6,7 @@ import SidebarSection from './sidebar-section';
 
 type Props = {
   security: Object,
-  onClick: (section: string, path: Array<mixed>) => void,
+  onClick: (section: string, ...args: any) => void,
 };
 
 // Implemented as a class component because of a caveat with render props
@@ -31,9 +31,7 @@ export default class SidebarSecurity extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.key} />
               </div>
-              <span onClick={() => onClick('components', ['securitySchemes', scheme])}>
-                {scheme}
-              </span>
+              <span onClick={() => onClick('components', 'securitySchemes', scheme)}>{scheme}</span>
             </SidebarItem>
           </React.Fragment>
         ))}

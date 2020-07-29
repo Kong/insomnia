@@ -3122,12 +3122,8 @@ const apiSpec2 = {
 export const _default = () => {
   const [targetPath, setTargetPath] = React.useState('Awaiting click...');
 
-  let itemPath = [];
-  const _handleItemClick = (section, item) => {
-    itemPath = [];
-    itemPath.push(section);
-    itemPath.push.apply(itemPath, item);
-    setTargetPath(itemPath.join(' > '));
+  const _handleItemClick = (...items) => {
+    setTargetPath(items.join(' > '));
   };
 
   return (
@@ -3141,12 +3137,8 @@ export const _default = () => {
 export const SimpleAPI = () => {
   const [targetPath, setTargetPath] = React.useState('Awaiting click...');
 
-  let itemPath = [];
-  const _handleItemClick = (section, item) => {
-    itemPath = [];
-    itemPath.push(section);
-    itemPath.push.apply(itemPath, item);
-    setTargetPath(itemPath.join(' > '));
+  const _handleItemClick = (...items) => {
+    setTargetPath(items.join(' > '));
   };
 
   return (
