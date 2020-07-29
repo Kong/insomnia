@@ -29,6 +29,7 @@ describe('cli', () => {
     (generateConfig: any).mockResolvedValue(true);
     (lintSpecification: any).mockResolvedValue(true);
     (runInsomniaTests: any).mockResolvedValue(true);
+    (exportSpecification: any).mockResolvedValue(true);
   });
 
   afterEach(() => {

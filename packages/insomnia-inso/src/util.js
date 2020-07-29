@@ -6,7 +6,7 @@ export function getVersion() {
 }
 
 export function logErrorExit1(err: Error) {
-  console.error(err);
+  console.log(`Something went wrong: ${err.message}`);
 
   process.exit(1);
 }

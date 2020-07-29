@@ -1,6 +1,5 @@
 // @flow
 import { ConversionTypeMap, generateConfig } from '../generate-config';
-import type { GenerateConfigOptions } from '../generate-config';
 import o2k from 'openapi-2-kong';
 import path from 'path';
 import { writeFileWithCliOptions } from '../../write-file';
@@ -16,17 +15,12 @@ describe('generateConfig()', () => {
     jest.restoreAllMocks();
   });
 
-  const base: GenerateConfigOptions = {
-    type: 'kubernetes',
-    output: undefined,
-  };
-
   const filePath = 'file.yaml';
 
   it('should should not generate if type arg is invalid', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
-    await generateConfig(filePath, { ...base, type: 'invalid' });
+    await generateConfig(filePath, { type: 'invalid' });
 
     expect(o2k.generate).not.toHaveBeenCalled();
     expect(consoleSpy).toHaveBeenCalledWith(
@@ -38,9 +32,9 @@ describe('generateConfig()', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
 
-    await generateConfig(filePath, base);
+    await generateConfig(filePath, { type: 'kubernetes' });
 
-    expect(o2k.generate).toHaveBeenCalledWith(filePath, ConversionTypeMap[base.type]);
+    expect(o2k.generate).toHaveBeenCalledWith(filePath, ConversionTypeMap.kubernetes);
     expect(consoleSpy).toHaveBeenCalledWith('a\n---\nb\n');
   });
 
@@ -49,7 +43,7 @@ describe('generateConfig()', () => {
     mock(o2k.generateFromString).mockResolvedValue({ documents: ['a', 'b'] });
 
     await generateConfig('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
-      ...base,
+      type: 'kubernetes',
       workingDir: 'src/db/__fixtures__/git-repo',
     });
 
@@ -64,7 +58,7 @@ describe('generateConfig()', () => {
     mock(writeFileWithCliOptions).mockResolvedValue({ outputPath });
 
     const options = {
-      ...base,
+      type: 'kubernetes',
       output: 'output.yaml',
       workingDir: 'working/dir',
     };
@@ -91,7 +85,7 @@ describe('generateConfig()', () => {
     mock(writeFileWithCliOptions).mockResolvedValue({ outputPath, error });
 
     const options = {
-      ...base,
+      type: 'kubernetes',
       output: 'output.yaml',
       workingDir: 'working/dir',
     };
@@ -108,7 +102,7 @@ describe('generateConfig()', () => {
     mock(writeFileWithCliOptions).mockResolvedValue({ outputPath: 'this-is-the-output-path' });
 
     const result = await generateConfig('file.yaml', {
-      ...base,
+      type: 'kubernetes',
       workingDir: 'test/dir',
       output: 'output.yaml',
     });
@@ -118,7 +112,7 @@ describe('generateConfig()', () => {
     // Read from workingDir
     expect(o2k.generate).toHaveBeenCalledWith(
       path.normalize('test/dir/file.yaml'),
-      ConversionTypeMap[base.type],
+      ConversionTypeMap.kubernetes,
     );
   });
 });

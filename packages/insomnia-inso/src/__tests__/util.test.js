@@ -20,12 +20,12 @@ describe('exit()', () => {
 
   it('should exit 1 and print to console and if rejected', async () => {
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
     const error = new Error('message');
     await exit(new Promise((resolve, reject) => reject(error)));
 
-    expect(errorSpy).toHaveBeenCalledWith(error);
+    expect(logSpy).toHaveBeenCalledWith('Something went wrong: message');
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 });
@@ -33,12 +33,12 @@ describe('exit()', () => {
 describe('logErrorExit1()', () => {
   it('should exit 1 and print error to console', async () => {
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
     const error = new Error('message');
     await logErrorExit1(error);
 
-    expect(errorSpy).toHaveBeenCalledWith(error);
+    expect(logSpy).toHaveBeenCalledWith('Something went wrong: message');
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 });
