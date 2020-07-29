@@ -2,7 +2,11 @@
 import * as packageJson from '../package.json';
 
 export function getVersion() {
-  return packageJson.version;
+  return isDevelopment() ? 'dev' : packageJson.version;
+}
+
+export function isDevelopment() {
+  return process.env.NODE_ENV === 'development';
 }
 
 export function logErrorExit1(err: Error) {
