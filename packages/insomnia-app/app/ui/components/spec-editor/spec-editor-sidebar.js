@@ -67,6 +67,11 @@ class SpecEditorSidebar extends React.Component<Props, State> {
     return scrollPosition;
   }
 
+  _handleItemClick = (...itemPath): void => {
+    const mappedPosition = this._mapPosition(itemPath);
+    this._handleScrollEditor(mappedPosition);
+  };
+
   render() {
     const { error } = this.state;
     if (error) {
@@ -74,14 +79,10 @@ class SpecEditorSidebar extends React.Component<Props, State> {
     }
 
     const specJSON = YAML.parse(this.props.apiSpec.contents);
-    const _handleItemClick = (...itemPath): void => {
-      const mappedPosition = this._mapPosition(itemPath);
-      this._handleScrollEditor(mappedPosition);
-    };
 
     return (
       <StyledSpecEditorSidebar>
-        <Sidebar jsonData={specJSON} onClick={_handleItemClick} />
+        <Sidebar jsonData={specJSON} onClick={this._handleItemClick} />
       </StyledSpecEditorSidebar>
     );
   }
