@@ -75,12 +75,7 @@ class SpecEditorSidebar extends React.Component<Props, State> {
 
     const specJSON = YAML.parse(this.props.apiSpec.contents);
     const _handleItemClick = (...itemPath): void => {
-      // Buid up path (no arr.flat() support)
-      console.log('Path Before: ');
-      console.log(...itemPath);
-      const mappedPosition = this._mapPosition([itemPath[0]].concat(...itemPath[1]));
-      console.log('Path After: ');
-      console.log(mappedPosition);
+      const mappedPosition = this._mapPosition(itemPath);
       this._handleScrollEditor(mappedPosition);
     };
 
