@@ -4,7 +4,7 @@ import GravatarImg from './gravatar-img';
 import Breadcrumb from './breadcrumb';
 import Switch from './switch';
 
-export default { title: '1st Party | Header' };
+export default { title: 'Layout | Header' };
 
 export const _default = () => <Header />;
 
