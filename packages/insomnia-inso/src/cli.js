@@ -7,6 +7,7 @@ import { exportSpecification } from './commands/export-specification';
 import { parseArgsStringToArgv } from 'string-argv';
 import commander from 'commander';
 import getOptions from './get-options';
+import { configureLogger } from './logger';
 
 type CreateCommandType = (command?: string, options?: Object) => Object;
 
@@ -135,6 +136,8 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
 
     return command;
   };
+
+  configureLogger();
 
   // inso
   const cmd = createCommand();

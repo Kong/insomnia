@@ -67,30 +67,50 @@ export const loadDb = async ({
   return db || emptyDb();
 };
 
-export const mustFindSingleOrNone = <T>(arr: Array<T>, predicate: T => boolean): ?T => {
+export class MultipleFoundError extends Error {
+  constructor() {
+    super();
+    this.name = 'MultipleFoundError';
+  }
+}
+
+export class NoneFoundError extends Error {
+  constructor() {
+    super();
+    this.name = 'NoneFoundError';
+  }
+}
+
+export const mustFindSingleOrNone = <T>(
+  arr: Array<T>,
+  predicate: T => boolean,
+): [?T, null | MultipleFoundError] => {
   const matched = arr.filter(predicate);
 
   if (matched.length === 1) {
-    return matched[0];
+    return [matched[0], null];
   }
 
   if (matched.length === 0) {
-    return null;
+    return [null, null];
   }
 
-  throw new Error(`Expected one or none, but found multiple matching entries`);
+  return [null, new MultipleFoundError()];
 };
 
-export const mustFindSingle = <T>(arr: Array<T>, predicate: T => boolean): T => {
+export const mustFindSingle = <T>(
+  arr: Array<T>,
+  predicate: T => boolean,
+): [?T, null | MultipleFoundError | NoneFoundError] => {
   const matched = arr.filter(predicate);
 
   if (matched.length === 1) {
-    return matched[0];
+    return [matched[0], null];
   }
 
   if (matched.length === 0) {
-    throw new Error('Expected one but found no matching entries');
+    return [null, new NoneFoundError()];
   }
 
-  throw new Error('Expected one but found multiple matching entries');
+  return [null, new MultipleFoundError()];
 };

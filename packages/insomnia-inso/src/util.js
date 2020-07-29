@@ -1,13 +1,13 @@
 // @flow
 import * as packageJson from '../package.json';
+import consola from 'consola';
 
 export function getVersion() {
   return packageJson.version;
 }
 
 export function logErrorExit1(err: Error) {
-  console.log(`Something went wrong: ${err.message}`);
-
+  consola.error(err);
   process.exit(1);
 }
 

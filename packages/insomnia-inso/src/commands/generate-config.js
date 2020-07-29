@@ -6,6 +6,7 @@ import type { GlobalOptions } from '../get-options';
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
 import { writeFileWithCliOptions } from '../write-file';
+import consola from 'consola';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
@@ -39,18 +40,30 @@ export async function generateConfig(
 
   const db = await loadDb({ workingDir, appDataDir, filterTypes: ['ApiSpec'] });
 
-  let result: ConversionResult;
+  let result: ConversionResult | null = null;
 
   // try get from db
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 
   if (specFromDb?.contents) {
+    consola.trace('Generating config from database contents');
     result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
   } else if (identifier) {
     // try load as a file
     const fileName = path.join(workingDir || '.', identifier);
-    result = await o2k.generate(fileName, ConversionTypeMap[type]);
-  } else {
+    consola.trace(`Generating config from file: ${fileName}`);
+    try {
+      result = await o2k.generate(fileName, ConversionTypeMap[type]);
+    } catch (e) {
+      consola.error(e);
+    }
+  }
+
+  if (!result?.documents) {
+    consola.log(
+      `Unable to load a specification to generate configuration from. Run with --verbose for more information.`,
+    );
+
     return false;
   }
 

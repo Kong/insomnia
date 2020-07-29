@@ -1,9 +1,31 @@
 // @flow
 import type { Database } from '../index';
 import type { Environment } from './types';
-import { mustFindSingle } from '../index';
+import { MultipleFoundError, mustFindSingle, NoneFoundError } from '../index';
 import { AutoComplete } from 'enquirer';
 import { generateIdIsh, getDbChoice, matchIdIsh } from './util';
+import consola from 'consola';
+
+const loadBaseEnvironmentForWorksace = (db: Database, workspaceId: string): ?Environment => {
+  consola.trace('Trying to load base environment of the workspace %s', workspaceId);
+  const [baseWorkspaceEnv, err] = mustFindSingle(db.Environment, e => e.parentId === workspaceId);
+
+  if (err) {
+    if (err instanceof NoneFoundError) {
+      consola.warn('No base environment found for the workspace; expected one.');
+      return null;
+    }
+
+    if (err instanceof MultipleFoundError) {
+      consola.warn('Multiple base environments found for the workspace; expected one.');
+      return null;
+    }
+
+    throw err;
+  }
+
+  return baseWorkspaceEnv;
+};
 
 export const loadEnvironment = (
   db: Database,
@@ -15,7 +37,11 @@ export const loadEnvironment = (
   }
 
   // Get the sub environments
-  const baseWorkspaceEnv = mustFindSingle(db.Environment, e => e.parentId === workspaceId);
+  const baseWorkspaceEnv = loadBaseEnvironmentForWorksace(db, workspaceId);
+  if (!baseWorkspaceEnv) {
+    return null;
+  }
+
   const subEnvs = db.Environment.filter(e => e.parentId === baseWorkspaceEnv._id);
 
   // try to find a sub env, otherwise return the base env
@@ -34,10 +60,15 @@ export const promptEnvironment = async (
   }
 
   // Get the sub environments
-  const baseWorkspaceEnv = mustFindSingle(db.Environment, e => e.parentId === workspaceId);
+  const baseWorkspaceEnv = loadBaseEnvironmentForWorksace(db, workspaceId);
+  if (!baseWorkspaceEnv) {
+    return null;
+  }
+
   const subEnvs = db.Environment.filter(e => e.parentId === baseWorkspaceEnv._id);
 
   if (!subEnvs.length) {
+    consola.trace('No sub environments found, using base environment');
     return baseWorkspaceEnv;
   }
 
@@ -48,5 +79,5 @@ export const promptEnvironment = async (
   });
 
   const [idIsh] = (await prompt.run()).split(' - ').reverse();
-  return mustFindSingle(db.Environment, e => matchIdIsh(e, idIsh));
+  return loadEnvironment(db, workspaceId, idIsh);
 };
