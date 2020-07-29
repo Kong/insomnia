@@ -43,7 +43,7 @@ class SpecEditorSidebar extends React.Component<Props, State> {
     handleSetSelection(pos.start.col - 1, pos.end.col - 1, pos.start.line - 1, pos.end.line - 1);
   }
 
-  _mapPosition(itemPath: array<any>) {
+  _mapPosition(itemPath: Array<any>) {
     const sourceMap = new YAMLSourceMap();
     const specMap = sourceMap.index(
       YAML.parseDocument(this.props.apiSpec.contents, { keepCstNodes: true }),
@@ -64,12 +64,11 @@ class SpecEditorSidebar extends React.Component<Props, State> {
       ? (scrollPosition.start.line = itemMappedPosition.start.line)
       : (scrollPosition.start.line = itemMappedPosition.start.line - 1);
     scrollPosition.end.line = scrollPosition.start.line;
-    return scrollPosition;
+    this._handleScrollEditor(scrollPosition);
   }
 
   _handleItemClick = (...itemPath): void => {
-    const mappedPosition = this._mapPosition(itemPath);
-    this._handleScrollEditor(mappedPosition);
+    this._mapPosition(itemPath);
   };
 
   render() {
