@@ -89,17 +89,14 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
           return Promise.resolve(null);
         }
 
-        return new Promise(resolve => {
-          const saveOptions = {
-            title: 'Save File',
-            buttonLabel: 'Save',
-            defaultPath: options.defaultPath,
-          };
+        const saveOptions = {
+          title: 'Save File',
+          buttonLabel: 'Save',
+          defaultPath: options.defaultPath,
+        };
 
-          electron.remote.dialog.showSaveDialog(saveOptions, filename => {
-            resolve(filename || null);
-          });
-        });
+        const { filePath } = await electron.remote.dialog.showSaveDialog(saveOptions);
+        return filePath || null;
       },
 
       // ~~~~~~~~~~~~~~~~~~ //

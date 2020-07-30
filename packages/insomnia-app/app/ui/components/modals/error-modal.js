@@ -62,12 +62,12 @@ class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
       <Modal ref={this._setModalRef}>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
         <ModalBody className="wide pad">
-          {message ? <div className="notice error">{message}</div> : null}
+          {message ? <div className="notice error pre">{message}</div> : null}
           {error && (
             <details>
               <summary>Stack trace</summary>
               <pre className="pad-top-sm force-wrap selectable">
-                <code>{error.stack || error}</code>
+                <code className="wide">{error.stack || error}</code>
               </pre>
             </details>
           )}

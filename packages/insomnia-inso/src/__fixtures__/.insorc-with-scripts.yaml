@@ -1,0 +1,15 @@
+options:
+  ci: false
+scripts:
+  lint: inso lint spec "Designer Demo"
+
+  test: inso run test "Designer Demo" --env UnitTest --bail --reporter progress
+  test:200s: inso test --testNamePattern 200
+  test:404s: inso test --testNamePattern 404
+  test:suite:math: inso run test uts_8783c30a24b24e9a851d96cce48bd1f2 --env UnitTest --bail --reporter progress
+  test:suite:requests: inso run test uts_bce4af --env UnitTest --bail --reporter progress
+
+  gen-conf: inso generate config "Designer Demo" --type declarative
+  gen-conf:k8s: inso gen-conf --type kubernetes
+
+  invalid-script: generate config "Designer Demo"

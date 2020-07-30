@@ -32,6 +32,7 @@
     "hardenedRuntime": true,
     "category": "public.app-category.developer-tools",
     "entitlements": "./build/static/entitlements.mac.inherit.plist",
+    "requirements": "./build/static/signing-requirements.txt",
     "artifactName": "__BINARY_PREFIX__-${version}.${ext}",
     "target": [
       "dmg",

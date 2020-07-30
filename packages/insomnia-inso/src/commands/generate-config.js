@@ -2,7 +2,7 @@
 import * as o2k from 'openapi-2-kong';
 import YAML from 'yaml';
 import path from 'path';
-import type { GlobalOptions } from '../util';
+import type { GlobalOptions } from '../get-options';
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
 import { writeFileWithCliOptions } from '../write-file';
