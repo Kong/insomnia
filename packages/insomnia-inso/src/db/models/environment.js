@@ -2,15 +2,15 @@
 import type { Database } from '../index';
 import type { Environment } from './types';
 import { AutoComplete } from 'enquirer';
-import { ensureSingle, ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';
+import { ensureSingle, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 import consola from 'consola';
 
-const loadBaseEnvironmentForWorksace = (db: Database, workspaceId: string): ?Environment => {
+const loadBaseEnvironmentForWorkspace = (db: Database, workspaceId: string): Environment => {
   consola.trace('Load base environment for the workspace `%s` from data store', workspaceId);
   const items = db.Environment.filter(e => e.parentId === workspaceId);
   consola.trace('Found %d.', items.length);
 
-  return ensureSingleOrNone(items, 'environment');
+  return ensureSingle(items, 'base environment');
 };
 
 export const loadEnvironment = (
@@ -23,11 +23,7 @@ export const loadEnvironment = (
   }
 
   // Get the sub environments
-  const baseWorkspaceEnv = loadBaseEnvironmentForWorksace(db, workspaceId);
-  if (!baseWorkspaceEnv) {
-    return null;
-  }
-
+  const baseWorkspaceEnv = loadBaseEnvironmentForWorkspace(db, workspaceId);
   const subEnvs = db.Environment.filter(e => e.parentId === baseWorkspaceEnv._id);
 
   // If no identifier, return base environmenmt
@@ -40,7 +36,7 @@ export const loadEnvironment = (
   const items = subEnvs.filter(e => matchIdIsh(e, identifier) || e.name === identifier);
   consola.trace('Found %d', items.length);
 
-  return ensureSingle(items, 'environment');
+  return ensureSingle(items, 'sub environment');
 };
 
 export const promptEnvironment = async (
@@ -53,11 +49,7 @@ export const promptEnvironment = async (
   }
 
   // Get the sub environments
-  const baseWorkspaceEnv = loadBaseEnvironmentForWorksace(db, workspaceId);
-  if (!baseWorkspaceEnv) {
-    return null;
-  }
-
+  const baseWorkspaceEnv = loadBaseEnvironmentForWorkspace(db, workspaceId);
   const subEnvs = db.Environment.filter(e => e.parentId === baseWorkspaceEnv._id);
 
   if (!subEnvs.length) {

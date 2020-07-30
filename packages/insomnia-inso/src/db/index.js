@@ -11,6 +11,8 @@ import envPaths from 'env-paths';
 import gitAdapter from './adapters/git-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
 import { getDefaultAppDataDir } from '../util';
+import consola from 'consola';
+import path from 'path';
 
 export type Database = {|
   ApiSpec: Array<ApiSpec>,
@@ -52,17 +54,26 @@ export const loadDb = async ({
 
   // try load from git
   if (!appDataDir) {
-    db = await gitAdapter(workingDir || '.', filterTypes);
+    const dir = workingDir || '.';
+    db = await gitAdapter(dir, filterTypes);
+    db && consola.debug(`Data store configured from git repository at \`${path.resolve(dir)}\``);
   }
 
   // try load from nedb
   if (!db) {
-    db = await neDbAdapter(
-      appDataDir || envPaths(getDefaultAppDataDir(), { suffix: '' }).data,
-      filterTypes,
-    );
+    const dir = appDataDir || envPaths(getDefaultAppDataDir(), { suffix: '' }).data;
+    db = await neDbAdapter(dir, filterTypes);
+    db &&
+      consola.debug(`Data store configured from app data directory at \`${path.resolve(dir)}\``);
   }
 
   // return empty db
-  return db || emptyDb();
+  if (!db) {
+    consola.warn(
+      'No git or app data store found, re-run `inso` with `--verbose` to see tracing information',
+    );
+    db = emptyDb();
+  }
+
+  return db;
 };

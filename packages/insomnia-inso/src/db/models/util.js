@@ -39,7 +39,7 @@ export const ensureSingleOrNone = <T>(items: Array<T>, entity: string): ?T => {
   );
 };
 
-export const ensureSingle = <T>(items: Array<T>, entity: string): ?T => {
+export const ensureSingle = <T>(items: Array<T>, entity: string): T => {
   if (items.length === 1) {
     return items[0];
   }

@@ -44,7 +44,7 @@ export const promptTestSuites = async (
     ...db.UnitTestSuite.filter(suite => suite.parentId === spec.parentId).map(suite =>
       getDbChoice(generateIdIsh(suite), suite.name, { indent: 1 }),
     ),
-  ]).filter(c => c.length > 1); // Remove documents with no unit test suites.
+  ]);
 
   if (!choices.length) {
     return [];

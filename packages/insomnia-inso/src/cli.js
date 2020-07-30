@@ -9,8 +9,18 @@ import commander from 'commander';
 import getOptions from './get-options';
 import { configureLogger } from './logger';
 import consola from 'consola';
+import type { GenerateConfigOptions } from './commands/generate-config';
+import type { RunTestsOptions } from './commands/run-tests';
+import type { LintSpecificationOptions } from './commands/lint-specification';
+import type { ExportSpecificationOptions } from './commands/export-specification';
+import type { GlobalOptions } from './get-options';
 
 type CreateCommandType = (command?: string, options?: Object) => Object;
+
+function prepareCommand(options: $Shape<GlobalOptions>): void {
+  configureLogger(options.verbose);
+  options.printOptions && consola.log(`Loaded options`, options, '\n');
+}
 
 function makeGenerateCommand(createCommand: CreateCommandType) {
   // inso generate
@@ -28,9 +38,11 @@ function makeGenerateCommand(createCommand: CreateCommandType) {
       `type of configuration to generate, options are [${conversionTypes}] (default: ${defaultType})`,
     )
     .option('-o, --output <path>', 'save the generated config to a file')
-    .action((identifier, cmd) =>
-      exit(generateConfig(identifier, getOptions(cmd, { type: defaultType }))),
-    );
+    .action((identifier, cmd) => {
+      const options = getOptions<GenerateConfigOptions>(cmd, { type: defaultType });
+      prepareCommand(options);
+      return exit(generateConfig(identifier, options));
+    });
 
   return generate;
 }
@@ -54,9 +66,11 @@ function makeTestCommand(createCommand: CreateCommandType) {
     )
     .option('-b, --bail', 'abort ("bail") after first test failure')
     .option('--keepFile', 'do not delete the generated test file')
-    .action((identifier, cmd) =>
-      exit(runInsomniaTests(identifier, getOptions(cmd, { reporter: defaultReporter }))),
-    );
+    .action((identifier, cmd) => {
+      const options = getOptions<RunTestsOptions>(cmd, { reporter: defaultReporter });
+      prepareCommand(options);
+      return exit(runInsomniaTests(identifier, options));
+    });
 
   return run;
 }
@@ -69,7 +83,11 @@ function makeLintCommand(createCommand: CreateCommandType) {
   lint
     .command('spec [identifier]')
     .description('Lint an API Specification')
-    .action((identifier, cmd) => exit(lintSpecification(identifier, getOptions(cmd))));
+    .action((identifier, cmd) => {
+      const options = getOptions<LintSpecificationOptions>(cmd);
+      prepareCommand(options);
+      return exit(lintSpecification(identifier, options));
+    });
 
   return lint;
 }
@@ -83,7 +101,11 @@ function makeExportCommand(createCommand: CreateCommandType) {
     .command('spec [identifier]')
     .description('Export an API Specification to a file')
     .option('-o, --output <path>', 'save the generated config to a file')
-    .action((identifier, cmd) => exit(exportSpecification(identifier, getOptions(cmd))));
+    .action((identifier, cmd) => {
+      const options = getOptions<ExportSpecificationOptions>(cmd);
+      prepareCommand(options);
+      return exit(exportSpecification(identifier, options));
+    });
 
   return exportCmd;
 }
@@ -97,6 +119,7 @@ function addScriptCommand(originalCommand: Object) {
     .action((scriptName, cmd) => {
       // Load scripts
       const options = getOptions(cmd);
+      prepareCommand(options);
 
       // Ignore the first arg because that will be scriptName, get the rest
       const passThroughArgs = cmd.args.slice(1);
@@ -151,6 +174,8 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     .option('-w, --workingDir <dir>', 'set working directory')
     .option('-a, --appDataDir <dir>', 'set the app data directory')
     .option('--config <path>', 'path to configuration file')
+    .option('--verbose', 'show additional logs while running the command')
+    .option('--printOptions', 'print the loaded options')
     .option('--ci', 'run in CI, disables all prompts');
 
   // Add commands and sub commands

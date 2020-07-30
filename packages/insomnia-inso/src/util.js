@@ -1,21 +1,13 @@
 // @flow
 import * as packageJson from '../package.json';
-import consola from 'consola';
-import { InsoError } from './errors';
+import { handleError } from './errors';
 
 export function getVersion() {
   return packageJson.version;
 }
 
-export function logErrorExit1(err: Error) {
-  if (err instanceof InsoError) {
-    consola.fatal(err.message);
-    err.cause && consola.error(err.cause);
-  } else {
-    consola.error(err);
-  }
-  consola.info('To view tracing information, re-run `inso` with `--verbose`');
-
+export function logErrorExit1(err?: Error) {
+  err && handleError(err);
   process.exit(1);
 }
 
