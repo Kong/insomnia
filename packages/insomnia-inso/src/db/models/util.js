@@ -41,6 +41,6 @@ export const ensureSingleOrNone = <T>(items: Array<T>, entity: string): ?T => {
   }
 
   throw new MultipleFoundError(
-    `Expected single or no [${entity}]; found multiple in the data store.`,
+    `Expected single or no ${entity} in the data store, but found multiple (${items.length}).`,
   );
 };
