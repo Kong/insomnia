@@ -45,6 +45,8 @@ Additionally, if the `[identifier]` argument is ommitted from the command, `inso
 | `--appDataDir <dir>` | `-a` |set the app data directory|
 | `--config <path>` | |path to the configuration file|
 | `--ci` | | run in CI, disables all prompts |
+| `--verbose` | | show additional logs while running a command |
+| `--printOptions` | | print the loaded options |
 | `--version` | `-v` |output the version number|
 | `--help` | `-h` |display help for a command|
 
