@@ -8,6 +8,7 @@ import { parseArgsStringToArgv } from 'string-argv';
 import commander from 'commander';
 import getOptions from './get-options';
 import { configureLogger } from './logger';
+import consola from 'consola';
 
 type CreateCommandType = (command?: string, options?: Object) => Object;
 
@@ -104,12 +105,12 @@ function addScriptCommand(originalCommand: Object) {
       const scriptTask = options.__configFile?.scripts?.[scriptName];
 
       if (!scriptTask) {
-        console.log(`Could not find inso script "${scriptName}" in the config file.`);
+        consola.fatal(`Could not find inso script "${scriptName}" in the config file.`);
         return exit(new Promise(resolve => resolve(false)));
       }
 
       if (!scriptTask.startsWith('inso')) {
-        console.log(`Tasks in the script should start with 'inso'.`);
+        consola.fatal('Tasks in a script should start with `inso`.');
         return exit(new Promise(resolve => resolve(false)));
       }
 
@@ -119,7 +120,7 @@ function addScriptCommand(originalCommand: Object) {
       );
 
       // Print command
-      console.log(`>> ${scriptArgs.slice(1).join(' ')}`);
+      consola.debug(`>> ${scriptArgs.slice(1).join(' ')}`);
 
       // Run
       runWithArgs(originalCommand, scriptArgs);

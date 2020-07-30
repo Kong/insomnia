@@ -23,3 +23,24 @@ export const getDbChoice = (
   value: `${message} - ${idIsh}`,
   hint: config.hint || `${idIsh}`,
 });
+
+export class MultipleFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'MultipleFoundError';
+  }
+}
+
+export const ensureSingleOrNone = <T>(items: Array<T>, entity: string): ?T => {
+  if (items.length === 1) {
+    return items[0];
+  }
+
+  if (items.length === 0) {
+    return null;
+  }
+
+  throw new MultipleFoundError(
+    `Expected single or no [${entity}]; found multiple in the data store.`,
+  );
+};

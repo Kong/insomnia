@@ -1,7 +1,6 @@
 // @flow
 
 import insomniaTesting from 'insomnia-testing';
-import type { RunTestsOptions } from '../run-tests';
 import { runInsomniaTests, TestReporterEnum } from '../run-tests';
 
 jest.mock('insomnia-testing');
@@ -14,7 +13,7 @@ describe('runInsomniaTests()', () => {
     jest.restoreAllMocks();
   });
 
-  const base: RunTestsOptions = {
+  const base = {
     reporter: TestReporterEnum.spec,
     appDataDir: 'src/db/__fixtures__/nedb',
     ci: true,

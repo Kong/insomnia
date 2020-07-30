@@ -1,27 +1,18 @@
 // @flow
 import type { Database } from '../index';
 import type { ApiSpec } from './types';
-import { MultipleFoundError, mustFindSingleOrNone } from '../index';
-import { generateIdIsh, getDbChoice, matchIdIsh } from './util';
+import { ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 import { AutoComplete } from 'enquirer';
 import consola from 'consola';
 
+const entity = 'api specification';
+
 export const loadApiSpec = (db: Database, identifier: string): ?ApiSpec => {
-  consola.trace('Trying to load api specification with identifier %s', identifier);
-  const [spec, err] = mustFindSingleOrNone(
-    db.ApiSpec,
-    s => matchIdIsh(s, identifier) || s.fileName === identifier,
-  );
+  consola.trace('Load %s with identifier %s', entity, identifier);
+  const items = db.ApiSpec.filter(s => matchIdIsh(s, identifier) || s.fileName === identifier);
+  consola.trace('Found %d.', items.length);
 
-  if (err) {
-    if (err instanceof MultipleFoundError) {
-      consola.warn('Multiple base environments found for the workspace; expected one.');
-      return null;
-    }
-
-    throw err;
-  }
-  return spec;
+  return ensureSingleOrNone(items, entity);
 };
 
 export const promptApiSpec = async (db: Database, ci: boolean): Promise<?ApiSpec> => {

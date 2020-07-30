@@ -1,13 +1,19 @@
 // @flow
 import * as packageJson from '../package.json';
 import consola from 'consola';
+import { MultipleFoundError } from './db/models/util';
 
 export function getVersion() {
   return packageJson.version;
 }
 
 export function logErrorExit1(err: Error) {
-  consola.error(err);
+  if (err instanceof MultipleFoundError) {
+    consola.fatal(err.message);
+  } else {
+    consola.error(err);
+  }
+
   process.exit(1);
 }
 

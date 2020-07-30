@@ -1,30 +1,18 @@
 // @flow
 import type { Database } from '../index';
 import type { Environment } from './types';
-import { MultipleFoundError, mustFindSingle, NoneFoundError } from '../index';
 import { AutoComplete } from 'enquirer';
-import { generateIdIsh, getDbChoice, matchIdIsh } from './util';
+import { ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 import consola from 'consola';
 
+const entity = 'environment';
+
 const loadBaseEnvironmentForWorksace = (db: Database, workspaceId: string): ?Environment => {
-  consola.trace('Trying to load base environment of the workspace %s', workspaceId);
-  const [baseWorkspaceEnv, err] = mustFindSingle(db.Environment, e => e.parentId === workspaceId);
+  consola.trace('Load %s for the workspace %s', entity, workspaceId);
+  const items = db.Environment.filter(e => e.parentId === workspaceId);
+  consola.trace('Found %d.', items.length);
 
-  if (err) {
-    if (err instanceof NoneFoundError) {
-      consola.warn('No base environment found for the workspace; expected one.');
-      return null;
-    }
-
-    if (err instanceof MultipleFoundError) {
-      consola.warn('Multiple base environments found for the workspace; expected one.');
-      return null;
-    }
-
-    throw err;
-  }
-
-  return baseWorkspaceEnv;
+  return ensureSingleOrNone(items, entity);
 };
 
 export const loadEnvironment = (
@@ -44,6 +32,7 @@ export const loadEnvironment = (
 
   const subEnvs = db.Environment.filter(e => e.parentId === baseWorkspaceEnv._id);
 
+  consola.trace('Found %d sub environments', entity, workspaceId);
   // try to find a sub env, otherwise return the base env
   return identifier && subEnvs.length
     ? subEnvs.find(e => matchIdIsh(e, identifier) || e.name === identifier)

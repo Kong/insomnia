@@ -2,36 +2,19 @@
 import type { Database } from '../index';
 import type { UnitTestSuite } from './types';
 import { loadApiSpec } from './api-spec';
-import { MultipleFoundError, mustFindSingleOrNone, NoneFoundError } from '../index';
 import { AutoComplete } from 'enquirer';
 import flattenDeep from 'lodash.flattendeep';
-import { generateIdIsh, getDbChoice, matchIdIsh } from './util';
+import { ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 import { loadWorkspace } from './workspace';
 import consola from 'consola';
 
-const loadSuite = (db: Database, identifier: string): ?UnitTestSuite => {
+export const loadUnitTestSuite = (db: Database, identifier: string): ?UnitTestSuite => {
   // Identifier is for one specific suite; find it
-  const [suite, err] = mustFindSingleOrNone(
-    db.UnitTestSuite,
-    s => matchIdIsh(s, identifier) || s.name === identifier,
-  );
+  consola.trace('Load unit test suite with identifier %s', identifier);
+  const items = db.UnitTestSuite.filter(s => matchIdIsh(s, identifier) || s.name === identifier);
+  consola.trace('Found %d.', items.length);
 
-  if (err) {
-    if (err instanceof NoneFoundError) {
-      consola.warn('No base environment found for the workspace; expected one.');
-      return null;
-    }
-
-    if (err instanceof MultipleFoundError) {
-      consola.warn('Multiple base environments found for the workspace; expected one.');
-      return null;
-    }
-
-    throw err;
-  }
-
-  consola.success('Found');
-  return suite;
+  return ensureSingleOrNone(items, 'unit test suite');
 };
 
 export const loadTestSuites = (db: Database, identifier: string): Array<UnitTestSuite> => {
@@ -44,7 +27,7 @@ export const loadTestSuites = (db: Database, identifier: string): Array<UnitTest
   }
 
   // load particular suite
-  const result = loadSuite(db, identifier);
+  const result = loadUnitTestSuite(db, identifier);
   return result ? [result] : [];
 };
 
@@ -61,7 +44,7 @@ export const promptTestSuites = async (
     ...db.UnitTestSuite.filter(suite => suite.parentId === spec.parentId).map(suite =>
       getDbChoice(generateIdIsh(suite), suite.name, { indent: 1 }),
     ),
-  ]).filter(c => c.length > 1);
+  ]).filter(c => c.length > 1); // Remove documents with no unit test suites.
 
   if (!choices.length) {
     return [];
