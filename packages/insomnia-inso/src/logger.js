@@ -12,6 +12,6 @@ export const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> =>
   }
 };
 
-export const configureLogger = (verbose: boolean = true) => {
-  consola.level = verbose ? consola.LogLevel.Verbose : consola.LogLevel.Log;
+export const configureLogger = (verbose: boolean = false) => {
+  consola.level = verbose ? consola.LogLevel.Verbose : consola.LogLevel.Info;
 };

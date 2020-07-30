@@ -1,5 +1,6 @@
 // @flow
 import type { BaseModel } from './types';
+import { InsoError } from '../../errors';
 
 export const matchIdIsh = ({ _id }: BaseModel, identifier: string) => _id.startsWith(identifier);
 export const generateIdIsh = ({ _id }: BaseModel, length: number = 10) => _id.substr(0, length);
@@ -24,13 +25,6 @@ export const getDbChoice = (
   hint: config.hint || `${idIsh}`,
 });
 
-export class MultipleFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'MultipleFoundError';
-  }
-}
-
 export const ensureSingleOrNone = <T>(items: Array<T>, entity: string): ?T => {
   if (items.length === 1) {
     return items[0];
@@ -40,7 +34,21 @@ export const ensureSingleOrNone = <T>(items: Array<T>, entity: string): ?T => {
     return null;
   }
 
-  throw new MultipleFoundError(
+  throw new InsoError(
     `Expected single or no ${entity} in the data store, but found multiple (${items.length}).`,
+  );
+};
+
+export const ensureSingle = <T>(items: Array<T>, entity: string): ?T => {
+  if (items.length === 1) {
+    return items[0];
+  }
+
+  if (items.length === 0) {
+    throw new InsoError(`Expected single ${entity} in the data store, but found none.`);
+  }
+
+  throw new InsoError(
+    `Expected single ${entity} in the data store, but found multiple (${items.length}).`,
   );
 };

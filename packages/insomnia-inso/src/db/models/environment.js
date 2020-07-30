@@ -2,17 +2,15 @@
 import type { Database } from '../index';
 import type { Environment } from './types';
 import { AutoComplete } from 'enquirer';
-import { ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';
+import { ensureSingle, ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 import consola from 'consola';
 
-const entity = 'environment';
-
 const loadBaseEnvironmentForWorksace = (db: Database, workspaceId: string): ?Environment => {
-  consola.trace('Load %s for the workspace %s', entity, workspaceId);
+  consola.trace('Load base environment for the workspace `%s` from data store', workspaceId);
   const items = db.Environment.filter(e => e.parentId === workspaceId);
   consola.trace('Found %d.', items.length);
 
-  return ensureSingleOrNone(items, entity);
+  return ensureSingleOrNone(items, 'environment');
 };
 
 export const loadEnvironment = (
@@ -32,11 +30,17 @@ export const loadEnvironment = (
 
   const subEnvs = db.Environment.filter(e => e.parentId === baseWorkspaceEnv._id);
 
-  consola.trace('Found %d sub environments', entity, workspaceId);
-  // try to find a sub env, otherwise return the base env
-  return identifier && subEnvs.length
-    ? subEnvs.find(e => matchIdIsh(e, identifier) || e.name === identifier)
-    : baseWorkspaceEnv;
+  // If no identifier, return base environmenmt
+  if (!identifier) {
+    consola.trace('No sub environments found, using base environment');
+    return baseWorkspaceEnv;
+  }
+
+  consola.trace('Load sub environment with identifier `%s` from data store', identifier);
+  const items = subEnvs.filter(e => matchIdIsh(e, identifier) || e.name === identifier);
+  consola.trace('Found %d', items.length);
+
+  return ensureSingle(items, 'environment');
 };
 
 export const promptEnvironment = async (
@@ -67,6 +71,7 @@ export const promptEnvironment = async (
     choices: subEnvs.map(e => getDbChoice(generateIdIsh(e, 14), e.name)),
   });
 
+  consola.trace('Prompt for environment');
   const [idIsh] = (await prompt.run()).split(' - ').reverse();
   return loadEnvironment(db, workspaceId, idIsh);
 };

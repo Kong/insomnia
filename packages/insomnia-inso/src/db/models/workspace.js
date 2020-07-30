@@ -5,7 +5,7 @@ import { ensureSingleOrNone, matchIdIsh } from './util';
 import consola from 'consola';
 
 export const loadWorkspace = (db: Database, identifier: string): ?Workspace => {
-  consola.trace('Load workspace with identifier %s', identifier);
+  consola.trace('Load workspace with identifier `%s` from data store', identifier);
   const items = db.Workspace.filter(s => matchIdIsh(s, identifier) || s.name === identifier);
   consola.trace('Found %d.', items.length);
 

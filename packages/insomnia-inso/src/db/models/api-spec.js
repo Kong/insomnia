@@ -8,7 +8,7 @@ import consola from 'consola';
 const entity = 'api specification';
 
 export const loadApiSpec = (db: Database, identifier: string): ?ApiSpec => {
-  consola.trace('Load %s with identifier %s', entity, identifier);
+  consola.trace('Load %s with identifier `%s` from data store', entity, identifier);
   const items = db.ApiSpec.filter(s => matchIdIsh(s, identifier) || s.fileName === identifier);
   consola.trace('Found %d.', items.length);
 
@@ -26,6 +26,7 @@ export const promptApiSpec = async (db: Database, ci: boolean): Promise<?ApiSpec
     choices: db.ApiSpec.map(s => getDbChoice(generateIdIsh(s), s.fileName)),
   });
 
+  consola.trace('Prompt for %s', entity);
   const [idIsh] = (await prompt.run()).split(' - ').reverse();
   return loadApiSpec(db, idIsh);
 };

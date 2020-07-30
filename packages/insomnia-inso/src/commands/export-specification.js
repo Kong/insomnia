@@ -22,16 +22,7 @@ export async function exportSpecification(
   }
 
   if (output) {
-    const { outputPath, error } = await writeFileWithCliOptions(
-      output,
-      specFromDb.contents,
-      workingDir,
-    );
-
-    if (error) {
-      console.log(`Failed to write to "${outputPath}".\n`, error);
-      return false;
-    }
+    const outputPath = await writeFileWithCliOptions(output, specFromDb.contents, workingDir);
     console.log(`Specification exported to "${outputPath}".`);
   } else {
     console.log(specFromDb.contents);

@@ -10,7 +10,7 @@ import consola from 'consola';
 
 export const loadUnitTestSuite = (db: Database, identifier: string): ?UnitTestSuite => {
   // Identifier is for one specific suite; find it
-  consola.trace('Load unit test suite with identifier %s', identifier);
+  consola.trace('Load unit test suite with identifier `%s` from data store', identifier);
   const items = db.UnitTestSuite.filter(s => matchIdIsh(s, identifier) || s.name === identifier);
   consola.trace('Found %d.', items.length);
 
@@ -56,6 +56,7 @@ export const promptTestSuites = async (
     choices: flattenDeep(choices),
   });
 
+  consola.trace('Prompt for document or test suite');
   const [idIsh] = (await prompt.run()).split(' - ').reverse();
   return loadTestSuites(db, idIsh);
 };

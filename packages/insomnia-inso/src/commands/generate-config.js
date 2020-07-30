@@ -7,6 +7,7 @@ import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
 import { writeFileWithCliOptions } from '../write-file';
 import consola from 'consola';
+import { InsoError } from '../errors';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
@@ -45,18 +46,18 @@ export async function generateConfig(
   // try get from db
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 
-  if (specFromDb?.contents) {
-    consola.trace('Generating config from database contents');
-    result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
-  } else if (identifier) {
-    // try load as a file
-    const fileName = path.join(workingDir || '.', identifier);
-    consola.trace(`Generating config from file: ${fileName}`);
-    try {
+  try {
+    if (specFromDb?.contents) {
+      consola.trace('Generating config from database contents');
+      result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
+    } else if (identifier) {
+      // try load as a file
+      const fileName = path.join(workingDir || '.', identifier);
+      consola.trace(`Generating config from file \`${fileName}\``);
       result = await o2k.generate(fileName, ConversionTypeMap[type]);
-    } catch (e) {
-      consola.error(e);
     }
+  } catch (e) {
+    throw new InsoError(`There was an error while generating configuration`, e);
   }
 
   if (!result?.documents) {
@@ -73,11 +74,7 @@ export async function generateConfig(
   const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
 
   if (output) {
-    const { outputPath, error } = await writeFileWithCliOptions(output, document, workingDir);
-    if (error) {
-      console.log(`Failed to write to "${outputPath}".\n`, error);
-      return false;
-    }
+    const outputPath = await writeFileWithCliOptions(output, document, workingDir);
     console.log(`Configuration generated to "${outputPath}".`);
   } else {
     console.log(document);

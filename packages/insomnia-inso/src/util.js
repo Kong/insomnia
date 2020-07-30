@@ -1,18 +1,20 @@
 // @flow
 import * as packageJson from '../package.json';
 import consola from 'consola';
-import { MultipleFoundError } from './db/models/util';
+import { InsoError } from './errors';
 
 export function getVersion() {
   return packageJson.version;
 }
 
 export function logErrorExit1(err: Error) {
-  if (err instanceof MultipleFoundError) {
+  if (err instanceof InsoError) {
     consola.fatal(err.message);
+    err.cause && consola.error(err.cause);
   } else {
     consola.error(err);
   }
+  consola.info('To view tracing information, re-run `inso` with `--verbose`');
 
   process.exit(1);
 }
