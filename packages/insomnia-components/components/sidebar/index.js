@@ -68,10 +68,24 @@ function Sidebar(props: Props) {
   if (props.jsonData === null) {
     return null;
   }
-  const { servers, info } = props.jsonData || {};
-  const { requestBodies, responses, parameters, headers, schemas, securitySchemes } =
-    props.jsonData.components || {};
-  const paths = Object.entries(props.jsonData.paths || {});
+  const { servers, info, paths }: { servers: Object, info: Object, paths: Object } =
+    props.jsonData || {};
+  const {
+    requestBodies,
+    responses,
+    parameters,
+    headers,
+    schemas,
+    securitySchemes,
+  }: {
+    requestBodies: Object,
+    responses: Object,
+    parameters: Object,
+    headers: Object,
+    schemas: Object,
+    securitySchemes: Object,
+  } = props.jsonData.components || {};
+  const pathItems: Array<Object> = Object.entries(paths || {});
 
   return (
     <StyledSidebar className="theme--sidebar">
@@ -146,7 +160,9 @@ function Sidebar(props: Props) {
         </StyledSection>
       )}
       {serversVisible && servers && <SidebarServers servers={servers} onClick={props.onClick} />}
-      {pathsVisible && paths && <SidebarPaths paths={paths} onClick={props.onClick} />}
+      {pathsVisible && pathItems && pathItems.length && (
+        <SidebarPaths paths={pathItems} onClick={props.onClick} />
+      )}
       {requestsVisible && requestBodies && (
         <SidebarRequests requests={requestBodies} onClick={props.onClick} />
       )}
