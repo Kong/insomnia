@@ -6,6 +6,8 @@ import { runInsomniaTests } from '../commands/run-tests';
 import { exportSpecification } from '../commands/export-specification';
 import { parseArgsStringToArgv } from 'string-argv';
 import * as packageJson from '../../package.json';
+import { globalBeforeAll, globalBeforeEach } from '../../__jest__/before';
+import logger from '../logger';
 
 jest.mock('../commands/generate-config');
 jest.mock('../commands/lint-specification');
@@ -22,6 +24,13 @@ const initInso = () => {
 };
 
 describe('cli', () => {
+  beforeAll(() => {
+    globalBeforeAll();
+  });
+  beforeEach(() => {
+    globalBeforeEach();
+  });
+
   let inso = initInso();
   beforeEach(() => {
     inso = initInso();
@@ -261,10 +270,9 @@ describe('cli', () => {
     });
 
     it('should fail if script not found', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
       inso('not-found-script', insorcFilePath);
-      expect(consoleSpy).toHaveBeenCalledWith(
+      const logs = logger.__getLogs();
+      expect(logs.fatal).toContain(
         'Could not find inso script "not-found-script" in the config file.',
       );
     });
