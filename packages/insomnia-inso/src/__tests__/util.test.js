@@ -1,5 +1,6 @@
 // @flow
-import { exit, logErrorExit1, getDefaultAppDataDir } from '../util';
+import { exit, logErrorExit1, getDefaultAppDataDir, getVersion, isDevelopment } from '../util';
+import * as packageJson from '../../package.json';
 
 describe('exit()', () => {
   it('should exit 0 if successful result', async () => {
@@ -67,4 +68,41 @@ describe('getDefaultAppDataDir()', () => {
       'Environment variable DEFAULT_APP_DATA_DIR is not set.',
     );
   });
+});
+
+describe('getVersion()', () => {
+  it('should return version from packageJson', () => {
+    expect(getVersion()).toBe(packageJson.version);
+  });
+
+  it('should return dev if running in development', () => {
+    const oldNodeEnv = process.env.NODE_ENV;
+
+    process.env.NODE_ENV = 'development';
+    expect(getVersion()).toBe('dev');
+
+    process.env.NODE_ENV = oldNodeEnv;
+  });
+});
+
+describe('isDevelopment()', () => {
+  it('should return true if NODE_ENV is development', () => {
+    const oldNodeEnv = process.env.NODE_ENV;
+
+    process.env.NODE_ENV = 'development';
+    expect(isDevelopment()).toBe(true);
+
+    process.env.NODE_ENV = oldNodeEnv;
+  });
+
+  it('should return false if NODE_ENV is not development', () => {
+    const oldNodeEnv = process.env.NODE_ENV;
+
+    process.env.NODE_ENV = 'production';
+    expect(isDevelopment()).toBe(false);
+
+    process.env.NODE_ENV = oldNodeEnv;
+  });
+
+  it('should return dev if running in development', () => {});
 });

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import MultiSwitch from './multi-switch';
 
-export default { title: '1st Party | Multi Switch' };
+export default { title: 'Navigation | Sliding Switch' };
 
 export const _default = () => (
   <MultiSwitch
