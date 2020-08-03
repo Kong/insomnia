@@ -22,6 +22,20 @@ type Props = {|
   className?: string,
   jsonData: Object,
   onClick: (section: string, path: any) => void,
+  jsonData: {
+    servers?: Object,
+    info?: Object,
+    paths?: Object,
+    components?: {
+      requestBodies?: Object,
+      responses?: Object,
+      parameters?: Object,
+      headers?: Object,
+      schemas?: Object,
+      securitySchemes?: Object,
+    },
+  },
+  pathItems: Array<Object>,
 |};
 
 const StyledSidebar: React.ComponentType<{}> = styled.div`
@@ -68,24 +82,10 @@ function Sidebar(props: Props) {
   if (props.jsonData === null) {
     return null;
   }
-  const { servers, info, paths }: { servers: Object, info: Object, paths: Object } =
-    props.jsonData || {};
-  const {
-    requestBodies,
-    responses,
-    parameters,
-    headers,
-    schemas,
-    securitySchemes,
-  }: {
-    requestBodies: Object,
-    responses: Object,
-    parameters: Object,
-    headers: Object,
-    schemas: Object,
-    securitySchemes: Object,
-  } = props.jsonData.components || {};
-  const pathItems: Array<Object> = Object.entries(paths || {});
+  const { servers, info, paths } = props.jsonData || {};
+  const { requestBodies, responses, parameters, headers, schemas, securitySchemes } =
+    props.jsonData.components || {};
+  const pathItems = Object.entries(paths || {});
 
   return (
     <StyledSidebar className="theme--sidebar">
