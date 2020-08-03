@@ -45,6 +45,7 @@ class ResponseRaw extends PureComponent {
         mode="text/plain"
         noMatchBrackets
         placeholder="..."
+        raw
         readOnly
         uniquenessKey={responseId}
       />
