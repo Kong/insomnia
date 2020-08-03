@@ -15,7 +15,7 @@ import {
 import * as misc from '../common/misc';
 import { docsBase } from '../common/documentation';
 
-const { app, Menu, BrowserWindow, shell, dialog } = electron;
+const { app, Menu, BrowserWindow, shell, dialog, clipboard } = electron;
 
 // So we can use native modules in renderer
 // NOTE: This will be deprecated in Electron 10 and impossible in 11
@@ -295,23 +295,32 @@ export function createWindow() {
   };
 
   if (!isMac()) {
+    const os = require('os');
     helpMenu.submenu.unshift({
       label: `${MNEMONIC_SYM}About`,
       click: async () => {
-        await dialog.showMessageBox({
+        const operatingSystem = [os.type(), os.release()].join(' ');
+        const detail = [
+          'OS ' + operatingSystem,
+          'Version ' + getAppVersion(),
+          'Shell ' + process.versions.electron,
+          'Node ' + process.versions.node,
+          'V8 ' + process.versions.v8,
+          'Architecture ' + process.arch,
+          Curl.getVersion(),
+        ].join('\n');
+
+        const msgBox = await dialog.showMessageBox({
           type: 'info',
+          buttons: ['Copy to clipboard', 'OK'],
           title: getAppName(),
           message: getAppLongName(),
-          detail: [
-            'Version ' + getAppVersion(),
-            'Shell ' + process.versions.electron,
-            'Node ' + process.versions.node,
-            'V8 ' + process.versions.v8,
-            'Architecture ' + process.arch,
-            '', // Blank line before libcurl
-            Curl.getVersion(),
-          ].join('\n'),
+          detail: detail,
         });
+
+        if (msgBox.response === 0) {
+          clipboard.writeText(detail);
+        }
       },
     });
   }
