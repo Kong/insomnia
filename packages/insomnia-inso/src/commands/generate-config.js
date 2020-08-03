@@ -6,7 +6,7 @@ import type { GlobalOptions } from '../get-options';
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
 import { writeFileWithCliOptions } from '../write-file';
-import consola from 'consola';
+import logger from '../logger';
 import { InsoError } from '../errors';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
@@ -48,12 +48,12 @@ export async function generateConfig(
 
   try {
     if (specFromDb?.contents) {
-      consola.trace('Generating config from database contents');
+      logger.trace('Generating config from database contents');
       result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
     } else if (identifier) {
       // try load as a file
       const fileName = path.join(workingDir || '.', identifier);
-      consola.trace(`Generating config from file \`${fileName}\``);
+      logger.trace(`Generating config from file \`${fileName}\``);
       result = await o2k.generate(fileName, ConversionTypeMap[type]);
     }
   } catch (e) {
@@ -61,9 +61,7 @@ export async function generateConfig(
   }
 
   if (!result?.documents) {
-    consola.log(
-      `Unable to load a specification to generate configuration from. Run with --verbose for more information.`,
-    );
+    logger.log('Could not find a valid specification to generate configuration.');
 
     return false;
   }

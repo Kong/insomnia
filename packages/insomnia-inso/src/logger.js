@@ -12,6 +12,13 @@ export const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> =>
   }
 };
 
-export const configureLogger = (verbose: boolean = false) => {
-  consola.level = verbose ? consola.LogLevel.Verbose : consola.LogLevel.Info;
+const logger = consola.create({
+  reporters: [new consola.FancyReporter({ dateFormat: ' ' })],
+});
+
+export const configureLogger = (verbose: boolean = false, ci: boolean = false) => {
+  logger.level = verbose ? consola.LogLevel.Verbose : consola.LogLevel.Info;
+  ci && logger.setReporters([new consola.BasicReporter()]);
 };
+
+export default logger;

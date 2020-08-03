@@ -7,8 +7,7 @@ import { exportSpecification } from './commands/export-specification';
 import { parseArgsStringToArgv } from 'string-argv';
 import commander from 'commander';
 import getOptions from './get-options';
-import { configureLogger } from './logger';
-import consola from 'consola';
+import logger, { configureLogger } from './logger';
 import type { GenerateConfigOptions } from './commands/generate-config';
 import type { RunTestsOptions } from './commands/run-tests';
 import type { LintSpecificationOptions } from './commands/lint-specification';
@@ -18,8 +17,8 @@ import type { GlobalOptions } from './get-options';
 type CreateCommandType = (command?: string, options?: Object) => Object;
 
 function prepareCommand(options: $Shape<GlobalOptions>): void {
-  configureLogger(options.verbose);
-  options.printOptions && consola.log(`Loaded options`, options, '\n');
+  configureLogger(options.verbose, options.ci);
+  options.printOptions && logger.log(`Loaded options`, options, '\n');
 }
 
 function makeGenerateCommand(createCommand: CreateCommandType) {
@@ -128,12 +127,12 @@ function addScriptCommand(originalCommand: Object) {
       const scriptTask = options.__configFile?.scripts?.[scriptName];
 
       if (!scriptTask) {
-        consola.fatal(`Could not find inso script "${scriptName}" in the config file.`);
+        logger.fatal(`Could not find inso script "${scriptName}" in the config file.`);
         return exit(new Promise(resolve => resolve(false)));
       }
 
       if (!scriptTask.startsWith('inso')) {
-        consola.fatal('Tasks in a script should start with `inso`.');
+        logger.fatal('Tasks in a script should start with `inso`.');
         return exit(new Promise(resolve => resolve(false)));
       }
 
@@ -143,7 +142,7 @@ function addScriptCommand(originalCommand: Object) {
       );
 
       // Print command
-      consola.debug(`>> ${scriptArgs.slice(1).join(' ')}`);
+      logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`);
 
       // Run
       runWithArgs(originalCommand, scriptArgs);

@@ -1,6 +1,6 @@
 // @flow
 
-import consola from 'consola';
+import logger from './logger';
 
 export class InsoError extends Error {
   cause: ?Error;
@@ -14,10 +14,10 @@ export class InsoError extends Error {
 
 export const handleError = (err: Error) => {
   if (err instanceof InsoError) {
-    consola.fatal(err.message);
-    err.cause && consola.error(err.cause);
+    logger.fatal(err.message);
+    err.cause && logger.error(err.cause);
   } else if (err) {
-    consola.error(err);
+    logger.error(err);
   }
-  consola.info('To view tracing information, re-run `inso` with `--verbose`');
+  logger.info('To view tracing information, re-run `inso` with `--verbose`');
 };

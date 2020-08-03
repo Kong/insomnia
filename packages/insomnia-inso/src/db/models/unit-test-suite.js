@@ -6,13 +6,13 @@ import { AutoComplete } from 'enquirer';
 import flattenDeep from 'lodash.flattendeep';
 import { ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 import { loadWorkspace } from './workspace';
-import consola from 'consola';
+import logger from '../../logger';
 
 export const loadUnitTestSuite = (db: Database, identifier: string): ?UnitTestSuite => {
   // Identifier is for one specific suite; find it
-  consola.trace('Load unit test suite with identifier `%s` from data store', identifier);
+  logger.trace('Load unit test suite with identifier `%s` from data store', identifier);
   const items = db.UnitTestSuite.filter(s => matchIdIsh(s, identifier) || s.name === identifier);
-  consola.trace('Found %d.', items.length);
+  logger.trace('Found %d.', items.length);
 
   return ensureSingleOrNone(items, 'unit test suite');
 };
@@ -56,7 +56,7 @@ export const promptTestSuites = async (
     choices: flattenDeep(choices),
   });
 
-  consola.trace('Prompt for document or test suite');
+  logger.trace('Prompt for document or test suite');
   const [idIsh] = (await prompt.run()).split(' - ').reverse();
   return loadTestSuites(db, idIsh);
 };

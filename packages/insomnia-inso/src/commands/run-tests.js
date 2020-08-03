@@ -4,10 +4,9 @@ import { generate, runTestsCli } from 'insomnia-testing';
 import type { GlobalOptions } from '../get-options';
 import { loadDb } from '../db';
 import type { UnitTest, UnitTestSuite } from '../db/models/types';
-import { noConsoleLog } from '../logger';
+import logger, { noConsoleLog } from '../logger';
 import { loadTestSuites, promptTestSuites } from '../db/models/unit-test-suite';
 import { loadEnvironment, promptEnvironment } from '../db/models/environment';
-import consola from 'consola';
 
 export const TestReporterEnum = {
   dot: 'dot',
@@ -57,7 +56,7 @@ export async function runInsomniaTests(
   const suites = identifier ? loadTestSuites(db, identifier) : await promptTestSuites(db, !!ci);
 
   if (!suites.length) {
-    consola.fatal('No test suites found; cannot run tests.');
+    logger.fatal('No test suites found; cannot run tests.');
     return false;
   }
 
@@ -68,7 +67,7 @@ export async function runInsomniaTests(
     : await promptEnvironment(db, !!ci, workspaceId);
 
   if (!environment) {
-    consola.fatal('No environment identified; cannot run tests without a valid environment.');
+    logger.fatal('No environment identified; cannot run tests without a valid environment.');
     return false;
   }
 
