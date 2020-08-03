@@ -6,7 +6,7 @@ on:
       - designer@*
 
 env:
-  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_REF: ${{ github.ref }}
   GITHUB_SHA: ${{ github.sha }}
   NPM_CONFIG_TARGET: 9.1.0
