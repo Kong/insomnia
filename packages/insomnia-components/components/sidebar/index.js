@@ -85,7 +85,10 @@ function Sidebar(props: Props) {
   const { servers, info, paths } = props.jsonData || {};
   const { requestBodies, responses, parameters, headers, schemas, securitySchemes } =
     props.jsonData.components || {};
-  const pathItems = Object.entries(paths || {});
+  let pathItems = {};
+  if (typeof paths !== 'string') {
+    pathItems = Object.entries(paths || {});
+  }
 
   return (
     <StyledSidebar className="theme--sidebar">

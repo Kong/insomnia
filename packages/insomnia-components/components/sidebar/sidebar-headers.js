@@ -4,6 +4,7 @@ import Tooltip from '../tooltip';
 import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
+import StyledInvalidSection from './sidebar-invalid-section';
 
 type Props = {
   headers: Object,
@@ -15,6 +16,10 @@ type Props = {
 export default class SidebarHeaders extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
     const { headers, onClick } = this.props;
+
+    if (Object.prototype.toString.call(headers) !== '[object Object]') {
+      return <StyledInvalidSection name={'header'} />;
+    }
 
     const filteredValues = Object.keys(headers).filter(header =>
       header.toLowerCase().includes(filter.toLocaleLowerCase()),

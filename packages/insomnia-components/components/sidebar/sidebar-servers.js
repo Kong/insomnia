@@ -3,6 +3,7 @@ import * as React from 'react';
 import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
+import StyledInvalidSection from './sidebar-invalid-section';
 
 type Props = {
   servers: Array<any>,
@@ -14,7 +15,9 @@ type Props = {
 export default class SidebarServers extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
     const { servers, onClick } = this.props;
-
+    if (!Array.isArray(servers)) {
+      return <StyledInvalidSection name={'server'} />;
+    }
     const filteredValues = servers.filter(server =>
       server.url.includes(filter.toLocaleLowerCase()),
     );

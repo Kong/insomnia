@@ -4,9 +4,10 @@ import styled from 'styled-components';
 import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
+import StyledInvalidSection from './sidebar-invalid-section';
 
 type Props = {
-  paths: Array<any>,
+  paths: Object,
   onClick: (section: string, ...args: any) => void,
 };
 
@@ -19,7 +20,9 @@ const StyledMethods: React.ComponentType<{}> = styled.span`
 export default class SidebarPaths extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
     const { paths, onClick } = this.props;
-
+    if (Object.prototype.toString.call(paths) !== '[object Array]') {
+      return <StyledInvalidSection name={'path'} />;
+    }
     const filteredValues = paths.filter(pathDetail =>
       pathDetail[0].toLowerCase().includes(filter.toLocaleLowerCase()),
     );

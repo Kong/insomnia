@@ -5,6 +5,7 @@ import Tooltip from '../tooltip';
 import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
+import StyledInvalidSection from './sidebar-invalid-section';
 
 type Props = {
   requests: Object,
@@ -27,6 +28,10 @@ const StyledRequestFormat: React.ComponentType<{}> = styled.span`
 export default class SidebarRequests extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
     const { requests, onClick } = this.props;
+
+    if (Object.prototype.toString.call(requests) !== '[object Object]') {
+      return <StyledInvalidSection name={'request'} />;
+    }
 
     const filteredValues = Object.keys(requests).filter(requestName =>
       requestName.toLowerCase().includes(filter.toLocaleLowerCase()),
