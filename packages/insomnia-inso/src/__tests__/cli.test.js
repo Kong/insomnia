@@ -5,6 +5,7 @@ import { lintSpecification } from '../commands/lint-specification';
 import { runInsomniaTests } from '../commands/run-tests';
 import { exportSpecification } from '../commands/export-specification';
 import { parseArgsStringToArgv } from 'string-argv';
+import * as packageJson from '../../package.json';
 
 jest.mock('../commands/generate-config');
 jest.mock('../commands/lint-specification');
@@ -43,6 +44,20 @@ describe('cli', () => {
 
     it('should throw error if working dir argument is missing', () => {
       expect(() => inso('-w')).toThrowError();
+    });
+
+    it.each(['-v', '--version'])('inso %s should print version from package.json', args => {
+      jest.spyOn(console, 'log').mockImplementation(() => {});
+      expect(() => inso(args)).toThrowError(packageJson.version);
+    });
+
+    it.each(['-v', '--version'])('inso %s should print "dev" if running in development', args => {
+      const oldNodeEnv = process.env.NODE_ENV;
+
+      process.env.NODE_ENV = 'development';
+      expect(() => inso(args)).toThrowError('dev');
+
+      process.env.NODE_ENV = oldNodeEnv;
     });
   });
 

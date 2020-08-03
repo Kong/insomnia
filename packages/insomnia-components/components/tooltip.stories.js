@@ -1,7 +1,7 @@
 import React from 'react';
 import Tooltip from './tooltip';
 
-export default { title: 'Tooltip' };
+export default { title: 'Helpers | Tooltip' };
 
 export const onTop = () => (
   <div className="text-center">
