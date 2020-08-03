@@ -53,7 +53,7 @@ class ImportExport extends PureComponent {
             </DropdownItem>
             <DropdownItem onClick={handleExportAll}>
               <i className="fa fa-empty" />
-              All {Strings.workspace}
+              All {Strings.workspaces}
             </DropdownItem>
           </Dropdown>
           &nbsp;&nbsp;
