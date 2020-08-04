@@ -302,7 +302,7 @@ export function createWindow() {
         const operatingSystem = [os.type(), os.release()].join(' ');
         const detail = [
           'OS ' + operatingSystem,
-          'Version ' + getAppVersion(),
+          `Version ${getAppLongName()} ${getAppVersion()}`,
           'Shell ' + process.versions.electron,
           'Node ' + process.versions.node,
           'V8 ' + process.versions.v8,
