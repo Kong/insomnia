@@ -3,6 +3,7 @@ import { Spectral } from '@stoplight/spectral';
 import type { GlobalOptions } from '../get-options';
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
+import logger from '../logger';
 
 export type LintSpecificationOptions = GlobalOptions;
 
@@ -15,7 +16,7 @@ export async function lintSpecification(
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 
   if (!specFromDb) {
-    console.log(`Specification not found.`);
+    logger.fatal(`Specification not found.`);
     return false;
   }
 
@@ -23,14 +24,14 @@ export async function lintSpecification(
   const results = await spectral.run(specFromDb.contents);
 
   if (results.length) {
-    console.log(`${results.length} lint errors found. \n`);
+    logger.log(`${results.length} lint errors found. \n`);
 
     results.forEach(r =>
-      console.log(`${r.range.start.line}:${r.range.start.character} - ${r.message}`),
+      logger.log(`${r.range.start.line}:${r.range.start.character} - ${r.message}`),
     );
     return false;
   }
 
-  console.log(`No linting errors. Yay!`);
+  logger.log(`No linting errors. Yay!`);
   return true;
 }

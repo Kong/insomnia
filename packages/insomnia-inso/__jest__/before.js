@@ -1,7 +1,6 @@
 import logger from '../src/logger';
 
 export function globalBeforeAll() {
-  logger.wrapAll();
   logger.__getLogs = () => {
     const logs = {};
     // Taken from https://github.com/nuxt-contrib/consola/blob/master/src/types.js
