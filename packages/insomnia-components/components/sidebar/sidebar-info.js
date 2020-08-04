@@ -28,7 +28,7 @@ function SidebarInfo(props: Props) {
           <SidebarTextItem label={'Version:'} headline={version} />
         </SidebarItem>
       )}
-      {license.name && (
+      {license && license.name && (
         <SidebarItem>
           <SidebarTextItem label={'License:'} headline={license.name} />
         </SidebarItem>

@@ -4,23 +4,24 @@ import Tooltip from '../tooltip';
 import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
+import StyledInvalidSection from './sidebar-invalid-section';
 
 type Props = {
   responses: Object,
-};
-
-let itemPath = [];
-const handleClick = items => {
-  itemPath.push('response');
-  itemPath.push.apply(itemPath, items);
-  itemPath = [];
+  onClick: (section: string, ...args: any) => void,
 };
 
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarResponses extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
-    const filteredValues = Object.keys(this.props.responses).filter(response =>
+    const { responses, onClick } = this.props;
+
+    if (Object.prototype.toString.call(responses) !== '[object Object]') {
+      return <StyledInvalidSection name={'response'} />;
+    }
+
+    const filteredValues = Object.keys(responses).filter(response =>
       response.toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -35,8 +36,8 @@ export default class SidebarResponses extends React.Component<Props> {
             <div>
               <SvgIcon icon={IconEnum.indentation} />
             </div>
-            <span onClick={() => handleClick([response])}>
-              <Tooltip message={this.props.responses[response].description} position="right">
+            <span onClick={() => onClick('components', 'responses', response)}>
+              <Tooltip message={responses[response].description} position="right">
                 {response}
               </Tooltip>
             </span>

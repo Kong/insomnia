@@ -103,7 +103,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
       return;
     }
 
-    editor.setSelection(chStart, chEnd, lineStart, lineEnd);
+    editor.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
   }
 
   _handleLintClick(notice: {}) {
