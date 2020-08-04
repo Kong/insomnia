@@ -22,7 +22,7 @@ export type GenerateConfigOptions = GlobalOptions & {
 function validateOptions({ type }: GenerateConfigOptions): boolean {
   if (!ConversionTypeMap[type]) {
     const conversionTypes = Object.keys(ConversionTypeMap).join(', ');
-    console.log(`Config type "${type}" not unrecognized. Options are [${conversionTypes}].`);
+    logger.fatal(`Config type "${type}" not unrecognized. Options are [${conversionTypes}].`);
     return false;
   }
 
@@ -73,9 +73,9 @@ export async function generateConfig(
 
   if (output) {
     const outputPath = await writeFileWithCliOptions(output, document, workingDir);
-    console.log(`Configuration generated to "${outputPath}".`);
+    logger.log(`Configuration generated to "${outputPath}".`);
   } else {
-    console.log(document);
+    logger.log(document);
   }
 
   return true;
