@@ -48,9 +48,7 @@ describe('writeFileWithCliOptions', () => {
     const workingDir = 'working/dir';
 
     const result = await writeFileWithCliOptions(output, contents, workingDir);
-    expect(result).toStrictEqual({
-      outputPath: path.normalize('working/dir/output/dir/file.yaml'),
-    });
+    expect(result).toEqual(path.normalize('working/dir/output/dir/file.yaml'));
 
     expect(mkdirp.sync).toHaveBeenCalledWith(path.normalize('working/dir/output/dir'));
     expect(fs.promises.writeFile).toHaveBeenCalledWith(

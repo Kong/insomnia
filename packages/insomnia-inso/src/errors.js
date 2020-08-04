@@ -12,7 +12,7 @@ export class InsoError extends Error {
   }
 }
 
-export const handleError = (err: Error) => {
+export const handleError = (err?: Error) => {
   if (err instanceof InsoError) {
     logger.fatal(err.message);
     err.cause && logger.error(err.cause);

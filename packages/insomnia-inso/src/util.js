@@ -11,7 +11,7 @@ export function isDevelopment() {
 }
 
 export function logErrorExit1(err?: Error) {
-  err && handleError(err);
+  handleError(err);
   process.exit(1);
 }
 
