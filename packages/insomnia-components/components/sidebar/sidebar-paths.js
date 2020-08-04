@@ -20,10 +20,14 @@ const StyledMethods: React.ComponentType<{}> = styled.span`
 export default class SidebarPaths extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
     const { paths, onClick } = this.props;
-    if (Object.prototype.toString.call(paths) !== '[object Array]') {
+    let pathItems = {};
+    if (typeof paths !== 'string') {
+      pathItems = Object.entries(paths || {});
+    }
+    if (Object.prototype.toString.call(pathItems) !== '[object Array]') {
       return <StyledInvalidSection name={'path'} />;
     }
-    const filteredValues = paths.filter(pathDetail =>
+    const filteredValues = pathItems.filter(pathDetail =>
       pathDetail[0].toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
