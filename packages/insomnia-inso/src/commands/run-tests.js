@@ -27,7 +27,7 @@ export type RunTestsOptions = GlobalOptions & {
 function validateOptions({ reporter }: RunTestsOptions): boolean {
   if (reporter && !TestReporterEnum[reporter]) {
     const reporterTypes = Object.keys(TestReporterEnum).join(', ');
-    console.log(`Reporter "${reporter}" not unrecognized. Options are [${reporterTypes}].`);
+    logger.fatal(`Reporter "${reporter}" not unrecognized. Options are [${reporterTypes}].`);
     return false;
   }
 
