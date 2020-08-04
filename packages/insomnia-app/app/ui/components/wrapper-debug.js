@@ -111,6 +111,7 @@ class WrapperDebug extends React.PureComponent<Props> {
       handleUpdateRequestUrl,
       handleUpdateSettingsShowPasswords,
       handleUpdateSettingsUseBulkHeaderEditor,
+      handleUpdateSettingsUseBulkParametersEditor,
     } = this.props;
 
     const {
@@ -149,7 +150,6 @@ class WrapperDebug extends React.PureComponent<Props> {
       handleStartDragPaneVertical,
       handleUpdateDownloadPath,
       handleUpdateRequestMimeType,
-      handleUpdateSettingsUseBulkParametersEditor,
       headerEditorKey,
       isVariableUncovered,
       isLoading,

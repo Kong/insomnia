@@ -160,6 +160,19 @@ class CodeEditor extends React.Component {
   setSelection(chStart, chEnd, lineStart, lineEnd) {
     if (this.codeMirror) {
       this.codeMirror.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
+      this.codeMirror.scrollIntoView({ line: lineStart, char: chStart });
+    }
+  }
+
+  scrollToSelection(chStart, chEnd, lineStart, lineEnd) {
+    const selectionFocusPos = window.innerHeight / 2 - 100;
+    if (this.codeMirror) {
+      this.codeMirror.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
+      this.codeMirror.scrollIntoView(
+        { line: lineStart, char: chStart },
+        // If sizing permits, position selection just above center
+        selectionFocusPos,
+      );
     }
   }
 

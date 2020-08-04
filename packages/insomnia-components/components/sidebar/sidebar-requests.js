@@ -5,16 +5,11 @@ import Tooltip from '../tooltip';
 import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
+import StyledInvalidSection from './sidebar-invalid-section';
 
 type Props = {
   requests: Object,
-};
-
-let itemPath = [];
-const handleClick = items => {
-  itemPath.push('request');
-  itemPath.push.apply(itemPath, items);
-  itemPath = [];
+  onClick: (section: string, ...args: any) => void,
 };
 
 const StyledRequestExample: React.ComponentType<{}> = styled.span`
@@ -32,7 +27,13 @@ const StyledRequestFormat: React.ComponentType<{}> = styled.span`
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarRequests extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
-    const filteredValues = Object.keys(this.props.requests).filter(requestName =>
+    const { requests, onClick } = this.props;
+
+    if (Object.prototype.toString.call(requests) !== '[object Object]') {
+      return <StyledInvalidSection name={'request'} />;
+    }
+
+    const filteredValues = Object.keys(requests).filter(requestName =>
       requestName.toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -43,14 +44,14 @@ export default class SidebarRequests extends React.Component<Props> {
     return (
       <div>
         {filteredValues.map(requestName => {
-          const { description, content } = this.props.requests[requestName];
+          const { description, content } = requests[requestName];
           return (
             <React.Fragment key={requestName}>
               <SidebarItem gridLayout>
                 <div>
                   <SvgIcon icon={IconEnum.folderOpen} />
                 </div>
-                <span onClick={() => handleClick([requestName])}>
+                <span onClick={() => onClick('components', 'requestBodies', requestName)}>
                   <Tooltip message={description} position="right">
                     {requestName}
                   </Tooltip>
@@ -61,18 +62,41 @@ export default class SidebarRequests extends React.Component<Props> {
                   <SidebarItem>
                     <StyledRequestFormat>
                       <SvgIcon icon={IconEnum.indentation} />
-                      <span onClick={() => handleClick([requestFormat])}>{requestFormat}</span>
+                      <span
+                        onClick={() =>
+                          onClick(
+                            'components',
+                            'requestBodies',
+                            requestName,
+                            'content',
+                            requestFormat,
+                          )
+                        }>
+                        {requestFormat}
+                      </span>
                     </StyledRequestFormat>
                   </SidebarItem>
-                  <SidebarItem>
-                    {Object.keys(content[requestFormat].examples).map(requestExample => (
-                      <StyledRequestExample
-                        onClick={() => handleClick([requestExample])}
-                        key={requestExample}>
-                        {requestExample}
-                      </StyledRequestExample>
-                    ))}
-                  </SidebarItem>
+                  {content[requestFormat].examples && (
+                    <SidebarItem>
+                      {Object.keys(content[requestFormat].examples).map(requestExample => (
+                        <StyledRequestExample
+                          onClick={() =>
+                            onClick(
+                              'components',
+                              'requestBodies',
+                              requestName,
+                              'content',
+                              requestFormat,
+                              'examples',
+                              requestExample,
+                            )
+                          }
+                          key={requestExample}>
+                          {requestExample}
+                        </StyledRequestExample>
+                      ))}
+                    </SidebarItem>
+                  )}
                 </React.Fragment>
               ))}
             </React.Fragment>

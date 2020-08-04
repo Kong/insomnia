@@ -354,6 +354,12 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     return sUpdate(this.props.settings, { useBulkHeaderEditor });
   }
 
+  _handleUpdateSettingsUseBulkParametersEditor(
+    useBulkParametersEditor: boolean,
+  ): Promise<Settings> {
+    return sUpdate(this.props.settings, { useBulkParametersEditor });
+  }
+
   _handleImportFile(forceToWorkspace?: ForceToWorkspace): void {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
   }
@@ -826,6 +832,9 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleUpdateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
               handleUpdateSettingsUseBulkHeaderEditor={
                 this._handleUpdateSettingsUseBulkHeaderEditor
+              }
+              handleUpdateSettingsUseBulkParametersEditor={
+                this._handleUpdateSettingsUseBulkParametersEditor
               }
               wrapperProps={this.props}
             />

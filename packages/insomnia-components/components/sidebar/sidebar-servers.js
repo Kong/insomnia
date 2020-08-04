@@ -3,22 +3,22 @@ import * as React from 'react';
 import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
+import StyledInvalidSection from './sidebar-invalid-section';
 
 type Props = {
   servers: Array<any>,
+  onClick: (section: string, path: string | number) => void,
 };
 
-let itemPath = [];
-const handleClick = items => {
-  itemPath.push('server');
-  itemPath.push.apply(itemPath, items);
-  itemPath = [];
-};
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarServers extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
-    const filteredValues = this.props.servers.filter(server =>
+    const { servers, onClick } = this.props;
+    if (!Array.isArray(servers)) {
+      return <StyledInvalidSection name={'server'} />;
+    }
+    const filteredValues = servers.filter(server =>
       server.url.includes(filter.toLocaleLowerCase()),
     );
 
@@ -28,13 +28,13 @@ export default class SidebarServers extends React.Component<Props> {
 
     return (
       <div>
-        {filteredValues.map(server => (
+        {filteredValues.map((server, index) => (
           <React.Fragment key={server.url}>
             <SidebarItem>
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => handleClick([server.url])}>{server.url}</span>
+              <span onClick={() => onClick('servers', index)}>{server.url}</span>
             </SidebarItem>
           </React.Fragment>
         ))}

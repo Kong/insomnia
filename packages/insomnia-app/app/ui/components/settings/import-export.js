@@ -4,6 +4,7 @@ import autobind from 'autobind-decorator';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import { showPrompt } from '../modals/index';
+import Strings from '../../../common/strings';
 
 @autobind
 class ImportExport extends PureComponent {
@@ -48,11 +49,11 @@ class ImportExport extends PureComponent {
             <DropdownDivider>Choose Export Type</DropdownDivider>
             <DropdownItem onClick={handleShowExportRequestsModal}>
               <i className="fa fa-home" />
-              Current Workspace
+              Current {Strings.workspace}
             </DropdownItem>
             <DropdownItem onClick={handleExportAll}>
               <i className="fa fa-empty" />
-              All Workspaces
+              All {Strings.workspaces}
             </DropdownItem>
           </Dropdown>
           &nbsp;&nbsp;
