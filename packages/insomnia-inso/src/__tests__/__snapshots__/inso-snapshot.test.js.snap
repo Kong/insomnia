@@ -10,6 +10,8 @@ Options:
   -w, --workingDir <dir>  set working directory
   -a, --appDataDir <dir>  set the app data directory
   --config <path>         path to configuration file
+  --verbose               show additional logs while running the command
+  --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command
 
@@ -32,6 +34,8 @@ Options:
   -w, --workingDir <dir>  set working directory
   -a, --appDataDir <dir>  set the app data directory
   --config <path>         path to configuration file
+  --verbose               show additional logs while running the command
+  --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command
 
@@ -102,6 +106,8 @@ Options:
   -w, --workingDir <dir>  set working directory
   -a, --appDataDir <dir>  set the app data directory
   --config <path>         path to configuration file
+  --verbose               show additional logs while running the command
+  --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command
 
