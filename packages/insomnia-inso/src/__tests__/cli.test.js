@@ -46,13 +46,6 @@ describe('cli', () => {
   });
 
   describe('global options', () => {
-    beforeEach(() => {
-      logger.wrapAll();
-    });
-    afterEach(() => {
-      logger.restoreAll();
-    });
-
     it('should throw error if app data dir argument is missing', () => {
       expect(() => inso('-a')).toThrowError();
     });
@@ -62,19 +55,19 @@ describe('cli', () => {
     });
 
     it.each(['-v', '--version'])('inso %s should print version from package.json', args => {
+      logger.wrapAll();
       expect(() => inso(args)).toThrowError(packageJson.version);
-      const logs = logger.__getLogs();
-      expect(logs.log).toEqual([packageJson.version]);
+      logger.restoreAll();
     });
 
     it.each(['-v', '--version'])('inso %s should print "dev" if running in development', args => {
       const oldNodeEnv = process.env.NODE_ENV;
 
       process.env.NODE_ENV = 'development';
-
+      logger.wrapAll();
       expect(() => inso(args)).toThrowError('dev');
-      const logs = logger.__getLogs();
-      expect(logs.log).toEqual(['dev']);
+      logger.restoreAll();
+
       process.env.NODE_ENV = oldNodeEnv;
     });
   });
