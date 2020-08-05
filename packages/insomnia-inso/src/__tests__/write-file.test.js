@@ -38,7 +38,7 @@ describe('writeFileWithCliOptions', () => {
     const workingDir = 'working/dir';
 
     const promise = writeFileWithCliOptions(output, contents, workingDir);
-    await expect(promise).resolves.toBe('working/dir/file.yaml');
+    await expect(promise).resolves.toBe(path.normalize('working/dir/file.yaml'));
   });
 
   it('should ensure the output directory exists', async () => {
