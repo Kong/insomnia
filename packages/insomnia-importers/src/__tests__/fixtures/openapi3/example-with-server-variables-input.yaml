@@ -12,7 +12,7 @@ servers:
       protocol:
         default: https
       port:
-        default: 8080
+        default: '8080'
       host:
         default: localhost
       basePath:
@@ -21,3 +21,6 @@ paths:
   /files:
     get:
       operationId: find_files
+      responses:
+        '200':
+          description: OK

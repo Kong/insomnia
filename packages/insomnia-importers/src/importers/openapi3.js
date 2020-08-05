@@ -30,8 +30,7 @@ const OAUTH_FLOWS = {
 };
 const SUPPORTED_SECURITY_TYPES = [SECURITY_TYPE.HTTP, SECURITY_TYPE.API_KEY, SECURITY_TYPE.OAUTH];
 const SUPPORTED_HTTP_AUTH_SCHEMES = [HTTP_AUTH_SCHEME.BASIC, HTTP_AUTH_SCHEME.BEARER];
-const PROTOCOL_VARIABLE_SEARCH_VALUE = /{([^}]+)}(?=:\/\/)/g; // positive lookahead for ://
-const PATH_VARIABLE_SEARCH_VALUE = /{([^}]+)}(?!:\/\/)/g; // negative lookahead for ://
+const VARIABLE_SEARCH_VALUE = /{([^}]+)}/g;
 let requestCounts = {};
 
 module.exports.id = 'openapi3';
@@ -119,48 +118,41 @@ function getDefaultServerUrl(api) {
     return urlParse(exampleServer);
   }
 
-  const url = firstServer.url;
+  const url = resolveVariables(firstServer);
 
-  const protocolResolved = resolveVariables(
-    url,
-    PROTOCOL_VARIABLE_SEARCH_VALUE,
-    firstServer.variables,
-    'http',
-  );
-  const pathResolved = resolveVariables(
-    protocolResolved,
-    PATH_VARIABLE_SEARCH_VALUE,
-    firstServer.variables,
-  );
-
-  return urlParse(pathResolved);
+  return urlParse(url);
 }
 
 /**
  * Resolve default variables for a server url
  *
- * @param {string} str - the source url
- * @param {RegExp} regExp - the regexp to use to identify variables
- * @param {Object} variables - the variables object from $.servers.*.variables in an openapi3 object
- * @param {string} fallback - the default string to apply
+ * @param {Object} str - the server
  * @returns {string} - the resolved url
  */
-function resolveVariables(str, regExp, variables, fallback) {
-  let resolved = str;
+function resolveVariables(server) {
+  let resolvedUrl = server.url;
+  const variables = server.variables || {};
+
   let shouldContinue = true;
 
   do {
     // Regexp contain the global flag (g), meaning we must execute our regex on the original string.
     // https://stackoverflow.com/a/27753327
-    const [replace, name] = regExp.exec(str) || [];
+    const [replace, name] = VARIABLE_SEARCH_VALUE.exec(server.url) || [];
+
     const variable = variables && variables[name];
-    const value = (variable && variable.default) || fallback;
+    const value = variable && variable.default;
+
+    if (name && !value) {
+      // We found a variable in the url (name) but we have no default to replace it with (value)
+      throw new Error(`Server variable "${name}" missing default value`);
+    }
 
     shouldContinue = !!name;
-    resolved = replace && value ? resolved.replace(replace, value) : resolved;
+    resolvedUrl = replace ? resolvedUrl.replace(replace, value) : resolvedUrl;
   } while (shouldContinue);
 
-  return resolved;
+  return resolvedUrl;
 }
 
 /**
@@ -301,7 +293,7 @@ function importRequest(endpointSchema, parentId, security, securitySchemes) {
  * @returns {string}
  */
 function pathWithParamsAsVariables(path) {
-  return path.replace(PATH_VARIABLE_SEARCH_VALUE, '{{ $1 }}');
+  return path.replace(VARIABLE_SEARCH_VALUE, '{{ $1 }}');
 }
 
 /**
