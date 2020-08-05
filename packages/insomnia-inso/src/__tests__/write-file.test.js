@@ -61,7 +61,7 @@ describe('writeFileWithCliOptions', () => {
     mock(mkdirp.sync).mockRejectedValue(error);
 
     const promise = writeFileWithCliOptions('file.yaml', 'contents');
-    await expect(promise).rejects.toThrow(InsoError);
+    await expect(promise).rejects.toThrow(new InsoError(`Failed to write to "file.yaml"`, error));
   });
 
   it('should return an error if write file fails', async () => {
@@ -69,6 +69,6 @@ describe('writeFileWithCliOptions', () => {
     mock(fs.promises.writeFile).mockRejectedValue(error);
 
     const promise = writeFileWithCliOptions('file.yaml', 'contents');
-    await expect(promise).rejects.toThrow(InsoError);
+    await expect(promise).rejects.toThrow(new InsoError(`Failed to write to "file.yaml"`, error));
   });
 });
