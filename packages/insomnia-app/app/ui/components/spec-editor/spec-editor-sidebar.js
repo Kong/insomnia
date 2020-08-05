@@ -32,17 +32,6 @@ class SpecEditorSidebar extends React.Component<Props, State> {
     };
   }
 
-  _IsSpecContentJson(str: string) {
-    try {
-      JSON.parse(str);
-    } catch (e) {
-      this.setState({ specContentJSON: false });
-      return false;
-    }
-    this.setState({ specContentJSON: true });
-    return true;
-  }
-
   _handleScrollEditor(pos: {
     start: { line: number, col: number },
     end: { line: number, col: number },
@@ -75,10 +64,12 @@ class SpecEditorSidebar extends React.Component<Props, State> {
     const specMap = sourceMap.index(YAML.parseDocument(contents, { keepCstNodes: true }));
     const itemMappedPosition = sourceMap.lookup(itemPath, specMap);
     const isServersSection = itemPath[0] === 'servers';
-    isServersSection
-      ? (scrollPosition.start.line += itemMappedPosition.start.line)
-      : (scrollPosition.start.line += itemMappedPosition.start.line - 1);
+    scrollPosition.start.line += itemMappedPosition.start.line;
+    if (!isServersSection) {
+      scrollPosition.start.line -= 1;
+    }
     scrollPosition.end.line = scrollPosition.start.line;
+
     this._handleScrollEditor(scrollPosition);
   }
 
