@@ -1,33 +1,12 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
+import CodeEditor from '../codemirror/code-editor';
 
 @autobind
 class ResponseRaw extends PureComponent {
-  constructor(props) {
-    super(props);
-    this._timeout = null;
-  }
-
-  _setTextAreaRef(n) {
-    this._textarea = n;
-  }
-
-  _update(value) {
-    clearTimeout(this._timeout);
-    this._timeout = setTimeout(() => {
-      if (this._textarea) {
-        this._textarea.value = value;
-      }
-    }, 200);
-  }
-
-  componentDidUpdate() {
-    this._update(this.props.value);
-  }
-
-  componentDidMount() {
-    this._update(this.props.value);
+  _setCodeEditorRef(n) {
+    this._codeEditor = n;
   }
 
   shouldComponentUpdate(nextProps) {
@@ -43,27 +22,32 @@ class ResponseRaw extends PureComponent {
   }
 
   focus() {
-    if (this._textarea) {
-      this._textarea.focus();
+    if (this._codeEditor) {
+      this._codeEditor.focus();
     }
   }
 
   selectAll() {
-    if (this._textarea) {
-      this._textarea.select();
+    if (this._codeEditor) {
+      this._codeEditor.selectAll();
     }
   }
 
   render() {
-    const { fontSize } = this.props;
+    const { fontSize, responseId, value } = this.props;
     return (
-      <textarea
-        ref={this._setTextAreaRef}
+      <CodeEditor
+        ref={this._setCodeEditorRef}
+        defaultValue={value}
+        fontSize={fontSize}
+        hideLineNumbers
+        lineWrapping
+        mode="text/plain"
+        noMatchBrackets
         placeholder="..."
-        className="force-wrap scrollable wide tall selectable monospace pad no-resize"
+        raw
         readOnly
-        defaultValue=""
-        style={{ fontSize }}
+        uniquenessKey={responseId}
       />
     );
   }
@@ -72,6 +56,7 @@ class ResponseRaw extends PureComponent {
 ResponseRaw.propTypes = {
   value: PropTypes.string.isRequired,
   fontSize: PropTypes.number,
+  responseId: PropTypes.string,
 };
 
 export default ResponseRaw;

@@ -374,6 +374,7 @@ class ResponseViewer extends React.Component<Props, State> {
       return (
         <ResponseRaw
           key={responseId}
+          responseId={responseId}
           ref={this._setSelectableViewRef}
           value={this._decodeIconv(bodyBuffer, charset)}
           fontSize={editorFontSize}

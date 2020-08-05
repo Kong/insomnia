@@ -18,10 +18,10 @@
         "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
       },
       "_type": "environment",
-      "_id": "__ENV_1__"
+      "_id": "__BASE_ENVIRONMENT_ID__"
     },
     {
-      "parentId": "__ENV_1__",
+      "parentId": "__BASE_ENVIRONMENT_ID__",
       "name": "Swagger env",
       "data": {
         "base_path": "/v2",
@@ -29,10 +29,10 @@
         "host": "petstore.swagger.io"
       },
       "_type": "environment",
-      "_id": "__ENV_2__"
+      "_id": "env___BASE_ENVIRONMENT_ID___sub"
     },
     {
-      "_id": "__GRP_1__",
+      "_id": "fld___WORKSPACE_ID__1b034c38",
       "_type": "request_group",
       "description": "",
       "environment": {},
@@ -40,7 +40,7 @@
       "parentId": "__WORKSPACE_ID__"
     },
     {
-      "_id": "__GRP_2__",
+      "_id": "fld___WORKSPACE_ID__3a21295d",
       "_type": "request_group",
       "description": "",
       "environment": {},
@@ -48,7 +48,7 @@
       "parentId": "__WORKSPACE_ID__"
     },
     {
-      "_id": "__GRP_3__",
+      "_id": "fld___WORKSPACE_ID__12dea96f",
       "_type": "request_group",
       "description": "",
       "environment": {},
@@ -56,7 +56,7 @@
       "parentId": "__WORKSPACE_ID__"
     },
     {
-      "parentId": "__GRP_1__",
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
       "name": "Add a new pet to the store",
       "description": "",
       "url": "{{ base_url }}/pet",
@@ -85,7 +85,7 @@
       "_id": "addPet"
     },
     {
-      "parentId": "__GRP_1__",
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
       "name": "Update an existing pet",
       "description": "",
       "url": "{{ base_url }}/pet",
@@ -114,7 +114,7 @@
       "_id": "updatePet"
     },
     {
-      "parentId": "__GRP_1__",
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
       "name": "Finds Pets by status",
       "description": "Multiple status values can be provided with comma separated strings",
       "url": "{{ base_url }}/pet/findByStatus",
@@ -140,7 +140,7 @@
       "_id": "findPetsByStatus"
     },
     {
-      "parentId": "__GRP_1__",
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
       "name": "Finds Pets by tags",
       "description": "Muliple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.",
       "url": "{{ base_url }}/pet/findByTags",
@@ -166,7 +166,7 @@
       "_id": "findPetsByTags"
     },
     {
-      "parentId": "__GRP_1__",
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
       "name": "Find pet by ID",
       "description": "Returns a single pet",
       "url": "{{ base_url }}/pet/{{ petId }}",
@@ -185,7 +185,7 @@
       "_id": "getPetById"
     },
     {
-      "parentId": "__GRP_1__",
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
       "name": "Updates a pet in the store with form data",
       "description": "",
       "url": "{{ base_url }}/pet/{{ petId }}",
@@ -225,7 +225,7 @@
       "_id": "updatePetWithForm"
     },
     {
-      "parentId": "__GRP_1__",
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
       "name": "Deletes a pet",
       "description": "",
       "url": "{{ base_url }}/pet/{{ petId }}",
@@ -251,7 +251,7 @@
       "_id": "deletePet"
     },
     {
-      "parentId": "__GRP_1__",
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
       "name": "uploads an image",
       "description": "",
       "url": "{{ base_url }}/pet/{{ petId }}/uploadImage",
@@ -291,7 +291,7 @@
       "_id": "uploadFile"
     },
     {
-      "parentId": "__GRP_2__",
+      "parentId": "fld___WORKSPACE_ID__3a21295d",
       "name": "Returns pet inventories by status",
       "description": "Returns a map of status codes to quantities",
       "url": "{{ base_url }}/store/inventory",
@@ -310,7 +310,7 @@
       "_id": "getInventory"
     },
     {
-      "parentId": "__GRP_2__",
+      "parentId": "fld___WORKSPACE_ID__3a21295d",
       "name": "Place an order for a pet",
       "description": "",
       "url": "{{ base_url }}/store/order",
@@ -323,7 +323,7 @@
       "_id": "placeOrder"
     },
     {
-      "parentId": "__GRP_2__",
+      "parentId": "fld___WORKSPACE_ID__3a21295d",
       "name": "Find purchase order by ID",
       "description": "For valid response try integer IDs with value >= 1 and <= 10. Other values will generated exceptions",
       "url": "{{ base_url }}/store/order/{{ orderId }}",
@@ -336,7 +336,7 @@
       "_id": "getOrderById"
     },
     {
-      "parentId": "__GRP_2__",
+      "parentId": "fld___WORKSPACE_ID__3a21295d",
       "name": "Delete purchase order by ID",
       "description": "For valid response try integer IDs with positive integer value. Negative or non-integer values will generate API errors",
       "url": "{{ base_url }}/store/order/{{ orderId }}",
@@ -349,7 +349,7 @@
       "_id": "deleteOrder"
     },
     {
-      "parentId": "__GRP_3__",
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
       "name": "Create user",
       "description": "This can only be done by the logged in user.",
       "url": "{{ base_url }}/user",
@@ -362,7 +362,7 @@
       "_id": "createUser"
     },
     {
-      "parentId": "__GRP_3__",
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
       "name": "Creates list of users with given input array",
       "description": "",
       "url": "{{ base_url }}/user/createWithArray",
@@ -375,7 +375,7 @@
       "_id": "createUsersWithArrayInput"
     },
     {
-      "parentId": "__GRP_3__",
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
       "name": "Creates list of users with given input array",
       "description": "",
       "url": "{{ base_url }}/user/createWithList",
@@ -388,7 +388,7 @@
       "_id": "createUsersWithListInput"
     },
     {
-      "parentId": "__GRP_3__",
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
       "name": "Logs user into the system",
       "description": "",
       "url": "{{ base_url }}/user/login",
@@ -412,7 +412,7 @@
       "_id": "loginUser"
     },
     {
-      "parentId": "__GRP_3__",
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
       "name": "Logs out current logged in user session",
       "description": "",
       "url": "{{ base_url }}/user/logout",
@@ -425,7 +425,7 @@
       "_id": "logoutUser"
     },
     {
-      "parentId": "__GRP_3__",
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
       "name": "Get user by user name",
       "description": "",
       "url": "{{ base_url }}/user/{{ username }}",
@@ -438,7 +438,7 @@
       "_id": "getUserByName"
     },
     {
-      "parentId": "__GRP_3__",
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
       "name": "Updated user",
       "description": "This can only be done by the logged in user.",
       "url": "{{ base_url }}/user/{{ username }}",
@@ -451,7 +451,7 @@
       "_id": "updateUser"
     },
     {
-      "parentId": "__GRP_3__",
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
       "name": "Delete user",
       "description": "This can only be done by the logged in user.",
       "url": "{{ base_url }}/user/{{ username }}",
