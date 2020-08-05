@@ -70,6 +70,16 @@ describe('cli', () => {
 
       process.env.NODE_ENV = oldNodeEnv;
     });
+
+    it('should print options', () => {
+      inso('generate config file.yaml -t declarative --printOptions --verbose');
+      const logs = logger.__getLogs();
+      expect(logs.log[0]).toContainEqual({
+        type: 'declarative',
+        printOptions: true,
+        verbose: true,
+      });
+    });
   });
 
   describe('generate config', () => {

@@ -16,7 +16,7 @@ export function globalBeforeAll() {
       'trace',
       'verbose',
     ].forEach(level => {
-      logs[level] = logger[level].mock.calls.map(c => c[0]);
+      logs[level] = logger[level].mock.calls.map(c => (c.length === 1 ? c[0] : c));
     });
     return logs;
   };

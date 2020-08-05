@@ -154,7 +154,7 @@ export function go(args?: Array<string>, exitOverride?: boolean): void {
     const command = new commander.Command(cmd).storeOptionsAsProperties(false);
 
     if (exitOverride) {
-      return command.exitOverride();
+      command.exitOverride();
     }
 
     return command;

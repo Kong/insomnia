@@ -5,6 +5,7 @@ import path from 'path';
 import { writeFileWithCliOptions } from '../../write-file';
 import { globalBeforeAll, globalBeforeEach } from '../../../__jest__/before';
 import logger from '../../logger';
+import { InsoError } from '../../errors';
 
 jest.mock('openapi-2-kong');
 jest.mock('../../write-file');
@@ -117,5 +118,31 @@ describe('generateConfig()', () => {
     );
 
     expect(logger.__getLogs().log).toEqual([`Configuration generated to "${outputPath}".`]);
+  });
+
+  it('should throw InsoError if there is an error thrown by openapi-2-kong', async () => {
+    const error = new Error('err');
+    mock(o2k.generate).mockRejectedValue(error);
+
+    const promise = generateConfig('file.yaml', {
+      type: 'kubernetes',
+    });
+
+    await expect(promise).rejects.toThrowError(
+      new InsoError(`There was an error while generating configuration`, error),
+    );
+  });
+
+  it('should warn if no valid spec can be found', async () => {
+    mock(o2k.generate).mockResolvedValue({});
+
+    const result = await generateConfig('file.yaml', {
+      type: 'kubernetes',
+    });
+
+    expect(result).toBe(false);
+    expect(logger.__getLogs().log).toEqual([
+      'Could not find a valid specification to generate configuration.',
+    ]);
   });
 });
