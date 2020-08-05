@@ -22,6 +22,8 @@ const OptionsSupportedInConfigFile: Array<$Keys<GlobalOptions>> = [
   'appDataDir',
   'workingDir',
   'ci',
+  'verbose',
+  'printOptions',
 ];
 
 export const loadCosmiConfig = (configFile?: string): ConfigFileOptions => {
