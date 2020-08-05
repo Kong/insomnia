@@ -2,3 +2,19 @@ input.editable {
   font-style: italic !important;
   opacity: 0.9;
 }
+
+span.editable {
+  transition: 0.2s;
+  opacity: 1;
+  background-position: right center;
+  background-image: none;
+  padding-right: 20px;
+  &:hover {
+    padding-right: 20px;
+    background-position: right center;
+    background-image: url('https://img.icons8.com/android/1x/edit.png');
+    background-repeat: no-repeat;
+    background-size: 16px 16px;
+    opacity: .70;
+  }
+}
