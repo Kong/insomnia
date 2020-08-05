@@ -21,12 +21,17 @@ export default class SidebarPaths extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
     const { paths, onClick } = this.props;
     let pathItems = {};
-    if (typeof paths !== 'string') {
-      pathItems = Object.entries(paths || {});
-    }
-    if (Object.prototype.toString.call(pathItems) !== '[object Array]') {
+
+    if (typeof paths === 'string') {
       return <StyledInvalidSection name={'path'} />;
     }
+
+    pathItems = Object.entries(paths || {});
+
+    if (!Array.isArray(pathItems) || pathItems.length === 0) {
+      return <StyledInvalidSection name={'path'} />;
+    }
+
     const filteredValues = pathItems.filter(pathDetail =>
       pathDetail[0].toLowerCase().includes(filter.toLocaleLowerCase()),
     );
