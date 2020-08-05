@@ -13,6 +13,7 @@ import {
   MNEMONIC_SYM,
 } from '../common/constants';
 import * as misc from '../common/misc';
+import * as os from 'os';
 import { docsBase } from '../common/documentation';
 
 const { app, Menu, BrowserWindow, shell, dialog, clipboard } = electron;
@@ -295,18 +296,16 @@ export function createWindow() {
   };
 
   if (!isMac()) {
-    const os = require('os');
     helpMenu.submenu.unshift({
       label: `${MNEMONIC_SYM}About`,
       click: async () => {
-        const operatingSystem = [os.type(), os.release()].join(' ');
         const detail = [
-          'OS ' + operatingSystem,
+          `OS ${os.type()} ${os.arch()} ${os.release()}`,
           `Version ${getAppLongName()} ${getAppVersion()}`,
-          'Shell ' + process.versions.electron,
-          'Node ' + process.versions.node,
-          'V8 ' + process.versions.v8,
-          'Architecture ' + process.arch,
+          `Shell ${process.versions.electron}`,
+          `Node ${process.versions.node}`,
+          `V8 ${process.versions.v8}`,
+          `Architecture ${process.arch}`,
           Curl.getVersion(),
         ].join('\n');
 
