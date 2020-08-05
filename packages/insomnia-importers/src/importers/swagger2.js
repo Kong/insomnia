@@ -1,6 +1,8 @@
-const SwaggerParser = require('swagger-parser');
-const utils = require('../utils');
+'use strict';
 
+const crypto = require('crypto');
+const utils = require('../utils');
+const SwaggerParser = require('swagger-parser');
 const SUPPORTED_SWAGGER_VERSION = '2.0';
 const MIMETYPE_JSON = 'application/json';
 const MIMETYPE_URLENCODED = 'application/x-www-form-urlencoded';
@@ -9,7 +11,6 @@ const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON, MIMETYPE_URLENCODED, MIMETYPE_MULTI
 const WORKSPACE_ID = '__WORKSPACE_ID__';
 
 let requestCount = 1;
-let requestGroupCount = 1;
 
 module.exports.id = 'swagger2';
 module.exports.name = 'Swagger 2.0';
@@ -17,7 +18,6 @@ module.exports.description = 'Importer for Swagger 2.0 specification (json/yaml)
 
 module.exports.convert = async function(rawData) {
   requestCount = 1;
-  requestGroupCount = 1;
 
   // Validate
   let api = await parseDocument(rawData);
@@ -45,7 +45,7 @@ module.exports.convert = async function(rawData) {
 
   const baseEnv = {
     _type: 'environment',
-    _id: '__ENV_1__',
+    _id: '__BASE_ENVIRONMENT_ID__',
     parentId: WORKSPACE_ID,
     name: 'Base environment',
     data: {
@@ -55,7 +55,7 @@ module.exports.convert = async function(rawData) {
 
   const swaggerEnv = {
     _type: 'environment',
-    _id: '__ENV_2__',
+    _id: 'env___BASE_ENVIRONMENT_ID___sub',
     parentId: baseEnv._id,
     name: 'Swagger env',
     data: {
@@ -156,9 +156,14 @@ function parseEndpoints(document) {
  * @returns {Object}
  */
 function importFolderItem(item, parentId) {
+  const hash = crypto
+    .createHash('sha1')
+    .update(item.name)
+    .digest('hex')
+    .slice(0, 8);
   return {
     parentId,
-    _id: `__GRP_${requestGroupCount++}__`,
+    _id: `fld___WORKSPACE_ID__${hash}`,
     _type: 'request_group',
     name: item.name || 'Folder {requestGroupCount}',
     description: item.description || '',
