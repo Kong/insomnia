@@ -28,6 +28,7 @@ class SpecEditorSidebar extends React.Component<Props, State> {
     super(props);
     this.state = {
       error: '',
+      specContentJSON: false,
     };
   }
 
@@ -45,11 +46,7 @@ class SpecEditorSidebar extends React.Component<Props, State> {
 
   _mapPosition(itemPath: Array<any>) {
     const sourceMap = new YAMLSourceMap();
-    const specMap = sourceMap.index(
-      YAML.parseDocument(this.props.apiSpec.contents, { keepCstNodes: true }),
-    );
-    const itemMappedPosition = sourceMap.lookup(itemPath, specMap);
-    const isServersSection = itemPath[0] === 'servers';
+    const { contents } = this.props.apiSpec;
     const scrollPosition = {
       start: {
         line: 0,
@@ -60,16 +57,36 @@ class SpecEditorSidebar extends React.Component<Props, State> {
         col: 200,
       },
     };
-    isServersSection
-      ? (scrollPosition.start.line = itemMappedPosition.start.line)
-      : (scrollPosition.start.line = itemMappedPosition.start.line - 1);
+    // Account for JSON (as string) line number shift
+    if (this.state.specContentJSON) {
+      scrollPosition.start.line = 1;
+    }
+    const specMap = sourceMap.index(YAML.parseDocument(contents, { keepCstNodes: true }));
+    const itemMappedPosition = sourceMap.lookup(itemPath, specMap);
+    const isServersSection = itemPath[0] === 'servers';
+    scrollPosition.start.line += itemMappedPosition.start.line;
+    if (!isServersSection) {
+      scrollPosition.start.line -= 1;
+    }
     scrollPosition.end.line = scrollPosition.start.line;
+
     this._handleScrollEditor(scrollPosition);
   }
 
   _handleItemClick = (...itemPath): void => {
     this._mapPosition(itemPath);
   };
+
+  componentDidMount() {
+    const { contents } = this.props.apiSpec;
+    try {
+      JSON.parse(contents);
+    } catch (e) {
+      this.setState({ specContentJSON: false });
+      return;
+    }
+    this.setState({ specContentJSON: true });
+  }
 
   render() {
     const { error } = this.state;
