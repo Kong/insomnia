@@ -1,9 +1,17 @@
 // @flow
 import type { Database } from '../index';
 import type { Environment } from './types';
-import { mustFindSingle } from '../index';
 import { AutoComplete } from 'enquirer';
-import { generateIdIsh, getDbChoice, matchIdIsh } from './util';
+import { ensureSingle, generateIdIsh, getDbChoice, matchIdIsh } from './util';
+import logger from '../../logger';
+
+const loadBaseEnvironmentForWorkspace = (db: Database, workspaceId: string): Environment => {
+  logger.trace('Load base environment for the workspace `%s` from data store', workspaceId);
+  const items = db.Environment.filter(e => e.parentId === workspaceId);
+  logger.trace('Found %d.', items.length);
+
+  return ensureSingle(items, 'base environment');
+};
 
 export const loadEnvironment = (
   db: Database,
@@ -15,13 +23,20 @@ export const loadEnvironment = (
   }
 
   // Get the sub environments
-  const baseWorkspaceEnv = mustFindSingle(db.Environment, e => e.parentId === workspaceId);
+  const baseWorkspaceEnv = loadBaseEnvironmentForWorkspace(db, workspaceId);
   const subEnvs = db.Environment.filter(e => e.parentId === baseWorkspaceEnv._id);
 
-  // try to find a sub env, otherwise return the base env
-  return identifier && subEnvs.length
-    ? subEnvs.find(e => matchIdIsh(e, identifier) || e.name === identifier)
-    : baseWorkspaceEnv;
+  // If no identifier, return base environmenmt
+  if (!identifier) {
+    logger.trace('No sub environments found, using base environment');
+    return baseWorkspaceEnv;
+  }
+
+  logger.trace('Load sub environment with identifier `%s` from data store', identifier);
+  const items = subEnvs.filter(e => matchIdIsh(e, identifier) || e.name === identifier);
+  logger.trace('Found %d', items.length);
+
+  return ensureSingle(items, 'sub environment');
 };
 
 export const promptEnvironment = async (
@@ -34,10 +49,11 @@ export const promptEnvironment = async (
   }
 
   // Get the sub environments
-  const baseWorkspaceEnv = mustFindSingle(db.Environment, e => e.parentId === workspaceId);
+  const baseWorkspaceEnv = loadBaseEnvironmentForWorkspace(db, workspaceId);
   const subEnvs = db.Environment.filter(e => e.parentId === baseWorkspaceEnv._id);
 
   if (!subEnvs.length) {
+    logger.trace('No sub environments found, using base environment');
     return baseWorkspaceEnv;
   }
 
@@ -47,6 +63,7 @@ export const promptEnvironment = async (
     choices: subEnvs.map(e => getDbChoice(generateIdIsh(e, 14), e.name)),
   });
 
+  logger.trace('Prompt for environment');
   const [idIsh] = (await prompt.run()).split(' - ').reverse();
-  return mustFindSingle(db.Environment, e => matchIdIsh(e, idIsh));
+  return loadEnvironment(db, workspaceId, idIsh);
 };

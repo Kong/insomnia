@@ -1,5 +1,6 @@
 // @flow
 import type { BaseModel } from './types';
+import { InsoError } from '../../errors';
 
 export const matchIdIsh = ({ _id }: BaseModel, identifier: string) => _id.startsWith(identifier);
 export const generateIdIsh = ({ _id }: BaseModel, length: number = 10) => _id.substr(0, length);
@@ -23,3 +24,31 @@ export const getDbChoice = (
   value: `${message} - ${idIsh}`,
   hint: config.hint || `${idIsh}`,
 });
+
+export const ensureSingleOrNone = <T>(items: Array<T>, entity: string): ?T => {
+  if (items.length === 1) {
+    return items[0];
+  }
+
+  if (items.length === 0) {
+    return null;
+  }
+
+  throw new InsoError(
+    `Expected single or no ${entity} in the data store, but found multiple (${items.length}).`,
+  );
+};
+
+export const ensureSingle = <T>(items: Array<T>, entity: string): T => {
+  if (items.length === 1) {
+    return items[0];
+  }
+
+  if (items.length === 0) {
+    throw new InsoError(`Expected single ${entity} in the data store, but found none.`);
+  }
+
+  throw new InsoError(
+    `Expected single ${entity} in the data store, but found multiple (${items.length}).`,
+  );
+};

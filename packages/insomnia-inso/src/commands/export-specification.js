@@ -3,6 +3,7 @@ import type { GlobalOptions } from '../get-options';
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
 import { writeFileWithCliOptions } from '../write-file';
+import logger from '../logger';
 
 export type ExportSpecificationOptions = GlobalOptions & {
   output?: string,
@@ -17,24 +18,15 @@ export async function exportSpecification(
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 
   if (!specFromDb) {
-    console.log(`Specification not found.`);
+    logger.fatal(`Specification not found.`);
     return false;
   }
 
   if (output) {
-    const { outputPath, error } = await writeFileWithCliOptions(
-      output,
-      specFromDb.contents,
-      workingDir,
-    );
-
-    if (error) {
-      console.log(`Failed to write to "${outputPath}".\n`, error);
-      return false;
-    }
-    console.log(`Specification exported to "${outputPath}".`);
+    const outputPath = await writeFileWithCliOptions(output, specFromDb.contents, workingDir);
+    logger.log(`Specification exported to "${outputPath}".`);
   } else {
-    console.log(specFromDb.contents);
+    logger.log(specFromDb.contents);
   }
 
   return true;

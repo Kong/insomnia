@@ -2,23 +2,19 @@
 import path from 'path';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
-
-type Result = {
-  outputPath: string,
-  error?: Error,
-};
+import { InsoError } from './errors';
 
 export async function writeFileWithCliOptions(
   output: string,
   contents: string,
   workingDir?: string,
-): Promise<Result> {
+): Promise<string> {
   const outputPath = path.join(workingDir || '.', output);
   try {
     await mkdirp.sync(path.dirname(outputPath));
     await fs.promises.writeFile(outputPath, contents);
+    return outputPath;
   } catch (e) {
-    return { outputPath, error: e };
+    throw new InsoError(`Failed to write to "${outputPath}"`, e);
   }
-  return { outputPath };
 }
