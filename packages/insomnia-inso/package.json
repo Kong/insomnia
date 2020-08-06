@@ -64,7 +64,7 @@
   "dependencies": {
     "@stoplight/spectral": "^5.4.0",
     "commander": "^5.1.0",
-    "consola": "^2.14.0",
+    "consola": "^2.15.0",
     "cosmiconfig": "^6.0.0",
     "enquirer": "^2.3.5",
     "env-paths": "^2.2.0",

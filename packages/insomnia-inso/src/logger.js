@@ -13,7 +13,7 @@ export const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> =>
 };
 
 const logger = consola.create({
-  reporters: [new consola.FancyReporter({ dateFormat: ' ' })],
+  reporters: [new consola.FancyReporter({ formatOptions: { date: false } })],
 });
 
 export const configureLogger = (verbose: boolean = false, ci: boolean = false) => {
