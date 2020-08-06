@@ -4,7 +4,7 @@ import { generate, runTestsCli } from 'insomnia-testing';
 import type { GlobalOptions } from '../get-options';
 import { loadDb } from '../db';
 import type { UnitTest, UnitTestSuite } from '../db/models/types';
-import { noConsoleLog } from '../logger';
+import logger, { noConsoleLog } from '../logger';
 import { loadTestSuites, promptTestSuites } from '../db/models/unit-test-suite';
 import { loadEnvironment, promptEnvironment } from '../db/models/environment';
 
@@ -27,7 +27,7 @@ export type RunTestsOptions = GlobalOptions & {
 function validateOptions({ reporter }: RunTestsOptions): boolean {
   if (reporter && !TestReporterEnum[reporter]) {
     const reporterTypes = Object.keys(TestReporterEnum).join(', ');
-    console.log(`Reporter "${reporter}" not unrecognized. Options are [${reporterTypes}].`);
+    logger.fatal(`Reporter "${reporter}" not unrecognized. Options are [${reporterTypes}].`);
     return false;
   }
 
@@ -56,7 +56,7 @@ export async function runInsomniaTests(
   const suites = identifier ? loadTestSuites(db, identifier) : await promptTestSuites(db, !!ci);
 
   if (!suites.length) {
-    console.log('No test suites identified.');
+    logger.fatal('No test suites found; cannot run tests.');
     return false;
   }
 
@@ -67,7 +67,7 @@ export async function runInsomniaTests(
     : await promptEnvironment(db, !!ci, workspaceId);
 
   if (!environment) {
-    console.log('No environment identified.');
+    logger.fatal('No environment identified; cannot run tests without a valid environment.');
     return false;
   }
 

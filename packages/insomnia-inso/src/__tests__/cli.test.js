@@ -6,12 +6,16 @@ import { runInsomniaTests } from '../commands/run-tests';
 import { exportSpecification } from '../commands/export-specification';
 import { parseArgsStringToArgv } from 'string-argv';
 import * as packageJson from '../../package.json';
+import { globalBeforeAll, globalBeforeEach } from '../../__jest__/before';
+import logger from '../logger';
+import { exit } from '../util';
 
 jest.mock('../commands/generate-config');
 jest.mock('../commands/lint-specification');
 jest.mock('../commands/run-tests');
 jest.mock('../commands/export-specification');
 jest.unmock('cosmiconfig');
+jest.mock('../util');
 
 const initInso = () => {
   return (...args: Array<string>): void => {
@@ -22,14 +26,19 @@ const initInso = () => {
 };
 
 describe('cli', () => {
+  beforeAll(() => {
+    globalBeforeAll();
+  });
+
   let inso = initInso();
   beforeEach(() => {
+    globalBeforeEach();
     inso = initInso();
     jest.spyOn(console, 'error').mockImplementation(() => {});
-    jest.spyOn(process, 'exit').mockImplementation(() => {});
     (generateConfig: any).mockResolvedValue(true);
     (lintSpecification: any).mockResolvedValue(true);
     (runInsomniaTests: any).mockResolvedValue(true);
+    (exportSpecification: any).mockResolvedValue(true);
   });
 
   afterEach(() => {
@@ -46,17 +55,30 @@ describe('cli', () => {
     });
 
     it.each(['-v', '--version'])('inso %s should print version from package.json', args => {
-      jest.spyOn(console, 'log').mockImplementation(() => {});
+      logger.wrapAll();
       expect(() => inso(args)).toThrowError(packageJson.version);
+      logger.restoreAll();
     });
 
     it.each(['-v', '--version'])('inso %s should print "dev" if running in development', args => {
       const oldNodeEnv = process.env.NODE_ENV;
 
       process.env.NODE_ENV = 'development';
+      logger.wrapAll();
       expect(() => inso(args)).toThrowError('dev');
+      logger.restoreAll();
 
       process.env.NODE_ENV = oldNodeEnv;
+    });
+
+    it('should print options', () => {
+      inso('generate config file.yaml -t declarative --printOptions --verbose');
+      const logs = logger.__getLogs();
+      expect(logs.log[0]).toContainEqual({
+        type: 'declarative',
+        printOptions: true,
+        verbose: true,
+      });
     });
   });
 
@@ -192,12 +214,10 @@ describe('cli', () => {
   });
 
   describe('script', () => {
-    let consoleLogSpy;
-    beforeEach(() => {
-      consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    });
-
     const insorcFilePath = '--config src/__fixtures__/.insorc-with-scripts.yaml';
+
+    const expectExitWith = async (result: boolean): Promise<void> =>
+      expect((exit: Object).mock.calls[0][0]).resolves.toBe(result);
 
     it('should call script command by default', () => {
       inso('gen-conf', insorcFilePath);
@@ -217,14 +237,16 @@ describe('cli', () => {
       );
     });
 
-    it('should warn if script task does not start with inso', () => {
+    it('should warn if script task does not start with inso', async () => {
       inso('invalid-script', insorcFilePath);
 
-      expect(consoleLogSpy).toHaveBeenCalledWith("Tasks in the script should start with 'inso'.");
+      const logs = logger.__getLogs();
+      expect(logs.fatal).toContain('Tasks in a script should start with `inso`.');
       expect(generateConfig).not.toHaveBeenCalledWith();
+      await expectExitWith(false);
     });
 
-    it('should call nested command', () => {
+    it('should call nested command', async () => {
       inso('gen-conf:k8s', insorcFilePath);
 
       expect(generateConfig).toHaveBeenCalledWith(
@@ -232,23 +254,25 @@ describe('cli', () => {
         expect.objectContaining({ type: 'kubernetes' }),
       );
 
-      expect(consoleLogSpy).toHaveBeenNthCalledWith(1, '>> inso gen-conf --type kubernetes');
-      expect(consoleLogSpy).toHaveBeenNthCalledWith(
-        2,
+      const logs = logger.__getLogs();
+      expect(logs.debug).toEqual([
+        '>> inso gen-conf --type kubernetes',
         '>> inso generate config Designer Demo --type declarative --type kubernetes',
-      );
+      ]);
+      await expectExitWith(true);
     });
 
-    it('should call nested command and pass through props', () => {
+    it('should call nested command and pass through props', async () => {
       inso('gen-conf:k8s --type declarative', insorcFilePath);
 
       expect(generateConfig).toHaveBeenCalledWith(
         'Designer Demo',
         expect.objectContaining({ type: 'declarative' }),
       );
+      await expectExitWith(true);
     });
 
-    it('should override env setting from command', () => {
+    it('should override env setting from command', async () => {
       inso('test:200s --env NewEnv', insorcFilePath);
 
       expect(runInsomniaTests).toHaveBeenCalledWith(
@@ -257,15 +281,16 @@ describe('cli', () => {
           env: 'NewEnv',
         }),
       );
+      await expectExitWith(true);
     });
 
-    it('should fail if script not found', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
+    it('should fail if script not found', async () => {
       inso('not-found-script', insorcFilePath);
-      expect(consoleSpy).toHaveBeenCalledWith(
+      const logs = logger.__getLogs();
+      expect(logs.fatal).toContain(
         'Could not find inso script "not-found-script" in the config file.',
       );
+      await expectExitWith(false);
     });
   });
 });
