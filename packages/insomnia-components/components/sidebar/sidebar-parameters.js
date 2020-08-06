@@ -5,6 +5,7 @@ import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
 import StyledInvalidSection from './sidebar-invalid-section';
+import { isObject } from '../utils';
 
 type Props = {
   parameters: Object,
@@ -17,7 +18,7 @@ export default class SidebarParameters extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
     const { parameters, onClick } = this.props;
 
-    if (Object.prototype.toString.call(parameters) !== '[object Object]') {
+    if (!isObject(parameters)) {
       return <StyledInvalidSection name={'parameter'} />;
     }
 

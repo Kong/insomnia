@@ -6,6 +6,7 @@ import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
 import StyledInvalidSection from './sidebar-invalid-section';
+import { isObject } from '../utils';
 
 type Props = {
   requests: Object,
@@ -29,7 +30,7 @@ export default class SidebarRequests extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
     const { requests, onClick } = this.props;
 
-    if (Object.prototype.toString.call(requests) !== '[object Object]') {
+    if (!isObject(requests)) {
       return <StyledInvalidSection name={'request'} />;
     }
 

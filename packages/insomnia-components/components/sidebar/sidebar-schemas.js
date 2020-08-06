@@ -4,6 +4,7 @@ import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
 import StyledInvalidSection from './sidebar-invalid-section';
+import { isObject } from '../utils';
 
 type Props = {
   schemas: Object,
@@ -16,7 +17,7 @@ export default class SidebarSchemas extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
     const { schemas, onClick } = this.props;
 
-    if (Object.prototype.toString.call(schemas) !== '[object Object]') {
+    if (!isObject(schemas)) {
       return <StyledInvalidSection name={'schema'} />;
     }
 

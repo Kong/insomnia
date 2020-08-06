@@ -5,6 +5,7 @@ import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
 import StyledInvalidSection from './sidebar-invalid-section';
+import { isObject } from '../utils';
 
 type Props = {
   paths: Object,
@@ -20,15 +21,14 @@ const StyledMethods: React.ComponentType<{}> = styled.span`
 export default class SidebarPaths extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
     const { paths, onClick } = this.props;
-    let pathItems = {};
 
     if (typeof paths === 'string') {
       return <StyledInvalidSection name={'path'} />;
     }
 
-    pathItems = Object.entries(paths || {});
+    const pathItems = Object.entries(paths || {});
 
-    if (!Array.isArray(pathItems) || pathItems.length === 0) {
+    if (!isObject(pathItems)) {
       return <StyledInvalidSection name={'path'} />;
     }
 
