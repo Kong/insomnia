@@ -26,10 +26,12 @@
     "@svgr/cli": "^5.3.0",
     "babel-loader": "^8.0.6",
     "babel-plugin-inline-react-svg": "^1.1.1",
+    "fsevents": "^2.1.3",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-use": "^15.3.2",
     "storybook-addon-designs": "^5.2.0",
+    "styled-components": "^4.4.1",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
     "webpack-merge": "^4.2.2"
@@ -41,12 +43,12 @@
     "fuzzysort": "^1.1.4",
     "md5": "^2.2.1",
     "prop-types": "^15.7.2",
-    "react-switch": "^5.0.1",
-    "styled-components": "^4.4.1"
+    "react-switch": "^5.0.1"
   },
   "peerDependencies": {
     "react": "^16.8.6",
-    "react-dom": "^16.8.6"
+    "react-dom": "^16.8.6",
+    "styled-components": "^4.4.1"
   },
   "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
 }
