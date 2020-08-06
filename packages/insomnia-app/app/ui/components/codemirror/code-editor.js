@@ -927,12 +927,14 @@ class CodeEditor extends React.Component {
       style,
       type,
       isVariableUncovered,
+      raw,
     } = this.props;
 
     const classes = classnames(className, {
       editor: true,
       'editor--dynamic-height': dynamicHeight,
       'editor--readonly': readOnly,
+      'raw-editor': raw,
     });
 
     const toolbarChildren = [];
@@ -1083,6 +1085,7 @@ CodeEditor.propTypes = {
   jumpOptions: PropTypes.object,
   uniquenessKey: PropTypes.any,
   isVariableUncovered: PropTypes.bool,
+  raw: PropTypes.bool,
 };
 
 export default CodeEditor;

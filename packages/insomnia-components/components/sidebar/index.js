@@ -85,10 +85,6 @@ function Sidebar(props: Props) {
   const { servers, info, paths } = props.jsonData || {};
   const { requestBodies, responses, parameters, headers, schemas, securitySchemes } =
     props.jsonData.components || {};
-  let pathItems = {};
-  if (typeof paths !== 'string') {
-    pathItems = Object.entries(paths || {});
-  }
 
   return (
     <StyledSidebar className="theme--sidebar">
@@ -163,9 +159,7 @@ function Sidebar(props: Props) {
         </StyledSection>
       )}
       {serversVisible && servers && <SidebarServers servers={servers} onClick={props.onClick} />}
-      {pathsVisible && pathItems && pathItems.length && (
-        <SidebarPaths paths={pathItems} onClick={props.onClick} />
-      )}
+      {pathsVisible && paths && <SidebarPaths paths={paths} onClick={props.onClick} />}
       {requestsVisible && requestBodies && (
         <SidebarRequests requests={requestBodies} onClick={props.onClick} />
       )}

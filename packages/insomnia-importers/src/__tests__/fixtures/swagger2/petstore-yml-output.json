@@ -12,7 +12,7 @@
       "parentId": null
     },
     {
-      "_id": "__ENV_1__",
+      "_id": "__BASE_ENVIRONMENT_ID__",
       "_type": "environment",
       "data": {
         "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
@@ -21,7 +21,7 @@
       "parentId": "__WORKSPACE_ID__"
     },
     {
-      "_id": "__ENV_2__",
+      "_id": "env___BASE_ENVIRONMENT_ID___sub",
       "_type": "environment",
       "data": {
         "base_path": "/v1",
@@ -29,10 +29,10 @@
         "scheme": "http"
       },
       "name": "Swagger env",
-      "parentId": "__ENV_1__"
+      "parentId": "__BASE_ENVIRONMENT_ID__"
     },
     {
-      "_id": "__GRP_1__",
+      "_id": "fld___WORKSPACE_ID__a8acce24",
       "_type": "request_group",
       "description": "",
       "environment": {},
@@ -55,7 +55,7 @@
           "value": "0"
         }
       ],
-      "parentId": "__GRP_1__",
+      "parentId": "fld___WORKSPACE_ID__a8acce24",
       "url": "{{ base_url }}/pets"
     },
     {
@@ -77,7 +77,7 @@
       "method": "POST",
       "name": "Create a pet",
       "parameters": [],
-      "parentId": "__GRP_1__",
+      "parentId": "fld___WORKSPACE_ID__a8acce24",
       "url": "{{ base_url }}/pets"
     },
     {
@@ -90,7 +90,7 @@
       "method": "GET",
       "name": "Info for a specific pet",
       "parameters": [],
-      "parentId": "__GRP_1__",
+      "parentId": "fld___WORKSPACE_ID__a8acce24",
       "url": "{{ base_url }}/pets/{{ petId }}"
     },
     {
@@ -118,7 +118,7 @@
       "method": "POST",
       "name": "Update specific pet",
       "parameters": [],
-      "parentId": "__GRP_1__",
+      "parentId": "fld___WORKSPACE_ID__a8acce24",
       "url": "{{ base_url }}/pets/{{ petId }}"
     }
   ]
