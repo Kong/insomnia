@@ -1,8 +1,18 @@
 // @flow
 import { exit, logErrorExit1, getDefaultAppDataDir, getVersion, isDevelopment } from '../util';
 import * as packageJson from '../../package.json';
+import { globalBeforeAll, globalBeforeEach } from '../../__jest__/before';
+import logger from '../logger';
+import { InsoError } from '../errors';
 
 describe('exit()', () => {
+  beforeAll(() => {
+    globalBeforeAll();
+  });
+  beforeEach(() => {
+    globalBeforeEach();
+  });
+
   it('should exit 0 if successful result', async () => {
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
 
@@ -21,25 +31,75 @@ describe('exit()', () => {
 
   it('should exit 1 and print to console and if rejected', async () => {
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     const error = new Error('message');
     await exit(new Promise((resolve, reject) => reject(error)));
 
-    expect(errorSpy).toHaveBeenCalledWith(error);
+    const logs = logger.__getLogs();
+    expect(logs.fatal).toEqual([]);
+    expect(logs.error).toEqual([error]);
+    expect(logs.info).toEqual(['To view tracing information, re-run `inso` with `--verbose`']);
+    expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+
+  it('should exit 1 and print to console and if rejected with InsoError', async () => {
+    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+
+    const cause = new Error('message');
+    const insoError = new InsoError('inso error', cause);
+    await exit(new Promise((resolve, reject) => reject(insoError)));
+
+    const logs = logger.__getLogs();
+    expect(logs.fatal).toEqual([insoError.message]);
+    expect(logs.error).toEqual([cause]);
+    expect(logs.info).toEqual(['To view tracing information, re-run `inso` with `--verbose`']);
+    expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+
+  it('should exit 1 and print to console and if rejected with InsoError without cause', async () => {
+    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+
+    const insoError = new InsoError('inso error');
+    await exit(new Promise((resolve, reject) => reject(insoError)));
+
+    const logs = logger.__getLogs();
+    expect(logs.fatal).toEqual([insoError.message]);
+    expect(logs.error).toEqual([]);
+    expect(logs.info).toEqual(['To view tracing information, re-run `inso` with `--verbose`']);
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 });
 
 describe('logErrorExit1()', () => {
+  beforeAll(() => {
+    globalBeforeAll();
+  });
+  beforeEach(() => {
+    globalBeforeEach();
+  });
+
   it('should exit 1 and print error to console', async () => {
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     const error = new Error('message');
     await logErrorExit1(error);
 
-    expect(errorSpy).toHaveBeenCalledWith(error);
+    const logs = logger.__getLogs();
+    expect(logs.error).toEqual([error]);
+    expect(logs.info).toEqual(['To view tracing information, re-run `inso` with `--verbose`']);
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+
+  it('should exit 1', async () => {
+    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+
+    await logErrorExit1();
+
+    const logs = logger.__getLogs();
+    expect(logs.error).toEqual([]);
+    expect(logs.info).toEqual(['To view tracing information, re-run `inso` with `--verbose`']);
+
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 });
@@ -103,6 +163,4 @@ describe('isDevelopment()', () => {
 
     process.env.NODE_ENV = oldNodeEnv;
   });
-
-  it('should return dev if running in development', () => {});
 });

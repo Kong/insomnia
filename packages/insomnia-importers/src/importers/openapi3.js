@@ -30,7 +30,7 @@ const OAUTH_FLOWS = {
 };
 const SUPPORTED_SECURITY_TYPES = [SECURITY_TYPE.HTTP, SECURITY_TYPE.API_KEY, SECURITY_TYPE.OAUTH];
 const SUPPORTED_HTTP_AUTH_SCHEMES = [HTTP_AUTH_SCHEME.BASIC, HTTP_AUTH_SCHEME.BEARER];
-
+const VARIABLE_SEARCH_VALUE = /{([^}]+)}/g;
 let requestCounts = {};
 
 module.exports.id = 'openapi3';
@@ -72,17 +72,15 @@ module.exports.convert = async function(rawData) {
     },
   };
 
-  const servers = api.servers || [];
-  const serverUrls = servers.map(s => urlParse(s.url));
-  const defaultServer = serverUrls[0] || urlParse('http://example.com/');
+  const defaultServerUrl = getDefaultServerUrl(api);
   const securityVariables = getSecurityEnvVariables(
     api.components && api.components.securitySchemes,
   );
 
-  const protocol = defaultServer.protocol || '';
+  const protocol = defaultServerUrl.protocol || '';
 
   // Base path is pulled out of the URL, and the trailing slash is removed
-  const basePath = (defaultServer.pathname || '').replace(/\/$/, '');
+  const basePath = (defaultServerUrl.pathname || '').replace(/\/$/, '');
 
   const openapiEnv = {
     _type: 'environment',
@@ -93,7 +91,7 @@ module.exports.convert = async function(rawData) {
       // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
       scheme: protocol.replace(/:$/, '') || ['http'],
       base_path: basePath,
-      host: defaultServer.host || '',
+      host: defaultServerUrl.host || '',
       ...securityVariables,
     },
   };
@@ -102,6 +100,60 @@ module.exports.convert = async function(rawData) {
 
   return [workspace, baseEnv, openapiEnv, ...endpoints];
 };
+
+/**
+ * Gets a server to use as the default
+ * Either the first server defined in the specification, or an example if none are specified
+ *
+ * @param {Object} api - openapi3 object
+ * @returns {UrlWithStringQuery} the resolved server URL
+ */
+function getDefaultServerUrl(api) {
+  const exampleServer = 'http://example.com/';
+  const servers = api.servers || [];
+  const firstServer = servers[0];
+  const foundServer = firstServer && firstServer.url;
+
+  if (!foundServer) {
+    return urlParse(exampleServer);
+  }
+
+  const url = resolveVariables(firstServer);
+
+  return urlParse(url);
+}
+
+/**
+ * Resolve default variables for a server url
+ *
+ * @param {Object} str - the server
+ * @returns {string} - the resolved url
+ */
+function resolveVariables(server) {
+  let resolvedUrl = server.url;
+  const variables = server.variables || {};
+
+  let shouldContinue = true;
+
+  do {
+    // Regexp contain the global flag (g), meaning we must execute our regex on the original string.
+    // https://stackoverflow.com/a/27753327
+    const [replace, name] = VARIABLE_SEARCH_VALUE.exec(server.url) || [];
+
+    const variable = variables && variables[name];
+    const value = variable && variable.default;
+
+    if (name && !value) {
+      // We found a variable in the url (name) but we have no default to replace it with (value)
+      throw new Error(`Server variable "${name}" missing default value`);
+    }
+
+    shouldContinue = !!name;
+    resolvedUrl = replace ? resolvedUrl.replace(replace, value) : resolvedUrl;
+  } while (shouldContinue);
+
+  return resolvedUrl;
+}
 
 /**
  * Parse string data into openapi 3 object (https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md#oasObject)
@@ -241,7 +293,7 @@ function importRequest(endpointSchema, parentId, security, securitySchemes) {
  * @returns {string}
  */
 function pathWithParamsAsVariables(path) {
-  return path.replace(/{([^}]+)}/g, '{{ $1 }}');
+  return path.replace(VARIABLE_SEARCH_VALUE, '{{ $1 }}');
 }
 
 /**
