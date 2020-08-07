@@ -3,12 +3,13 @@
   <br />
   <br />
   <img src="assets/package.svg"/>
-  <br />
-  <br />
-  <h1>Inso</h1>
-  <h3>A CLI to accompany <a href="https://insomnia.rest">Insomnia Designer</a></h3>
+  <h1>
+    Inso
+    <br />
+    <br />
+  </h1>
+  <h3>A CLI for <a href="https://insomnia.rest">Insomnia Designer</a></h3>
   <pre>npm i -g <a href="https://www.npmjs.com/package/insomnia-inso">insomnia-inso</a></pre>
-  
   <img src="assets/demo.gif"/>
   <br />
 </div>
