@@ -2,7 +2,7 @@
 <div align="center">
   <br />
   <br />
-  <img src="assets/package.svg"/>
+  <img src="https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/logo.svg"/>
   <h1>
     Inso
     <br />
@@ -10,7 +10,7 @@
   </h1>
   <h3>A CLI for <a href="https://insomnia.rest">Insomnia Designer</a></h3>
   <pre>npm i -g <a href="https://www.npmjs.com/package/insomnia-inso">insomnia-inso</a></pre>
-  <img src="assets/demo.gif"/>
+  <img src="https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/demo.gif"/>
   <br />
 </div>
 
