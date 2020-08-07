@@ -11,6 +11,7 @@ export type Props = {
     value: string,
   }>,
   className?: string,
+  selectedValue: string,
 };
 
 const StyledRadioButtonGroup: React.ComponentType<{}> = styled.div`
@@ -53,6 +54,7 @@ export default function RadioButtonGroup({
   defaultValue,
   onChange,
   className,
+  selectedValue,
 }: Props) {
   const handleChange = e => {
     if (typeof onChange !== 'function') {
@@ -71,6 +73,7 @@ export default function RadioButtonGroup({
             name={name}
             value={value}
             defaultChecked={defaultValue === value}
+            checked={selectedValue === value}
             onChange={handleChange}
           />
           <span>{label}</span>
