@@ -122,9 +122,6 @@ export function createWindow() {
   const applicationMenu = {
     label: `${MNEMONIC_SYM}Application`,
     submenu: [
-      ...(isMac()
-        ? [{ label: `A${MNEMONIC_SYM}bout ${getAppName()}`, role: 'about' }, { type: 'separator' }]
-        : []),
       {
         label: `${MNEMONIC_SYM}Preferences`,
         click: function(menuItem, window, e) {
@@ -295,30 +292,51 @@ export function createWindow() {
     ],
   };
 
-  if (!isMac()) {
+  const aboutDetail = [
+    `OS ${os.type()} ${os.arch()} ${os.release()}`,
+    `Version ${getAppLongName()} ${getAppVersion()}`,
+    `Shell ${process.versions.electron}`,
+    `Node ${process.versions.node}`,
+    `V8 ${process.versions.v8}`,
+    `Architecture ${process.arch}`,
+    Curl.getVersion(),
+  ].join('\n');
+
+  const aboutMsgOptions = {
+    type: 'info',
+    title: getAppName(),
+    message: getAppLongName(),
+    detail: aboutDetail,
+  };
+
+  if (isMac()) {
+    applicationMenu.submenu.unshift(
+      {
+        label: `A${MNEMONIC_SYM}bout ${getAppName()}`,
+        click: async () => {
+          const msgBox = await dialog.showMessageBox({
+            ...aboutMsgOptions,
+            buttons: ['OK', 'Copy'],
+          });
+
+          if (msgBox.response === 1) {
+            clipboard.writeText(aboutDetail);
+          }
+        },
+      },
+      { type: 'separator' },
+    );
+  } else {
     helpMenu.submenu.unshift({
       label: `${MNEMONIC_SYM}About`,
       click: async () => {
-        const detail = [
-          `OS ${os.type()} ${os.arch()} ${os.release()}`,
-          `Version ${getAppLongName()} ${getAppVersion()}`,
-          `Shell ${process.versions.electron}`,
-          `Node ${process.versions.node}`,
-          `V8 ${process.versions.v8}`,
-          `Architecture ${process.arch}`,
-          Curl.getVersion(),
-        ].join('\n');
-
         const msgBox = await dialog.showMessageBox({
-          type: 'info',
+          ...aboutMsgOptions,
           buttons: ['Copy to clipboard', 'OK'],
-          title: getAppName(),
-          message: getAppLongName(),
-          detail: detail,
         });
 
         if (msgBox.response === 0) {
-          clipboard.writeText(detail);
+          clipboard.writeText(aboutDetail);
         }
       },
     });
