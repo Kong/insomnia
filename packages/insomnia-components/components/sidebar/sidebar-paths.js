@@ -4,16 +4,11 @@ import styled from 'styled-components';
 import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
+import StyledInvalidSection from './sidebar-invalid-section';
 
 type Props = {
-  paths: Array<any>,
-};
-
-let itemPath = [];
-const handleClick = items => {
-  itemPath.push('path');
-  itemPath.push.apply(itemPath, items);
-  itemPath = [];
+  paths: Object,
+  onClick: (section: string, ...args: any) => void,
 };
 
 const StyledMethods: React.ComponentType<{}> = styled.span`
@@ -24,7 +19,15 @@ const StyledMethods: React.ComponentType<{}> = styled.span`
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarPaths extends React.Component<Props> {
   renderBody = (filter: string): null | React.Node => {
-    const filteredValues = this.props.paths.filter(pathDetail =>
+    const { paths, onClick } = this.props;
+    let pathItems = {};
+    if (typeof paths !== 'string') {
+      pathItems = Object.entries(paths || {});
+    }
+    if (Object.prototype.toString.call(pathItems) !== '[object Array]') {
+      return <StyledInvalidSection name={'path'} />;
+    }
+    const filteredValues = pathItems.filter(pathDetail =>
       pathDetail[0].toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -40,7 +43,7 @@ export default class SidebarPaths extends React.Component<Props> {
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => handleClick([route])}>{route}</span>
+              <span onClick={() => onClick('paths', route)}>{route}</span>
             </SidebarItem>
             <SidebarItem>
               <StyledMethods>
@@ -48,7 +51,7 @@ export default class SidebarPaths extends React.Component<Props> {
                   <span
                     key={method}
                     className={`method-${method}`}
-                    onClick={() => handleClick([route, method])}>
+                    onClick={() => onClick('paths', route, method)}>
                     {method}
                   </span>
                 ))}

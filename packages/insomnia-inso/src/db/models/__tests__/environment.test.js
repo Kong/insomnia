@@ -5,10 +5,18 @@ import type { Environment, Workspace } from '../types';
 import { generateIdIsh } from '../util';
 import enquirer from 'enquirer';
 import { loadEnvironment, promptEnvironment } from '../environment';
+import { globalBeforeAll, globalBeforeEach } from '../../../../__jest__/before';
 
 jest.mock('enquirer');
 
 describe('Environment', () => {
+  beforeAll(() => {
+    globalBeforeAll();
+  });
+  beforeEach(() => {
+    globalBeforeEach();
+  });
+
   let db: Database = emptyDb();
 
   const workspace: $Shape<Workspace> = {
@@ -107,7 +115,12 @@ describe('Environment', () => {
 
     it('should return the base environment if no sub envs exist', () => {
       db.Environment = [environment];
-      expect(loadEnvironment(db, workspace._id, subEnvironment._id)).toBe(environment);
+      expect(loadEnvironment(db, workspace._id)).toBe(environment);
+    });
+
+    it('should throw error sub env not found', () => {
+      db.Environment = [environment];
+      expect(() => loadEnvironment(db, workspace._id, subEnvironment._id)).toThrowError();
     });
   });
 });

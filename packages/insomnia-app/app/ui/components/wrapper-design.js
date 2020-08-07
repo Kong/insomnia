@@ -103,7 +103,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
       return;
     }
 
-    editor.setSelection(chStart, chEnd, lineStart, lineEnd);
+    editor.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
   }
 
   _handleLintClick(notice: {}) {
@@ -223,10 +223,12 @@ class WrapperDesign extends React.PureComponent<Props, State> {
               <ErrorBoundary
                 invalidationKey={activeApiSpec.contents}
                 renderError={() => (
-                  <div className="text-center margin">
+                  <div className="text-left margin pad">
                     <h3>An error occurred while trying to render Swagger UI 😢</h3>
-                    This preview will automatically refresh, once you have a valid specification
-                    that can be previewed.
+                    <p>
+                      This preview will automatically refresh, once you have a valid specification
+                      that can be previewed.
+                    </p>
                   </div>
                 )}>
                 <SwaggerUI
@@ -265,7 +267,17 @@ class WrapperDesign extends React.PureComponent<Props, State> {
           </div>
         )}
         renderPageSidebar={() => (
-          <ErrorBoundary showAlert>
+          <ErrorBoundary
+            invalidationKey={activeApiSpec.contents}
+            renderError={() => (
+              <div className="text-left margin pad">
+                <h4>An error occurred while trying to render your spec's navigation. 😢</h4>
+                <p>
+                  This navigation will automatically refresh, once you have a valid specification
+                  that can be rendered.
+                </p>
+              </div>
+            )}>
             <SpecEditorSidebar
               apiSpec={activeApiSpec}
               handleSetSelection={this._handleSetSelection}

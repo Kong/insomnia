@@ -1,5 +1,5 @@
 {
-  "__export_date": "2019-11-22T18:56:44.435Z",
+  "__export_date": "2020-05-11T00:51:52.464Z",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -7,8 +7,8 @@
     {
       "_id": "__WORKSPACE_ID__",
       "_type": "workspace",
-      "description": "",
-      "name": "docs v1",
+      "description": "This API is for administrating files and file storages.",
+      "name": "File and Storage API 0.1.0",
       "parentId": null
     },
     {
@@ -24,33 +24,24 @@
       "_id": "env___BASE_ENVIRONMENT_ID___sub",
       "_type": "environment",
       "data": {
-        "base_path": "",
-        "host": "",
-        "scheme": "http"
+        "base_path": "/filemanagement",
+        "host": "localhost:8080",
+        "scheme": "https"
       },
-      "name": "Swagger env",
+      "name": "OpenAPI env",
       "parentId": "__BASE_ENVIRONMENT_ID__"
     },
     {
-      "_id": "fld___WORKSPACE_ID__e214b8a2",
-      "_type": "request_group",
-      "description": "",
-      "environment": {},
-      "name": "Document",
-      "parentId": "__WORKSPACE_ID__"
-    },
-    {
-      "_id": "ApiId",
+      "_id": "req___WORKSPACE_ID__a6294159",
       "_type": "request",
       "authentication": {},
       "body": {},
-      "description": "",
       "headers": [],
       "method": "GET",
-      "name": "Some list",
+      "name": "/files",
       "parameters": [],
-      "parentId": "fld___WORKSPACE_ID__e214b8a2",
-      "url": "{{ base_url }}/api/list"
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/files"
     }
   ]
 }

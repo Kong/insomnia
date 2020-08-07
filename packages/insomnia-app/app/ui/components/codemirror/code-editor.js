@@ -160,6 +160,19 @@ class CodeEditor extends React.Component {
   setSelection(chStart, chEnd, lineStart, lineEnd) {
     if (this.codeMirror) {
       this.codeMirror.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
+      this.codeMirror.scrollIntoView({ line: lineStart, char: chStart });
+    }
+  }
+
+  scrollToSelection(chStart, chEnd, lineStart, lineEnd) {
+    const selectionFocusPos = window.innerHeight / 2 - 100;
+    if (this.codeMirror) {
+      this.codeMirror.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
+      this.codeMirror.scrollIntoView(
+        { line: lineStart, char: chStart },
+        // If sizing permits, position selection just above center
+        selectionFocusPos,
+      );
     }
   }
 
@@ -914,12 +927,14 @@ class CodeEditor extends React.Component {
       style,
       type,
       isVariableUncovered,
+      raw,
     } = this.props;
 
     const classes = classnames(className, {
       editor: true,
       'editor--dynamic-height': dynamicHeight,
       'editor--readonly': readOnly,
+      'raw-editor': raw,
     });
 
     const toolbarChildren = [];
@@ -1070,6 +1085,7 @@ CodeEditor.propTypes = {
   jumpOptions: PropTypes.object,
   uniquenessKey: PropTypes.any,
   isVariableUncovered: PropTypes.bool,
+  raw: PropTypes.bool,
 };
 
 export default CodeEditor;

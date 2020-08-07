@@ -2,11 +2,20 @@
 import type { Database } from '../index';
 import type { UnitTestSuite } from './types';
 import { loadApiSpec } from './api-spec';
-import { mustFindSingleOrNone } from '../index';
 import { AutoComplete } from 'enquirer';
 import flattenDeep from 'lodash.flattendeep';
-import { generateIdIsh, getDbChoice, matchIdIsh } from './util';
+import { ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 import { loadWorkspace } from './workspace';
+import logger from '../../logger';
+
+export const loadUnitTestSuite = (db: Database, identifier: string): ?UnitTestSuite => {
+  // Identifier is for one specific suite; find it
+  logger.trace('Load unit test suite with identifier `%s` from data store', identifier);
+  const items = db.UnitTestSuite.filter(s => matchIdIsh(s, identifier) || s.name === identifier);
+  logger.trace('Found %d.', items.length);
+
+  return ensureSingleOrNone(items, 'unit test suite');
+};
 
 export const loadTestSuites = (db: Database, identifier: string): Array<UnitTestSuite> => {
   const apiSpec = loadApiSpec(db, identifier);
@@ -17,12 +26,8 @@ export const loadTestSuites = (db: Database, identifier: string): Array<UnitTest
     return db.UnitTestSuite.filter(s => s.parentId === workspace._id);
   }
 
-  // Identifier is for one specific suite; find it
-  const result = mustFindSingleOrNone(
-    db.UnitTestSuite,
-    s => matchIdIsh(s, identifier) || s.name === identifier,
-  );
-
+  // load particular suite
+  const result = loadUnitTestSuite(db, identifier);
   return result ? [result] : [];
 };
 
@@ -51,6 +56,7 @@ export const promptTestSuites = async (
     choices: flattenDeep(choices),
   });
 
+  logger.trace('Prompt for document or test suite');
   const [idIsh] = (await prompt.run()).split(' - ').reverse();
   return loadTestSuites(db, idIsh);
 };

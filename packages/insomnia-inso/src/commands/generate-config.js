@@ -6,6 +6,8 @@ import type { GlobalOptions } from '../get-options';
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
 import { writeFileWithCliOptions } from '../write-file';
+import logger from '../logger';
+import { InsoError } from '../errors';
 
 export const ConversionTypeMap: { [string]: ConversionResultType } = {
   kubernetes: 'kong-for-kubernetes',
@@ -20,7 +22,7 @@ export type GenerateConfigOptions = GlobalOptions & {
 function validateOptions({ type }: GenerateConfigOptions): boolean {
   if (!ConversionTypeMap[type]) {
     const conversionTypes = Object.keys(ConversionTypeMap).join(', ');
-    console.log(`Config type "${type}" not unrecognized. Options are [${conversionTypes}].`);
+    logger.fatal(`Config type "${type}" not unrecognized. Options are [${conversionTypes}].`);
     return false;
   }
 
@@ -39,18 +41,28 @@ export async function generateConfig(
 
   const db = await loadDb({ workingDir, appDataDir, filterTypes: ['ApiSpec'] });
 
-  let result: ConversionResult;
+  let result: ConversionResult | null = null;
 
   // try get from db
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 
-  if (specFromDb?.contents) {
-    result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
-  } else if (identifier) {
-    // try load as a file
-    const fileName = path.join(workingDir || '.', identifier);
-    result = await o2k.generate(fileName, ConversionTypeMap[type]);
-  } else {
+  try {
+    if (specFromDb?.contents) {
+      logger.trace('Generating config from database contents');
+      result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
+    } else if (identifier) {
+      // try load as a file
+      const fileName = path.join(workingDir || '.', identifier);
+      logger.trace(`Generating config from file \`${fileName}\``);
+      result = await o2k.generate(fileName, ConversionTypeMap[type]);
+    }
+  } catch (e) {
+    throw new InsoError(`There was an error while generating configuration`, e);
+  }
+
+  if (!result?.documents) {
+    logger.log('Could not find a valid specification to generate configuration.');
+
     return false;
   }
 
@@ -60,14 +72,10 @@ export async function generateConfig(
   const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
 
   if (output) {
-    const { outputPath, error } = await writeFileWithCliOptions(output, document, workingDir);
-    if (error) {
-      console.log(`Failed to write to "${outputPath}".\n`, error);
-      return false;
-    }
-    console.log(`Configuration generated to "${outputPath}".`);
+    const outputPath = await writeFileWithCliOptions(output, document, workingDir);
+    logger.log(`Configuration generated to "${outputPath}".`);
   } else {
-    console.log(document);
+    logger.log(document);
   }
 
   return true;

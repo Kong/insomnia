@@ -21,6 +21,21 @@ import { useToggle } from 'react-use';
 type Props = {|
   className?: string,
   jsonData: Object,
+  onClick: (section: string, path: any) => void,
+  jsonData: {
+    servers?: Object,
+    info?: Object,
+    paths?: Object,
+    components?: {
+      requestBodies?: Object,
+      responses?: Object,
+      parameters?: Object,
+      headers?: Object,
+      schemas?: Object,
+      securitySchemes?: Object,
+    },
+  },
+  pathItems: Array<Object>,
 |};
 
 const StyledSidebar: React.ComponentType<{}> = styled.div`
@@ -67,16 +82,9 @@ function Sidebar(props: Props) {
   if (props.jsonData === null) {
     return null;
   }
-  const { servers, info } = props.jsonData;
-  const {
-    requestBodies,
-    responses,
-    parameters,
-    headers,
-    schemas,
-    securitySchemes,
-  } = props.jsonData.components;
-  const paths = Object.entries(props.jsonData.paths);
+  const { servers, info, paths } = props.jsonData || {};
+  const { requestBodies, responses, parameters, headers, schemas, securitySchemes } =
+    props.jsonData.components || {};
 
   return (
     <StyledSidebar className="theme--sidebar">
@@ -150,14 +158,22 @@ function Sidebar(props: Props) {
           <SidebarInfo childrenVisible={infoSec} info={info} />
         </StyledSection>
       )}
-      {serversVisible && servers && <SidebarServers servers={servers} />}
-      {pathsVisible && paths && <SidebarPaths paths={paths} />}
-      {requestsVisible && requestBodies && <SidebarRequests requests={requestBodies} />}
-      {responsesVisible && responses && <SidebarResponses responses={responses} />}
-      {parametersVisible && parameters && <SidebarParameters parameters={parameters} />}
-      {headersVisible && headers && <SidebarHeaders headers={headers} />}
-      {schemasVisible && schemas && <SidebarSchemas schemas={schemas} />}
-      {securityVisible && schemas && <SidebarSecurity security={securitySchemes} />}
+      {serversVisible && servers && <SidebarServers servers={servers} onClick={props.onClick} />}
+      {pathsVisible && paths && <SidebarPaths paths={paths} onClick={props.onClick} />}
+      {requestsVisible && requestBodies && (
+        <SidebarRequests requests={requestBodies} onClick={props.onClick} />
+      )}
+      {responsesVisible && responses && (
+        <SidebarResponses responses={responses} onClick={props.onClick} />
+      )}
+      {parametersVisible && parameters && (
+        <SidebarParameters parameters={parameters} onClick={props.onClick} />
+      )}
+      {headersVisible && headers && <SidebarHeaders headers={headers} onClick={props.onClick} />}
+      {schemasVisible && schemas && <SidebarSchemas schemas={schemas} onClick={props.onClick} />}
+      {securityVisible && securitySchemes && (
+        <SidebarSecurity security={securitySchemes} onClick={props.onClick} />
+      )}
     </StyledSidebar>
   );
 }
