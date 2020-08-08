@@ -2,10 +2,12 @@
   "name": "insomnia",
   "private": true,
   "version": "1.0.0",
+  "description": "Insomnia is a cross-platform REST client, built on top of Electron.",
   "repository": "https://github.com/kong/insomnia",
   "bugs": {
-    "url": "https://github.com/kong/insomnia"
+    "url": "https://github.com/kong/insomnia/issues"
   },
+  "homepage": "https://github.com/kong/insomnia#readme",
   "scripts": {
     "lint": "eslint . --ext .js,.json",
     "lint:fix": "npm run lint -- --fix",
