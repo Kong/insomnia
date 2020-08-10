@@ -56,7 +56,7 @@
     "get-bin-path": "^5.1.0",
     "jest": "^26.0.1",
     "rimraf": "^3.0.2",
-    "webpack": "^4.43.0",
+    "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-merge": "^5.0.7",
     "webpack-node-externals": "^1.7.2"

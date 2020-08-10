@@ -20,7 +20,7 @@
     "build:sr": "webpack --config send-request/webpack.config.babel.js",
     "package": "node ./scripts/package.js",
     "release": "node ./scripts/release.js",
-    "bootstrap": "rimraf ./**/node_modules/fsevents && rimraf node_modules/graphql-language-service-interface/dist/*.flow && npm run build:sr"
+    "bootstrap": "rimraf node_modules/graphql-language-service-interface/dist/*.flow && npm run build:sr"
   },
   "dev": {
     "dev-server-port": 3334
@@ -199,9 +199,9 @@
     "source-map-loader": "^1.0.0",
     "style-loader": "^0.23.1",
     "url-loader": "^1.1.2",
-    "webpack": "^4.44.0",
+    "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.3.1",
+    "webpack-dev-server": "^3.11.0",
     "webpack-target-electron-renderer": "^0.4.0",
     "worker-loader": "^2.0.0"
   }
