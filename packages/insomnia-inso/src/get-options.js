@@ -13,6 +13,8 @@ export type GlobalOptions = {
   appDataDir?: string,
   workingDir?: string,
   ci?: boolean,
+  verbose?: boolean,
+  printOptions?: boolean,
   config?: string,
 } & ConfigFileOptions;
 
@@ -20,6 +22,8 @@ const OptionsSupportedInConfigFile: Array<$Keys<GlobalOptions>> = [
   'appDataDir',
   'workingDir',
   'ci',
+  'verbose',
+  'printOptions',
 ];
 
 export const loadCosmiConfig = (configFile?: string): ConfigFileOptions => {
@@ -32,7 +36,10 @@ export const loadCosmiConfig = (configFile?: string): ConfigFileOptions => {
       const options = {};
 
       OptionsSupportedInConfigFile.forEach(key => {
-        options[key] = results.config?.options?.[key];
+        const value = results.config?.options?.[key];
+        if (value) {
+          options[key] = value;
+        }
       });
 
       return {

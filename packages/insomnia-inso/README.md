@@ -1,8 +1,17 @@
-# `inso`
-A CLI to accompany <a href="https://insomnia.rest">Insomnia Designer</a>
 
 <div align="center">
+  <br />
+  <br />
+  <img src="https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/logo.svg" alt=""/>
+  <h1>
+    Inso
+    <br />
+    <br />
+  </h1>
+  <h3>A CLI for <a href="https://insomnia.rest">Insomnia Designer</a></h3>
   <pre>npm i -g <a href="https://www.npmjs.com/package/insomnia-inso">insomnia-inso</a></pre>
+  <img src="https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/demo.gif" alt=""/>
+  <br />
 </div>
 
 Table of Contents
@@ -12,9 +21,9 @@ Table of Contents
 * [The `[identifier]` argument](#the-identifier-argument)
 * [Global options](#global-options)
 * [Commands](#commands)
-  + [ `inso generate config` ](#-inso-generate-config-options-identifier)
+  + [ `inso generate config` ](#-inso-generate-config-identifier)
   + [ `inso lint spec` ](#-inso-lint-spec-identifier)
-  + [ `inso run test` ](#-inso-run-test-options-identifier)
+  + [ `inso run test` ](#-inso-run-test-identifier)
   + [ `inso export spec` ](#-inso-export-spec-identifier)
   + [ `inso script` ](#-inso-script-name)
 * [Configuration](#configuration)
@@ -26,7 +35,7 @@ Table of Contents
 
 `inso` will first try to find a `.insomnia` directory in it's working directory. This directory is generated in a git repository when using git sync in Designer. When `inso` is used in a CI environment, it will always run against the `.insomnia` directory.
 
-If `inso` cannot find the `.insomnia` directory, it will try to run against the Designer app data directory (if found). You can override both the working directory, and the app data directory, using the `--working-dir` and `--app-data-dir` global options.
+If `inso` cannot find the `.insomnia` directory, it will try to run against the Designer app data directory (if found). You can override both the working directory, and the app data directory, using the `--workingDir` and `--appDataDir` global options.
 
 # The `[identifier]` argument
 
@@ -45,6 +54,8 @@ Additionally, if the `[identifier]` argument is ommitted from the command, `inso
 | `--appDataDir <dir>` | `-a` |set the app data directory|
 | `--config <path>` | |path to the configuration file|
 | `--ci` | | run in CI, disables all prompts |
+| `--verbose` | | show additional logs while running a command |
+| `--printOptions` | | print the loaded options |
 | `--version` | `-v` |output the version number|
 | `--help` | `-h` |display help for a command|
 
@@ -327,5 +338,5 @@ jobs:
 # Development
 
 * Bootstrap: `npm run bootstrap`
-* Start the compiler in watch mode: `npm run watch`
+* Start the compiler in watch mode: `npm run start`
 * Run: `./bin/inso -v`

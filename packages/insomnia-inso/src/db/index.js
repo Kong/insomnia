@@ -11,6 +11,8 @@ import envPaths from 'env-paths';
 import gitAdapter from './adapters/git-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
 import { getDefaultAppDataDir } from '../util';
+import logger from '../logger';
+import path from 'path';
 
 export type Database = {|
   ApiSpec: Array<ApiSpec>,
@@ -52,45 +54,25 @@ export const loadDb = async ({
 
   // try load from git
   if (!appDataDir) {
-    db = await gitAdapter(workingDir || '.', filterTypes);
+    const dir = workingDir || '.';
+    db = await gitAdapter(dir, filterTypes);
+    db && logger.debug(`Data store configured from git repository at \`${path.resolve(dir)}\``);
   }
 
   // try load from nedb
   if (!db) {
-    db = await neDbAdapter(
-      appDataDir || envPaths(getDefaultAppDataDir(), { suffix: '' }).data,
-      filterTypes,
-    );
+    const dir = appDataDir || envPaths(getDefaultAppDataDir(), { suffix: '' }).data;
+    db = await neDbAdapter(dir, filterTypes);
+    db && logger.debug(`Data store configured from app data directory at \`${path.resolve(dir)}\``);
   }
 
   // return empty db
-  return db || emptyDb();
-};
-
-export const mustFindSingleOrNone = <T>(arr: Array<T>, predicate: T => boolean): ?T => {
-  const matched = arr.filter(predicate);
-
-  if (matched.length === 1) {
-    return matched[0];
+  if (!db) {
+    logger.warn(
+      'No git or app data store found, re-run `inso` with `--verbose` to see tracing information',
+    );
+    db = emptyDb();
   }
 
-  if (matched.length === 0) {
-    return null;
-  }
-
-  throw new Error(`Expected one or none, but found multiple matching entries`);
-};
-
-export const mustFindSingle = <T>(arr: Array<T>, predicate: T => boolean): T => {
-  const matched = arr.filter(predicate);
-
-  if (matched.length === 1) {
-    return matched[0];
-  }
-
-  if (matched.length === 0) {
-    throw new Error('Expected one but found no matching entries');
-  }
-
-  throw new Error('Expected one but found multiple matching entries');
+  return db;
 };

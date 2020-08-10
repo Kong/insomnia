@@ -1,14 +1,23 @@
 // @flow
 import { ConversionTypeMap, generateConfig } from '../generate-config';
-import type { GenerateConfigOptions } from '../generate-config';
 import o2k from 'openapi-2-kong';
 import path from 'path';
 import { writeFileWithCliOptions } from '../../write-file';
+import { globalBeforeAll, globalBeforeEach } from '../../../__jest__/before';
+import logger from '../../logger';
+import { InsoError } from '../../errors';
 
 jest.mock('openapi-2-kong');
 jest.mock('../../write-file');
 
 describe('generateConfig()', () => {
+  beforeAll(() => {
+    globalBeforeAll();
+  });
+  beforeEach(() => {
+    globalBeforeEach();
+  });
+
   // make flow happy
   const mock = (mockFn: any) => mockFn;
 
@@ -16,55 +25,45 @@ describe('generateConfig()', () => {
     jest.restoreAllMocks();
   });
 
-  const base: GenerateConfigOptions = {
-    type: 'kubernetes',
-    output: undefined,
-  };
-
   const filePath = 'file.yaml';
 
   it('should should not generate if type arg is invalid', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
-    await generateConfig(filePath, { ...base, type: 'invalid' });
+    await generateConfig(filePath, { type: 'invalid' });
 
     expect(o2k.generate).not.toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalledWith(
+    expect(logger.__getLogs().fatal).toEqual([
       'Config type "invalid" not unrecognized. Options are [kubernetes, declarative].',
-    );
+    ]);
   });
 
   it('should print conversion documents to console', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
 
-    await generateConfig(filePath, base);
+    await generateConfig(filePath, { type: 'kubernetes' });
 
-    expect(o2k.generate).toHaveBeenCalledWith(filePath, ConversionTypeMap[base.type]);
-    expect(consoleSpy).toHaveBeenCalledWith('a\n---\nb\n');
+    expect(o2k.generate).toHaveBeenCalledWith(filePath, ConversionTypeMap.kubernetes);
+    expect(logger.__getLogs().log).toEqual(['a\n---\nb\n']);
   });
 
   it('should load identifier from database', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     mock(o2k.generateFromString).mockResolvedValue({ documents: ['a', 'b'] });
 
     await generateConfig('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
-      ...base,
+      type: 'kubernetes',
       workingDir: 'src/db/__fixtures__/git-repo',
     });
 
     expect(o2k.generateFromString).toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalledWith('a\n---\nb\n');
+    expect(logger.__getLogs().log).toEqual(['a\n---\nb\n']);
   });
 
   it('should output generated document to a file', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
     const outputPath = 'this-is-the-output-path';
-    mock(writeFileWithCliOptions).mockResolvedValue({ outputPath });
+    mock(writeFileWithCliOptions).mockResolvedValue(outputPath);
 
     const options = {
-      ...base,
+      type: 'kubernetes',
       output: 'output.yaml',
       workingDir: 'working/dir',
     };
@@ -79,36 +78,33 @@ describe('generateConfig()', () => {
       options.workingDir,
     );
 
-    expect(consoleSpy).toHaveBeenCalledWith(`Configuration generated to "${outputPath}".`);
+    expect(logger.__getLogs().log).toEqual([`Configuration generated to "${outputPath}".`]);
   });
 
   it('should return false if failed to write file', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
-    const outputPath = 'this-is-the-output-path';
     const error = new Error('error message');
 
-    mock(writeFileWithCliOptions).mockResolvedValue({ outputPath, error });
+    mock(writeFileWithCliOptions).mockRejectedValue(error);
 
     const options = {
-      ...base,
+      type: 'kubernetes',
       output: 'output.yaml',
       workingDir: 'working/dir',
     };
 
-    const result = await generateConfig(filePath, options);
+    const result = generateConfig(filePath, options);
 
-    expect(result).toBe(false);
-    expect(consoleSpy).toHaveBeenCalledWith(`Failed to write to "${outputPath}".\n`, error);
+    await expect(result).rejects.toThrowError(error);
   });
 
   it('should generate documents using workingDir', async () => {
-    jest.spyOn(console, 'log').mockImplementation(() => {});
     mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
-    mock(writeFileWithCliOptions).mockResolvedValue({ outputPath: 'this-is-the-output-path' });
+    const outputPath = 'this-is-the-output-path';
+    mock(writeFileWithCliOptions).mockResolvedValue(outputPath);
 
     const result = await generateConfig('file.yaml', {
-      ...base,
+      type: 'kubernetes',
       workingDir: 'test/dir',
       output: 'output.yaml',
     });
@@ -118,7 +114,35 @@ describe('generateConfig()', () => {
     // Read from workingDir
     expect(o2k.generate).toHaveBeenCalledWith(
       path.normalize('test/dir/file.yaml'),
-      ConversionTypeMap[base.type],
+      ConversionTypeMap.kubernetes,
     );
+
+    expect(logger.__getLogs().log).toEqual([`Configuration generated to "${outputPath}".`]);
+  });
+
+  it('should throw InsoError if there is an error thrown by openapi-2-kong', async () => {
+    const error = new Error('err');
+    mock(o2k.generate).mockRejectedValue(error);
+
+    const promise = generateConfig('file.yaml', {
+      type: 'kubernetes',
+    });
+
+    await expect(promise).rejects.toThrowError(
+      new InsoError(`There was an error while generating configuration`, error),
+    );
+  });
+
+  it('should warn if no valid spec can be found', async () => {
+    mock(o2k.generate).mockResolvedValue({});
+
+    const result = await generateConfig('file.yaml', {
+      type: 'kubernetes',
+    });
+
+    expect(result).toBe(false);
+    expect(logger.__getLogs().log).toEqual([
+      'Could not find a valid specification to generate configuration.',
+    ]);
   });
 });
