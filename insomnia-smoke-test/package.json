@@ -1,0 +1,11 @@
+{
+  "name": "insomnia-smoke-test",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^26.2.2",
+    "spectron": "^11.1.0"
+  }
+}

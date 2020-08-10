@@ -197,6 +197,7 @@
     "prompt-run": "^1.4.5",
     "react-hot-loader": "^4.8.3",
     "source-map-loader": "^1.0.0",
+    "spectron": "^11.1.0",
     "style-loader": "^0.23.1",
     "url-loader": "^1.1.2",
     "webpack": "^4.44.0",
