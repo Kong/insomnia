@@ -307,6 +307,7 @@ export function createWindow() {
     title: getAppName(),
     message: getAppLongName(),
     detail: aboutDetail,
+    noLink: true,
   };
 
   if (isMac()) {
@@ -314,12 +315,15 @@ export function createWindow() {
       {
         label: `A${MNEMONIC_SYM}bout ${getAppName()}`,
         click: async () => {
+          const buttons = ['OK', 'Copy'];
           const msgBox = await dialog.showMessageBox({
             ...aboutMsgOptions,
-            buttons: ['OK', 'Copy'],
+            buttons: buttons,
+            defaultId: buttons.indexOf('OK'),
+            cancelId: buttons.indexOf('OK'),
           });
 
-          if (msgBox.response === 1) {
+          if (msgBox.response === buttons.indexOf('Copy')) {
             clipboard.writeText(aboutDetail);
           }
         },
@@ -330,12 +334,14 @@ export function createWindow() {
     helpMenu.submenu.unshift({
       label: `${MNEMONIC_SYM}About`,
       click: async () => {
+        const buttons = ['Copy', 'OK'];
         const msgBox = await dialog.showMessageBox({
           ...aboutMsgOptions,
-          buttons: ['Copy to clipboard', 'OK'],
+          buttons: buttons,
+          defaultId: buttons.indexOf('OK'),
+          cancelId: buttons.indexOf('OK'),
         });
-
-        if (msgBox.response === 0) {
+        if (msgBox.response === buttons.indexOf('Copy')) {
           clipboard.writeText(aboutDetail);
         }
       },
