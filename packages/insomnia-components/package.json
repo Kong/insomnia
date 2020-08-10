@@ -4,6 +4,7 @@
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Insomnia UI component library",
   "license": "MIT",
+  "repository": "https://github.com/kong/insomnia/tree/develop/packages/insomnia-components",
   "main": "dist/index.js",
   "scripts": {
     "typecheck": "flow check",
@@ -30,6 +31,7 @@
     "react-dom": "^16.8.6",
     "react-use": "^15.3.2",
     "storybook-addon-designs": "^5.4.1",
+    "styled-components": "^4.4.1",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.11",
     "webpack-merge": "^4.2.2"
@@ -41,12 +43,12 @@
     "fuzzysort": "^1.1.4",
     "md5": "^2.2.1",
     "prop-types": "^15.7.2",
-    "react-switch": "^5.0.1",
-    "styled-components": "^4.4.1"
+    "react-switch": "^5.0.1"
   },
   "peerDependencies": {
     "react": "^16.8.6",
-    "react-dom": "^16.8.6"
+    "react-dom": "^16.8.6",
+    "styled-components": "^4.4.1"
   },
   "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
 }
