@@ -3,3 +3,4 @@
   base = "packages/insomnia-components/"
   command = "npm run convert-svg && npm run build-storybook"
   ignore = "git diff --quiet HEAD^ HEAD packages/insomnia-components/"
+  environment = { NODE_ENV = "production" }
