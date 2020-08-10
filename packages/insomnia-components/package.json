@@ -30,7 +30,7 @@
     "react-dom": "^16.8.6",
     "react-use": "^15.3.2",
     "storybook-addon-designs": "^5.4.1",
-    "webpack": "^4.42.1",
+    "webpack": "^4.44.1",
     "webpack-cli": "^3.3.11",
     "webpack-merge": "^4.2.2"
   },
