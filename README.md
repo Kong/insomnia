@@ -57,11 +57,25 @@ npm test
 npm run app-start
 ```
 
-If you are on Linux and have problems, you may need to install `libfontconfig-dev`
+If you are on Linux, you may need to install the following supporting packages 
 
 ```bash
-# Install libfontconfig-dev
+# Update library
+sudo apt-get update
+
+# Install font configuration library & support
 sudo apt-get install libfontconfig-dev
+sudo apt-get install font-manager
+
+# Build capability for required font-scanner package
+sudo apt-get install build-essential
+```
+
+Also on Linux, if Electron is failing during the bootstrap process, run the following
+```bash
+# Clear Electron install conflicts
+rm -rf ~/cache/electron
+
 ```
 
 If you are on Windows and have problems, you may need to install [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)
