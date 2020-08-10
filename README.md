@@ -75,7 +75,6 @@ Also on Linux, if Electron is failing during the bootstrap process, run the foll
 ```bash
 # Clear Electron install conflicts
 rm -rf ~/cache/electron
-
 ```
 
 If you are on Windows and have problems, you may need to install [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)
