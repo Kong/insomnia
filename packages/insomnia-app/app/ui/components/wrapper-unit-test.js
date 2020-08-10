@@ -332,10 +332,10 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                 <li key={i}>
                   <SvgIcon icon={t.err.message ? 'error' : 'success'} /> {t.title} ({t.duration} ms)
                   {t.err.message && (
-                    <>
+                    <React.Fragment>
                       <br />
                       <code className="text-danger">{t.err.message}</code>
-                    </>
+                    </React.Fragment>
                   )}
                 </li>
               ))}
@@ -362,6 +362,17 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               value={unitTest.name}
             />
           </h2>
+          <Dropdown
+            renderButton={({ open }) => (
+              <Button>
+                {selectableRequests.length ? 'Select Request' : 'No Requests'} &nbsp;&nbsp;
+                <SvgIcon icon={open ? 'chevron-up' : 'chevron-down'} />
+              </Button>
+            )}>
+            <DropdownItem>asdf</DropdownItem>
+            <DropdownItem>Delete Suite</DropdownItem>
+          </Dropdown>
+
           <div className="form-control form-control--outlined">
             <select
               name="request"
@@ -378,19 +389,15 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               ))}
             </select>
           </div>
-          <Dropdown
-            renderButton={() => (
-              <Button variant="outlined">
-                <SvgIcon icon="gear" />
-              </Button>
-            )}>
-            <DropdownItem
-              disabled={testsRunning && testsRunning.find(t => t._id === unitTest._id)}
-              onClick={() => this._handleRunTest(unitTest)}>
-              Run Test
-            </DropdownItem>
-            <DropdownItem onClick={() => this._handleDeleteTest(unitTest)}>Delete</DropdownItem>
-          </Dropdown>
+          <Button
+            variant="text"
+            disabled={testsRunning && testsRunning.find(t => t._id === unitTest._id)}
+            onClick={() => this._handleRunTest(unitTest)}>
+            <SvgIcon icon="play" />
+          </Button>
+          <Button variant="text" onClick={() => this._handleDeleteTest(unitTest)}>
+            <SvgIcon icon="trashcan" />
+          </Button>
         </div>
         <CodeEditor
           dynamicHeight

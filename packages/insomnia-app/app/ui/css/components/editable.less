@@ -4,17 +4,18 @@ input.editable {
 }
 
 span.editable {
-  transition: 0.2s;
+  transition: opacity 0.2s, background-position 0.15s;
+  transition-timing-function: ease-in;
+  padding-right: 20px !important;
+  background-image: url('https://image.flaticon.com/icons/svg/1250/1250615.svg');
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
   opacity: 1;
-  background-position: right center;
-  background-image: none;
-  padding-right: 20px;
+  background-position: right 150px;
   &:hover {
-    padding-right: 20px;
+    transition: opacity 0.2s, background-position 0.15s;
+    transition-timing-function: ease-out;
     background-position: right center;
-    background-image: url('https://img.icons8.com/android/1x/edit.png');
-    background-repeat: no-repeat;
-    background-size: 16px 16px;
-    opacity: .70;
+    opacity: .75;
   }
 }
