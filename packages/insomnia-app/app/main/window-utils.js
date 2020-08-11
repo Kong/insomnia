@@ -334,8 +334,8 @@ export function createWindow() {
       },
       { type: 'separator' },
     );
-    // } else {
-    helpMenu.submenu.unshift({
+  } else {
+    helpMenu.submenu.push({
       label: `${MNEMONIC_SYM}About`,
       click: aboutMenuClickHandler,
     });
