@@ -13,10 +13,9 @@ import {
   MNEMONIC_SYM,
 } from '../common/constants';
 import * as misc from '../common/misc';
-import * as os from 'os';
 import { docsBase } from '../common/documentation';
 
-const { app, Menu, BrowserWindow, shell, dialog, clipboard } = electron;
+const { app, Menu, BrowserWindow, shell, dialog } = electron;
 
 // So we can use native modules in renderer
 // NOTE: This will be deprecated in Electron 10 and impossible in 11
@@ -122,6 +121,9 @@ export function createWindow() {
   const applicationMenu = {
     label: `${MNEMONIC_SYM}Application`,
     submenu: [
+      ...(isMac()
+        ? [{ label: `A${MNEMONIC_SYM}bout ${getAppName()}`, role: 'about' }, { type: 'separator' }]
+        : []),
       {
         label: `${MNEMONIC_SYM}Preferences`,
         click: function(menuItem, window, e) {
@@ -292,58 +294,24 @@ export function createWindow() {
     ],
   };
 
-  const aboutDetail = [
-    `OS ${os.type()} ${os.arch()} ${os.release()}`,
-    `Version ${getAppLongName()} ${getAppVersion()}`,
-    `Shell ${process.versions.electron}`,
-    `Node ${process.versions.node}`,
-    `V8 ${process.versions.v8}`,
-    `Architecture ${process.arch}`,
-    Curl.getVersion(),
-  ].join('\n');
-
-  const aboutMsgOptions = {
-    type: 'info',
-    title: getAppName(),
-    message: getAppLongName(),
-    detail: aboutDetail,
-    noLink: true,
-  };
-
-  if (isMac()) {
-    applicationMenu.submenu.unshift(
-      {
-        label: `A${MNEMONIC_SYM}bout ${getAppName()}`,
-        click: async () => {
-          const buttons = ['OK', 'Copy'];
-          const msgBox = await dialog.showMessageBox({
-            ...aboutMsgOptions,
-            buttons: buttons,
-            defaultId: buttons.indexOf('OK'),
-            cancelId: buttons.indexOf('OK'),
-          });
-
-          if (msgBox.response === buttons.indexOf('Copy')) {
-            clipboard.writeText(aboutDetail);
-          }
-        },
-      },
-      { type: 'separator' },
-    );
-  } else {
+  if (!isMac()) {
     helpMenu.submenu.unshift({
       label: `${MNEMONIC_SYM}About`,
       click: async () => {
-        const buttons = ['Copy', 'OK'];
-        const msgBox = await dialog.showMessageBox({
-          ...aboutMsgOptions,
-          buttons: buttons,
-          defaultId: buttons.indexOf('OK'),
-          cancelId: buttons.indexOf('OK'),
+        await dialog.showMessageBox({
+          type: 'info',
+          title: getAppName(),
+          message: getAppLongName(),
+          detail: [
+            'Version ' + getAppVersion(),
+            'Shell ' + process.versions.electron,
+            'Node ' + process.versions.node,
+            'V8 ' + process.versions.v8,
+            'Architecture ' + process.arch,
+            '', // Blank line before libcurl
+            Curl.getVersion(),
+          ].join('\n'),
         });
-        if (msgBox.response === buttons.indexOf('Copy')) {
-          clipboard.writeText(aboutDetail);
-        }
       },
     });
   }
