@@ -85,6 +85,7 @@
     "redux-thunk",
     "reselect",
     "srp-js",
+    "styled-components",
     "swagger-ui-react",
     "vkbeautify",
     "zprint-clj"
