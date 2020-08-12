@@ -8,7 +8,7 @@ const expectedNodeVersion = fs
 
 if (foundNodeVersion !== expectedNodeVersion) {
   console.log(`Current node version: ${foundNodeVersion}`);
-  console.log(`Expect node version: ${expectedNodeVersion}`);
+  console.log(`Expected node version: ${expectedNodeVersion}`);
   console.log(
     `Remember to 'npm run clean && npm run bootstrap' after installing the expected version.`,
   );
