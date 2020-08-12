@@ -10,6 +10,7 @@ import {
   getAppReleaseDate,
   getAppVersion,
   isDevelopment,
+  isLinux,
   isMac,
   MNEMONIC_SYM,
 } from '../common/constants';
@@ -297,7 +298,7 @@ export function createWindow() {
     const copy = 'Copy';
     const ok = 'OK';
 
-    const buttons = [ok, copy];
+    const buttons = isLinux() ? [copy, ok] : [ok, copy];
 
     const detail = [
       `Version: ${getAppLongName()} ${getAppVersion()}`,
