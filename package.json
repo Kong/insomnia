@@ -23,7 +23,8 @@
     "app-package": "npm run package --prefix packages/insomnia-app",
     "app-release": "npm run release --prefix packages/insomnia-app",
     "storybook-start": "npm run storybook --prefix packages/insomnia-components",
-    "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app"
+    "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app",
+    "preinstall": "node ./scripts/check-version.js"
   },
   "lint-staged": {
     "{packages,plugins}/**/*.{js,json}": [
