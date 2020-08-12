@@ -1,5 +1,10 @@
+const fs = require('fs');
+
 const foundNodeVersion = process.versions.node;
-const expectedNodeVersion = process.argv[3];
+const expectedNodeVersion = fs
+  .readFileSync('.nvmrc')
+  .toString()
+  .trim();
 
 if (foundNodeVersion !== expectedNodeVersion) {
   console.log(`Current node version: ${foundNodeVersion}`);
