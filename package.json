@@ -48,7 +48,6 @@
     "babel-loader": "^8.0.5",
     "babel-plugin-inline-react-svg": "^1.1.0",
     "babel-plugin-styled-components": "^1.10.6",
-    "check-node-version": "^4.0.3",
     "eslint": "^7.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-config-semistandard": "^15.0.0",
