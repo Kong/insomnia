@@ -7,8 +7,10 @@ import {
   changelogUrl,
   getAppLongName,
   getAppName,
+  getAppReleaseDate,
   getAppVersion,
   isDevelopment,
+  isLinux,
   isMac,
   MNEMONIC_SYM,
 } from '../common/constants';
@@ -292,59 +294,51 @@ export function createWindow() {
     ],
   };
 
-  const aboutDetail = [
-    `OS ${os.type()} ${os.arch()} ${os.release()}`,
-    `Version ${getAppLongName()} ${getAppVersion()}`,
-    `Shell ${process.versions.electron}`,
-    `Node ${process.versions.node}`,
-    `V8 ${process.versions.v8}`,
-    `Architecture ${process.arch}`,
-    Curl.getVersion(),
-  ].join('\n');
+  const aboutMenuClickHandler = async () => {
+    const copy = 'Copy';
+    const ok = 'OK';
 
-  const aboutMsgOptions = {
-    type: 'info',
-    title: getAppName(),
-    message: getAppLongName(),
-    detail: aboutDetail,
-    noLink: true,
+    const buttons = isLinux() ? [copy, ok] : [ok, copy];
+
+    const detail = [
+      `Version: ${getAppLongName()} ${getAppVersion()}`,
+      `Release date: ${getAppReleaseDate()}`,
+      `OS: ${os.type()} ${os.arch()} ${os.release()}`,
+      `Electron: ${process.versions.electron}`,
+      `Node: ${process.versions.node}`,
+      `V8: ${process.versions.v8}`,
+      `Architecture: ${process.arch}`,
+      `node-libcurl: ${Curl.getVersion()}`,
+    ].join('\n');
+
+    const msgBox = await dialog.showMessageBox({
+      type: 'info',
+      title: getAppName(),
+      message: getAppLongName(),
+      detail,
+      buttons,
+      defaultId: buttons.indexOf(ok),
+      cancelId: buttons.indexOf(ok),
+      noLink: true,
+    });
+
+    if (msgBox.response === buttons.indexOf(copy)) {
+      clipboard.writeText(detail);
+    }
   };
 
   if (isMac()) {
     applicationMenu.submenu.unshift(
       {
         label: `A${MNEMONIC_SYM}bout ${getAppName()}`,
-        click: async () => {
-          const buttons = ['OK', 'Copy'];
-          const msgBox = await dialog.showMessageBox({
-            ...aboutMsgOptions,
-            buttons: buttons,
-            defaultId: buttons.indexOf('OK'),
-            cancelId: buttons.indexOf('OK'),
-          });
-
-          if (msgBox.response === buttons.indexOf('Copy')) {
-            clipboard.writeText(aboutDetail);
-          }
-        },
+        click: aboutMenuClickHandler,
       },
       { type: 'separator' },
     );
   } else {
-    helpMenu.submenu.unshift({
+    helpMenu.submenu.push({
       label: `${MNEMONIC_SYM}About`,
-      click: async () => {
-        const buttons = ['Copy', 'OK'];
-        const msgBox = await dialog.showMessageBox({
-          ...aboutMsgOptions,
-          buttons: buttons,
-          defaultId: buttons.indexOf('OK'),
-          cancelId: buttons.indexOf('OK'),
-        });
-        if (msgBox.response === buttons.indexOf('Copy')) {
-          clipboard.writeText(aboutDetail);
-        }
-      },
+      click: aboutMenuClickHandler,
     });
   }
 
