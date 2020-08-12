@@ -1,6 +1,6 @@
 {
   "name": "insomnia-inso",
-  "version": "2.2.19",
+  "version": "2.2.20",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnia Designer - the collaborative API design tool.",
   "author": "Kong <office@konghq.com>",
@@ -56,7 +56,7 @@
     "get-bin-path": "^5.1.0",
     "jest": "^26.0.1",
     "rimraf": "^3.0.2",
-    "webpack": "^4.43.0",
+    "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-merge": "^5.0.7",
     "webpack-node-externals": "^1.7.2"
@@ -80,7 +80,7 @@
     "insomnia-plugin-request": "^2.2.12",
     "insomnia-plugin-response": "^2.2.10",
     "insomnia-plugin-uuid": "^2.2.10",
-    "insomnia-send-request": "^2.2.19",
+    "insomnia-send-request": "^2.2.20",
     "insomnia-testing": "^2.2.15",
     "lodash.flattendeep": "^4.4.0",
     "mkdirp": "^1.0.4",

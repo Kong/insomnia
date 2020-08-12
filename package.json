@@ -2,10 +2,12 @@
   "name": "insomnia",
   "private": true,
   "version": "1.0.0",
+  "description": "Insomnia is a cross-platform REST client, built on top of Electron.",
   "repository": "https://github.com/kong/insomnia",
   "bugs": {
-    "url": "https://github.com/kong/insomnia"
+    "url": "https://github.com/kong/insomnia/issues"
   },
+  "homepage": "https://github.com/kong/insomnia#readme",
   "scripts": {
     "lint": "eslint . --ext .js,.json",
     "lint:fix": "npm run lint -- --fix",
@@ -21,7 +23,8 @@
     "app-package": "npm run package --prefix packages/insomnia-app",
     "app-release": "npm run release --prefix packages/insomnia-app",
     "storybook-start": "npm run storybook --prefix packages/insomnia-components",
-    "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app"
+    "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app",
+    "preinstall": "node ./scripts/check-version.js"
   },
   "lint-staged": {
     "{packages,plugins}/**/*.{js,json}": [
@@ -45,7 +48,6 @@
     "babel-loader": "^8.0.5",
     "babel-plugin-inline-react-svg": "^1.1.0",
     "babel-plugin-styled-components": "^1.10.6",
-    "chokidar": "^3.4.1",
     "eslint": "^7.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-config-semistandard": "^15.0.0",

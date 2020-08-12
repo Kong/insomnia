@@ -25,6 +25,7 @@ export default function ActivityToggle({ activity, handleActivityChange, workspa
       name="activity-toggle"
       onChange={a => handleActivityChange(workspace._id, a)}
       choices={choices}
+      selectedValue={activity}
     />
   );
 }

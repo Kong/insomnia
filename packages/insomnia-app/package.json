@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "2.2.19",
+  "version": "2.2.20",
   "name": "insomnia-app",
   "homepage": "https://konghq.com",
   "description": "The Collaborative API Design Tool",
@@ -20,7 +20,7 @@
     "build:sr": "webpack --config send-request/webpack.config.babel.js",
     "package": "node ./scripts/package.js",
     "release": "node ./scripts/release.js",
-    "bootstrap": "rimraf ./**/node_modules/fsevents && rimraf node_modules/graphql-language-service-interface/dist/*.flow && npm run build:sr"
+    "bootstrap": "rimraf node_modules/graphql-language-service-interface/dist/*.flow && npm run build:sr"
   },
   "dev": {
     "dev-server-port": 3334
@@ -85,6 +85,7 @@
     "redux-thunk",
     "reselect",
     "srp-js",
+    "styled-components",
     "swagger-ui-react",
     "vkbeautify",
     "zprint-clj"
@@ -114,9 +115,9 @@
     "html-entities": "^1.2.0",
     "httpsnippet": "^1.19.1",
     "iconv-lite": "^0.4.15",
-    "insomnia-components": "^2.2.19",
+    "insomnia-components": "^2.2.20",
     "insomnia-cookies": "^2.2.10",
-    "insomnia-importers": "^2.2.19",
+    "insomnia-importers": "^2.2.20",
     "insomnia-plugin-base64": "^2.2.10",
     "insomnia-plugin-cookie-jar": "^2.2.10",
     "insomnia-plugin-core-themes": "^2.2.12",
@@ -200,9 +201,9 @@
     "spectron": "^11.1.0",
     "style-loader": "^0.23.1",
     "url-loader": "^1.1.2",
-    "webpack": "^4.44.0",
+    "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.3.1",
+    "webpack-dev-server": "^3.11.0",
     "webpack-target-electron-renderer": "^0.4.0",
     "worker-loader": "^2.0.0"
   }
