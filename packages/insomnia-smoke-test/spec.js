@@ -29,14 +29,12 @@ describe('Application launch', function() {
     await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
   });
 
-  it('create a request', async () => {
+  it('create and send a request', async () => {
     await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
 
-    // Click on plus
-    const btn = await app.client.$('.sidebar .dropdown .fa-plus-circle');
-    await btn.click();
+    // Create a new request
+    await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
 
-    // Click on new request
     await app.client
       .$('[aria-hidden=false]')
       .then(e => e.$('button*=New Request'))
