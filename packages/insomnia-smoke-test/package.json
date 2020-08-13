@@ -6,6 +6,7 @@
   },
   "devDependencies": {
     "jest": "^26.4.0",
-    "spectron": "^11.1.0"
+    "spectron": "^11.1.0",
+    "spectron-keys": "0.0.1"
   }
 }
