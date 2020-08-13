@@ -1,4 +1,5 @@
 const Application = require('spectron').Application;
+const fs = require('fs');
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
@@ -77,5 +78,9 @@ describe('Application launch', function() {
       .$('.response-pane .pane__header .tag.bg-success')
       .then(e => e.getText())
       .then(e => expect(e).toBe('200 OK'));
+
+    await app.browserWindow.capturePage().then(function(imageBuffer) {
+      fs.writeFileSync('page.png', imageBuffer);
+    });
   });
 });
