@@ -5,7 +5,7 @@
     "test": "jest"
   },
   "devDependencies": {
-    "jest": "^26.2.2",
+    "jest": "^26.4.0",
     "spectron": "^11.1.0"
   }
 }
