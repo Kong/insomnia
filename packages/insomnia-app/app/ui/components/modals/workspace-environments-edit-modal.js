@@ -462,6 +462,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                   <Editable
                     singleClick
                     className="wide"
+                    defaultValue="Untitled"
                     hoverHint
                     onSubmit={name =>
                       activeEnvironment &&
