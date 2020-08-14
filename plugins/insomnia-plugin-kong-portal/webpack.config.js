@@ -11,6 +11,7 @@ module.exports = {
     library: 'kongDeploy',
     libraryTarget: 'commonjs2',
   },
+  externals: ['styled-components'],
   module: {
     rules: [
       {
