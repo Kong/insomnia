@@ -27,6 +27,7 @@ import MemoSvgIcnGUI from '../assets/svgr/IcnGui';
 import MemoSvgIcnIndendation from '../assets/svgr/IcnIndentation';
 import MemoSvgIcnMinusCircleFill from '../assets/svgr/IcnMinusCircleFill';
 import MemoSvgIcnMinusCircle from '../assets/svgr/IcnMinusCircle';
+import MemoSvgIcnPencil from '../assets/svgr/IcnPencil';
 import MemoSvgIcnPlaceholder from '../assets/svgr/IcnPlaceholder';
 import MemoSvgIcnPlay from '../assets/svgr/IcnPlay';
 import MemoSvgIcnPlus from '../assets/svgr/IcnPlus';
@@ -89,6 +90,7 @@ export const IconEnum = {
   indentation: 'indentation',
   minusCircle: 'minus-circle',
   minusCircleFill: 'minus-circle-fill',
+  pencil: 'pencil',
   placeholder: 'placeholder',
   play: 'play',
   plus: 'plus',
@@ -180,6 +182,7 @@ class SvgIcon extends React.Component<Props> {
     [IconEnum.indentation]: [ThemeEnum.default, MemoSvgIcnIndendation],
     [IconEnum.minusCircle]: [ThemeEnum.default, MemoSvgIcnMinusCircle],
     [IconEnum.minusCircleFill]: [ThemeEnum.default, MemoSvgIcnMinusCircleFill],
+    [IconEnum.pencil]: [ThemeEnum.default, MemoSvgIcnPencil],
     [IconEnum.placeholder]: [ThemeEnum.default, MemoSvgIcnPlaceholder],
     [IconEnum.play]: [ThemeEnum.default, MemoSvgIcnPlay],
     [IconEnum.plus]: [ThemeEnum.default, MemoSvgIcnPlus],

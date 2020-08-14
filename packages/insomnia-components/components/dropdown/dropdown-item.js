@@ -17,6 +17,7 @@ const StyledButton = styled.button`
   white-space: nowrap;
   margin: 0;
   border: 0;
+  align-items: center;
 
   &:hover:not(:disabled),
   &:active:not(:disabled) {

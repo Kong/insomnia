@@ -3,7 +3,16 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
-import { Breadcrumb, Button, Dropdown, DropdownItem, Header, SvgIcon } from 'insomnia-components';
+import {
+  Breadcrumb,
+  Button,
+  Dropdown,
+  DropdownItem,
+  Header,
+  SvgIcon,
+  ListGroup,
+  ListGroupItem,
+} from 'insomnia-components';
 import ErrorBoundary from './error-boundary';
 import CodeEditor from './codemirror/code-editor';
 import designerLogo from '../images/insomnia-designer-logo.svg';
@@ -327,6 +336,26 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                 </h2>
               )}
             </div>
+            <ListGroup>
+              {tests.map((t, i) => (
+                <React.Fragment key={i}>
+                  {t.err.message && (
+                    <ListGroupItem
+                      key={i}
+                      name={t.title}
+                      time={t.duration}
+                      result="fail"
+                      errorMsg={t.err.message}
+                    />
+                  )}
+
+                  {!t.err.message && (
+                    <ListGroupItem key={i} name={t.title} time={t.duration} result="pass" />
+                  )}
+                </React.Fragment>
+              ))}
+            </ListGroup>
+            {/*
             <ul>
               {tests.map((t, i) => (
                 <li key={i}>
@@ -340,6 +369,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                 </li>
               ))}
             </ul>
+            */}
           </div>
         )}
       </div>
@@ -360,8 +390,12 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               singleClick
               onSubmit={this._handleChangeTestName.bind(this, unitTest)}
               value={unitTest.name}
+              blankValue="Undefined"
+              hoverHint
             />
           </h2>
+          {/*
+          TODO: Finish Component DD Implementation
           <Dropdown
             renderButton={({ open }) => (
               <Button>
@@ -369,11 +403,14 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                 <SvgIcon icon={open ? 'chevron-up' : 'chevron-down'} />
               </Button>
             )}>
-            <DropdownItem>asdf</DropdownItem>
-            <DropdownItem>Delete Suite</DropdownItem>
+            {selectableRequests.map(({ name, request }) => (
+              <DropdownItem key={request._id} value={request._id}>
+                {name}
+              </DropdownItem>
+            ))}
           </Dropdown>
-
-          <div className="form-control form-control--outlined">
+          */}
+          <div className="form-control">
             <select
               name="request"
               id="request"
@@ -441,6 +478,8 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                 singleClick
                 onSubmit={this._handleChangeActiveSuiteName}
                 value={activeUnitTestSuite.name}
+                blankValue="Undefined"
+                hoverHint
               />
             </h2>
             <Button variant="outlined" onClick={this._handleCreateTest}>
@@ -453,6 +492,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               size="default"
               disabled={testsRunning}>
               {testsRunning ? 'Running... ' : 'Run Tests'}
+              <i className="fa fa-play space-left"></i>
             </Button>
           </div>
           {activeUnitTests.map(this.renderUnitTest)}
@@ -471,7 +511,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       <ErrorBoundary showAlert>
         <div className="unit-tests__sidebar">
           <div className="pad-sm">
-            <Button variant="outlined" bg="surprise" onClick={this._handleCreateTestSuite}>
+            <Button variant="outlined" onClick={this._handleCreateTestSuite}>
               New Test Suite
             </Button>
           </div>

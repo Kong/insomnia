@@ -3,19 +3,21 @@ input.editable {
   opacity: 0.9;
 }
 
-span.editable {
-  transition: opacity 0.2s, background-position 0.15s;
-  transition-timing-function: ease-in;
+span.editable.hover-hint {
   padding-right: 20px !important;
-  background-image: url('https://image.flaticon.com/icons/svg/1250/1250615.svg');
-  background-repeat: no-repeat;
-  background-size: 16px 16px;
-  opacity: 1;
-  background-position: right 150px;
+
+  &::after {
+    transition: opacity 0.15s;
+    transition-timing-function: ease-in;
+    opacity: 0;
+    content: '\f040';
+    font-family: FontAwesome;
+    position: absolute;
+    margin-left:var(--padding-xs);
+  }
   &:hover {
-    transition: opacity 0.2s, background-position 0.15s;
-    transition-timing-function: ease-out;
-    background-position: right center;
-    opacity: .75;
+    &::after {
+      opacity: 1;
+    }
   }
 }

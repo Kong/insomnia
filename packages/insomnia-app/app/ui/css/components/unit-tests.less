@@ -24,10 +24,15 @@
       height: auto;
       width: 100%;
       border-bottom: 1px dashed var(--hl-md);
-      padding-bottom: var(--padding-md);
 
       .editor {
         overflow-y: hidden !important;
+
+        .CodeMirror {
+          max-height: 290px;
+          overflow-y: auto;
+          padding-bottom: var(--padding-sm);
+        }
       }
 
       &__header {
@@ -58,7 +63,10 @@
         .form-control {
           width: 100%;
           max-width: 18rem;
-
+          padding: var(--padding-xs) var(--padding-sm);
+          border: 1px solid var(--hl-md);
+          border-radius: var(--radius-sm);
+          margin-right: var(--padding-sm);
           * {
             margin: 0;
           }
@@ -73,14 +81,6 @@
     background: var(--color-bg);
     color: var(--color-font);
     overflow-y: auto;
-
-    ul {
-      padding-top: var(--padding-md);
-      li {
-        display: block;
-        padding: var(--padding-xs) var(--padding-md);
-      }
-    }
   }
 
   &__sidebar {
@@ -135,6 +135,13 @@
     border-bottom: 1px solid var(--hl-md);
     display: flex;
     align-items: center;
+
+    button {
+      i {
+        font-size: var(--font-size-xs);
+        padding-left: var(--padding-xxs);
+      }
+    }
 
     & > * {
       margin-right: var(--padding-md);
