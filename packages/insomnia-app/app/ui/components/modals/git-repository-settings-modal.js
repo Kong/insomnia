@@ -7,6 +7,7 @@ import ModalHeader from '../base/modal-header';
 import type { GitRepository } from '../../../models/git-repository';
 import ModalFooter from '../base/modal-footer';
 import * as models from '../../../models';
+import HelpTooltip from '../help-tooltip';
 
 type Props = {||};
 
@@ -199,6 +200,21 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
               <div className="form-control form-control--outlined">
                 <label>
                   Authentication Token
+                  <HelpTooltip className="space-left">
+                    Create a personal access token (instructions for{' '}
+                    <a href="https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token">
+                      Github
+                    </a>{' '}
+                    |{' '}
+                    <a href="https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html">
+                      Gitlab
+                    </a>{' '}
+                    |{' '}
+                    <a href="https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html">
+                      Bitbucket
+                    </a>
+                    )
+                  </HelpTooltip>
                   <input
                     required
                     type="password"
