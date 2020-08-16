@@ -8,6 +8,8 @@ import type { GitRepository } from '../../../models/git-repository';
 import ModalFooter from '../base/modal-footer';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
+import { docsGitAccessToken, docsGitSync } from '../../../common/documentation';
+import Link from '../base/link';
 
 type Props = {||};
 
@@ -135,10 +137,23 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
   render() {
     const { inputs, gitRepository } = this.state;
 
+    const linkIcon = <i className="fa fa-external-link-square" />;
+
     return (
       <form onSubmit={this._handleSubmitEdit}>
         <Modal ref={this._setModalRef} {...this.props}>
-          <ModalHeader>Configure Repository</ModalHeader>
+          <ModalHeader>
+            Configure Repository{' '}
+            <HelpTooltip>
+              Sync and collaborate with Git{' '}
+              <Link href={docsGitSync}>
+                <span className="no-wrap">
+                  <br />
+                  Documentation <i className="fa fa-external-link" />
+                </span>
+              </Link>
+            </HelpTooltip>
+          </ModalHeader>
           <ModalBody key={gitRepository ? gitRepository._id : 'new'} className="pad">
             <div className="form-control form-control--outlined">
               <label>
@@ -201,19 +216,17 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
                 <label>
                   Authentication Token
                   <HelpTooltip className="space-left">
-                    Create a personal access token (instructions for{' '}
-                    <a href="https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token">
-                      Github
-                    </a>{' '}
-                    |{' '}
-                    <a href="https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html">
-                      Gitlab
-                    </a>{' '}
-                    |{' '}
-                    <a href="https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html">
-                      Bitbucket
-                    </a>
-                    )
+                    Create a personal access token
+                    <br />
+                    <Link href={docsGitAccessToken.github}>Github {linkIcon}</Link>
+                    {' | '}
+                    <Link href={docsGitAccessToken.gitlab}>Gitlab {linkIcon}</Link>
+                    {' | '}
+                    <Link href={docsGitAccessToken.bitbucket}>Bitbucket {linkIcon}</Link>
+                    {' | '}
+                    <Link href={docsGitAccessToken.bitbucketServer}>
+                      Bitbucket Server {linkIcon}
+                    </Link>
                   </HelpTooltip>
                   <input
                     required
