@@ -145,13 +145,9 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
           <ModalHeader>
             Configure Repository{' '}
             <HelpTooltip>
-              Sync and collaborate with Git{' '}
-              <Link href={docsGitSync}>
-                <span className="no-wrap">
-                  <br />
-                  Documentation <i className="fa fa-external-link" />
-                </span>
-              </Link>
+              Sync and collaborate with Git
+              <br />
+              <Link href={docsGitSync}>Documentation {linkIcon}</Link>
             </HelpTooltip>
           </ModalHeader>
           <ModalBody key={gitRepository ? gitRepository._id : 'new'} className="pad">
