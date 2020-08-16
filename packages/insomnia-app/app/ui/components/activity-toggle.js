@@ -21,7 +21,6 @@ export default function ActivityToggle({ activity, handleActivityChange, workspa
 
   return (
     <MultiSwitch
-      defaultValue={activity}
       name="activity-toggle"
       onChange={a => handleActivityChange(workspace._id, a)}
       choices={choices}
