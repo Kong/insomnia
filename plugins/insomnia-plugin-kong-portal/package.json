@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-kong-portal",
-  "version": "2.2.20",
+  "version": "2.2.21",
   "main": "dist/index.js",
   "scripts": {
     "build": "webpack --config webpack.config.js --display errors-only",

@@ -1,6 +1,6 @@
 {
   "name": "insomnia-send-request",
-  "version": "2.2.20",
+  "version": "2.2.21",
   "main": "dist/index.js",
   "dependencies": {
     "@stoplight/spectral": "^5.4.0",
