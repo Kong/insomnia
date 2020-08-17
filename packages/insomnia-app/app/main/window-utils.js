@@ -73,6 +73,7 @@ export function createWindow() {
     icon: path.resolve(__dirname, 'static/icon.png'),
     webPreferences: {
       zoomFactor: zoomFactor,
+      // preload: path.resolve(__dirname, 'main/preload.js'),
       nodeIntegration: true,
       webviewTag: true,
       enableRemoteModule: true,

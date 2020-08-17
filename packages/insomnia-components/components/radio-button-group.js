@@ -72,7 +72,6 @@ export default function RadioButtonGroup({
             type="radio"
             name={name}
             value={value}
-            defaultChecked={defaultValue === value}
             checked={selectedValue === value}
             onChange={handleChange}
           />
