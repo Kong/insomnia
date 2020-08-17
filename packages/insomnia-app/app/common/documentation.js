@@ -7,7 +7,7 @@ export const docsBase = insomniaDocs('/');
 export const docsGitSync = insomniaDocs('/article/96-git-sync');
 export const docsGitAccessToken = {
   github:
-    'https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token',
+    'https://docs.github.com/github/authenticating-to-github/creating-a-personal-access-token',
   gitlab: 'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html',
   bitbucket: 'https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/',
   bitbucketServer:
