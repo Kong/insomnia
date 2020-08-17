@@ -4,7 +4,6 @@ import styled from 'styled-components';
 
 export type Props = {
   name: string,
-  defaultValue: string,
   onChange: (value: string) => any,
   choices: Array<{
     label: string,
@@ -51,18 +50,20 @@ const StyledRadioButtonBtn: React.ComponentType<{}> = styled.label`
 export default function RadioButtonGroup({
   name,
   choices,
-  defaultValue,
   onChange,
   className,
   selectedValue,
 }: Props) {
-  const handleChange = e => {
-    if (typeof onChange !== 'function') {
-      return;
-    }
+  const handleChange = React.useCallback(
+    e => {
+      if (typeof onChange !== 'function') {
+        return;
+      }
 
-    onChange(e.currentTarget.value);
-  };
+      onChange(e.currentTarget.value);
+    },
+    [onChange],
+  );
 
   return (
     <StyledRadioButtonGroup className={className}>
@@ -72,7 +73,6 @@ export default function RadioButtonGroup({
             type="radio"
             name={name}
             value={value}
-            defaultChecked={defaultValue === value}
             checked={selectedValue === value}
             onChange={handleChange}
           />

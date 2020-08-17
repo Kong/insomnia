@@ -6,18 +6,11 @@ import RadioButtonGroup from './radio-button-group';
 export default { title: 'Navigation | Radio Button Group' };
 
 export const _default = () => {
-  const defaultValue = 'scratch';
-  const [selectedValue, setSelectedValue] = React.useState(defaultValue);
-  const onChangeHandler = v => {
-    console.log(v);
-    setSelectedValue(v);
-  };
-
+  const [selectedValue, setSelectedValue] = React.useState('scratch');
   return (
     <RadioButtonGroup
       name="dummy"
-      defaultValue={defaultValue}
-      onChange={onChangeHandler}
+      onChange={setSelectedValue}
       choices={[
         { label: 'From Scratch', value: 'scratch' },
         { label: 'From Repository', value: 'repo' },
