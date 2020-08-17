@@ -1,6 +1,6 @@
 {
   "name": "insomnia-inso",
-  "version": "2.2.20",
+  "version": "2.2.21",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnia Designer - the collaborative API design tool.",
   "author": "Kong <office@konghq.com>",
@@ -80,7 +80,7 @@
     "insomnia-plugin-request": "^2.2.12",
     "insomnia-plugin-response": "^2.2.10",
     "insomnia-plugin-uuid": "^2.2.10",
-    "insomnia-send-request": "^2.2.20",
+    "insomnia-send-request": "^2.2.21",
     "insomnia-testing": "^2.2.15",
     "lodash.flattendeep": "^4.4.0",
     "mkdirp": "^1.0.4",

@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "2.2.20",
+  "version": "2.2.21",
   "name": "insomnia-app",
   "homepage": "https://konghq.com",
   "description": "The Collaborative API Design Tool",
@@ -115,7 +115,7 @@
     "html-entities": "^1.2.0",
     "httpsnippet": "^1.19.1",
     "iconv-lite": "^0.4.15",
-    "insomnia-components": "^2.2.20",
+    "insomnia-components": "^2.2.21",
     "insomnia-cookies": "^2.2.10",
     "insomnia-importers": "^2.2.20",
     "insomnia-plugin-base64": "^2.2.10",
