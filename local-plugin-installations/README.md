@@ -13,7 +13,7 @@ yalc publish
 
 # Install the plugin into this directory
 cd insomnia/local-plugin-installations
-yalc add insomnia-plugin-kong-portal --pure
+npm run add insomnia-plugin-kong-portal
 ```
 
 After installation, your directory structure should look like this:
@@ -31,4 +31,13 @@ cd insomnia/plugins/insomnia-plugin-kong-portal
 yalc publish --push
 
 # Reload plugins via Insomnia Preferences > Plugins > Reload Plugins
+```
+
+### Remove
+```sh
+# Remove a single package
+npm run remove insomnia-plugin-kong-portal
+
+# Remove all packages
+npm run remove:all
 ```

@@ -1,11 +1,19 @@
 {
   "name": "local-plugin-installations",
   "scripts": {
+    "add": "yalc add",
+    "remove": "yalc remove",
+    "remove:all": "npm run remove -- --all",
+    "postremove": "npm run postyalc",
     "postyalc": "npm run copy-dirs && npm run install-plugins",
-    "copy-dirs": "rimraf ./insomnia-plugin-* && cp -R ./.yalc/* ./",
+    "copy-dirs": "rimraf ./insomnia-plugin-* && cpx './.yalc/**/*' ./",
     "install-plugins": "node install.js ../packages/insomnia-app/bin/yarn-standalone.js"
   },
   "devDependencies": {
+    "cpx": "^1.5.0",
     "rimraf": "^3.0.2"
+  },
+  "dependencies": {
+    "insomnia-plugin-kong-declarative-config": "file:.yalc/insomnia-plugin-kong-declarative-config"
   }
 }
