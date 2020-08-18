@@ -390,7 +390,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               singleClick
               onSubmit={this._handleChangeTestName.bind(this, unitTest)}
               value={unitTest.name}
-              blankValue="Untitled"
+              blankValue="Undefined"
               hoverHint
             />
           </h2>
@@ -478,7 +478,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                 singleClick
                 onSubmit={this._handleChangeActiveSuiteName}
                 value={activeUnitTestSuite.name}
-                blankValue="Untitled"
+                blankValue="Undefined"
                 hoverHint
               />
             </h2>
