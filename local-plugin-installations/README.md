@@ -8,26 +8,26 @@ Use [yalc](https://github.com/whitecolor/yalc) to emulate the production install
 npm install -g yalc
 
 # Publish a plugin to yalc
-cd insomnia/plugins/insomnia-plugin-kong-portal
+cd plugins/insomnia-plugin-kong-declarative-config
 yalc publish
 
 # Install the plugin into this directory
-cd insomnia/local-plugin-installations
-npm run add insomnia-plugin-kong-portal
+cd local-plugin-installations
+npm run add insomnia-plugin-kong-declarative-config
 ```
 
 After installation, your directory structure should look like this:
 
 ![](assets/installed.png)
 
-Now, set the `insomnia/local-plugin-installations/.yalc` directory, as an additional plugin path within Insomnia preferences:
+Now, set the `local-plugin-installations` directory, as an additional plugin path within Insomnia preferences:
 
 ![](assets/preferences.png)
 
 ### Active development
 ```sh
 # Make changes to your plugin, and re-publish to reinstall the plugin
-cd insomnia/plugins/insomnia-plugin-kong-portal
+cd plugins/insomnia-plugin-kong-declarative-config
 yalc publish --push
 
 # Reload plugins via Insomnia Preferences > Plugins > Reload Plugins
@@ -36,7 +36,7 @@ yalc publish --push
 ### Remove
 ```sh
 # Remove a single package
-npm run remove insomnia-plugin-kong-portal
+npm run remove insomnia-plugin-kong-declarative-config
 
 # Remove all packages
 npm run remove:all
