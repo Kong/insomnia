@@ -20,7 +20,7 @@ After installation, your directory structure should look like this:
 
 ![](assets/installed.png)
 
-Now, mark the `insomnia/local-plugin-installations/.yalc` directory, as an additional plugin path within Insomnia preferences:
+Now, set the `insomnia/local-plugin-installations/.yalc` directory, as an additional plugin path within Insomnia preferences:
 
 ![](assets/preferences.png)
 

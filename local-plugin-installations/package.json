@@ -1,3 +1,8 @@
 {
-  "name": "local-plugin-installations"
+  "name": "local-plugin-installations",
+  "scripts": {
+    "postyalc": "npm run copy-dirs && npm run install-plugins",
+    "copy-dirs": "cp -R ./.yalc/* ./",
+    "install-plugins": "node install.js ../packages/insomnia-app/bin/yarn-standalone.js"
+  }
 }
