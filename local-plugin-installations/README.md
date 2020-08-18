@@ -2,8 +2,7 @@
 
 Use [yalc](https://github.com/whitecolor/yalc) to emulate the production installation of plugins, without having to publish them to NPM. This is useful for development.
 
-## Setup
-### One time
+### One time setup
 ```sh
 # Install `yalc` globally
 npm install -g yalc
@@ -17,11 +16,15 @@ cd insomnia/local-plugin-installations
 yalc add insomnia-plugin-kong-portal --pure
 ```
 
-After the above steps are complete, mark the `insomnia/local-plugin-installations/.yalc` directory, as an additional plugin path within Insomnia preferences.
+After installation, your directory structure should look like this:
 
-![](screenshot.png)
+![](assets/installed.png)
 
-### Continuous
+Now, mark the `insomnia/local-plugin-installations/.yalc` directory, as an additional plugin path within Insomnia preferences:
+
+![](assets/preferences.png)
+
+### Active development
 ```sh
 # Make changes to your plugin, and re-publish to reinstall the plugin
 cd insomnia/plugins/insomnia-plugin-kong-portal
