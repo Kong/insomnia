@@ -1,5 +1,6 @@
-const styled = require('styled-components');
+const insomniaComponents = require('insomnia-components');
 
 process.once('loaded', () => {
-  global['styled-components'] = styled;
+  console.log('loaded');
+  global['insomnia-components'] = insomniaComponents;
 });
