@@ -12,7 +12,7 @@ module.exports = {
     libraryTarget: 'commonjs2',
   },
   externals: {
-    'insomnia-components': 'global insomnia-components',
+    'styled-components': 'global styled-components',
   },
   module: {
     rules: [

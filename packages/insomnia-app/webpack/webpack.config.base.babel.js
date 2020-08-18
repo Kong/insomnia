@@ -51,7 +51,6 @@ module.exports = {
       'react-hot-loader': path.resolve(path.join(__dirname, '../node_modules/react-hot-loader')),
       'react': path.resolve(path.join(__dirname, '../node_modules/react')),
       'styled-components': path.resolve(path.join(__dirname, '../node_modules/styled-components')),
-      'insomnia-components': path.resolve(path.join(__dirname, '../node_modules/insomnia-components')),
       'react-dom': path.resolve(path.join(__dirname, '../node_modules/@hot-loader/react-dom')),
     },
     extensions: ['.js', '.json'],
