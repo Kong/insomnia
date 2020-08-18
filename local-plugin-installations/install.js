@@ -47,11 +47,6 @@ module.exports.start = async function() {
             return;
           }
 
-          if (stderr) {
-            reject(new Error(`Yarn error ${stderr.toString()}`));
-            return;
-          }
-
           resolve({ dir });
         },
       );
