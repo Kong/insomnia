@@ -1,0 +1,7 @@
+{
+  "name": "installations",
+  "description": "yalc add insomnia-plugin-* --pure in here, then yalc publish --push in parent",
+  "scripts": {
+    "postyalc": "cp -R ./.yalc/* ."
+  }
+}
