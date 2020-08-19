@@ -19,14 +19,14 @@
     "@babel/preset-env": "^7.9.0",
     "@babel/preset-flow": "^7.9.0",
     "@babel/preset-react": "^7.9.4",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
-  },
-  "dependencies": {
-    "autobind-decorator": "^2.4.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11",
+    "autobind-decorator": "^2.4.0",
+    "insomnia-components": "^2.2.21",
     "url-join": "^4.0.1"
   },
-  "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
+  "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3",
+  "dependencies": {}
 }
