@@ -8,7 +8,7 @@ module.exports = {
     filename: '[name].js',
     sourceMapFilename: '[name].js.map',
     library: 'insomniaComponents',
-    libraryTarget: 'umd',
+    libraryTarget: 'commonjs2',
   },
   externals: ['react', 'react-dom', 'styled-components'],
   module: {

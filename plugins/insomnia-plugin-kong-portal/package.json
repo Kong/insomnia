@@ -20,8 +20,7 @@
     "@babel/preset-flow": "^7.9.0",
     "@babel/preset-react": "^7.9.4",
     "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11",
-    "insomnia-components": "^2.2.21"
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "autobind-decorator": "^2.4.0",
