@@ -12,7 +12,7 @@ module.exports = {
     libraryTarget: 'commonjs2',
   },
   externals: {
-    'styled-components': 'global styled-components',
+    'styled-components': 'window styled-components',
   },
   module: {
     rules: [

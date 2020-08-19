@@ -15,6 +15,7 @@ import { DragDropContext } from 'react-dnd';
 import DNDBackend from './dnd-backend';
 import { trackEvent } from '../common/analytics';
 import { APP_ID_DESIGNER, APP_ID_INSOMNIA } from '../../config';
+import * as styledComponents from 'styled-components';
 
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
@@ -75,6 +76,8 @@ if (isDevelopment()) {
   window.models = models;
   window.db = db;
 }
+
+window['styled-components'] = styledComponents;
 
 // Catch uncaught errors and report them
 if (window && !isDevelopment()) {
