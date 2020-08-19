@@ -385,12 +385,12 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     return (
       <div key={unitTest._id} className="unit-tests__tests__block">
         <div className="unit-tests__tests__block__header">
-          <h2 className="pad-left-md">
+          <h2>
             <Editable
               singleClick
               onSubmit={this._handleChangeTestName.bind(this, unitTest)}
               value={unitTest.name}
-              blankValue="Undefined"
+              blankValue="Untitled"
               hoverHint
             />
           </h2>
@@ -478,7 +478,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                 singleClick
                 onSubmit={this._handleChangeActiveSuiteName}
                 value={activeUnitTestSuite.name}
-                blankValue="Undefined"
+                blankValue="Untitled"
                 hoverHint
               />
             </h2>
