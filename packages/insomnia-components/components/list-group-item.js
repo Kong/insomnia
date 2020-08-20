@@ -35,7 +35,7 @@ const StyledListItem: React.ComponentType<{}> = styled.li`
 
   code {
     background-color: var(--hl-xs);
-    padding: var(--padding-xs) var(--padding-xs) var(--padding-xs) var(--padding-sm);
+    padding: var(--padding-sm) var(--padding-md) var(--padding-sm) var(--padding-md);
     color: var(--color-danger);
     display: block;
     margin: var(--padding-xxs) var(--padding-sm) var(--padding-xxs) var(--padding-md);

@@ -5,45 +5,22 @@ import ListGroupItem from './list-group-item';
 export default { title: 'Lists | List Group' };
 
 export const _default = () => (
-  <div style={{ width: '300px' }}>
-    <ListGroup className={'blah'}>
+  <div style={{ width: '400px' }}>
+    <ListGroup>
       <ListGroupItem
-        name="My super du name"
+        name="My test name one"
         time="602ms"
         result="fail"
         errorMsg="Some dastardly error."
-        className={'blah'}
       />
-      <ListGroupItem name="My super du name" time="6ms" result="pass" />
+      <ListGroupItem name="My test name two" time="6ms" result="pass" />
+      <ListGroupItem name="My test name three" time="22ms" result="pass" />
       <ListGroupItem
-        name="Aasdf asdf asdf adsf asdf dsfff"
-        time="22ms"
-        result="pass"
-        className={'blah'}
-      />
-      <ListGroupItem
-        name="My super du name"
+        name="My test name four"
         time="602ms"
         result="fail"
-        errorMsg="Some dastardly error."
-        className={'blah'}
+        errorMsg="Some dastardly verbose error consuming a lot of space."
       />
-      <ListGroupItem
-        name="My super du name"
-        time="602ms"
-        result="fail"
-        errorMsg="Some dastardly error."
-        className={'blah'}
-      />
-      <ListGroupItem name="My test name" time="430ms" result="pass" />
-      <ListGroupItem name="My super du name" time="6ms" result="pass" />
-      <ListGroupItem
-        name="Aasdf asdf asdf adsf asdf dsfff"
-        time="22ms"
-        result="pass"
-        className={'blah'}
-      />
-      <ListGroupItem name="My test name" time="430ms" result="pass" />
     </ListGroup>
   </div>
 );
