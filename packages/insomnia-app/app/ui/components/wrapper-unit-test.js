@@ -3,7 +3,16 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
-import { Breadcrumb, Button, Dropdown, DropdownItem, Header, SvgIcon } from 'insomnia-components';
+import {
+  Breadcrumb,
+  Button,
+  Dropdown,
+  DropdownItem,
+  Header,
+  SvgIcon,
+  ListGroup,
+  ListGroupItem,
+} from 'insomnia-components';
 import ErrorBoundary from './error-boundary';
 import CodeEditor from './codemirror/code-editor';
 import designerLogo from '../images/insomnia-designer-logo.svg';
@@ -327,19 +336,25 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                 </h2>
               )}
             </div>
-            <ul>
+            <ListGroup>
               {tests.map((t, i) => (
-                <li key={i}>
-                  <SvgIcon icon={t.err.message ? 'error' : 'success'} /> {t.title} ({t.duration} ms)
+                <React.Fragment key={i}>
                   {t.err.message && (
-                    <>
-                      <br />
-                      <code className="text-danger">{t.err.message}</code>
-                    </>
+                    <ListGroupItem
+                      key={i}
+                      name={t.title}
+                      time={t.duration}
+                      result="fail"
+                      errorMsg={t.err.message}
+                    />
                   )}
-                </li>
+
+                  {!t.err.message && (
+                    <ListGroupItem key={i} name={t.title} time={t.duration} result="pass" />
+                  )}
+                </React.Fragment>
               ))}
-            </ul>
+            </ListGroup>
           </div>
         )}
       </div>
