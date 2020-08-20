@@ -1,6 +1,6 @@
 const Application = require('spectron').Application;
 // const fs = require('fs');
-// const electronPath = require('../insomnia-app/node_modules/electron');
+const electronPath = require('../insomnia-app/node_modules/electron');
 const path = require('path');
 
 describe('Application launch', function() {
@@ -13,20 +13,11 @@ describe('Application launch', function() {
       // path: '/Applications/Insomnia.app/Contents/MacOS/Insomnia',
 
       // Run after app-package
-      path: path.join(__dirname, '../insomnia-app/dist/mac/Insomnia.app/Contents/MacOS/Insomnia'),
+      // path: path.join(__dirname, '../insomnia-app/dist/mac/Insomnia.app/Contents/MacOS/Insomnia'),
 
       // Run after app-build
-      // path: electronPath,
-      // args: [path.join(__dirname, '../insomnia-app/build')],
-
-      // Run development
-      // This doesn't start because webpack-dev-server isn't running
-
-      // path: electronPath,
-      // args: [path.join(__dirname, '../insomnia-app')],
-      // env: {
-      //   APP_ID: 'com.insomnia.app',
-      // },
+      path: electronPath,
+      args: [path.join(__dirname, '../insomnia-app/build')],
 
       // Don't ask why, but don't remove chromeDriverArgs
       // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
