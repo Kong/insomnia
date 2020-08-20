@@ -1,0 +1,14 @@
+{
+  "name": "insomnia-smoke-test",
+  "version": "1.0.0",
+  "scripts": {
+    "test:build:core": "jest",
+    "test:package:core": "cross-env PACKAGE=Insomnia jest"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.2",
+    "jest": "^26.4.0",
+    "spectron": "^11.1.0",
+    "spectron-keys": "0.0.1"
+  }
+}
