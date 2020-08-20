@@ -378,19 +378,15 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               ))}
             </select>
           </div>
-          <Dropdown
-            renderButton={() => (
-              <Button variant="outlined">
-                <SvgIcon icon="gear" />
-              </Button>
-            )}>
-            <DropdownItem
-              disabled={testsRunning && testsRunning.find(t => t._id === unitTest._id)}
-              onClick={() => this._handleRunTest(unitTest)}>
-              Run Test
-            </DropdownItem>
-            <DropdownItem onClick={() => this._handleDeleteTest(unitTest)}>Delete</DropdownItem>
-          </Dropdown>
+          <Button
+            variant="text"
+            disabled={testsRunning && testsRunning.find(t => t._id === unitTest._id)}
+            onClick={() => this._handleRunTest(unitTest)}>
+            <SvgIcon icon="play" />
+          </Button>
+          <Button variant="text" onClick={() => this._handleDeleteTest(unitTest)}>
+            <SvgIcon icon="trashcan" />
+          </Button>
         </div>
         <CodeEditor
           dynamicHeight
