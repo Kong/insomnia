@@ -16,14 +16,10 @@ if (require.main === module) {
   process.nextTick(async () => {
     try {
       const buildContext = await buildTask.start();
-      if (buildContext.smokeTest) {
-        console.log('[release] App built for smoke tests, cannot release.');
-        process.exit(1);
-      }
       await packageTask.start();
       await start(buildContext.app, buildContext.version);
     } catch (err) {
-      console.log('[release] ERROR:', err);
+      console.log('[package] ERROR:', err);
       process.exit(1);
     }
   });
