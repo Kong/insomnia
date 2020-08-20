@@ -442,6 +442,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               size="default"
               disabled={testsRunning}>
               {testsRunning ? 'Running... ' : 'Run Tests'}
+              <i className="fa fa-play space-left"></i>
             </Button>
           </div>
           {activeUnitTests.map(this.renderUnitTest)}
@@ -460,7 +461,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       <ErrorBoundary showAlert>
         <div className="unit-tests__sidebar">
           <div className="pad-sm">
-            <Button variant="outlined" bg="surprise" onClick={this._handleCreateTestSuite}>
+            <Button variant="outlined" onClick={this._handleCreateTestSuite}>
               New Test Suite
             </Button>
           </div>
