@@ -33,8 +33,6 @@ const ThemedButtonGroup: React.ComponentType<RadioButtonGroupProps> = styled(Rad
   }
 `;
 
-const MultiSwitch = (props: RadioButtonGroupProps) => {
-  return <ThemedButtonGroup {...props} />;
-};
+const MultiSwitch = (props: RadioButtonGroupProps) => <ThemedButtonGroup {...props} />;
 
 export default MultiSwitch;

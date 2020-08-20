@@ -4,17 +4,11 @@ import MultiSwitch from './multi-switch';
 export default { title: 'Navigation | Sliding Switch' };
 
 export const _default = () => {
-  const defaultValue = 'debug';
-  const [selectedValue, setSelectedValue] = React.useState(defaultValue);
-  const onChangeHandler = v => {
-    console.log(v);
-    setSelectedValue(v);
-  };
+  const [selectedValue, setSelectedValue] = React.useState('debug');
   return (
     <MultiSwitch
       name="activity"
-      defaultValue={defaultValue}
-      onChange={onChangeHandler}
+      onChange={setSelectedValue}
       choices={[
         { label: 'Design', value: 'design' },
         { label: 'Debug', value: 'debug' },

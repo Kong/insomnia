@@ -219,33 +219,35 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             className={classnames('spec-editor layout-body--sidebar theme--pane', {
               'preview-hidden': previewHidden,
             })}>
-            <div id="swagger-ui-wrapper">
-              <ErrorBoundary
-                invalidationKey={activeApiSpec.contents}
-                renderError={() => (
-                  <div className="text-left margin pad">
-                    <h3>An error occurred while trying to render Swagger UI 😢</h3>
-                    <p>
-                      This preview will automatically refresh, once you have a valid specification
-                      that can be previewed.
-                    </p>
-                  </div>
-                )}>
-                <SwaggerUI
-                  spec={swaggerUiSpec}
-                  supportedSubmitMethods={[
-                    'get',
-                    'put',
-                    'post',
-                    'delete',
-                    'options',
-                    'head',
-                    'patch',
-                    'trace',
-                  ]}
-                />
-              </ErrorBoundary>
-            </div>
+            {previewHidden ? null : (
+              <div id="swagger-ui-wrapper">
+                <ErrorBoundary
+                  invalidationKey={activeApiSpec.contents}
+                  renderError={() => (
+                    <div className="text-left margin pad">
+                      <h3>An error occurred while trying to render Swagger UI 😢</h3>
+                      <p>
+                        This preview will automatically refresh, once you have a valid specification
+                        that can be previewed.
+                      </p>
+                    </div>
+                  )}>
+                  <SwaggerUI
+                    spec={swaggerUiSpec}
+                    supportedSubmitMethods={[
+                      'get',
+                      'put',
+                      'post',
+                      'delete',
+                      'options',
+                      'head',
+                      'patch',
+                      'trace',
+                    ]}
+                  />
+                </ErrorBoundary>
+              </div>
+            )}
             <div className="spec-editor__body theme--pane__body">
               <CodeEditor
                 manualPrettify
