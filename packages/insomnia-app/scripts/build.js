@@ -18,7 +18,7 @@ if (require.main === module) {
 
 module.exports.start = async function(forcedVersion = null) {
   const buildContext = getBuildContext();
-  if (!buildContext.version) {
+  if (!buildContext.smokeTest && !buildContext.version) {
     console.log(`[build] Skipping build for ref "${buildContext.gitRef}"`);
     process.exit(0);
   }
@@ -31,11 +31,13 @@ module.exports.start = async function(forcedVersion = null) {
   // Configure APP_ID env based on what we detected
   if (buildContext.app === 'designer') {
     process.env.APP_ID = APP_ID_DESIGNER;
-  } else {
+  } else if (buildContext.app === 'core') {
     process.env.APP_ID = APP_ID_INSOMNIA;
   }
 
-  if (appConfig().version !== buildContext.version) {
+  if (buildContext.smokeTest) {
+    console.log(`[build] Building ${buildContext.app} for smoke testing.`);
+  } else if (appConfig().version !== buildContext.version) {
     console.log(
       `[build] App version mismatch with Git tag ${appConfig().version} != ${buildContext.version}`,
     );
@@ -262,7 +264,15 @@ function getBuildContext() {
     TRAVIS_TAG,
     TRAVIS_COMMIT,
     TRAVIS_CURRENT_BRANCH,
+    SMOKE_TEST,
   } = process.env;
+
+  if (SMOKE_TEST) {
+    return {
+      smokeTest: true,
+      app: SMOKE_TEST,
+    };
+  }
 
   const gitCommit = GITHUB_SHA || TRAVIS_COMMIT;
   const gitRef = GIT_TAG || GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || '';
