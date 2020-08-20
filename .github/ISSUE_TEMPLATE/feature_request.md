@@ -3,7 +3,6 @@ name: Feature request
 about: Suggest an idea for this project
 title: Short issue title
 labels: "Feature \U0001F381"
-assignees: nijikokun
 
 ---
 

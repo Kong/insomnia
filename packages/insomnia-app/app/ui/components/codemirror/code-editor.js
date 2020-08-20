@@ -713,6 +713,8 @@ class CodeEditor extends React.Component {
       return 'application/edn';
     } else if (CodeEditor._isXML(mimeType)) {
       return 'application/xml';
+    } else if (mimeType.includes('kotlin')) {
+      return 'text/x-kotlin';
     } else {
       return mimeType;
     }
