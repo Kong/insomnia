@@ -15,6 +15,7 @@ import { DragDropContext } from 'react-dnd';
 import DNDBackend from './dnd-backend';
 import { trackEvent } from '../common/analytics';
 import { APP_ID_DESIGNER, APP_ID_INSOMNIA } from '../../config';
+import * as styledComponents from 'styled-components';
 
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
@@ -75,6 +76,12 @@ if (isDevelopment()) {
   window.models = models;
   window.db = db;
 }
+
+// Styled components is added to the window object here, for plugins to use.
+// UI plugins built with webpack (such as insomnia-plugin-kong-portal) define styled-components as an external resolved
+// from the window object. This is to ensure there is only one instance of styled-components on the page.
+// Because styled-components are loaded at runtime, they don't have direct access to modules in the electron bundle
+window['styled-components'] = styledComponents;
 
 // Catch uncaught errors and report them
 if (window && !isDevelopment()) {
