@@ -1,5 +1,7 @@
 const Application = require('spectron').Application;
-const fs = require('fs');
+// const fs = require('fs');
+// const electronPath = require('../insomnia-app/node_modules/electron');
+const path = require('path');
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
@@ -7,7 +9,25 @@ describe('Application launch', function() {
 
   beforeEach(async () => {
     app = new Application({
-      path: '/Applications/Insomnia.app/Contents/MacOS/Insomnia',
+      // Run installed app
+      // path: '/Applications/Insomnia.app/Contents/MacOS/Insomnia',
+
+      // Run after app-package
+      path: path.join(__dirname, '../insomnia-app/dist/mac/Insomnia.app/Contents/MacOS/Insomnia'),
+
+      // Run after app-build
+      // path: electronPath,
+      // args: [path.join(__dirname, '../insomnia-app/build')],
+
+      // Run development
+      // This doesn't start because webpack-dev-server isn't running
+
+      // path: electronPath,
+      // args: [path.join(__dirname, '../insomnia-app')],
+      // env: {
+      //   APP_ID: 'com.insomnia.app',
+      // },
+
       // Don't ask why, but don't remove chromeDriverArgs
       // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
       chromeDriverArgs: ['remote-debugging-port=9222'],
@@ -29,56 +49,56 @@ describe('Application launch', function() {
     await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
   });
 
-  it('create and send a request', async () => {
-    await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
-
-    // Create a new request
-    await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
-
-    await app.client
-      .$('[aria-hidden=false]')
-      .then(e => e.$('button*=New Request'))
-      .then(e => e.click());
-
-    // Wait for modal to open
-    await app.client.waitUntilTextExists('.modal__header', 'New Request');
-
-    // Set name and create request
-    const input = await app.client.$('.modal input');
-    await app.client.waitUntil(() => input.isFocused());
-    const requestName = 'Request from test';
-    await input.keys(requestName);
-
-    await app.client
-      .$('.modal .modal__footer')
-      .then(e => e.$('button=Create'))
-      .then(e => e.click());
-
-    // Ensure first item is the one we created and is selected
-    const requests = await app.client.$$('.sidebar__item');
-    const firstRequest = requests[0];
-    const firstRequestName = await firstRequest.$('span.editable').then(e => e.getText());
-    const firstRequestClasses = await firstRequest.getAttribute('class');
-
-    expect(firstRequestName).toBe(requestName);
-    expect(firstRequestClasses).toContain('sidebar__item--active');
-
-    // Type into url bar
-    const urlEditor = await app.client.$('.urlbar .editor');
-    await urlEditor.click();
-    await urlEditor.keys('https://petstore.swagger.io/v2/pet/findByStatus?status=available');
-
-    // Send request
-    await app.client.$('.urlbar__send-btn').then(e => e.click());
-
-    // Expect 200
-    await app.client
-      .$('.response-pane .pane__header .tag.bg-success')
-      .then(e => e.getText())
-      .then(e => expect(e).toBe('200 OK'));
-
-    await app.browserWindow.capturePage().then(function(imageBuffer) {
-      fs.writeFileSync('page.png', imageBuffer);
-    });
-  });
+  // it('create and send a request', async () => {
+  //   await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
+  //
+  //   // Create a new request
+  //   await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
+  //
+  //   await app.client
+  //     .$('[aria-hidden=false]')
+  //     .then(e => e.$('button*=New Request'))
+  //     .then(e => e.click());
+  //
+  //   // Wait for modal to open
+  //   await app.client.waitUntilTextExists('.modal__header', 'New Request');
+  //
+  //   // Set name and create request
+  //   const input = await app.client.$('.modal input');
+  //   await app.client.waitUntil(() => input.isFocused());
+  //   const requestName = 'Request from test';
+  //   await input.keys(requestName);
+  //
+  //   await app.client
+  //     .$('.modal .modal__footer')
+  //     .then(e => e.$('button=Create'))
+  //     .then(e => e.click());
+  //
+  //   // Ensure first item is the one we created and is selected
+  //   const requests = await app.client.$$('.sidebar__item');
+  //   const firstRequest = requests[0];
+  //   const firstRequestName = await firstRequest.$('span.editable').then(e => e.getText());
+  //   const firstRequestClasses = await firstRequest.getAttribute('class');
+  //
+  //   expect(firstRequestName).toBe(requestName);
+  //   expect(firstRequestClasses).toContain('sidebar__item--active');
+  //
+  //   // Type into url bar
+  //   const urlEditor = await app.client.$('.urlbar .editor');
+  //   await urlEditor.click();
+  //   await urlEditor.keys('https://petstore.swagger.io/v2/pet/findByStatus?status=available');
+  //
+  //   // Send request
+  //   await app.client.$('.urlbar__send-btn').then(e => e.click());
+  //
+  //   // Expect 200
+  //   await app.client
+  //     .$('.response-pane .pane__header .tag.bg-success')
+  //     .then(e => e.getText())
+  //     .then(e => expect(e).toBe('200 OK'));
+  //
+  //   await app.browserWindow.capturePage().then(function(imageBuffer) {
+  //     fs.writeFileSync('page.png', imageBuffer);
+  //   });
+  // });
 });
