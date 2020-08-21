@@ -12,7 +12,7 @@ module.exports = {
   context: path.join(__dirname, '../app'),
   entry: ['./renderer.js', './renderer.html'],
   output: {
-    path: path.join(__dirname, '../build'),
+    path: path.join(__dirname, '../build', process.env.APP_ID),
     filename: 'bundle.js',
     libraryTarget: 'commonjs2',
   },
