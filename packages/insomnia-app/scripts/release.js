@@ -15,7 +15,7 @@ const octokit = new Octokit({
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      const buildContext = await buildTask.start();
+      const buildContext = await buildTask.start(true);
       if (buildContext.smokeTest) {
         console.log('[release] App built for smoke tests, cannot release.');
         process.exit(1);

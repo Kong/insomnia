@@ -7,17 +7,18 @@ const ncp = require('ncp').ncp;
 const path = require('path');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
+const { getBuildContext } = require('./getBuildContext');
 const { APP_ID_INSOMNIA, APP_ID_DESIGNER } = require('../config');
 
 // Start build if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
-    await module.exports.start();
+    await module.exports.start(false);
   });
 }
 
-module.exports.start = async function(forcedVersion = null) {
-  const buildContext = getBuildContext();
+module.exports.start = async function(forceFromGitRef) {
+  const buildContext = getBuildContext(forceFromGitRef);
   if (!buildContext.smokeTest && !buildContext.version) {
     console.log(`[build] Skipping build for ref "${buildContext.gitRef}"`);
     process.exit(0);
@@ -35,9 +36,7 @@ module.exports.start = async function(forcedVersion = null) {
     process.env.APP_ID = APP_ID_INSOMNIA;
   }
 
-  if (buildContext.smokeTest) {
-    console.log(`[build] Building ${buildContext.app} for smoke testing.`);
-  } else if (appConfig().version !== buildContext.version) {
+  if (!buildContext.smokeTest && appConfig().version !== buildContext.version) {
     console.log(
       `[build] App version mismatch with Git tag ${appConfig().version} != ${buildContext.version}`,
     );
@@ -48,7 +47,11 @@ module.exports.start = async function(forcedVersion = null) {
   const configRenderer = require('../webpack/webpack.config.production.babel');
   const configMain = require('../webpack/webpack.config.electron.babel');
 
-  console.log(`[build] Starting build for ref "${buildContext.gitRef}"`);
+  if (buildContext.smokeTest) {
+    console.log(`[build] Starting build to smoke test ${buildContext.app}`);
+  } else {
+    console.log(`[build] Starting build for ref "${buildContext.gitRef}"`);
+  }
   console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
   console.log(`[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim());
 
@@ -76,7 +79,7 @@ module.exports.start = async function(forcedVersion = null) {
   await copyFiles(`../app/icons/${appConfig().appId}`, '../build/');
 
   // Generate necessary files needed by `electron-builder`
-  await generatePackageJson('../package.json', '../build/package.json', forcedVersion);
+  await generatePackageJson('../package.json', '../build/package.json');
 
   // Install Node modules
   console.log('[build] Installing dependencies');
@@ -207,7 +210,7 @@ async function install(relDir) {
   });
 }
 
-function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
+function generatePackageJson(relBasePkg, relOutPkg) {
   // Read package.json's
   const basePath = path.resolve(__dirname, relBasePkg);
   const outPath = path.resolve(__dirname, relOutPkg);
@@ -217,7 +220,7 @@ function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
   const app = appConfig();
   const appPkg = {
     name: app.name,
-    version: forcedVersion || app.version,
+    version: app.version,
     productName: app.productName,
     longName: app.longName,
     description: basePkg.description,
@@ -253,40 +256,4 @@ function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
   }
 
   fs.writeFileSync(outPath, JSON.stringify(appPkg, null, 2));
-}
-
-// Only release if we're building a tag that ends in a version number
-function getBuildContext() {
-  const {
-    GIT_TAG,
-    GITHUB_REF,
-    GITHUB_SHA,
-    TRAVIS_TAG,
-    TRAVIS_COMMIT,
-    TRAVIS_CURRENT_BRANCH,
-    SMOKE_TEST,
-  } = process.env;
-
-  if (SMOKE_TEST) {
-    return {
-      smokeTest: true,
-      app: SMOKE_TEST,
-    };
-  }
-
-  const gitCommit = GITHUB_SHA || TRAVIS_COMMIT;
-  const gitRef = GIT_TAG || GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || '';
-  const tagMatch = gitRef.match(/(designer|core)@(\d{4}\.\d+\.\d+(-(alpha|beta)\.\d+)?)$/);
-
-  const app = tagMatch ? tagMatch[1] : null;
-  const version = tagMatch ? tagMatch[2] : null;
-  const channel = tagMatch ? tagMatch[4] : 'stable';
-
-  return {
-    app,
-    channel,
-    version,
-    gitRef,
-    gitCommit,
-  };
 }

@@ -26,8 +26,8 @@
     "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app",
     "preinstall": "node ./scripts/check-version.js",
 
-    "app-build:smoke:core": "cross-env SMOKE_TEST=core npm run app-build ",
-    "app-build:smoke:designer": "cross-env SMOKE_TEST=designer npm run app-build ",
+    "app-build:smoke:core": "cross-env SMOKE_TEST=core npm run app-build",
+    "app-build:smoke:designer": "cross-env SMOKE_TEST=designer npm run app-build",
     "test:smoke:core": "npm run test:build:core --prefix packages/insomnia-smoke-test",
     "test:smoke:designer": "npm run test:build:designer --prefix packages/insomnia-smoke-test",
     "test:smoke:package": "npm run test:package --prefix packages/insomnia-smoke-test"
