@@ -273,8 +273,8 @@ function getBuildContext() {
   const gitRef = GIT_TAG || GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || '';
   const tagMatch = gitRef.match(/(designer|core)@(\d{4}\.\d+\.\d+(-(alpha|beta)\.\d+)?)$/);
 
-  const app = tagMatch ? tagMatch[1] : 'core';
-  const version = tagMatch ? tagMatch[2] : '2020.4.0-beta.4';
+  const app = tagMatch ? tagMatch[1] : null;
+  const version = tagMatch ? tagMatch[2] : null;
   const channel = tagMatch ? tagMatch[4] : 'stable';
 
   return {
