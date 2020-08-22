@@ -13,11 +13,11 @@ describe('Application launch', function() {
       // path: '/Applications/Insomnia.app/Contents/MacOS/Insomnia',
 
       // Run after app-package
-      // path: path.join(__dirname, '../insomnia-app/dist/mac/Insomnia.app/Contents/MacOS/Insomnia'),
+      // path: path.join(__dirname, '../insomnia-app/dist/com.insomnia.app/mac/Insomnia.app/Contents/MacOS/Insomnia'),
 
       // Run after app-build
       path: electronPath,
-      args: [path.join(__dirname, '../insomnia-app/build')],
+      args: [path.join(__dirname, '../insomnia-app/build/com.insomnia.app')],
 
       // Don't ask why, but don't remove chromeDriverArgs
       // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725

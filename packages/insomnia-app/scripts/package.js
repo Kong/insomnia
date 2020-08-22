@@ -27,7 +27,8 @@ module.exports.start = async function() {
   console.log('[package] Removing existing directories');
 
   if (process.env.KEEP_DIST_FOLDER !== 'yes') {
-    await emptyDir('../dist/*');
+    const appId = appConfig().appId;
+    await emptyDir(path.join('..', 'dist', appId, '*'));
   }
 
   console.log('[package] Packaging app');
