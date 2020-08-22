@@ -31,16 +31,18 @@ if (require.main === module) {
 
 async function start(app, version) {
   console.log(`[release] Creating release for ${app} ${version}`);
+  const appId = appConfig().appId;
+  const distGlob = ext => path.join('dist', appId, '**', `*${ext}`);
 
   const assetGlobs = {
-    darwin: ['dist/**/*.zip', 'dist/**/*.dmg'],
-    win32: ['dist/squirrel-windows/*'],
+    darwin: [distGlob('.zip'), distGlob('.dmg')],
+    win32: [path.join('dist', appId, 'squirrel-windows', '*')],
     linux: [
-      'dist/**/*.snap',
-      'dist/**/*.rpm',
-      'dist/**/*.deb',
-      'dist/**/*.AppImage',
-      'dist/**/*.tar.gz',
+      distGlob('.snap'),
+      distGlob('.rpm'),
+      distGlob('.deb'),
+      distGlob('.AppImage'),
+      distGlob('.tar.gz'),
     ],
   };
 

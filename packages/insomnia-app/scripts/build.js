@@ -46,6 +46,7 @@ module.exports.start = async function(forceFromGitRef) {
   // These must be required after APP_ID environment variable is set above
   const configRenderer = require('../webpack/webpack.config.production.babel');
   const configMain = require('../webpack/webpack.config.electron.babel');
+  const buildFolder = path.join('../build', appConfig().appId);
 
   if (buildContext.smokeTest) {
     console.log(`[build] Starting build to smoke test ${buildContext.app}`);
@@ -62,11 +63,11 @@ module.exports.start = async function(forceFromGitRef) {
 
   // Remove folders first
   console.log('[build] Removing existing directories');
-  await emptyDir('../build');
+  await emptyDir(buildFolder);
 
   // Build the things
   console.log('[build] Building license list');
-  await buildLicenseList('../', '../build/opensource-licenses.txt');
+  await buildLicenseList('../', path.join(buildFolder, 'opensource-licenses.txt'));
   console.log('[build] Building Webpack renderer');
   await buildWebpack(configRenderer);
   console.log('[build] Building Webpack main');
@@ -74,16 +75,16 @@ module.exports.start = async function(forceFromGitRef) {
 
   // Copy necessary files
   console.log('[build] Copying files');
-  await copyFiles('../bin', '../build/');
-  await copyFiles('../app/static', '../build/static');
-  await copyFiles(`../app/icons/${appConfig().appId}`, '../build/');
+  await copyFiles('../bin', buildFolder);
+  await copyFiles('../app/static', path.join(buildFolder, 'static'));
+  await copyFiles(`../app/icons/${appConfig().appId}`, buildFolder);
 
   // Generate necessary files needed by `electron-builder`
-  await generatePackageJson('../package.json', '../build/package.json');
+  await generatePackageJson('../package.json', path.join(buildFolder, 'package.json'));
 
   // Install Node modules
   console.log('[build] Installing dependencies');
-  await install('../build/');
+  await install(buildFolder);
 
   console.log('[build] Complete!');
   return buildContext;
