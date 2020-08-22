@@ -1,7 +1,8 @@
 const Application = require('spectron').Application;
-// const fs = require('fs');
+const fs = require('fs');
 const electronPath = require('../insomnia-app/node_modules/electron');
 const path = require('path');
+const { mockServerClient } = require('mockserver-client');
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
@@ -40,56 +41,66 @@ describe('Application launch', function() {
     await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
   });
 
-  // it('create and send a request', async () => {
-  //   await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
-  //
-  //   // Create a new request
-  //   await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
-  //
-  //   await app.client
-  //     .$('[aria-hidden=false]')
-  //     .then(e => e.$('button*=New Request'))
-  //     .then(e => e.click());
-  //
-  //   // Wait for modal to open
-  //   await app.client.waitUntilTextExists('.modal__header', 'New Request');
-  //
-  //   // Set name and create request
-  //   const input = await app.client.$('.modal input');
-  //   await app.client.waitUntil(() => input.isFocused());
-  //   const requestName = 'Request from test';
-  //   await input.keys(requestName);
-  //
-  //   await app.client
-  //     .$('.modal .modal__footer')
-  //     .then(e => e.$('button=Create'))
-  //     .then(e => e.click());
-  //
-  //   // Ensure first item is the one we created and is selected
-  //   const requests = await app.client.$$('.sidebar__item');
-  //   const firstRequest = requests[0];
-  //   const firstRequestName = await firstRequest.$('span.editable').then(e => e.getText());
-  //   const firstRequestClasses = await firstRequest.getAttribute('class');
-  //
-  //   expect(firstRequestName).toBe(requestName);
-  //   expect(firstRequestClasses).toContain('sidebar__item--active');
-  //
-  //   // Type into url bar
-  //   const urlEditor = await app.client.$('.urlbar .editor');
-  //   await urlEditor.click();
-  //   await urlEditor.keys('https://petstore.swagger.io/v2/pet/findByStatus?status=available');
-  //
-  //   // Send request
-  //   await app.client.$('.urlbar__send-btn').then(e => e.click());
-  //
-  //   // Expect 200
-  //   await app.client
-  //     .$('.response-pane .pane__header .tag.bg-success')
-  //     .then(e => e.getText())
-  //     .then(e => expect(e).toBe('200 OK'));
-  //
-  //   await app.browserWindow.capturePage().then(function(imageBuffer) {
-  //     fs.writeFileSync('page.png', imageBuffer);
-  //   });
-  // });
+  fit('create and send a request', async () => {
+    await mockServerClient('localhost', 1080).openAPIExpectation({
+      specUrlOrPayload:
+        'https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json',
+      operationsAndResponses: {
+        showPetById: '200',
+        findByStatus: '200',
+        createPets: '500',
+      },
+    });
+
+    await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
+
+    // Create a new request
+    await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
+
+    await app.client
+      .$('[aria-hidden=false]')
+      .then(e => e.$('button*=New Request'))
+      .then(e => e.click());
+
+    // Wait for modal to open
+    await app.client.waitUntilTextExists('.modal__header', 'New Request');
+
+    // Set name and create request
+    const input = await app.client.$('.modal input');
+    await app.client.waitUntil(() => input.isFocused());
+    const requestName = 'Request from test';
+    await input.keys(requestName);
+
+    await app.client
+      .$('.modal .modal__footer')
+      .then(e => e.$('button=Create'))
+      .then(e => e.click());
+
+    // Ensure first item is the one we created and is selected
+    const requests = await app.client.$$('.sidebar__item');
+    const firstRequest = requests[0];
+    const firstRequestName = await firstRequest.$('span.editable').then(e => e.getText());
+    const firstRequestClasses = await firstRequest.getAttribute('class');
+
+    expect(firstRequestName).toBe(requestName);
+    expect(firstRequestClasses).toContain('sidebar__item--active');
+
+    // Type into url bar
+    const urlEditor = await app.client.$('.urlbar .editor');
+    await urlEditor.click();
+    await urlEditor.keys('http://localhost:1080/v2/pet/findByStatus?status=available');
+
+    // Send request
+    await app.client.$('.urlbar__send-btn').then(e => e.click());
+
+    // Expect 200
+    await app.client
+      .$('.response-pane .pane__header .tag.bg-success')
+      .then(e => e.getText())
+      .then(e => expect(e).toBe('200 OK'));
+
+    await app.browserWindow.capturePage().then(function(imageBuffer) {
+      fs.writeFileSync('page.png', imageBuffer);
+    });
+  });
 });

@@ -2,12 +2,16 @@
   "name": "insomnia-smoke-test",
   "version": "1.0.0",
   "scripts": {
-    "test:build:core": "jest",
-    "test:package:core": "cross-env PACKAGE=Insomnia jest"
+    "test:build:core": "npm run mockserver:start && jest && npm run mockserver:stop",
+    "test:package:core": "cross-env PACKAGE=Insomnia jest",
+    "mockserver:start": "node mockserver/start.js",
+    "mockserver:stop": "node mockserver/stop.js"
   },
   "devDependencies": {
     "cross-env": "^7.0.2",
     "jest": "^26.4.0",
+    "mockserver-client": "^5.11.1",
+    "mockserver-node": "^5.11.1",
     "spectron": "^11.1.0",
     "spectron-keys": "0.0.1"
   }
