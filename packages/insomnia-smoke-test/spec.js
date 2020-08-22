@@ -3,6 +3,22 @@ const Application = require('spectron').Application;
 const electronPath = require('../insomnia-app/node_modules/electron');
 const path = require('path');
 
+// export function isMac() {
+//   return getAppPlatform() === 'darwin';
+// }
+
+// export function isLinux() {
+//   return getAppPlatform() === 'linux';
+// }
+
+// export function isWindows() {
+//   return getAppPlatform() === 'win32';
+// }
+
+// export function getAppPlatform() {
+//   return process.platform;
+// }
+
 describe('Application launch', function() {
   jest.setTimeout(50000);
   let app = null;
@@ -12,10 +28,13 @@ describe('Application launch', function() {
       // Run installed app
       // path: '/Applications/Insomnia.app/Contents/MacOS/Insomnia',
 
-      // Run after app-package
+      // Run after app-package - mac
       // path: path.join(__dirname, '../insomnia-app/dist/com.insomnia.app/mac/Insomnia.app/Contents/MacOS/Insomnia'),
 
-      // Run after app-build
+      // Run after app-package - Windows
+      // path: path.join(__dirname, '../insomnia-app/dist/com.insomnia.app/win-unpacked/Insomnia.exe'),
+
+      // Run after app-build - mac, Windows
       path: electronPath,
       args: [path.join(__dirname, '../insomnia-app/build/com.insomnia.app')],
 
@@ -23,7 +42,13 @@ describe('Application launch', function() {
       // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
       chromeDriverArgs: ['remote-debugging-port=9222'],
     });
-    await app.start();
+    await app.start().then(async () => {
+      // Windows spawns two terminal windows when running spectron, and the only workaround
+      // is to focus the window on start.
+      // https://github.com/electron-userland/spectron/issues/60
+      await app.browserWindow.focus();
+      await app.browserWindow.setAlwaysOnTop(true);
+    });
   });
 
   afterEach(async () => {
