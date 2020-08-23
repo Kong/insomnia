@@ -1,10 +1,10 @@
 # Insomnia Smoke Tests
 
 ```sh
-# Create the docker container, to set up the mock server
-docker-compose up -d
-
-# Run tests
 npm install
-npm run test:build:core
+
+npm run test:core:build
+npm run test:designer:build
+npm run test:core:package
+npm run test:core:build
 ```

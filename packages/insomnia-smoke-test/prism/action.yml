@@ -1,6 +1,0 @@
-# action.yml
-name: 'Prism mock server'
-description: 'Run a mock server using Prism'
-runs:
-  using: 'docker'
-  image: 'Dockerfile'

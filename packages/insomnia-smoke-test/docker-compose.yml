@@ -1,6 +1,0 @@
-version: '3'
-services:
-  prism-server:
-    build: ./prism
-    ports:
-      - "4010:4010"
