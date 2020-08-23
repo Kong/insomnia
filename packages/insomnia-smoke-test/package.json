@@ -4,12 +4,9 @@
   "version": "1.0.0",
   "scripts": {
     "test:build:core": "jest",
-    "test:package:core": "cross-env PACKAGE=Insomnia jest",
-    "start:prism": "prism mock prism/petstore.oas3.yaml"
+    "test:package:core": "cross-env PACKAGE=Insomnia jest"
   },
   "devDependencies": {
-    "@stoplight/prism-cli": "^3.3.6",
-    "concurrently": "^5.3.0",
     "cross-env": "^7.0.2",
     "jest": "^26.4.0",
     "spectron": "^11.1.0",
