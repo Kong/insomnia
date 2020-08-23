@@ -1,5 +1,5 @@
 const Application = require('spectron').Application;
-const fs = require('fs');
+// const fs = require('fs');
 const electronPath = require('../insomnia-app/node_modules/electron');
 const path = require('path');
 
@@ -40,7 +40,7 @@ describe('Application launch', function() {
     await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
   });
 
-  fit('create and send a request', async () => {
+  it('create and send a request', async () => {
     await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
 
     // Create a new request
@@ -88,8 +88,8 @@ describe('Application launch', function() {
       .then(e => e.getText())
       .then(e => expect(e).toBe('200 OK'));
 
-    await app.browserWindow.capturePage().then(function(imageBuffer) {
-      fs.writeFileSync('page.png', imageBuffer);
-    });
+    // await app.browserWindow.capturePage().then(function(imageBuffer) {
+    //   fs.writeFileSync('page.png', imageBuffer);
+    // });
   });
 });
