@@ -2,7 +2,6 @@ const Application = require('spectron').Application;
 const fs = require('fs');
 const electronPath = require('../insomnia-app/node_modules/electron');
 const path = require('path');
-const { mockServerClient } = require('mockserver-client');
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
@@ -42,16 +41,6 @@ describe('Application launch', function() {
   });
 
   fit('create and send a request', async () => {
-    await mockServerClient('localhost', 1080).openAPIExpectation({
-      specUrlOrPayload:
-        'https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json',
-      operationsAndResponses: {
-        showPetById: '200',
-        findByStatus: '200',
-        createPets: '500',
-      },
-    });
-
     await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
 
     // Create a new request
@@ -88,7 +77,7 @@ describe('Application launch', function() {
     // Type into url bar
     const urlEditor = await app.client.$('.urlbar .editor');
     await urlEditor.click();
-    await urlEditor.keys('http://localhost:1080/v2/pet/findByStatus?status=available');
+    await urlEditor.keys('http://127.0.0.1:4010/pets/123');
 
     // Send request
     await app.client.$('.urlbar__send-btn').then(e => e.click());

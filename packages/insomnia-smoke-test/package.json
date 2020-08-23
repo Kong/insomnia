@@ -2,16 +2,15 @@
   "name": "insomnia-smoke-test",
   "version": "1.0.0",
   "scripts": {
-    "test:build:core": "npm run mockserver:start && jest && npm run mockserver:stop",
+    "test:build:core": "jest",
     "test:package:core": "cross-env PACKAGE=Insomnia jest",
-    "mockserver:start": "node mockserver/start.js",
-    "mockserver:stop": "node mockserver/stop.js"
+    "start:prism": "prism mock prism/petstore.oas3.yaml"
   },
   "devDependencies": {
+    "@stoplight/prism-cli": "^3.3.6",
+    "concurrently": "^5.3.0",
     "cross-env": "^7.0.2",
     "jest": "^26.4.0",
-    "mockserver-client": "^5.11.1",
-    "mockserver-node": "^5.11.1",
     "spectron": "^11.1.0",
     "spectron-keys": "0.0.1"
   }
