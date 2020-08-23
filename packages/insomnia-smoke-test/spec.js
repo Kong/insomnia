@@ -77,7 +77,7 @@ describe('Application launch', function() {
     // Type into url bar
     const urlEditor = await app.client.$('.urlbar .editor');
     await urlEditor.click();
-    await urlEditor.keys('http://127.0.0.1:4010/pets/123');
+    await urlEditor.keys('http://127.0.0.1:4010/pets/1');
 
     // Send request
     await app.client.$('.urlbar__send-btn').then(e => e.click());
