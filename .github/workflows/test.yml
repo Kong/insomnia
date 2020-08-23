@@ -43,6 +43,6 @@ jobs:
         run: npm run bootstrap
       - name: Run tests
         run: npm test
-      - name: Run prism
-        uses: ./packages/insomnia-smoke-test/prism # Uses an action in the root directory
-        id: prism
+      # - name: Run prism
+      #   uses: ./packages/insomnia-smoke-test/prism # Uses an action in the root directory
+      #   id: prism
