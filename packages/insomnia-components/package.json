@@ -20,9 +20,9 @@
   "devDependencies": {
     "@babel/core": "^7.7.7",
     "@babel/plugin-proposal-decorators": "^7.8.3",
-    "@storybook/addon-contexts": "^5.3.19",
     "@storybook/addon-info": "^5.3.19",
     "@storybook/addon-knobs": "^6.0.16",
+    "@storybook/addon-toolbars": "^6.0.16",
     "@storybook/react": "^6.0.16",
     "@svgr/cli": "^5.3.0",
     "babel-loader": "^8.0.6",
