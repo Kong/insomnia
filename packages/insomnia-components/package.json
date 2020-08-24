@@ -14,7 +14,7 @@
     "build-storybook": "build-storybook --quiet",
     "storybook": "start-storybook --port 3223",
     "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js",
-    "prepack": "npm run convert-svg && npm run build"
+    "prepare": "npm run convert-svg && npm run build"
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",
