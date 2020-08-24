@@ -71,12 +71,12 @@ const StyledBadge: React.ComponentType<{}> = styled.span`
   text-transform: capitalize;
 `;
 
-const StyledDangerBadge = styled(StyledBadge)`
+const StyledFailedBadge = styled(StyledBadge)`
   border-color: var(--color-danger);
   color: var(--color-danger);
 `;
 
-const StyledSuccessBadge = styled(StyledBadge)`
+const StyledPassedBadge = styled(StyledBadge)`
   border-color: var(--color-success);
   color: var(--color-success);
 `;
@@ -409,9 +409,9 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                   <StyledResultListItem>
                     <div>
                       {t.err.message ? (
-                        <StyledDangerBadge>Failed</StyledDangerBadge>
+                        <StyledFailedBadge>Failed</StyledFailedBadge>
                       ) : (
-                        <StyledSuccessBadge>Passed</StyledSuccessBadge>
+                        <StyledPassedBadge>Passed</StyledPassedBadge>
                       )}
                       <p>{t.title}</p>
                       <StyledTimestamp>
