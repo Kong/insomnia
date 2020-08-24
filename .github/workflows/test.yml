@@ -67,7 +67,7 @@ jobs:
         run: npm run bootstrap
       - name: Run tests
         run: npm test
-#      - name: Build core for smoke tests
-#        run: npm run app-build:smoke:core
-#      - name: Run core smoke tests
-#        run: npm run test:smoke:core
+      - name: Build core for smoke tests
+        run: npm run app-build:smoke:core
+      - name: Run core smoke tests
+        run: npm run test:smoke:core
