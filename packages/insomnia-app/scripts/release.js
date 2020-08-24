@@ -15,11 +15,11 @@ const octokit = new Octokit({
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      const buildContext = await buildTask.start();
+      const buildContext = await buildTask.start(true);
       await packageTask.start();
       await start(buildContext.app, buildContext.version);
     } catch (err) {
-      console.log('[package] ERROR:', err);
+      console.log('[release] ERROR:', err);
       process.exit(1);
     }
   });
