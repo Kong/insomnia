@@ -1,7 +1,7 @@
 import * as React from 'react';
 import ToggleSwitch from './toggle-switch';
 
-export default { title: 'Form Elements | Toggle Switch' };
+export default { title: 'Form Elements / Toggle Switch' };
 
 const defaultOnChange = () => {};
 

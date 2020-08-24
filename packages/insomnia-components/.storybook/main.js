@@ -4,4 +4,5 @@ module.exports = {
     '@storybook/addon-contexts/register',
     'storybook-addon-designs/register',
   ],
+  stories: ['../components/**/*.stories.js'],
 };

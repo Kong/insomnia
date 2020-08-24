@@ -7,7 +7,7 @@ import SvgIcon from '../svg-icon';
 import Button from '../button';
 
 export default {
-  title: 'Navigation | Dropdown',
+  title: 'Navigation / Dropdown',
   decorators: [withKnobs],
 };
 

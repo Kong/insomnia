@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import SvgIcon, { IconEnum } from './svg-icon';
 
 export default {
-  title: 'Buttons | Button',
+  title: 'Buttons / Button',
   decorators: [withKnobs],
 };
 

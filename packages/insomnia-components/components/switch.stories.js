@@ -1,7 +1,7 @@
 import React from 'react';
 import Switch from './switch';
 
-export default { title: 'Navigation | Sliding Switch' };
+export default { title: 'Navigation / Sliding Switch' };
 
 export const _design = () => (
   <Switch

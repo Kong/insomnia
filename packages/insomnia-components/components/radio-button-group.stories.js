@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import RadioButtonGroup from './radio-button-group';
 
-export default { title: 'Navigation | Radio Button Group' };
+export default { title: 'Navigation / Radio Button Group' };
 
 export const _default = () => {
   const [selectedValue, setSelectedValue] = React.useState('scratch');

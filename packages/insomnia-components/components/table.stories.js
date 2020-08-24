@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
 
-export default { title: 'Tables | Table' };
+export default { title: 'Tables / Table' };
 
 export const _default = () => (
   <Table>

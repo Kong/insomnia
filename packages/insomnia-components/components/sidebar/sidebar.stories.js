@@ -4,7 +4,7 @@ import { withKnobs } from '@storybook/addon-knobs';
 import { withDesign } from 'storybook-addon-designs';
 
 export default {
-  title: 'Navigation | Sidebar',
+  title: 'Navigation / Sidebar',
   decorators: [withKnobs, withDesign],
 };
 
@@ -3149,11 +3149,9 @@ export const SimpleAPI = () => {
   );
 };
 
-_default.story = {
-  parameters: {
-    design: {
-      type: 'figma',
-      url: 'https://www.figma.com/file/sS7oBbKmDvhtq5lXyTckVe/Style-Guide-Components?node-id=0%3A2',
-    },
+_default.parameters = {
+  design: {
+    type: 'figma',
+    url: 'https://www.figma.com/file/sS7oBbKmDvhtq5lXyTckVe/Style-Guide-Components?node-id=0%3A2',
   },
 };

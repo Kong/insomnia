@@ -1,7 +1,7 @@
 import * as React from 'react';
 import MultiSwitch from './multi-switch';
 
-export default { title: 'Navigation | Sliding Switch' };
+export default { title: 'Navigation / Multi Switch' };
 
 export const _default = () => {
   const [selectedValue, setSelectedValue] = React.useState('debug');
