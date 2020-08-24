@@ -11,7 +11,7 @@ on:
       - synchronize
 
 jobs:
-  Test:
+  OS:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -38,5 +38,9 @@ jobs:
         run: npm test
       - name: Build core for smoke tests
         run: npm run app-build:smoke:core
+      - name: Build designer for smoke tests
+        run: npm run app-build:smoke:designer
       - name: Run core smoke tests
         run: npm run test:smoke:core
+      - name: Run designer smoke tests
+        run: npm run test:smoke:designer
