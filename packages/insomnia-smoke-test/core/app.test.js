@@ -1,7 +1,9 @@
 const Application = require('spectron').Application;
 // const fs = require('fs');
-const electronPath = require('../insomnia-app/node_modules/electron');
+const electronPath = require('../../insomnia-app/node_modules/electron');
 const path = require('path');
+const debug = require('../modules/debug');
+const client = require('../modules/client');
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
@@ -20,7 +22,7 @@ describe('Application launch', function() {
 
       // Run after app-build - mac, Windows, Linux
       path: electronPath,
-      args: [path.join(__dirname, '../insomnia-app/build/com.insomnia.app')],
+      args: [path.join(__dirname, '../../insomnia-app/build/com.insomnia.app')],
 
       // Don't ask why, but don't remove chromeDriverArgs
       // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
@@ -42,15 +44,12 @@ describe('Application launch', function() {
   });
 
   it('shows an initial window', async () => {
-    await expect(app.browserWindow.isDevToolsOpened()).resolves.toBe(false);
-    await expect(app.client.getWindowCount()).resolves.toBe(1);
-    await expect(app.browserWindow.isMinimized()).resolves.toBe(false);
-    await expect(app.browserWindow.isFocused()).resolves.toBe(true);
-    await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
+    await client.correctlyLaunched(app);
+    await debug.workspaceDropdownExists(app);
   });
 
   it('creates and sends a request', async () => {
-    await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
+    await debug.workspaceDropdownExists(app);
 
     // Create a new request
     await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
@@ -65,7 +64,7 @@ describe('Application launch', function() {
 
     // Set name and create request
     const input = await app.client.$('.modal input');
-    await app.client.waitUntil(() => input.isFocused());
+    await input.waitUntil(() => input.isFocused());
     const requestName = 'Request from test';
     await input.keys(requestName);
 

@@ -3,10 +3,10 @@
   "name": "insomnia-smoke-test",
   "version": "1.0.0",
   "scripts": {
-    "spectron:core:build": "xvfb-maybe jest",
-    "spectron:designer:build": "xvfb-maybe jest",
-    "spectron:core:package": "xvfb-maybe jest",
-    "spectron:designer:package": "xvfb-maybe jest",
+    "spectron:core:build": "xvfb-maybe jest --testPathPattern core",
+    "spectron:designer:build": "xvfb-maybe jest --testPathPattern designer",
+    "spectron:core:package": "xvfb-maybe jest --testPathPattern core",
+    "spectron:designer:package": "xvfb-maybe jest --testPathPattern designer",
 
     "start:prism": "prism mock prism/petstore.oas3.yaml",
     "with-mock": "concurrently --names prism,spectron --success first --kill-others \"npm run start:prism\"",
