@@ -40,7 +40,7 @@ describe('Application launch', function() {
 
       // Don't ask why, but don't remove chromeDriverArgs
       // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
-      chromeDriverArgs: ['--no-sandbox', '--whitelisted-ips=', '--disable-dev-shm-usage'],
+      chromeDriverArgs: ['--no-sandbox', '--disable-dev-shm-usage'],
     });
     await app.start().then(async () => {
       // Windows spawns two terminal windows when running spectron, and the only workaround
