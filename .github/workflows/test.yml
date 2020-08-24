@@ -29,8 +29,12 @@ jobs:
         run: npm test
       - name: Build core for smoke tests
         run: npm run app-build:smoke:core
+      - name: Build designer for smoke tests
+        run: npm run app-build:smoke:designer
       - name: Run core smoke tests
         run: npm run test:smoke:core
+      - name: Run designer smoke tests
+        run: npm run test:smoke:designer
   Windows:
     name: Test Windows
     runs-on: windows-latest
@@ -49,8 +53,12 @@ jobs:
         run: npm test
       - name: Build core for smoke tests
         run: npm run app-build:smoke:core
+      - name: Build designer for smoke tests
+        run: npm run app-build:smoke:designer
       - name: Run core smoke tests
         run: npm run test:smoke:core
+      - name: Run designer smoke tests
+        run: npm run test:smoke:designer
   Linux:
     name: Test Linux
     runs-on: ubuntu-latest
@@ -69,5 +77,9 @@ jobs:
         run: npm test
       - name: Build core for smoke tests
         run: npm run app-build:smoke:core
+      - name: Build designer for smoke tests
+        run: npm run app-build:smoke:designer
       - name: Run core smoke tests
         run: npm run test:smoke:core
+      - name: Run designer smoke tests
+        run: npm run test:smoke:designer
