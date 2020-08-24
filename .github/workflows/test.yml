@@ -12,7 +12,7 @@ on:
 
 jobs:
   Mac:
-    name: Mac
+    name: Test Mac
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
@@ -31,7 +31,7 @@ jobs:
       - name: Run core smoke tests
         run: npm run test:smoke:core
   Windows:
-    name: Windows
+    name: Test Windows
     runs-on: windows-latest
     steps:
       - name: Checkout branch
@@ -51,7 +51,7 @@ jobs:
       - name: Run core smoke tests
         run: npm run test:smoke:core
   Linux:
-    name: Linux
+    name: Test Linux
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
