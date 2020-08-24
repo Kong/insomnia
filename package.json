@@ -15,7 +15,7 @@
     "publish": "lerna publish",
     "clean": "lerna clean --yes && rimraf node_modules",
     "typecheck": "lerna run --parallel --stream typecheck",
-    "test": "npm run lint && npm run typecheck && lerna run --stream --parallel smoke-test",
+    "test": "npm run lint && npm run typecheck && lerna run --stream --parallel test",
     "test:pre-release": "npm run test --prefix packages/insomnia-app",
     "inso-start": "npm start --prefix packages/insomnia-inso",
     "app-start": "npm start --prefix packages/insomnia-app",
