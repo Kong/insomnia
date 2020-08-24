@@ -270,8 +270,7 @@ function getBuildContext() {
   } = process.env;
 
   const gitCommit = GITHUB_SHA || TRAVIS_COMMIT;
-  const gitRef =
-    GIT_TAG || GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || 'designer@2020.4.0-beta.4';
+  const gitRef = GIT_TAG || GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || '';
   const tagMatch = gitRef.match(/(designer|core)@(\d{4}\.\d+\.\d+(-(alpha|beta)\.\d+)?)$/);
 
   const app = tagMatch ? tagMatch[1] : null;
