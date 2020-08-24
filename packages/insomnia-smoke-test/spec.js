@@ -40,7 +40,7 @@ describe('Application launch', function() {
     await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
   });
 
-  it('create and send a request', async () => {
+  it('creates and sends a request', async () => {
     await app.client.waitUntilTextExists('.workspace-dropdown', 'Insomnia');
 
     // Create a new request
