@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import styled from 'styled-components';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
@@ -41,6 +42,72 @@ type State = {|
   testsRunning: Array<UnitTest> | null,
   resultsError: string | null,
 |};
+
+const StyledTimestamp: React.ComponentType<{}> = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  flex-shrink: 0;
+  font-size: var(--font-size-xs);
+  color: var(--hl-xl);
+
+  svg {
+    fill: var(--hl-xl);
+    margin-right: var(--padding-xxs);
+  }
+`;
+
+const StyledBadge: React.ComponentType<{}> = styled.span`
+  padding: var(--padding-xs) var(--padding-sm);
+  border: 1px solid var(--color-success);
+  background-color: var(--color-bg);
+  color: var(--color-success);
+  font-weight: var(--font-weight-bold);
+  border-radius: var(--radius-sm);
+  flex-basis: 2.5em;
+  flex-shrink: 0;
+  text-align: center;
+  text-transform: capitalize;
+`;
+
+const StyledDangerBadge = styled(StyledBadge)`
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+`;
+
+const StyledSuccessBadge = styled(StyledBadge)`
+  border-color: var(--color-success);
+  color: var(--color-success);
+`;
+
+const StyledResultListItem: React.ComponentType<{}> = styled.li`
+  > div:first-of-type {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    > *:not(:first-child) {
+      margin: var(--padding-xs) 0 var(--padding-xs) var(--padding-sm);
+    }
+  }
+
+  code {
+    background-color: var(--hl-xs);
+    padding: var(--padding-sm) var(--padding-md) var(--padding-sm) var(--padding-md);
+    color: var(--color-danger);
+    display: block;
+    margin: var(--padding-sm) 0 0 0;
+  }
+
+  p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1;
+  }
+`;
 
 @autobind
 class WrapperUnitTest extends React.PureComponent<Props, State> {
@@ -338,21 +405,23 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
             </div>
             <ListGroup>
               {tests.map((t, i) => (
-                <React.Fragment key={i}>
-                  {t.err.message && (
-                    <ListGroupItem
-                      key={i}
-                      name={t.title}
-                      time={t.duration}
-                      result="fail"
-                      errorMsg={t.err.message}
-                    />
-                  )}
-
-                  {!t.err.message && (
-                    <ListGroupItem key={i} name={t.title} time={t.duration} result="pass" />
-                  )}
-                </React.Fragment>
+                <ListGroupItem key={i}>
+                  <StyledResultListItem>
+                    <div>
+                      {t.err.message ? (
+                        <StyledDangerBadge>Failed</StyledDangerBadge>
+                      ) : (
+                        <StyledSuccessBadge>Passed</StyledSuccessBadge>
+                      )}
+                      <p>{t.title}</p>
+                      <StyledTimestamp>
+                        <SvgIcon icon="clock" />
+                        <span>{t.duration} ms</span>
+                      </StyledTimestamp>
+                    </div>
+                    {t.err.message && <code>{t.err.message}</code>}
+                  </StyledResultListItem>
+                </ListGroupItem>
               ))}
             </ListGroup>
           </div>
