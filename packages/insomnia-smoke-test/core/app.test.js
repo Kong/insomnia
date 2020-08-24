@@ -14,10 +14,13 @@ describe('Application launch', function() {
       // Run installed app
       // path: '/Applications/Insomnia.app/Contents/MacOS/Insomnia',
 
-      // Run after app-package
-      // path: path.join(__dirname, '../../insomnia-app/dist/com.insomnia.app/mac/Insomnia.app/Contents/MacOS/Insomnia'),
+      // Run after app-package - mac
+      // path: path.join(__dirname, '../insomnia-app/dist/com.insomnia.app/mac/Insomnia.app/Contents/MacOS/Insomnia'),
 
-      // Run after app-build
+      // Run after app-package - Windows
+      // path: path.join(__dirname, '../insomnia-app/dist/com.insomnia.app/win-unpacked/Insomnia.exe'),
+
+      // Run after app-build - mac, Windows, Linux
       path: electronPath,
       args: [path.join(__dirname, '../../insomnia-app/build/com.insomnia.app')],
 
@@ -25,7 +28,13 @@ describe('Application launch', function() {
       // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
       chromeDriverArgs: ['remote-debugging-port=9222'],
     });
-    await app.start();
+    await app.start().then(async () => {
+      // Windows spawns two terminal windows when running spectron, and the only workaround
+      // is to focus the window on start.
+      // https://github.com/electron-userland/spectron/issues/60
+      await app.browserWindow.focus();
+      await app.browserWindow.setAlwaysOnTop(true);
+    });
   });
 
   afterEach(async () => {
@@ -39,7 +48,7 @@ describe('Application launch', function() {
     await debug.workspaceDropdownExists(app);
   });
 
-  it('create and send a request', async () => {
+  it('creates and sends a request', async () => {
     await debug.workspaceDropdownExists(app);
 
     // Create a new request
@@ -76,7 +85,7 @@ describe('Application launch', function() {
     // Type into url bar
     const urlEditor = await app.client.$('.urlbar .editor');
     await urlEditor.click();
-    await urlEditor.keys('https://petstore.swagger.io/v2/pet/findByStatus?status=available');
+    await urlEditor.keys('http://127.0.0.1:4010/pets/1');
 
     // Send request
     await app.client.$('.urlbar__send-btn').then(e => e.click());

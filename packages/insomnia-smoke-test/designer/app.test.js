@@ -15,18 +15,27 @@ describe('Application launch', function() {
       // Run installed app
       // path: '/Applications/Insomnia.app/Contents/MacOS/Insomnia',
 
-      // Run after app-package
-      // path: path.join(__dirname, '../../insomnia-app/dist/com.insomnia.app/mac/Insomnia.app/Contents/MacOS/Insomnia'),
+      // Run after app-package - mac
+      // path: path.join(__dirname, '../insomnia-app/dist/com.insomnia.app/mac/Insomnia.app/Contents/MacOS/Insomnia'),
 
-      // Run after app-build
+      // Run after app-package - Windows
+      // path: path.join(__dirname, '../insomnia-app/dist/com.insomnia.app/win-unpacked/Insomnia.exe'),
+
+      // Run after app-build - mac, Windows, Linux
       path: electronPath,
-      args: [path.join(__dirname, '../../insomnia-app/build/com.insomnia.designer')],
+      args: [path.join(__dirname, '../../insomnia-app/build/com.insomnia.app')],
 
       // Don't ask why, but don't remove chromeDriverArgs
       // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
       chromeDriverArgs: ['remote-debugging-port=9222'],
     });
-    await app.start();
+    await app.start().then(async () => {
+      // Windows spawns two terminal windows when running spectron, and the only workaround
+      // is to focus the window on start.
+      // https://github.com/electron-userland/spectron/issues/60
+      await app.browserWindow.focus();
+      await app.browserWindow.setAlwaysOnTop(true);
+    });
   });
 
   afterEach(async () => {
