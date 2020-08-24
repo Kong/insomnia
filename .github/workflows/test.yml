@@ -11,6 +11,26 @@ on:
       - synchronize
 
 jobs:
+  Mac:
+    name: Test Mac
+    runs-on: macos-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v1
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
+      - name: Bootstrap packages
+        run: npm run bootstrap
+      - name: Run tests
+        run: npm test
+      - name: Build core for smoke tests
+        run: npm run app-build:smoke:core
+      - name: Run core smoke tests
+        run: npm run test:smoke:core
   Windows:
     name: Test Windows
     runs-on: windows-latest
@@ -27,6 +47,10 @@ jobs:
         run: npm run bootstrap
       - name: Run tests
         run: npm test
+      - name: Build core for smoke tests
+        run: npm run app-build:smoke:core
+      - name: Run core smoke tests
+        run: npm run test:smoke:core
   Linux:
     name: Test Linux
     runs-on: ubuntu-latest
@@ -43,3 +67,7 @@ jobs:
         run: npm run bootstrap
       - name: Run tests
         run: npm test
+      - name: Build core for smoke tests
+        run: npm run app-build:smoke:core
+      - name: Run core smoke tests
+        run: npm run test:smoke:core

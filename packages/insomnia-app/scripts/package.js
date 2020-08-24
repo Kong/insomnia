@@ -14,7 +14,7 @@ const PLATFORM_MAP = {
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      await buildTask.start();
+      await buildTask.start(false);
       await module.exports.start();
     } catch (err) {
       console.log('[package] ERROR:', err);
