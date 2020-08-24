@@ -3,22 +3,6 @@ const Application = require('spectron').Application;
 const electronPath = require('../insomnia-app/node_modules/electron');
 const path = require('path');
 
-// export function isMac() {
-//   return getAppPlatform() === 'darwin';
-// }
-
-// export function isLinux() {
-//   return getAppPlatform() === 'linux';
-// }
-
-// export function isWindows() {
-//   return getAppPlatform() === 'win32';
-// }
-
-// export function getAppPlatform() {
-//   return process.platform;
-// }
-
 describe('Application launch', function() {
   jest.setTimeout(50000);
   let app = null;
