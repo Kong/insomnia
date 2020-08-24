@@ -58,8 +58,6 @@ jobs:
         uses: actions/checkout@v1
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-      - name: Echo chrome version
-        run: echo $CHROMEWEBDRIVER
         id: nvm
       - uses: actions/setup-node@v1
         with:

@@ -34,13 +34,13 @@ describe('Application launch', function() {
       // Run after app-package - Windows
       // path: path.join(__dirname, '../insomnia-app/dist/com.insomnia.app/win-unpacked/Insomnia.exe'),
 
-      // Run after app-build - mac, Windows
+      // Run after app-build - mac, Windows, Linux
       path: electronPath,
       args: [path.join(__dirname, '../insomnia-app/build/com.insomnia.app')],
 
       // Don't ask why, but don't remove chromeDriverArgs
       // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
-      chromeDriverArgs: ['remote-debugging-port=9222'],
+      chromeDriverArgs: ['remote-debugging-port=9222', '--no-sandbox'],
     });
     await app.start().then(async () => {
       // Windows spawns two terminal windows when running spectron, and the only workaround
