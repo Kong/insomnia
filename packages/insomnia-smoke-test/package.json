@@ -2,7 +2,8 @@
   "name": "insomnia-smoke-test",
   "version": "1.0.0",
   "scripts": {
-    "test:build:core": "jest",
+    "test:build:core": "jest --testPathPattern core",
+    "test:build:designer": "jest --testPathPattern designer",
     "test:package:core": "cross-env PACKAGE=Insomnia jest"
   },
   "devDependencies": {
