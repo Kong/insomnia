@@ -43,7 +43,7 @@ Development on Insomnia can be done on Mac, Windows, or Linux as long as you hav
 
 This repository is structured as a monorepo and contains many Node.JS packages. Each package has
 its own set of commands, but the most common commands are available from the
-root `[package.json](package.json)` and can be accessed using the `npm run ...` command. Here
+root [`package.json`](package.json) and can be accessed using the `npm run ...` command. Here
 are the only three commands you should need to start developing on the app.
 
 ```bash
