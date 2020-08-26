@@ -1,12 +1,12 @@
-const fs = require('fs');
+// const fs = require('fs');
 
 const foundNodeVersion = process.versions.node;
-const expectedNodeVersion = fs
-  .readFileSync('.nvmrc')
-  .toString()
-  .trim();
+// const expectedNodeVersion = fs
+//   .readFileSync('.nvmrc')
+//   .toString()
+//   .trim();
 
-if (foundNodeVersion !== expectedNodeVersion) {
+if (foundNodeVersion !== '12.8.0') {
   console.log(`Current node version: ${foundNodeVersion}`);
   console.log(`Expected node version: ${expectedNodeVersion}`);
   console.log(
