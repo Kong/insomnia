@@ -1,8 +1,7 @@
 const fs = require('fs');
 
 const foundNodeVersion = process.versions.node;
-const expectedNodeVersion = '12.8.0';
-const fromFile = fs
+const expectedNodeVersion = fs
   .readFileSync('.nvmrc')
   .toString()
   .trim();
