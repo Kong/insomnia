@@ -2,6 +2,7 @@ const fs = require('fs');
 
 const GREEN_FG = '\x1b[32m';
 const RED_FG = '\x1b[31m';
+const YELLOW_FG = '\x1b[33m';
 const UNDERSCORE = '\x1b[4m';
 const BRIGHT = '\x1b[1m';
 const RESET = '\x1b[0m';
@@ -12,8 +13,8 @@ const expectedNodeVersion = fs
   .toString()
   .trim();
 
-console.log('Checking the current node version ...\n');
 if (foundNodeVersion !== expectedNodeVersion) {
+  console.log(`${BRIGHT}${RED_FG}Incorrect node version installed ...${RESET}\n`);
   console.log(`Current node version -> ${RED_FG}${foundNodeVersion}${RESET}`);
   console.log(`Expected node version -> ${GREEN_FG}${expectedNodeVersion}${RESET}`);
   console.log();
@@ -22,7 +23,7 @@ if (foundNodeVersion !== expectedNodeVersion) {
   );
   console.log();
   console.log(
-    `${BRIGHT}Remember to 'npm run clean && npm run bootstrap' after installing the expected version.${RESET}`,
+    `${BRIGHT}${YELLOW_FG}Remember to 'npm run clean && npm run bootstrap' after installing the expected version.${RESET}`,
   );
   console.log();
   process.exit(1);
