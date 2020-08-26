@@ -99,6 +99,10 @@ export function authorizeUserInWindow(
       _parseUrl(url);
     });
 
+    child.webContents.on('will-redirect', (e, url) => {
+      _parseUrl(url);
+    });
+
     // Show the window to the user after it loads
     child.on('ready-to-show', child.show.bind(child));
     child.loadURL(url);
