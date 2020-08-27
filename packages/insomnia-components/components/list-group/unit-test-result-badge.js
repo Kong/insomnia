@@ -3,7 +3,7 @@ import * as React from 'react';
 import styled from 'styled-components';
 
 type Props = {|
-  result?: String,
+  failed?: boolean,
 |};
 
 const StyledBadge: React.ComponentType<{}> = styled.span`
