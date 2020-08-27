@@ -3,7 +3,17 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
-import { Breadcrumb, Button, Dropdown, DropdownItem, Header, SvgIcon } from 'insomnia-components';
+import {
+  Breadcrumb,
+  Button,
+  Dropdown,
+  DropdownItem,
+  Header,
+  SvgIcon,
+  ListGroup,
+  ListGroupItem,
+  UnitTestResultItem,
+} from 'insomnia-components';
 import ErrorBoundary from './error-boundary';
 import CodeEditor from './codemirror/code-editor';
 import designerLogo from '../images/insomnia-designer-logo.svg';
@@ -327,19 +337,11 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                 </h2>
               )}
             </div>
-            <ul>
+            <ListGroup>
               {tests.map((t, i) => (
-                <li key={i}>
-                  <SvgIcon icon={t.err.message ? 'error' : 'success'} /> {t.title} ({t.duration} ms)
-                  {t.err.message && (
-                    <>
-                      <br />
-                      <code className="text-danger">{t.err.message}</code>
-                    </>
-                  )}
-                </li>
+                <UnitTestResultItem key={i} item={t} />
               ))}
-            </ul>
+            </ListGroup>
           </div>
         )}
       </div>
@@ -353,7 +355,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     const selectableRequests = this.buildSelectableRequests();
 
     return (
-      <div key={unitTest._id} className="unit-tests__tests__block">
+      <ListGroupItem key={unitTest._id}>
         <div className="unit-tests__tests__block__header">
           <h2 className="pad-left-md">
             <Editable
@@ -405,7 +407,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           lineWrapping={settings.editorLineWrapping}
           placeholder=""
         />
-      </div>
+      </ListGroupItem>
     );
   }
 
@@ -445,7 +447,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               <i className="fa fa-play space-left"></i>
             </Button>
           </div>
-          {activeUnitTests.map(this.renderUnitTest)}
+          <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
         </div>
         {this.renderResults()}
       </div>
