@@ -7,18 +7,19 @@ const ncp = require('ncp').ncp;
 const path = require('path');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
+const { getBuildContext } = require('./getBuildContext');
 const { APP_ID_INSOMNIA, APP_ID_DESIGNER } = require('../config');
 
 // Start build if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
-    await module.exports.start();
+    await module.exports.start(false);
   });
 }
 
-module.exports.start = async function(forcedVersion = null) {
-  const buildContext = getBuildContext();
-  if (!buildContext.version) {
+module.exports.start = async function(forceFromGitRef) {
+  const buildContext = getBuildContext(forceFromGitRef);
+  if (!buildContext.smokeTest && !buildContext.version) {
     console.log(`[build] Skipping build for ref "${buildContext.gitRef}"`);
     process.exit(0);
   }
@@ -31,11 +32,11 @@ module.exports.start = async function(forcedVersion = null) {
   // Configure APP_ID env based on what we detected
   if (buildContext.app === 'designer') {
     process.env.APP_ID = APP_ID_DESIGNER;
-  } else {
+  } else if (buildContext.app === 'core') {
     process.env.APP_ID = APP_ID_INSOMNIA;
   }
 
-  if (appConfig().version !== buildContext.version) {
+  if (!buildContext.smokeTest && appConfig().version !== buildContext.version) {
     console.log(
       `[build] App version mismatch with Git tag ${appConfig().version} != ${buildContext.version}`,
     );
@@ -45,8 +46,13 @@ module.exports.start = async function(forcedVersion = null) {
   // These must be required after APP_ID environment variable is set above
   const configRenderer = require('../webpack/webpack.config.production.babel');
   const configMain = require('../webpack/webpack.config.electron.babel');
+  const buildFolder = path.join('../build', appConfig().appId);
 
-  console.log(`[build] Starting build for ref "${buildContext.gitRef}"`);
+  if (buildContext.smokeTest) {
+    console.log(`[build] Starting build to smoke test ${buildContext.app}`);
+  } else {
+    console.log(`[build] Starting build for ref "${buildContext.gitRef}"`);
+  }
   console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
   console.log(`[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim());
 
@@ -57,11 +63,11 @@ module.exports.start = async function(forcedVersion = null) {
 
   // Remove folders first
   console.log('[build] Removing existing directories');
-  await emptyDir('../build');
+  await emptyDir(buildFolder);
 
   // Build the things
   console.log('[build] Building license list');
-  await buildLicenseList('../', '../build/opensource-licenses.txt');
+  await buildLicenseList('../', path.join(buildFolder, 'opensource-licenses.txt'));
   console.log('[build] Building Webpack renderer');
   await buildWebpack(configRenderer);
   console.log('[build] Building Webpack main');
@@ -69,16 +75,16 @@ module.exports.start = async function(forcedVersion = null) {
 
   // Copy necessary files
   console.log('[build] Copying files');
-  await copyFiles('../bin', '../build/');
-  await copyFiles('../app/static', '../build/static');
-  await copyFiles(`../app/icons/${appConfig().appId}`, '../build/');
+  await copyFiles('../bin', buildFolder);
+  await copyFiles('../app/static', path.join(buildFolder, 'static'));
+  await copyFiles(`../app/icons/${appConfig().appId}`, buildFolder);
 
   // Generate necessary files needed by `electron-builder`
-  await generatePackageJson('../package.json', '../build/package.json', forcedVersion);
+  await generatePackageJson('../package.json', path.join(buildFolder, 'package.json'));
 
   // Install Node modules
   console.log('[build] Installing dependencies');
-  await install('../build/');
+  await install(buildFolder);
 
   console.log('[build] Complete!');
   return buildContext;
@@ -205,7 +211,7 @@ async function install(relDir) {
   });
 }
 
-function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
+function generatePackageJson(relBasePkg, relOutPkg) {
   // Read package.json's
   const basePath = path.resolve(__dirname, relBasePkg);
   const outPath = path.resolve(__dirname, relOutPkg);
@@ -215,7 +221,7 @@ function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
   const app = appConfig();
   const appPkg = {
     name: app.name,
-    version: forcedVersion || app.version,
+    version: app.version,
     productName: app.productName,
     longName: app.longName,
     description: basePkg.description,
@@ -251,32 +257,4 @@ function generatePackageJson(relBasePkg, relOutPkg, forcedVersion) {
   }
 
   fs.writeFileSync(outPath, JSON.stringify(appPkg, null, 2));
-}
-
-// Only release if we're building a tag that ends in a version number
-function getBuildContext() {
-  const {
-    GIT_TAG,
-    GITHUB_REF,
-    GITHUB_SHA,
-    TRAVIS_TAG,
-    TRAVIS_COMMIT,
-    TRAVIS_CURRENT_BRANCH,
-  } = process.env;
-
-  const gitCommit = GITHUB_SHA || TRAVIS_COMMIT;
-  const gitRef = GIT_TAG || GITHUB_REF || TRAVIS_TAG || TRAVIS_CURRENT_BRANCH || '';
-  const tagMatch = gitRef.match(/(designer|core)@(\d{4}\.\d+\.\d+(-(alpha|beta)\.\d+)?)$/);
-
-  const app = tagMatch ? tagMatch[1] : null;
-  const version = tagMatch ? tagMatch[2] : null;
-  const channel = tagMatch ? tagMatch[4] : 'stable';
-
-  return {
-    app,
-    channel,
-    version,
-    gitRef,
-    gitCommit,
-  };
 }

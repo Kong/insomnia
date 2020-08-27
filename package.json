@@ -24,7 +24,12 @@
     "app-release": "npm run release --prefix packages/insomnia-app",
     "storybook-start": "npm run storybook --prefix packages/insomnia-components",
     "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app",
-    "preinstall": "node ./scripts/check-version.js"
+    "preinstall": "node ./scripts/check-version.js",
+    "app-build:smoke:core": "cross-env SMOKE_TEST=core npm run app-build",
+    "app-build:smoke:designer": "cross-env SMOKE_TEST=designer npm run app-build",
+    "test:smoke:core": "npm run test:core:build --prefix packages/insomnia-smoke-test",
+    "test:smoke:designer": "npm run test:designer:build --prefix packages/insomnia-smoke-test",
+    "test:smoke:package": "npm run test:package --prefix packages/insomnia-smoke-test"
   },
   "lint-staged": {
     "{packages,plugins}/**/*.{js,json}": [
@@ -48,6 +53,7 @@
     "babel-loader": "^8.0.5",
     "babel-plugin-inline-react-svg": "^1.1.0",
     "babel-plugin-styled-components": "^1.10.6",
+    "cross-env": "^7.0.2",
     "eslint": "^7.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-config-semistandard": "^15.0.0",

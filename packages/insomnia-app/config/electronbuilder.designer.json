@@ -9,7 +9,7 @@
       "filter": "yarn-standalone.js"
     },
     {
-      "from": "./build",
+      "from": "./build/__APP_ID__",
       "to": ".",
       "filter": "opensource-licenses.txt"
     }
@@ -25,13 +25,13 @@
   ],
   "fileAssociations": [],
   "directories": {
-    "app": "build",
-    "output": "dist"
+    "app": "build/__APP_ID__",
+    "output": "dist/__APP_ID__"
   },
   "mac": {
     "hardenedRuntime": true,
     "category": "public.app-category.developer-tools",
-    "entitlements": "./build/static/entitlements.mac.inherit.plist",
+    "entitlements": "./build/__APP_ID__/static/entitlements.mac.inherit.plist",
     "artifactName": "__BINARY_PREFIX__-${version}.${ext}",
     "target": [
       "dmg",
@@ -61,7 +61,7 @@
   },
   "win": {
     "artifactName": "__BINARY_PREFIX__-${version}.${ext}",
-    "icon": "./build/icon.ico",
+    "icon": "./build/__APP_ID__/icon.ico",
     "target": [
       "squirrel",
       "zip"

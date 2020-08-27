@@ -24,7 +24,7 @@ if (process.env.NODE_ENV === 'development') {
     }),
   ];
 } else {
-  output.path = path.join(__dirname, '../build');
+  output.path = path.join(__dirname, '../build', process.env.APP_ID);
   devtool = productionConfig.devtool;
   plugins = productionConfig.plugins;
 }

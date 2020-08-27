@@ -34,16 +34,24 @@
         display: flex;
         flex-direction: row;
         align-items: center;
+        padding:0px var(--padding-sm) 0px 0px;
+
+        button {
+          padding: 0px var(--padding-sm);
+          flex: 0 0 auto;
+        }
 
         h2 {
           font-size: var(--font-size-lg);
+          flex: 1 1 auto;
           white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         & > * {
           margin-top: var(--padding-md);
           margin-bottom: var(--padding-md);
-          margin-right: var(--padding-md);
         }
 
         & > *:first-child {
@@ -54,7 +62,15 @@
         .form-control {
           width: 100%;
           max-width: 18rem;
-
+          flex: 0 0 auto;
+          padding: var(--padding-xxs) var(--padding-sm);
+          border: 1px solid var(--hl-md);
+          border-radius: var(--radius-sm);
+          margin-right: var(--padding-sm);
+          select {
+            border: none;
+            background: none;
+          }
           * {
             margin: 0;
           }
@@ -127,6 +143,15 @@
     border-bottom: 1px solid var(--hl-md);
     display: flex;
     align-items: center;
+
+    button {
+      flex: 0 0 auto;
+      align-self: center;
+      i {
+        font-size: var(--font-size-xs);
+        padding-left: var(--padding-xxs);
+      }
+    }
 
     & > * {
       margin-right: var(--padding-md);
