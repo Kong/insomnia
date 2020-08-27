@@ -29,8 +29,8 @@ const StyledPassedBadge: React.ComponentType<{}> = styled(StyledBadge)`
   color: var(--color-success);
 `;
 
-const UnitTestResultBadge = ({ result }: Props) => {
-  if (result) {
+const UnitTestResultBadge = ({ failed }: Props) => {
+  if (failed) {
     return <StyledFailedBadge>Failed</StyledFailedBadge>;
   }
   return <StyledPassedBadge>Passed</StyledPassedBadge>;

@@ -2,7 +2,7 @@
 import React from 'react';
 import ListGroupItem from './list-group-item';
 import ListGroup from './list-group';
-import { UnitTestResultItem } from './unit-test-result-item';
+import UnitTestResultItem from './unit-test-result-item';
 
 export default { title: 'Lists | List Group' };
 

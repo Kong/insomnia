@@ -1,7 +1,6 @@
 // @flow
 import * as React from 'react';
 import styled from 'styled-components';
-import SvgIcon from '../svg-icon';
 import ListGroupItem from './list-group-item';
 import UnitTestResultTimeStamp from './unit-test-result-timestamp';
 import UnitTestResultBadge from './unit-test-result-badge';
@@ -51,4 +50,4 @@ const UnitTestResultItem = ({ item }: Props) => {
   );
 };
 
-export { UnitTestResultItem, UnitTestResultBadge, UnitTestResultTimeStamp, SvgIcon };
+export default UnitTestResultItem;

@@ -5,7 +5,6 @@ import SvgIcon from '../svg-icon';
 
 type Props = {|
   timeMs: String,
-  children?: React.Node,
 |};
 
 const StyledTimestamp: React.ComponentType<{}> = styled.div`
@@ -23,7 +22,7 @@ const StyledTimestamp: React.ComponentType<{}> = styled.div`
   }
 `;
 
-const UnitTestResultTimestamp = ({ children, timeMs }: Props) => {
+const UnitTestResultTimestamp = ({ timeMs }: Props) => {
   return (
     <StyledTimestamp>
       {' '}
