@@ -3,9 +3,11 @@ import * as React from 'react';
 import styled from 'styled-components';
 import SvgIcon from '../svg-icon';
 import ListGroupItem from './list-group-item';
+import UnitTestResultTimeStamp from './unit-test-result-timestamp';
+import UnitTestResultBadge from './unit-test-result-badge';
 
 type Props = {|
-  children?: React.Node,
+  item: Object,
 |};
 
 const StyledResultListItem: React.ComponentType<{}> = styled(ListGroupItem)`
@@ -36,46 +38,17 @@ const StyledResultListItem: React.ComponentType<{}> = styled(ListGroupItem)`
   }
 `;
 
-const StyledBadge: React.ComponentType<{}> = styled.span`
-  padding: var(--padding-xs) var(--padding-sm);
-  border: 1px solid var(--color-success);
-  background-color: var(--color-bg);
-  color: var(--color-success);
-  font-weight: var(--font-weight-bold);
-  border-radius: var(--radius-sm);
-  flex-basis: 3.5em;
-  flex-shrink: 0;
-  text-align: center;
-  text-transform: capitalize;
-`;
-
-const StyledFailedBadge: React.ComponentType<{}> = styled(StyledBadge)`
-  border-color: var(--color-danger);
-  color: var(--color-danger);
-`;
-
-const StyledPassedBadge: React.ComponentType<{}> = styled(StyledBadge)`
-  border-color: var(--color-success);
-  color: var(--color-success);
-`;
-
-const StyledTimestamp: React.ComponentType<{}> = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  flex-shrink: 0;
-  font-size: var(--font-size-xs);
-  color: var(--hl-xl);
-
-  svg {
-    fill: var(--hl-xl);
-    margin-right: var(--padding-xxs);
-  }
-`;
-
-const UnitTestResultItem = ({ children }: Props) => {
-  return <StyledResultListItem>{children}</StyledResultListItem>;
+const UnitTestResultItem = ({ item }: Props) => {
+  return (
+    <StyledResultListItem>
+      <div>
+        <UnitTestResultBadge result={item.err.message} />
+        <p>{item.title}</p>
+        <UnitTestResultTimeStamp timeMs={item.duration} />
+      </div>
+      {item.err.message && <code>{item.err.message}</code>}
+    </StyledResultListItem>
+  );
 };
 
-export { UnitTestResultItem, StyledFailedBadge, StyledPassedBadge, StyledTimestamp, SvgIcon };
+export { UnitTestResultItem, UnitTestResultBadge, UnitTestResultTimeStamp, SvgIcon };

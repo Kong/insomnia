@@ -13,9 +13,6 @@ import {
   ListGroup,
   ListGroupItem,
   UnitTestResultItem,
-  StyledFailedBadge,
-  StyledPassedBadge,
-  StyledTimestamp,
 } from 'insomnia-components';
 import ErrorBoundary from './error-boundary';
 import CodeEditor from './codemirror/code-editor';
@@ -342,21 +339,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
             </div>
             <ListGroup>
               {tests.map((t, i) => (
-                <UnitTestResultItem key={i}>
-                  <div>
-                    {t.err.message ? (
-                      <StyledFailedBadge>Failed</StyledFailedBadge>
-                    ) : (
-                      <StyledPassedBadge>Passed</StyledPassedBadge>
-                    )}
-                    <p>{t.title}</p>
-                    <StyledTimestamp>
-                      <SvgIcon icon="clock" />
-                      <span>{t.duration} ms</span>
-                    </StyledTimestamp>
-                  </div>
-                  {t.err.message && <code>{t.err.message}</code>}
-                </UnitTestResultItem>
+                <UnitTestResultItem key={i} item={t} />
               ))}
             </ListGroup>
           </div>
