@@ -2,7 +2,7 @@ import { MemPlugin } from '../mem-plugin';
 import { routableFSPlugin } from '../routable-fs-plugin';
 import { GIT_CLONE_DIR } from '../git-vcs';
 
-describe('routableFSPlugin using path.%s', () => {
+describe('routableFSPlugin', () => {
   afterAll(() => jest.restoreAllMocks());
   it('routes .git and other files to separate places', async () => {
     const pGit = MemPlugin.createPlugin();
