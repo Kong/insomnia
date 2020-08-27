@@ -42,7 +42,7 @@ const UnitTestResultItem = ({ item }: Props) => {
   return (
     <StyledResultListItem>
       <div>
-        <UnitTestResultBadge result={item.err.message} />
+        <UnitTestResultBadge failed={!!item.err.message} />
         <p>{item.title}</p>
         <UnitTestResultTimeStamp timeMs={item.duration} />
       </div>
