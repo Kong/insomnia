@@ -6,10 +6,10 @@ on:
       - core@*
 
 env:
-  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_REF: ${{ github.ref }}
   GITHUB_SHA: ${{ github.sha }}
-  NPM_CONFIG_TARGET: 3.1.13
+  NPM_CONFIG_TARGET: 9.1.0
   NPM_CONFIG_DISTURL: https://electronjs.org/headers
   NPM_CONFIG_RUNTIME: electron
 
@@ -19,11 +19,14 @@ jobs:
     runs-on: windows-2016
     steps:
       - uses: actions/checkout@v1
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
       - uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
       - run: npm run bootstrap
-      - run: npm test
+      - run: npm run test:pre-release
       - run: npm run app-release
         env:
           CSC_LINK: ${{ secrets.CORE_WINDOWS_CSC_LINK }}
@@ -33,11 +36,14 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
       - uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
       - run: npm run bootstrap
-      - run: npm test
+      - run: npm run test:pre-release
       - run: npm run app-release
         env:
           APPLE_ID: ${{ secrets.CORE_APPLE_ID }}
@@ -52,11 +58,14 @@ jobs:
           sudo snap install snapcraft --classic
           echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
       - uses: actions/checkout@v1
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
       - uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
       - run: npm run bootstrap
-      - run: npm test
+      - run: npm run test:pre-release
       - run: npm run app-release
         env:
           BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap

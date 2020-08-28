@@ -10,7 +10,7 @@ module.exports = {
     library: 'insomniaComponents',
     libraryTarget: 'commonjs2',
   },
-  externals: ['react', 'react-dom'],
+  externals: ['react', 'react-dom', 'styled-components'],
   module: {
     rules: [
       {

@@ -77,7 +77,7 @@ type State = {
 
 @autobind
 class GraphQLEditor extends React.PureComponent<Props, State> {
-  _disabledOperationMarkers: TextMarker[];
+  _disabledOperationMarkers: Array<TextMarker>;
   _documentAST: null | Object;
   _isMounted: boolean;
   _queryEditor: null | CodeMirror;
@@ -303,7 +303,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     } catch (err) {
       console.log('[graphql] ERROR: Failed to fetch schema', err);
       newState.schemaFetchError = {
-        message: `Failed to to fetch schema: ${err.message}`,
+        message: `Failed to fetch schema: ${err.message}`,
         response: responsePatch,
       };
     }

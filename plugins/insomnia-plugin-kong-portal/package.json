@@ -1,10 +1,11 @@
 {
   "name": "insomnia-plugin-kong-portal",
-  "version": "2.2.8",
+  "version": "2.2.21",
   "main": "dist/index.js",
   "scripts": {
     "build": "webpack --config webpack.config.js --display errors-only",
-    "watch": "webpack --config webpack.config.js --watch"
+    "watch": "webpack --config webpack.config.js --watch",
+    "prepare": "npm run build"
   },
   "insomnia": {
     "name": "kong-portal",
@@ -17,14 +18,13 @@
     "@babel/preset-env": "^7.9.0",
     "@babel/preset-flow": "^7.9.0",
     "@babel/preset-react": "^7.9.4",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
-  },
-  "dependencies": {
-    "autobind-decorator": "^2.4.0",
-    "insomnia-components": "^2.2.8",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11",
+    "autobind-decorator": "^2.4.0",
+    "insomnia-components": "^2.2.21",
     "url-join": "^4.0.1"
-  }
+  },
+  "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
 }

@@ -31,6 +31,7 @@ import type { RequestVersion } from '../../models/request-version';
 import { showError } from '../components/modals/index';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import type { Environment } from '../../models/environment';
+import type { UnitTestResult } from '../../models/unit-test-result';
 
 type Props = {
   // Functions
@@ -61,6 +62,7 @@ type Props = {
   request: ?Request,
   response: ?Response,
   environment: ?Environment,
+  unitTestResult: ?UnitTestResult,
 };
 
 @autobind
@@ -96,37 +98,36 @@ class ResponsePane extends React.PureComponent<Props> {
       defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
     };
 
-    remote.dialog.showSaveDialog(options, outputPath => {
-      if (!outputPath) {
-        return;
-      }
+    const { canceled, filePath: outputPath } = await remote.dialog.showSaveDialog(options);
+    if (canceled) {
+      return;
+    }
 
-      const readStream = models.response.getBodyStream(response);
-      const dataBuffers = [];
-      if (readStream) {
-        readStream.on('data', data => {
-          dataBuffers.push(data);
-        });
-        readStream.on('end', () => {
-          const to = fs.createWriteStream(outputPath);
-          const finalBuffer = Buffer.concat(dataBuffers);
+    const readStream = models.response.getBodyStream(response);
+    const dataBuffers = [];
+    if (readStream) {
+      readStream.on('data', data => {
+        dataBuffers.push(data);
+      });
+      readStream.on('end', () => {
+        const to = fs.createWriteStream(outputPath);
+        const finalBuffer = Buffer.concat(dataBuffers);
 
-          to.on('error', err => {
-            showError({
-              title: 'Save Failed',
-              message: 'Failed to save response body',
-              error: err,
-            });
+        to.on('error', err => {
+          showError({
+            title: 'Save Failed',
+            message: 'Failed to save response body',
+            error: err,
           });
-
-          if (prettify && contentType.includes('json')) {
-            to.write(jsonPrettify(finalBuffer.toString('utf8')));
-          } else {
-            to.write(finalBuffer);
-          }
         });
-      }
-    });
+
+        if (prettify && contentType.includes('json')) {
+          to.write(jsonPrettify(finalBuffer.toString('utf8')));
+        } else {
+          to.write(finalBuffer);
+        }
+      });
+    }
   }
 
   async _handleDownloadFullResponseBody() {
@@ -150,21 +151,20 @@ class ResponsePane extends React.PureComponent<Props> {
       defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
     };
 
-    remote.dialog.showSaveDialog(options, filename => {
-      if (!filename) {
-        return;
-      }
+    const { canceled, filePath } = await remote.dialog.showSaveDialog(options);
+    if (canceled) {
+      return;
+    }
 
-      const readStream = models.response.getBodyStream(response);
-      if (readStream) {
-        const to = fs.createWriteStream(filename);
-        to.write(headers);
-        readStream.pipe(to);
-        to.on('error', err => {
-          console.warn('Failed to save full response', err);
-        });
-      }
-    });
+    const readStream = models.response.getBodyStream(response);
+    if (readStream) {
+      const to = fs.createWriteStream(filePath);
+      to.write(headers);
+      readStream.pipe(to);
+      to.on('error', err => {
+        console.warn('Failed to save full response', err);
+      });
+    }
   }
 
   _handleTabSelect(index: number, lastIndex: number) {

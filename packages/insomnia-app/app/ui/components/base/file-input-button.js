@@ -33,7 +33,7 @@ class FileInputButton extends React.PureComponent<Props> {
     this._button = n;
   }
 
-  _handleChooseFile() {
+  async _handleChooseFile() {
     // If no types are selected then default to just files and not directories
     const types = this.props.itemtypes ? this.props.itemtypes : ['file'];
     let title = 'Select ';
@@ -50,6 +50,7 @@ class FileInputButton extends React.PureComponent<Props> {
       title: title,
       buttonLabel: 'Select',
       properties: types.map(type => {
+        console.log('TYPE', type);
         if (type === 'file') {
           return 'openFile';
         }
@@ -65,15 +66,15 @@ class FileInputButton extends React.PureComponent<Props> {
       options.filters = [{ name: 'Files', extensions: this.props.extensions }];
     }
 
-    remote.dialog.showOpenDialog(options, async paths => {
-      // Only change the file if a new file was selected
-      if (!paths || paths.length === 0) {
-        return;
-      }
+    const { canceled, filePaths } = await remote.dialog.showOpenDialog(options);
 
-      const path = paths[0];
-      this.props.onChange(path);
-    });
+    // Only change the file if a new file was selected
+    if (canceled) {
+      return;
+    }
+
+    const path = filePaths[0];
+    this.props.onChange(path);
   }
 
   render() {

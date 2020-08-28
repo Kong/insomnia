@@ -12,7 +12,7 @@ module.exports = {
   context: path.join(__dirname, '../app'),
   entry: ['./renderer.js', './renderer.html'],
   output: {
-    path: path.join(__dirname, '../build'),
+    path: path.join(__dirname, '../build', process.env.APP_ID),
     filename: 'bundle.js',
     libraryTarget: 'commonjs2',
   },
@@ -50,6 +50,7 @@ module.exports = {
       // https://github.com/gaearon/react-hot-loader/tree/92961be0b44260d3d3f1b8864aa699766572a67c#linking
       'react-hot-loader': path.resolve(path.join(__dirname, '../node_modules/react-hot-loader')),
       'react': path.resolve(path.join(__dirname, '../node_modules/react')),
+      'styled-components': path.resolve(path.join(__dirname, '../node_modules/styled-components')),
       'react-dom': path.resolve(path.join(__dirname, '../node_modules/@hot-loader/react-dom')),
     },
     extensions: ['.js', '.json'],

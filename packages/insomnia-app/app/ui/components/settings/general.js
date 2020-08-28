@@ -1,9 +1,10 @@
 // @flow
 import * as React from 'react';
-import * as fontScanner from 'font-manager';
+import * as fontScanner from 'font-scanner';
 import * as electron from 'electron';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
+import type { HttpVersion } from '../../../common/constants';
 import {
   EDITOR_KEY_MAP_DEFAULT,
   EDITOR_KEY_MAP_EMACS,
@@ -23,7 +24,6 @@ import Tooltip from '../tooltip';
 import FileInputButton from '../base/file-input-button';
 import { CertificateBundleType } from '../../../models/settings';
 import CheckForUpdatesButton from '../check-for-updates-button';
-import type { HttpVersion } from '../../../common/constants';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -51,22 +51,22 @@ class General extends React.PureComponent<Props, State> {
     };
   }
 
-  componentDidMount() {
-    fontScanner.getAvailableFonts(allFonts => {
-      // Find regular fonts
-      const fonts = allFonts
-        .filter(i => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)
-        .sort((a, b) => (a.family > b.family ? 1 : -1));
+  async componentDidMount() {
+    const allFonts = await fontScanner.getAvailableFonts();
 
-      // Find monospaced fonts
-      // NOTE: Also include some others:
-      //  - https://github.com/Kong/insomnia/issues/1835
-      const fontsMono = fonts.filter(i => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX));
+    // Find regular fonts
+    const fonts = allFonts
+      .filter(i => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)
+      .sort((a, b) => (a.family > b.family ? 1 : -1));
 
-      this.setState({
-        fonts,
-        fontsMono,
-      });
+    // Find monospaced fonts
+    // NOTE: Also include some others:
+    //  - https://github.com/Kong/insomnia/issues/1835
+    const fontsMono = fonts.filter(i => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX));
+
+    this.setState({
+      fonts,
+      fontsMono,
     });
   }
 
@@ -250,7 +250,7 @@ class General extends React.PureComponent<Props, State> {
           </div>
           <div>
             {this.renderBooleanSetting('Reveal passwords', 'showPasswords', '')}
-            {!isMac() && this.renderBooleanSetting('Hide menu bar', 'autoHideMenuBar', '')}
+            {!isMac() && this.renderBooleanSetting('Hide menu bar', 'autoHideMenuBar', '', true)}
             {this.renderBooleanSetting('Raw template syntax', 'nunjucksPowerUserMode', '', true)}
           </div>
         </div>
@@ -533,13 +533,6 @@ class General extends React.PureComponent<Props, State> {
 
         <br />
 
-        {session.isLoggedIn() && (
-          <React.Fragment>
-            <hr />
-            {this.renderBooleanSetting('Enable version control beta', 'enableSyncBeta', '', true)}
-          </React.Fragment>
-        )}
-
         <hr className="pad-top" />
         <h2>Data Sharing</h2>
         <div className="form-control form-control--thin">
@@ -562,6 +555,13 @@ class General extends React.PureComponent<Props, State> {
             as request data, names, etc.
           </p>
         </div>
+
+        {session.isLoggedIn() && (
+          <React.Fragment>
+            <hr />
+            {this.renderBooleanSetting('Enable version control beta', 'enableSyncBeta', '', true)}
+          </React.Fragment>
+        )}
       </div>
     );
   }

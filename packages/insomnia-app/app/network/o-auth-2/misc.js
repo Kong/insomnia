@@ -1,5 +1,5 @@
 import electron from 'electron';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import querystring from 'querystring';
 
 const AUTH_WINDOW_SESSION_ID = uuid.v4();
@@ -99,18 +99,8 @@ export function authorizeUserInWindow(
       _parseUrl(url);
     });
 
-    const options = {};
-
-    // Force user-agent for GitHub until we update Chromium version. Note, we don't do this for
-    // everything because it breaks things. https://github.com/kong/insomnia/issues/1816
-    if (url.includes('github.com')) {
-      options.userAgent =
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, ' +
-        'like Gecko) Chrome/78.0.3904.108 Safari/537.36';
-    }
-
     // Show the window to the user after it loads
     child.on('ready-to-show', child.show.bind(child));
-    child.loadURL(url, options);
+    child.loadURL(url);
   });
 }

@@ -43,7 +43,7 @@ Development on Insomnia can be done on Mac, Windows, or Linux as long as you hav
 
 This repository is structured as a monorepo and contains many Node.JS packages. Each package has
 its own set of commands, but the most common commands are available from the
-root `[package.json](package.json)` and can be accessed using the `npm run ...` command. Here
+root [`package.json`](package.json) and can be accessed using the `npm run ...` command. Here
 are the only three commands you should need to start developing on the app.
 
 ```bash
@@ -57,11 +57,24 @@ npm test
 npm run app-start
 ```
 
-If you are on Linux and have problems, you may need to install `libfontconfig-dev`
+If you are on Linux, you may need to install the following supporting packages 
 
 ```bash
-# Install libfontconfig-dev
+# Update library
+sudo apt-get update
+
+# Install font configuration library & support
 sudo apt-get install libfontconfig-dev
+sudo apt-get install font-manager
+
+# Build capability for required font-scanner package
+sudo apt-get install build-essential
+```
+
+Also on Linux, if Electron is failing during the bootstrap process, run the following
+```bash
+# Clear Electron install conflicts
+rm -rf ~/cache/electron
 ```
 
 If you are on Windows and have problems, you may need to install [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)
@@ -87,7 +100,7 @@ Search, discover, and install plugins from the Insomnia [Plugin Hub](https://ins
 ## Community Projects
 
 - [Insomnia Documenter](https://github.com/jozsefsallai/insomnia-documenter) – Generate beautiful API documentation pages using your Insomnia export file.
-- [GitHub API Spec Importer](https://github.com/swinton/github-rest-apis-for-insomnia) – A complete set of GitHub REST API route specifications that can be imported straight into Insomnia
+- [GitHub API Spec Importer](https://github.com/swinton/github-rest-apis-for-insomnia) – A complete set of GitHub REST API route specifications that can be imported straight into Insomnia.
 - [Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
 
 ## License

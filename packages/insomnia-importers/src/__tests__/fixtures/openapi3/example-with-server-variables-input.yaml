@@ -1,0 +1,26 @@
+openapi: 3.0.2
+info:
+  description: This API is for administrating files and file storages.
+  license:
+    name: Some license
+  title: File and Storage API
+  version: 0.1.0
+servers:
+  - description: Devserver
+    url: '{protocol}://{host}:{port}/{basePath}'
+    variables:
+      protocol:
+        default: https
+      port:
+        default: '8080'
+      host:
+        default: localhost
+      basePath:
+        default: filemanagement
+paths:
+  /files:
+    get:
+      operationId: find_files
+      responses:
+        '200':
+          description: OK

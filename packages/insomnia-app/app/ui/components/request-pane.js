@@ -8,7 +8,6 @@ import type {
 } from '../../models/request';
 import type { Workspace } from '../../models/workspace';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
-
 import autobind from 'autobind-decorator';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
 import * as React from 'react';

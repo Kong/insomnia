@@ -2,10 +2,12 @@
   "name": "insomnia",
   "private": true,
   "version": "1.0.0",
+  "description": "Insomnia is a cross-platform REST client, built on top of Electron.",
   "repository": "https://github.com/kong/insomnia",
   "bugs": {
-    "url": "https://github.com/kong/insomnia"
+    "url": "https://github.com/kong/insomnia/issues"
   },
+  "homepage": "https://github.com/kong/insomnia#readme",
   "scripts": {
     "lint": "eslint . --ext .js,.json",
     "lint:fix": "npm run lint -- --fix",
@@ -14,13 +16,20 @@
     "clean": "lerna clean --yes && rimraf node_modules",
     "typecheck": "lerna run --parallel --stream typecheck",
     "test": "npm run lint && npm run typecheck && lerna run --stream --parallel test",
-    "cli-start": "npm start --prefix packages/insomnia-cli",
+    "test:pre-release": "npm run test --prefix packages/insomnia-app",
+    "inso-start": "npm start --prefix packages/insomnia-inso",
     "app-start": "npm start --prefix packages/insomnia-app",
     "app-build": "npm run build --prefix packages/insomnia-app",
     "app-package": "npm run package --prefix packages/insomnia-app",
     "app-release": "npm run release --prefix packages/insomnia-app",
     "storybook-start": "npm run storybook --prefix packages/insomnia-components",
-    "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app"
+    "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app",
+    "preinstall": "node ./scripts/check-version.js",
+    "app-build:smoke:core": "cross-env SMOKE_TEST=core npm run app-build",
+    "app-build:smoke:designer": "cross-env SMOKE_TEST=designer npm run app-build",
+    "test:smoke:core": "npm run test:core:build --prefix packages/insomnia-smoke-test",
+    "test:smoke:designer": "npm run test:designer:build --prefix packages/insomnia-smoke-test",
+    "test:smoke:package": "npm run test:package --prefix packages/insomnia-smoke-test"
   },
   "lint-staged": {
     "{packages,plugins}/**/*.{js,json}": [
@@ -33,7 +42,7 @@
     }
   },
   "devDependencies": {
-    "@babel/cli": "^7.8.4",
+    "@babel/cli": "^7.10.5",
     "@babel/plugin-proposal-class-properties": "^7.7.4",
     "@babel/plugin-proposal-decorators": "^7.4.0",
     "@babel/preset-env": "^7.4.3",
@@ -44,6 +53,7 @@
     "babel-loader": "^8.0.5",
     "babel-plugin-inline-react-svg": "^1.1.0",
     "babel-plugin-styled-components": "^1.10.6",
+    "cross-env": "^7.0.2",
     "eslint": "^7.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-config-semistandard": "^15.0.0",
@@ -67,6 +77,5 @@
     "lint-staged": "^10.2.2",
     "prettier": "^1.16.4",
     "rimraf": "^2.6.3"
-  },
-  "dependencies": {}
+  }
 }

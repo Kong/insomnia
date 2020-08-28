@@ -24,13 +24,13 @@ import SettingsModal, {
 import install from '../../../plugins/install';
 import type { ForceToWorkspace } from './helpers';
 import { askToImportIntoWorkspace, ensureActivityIsForApp } from './helpers';
-import type { GlobalActivity } from '../../components/activity-bar/activity-bar';
 import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
 import { setActivityAttribute } from '../../../common/misc';
 import { isDevelopment } from '../../../common/constants';
 import type { Workspace } from '../../../models/workspace';
+import type { GlobalActivity } from '../../../common/constants';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
@@ -271,37 +271,36 @@ export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorksp
       ],
     };
 
-    electron.remote.dialog.showOpenDialog(options, async paths => {
-      if (!paths) {
-        // It was cancelled, so let's bail out
+    const { canceled, filePaths: paths } = await electron.remote.dialog.showOpenDialog(options);
+    if (canceled) {
+      // It was cancelled, so let's bail out
+      dispatch(loadStop());
+      return;
+    }
+
+    // Let's import all the paths!
+    let importedWorkspaces = [];
+    for (const p of paths) {
+      try {
+        const uri = `file://${p}`;
+        const result = await importUtils.importUri(
+          askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+          uri,
+        );
+        importedWorkspaces = handleImportResult(
+          result,
+          'The file does not contain a valid specification.',
+        );
+      } catch (err) {
+        showModal(AlertModal, { title: 'Import Failed', message: err + '' });
+      } finally {
         dispatch(loadStop());
-        return;
       }
+    }
 
-      // Let's import all the paths!
-      let importedWorkspaces = [];
-      for (const p of paths) {
-        try {
-          const uri = `file://${p}`;
-          const result = await importUtils.importUri(
-            askToImportIntoWorkspace(workspaceId, forceToWorkspace),
-            uri,
-          );
-          importedWorkspaces = handleImportResult(
-            result,
-            'The file does not contain a valid specification.',
-          );
-        } catch (err) {
-          showModal(AlertModal, { title: 'Import Failed', message: err + '' });
-        } finally {
-          dispatch(loadStop());
-        }
-      }
-
-      if (importedWorkspaces.length === 1) {
-        dispatch(setActiveWorkspace(importedWorkspaces[0]._id));
-      }
-    });
+    if (importedWorkspaces.length === 1) {
+      dispatch(setActiveWorkspace(importedWorkspaces[0]._id));
+    }
   };
 }
 
@@ -409,7 +408,7 @@ function showExportPrivateEnvironmentsModal(privateEnvNames) {
   });
 }
 
-function showSaveExportedFileDialog(exportedFileNamePrefix, selectedFormat, onDone) {
+async function showSaveExportedFileDialog(exportedFileNamePrefix, selectedFormat) {
   const date = moment().format('YYYY-MM-DD');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
@@ -435,7 +434,8 @@ function showSaveExportedFileDialog(exportedFileNamePrefix, selectedFormat, onDo
     options.filters = [{ name: 'Insomnia Export', extensions: ['json'] }];
   }
 
-  electron.remote.dialog.showSaveDialog(options, onDone);
+  const { filePath } = await electron.remote.dialog.showSaveDialog(options);
+  return filePath || null;
 }
 
 function writeExportedFileToFileSystem(filename, jsonData, onDone) {
@@ -470,49 +470,48 @@ export function exportWorkspacesToFile(workspaceId = null) {
         }
 
         const fileNamePrefix = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
-        showSaveExportedFileDialog(fileNamePrefix, selectedFormat, async fileName => {
-          if (!fileName) {
-            // Cancelled.
-            dispatch(loadStop());
-            return;
-          }
+        const fileName = await showSaveExportedFileDialog(fileNamePrefix, selectedFormat);
+        if (!fileName) {
+          // Cancelled.
+          dispatch(loadStop());
+          return;
+        }
 
-          let stringifiedExport;
-          try {
-            if (selectedFormat === VALUE_HAR) {
-              stringifiedExport = await importUtils.exportWorkspacesHAR(
-                workspace,
-                exportPrivateEnvironments,
-              );
-            } else if (selectedFormat === VALUE_YAML) {
-              stringifiedExport = await importUtils.exportWorkspacesData(
-                workspace,
-                exportPrivateEnvironments,
-                'yaml',
-              );
-            } else {
-              stringifiedExport = await importUtils.exportWorkspacesData(
-                workspace,
-                exportPrivateEnvironments,
-                'json',
-              );
-            }
-          } catch (err) {
-            showError({
-              title: 'Export Failed',
-              error: err,
-              message: 'Export failed due to an unexpected error',
-            });
-            dispatch(loadStop());
-            return;
+        let stringifiedExport;
+        try {
+          if (selectedFormat === VALUE_HAR) {
+            stringifiedExport = await importUtils.exportWorkspacesHAR(
+              workspace,
+              exportPrivateEnvironments,
+            );
+          } else if (selectedFormat === VALUE_YAML) {
+            stringifiedExport = await importUtils.exportWorkspacesData(
+              workspace,
+              exportPrivateEnvironments,
+              'yaml',
+            );
+          } else {
+            stringifiedExport = await importUtils.exportWorkspacesData(
+              workspace,
+              exportPrivateEnvironments,
+              'json',
+            );
           }
-
-          writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
-            if (err) {
-              console.warn('Export failed', err);
-            }
-            dispatch(loadStop());
+        } catch (err) {
+          showError({
+            title: 'Export Failed',
+            error: err,
+            message: 'Export failed due to an unexpected error',
           });
+          dispatch(loadStop());
+          return;
+        }
+
+        writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
+          if (err) {
+            console.warn('Export failed', err);
+          }
+          dispatch(loadStop());
         });
       },
     );
@@ -560,49 +559,48 @@ export function exportRequestsToFile(requestIds) {
         }
 
         const fileNamePrefix = 'Insomnia';
-        showSaveExportedFileDialog(fileNamePrefix, selectedFormat, async fileName => {
-          if (!fileName) {
-            // Cancelled.
-            dispatch(loadStop());
-            return;
-          }
+        const fileName = await showSaveExportedFileDialog(fileNamePrefix, selectedFormat);
+        if (!fileName) {
+          // Cancelled.
+          dispatch(loadStop());
+          return;
+        }
 
-          let stringifiedExport;
-          try {
-            if (selectedFormat === VALUE_HAR) {
-              stringifiedExport = await importUtils.exportRequestsHAR(
-                requests,
-                exportPrivateEnvironments,
-              );
-            } else if (selectedFormat === VALUE_YAML) {
-              stringifiedExport = await importUtils.exportRequestsData(
-                requests,
-                exportPrivateEnvironments,
-                'yaml',
-              );
-            } else {
-              stringifiedExport = await importUtils.exportRequestsData(
-                requests,
-                exportPrivateEnvironments,
-                'json',
-              );
-            }
-          } catch (err) {
-            showError({
-              title: 'Export Failed',
-              error: err,
-              message: 'Export failed due to an unexpected error',
-            });
-            dispatch(loadStop());
-            return;
+        let stringifiedExport;
+        try {
+          if (selectedFormat === VALUE_HAR) {
+            stringifiedExport = await importUtils.exportRequestsHAR(
+              requests,
+              exportPrivateEnvironments,
+            );
+          } else if (selectedFormat === VALUE_YAML) {
+            stringifiedExport = await importUtils.exportRequestsData(
+              requests,
+              exportPrivateEnvironments,
+              'yaml',
+            );
+          } else {
+            stringifiedExport = await importUtils.exportRequestsData(
+              requests,
+              exportPrivateEnvironments,
+              'json',
+            );
           }
-
-          writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
-            if (err) {
-              console.warn('Export failed', err);
-            }
-            dispatch(loadStop());
+        } catch (err) {
+          showError({
+            title: 'Export Failed',
+            error: err,
+            message: 'Export failed due to an unexpected error',
           });
+          dispatch(loadStop());
+          return;
+        }
+
+        writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
+          if (err) {
+            console.warn('Export failed', err);
+          }
+          dispatch(loadStop());
         });
       },
     );

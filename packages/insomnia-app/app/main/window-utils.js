@@ -7,15 +7,23 @@ import {
   changelogUrl,
   getAppLongName,
   getAppName,
+  getAppReleaseDate,
   getAppVersion,
   isDevelopment,
+  isLinux,
   isMac,
   MNEMONIC_SYM,
 } from '../common/constants';
 import * as misc from '../common/misc';
+import * as os from 'os';
 import { docsBase } from '../common/documentation';
 
-const { app, Menu, BrowserWindow, shell, dialog } = electron;
+const { app, Menu, BrowserWindow, shell, dialog, clipboard } = electron;
+
+// So we can use native modules in renderer
+// NOTE: This will be deprecated in Electron 10 and impossible in 11
+//   https://github.com/electron/electron/issues/18397
+app.allowRendererProcessReuse = false;
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 700;
@@ -65,6 +73,9 @@ export function createWindow() {
     icon: path.resolve(__dirname, 'static/icon.png'),
     webPreferences: {
       zoomFactor: zoomFactor,
+      nodeIntegration: true,
+      webviewTag: true,
+      enableRemoteModule: true,
     },
   });
 
@@ -113,9 +124,6 @@ export function createWindow() {
   const applicationMenu = {
     label: `${MNEMONIC_SYM}Application`,
     submenu: [
-      ...(isMac()
-        ? [{ label: `A${MNEMONIC_SYM}bout ${getAppName()}`, role: 'about' }, { type: 'separator' }]
-        : []),
       {
         label: `${MNEMONIC_SYM}Preferences`,
         click: function(menuItem, window, e) {
@@ -219,6 +227,7 @@ export function createWindow() {
       },
       {
         label: `Toggle ${MNEMONIC_SYM}DevTools`,
+        accelerator: 'Alt+CmdOrCtrl+I',
         click: () => mainWindow.toggleDevTools(),
       },
     ],
@@ -266,7 +275,7 @@ export function createWindow() {
         label: 'Show Open Source Licenses',
         click: (menuItem, w, e) => {
           const licensePath = path.resolve(app.getAppPath(), '../opensource-licenses.txt');
-          shell.openItem(licensePath);
+          shell.openPath(licensePath);
         },
       },
       {
@@ -285,25 +294,51 @@ export function createWindow() {
     ],
   };
 
-  if (!isMac()) {
-    helpMenu.submenu.unshift({
-      label: `${MNEMONIC_SYM}About`,
-      click: () => {
-        dialog.showMessageBox({
-          type: 'info',
-          title: getAppName(),
-          message: getAppLongName(),
-          detail: [
-            'Version ' + getAppVersion(),
-            'Shell ' + process.versions.electron,
-            'Node ' + process.versions.node,
-            'V8 ' + process.versions.v8,
-            'Architecture ' + process.arch,
-            '', // Blank line before libcurl
-            Curl.getVersion(),
-          ].join('\n'),
-        });
+  const aboutMenuClickHandler = async () => {
+    const copy = 'Copy';
+    const ok = 'OK';
+
+    const buttons = isLinux() ? [copy, ok] : [ok, copy];
+
+    const detail = [
+      `Version: ${getAppLongName()} ${getAppVersion()}`,
+      `Release date: ${getAppReleaseDate()}`,
+      `OS: ${os.type()} ${os.arch()} ${os.release()}`,
+      `Electron: ${process.versions.electron}`,
+      `Node: ${process.versions.node}`,
+      `V8: ${process.versions.v8}`,
+      `Architecture: ${process.arch}`,
+      `node-libcurl: ${Curl.getVersion()}`,
+    ].join('\n');
+
+    const msgBox = await dialog.showMessageBox({
+      type: 'info',
+      title: getAppName(),
+      message: getAppLongName(),
+      detail,
+      buttons,
+      defaultId: buttons.indexOf(ok),
+      cancelId: buttons.indexOf(ok),
+      noLink: true,
+    });
+
+    if (msgBox.response === buttons.indexOf(copy)) {
+      clipboard.writeText(detail);
+    }
+  };
+
+  if (isMac()) {
+    applicationMenu.submenu.unshift(
+      {
+        label: `A${MNEMONIC_SYM}bout ${getAppName()}`,
+        click: aboutMenuClickHandler,
       },
+      { type: 'separator' },
+    );
+  } else {
+    helpMenu.submenu.push({
+      label: `${MNEMONIC_SYM}About`,
+      click: aboutMenuClickHandler,
     });
   }
 
@@ -315,11 +350,6 @@ export function createWindow() {
         label: `${MNEMONIC_SYM}Reload`,
         accelerator: 'Shift+F5',
         click: () => mainWindow.reload(),
-      },
-      {
-        label: `Toggle ${MNEMONIC_SYM}DevTools`,
-        accelerator: 'Alt+CmdOrCtrl+I',
-        click: () => mainWindow.toggleDevTools(),
       },
       {
         label: `Resize to Defaul${MNEMONIC_SYM}t`,
@@ -390,23 +420,20 @@ export function createWindow() {
   return mainWindow;
 }
 
-function showUnresponsiveModal() {
-  dialog.showMessageBox(
-    {
-      type: 'info',
-      buttons: ['Cancel', 'Reload'],
-      defaultId: 1,
-      cancelId: 0,
-      title: 'Unresponsive',
-      message: 'Insomnia has become unresponsive. Do you want to reload?',
-    },
-    id => {
-      if (id === 1) {
-        mainWindow.destroy();
-        createWindow();
-      }
-    },
-  );
+async function showUnresponsiveModal() {
+  const id = await dialog.showMessageBox({
+    type: 'info',
+    buttons: ['Cancel', 'Reload'],
+    defaultId: 1,
+    cancelId: 0,
+    title: 'Unresponsive',
+    message: 'Insomnia has become unresponsive. Do you want to reload?',
+  });
+
+  if (id === 1) {
+    mainWindow.destroy();
+    createWindow();
+  }
 }
 
 function saveBounds() {

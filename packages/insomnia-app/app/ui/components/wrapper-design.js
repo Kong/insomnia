@@ -3,7 +3,7 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
-import { Breadcrumb, Button, Header, NoticeTable, Switch } from 'insomnia-components';
+import { Breadcrumb, Button, Header, NoticeTable } from 'insomnia-components';
 import ErrorBoundary from './error-boundary';
 import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
 import CodeEditor from './codemirror/code-editor';
@@ -12,7 +12,6 @@ import { showModal } from './modals';
 import GenerateConfigModal from './modals/generate-config-modal';
 import classnames from 'classnames';
 import SwaggerUI from 'swagger-ui-react';
-import { ACTIVITY_HOME } from './activity-bar/activity-bar';
 import type { ApiSpec } from '../../models/api-spec';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import previewIcon from '../images/icn-eye.svg';
@@ -20,15 +19,17 @@ import generateConfigIcon from '../images/icn-gear.svg';
 import * as models from '../../models/index';
 import { parseApiSpec } from '../../common/api-specs';
 import { getConfigGenerators } from '../../plugins';
-import AlertModal from './modals/alert-modal';
+import type { GlobalActivity } from '../../common/constants';
+import { ACTIVITY_HOME } from '../../common/constants';
+import ActivityToggle from './activity-toggle';
 
 const spectral = new Spectral();
 
 type Props = {|
   gitSyncDropdown: React.Node,
-  wrapperProps: WrapperProps,
+  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>,
   handleUpdateApiSpec: (s: ApiSpec) => Promise<void>,
-  handleSetDebugActivity: (s: ApiSpec) => Promise<void>,
+  wrapperProps: WrapperProps,
 |};
 
 type State = {|
@@ -71,32 +72,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     showModal(GenerateConfigModal, { apiSpec: activeApiSpec });
   }
 
-  async _handleDebugSpec(errors, e): Pomise<void> {
-    e.preventDefault();
-    if (errors) {
-      showModal(AlertModal, {
-        title: 'Error Generating Configuration',
-        message:
-          'Some requests may not be available due to errors found in the specification. We recommend fixing errors before proceeding. 🤗',
-        okLabel: 'Proceed',
-        addCancel: true,
-        onConfirm: async () => {
-          const {
-            handleSetDebugActivity,
-            wrapperProps: { activeApiSpec },
-          } = this.props;
-          await handleSetDebugActivity(activeApiSpec);
-        },
-      });
-    } else {
-      const {
-        handleSetDebugActivity,
-        wrapperProps: { activeApiSpec },
-      } = this.props;
-      await handleSetDebugActivity(activeApiSpec);
-    }
-  }
-
   async _handleTogglePreview() {
     await this.setState(
       prevState => ({ previewHidden: !prevState.previewHidden }),
@@ -128,7 +103,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
       return;
     }
 
-    editor.setSelection(chStart, chEnd, lineStart, lineEnd);
+    editor.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
   }
 
   _handleLintClick(notice: {}) {
@@ -181,21 +156,20 @@ class WrapperDesign extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { gitSyncDropdown, wrapperProps } = this.props;
+    const { gitSyncDropdown, wrapperProps, handleActivityChange } = this.props;
 
-    const { activeApiSpec, settings } = wrapperProps;
+    const { activeApiSpec, settings, activity, activeWorkspace } = wrapperProps;
 
     const { lintMessages, previewHidden, hasConfigPlugins } = this.state;
 
     let swaggerUiSpec;
     try {
-      const { contents } = parseApiSpec(activeApiSpec.contents);
-      swaggerUiSpec = contents;
-    } catch (err) {
+      swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
+    } catch (err) {}
+
+    if (!swaggerUiSpec) {
       swaggerUiSpec = {};
     }
-
-    const lintErrorsExist = !!lintMessages.find(c => c.type === 'error');
 
     return (
       <PageLayout
@@ -214,12 +188,10 @@ class WrapperDesign extends React.PureComponent<Props, State> {
               </React.Fragment>
             }
             gridCenter={
-              <Switch
-                onClick={this._handleDebugSpec.bind(this, lintErrorsExist)}
-                optionItems={[
-                  { label: 'DESIGN', selected: true },
-                  { label: 'DEBUG', selected: false },
-                ]}
+              <ActivityToggle
+                activity={activity}
+                handleActivityChange={handleActivityChange}
+                workspace={activeWorkspace}
               />
             }
             gridRight={
@@ -247,31 +219,35 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             className={classnames('spec-editor layout-body--sidebar theme--pane', {
               'preview-hidden': previewHidden,
             })}>
-            <div id="swagger-ui-wrapper">
-              <ErrorBoundary
-                invalidationKey={activeApiSpec.contents}
-                renderError={() => (
-                  <div className="text-center margin">
-                    <h3>An error occurred while trying to render Swagger UI 😢</h3>
-                    This preview will automatically refresh, once you have a valid specification
-                    that can be previewed.
-                  </div>
-                )}>
-                <SwaggerUI
-                  spec={swaggerUiSpec}
-                  supportedSubmitMethods={[
-                    'get',
-                    'put',
-                    'post',
-                    'delete',
-                    'options',
-                    'head',
-                    'patch',
-                    'trace',
-                  ]}
-                />
-              </ErrorBoundary>
-            </div>
+            {previewHidden ? null : (
+              <div id="swagger-ui-wrapper">
+                <ErrorBoundary
+                  invalidationKey={activeApiSpec.contents}
+                  renderError={() => (
+                    <div className="text-left margin pad">
+                      <h3>An error occurred while trying to render Swagger UI 😢</h3>
+                      <p>
+                        This preview will automatically refresh, once you have a valid specification
+                        that can be previewed.
+                      </p>
+                    </div>
+                  )}>
+                  <SwaggerUI
+                    spec={swaggerUiSpec}
+                    supportedSubmitMethods={[
+                      'get',
+                      'put',
+                      'post',
+                      'delete',
+                      'options',
+                      'head',
+                      'patch',
+                      'trace',
+                    ]}
+                  />
+                </ErrorBoundary>
+              </div>
+            )}
             <div className="spec-editor__body theme--pane__body">
               <CodeEditor
                 manualPrettify
@@ -293,7 +269,17 @@ class WrapperDesign extends React.PureComponent<Props, State> {
           </div>
         )}
         renderPageSidebar={() => (
-          <ErrorBoundary showAlert>
+          <ErrorBoundary
+            invalidationKey={activeApiSpec.contents}
+            renderError={() => (
+              <div className="text-left margin pad">
+                <h4>An error occurred while trying to render your spec's navigation. 😢</h4>
+                <p>
+                  This navigation will automatically refresh, once you have a valid specification
+                  that can be rendered.
+                </p>
+              </div>
+            )}>
             <SpecEditorSidebar
               apiSpec={activeApiSpec}
               handleSetSelection={this._handleSetSelection}

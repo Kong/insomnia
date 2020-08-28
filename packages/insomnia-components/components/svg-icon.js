@@ -35,6 +35,7 @@ import MemoSvgIcnQuestionFill from '../assets/svgr/IcnQuestionFill';
 import MemoSvgIcnQuestion from '../assets/svgr/IcnQuestion';
 import MemoSvgIcnSearch from '../assets/svgr/IcnSearch';
 import MemoSvgIcnSecCert from '../assets/svgr/IcnSecCert';
+import MemoSvgIcnSuccess from '../assets/svgr/IcnSuccess';
 import MemoSvgIcnSync from '../assets/svgr/IcnSync';
 import MemoSvgIcnTrashcan from '../assets/svgr/IcnTrashcan';
 import MemoSvgIcnTriangle from '../assets/svgr/IcnTriangle';
@@ -42,6 +43,8 @@ import MemoSvgIcnUser from '../assets/svgr/IcnUser';
 import MemoSvgIcnWarningCircle from '../assets/svgr/IcnWarningCircle';
 import MemoSvgIcnX from '../assets/svgr/IcnX';
 import MemoSvgIcnInfo from '../assets/svgr/IcnInfo';
+import MemoSvgIcnKey from '../assets/svgr/IcnKey';
+import MemoSvgIcnBrackets from '../assets/svgr/IcnBrackets';
 
 export const ThemeEnum = {
   default: 'default',
@@ -93,12 +96,15 @@ export const IconEnum = {
   questionFill: 'question-fill',
   question: 'question',
   secCert: 'sec-cert',
+  success: 'success',
   sync: 'sync',
   trashcan: 'trashcan',
   triangle: 'triangle',
   user: 'user',
   warningCircle: 'warning-circle',
   x: 'x',
+  key: 'key',
+  brackets: 'brackets',
 
   // Blank icon
   empty: 'empty',
@@ -181,12 +187,15 @@ class SvgIcon extends React.Component<Props> {
     [IconEnum.question]: [ThemeEnum.default, MemoSvgIcnQuestion],
     [IconEnum.questionFill]: [ThemeEnum.default, MemoSvgIcnQuestionFill],
     [IconEnum.secCert]: [ThemeEnum.default, MemoSvgIcnSecCert],
+    [IconEnum.success]: [ThemeEnum.success, MemoSvgIcnSuccess],
     [IconEnum.sync]: [ThemeEnum.default, MemoSvgIcnSync],
     [IconEnum.trashcan]: [ThemeEnum.default, MemoSvgIcnTrashcan],
     [IconEnum.triangle]: [ThemeEnum.default, MemoSvgIcnTriangle],
     [IconEnum.user]: [ThemeEnum.default, MemoSvgIcnUser],
     [IconEnum.warningCircle]: [ThemeEnum.default, MemoSvgIcnWarningCircle],
     [IconEnum.x]: [ThemeEnum.default, MemoSvgIcnX],
+    [IconEnum.key]: [ThemeEnum.default, MemoSvgIcnKey],
+    [IconEnum.brackets]: [ThemeEnum.default, MemoSvgIcnBrackets],
   };
 
   render() {
@@ -194,7 +203,7 @@ class SvgIcon extends React.Component<Props> {
 
     if (!SvgIcon.icons[icon]) {
       throw new Error(
-        `Invalid icon "${icon}" used. Must be one of ${Object.values(SvgIcon.icons).join('|')}`,
+        `Invalid icon "${icon}" used. Must be one of ${Object.values(IconEnum).join('|')}`,
       );
     }
 

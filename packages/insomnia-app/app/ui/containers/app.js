@@ -14,8 +14,9 @@ import Toast from '../components/toast';
 import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
-import { ACTIVITY_HOME, ACTIVITY_INSOMNIA } from '../components/activity-bar/activity-bar';
 import {
+  ACTIVITY_HOME,
+  ACTIVITY_INSOMNIA,
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
   DEFAULT_PANE_WIDTH,
@@ -27,8 +28,8 @@ import {
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
   PREVIEW_MODE_SOURCE,
-  getAppName,
   getAppId,
+  getAppName,
 } from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as entitiesActions from '../redux/modules/entities';
@@ -42,6 +43,10 @@ import {
   selectActiveRequestMeta,
   selectActiveRequestResponses,
   selectActiveResponse,
+  selectActiveUnitTestResult,
+  selectActiveUnitTests,
+  selectActiveUnitTestSuite,
+  selectActiveUnitTestSuites,
   selectActiveWorkspace,
   selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
@@ -606,18 +611,20 @@ class App extends PureComponent {
   }
 
   async _getDownloadLocation() {
-    return new Promise(resolve => {
-      const options = {
-        title: 'Select Download Location',
-        buttonLabel: 'Send and Save',
-        defaultPath: window.localStorage.getItem('insomnia.sendAndDownloadLocation'),
-      };
+    const options = {
+      title: 'Select Download Location',
+      buttonLabel: 'Send and Save',
+    };
 
-      remote.dialog.showSaveDialog(options, filename => {
-        window.localStorage.setItem('insomnia.sendAndDownloadLocation', filename);
-        resolve(filename);
-      });
-    });
+    const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
+    if (defaultPath) {
+      // NOTE: An error will be thrown if defaultPath is supplied but not a String
+      options.defaultPath = defaultPath;
+    }
+
+    const { filePath } = await remote.dialog.showSaveDialog(options);
+    window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
+    return filePath || null;
   }
 
   async _handleSendAndDownloadRequestWithEnvironment(requestId, environmentId, dir) {
@@ -658,6 +665,10 @@ class App extends PureComponent {
           filename = path.join(dir, name);
         } else {
           filename = await this._getDownloadLocation();
+        }
+
+        if (!filename) {
+          return;
         }
 
         const to = fs.createWriteStream(filename);
@@ -888,7 +899,7 @@ class App extends PureComponent {
 
   _handleToggleMenuBar(hide) {
     for (const win of remote.BrowserWindow.getAllWindows()) {
-      if (win.isMenuBarAutoHide() !== hide) {
+      if (win.autoHideMenuBar !== hide) {
         win.setAutoHideMenuBar(hide);
         win.setMenuBarVisibility(!hide);
       }
@@ -931,11 +942,17 @@ class App extends PureComponent {
    * @private
    */
   _updateDocumentTitle() {
-    const { activeWorkspace, activeApiSpec, activeEnvironment, activeRequest } = this.props;
+    const {
+      activeWorkspace,
+      activeApiSpec,
+      activeEnvironment,
+      activeRequest,
+      activity,
+    } = this.props;
 
     let title;
 
-    if (this.props.activity === ACTIVITY_HOME) {
+    if (activity === ACTIVITY_HOME) {
       title = getAppName();
     } else {
       title = getAppId() === APP_ID_INSOMNIA ? activeWorkspace.name : activeApiSpec.fileName;
@@ -1356,15 +1373,15 @@ function mapStateToProps(state, props) {
   // Entities
   const entitiesLists = selectEntitiesLists(state, props);
   const {
-    workspaces,
-    workspaceMetas,
+    apiSpecs,
     environments,
-    requests,
+    gitRepositories,
     requestGroups,
     requestMetas,
     requestVersions,
-    apiSpecs,
-    gitRepositories,
+    requests,
+    workspaceMetas,
+    workspaces,
   } = entitiesLists;
 
   const settings = entitiesLists.settings[0];
@@ -1416,6 +1433,12 @@ function mapStateToProps(state, props) {
   // Api spec stuff
   const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace._id);
 
+  // Test stuff
+  const activeUnitTests = selectActiveUnitTests(state, props);
+  const activeUnitTestSuite = selectActiveUnitTestSuite(state, props);
+  const activeUnitTestSuites = selectActiveUnitTestSuites(state, props);
+  const activeUnitTestResult = selectActiveUnitTestResult(state, props);
+
   return Object.assign({}, state, {
     activity: activeActivity,
     activeApiSpec,
@@ -1425,6 +1448,10 @@ function mapStateToProps(state, props) {
     activeRequest,
     activeRequestResponses,
     activeResponse,
+    activeUnitTestResult,
+    activeUnitTestSuite,
+    activeUnitTestSuites,
+    activeUnitTests,
     activeWorkspace,
     activeWorkspaceClientCertificates,
     activeWorkspaceMeta,

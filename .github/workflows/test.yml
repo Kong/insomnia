@@ -10,39 +10,30 @@ on:
       - opened
       - synchronize
 
-env:
-  NPM_CONFIG_TARGET: 3.1.13
-  NPM_CONFIG_ARCH: x64
-  NPM_CONFIG_TARGET_ARCH: x64
-  NPM_CONFIG_DISTURL: https://electronjs.org/headers
-  NPM_CONFIG_RUNTIME: electron
-
 jobs:
-  Windows:
-    name: Test Windows
-    runs-on: windows-latest
+  OS:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Install NodeJS
-        uses: actions/setup-node@v1
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
+      - uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Run tests
         run: npm test
-  Linux:
-    name: Test Linux
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v1
-      - name: Install NodeJS
-        uses: actions/setup-node@v1
-        with:
-          node-version: 10
-      - name: Bootstrap packages
-        run: npm run bootstrap
-      - name: Run tests
-        run: npm test
+      - name: Build core for smoke tests
+        run: npm run app-build:smoke:core
+      - name: Build designer for smoke tests
+        run: npm run app-build:smoke:designer
+      - name: Run core smoke tests
+        run: npm run test:smoke:core
+      - name: Run designer smoke tests
+        run: npm run test:smoke:designer

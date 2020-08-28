@@ -32,6 +32,11 @@
     right: 0;
     top: 0;
     bottom: 0;
+
+    .cm-searching {
+      background: var(--hl-sm);
+      border-bottom: 1px solid var(--color-success);
+    }
   }
 
   .editor__toolbar {
@@ -155,5 +160,16 @@
     .CodeMirror-lines {
       padding-bottom: 0.5em;
     }
+  }
+}
+
+/*
+  We need to restyle CodeMirrow for raw editor
+*/
+.raw-editor {
+  .CodeMirror-wrap pre.CodeMirror-line, .CodeMirror-wrap pre.CodeMirror-line-like {
+    word-break: break-all;
+    line-height: normal;
+    padding: var(--padding-md);
   }
 }
