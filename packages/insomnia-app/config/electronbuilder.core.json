@@ -12,6 +12,11 @@
       "from": "./build/__APP_ID__",
       "to": ".",
       "filter": "opensource-licenses.txt"
+    },
+    {
+      "from": "./node_modules/win-ca/lib/roots.exe",
+      "to": ".",
+      "filter": "roots.exe"
     }
   ],
   "protocols": [
