@@ -5,7 +5,7 @@
   "scripts": {
     "build": "webpack --config webpack.config.js --display errors-only",
     "watch": "webpack --config webpack.config.js --watch",
-    "prepack": "npm run build"
+    "prepare": "npm run build"
   },
   "insomnia": {
     "name": "kong-portal",
