@@ -2,7 +2,6 @@ import { assertAsyncError, setupDateMocks } from './util';
 import { MemPlugin } from '../mem-plugin';
 import path from 'path';
 import { GIT_CLONE_DIR } from '../git-vcs';
-jest.mock('path');
 
 describe('MemPlugin', () => {
   afterAll(() => jest.restoreAllMocks());
