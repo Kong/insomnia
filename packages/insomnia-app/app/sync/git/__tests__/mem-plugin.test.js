@@ -4,7 +4,7 @@ import path from 'path';
 import { GIT_CLONE_DIR } from '../git-vcs';
 jest.mock('path');
 
-describe('Memlugin', () => {
+describe('MemPlugin', () => {
   afterAll(() => jest.restoreAllMocks());
   beforeEach(setupDateMocks);
 
