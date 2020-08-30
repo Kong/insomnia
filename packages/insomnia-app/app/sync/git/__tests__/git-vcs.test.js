@@ -4,13 +4,10 @@ import { MemPlugin } from '../mem-plugin';
 import path from 'path';
 import * as git from 'isomorphic-git';
 
-jest.mock('path');
-
-describe.each(['win32', 'posix'])('Git-VCS using path.%s', type => {
+describe('Git-VCS', () => {
   let fooTxt = '';
   let barTxt = '';
   beforeAll(() => {
-    path.__mockPath(type);
     fooTxt = path.join(GIT_INSOMNIA_DIR, 'foo.txt');
     barTxt = path.join(GIT_INSOMNIA_DIR, 'bar.txt');
   });
