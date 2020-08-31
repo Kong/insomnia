@@ -1,5 +1,6 @@
 {
   "name": "insomnia-plugin-kong-kubernetes-config",
+  "private": true,
   "version": "2.2.12",
   "main": "index.js",
   "insomnia": {

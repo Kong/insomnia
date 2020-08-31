@@ -1,5 +1,6 @@
 {
   "name": "insomnia-plugin-kong-portal",
+  "private": true,
   "version": "2.2.21",
   "main": "dist/index.js",
   "scripts": {
