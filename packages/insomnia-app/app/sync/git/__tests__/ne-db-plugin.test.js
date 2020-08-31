@@ -7,10 +7,8 @@ import { assertAsyncError, setupDateMocks } from './util';
 import NeDBPlugin from '../ne-db-plugin';
 import path from 'path';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';
-jest.mock('path');
 
-describe.each(['win32', 'posix'])('NeDBPlugin using path.%s', type => {
-  beforeAll(() => path.__mockPath(type));
+describe('NeDBPlugin', () => {
   afterAll(() => jest.restoreAllMocks());
 
   beforeEach(async () => {

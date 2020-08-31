@@ -158,6 +158,7 @@ class CodePromptModal extends PureComponent {
               <div className="form-control form-control--outlined form-control--tall tall">
                 <CodeEditor
                   hideLineNumbers
+                  manualPrettify
                   className="tall"
                   defaultValue={defaultValue}
                   placeholder={placeholder}
