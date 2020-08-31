@@ -1,6 +1,6 @@
 {
   "name": "insomnia-testing",
-  "version": "2.2.15",
+  "version": "2.2.22",
   "main": "dist/index.js",
   "scripts": {
     "typecheck": "flow check",
