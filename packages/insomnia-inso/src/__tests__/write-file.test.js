@@ -4,6 +4,7 @@ import { writeFileWithCliOptions } from '../write-file';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
 import { InsoError } from '../errors';
+import os from 'os';
 
 jest.mock('mkdirp', () => ({
   sync: jest.fn().mockResolvedValue(),
@@ -33,21 +34,23 @@ describe('writeFileWithCliOptions', () => {
   });
 
   it('should write to absolute output file', async () => {
-    const output = '/Users/me/dev/file.yaml';
+    const absolutePath = path.join(os.tmpdir(), 'dev', 'file.yaml');
+    const output = absolutePath;
     const contents = 'contents';
     const workingDir = undefined;
 
     const promise = writeFileWithCliOptions(output, contents, workingDir);
-    await expect(promise).resolves.toBe('/Users/me/dev/file.yaml');
+    await expect(promise).resolves.toBe(absolutePath);
   });
 
   it('should write to absolute output file and ignore working dir', async () => {
-    const output = '/Users/me/dev/file.yaml';
+    const absolutePath = path.join(os.tmpdir(), 'dev', 'file.yaml');
+    const output = absolutePath;
     const contents = 'contents';
     const workingDir = 'working/dir';
 
     const promise = writeFileWithCliOptions(output, contents, workingDir);
-    await expect(promise).resolves.toBe('/Users/me/dev/file.yaml');
+    await expect(promise).resolves.toBe(absolutePath);
   });
 
   it('should write to output file under working dir', async () => {

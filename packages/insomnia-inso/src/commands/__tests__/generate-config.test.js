@@ -6,6 +6,7 @@ import { writeFileWithCliOptions } from '../../write-file';
 import { globalBeforeAll, globalBeforeEach } from '../../../__jest__/before';
 import logger from '../../logger';
 import { InsoError } from '../../errors';
+import os from 'os';
 
 jest.mock('openapi-2-kong');
 jest.mock('../../write-file');
@@ -125,7 +126,9 @@ describe('generateConfig()', () => {
     const outputPath = 'this-is-the-output-path';
     mock(writeFileWithCliOptions).mockResolvedValue(outputPath);
 
-    const result = await generateConfig('/Users/me/dev/file.yaml', {
+    const absolutePath = path.join(os.tmpdir(), 'dev', 'file.yaml');
+
+    const result = await generateConfig(absolutePath, {
       type: 'kubernetes',
       workingDir: 'test/dir',
       output: 'output.yaml',
@@ -134,10 +137,7 @@ describe('generateConfig()', () => {
     expect(result).toBe(true);
 
     // Read from workingDir
-    expect(o2k.generate).toHaveBeenCalledWith(
-      path.normalize('/Users/me/dev/file.yaml'),
-      ConversionTypeMap.kubernetes,
-    );
+    expect(o2k.generate).toHaveBeenCalledWith(absolutePath, ConversionTypeMap.kubernetes);
 
     expect(logger.__getLogs().log).toEqual([`Configuration generated to "${outputPath}".`]);
   });
