@@ -5,7 +5,6 @@ import { setupDateMocks } from './util';
 import { MemPlugin } from '../mem-plugin';
 import type { FileWithStatus } from '../git-rollback';
 import { gitRollback } from '../git-rollback';
-jest.mock('path');
 
 describe('git rollback', () => {
   describe('mocked', () => {
@@ -92,12 +91,11 @@ describe('git rollback', () => {
     });
   });
 
-  describe.each(['win32', 'posix'])('integration using path.%s', type => {
+  describe('integration', () => {
     let fooTxt = '';
     let barTxt = '';
     let bazTxt = '';
     beforeAll(() => {
-      path.__mockPath(type);
       fooTxt = path.join(GIT_INSOMNIA_DIR, 'foo.txt');
       barTxt = path.join(GIT_INSOMNIA_DIR, 'bar.txt');
       bazTxt = path.join(GIT_INSOMNIA_DIR, 'baz.txt');

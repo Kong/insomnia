@@ -1,5 +1,7 @@
 import mkdirp from 'mkdirp';
 import events from 'events';
+import os from 'os';
+import path from 'path';
 
 const RANDOM_STRING = Math.random()
   .toString()
@@ -8,7 +10,7 @@ const RANDOM_STRING = Math.random()
 const remote = {
   app: {
     getPath(name) {
-      const dir = `/tmp/insomnia-tests-${RANDOM_STRING}/${name}`;
+      const dir = path.join(os.tmpdir(), `insomnia-tests-${RANDOM_STRING}`, name);
       mkdirp.sync(dir);
       return dir;
     },
