@@ -120,6 +120,28 @@ describe('generateConfig()', () => {
     expect(logger.__getLogs().log).toEqual([`Configuration generated to "${outputPath}".`]);
   });
 
+  it('should generate documents using absolute path', async () => {
+    mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
+    const outputPath = 'this-is-the-output-path';
+    mock(writeFileWithCliOptions).mockResolvedValue(outputPath);
+
+    const result = await generateConfig('/Users/me/dev/file.yaml', {
+      type: 'kubernetes',
+      workingDir: 'test/dir',
+      output: 'output.yaml',
+    });
+
+    expect(result).toBe(true);
+
+    // Read from workingDir
+    expect(o2k.generate).toHaveBeenCalledWith(
+      path.normalize('/Users/me/dev/file.yaml'),
+      ConversionTypeMap.kubernetes,
+    );
+
+    expect(logger.__getLogs().log).toEqual([`Configuration generated to "${outputPath}".`]);
+  });
+
   it('should throw InsoError if there is an error thrown by openapi-2-kong', async () => {
     const error = new Error('err');
     mock(o2k.generate).mockRejectedValue(error);

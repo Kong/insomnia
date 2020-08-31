@@ -52,7 +52,9 @@ export async function generateConfig(
       result = await o2k.generateFromString(specFromDb.contents, ConversionTypeMap[type]);
     } else if (identifier) {
       // try load as a file
-      const fileName = path.join(workingDir || '.', identifier);
+      const fileName = path.isAbsolute(identifier)
+        ? identifier
+        : path.join(workingDir || '.', identifier);
       logger.trace(`Generating config from file \`${fileName}\``);
       result = await o2k.generate(fileName, ConversionTypeMap[type]);
     }
