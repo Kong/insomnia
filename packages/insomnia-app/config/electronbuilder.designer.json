@@ -25,6 +25,7 @@
   ],
   "fileAssociations": [],
   "directories": {
+    "buildResources": "build/__APP_ID__",
     "app": "build/__APP_ID__",
     "output": "dist/__APP_ID__"
   },
