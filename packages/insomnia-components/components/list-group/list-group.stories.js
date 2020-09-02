@@ -1,20 +1,20 @@
 // @flow
 import React from 'react';
+import styled from 'styled-components';
+import { motion } from 'framer-motion';
 import ListGroupItem from './list-group-item';
 import ListGroup from './list-group';
 import UnitTestResultItem from './unit-test-result-item';
 
 export default { title: 'Lists | List Group' };
 
-export const _default = () => (
-  <div style={{ width: '350px' }}>
-    <ListGroup>
-      <ListGroupItem>List</ListGroupItem>
-      <ListGroupItem>of</ListGroupItem>
-      <ListGroupItem>things...</ListGroupItem>
-    </ListGroup>
-  </div>
-);
+const StyledContent: React.ComponentType<{}> = styled(motion.div)`
+  display: block;
+  height: 1px;
+  padding: var(--padding-sm);
+  border: 1px solid #ccc;
+  margin: var(--padding-md) 0px;
+`;
 
 const tests = [
   {
@@ -46,6 +46,45 @@ const tests = [
     },
   },
 ];
+
+export const _default = () => {
+  const [items, setItems] = React.useState([]);
+  const newItems = [];
+  const _handleItemClick = position => {
+    setItems([]);
+    tests.map((test, i) => {
+      let visible = false;
+      if (position === i) {
+        visible = true;
+      }
+      newItems.push({ position: i, visible: visible });
+    });
+    setItems(newItems);
+  };
+
+  return (
+    <div style={{ width: '350px' }}>
+      <ListGroup>
+        {tests.map((test, i) => (
+          <ListGroupItem
+            key={i}
+            onClick={() => {
+              _handleItemClick(i);
+            }}>
+            {test.title}
+            {items && items.length > 1 && items[i].position === i && items[i].visible === true && (
+              <StyledContent
+                initial={{ height: items[i].visible ? '0px' : '0px' }}
+                animate={{ height: items[i].visible ? '100px' : '0px' }}>
+                Item: {items[i].position}
+              </StyledContent>
+            )}
+          </ListGroupItem>
+        ))}
+      </ListGroup>
+    </div>
+  );
+};
 
 export const _unitTestResults = () => (
   <div style={{ width: '350px' }}>
