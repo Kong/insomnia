@@ -120,7 +120,7 @@ class ExampleModal extends PureComponent {
     } = this.state;
     return (
       <Modal ref={this._setModalRef}>
-        <ModalHeader>New Request</ModalHeader>
+        <ModalHeader>New Example</ModalHeader>
         <ModalBody className="pad">
           <form onSubmit={this._handleSubmit} className="pad">
             <div className="form-row">
