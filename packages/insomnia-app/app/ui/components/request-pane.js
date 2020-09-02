@@ -5,6 +5,7 @@ import type {
   RequestBody,
   RequestHeader,
   RequestParameter,
+  RequestExample,
 } from '../../models/request';
 import type { Workspace } from '../../models/workspace';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
@@ -26,10 +27,16 @@ import Hotkey from './hotkey';
 import MarkdownPreview from './markdown-preview';
 import { showModal } from './modals/index';
 import RequestSettingsModal from './modals/request-settings-modal';
+import ExampleModal from './modals/example-modal';
 import RenderedQueryString from './rendered-query-string';
 import RequestUrlBar from './request-url-bar.js';
 import type { Settings } from '../../models/settings';
 import RequestParametersEditor from './editors/request-parameters-editor';
+import { generateId } from '../../common/misc';
+import Button from './base/button';
+import PromptButton from './base/prompt-button';
+
+const examplePrefix = 'expl';
 
 type Props = {
   // Functions
@@ -48,6 +55,7 @@ type Props = {
   updateRequestParameters: (r: Request, params: Array<RequestParameter>) => Promise<Request>,
   updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>,
   updateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>,
+  updateRequestExample: (r: Request, example: RequestExample) => Promise<Request>,
   updateRequestMimeType: (r: Request, mimeType: string) => Promise<Request>,
   updateSettingsShowPasswords: Function,
   updateSettingsUseBulkHeaderEditor: Function,
@@ -80,6 +88,42 @@ class RequestPane extends React.PureComponent<Props> {
       request: this.props.request,
       forceEditMode: addDescription,
     });
+  }
+
+  _handleAddExample() {
+    showModal(ExampleModal, {
+      request: this.props.request,
+      handleRender: this.props.handleRender,
+      handleGetRenderContext: this.props.handleGetRenderContext,
+      editorSettings: this.props.settings,
+      onComplete: example => {
+        example.id = generateId(examplePrefix);
+        console.log('exampleAdd', this.props.request, example);
+        this.props.updateRequestExample(this.props.request, example);
+      },
+    });
+  }
+
+  _handleEditExample(example: RequestExample) {
+    showModal(ExampleModal, {
+      example,
+      request: this.props.request,
+      handleRender: this.props.handleRender,
+      handleGetRenderContext: this.props.handleGetRenderContext,
+      editorSettings: this.props.settings,
+      onComplete: _example => {
+        // example.id = generateId(examplePrefix)
+        _example.id = example.id;
+        console.log('exampleEdit', this.props.request, _example);
+        this.props.updateRequestExample(this.props.request, _example);
+      },
+    });
+    console.log('edit Example', example);
+  }
+
+  _handleDeleteExample(example: RequestExample) {
+    console.log('delete Example', example);
+    this.props.deleteRequestExample(this.props.request, example);
   }
 
   async _autocompleteUrls(): Promise<Array<string>> {
@@ -319,6 +363,9 @@ class RequestPane extends React.PureComponent<Props> {
                 )}
               </button>
             </Tab>
+            <Tab tabIndex="-1">
+              <button>Examples</button>
+            </Tab>
           </TabList>
           <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
             <BodyEditor
@@ -457,6 +504,59 @@ class RequestPane extends React.PureComponent<Props> {
                 </p>
               </div>
             )}
+          </TabPanel>
+          <TabPanel className="react-tabs__tab-panel example-editor">
+            <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+              {request.examples.length ? (
+                <div>
+                  <div className="pull-right pad bg-default">
+                    <button className="btn btn--clicky" onClick={this._handleAddExample}>
+                      Add
+                    </button>
+                  </div>
+                  <div className="pad">
+                    <h2> Examples </h2>
+                    <ul className="example__list">
+                      {request.examples.map((example, i) => (
+                        <li className="example__list-row" key={example._id || i}>
+                          <div className="example__list-item">
+                            <span>{example.title}</span>
+                          </div>
+                          <div>
+                            <Button value={example} onClick={this._handleEditExample} title="Edit">
+                              <i className="fa fa-edit" />
+                            </Button>
+                            <PromptButton
+                              key={Math.random()}
+                              tabIndex={-1}
+                              confirmMessage=""
+                              addIcon
+                              value={example}
+                              onClick={this._handleDeleteExample}
+                              title="Delete item">
+                              <i className="fa fa-trash-o" />
+                            </PromptButton>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <div className="overflow-hidden editor vertically-center text-center">
+                  <p className="pad text-sm text-center">
+                    <span className="super-faint">
+                      <i className="fa fa-file-text-o" style={{ fontSize: '8rem', opacity: 0.3 }} />
+                    </span>
+                    <br />
+                    <br />
+                    <button className="btn btn--clicky faint" onClick={this._handleAddExample}>
+                      Add Example
+                    </button>
+                  </p>
+                </div>
+              )}
+            </ErrorBoundary>
           </TabPanel>
         </Tabs>
       </section>

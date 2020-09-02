@@ -106,6 +106,8 @@ class WrapperDebug extends React.PureComponent<Props> {
       handleUpdateRequestAuthentication,
       handleUpdateRequestBody,
       handleUpdateRequestHeaders,
+      handleUpdateExample,
+      handleDeleteExample,
       handleUpdateRequestMethod,
       handleUpdateRequestParameters,
       handleUpdateRequestUrl,
@@ -271,6 +273,8 @@ class WrapperDebug extends React.PureComponent<Props> {
                 updateRequestAuthentication={handleUpdateRequestAuthentication}
                 updateRequestBody={handleUpdateRequestBody}
                 updateRequestHeaders={handleUpdateRequestHeaders}
+                updateRequestExample={handleUpdateExample}
+                deleteRequestExample={handleDeleteExample}
                 updateRequestMethod={handleUpdateRequestMethod}
                 updateRequestMimeType={handleUpdateRequestMimeType}
                 updateRequestParameters={handleUpdateRequestParameters}

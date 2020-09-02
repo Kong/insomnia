@@ -4,3 +4,30 @@
     text-align: left;
   }
 }
+
+.example__list {
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-bg);
+  grid-template-rows: auto auto minmax(0, 1fr);
+
+
+  & > * {
+    // Fit the children properly
+    width: auto;
+    margin: 0;
+  }
+
+  &-row {
+    padding: var(--padding-md);
+    overflow-y: auto;
+    box-sizing: border-box;
+    width: 100%;
+    border-bottom: 1px var(--hl) solid;
+
+    &-item {
+      background-attachment: fixed;
+    }
+  }
+}

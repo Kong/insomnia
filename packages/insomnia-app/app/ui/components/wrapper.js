@@ -10,6 +10,7 @@ import type {
   RequestBody,
   RequestHeader,
   RequestParameter,
+  RequestExample,
 } from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import * as React from 'react';
@@ -31,6 +32,7 @@ import AskModal from './modals/ask-modal';
 import GenerateConfigModal from './modals/generate-config-modal';
 import SelectModal from './modals/select-modal';
 import RequestCreateModal from './modals/request-create-modal';
+import ExampleModal from './modals/example-modal';
 import RequestSwitcherModal from './modals/request-switcher-modal';
 import SettingsModal from './modals/settings-modal';
 import FilterHelpModal from './modals/filter-help-modal';
@@ -276,6 +278,14 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     }
 
     return rUpdate(r, { url });
+  }
+
+  static _handleUpdateExample(r: Request, example: RequestExample): Promise<Request> {
+    return models.request.updateExample(r, example);
+  }
+
+  static _handleDeleteExample(r: Request, example: RequestExample): Promise<Request> {
+    return models.request.deleteExample(r, example);
   }
 
   async _handleImport(text: string): Promise<Request | null> {
@@ -608,6 +618,8 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               isVariableUncovered={isVariableUncovered}
             />
 
+            <ExampleModal ref={registerModal} />
+
             {/* TODO: Figure out why cookieJar is sometimes null */}
             {activeCookieJar ? (
               <CookiesModal
@@ -829,6 +841,8 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleUpdateRequestMethod={Wrapper._handleUpdateRequestMethod}
               handleUpdateRequestParameters={Wrapper._handleUpdateRequestParameters}
               handleUpdateRequestUrl={Wrapper._handleUpdateRequestUrl}
+              handleUpdateExample={Wrapper._handleUpdateExample}
+              handleDeleteExample={Wrapper._handleDeleteExample}
               handleUpdateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
               handleUpdateSettingsUseBulkHeaderEditor={
                 this._handleUpdateSettingsUseBulkHeaderEditor

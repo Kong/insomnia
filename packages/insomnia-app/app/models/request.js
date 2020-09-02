@@ -69,6 +69,14 @@ export type RequestBody = {
   params?: Array<RequestBodyParameter>,
 };
 
+export type RequestExample = {
+  id: string,
+  title: string,
+  body: string,
+  contentType: string,
+  statusCode: integer,
+};
+
 type BaseRequest = {
   url: string,
   name: string,
@@ -80,6 +88,9 @@ type BaseRequest = {
   authentication: RequestAuthentication,
   metaSortKey: number,
   isPrivate: boolean,
+
+  // Examples
+  examples: Array<RequestExample>,
 
   // Settings
   settingStoreCookies: boolean,
@@ -104,6 +115,9 @@ export function init(): BaseRequest {
     authentication: {},
     metaSortKey: -1 * Date.now(),
     isPrivate: false,
+
+    // Examples
+    examples: [],
 
     // Settings
     settingStoreCookies: true,
@@ -237,6 +251,8 @@ export function create(patch: $Shape<Request> = {}): Promise<Request> {
     throw new Error(`New Requests missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
 
+  patch.examples = [];
+
   return db.docCreate(type, patch);
 }
 
@@ -250,6 +266,27 @@ export function findByParentId(parentId: string): Promise<Array<Request>> {
 
 export function update(request: Request, patch: $Shape<Request>): Promise<Request> {
   return db.docUpdate(request, patch);
+}
+
+export function updateExample(request: Request, example: RequestExample): Promise<Request> {
+  let found = false;
+  const modifiedExamples = request.examples.map(e => {
+    if (e.id === example.id) {
+      e = example;
+      found = true;
+    }
+    return e;
+  });
+
+  if (found === false) modifiedExamples.push(example);
+
+  return update(request, { examples: modifiedExamples });
+}
+
+export function deleteExample(request: Request, example: RequestExample): Promise<Request> {
+  const examplesWithoutProvided = request.examples.filter(e => e.id !== example.id);
+  request.examples = examplesWithoutProvided;
+  return update(request, { examples: request.examples });
 }
 
 export function updateMimeType(
