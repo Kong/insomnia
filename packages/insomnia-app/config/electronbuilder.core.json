@@ -62,6 +62,7 @@
     ]
   },
   "win": {
+    "icon": "./build/__APP_ID__/icon.ico",
     "target": [
       "squirrel",
       "zip"
