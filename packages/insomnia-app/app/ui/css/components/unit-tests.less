@@ -85,6 +85,7 @@
     background: var(--color-bg);
     color: var(--color-font);
     overflow-y: auto;
+    box-sizing: border-box;
 
     ul {
       padding-top: var(--padding-sm);
@@ -142,7 +143,12 @@
     padding-right: 0;
     border-bottom: 1px solid var(--hl-md);
     display: flex;
+    position: sticky;
+    // Double that of CodeMirror's topmost element.
+    z-index: 20;
+    top: 0;
     align-items: center;
+    background: var(--color-bg);
 
     button {
       flex: 0 0 auto;

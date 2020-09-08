@@ -5,6 +5,7 @@ import styled from 'styled-components';
 
 const StyledButton = styled.button`
   display: flex;
+  align-items: center;
   min-width: 15rem;
   font-size: var(--font-size-md);
   text-align: left;
