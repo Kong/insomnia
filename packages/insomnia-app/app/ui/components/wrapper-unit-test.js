@@ -9,11 +9,12 @@ import {
   Dropdown,
   DropdownItem,
   Header,
-  SvgIcon,
   ListGroup,
-  ListGroupItem,
+  UnitTestItem,
   UnitTestResultItem,
 } from 'insomnia-components';
+import UnitTestSelection from './unit-test-selection';
+import UnitTestEditable from './unit-test-editable';
 import ErrorBoundary from './error-boundary';
 import CodeEditor from './codemirror/code-editor';
 import designerLogo from '../images/insomnia-designer-logo.svg';
@@ -351,45 +352,28 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
   renderUnitTest(unitTest: UnitTest): React.Node {
     const { settings } = this.props.wrapperProps;
     const { testsRunning } = this.state;
-
     const selectableRequests = this.buildSelectableRequests();
 
     return (
-      <ListGroupItem key={unitTest._id}>
-        <div className="unit-tests__tests__block__header">
-          <h2 className="pad-left-md">
-            <Editable
-              singleClick
-              onSubmit={this._handleChangeTestName.bind(this, unitTest)}
-              value={unitTest.name}
-            />
-          </h2>
-          <div className="form-control form-control--outlined">
-            <select
-              name="request"
-              id="request"
-              onChange={this._handleSetActiveRequest.bind(this, unitTest)}
-              value={unitTest.requestId || '__NULL__'}>
-              <option value="__NULL__">
-                {selectableRequests.length ? '-- Select Request --' : '-- No Requests --'}
-              </option>
-              {selectableRequests.map(({ name, request }) => (
-                <option key={request._id} value={request._id}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <Button
-            variant="text"
-            disabled={testsRunning && testsRunning.find(t => t._id === unitTest._id)}
-            onClick={() => this._handleRunTest(unitTest)}>
-            <SvgIcon icon="play" />
-          </Button>
-          <Button variant="text" onClick={() => this._handleDeleteTest(unitTest)}>
-            <SvgIcon icon="trashcan" />
-          </Button>
-        </div>
+      <UnitTestItem
+        item={unitTest}
+        key={unitTest._id}
+        testSelection={
+          <UnitTestSelection
+            onChange={this._handleSetActiveRequest.bind(this, unitTest)}
+            unitTest={unitTest}
+            selectableRequests={selectableRequests}
+          />
+        }
+        onDeleteTest={() => this._handleDeleteTest(unitTest)}
+        onRunTest={() => this._handleRunTest(unitTest)}
+        testsRunning={testsRunning}
+        testNameEditable={
+          <UnitTestEditable
+            onSubmit={this._handleChangeTestName.bind(this, unitTest)}
+            value={unitTest.name}
+          />
+        }>
         <CodeEditor
           dynamicHeight
           manualPrettify
@@ -407,7 +391,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           lineWrapping={settings.editorLineWrapping}
           placeholder=""
         />
-      </ListGroupItem>
+      </UnitTestItem>
     );
   }
 
