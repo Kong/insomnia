@@ -75,7 +75,7 @@ export function tokenizeTag(tagStr: string): NunjucksParsedTag {
     .replace(/%}$/, '')
     .trim();
 
-  const nameMatch = withoutEnds.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
+  const nameMatch = withoutEnds.match(/^[a-zA-Z_\-$][0-9a-zA-Z_\-$]*/);
   const name = nameMatch ? nameMatch[0] : withoutEnds;
   const argsStr = withoutEnds.slice(name.length);
 
@@ -140,7 +140,7 @@ export function tokenizeTag(tagStr: string): NunjucksParsedTag {
         arg = { type: 'boolean', value: currentArg.toLowerCase() === 'true' };
       } else if (currentArg.match(/^\d*\.?\d*$/)) {
         arg = { type: 'number', value: currentArg };
-      } else if (currentArg.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
+      } else if (currentArg.match(/^[a-zA-Z_\-$][0-9a-zA-Z_\-$]*$/)) {
         arg = { type: 'variable', value: currentArg };
       } else {
         arg = { type: 'expression', value: currentArg };

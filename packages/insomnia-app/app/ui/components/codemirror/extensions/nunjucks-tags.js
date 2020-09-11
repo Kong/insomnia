@@ -277,11 +277,13 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
       }
     } else {
       // Render if it's a variable
+      const matches = /^'([a-zA-Z_\-$][0-9a-zA-Z_\-$]*)' \| getVarFromString/.exec(cleanedStr);
+      const variableName = matches && matches[1];
       title = await render(str);
       const context = await renderContext();
       const con = context.context.getKeysContext();
-      title = '{' + con.keyContext[cleanedStr] + '}: ' + title;
-      innerHTML = isVariableUncovered ? title : cleanedStr;
+      title = '{' + con.keyContext[variableName] + '}: ' + title;
+      innerHTML = isVariableUncovered ? title : variableName;
     }
     dataError = 'off';
   } catch (err) {
