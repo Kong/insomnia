@@ -353,7 +353,9 @@ async function replaceHintMatch(cm, self, data) {
     suffix = ' %}'; // If no closer after
   }
 
-  cm.replaceRange(`${prefix}${data.text}${suffix}`, from, to);
+  const text = data.type === TYPE_VARIABLE ? `'${data.text}' | getVarFromString` : data.text;
+
+  cm.replaceRange(`${prefix}${text}${suffix}`, from, to);
 }
 
 /**

@@ -40,6 +40,7 @@ export function render(
 
   return new Promise(async (resolve, reject) => {
     const nj = await getNunjucks(renderMode);
+    nj.addFilter('getVarFromString', o => context[o]);
 
     nj.renderString(text, context, (err, result) => {
       if (err) {
@@ -157,9 +158,7 @@ async function getNunjucks(renderMode: string) {
 
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`
-    nj.addFilter('debug', o => {
-      return o;
-    });
+    nj.addFilter('debug', o => o);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~ //
