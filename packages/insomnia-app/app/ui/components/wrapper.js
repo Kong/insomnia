@@ -254,6 +254,13 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     return rUpdate(r, { parameters });
   }
 
+  static _handleUpdateRequestPathParameters(
+    r: Request,
+    pathParameters: Array<RequestPathParameter>,
+  ): Promise<Request> {
+    return rUpdate(r, { pathParameters });
+  }
+
   static _handleUpdateRequestAuthentication(
     r: Request,
     authentication: RequestAuthentication,
@@ -358,6 +365,12 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     useBulkParametersEditor: boolean,
   ): Promise<Settings> {
     return sUpdate(this.props.settings, { useBulkParametersEditor });
+  }
+
+  _handleUpdateSettingsUseBulkPathParametersEditor(
+    useBulkPathParametersEditor: boolean,
+  ): Promise<Settings> {
+    return sUpdate(this.props.settings, { useBulkPathParametersEditor });
   }
 
   _handleImportFile(forceToWorkspace?: ForceToWorkspace): void {
@@ -828,6 +841,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleUpdateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
               handleUpdateRequestMethod={Wrapper._handleUpdateRequestMethod}
               handleUpdateRequestParameters={Wrapper._handleUpdateRequestParameters}
+              handleUpdateRequestPathParameters={Wrapper._handleUpdateRequestPathParameters}
               handleUpdateRequestUrl={Wrapper._handleUpdateRequestUrl}
               handleUpdateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
               handleUpdateSettingsUseBulkHeaderEditor={
@@ -835,6 +849,9 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               }
               handleUpdateSettingsUseBulkParametersEditor={
                 this._handleUpdateSettingsUseBulkParametersEditor
+              }
+              handleUpdateSettingsUseBulkPathParametersEditor={
+                this._handleUpdateSettingsUseBulkPathParametersEditor
               }
               wrapperProps={this.props}
             />

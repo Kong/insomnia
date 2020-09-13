@@ -1,7 +1,12 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from 'insomnia-url';
+import {
+  insertPathParameters,
+  buildQueryStringFromParams,
+  joinUrlAndQueryString,
+  smartEncodeUrl,
+} from 'insomnia-url';
 import CopyButton from './base/copy-button';
 
 @autobind
@@ -24,21 +29,24 @@ class RenderedQueryString extends PureComponent {
   async _update(props) {
     const { request } = props;
     const enabledParameters = request.parameters.filter(p => !p.disabled);
+    const enabledPathParameters = request.pathParameters.filter(p => !p.disabled);
 
     let result;
     try {
       result = await props.handleRender({
         url: request.url,
         parameters: enabledParameters,
+        pathParameters: enabledPathParameters,
       });
     } catch (err) {
       // Just ignore failures
     }
 
     if (result) {
-      const { url, parameters } = result;
+      const { url, parameters, pathParameters } = result;
+      const templatedUrl = insertPathParameters(url, pathParameters);
       const qs = buildQueryStringFromParams(parameters);
-      const fullUrl = joinUrlAndQueryString(url, qs);
+      const fullUrl = joinUrlAndQueryString(templatedUrl, qs);
       this.setState({
         string: smartEncodeUrl(fullUrl, request.settingEncodeUrl),
       });

@@ -40,9 +40,12 @@ type Props = {
   handleUpdateRequestHeaders: Function,
   handleUpdateRequestMethod: Function,
   handleUpdateRequestParameters: Function,
+  handleUpdateRequestPathParameters: Function,
   handleUpdateRequestUrl: Function,
   handleUpdateSettingsShowPasswords: Function,
   handleUpdateSettingsUseBulkHeaderEditor: Function,
+  handleUpdateSettingsUseBulkParametersEditor: Function,
+  handleUpdateSettingsUseBulkPathParametersEditor: Function,
   wrapperProps: WrapperProps,
 };
 
@@ -108,10 +111,12 @@ class WrapperDebug extends React.PureComponent<Props> {
       handleUpdateRequestHeaders,
       handleUpdateRequestMethod,
       handleUpdateRequestParameters,
+      handleUpdateRequestPathParameters,
       handleUpdateRequestUrl,
       handleUpdateSettingsShowPasswords,
       handleUpdateSettingsUseBulkHeaderEditor,
       handleUpdateSettingsUseBulkParametersEditor,
+      handleUpdateSettingsUseBulkPathParametersEditor,
     } = this.props;
 
     const {
@@ -274,10 +279,14 @@ class WrapperDebug extends React.PureComponent<Props> {
                 updateRequestMethod={handleUpdateRequestMethod}
                 updateRequestMimeType={handleUpdateRequestMimeType}
                 updateRequestParameters={handleUpdateRequestParameters}
+                updateRequestPathParameters={handleUpdateRequestPathParameters}
                 updateRequestUrl={handleUpdateRequestUrl}
                 updateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
                 updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
                 updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
+                updateSettingsUseBulkPathParametersEditor={
+                  handleUpdateSettingsUseBulkPathParametersEditor
+                }
                 workspace={activeWorkspace}
               />
             </ErrorBoundary>

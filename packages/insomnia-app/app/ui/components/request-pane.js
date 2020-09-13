@@ -5,6 +5,7 @@ import type {
   RequestBody,
   RequestHeader,
   RequestParameter,
+  RequestPathParameter,
 } from '../../models/request';
 import type { Workspace } from '../../models/workspace';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
@@ -30,6 +31,7 @@ import RenderedQueryString from './rendered-query-string';
 import RequestUrlBar from './request-url-bar.js';
 import type { Settings } from '../../models/settings';
 import RequestParametersEditor from './editors/request-parameters-editor';
+import RequestPathParametersEditor from './editors/request-path-parameters-editor';
 
 type Props = {
   // Functions
@@ -46,12 +48,17 @@ type Props = {
   updateRequestMethod: (r: Request, method: string) => Promise<Request>,
   updateRequestBody: (r: Request, body: RequestBody) => Promise<Request>,
   updateRequestParameters: (r: Request, params: Array<RequestParameter>) => Promise<Request>,
+  updateRequestPathParameters: (
+    r: Request,
+    params: Array<RequestPathParameter>,
+  ) => Promise<Request>,
   updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>,
   updateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>,
   updateRequestMimeType: (r: Request, mimeType: string) => Promise<Request>,
   updateSettingsShowPasswords: Function,
   updateSettingsUseBulkHeaderEditor: Function,
   updateSettingsUseBulkParametersEditor: Function,
+  updateSettingsUseBulkPathParametersEditor: Function,
   handleImport: Function,
   handleImportFile: Function,
 
@@ -107,6 +114,11 @@ class RequestPane extends React.PureComponent<Props> {
   _handleUpdateSettingsUseBulkParametersEditor() {
     const { settings, updateSettingsUseBulkParametersEditor } = this.props;
     updateSettingsUseBulkParametersEditor(!settings.useBulkParametersEditor);
+  }
+
+  _handleUpdateSettingsUseBulkPathParametersEditor() {
+    const { settings, updateSettingsUseBulkPathParametersEditor } = this.props;
+    updateSettingsUseBulkPathParametersEditor(!settings.useBulkPathParametersEditor);
   }
 
   _handleImportFile() {
@@ -167,6 +179,7 @@ class RequestPane extends React.PureComponent<Props> {
       updateSettingsShowPasswords,
       updateRequestMethod,
       updateRequestParameters,
+      updateRequestPathParameters,
       updateRequestUrl,
       headerEditorKey,
       downloadPath,
@@ -244,6 +257,7 @@ class RequestPane extends React.PureComponent<Props> {
     }
 
     const numParameters = request.parameters.filter(p => !p.disabled).length;
+    const numPathParameters = request.pathParameters.filter(p => !p.disabled).length;
     const numHeaders = request.headers.filter(h => !h.disabled).length;
     const urlHasQueryParameters = request.url.indexOf('?') >= 0;
 
@@ -301,6 +315,14 @@ class RequestPane extends React.PureComponent<Props> {
               <button>
                 Query
                 {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
+              </button>
+            </Tab>
+            <Tab tabIndex="-1">
+              <button>
+                Params
+                {numPathParameters > 0 && (
+                  <span className="bubble space-left">{numPathParameters}</span>
+                )}
               </button>
             </Tab>
             <Tab tabIndex="-1">
@@ -394,6 +416,44 @@ class RequestPane extends React.PureComponent<Props> {
                 className="margin-top-sm btn btn--clicky space-left"
                 onClick={this._handleUpdateSettingsUseBulkParametersEditor}>
                 {settings.useBulkParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
+              </button>
+            </div>
+          </TabPanel>
+          <TabPanel className="react-tabs__tab-panel query-editor">
+            <div className="pad pad-bottom-sm query-editor__preview">
+              <label className="label--small no-pad-top">Url Preview</label>
+              <code className="txt-sm block faint">
+                <ErrorBoundary
+                  key={uniqueKey}
+                  errorClassName="tall wide vertically-align font-error pad text-center">
+                  <RenderedQueryString handleRender={handleRender} request={request} />
+                </ErrorBoundary>
+              </code>
+            </div>
+            <div className="query-editor__editor">
+              <ErrorBoundary
+                key={uniqueKey}
+                errorClassName="tall wide vertically-align font-error pad text-center">
+                <RequestPathParametersEditor
+                  key={headerEditorKey}
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
+                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                  isVariableUncovered={isVariableUncovered}
+                  editorFontSize={settings.editorFontSize}
+                  editorIndentSize={settings.editorIndentSize}
+                  editorLineWrapping={settings.editorLineWrapping}
+                  onChange={updateRequestPathParameters}
+                  request={request}
+                  bulk={settings.useBulkPathParametersEditor}
+                />
+              </ErrorBoundary>
+            </div>
+            <div className="pad-right text-right">
+              <button
+                className="margin-top-sm btn btn--clicky space-left"
+                onClick={this._handleUpdateSettingsUseBulkPathParametersEditor}>
+                {settings.useBulkPathParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>
           </TabPanel>

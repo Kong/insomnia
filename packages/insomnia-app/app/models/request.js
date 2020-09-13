@@ -51,6 +51,13 @@ export type RequestParameter = {
   fileName?: string,
 };
 
+export type RequestPathParameter = {
+  name: string,
+  value: string,
+  disabled?: boolean,
+  id?: string,
+};
+
 export type RequestBodyParameter = {
   name: string,
   value: string,
@@ -76,6 +83,7 @@ type BaseRequest = {
   method: string,
   body: RequestBody,
   parameters: Array<RequestParameter>,
+  pathParameters: Array<RequestPathParameter>,
   headers: Array<RequestHeader>,
   authentication: RequestAuthentication,
   metaSortKey: number,
@@ -100,6 +108,7 @@ export function init(): BaseRequest {
     method: METHOD_GET,
     body: {},
     parameters: [],
+    pathParameters: [],
     headers: [],
     authentication: {},
     metaSortKey: -1 * Date.now(),

@@ -429,6 +429,7 @@ export async function getRenderedRequestAndContext(
       method: renderedRequest.method,
       name: renderedRequest.name,
       parameters: renderedRequest.parameters,
+      pathParameters: renderedRequest.pathParameters,
       parentId: renderedRequest.parentId,
       settingDisableRenderRequestBody: renderedRequest.settingDisableRenderRequestBody,
       settingEncodeUrl: renderedRequest.settingEncodeUrl,

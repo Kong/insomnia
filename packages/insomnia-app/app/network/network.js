@@ -54,6 +54,7 @@ import {
   waitForStreamToFinish,
 } from '../common/misc';
 import {
+  insertPathParameters,
   buildQueryStringFromParams,
   joinUrlAndQueryString,
   setDefaultProtocol,
@@ -330,9 +331,13 @@ export async function _actuallySend(
       // Set the headers (to be modified as we go)
       const headers = clone(renderedRequest.headers);
 
-      // Set the URL, including the query parameters
+      // Set the URL, including the path parameters and query parameters
+      const templatedUrl = insertPathParameters(
+        renderedRequest.url,
+        renderedRequest.pathParameters || [],
+      );
       const qs = buildQueryStringFromParams(renderedRequest.parameters);
-      const url = joinUrlAndQueryString(renderedRequest.url, qs);
+      const url = joinUrlAndQueryString(templatedUrl, qs);
       const isUnixSocket = url.match(/https?:\/\/unix:\//);
       const finalUrl = smartEncodeUrl(url, renderedRequest.settingEncodeUrl);
       if (isUnixSocket) {

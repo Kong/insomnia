@@ -1,4 +1,5 @@
 const {
+  insertPathParameters,
   buildQueryStringFromParams,
   joinUrlAndQueryString,
   smartEncodeUrl,
@@ -177,15 +178,25 @@ module.exports.templateTags = [
 async function getRequestUrl(context, request) {
   const url = await context.util.render(request.url);
   const parameters = [];
+  const pathParameters = [];
   for (const p of request.parameters) {
     parameters.push({
       name: await context.util.render(p.name),
       value: await context.util.render(p.value),
     });
   }
+  if (request.pathParameters) {
+    for (const pp of request.pathParameters) {
+      pathParameters.push({
+        name: await context.util.render(pp.name),
+        value: await context.util.render(pp.value),
+      });
+    }
+  }
 
+  const templateUrl = insertPathParameters(url, pathParameters);
   const qs = buildQueryStringFromParams(parameters);
-  const finalUrl = joinUrlAndQueryString(url, qs);
+  const finalUrl = joinUrlAndQueryString(templateUrl, qs);
 
   return smartEncodeUrl(finalUrl, request.settingEncodeUrl);
 }

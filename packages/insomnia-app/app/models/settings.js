@@ -53,6 +53,7 @@ type BaseSettings = {
   updateChannel: string,
   useBulkHeaderEditor: boolean,
   useBulkParametersEditor: boolean,
+  useBulkPathParametersEditor: boolean,
   validateSSL: boolean,
 
   // Feature flags
@@ -108,6 +109,7 @@ export function init(): BaseSettings {
     updateChannel: UPDATE_CHANNEL_STABLE,
     useBulkHeaderEditor: false,
     useBulkParametersEditor: false,
+    useBulkPathParametersEditor: false,
     validateSSL: true,
 
     // Feature flags
