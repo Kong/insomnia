@@ -3,8 +3,8 @@ import React from 'react';
 import Editable from './base/editable';
 
 type Props = {
-  onSubmit: Function,
-  value: String,
+  onSubmit: () => void,
+  value: string,
 };
 
 export default function UnitTestEditable({ onSubmit, value }: Props) {

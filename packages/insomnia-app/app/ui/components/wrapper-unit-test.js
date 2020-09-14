@@ -13,7 +13,6 @@ import {
   UnitTestItem,
   UnitTestResultItem,
 } from 'insomnia-components';
-import UnitTestSelection from './unit-test-selection';
 import UnitTestEditable from './unit-test-editable';
 import ErrorBoundary from './error-boundary';
 import CodeEditor from './codemirror/code-editor';
@@ -354,20 +353,18 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     const { testsRunning } = this.state;
     const selectableRequests = this.buildSelectableRequests();
 
+    console.log(selectableRequests);
+
     return (
       <UnitTestItem
         item={unitTest}
         key={unitTest._id}
-        testSelection={
-          <UnitTestSelection
-            onChange={this._handleSetActiveRequest.bind(this, unitTest)}
-            unitTest={unitTest}
-            selectableRequests={selectableRequests}
-          />
-        }
-        onDeleteTest={() => this._handleDeleteTest(unitTest)}
-        onRunTest={() => this._handleRunTest(unitTest)}
+        onChange={this._handleSetActiveRequest.bind(this, unitTest)}
+        onDeleteTest={this._handleDeleteTest.bind(this, unitTest)}
+        onRunTest={this._handleRunTest.bind(this, unitTest)}
         testsRunning={testsRunning}
+        selectedRequestId={unitTest.requestId}
+        selectableRequests={selectableRequests}
         testNameEditable={
           <UnitTestEditable
             onSubmit={this._handleChangeTestName.bind(this, unitTest)}

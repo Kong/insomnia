@@ -1,40 +1,26 @@
 // @flow
 import * as React from 'react';
 import styled from 'styled-components';
+import { useToggle } from 'react-use';
 import SvgIcon from '../svg-icon';
 import Button from '../button';
 import ListGroupItem from './list-group-item';
+import UnitTestRequestSelector from './unit-test-request-selector';
 
 type Props = {|
   item: Object,
   children?: React.Node,
-  onDeleteTest?: Function,
-  onRunTest?: Function,
-  testSelection?: React.Node,
+  onDeleteTest?: () => void,
+  onRunTest?: () => void,
   testNameEditable?: React.Node,
   testsRunning?: Object,
+  onChange: () => void,
+  selectedRequestId?: string,
+  selectableRequests: Array<{ name: string, request: { _id: string } }>,
 |};
 
 const StyledResultListItem: React.ComponentType<{}> = styled(ListGroupItem)`
   padding: 0 var(--padding-sm);
-
-  .form-control {
-    padding: 0 var(--padding-sm);
-    border: 1px solid var(--hl-md);
-    border-radius: var(--radius-sm);
-    margin: var(--padding-sm) var(--padding-sm) var(--padding-sm) auto;
-    max-width: 18rem;
-    flex: 0 0 auto;
-    select {
-      height: var(--line-height-xs);
-      border: none !important;
-      background: none !important;
-      color: var(--font-color);
-    }
-    * {
-      margin: 0px;
-    }
-  }
 
   > div:first-of-type {
     display: flex;
@@ -63,27 +49,36 @@ const UnitTestItem = ({
   children,
   onDeleteTest,
   onRunTest,
-  testSelection,
   testNameEditable,
   testsRunning,
+  onChange,
+  selectedRequestId,
+  selectableRequests,
 }: Props) => {
-  const [collapse, toggleCollapse] = React.useState(false);
-  const toggleRotation = -90;
+  const [isToggled, toggle] = useToggle(false);
+  const toggleIconRotation = -90;
+  const _handleItemToggle = React.useCallback(() => {
+    toggle();
+  }, [toggle]);
 
   return (
     <StyledResultListItem>
       <div>
         <Button
-          onClick={() => toggleCollapse(!collapse)}
+          onClick={_handleItemToggle}
           variant="text"
-          style={!collapse ? { transform: `rotate(${toggleRotation}deg)` } : {}}>
+          style={!isToggled ? { transform: `rotate(${toggleIconRotation}deg)` } : {}}>
           <SvgIcon icon="chevron-down" />
         </Button>
         <Button variant="text" disabled>
           <SvgIcon icon="file" />
         </Button>
         <h2>{testNameEditable}</h2>
-        {testSelection}
+        <UnitTestRequestSelector
+          selectedRequestId={selectedRequestId}
+          selectableRequests={selectableRequests}
+          onChange={onChange}
+        />
         <Button variant="text" onClick={onDeleteTest}>
           <SvgIcon icon="trashcan" />
         </Button>
@@ -94,13 +89,7 @@ const UnitTestItem = ({
           <SvgIcon icon="play" />
         </Button>
       </div>
-      {collapse && (
-        <div
-          initial={{ height: collapse ? '100%' : '0px' }}
-          animate={{ height: collapse ? '100%' : '0px' }}>
-          {children}
-        </div>
-      )}
+      {isToggled && <div>{children}</div>}
     </StyledResultListItem>
   );
 };
