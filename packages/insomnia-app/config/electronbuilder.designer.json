@@ -25,6 +25,7 @@
   ],
   "fileAssociations": [],
   "directories": {
+    "buildResources": "build/__APP_ID__",
     "app": "build/__APP_ID__",
     "output": "dist/__APP_ID__"
   },
@@ -61,7 +62,6 @@
   },
   "win": {
     "artifactName": "__BINARY_PREFIX__-${version}.${ext}",
-    "icon": "./build/__APP_ID__/icon.ico",
     "target": [
       "squirrel",
       "zip"
