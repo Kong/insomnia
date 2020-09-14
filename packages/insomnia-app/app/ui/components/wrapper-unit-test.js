@@ -353,8 +353,6 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     const { testsRunning } = this.state;
     const selectableRequests = this.buildSelectableRequests();
 
-    console.log(selectableRequests);
-
     return (
       <UnitTestItem
         item={unitTest}
