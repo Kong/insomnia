@@ -39,11 +39,11 @@ export default class SidebarPaths extends React.Component<Props> {
       <div>
         {filteredValues.map(([route, method]) => (
           <React.Fragment key={route}>
-            <SidebarItem gridLayout>
+            <SidebarItem gridLayout onClick={() => onClick('paths', route)}>
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => onClick('paths', route)}>{route}</span>
+              <span>{route}</span>
             </SidebarItem>
             <SidebarItem>
               <StyledMethods>

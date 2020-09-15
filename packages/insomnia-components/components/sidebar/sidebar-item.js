@@ -5,6 +5,7 @@ import styled from 'styled-components';
 type Props = {
   children: React.Node,
   gridLayout?: boolean,
+  onClick?: () => void,
 };
 
 const StyledBlockItem: React.ComponentType<{}> = styled.div`
@@ -12,7 +13,7 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
   margin: 0;
   display: block;
   font-size: var(--font-size-md);
-  line-height: var(--font-size-sm);
+  line-height: var(--font-size-md);
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -24,7 +25,7 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
     margin-bottom: var(--padding-md);
   }
   span {
-    margin: 0 0 0 var(--padding-sm);
+    margin: 0 0 0 var(--padding-xs);
   }
   div {
     display: inline;
@@ -73,11 +74,11 @@ const StyledGridItem: React.ComponentType<{}> = styled.li`
   }
 `;
 
-const SidebarItem = ({ children, gridLayout }: Props) => {
+const SidebarItem = ({ children, gridLayout, onClick }: Props) => {
   if (gridLayout) {
-    return <StyledGridItem>{children}</StyledGridItem>;
+    return <StyledGridItem onClick={onClick}>{children}</StyledGridItem>;
   } else {
-    return <StyledBlockItem>{children}</StyledBlockItem>;
+    return <StyledBlockItem onClick={onClick}>{children}</StyledBlockItem>;
   }
 };
 

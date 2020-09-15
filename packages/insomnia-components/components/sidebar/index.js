@@ -155,7 +155,7 @@ function Sidebar(props: Props) {
               </DropdownItem>
             </Dropdown>
           </SidebarHeader>
-          <SidebarInfo childrenVisible={infoSec} info={info} />
+          <SidebarInfo childrenVisible={infoSec} info={info} onClick={props.onClick} />
         </StyledSection>
       )}
       {serversVisible && servers && <SidebarServers servers={servers} onClick={props.onClick} />}
