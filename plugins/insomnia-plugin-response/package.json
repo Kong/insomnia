@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-response",
-  "version": "2.2.10",
+  "version": "2.2.22",
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Insomnia response template tag",
   "license": "MIT",
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "iconv-lite": "^0.4.19",
-    "insomnia-xpath": "^2.2.10",
+    "insomnia-xpath": "^2.2.22",
     "jsonpath": "^1.0.2"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
