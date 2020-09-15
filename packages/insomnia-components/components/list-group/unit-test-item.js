@@ -14,7 +14,7 @@ type Props = {|
   onRunTest?: () => void,
   testNameEditable?: React.Node,
   testsRunning?: Object,
-  onChange: () => void,
+  onSetActiveRequest: () => void,
   selectedRequestId?: string,
   selectableRequests: Array<{ name: string, request: { _id: string } }>,
 |};
@@ -51,21 +51,18 @@ const UnitTestItem = ({
   onRunTest,
   testNameEditable,
   testsRunning,
-  onChange,
+  onSetActiveRequest,
   selectedRequestId,
   selectableRequests,
 }: Props) => {
   const [isToggled, toggle] = useToggle(false);
   const toggleIconRotation = -90;
-  const _handleItemToggle = React.useCallback(() => {
-    toggle();
-  }, [toggle]);
 
   return (
     <StyledResultListItem>
       <div>
         <Button
-          onClick={_handleItemToggle}
+          onClick={toggle}
           variant="text"
           style={!isToggled ? { transform: `rotate(${toggleIconRotation}deg)` } : {}}>
           <SvgIcon icon="chevron-down" />
@@ -77,7 +74,7 @@ const UnitTestItem = ({
         <UnitTestRequestSelector
           selectedRequestId={selectedRequestId}
           selectableRequests={selectableRequests}
-          onChange={onChange}
+          onSetActiveRequest={onSetActiveRequest}
         />
         <Button variant="text" onClick={onDeleteTest}>
           <SvgIcon icon="trashcan" />

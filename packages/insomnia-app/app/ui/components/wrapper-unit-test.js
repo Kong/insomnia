@@ -357,7 +357,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       <UnitTestItem
         item={unitTest}
         key={unitTest._id}
-        onChange={this._handleSetActiveRequest.bind(this, unitTest)}
+        onSetActiveRequest={this._handleSetActiveRequest.bind(this, unitTest)}
         onDeleteTest={this._handleDeleteTest.bind(this, unitTest)}
         onRunTest={this._handleRunTest.bind(this, unitTest)}
         testsRunning={testsRunning}

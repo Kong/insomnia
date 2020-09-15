@@ -3,7 +3,7 @@ import * as React from 'react';
 import styled from 'styled-components';
 
 type Props = {
-  onChange: () => void,
+  onSetActiveRequest: () => void,
   selectedRequestId?: string,
   selectableRequests: Array<{ name: string, request: { _id: string } }>,
 };
@@ -31,14 +31,18 @@ const StyledUnitTestRequestSelector: React.ComponentType<{}> = styled.div`
   }
 `;
 
-const UnitTestRequestSelector = ({ onChange, selectedRequestId, selectableRequests }: Props) => {
+const UnitTestRequestSelector = ({
+  onSetActiveRequest,
+  selectedRequestId,
+  selectableRequests,
+}: Props) => {
   return (
     <StyledUnitTestRequestSelector>
       <select
         name="request"
         id="request"
-        onChange={onChange}
-        value={selectedRequestId || '__NULL__'}>
+        onChange={onSetActiveRequest}
+        defaultValue={selectedRequestId || '__NULL__'}>
         <option value="__NULL__">
           {selectableRequests.length ? '-- Select Request --' : '-- No Requests --'}
         </option>
