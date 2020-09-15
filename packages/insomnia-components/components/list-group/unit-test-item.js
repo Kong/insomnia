@@ -2,6 +2,7 @@
 import * as React from 'react';
 import styled from 'styled-components';
 import { useToggle } from 'react-use';
+import { motion } from 'framer-motion';
 import SvgIcon from '../svg-icon';
 import Button from '../button';
 import ListGroupItem from './list-group-item';
@@ -42,6 +43,12 @@ const StyledResultListItem: React.ComponentType<{}> = styled(ListGroupItem)`
   button {
     padding: 0px var(--padding-sm);
   }
+`;
+
+const StyledUnitTestContent: React.ComponentType<{}> = styled(motion.div)`
+  display: block;
+  height: 0px;
+  overflow: hidden;
 `;
 
 const UnitTestItem = ({
@@ -86,7 +93,12 @@ const UnitTestItem = ({
           <SvgIcon icon="play" />
         </Button>
       </div>
-      {isToggled && <div>{children}</div>}
+      <StyledUnitTestContent
+        initial={{ height: isToggled ? '100%' : '0px' }}
+        animate={{ height: isToggled ? '100%' : '0px' }}
+        transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
+        {isToggled && <div>{children}</div>}
+      </StyledUnitTestContent>
     </StyledResultListItem>
   );
 };
