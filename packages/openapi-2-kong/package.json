@@ -1,6 +1,6 @@
 {
   "name": "openapi-2-kong",
-  "version": "2.2.12",
+  "version": "2.2.22",
   "main": "dist/index.js",
   "scripts": {
     "typecheck": "flow check",
