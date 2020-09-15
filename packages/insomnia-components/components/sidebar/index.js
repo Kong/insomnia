@@ -46,7 +46,6 @@ const StyledSidebar: React.ComponentType<{}> = styled.div`
   color: var(--color-font);
   position: relative;
   svg {
-    font-size: var(--font-size-xl);
     fill: var(--hl-lg);
   }
   ul:first-child {

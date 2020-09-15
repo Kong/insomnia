@@ -11,7 +11,7 @@ type Props = {
 const StyledBlockItem: React.ComponentType<{}> = styled.div`
   padding: 0 var(--padding-md) var(--padding-sm) 0;
   margin: 0;
-  display: block;
+  display: flex;
   font-size: var(--font-size-md);
   line-height: var(--font-size-md);
   text-overflow: ellipsis;
@@ -26,6 +26,7 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
   }
   span {
     margin: 0 0 0 var(--padding-xs);
+    padding-top: var(--padding-xxs);
   }
   div {
     display: inline;
@@ -44,7 +45,7 @@ const StyledGridItem: React.ComponentType<{}> = styled.li`
   margin: 0;
   display: grid;
   grid-template-columns: 0.25fr 5fr;
-  column-gap: var(--padding-sm);
+  column-gap: var(--padding-xs);
   grid-template-rows: 1fr;
   align-items: start;
   white-space: nowrap;

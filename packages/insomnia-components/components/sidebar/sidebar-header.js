@@ -46,6 +46,7 @@ const StyledHeader: React.ComponentType<{}> = styled.li`
 
     svg {
       margin-left: var(--padding-sm);
+      font-size: var(--font-size-xl);
 
       &:hover {
         fill: var(--color-font);
