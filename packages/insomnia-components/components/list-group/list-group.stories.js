@@ -185,7 +185,7 @@ export const _unitTests = () => (
           testNameEditable={test.name}
           item={test}
           key={test._id}
-          onChange={_handleRequestSelected}
+          onSetActiveRequest={_handleRequestSelected}
           selectableRequests={unitTestRequests}>
           <div style={{ padding: '10px 15px', border: '1px solid #eee', margin: '10px' }}>
             CodeMirror instance.
