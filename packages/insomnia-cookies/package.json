@@ -1,6 +1,6 @@
 {
   "name": "insomnia-cookies",
-  "version": "2.2.10",
+  "version": "2.2.22",
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Cookie utilities",
   "license": "MIT",

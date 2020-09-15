@@ -1,6 +1,7 @@
 {
   "name": "insomnia-plugin-kong-bundle",
-  "version": "2.2.21",
+  "private": true,
+  "version": "2.2.23",
   "main": "index.js",
   "insomnia": {
     "name": "kong-bundle",
@@ -16,9 +17,9 @@
     }
   },
   "dependencies": {
-    "insomnia-plugin-kong-declarative-config": "^2.2.12",
-    "insomnia-plugin-kong-kubernetes-config": "^2.2.12",
-    "insomnia-plugin-kong-portal": "^2.2.21"
+    "insomnia-plugin-kong-declarative-config": "^2.2.22",
+    "insomnia-plugin-kong-kubernetes-config": "^2.2.22",
+    "insomnia-plugin-kong-portal": "^2.2.23"
   },
   "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
 }
