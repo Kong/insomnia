@@ -9,9 +9,10 @@ type Props = {
 };
 
 const StyledBlockItem: React.ComponentType<{}> = styled.div`
-  padding: 0 var(--padding-md) var(--padding-sm) 0;
+  padding: var(--padding-xs) var(--padding-md) var(--padding-xs) 0;
   margin: 0;
   display: flex;
+  align-items: center;
   font-size: var(--font-size-md);
   line-height: var(--font-size-md);
   text-overflow: ellipsis;
@@ -26,7 +27,6 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
   }
   span {
     margin: 0 0 0 var(--padding-xs);
-    padding-top: var(--padding-xxs);
   }
   div {
     display: inline;
@@ -43,11 +43,8 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
 const StyledGridItem: React.ComponentType<{}> = styled.li`
   padding: 0 0 0 var(--padding-sm);
   margin: 0;
-  display: grid;
-  grid-template-columns: 0.25fr 5fr;
-  column-gap: var(--padding-xs);
-  grid-template-rows: 1fr;
-  align-items: start;
+  display: flex;
+  align-items: center;
   white-space: nowrap;
   font-size: var(--font-size-md);
   line-height: var(--font-size-sm);
@@ -55,7 +52,7 @@ const StyledGridItem: React.ComponentType<{}> = styled.li`
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    padding: 4px var(--padding-sm) var(--padding-xs) 0px;
+    padding: 4px var(--padding-sm) var(--padding-xs) var(--padding-xs);
   }
   a {
     color: var(--hl-xl);

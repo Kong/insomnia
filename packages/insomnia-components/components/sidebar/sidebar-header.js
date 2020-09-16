@@ -22,7 +22,7 @@ const StyledHeader: React.ComponentType<{}> = styled.li`
   }
 
   h6 {
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-sm);
     display: flex;
     flex-grow: 1;
     &:hover {
