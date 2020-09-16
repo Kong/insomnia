@@ -68,6 +68,12 @@ export type WorkspaceAction = {
   icon?: string,
 };
 
+export type PluginTab = {
+  plugin: Plugin,
+  label: string,
+  icon?: string,
+};
+
 export type SpecInfo = {
   contents: Object,
   rawContents: string,
@@ -309,6 +315,16 @@ export async function getConfigGenerators(): Promise<Array<ConfigGenerator>> {
   }
 
   return functions;
+}
+
+export async function getRequestTabs(): Promise<Array<PluginTab>> {
+  let tabs = [];
+  for (const plugin of await getActivePlugins()) {
+    const newTabs = plugin.module.requestTabs || [];
+    tabs = [...tabs, ...newTabs.map(p => ({ plugin, ...p }))];
+  }
+
+  return tabs;
 }
 
 const _defaultPluginConfig: PluginConfig = {

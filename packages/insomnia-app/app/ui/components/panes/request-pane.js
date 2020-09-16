@@ -14,6 +14,9 @@ import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import { getAuthTypeName, getContentTypeName } from '../../../common/constants';
 import * as models from '../../../models';
+import * as db from '../../../common/database';
+import { hotKeyRefs } from '../../common/hotkeys';
+import Hotkey from '../hotkey';
 import AuthDropdown from '../dropdowns/auth-dropdown';
 import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
 import AuthWrapper from '../editors/auth/auth-wrapper';
@@ -31,6 +34,7 @@ import type { ForceToWorkspace } from '../../redux/modules/helpers';
 import PlaceholderRequestPane from './placeholder-request-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import classnames from 'classnames';
+import { getRequestTabs, PluginTab } from '../../../plugins';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 
 type Props = {
@@ -71,8 +75,16 @@ type Props = {
   oAuth2Token: ?OAuth2Token,
 };
 
+type State = {
+  pluginTabs: Array<PluginTab>,
+};
+
 @autobind
-class RequestPane extends React.PureComponent<Props> {
+class RequestPane extends React.PureComponent<Props, State> {
+  state = {
+    pluginTabs: [],
+  };
+
   _handleEditDescriptionAdd() {
     this._handleEditDescription(true);
   }
@@ -84,9 +96,32 @@ class RequestPane extends React.PureComponent<Props> {
     });
   }
 
-  _autocompleteUrls(): Promise<Array<string>> {
-    const { workspace, request } = this.props;
-    return queryAllWorkspaceUrls(workspace, models.request.type, request?._id);
+  async _handlePluginTabs() {
+    getRequestTabs().then(
+      pluginTabs => this.setState({ pluginTabs }),
+      err => console.error(err),
+    );
+  }
+
+  componentWillMount() {
+    this._handlePluginTabs();
+  }
+
+  async _autocompleteUrls(): Promise<Array<string>> {
+    const docs = await db.withDescendants(this.props.workspace, models.request.type);
+
+    const requestId = this.props.request ? this.props.request._id : 'n/a';
+
+    const urls = docs
+      .filter(
+        (d: any) =>
+          d.type === models.request.type && // Only requests
+          d._id !== requestId && // Not current request
+          (d.url || ''), // Only ones with non-empty URLs
+      )
+      .map((r: any) => (r.url || '').trim());
+
+    return Array.from(new Set(urls));
   }
 
   _handleUpdateSettingsUseBulkHeaderEditor() {
@@ -179,6 +214,8 @@ class RequestPane extends React.PureComponent<Props> {
 
     const uniqueKey = `${forceRefreshCounter}::${request._id}`;
 
+    const { pluginTabs } = this.state;
+
     return (
       <Pane type="request">
         <PaneHeader>
@@ -249,6 +286,16 @@ class RequestPane extends React.PureComponent<Props> {
                 )}
               </button>
             </Tab>
+            {pluginTabs.map((p: PluginTab, i: number) => (
+              <Tab tabIndex="-1" key={i}>
+                <button>
+                  {p.label}
+                  <span className="bubble space-left">
+                    <i className={classnames('fa', p.icon || 'fa-code')} />
+                  </span>
+                </button>
+              </Tab>
+            ))}
           </TabList>
           <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
             <BodyEditor
@@ -388,6 +435,11 @@ class RequestPane extends React.PureComponent<Props> {
               </div>
             )}
           </TabPanel>
+          {pluginTabs.map((p: PluginTab, i: number) => (
+            <TabPanel className="react-tabs__tab-panel" key={i}>
+              {p.description}
+            </TabPanel>
+          ))}
         </Tabs>
       </Pane>
     );
