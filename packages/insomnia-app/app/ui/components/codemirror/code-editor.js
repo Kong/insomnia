@@ -66,6 +66,9 @@ const BASE_CODEMIRROR_OPTIONS = {
     // search box stays open after pressing Enter
     [isMac() ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent',
 
+    [isMac() ? 'Shift-Cmd--' : 'Shift-Ctrl--']: 'foldAll',
+    [isMac() ? 'Shift-Cmd-=' : 'Shift-Ctrl-=']: 'unfoldAll',
+
     'Shift-Tab': 'indentLess',
     Tab: 'indentMore',
   }),
