@@ -47,14 +47,16 @@ export default class SidebarPaths extends React.Component<Props> {
             </SidebarItem>
             <SidebarItem>
               <StyledMethods>
-                {Object.keys((method: any)).map(method => (
-                  <span
-                    key={method}
-                    className={`method-${method}`}
-                    onClick={() => onClick('paths', route, method)}>
-                    {method}
-                  </span>
-                ))}
+                {Object.keys((method: any))
+                  .filter(method => method.indexOf('x-') !== 0)
+                  .map(method => (
+                    <span
+                      key={method}
+                      className={`method-${method}`}
+                      onClick={() => onClick('paths', route, method)}>
+                      {method}
+                    </span>
+                  ))}
               </StyledMethods>
             </SidebarItem>
           </React.Fragment>
