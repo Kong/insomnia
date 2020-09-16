@@ -5,17 +5,22 @@ import styled from 'styled-components';
 type Props = {
   children: React.Node,
   gridLayout?: boolean,
+  onClick?: () => void,
 };
 
 const StyledBlockItem: React.ComponentType<{}> = styled.div`
-  padding: 0 var(--padding-md) var(--padding-sm) 0;
+  padding: var(--padding-xs) var(--padding-md) var(--padding-xs) 0;
   margin: 0;
-  display: block;
+  display: flex;
+  align-items: center;
   font-size: var(--font-size-md);
-  line-height: var(--font-size-sm);
+  line-height: var(--font-size-md);
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  &:first-child {
+    margin-top: var(--padding-xxs);
+  }
   &:hover {
     background-color: var(--hl-xxs);
     cursor: default;
@@ -24,7 +29,7 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
     margin-bottom: var(--padding-md);
   }
   span {
-    margin: 0 0 0 var(--padding-sm);
+    margin: 0 0 0 var(--padding-xs);
   }
   div {
     display: inline;
@@ -41,19 +46,19 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
 const StyledGridItem: React.ComponentType<{}> = styled.li`
   padding: 0 0 0 var(--padding-sm);
   margin: 0;
-  display: grid;
-  grid-template-columns: 0.25fr 5fr;
-  column-gap: var(--padding-sm);
-  grid-template-rows: 1fr;
-  align-items: start;
+  display: flex;
+  align-items: center;
   white-space: nowrap;
   font-size: var(--font-size-md);
   line-height: var(--font-size-sm);
+  &:first-child {
+    margin-top: var(--padding-xxs);
+  }
   span {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    padding: 4px var(--padding-sm) var(--padding-xs) 0px;
+    padding: 4px var(--padding-sm) var(--padding-xs) var(--padding-xs);
   }
   a {
     color: var(--hl-xl);
@@ -73,11 +78,11 @@ const StyledGridItem: React.ComponentType<{}> = styled.li`
   }
 `;
 
-const SidebarItem = ({ children, gridLayout }: Props) => {
+const SidebarItem = ({ children, gridLayout, onClick }: Props) => {
   if (gridLayout) {
-    return <StyledGridItem>{children}</StyledGridItem>;
+    return <StyledGridItem onClick={onClick}>{children}</StyledGridItem>;
   } else {
-    return <StyledBlockItem>{children}</StyledBlockItem>;
+    return <StyledBlockItem onClick={onClick}>{children}</StyledBlockItem>;
   }
 };
 

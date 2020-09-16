@@ -33,11 +33,11 @@ export default class SidebarHeaders extends React.Component<Props> {
       <div>
         {filteredValues.map(header => (
           <React.Fragment key={header}>
-            <SidebarItem>
+            <SidebarItem onClick={() => onClick('components', 'headers', header)}>
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => onClick('components', 'headers', header)}>
+              <span>
                 <Tooltip message={headers[header].description} position="right">
                   {header}
                 </Tooltip>
