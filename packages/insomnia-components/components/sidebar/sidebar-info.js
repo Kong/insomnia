@@ -7,7 +7,7 @@ import SidebarTextItem from './sidebar-text-item';
 type Props = {
   info: Object,
   childrenVisible: boolean,
-  onClick: (section: string, ...args: any) => void,
+  onClick: (section: string, ...args: Array<string>) => void,
 };
 
 function SidebarInfo(props: Props) {
