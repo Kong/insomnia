@@ -18,6 +18,9 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  &:first-child {
+    margin-top: var(--padding-xxs);
+  }
   &:hover {
     background-color: var(--hl-xxs);
     cursor: default;
@@ -48,6 +51,9 @@ const StyledGridItem: React.ComponentType<{}> = styled.li`
   white-space: nowrap;
   font-size: var(--font-size-md);
   line-height: var(--font-size-sm);
+  &:first-child {
+    margin-top: var(--padding-xxs);
+  }
   span {
     text-overflow: ellipsis;
     white-space: nowrap;
