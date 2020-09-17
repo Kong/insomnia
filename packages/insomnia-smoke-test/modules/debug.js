@@ -30,9 +30,15 @@ const createNewRequest = async (app, name = undefined) => {
 const typeUrl = async (app, url) => {
   // Type into url bar
   const urlEditor = await app.client.$('.urlbar .editor .input');
-  await urlEditor.click();
-  await urlEditor.keys(url);
-  await app.client.pause(2000);
+  await typeCodeMirror(urlEditor, url);
+  // await app.client.pause(2000);
+};
+
+const typeCodeMirror = async (element, value) => {
+  await element.click();
+  const cm = await element.$('.CodeMirror');
+  await cm.waitForExist();
+  await cm.keys(value);
 };
 
 const clickSendRequest = async app => {
@@ -42,9 +48,14 @@ const clickSendRequest = async app => {
 const expect200 = async app => {
   await app.client
     .$('.response-pane .pane__header .tag.bg-success')
-    .then(e => e.waitForDisplayed())
     .then(e => e.getText())
     .then(e => expect(e).toBe('200 OK'));
+};
+
+const getCsvViewer = async app => {
+  const csvViewer = await app.client.react$('ResponseCSVViewer');
+  await csvViewer.waitForDisplayed();
+  return csvViewer;
 };
 
 module.exports = {
@@ -53,4 +64,5 @@ module.exports = {
   typeUrl,
   clickSendRequest,
   expect200,
+  getCsvViewer,
 };
