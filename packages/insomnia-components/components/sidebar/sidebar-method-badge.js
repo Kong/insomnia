@@ -3,9 +3,11 @@ import styled from 'styled-components';
 
 export default styled.span`
   display: table;
+  border-spacing: var(--padding-xxs) 0;
   &:first-of-type {
     padding-left: var(--padding-lg);
   }
+  margin: 0px !important;
   span {
     display: table-cell;
     vertical-align: middle;
@@ -13,11 +15,10 @@ export default styled.span`
     text-transform: uppercase;
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
-    color: white;
+    color: #fff;
     border-radius: var(--radius-sm);
     text-shadow: 1px 1px 0px var(--hl-sm);
     transition: background-color 0.2s ease;
-    margin-left: var(--padding-xs);
 
     &.post {
       background-color: rgba(var(--color-success-rgb), 0.8);
@@ -39,6 +40,7 @@ export default styled.span`
     }
     &.parameters {
       display: none;
+      margin-right: 0px !important;
     }
     &.options-head,
     &.custom {
