@@ -2,9 +2,6 @@
 import styled from 'styled-components';
 
 export default styled.span`
-  /*
-  padding-left: var(--padding-lg);
-  */
   display: table;
   &:first-of-type {
     padding-left: var(--padding-lg);

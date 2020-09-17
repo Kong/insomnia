@@ -18,9 +18,6 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
-  &:first-child {
-    margin-top: var(--padding-xxs);
-  }
   &:hover {
     background-color: var(--hl-xxs);
     cursor: default;
