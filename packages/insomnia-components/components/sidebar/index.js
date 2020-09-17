@@ -93,63 +93,35 @@ function Sidebar(props: Props) {
             <Dropdown renderButton={DropdownEllipsis}>
               <DropdownDivider>VISIBILITY</DropdownDivider>
               <DropdownItem stayOpenAfterClick onClick={setServersVisible}>
-                <input
-                  type="checkbox"
-                  onChange={e => e.preventDefault()}
-                  checked={serversVisible}
-                />
+                <input type="checkbox" checked={serversVisible} readOnly />
                 <label htmlFor="servers">Servers</label>
               </DropdownItem>
               <DropdownItem stayOpenAfterClick onClick={setPathsVisible}>
-                <input type="checkbox" checked={pathsVisible} onChange={e => e.preventDefault()} />
+                <input type="checkbox" checked={pathsVisible} readOnly />
                 <label htmlFor="paths">Paths</label>
               </DropdownItem>
               <DropdownItem stayOpenAfterClick onClick={setRequestsVisible}>
-                <input
-                  type="checkbox"
-                  checked={requestsVisible}
-                  onChange={e => e.preventDefault()}
-                />
+                <input type="checkbox" checked={requestsVisible} readOnly />
                 <label htmlFor="requests">Requests</label>
               </DropdownItem>
               <DropdownItem stayOpenAfterClick onClick={setResponsesVisible}>
-                <input
-                  type="checkbox"
-                  checked={responsesVisible}
-                  onChange={e => e.preventDefault()}
-                />
+                <input type="checkbox" checked={responsesVisible} readOnly />
                 <label htmlFor="responses">Responses</label>
               </DropdownItem>
               <DropdownItem stayOpenAfterClick onClick={setParametersVisible}>
-                <input
-                  type="checkbox"
-                  checked={parametersVisible}
-                  onChange={e => e.preventDefault()}
-                />
+                <input type="checkbox" checked={parametersVisible} readOnly />
                 <label htmlFor="parameters">Parameters</label>
               </DropdownItem>
               <DropdownItem stayOpenAfterClick onClick={setHeadersVisible}>
-                <input
-                  type="checkbox"
-                  checked={headersVisible}
-                  onChange={e => e.preventDefault()}
-                />
+                <input type="checkbox" checked={headersVisible} readOnly />
                 <label htmlFor="headers">Headers</label>
               </DropdownItem>
               <DropdownItem stayOpenAfterClick onClick={setSchemasVisible}>
-                <input
-                  type="checkbox"
-                  checked={schemasVisible}
-                  onChange={e => e.preventDefault()}
-                />
+                <input type="checkbox" checked={schemasVisible} readOnly />
                 <label htmlFor="schemas">Schemas</label>
               </DropdownItem>
               <DropdownItem stayOpenAfterClick onClick={setSecurityVisible}>
-                <input
-                  type="checkbox"
-                  checked={securityVisible}
-                  onChange={e => e.preventDefault()}
-                />
+                <input type="checkbox" checked={securityVisible} readOnly />
                 <label htmlFor="security">Security</label>
               </DropdownItem>
             </Dropdown>
