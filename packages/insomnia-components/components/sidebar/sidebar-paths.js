@@ -11,6 +11,8 @@ type Props = {
   onClick: (section: string, ...args: any) => void,
 };
 
+const isNotXDashKey = key => key.indexOf('x-') !== 0;
+
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarPaths extends React.Component<Props> {
@@ -33,7 +35,7 @@ export default class SidebarPaths extends React.Component<Props> {
 
     return (
       <div>
-        {filteredValues.map(([route, method]) => (
+        {filteredValues.map(([route, routeBody]) => (
           <React.Fragment key={route}>
             <SidebarItem gridLayout onClick={() => onClick('paths', route)}>
               <div>
@@ -42,16 +44,18 @@ export default class SidebarPaths extends React.Component<Props> {
               <span>{route}</span>
             </SidebarItem>
             <SidebarItem>
-              {Object.keys((method: any)).map(method => (
-                <SidebarMethodBadge>
-                  <span
-                    key={method}
-                    className={`${method}`}
-                    onClick={() => onClick('paths', route, method)}>
-                    {method}
-                  </span>
-                </SidebarMethodBadge>
-              ))}
+              {Object.keys((routeBody: any))
+                .filter(isNotXDashKey)
+                .map(method => (
+                  <SidebarMethodBadge>
+                    <span
+                      key={method}
+                      className={`${method}`}
+                      onClick={() => onClick('paths', route, method)}>
+                      {method}
+                    </span>
+                  </SidebarMethodBadge>
+                ))}
             </SidebarItem>
           </React.Fragment>
         ))}
