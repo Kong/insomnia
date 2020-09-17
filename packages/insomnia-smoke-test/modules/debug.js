@@ -44,10 +44,9 @@ const clickSendRequest = async app => {
 };
 
 const expect200 = async app => {
-  await app.client
-    .$('.response-pane .pane__header .tag.bg-success')
-    .then(e => e.getText())
-    .then(e => expect(e).toBe('200 OK'));
+  const tag = await app.client.$('.response-pane .pane__header .tag.bg-success');
+  await tag.waitForDisplayed();
+  await expect(tag.getText()).resolves.toBe('200 OK');
 };
 
 const getCsvViewer = async app => {
