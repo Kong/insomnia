@@ -15,17 +15,10 @@ const StyledTextItem: React.ComponentType<{}> = styled.span`
   white-space: nowrap;
 `;
 
-let itemPath = [];
-const handleClick = items => {
-  itemPath.push('info');
-  itemPath.push.apply(itemPath, items);
-  itemPath = [];
-};
-
 const SidebarTextItem = ({ label, headline }: Props) => (
   <StyledTextItem>
     <strong>{label}</strong>
-    <span onClick={() => handleClick([headline])}>{headline}</span>
+    <span>{headline}</span>
   </StyledTextItem>
 );
 

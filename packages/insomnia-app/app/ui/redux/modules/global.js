@@ -382,8 +382,11 @@ const VALUE_YAML = 'yaml';
 const VALUE_HAR = 'har';
 
 function showSelectExportTypeModal(onCancel, onDone) {
+  const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
+
   showModal(SelectModal, {
     title: 'Select Export Type',
+    value: lastFormat,
     options: [
       {
         name: 'Insomnia v4 (JSON)',
@@ -397,7 +400,10 @@ function showSelectExportTypeModal(onCancel, onDone) {
     ],
     message: 'Which format would you like to export as?',
     onCancel: onCancel,
-    onDone: onDone,
+    onDone: selectedFormat => {
+      window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
+      onDone(selectedFormat);
+    },
   });
 }
 

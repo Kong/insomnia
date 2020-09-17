@@ -15,6 +15,8 @@ const StyledMethods: React.ComponentType<{}> = styled.span`
   padding-left: var(--padding-lg);
 `;
 
+const isNotXDashKey = key => key.indexOf('x-') !== 0;
+
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
 export default class SidebarPaths extends React.Component<Props> {
@@ -37,24 +39,26 @@ export default class SidebarPaths extends React.Component<Props> {
 
     return (
       <div>
-        {filteredValues.map(([route, method]) => (
+        {filteredValues.map(([route, routeBody]) => (
           <React.Fragment key={route}>
-            <SidebarItem gridLayout>
+            <SidebarItem gridLayout onClick={() => onClick('paths', route)}>
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => onClick('paths', route)}>{route}</span>
+              <span>{route}</span>
             </SidebarItem>
             <SidebarItem>
               <StyledMethods>
-                {Object.keys((method: any)).map(method => (
-                  <span
-                    key={method}
-                    className={`method-${method}`}
-                    onClick={() => onClick('paths', route, method)}>
-                    {method}
-                  </span>
-                ))}
+                {Object.keys((routeBody: any))
+                  .filter(isNotXDashKey)
+                  .map(method => (
+                    <span
+                      key={method}
+                      className={`method-${method}`}
+                      onClick={() => onClick('paths', route, method)}>
+                      {method}
+                    </span>
+                  ))}
               </StyledMethods>
             </SidebarItem>
           </React.Fragment>
