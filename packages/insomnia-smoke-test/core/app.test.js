@@ -68,7 +68,7 @@ describe('Application launch', function() {
     await debug.expect200(app);
   });
 
-  fit('sends CSV request and shows rich response', async () => {
+  it('sends CSV request and shows rich response', async () => {
     await debug.workspaceDropdownExists(app);
     await debug.createNewRequest(app);
     await debug.typeUrl(app, 'http://127.0.0.1:4010/csv');
