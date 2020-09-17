@@ -7,7 +7,7 @@
     "spectron:designer:build": "xvfb-maybe jest --testPathPattern designer",
     "spectron:core:package": "xvfb-maybe jest --testPathPattern core",
     "spectron:designer:package": "xvfb-maybe jest --testPathPattern designer",
-    "start:prism": "prism mock prism/petstore.oas3.yaml",
+    "start:prism": "prism mock prism/*",
     "with-mock": "concurrently --names prism,spectron --success first --kill-others \"npm run start:prism\"",
     "test:core:build": "npm run with-mock \"npm run spectron:core:build\"",
     "test:designer:build": "npm run with-mock \"npm run spectron:designer:build\"",
