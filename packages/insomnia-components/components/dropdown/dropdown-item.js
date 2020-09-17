@@ -55,6 +55,9 @@ const StyledText = styled.div`
   & > *:not(:first-child) {
     margin-left: 0.3em;
   }
+  input + label {
+    padding-top: 0px !important;
+  }
 `;
 
 const StyledIconContainer = styled.div`
