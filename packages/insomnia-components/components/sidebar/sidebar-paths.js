@@ -1,19 +1,15 @@
 // @flow
 import * as React from 'react';
-import styled from 'styled-components';
 import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
+import SidebarMethodBadge from './sidebar-method-badge';
 import StyledInvalidSection from './sidebar-invalid-section';
 
 type Props = {
   paths: Object,
   onClick: (section: string, ...args: any) => void,
 };
-
-const StyledMethods: React.ComponentType<{}> = styled.span`
-  padding-left: var(--padding-lg);
-`;
 
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
@@ -46,16 +42,16 @@ export default class SidebarPaths extends React.Component<Props> {
               <span>{route}</span>
             </SidebarItem>
             <SidebarItem>
-              <StyledMethods>
-                {Object.keys((method: any)).map(method => (
+              {Object.keys((method: any)).map(method => (
+                <SidebarMethodBadge>
                   <span
                     key={method}
-                    className={`method-${method}`}
+                    className={`${method}`}
                     onClick={() => onClick('paths', route, method)}>
                     {method}
                   </span>
-                ))}
-              </StyledMethods>
+                </SidebarMethodBadge>
+              ))}
             </SidebarItem>
           </React.Fragment>
         ))}
