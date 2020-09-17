@@ -50,28 +50,8 @@ describe('Application launch', function() {
 
   it('creates and sends a request', async () => {
     await debug.workspaceDropdownExists(app);
-
-    // Create a new request
-    await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
-
-    await app.client
-      .$('[aria-hidden=false]')
-      .then(e => e.$('button*=New Request'))
-      .then(e => e.click());
-
-    // Wait for modal to open
-    await app.client.waitUntilTextExists('.modal__header', 'New Request');
-
-    // Set name and create request
-    const input = await app.client.$('.modal input');
-    await input.waitUntil(() => input.isFocused());
     const requestName = 'Request from test';
-    await input.keys(requestName);
-
-    await app.client
-      .$('.modal .modal__footer')
-      .then(e => e.$('button=Create'))
-      .then(e => e.click());
+    await debug.createNewRequest(app, requestName);
 
     // Ensure first item is the one we created and is selected
     const requests = await app.client.$$('.sidebar__item');
@@ -83,9 +63,7 @@ describe('Application launch', function() {
     expect(firstRequestClasses).toContain('sidebar__item--active');
 
     // Type into url bar
-    const urlEditor = await app.client.$('.urlbar .editor');
-    await urlEditor.click();
-    await urlEditor.keys('http://127.0.0.1:4010/pets/1');
+    await debug.typeUrl(app, 'http://127.0.0.1:4010/pets/1');
 
     // Send request
     await app.client.$('.urlbar__send-btn').then(e => e.click());
@@ -99,5 +77,16 @@ describe('Application launch', function() {
     // await app.browserWindow.capturePage().then(function(imageBuffer) {
     //   fs.writeFileSync('page.png', imageBuffer);
     // });
+  });
+
+  fit('shows CSV response', async () => {
+    await debug.workspaceDropdownExists(app);
+    await debug.createNewRequest(app);
+    await debug.typeUrl(app, 'http://127.0.0.1:4010/csv');
+    await debug.clickSendRequest(app);
+    await debug.expect200(app);
+    await app.client
+      .react$('ResponseCSVViewer')
+      .then(element => expect(element.isDisplayed()).toBe(true));
   });
 });

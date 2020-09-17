@@ -2,6 +2,55 @@ const workspaceDropdownExists = async (app, workspaceName = 'Insomnia') => {
   await app.client.waitUntilTextExists('.workspace-dropdown', workspaceName);
 };
 
+const createNewRequest = async (app, name = undefined) => {
+  await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
+
+  await app.client
+    .$('[aria-hidden=false]')
+    .then(e => e.$('button*=New Request'))
+    .then(e => e.click());
+
+  // Wait for modal to open
+  await app.client.waitUntilTextExists('.modal__header', 'New Request');
+
+  // Set name and create request
+  const input = await app.client.$('.modal input');
+
+  if (name) {
+    await input.waitUntil(() => input.isFocused());
+    await input.keys(name);
+  }
+
+  await app.client
+    .$('.modal .modal__footer')
+    .then(e => e.$('button=Create'))
+    .then(e => e.click());
+};
+
+const typeUrl = async (app, url) => {
+  // Type into url bar
+  const urlEditor = await app.client.$('.urlbar .editor .input');
+  await urlEditor.click();
+  await urlEditor.keys(url);
+  await app.client.pause(2000);
+};
+
+const clickSendRequest = async app => {
+  await app.client.$('.urlbar__send-btn').then(e => e.click());
+};
+
+const expect200 = async app => {
+  await app.client
+    .$('.response-pane .pane__header .tag.bg-success')
+    .then(e => e.waitForDisplayed())
+    .then(e => e.getText())
+    .then(e => expect(e).toBe('200 OK'));
+};
+
 module.exports = {
   workspaceDropdownExists,
+  createNewRequest,
+  typeUrl,
+  clickSendRequest,
+  expect200,
 };
