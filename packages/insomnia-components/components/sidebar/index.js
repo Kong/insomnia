@@ -92,63 +92,63 @@ function Sidebar(props: Props) {
           <SidebarHeader headerTitle="INFO" sectionVisible={infoSec} toggleSection={setInfoSec}>
             <Dropdown renderButton={DropdownEllipsis}>
               <DropdownDivider>VISIBILITY</DropdownDivider>
-              <DropdownItem stayOpenAfterClick>
+              <DropdownItem stayOpenAfterClick onClick={setServersVisible}>
                 <input
                   type="checkbox"
-                  onClick={setServersVisible}
-                  defaultChecked={serversVisible}
+                  onChange={e => e.preventDefault()}
+                  checked={serversVisible}
                 />
                 <label htmlFor="servers">Servers</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
-                <input type="checkbox" onClick={setPathsVisible} defaultChecked={pathsVisible} />
+              <DropdownItem stayOpenAfterClick onClick={setPathsVisible}>
+                <input type="checkbox" checked={pathsVisible} onChange={e => e.preventDefault()} />
                 <label htmlFor="paths">Paths</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
+              <DropdownItem stayOpenAfterClick onClick={setRequestsVisible}>
                 <input
                   type="checkbox"
-                  onClick={setRequestsVisible}
-                  defaultChecked={requestsVisible}
+                  checked={requestsVisible}
+                  onChange={e => e.preventDefault()}
                 />
                 <label htmlFor="requests">Requests</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
+              <DropdownItem stayOpenAfterClick onClick={setResponsesVisible}>
                 <input
                   type="checkbox"
-                  onClick={setResponsesVisible}
-                  defaultChecked={responsesVisible}
+                  checked={responsesVisible}
+                  onChange={e => e.preventDefault()}
                 />
                 <label htmlFor="responses">Responses</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
+              <DropdownItem stayOpenAfterClick onClick={setParametersVisible}>
                 <input
                   type="checkbox"
-                  onClick={setParametersVisible}
-                  defaultChecked={parametersVisible}
+                  checked={parametersVisible}
+                  onChange={e => e.preventDefault()}
                 />
                 <label htmlFor="parameters">Parameters</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
+              <DropdownItem stayOpenAfterClick onClick={setHeadersVisible}>
                 <input
                   type="checkbox"
-                  onClick={setHeadersVisible}
-                  defaultChecked={headersVisible}
+                  checked={headersVisible}
+                  onChange={e => e.preventDefault()}
                 />
                 <label htmlFor="headers">Headers</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
+              <DropdownItem stayOpenAfterClick onClick={setSchemasVisible}>
                 <input
                   type="checkbox"
-                  onClick={setSchemasVisible}
-                  defaultChecked={schemasVisible}
+                  checked={schemasVisible}
+                  onChange={e => e.preventDefault()}
                 />
                 <label htmlFor="schemas">Schemas</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
+              <DropdownItem stayOpenAfterClick onClick={setSecurityVisible}>
                 <input
                   type="checkbox"
-                  onClick={setSecurityVisible}
-                  defaultChecked={securityVisible}
+                  checked={securityVisible}
+                  onChange={e => e.preventDefault()}
                 />
                 <label htmlFor="security">Security</label>
               </DropdownItem>
