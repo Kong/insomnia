@@ -28,10 +28,8 @@ const createNewRequest = async (app, name = undefined) => {
 };
 
 const typeUrl = async (app, url) => {
-  // Type into url bar
   const urlEditor = await app.client.$('.urlbar .editor .input');
   await typeCodeMirror(urlEditor, url);
-  // await app.client.pause(2000);
 };
 
 const typeCodeMirror = async (element, value) => {
