@@ -146,7 +146,7 @@
     "moment": "^2.21.0",
     "multiparty": "^4.2.1",
     "nedb": "^1.8.0",
-    "node-forge": "^0.8.2",
+    "node-forge": "^0.10.0",
     "node-libcurl": "^2.2.0",
     "nunjucks": "^3.2.0",
     "oauth-1.0a": "^2.2.2",
