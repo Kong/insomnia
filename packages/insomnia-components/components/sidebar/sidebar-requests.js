@@ -47,11 +47,13 @@ export default class SidebarRequests extends React.Component<Props> {
           const { description, content } = requests[requestName];
           return (
             <React.Fragment key={requestName}>
-              <SidebarItem gridLayout>
+              <SidebarItem
+                gridLayout
+                onClick={() => onClick('components', 'requestBodies', requestName)}>
                 <div>
                   <SvgIcon icon={IconEnum.folderOpen} />
                 </div>
-                <span onClick={() => onClick('components', 'requestBodies', requestName)}>
+                <span>
                   <Tooltip message={description} position="right">
                     {requestName}
                   </Tooltip>

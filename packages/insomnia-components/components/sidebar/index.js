@@ -46,7 +46,6 @@ const StyledSidebar: React.ComponentType<{}> = styled.div`
   color: var(--color-font);
   position: relative;
   svg {
-    font-size: var(--font-size-xl);
     fill: var(--hl-lg);
   }
   ul:first-child {
@@ -155,7 +154,7 @@ function Sidebar(props: Props) {
               </DropdownItem>
             </Dropdown>
           </SidebarHeader>
-          <SidebarInfo childrenVisible={infoSec} info={info} />
+          <SidebarInfo childrenVisible={infoSec} info={info} onClick={props.onClick} />
         </StyledSection>
       )}
       {serversVisible && servers && <SidebarServers servers={servers} onClick={props.onClick} />}
