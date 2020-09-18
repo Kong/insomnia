@@ -1,6 +1,5 @@
 {
   "name": "insomnia-plugin-kong-bundle",
-  "private": true,
   "version": "2.2.23",
   "main": "index.js",
   "insomnia": {
