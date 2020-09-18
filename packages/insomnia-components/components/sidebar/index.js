@@ -92,64 +92,36 @@ function Sidebar(props: Props) {
           <SidebarHeader headerTitle="INFO" sectionVisible={infoSec} toggleSection={setInfoSec}>
             <Dropdown renderButton={DropdownEllipsis}>
               <DropdownDivider>VISIBILITY</DropdownDivider>
-              <DropdownItem stayOpenAfterClick>
-                <input
-                  type="checkbox"
-                  onClick={setServersVisible}
-                  defaultChecked={serversVisible}
-                />
+              <DropdownItem stayOpenAfterClick onClick={setServersVisible}>
+                <input type="checkbox" checked={serversVisible} readOnly />
                 <label htmlFor="servers">Servers</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
-                <input type="checkbox" onClick={setPathsVisible} defaultChecked={pathsVisible} />
+              <DropdownItem stayOpenAfterClick onClick={setPathsVisible}>
+                <input type="checkbox" checked={pathsVisible} readOnly />
                 <label htmlFor="paths">Paths</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
-                <input
-                  type="checkbox"
-                  onClick={setRequestsVisible}
-                  defaultChecked={requestsVisible}
-                />
+              <DropdownItem stayOpenAfterClick onClick={setRequestsVisible}>
+                <input type="checkbox" checked={requestsVisible} readOnly />
                 <label htmlFor="requests">Requests</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
-                <input
-                  type="checkbox"
-                  onClick={setResponsesVisible}
-                  defaultChecked={responsesVisible}
-                />
+              <DropdownItem stayOpenAfterClick onClick={setResponsesVisible}>
+                <input type="checkbox" checked={responsesVisible} readOnly />
                 <label htmlFor="responses">Responses</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
-                <input
-                  type="checkbox"
-                  onClick={setParametersVisible}
-                  defaultChecked={parametersVisible}
-                />
+              <DropdownItem stayOpenAfterClick onClick={setParametersVisible}>
+                <input type="checkbox" checked={parametersVisible} readOnly />
                 <label htmlFor="parameters">Parameters</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
-                <input
-                  type="checkbox"
-                  onClick={setHeadersVisible}
-                  defaultChecked={headersVisible}
-                />
+              <DropdownItem stayOpenAfterClick onClick={setHeadersVisible}>
+                <input type="checkbox" checked={headersVisible} readOnly />
                 <label htmlFor="headers">Headers</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
-                <input
-                  type="checkbox"
-                  onClick={setSchemasVisible}
-                  defaultChecked={schemasVisible}
-                />
+              <DropdownItem stayOpenAfterClick onClick={setSchemasVisible}>
+                <input type="checkbox" checked={schemasVisible} readOnly />
                 <label htmlFor="schemas">Schemas</label>
               </DropdownItem>
-              <DropdownItem stayOpenAfterClick>
-                <input
-                  type="checkbox"
-                  onClick={setSecurityVisible}
-                  defaultChecked={securityVisible}
-                />
+              <DropdownItem stayOpenAfterClick onClick={setSecurityVisible}>
+                <input type="checkbox" checked={securityVisible} readOnly />
                 <label htmlFor="security">Security</label>
               </DropdownItem>
             </Dropdown>
