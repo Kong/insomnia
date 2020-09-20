@@ -97,14 +97,16 @@ class RequestPane extends React.PureComponent<Props, State> {
   }
 
   async _handlePluginTabs() {
-    getRequestTabs().then(
-      pluginTabs => this.setState({ pluginTabs }),
-      err => console.error(err),
-    );
+    try {
+      const pluginTabs = await getRequestTabs();
+      this.setState({ pluginTabs });
+    } catch (err) {
+      console.error('[plugins] Error getting request tabs', err);
+    }
   }
 
-  componentWillMount() {
-    this._handlePluginTabs();
+  async componentDidMount() {
+    await this._handlePluginTabs();
   }
 
   async _autocompleteUrls(): Promise<Array<string>> {
@@ -286,8 +288,8 @@ class RequestPane extends React.PureComponent<Props, State> {
                 )}
               </button>
             </Tab>
-            {pluginTabs.map((p: PluginTab, i: number) => (
-              <Tab tabIndex="-1" key={i}>
+            {pluginTabs.map((p: PluginTab) => (
+              <Tab tabIndex="-1" key={`${p.plugin.name}::${p.label}`}>
                 <button>
                   {p.label}
                   <span className="bubble space-left">
@@ -435,8 +437,8 @@ class RequestPane extends React.PureComponent<Props, State> {
               </div>
             )}
           </TabPanel>
-          {pluginTabs.map((p: PluginTab, i: number) => (
-            <TabPanel className="react-tabs__tab-panel" key={i}>
+          {pluginTabs.map((p: PluginTab) => (
+            <TabPanel className="react-tabs__tab-panel" key={`${p.plugin.name}::${p.label}`}>
               {p.description}
             </TabPanel>
           ))}
