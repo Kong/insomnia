@@ -62,6 +62,7 @@ module.exports.templateTags = [
         displayName: 'Trigger Behavior',
         help: 'Configure when to resend the dependent request',
         type: 'enum',
+        defaultValue: 'never',
         options: [
           {
             displayName: 'Never',
@@ -96,7 +97,7 @@ module.exports.templateTags = [
 
     async run(context, field, id, filter, resendBehavior, maxAgeSeconds) {
       filter = filter || '';
-      resendBehavior = (resendBehavior || 'never').toLowerCase();
+      resendBehavior = resendBehavior.toLowerCase();
 
       if (!['body', 'header', 'raw', 'url'].includes(field)) {
         throw new Error(`Invalid response field ${field}`);
