@@ -29,14 +29,17 @@ const createNewRequest = async (app, name = undefined) => {
 
 const typeUrl = async (app, url) => {
   const urlEditor = await app.client.$('.urlbar .editor .input');
-  await typeCodeMirror(urlEditor, url);
+  await typeCodeMirror(app, urlEditor, url, 150);
 };
 
-const typeCodeMirror = async (element, value) => {
+const typeCodeMirror = async (app, element, value, debounceWait) => {
   await element.click();
   const cm = await element.$('.CodeMirror');
   await cm.waitForExist();
   await cm.keys(value);
+
+  // Wait for the code-editor debounce
+  await app.client.pause(debounceWait);
 };
 
 const clickSendRequest = async app => {
