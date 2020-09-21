@@ -58,6 +58,14 @@ const getCsvViewer = async app => {
   return csvViewer;
 };
 
+const getPdfCanvas = async app => {
+  const pdfViewer = await app.client.react$('ResponsePDFViewer');
+  await pdfViewer.waitForDisplayed();
+  const canvas = await pdfViewer.$('.S-PDF-ID canvas');
+  await canvas.waitForDisplayed();
+  return canvas;
+};
+
 module.exports = {
   workspaceDropdownExists,
   createNewRequest,
@@ -65,4 +73,5 @@ module.exports = {
   clickSendRequest,
   expect200,
   getCsvViewer,
+  getPdfCanvas,
 };
