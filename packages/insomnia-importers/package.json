@@ -16,7 +16,7 @@
     "test": "jest --silent"
   },
   "dependencies": {
-    "apiconnect-wsdl": "^1.8.10",
+    "apiconnect-wsdl": "^1.8.29",
     "change-case": "^4.1.1",
     "commander": "^2.20.0",
     "lodash": "^4.17.15",
