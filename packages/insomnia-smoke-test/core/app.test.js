@@ -78,4 +78,17 @@ describe('Application launch', function() {
     const csvViewer = await debug.getCsvViewer(app);
     await expect(csvViewer.getText()).resolves.toBe('a b c\n1 2 3');
   });
+
+  fit('sends PDF request and shows rich response', async () => {
+    const pdfUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+    await debug.workspaceDropdownExists(app);
+    await debug.createNewRequest(app);
+    await debug.typeUrl(app, pdfUrl);
+    await debug.clickSendRequest(app);
+
+    await debug.expect200(app);
+    const pdfCanvas = await debug.getPdfCanvas(app);
+    await expect(pdfCanvas.getAttribute('width')).resolves.toBe('1018');
+    await expect(pdfCanvas.getAttribute('height')).resolves.toBe('1440');
+  });
 });

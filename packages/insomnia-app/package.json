@@ -152,7 +152,7 @@
     "oauth-1.0a": "^2.2.2",
     "openapi-2-kong": "^2.2.22",
     "papaparse": "^5.2.0",
-    "pdfjs-dist": "^2.2.228",
+    "pdfjs-dist": "^2.5.207",
     "prop-types": "^15.6.1",
     "react": "^16.8.6",
     "react-animated-tree": "^1.0.10",
