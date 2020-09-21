@@ -1,7 +1,22 @@
-// @Flow
+// @flow
+import * as React from 'react';
 import styled from 'styled-components';
 
-export default styled.span`
+type Props = {
+  label?: string,
+  onClick?: () => void,
+  method?:
+    | 'get'
+    | 'post'
+    | 'delete'
+    | 'parameters'
+    | 'parameters'
+    | 'patch'
+    | 'put'
+    | 'options-head',
+};
+
+const StyledBadge: React.ComponentType<{}> = styled.span`
   display: table;
   border-spacing: var(--padding-xxs) 0;
   &:first-of-type {
@@ -63,3 +78,11 @@ export default styled.span`
     }
   }
 `;
+
+const SidebarBadge = ({ onClick = () => {}, method = 'post', label = method }: Props) => (
+  <StyledBadge>
+    <span className={method}>{label}</span>
+  </StyledBadge>
+);
+
+export default SidebarBadge;

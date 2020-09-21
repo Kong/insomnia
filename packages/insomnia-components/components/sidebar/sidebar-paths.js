@@ -3,7 +3,7 @@ import * as React from 'react';
 import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
-import SidebarMethodBadge from './sidebar-method-badge';
+import SidebarBadge from './sidebar-badge';
 import StyledInvalidSection from './sidebar-invalid-section';
 
 type Props = {
@@ -47,14 +47,11 @@ export default class SidebarPaths extends React.Component<Props> {
               {Object.keys((routeBody: any))
                 .filter(isNotXDashKey)
                 .map(method => (
-                  <SidebarMethodBadge>
-                    <span
-                      key={method}
-                      className={`${method}`}
-                      onClick={() => onClick('paths', route, method)}>
-                      {method}
-                    </span>
-                  </SidebarMethodBadge>
+                  <SidebarBadge
+                    key={method}
+                    label={method}
+                    method={method}
+                    onClick={() => onClick('paths', route, method)}></SidebarBadge>
                 ))}
             </SidebarItem>
           </React.Fragment>
