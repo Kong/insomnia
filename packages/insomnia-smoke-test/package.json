@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-smoke-test",
-  "version": "2.2.22",
+  "version": "2.2.24",
   "scripts": {
     "spectron:core:build": "xvfb-maybe jest --testPathPattern core",
     "spectron:designer:build": "xvfb-maybe jest --testPathPattern designer",
