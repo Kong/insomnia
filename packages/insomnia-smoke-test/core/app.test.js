@@ -79,7 +79,7 @@ describe('Application launch', function() {
     await expect(csvViewer.getText()).resolves.toBe('a b c\n1 2 3');
   });
 
-  fit('sends PDF request and shows rich response', async () => {
+  it('sends PDF request and shows rich response', async () => {
     const pdfUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
     await debug.workspaceDropdownExists(app);
     await debug.createNewRequest(app);
