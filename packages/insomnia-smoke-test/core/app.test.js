@@ -88,7 +88,6 @@ describe('Application launch', function() {
 
     await debug.expect200(app);
     const pdfCanvas = await debug.getPdfCanvas(app);
-    await expect(pdfCanvas.getAttribute('width')).resolves.toBe('1018');
-    await expect(pdfCanvas.getAttribute('height')).resolves.toBe('1440');
+    await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
 });
