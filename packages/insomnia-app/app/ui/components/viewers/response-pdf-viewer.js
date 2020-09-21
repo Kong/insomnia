@@ -34,11 +34,10 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
       container.innerHTML = '';
 
       const containerWidth = container.clientWidth;
-      const loadingTask = PDF.getDocument({
+      const pdf = await PDF.getDocument({
         data: this.props.body.toString('binary'),
-      });
+      }).promise;
 
-      const pdf = await loadingTask.promise;
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const density = window.devicePixelRatio || 1;
@@ -67,8 +66,7 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
           viewport: viewport,
         };
 
-        const renderTask = page.render(renderContext);
-        await renderTask.promise;
+        await page.render(renderContext).promise;
       }
     }, 100);
   }
