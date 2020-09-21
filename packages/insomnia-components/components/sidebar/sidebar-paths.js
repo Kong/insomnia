@@ -49,7 +49,6 @@ export default class SidebarPaths extends React.Component<Props> {
                 .map(method => (
                   <SidebarBadge
                     key={method}
-                    label={method}
                     method={method}
                     onClick={() => onClick('paths', route, method)}></SidebarBadge>
                 ))}

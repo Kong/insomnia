@@ -5,15 +5,7 @@ import styled from 'styled-components';
 type Props = {
   label?: string,
   onClick?: () => void,
-  method?:
-    | 'get'
-    | 'post'
-    | 'delete'
-    | 'parameters'
-    | 'parameters'
-    | 'patch'
-    | 'put'
-    | 'options-head',
+  method?: 'get' | 'post' | 'delete' | 'parameters' | 'patch' | 'put' | 'options-head',
 };
 
 const StyledBadge: React.ComponentType<{}> = styled.span`
@@ -79,10 +71,12 @@ const StyledBadge: React.ComponentType<{}> = styled.span`
   }
 `;
 
-const SidebarBadge = ({ onClick = () => {}, method = 'post', label = method }: Props) => (
-  <StyledBadge>
-    <span className={method}>{label}</span>
-  </StyledBadge>
-);
+const SidebarBadge = ({ onClick = () => {}, method = 'post', label = method }: Props) => {
+  return (
+    <StyledBadge>
+      <span className={method}>{label}</span>
+    </StyledBadge>
+  );
+};
 
 export default SidebarBadge;
