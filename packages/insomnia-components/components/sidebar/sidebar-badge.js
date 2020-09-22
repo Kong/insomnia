@@ -68,6 +68,9 @@ const StyledBadge: React.ComponentType<{}> = styled.span`
         background-color: var(--color-warning);
       }
     }
+    &:hover {
+      cursor: default;
+    }
   }
 `;
 

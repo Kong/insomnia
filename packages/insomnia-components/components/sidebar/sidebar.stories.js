@@ -1,5 +1,6 @@
 import React from 'react';
 import Sidebar from './';
+import SidebarBadge from './sidebar-badge';
 import { withKnobs } from '@storybook/addon-knobs';
 import { withDesign } from 'storybook-addon-designs';
 
@@ -3145,6 +3146,44 @@ export const SimpleAPI = () => {
     <div style={{ width: '350px' }}>
       <div style={{ display: 'block', margin: '0px 0px 20px 0px' }}>Target: {targetPath}</div>
       <Sidebar jsonData={apiSpec2} onClick={_handleItemClick} />
+    </div>
+  );
+};
+
+export const Badges = () => {
+  return (
+    <div style={{ width: '350px' }}>
+      <br />
+      <h3>Method Badges</h3>
+      <hr />
+      <SidebarBadge style={{ paddingLeft: '0px' }} method="get" />
+      <br />
+      <SidebarBadge method="post" />
+      <br />
+      <SidebarBadge method="put" />
+      <br />
+      <SidebarBadge method="patch" />
+      <br />
+      <SidebarBadge method="delete" />
+      <br />
+      <br />
+      <h3>Custom Labels & Clickable</h3>
+      <hr />
+      <SidebarBadge
+        label="My Label"
+        method="delete"
+        onClick={() => {
+          console.log('Clicked.');
+        }}
+      />
+      <br />
+      <SidebarBadge
+        label="My Other Label"
+        method="get"
+        onClick={() => {
+          console.log('Clicked.');
+        }}
+      />
     </div>
   );
 };
