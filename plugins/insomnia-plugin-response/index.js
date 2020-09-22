@@ -92,7 +92,10 @@ module.exports.templateTags = [
         displayName: 'Max age (seconds)',
         help: 'The maximum age of a response to use before it expires',
         type: 'number',
-        hide: args => args[3].value !== 'when-expired',
+        hide: args => {
+          const triggerBehavior = (args[3] && args[3].value) || defaultTriggerBehaviour;
+          return triggerBehavior !== 'when-expired';
+        },
         defaultValue: 60,
       },
     ],
