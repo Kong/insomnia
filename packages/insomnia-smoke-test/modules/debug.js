@@ -29,7 +29,7 @@ const createNewRequest = async (app, name = undefined) => {
 
 const typeUrl = async (app, url) => {
   const urlEditor = await app.client.$('.urlbar .editor .input');
-  await typeCodeMirror(app, urlEditor, url, 150);
+  await typeCodeMirror(app, urlEditor, url, 500);
 };
 
 const typeCodeMirror = async (app, element, value, debounceWait) => {
