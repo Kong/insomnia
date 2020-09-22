@@ -301,7 +301,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     }
 
     // Fill activeTagData arguments with defaults for missing arguments
-    if (tagDefinition && activeTagData.args.length !== tagDefinition.args.length) {
+    if (tagDefinition && activeTagData.args.length < tagDefinition.args.length) {
       const defaultTagData = TagEditor._getDefaultTagData(tagDefinition);
       defaultTagData.args
         .slice(activeTagData.args.length)
