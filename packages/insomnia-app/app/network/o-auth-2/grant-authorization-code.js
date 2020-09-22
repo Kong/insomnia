@@ -1,4 +1,5 @@
 // @flow
+import crypto from 'crypto';
 import { parse as urlParse } from 'url';
 import * as c from './constants';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
@@ -15,6 +16,7 @@ export default async function(
   credentialsInBody: boolean,
   clientId: string,
   clientSecret: string,
+  usePkce: boolean,
   redirectUri: string = '',
   scope: string = '',
   state: string = '',
@@ -29,6 +31,19 @@ export default async function(
     throw new Error('Invalid access token URL');
   }
 
+  let codeVerifier = '';
+  let codeChallenge = '';
+
+  if (usePkce) {
+    codeVerifier = _base64UrlEncode(crypto.randomBytes(32));
+    codeChallenge = _base64UrlEncode(
+      crypto
+        .createHash('sha256')
+        .update(codeVerifier)
+        .digest(),
+    );
+  }
+
   const authorizeResults = await _authorize(
     authorizeUrl,
     clientId,
@@ -37,6 +52,7 @@ export default async function(
     state,
     audience,
     resource,
+    codeChallenge,
   );
 
   // Handle the error
@@ -58,6 +74,7 @@ export default async function(
     state,
     audience,
     resource,
+    codeVerifier,
   );
 }
 
@@ -69,6 +86,7 @@ async function _authorize(
   state = '',
   audience = '',
   resource = '',
+  codeChallenge = '',
 ) {
   const params = [
     { name: c.P_RESPONSE_TYPE, value: c.RESPONSE_TYPE_CODE },
@@ -81,6 +99,11 @@ async function _authorize(
   state && params.push({ name: c.P_STATE, value: state });
   audience && params.push({ name: c.P_AUDIENCE, value: audience });
   resource && params.push({ name: c.P_RESOURCE, value: resource });
+
+  if (codeChallenge) {
+    params.push({ name: c.P_CODE_CHALLENGE, value: codeChallenge });
+    params.push({ name: c.P_CODE_CHALLENGE_METHOD, value: 'S256' });
+  }
 
   // Add query params to URL
   const qs = buildQueryStringFromParams(params);
@@ -113,6 +136,7 @@ async function _getToken(
   state: string = '',
   audience: string = '',
   resource: string = '',
+  codeVerifier: string = '',
 ): Promise<Object> {
   const params = [
     { name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_AUTHORIZATION_CODE },
@@ -124,6 +148,7 @@ async function _getToken(
   state && params.push({ name: c.P_STATE, value: state });
   audience && params.push({ name: c.P_AUDIENCE, value: audience });
   resource && params.push({ name: c.P_RESOURCE, value: resource });
+  codeVerifier && params.push({ name: c.P_CODE_VERIFIER, value: codeVerifier });
 
   const headers = [
     { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
@@ -181,4 +206,12 @@ async function _getToken(
   results[c.X_RESPONSE_ID] = response._id;
 
   return results;
+}
+
+function _base64UrlEncode(string: string): string {
+  return string
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
 }
