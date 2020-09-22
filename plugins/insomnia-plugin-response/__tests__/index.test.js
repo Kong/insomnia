@@ -557,6 +557,45 @@ describe('Response tag', () => {
       throw new Error('Running tag should have thrown exception');
     });
   });
+
+  describe('Max Age', () => {
+    const maxAgeArg = tag.args[4];
+    const toValueObj = value => ({ value });
+
+    it('should ensure fourth argument is maxAge', () => {
+      expect(maxAgeArg.displayName).toBe('Max age (seconds)');
+    });
+
+    it('should hide when behavior and max age arguments are missing - backward compatibility', () => {
+      const args = ['raw', 'req_1', ''].map(toValueObj);
+      const hidden = maxAgeArg.hide(args);
+      expect(hidden).toBe(true);
+    });
+
+    it('should hide when behavior=no-history and max age argument is missing - backward compatibility', () => {
+      const args = ['raw', 'req_1', '', 'no-history'].map(toValueObj);
+      const hidden = maxAgeArg.hide(args);
+      expect(hidden).toBe(true);
+    });
+
+    it('should show when behavior=when-expired and max age argument is missing - backward compatibility', () => {
+      const args = ['raw', 'req_1', '', 'when-expired'].map(toValueObj);
+      const hidden = maxAgeArg.hide(args);
+      expect(hidden).toBe(false);
+    });
+
+    it('should hide when behavior=always', () => {
+      const args = ['raw', 'req_1', '', 'always', 60].map(toValueObj);
+      const hidden = maxAgeArg.hide(args);
+      expect(hidden).toBe(true);
+    });
+
+    it('should show when behavior=when-expired', () => {
+      const args = ['raw', 'req_1', '', 'when-expired', 60].map(toValueObj);
+      const hidden = maxAgeArg.hide(args);
+      expect(hidden).toBe(false);
+    });
+  });
 });
 
 function _genTestContext(requests, responses, extraInfoRoot) {
