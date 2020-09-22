@@ -88,7 +88,8 @@ export default class SidebarRequests extends React.Component<Props> {
                               'examples',
                               requestExample,
                             )
-                          } />
+                          }
+                        />
                       ))}
                     </SidebarItem>
                   )}
