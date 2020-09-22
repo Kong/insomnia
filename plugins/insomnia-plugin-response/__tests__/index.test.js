@@ -559,8 +559,13 @@ describe('Response tag', () => {
   });
 
   describe('Max Age', () => {
-    const maxAgeArg = tag.args.find(c => c.displayName === 'Max age (seconds)');
+    const maxAgeArg = tag.args[4];
     const toValueObj = value => ({ value });
+
+    it('should ensure fourth argument is maxAge', () => {
+      expect(maxAgeArg.displayName).toBe('Max age (seconds)');
+    });
+
     it('should hide when behavior and max age arguments are missing - backward compatibility', () => {
       const args = ['raw', 'req_1', ''].map(toValueObj);
       const hidden = maxAgeArg.hide(args);
