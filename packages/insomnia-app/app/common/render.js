@@ -283,7 +283,7 @@ export async function getRenderContext(
     const typeStr = Object.prototype.toString.call(subObject);
     if (typeStr === '[object Object]') {
       for (const key of Object.keys(subObject)) {
-        getKeySource(subObject[key], inKey ? `${inKey}.${key}` : key, inSource);
+        getKeySource(subObject[key], inKey ? `${inKey}.['${key}']` : `['${key}']`, inSource);
       }
     } else if (typeStr === '[object Array]') {
       for (let i = 0; i < subObject.length; i++) {

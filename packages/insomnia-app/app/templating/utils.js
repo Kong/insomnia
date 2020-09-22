@@ -47,7 +47,7 @@ export function getKeys(obj: any, prefix: string = ''): Array<{ name: string, va
   } else if (typeOfObj === '[object Object]') {
     const keys = Object.keys(obj);
     for (const key of keys) {
-      const newPrefix = prefix ? `${prefix}.${key}` : key;
+      const newPrefix = prefix ? `${prefix}.['${key}']` : `['${key}']`;
       allKeys = [...allKeys, ...getKeys(obj[key], newPrefix)];
     }
   } else if (typeOfObj === '[object Function]') {

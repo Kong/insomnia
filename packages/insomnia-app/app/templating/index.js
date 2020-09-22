@@ -3,6 +3,7 @@ import nunjucks from 'nunjucks';
 import BaseExtension from './base-extension';
 import type { NunjucksParsedTag } from './utils';
 import * as plugins from '../plugins/index';
+import jq from 'jsonpath';
 
 export class RenderError extends Error {
   message: string;
@@ -40,7 +41,10 @@ export function render(
 
   return new Promise(async (resolve, reject) => {
     const nj = await getNunjucks(renderMode);
-    nj.addFilter('getVarFromString', o => context[o]);
+    nj.addFilter('getVarFromString', varPath => {
+      // const query = jq.stringify(`$.${varPath}`.split(/\.|\[(\d*)\]/).filter(a => a));
+      return jq.query(context, `$.${varPath}`);
+    });
 
     nj.renderString(text, context, (err, result) => {
       if (err) {
