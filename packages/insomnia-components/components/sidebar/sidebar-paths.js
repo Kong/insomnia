@@ -1,19 +1,15 @@
 // @flow
 import * as React from 'react';
-import styled from 'styled-components';
 import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
+import SidebarBadge from './sidebar-badge';
 import StyledInvalidSection from './sidebar-invalid-section';
 
 type Props = {
   paths: Object,
   onClick: (section: string, ...args: any) => void,
 };
-
-const StyledMethods: React.ComponentType<{}> = styled.span`
-  padding-left: var(--padding-lg);
-`;
 
 const isNotXDashKey = key => key.indexOf('x-') !== 0;
 
@@ -48,18 +44,14 @@ export default class SidebarPaths extends React.Component<Props> {
               <span>{route}</span>
             </SidebarItem>
             <SidebarItem>
-              <StyledMethods>
-                {Object.keys((routeBody: any))
-                  .filter(isNotXDashKey)
-                  .map(method => (
-                    <span
-                      key={method}
-                      className={`method-${method}`}
-                      onClick={() => onClick('paths', route, method)}>
-                      {method}
-                    </span>
-                  ))}
-              </StyledMethods>
+              {Object.keys((routeBody: any))
+                .filter(isNotXDashKey)
+                .map(method => (
+                  <SidebarBadge
+                    key={method}
+                    method={method}
+                    onClick={() => onClick('paths', route, method)}></SidebarBadge>
+                ))}
             </SidebarItem>
           </React.Fragment>
         ))}

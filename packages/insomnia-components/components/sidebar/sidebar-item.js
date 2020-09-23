@@ -18,9 +18,6 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
-  &:first-child {
-    margin-top: var(--padding-xxs);
-  }
   &:hover {
     background-color: var(--hl-xxs);
     cursor: default;
@@ -36,7 +33,7 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
     margin: 0;
   }
   div:nth-child(1) {
-    padding-left: var(--padding-sm);
+    padding-left: var(--padding-xs);
   }
   div.tooltip {
     padding: 0;
@@ -58,7 +55,8 @@ const StyledGridItem: React.ComponentType<{}> = styled.li`
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    padding: 4px var(--padding-sm) var(--padding-xs) var(--padding-xs);
+    padding: 4px var(--padding-sm) var(--padding-xs) 0px;
+    margin-left: var(--padding-xs);
   }
   a {
     color: var(--hl-xl);

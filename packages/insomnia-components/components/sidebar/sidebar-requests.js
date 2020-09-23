@@ -5,19 +5,13 @@ import Tooltip from '../tooltip';
 import SidebarItem from './sidebar-item';
 import SvgIcon, { IconEnum } from '../svg-icon';
 import SidebarSection from './sidebar-section';
+import SidebarBadge from './sidebar-badge';
 import StyledInvalidSection from './sidebar-invalid-section';
 
 type Props = {
   requests: Object,
   onClick: (section: string, ...args: any) => void,
 };
-
-const StyledRequestExample: React.ComponentType<{}> = styled.span`
-  color: var(--color-success);
-  &:first-of-type {
-    padding-left: var(--padding-lg);
-  }
-`;
 
 const StyledRequestFormat: React.ComponentType<{}> = styled.span`
   padding-left: var(--padding-sm);
@@ -81,7 +75,9 @@ export default class SidebarRequests extends React.Component<Props> {
                   {content[requestFormat].examples && (
                     <SidebarItem>
                       {Object.keys(content[requestFormat].examples).map(requestExample => (
-                        <StyledRequestExample
+                        <SidebarBadge
+                          key={requestExample}
+                          label={requestExample}
                           onClick={() =>
                             onClick(
                               'components',
@@ -93,9 +89,7 @@ export default class SidebarRequests extends React.Component<Props> {
                               requestExample,
                             )
                           }
-                          key={requestExample}>
-                          {requestExample}
-                        </StyledRequestExample>
+                        />
                       ))}
                     </SidebarItem>
                   )}
