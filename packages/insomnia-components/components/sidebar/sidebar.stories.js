@@ -1,5 +1,8 @@
 import React from 'react';
 import Sidebar from './';
+import SidebarItem from './sidebar-item';
+import SidebarBadge from './sidebar-badge';
+import SvgIcon from '../svg-icon';
 import { withKnobs } from '@storybook/addon-knobs';
 import { withDesign } from 'storybook-addon-designs';
 
@@ -3145,6 +3148,53 @@ export const SimpleAPI = () => {
     <div style={{ width: '350px' }}>
       <div style={{ display: 'block', margin: '0px 0px 20px 0px' }}>Target: {targetPath}</div>
       <Sidebar jsonData={apiSpec2} onClick={_handleItemClick} />
+    </div>
+  );
+};
+
+export const Badges = () => {
+  const [clickedBadge, setClickedBadge] = React.useState('Awaiting click...');
+
+  const _handleBadgeClick = () => {
+    setClickedBadge('Badge Clicked.');
+  };
+  return (
+    <div style={{ width: '600px' }}>
+      <div style={{ display: 'block', margin: '0px 0px 20px 0px' }}>{clickedBadge}</div>
+      <h3>Method Badges</h3>
+      <hr />
+      <SidebarItem>
+        <SvgIcon icon="empty" />
+        <SvgIcon icon="indentation" />
+        <span>Badgable Row</span>
+      </SidebarItem>
+      <SidebarItem>
+        <SidebarBadge method="get" />
+        <SidebarBadge method="post" />
+        <SidebarBadge method="put" />
+        <SidebarBadge method="patch" />
+        <SidebarBadge method="delete" />
+      </SidebarItem>
+      <br />
+      <br />
+      <h3>Custom Labels & Clickable</h3>
+      <hr />
+      <SidebarItem>
+        <SvgIcon icon="empty" />
+        <SvgIcon icon="indentation" />
+        <span>Badgable Row</span>
+      </SidebarItem>
+      <SidebarItem>
+        <SidebarBadge label="Custom Label" method="delete" />
+        <SidebarBadge label="Default No Method" />
+        <SidebarBadge
+          label="Clickable Custom Label"
+          method="get"
+          onClick={() => {
+            _handleBadgeClick();
+          }}
+        />
+      </SidebarItem>
     </div>
   );
 };
