@@ -48,30 +48,23 @@ describe('Application launch', function() {
     await debug.workspaceDropdownExists(app);
   });
 
-  it('creates and sends a request', async () => {
+  it('sends JSON request', async () => {
+    const url = 'http://127.0.0.1:4010/pets/1';
+
     await debug.workspaceDropdownExists(app);
-    const requestName = 'Request from test';
-    await debug.createNewRequest(app, requestName);
-
-    // Ensure first item is the one we created and is selected
-    const requests = await app.client.$$('.sidebar__item');
-    const firstRequest = requests[0];
-    const firstRequestName = await firstRequest.$('span.editable').then(e => e.getText());
-    const firstRequestClasses = await firstRequest.getAttribute('class');
-
-    expect(firstRequestName).toBe(requestName);
-    expect(firstRequestClasses).toContain('sidebar__item--active');
-
-    await debug.typeUrl(app, 'http://127.0.0.1:4010/pets/1');
+    await debug.createNewRequest(app, 'json');
+    await debug.typeInUrlBar(app, url);
     await debug.clickSendRequest(app);
 
     await debug.expect200(app);
   });
 
   it('sends CSV request and shows rich response', async () => {
+    const url = 'http://127.0.0.1:4010/csv';
+
     await debug.workspaceDropdownExists(app);
-    await debug.createNewRequest(app);
-    await debug.typeUrl(app, 'http://127.0.0.1:4010/csv');
+    await debug.createNewRequest(app, 'csv');
+    await debug.typeInUrlBar(app, url);
     await debug.clickSendRequest(app);
 
     await debug.expect200(app);
@@ -82,10 +75,11 @@ describe('Application launch', function() {
   it('sends PDF request and shows rich response', async () => {
     // Cannot mock the pdf response using Prism because it is not yet supported
     // https://github.com/stoplightio/prism/issues/1248#issuecomment-646056440
-    const pdfUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+    const url = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+
     await debug.workspaceDropdownExists(app);
-    await debug.createNewRequest(app);
-    await debug.typeUrl(app, pdfUrl);
+    await debug.createNewRequest(app, 'pdf');
+    await debug.typeInUrlBar(app, url);
     await debug.clickSendRequest(app);
 
     await debug.expect200(app);
