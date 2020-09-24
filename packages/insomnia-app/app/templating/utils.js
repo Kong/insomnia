@@ -1,6 +1,7 @@
 // @flow
 
 import type { PluginArgumentEnumOption } from './extensions';
+import jq from 'jsonpath';
 
 export type NunjucksParsedTagArg = {
   type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model',
@@ -47,7 +48,7 @@ export function getKeys(obj: any, prefix: string = ''): Array<{ name: string, va
   } else if (typeOfObj === '[object Object]') {
     const keys = Object.keys(obj);
     for (const key of keys) {
-      const newPrefix = prefix ? `${prefix}.['${key}']` : `['${key}']`;
+      const newPrefix = prefix ? `${prefix}.${key}` : key;
       allKeys = [...allKeys, ...getKeys(obj[key], newPrefix)];
     }
   } else if (typeOfObj === '[object Function]') {
@@ -225,4 +226,30 @@ export function decodeEncoding(value: string): string {
   }
 
   return value;
+}
+
+// This function returns a function
+export function createVariableResolver(context: Object): string => any {
+  const resolver = (varPath: string): any => {
+    // varPath    'arr[0].nested-Obj.prop'              <- invalid JSON path expression
+    // segments   ["arr", "0", "nested-Obj", "prop"]
+    // query      '$.arr["0"]["nested-Obj"].prop'       <- valid JSON path expression
+
+    // Parse segments by splitting on . or [0], and capturing the index in the second case
+    const segments = varPath.split(/\.|\[(\d*)\]/).filter(c => c);
+
+    // Convert segments to JSON path expression
+    const query = jq.stringify(segments);
+
+    // Run JSON path expression on context
+    const result: Array<any> = jq.query(context, query);
+
+    if (result.length) {
+      return result[0];
+    }
+
+    throw new Error('No variable found at the provided path');
+  };
+
+  return resolver;
 }

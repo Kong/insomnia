@@ -277,9 +277,9 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
       }
     } else {
       // Render if it's a variable
-      // const matches = /^'(.*)' \| getVarFromString$/.exec(cleanedStr);
-      // const variableName = (matches && matches[1]) || cleanedStr;
-      const variableName = cleanedStr;
+      const matches = /^'(.*)' \| getVarFromString$/.exec(cleanedStr);
+      const variableName = (matches && matches[1]) || cleanedStr;
+      // const variableName = cleanedStr;
       title = await render(str);
       const context = await renderContext();
       const con = context.context.getKeysContext();
