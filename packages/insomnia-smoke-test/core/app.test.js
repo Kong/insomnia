@@ -3,15 +3,12 @@ import electronPath from '../../insomnia-app/node_modules/electron';
 import path from 'path';
 import * as debug from '../modules/debug';
 import * as client from '../modules/client';
-import os from 'os';
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
   let app = null;
 
   beforeEach(async () => {
-    const userDataDir = path.join(os.tmpdir(), 'insomnia-smoke-test', `${Math.random()}`);
-
     app = new Application({
       // Run installed app
       // path: '/Applications/Insomnia.app/Contents/MacOS/Insomnia',
@@ -29,10 +26,8 @@ describe('Application launch', function() {
       // Don't ask why, but don't remove chromeDriverArgs
       // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
       chromeDriverArgs: ['remote-debugging-port=9222'],
-      env: { INSOMNIA_DATA_PATH: userDataDir },
     });
     await app.start().then(async () => {
-      await app.electron.remote.app.setPath('userData', userDataDir);
       // Windows spawns two terminal windows when running spectron, and the only workaround
       // is to focus the window on start.
       // https://github.com/electron-userland/spectron/issues/60
