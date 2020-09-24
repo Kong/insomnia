@@ -1,9 +1,8 @@
-const Application = require('spectron').Application;
-// const fs = require('fs');
-const electronPath = require('../../insomnia-app/node_modules/electron');
-const path = require('path');
-const debug = require('../modules/debug');
-const client = require('../modules/client');
+import { Application } from 'spectron';
+import electronPath from '../../insomnia-app/node_modules/electron';
+import path from 'path';
+import * as debug from '../modules/debug';
+import * as client from '../modules/client';
 
 describe('Application launch', function() {
   jest.setTimeout(50000);

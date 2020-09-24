@@ -1,10 +1,10 @@
-const onboarding = require('../modules/onboarding');
-const client = require('../modules/client');
-const home = require('../modules/home');
+import * as onboarding from '../modules/onboarding';
+import * as client from '../modules/client';
+import * as home from '../modules/home';
 
-const Application = require('spectron').Application;
-const electronPath = require('../../insomnia-app/node_modules/electron');
-const path = require('path');
+import { Application } from 'spectron';
+import electronPath from '../../insomnia-app/node_modules/electron';
+import path from 'path';
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
