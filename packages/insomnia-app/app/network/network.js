@@ -1009,6 +1009,7 @@ async function _applyResponsePluginHooks(
       ...(pluginContexts.store.init(plugin): Object),
       ...(pluginContexts.response.init(newResponse): Object),
       ...(pluginContexts.request.init(newRequest, renderContext, true): Object),
+      ...(pluginContexts.network.init(renderContext.getEnvironmentId()): Object),
     };
 
     try {
