@@ -36,19 +36,23 @@ export const launchDesigner = async () => {
   return await launch(config);
 };
 
+const getLaunchPath = config =>
+  process.env.BUNDLE === 'package'
+    ? { path: config.packagePath }
+    : {
+        path: electronPath,
+        args: [config.buildPath],
+      };
+
 const launch = async config => {
   if (!config) {
     throw new Error('Spectron config could not be loaded.');
   }
+
   const app = new Application({
-    // Run after app-package
-    // path: config.packagePath,
+    ...getLaunchPath(config),
 
-    // Run after app-build - mac, Windows, Linux
-    path: electronPath,
-    args: [config.buildPath],
-
-    // Don't ask why, but don't remove chromeDriverArgs
+    // Don't remove chromeDriverArgs
     // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
     chromeDriverArgs: ['remote-debugging-port=9222'],
 
