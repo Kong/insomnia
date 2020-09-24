@@ -27,7 +27,6 @@ import * as uuid from 'uuid';
 import * as models from '../models';
 import {
   AUTH_AWS_IAM,
-  AUTH_BASIC,
   AUTH_DIGEST,
   AUTH_NETRC,
   AUTH_NTLM,
@@ -614,12 +613,7 @@ export async function _actuallySend(
 
       // Handle Authorization header
       if (!hasAuthHeader(headers) && !renderedRequest.authentication.disabled) {
-        if (renderedRequest.authentication.type === AUTH_BASIC) {
-          const { username, password } = renderedRequest.authentication;
-          setOpt(Curl.option.HTTPAUTH, CurlAuth.Basic);
-          setOpt(Curl.option.USERNAME, username || '');
-          setOpt(Curl.option.PASSWORD, password || '');
-        } else if (renderedRequest.authentication.type === AUTH_DIGEST) {
+        if (renderedRequest.authentication.type === AUTH_DIGEST) {
           const { username, password } = renderedRequest.authentication;
           setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
           setOpt(Curl.option.USERNAME, username || '');

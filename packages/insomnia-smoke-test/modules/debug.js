@@ -1,8 +1,10 @@
-const workspaceDropdownExists = async (app, workspaceName = 'Insomnia') => {
+import faker from 'faker';
+
+export const workspaceDropdownExists = async (app, workspaceName = 'Insomnia') => {
   await app.client.waitUntilTextExists('.workspace-dropdown', workspaceName);
 };
 
-const createNewRequest = async (app, name = undefined) => {
+export const createNewRequest = async (app, name) => {
   await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
 
   await app.client
@@ -16,62 +18,59 @@ const createNewRequest = async (app, name = undefined) => {
   // Set name and create request
   const input = await app.client.$('.modal input');
 
-  if (name) {
-    await input.waitUntil(() => input.isFocused());
-    await input.keys(name);
-  }
+  const requestName = `${name}-${faker.lorem.slug()}`;
+  await input.waitUntil(() => input.isFocused());
+  await input.keys(requestName);
 
   await app.client
     .$('.modal .modal__footer')
     .then(e => e.$('button=Create'))
     .then(e => e.click());
+
+  await waitUntilRequestIsActive(app, requestName);
 };
 
-const typeUrl = async (app, url) => {
-  const urlEditor = await app.client.$('.urlbar .editor .input');
-  await typeCodeMirror(app, urlEditor, url, 150);
+const waitUntilRequestIsActive = async (app, name) => {
+  const requestIsActive = async () => {
+    const requests = await app.client.react$$('SidebarRequestRow', { props: { isActive: true } });
+    const firstRequest = requests[0];
+    const activeRequestName = await firstRequest.react$('Editable').then(e => e.getText());
+    return activeRequestName === name;
+  };
+
+  await app.client.waitUntil(requestIsActive);
 };
 
-const typeCodeMirror = async (app, element, value, debounceWait) => {
-  await element.click();
-  const cm = await element.$('.CodeMirror');
-  await cm.waitForExist();
-  await cm.keys(value);
-
-  // Wait for the code-editor debounce
-  await app.client.pause(debounceWait);
+export const typeInUrlBar = async (app, url) => {
+  const urlEditor = await app.client.react$('RequestUrlBar');
+  await urlEditor.waitForExist();
+  await urlEditor.click();
+  await urlEditor.keys(url);
 };
 
-const clickSendRequest = async app => {
-  await app.client.$('.urlbar__send-btn').then(e => e.click());
+export const clickSendRequest = async app => {
+  await app.client
+    .react$('RequestUrlBar')
+    .then(e => e.$('.urlbar__send-btn'))
+    .then(e => e.click());
 };
 
-const expect200 = async app => {
+export const expect200 = async app => {
   const tag = await app.client.$('.response-pane .pane__header .tag.bg-success');
   await tag.waitForDisplayed();
   await expect(tag.getText()).resolves.toBe('200 OK');
 };
 
-const getCsvViewer = async app => {
+export const getCsvViewer = async app => {
   const csvViewer = await app.client.react$('ResponseCSVViewer');
   await csvViewer.waitForDisplayed();
   return csvViewer;
 };
 
-const getPdfCanvas = async app => {
+export const getPdfCanvas = async app => {
   const pdfViewer = await app.client.react$('ResponsePDFViewer');
   await pdfViewer.waitForDisplayed();
   const canvas = await pdfViewer.$('.S-PDF-ID canvas');
   await canvas.waitForDisplayed();
   return canvas;
-};
-
-module.exports = {
-  workspaceDropdownExists,
-  createNewRequest,
-  typeUrl,
-  clickSendRequest,
-  expect200,
-  getCsvViewer,
-  getPdfCanvas,
 };

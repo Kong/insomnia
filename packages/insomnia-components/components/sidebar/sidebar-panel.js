@@ -10,33 +10,6 @@ type Props = {
 
 const StyledPanel: React.ComponentType<{}> = styled(motion.div)`
   height: 0;
-  .method {
-    h6 {
-      font-size: var(--font-size-xxs);
-    }
-  }
-  .method-post {
-    color: var(--color-success);
-  }
-  .method-get {
-    color: var(--color-surprise);
-  }
-  .method-delete {
-    color: var(--color-danger);
-  }
-  .method-parameters {
-    display: none;
-  }
-  .method-options-head,
-  .method-custom {
-    color: var(--color-info);
-  }
-  .method-patch {
-    color: var(--color-notice);
-  }
-  .method-put {
-    color: var(--color-warning);
-  }
 `;
 
 const SidebarPanel = ({ childrenVisible, children }: Props) => (

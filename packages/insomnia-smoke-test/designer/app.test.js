@@ -1,47 +1,19 @@
-const onboarding = require('../modules/onboarding');
-const client = require('../modules/client');
-const home = require('../modules/home');
+import * as onboarding from '../modules/onboarding';
+import * as client from '../modules/client';
+import * as home from '../modules/home';
 
-const Application = require('spectron').Application;
-const electronPath = require('../../insomnia-app/node_modules/electron');
-const path = require('path');
+import { launchDesigner, stop } from '../modules/application';
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
   let app = null;
 
   beforeEach(async () => {
-    app = new Application({
-      // Run installed app
-      // path: '/Applications/Insomnia.app/Contents/MacOS/Insomnia',
-
-      // Run after app-package - mac
-      // path: path.join(__dirname, '../insomnia-app/dist/com.insomnia.designer/mac/Insomnia.app/Contents/MacOS/Insomnia'),
-
-      // Run after app-package - Windows
-      // path: path.join(__dirname, '../insomnia-app/dist/com.insomnia.designer/win-unpacked/Insomnia.exe'),
-
-      // Run after app-build - mac, Windows, Linux
-      path: electronPath,
-      args: [path.join(__dirname, '../../insomnia-app/build/com.insomnia.designer')],
-
-      // Don't ask why, but don't remove chromeDriverArgs
-      // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
-      chromeDriverArgs: ['remote-debugging-port=9222'],
-    });
-    await app.start().then(async () => {
-      // Windows spawns two terminal windows when running spectron, and the only workaround
-      // is to focus the window on start.
-      // https://github.com/electron-userland/spectron/issues/60
-      await app.browserWindow.focus();
-      await app.browserWindow.setAlwaysOnTop(true);
-    });
+    app = await launchDesigner();
   });
 
   afterEach(async () => {
-    if (app && app.isRunning()) {
-      await app.stop();
-    }
+    await stop(app);
   });
 
   it('can reset to and proceed through onboarding flow', async () => {

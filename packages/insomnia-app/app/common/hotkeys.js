@@ -186,7 +186,7 @@ const defaultRegistry: HotKeyRegistry = {
   ),
 
   [hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.forwardslash.keyCode),
+    keyComb(true, false, true, true, keyboardKeys.forwardslash.keyCode),
     keyComb(true, false, true, false, keyboardKeys.forwardslash.keyCode),
   ),
 
