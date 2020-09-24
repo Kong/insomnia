@@ -22,7 +22,6 @@ const EXPORT_TYPE_REQUEST = 'request';
 const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
 const EXPORT_TYPE_UNIT_TEST_SUITE = 'unit_test_suite';
 const EXPORT_TYPE_UNIT_TEST = 'unit_test';
-const EXPORT_TYPE_UNIT_TEST_RESULT = 'unit_test_result';
 const EXPORT_TYPE_WORKSPACE = 'workspace';
 const EXPORT_TYPE_COOKIE_JAR = 'cookie_jar';
 const EXPORT_TYPE_ENVIRONMENT = 'environment';
@@ -36,7 +35,6 @@ const MODELS = {
   [EXPORT_TYPE_REQUEST_GROUP]: models.requestGroup,
   [EXPORT_TYPE_UNIT_TEST_SUITE]: models.unitTestSuite,
   [EXPORT_TYPE_UNIT_TEST]: models.unitTest,
-  [EXPORT_TYPE_UNIT_TEST_RESULT]: models.unitTestResult,
   [EXPORT_TYPE_WORKSPACE]: models.workspace,
   [EXPORT_TYPE_COOKIE_JAR]: models.cookieJar,
   [EXPORT_TYPE_ENVIRONMENT]: models.environment,
@@ -349,18 +347,8 @@ export async function exportWorkspacesData(
     doc => doc.type === models.unitTestSuite.type,
   );
   const unitTests: Array<BaseModel> = docs.filter(doc => doc.type === models.unitTest.type);
-  const unitTestResults: Array<BaseModel> = docs.filter(
-    doc => doc.type === models.unitTestResult.type,
-  );
 
-  return exportRequestsData(
-    requests,
-    includePrivateDocs,
-    format,
-    unitTestSuites,
-    unitTests,
-    unitTestResults,
-  );
+  return exportRequestsData(requests, includePrivateDocs, format, unitTestSuites, unitTests);
 }
 
 export async function exportRequestsData(
@@ -369,7 +357,6 @@ export async function exportRequestsData(
   format: 'json' | 'yaml',
   unitTestSuites: Array<BaseModel>,
   unitTests: Array<BaseModel>,
-  unitTestResults: Array<BaseModel>,
 ): Promise<string> {
   const data = {
     _type: 'export',
@@ -405,8 +392,7 @@ export async function exportRequestsData(
         d.type === models.environment.type ||
         d.type === models.apiSpec.type ||
         d.type === models.unitTestSuite.type ||
-        d.type === models.unitTest.type ||
-        d.type === models.unitTestResult.type
+        d.type === models.unitTest.type
       );
     });
     docs.push(...descendants);
@@ -419,7 +405,6 @@ export async function exportRequestsData(
         !(
           d.type === models.unitTestSuite.type ||
           d.type === models.unitTest.type ||
-          d.type === models.unitTestResult.type ||
           d.type === models.request.type ||
           d.type === models.requestGroup.type ||
           d.type === models.workspace.type ||
@@ -444,8 +429,6 @@ export async function exportRequestsData(
         d._type = EXPORT_TYPE_UNIT_TEST_SUITE;
       } else if (d.type === models.unitTest.type) {
         d._type = EXPORT_TYPE_UNIT_TEST;
-      } else if (d.type === models.unitTestResult.type) {
-        d._type = EXPORT_TYPE_UNIT_TEST_RESULT;
       } else if (d.type === models.requestGroup.type) {
         d._type = EXPORT_TYPE_REQUEST_GROUP;
       } else if (d.type === models.request.type) {
