@@ -981,6 +981,7 @@ async function _applyRequestPluginHooks(
       ...(pluginContexts.data.init(): Object),
       ...(pluginContexts.store.init(plugin): Object),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext): Object),
+      ...(pluginContexts.network.init(renderedContext.getEnvironmentId()): Object),
     };
 
     try {
