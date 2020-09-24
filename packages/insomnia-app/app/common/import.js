@@ -355,8 +355,6 @@ export async function exportRequestsData(
   requests: Array<BaseModel>,
   includePrivateDocs: boolean,
   format: 'json' | 'yaml',
-  unitTestSuites: Array<BaseModel>,
-  unitTests: Array<BaseModel>,
 ): Promise<string> {
   const data = {
     _type: 'export',
