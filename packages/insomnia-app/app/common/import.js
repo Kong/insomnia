@@ -343,12 +343,7 @@ export async function exportWorkspacesData(
 ): Promise<string> {
   const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
   const requests: Array<BaseModel> = docs.filter(doc => doc.type === models.request.type);
-  const unitTestSuites: Array<BaseModel> = docs.filter(
-    doc => doc.type === models.unitTestSuite.type,
-  );
-  const unitTests: Array<BaseModel> = docs.filter(doc => doc.type === models.unitTest.type);
-
-  return exportRequestsData(requests, includePrivateDocs, format, unitTestSuites, unitTests);
+  return exportRequestsData(requests, includePrivateDocs, format);
 }
 
 export async function exportRequestsData(
