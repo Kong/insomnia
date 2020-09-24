@@ -320,13 +320,6 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       );
     }
 
-    // On imported spec
-    /*
-    if (!activeUnitTestResult.results) {
-      this._handleRunTests();
-    }
-    */
-
     if (activeUnitTestResult.results) {
       const { stats, tests } = activeUnitTestResult.results;
       return (
