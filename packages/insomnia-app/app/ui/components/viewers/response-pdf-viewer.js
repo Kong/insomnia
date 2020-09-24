@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import PDF from 'pdfjs-dist/webpack';
+import * as PDF from 'pdfjs-dist/webpack';
 
 type Props = {
   body: Buffer,
@@ -36,15 +36,16 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
       const containerWidth = container.clientWidth;
       const pdf = await PDF.getDocument({
         data: this.props.body.toString('binary'),
-      });
+      }).promise;
+
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const density = window.devicePixelRatio || 1;
 
-        const { width: pdfWidth, height: pdfHeight } = page.getViewport(1);
+        const { width: pdfWidth, height: pdfHeight } = page.getViewport({ scale: 1 });
         const ratio = pdfHeight / pdfWidth;
         const scale = containerWidth / pdfWidth;
-        const viewport = page.getViewport(scale * density);
+        const viewport = page.getViewport({ scale: scale * density });
 
         // set canvas for page
         const canvas = document.createElement('canvas');
@@ -65,7 +66,7 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
           viewport: viewport,
         };
 
-        page.render(renderContext);
+        await page.render(renderContext).promise;
       }
     }, 100);
   }

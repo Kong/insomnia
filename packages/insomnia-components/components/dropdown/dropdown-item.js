@@ -50,9 +50,13 @@ const StyledInner = styled.div`
 
 const StyledText = styled.div`
   white-space: nowrap;
-
+  display: flex;
+  align-items: center;
   & > *:not(:first-child) {
     margin-left: 0.3em;
+  }
+  input + label {
+    padding-top: 0px !important;
   }
 `;
 

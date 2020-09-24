@@ -48,56 +48,43 @@ describe('Application launch', function() {
     await debug.workspaceDropdownExists(app);
   });
 
-  it('creates and sends a request', async () => {
+  it('sends JSON request', async () => {
+    const url = 'http://127.0.0.1:4010/pets/1';
+
     await debug.workspaceDropdownExists(app);
+    await debug.createNewRequest(app, 'json');
+    await debug.typeInUrlBar(app, url);
+    await debug.clickSendRequest(app);
 
-    // Create a new request
-    await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
+    await debug.expect200(app);
+  });
 
-    await app.client
-      .$('[aria-hidden=false]')
-      .then(e => e.$('button*=New Request'))
-      .then(e => e.click());
+  it('sends CSV request and shows rich response', async () => {
+    const url = 'http://127.0.0.1:4010/csv';
 
-    // Wait for modal to open
-    await app.client.waitUntilTextExists('.modal__header', 'New Request');
+    await debug.workspaceDropdownExists(app);
+    await debug.createNewRequest(app, 'csv');
+    await debug.typeInUrlBar(app, url);
+    await debug.clickSendRequest(app);
 
-    // Set name and create request
-    const input = await app.client.$('.modal input');
-    await input.waitUntil(() => input.isFocused());
-    const requestName = 'Request from test';
-    await input.keys(requestName);
+    await debug.expect200(app);
+    const csvViewer = await debug.getCsvViewer(app);
+    await expect(csvViewer.getText()).resolves.toBe('a b c\n1 2 3');
+  });
 
-    await app.client
-      .$('.modal .modal__footer')
-      .then(e => e.$('button=Create'))
-      .then(e => e.click());
+  it('sends PDF request and shows rich response', async () => {
+    // Cannot mock the pdf response using Prism because it is not yet supported
+    // https://github.com/stoplightio/prism/issues/1248#issuecomment-646056440
+    const url = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
 
-    // Ensure first item is the one we created and is selected
-    const requests = await app.client.$$('.sidebar__item');
-    const firstRequest = requests[0];
-    const firstRequestName = await firstRequest.$('span.editable').then(e => e.getText());
-    const firstRequestClasses = await firstRequest.getAttribute('class');
+    await debug.workspaceDropdownExists(app);
+    await debug.createNewRequest(app, 'pdf');
+    await debug.typeInUrlBar(app, url);
+    await debug.clickSendRequest(app);
 
-    expect(firstRequestName).toBe(requestName);
-    expect(firstRequestClasses).toContain('sidebar__item--active');
-
-    // Type into url bar
-    const urlEditor = await app.client.$('.urlbar .editor');
-    await urlEditor.click();
-    await urlEditor.keys('http://127.0.0.1:4010/pets/1');
-
-    // Send request
-    await app.client.$('.urlbar__send-btn').then(e => e.click());
-
-    // Expect 200
-    await app.client
-      .$('.response-pane .pane__header .tag.bg-success')
-      .then(e => e.getText())
-      .then(e => expect(e).toBe('200 OK'));
-
-    // await app.browserWindow.capturePage().then(function(imageBuffer) {
-    //   fs.writeFileSync('page.png', imageBuffer);
-    // });
+    await debug.expect200(app);
+    const pdfCanvas = await debug.getPdfCanvas(app);
+    // Investigate how we can extract text from the canvas, or compare images
+    await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
 });

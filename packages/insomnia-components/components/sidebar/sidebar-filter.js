@@ -42,6 +42,8 @@ const SidebarFilter = ({ filter, onChange }: Props) => {
   useLayoutEffect(() => {
     if (filterField.current && !filter) {
       filterField.current.value = '';
+    } else if (filterField.current) {
+      filterField.current.focus();
     }
   }, [filter, filterField]);
 

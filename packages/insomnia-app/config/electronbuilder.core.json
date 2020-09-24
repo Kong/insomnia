@@ -25,6 +25,7 @@
   ],
   "fileAssociations": [],
   "directories": {
+    "buildResources": "build/__APP_ID__",
     "app": "build/__APP_ID__",
     "output": "dist/__APP_ID__"
   },
@@ -32,7 +33,6 @@
     "hardenedRuntime": true,
     "category": "public.app-category.developer-tools",
     "entitlements": "./build/__APP_ID__/static/entitlements.mac.inherit.plist",
-    "requirements": "./build/__APP_ID__/static/signing-requirements.txt",
     "artifactName": "__BINARY_PREFIX__-${version}.${ext}",
     "target": [
       "dmg",
@@ -61,7 +61,6 @@
     ]
   },
   "win": {
-    "icon": "./build/__APP_ID__/icon.ico",
     "target": [
       "squirrel",
       "zip"

@@ -1,5 +1,5 @@
 {
-  "version": "2020.4.0-beta.4",
+  "version": "2020.4.1",
   "name": "insomnia-designer",
   "executableName": "insomnia-designer",
   "appId": "com.insomnia.designer",
@@ -8,7 +8,7 @@
   "binaryPrefix": "Insomnia.Designer",
   "longName": "Insomnia Designer",
   "synopsis": "The Collaborative API Design Tool",
-  "icon": "https://github.com/getinsomnia/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
+  "icon": "https://github.com/kong/insomnia/blob/develop/packages/insomnia-app/app/icons/com.insomnia.designer/icon.ico?raw=true",
   "changelogBaseUrl": "https://insomnia.rest/changelog/designer",
   "theme": "studio-light",
   "main": "main.min.js",

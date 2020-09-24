@@ -1,5 +1,5 @@
 {
-  "version": "2020.4.0-beta.4",
+  "version": "2020.4.1",
   "name": "insomnia",
   "executableName": "insomnia",
   "appId": "com.insomnia.app",
@@ -8,7 +8,7 @@
   "binaryPrefix": "Insomnia.Core",
   "longName": "Insomnia Core",
   "synopsis": "A simple, beautiful, and free REST API client",
-  "icon": "https://github.com/kong/insomnia/blob/master/packages/insomnia-app/app/icons/icon.ico?raw=true",
+  "icon": "https://github.com/kong/insomnia/blob/develop/packages/insomnia-app/app/icons/com.insomnia.app/icon.ico?raw=true",
   "changelogBaseUrl": "https://insomnia.rest/changelog/core",
   "theme": "default",
   "main": "main.min.js",

@@ -30,11 +30,11 @@ export default class SidebarServers extends React.Component<Props> {
       <div>
         {filteredValues.map((server, index) => (
           <React.Fragment key={server.url}>
-            <SidebarItem>
+            <SidebarItem onClick={() => onClick('servers', index)}>
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => onClick('servers', index)}>{server.url}</span>
+              <span>{server.url}</span>
             </SidebarItem>
           </React.Fragment>
         ))}
