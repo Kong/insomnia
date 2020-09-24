@@ -278,6 +278,14 @@ describe('export', () => {
       name: 'Request 2',
       parentId: f2._id,
     });
+    const uts1 = await models.unitTestSuite.create({
+      name: 'Unit Test Suite One',
+      parentId: w._id,
+    });
+    const ut1 = await models.unitTest.create({
+      name: 'Unit Test One',
+      parentId: uts1._id,
+    });
     const eBase = await models.environment.getOrCreateForWorkspace(w);
     const ePub = await models.environment.create({
       name: 'Public',
@@ -290,6 +298,7 @@ describe('export', () => {
     });
 
     const result = await importUtil.exportWorkspacesData(w, false, 'json');
+
     expect(JSON.parse(result)).toEqual({
       _type: 'export',
       __export_format: 4,
@@ -301,6 +310,8 @@ describe('export', () => {
         expect.objectContaining({ _id: jar._id }),
         expect.objectContaining({ _id: r1._id }),
         expect.objectContaining({ _id: r2._id }),
+        expect.objectContaining({ _id: uts1._id }),
+        expect.objectContaining({ _id: ut1._id }),
         expect.objectContaining({ _id: ePub._id }),
         expect.objectContaining({ _id: spec._id }),
       ]),
