@@ -286,6 +286,10 @@ describe('export', () => {
       name: 'Unit Test One',
       parentId: uts1._id,
     });
+    const utr1 = await models.unitTestResult.create({
+      name: 'Unit Test 1 Result 1',
+      parentId: ut1._id,
+    });
     const eBase = await models.environment.getOrCreateForWorkspace(w);
     const ePub = await models.environment.create({
       name: 'Public',
@@ -312,6 +316,7 @@ describe('export', () => {
         expect.objectContaining({ _id: r2._id }),
         expect.objectContaining({ _id: uts1._id }),
         expect.objectContaining({ _id: ut1._id }),
+        expect.objectContaining({ _id: utr1._id }),
         expect.objectContaining({ _id: ePub._id }),
         expect.objectContaining({ _id: spec._id }),
       ]),
