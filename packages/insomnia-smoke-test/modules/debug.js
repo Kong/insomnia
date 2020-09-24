@@ -1,8 +1,10 @@
+const faker = require('faker');
+
 const workspaceDropdownExists = async (app, workspaceName = 'Insomnia') => {
   await app.client.waitUntilTextExists('.workspace-dropdown', workspaceName);
 };
 
-const createNewRequest = async (app, name = undefined) => {
+const createNewRequest = async (app, name) => {
   await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
 
   await app.client
@@ -16,34 +18,41 @@ const createNewRequest = async (app, name = undefined) => {
   // Set name and create request
   const input = await app.client.$('.modal input');
 
-  if (name) {
-    await input.waitUntil(() => input.isFocused());
-    await input.keys(name);
-  }
+  const requestName = `${name}-${faker.lorem.slug()}`;
+  await input.waitUntil(() => input.isFocused());
+  await input.keys(requestName);
 
   await app.client
     .$('.modal .modal__footer')
     .then(e => e.$('button=Create'))
     .then(e => e.click());
+
+  await waitUntilRequestIsActive(app, requestName);
 };
 
-const typeUrl = async (app, url) => {
-  const urlEditor = await app.client.$('.urlbar .editor .input');
-  await typeCodeMirror(app, urlEditor, url, 150);
+const waitUntilRequestIsActive = async (app, name) => {
+  const requestIsActive = async () => {
+    const requests = await app.client.react$$('SidebarRequestRow', { props: { isActive: true } });
+    const firstRequest = requests[0];
+    const activeRequestName = await firstRequest.react$('Editable').then(e => e.getText());
+    return activeRequestName === name;
+  };
+
+  await app.client.waitUntil(requestIsActive);
 };
 
-const typeCodeMirror = async (app, element, value, debounceWait) => {
-  await element.click();
-  const cm = await element.$('.CodeMirror');
-  await cm.waitForExist();
-  await cm.keys(value);
-
-  // Wait for the code-editor debounce
-  await app.client.pause(debounceWait);
+const typeInUrlBar = async (app, url) => {
+  const urlEditor = await app.client.react$('RequestUrlBar');
+  await urlEditor.waitForExist();
+  await urlEditor.click();
+  await urlEditor.keys(url);
 };
 
 const clickSendRequest = async app => {
-  await app.client.$('.urlbar__send-btn').then(e => e.click());
+  await app.client
+    .react$('RequestUrlBar')
+    .then(e => e.$('.urlbar__send-btn'))
+    .then(e => e.click());
 };
 
 const expect200 = async app => {
@@ -69,7 +78,7 @@ const getPdfCanvas = async app => {
 module.exports = {
   workspaceDropdownExists,
   createNewRequest,
-  typeUrl,
+  typeInUrlBar,
   clickSendRequest,
   expect200,
   getCsvViewer,
