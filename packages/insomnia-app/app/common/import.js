@@ -20,6 +20,8 @@ const EXPORT_FORMAT = 4;
 
 const EXPORT_TYPE_REQUEST = 'request';
 const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
+const EXPORT_TYPE_UNIT_TEST_SUITE = 'unit_test_suite';
+const EXPORT_TYPE_UNIT_TEST = 'unit_test';
 const EXPORT_TYPE_WORKSPACE = 'workspace';
 const EXPORT_TYPE_COOKIE_JAR = 'cookie_jar';
 const EXPORT_TYPE_ENVIRONMENT = 'environment';
@@ -31,6 +33,8 @@ const REPLACE_ID_REGEX = /__\w+_\d+__/g;
 const MODELS = {
   [EXPORT_TYPE_REQUEST]: models.request,
   [EXPORT_TYPE_REQUEST_GROUP]: models.requestGroup,
+  [EXPORT_TYPE_UNIT_TEST_SUITE]: models.unitTestSuite,
+  [EXPORT_TYPE_UNIT_TEST]: models.unitTest,
   [EXPORT_TYPE_WORKSPACE]: models.workspace,
   [EXPORT_TYPE_COOKIE_JAR]: models.cookieJar,
   [EXPORT_TYPE_ENVIRONMENT]: models.environment,
@@ -354,10 +358,10 @@ export async function exportRequestsData(
     __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
     resources: [],
   };
-
   const docs: Array<BaseModel> = [];
   const workspaces: Array<BaseModel> = [];
   const mapTypeAndIdToDoc: Object = {};
+
   for (const req of requests) {
     const ancestors: Array<BaseModel> = clone(await db.withAncestors(req));
     for (const ancestor of ancestors) {
@@ -379,7 +383,9 @@ export async function exportRequestsData(
       return (
         d.type === models.cookieJar.type ||
         d.type === models.environment.type ||
-        d.type === models.apiSpec.type
+        d.type === models.apiSpec.type ||
+        d.type === models.unitTestSuite.type ||
+        d.type === models.unitTest.type
       );
     });
     docs.push(...descendants);
@@ -390,6 +396,8 @@ export async function exportRequestsData(
       // Only export these model types.
       if (
         !(
+          d.type === models.unitTestSuite.type ||
+          d.type === models.unitTest.type ||
           d.type === models.request.type ||
           d.type === models.requestGroup.type ||
           d.type === models.workspace.type ||
@@ -410,6 +418,10 @@ export async function exportRequestsData(
         d._type = EXPORT_TYPE_COOKIE_JAR;
       } else if (d.type === models.environment.type) {
         d._type = EXPORT_TYPE_ENVIRONMENT;
+      } else if (d.type === models.unitTestSuite.type) {
+        d._type = EXPORT_TYPE_UNIT_TEST_SUITE;
+      } else if (d.type === models.unitTest.type) {
+        d._type = EXPORT_TYPE_UNIT_TEST;
       } else if (d.type === models.requestGroup.type) {
         d._type = EXPORT_TYPE_REQUEST_GROUP;
       } else if (d.type === models.request.type) {
@@ -424,7 +436,6 @@ export async function exportRequestsData(
     });
 
   trackEvent('Data', 'Export', `Insomnia ${format}`);
-
   if (format.toLowerCase() === 'yaml') {
     return YAML.stringify(data);
   } else if (format.toLowerCase() === 'json') {

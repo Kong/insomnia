@@ -320,30 +320,40 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       );
     }
 
-    const { stats, tests } = activeUnitTestResult.results;
-
+    if (activeUnitTestResult.results) {
+      const { stats, tests } = activeUnitTestResult.results;
+      return (
+        <div className="unit-tests__results">
+          {activeUnitTestResult && (
+            <div key={activeUnitTestResult._id}>
+              <div className="unit-tests__top-header">
+                {stats.failures ? (
+                  <h2 className="warning">
+                    Tests Failed {stats.failures}/{stats.tests}
+                  </h2>
+                ) : (
+                  <h2 className="success">
+                    Tests Passed {stats.passes}/{stats.tests}
+                  </h2>
+                )}
+              </div>
+              <ListGroup>
+                {tests.map((t, i) => (
+                  <UnitTestResultItem key={i} item={t} />
+                ))}
+              </ListGroup>
+            </div>
+          )}
+        </div>
+      );
+    }
     return (
       <div className="unit-tests__results">
-        {activeUnitTestResult && (
-          <div key={activeUnitTestResult._id}>
-            <div className="unit-tests__top-header">
-              {stats.failures ? (
-                <h2 className="warning">
-                  Tests Failed {stats.failures}/{stats.tests}
-                </h2>
-              ) : (
-                <h2 className="success">
-                  Tests Passed {stats.passes}/{stats.tests}
-                </h2>
-              )}
-            </div>
-            <ListGroup>
-              {tests.map((t, i) => (
-                <UnitTestResultItem key={i} item={t} />
-              ))}
-            </ListGroup>
+        <div>
+          <div className="unit-tests__top-header">
+            <h2 className="success">Awaiting Test Execution</h2>
           </div>
-        )}
+        </div>
       </div>
     );
   }
