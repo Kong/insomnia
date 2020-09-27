@@ -61,6 +61,19 @@ export const expect200 = async app => {
   await expect(tag.getText()).resolves.toBe('200 OK');
 };
 
+export const expect401 = async app => {
+  const tag = await app.client.$('.response-pane .pane__header .tag.bg-warning');
+  await tag.waitForDisplayed();
+  await expect(tag.getText()).resolves.toBe('401 Unauthorized');
+};
+
+export const getResponseViewer = async app => {
+  // const responseViewer = await app.client.react$('ResponseViewer');
+  // await responseViewer.waitForDisplayed();
+  const codeEditor = await app.client.$('.response-pane .editor');
+  return codeEditor;
+};
+
 export const getCsvViewer = async app => {
   const csvViewer = await app.client.react$('ResponseCSVViewer');
   await csvViewer.waitForDisplayed();

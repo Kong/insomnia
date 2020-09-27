@@ -43,6 +43,21 @@ paths:
               example: |
                 a,b,c
                 1,2,3
+  /auth/basic:
+    get:
+      description: Basic auth request
+      security:
+        - basicAuth: [ ]
+      responses:
+        '200':
+          content:
+            text/plain:
+              example: basic auth received
+        '401':
+          content:
+            text/plain:
+              example: basic auth not received
+
 components:
   schemas:
     Pet:
@@ -75,3 +90,7 @@ components:
           format: int32
         message:
           type: string
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic

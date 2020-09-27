@@ -58,4 +58,22 @@ describe('Application launch', function() {
     // Investigate how we can extract text from the canvas, or compare images
     await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
+
+  fit('sends request with basic authentication', async () => {
+    const url = 'http://127.0.0.1:4010/auth/basic';
+
+    await debug.workspaceDropdownExists(app);
+    await debug.createNewRequest(app, 'basic auth');
+    await debug.typeInUrlBar(app, url);
+
+    // Send request with no auth present
+    await debug.clickSendRequest(app);
+    await debug.expect401(app);
+    const responseViewer = await debug.getResponseViewer(app);
+    await expect(responseViewer.getText()).resolves.toBe('1\nbasic auth not received');
+
+    // await debug.expect200(app);
+    // const csvViewer = await debug.getCsvViewer(app);
+    // await expect(csvViewer.getText()).resolves.toBe('a b c\n1 2 3');
+  });
 });
