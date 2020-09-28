@@ -108,9 +108,10 @@ export const clickBasicAuth = async app => {
     .then(e => e.react$('DropdownItem', { props: { value: 'basic' } }))
     .then(e => e.click());
 
-  await app.client.waitUntil(
-    async () => await app.client.$$('.dropdown__menu--open').then(items => items.length === 0),
-  );
+  // await app.client.waitUntil(
+  //   async () => await app.client.$$('.dropdown__menu--open').then(items => items.length === 0),
+  // );
+  await app.client.pause(1000);
 };
 
 export const expectNoAuthSelected = async app => {
@@ -123,17 +124,26 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password) 
   const usernameEditor = await app.client.react$('OneLineEditor', {
     props: { id: 'username' },
   });
+  await usernameEditor.waitForExist();
+  await usernameEditor.click();
+  await usernameEditor.keys(username);
+
   const passwordEditor = await app.client.react$('OneLineEditor', {
     props: { id: 'password' },
   });
-  await usernameEditor.waitForExist();
   await passwordEditor.waitForExist();
-
-  await usernameEditor.click();
-  await usernameEditor.keys(username);
   await passwordEditor.click();
+  await app.client.pause(5000);
+
   await passwordEditor.keys(password);
-  await usernameEditor.click();
+
+  const es = await app.client.react$('OneLineEditor', {
+    props: { id: 'username' },
+  });
+  await es.waitForExist();
+  await es.click();
+
+  await app.client.pause(5000);
 };
 
 export const expectText = async (element, text) => {
@@ -149,6 +159,8 @@ export const clickTimelineTab = async app => {
 
 export const getTimelineViewer = async app => {
   const viewer = await app.client.react$('ResponseTimelineViewer');
-  await viewer.waitForExist();
+  await app.client.waitUntil(async () => (await viewer.getText()).length > 0);
+  await app.client.pause(5000);
+
   return viewer;
 };
