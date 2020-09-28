@@ -126,24 +126,17 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password) 
   });
   await usernameEditor.waitForExist();
   await usernameEditor.click();
-  await usernameEditor.keys(username);
+  await app.client.keys(username);
 
   const passwordEditor = await app.client.react$('OneLineEditor', {
     props: { id: 'password' },
   });
   await passwordEditor.waitForExist();
   await passwordEditor.click();
-  await app.client.pause(5000);
 
-  await passwordEditor.keys(password);
-
-  const es = await app.client.react$('OneLineEditor', {
-    props: { id: 'username' },
-  });
-  await es.waitForExist();
-  await es.click();
-
-  await app.client.pause(5000);
+  // Without this pause exactly here, the test fails...
+  await app.client.pause(100);
+  await app.client.keys(password);
 };
 
 export const expectText = async (element, text) => {
@@ -161,6 +154,5 @@ export const getTimelineViewer = async app => {
   const viewer = await app.client.react$('ResponseTimelineViewer');
   await app.client.waitUntil(async () => (await viewer.getText()).length > 0);
   await app.client.pause(5000);
-
   return viewer;
 };
