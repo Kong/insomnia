@@ -126,7 +126,7 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password) 
   });
   await usernameEditor.waitForExist();
   await usernameEditor.click();
-  await app.client.keys(username);
+  await usernameEditor.keys(username);
 
   const passwordEditor = await app.client.react$('OneLineEditor', {
     props: { id: 'password' },
@@ -134,9 +134,17 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password) 
   await passwordEditor.waitForExist();
   await passwordEditor.click();
 
-  // Without this pause exactly here, the test fails...
+  // Allow username changes to persist
   await app.client.pause(100);
-  await app.client.keys(password);
+
+  await passwordEditor.keys(password);
+
+  // Allow password changes and encoding checkbox to persist
+  await app.client.pause(100);
+
+  await app.client.$('button#use-iso-8859-1').then(e => e.click());
+
+  await app.client.pause(100);
 };
 
 export const expectText = async (element, text) => {
@@ -153,6 +161,5 @@ export const clickTimelineTab = async app => {
 export const getTimelineViewer = async app => {
   const viewer = await app.client.react$('ResponseTimelineViewer');
   await app.client.waitUntil(async () => (await viewer.getText()).length > 0);
-  await app.client.pause(5000);
   return viewer;
 };

@@ -59,11 +59,11 @@ describe('Application launch', function() {
     await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
 
-  fit('sends request with basic authentication', async () => {
+  it('sends request with basic authentication', async num => {
     const url = 'http://127.0.0.1:4010/auth/basic';
 
     await debug.workspaceDropdownExists(app);
-    await debug.createNewRequest(app, 'basic auth');
+    await debug.createNewRequest(app, 'basic-auth');
     await debug.typeInUrlBar(app, url);
 
     // Send request with no auth present
@@ -81,7 +81,7 @@ describe('Application launch', function() {
     await debug.clickBasicAuth(app);
 
     // Enter username and password
-    await debug.typeBasicAuthUsernameAndPassword(app, 'user', 'pass');
+    await debug.typeBasicAuthUsernameAndPassword(app, 'user', 'password-é');
 
     // Send request with auth present
     await debug.clickSendRequest(app);
@@ -95,7 +95,7 @@ describe('Application launch', function() {
     const timelineViewer = await debug.getTimelineViewer(app);
 
     await expect(timelineViewer.getText()).resolves.toContain(
-      '> Authorization: Basic dXNlcjpwYXNz',
+      '> Authorization: Basic dXNlcjpwYXNzd29yZC3p',
     );
   });
 });
