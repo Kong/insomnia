@@ -108,10 +108,8 @@ export const clickBasicAuth = async app => {
     .then(e => e.react$('DropdownItem', { props: { value: 'basic' } }))
     .then(e => e.click());
 
-  // await app.client.waitUntil(
-  //   async () => await app.client.$$('.dropdown__menu--open').then(items => items.length === 0),
-  // );
-  await app.client.pause(1000);
+  // Wait for basic auth to be enabled on the request
+  await app.client.pause(500);
 };
 
 export const expectNoAuthSelected = async app => {
