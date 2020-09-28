@@ -69,11 +69,33 @@ describe('Application launch', function() {
     // Send request with no auth present
     await debug.clickSendRequest(app);
     await debug.expect401(app);
-    const responseViewer = await debug.getResponseViewer(app);
-    await expect(responseViewer.getText()).resolves.toBe('1\nbasic auth not received');
+    let responseViewer = await debug.getResponseViewer(app);
+    await debug.expectText(responseViewer, '1\nbasic auth not received');
 
-    // await debug.expect200(app);
-    // const csvViewer = await debug.getCsvViewer(app);
-    // await expect(csvViewer.getText()).resolves.toBe('a b c\n1 2 3');
+    // Click auth tab
+    await debug.clickRequestAuthTab(app);
+    await debug.expectNoAuthSelected(app);
+
+    // Select basic auth
+    await debug.clickRequestAuthDropdown(app);
+    await debug.clickBasicAuth(app);
+
+    // Enter username and password
+    await debug.typeBasicAuthUsernameAndPassword(app, 'user', 'pass');
+
+    // Send request with auth present
+    await debug.clickSendRequest(app);
+    await debug.expect200(app);
+
+    responseViewer = await debug.getResponseViewer(app);
+    await debug.expectText(responseViewer, '1\nbasic auth received');
+
+    // Check auth header in timeline
+    await debug.clickTimelineTab(app);
+    const timelineViewer = await debug.getTimelineViewer(app);
+
+    await expect(timelineViewer.getText()).resolves.toContain(
+      '> Authorization: Basic dXNlcjpwYXNz',
+    );
   });
 });

@@ -58,19 +58,19 @@ export const clickSendRequest = async app => {
 export const expect200 = async app => {
   const tag = await app.client.$('.response-pane .pane__header .tag.bg-success');
   await tag.waitForDisplayed();
-  await expect(tag.getText()).resolves.toBe('200 OK');
+  await expectText(tag, '200 OK');
 };
 
 export const expect401 = async app => {
   const tag = await app.client.$('.response-pane .pane__header .tag.bg-warning');
   await tag.waitForDisplayed();
-  await expect(tag.getText()).resolves.toBe('401 Unauthorized');
+  await expectText(tag, '401 Unauthorized');
 };
 
 export const getResponseViewer = async app => {
-  // const responseViewer = await app.client.react$('ResponseViewer');
-  // await responseViewer.waitForDisplayed();
+  // app.client.react$('ResponseViewer') doesn't seem to work because ResponseViewer is not a PureComponent
   const codeEditor = await app.client.$('.response-pane .editor');
+  await codeEditor.waitForDisplayed();
   return codeEditor;
 };
 
@@ -86,4 +86,69 @@ export const getPdfCanvas = async app => {
   const canvas = await pdfViewer.$('.S-PDF-ID canvas');
   await canvas.waitForDisplayed();
   return canvas;
+};
+
+export const clickRequestAuthDropdown = async app => {
+  await app.client
+    .react$('AuthDropdown')
+    .then(e => e.react$('DropdownButton'))
+    .then(e => e.click());
+};
+
+export const clickRequestAuthTab = async app => {
+  await app.client
+    .react$('RequestPane')
+    .then(e => e.$('#react-tabs-2'))
+    .then(e => e.click());
+};
+
+export const clickBasicAuth = async app => {
+  await app.client
+    .react$('AuthDropdown')
+    .then(e => e.react$('DropdownItem', { props: { value: 'basic' } }))
+    .then(e => e.click());
+
+  await app.client.waitUntil(
+    async () => await app.client.$$('.dropdown__menu--open').then(items => items.length === 0),
+  );
+};
+
+export const expectNoAuthSelected = async app => {
+  const wrapper = await app.client.react$('RequestPane').then(e => e.react$('AuthWrapper'));
+  await wrapper.waitForDisplayed();
+  await expectText(wrapper, 'Select an auth type from above');
+};
+
+export const typeBasicAuthUsernameAndPassword = async (app, username, password) => {
+  const usernameEditor = await app.client.react$('OneLineEditor', {
+    props: { id: 'username' },
+  });
+  const passwordEditor = await app.client.react$('OneLineEditor', {
+    props: { id: 'password' },
+  });
+  await usernameEditor.waitForExist();
+  await passwordEditor.waitForExist();
+
+  await usernameEditor.click();
+  await usernameEditor.keys(username);
+  await passwordEditor.click();
+  await passwordEditor.keys(password);
+  await usernameEditor.click();
+};
+
+export const expectText = async (element, text) => {
+  await expect(element.getText()).resolves.toBe(text);
+};
+
+export const clickTimelineTab = async app => {
+  await app.client
+    .$('.response-pane')
+    .then(e => e.$('#react-tabs-16'))
+    .then(e => e.click());
+};
+
+export const getTimelineViewer = async app => {
+  const viewer = await app.client.react$('ResponseTimelineViewer');
+  await viewer.waitForExist();
+  return viewer;
 };

@@ -230,7 +230,7 @@ class RequestPane extends React.PureComponent<Props> {
                 <i className="fa fa-caret-down space-left" />
               </ContentTypeDropdown>
             </Tab>
-            <Tab tabIndex="-1">
+            <Tab id="auth-dropdown-tab" tabIndex="-1">
               <AuthDropdown
                 onChange={updateRequestAuthentication}
                 request={request}
