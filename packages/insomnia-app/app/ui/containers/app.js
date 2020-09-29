@@ -89,6 +89,7 @@ import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
 
 @autobind
 class App extends PureComponent {
@@ -430,7 +431,7 @@ class App extends PureComponent {
 
   async _handleGetRenderContext() {
     const context = await this._fetchRenderContext();
-    const keys = getKeys(context);
+    const keys = getKeys(context, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME);
     return { context, keys };
   }
 

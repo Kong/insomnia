@@ -1,6 +1,7 @@
 // @flow
 
 import type { PluginArgumentEnumOption } from './extensions';
+import objectPath from 'objectpath';
 
 export type NunjucksParsedTagArg = {
   type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model',
@@ -42,21 +43,24 @@ export function getKeys(obj: any, prefix: string = ''): Array<{ name: string, va
 
   if (typeOfObj === '[object Array]') {
     for (let i = 0; i < obj.length; i++) {
-      allKeys = [...allKeys, ...getKeys(obj[i], `${prefix}[${i}]`)];
+      allKeys = [...allKeys, ...getKeys(obj[i], concatenateKeyPath(prefix, i))];
     }
   } else if (typeOfObj === '[object Object]') {
     const keys = Object.keys(obj);
     for (const key of keys) {
-      const newPrefix = prefix ? `${prefix}.${key}` : key;
-      allKeys = [...allKeys, ...getKeys(obj[key], newPrefix)];
+      allKeys = [...allKeys, ...getKeys(obj[key], concatenateKeyPath(prefix, key))];
     }
   } else if (typeOfObj === '[object Function]') {
     // Ignore functions
   } else if (prefix) {
-    allKeys.push({ name: prefix, value: obj });
+    allKeys.push({ name: objectPath.normalize(prefix), value: obj });
   }
 
   return allKeys;
+}
+
+function concatenateKeyPath(prefix: string, key: string | number): string {
+  return `${prefix}${objectPath.stringify([key], "'", true)}`;
 }
 
 /**
