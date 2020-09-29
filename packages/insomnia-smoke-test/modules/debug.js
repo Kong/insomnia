@@ -1,10 +1,10 @@
-const faker = require('faker');
+import faker from 'faker';
 
-const workspaceDropdownExists = async (app, workspaceName = 'Insomnia') => {
+export const workspaceDropdownExists = async (app, workspaceName = 'Insomnia') => {
   await app.client.waitUntilTextExists('.workspace-dropdown', workspaceName);
 };
 
-const createNewRequest = async (app, name) => {
+export const createNewRequest = async (app, name) => {
   await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
 
   await app.client
@@ -41,46 +41,36 @@ const waitUntilRequestIsActive = async (app, name) => {
   await app.client.waitUntil(requestIsActive);
 };
 
-const typeInUrlBar = async (app, url) => {
+export const typeInUrlBar = async (app, url) => {
   const urlEditor = await app.client.react$('RequestUrlBar');
   await urlEditor.waitForExist();
   await urlEditor.click();
   await urlEditor.keys(url);
 };
 
-const clickSendRequest = async app => {
+export const clickSendRequest = async app => {
   await app.client
     .react$('RequestUrlBar')
     .then(e => e.$('.urlbar__send-btn'))
     .then(e => e.click());
 };
 
-const expect200 = async app => {
+export const expect200 = async app => {
   const tag = await app.client.$('.response-pane .pane__header .tag.bg-success');
   await tag.waitForDisplayed();
   await expect(tag.getText()).resolves.toBe('200 OK');
 };
 
-const getCsvViewer = async app => {
+export const getCsvViewer = async app => {
   const csvViewer = await app.client.react$('ResponseCSVViewer');
   await csvViewer.waitForDisplayed();
   return csvViewer;
 };
 
-const getPdfCanvas = async app => {
+export const getPdfCanvas = async app => {
   const pdfViewer = await app.client.react$('ResponsePDFViewer');
   await pdfViewer.waitForDisplayed();
   const canvas = await pdfViewer.$('.S-PDF-ID canvas');
   await canvas.waitForDisplayed();
   return canvas;
-};
-
-module.exports = {
-  workspaceDropdownExists,
-  createNewRequest,
-  typeInUrlBar,
-  clickSendRequest,
-  expect200,
-  getCsvViewer,
-  getPdfCanvas,
 };

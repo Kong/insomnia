@@ -7,8 +7,7 @@
           "node": "12"
         }
       }
-    ],
-    "@babel/preset-flow"
+    ]
   ],
   "plugins": [
     ["@babel/plugin-proposal-optional-chaining"]

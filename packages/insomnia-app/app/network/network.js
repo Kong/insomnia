@@ -27,7 +27,6 @@ import * as uuid from 'uuid';
 import * as models from '../models';
 import {
   AUTH_AWS_IAM,
-  AUTH_BASIC,
   AUTH_DIGEST,
   AUTH_NETRC,
   AUTH_NTLM,
@@ -614,12 +613,7 @@ export async function _actuallySend(
 
       // Handle Authorization header
       if (!hasAuthHeader(headers) && !renderedRequest.authentication.disabled) {
-        if (renderedRequest.authentication.type === AUTH_BASIC) {
-          const { username, password } = renderedRequest.authentication;
-          setOpt(Curl.option.HTTPAUTH, CurlAuth.Basic);
-          setOpt(Curl.option.USERNAME, username || '');
-          setOpt(Curl.option.PASSWORD, password || '');
-        } else if (renderedRequest.authentication.type === AUTH_DIGEST) {
+        if (renderedRequest.authentication.type === AUTH_DIGEST) {
           const { username, password } = renderedRequest.authentication;
           setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
           setOpt(Curl.option.USERNAME, username || '');
@@ -987,6 +981,7 @@ async function _applyRequestPluginHooks(
       ...(pluginContexts.data.init(): Object),
       ...(pluginContexts.store.init(plugin): Object),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext): Object),
+      ...(pluginContexts.network.init(renderedContext.getEnvironmentId()): Object),
     };
 
     try {
@@ -1002,11 +997,11 @@ async function _applyRequestPluginHooks(
 
 async function _applyResponsePluginHooks(
   response: ResponsePatch,
-  request: RenderedRequest,
-  renderContext: Object,
+  renderedRequest: RenderedRequest,
+  renderedContext: Object,
 ): Promise<ResponsePatch> {
   const newResponse = clone(response);
-  const newRequest = clone(request);
+  const newRequest = clone(renderedRequest);
 
   for (const { plugin, hook } of await plugins.getResponseHooks()) {
     const context = {
@@ -1014,7 +1009,8 @@ async function _applyResponsePluginHooks(
       ...(pluginContexts.data.init(): Object),
       ...(pluginContexts.store.init(plugin): Object),
       ...(pluginContexts.response.init(newResponse): Object),
-      ...(pluginContexts.request.init(newRequest, renderContext, true): Object),
+      ...(pluginContexts.request.init(newRequest, renderedContext, true): Object),
+      ...(pluginContexts.network.init(renderedContext.getEnvironmentId()): Object),
     };
 
     try {

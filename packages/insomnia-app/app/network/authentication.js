@@ -32,8 +32,9 @@ export async function getAuthHeader(
   }
 
   if (authentication.type === AUTH_BASIC) {
-    const { username, password } = authentication;
-    return getBasicAuthHeader(username, password);
+    const { username, password, useISO88591 } = authentication;
+    const encoding = useISO88591 ? 'latin1' : 'utf8';
+    return getBasicAuthHeader(username, password, encoding);
   }
 
   if (authentication.type === AUTH_BEARER) {

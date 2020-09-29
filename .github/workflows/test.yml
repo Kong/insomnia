@@ -35,6 +35,6 @@ jobs:
       - name: Build designer for smoke tests
         run: npm run app-build:smoke:designer
       - name: Run core smoke tests
-        run: npm run test:smoke:core
+        run: npm run test:smoke:core:build
       - name: Run designer smoke tests
-        run: npm run test:smoke:designer
+        run: npm run test:smoke:designer:build
