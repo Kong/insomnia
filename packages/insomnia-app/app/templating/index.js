@@ -36,7 +36,7 @@ export function render(
   config: { context?: Object, path?: string, renderMode?: string } = {},
 ): Promise<string> {
   const context = config.context || {};
-  // context needs to exist on the root for the old templating syntax, and in _ctx for the new templating syntax
+  // context needs to exist on the root for the old templating syntax, and in _ for the new templating syntax
   // old: {{ arr[0].prop }}
   // new: {{ _['arr-name-with-dash'][0].prop }}
   const templatingContext = { ...context, [NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME]: context };
