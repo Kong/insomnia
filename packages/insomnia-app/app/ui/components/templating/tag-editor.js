@@ -350,7 +350,7 @@ class TagEditor extends React.PureComponent<Props, State> {
           -- Select Variable --
         </option>
         {variables.map((v, i) => (
-          <option key={`${i}::${v.name}`} value={`'${v.name}' | getVarFromString`}>
+          <option key={`${i}::${v.name}`} value={v.name}>
             {v.name}
           </option>
         ))}

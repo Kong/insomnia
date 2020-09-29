@@ -3,7 +3,6 @@ import nunjucks from 'nunjucks';
 import BaseExtension from './base-extension';
 import type { NunjucksParsedTag } from './utils';
 import * as plugins from '../plugins/index';
-import { createVariableResolver } from './utils';
 
 export class RenderError extends Error {
   message: string;
@@ -46,8 +45,6 @@ export function render(
 
   return new Promise(async (resolve, reject) => {
     const nj = await getNunjucks(renderMode);
-    nj.addFilter('getVarFromString', createVariableResolver(context));
-
     nj.renderString(text, templatingContext, (err, result) => {
       if (err) {
         const sanitizedMsg = err.message
