@@ -981,6 +981,7 @@ async function _applyRequestPluginHooks(
       ...(pluginContexts.data.init(): Object),
       ...(pluginContexts.store.init(plugin): Object),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext): Object),
+      ...(pluginContexts.network.init(renderedContext.getEnvironmentId()): Object),
     };
 
     try {
@@ -996,11 +997,11 @@ async function _applyRequestPluginHooks(
 
 async function _applyResponsePluginHooks(
   response: ResponsePatch,
-  request: RenderedRequest,
-  renderContext: Object,
+  renderedRequest: RenderedRequest,
+  renderedContext: Object,
 ): Promise<ResponsePatch> {
   const newResponse = clone(response);
-  const newRequest = clone(request);
+  const newRequest = clone(renderedRequest);
 
   for (const { plugin, hook } of await plugins.getResponseHooks()) {
     const context = {
@@ -1008,7 +1009,8 @@ async function _applyResponsePluginHooks(
       ...(pluginContexts.data.init(): Object),
       ...(pluginContexts.store.init(plugin): Object),
       ...(pluginContexts.response.init(newResponse): Object),
-      ...(pluginContexts.request.init(newRequest, renderContext, true): Object),
+      ...(pluginContexts.request.init(newRequest, renderedContext, true): Object),
+      ...(pluginContexts.network.init(renderedContext.getEnvironmentId()): Object),
     };
 
     try {
