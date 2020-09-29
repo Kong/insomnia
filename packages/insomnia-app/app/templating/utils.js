@@ -43,24 +43,29 @@ export function getKeys(obj: any, prefix: string = ''): Array<{ name: string, va
 
   if (typeOfObj === '[object Array]') {
     for (let i = 0; i < obj.length; i++) {
-      allKeys = [...allKeys, ...getKeys(obj[i], concatenateKeyPath(prefix, i))];
+      allKeys = [...allKeys, ...getKeys(obj[i], forceBracketNotation(prefix, i))];
     }
   } else if (typeOfObj === '[object Object]') {
     const keys = Object.keys(obj);
     for (const key of keys) {
-      allKeys = [...allKeys, ...getKeys(obj[key], concatenateKeyPath(prefix, key))];
+      allKeys = [...allKeys, ...getKeys(obj[key], forceBracketNotation(prefix, key))];
     }
   } else if (typeOfObj === '[object Function]') {
     // Ignore functions
   } else if (prefix) {
-    allKeys.push({ name: objectPath.normalize(prefix), value: obj });
+    allKeys.push({ name: normalizeToDotAndBracketNotation(prefix), value: obj });
   }
 
   return allKeys;
 }
 
-function concatenateKeyPath(prefix: string, key: string | number): string {
+function forceBracketNotation(prefix: string, key: string | number): string {
+  // Prefix is already in bracket notation because getKeys is recursive
   return `${prefix}${objectPath.stringify([key], "'", true)}`;
+}
+
+function normalizeToDotAndBracketNotation(prefix: string): string {
+  return objectPath.normalize(prefix);
 }
 
 /**
