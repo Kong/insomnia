@@ -2,16 +2,17 @@
 import * as React from 'react';
 import * as electron from 'electron';
 import autobind from 'autobind-decorator';
+import styled from 'styled-components';
 import classnames from 'classnames';
 import { appConfig } from '../../../config';
-import GravatarImg from './gravatar-img';
 import Link from './base/link';
 import * as models from '../../models/index';
-import * as constants from '../../common/constants';
+import { constants, getAppName } from '../../common/constants';
 import * as db from '../../common/database';
 import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
-import appIconSrc from '../images/logo.png';
+import imgSrcDesigner from '../images/insomnia-designer-logo.png';
+import imgSrcCore from '../images/insomnia-core-logo.png';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
@@ -29,6 +30,24 @@ type State = {
   notification: ToastNotification | null,
   visible: boolean,
 };
+
+const StyledLogo: React.ComponentType<{}> = styled.div`
+  margin: var(--padding-xs) var(--padding-sm) var(--padding-xs) var(--padding-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  img {
+    max-width: 5rem;
+  }
+`;
+
+const StyledContent: React.ComponentType<{}> = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 0 var(--padding-xs) 0 var(--padding-xs);
+`;
 
 @autobind
 class Toast extends React.PureComponent<Props, State> {
@@ -179,10 +198,10 @@ class Toast extends React.PureComponent<Props, State> {
         className={classnames('toast theme--dialog', {
           'toast--show': visible,
         })}>
-        <div className="toast__image">
-          <GravatarImg email={notification.email} fallback={appIconSrc} size={100} rounded />
-        </div>
-        <div className="toast__content">
+        <StyledLogo>
+          <img src={getAppName() === 'Insomnia' ? imgSrcCore : imgSrcDesigner} />
+        </StyledLogo>
+        <StyledContent>
           <p className="toast__message">{notification ? notification.message : 'Unknown'}</p>
           <footer className="toast__actions">
             <button
@@ -199,7 +218,7 @@ class Toast extends React.PureComponent<Props, State> {
               {notification.cta}
             </Link>
           </footer>
-        </div>
+        </StyledContent>
       </div>
     );
   }
