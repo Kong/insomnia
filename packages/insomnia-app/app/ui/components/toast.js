@@ -47,6 +47,7 @@ const StyledContent: React.ComponentType<{}> = styled.div`
   justify-content: center;
   flex-direction: column;
   padding: 0 var(--padding-xs) 0 var(--padding-xs);
+  max-width: 20rem;
 `;
 
 @autobind
