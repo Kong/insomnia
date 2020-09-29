@@ -1,7 +1,7 @@
 // @flow
 
 import type { PluginArgumentEnumOption } from './extensions';
-import jq from 'jsonpath';
+import objectPath from 'objectpath';
 
 export type NunjucksParsedTagArg = {
   type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model',
@@ -43,21 +43,24 @@ export function getKeys(obj: any, prefix: string = ''): Array<{ name: string, va
 
   if (typeOfObj === '[object Array]') {
     for (let i = 0; i < obj.length; i++) {
-      allKeys = [...allKeys, ...getKeys(obj[i], `${prefix}[${i}]`)];
+      allKeys = [...allKeys, ...getKeys(obj[i], concatenateKeyPath(prefix, i))];
     }
   } else if (typeOfObj === '[object Object]') {
     const keys = Object.keys(obj);
     for (const key of keys) {
-      const newPrefix = prefix ? `${prefix}.${key}` : key;
-      allKeys = [...allKeys, ...getKeys(obj[key], newPrefix)];
+      allKeys = [...allKeys, ...getKeys(obj[key], concatenateKeyPath(prefix, key))];
     }
   } else if (typeOfObj === '[object Function]') {
     // Ignore functions
   } else if (prefix) {
-    allKeys.push({ name: prefix, value: obj });
+    allKeys.push({ name: objectPath.normalize(prefix), value: obj });
   }
 
   return allKeys;
+}
+
+function concatenateKeyPath(prefix: string, key: string | number): string {
+  return `${prefix}${objectPath.stringify([key], "'", true)}`;
 }
 
 /**
@@ -76,7 +79,7 @@ export function tokenizeTag(tagStr: string): NunjucksParsedTag {
     .replace(/%}$/, '')
     .trim();
 
-  const nameMatch = withoutEnds.match(/^[a-zA-Z_\-$][0-9a-zA-Z_\-$]*/);
+  const nameMatch = withoutEnds.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
   const name = nameMatch ? nameMatch[0] : withoutEnds;
   const argsStr = withoutEnds.slice(name.length);
 
@@ -141,7 +144,7 @@ export function tokenizeTag(tagStr: string): NunjucksParsedTag {
         arg = { type: 'boolean', value: currentArg.toLowerCase() === 'true' };
       } else if (currentArg.match(/^\d*\.?\d*$/)) {
         arg = { type: 'number', value: currentArg };
-      } else if (currentArg.match(/^[a-zA-Z_\-$][0-9a-zA-Z_\-$]*$/)) {
+      } else if (currentArg.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
         arg = { type: 'variable', value: currentArg };
       } else {
         arg = { type: 'expression', value: currentArg };
@@ -226,30 +229,4 @@ export function decodeEncoding(value: string): string {
   }
 
   return value;
-}
-
-// This function returns a function
-export function createVariableResolver(context: Object): string => any {
-  const resolver = (varPath: string): any => {
-    // varPath    'arr[0].nested-Obj.prop'              <- invalid JSON path expression
-    // segments   ["arr", "0", "nested-Obj", "prop"]
-    // query      '$.arr["0"]["nested-Obj"].prop'       <- valid JSON path expression
-
-    // Parse segments by splitting on . or [0], and capturing the index in the second case
-    const segments = varPath.split(/\.|\[(\d*)\]/).filter(c => c);
-
-    // Convert segments to JSON path expression
-    const query = jq.stringify(segments);
-
-    // Run JSON path expression on context
-    const result: Array<any> = jq.query(context, query);
-
-    if (result.length) {
-      return result[0];
-    }
-
-    throw new Error('No variable found at the provided path');
-  };
-
-  return resolver;
 }
