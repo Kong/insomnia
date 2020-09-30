@@ -80,7 +80,7 @@ describe('Application launch', function() {
     await debug.clickRequestAuthDropdown(app);
     await debug.clickBasicAuth(app);
 
-    // Enter username and password
+    // Enter username and password with regular characters
     await debug.typeBasicAuthUsernameAndPassword(app, 'user', 'pass');
 
     // Send request with auth present
@@ -95,17 +95,24 @@ describe('Application launch', function() {
 
     // Toggle basic auth disabled
     await debug.toggleBasicAuthEnabled(app);
+
+    // Send request
     await debug.clickSendRequest(app);
     await debug.expect401(app);
+    timelineText = await debug.getTimelineViewerText(app);
+    expect(timelineText).not.toContain('> Authorization: Basic');
 
-    // Toggle basic auth and encoding enabled with special characters
-    await debug.typeBasicAuthUsernameAndPassword(app, 'user', 'password-é', true);
+    // Clear and type username/password with special characters
+    await debug.typeBasicAuthUsernameAndPassword(app, 'user-é', 'password-é', true);
+    // Toggle basic auth and encoding enabled
     await debug.toggleBasicAuthEnabled(app);
     await debug.toggleBasicAuthEncoding(app);
+
+    // Send request
     await debug.clickSendRequest(app);
     await debug.expect200(app);
 
-    timelineText = await debug.getTimelineViewerText(app, timelineText);
-    expect(timelineText).toContain('> Authorization: Basic dXNlcjpwYXNzd29yZC3p');
+    timelineText = await debug.getTimelineViewerText(app);
+    expect(timelineText).toContain('> Authorization: Basic dXNlci3pOnBhc3N3b3JkLek=');
   });
 });
