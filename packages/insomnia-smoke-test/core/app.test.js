@@ -59,7 +59,7 @@ describe('Application launch', function() {
     await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
 
-  it('sends request with basic authentication', async () => {
+  fit('sends request with basic authentication', async () => {
     const url = 'http://127.0.0.1:4010/auth/basic';
 
     await debug.workspaceDropdownExists(app);
@@ -69,7 +69,7 @@ describe('Application launch', function() {
     // Send request with no auth present
     await debug.clickSendRequest(app);
     await debug.expect401(app);
-    let responseViewer = await debug.getResponseViewer(app);
+    const responseViewer = await debug.getResponseViewer(app);
     await debug.expectText(responseViewer, '1\nbasic auth not received');
 
     // Click auth tab
@@ -81,21 +81,31 @@ describe('Application launch', function() {
     await debug.clickBasicAuth(app);
 
     // Enter username and password
-    await debug.typeBasicAuthUsernameAndPassword(app, 'user', 'password-é');
+    await debug.typeBasicAuthUsernameAndPassword(app, 'user', 'pass');
 
     // Send request with auth present
     await debug.clickSendRequest(app);
     await debug.expect200(app);
-
-    responseViewer = await debug.getResponseViewer(app);
     await debug.expectText(responseViewer, '1\nbasic auth received');
 
     // Check auth header in timeline
     await debug.clickTimelineTab(app);
-    const timelineViewer = await debug.getTimelineViewer(app);
+    let timelineText = await debug.getTimelineViewerText(app);
+    expect(timelineText).toContain('> Authorization: Basic dXNlcjpwYXNz');
 
-    await expect(timelineViewer.getText()).resolves.toContain(
-      '> Authorization: Basic dXNlcjpwYXNzd29yZC3p',
-    );
+    // Toggle basic auth disabled
+    await debug.toggleBasicAuthEnabled(app);
+    await debug.clickSendRequest(app);
+    await debug.expect401(app);
+
+    // Toggle basic auth and encoding enabled with special characters
+    await debug.typeBasicAuthUsernameAndPassword(app, 'user', 'password-é', true);
+    await debug.toggleBasicAuthEnabled(app);
+    await debug.toggleBasicAuthEncoding(app);
+    await debug.clickSendRequest(app);
+    await debug.expect200(app);
+
+    timelineText = await debug.getTimelineViewerText(app, timelineText);
+    expect(timelineText).toContain('> Authorization: Basic dXNlcjpwYXNzd29yZC3p');
   });
 });

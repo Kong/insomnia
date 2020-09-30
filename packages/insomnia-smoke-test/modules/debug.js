@@ -1,4 +1,5 @@
 import faker from 'faker';
+import spectronKeys from 'spectron-keys';
 
 export const workspaceDropdownExists = async (app, workspaceName = 'Insomnia') => {
   await app.client.waitUntilTextExists('.workspace-dropdown', workspaceName);
@@ -118,12 +119,16 @@ export const expectNoAuthSelected = async app => {
   await expectText(wrapper, 'Select an auth type from above');
 };
 
-export const typeBasicAuthUsernameAndPassword = async (app, username, password) => {
+export const typeBasicAuthUsernameAndPassword = async (app, username, password, clear = false) => {
   const usernameEditor = await app.client.react$('OneLineEditor', {
     props: { id: 'username' },
   });
   await usernameEditor.waitForExist();
   await usernameEditor.click();
+  if (clear) {
+    await usernameEditor.keys(spectronKeys.mapAccelerator('CommandOrControl+A'));
+    await usernameEditor.keys(spectronKeys.keys.Backspace);
+  }
   await usernameEditor.keys(username);
 
   const passwordEditor = await app.client.react$('OneLineEditor', {
@@ -135,13 +140,32 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password) 
   // Allow username changes to persist
   await app.client.pause(100);
 
+  if (clear) {
+    await passwordEditor.keys(spectronKeys.mapAccelerator('CommandOrControl+A'));
+    await passwordEditor.keys(spectronKeys.keys.Backspace);
+  }
   await passwordEditor.keys(password);
 
-  // Allow password changes and encoding checkbox to persist
+  // Allow password changes to persist
   await app.client.pause(100);
+};
 
-  await app.client.$('button#use-iso-8859-1').then(e => e.click());
+export const toggleBasicAuthEnabled = async app => {
+  await app.client
+    .react$('BasicAuth')
+    .then(e => e.$('button#enabled'))
+    .then(e => e.click());
+  // Allow toggle to persist
+  await app.client.pause(100);
+};
 
+export const toggleBasicAuthEncoding = async app => {
+  await app.client
+    .react$('BasicAuth')
+    .then(e => e.$('button#use-iso-8859-1'))
+    .then(e => e.click());
+
+  // Allow toggle to persist
   await app.client.pause(100);
 };
 
@@ -156,8 +180,13 @@ export const clickTimelineTab = async app => {
     .then(e => e.click());
 };
 
-export const getTimelineViewer = async app => {
+export const getTimelineViewerText = async (app, oldText = '') => {
   const viewer = await app.client.react$('ResponseTimelineViewer');
-  await app.client.waitUntil(async () => (await viewer.getText()).length > 0);
-  return viewer;
+  await app.client.waitUntil(async () => (await viewer.getText()) !== oldText);
+  return viewer.getText();
 };
+
+// export const waitUntilTextChange = async (element, originalText = '') => {
+//   await element.waitUntil(async () => (await element.getText()) !== originalText);
+//   return await element.getText();
+// };
