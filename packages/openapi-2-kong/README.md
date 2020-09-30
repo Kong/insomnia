@@ -54,20 +54,23 @@ paths:
 `;
 
 async function examples() {
+  const tags = [ 'MyTag' ];
+  const type = 'kong-declarative-config'; // or 'kong-for-kubernetes'
+
   // Generate a config from YAML string
-  const config1 = await o2k.generateFromString(spec, [ 'MyTag' ]);
+  const config1 = await o2k.generateFromString(spec, type, tags);
 
   // Generate a config from a JS object
   const specObject = require('yaml').parse(spec);
-  const config2 = await o2k.generateFromSpec(specObject, [ 'MyTag' ]);
+  const config2 = await o2k.generateFromSpec(specObject, type, tags);
 
   // Generate a config from a JSON string
   const specJSON = JSON.stringify(specObject);
-  const config3 = await o2k.generateFromString(specJSON, [ 'MyTag' ]);
+  const config3 = await o2k.generateFromString(specJSON, type, tags);
 
   // generate a config from a file path
   require('fs').writeFileSync('/tmp/spec.yaml', spec);
-  const config4 = await o2k.generate('/tmp/spec.yaml', [ 'MyTag' ]);
+  const config4 = await o2k.generate('/tmp/spec.yaml', type, tags);
 
   console.log('Generated:', { config1, config2, config3, config4 });
 }
