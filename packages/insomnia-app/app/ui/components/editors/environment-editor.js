@@ -26,9 +26,10 @@ type Props = {
   lineWrapping: boolean,
 };
 
+// There was existing logic to also handle warnings, but it was removed in PR#2601 as there were no more warnings
+// to show. If warnings need to be added again, review git history to revert that particular change.
 type State = {
   error: string | null,
-  warning: string | null,
 };
 
 @autobind
@@ -39,13 +40,11 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     super(props);
     this.state = {
       error: null,
-      warning: null,
     };
   }
 
   _handleChange() {
     let error = null;
-    const warning = null;
     let value = null;
 
     // Check for JSON parse errors
@@ -66,8 +65,8 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     }
 
     // Call this last in case component unmounted
-    if (this.state.error !== error || this.state.warning !== warning) {
-      this.setState({ error, warning }, () => {
+    if (this.state.error !== error) {
+      this.setState({ error }, () => {
         this.props.didChange();
       });
     } else {
@@ -97,6 +96,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
   }
 
   isValid() {
+    // Save if warning, don't save if error
     return !this.state.error;
   }
 
@@ -114,7 +114,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
       ...props
     } = this.props;
 
-    const { error, warning } = this.state;
+    const { error } = this.state;
 
     const defaultValue = orderedJSON.stringify(
       environmentInfo.object,
@@ -141,7 +141,6 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           {...(props: Object)}
         />
         {error && <p className="notice error margin">{error}</p>}
-        {!error && warning && <p className="notice warning margin">{warning}</p>}
       </div>
     );
   }
