@@ -126,7 +126,7 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password, 
   await usernameEditor.waitForExist();
   await usernameEditor.click();
   if (clear) {
-    await clearText(usernameEditor);
+    await selectAll(app);
   }
   await usernameEditor.keys(username);
 
@@ -140,7 +140,7 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password, 
   await app.client.pause(100);
 
   if (clear) {
-    await clearText(passwordEditor);
+    await selectAll(app);
   }
   await passwordEditor.keys(password);
 
@@ -184,7 +184,6 @@ export const getTimelineViewerText = async (app, oldText = '') => {
   return viewer.getText();
 };
 
-export const clearText = async element => {
-  await element.keys(spectronKeys.mapAccelerator('CommandOrControl+A'));
-  await element.keys(spectronKeys.keys.Backspace);
+export const selectAll = async app => {
+  await app.client.keys(spectronKeys.mapAccelerator('CommandOrControl+A'));
 };

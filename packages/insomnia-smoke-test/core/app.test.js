@@ -59,7 +59,7 @@ describe('Application launch', function() {
     await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
 
-  fit('sends request with basic authentication', async () => {
+  it('sends request with basic authentication', async () => {
     const url = 'http://127.0.0.1:4010/auth/basic';
 
     await debug.workspaceDropdownExists(app);
@@ -99,11 +99,12 @@ describe('Application launch', function() {
     // Send request
     await debug.clickSendRequest(app);
     await debug.expect401(app);
-    timelineText = await debug.getTimelineViewerText(app);
+    timelineText = await debug.getTimelineViewerText(app, timelineText);
     expect(timelineText).not.toContain('> Authorization: Basic');
 
     // Clear and type username/password with special characters
-    await debug.typeBasicAuthUsernameAndPassword(app, 'user-é', 'password-é', true);
+    await debug.typeBasicAuthUsernameAndPassword(app, 'user-é', 'pass-é', true);
+
     // Toggle basic auth and encoding enabled
     await debug.toggleBasicAuthEnabled(app);
     await debug.toggleBasicAuthEncoding(app);
@@ -112,7 +113,7 @@ describe('Application launch', function() {
     await debug.clickSendRequest(app);
     await debug.expect200(app);
 
-    timelineText = await debug.getTimelineViewerText(app);
-    expect(timelineText).toContain('> Authorization: Basic dXNlci3pOnBhc3N3b3JkLek=');
+    timelineText = await debug.getTimelineViewerText(app, timelineText);
+    expect(timelineText).toContain('> Authorization: Basic dXNlci3pOnBhc3Mt6Q==');
   });
 });
