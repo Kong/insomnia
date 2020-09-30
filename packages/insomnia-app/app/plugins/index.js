@@ -72,6 +72,7 @@ export type PluginTab = {
   plugin: Plugin,
   label: string,
   icon?: string,
+  body?: HTMLElement | Promise<HTMLElement>,
 };
 
 export type SpecInfo = {

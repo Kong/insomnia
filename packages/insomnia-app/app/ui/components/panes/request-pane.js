@@ -35,6 +35,7 @@ import PlaceholderRequestPane from './placeholder-request-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import classnames from 'classnames';
 import { getRequestTabs, PluginTab } from '../../../plugins';
+import HtmlElementWrapper from '../html-element-wrapper';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 
 type Props = {
@@ -439,7 +440,7 @@ class RequestPane extends React.PureComponent<Props, State> {
           </TabPanel>
           {pluginTabs.map((p: PluginTab) => (
             <TabPanel className="react-tabs__tab-panel" key={`${p.plugin.name}::${p.label}`}>
-              {p.description}
+              <HtmlElementWrapper el={p.body} />
             </TabPanel>
           ))}
         </Tabs>
