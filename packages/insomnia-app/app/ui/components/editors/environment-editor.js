@@ -4,6 +4,9 @@ import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
+
+const RESERVED_KEY_REGEX = new RegExp(`^${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}$`);
 
 export type EnvironmentInfo = {
   object: Object,
@@ -42,7 +45,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
   _handleChange() {
     let error = null;
-    let warning = null;
+    const warning = null;
     let value = null;
 
     // Check for JSON parse errors
@@ -55,8 +58,8 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     // Check for invalid key names
     if (value && value.object) {
       for (const key of Object.keys(value.object)) {
-        if (!key.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
-          warning = `"${key}" must only contain letters, numbers, and underscores`;
+        if (key.match(RESERVED_KEY_REGEX)) {
+          error = `${key} is a reserved key`; // placeholder verbiage, need better english
           break;
         }
       }
