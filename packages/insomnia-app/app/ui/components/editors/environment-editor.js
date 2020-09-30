@@ -10,7 +10,17 @@ import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 // Docs: https://github.com/DeNA/nedb#inserting-documents
 const INVALID_NEDB_KEY_REGEX = /^\$|\./;
 
-export const isValidNeDBKey = (key: string): boolean => !key.match(INVALID_NEDB_KEY_REGEX);
+export const ensureKeyIsValid = (key: string): string | null => {
+  if (key.match(INVALID_NEDB_KEY_REGEX)) {
+    return `Keys cannot begin with '$' or contain a '.'`;
+  }
+
+  if (key === NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME) {
+    return `${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME} is a reserved key`; // verbiage WIP
+  }
+
+  return null;
+};
 
 export type EnvironmentInfo = {
   object: Object,
@@ -62,13 +72,8 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     // TODO: these only check root properties, not nested properties
     if (value && value.object) {
       for (const key of Object.keys(value.object)) {
-        if (!isValidNeDBKey(key)) {
-          error = `Keys cannot begin with '$' or contain a '.'`;
-          break;
-        }
-
-        if (key === NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME) {
-          error = `${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME} is a reserved key`; // verbiage WIP
+        error = ensureKeyIsValid(key);
+        if (error) {
           break;
         }
       }
