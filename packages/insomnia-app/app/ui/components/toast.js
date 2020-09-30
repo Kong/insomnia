@@ -4,10 +4,10 @@ import * as electron from 'electron';
 import autobind from 'autobind-decorator';
 import styled from 'styled-components';
 import classnames from 'classnames';
-import { appConfig } from '../../../config';
+import { appConfig, APP_ID_INSOMNIA } from '../../../config';
 import Link from './base/link';
 import * as models from '../../models/index';
-import { constants, getAppName } from '../../common/constants';
+import { constants, getAppName, getDefaultAppId } from '../../common/constants';
 import * as db from '../../common/database';
 import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
@@ -50,6 +50,14 @@ const StyledContent: React.ComponentType<{}> = styled.div`
   max-width: 20rem;
 `;
 
+const StyledFooter: React.ComponentType<{}> = styled.footer`
+  padding-top: var(--padding-sm);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+`;
+
 @autobind
 class Toast extends React.PureComponent<Props, State> {
   _interval: any;
@@ -59,6 +67,7 @@ class Toast extends React.PureComponent<Props, State> {
     this.state = {
       notification: null,
       visible: false,
+      appName: getAppName(),
     };
   }
 
@@ -188,7 +197,7 @@ class Toast extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { notification, visible } = this.state;
+    const { notification, visible, appName } = this.state;
 
     if (!notification) {
       return null;
@@ -200,11 +209,14 @@ class Toast extends React.PureComponent<Props, State> {
           'toast--show': visible,
         })}>
         <StyledLogo>
-          <img src={getAppName() === 'Insomnia' ? imgSrcCore : imgSrcDesigner} />
+          <img
+            src={getDefaultAppId() === APP_ID_INSOMNIA ? imgSrcCore : imgSrcDesigner}
+            alt={appName}
+          />
         </StyledLogo>
         <StyledContent>
-          <p className="toast__message">{notification ? notification.message : 'Unknown'}</p>
-          <footer className="toast__actions">
+          <p>{notification ? notification.message : 'Unknown'}</p>
+          <StyledFooter>
             <button
               className="btn btn--super-duper-compact btn--outlined"
               onClick={this._handleCancelClick}>
@@ -218,7 +230,7 @@ class Toast extends React.PureComponent<Props, State> {
               href={notification.url}>
               {notification.cta}
             </Link>
-          </footer>
+          </StyledFooter>
         </StyledContent>
       </div>
     );
