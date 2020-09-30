@@ -16,7 +16,7 @@ export class RenderError extends Error {
 export const RENDER_ALL = 'all';
 export const RENDER_VARS = 'variables';
 export const RENDER_TAGS = 'tags';
-export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '$';
+export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
 
 // Cached globals
 let nunjucksVariablesOnly = null;

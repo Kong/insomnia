@@ -4,12 +4,13 @@ import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 
 // NeDB field names cannot begin with '$' or contain a period '.'
 // Docs: https://github.com/DeNA/nedb#inserting-documents
 const INVALID_NEDB_KEY_REGEX = /^\$|\./;
 
-export const isValidKey = (key: string): boolean => !key.match(INVALID_NEDB_KEY_REGEX);
+export const isValidNeDBKey = (key: string): boolean => !key.match(INVALID_NEDB_KEY_REGEX);
 
 export type EnvironmentInfo = {
   object: Object,
@@ -58,10 +59,16 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     }
 
     // Check for invalid key names
+    // TODO: these only check root properties, not nested properties
     if (value && value.object) {
       for (const key of Object.keys(value.object)) {
-        if (!isValidKey(key)) {
+        if (!isValidNeDBKey(key)) {
           error = `Keys cannot begin with '$' or contain a '.'`;
+          break;
+        }
+
+        if (key === NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME) {
+          error = `${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME} is a reserved key`; // verbiage WIP
           break;
         }
       }

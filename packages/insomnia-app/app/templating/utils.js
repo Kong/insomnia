@@ -59,12 +59,12 @@ export function getKeys(obj: any, prefix: string = ''): Array<{ name: string, va
   return allKeys;
 }
 
-function forceBracketNotation(prefix: string, key: string | number): string {
+export function forceBracketNotation(prefix: string, key: string | number): string {
   // Prefix is already in bracket notation because getKeys is recursive
   return `${prefix}${objectPath.stringify([key], "'", true)}`;
 }
 
-function normalizeToDotAndBracketNotation(prefix: string): string {
+export function normalizeToDotAndBracketNotation(prefix: string): string {
   return objectPath.normalize(prefix);
 }
 
