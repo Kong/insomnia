@@ -181,7 +181,7 @@ export const clickTimelineTab = async app => {
 export const getTimelineViewerText = async (app, oldText = '') => {
   const viewer = await app.client.react$('ResponseTimelineViewer');
   await app.client.waitUntil(async () => (await viewer.getText()) !== oldText);
-  return viewer.getText();
+  return await viewer.getText();
 };
 
 export const selectAll = async app => {
