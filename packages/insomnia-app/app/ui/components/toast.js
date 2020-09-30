@@ -4,7 +4,6 @@ import * as electron from 'electron';
 import autobind from 'autobind-decorator';
 import styled from 'styled-components';
 import classnames from 'classnames';
-import { appConfig, APP_ID_INSOMNIA } from '../../../config';
 import Link from './base/link';
 import * as models from '../../models/index';
 import { constants, getAppName, getDefaultAppId } from '../../common/constants';
@@ -13,6 +12,7 @@ import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
 import imgSrcDesigner from '../images/insomnia-designer-logo.png';
 import imgSrcCore from '../images/insomnia-core-logo.png';
+import APP_ID_INSOMNIA from '../../../config';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
@@ -21,7 +21,6 @@ export type ToastNotification = {
   url: string,
   cta: string,
   message: string,
-  email?: string,
 };
 
 type Props = {};
@@ -135,11 +134,6 @@ class Toast extends React.PureComponent<Props, State> {
     // No new notifications
     if (!notification || this._hasSeenNotification(notification)) {
       return;
-    }
-
-    // Set default properties
-    if (!notification.email) {
-      notification.email = appConfig().gravatarEmail;
     }
 
     // Remember that we've seen it
