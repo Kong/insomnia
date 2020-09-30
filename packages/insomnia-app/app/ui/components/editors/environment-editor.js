@@ -97,7 +97,6 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
   }
 
   isValid() {
-    // Save if warning, don't save if error
     return !this.state.error;
   }
 
