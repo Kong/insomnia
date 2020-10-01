@@ -68,11 +68,16 @@ export type WorkspaceAction = {
   icon?: string,
 };
 
-export type PluginTab = {
+export type RequestTab = {
   plugin: Plugin,
   label: string,
   icon?: string,
-  body?: HTMLElement | Promise<HTMLElement>,
+  panelBody?: (
+    context: Object,
+    models: {
+      request: Request,
+    },
+  ) => HTMLElement | Promise<HTMLElement>,
 };
 
 export type SpecInfo = {
@@ -318,7 +323,7 @@ export async function getConfigGenerators(): Promise<Array<ConfigGenerator>> {
   return functions;
 }
 
-export async function getRequestTabs(): Promise<Array<PluginTab>> {
+export async function getRequestTabs(): Promise<Array<RequestTab>> {
   let tabs = [];
   for (const plugin of await getActivePlugins()) {
     const newTabs = plugin.module.requestTabs || [];
