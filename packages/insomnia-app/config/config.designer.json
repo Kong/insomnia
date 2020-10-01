@@ -16,7 +16,6 @@
   "githubRepo": "insomnia",
   "gaId": "UA-8499472-35",
   "gaLocation": "https://designer.lytics.insomnia.rest",
-  "gravatarEmail": "avatar.designer@insomnia.rest",
   "plugins": [
     "insomnia-plugin-base64",
     "insomnia-plugin-hash",
