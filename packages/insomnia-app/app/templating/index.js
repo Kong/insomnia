@@ -16,6 +16,7 @@ export class RenderError extends Error {
 export const RENDER_ALL = 'all';
 export const RENDER_VARS = 'variables';
 export const RENDER_TAGS = 'tags';
+export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
 
 // Cached globals
 let nunjucksVariablesOnly = null;
@@ -35,13 +36,16 @@ export function render(
   config: { context?: Object, path?: string, renderMode?: string } = {},
 ): Promise<string> {
   const context = config.context || {};
+  // context needs to exist on the root for the old templating syntax, and in _ for the new templating syntax
+  // old: {{ arr[0].prop }}
+  // new: {{ _['arr-name-with-dash'][0].prop }}
+  const templatingContext = { ...context, [NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME]: context };
   const path = config.path || null;
   const renderMode = config.renderMode || RENDER_ALL;
 
   return new Promise(async (resolve, reject) => {
     const nj = await getNunjucks(renderMode);
-
-    nj.renderString(text, context, (err, result) => {
+    nj.renderString(text, templatingContext, (err, result) => {
       if (err) {
         const sanitizedMsg = err.message
           .replace(/\(unknown path\)\s/, '')
@@ -157,9 +161,7 @@ async function getNunjucks(renderMode: string) {
 
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`
-    nj.addFilter('debug', o => {
-      return o;
-    });
+    nj.addFilter('debug', o => o);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~ //
