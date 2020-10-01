@@ -12,11 +12,11 @@ const INVALID_NEDB_KEY_REGEX = /^\$|\./;
 
 export const ensureKeyIsValid = (key: string): string | null => {
   if (key.match(INVALID_NEDB_KEY_REGEX)) {
-    return `Keys cannot begin with '$' or contain a '.'`;
+    return `"${key}" cannot begin with '$' or contain a '.'`;
   }
 
   if (key === NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME) {
-    return `${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME} is a reserved key`; // verbiage WIP
+    return `"${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}" is a reserved key`; // verbiage WIP
   }
 
   return null;
