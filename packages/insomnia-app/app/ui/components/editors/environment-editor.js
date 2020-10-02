@@ -5,6 +5,7 @@ import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
+import { getNestedKeys } from '../../../templating/utils';
 
 // NeDB field names cannot begin with '$' or contain a period '.'
 // Docs: https://github.com/DeNA/nedb#inserting-documents
@@ -17,6 +18,15 @@ export const ensureKeyIsValid = (key: string): string | null => {
 
   if (key === NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME) {
     return `"${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}" is a reserved key`; // verbiage WIP
+  }
+
+  return null;
+};
+
+export const ensureNestedKeyIsValid = (item: any): string | null => {
+  var keys = item.name.split(" ")
+  if (keys[keys.length - 1].match(INVALID_NEDB_KEY_REGEX)) {
+    return `"${key}" cannot begin with '$' or contain a '.'`;
   }
 
   return null;
@@ -69,10 +79,18 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     }
 
     // Check for invalid key names
-    // TODO: these only check root properties, not nested properties
     if (value && value.object) {
+      // Check root properties
       for (const key of Object.keys(value.object)) {
         error = ensureKeyIsValid(key);
+        if (error) {
+          break;
+        }
+      }
+      // Check for nested properties
+      var nested = getNestedKeys(obj)
+      for (const item of nested) {
+        error = ensureNestedKeyIsValid(item);
         if (error) {
           break;
         }
