@@ -5,7 +5,6 @@ import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
-import { getNestedKeys } from '../../../templating/utils';
 
 // NeDB field names cannot begin with '$' or contain a period '.'
 // Docs: https://github.com/DeNA/nedb#inserting-documents
@@ -23,14 +22,40 @@ export const ensureKeyIsValid = (key: string): string | null => {
   return null;
 };
 
-export const ensureNestedKeyIsValid = (item: any): string | null => {
-  var keys = item.name.split(" ")
-  if (keys[keys.length - 1].match(INVALID_NEDB_KEY_REGEX)) {
-    return `"${key}" cannot begin with '$' or contain a '.'`;
+export const ensureRootKeyIsValid = (key: string): string | null => {
+  if (key === '_') {
+    return `"${key}" cannot be '_'`;
   }
 
   return null;
 };
+
+/**
+ * Recursively check keys of nested object and immediately return when found
+ * @param {object} obj - object to analyse
+ * @returns {boolean} - if any invalid key is found
+ */
+export function checkNestedKeys (obj: any, result: boolean = true, isRoot: boolean = true): boolean {
+  for (var key in obj) {
+    // Case: Root keys
+    if (isRoot) {
+      if(ensureKeyIsValid(key) == null && ensureRootKeyIsValid(key) == null) {
+        result = false;
+        break;
+      }
+    }
+    // Case: Nested keys
+    if (typeof obj[key] === "object" && obj.hasOwnProperty(key)) {
+      result = checkNestedKeys(obj[key], result, false);
+    }
+    if(ensureKeyIsValid(key) !== null) {
+      result = false;
+      break;
+    }
+  }
+
+  return result;
+}
 
 export type EnvironmentInfo = {
   object: Object,
@@ -80,20 +105,9 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
     // Check for invalid key names
     if (value && value.object) {
-      // Check root properties
-      for (const key of Object.keys(value.object)) {
-        error = ensureKeyIsValid(key);
-        if (error) {
-          break;
-        }
-      }
-      // Check for nested properties
-      var nested = getNestedKeys(obj)
-      for (const item of nested) {
-        error = ensureNestedKeyIsValid(item);
-        if (error) {
-          break;
-        }
+      // Check root and nested properties
+      if(!checkNestedKeys(value.object)) {
+        error = 'Object contains invalid key(s)'
       }
     }
 

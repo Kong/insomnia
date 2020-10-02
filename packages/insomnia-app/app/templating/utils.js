@@ -59,35 +59,6 @@ export function getKeys(obj: any, prefix: string = ''): Array<{ name: string, va
   return allKeys;
 }
 
-/**
- * Get list of paths to all primitive types in nested object without normalization
- * @param {object} obj - object to analyse
- * @param {String} [prefix] - base path to prefix to all paths
- * @returns {Array} - list of paths
- */
-export function getNestedKeys(obj: any, prefix: string = ''): Array<{ name: string, value: any }> {
-  let allKeys = [];
-
-  const typeOfObj = Object.prototype.toString.call(obj);
-
-  if (typeOfObj === '[object Array]') {
-    for (let i = 0; i < obj.length; i++) {
-      allKeys = [...allKeys, ...getKeys(obj[i], `${prefix} ${i}`)];
-    }
-  } else if (typeOfObj === '[object Object]') {
-    const keys = Object.keys(obj);
-    for (const key of keys) {
-      allKeys = [...allKeys, ...getKeys(obj[key], `${prefix} ${key}`)];
-    }
-  } else if (typeOfObj === '[object Function]') {
-    // Ignore functions
-  } else if (prefix) {
-    allKeys.push({ name: prefix, value: obj });
-  }
-
-  return allKeys;
-}
-
 export function forceBracketNotation(prefix: string, key: string | number): string {
   // Prefix is already in bracket notation because getKeys is recursive
   return `${prefix}${objectPath.stringify([key], "'", true)}`;

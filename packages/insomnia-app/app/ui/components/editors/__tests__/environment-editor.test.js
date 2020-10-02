@@ -1,9 +1,9 @@
 // @flow
-import { ensureKeyIsValid } from '../environment-editor';
+import { ensureKeyIsValid, ensureRootKeyIsValid } from '../environment-editor';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../../templating';
 
-describe('ensureKeyIsValid', () => {
-  it.each(['$', '$a', '$ab'])('%s should be invalid when as key begins with $', key => {
+describe('ensureNestedKeyIsValid', () => {
+  it.each(['$', '$a', '$ab'])('%s should be invalid when key begins with $', key => {
     expect(ensureKeyIsValid(key)).toBe(`"${key}" cannot begin with '$' or contain a '.'`);
   });
 
@@ -25,3 +25,14 @@ describe('ensureKeyIsValid', () => {
     expect(ensureKeyIsValid(key)).toBe(null);
   });
 });
+
+describe('ensureRootKeyIsValid', () => {
+  it.each(['_'])('%s should be invalid when key is _', key => {
+    expect(ensureRootKeyIsValid(key)).toBe(`"${key}" cannot be '_'`);
+  });
+
+  it.each(['a', 'ab', 'a$', 'a$b', 'a-b', `a b`])('%s should be valid', key => {
+    expect(ensureRootKeyIsValid(key)).toBe(null);
+  });
+});
+
