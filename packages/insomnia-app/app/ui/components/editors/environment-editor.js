@@ -35,21 +35,28 @@ export const ensureRootKeyIsValid = (key: string): string | null => {
  * @param {object} obj - object to analyse
  * @returns {boolean} - if any invalid key is found
  */
-export function checkNestedKeys (obj: any, result: boolean = true, isRoot: boolean = true): boolean {
-  for (var key in obj) {
+export function checkNestedKeys(
+  obj: any,
+  result: string | null = '',
+  isRoot: boolean = true,
+): boolean {
+  for (const key in obj) {
     // Case: Root keys
     if (isRoot) {
-      if(ensureKeyIsValid(key) == null && ensureRootKeyIsValid(key) == null) {
-        result = false;
+      if (ensureRootKeyIsValid(key) !== null) {
+        result = ensureRootKeyIsValid(key);
+        break;
+      } else if (ensureKeyIsValid(key) !== null) {
+        result = ensureKeyIsValid(key);
         break;
       }
     }
     // Case: Nested keys
-    if (typeof obj[key] === "object" && obj.hasOwnProperty(key)) {
+    if (typeof obj[key] === 'object' && obj.hasOwnProperty(key)) {
       result = checkNestedKeys(obj[key], result, false);
     }
-    if(ensureKeyIsValid(key) !== null) {
-      result = false;
+    if (ensureKeyIsValid(key) !== null) {
+      result = ensureKeyIsValid(key);
       break;
     }
   }
@@ -106,8 +113,9 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     // Check for invalid key names
     if (value && value.object) {
       // Check root and nested properties
-      if(!checkNestedKeys(value.object)) {
-        error = 'Object contains invalid key(s)'
+      const err = checkNestedKeys(value.object);
+      if (err) {
+        error = err;
       }
     }
 

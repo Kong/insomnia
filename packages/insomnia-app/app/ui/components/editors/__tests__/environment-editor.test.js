@@ -35,4 +35,3 @@ describe('ensureRootKeyIsValid', () => {
     expect(ensureRootKeyIsValid(key)).toBe(null);
   });
 });
-
