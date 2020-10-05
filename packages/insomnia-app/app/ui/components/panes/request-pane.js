@@ -105,7 +105,7 @@ class RequestPane extends React.PureComponent<Props, State> {
 
   async _handleRequestTabs() {
     const { request, environmentId } = this.props;
-
+    this.setState({ requestTabs: [] });
     try {
       const tabs = await getRequestTabs();
       for (const tab of tabs) {
@@ -126,6 +126,13 @@ class RequestPane extends React.PureComponent<Props, State> {
 
   async componentDidMount() {
     await this._handleRequestTabs();
+  }
+
+  async componentDidUpdate(prevProps) {
+    const { request } = this.props;
+    if (prevProps.request && prevProps.request._id !== request._id) {
+      await this._handleRequestTabs();
+    }
   }
 
   async _autocompleteUrls(): Promise<Array<string>> {
@@ -308,7 +315,7 @@ class RequestPane extends React.PureComponent<Props, State> {
               </button>
             </Tab>
             {requestTabs.map((p: RequestTabWithBody) => (
-              <Tab tabIndex="-1" key={`${p.plugin.name}::${p.label}`}>
+              <Tab tabIndex="-1" key={`${request._id}::${p.plugin.name}::${p.label}`}>
                 <button>
                   {p.label}
                   <span className="bubble space-left">
@@ -457,7 +464,9 @@ class RequestPane extends React.PureComponent<Props, State> {
             )}
           </TabPanel>
           {requestTabs.map((p: RequestTabWithBody) => (
-            <TabPanel className="react-tabs__tab-panel" key={`${p.plugin.name}::${p.label}`}>
+            <TabPanel
+              className="react-tabs__tab-panel"
+              key={`${request._id}::${p.plugin.name}::${p.label}`}>
               <HtmlElementWrapper el={p.body} />
             </TabPanel>
           ))}
