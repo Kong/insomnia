@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
+import CopyButton from '../base/copy-button';
 
 @autobind
 class ResponseRaw extends PureComponent {
@@ -36,19 +37,29 @@ class ResponseRaw extends PureComponent {
   render() {
     const { fontSize, responseId, value } = this.props;
     return (
-      <CodeEditor
-        ref={this._setCodeEditorRef}
-        defaultValue={value}
-        fontSize={fontSize}
-        hideLineNumbers
-        lineWrapping
-        mode="text/plain"
-        noMatchBrackets
-        placeholder="..."
-        raw
-        readOnly
-        uniquenessKey={responseId}
-      />
+      <div className="tall">
+        <CopyButton
+          size="small"
+          content={value}
+          className="pull-right"
+          title="Copy raw response"
+          confirmMessage="">
+          <i className="fa fa-copy" />
+        </CopyButton>
+        <CodeEditor
+          ref={this._setCodeEditorRef}
+          defaultValue={value}
+          fontSize={fontSize}
+          hideLineNumbers
+          lineWrapping
+          mode="text/plain"
+          noMatchBrackets
+          placeholder="..."
+          raw
+          readOnly
+          uniquenessKey={responseId}
+        />
+      </div>
     );
   }
 }
