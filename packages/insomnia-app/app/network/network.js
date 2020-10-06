@@ -109,12 +109,15 @@ const LIBCURL_DEBUG_MIGRATION_MAP = {
   '': '',
 };
 
-let cancelRequestFunction = null;
+const cancelRequestFunctionMap = {};
 let lastUserInteraction = Date.now();
 
-export async function cancelCurrentRequest() {
-  if (typeof cancelRequestFunction === 'function') {
-    return cancelRequestFunction();
+export async function cancelRequestById(requestId) {
+  if (cancelRequestFunctionMap.hasOwnProperty(requestId)) {
+    const cancelRequestFunction = cancelRequestFunctionMap[requestId];
+    if (typeof cancelRequestFunction === 'function') {
+      return cancelRequestFunction();
+    }
   }
 }
 
@@ -224,7 +227,7 @@ export async function _actuallySend(
 
     try {
       // Setup the cancellation logic
-      cancelRequestFunction = async () => {
+      cancelRequestFunctionMap[renderedRequest._id] = async () => {
         await respond(
           {
             elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
