@@ -48,6 +48,8 @@ type State = {
   blockingBecauseTooLarge: boolean,
   bodyBuffer: Buffer | null,
   error: string,
+  hugeResponse: boolean,
+  largeResponse: boolean,
 };
 
 @autobind
@@ -93,9 +95,14 @@ class ResponseViewer extends React.Component<Props, State> {
   }
 
   _maybeLoadResponseBody(props: Props, forceShow?: boolean) {
+    const { bytes } = props;
+    const largeResponse = bytes > LARGE_RESPONSE_MB * 1024 * 1024;
+    const hugeResponse = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
+
+    this.setState({ largeResponse, hugeResponse });
+
     // Block the response if it's too large
-    const responseIsTooLarge = props.bytes > LARGE_RESPONSE_MB * 1024 * 1024;
-    if (!forceShow && !alwaysShowLargeResponses && responseIsTooLarge) {
+    if (!forceShow && !alwaysShowLargeResponses && largeResponse) {
       this.setState({ blockingBecauseTooLarge: true });
     } else {
       try {
@@ -196,7 +203,6 @@ class ResponseViewer extends React.Component<Props, State> {
 
   _renderView() {
     const {
-      bytes,
       disableHtmlPreviewJs,
       disablePreviewLinks,
       download,
@@ -226,12 +232,11 @@ class ResponseViewer extends React.Component<Props, State> {
       );
     }
 
-    const wayTooLarge = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
-    const { blockingBecauseTooLarge } = this.state;
+    const { blockingBecauseTooLarge, hugeResponse } = this.state;
     if (blockingBecauseTooLarge) {
       return (
         <div className="response-pane__notify">
-          {wayTooLarge ? (
+          {hugeResponse ? (
             <React.Fragment>
               <p className="pad faint">Responses over {HUGE_RESPONSE_MB}MB cannot be shown</p>
               <button onClick={download} className="inline-block btn btn--clicky">
@@ -249,7 +254,7 @@ class ResponseViewer extends React.Component<Props, State> {
                 </button>
                 <button
                   onClick={this._handleDismissBlocker}
-                  disabled={wayTooLarge}
+                  disabled={hugeResponse}
                   className=" inline-block btn btn--clicky margin-xs">
                   Show Anyway
                 </button>
