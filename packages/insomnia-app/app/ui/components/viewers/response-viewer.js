@@ -197,7 +197,10 @@ class ResponseViewer extends React.Component<Props, State> {
       }
 
       this._selectableView.focus();
-      this._selectableView.selectAll();
+
+      if (!this.state.largeResponse) {
+        this._selectableView.selectAll();
+      }
     });
   }
 
