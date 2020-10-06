@@ -99,7 +99,7 @@ Search, discover, and install plugins from the Insomnia [Plugin Hub](https://ins
 
 ## Community Projects
 
-- [Insomnia Documenter](https://github.com/jozsefsallai/insomnia-documenter) – Generate beautiful API documentation pages using your Insomnia export file.
+- [Insomnia Documenter](https://github.com/jozsefsallai/insomnia-documenter) – Generate beautiful API documentation pages using the [documenter plugin](https://insomnia.rest/plugins/insomnia-plugin-documenter) or your Insomnia export file.
 - [GitHub API Spec Importer](https://github.com/swinton/github-rest-apis-for-insomnia) – A complete set of GitHub REST API route specifications that can be imported straight into Insomnia.
 - [Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
 
