@@ -612,6 +612,41 @@ describe('actuallySend()', () => {
     expect(JSON.parse(r.getBodyBuffer(responseDefault)).options.HTTP_VERSION).toBe(undefined);
     expect(JSON.parse(r.getBodyBuffer(responseInvalid)).options.HTTP_VERSION).toBe(undefined);
   });
+
+  it('requests can be cancelled by requestId', async () => {
+    // GIVEN
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.create();
+
+    const request1 = Object.assign(models.request.init(), {
+      _id: 'req_15',
+      parentId: workspace._id,
+    });
+
+    const request2 = Object.assign(models.request.init(), {
+      _id: 'req_10',
+      parentId: workspace._id,
+    });
+
+    const renderedRequest1 = await getRenderedRequest(request1);
+    const renderedRequest2 = await getRenderedRequest(request2);
+
+    await networkUtils._actuallySend(renderedRequest1, CONTEXT, workspace, {
+      ...settings,
+    });
+    await networkUtils._actuallySend(renderedRequest2, CONTEXT, workspace, {
+      ...settings,
+    });
+
+    // WHEN
+    await networkUtils.cancelRequestById(renderedRequest1._id);
+
+    // THEN
+    const cancelFunc1 = await networkUtils.cancelRequestById(renderedRequest1._id);
+    const cancelFunc2 = await networkUtils.cancelRequestById(renderedRequest2._id);
+    expect(cancelFunc1).toBe(false);
+    expect(cancelFunc2).toBe(true);
+  });
 });
 
 describe('_getAwsAuthHeaders', () => {

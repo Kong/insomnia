@@ -115,10 +115,13 @@ let lastUserInteraction = Date.now();
 export async function cancelRequestById(requestId) {
   if (cancelRequestFunctionMap.hasOwnProperty(requestId)) {
     const cancelRequestFunction = cancelRequestFunctionMap[requestId];
+    delete cancelRequestFunctionMap[requestId];
     if (typeof cancelRequestFunction === 'function') {
-      return cancelRequestFunction();
+      cancelRequestFunction();
+      return true;
     }
   }
+  return false;
 }
 
 export async function _actuallySend(
