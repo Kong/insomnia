@@ -2,7 +2,11 @@ import electron from 'electron';
 import * as uuid from 'uuid';
 import querystring from 'querystring';
 
-const AUTH_WINDOW_SESSION_ID = uuid.v4();
+let authWindowSessionId = `persist:oauth2`;
+
+export function clearOAuthSession() {
+  authWindowSessionId = `oauth2_${uuid.v4()}`;
+}
 
 export function responseToObject(body, keys, defaults = {}) {
   let data = null;
@@ -72,7 +76,7 @@ export function authorizeUserInWindow(
     const child = new electron.remote.BrowserWindow({
       webPreferences: {
         nodeIntegration: false,
-        partition: `oauth2_${AUTH_WINDOW_SESSION_ID}`,
+        partition: authWindowSessionId,
       },
       show: false,
     });
