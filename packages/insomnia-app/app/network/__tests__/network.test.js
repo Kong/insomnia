@@ -656,6 +656,9 @@ describe('actuallySend()', () => {
     // THEN
     expect(response1.statusMessage).toBe('Cancelled');
     expect(response2.statusMessage).toBe('OK');
+
+    expect(networkUtils.hasCancelFunctionForId(request1._id)).toBe(false);
+    expect(networkUtils.hasCancelFunctionForId(request2._id)).toBe(false);
   });
 });
 
