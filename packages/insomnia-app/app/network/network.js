@@ -115,13 +115,11 @@ let lastUserInteraction = Date.now();
 export async function cancelRequestById(requestId) {
   if (cancelRequestFunctionMap.hasOwnProperty(requestId)) {
     const cancelRequestFunction = cancelRequestFunctionMap[requestId];
-    delete cancelRequestFunctionMap[requestId];
     if (typeof cancelRequestFunction === 'function') {
-      cancelRequestFunction();
-      return true;
+      return cancelRequestFunction();
     }
   }
-  return false;
+  console.log(`WARN: cancelFunction for ${requestId} not found.`);
 }
 
 export async function _actuallySend(
@@ -188,6 +186,14 @@ export async function _actuallySend(
           new Error(`[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`),
         );
         return;
+      } finally {
+        if (cancelRequestFunctionMap.hasOwnProperty(responsePatchBeforeHooks.parentId)) {
+          delete cancelRequestFunctionMap[responsePatchBeforeHooks.parentId];
+        } else {
+          console.log(
+            `WARN: cancelFunction for requestId ${responsePatchBeforeHooks.parentId} could not be found.`,
+          );
+        }
       }
 
       resolve(responsePatch);

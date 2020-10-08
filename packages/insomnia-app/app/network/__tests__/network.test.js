@@ -621,31 +621,41 @@ describe('actuallySend()', () => {
     const request1 = Object.assign(models.request.init(), {
       _id: 'req_15',
       parentId: workspace._id,
+      url: 'http://unix:3000/requestA',
+      method: 'GET',
     });
 
     const request2 = Object.assign(models.request.init(), {
       _id: 'req_10',
       parentId: workspace._id,
+      url: 'http://unix:3000/requestB',
+      method: 'GET',
     });
 
     const renderedRequest1 = await getRenderedRequest(request1);
     const renderedRequest2 = await getRenderedRequest(request2);
 
-    await networkUtils._actuallySend(renderedRequest1, CONTEXT, workspace, {
-      ...settings,
-    });
-    await networkUtils._actuallySend(renderedRequest2, CONTEXT, workspace, {
-      ...settings,
-    });
-
     // WHEN
+    const response1Promise = networkUtils._actuallySend(
+      renderedRequest1,
+      CONTEXT,
+      workspace,
+      settings,
+    );
+    const response2Promise = networkUtils._actuallySend(
+      renderedRequest2,
+      CONTEXT,
+      workspace,
+      settings,
+    );
+
     await networkUtils.cancelRequestById(renderedRequest1._id);
+    const response1 = await response1Promise;
+    const response2 = await response2Promise;
 
     // THEN
-    const cancelFunc1 = await networkUtils.cancelRequestById(renderedRequest1._id);
-    const cancelFunc2 = await networkUtils.cancelRequestById(renderedRequest2._id);
-    expect(cancelFunc1).toBe(false);
-    expect(cancelFunc2).toBe(true);
+    expect(response1.statusMessage).toBe('Cancelled');
+    expect(response2.statusMessage).toBe('OK');
   });
 });
 
