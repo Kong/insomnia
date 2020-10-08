@@ -1,7 +1,6 @@
 import electron from 'electron';
 import * as uuid from 'uuid';
 import querystring from 'querystring';
-import * as models from '../../models';
 
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 let authWindowSessionId;
@@ -9,14 +8,6 @@ if (window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID)) {
   authWindowSessionId = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
 } else {
   initNewOAuthSession();
-}
-loadSettings();
-
-export async function loadSettings() {
-  const settings = await models.settings.getOrCreate();
-  if (settings.clearOAuth2SessionOnRestart) {
-    initNewOAuthSession();
-  }
 }
 
 export function initNewOAuthSession() {
