@@ -22,7 +22,7 @@ import ResponseCookiesViewer from './viewers/response-cookies-viewer';
 import * as models from '../../models';
 import { PREVIEW_MODE_SOURCE } from '../../common/constants';
 import { getSetCookieHeaders } from '../../common/misc';
-import { cancelCurrentRequest } from '../../network/network';
+import { cancelRequestById } from '../../network/network';
 import Hotkey from './hotkey';
 import ErrorBoundary from './error-boundary';
 import type { HotKeyRegistry } from '../../common/hotkeys';
@@ -274,7 +274,10 @@ class ResponsePane extends React.PureComponent<Props> {
             </div>
           </div>
 
-          <ResponseTimer handleCancel={cancelCurrentRequest} loadStartTime={loadStartTime} />
+          <ResponseTimer
+            handleCancel={() => cancelRequestById(request._id)}
+            loadStartTime={loadStartTime}
+          />
         </section>
       );
     }
@@ -392,7 +395,10 @@ class ResponsePane extends React.PureComponent<Props> {
           </TabPanel>
         </Tabs>
         <ErrorBoundary errorClassName="font-error pad text-center">
-          <ResponseTimer handleCancel={cancelCurrentRequest} loadStartTime={loadStartTime} />
+          <ResponseTimer
+            handleCancel={() => cancelRequestById(request._id)}
+            loadStartTime={loadStartTime}
+          />
         </ErrorBoundary>
       </section>
     );
