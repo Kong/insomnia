@@ -19,7 +19,6 @@ import {
 import KeydownBinder from '../keydown-binder';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../common/hotkeys';
-import CopyButton from '../base/copy-button';
 
 let alwaysShowLargeResponses = false;
 
@@ -406,35 +405,25 @@ class ResponseViewer extends React.Component<Props, State> {
       }
 
       return (
-        <div className="tall">
-          <CopyButton
-            size="small"
-            content={body}
-            className="pull-right"
-            title="Copy response"
-            confirmMessage="">
-            <i className="fa fa-copy" />
-          </CopyButton>
-          <CodeEditor
-            key={disablePreviewLinks ? 'links-no' : 'links-yes'}
-            ref={this._setSelectableViewRef}
-            autoPrettify
-            defaultValue={body}
-            filter={filter}
-            filterHistory={filterHistory}
-            fontSize={editorFontSize}
-            indentSize={editorIndentSize}
-            keyMap={editorKeyMap}
-            lineWrapping={editorLineWrapping}
-            mode={mode}
-            noMatchBrackets
-            onClickLink={disablePreviewLinks ? null : this._handleOpenLink}
-            placeholder="..."
-            readOnly
-            uniquenessKey={responseId}
-            updateFilter={updateFilter}
-          />
-        </div>
+        <CodeEditor
+          key={disablePreviewLinks ? 'links-no' : 'links-yes'}
+          ref={this._setSelectableViewRef}
+          autoPrettify
+          defaultValue={body}
+          filter={filter}
+          filterHistory={filterHistory}
+          fontSize={editorFontSize}
+          indentSize={editorIndentSize}
+          keyMap={editorKeyMap}
+          lineWrapping={editorLineWrapping}
+          mode={mode}
+          noMatchBrackets
+          onClickLink={disablePreviewLinks ? null : this._handleOpenLink}
+          placeholder="..."
+          readOnly
+          uniquenessKey={responseId}
+          updateFilter={updateFilter}
+        />
       );
     }
   }
