@@ -2,10 +2,18 @@ import electron from 'electron';
 import * as uuid from 'uuid';
 import querystring from 'querystring';
 
-let authWindowSessionId = `persist:oauth2`;
+const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
+let authWindowSessionId = `oauth2_${uuid.v4()}`;
+
+if (window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID)) {
+  authWindowSessionId = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+} else {
+  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+}
 
 export function clearOAuthSession() {
   authWindowSessionId = `oauth2_${uuid.v4()}`;
+  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
 }
 
 export function responseToObject(body, keys, defaults = {}) {

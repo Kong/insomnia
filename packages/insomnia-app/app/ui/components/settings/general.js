@@ -187,10 +187,6 @@ class General extends React.PureComponent<Props, State> {
     const { settings } = this.props;
     const { fonts, fontsMono } = this.state;
 
-    function clearSession() {
-      clearOAuthSession();
-    }
-
     return (
       <div className="pad-bottom">
         <div className="row-fill row-fill--top">
@@ -485,7 +481,7 @@ class General extends React.PureComponent<Props, State> {
 
         <hr className="pad-top" />
         <h2>Clear OAuth2 Session</h2>
-        <button className="btn btn--clicky" onClick={clearSession}>
+        <button className="btn btn--clicky" onClick={clearOAuthSession}>
           Clear session
         </button>
         <br />
