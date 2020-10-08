@@ -22,7 +22,7 @@ import { setFont } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
-import { clearOAuthSession } from '../../../network/o-auth-2/misc';
+import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -391,6 +391,23 @@ class General extends React.PureComponent<Props, State> {
 
         <hr className="pad-top" />
 
+        <h2>Security</h2>
+        <div className="form-row pad-top-sm">
+          {this.renderBooleanSetting(
+            'Clear OAuth 2 session on start',
+            'clearOAuth2SessionOnRestart',
+            'Clears the session of the OAuth2 popup window every time insomnia is launched',
+          )}
+          <button
+            className="btn btn--clicky pointer"
+            style={{ padding: 0 }}
+            onClick={initNewOAuthSession}>
+            Clear OAuth 2 session
+          </button>
+        </div>
+
+        <hr className="pad-top" />
+
         <h2>
           HTTP Network Proxy
           <HelpTooltip
@@ -478,11 +495,6 @@ class General extends React.PureComponent<Props, State> {
           { placeholder: '~/.insomnia:/other/path' },
         )}
 
-        <hr className="pad-top" />
-        <h2>Clear OAuth2 Session</h2>
-        <button className="btn btn--clicky" onClick={clearOAuthSession}>
-          Clear session
-        </button>
         <br />
 
         <hr className="pad-top" />

@@ -1,18 +1,28 @@
 import electron from 'electron';
 import * as uuid from 'uuid';
 import querystring from 'querystring';
+import * as models from '../../models';
 
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
-let authWindowSessionId = `oauth2_${uuid.v4()}`;
-
+let authWindowSessionId;
 if (window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID)) {
   authWindowSessionId = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
 } else {
-  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+  initNewOAuthSession();
+}
+loadSettings();
+
+export async function loadSettings() {
+  const settings = await models.settings.getOrCreate();
+  if (settings.clearOAuth2SessionOnRestart) {
+    initNewOAuthSession();
+  }
 }
 
-export function clearOAuthSession() {
-  authWindowSessionId = `oauth2_${uuid.v4()}`;
+export function initNewOAuthSession() {
+  // the value of this variable needs to start with 'persist:'
+  // otherwise sessions won't be persisted over application-restarts
+  authWindowSessionId = `persist:oauth2_${uuid.v4()}`;
   window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
 }
 
