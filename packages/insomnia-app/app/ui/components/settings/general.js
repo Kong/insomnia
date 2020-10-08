@@ -186,7 +186,6 @@ class General extends React.PureComponent<Props, State> {
   render() {
     const { settings } = this.props;
     const { fonts, fontsMono } = this.state;
-
     return (
       <div className="pad-bottom">
         <div className="row-fill row-fill--top">
