@@ -396,7 +396,7 @@ class General extends React.PureComponent<Props, State> {
           {this.renderBooleanSetting(
             'Clear OAuth 2 session on start',
             'clearOAuth2SessionOnRestart',
-            'Clears the session of the OAuth2 popup window every time insomnia is launched',
+            'Clears the session of the OAuth2 popup window every time Insomnia is launched',
           )}
           <button
             className="btn btn--clicky pointer"
