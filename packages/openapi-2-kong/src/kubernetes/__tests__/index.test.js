@@ -81,23 +81,30 @@ describe('index', () => {
       const result = generateMetadataAnnotations(api, { pluginNames: [] });
 
       expect(result).toEqual({
+        'kubernetes.io/ingress.class': 'kong',
         'nginx.ingress.kubernetes.io/rewrite-target': '/',
       });
     });
 
-    it('gets no annotations', () => {
+    it('gets only core annotation(s)', () => {
       const result = generateMetadataAnnotations(spec, { pluginNames: [] });
-      expect(result).toBe(null);
+      expect(result).toEqual({ 'kubernetes.io/ingress.class': 'kong' });
     });
 
     it('gets plugin annotations correctly', () => {
       const result = generateMetadataAnnotations(spec, { pluginNames: ['one', 'two'] });
-      expect(result).toEqual({ 'konghq.com/plugins': 'one, two' });
+      expect(result).toEqual({
+        'kubernetes.io/ingress.class': 'kong',
+        'konghq.com/plugins': 'one, two',
+      });
     });
 
     it('gets override annotation correctly', () => {
       const result = generateMetadataAnnotations(spec, { pluginNames: [], overrideName: 'name' });
-      expect(result).toEqual({ 'konghq.com/override': 'name' });
+      expect(result).toEqual({
+        'kubernetes.io/ingress.class': 'kong',
+        'konghq.com/override': 'name',
+      });
     });
 
     it('gets all annotations correctly', () => {
@@ -120,6 +127,7 @@ describe('index', () => {
         overrideName: 'name',
       });
       expect(result).toEqual({
+        'kubernetes.io/ingress.class': 'kong',
         'nginx.ingress.kubernetes.io/rewrite-target': '/',
         'konghq.com/plugins': 'one, two',
         'konghq.com/override': 'name',
