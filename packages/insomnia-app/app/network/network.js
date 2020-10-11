@@ -109,13 +109,27 @@ const LIBCURL_DEBUG_MIGRATION_MAP = {
   '': '',
 };
 
-let cancelRequestFunction = null;
+const cancelRequestFunctionMap = {};
 let lastUserInteraction = Date.now();
 
-export async function cancelCurrentRequest() {
-  if (typeof cancelRequestFunction === 'function') {
-    return cancelRequestFunction();
+export async function cancelRequestById(requestId) {
+  if (hasCancelFunctionForId(requestId)) {
+    const cancelRequestFunction = cancelRequestFunctionMap[requestId];
+    if (typeof cancelRequestFunction === 'function') {
+      return cancelRequestFunction();
+    }
   }
+  console.log(`[network] Failed to cancel req=${requestId} because cancel function not found`);
+}
+
+function clearCancelFunctionForId(requestId) {
+  if (hasCancelFunctionForId(requestId)) {
+    delete cancelRequestFunctionMap[requestId];
+  }
+}
+
+export function hasCancelFunctionForId(requestId) {
+  return cancelRequestFunctionMap.hasOwnProperty(requestId);
 }
 
 export async function _actuallySend(
@@ -150,6 +164,9 @@ export async function _actuallySend(
       noPlugins: boolean = false,
     ): Promise<void> {
       const timelinePath = await storeTimeline(timeline);
+
+      // Tear Down the cancellation logic
+      clearCancelFunctionForId(renderedRequest._id);
 
       const environmentId = environment ? environment._id : null;
       const responsePatchBeforeHooks = Object.assign(
@@ -224,7 +241,7 @@ export async function _actuallySend(
 
     try {
       // Setup the cancellation logic
-      cancelRequestFunction = async () => {
+      cancelRequestFunctionMap[renderedRequest._id] = async () => {
         await respond(
           {
             elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
