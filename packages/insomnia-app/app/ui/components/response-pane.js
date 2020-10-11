@@ -6,7 +6,7 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import mime from 'mime-types';
-import { remote } from 'electron';
+import { clipboard, remote } from 'electron';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import SizeTag from './tags/size-tag';
 import StatusTag from './tags/status-tag';
@@ -167,6 +167,15 @@ class ResponsePane extends React.PureComponent<Props> {
     }
   }
 
+  async _handleCopyResponseToClipboard() {
+    if (!this.props.response) {
+      return;
+    }
+
+    const bodyBuffer = models.response.getBodyBuffer(this.props.response);
+    clipboard.writeText(bodyBuffer.toString('utf8'));
+  }
+
   _handleTabSelect(index: number, lastIndex: number) {
     if (this._responseViewer != null && index === 0 && index !== lastIndex) {
       // Fix for CodeMirror editor not updating its content.
@@ -319,6 +328,7 @@ class ResponsePane extends React.PureComponent<Props> {
                 previewMode={previewMode}
                 updatePreviewMode={handleSetPreviewMode}
                 showPrettifyOption={response.contentType.includes('json')}
+                copyToClipboard={this._handleCopyResponseToClipboard}
               />
             </Tab>
             <Tab tabIndex="-1">
