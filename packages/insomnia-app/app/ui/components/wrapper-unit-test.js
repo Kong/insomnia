@@ -413,7 +413,10 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     }
 
     return (
-      <div className="unit-tests layout-body--sidebar theme--pane">
+      <div
+        className={classnames('unit-tests layout-body--sidebar theme--pane', {
+          vertical: this.props.wrapperProps.settings.forceVerticalLayout,
+        })}>
         <div className="unit-tests__tests theme--pane__body">
           <div className="unit-tests__top-header">
             <h2>

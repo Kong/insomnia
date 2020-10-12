@@ -218,6 +218,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
           <div
             className={classnames('spec-editor layout-body--sidebar theme--pane', {
               'preview-hidden': previewHidden,
+              vertical: this.props.wrapperProps.settings.forceVerticalLayout,
             })}>
             {previewHidden ? null : (
               <div id="swagger-ui-wrapper">

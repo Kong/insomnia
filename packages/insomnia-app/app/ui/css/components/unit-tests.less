@@ -13,6 +13,32 @@
     grid-template-columns: 1fr 0;
   }
 
+  &.vertical {
+    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr;
+
+    .unit-tests__tests {
+      grid-column-start: 1;
+      grid-column-end: span 3;
+      grid-row-start: 1;
+      grid-row-end: span 1;
+    }
+
+    .unit-tests__results {
+      border-top: 1px solid var(--hl-md);
+      border-left: none;
+
+      grid-column-start: 1;
+      grid-column-end: span 3;
+      grid-row-start: 2;
+      grid-row-end: span 1;
+    }
+
+    &.preview-hidden {
+      grid-template-rows: 1fr 0;
+    }
+  }
+
   .editor {
     overflow-y: hidden !important;
     max-height: 25em;

@@ -192,9 +192,9 @@ class General extends React.PureComponent<Props, State> {
           <div>
             {this.renderBooleanSetting('Force bulk header editor', 'useBulkHeaderEditor', '')}
             {this.renderBooleanSetting(
-              'Vertical request/response layout',
+              'Use vertical layout',
               'forceVerticalLayout',
-              '',
+              'Stack application panels vertically instead of horizontally',
             )}
           </div>
           <div>
