@@ -93,16 +93,10 @@ function generateMetadata(
   increment: IndexIncrement,
   specName: string,
 ): K8sMetadata {
-  const metadata: K8sMetadata = {
+  return {
     name: `${specName}-${increment()}`,
+    annotations: generateMetadataAnnotations(api, customAnnotations),
   };
-
-  const annotations = generateMetadataAnnotations(api, customAnnotations);
-  if (annotations) {
-    metadata.annotations = annotations;
-  }
-
-  return metadata;
 }
 
 type CustomAnnotations = {
@@ -117,7 +111,11 @@ export function getSpecName(api: OpenApi3Spec): string {
 export function generateMetadataAnnotations(
   api: OpenApi3Spec,
   { pluginNames, overrideName }: CustomAnnotations,
-): K8sAnnotations | null {
+): K8sAnnotations {
+  // This annotation is required by kong-ingress-controller
+  // https://github.com/Kong/kubernetes-ingress-controller/blob/main/docs/references/annotations.md#kubernetesioingressclass
+  const coreAnnotations = { 'kubernetes.io/ingress.class': 'kong' };
+
   const metadata = api.info?.['x-kubernetes-ingress-metadata'];
 
   // Only continue if metadata annotations, or plugins, or overrides exist
@@ -133,10 +131,10 @@ export function generateMetadataAnnotations(
     }
 
     const originalAnnotations = metadata?.annotations || {};
-    return { ...originalAnnotations, ...customAnnotations };
+    return { ...originalAnnotations, ...customAnnotations, ...coreAnnotations };
   }
 
-  return null;
+  return coreAnnotations;
 }
 
 export function generateRulesForServer(
