@@ -16,12 +16,12 @@ export default async function(
   credentialsInBody: boolean,
   clientId: string,
   clientSecret: string,
-  usePkce: boolean,
   redirectUri: string = '',
   scope: string = '',
   state: string = '',
   audience: string = '',
   resource: string = '',
+  usePkce: boolean = false,
 ): Promise<Object> {
   if (!authorizeUrl) {
     throw new Error('Invalid authorization URL');
