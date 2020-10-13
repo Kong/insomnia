@@ -285,8 +285,8 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     return selectableRequests;
   }
 
-  renderResults(): React.Node {
-    const { activeUnitTestResult, handleSetResponsePaneRef } = this.props.wrapperProps;
+  renderResults = (): React.Node => {
+    const { activeUnitTestResult } = this.props.wrapperProps;
     const { testsRunning, resultsError } = this.state;
 
     if (resultsError) {
@@ -348,15 +348,13 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       );
     }
     return (
-      <section className="unit-tests__results" ref={handleSetResponsePaneRef}>
-        <div>
-          <div className="unit-tests__top-header">
-            <h2 className="success">Awaiting Test Execution</h2>
-          </div>
+      <div className="unit-tests__results">
+        <div className="unit-tests__top-header">
+          <h2 className="success">Awaiting Test Execution</h2>
         </div>
-      </section>
+      </div>
     );
-  }
+  };
 
   renderUnitTest(unitTest: UnitTest): React.Node {
     const { settings } = this.props.wrapperProps;
@@ -400,15 +398,8 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     );
   }
 
-  renderPageBody(): React.Node {
-    const {
-      activeUnitTests,
-      activeUnitTestSuite,
-      handleSetRequestPaneRef,
-      handleSetResponsePaneRef,
-      handleStartDragPaneHorizontal,
-      handleResetDragPaneHorizontal,
-    } = this.props.wrapperProps;
+  renderTestSuite = (): React.Node => {
+    const { activeUnitTests, activeUnitTestSuite } = this.props.wrapperProps;
     const { testsRunning } = this.state;
 
     if (!activeUnitTestSuite) {
@@ -420,43 +411,32 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     }
 
     return (
-      <React.Fragment>
-        <TestsPane ref={handleSetRequestPaneRef}>
-          <div className="unit-tests__tests">
-            <div className="unit-tests__top-header">
-              <h2>
-                <Editable
-                  singleClick
-                  onSubmit={this._handleChangeActiveSuiteName}
-                  value={activeUnitTestSuite.name}
-                />
-              </h2>
-              <Button variant="outlined" onClick={this._handleCreateTest}>
-                New Test
-              </Button>
-              <Button
-                variant="contained"
-                bg="surprise"
-                onClick={this._handleRunTests}
-                size="default"
-                disabled={testsRunning}>
-                {testsRunning ? 'Running... ' : 'Run Tests'}
-                <i className="fa fa-play space-left"></i>
-              </Button>
-            </div>
-            <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
-          </div>
-        </TestsPane>
-        <div className="drag drag--pane-horizontal">
-          <div
-            onMouseDown={handleStartDragPaneHorizontal}
-            onDoubleClick={handleResetDragPaneHorizontal}
-          />
+      <div className="unit-tests__tests">
+        <div className="unit-tests__top-header">
+          <h2>
+            <Editable
+              singleClick
+              onSubmit={this._handleChangeActiveSuiteName}
+              value={activeUnitTestSuite.name}
+            />
+          </h2>
+          <Button variant="outlined" onClick={this._handleCreateTest}>
+            New Test
+          </Button>
+          <Button
+            variant="contained"
+            bg="surprise"
+            onClick={this._handleRunTests}
+            size="default"
+            disabled={testsRunning}>
+            {testsRunning ? 'Running... ' : 'Run Tests'}
+            <i className="fa fa-play space-left"></i>
+          </Button>
         </div>
-        <ResultsPane ref={handleSetResponsePaneRef}>{this.renderResults()}</ResultsPane>
-      </React.Fragment>
+        <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
+      </div>
     );
-  }
+  };
 
   renderPageSidebar(): React.Node {
     const { activeUnitTestSuites, activeUnitTestSuite } = this.props.wrapperProps;
@@ -509,7 +489,8 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       <PageLayout
         wrapperProps={this.props.wrapperProps}
         renderPageSidebar={this.renderPageSidebar}
-        renderPageBody={this.renderPageBody}
+        renderPaneOne={this.renderTestSuite}
+        renderPaneTwo={this.renderResults}
         renderPageHeader={() => (
           <Header
             className="app-header"
@@ -535,18 +516,6 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         )}
       />
     );
-  }
-}
-
-class TestsPane extends React.PureComponent {
-  render() {
-    return <section className="request-pane">{this.props.children}</section>;
-  }
-}
-
-class ResultsPane extends React.PureComponent {
-  render() {
-    return <section className="response-pane">{this.props.children}</section>;
   }
 }
 

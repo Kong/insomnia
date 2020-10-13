@@ -13,7 +13,8 @@ type Props = {
   // Render props
   renderPageSidebar?: () => React.Node,
   renderPageHeader?: () => React.Node,
-  renderPageBody?: () => React.Node,
+  renderPaneOne?: () => React.Node,
+  renderPaneTwo?: () => React.Node,
 };
 
 type State = {};
@@ -29,7 +30,13 @@ class PageLayout extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { renderPageBody, renderPageHeader, renderPageSidebar, wrapperProps } = this.props;
+    const {
+      renderPaneOne,
+      renderPaneTwo,
+      renderPageHeader,
+      renderPageSidebar,
+      wrapperProps,
+    } = this.props;
 
     const {
       activity,
@@ -43,6 +50,10 @@ class PageLayout extends React.PureComponent<Props, State> {
       handleSetActiveWorkspace,
       handleSetSidebarRef,
       handleShowSettingsModal,
+      handleSetRequestPaneRef,
+      handleSetResponsePaneRef,
+      handleStartDragPaneHorizontal,
+      handleResetDragPaneHorizontal,
       isLoading,
       paneHeight,
       paneWidth,
@@ -141,10 +152,39 @@ class PageLayout extends React.PureComponent<Props, State> {
           </ErrorBoundary>
         )}
 
-        {renderPageBody && <ErrorBoundary showAlert>{renderPageBody()}</ErrorBoundary>}
+        {renderPaneOne && (
+          <ErrorBoundary showAlert>
+            <PaneOne ref={handleSetRequestPaneRef}>{renderPaneOne()}</PaneOne>
+          </ErrorBoundary>
+        )}
+
+        <div className="drag drag--pane-horizontal">
+          <div
+            onMouseDown={handleStartDragPaneHorizontal}
+            onDoubleClick={handleResetDragPaneHorizontal}
+          />
+        </div>
+
+        {renderPaneTwo && (
+          <ErrorBoundary showAlert>
+            <PaneTwo ref={handleSetResponsePaneRef}>{renderPaneTwo()}</PaneTwo>
+          </ErrorBoundary>
+        )}
       </div>
     );
   }
 }
 
 export default PageLayout;
+
+class PaneOne extends React.PureComponent {
+  render() {
+    return <section className="request-pane">{this.props.children}</section>;
+  }
+}
+
+class PaneTwo extends React.PureComponent {
+  render() {
+    return <section className="response-pane">{this.props.children}</section>;
+  }
+}
