@@ -10,7 +10,6 @@ import CodeEditor from './codemirror/code-editor';
 import { Spectral } from '@stoplight/spectral';
 import { showModal } from './modals';
 import GenerateConfigModal from './modals/generate-config-modal';
-import classnames from 'classnames';
 import SwaggerUI from 'swagger-ui-react';
 import type { ApiSpec } from '../../models/api-spec';
 import designerLogo from '../images/insomnia-designer-logo.svg';
@@ -155,12 +154,84 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     }
   }
 
+  renderEditor = (): React.Node => {
+    const { activeApiSpec, settings } = this.props.wrapperProps;
+    const { lintMessages, previewHidden } = this.state;
+
+    return (
+      <div className={`spec-editor__body ${previewHidden ? 'preview-hidden' : ''}`}>
+        <CodeEditor
+          manualPrettify
+          ref={this._setEditorRef}
+          fontSize={settings.editorFontSize}
+          indentSize={settings.editorIndentSize}
+          lineWrapping={settings.lineWrapping}
+          keyMap={settings.editorKeyMap}
+          lintOptions={WrapperDesign.lintOptions}
+          mode="openapi"
+          defaultValue={activeApiSpec.contents}
+          onChange={this._handleOnChange}
+          uniquenessKey={activeApiSpec._id}
+        />
+        {lintMessages.length > 0 && (
+          <NoticeTable notices={lintMessages} onClick={this._handleLintClick} />
+        )}
+      </div>
+    );
+  };
+
+  renderPreview = (): React.Node => {
+    const { activeApiSpec } = this.props.wrapperProps;
+    const { previewHidden } = this.state;
+
+    let swaggerUiSpec;
+    try {
+      swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
+    } catch (err) {}
+
+    if (!swaggerUiSpec) {
+      swaggerUiSpec = {};
+    }
+
+    return (
+      !previewHidden && (
+        <div id="swagger-ui-wrapper">
+          <ErrorBoundary
+            invalidationKey={activeApiSpec.contents}
+            renderError={() => (
+              <div className="text-left margin pad">
+                <h3>An error occurred while trying to render Swagger UI 😢</h3>
+                <p>
+                  This preview will automatically refresh, once you have a valid specification that
+                  can be previewed.
+                </p>
+              </div>
+            )}>
+            <SwaggerUI
+              spec={swaggerUiSpec}
+              supportedSubmitMethods={[
+                'get',
+                'put',
+                'post',
+                'delete',
+                'options',
+                'head',
+                'patch',
+                'trace',
+              ]}
+            />
+          </ErrorBoundary>
+        </div>
+      )
+    );
+  };
+
   render() {
     const { gitSyncDropdown, wrapperProps, handleActivityChange } = this.props;
 
-    const { activeApiSpec, settings, activity, activeWorkspace } = wrapperProps;
+    const { activeApiSpec, activity, activeWorkspace } = wrapperProps;
 
-    const { lintMessages, previewHidden, hasConfigPlugins } = this.state;
+    const { previewHidden, hasConfigPlugins } = this.state;
 
     let swaggerUiSpec;
     try {
@@ -214,60 +285,8 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             }
           />
         )}
-        renderPageBody={() => (
-          <div
-            className={classnames('spec-editor layout-body--sidebar theme--pane', {
-              'preview-hidden': previewHidden,
-            })}>
-            {previewHidden ? null : (
-              <div id="swagger-ui-wrapper">
-                <ErrorBoundary
-                  invalidationKey={activeApiSpec.contents}
-                  renderError={() => (
-                    <div className="text-left margin pad">
-                      <h3>An error occurred while trying to render Swagger UI 😢</h3>
-                      <p>
-                        This preview will automatically refresh, once you have a valid specification
-                        that can be previewed.
-                      </p>
-                    </div>
-                  )}>
-                  <SwaggerUI
-                    spec={swaggerUiSpec}
-                    supportedSubmitMethods={[
-                      'get',
-                      'put',
-                      'post',
-                      'delete',
-                      'options',
-                      'head',
-                      'patch',
-                      'trace',
-                    ]}
-                  />
-                </ErrorBoundary>
-              </div>
-            )}
-            <div className="spec-editor__body theme--pane__body">
-              <CodeEditor
-                manualPrettify
-                ref={this._setEditorRef}
-                fontSize={settings.editorFontSize}
-                indentSize={settings.editorIndentSize}
-                lineWrapping={settings.lineWrapping}
-                keyMap={settings.editorKeyMap}
-                lintOptions={WrapperDesign.lintOptions}
-                mode="openapi"
-                defaultValue={activeApiSpec.contents}
-                onChange={this._handleOnChange}
-                uniquenessKey={activeApiSpec._id}
-              />
-              {lintMessages.length > 0 && (
-                <NoticeTable notices={lintMessages} onClick={this._handleLintClick} />
-              )}
-            </div>
-          </div>
-        )}
+        renderPaneOne={this.renderEditor}
+        renderPaneTwo={this.renderPreview}
         renderPageSidebar={() => (
           <ErrorBoundary
             invalidationKey={activeApiSpec.contents}

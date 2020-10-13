@@ -5,7 +5,7 @@
 
   grid-template-areas: 'appheader appheader' 'body-left body-right';
   grid-template-rows: auto 1fr;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 2fr 1fr;
 
   border-left: 1px solid var(--hl-md);
 
@@ -40,7 +40,10 @@
   }
 
   &__body {
-    grid-area: body-left;
+    // TODO - Jasmine this is used too
+    // grid-area: body-left;
+    border-left: 1px solid var(--hl-md);
+    height: 100%;
     background: var(--color-bg);
     color: var(--color-font);
     display: grid;
@@ -55,9 +58,11 @@
 }
 
 #swagger-ui-wrapper {
+  // TODO - Jasmine this is used
   border-left: 1px solid var(--hl-sm);
+  height: 100%;
   overflow-y: scroll;
-  grid-area: body-right;
+  // grid-area: body-right;
 
   .nostyle,
   .renderedMarkdown,
@@ -100,7 +105,6 @@
   code {
     color: var(--color-font);
     background-color: var(--hl-md);
-
   }
 
   .scheme-container {
@@ -109,7 +113,6 @@
 
   section.schemes {
     div:first-child {
-
       &:not('.modal-ux-header') {
         float: left;
       }
@@ -140,7 +143,8 @@
     fill: var(--color-font);
   }
 
-  .opblock-section-header, .opblock {
+  .opblock-section-header,
+  .opblock {
     background-color: var(--hl-xs);
   }
 
