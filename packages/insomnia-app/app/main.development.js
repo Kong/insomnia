@@ -12,14 +12,19 @@ import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/cons
 import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';
 import { trackNonInteractiveEventQueueable } from './common/analytics';
+import log, { initializeLogging } from './common/log';
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
   process.exit(0);
 }
 
+initializeLogging();
+
 const { app, ipcMain, session } = electron;
 const commandLineArgs = process.argv.slice(1);
+
+log.info(`Running version ${getAppVersion()}`);
 
 // Explicitly set userData folder from config because it's sketchy to
 // rely on electron-builder to use productName, which could be changed
