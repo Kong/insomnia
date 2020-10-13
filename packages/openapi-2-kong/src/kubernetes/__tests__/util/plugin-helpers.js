@@ -75,6 +75,7 @@ export const ingressDoc = (
     kind: 'Ingress',
     metadata: {
       annotations: {
+        'kubernetes.io/ingress.class': 'kong',
         'konghq.com/plugins': plugins.join(', '),
       },
       name: `my-api-${index}`,
@@ -104,6 +105,7 @@ export const ingressDocWithOverride = (
   kind: 'Ingress',
   metadata: {
     annotations: {
+      'kubernetes.io/ingress.class': 'kong',
       'konghq.com/plugins': plugins.join(', '),
       'konghq.com/override': override,
     },
