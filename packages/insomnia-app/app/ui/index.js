@@ -16,6 +16,9 @@ import DNDBackend from './dnd-backend';
 import { trackEvent } from '../common/analytics';
 import { APP_ID_DESIGNER, APP_ID_INSOMNIA } from '../../config';
 import * as styledComponents from 'styled-components';
+import { initializeLogging } from '../common/log';
+
+initializeLogging();
 
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
@@ -90,7 +93,7 @@ if (window && !isDevelopment()) {
     trackEvent('Error', 'Uncaught Error');
   });
 
-  window.addEventListener('unhandledRejection', e => {
+  window.addEventListener('unhandledrejection', e => {
     console.error('Unhandled Promise', e);
     trackEvent('Error', 'Uncaught Promise');
   });
