@@ -208,8 +208,8 @@ async function _getToken(
   return results;
 }
 
-function _base64UrlEncode(string: string): string {
-  return string
+function _base64UrlEncode(str: string): string {
+  return str
     .toString('base64')
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
