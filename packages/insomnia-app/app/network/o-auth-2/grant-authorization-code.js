@@ -214,4 +214,8 @@ function _base64UrlEncode(str: string): string {
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=/g, '');
+    
+    // The characters + / = are reserved for PKCE as per the RFC,
+    // so we replace them with unreserved characters
+    // Docs: https://tools.ietf.org/html/rfc7636#section-4.2
 }
