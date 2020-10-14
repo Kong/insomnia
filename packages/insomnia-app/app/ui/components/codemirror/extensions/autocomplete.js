@@ -3,6 +3,7 @@ import 'codemirror/addon/mode/overlay';
 import * as models from '../../../../models';
 import { getDefaultFill } from '../../../../templating/utils';
 import { escapeHTML, escapeRegex } from '../../../../common/misc';
+import { getPlatformKeyCombinations, hotKeyRefs } from '../../../../common/hotkeys';
 
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;
 const NAME_MATCH = /[\w.\][]+$/;
@@ -129,6 +130,32 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     return CodeMirror.Pass;
   }
 
+  async function setupKeyMap(cm, functionMap) {
+    // Remove keymap if we're already added it
+    cm.removeKeyMap('autocomplete-keymap');
+
+    const settings = await models.settings.getOrCreate();
+    const keyBindings = settings.hotKeyRegistry[hotKeyRefs.SHOW_AUTOCOMPLETE.id];
+    const keyCombs = getPlatformKeyCombinations(keyBindings);
+
+    const keymap = {
+      name: 'autocomplete-keymap',
+      "' '": functionMap.completeIfAfterTagOrVarOpen,
+    };
+
+    for (const keyComb of keyCombs) {
+      const alt = keyComb.alt ? 'Alt-' : '';
+      const ctrl = keyComb.ctrl ? 'Ctrl-' : '';
+      const meta = keyComb.meta ? 'Cmd-' : '';
+      const shift = keyComb.shift ? 'Shift-' : '';
+      const keyname = CodeMirror.keyNames[keyComb.keyCode];
+
+      const key = `${shift}${meta}${ctrl}${alt}${keyname}`;
+      keymap[key] = functionMap.completeForce;
+    }
+    cm.addKeyMap(keymap);
+  }
+
   let keydownDebounce = null;
 
   cm.on('keydown', async (cm, e) => {
@@ -166,15 +193,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     clearTimeout(keydownDebounce);
   });
 
-  // Remove keymap if we're already added it
-  cm.removeKeyMap('autocomplete-keymap');
-
-  // Add keymap
-  cm.addKeyMap({
-    name: 'autocomplete-keymap',
-    'Ctrl-Space': completeForce, // Force autocomplete on hotkey
-    "' '": completeIfAfterTagOrVarOpen,
-  });
+  setupKeyMap(cm, { completeForce, completeIfAfterTagOrVarOpen });
 });
 
 /**
