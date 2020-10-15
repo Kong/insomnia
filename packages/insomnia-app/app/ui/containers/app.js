@@ -62,7 +62,12 @@ import WorkspaceSettingsModal from '../components/modals/workspace-settings-moda
 import RequestSettingsModal from '../components/modals/request-settings-modal';
 import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
 import * as network from '../../network/network';
-import { debounce, getContentDispositionHeader, getDataDirectory } from '../../common/misc';
+import {
+  debounce,
+  getContentDispositionHeader,
+  getDataDirectory,
+  generateId,
+} from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
@@ -121,6 +126,8 @@ class App extends PureComponent {
     );
 
     this._globalKeyMap = null;
+
+    this._updateVCSLock = null;
   }
 
   _setGlobalKeyMap() {
@@ -1054,6 +1061,9 @@ class App extends PureComponent {
   }
 
   async _updateVCS() {
+    const lock = generateId();
+    this._updateVCSLock = lock;
+
     const { activeWorkspace } = this.props;
 
     // Get the vcs and set it to null in the state while we update it
@@ -1075,7 +1085,10 @@ class App extends PureComponent {
 
     await vcs.switchProject(activeWorkspace._id);
 
-    this.setState({ vcs });
+    // Prevent a potential race-condition when _updateVCS() gets called for different projects in rapid succession
+    if (this._updateVCSLock === lock) {
+      this.setState({ vcs });
+    }
   }
 
   async componentDidMount() {
@@ -1088,7 +1101,7 @@ class App extends PureComponent {
     this._updateDocumentTitle();
 
     // Update VCS
-    await this._updateVCS(this.props.activeWorkspace);
+    await this._updateVCS();
     await this._updateGitVCS(this.props.activeWorkspace);
 
     db.onChange(async changes => {
@@ -1240,12 +1253,6 @@ class App extends PureComponent {
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps) {
     this._ensureWorkspaceChildren(nextProps);
-
-    // Update VCS if needed
-    const { activeWorkspace } = this.props;
-    if (nextProps.activeWorkspace._id !== activeWorkspace._id) {
-      this._updateVCS(nextProps.activeWorkspace);
-    }
   }
 
   // eslint-disable-next-line camelcase
