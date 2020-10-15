@@ -10,21 +10,13 @@ import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 // Docs: https://github.com/DeNA/nedb#inserting-documents
 const INVALID_NEDB_KEY_REGEX = /^\$|\./;
 
-export const ensureKeyIsValid = (key: string): string | null => {
+export const ensureKeyIsValid = (key: string, isRoot: boolean = false): string | null => {
   if (key.match(INVALID_NEDB_KEY_REGEX)) {
     return `"${key}" cannot begin with '$' or contain a '.'`;
   }
 
-  if (key === NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME) {
+  if (key === NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME && isRoot) {
     return `"${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}" is a reserved key`; // verbiage WIP
-  }
-
-  return null;
-};
-
-export const ensureRootKeyIsValid = (key: string): string | null => {
-  if (key === '_') {
-    return `"${key}" cannot be '_'`;
   }
 
   return null;
@@ -35,28 +27,16 @@ export const ensureRootKeyIsValid = (key: string): string | null => {
  * @param {object} obj - object to analyse
  * @returns {boolean} - if any invalid key is found
  */
-export function checkNestedKeys(
-  obj: any,
-  result: string | null = '',
-  isRoot: boolean = true,
-): boolean {
+export function checkNestedKeys(obj: any, isRoot: boolean = true): string | null {
+  let result = null;
   for (const key in obj) {
-    // Case: Root keys
-    if (isRoot) {
-      if (ensureRootKeyIsValid(key) !== null) {
-        result = ensureRootKeyIsValid(key);
-        break;
-      } else if (ensureKeyIsValid(key) !== null) {
-        result = ensureKeyIsValid(key);
-        break;
-      }
-    }
-    // Case: Nested keys
+    // Nested keys
     if (typeof obj[key] === 'object' && obj.hasOwnProperty(key)) {
-      result = checkNestedKeys(obj[key], result, false);
+      result = checkNestedKeys(obj[key], false);
+    } else {
+      result = ensureKeyIsValid(key, isRoot);
     }
-    if (ensureKeyIsValid(key) !== null) {
-      result = ensureKeyIsValid(key);
+    if (result !== null) {
       break;
     }
   }
