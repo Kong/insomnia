@@ -1085,7 +1085,7 @@ class App extends PureComponent {
 
     await vcs.switchProject(activeWorkspace._id);
 
-    // Prevent a potential race-condition when _updateVCS() gets called for different projects in rapid succession
+    // Prevent a potential race-condition when _updateVCS() gets called for different workspaces in rapid succession
     if (this._updateVCSLock === lock) {
       this.setState({ vcs });
     }
