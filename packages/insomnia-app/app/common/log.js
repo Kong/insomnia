@@ -1,3 +1,4 @@
+// @flow
 import log from 'electron-log';
 import { isDevelopment } from './constants';
 import { dirname } from 'path';
@@ -24,7 +25,7 @@ export const initializeLogging = () => {
 
 export function getLogDirectory(): string {
   const logPath = log.transports.file.getFile().path;
-  return dirname(logPath)
+  return dirname(logPath);
 }
 
 export default log;
