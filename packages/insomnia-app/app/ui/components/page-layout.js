@@ -68,10 +68,12 @@ class PageLayout extends React.PureComponent<Props, State> {
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
 
+    const paneTwo = renderPaneTwo();
+
     const gridRows = `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
     const gridColumns =
       `auto ${realSidebarWidth}rem 0 ` +
-      `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)`;
+      `${paneTwo ? `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)` : '1fr'}`;
 
     return (
       <div
@@ -157,18 +159,21 @@ class PageLayout extends React.PureComponent<Props, State> {
             <PaneOne ref={handleSetRequestPaneRef}>{renderPaneOne()}</PaneOne>
           </ErrorBoundary>
         )}
-
-        <div className="drag drag--pane-horizontal">
-          <div
-            onMouseDown={handleStartDragPaneHorizontal}
-            onDoubleClick={handleResetDragPaneHorizontal}
-          />
-        </div>
-
-        {renderPaneTwo && (
-          <ErrorBoundary showAlert>
-            <PaneTwo ref={handleSetResponsePaneRef}>{renderPaneTwo()}</PaneTwo>
-          </ErrorBoundary>
+        {paneTwo && (
+          <>
+            <div className="drag drag--pane-horizontal">
+              <div
+                onMouseDown={handleStartDragPaneHorizontal}
+                onDoubleClick={handleResetDragPaneHorizontal}
+              />
+            </div>
+            {/* TODO - Jasmine change grid-column-end from span 2 to span 3 when not rendering
+                Actually, what might be better is if you call whatever's resetting the size
+            */}
+            <ErrorBoundary showAlert>
+              <PaneTwo ref={handleSetResponsePaneRef}>{paneTwo}</PaneTwo>
+            </ErrorBoundary>
+          </>
         )}
       </div>
     );

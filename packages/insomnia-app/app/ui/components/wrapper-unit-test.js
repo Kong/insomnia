@@ -411,7 +411,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     }
 
     return (
-      <div className="unit-tests__tests">
+      <div className="unit-tests">
         <div className="unit-tests__top-header">
           <h2>
             <Editable

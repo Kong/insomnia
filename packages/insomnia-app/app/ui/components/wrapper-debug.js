@@ -242,46 +242,47 @@ class WrapperDebug extends React.PureComponent<Props> {
             />
           </React.Fragment>
         )}
-        renderPageBody={() => (
-          <React.Fragment>
-            <ErrorBoundary showAlert>
-              <RequestPane
-                ref={handleSetRequestPaneRef}
-                downloadPath={responseDownloadPath}
-                environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                forceRefreshCounter={forceRefreshKey}
-                forceUpdateRequest={handleForceUpdateRequest}
-                forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
-                handleCreateRequest={handleCreateRequestForWorkspace}
-                handleGenerateCode={handleGenerateCodeForActiveRequest}
-                handleGetRenderContext={handleGetRenderContext}
-                handleImport={handleImport}
-                handleImportFile={handleImportFile}
-                handleRender={handleRender}
-                handleSend={handleSendRequestWithActiveEnvironment}
-                handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
-                handleUpdateDownloadPath={handleUpdateDownloadPath}
-                headerEditorKey={headerEditorKey}
-                isVariableUncovered={isVariableUncovered}
-                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-                oAuth2Token={oAuth2Token}
-                request={activeRequest}
-                unitTest={activeUnitTest}
-                settings={settings}
-                updateRequestAuthentication={handleUpdateRequestAuthentication}
-                updateRequestBody={handleUpdateRequestBody}
-                updateRequestHeaders={handleUpdateRequestHeaders}
-                updateRequestMethod={handleUpdateRequestMethod}
-                updateRequestMimeType={handleUpdateRequestMimeType}
-                updateRequestParameters={handleUpdateRequestParameters}
-                updateRequestUrl={handleUpdateRequestUrl}
-                updateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-                updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
-                updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
-                workspace={activeWorkspace}
-              />
-            </ErrorBoundary>
-
+        renderPaneOne={() => (
+          <ErrorBoundary showAlert>
+            <RequestPane
+              ref={handleSetRequestPaneRef}
+              downloadPath={responseDownloadPath}
+              environmentId={activeEnvironment ? activeEnvironment._id : ''}
+              forceRefreshCounter={forceRefreshKey}
+              forceUpdateRequest={handleForceUpdateRequest}
+              forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
+              handleCreateRequest={handleCreateRequestForWorkspace}
+              handleGenerateCode={handleGenerateCodeForActiveRequest}
+              handleGetRenderContext={handleGetRenderContext}
+              handleImport={handleImport}
+              handleImportFile={handleImportFile}
+              handleRender={handleRender}
+              handleSend={handleSendRequestWithActiveEnvironment}
+              handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
+              handleUpdateDownloadPath={handleUpdateDownloadPath}
+              headerEditorKey={headerEditorKey}
+              isVariableUncovered={isVariableUncovered}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              oAuth2Token={oAuth2Token}
+              request={activeRequest}
+              unitTest={activeUnitTest}
+              settings={settings}
+              updateRequestAuthentication={handleUpdateRequestAuthentication}
+              updateRequestBody={handleUpdateRequestBody}
+              updateRequestHeaders={handleUpdateRequestHeaders}
+              updateRequestMethod={handleUpdateRequestMethod}
+              updateRequestMimeType={handleUpdateRequestMimeType}
+              updateRequestParameters={handleUpdateRequestParameters}
+              updateRequestUrl={handleUpdateRequestUrl}
+              updateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
+              updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
+              updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
+              workspace={activeWorkspace}
+            />
+          </ErrorBoundary>
+        )}
+        renderPaneTwo={() => (
+          <>
             <div className="drag drag--pane-horizontal">
               <div
                 onMouseDown={handleStartDragPaneHorizontal}
@@ -325,7 +326,7 @@ class WrapperDebug extends React.PureComponent<Props> {
                 unitTestResult={activeUnitTestResult}
               />
             </ErrorBoundary>
-          </React.Fragment>
+          </>
         )}
       />
     );
