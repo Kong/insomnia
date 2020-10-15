@@ -28,7 +28,7 @@ describe('ensureNestedKeyIsValid', () => {
 
 describe('ensureRootKeyIsValid', () => {
   it.each(['_'])('%s should be invalid when key is _', key => {
-    expect(ensureKeyIsValid(key, true)).toBe(`"${key}" cannot be '_'`);
+    expect(ensureKeyIsValid(key, true)).toBe(`"${key}" is a reserved key`);
   });
 
   it.each(['a', 'ab', 'a$', 'a$b', 'a-b', `a b`])('%s should be valid', key => {
