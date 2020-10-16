@@ -180,6 +180,7 @@ class BodyEditor extends React.PureComponent<Props> {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return (
         <RawEditor
+          autoPrettify={settings.autoPrettify}
           uniquenessKey={uniqueKey}
           fontSize={settings.editorFontSize}
           indentSize={settings.editorIndentSize}

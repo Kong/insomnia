@@ -196,6 +196,7 @@ class General extends React.PureComponent<Props, State> {
               'forceVerticalLayout',
               '',
             )}
+            {this.renderBooleanSetting('Automatically beautify request body', 'autoPrettify', '')}
           </div>
           <div>
             {this.renderBooleanSetting('Reveal passwords', 'showPasswords', '')}

@@ -20,6 +20,7 @@ class RawEditor extends PureComponent {
       isVariableUncovered,
       onChange,
       render,
+      autoPrettify,
       uniquenessKey,
     } = this.props;
 
@@ -27,6 +28,7 @@ class RawEditor extends PureComponent {
       <React.Fragment>
         <CodeEditor
           manualPrettify
+          autoPrettify={autoPrettify}
           uniquenessKey={uniquenessKey}
           fontSize={fontSize}
           indentSize={indentSize}
