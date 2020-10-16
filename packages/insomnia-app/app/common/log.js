@@ -21,4 +21,6 @@ export const initializeLogging = () => {
   Object.assign(console, log.functions);
 };
 
+export const getLogsDirectory = () => log.transports.file.getFile().path;
+
 export default log;
