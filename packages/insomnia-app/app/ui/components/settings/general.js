@@ -22,6 +22,7 @@ import { setFont } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
+import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -189,7 +190,7 @@ class General extends React.PureComponent<Props, State> {
       <div className="pad-bottom">
         <div className="row-fill row-fill--top">
           <div>
-            {this.renderBooleanSetting('Force bulk header editor', 'useBulkHeaderEditor', '')}
+            {this.renderBooleanSetting('Use bulk header editor', 'useBulkHeaderEditor', '')}
             {this.renderBooleanSetting(
               'Vertical request/response layout',
               'forceVerticalLayout',
@@ -386,6 +387,23 @@ class General extends React.PureComponent<Props, State> {
             'Maximum size in kilobytes to show on timeline',
             { min: 0 },
           )}
+        </div>
+
+        <hr className="pad-top" />
+
+        <h2>Security</h2>
+        <div className="form-row pad-top-sm">
+          {this.renderBooleanSetting(
+            'Clear OAuth 2 session on start',
+            'clearOAuth2SessionOnRestart',
+            'Clears the session of the OAuth2 popup window every time Insomnia is launched',
+          )}
+          <button
+            className="btn btn--clicky pointer"
+            style={{ padding: 0 }}
+            onClick={initNewOAuthSession}>
+            Clear OAuth 2 session
+          </button>
         </div>
 
         <hr className="pad-top" />

@@ -2,7 +2,20 @@ import electron from 'electron';
 import * as uuid from 'uuid';
 import querystring from 'querystring';
 
-const AUTH_WINDOW_SESSION_ID = uuid.v4();
+const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
+let authWindowSessionId;
+if (window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID)) {
+  authWindowSessionId = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+} else {
+  initNewOAuthSession();
+}
+
+export function initNewOAuthSession() {
+  // the value of this variable needs to start with 'persist:'
+  // otherwise sessions won't be persisted over application-restarts
+  authWindowSessionId = `persist:oauth2_${uuid.v4()}`;
+  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+}
 
 export function responseToObject(body, keys, defaults = {}) {
   let data = null;
@@ -72,7 +85,7 @@ export function authorizeUserInWindow(
     const child = new electron.remote.BrowserWindow({
       webPreferences: {
         nodeIntegration: false,
-        partition: `oauth2_${AUTH_WINDOW_SESSION_ID}`,
+        partition: authWindowSessionId,
       },
       show: false,
     });
