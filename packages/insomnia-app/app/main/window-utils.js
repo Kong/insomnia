@@ -14,6 +14,7 @@ import {
   isMac,
   MNEMONIC_SYM,
 } from '../common/constants';
+import { getLogsDirectory } from '../common/log';
 import * as misc from '../common/misc';
 import * as os from 'os';
 import { docsBase } from '../common/documentation';
@@ -269,6 +270,13 @@ export function createWindow() {
         click: (menuItem, w, e) => {
           const directory = misc.getDataDirectory();
           shell.showItemInFolder(directory);
+        },
+      },
+      {
+        label: `Show App ${MNEMONIC_SYM}Logs Folder`,
+        click: (menuItem, w, e) => {
+          const logsDirectory = getLogsDirectory();
+          shell.showItemInFolder(logsDirectory);
         },
       },
       {
