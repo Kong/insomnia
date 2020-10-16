@@ -15,6 +15,9 @@ import { delay } from '../common/misc';
 const { autoUpdater, BrowserWindow, ipcMain } = electron;
 
 async function getUpdateUrl(force: boolean): Promise<string | null> {
+  return null;
+
+  // eslint-disable-next-line no-unreachable
   const platform = process.platform;
   const settings = await models.settings.getOrCreate();
   let updateUrl = null;
