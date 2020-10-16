@@ -226,6 +226,8 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: insomnia-api-1
+  annotations:
+    kubernetes.io/ingress.class: "kong"
 spec:
   rules:
     - host: one.insomnia.rest
@@ -240,6 +242,8 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: insomnia-api-2
+  annotations:
+    kubernetes.io/ingress.class: "kong"
 spec:
   rules:
     - host: two.insomnia.rest
@@ -263,7 +267,6 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: insomnia-api
-spec:
 ...
 ```
 
@@ -408,6 +411,7 @@ kind: Ingress
 metadata:
   name: insomnia-api-0
   annotations:
+    kubernetes.io/ingress.class: "kong"
     example: example                            # annotation from x-kong-ingress-metadata
     konghq.com/plugins: add-custom-global-g0    # only global plugin
 spec:
@@ -425,6 +429,7 @@ kind: Ingress
 metadata:
   name: insomnia-api-1
   annotations:
+    kubernetes.io/ingress.class: "kong"
     example: example
     konghq.com/plugins: add-custom-global-g0, add-key-auth-m2   # global and operation plugin, no server or path
     konghq.com/override: get-method             # restrict document to be for specified operation (due to plugin)
@@ -443,6 +448,7 @@ kind: Ingress
 metadata:
   name: insomnia-api-2
   annotations:
+    kubernetes.io/ingress.class: "kong"
     example: example
     konghq.com/plugins: add-custom-global-g0, add-custom-server-s1    # global and server 1 plugin, no path or operation
 spec:
@@ -460,6 +466,7 @@ kind: Ingress
 metadata:
   name: insomnia-api-3
   annotations:
+    kubernetes.io/ingress.class: "kong"
     example: example
     konghq.com/plugins: add-custom-global-g0, add-custom-server-s1, add-key-auth-m2   # global, server 1, and operation plugin, no path
     konghq.com/override: get-method             # restrict document to be for specified operation (due to plugin)
