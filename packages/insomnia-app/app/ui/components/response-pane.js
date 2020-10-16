@@ -204,22 +204,22 @@ class ResponsePane extends React.PureComponent<Props> {
       responses,
       showCookiesModal,
     } = this.props;
-    const paneClasses = 'response-pane theme--pane pane';
+    const paneClasses = 'theme--pane pane';
     const paneHeaderClasses = 'pane__header theme--pane__header';
     const paneBodyClasses = 'pane__body theme--pane__body';
 
     if (!request) {
       return (
-        <section className={paneClasses}>
+        <div className={paneClasses} style={{ height: '100%' }}>
           <header className={paneHeaderClasses} />
           <div className={paneBodyClasses + ' pane__body--placeholder'} />
-        </section>
+        </div>
       );
     }
 
     if (!response) {
       return (
-        <section className={paneClasses}>
+        <div className={paneClasses} style={{ height: '100%' }}>
           <header className={paneHeaderClasses} />
           <div className={paneBodyClasses + ' pane__body--placeholder'}>
             <div>
@@ -278,14 +278,14 @@ class ResponsePane extends React.PureComponent<Props> {
             handleCancel={() => cancelRequestById(request._id)}
             loadStartTime={loadStartTime}
           />
-        </section>
+        </div>
       );
     }
 
     const cookieHeaders = getSetCookieHeaders(response.headers);
 
     return (
-      <section className={paneClasses}>
+      <div className={paneClasses} style={{ height: '100%' }}>
         {!response ? null : (
           <header className={paneHeaderClasses + ' row-spaced'}>
             <div className="no-wrap scrollable scrollable--no-bars pad-left">
@@ -400,7 +400,7 @@ class ResponsePane extends React.PureComponent<Props> {
             loadStartTime={loadStartTime}
           />
         </ErrorBoundary>
-      </section>
+      </div>
     );
   }
 }

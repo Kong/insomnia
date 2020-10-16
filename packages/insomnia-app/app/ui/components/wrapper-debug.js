@@ -139,15 +139,11 @@ class WrapperDebug extends React.PureComponent<Props> {
       handleMoveDoc,
       handleMoveRequestGroup,
       handleRender,
-      handleResetDragPaneHorizontal,
-      handleResetDragPaneVertical,
       handleSetRequestGroupCollapsed,
       handleSetRequestPaneRef,
       handleSetRequestPinned,
       handleSetResponsePaneRef,
       handleSetSidebarFilter,
-      handleStartDragPaneHorizontal,
-      handleStartDragPaneVertical,
       handleUpdateDownloadPath,
       handleUpdateRequestMimeType,
       headerEditorKey,
@@ -282,51 +278,35 @@ class WrapperDebug extends React.PureComponent<Props> {
           </ErrorBoundary>
         )}
         renderPaneTwo={() => (
-          <>
-            <div className="drag drag--pane-horizontal">
-              <div
-                onMouseDown={handleStartDragPaneHorizontal}
-                onDoubleClick={handleResetDragPaneHorizontal}
-              />
-            </div>
-
-            <div className="drag drag--pane-vertical">
-              <div
-                onMouseDown={handleStartDragPaneVertical}
-                onDoubleClick={handleResetDragPaneVertical}
-              />
-            </div>
-
-            <ErrorBoundary showAlert>
-              <ResponsePane
-                ref={handleSetResponsePaneRef}
-                disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-                disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
-                editorFontSize={settings.editorFontSize}
-                editorIndentSize={settings.editorIndentSize}
-                editorKeyMap={settings.editorKeyMap}
-                editorLineWrapping={settings.editorLineWrapping}
-                environment={activeEnvironment}
-                filter={responseFilter}
-                filterHistory={responseFilterHistory}
-                handleDeleteResponse={handleDeleteResponse}
-                handleDeleteResponses={handleDeleteResponses}
-                handleSetActiveResponse={handleSetActiveResponse}
-                handleSetFilter={handleSetResponseFilter}
-                handleSetPreviewMode={handleSetPreviewMode}
-                handleShowRequestSettings={handleShowRequestSettingsModal}
-                showCookiesModal={handleShowCookiesModal}
-                hotKeyRegistry={settings.hotKeyRegistry}
-                loadStartTime={loadStartTime}
-                previewMode={responsePreviewMode}
-                request={activeRequest}
-                requestVersions={requestVersions}
-                response={activeResponse}
-                responses={activeRequestResponses}
-                unitTestResult={activeUnitTestResult}
-              />
-            </ErrorBoundary>
-          </>
+          <ErrorBoundary showAlert>
+            <ResponsePane
+              ref={handleSetResponsePaneRef}
+              disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+              disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+              editorLineWrapping={settings.editorLineWrapping}
+              environment={activeEnvironment}
+              filter={responseFilter}
+              filterHistory={responseFilterHistory}
+              handleDeleteResponse={handleDeleteResponse}
+              handleDeleteResponses={handleDeleteResponses}
+              handleSetActiveResponse={handleSetActiveResponse}
+              handleSetFilter={handleSetResponseFilter}
+              handleSetPreviewMode={handleSetPreviewMode}
+              handleShowRequestSettings={handleShowRequestSettingsModal}
+              showCookiesModal={handleShowCookiesModal}
+              hotKeyRegistry={settings.hotKeyRegistry}
+              loadStartTime={loadStartTime}
+              previewMode={responsePreviewMode}
+              request={activeRequest}
+              requestVersions={requestVersions}
+              response={activeResponse}
+              responses={activeRequestResponses}
+              unitTestResult={activeUnitTestResult}
+            />
+          </ErrorBoundary>
         )}
       />
     );

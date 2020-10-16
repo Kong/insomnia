@@ -54,6 +54,8 @@ class PageLayout extends React.PureComponent<Props, State> {
       handleSetResponsePaneRef,
       handleStartDragPaneHorizontal,
       handleResetDragPaneHorizontal,
+      handleStartDragPaneVertical,
+      handleResetDragPaneVertical,
       isLoading,
       paneHeight,
       paneWidth,
@@ -167,9 +169,14 @@ class PageLayout extends React.PureComponent<Props, State> {
                 onDoubleClick={handleResetDragPaneHorizontal}
               />
             </div>
-            {/* TODO - Jasmine change grid-column-end from span 2 to span 3 when not rendering
-                Actually, what might be better is if you call whatever's resetting the size
-            */}
+
+            <div className="drag drag--pane-vertical">
+              <div
+                onMouseDown={handleStartDragPaneVertical}
+                onDoubleClick={handleResetDragPaneVertical}
+              />
+            </div>
+
             <ErrorBoundary showAlert>
               <PaneTwo ref={handleSetResponsePaneRef}>{paneTwo}</PaneTwo>
             </ErrorBoundary>
@@ -184,12 +191,12 @@ export default PageLayout;
 
 class PaneOne extends React.PureComponent {
   render() {
-    return <section className="request-pane">{this.props.children}</section>;
+    return <section className="request-pane theme--pane">{this.props.children}</section>;
   }
 }
 
 class PaneTwo extends React.PureComponent {
   render() {
-    return <section className="response-pane">{this.props.children}</section>;
+    return <section className="response-pane theme--pane">{this.props.children}</section>;
   }
 }

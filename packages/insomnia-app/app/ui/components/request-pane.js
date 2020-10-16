@@ -172,7 +172,7 @@ class RequestPane extends React.PureComponent<Props> {
       downloadPath,
     } = this.props;
 
-    const paneClasses = 'request-pane theme--pane pane';
+    const paneClasses = 'theme--pane pane';
     const paneHeaderClasses = 'pane__header theme--pane__header';
     const paneBodyClasses = 'pane__body theme--pane__body';
 
@@ -180,7 +180,7 @@ class RequestPane extends React.PureComponent<Props> {
 
     if (!request) {
       return (
-        <section className={paneClasses}>
+        <div className={paneClasses} style={{ height: '100%' }}>
           <header className={paneHeaderClasses} />
           <div className={paneBodyClasses + ' pane__body--placeholder'}>
             <div>
@@ -234,7 +234,7 @@ class RequestPane extends React.PureComponent<Props> {
               </div>
             </div>
           </div>
-        </section>
+        </div>
       );
     }
 
@@ -250,7 +250,7 @@ class RequestPane extends React.PureComponent<Props> {
     const uniqueKey = `${forceRefreshCounter}::${request._id}`;
 
     return (
-      <section className={paneClasses}>
+      <div className={paneClasses} style={{ height: '100%' }}>
         <header className={paneHeaderClasses}>
           <ErrorBoundary errorClassName="font-error pad text-center">
             <RequestUrlBar
@@ -459,7 +459,7 @@ class RequestPane extends React.PureComponent<Props> {
             )}
           </TabPanel>
         </Tabs>
-      </section>
+      </div>
     );
   }
 }

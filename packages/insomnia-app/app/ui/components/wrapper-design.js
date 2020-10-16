@@ -156,10 +156,10 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
   renderEditor = (): React.Node => {
     const { activeApiSpec, settings } = this.props.wrapperProps;
-    const { lintMessages, previewHidden } = this.state;
+    const { lintMessages } = this.state;
 
     return (
-      <div className={`spec-editor__body ${previewHidden ? 'preview-hidden' : ''}`}>
+      <div className="spec-editor theme--pane__body">
         <CodeEditor
           manualPrettify
           ref={this._setEditorRef}
