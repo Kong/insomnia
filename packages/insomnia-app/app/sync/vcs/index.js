@@ -65,6 +65,41 @@ export default class VCS {
     return newVCS;
   }
 
+  debugInfo(): function {
+    try {
+      this.localProjects().then(projects => {
+        console.log('[sync] localProjects', projects);
+
+        for (const project of projects) {
+          (project => {
+            this._getBranches(project.id).then(branches => {
+              for (const branch of branches) {
+                console.log(
+                  `[sync] localProject ${project.id} (${project.name}) branch ${branch.name}`,
+                  branch,
+                );
+                for (const snapshot of branch.snapshots) {
+                  this._getSnapshot(snapshot).then(snapshot => {
+                    console.log(
+                      `[sync] localProject ${project.id} (${project.name}) snapshot ${snapshot.id}`,
+                      snapshot,
+                    );
+                  });
+                }
+              }
+            });
+          })(project);
+        }
+      });
+
+      this.remoteProjects().then(projects => {
+        console.log('[sync] remoteProjects', projects);
+      });
+    } catch (error) {
+      console.log('[sync] Failed getting debug info', error);
+    }
+  }
+
   async setProject(project: Project): Promise<void> {
     this._project = project;
     console.log(`[sync] Activated project ${project.id}`);
@@ -915,7 +950,12 @@ export default class VCS {
 
       for (const blob of blobs) {
         const encryptedResult = JSON.parse(blob.content);
-        result[blob.id] = crypt.decryptAESToBuffer(symmetricKey, encryptedResult);
+        try {
+          result[blob.id] = crypt.decryptAESToBuffer(symmetricKey, encryptedResult);
+        } catch (error) {
+          console.log(`[sync] Failed decrypting blob ${blob.id}`, error);
+          throw error;
+        }
       }
     }
 

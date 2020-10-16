@@ -1080,6 +1080,8 @@ class App extends PureComponent {
           });
         });
       });
+
+      vcs.debugInfo();
     }
 
     await vcs.switchProject(activeWorkspace._id);
