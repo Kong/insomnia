@@ -13,6 +13,7 @@ type Props = {
   // Render props
   renderPageSidebar?: () => React.Node,
   renderPageHeader?: () => React.Node,
+  renderPageBody?: () => React.Node,
   renderPaneOne?: () => React.Node,
   renderPaneTwo?: () => React.Node,
 };
@@ -33,6 +34,7 @@ class PageLayout extends React.PureComponent<Props, State> {
     const {
       renderPaneOne,
       renderPaneTwo,
+      renderPageBody,
       renderPageHeader,
       renderPageSidebar,
       wrapperProps,
@@ -70,7 +72,7 @@ class PageLayout extends React.PureComponent<Props, State> {
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
 
-    const paneTwo = renderPaneTwo();
+    const paneTwo = renderPaneTwo && renderPaneTwo();
 
     const gridRows = `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
     const gridColumns =
@@ -155,31 +157,36 @@ class PageLayout extends React.PureComponent<Props, State> {
             </div>
           </ErrorBoundary>
         )}
-
-        {renderPaneOne && (
-          <ErrorBoundary showAlert>
-            <PaneOne ref={handleSetRequestPaneRef}>{renderPaneOne()}</PaneOne>
-          </ErrorBoundary>
-        )}
-        {paneTwo && (
+        {renderPageBody ? (
+          <ErrorBoundary showAlert>{renderPageBody()}</ErrorBoundary>
+        ) : (
           <>
-            <div className="drag drag--pane-horizontal">
-              <div
-                onMouseDown={handleStartDragPaneHorizontal}
-                onDoubleClick={handleResetDragPaneHorizontal}
-              />
-            </div>
+            {renderPaneOne && (
+              <ErrorBoundary showAlert>
+                <PaneOne ref={handleSetRequestPaneRef}>{renderPaneOne()}</PaneOne>
+              </ErrorBoundary>
+            )}
+            {paneTwo && (
+              <>
+                <div className="drag drag--pane-horizontal">
+                  <div
+                    onMouseDown={handleStartDragPaneHorizontal}
+                    onDoubleClick={handleResetDragPaneHorizontal}
+                  />
+                </div>
 
-            <div className="drag drag--pane-vertical">
-              <div
-                onMouseDown={handleStartDragPaneVertical}
-                onDoubleClick={handleResetDragPaneVertical}
-              />
-            </div>
+                <div className="drag drag--pane-vertical">
+                  <div
+                    onMouseDown={handleStartDragPaneVertical}
+                    onDoubleClick={handleResetDragPaneVertical}
+                  />
+                </div>
 
-            <ErrorBoundary showAlert>
-              <PaneTwo ref={handleSetResponsePaneRef}>{paneTwo}</PaneTwo>
-            </ErrorBoundary>
+                <ErrorBoundary showAlert>
+                  <PaneTwo ref={handleSetResponsePaneRef}>{paneTwo}</PaneTwo>
+                </ErrorBoundary>
+              </>
+            )}
           </>
         )}
       </div>
