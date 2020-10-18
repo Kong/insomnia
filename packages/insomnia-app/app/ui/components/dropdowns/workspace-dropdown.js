@@ -34,6 +34,7 @@ import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
+import DropdownId from '../base/dropdown/dropdown-id';
 
 type Props = {
   activeEnvironment: Environment | null,
@@ -294,7 +295,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
                 )}
                 <i className="fa fa-caret-down space-left" />
               </div>
-              {activeWorkspace.name}
+              {activeWorkspace.name}{' '}
+              <DropdownId>({activeWorkspace._id.substring(0, 8)})</DropdownId>
             </h1>
           </DropdownButton>
           <DropdownDivider>{activeWorkspace.name}</DropdownDivider>
@@ -313,7 +315,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             const isUnseen = !!unseenWorkspaces.find(v => v._id === w._id);
             return (
               <DropdownItem key={w._id} onClick={handleSetActiveWorkspace} value={w._id}>
-                <i className="fa fa-random" /> To <strong>{w.name}</strong>
+                <i className="fa fa-random" /> To <strong>{w.name}</strong>{' '}
+                <i className="f">({w._id.substring(0, 8)})</i>
                 {isUnseen && (
                   <Tooltip message="You haven't seen this workspace before" position="top">
                     <i className="width-auto fa fa-asterisk surprise" />
