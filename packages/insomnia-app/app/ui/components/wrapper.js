@@ -137,6 +137,7 @@ export type WrapperProps = {
   handleSetResponseFilter: Function,
   handleSetActiveResponse: Function,
   handleSetSidebarRef: Function,
+  handleSidebarSort: Function,
   handleStartDragSidebar: Function,
   handleResetDragSidebar: Function,
   handleStartDragPaneHorizontal: Function,
@@ -191,6 +192,7 @@ export type WrapperProps = {
   gitVCS: GitVCS | null,
   gitRepositories: Array<GitRepository>,
   syncItems: Array<StatusCandidate>,
+  sortOrder: string,
 
   // Optional
   oAuth2Token: OAuth2Token | null,
@@ -533,6 +535,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       handleRender,
       handleSetActiveWorkspace,
       handleShowExportRequestsModal,
+      handleSidebarSort,
       handleToggleMenuBar,
       isVariableUncovered,
       requestMetas,
@@ -823,6 +826,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleSetResponseFilter={this._handleSetResponseFilter}
               handleShowCookiesModal={this._handleShowCookiesModal}
               handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
+              handleSidebarSort={handleSidebarSort}
               handleUpdateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
               handleUpdateRequestBody={Wrapper._handleUpdateRequestBody}
               handleUpdateRequestHeaders={Wrapper._handleUpdateRequestHeaders}

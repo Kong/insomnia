@@ -7,11 +7,14 @@ import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import SidebarCreateDropdown from './sidebar-create-dropdown';
+import SidebarSortDropdown from './sidebar-sort-dropdown';
 
 type Props = {
   onChange: string => void,
   requestCreate: () => void,
   requestGroupCreate: () => void,
+  sidebarSort: Function,
+  sortOrder: string,
   filter: string,
   hotKeyRegistry: HotKeyRegistry,
 };
@@ -57,7 +60,7 @@ class SidebarFilter extends React.PureComponent<Props> {
   }
 
   render() {
-    const { filter, hotKeyRegistry } = this.props;
+    const { filter, hotKeyRegistry, sidebarSort, sortOrder } = this.props;
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
         <div className="sidebar__filter">
@@ -75,6 +78,7 @@ class SidebarFilter extends React.PureComponent<Props> {
               </button>
             )}
           </div>
+          <SidebarSortDropdown handleSort={sidebarSort} sortOrder={sortOrder} />
           <SidebarCreateDropdown
             handleCreateRequest={this._handleRequestCreate}
             handleCreateRequestGroup={this._handleRequestGroupCreate}

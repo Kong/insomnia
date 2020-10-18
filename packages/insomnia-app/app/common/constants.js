@@ -257,6 +257,37 @@ const authTypesMap = {
   [AUTH_NETRC]: ['Netrc', 'Netrc File'],
 };
 
+// Sort Orders
+export const SORT_CUSTOM = 'custom';
+export const SORT_NAME_ASC = 'name-asc';
+export const SORT_NAME_DESC = 'name-desc';
+export const SORT_CREATED_FIRST = 'created-first';
+export const SORT_CREATED_LAST = 'created-last';
+export const SORT_METHOD = 'method';
+export const SORT_TYPE_ASC = 'type-asc';
+export const SORT_TYPE_DESC = 'type-desc';
+
+export function getSortOrderName(sortOrder) {
+  switch (sortOrder) {
+    case SORT_NAME_ASC:
+      return 'Name Ascending';
+    case SORT_NAME_DESC:
+      return 'Name Descending';
+    case SORT_CREATED_FIRST:
+      return 'Created First';
+    case SORT_CREATED_LAST:
+      return 'Created Last';
+    case SORT_METHOD:
+      return 'Method';
+    case SORT_TYPE_ASC:
+      return 'Folder First';
+    case SORT_TYPE_DESC:
+      return 'Folder Last';
+    default:
+      return '';
+  }
+}
+
 export function getPreviewModeName(previewMode, useLong = false) {
   if (previewModeMap.hasOwnProperty(previewMode)) {
     return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];

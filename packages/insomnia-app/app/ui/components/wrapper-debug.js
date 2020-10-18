@@ -35,6 +35,7 @@ type Props = {
   handleSetResponseFilter: Function,
   handleShowCookiesModal: Function,
   handleShowRequestSettingsModal: Function,
+  handleSidebarSort: Function,
   handleUpdateRequestAuthentication: Function,
   handleUpdateRequestBody: Function,
   handleUpdateRequestHeaders: Function,
@@ -103,6 +104,7 @@ class WrapperDebug extends React.PureComponent<Props> {
       handleSetResponseFilter,
       handleShowCookiesModal,
       handleShowRequestSettingsModal,
+      handleSidebarSort,
       handleUpdateRequestAuthentication,
       handleUpdateRequestBody,
       handleUpdateRequestHeaders,
@@ -164,6 +166,7 @@ class WrapperDebug extends React.PureComponent<Props> {
       sidebarFilter,
       sidebarHidden,
       sidebarWidth,
+      sortOrder,
       unseenWorkspaces,
       vcs,
       workspaces,
@@ -213,6 +216,8 @@ class WrapperDebug extends React.PureComponent<Props> {
               onChange={handleSetSidebarFilter}
               requestCreate={handleRequestCreate}
               requestGroupCreate={handleRequestGroupCreate}
+              sidebarSort={handleSidebarSort}
+              sortOrder={sortOrder}
               filter={sidebarFilter || ''}
               hotKeyRegistry={settings.hotKeyRegistry}
             />

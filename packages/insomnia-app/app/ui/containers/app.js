@@ -30,6 +30,15 @@ import {
   PREVIEW_MODE_SOURCE,
   getAppId,
   getAppName,
+  SORT_NAME_ASC,
+  SORT_NAME_DESC,
+  SORT_TYPE_ASC,
+  SORT_TYPE_DESC,
+  SORT_METHOD,
+  SORT_CREATED_FIRST,
+  SORT_CREATED_LAST,
+  HTTP_METHODS,
+  SORT_CUSTOM,
 } from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as entitiesActions from '../redux/modules/entities';
@@ -115,6 +124,7 @@ class App extends PureComponent {
       forceRefreshCounter: 0,
       forceRefreshHeaderCounter: 0,
       isMigratingChildren: false,
+      activeSortOrder: props.activeSortOrder || SORT_CUSTOM,
     };
 
     this._getRenderContextPromiseCache = {};
@@ -333,6 +343,80 @@ class App extends PureComponent {
         this._handleSetActiveRequest(request._id);
       },
     });
+  }
+
+  _getSortMethod(order) {
+    switch (order) {
+      case SORT_NAME_ASC:
+        return (a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1);
+      case SORT_NAME_DESC:
+        return (a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? -1 : 1);
+      case SORT_CREATED_FIRST:
+        return (a, b) => (a.created < b.created ? -1 : 1);
+      case SORT_CREATED_LAST:
+        return (a, b) => (a.created > b.created ? -1 : 1);
+      case SORT_METHOD:
+        return (a, b) => {
+          if (a.type !== b.type) {
+            return a.type === models.request.type ? -1 : 1;
+          } else if (a.type === models.request.type) {
+            const aIndex = HTTP_METHODS.indexOf(a.method);
+            const bIndex = HTTP_METHODS.indexOf(b.method);
+            if (aIndex !== bIndex) {
+              return aIndex < bIndex ? -1 : 1;
+            } else {
+              return a.metaSortKey < b.metaSortKey ? -1 : 1;
+            }
+          } else {
+            return a.metaSortKey < b.metaSortKey ? -1 : 1;
+          }
+        };
+      case SORT_TYPE_ASC:
+        return (a, b) => {
+          if (a.type === b.type) {
+            return a.metaSortKey < b.metaSortKey ? -1 : 1;
+          } else {
+            return a.type === models.requestGroup.type ? -1 : 1;
+          }
+        };
+      case SORT_TYPE_DESC:
+        return (a, b) => {
+          if (a.type === b.type) {
+            return a.metaSortKey < b.metaSortKey ? -1 : 1;
+          } else {
+            return a.type === models.request.type ? -1 : 1;
+          }
+        };
+      default:
+        return (a, b) => (a.metaSortKey < b.metaSortKey ? -1 : 1);
+    }
+  }
+
+  async _recalculateMetaSortKey(docs) {
+    function __updateDoc(doc, metaSortKey) {
+      models.getModel(doc.type).update(doc, { metaSortKey });
+    }
+
+    await db.bufferChanges(300);
+    docs.map((doc, i) => __updateDoc(doc, i * 100));
+  }
+
+  async _sortSidebar(order, parentId) {
+    console.log('[sort called]', order, parentId);
+    if (!parentId) {
+      parentId = this.props.activeWorkspace._id;
+      this.state.activeSortOrder = order;
+    }
+
+    const docs = [
+      ...(await models.requestGroup.findByParentId(parentId)),
+      ...(await models.request.findByParentId(parentId)),
+    ].sort(this._getSortMethod(order));
+
+    this._recalculateMetaSortKey(docs);
+
+    // sort RequestGroups recursively
+    docs.filter(d => d.type === models.requestGroup.type).map(g => this._sortSidebar(order, g._id));
   }
 
   static async _requestGroupDuplicate(requestGroup) {
@@ -1335,6 +1419,8 @@ class App extends PureComponent {
               handleUpdateDownloadPath={this._handleUpdateDownloadPath}
               isVariableUncovered={isVariableUncovered}
               headerEditorKey={forceRefreshHeaderCounter + ''}
+              handleSidebarSort={this._sortSidebar}
+              sortOrder={this.state.activeSortOrder}
               vcs={vcs}
               gitVCS={gitVCS}
             />
@@ -1532,6 +1618,9 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   function __updateDoc(doc, patch) {
     models.getModel(docToMove.type).update(doc, patch);
   }
+
+  // Change sort order to CUSTOM so that sidebar can be sorted again
+  // this.state.activeSortOrder = SORT_CUSTOM;
 
   if (targetId === null) {
     // We are moving to an empty area. No sorting required
