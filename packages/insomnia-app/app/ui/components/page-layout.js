@@ -198,12 +198,12 @@ export default PageLayout;
 
 class PaneOne extends React.PureComponent {
   render() {
-    return <section className="request-pane theme--pane">{this.props.children}</section>;
+    return <section className="pane-one theme--pane">{this.props.children}</section>;
   }
 }
 
 class PaneTwo extends React.PureComponent {
   render() {
-    return <section className="response-pane theme--pane">{this.props.children}</section>;
+    return <section className="pane-two theme--pane">{this.props.children}</section>;
   }
 }

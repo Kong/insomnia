@@ -172,7 +172,7 @@ class RequestPane extends React.PureComponent<Props> {
       downloadPath,
     } = this.props;
 
-    const paneClasses = 'theme--pane pane';
+    const paneClasses = 'request-pane theme--pane pane';
     const paneHeaderClasses = 'pane__header theme--pane__header';
     const paneBodyClasses = 'pane__body theme--pane__body';
 

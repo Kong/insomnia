@@ -204,7 +204,7 @@ class ResponsePane extends React.PureComponent<Props> {
       responses,
       showCookiesModal,
     } = this.props;
-    const paneClasses = 'theme--pane pane';
+    const paneClasses = 'response-pane theme--pane pane';
     const paneHeaderClasses = 'pane__header theme--pane__header';
     const paneBodyClasses = 'pane__body theme--pane__body';
 
