@@ -190,7 +190,7 @@ class General extends React.PureComponent<Props, State> {
       <div className="pad-bottom">
         <div className="row-fill row-fill--top">
           <div>
-            {this.renderBooleanSetting('Force bulk header editor', 'useBulkHeaderEditor', '')}
+            {this.renderBooleanSetting('Use bulk header editor', 'useBulkHeaderEditor', '')}
             {this.renderBooleanSetting(
               'Vertical request/response layout',
               'forceVerticalLayout',
