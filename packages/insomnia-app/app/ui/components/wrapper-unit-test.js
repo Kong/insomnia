@@ -348,7 +348,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       );
     }
     return (
-      <div className="unit-tests__results">
+      <div className="unit-tests">
         <div className="unit-tests__top-header">
           <h2 className="success">Awaiting Test Execution</h2>
         </div>
@@ -403,11 +403,11 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     const { testsRunning } = this.state;
 
     if (!activeUnitTestSuite) {
-      return <div className="unit-tests__tests pad theme--pane__body">No test suite selected</div>;
+      return <div className="unit-tests pad theme--pane__body">No test suite selected</div>;
     }
 
     return (
-      <div className="unit-tests__tests theme--pane__body">
+      <div className="unit-tests theme--pane__body">
         <div className="unit-tests__top-header">
           <h2>
             <Editable

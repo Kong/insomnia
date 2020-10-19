@@ -1,27 +1,15 @@
 .unit-tests {
   height: 100%;
+  background: var(--color-bg);
+  color: var(--color-font);
+  overflow-y: auto;
+  box-sizing: border-box;
 
   .editor {
     overflow-y: hidden !important;
     max-height: 25em;
     overflow-y: auto; // TODO - Jasmine do we want it auto or hidden?
     margin: var(--padding-sm) 0 var(--padding-md) 0;
-  }
-
-  &__tests {
-    height: 100%;
-    background: var(--color-bg);
-    color: var(--color-font);
-    overflow-y: auto;
-    box-sizing: border-box;
-  }
-
-  &__results {
-    height: 100%;
-    background: var(--color-bg);
-    color: var(--color-font);
-    overflow-y: auto;
-    box-sizing: border-box;
   }
 
   &__sidebar {
