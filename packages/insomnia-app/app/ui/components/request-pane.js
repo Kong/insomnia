@@ -180,7 +180,7 @@ class RequestPane extends React.PureComponent<Props> {
 
     if (!request) {
       return (
-        <div className={paneClasses} style={{ height: '100%' }}>
+        <div className={paneClasses}>
           <header className={paneHeaderClasses} />
           <div className={paneBodyClasses + ' pane__body--placeholder'}>
             <div>
@@ -250,7 +250,7 @@ class RequestPane extends React.PureComponent<Props> {
     const uniqueKey = `${forceRefreshCounter}::${request._id}`;
 
     return (
-      <div className={paneClasses} style={{ height: '100%' }}>
+      <div className={paneClasses}>
         <header className={paneHeaderClasses}>
           <ErrorBoundary errorClassName="font-error pad text-center">
             <RequestUrlBar

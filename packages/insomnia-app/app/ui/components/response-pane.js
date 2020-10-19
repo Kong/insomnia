@@ -210,7 +210,7 @@ class ResponsePane extends React.PureComponent<Props> {
 
     if (!request) {
       return (
-        <div className={paneClasses} style={{ height: '100%' }}>
+        <div className={paneClasses}>
           <header className={paneHeaderClasses} />
           <div className={paneBodyClasses + ' pane__body--placeholder'} />
         </div>
@@ -219,7 +219,7 @@ class ResponsePane extends React.PureComponent<Props> {
 
     if (!response) {
       return (
-        <div className={paneClasses} style={{ height: '100%' }}>
+        <div className={paneClasses}>
           <header className={paneHeaderClasses} />
           <div className={paneBodyClasses + ' pane__body--placeholder'}>
             <div>
@@ -285,7 +285,7 @@ class ResponsePane extends React.PureComponent<Props> {
     const cookieHeaders = getSetCookieHeaders(response.headers);
 
     return (
-      <div className={paneClasses} style={{ height: '100%' }}>
+      <div className={paneClasses}>
         {!response ? null : (
           <header className={paneHeaderClasses + ' row-spaced'}>
             <div className="no-wrap scrollable scrollable--no-bars pad-left">
