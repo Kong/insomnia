@@ -27,6 +27,8 @@ const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
 // Refresh dropdown periodically
 const REFRESH_PERIOD = 1000 * 60 * 1;
 
+const DEFAULT_BRANCH_NAME = 'master';
+
 type Props = {
   workspace: Workspace,
   vcs: VCS,
@@ -258,11 +260,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     this.setState({ loadingProjectPull: true });
     await vcs.setProject(p);
 
-    const defaultBranch = 'master';
-    await vcs.checkout([], defaultBranch);
+    await vcs.checkout([], DEFAULT_BRANCH_NAME);
 
     const remoteBranches = await vcs.getRemoteBranches();
-    const defaultBranchMissing = !remoteBranches.includes(defaultBranch);
+    const defaultBranchMissing = !remoteBranches.includes(DEFAULT_BRANCH_NAME);
 
     // The default branch does not exist, so we create it and the workspace locally
     if (defaultBranchMissing) {
@@ -290,11 +291,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
     try {
       const delta = await vcs.checkout(syncItems, branch);
-      const defaultBranchName = 'master';
 
-      if (branch === defaultBranchName) {
+      if (branch === DEFAULT_BRANCH_NAME) {
         const { historyCount } = this.state;
-        const defaultBranchHistoryCount = await vcs.getHistoryCount(defaultBranchName);
+        const defaultBranchHistoryCount = await vcs.getHistoryCount(DEFAULT_BRANCH_NAME);
 
         // If the default branch has no snapshots, but the current branch does
         // It will result in the workspace getting deleted
