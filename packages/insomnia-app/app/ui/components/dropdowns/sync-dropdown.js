@@ -19,6 +19,7 @@ import LoginModal from '../modals/login-modal';
 import * as session from '../../../account/session';
 import PromptButton from '../base/prompt-button';
 import * as db from '../../../common/database';
+import * as models from '../../../models';
 
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
@@ -256,15 +257,30 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const { vcs } = this.props;
     this.setState({ loadingProjectPull: true });
     await vcs.setProject(p);
-    await vcs.checkout([], 'master');
 
-    // Pull changes
-    await vcs.pull([]); // There won't be any existing docs since it's a new pull
-    const flushId = await db.bufferChanges();
-    for (const doc of await vcs.allDocuments()) {
-      await db.upsert(doc);
+    const defaultBranch = 'master';
+    await vcs.checkout([], defaultBranch);
+
+    const remoteBranches = await vcs.getRemoteBranches();
+    const defaultBranchMissing = !remoteBranches.includes(defaultBranch);
+
+    // The default branch does not exist, so we create it and the workspace locally
+    if (defaultBranchMissing) {
+      const workspace: Workspace = await models.initModel(models.workspace.type, {
+        _id: p.rootDocumentId,
+        name: p.name,
+      });
+
+      await db.upsert(workspace);
+    } else {
+      // Pull changes
+      await vcs.pull([]); // There won't be any existing docs since it's a new pull
+      const flushId = await db.bufferChanges();
+      for (const doc of await vcs.allDocuments()) {
+        await db.upsert(doc);
+      }
+      await db.flushChanges(flushId);
     }
-    await db.flushChanges(flushId);
 
     await this.refreshMainAttributes({ loadingProjectPull: false });
   }
