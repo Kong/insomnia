@@ -15,8 +15,6 @@ import {
   isMac,
   MNEMONIC_SYM,
 } from '../common/constants';
-import imgSrcDesigner from 'static/icon.png';
-import imgSrcCore from 'static/insomnia-core-logo.png';
 import APP_ID_INSOMNIA from '../../config';
 import * as misc from '../common/misc';
 import * as log from '../common/log';
@@ -47,7 +45,8 @@ export function createWindow() {
   const zoomFactor = getZoomFactor();
   const { bounds, fullscreen, maximize } = getBounds();
   const { x, y, width, height } = bounds;
-  const appLogo = getDefaultAppId() === APP_ID_INSOMNIA ? imgSrcCore : imgSrcDesigner;
+  const appLogo =
+    getDefaultAppId() === APP_ID_INSOMNIA ? 'static/icon.png' : 'static/insomnia-core-logo.png';
 
   let isVisibleOnAnyDisplay = true;
   for (const d of electron.screen.getAllDisplays()) {
