@@ -727,7 +727,7 @@ export default class VCS {
       `
           query ($projectId: ID!, $ids: [ID!]!) {
             blobsMissing(project: $projectId, ids: $ids) {
-              missing 
+              missing
             }
           }
         `,
@@ -766,7 +766,7 @@ export default class VCS {
     await this._runGraphQL(
       `
       mutation ($projectId: ID!, $branch: String!) {
-        branchRemove(project: $projectId, name: $branch) 
+        branchRemove(project: $projectId, name: $branch)
       }`,
       {
         projectId: this._projectId(),
