@@ -15,6 +15,7 @@ import {
   MNEMONIC_SYM,
 } from '../common/constants';
 import * as misc from '../common/misc';
+import * as log from '../common/log';
 import * as os from 'os';
 import { docsBase } from '../common/documentation';
 
@@ -268,6 +269,13 @@ export function createWindow() {
         label: `Show App ${MNEMONIC_SYM}Data Folder`,
         click: (menuItem, w, e) => {
           const directory = misc.getDataDirectory();
+          shell.showItemInFolder(directory);
+        },
+      },
+      {
+        label: `Show App ${MNEMONIC_SYM}Logs Folder`,
+        click: (menuItem, w, e) => {
+          const directory = log.getLogDirectory();
           shell.showItemInFolder(directory);
         },
       },

@@ -1,5 +1,7 @@
+// @flow
 import log from 'electron-log';
 import { isDevelopment } from './constants';
+import { dirname } from 'path';
 
 export const initializeLogging = () => {
   if (isDevelopment()) {
@@ -20,5 +22,10 @@ export const initializeLogging = () => {
   // Overwrite the console.log/warn/etc methods
   Object.assign(console, log.functions);
 };
+
+export function getLogDirectory(): string {
+  const logPath = log.transports.file.getFile().path;
+  return dirname(logPath);
+}
 
 export default log;
