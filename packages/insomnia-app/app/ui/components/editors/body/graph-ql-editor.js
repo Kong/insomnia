@@ -544,6 +544,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       automaticFetch,
       activeReference,
       explorerVisible,
+      schemaLastFetchTime,
     } = this.state;
 
     const { query, variables: variablesObject } = GraphQLEditor._stringToGraphQL(content);
@@ -556,6 +557,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     const graphQLExplorerPortal = ReactDOM.createPortal(
       <GraphqlExplorer
         schema={schema}
+        key={schemaLastFetchTime}
         visible={explorerVisible}
         reference={activeReference}
         handleClose={this._handleCloseExplorer}

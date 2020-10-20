@@ -1,12 +1,13 @@
 // @flow
 
 declare type K8sAnnotations = {
+  'kubernetes.io/ingress.class': 'kong',
   [string]: string,
 };
 
 declare type K8sMetadata = {
   name: string,
-  annotations?: K8sAnnotations,
+  annotations: K8sAnnotations,
 };
 
 declare type K8sBackend = {
