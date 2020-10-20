@@ -621,7 +621,7 @@ class App extends PureComponent {
   async _getDownloadLocation() {
     const options = {
       title: 'Select Download Location',
-      buttonLabel: 'Send and Save',
+      buttonLabel: 'Save',
     };
 
     const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
