@@ -287,8 +287,23 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
   async _handleSwitchBranch(branch: string) {
     const { vcs, syncItems } = this.props;
+
     try {
       const delta = await vcs.checkout(syncItems, branch);
+      const defaultBranchName = 'master';
+
+      if (branch === defaultBranchName) {
+        const { historyCount } = this.state;
+        const defaultBranchHistoryCount = await vcs.getHistoryCount(defaultBranchName);
+
+        // If the default branch has no snapshots, but the current branch does
+        // It will result in the workspace getting deleted
+        // So we filter out the workspace from the delta to prevent this
+        if (!defaultBranchHistoryCount && historyCount) {
+          delta.remove = delta.remove.filter(e => e.type !== models.workspace.type);
+        }
+      }
+
       await db.batchModifyDocs(delta);
     } catch (err) {
       showAlert({

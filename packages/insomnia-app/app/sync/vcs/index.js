@@ -367,8 +367,8 @@ export default class VCS {
     };
   }
 
-  async getHistoryCount(): Promise<number> {
-    const branch = await this._getCurrentBranch();
+  async getHistoryCount(branchName?: string): Promise<number> {
+    const branch = branchName ? await this._getBranch(branchName) : await this._getCurrentBranch();
     return branch.snapshots.length;
   }
 
