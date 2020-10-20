@@ -621,7 +621,7 @@ class App extends PureComponent {
   async _getDownloadLocation() {
     const options = {
       title: 'Select Download Location',
-      buttonLabel: 'Send and Save',
+      buttonLabel: 'Save',
     };
 
     const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
@@ -713,15 +713,15 @@ class App extends PureComponent {
           </div>
         ),
       });
+    } finally {
+      // Unset active response because we just made a new one
+      await App._updateRequestMetaByParentId(requestId, {
+        activeResponseId: null,
+      });
+
+      // Stop loading
+      handleStopLoading(requestId);
     }
-
-    // Unset active response because we just made a new one
-    await App._updateRequestMetaByParentId(requestId, {
-      activeResponseId: null,
-    });
-
-    // Stop loading
-    handleStopLoading(requestId);
   }
 
   async _handleSendRequestWithEnvironment(requestId, environmentId) {

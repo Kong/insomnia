@@ -161,6 +161,10 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     this._handleChangeProperty('clientSecret', value);
   }
 
+  _handleChangePkce(value: boolean): void {
+    this._handleChangeProperty('usePkce', value);
+  }
+
   _handleChangeAuthorizationUrl(value: string): void {
     this._handleChangeProperty('authorizationUrl', value);
   }
@@ -227,6 +231,36 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
                 <i className="fa fa-square-o" />
               ) : (
                 <i className="fa fa-check-square-o" />
+              )}
+            </Button>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
+  renderUsePkceRow(onChange: boolean => void): React.Element<*> {
+    const { request } = this.props;
+    const { authentication } = request;
+    return (
+      <tr key="use-pkce">
+        <td className="pad-right no-wrap valign-middle">
+          <label htmlFor="use-pkce" className="label--small no-pad">
+            Use PKCE
+          </label>
+        </td>
+        <td className="wide">
+          <div className="form-control form-control--underlined no-margin">
+            <Button
+              className="btn btn--super-duper-compact"
+              id="use-pkce"
+              onClick={onChange}
+              value={authentication.usePkce}
+              title={authentication.usePkce ? 'Disable PKCE' : 'Enable PKCE'}>
+              {authentication.usePkce ? (
+                <i className="fa fa-check-square-o" />
+              ) : (
+                <i className="fa fa-square-o" />
               )}
             </Button>
           </div>
@@ -336,6 +370,8 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       this._handleChangeClientSecret,
     );
 
+    const usePkce = this.renderUsePkceRow(this._handleChangePkce);
+
     const authorizationUrl = this.renderInputRow(
       'Authorization URL',
       'authorizationUrl',
@@ -422,6 +458,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         accessTokenUrl,
         clientId,
         clientSecret,
+        usePkce,
         redirectUri,
         enabled,
       ];
