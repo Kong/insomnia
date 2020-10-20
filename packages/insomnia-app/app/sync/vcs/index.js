@@ -716,6 +716,7 @@ export default class VCS {
     const { data, errors } = await fetch.post('/graphql?' + name, { query, variables }, sessionId);
 
     if (errors && errors.length) {
+      console.log(`[sync] Failed to query ${name}`, errors);
       throw new Error(`Failed to query ${name}`);
     }
 
