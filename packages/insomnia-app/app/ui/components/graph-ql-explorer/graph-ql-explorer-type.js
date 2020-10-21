@@ -29,6 +29,9 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
     onNavigateField(field);
   }
 
+  deprecatedFieldDescription = field =>
+    `The field "${field.name}" is deprecated. ${field.deprecationReason}`;
+
   renderDescription() {
     const { type } = this.props;
     return <MarkdownPreview markdown={type.description || '*no description*'} />;
@@ -79,8 +82,6 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
 
     // $FlowFixMe
     const fields = type.getFields();
-    const deprecatedFieldDescription = field =>
-      `The field ${field.name} is deprecated. ${field.deprecationReason}`;
 
     return (
       <React.Fragment>
@@ -122,7 +123,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
                 {argLinks}: {typeLink} <GraphQLDefaultValue field={field} />
                 {isDeprecated && (
                   <Tooltip
-                    message={deprecatedFieldDescription(field)}
+                    message={this.deprecatedFieldDescription(field)}
                     position="bottom"
                     delay={1000}>
                     <SvgIcon icon="warning" />
