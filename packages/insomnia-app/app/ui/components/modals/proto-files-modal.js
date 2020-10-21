@@ -144,7 +144,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { protoFiles } = this.state;
+    const { protoFiles, selectedProtoFileId } = this.state;
 
     return (
       <Modal ref={this._setModalRef}>
@@ -160,7 +160,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
         </ModalBody>
         <ModalFooter>
           <div>
-            <button className="btn" onClick={this._handleSave}>
+            <button className="btn" onClick={this._handleSave} disabled={!selectedProtoFileId}>
               Save
             </button>
           </div>
