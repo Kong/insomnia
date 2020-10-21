@@ -99,24 +99,22 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
   async _handlePluginClick(p: RequestAction) {
     this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: true } }));
 
-    if (p.action) {
-      try {
-        const { activeEnvironment, request, requestGroup } = this.props;
-        const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
-        const context = {
-          ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER): Object),
-          ...(pluginContexts.data.init(): Object),
-          ...(pluginContexts.store.init(p.plugin): Object),
-          ...(pluginContexts.network.init(activeEnvironmentId): Object),
-        };
+    try {
+      const { activeEnvironment, request, requestGroup } = this.props;
+      const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
+      const context = {
+        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER): Object),
+        ...(pluginContexts.data.init(): Object),
+        ...(pluginContexts.store.init(p.plugin): Object),
+        ...(pluginContexts.network.init(activeEnvironmentId): Object),
+      };
 
-        await p.action(context, { request, requestGroup });
-      } catch (err) {
-        showError({
-          title: 'Plugin Action Failed',
-          error: err,
-        });
-      }
+      await p.action(context, { request, requestGroup });
+    } catch (err) {
+      showError({
+        title: 'Plugin Action Failed',
+        error: err,
+      });
     }
 
     this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
