@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import { SvgIcon } from 'insomnia-components';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
 import autobind from 'autobind-decorator';
 import MarkdownPreview from '../markdown-preview';
@@ -124,7 +125,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
                     message={deprecatedFieldDescription(field)}
                     position="bottom"
                     delay={1000}>
-                    <i className="fa fa-exclamation-circle" />
+                    <SvgIcon icon="warning" />
                   </Tooltip>
                 )}
                 {description && (
