@@ -37,8 +37,8 @@ describe('create()', () => {
 
   it('fails when missing parentId', async () => {
     Date.now = jest.fn().mockReturnValue(1478795580200);
-    expect(() => models.protoFile.create({ name: 'Test protofile' })).toThrow(
-      'New ProtoFile missing `parentId`',
+    expect(() => models.protoFile.create({ name: 'no parentId' })).toThrow(
+      'New Proto File missing `parentId`',
     );
   });
 });
