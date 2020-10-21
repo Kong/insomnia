@@ -99,23 +99,24 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
   async _handlePluginClick(p: RequestAction) {
     this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: true } }));
 
-    try {
-      const { activeEnvironment, request, requestGroup } = this.props;
-      const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
+    if (p.action) {
+      try {
+        const { activeEnvironment, request, requestGroup } = this.props;
+        const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
+        const context = {
+          ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER): Object),
+          ...(pluginContexts.data.init(): Object),
+          ...(pluginContexts.store.init(p.plugin): Object),
+          ...(pluginContexts.network.init(activeEnvironmentId): Object),
+        };
 
-      const context = {
-        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER): Object),
-        ...(pluginContexts.data.init(): Object),
-        ...(pluginContexts.store.init(p.plugin): Object),
-        ...(pluginContexts.network.init(activeEnvironmentId): Object),
-      };
-
-      await p.action(context, { request, requestGroup });
-    } catch (err) {
-      showError({
-        title: 'Plugin Action Failed',
-        error: err,
-      });
+        await p.action(context, { request, requestGroup });
+      } catch (err) {
+        showError({
+          title: 'Plugin Action Failed',
+          error: err,
+        });
+      }
     }
 
     this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
@@ -173,7 +174,10 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
 
         {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
         {actionPlugins.map((p: RequestAction) => (
-          <DropdownItem key={p.label} onClick={() => this._handlePluginClick(p)} stayOpenAfterClick>
+          <DropdownItem
+            key={`${p.plugin.name}::${p.label}`}
+            onClick={() => this._handlePluginClick(p)}
+            stayOpenAfterClick>
             {loadingActions[p.label] ? (
               <i className="fa fa-refresh fa-spin" />
             ) : (
