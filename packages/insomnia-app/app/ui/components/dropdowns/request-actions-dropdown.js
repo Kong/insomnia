@@ -97,7 +97,7 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handlePluginClick(p: RequestAction) {
-    this.setState((state) => ({ loadingActions: { ...state.loadingActions, [p.label]: true } }));
+    this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: true } }));
 
     try {
       const { activeEnvironment, request, requestGroup } = this.props;
@@ -117,7 +117,7 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
       });
     }
 
-    this.setState((state) => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
+    this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
     this._dropdown && this._dropdown.hide();
   }
 
