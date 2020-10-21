@@ -12,6 +12,8 @@ import ProtoFileList from '../proto-file/proto-file-list';
 import PromptButton from '../base/prompt-button';
 import FileInputButton from '../base/file-input-button';
 import { showError } from './index';
+import fs from 'fs';
+import path from 'path';
 
 type Props = {|
   workspace: Workspace,
@@ -85,11 +87,14 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     console.log(`delete ${protoFile._id}`);
   }
 
-  async _handleProtoFileUpload(path: string) {
+  async _handleProtoFileUpload(filePath: string) {
     const { workspace } = this.props;
 
     try {
-      await models.protoFile.create({ name: path, parentId: workspace._id });
+      const protoText = fs.readFileSync(filePath, 'utf-8');
+      const name = path.basename(filePath);
+      const newFile = await models.protoFile.create({ name, parentId: workspace._id, protoText });
+      this.setState({ selectedProtoFileId: newFile._id });
       await this._refresh();
     } catch (e) {
       showError({ error: e });
@@ -106,6 +111,8 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
           <div className="row-spaced">
             Files
             <FileInputButton
+              name=".proto file"
+              showFileIcon
               extensions={['.proto']}
               className="btn btn--clicky"
               onChange={this._handleProtoFileUpload}
