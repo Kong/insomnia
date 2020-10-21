@@ -12,6 +12,7 @@ import {
   METHOD_HEAD,
   METHOD_OPTIONS,
   METHOD_DELETE,
+  METHOD_GRPC,
 } from '../../../common/constants';
 import * as models from '../../../models/index';
 import { trackEvent } from '../../../common/analytics';
@@ -77,7 +78,8 @@ class RequestCreateModal extends PureComponent {
       selectedMethod === METHOD_GET ||
       selectedMethod === METHOD_HEAD ||
       selectedMethod === METHOD_DELETE ||
-      selectedMethod === METHOD_OPTIONS
+      selectedMethod === METHOD_OPTIONS ||
+      selectedMethod === METHOD_GRPC
     );
   }
 
