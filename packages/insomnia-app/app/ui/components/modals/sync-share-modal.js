@@ -72,6 +72,14 @@ class SyncShareModal extends React.PureComponent<Props, State> {
     this.setState({ loading: true });
     this.modal && this.modal.show();
 
+    if (!vcs.hasProject()) {
+      this.setState({
+        error: 'Please set up sync to be able to share the workspace',
+        loading: false,
+      });
+      return;
+    }
+
     let results;
     try {
       results = await Promise.all([vcs.teams(), vcs.projectTeams()]);
