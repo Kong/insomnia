@@ -1,8 +1,8 @@
 // @flow
-import autobind from 'autobind-decorator';
 import * as React from 'react';
 import {
-  getSortOrderName,
+  SortOrder,
+  sortOrderName,
   SORT_CREATED_FIRST,
   SORT_CREATED_LAST,
   SORT_CUSTOM,
@@ -15,45 +15,42 @@ import {
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 
 type Props = {
-  handleSort: Function,
-  sortOrder: string,
+  handleSort: (sortOrder: SortOrder) => void,
+  sortOrder: SortOrder,
 };
 
-@autobind
-class SidebarSortDropdown extends React.PureComponent<Props> {
-  _handleSort(order: string) {
-    if (order !== this.props.sortOrder) {
-      this.props.handleSort(order);
+const SidebarSortDropdown = (props: Props) => {
+  const _handleSort = (order: SortOrder) => {
+    if (order !== props.sortOrder) {
+      props.handleSort(order);
     }
-  }
+  };
 
-  renderSortOrder(order: string) {
-    const currentSortOrder = this.props.sortOrder || SORT_CUSTOM;
+  const _renderSortOrder = (order: SortOrder) => {
+    const currentSortOrder = props.sortOrder || SORT_CUSTOM;
 
     return (
-      <DropdownItem onClick={this._handleSort} value={order}>
+      <DropdownItem onClick={_handleSort} value={order}>
         {currentSortOrder === order ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}{' '}
-        {getSortOrderName(order)}
+        {sortOrderName[order]}
       </DropdownItem>
     );
-  }
+  };
 
-  render() {
-    return (
-      <Dropdown>
-        <DropdownButton className="btn btn--compact">
-          <i className="fa fa-sort" />
-        </DropdownButton>
-        {this.renderSortOrder(SORT_NAME_ASC)}
-        {this.renderSortOrder(SORT_NAME_DESC)}
-        {this.renderSortOrder(SORT_CREATED_FIRST)}
-        {this.renderSortOrder(SORT_CREATED_LAST)}
-        {this.renderSortOrder(SORT_METHOD)}
-        {this.renderSortOrder(SORT_TYPE_ASC)}
-        {this.renderSortOrder(SORT_TYPE_DESC)}
-      </Dropdown>
-    );
-  }
-}
+  return (
+    <Dropdown>
+      <DropdownButton className="btn btn--compact">
+        <i className="fa fa-sort" />
+      </DropdownButton>
+      {_renderSortOrder(SORT_NAME_ASC)}
+      {_renderSortOrder(SORT_NAME_DESC)}
+      {_renderSortOrder(SORT_CREATED_FIRST)}
+      {_renderSortOrder(SORT_CREATED_LAST)}
+      {_renderSortOrder(SORT_METHOD)}
+      {_renderSortOrder(SORT_TYPE_ASC)}
+      {_renderSortOrder(SORT_TYPE_DESC)}
+    </Dropdown>
+  );
+};
 
 export default SidebarSortDropdown;

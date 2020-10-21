@@ -88,6 +88,7 @@ import {
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   getAppName,
+  SortOrder,
 } from '../../common/constants';
 import { Spectral } from '@stoplight/spectral';
 
@@ -137,7 +138,7 @@ export type WrapperProps = {
   handleSetResponseFilter: Function,
   handleSetActiveResponse: Function,
   handleSetSidebarRef: Function,
-  handleSidebarSort: Function,
+  handleSidebarSort: (sortOrder: SortOrder) => void,
   handleStartDragSidebar: Function,
   handleResetDragSidebar: Function,
   handleStartDragPaneHorizontal: Function,
@@ -192,7 +193,7 @@ export type WrapperProps = {
   gitVCS: GitVCS | null,
   gitRepositories: Array<GitRepository>,
   syncItems: Array<StatusCandidate>,
-  sortOrder: string,
+  sortOrder: SortOrder,
 
   // Optional
   oAuth2Token: OAuth2Token | null,

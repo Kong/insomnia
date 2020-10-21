@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import { DEBOUNCE_MILLIS } from '../../../common/constants';
+import { DEBOUNCE_MILLIS, SortOrder } from '../../../common/constants';
 import KeydownBinder from '../keydown-binder';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -13,8 +13,8 @@ type Props = {
   onChange: string => void,
   requestCreate: () => void,
   requestGroupCreate: () => void,
-  sidebarSort: Function,
-  sortOrder: string,
+  sidebarSort: (sortOrder: SortOrder) => void,
+  sortOrder: SortOrder,
   filter: string,
   hotKeyRegistry: HotKeyRegistry,
 };

@@ -30,14 +30,6 @@ import {
   PREVIEW_MODE_SOURCE,
   getAppId,
   getAppName,
-  SORT_NAME_ASC,
-  SORT_NAME_DESC,
-  SORT_TYPE_ASC,
-  SORT_TYPE_DESC,
-  SORT_METHOD,
-  SORT_CREATED_FIRST,
-  SORT_CREATED_LAST,
-  HTTP_METHODS,
   SORT_CUSTOM,
 } from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
@@ -104,6 +96,7 @@ import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
+import { _getSortMethod } from '../helpers/sorting';
 
 @autobind
 class App extends PureComponent {
@@ -345,53 +338,6 @@ class App extends PureComponent {
     });
   }
 
-  _getSortMethod(order) {
-    switch (order) {
-      case SORT_NAME_ASC:
-        return (a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1);
-      case SORT_NAME_DESC:
-        return (a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? -1 : 1);
-      case SORT_CREATED_FIRST:
-        return (a, b) => (a.created < b.created ? -1 : 1);
-      case SORT_CREATED_LAST:
-        return (a, b) => (a.created > b.created ? -1 : 1);
-      case SORT_METHOD:
-        return (a, b) => {
-          if (a.type !== b.type) {
-            return a.type === models.request.type ? -1 : 1;
-          } else if (a.type === models.request.type) {
-            const aIndex = HTTP_METHODS.indexOf(a.method);
-            const bIndex = HTTP_METHODS.indexOf(b.method);
-            if (aIndex !== bIndex) {
-              return aIndex < bIndex ? -1 : 1;
-            } else {
-              return a.metaSortKey < b.metaSortKey ? -1 : 1;
-            }
-          } else {
-            return a.metaSortKey < b.metaSortKey ? -1 : 1;
-          }
-        };
-      case SORT_TYPE_ASC:
-        return (a, b) => {
-          if (a.type === b.type) {
-            return a.metaSortKey < b.metaSortKey ? -1 : 1;
-          } else {
-            return a.type === models.requestGroup.type ? -1 : 1;
-          }
-        };
-      case SORT_TYPE_DESC:
-        return (a, b) => {
-          if (a.type === b.type) {
-            return a.metaSortKey < b.metaSortKey ? -1 : 1;
-          } else {
-            return a.type === models.request.type ? -1 : 1;
-          }
-        };
-      default:
-        return (a, b) => (a.metaSortKey < b.metaSortKey ? -1 : 1);
-    }
-  }
-
   async _recalculateMetaSortKey(docs) {
     function __updateDoc(doc, metaSortKey) {
       models.getModel(doc.type).update(doc, { metaSortKey });
@@ -411,7 +357,7 @@ class App extends PureComponent {
     const docs = [
       ...(await models.requestGroup.findByParentId(parentId)),
       ...(await models.request.findByParentId(parentId)),
-    ].sort(this._getSortMethod(order));
+    ].sort(_getSortMethod(order));
 
     this._recalculateMetaSortKey(docs);
 

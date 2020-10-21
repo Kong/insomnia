@@ -35,7 +35,7 @@ type Props = {
   handleSetResponseFilter: Function,
   handleShowCookiesModal: Function,
   handleShowRequestSettingsModal: Function,
-  handleSidebarSort: Function,
+  handleSidebarSort: (sortOrder: SortOrder) => void,
   handleUpdateRequestAuthentication: Function,
   handleUpdateRequestBody: Function,
   handleUpdateRequestHeaders: Function,
