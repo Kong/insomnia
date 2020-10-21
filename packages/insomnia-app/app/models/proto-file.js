@@ -5,7 +5,7 @@ import type { BaseModel } from './index';
 export const name = 'Proto File';
 export const type = 'ProtoFile';
 export const prefix = 'pf';
-export const canDuplicate = false;
+export const canDuplicate = true;
 export const canSync = true;
 
 type BaseProtoFile = {
