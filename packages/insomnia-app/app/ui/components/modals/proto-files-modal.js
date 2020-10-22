@@ -6,11 +6,9 @@ import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
 import ModalFooter from '../base/modal-footer';
 import autobind from 'autobind-decorator';
-import { ListGroup, ListGroupItem } from 'insomnia-components';
 import type { Workspace } from '../../../models/workspace';
-import styled from 'styled-components';
 import Modal from '../base/modal';
-import PromptButton from '../base/prompt-button';
+import ProtoFileList from '../proto-file-list';
 
 type Props = {|
   workspace: Workspace,
@@ -25,50 +23,6 @@ type ProtoFilesModalOptions = {|
   preselectProtoFileId?: string,
   onSave?: string => Promise<void>,
 |};
-
-const SelectableListItem: React.PureComponent<{ selected?: boolean }> = styled(ListGroupItem)`
-  &:hover {
-    background-color: var(--hl-sm) !important;
-  }
-
-  background-color: ${props => props.selected && 'var(--hl-sm) !important'};
-`;
-
-const ProtoFileListItem = (props: {
-  protoFile: ProtoFile,
-  selected?: boolean,
-  onClick: (id: string) => void,
-  onDelete: (id: string) => Promise<void>,
-  onRename: (id: string, name: string) => Promise<void>,
-}) => {
-  const { protoFile, selected, onClick, onDelete } = props;
-  const { name, _id } = protoFile;
-
-  const onClickCallback = React.useCallback(() => onClick(_id), [onClick, _id]);
-  const onDeleteCallback = React.useCallback(
-    async (e: SyntheticEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-      await onDelete(_id);
-    },
-    [onDelete, _id],
-  );
-
-  return (
-    <SelectableListItem selected={selected} onClick={onClickCallback}>
-      <div className="row-spaced">
-        {name}
-        <PromptButton
-          className="btn btn--super-compact btn--outlined"
-          addIcon
-          confirmMessage=""
-          onClick={onDeleteCallback}
-          title="Delete Proto File">
-          <i className="fa fa-trash-o" />
-        </PromptButton>
-      </div>
-    </SelectableListItem>
-  );
-};
 
 const INITIAL_STATE: State = {
   protoFiles: [],
@@ -128,19 +82,13 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  renderProtofile(p: ProtoFile) {
-    const { selectedProtoFileId } = this.state;
+  _handleSelect(id: string) {
+    this.setState({ selectedProtoFileId: id });
+  }
 
-    return (
-      <ProtoFileListItem
-        key={p.id}
-        protoFile={p}
-        selected={p._id === selectedProtoFileId}
-        onClick={id => this.setState({ selectedProtoFileId: id })}
-        onDelete={id => console.log(`delete ${id}`)}
-        onRename={id => console.log(`rename ${id}`)}
-      />
-    );
+  _handleDelete(id: string) {
+    // TODO: to be built in INS-209
+    console.log(`delete ${id}`);
   }
 
   render() {
@@ -151,12 +99,12 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
         <ModalHeader>Select Protofile</ModalHeader>
         <ModalBody className="wide pad">
           Files
-          <ListGroup>
-            {!protoFiles.length && (
-              <ListGroupItem>No proto files exist for this workspace</ListGroupItem>
-            )}
-            {protoFiles.map(this.renderProtofile)}
-          </ListGroup>
+          <ProtoFileList
+            protoFiles={protoFiles}
+            selectedId={selectedProtoFileId}
+            handleSelect={this._handleSelect}
+            handleDelete={this._handleDelete}
+          />
         </ModalBody>
         <ModalFooter>
           <div>
