@@ -182,6 +182,7 @@ export type WrapperProps = {
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
   activeGitRepository: GitRepository | null,
+  activeProtoFiles: Array<ProtoFile>,
   activeUnitTestResult: UnitTestResult | null,
   activeUnitTestSuites: Array<UnitTestSuite>,
   activeUnitTests: Array<UnitTest>,
@@ -520,6 +521,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       activeCookieJar,
       activeEnvironment,
       activeGitRepository,
+      activeProtoFiles,
       activeRequest,
       activeWorkspace,
       activeWorkspaceClientCertificates,
@@ -772,7 +774,11 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleExportRequestsToFile={handleExportRequestsToFile}
             />
 
-            <ProtoFilesModal ref={registerModal} workspace={activeWorkspace} />
+            <ProtoFilesModal
+              ref={registerModal}
+              workspace={activeWorkspace}
+              protoFiles={activeProtoFiles}
+            />
           </ErrorBoundary>
         </div>
         <React.Fragment key={`views::${this.state.activeGitBranch}`}>

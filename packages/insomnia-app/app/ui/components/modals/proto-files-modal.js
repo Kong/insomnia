@@ -16,10 +16,10 @@ import path from 'path';
 
 type Props = {|
   workspace: Workspace,
+  protoFiles: Array<ProtoFile>,
 |};
 
 type State = {|
-  protoFiles: Array<ProtoFile>,
   selectedProtoFileId: string,
 |};
 
@@ -29,7 +29,6 @@ type ProtoFilesModalOptions = {|
 |};
 
 const INITIAL_STATE: State = {
-  protoFiles: [],
   selectedProtoFileId: '',
 };
 
@@ -51,17 +50,9 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
 
   async show(options: ProtoFilesModalOptions) {
     this.onSave = options.onSave;
-    this.setState({ ...INITIAL_STATE, selectedProtoFileId: options.preselectProtoFileId });
+    this.setState({ selectedProtoFileId: options.preselectProtoFileId });
 
     this.modal && this.modal.show();
-    await this._refresh();
-  }
-
-  async _refresh() {
-    const { workspace } = this.props;
-    const protoFilesForWorkspace = await models.protoFile.findByParentId(workspace._id);
-
-    this.setState({ protoFiles: protoFilesForWorkspace });
   }
 
   async _handleSave(e: SyntheticEvent<HTMLButtonElement>) {
@@ -94,7 +85,6 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
       const name = path.basename(filePath);
       const newFile = await models.protoFile.create({ name, parentId: workspace._id, protoText });
       this.setState({ selectedProtoFileId: newFile._id });
-      await this._refresh();
     } catch (e) {
       showError({ error: e });
     }
@@ -102,11 +92,11 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
 
   async _handleRename(protoFile: ProtoFile, name: string): Promise<void> {
     await models.protoFile.update(protoFile, { name });
-    await this._refresh();
   }
 
   render() {
-    const { protoFiles, selectedProtoFileId } = this.state;
+    const { protoFiles } = this.props;
+    const { selectedProtoFileId } = this.state;
 
     return (
       <Modal ref={this._setModalRef}>
