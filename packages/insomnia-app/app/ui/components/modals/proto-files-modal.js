@@ -54,8 +54,8 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
   }
 
   async _refresh(preselectProtoFileId?: string) {
-    const { workspaceId } = this.props;
-    const protoFilesForWorkspace = await models.protoFile.findByParentId(workspaceId);
+    const { workspace } = this.props;
+    const protoFilesForWorkspace = await models.protoFile.findByParentId(workspace._id);
 
     protoFilesForWorkspace.push(
       { _id: 'pf_123', name: 'File 1' },
