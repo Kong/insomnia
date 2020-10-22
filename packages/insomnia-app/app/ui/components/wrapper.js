@@ -90,6 +90,7 @@ import {
   getAppName,
 } from '../../common/constants';
 import { Spectral } from '@stoplight/spectral';
+import ProtoFilesModal from './modals/proto-files-modal';
 
 const spectral = new Spectral();
 
@@ -770,6 +771,8 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               childObjects={sidebarChildren.all}
               handleExportRequestsToFile={handleExportRequestsToFile}
             />
+
+            <ProtoFilesModal ref={registerModal} workspace={activeWorkspace} />
           </ErrorBoundary>
         </div>
         <React.Fragment key={`views::${this.state.activeGitBranch}`}>
