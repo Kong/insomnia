@@ -5,7 +5,7 @@ import KeydownBinder from '../keydown-binder';
 
 export const shouldSave = (oldValue, newValue, preventBlank) => {
   // Should not save if length = 0 and we want to prevent blank
-  if (preventBlank && newValue.length === 0) {
+  if (preventBlank && !newValue.length) {
     return false;
   }
 
@@ -51,10 +51,10 @@ class Editable extends PureComponent {
   }
 
   _handleEditEnd() {
-    const { originalValue, preventBlank } = this.props;
+    const originalValue = this.props.value;
     const newValue = this._input.value.trim();
 
-    if (shouldSave(originalValue, newValue, preventBlank)) {
+    if (shouldSave(originalValue, newValue, this.props.preventBlank)) {
       // Don't run onSubmit for values that haven't been changed
       this.props.onSubmit(newValue);
     }
