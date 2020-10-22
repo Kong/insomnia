@@ -86,9 +86,9 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     this.setState({ selectedProtoFileId: id });
   }
 
-  _handleDelete(id: string) {
+  _handleDelete(protoFile: ProtoFile) {
     // TODO: to be built in INS-209
-    console.log(`delete ${id}`);
+    console.log(`delete ${protoFile._id}`);
   }
 
   render() {

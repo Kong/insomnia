@@ -5,7 +5,7 @@ import { ListGroup, ListGroupItem } from 'insomnia-components';
 import ProtoFileListItem from './proto-file-list-item';
 
 export type SelectProtoFileHandler = (id: string) => void;
-export type DeleteProtoFileHandler = (id: string) => Promise<void>;
+export type DeleteProtoFileHandler = (protofile: ProtoFile) => Promise<void>;
 
 type Props = {
   protoFiles: Array<ProtoFile>,

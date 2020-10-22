@@ -29,9 +29,9 @@ const ProtoFileListItem = ({ protoFile, isSelected, handleSelect, handleDelete }
   const handleDeleteCallback = React.useCallback(
     async (e: SyntheticEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      await handleDelete(_id);
+      await handleDelete(protoFile);
     },
-    [handleDelete, _id],
+    [handleDelete, protoFile],
   );
 
   return (
