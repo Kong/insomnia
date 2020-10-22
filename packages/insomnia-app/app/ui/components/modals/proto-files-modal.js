@@ -21,7 +21,7 @@ type State = {|
 
 type ProtoFilesModalOptions = {|
   preselectProtoFileId?: string,
-  onSave?: string => Promise<void>,
+  onSave: string => Promise<void>,
 |};
 
 const INITIAL_STATE: State = {
@@ -46,7 +46,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
   }
 
   async show(options: ProtoFilesModalOptions) {
-    this.onSave = options.onSave || null;
+    this.onSave = options.onSave;
     this.setState({ ...INITIAL_STATE });
 
     this.modal && this.modal.show();
