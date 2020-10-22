@@ -100,6 +100,11 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     }
   }
 
+  _handleRename(id: string) {
+    // TODO: to be built in INS-209
+    console.log(`delete ${id}`);
+  }
+
   render() {
     const { protoFiles, selectedProtoFileId } = this.state;
 
