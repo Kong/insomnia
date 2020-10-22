@@ -36,11 +36,13 @@ class Editable extends PureComponent {
   }
 
   _handleEditEnd() {
+    const { originalValue, fallbackValue } = this.props;
     const value = this._input.value.trim();
 
-    if (value !== this.props.value) {
-      // Don't run onSubmit for values that haven't been changed.
-      this.props.onSubmit(value);
+    if (value !== originalValue) {
+      // Don't run onSubmit for values that haven't been changed
+      // Revert to fallbackValue if new value is empty
+      this.props.onSubmit(value || fallbackValue || '');
     }
 
     // This timeout prevents the UI from showing the old value after submit.

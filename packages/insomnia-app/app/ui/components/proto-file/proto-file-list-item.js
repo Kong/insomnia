@@ -55,12 +55,7 @@ const ProtoFileListItem = ({
   return (
     <SelectableListItem isSelected={isSelected} onClick={handleSelectCallback}>
       <div className="row-spaced">
-        <Editable
-          onSubmit={handleRenameCallback}
-          value={name}
-          blankValue="Enter name"
-          fallbackValue={name}
-        />
+        <Editable onSubmit={handleRenameCallback} value={name} fallbackValue={name} />
         <PromptButton
           className="btn btn--super-compact btn--outlined"
           addIcon
