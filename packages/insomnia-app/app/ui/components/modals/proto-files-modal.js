@@ -9,7 +9,6 @@ import autobind from 'autobind-decorator';
 import type { Workspace } from '../../../models/workspace';
 import Modal from '../base/modal';
 import ProtoFileList from '../proto-file/proto-file-list';
-import PromptButton from '../base/prompt-button';
 import FileInputButton from '../base/file-input-button';
 import { showError } from './index';
 import fs from 'fs';
