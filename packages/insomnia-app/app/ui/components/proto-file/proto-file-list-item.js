@@ -1,16 +1,22 @@
 // @flow
-import React from 'react';
+import * as React from 'react';
 import styled from 'styled-components';
 import type { ProtoFile } from '../../../models/proto-file';
 import PromptButton from '../base/prompt-button';
-import type { DeleteProtoFileHandler, SelectProtoFileHandler } from './proto-file-list';
+import type {
+  DeleteProtoFileHandler,
+  RenameProtoFileHandler,
+  SelectProtoFileHandler,
+} from './proto-file-list';
 import { ListGroupItem } from '../../../../../insomnia-components';
+import Editable from '../base/editable';
 
 type Props = {
   protoFile: ProtoFile,
   isSelected?: boolean,
   handleSelect: SelectProtoFileHandler,
   handleDelete: DeleteProtoFileHandler,
+  handleRename: RenameProtoFileHandler,
 };
 
 const SelectableListItem: React.PureComponent<{ isSelected?: boolean }> = styled(ListGroupItem)`
@@ -21,7 +27,13 @@ const SelectableListItem: React.PureComponent<{ isSelected?: boolean }> = styled
   background-color: ${({ isSelected }) => isSelected && 'var(--hl-sm) !important'};
 `;
 
-const ProtoFileListItem = ({ protoFile, isSelected, handleSelect, handleDelete }: Props) => {
+const ProtoFileListItem = ({
+  protoFile,
+  isSelected,
+  handleSelect,
+  handleDelete,
+  handleRename,
+}: Props) => {
   const { name, _id } = protoFile;
 
   // Don't re-instantiate the callbacks if the dependencies have not changed
@@ -33,11 +45,17 @@ const ProtoFileListItem = ({ protoFile, isSelected, handleSelect, handleDelete }
     },
     [handleDelete, protoFile],
   );
+  const handleRenameCallback = React.useCallback(
+    async (newName: string) => {
+      await handleRename(protoFile, newName);
+    },
+    [handleRename, protoFile],
+  );
 
   return (
     <SelectableListItem isSelected={isSelected} onClick={handleSelectCallback}>
       <div className="row-spaced">
-        {name}
+        <Editable onSubmit={handleRenameCallback} value={name} preventBlank />
         <PromptButton
           className="btn btn--super-compact btn--outlined"
           addIcon

@@ -100,6 +100,11 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     }
   }
 
+  async _handleRename(protoFile: ProtoFile, name: string): Promise<void> {
+    await models.protoFile.update(protoFile, { name });
+    await this._refresh();
+  }
+
   render() {
     const { protoFiles, selectedProtoFileId } = this.state;
 
@@ -122,6 +127,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
             selectedId={selectedProtoFileId}
             handleSelect={this._handleSelect}
             handleDelete={this._handleDelete}
+            handleRename={this._handleRename}
           />
         </ModalBody>
         <ModalFooter>
