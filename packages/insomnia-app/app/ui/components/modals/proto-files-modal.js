@@ -9,6 +9,10 @@ import autobind from 'autobind-decorator';
 import type { Workspace } from '../../../models/workspace';
 import Modal from '../base/modal';
 import ProtoFileList from '../proto-file/proto-file-list';
+import FileInputButton from '../base/file-input-button';
+import { showError } from './index';
+import fs from 'fs';
+import path from 'path';
 
 type Props = {|
   workspace: Workspace,
@@ -47,26 +51,17 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
 
   async show(options: ProtoFilesModalOptions) {
     this.onSave = options.onSave;
-    this.setState({ ...INITIAL_STATE });
+    this.setState({ ...INITIAL_STATE, selectedProtoFileId: options.preselectProtoFileId });
 
     this.modal && this.modal.show();
-    await this._refresh(options.preselectProtoFileId);
+    await this._refresh();
   }
 
-  async _refresh(preselectProtoFileId?: string) {
+  async _refresh() {
     const { workspace } = this.props;
     const protoFilesForWorkspace = await models.protoFile.findByParentId(workspace._id);
 
-    protoFilesForWorkspace.push(
-      { _id: 'pf_123', name: 'File 1' },
-      { _id: 'pf_456', name: 'File 2' },
-      { _id: 'pf_789', name: 'File 3' },
-    );
-
-    this.setState({
-      protoFiles: protoFilesForWorkspace,
-      selectedProtoFileId: preselectProtoFileId,
-    });
+    this.setState({ protoFiles: protoFilesForWorkspace });
   }
 
   async _handleSave(e: SyntheticEvent<HTMLButtonElement>) {
@@ -91,6 +86,20 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     console.log(`delete ${protoFile._id}`);
   }
 
+  async _handleProtoFileUpload(filePath: string) {
+    const { workspace } = this.props;
+
+    try {
+      const protoText = fs.readFileSync(filePath, 'utf-8');
+      const name = path.basename(filePath);
+      const newFile = await models.protoFile.create({ name, parentId: workspace._id, protoText });
+      this.setState({ selectedProtoFileId: newFile._id });
+      await this._refresh();
+    } catch (e) {
+      showError({ error: e });
+    }
+  }
+
   render() {
     const { protoFiles, selectedProtoFileId } = this.state;
 
@@ -98,7 +107,16 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
       <Modal ref={this._setModalRef}>
         <ModalHeader>Select Protofile</ModalHeader>
         <ModalBody className="wide pad">
-          Files
+          <div className="row-spaced">
+            Files
+            <FileInputButton
+              name=".proto file"
+              showFileIcon
+              extensions={['.proto']}
+              className="btn btn--clicky"
+              onChange={this._handleProtoFileUpload}
+            />
+          </div>
           <ProtoFileList
             protoFiles={protoFiles}
             selectedId={selectedProtoFileId}
