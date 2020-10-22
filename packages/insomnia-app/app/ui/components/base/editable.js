@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import KeydownBinder from '../keydown-binder';
 
-const shouldSave = (oldValue, newValue, preventBlank) => {
+export const shouldSave = (oldValue, newValue, preventBlank) => {
   // Should not save if length = 0 and we want to prevent blank
   if (preventBlank && newValue.length === 0) {
     return false;
