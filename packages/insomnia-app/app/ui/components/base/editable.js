@@ -3,6 +3,21 @@ import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import KeydownBinder from '../keydown-binder';
 
+const shouldSave = (oldValue, newValue, preventBlank) => {
+  // Should not save if length = 0 and we want to prevent blank
+  if (preventBlank && newValue.length === 0) {
+    return false;
+  }
+
+  // Should not save if old value and new value is the same
+  if (oldValue === newValue) {
+    return false;
+  }
+
+  // Should save
+  return true;
+};
+
 @autobind
 class Editable extends PureComponent {
   constructor(props) {
@@ -36,13 +51,12 @@ class Editable extends PureComponent {
   }
 
   _handleEditEnd() {
-    const { originalValue, fallbackValue } = this.props;
-    const value = this._input.value.trim();
+    const { originalValue, preventBlank } = this.props;
+    const newValue = this._input.value.trim();
 
-    if (value !== originalValue) {
+    if (shouldSave(originalValue, newValue, preventBlank)) {
       // Don't run onSubmit for values that haven't been changed
-      // Revert to fallbackValue if new value is empty
-      this.props.onSubmit(value || fallbackValue || '');
+      this.props.onSubmit(newValue);
     }
 
     // This timeout prevents the UI from showing the old value after submit.
@@ -75,6 +89,7 @@ class Editable extends PureComponent {
       blankValue,
       singleClick,
       onEditStart, // eslint-disable-line no-unused-vars
+      preventBlank, // eslint-disable-line no-unused-vars
       className,
       renderReadView,
       ...extra
@@ -126,6 +141,7 @@ Editable.propTypes = {
   singleClick: PropTypes.bool,
   onEditStart: PropTypes.func,
   className: PropTypes.string,
+  preventBlank: PropTypes.bool,
 };
 
 export default Editable;
