@@ -1,5 +1,5 @@
 // @flow
-import React from 'react';
+import * as React from 'react';
 import type { ProtoFile } from '../../../models/proto-file';
 import { ListGroup, ListGroupItem } from 'insomnia-components';
 import ProtoFileListItem from './proto-file-list-item';

@@ -100,9 +100,9 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     }
   }
 
-  _handleRename(id: string) {
-    // TODO: to be built in INS-209
-    console.log(`delete ${id}`);
+  async _handleRename(protoFile: ProtoFile, name: string): Promise<void> {
+    await models.protoFile.update(protoFile, { name });
+    await this._refresh();
   }
 
   render() {
@@ -127,6 +127,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
             selectedId={selectedProtoFileId}
             handleSelect={this._handleSelect}
             handleDelete={this._handleDelete}
+            handleRename={this._handleRename}
           />
         </ModalBody>
         <ModalFooter>
