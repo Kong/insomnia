@@ -329,8 +329,8 @@ class App extends PureComponent {
   _requestCreate(parentId) {
     showModal(RequestCreateModal, {
       parentId,
-      onComplete: request => {
-        this._handleSetActiveRequest(request._id);
+      onComplete: requestId => {
+        this._handleSetActiveRequest(requestId);
       },
     });
   }

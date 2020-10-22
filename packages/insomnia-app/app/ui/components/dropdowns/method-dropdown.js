@@ -4,8 +4,10 @@ import autobind from 'autobind-decorator';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import * as constants from '../../../common/constants';
 import { showPrompt } from '../modals/index';
+import { METHOD_GRPC } from '../../../common/constants';
 
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
+const GRPC_LABEL = 'gRPC';
 
 @autobind
 class MethodDropdown extends PureComponent {
@@ -74,10 +76,12 @@ class MethodDropdown extends PureComponent {
       onChange, // eslint-disable-line no-unused-vars
       ...extraProps
     } = this.props;
+    const buttonLabel = method === METHOD_GRPC ? GRPC_LABEL : method;
+
     return (
       <Dropdown ref={this._setDropdownRef} className="method-dropdown" right={right}>
         <DropdownButton type="button" {...extraProps}>
-          {method} <i className="fa fa-caret-down" />
+          {buttonLabel} <i className="fa fa-caret-down" />
         </DropdownButton>
         {constants.HTTP_METHODS.map(method => (
           <DropdownItem
@@ -88,6 +92,10 @@ class MethodDropdown extends PureComponent {
             {method}
           </DropdownItem>
         ))}
+        <DropdownDivider />
+        <DropdownItem className="method-grpc" onClick={this._handleChange} value={METHOD_GRPC}>
+          {GRPC_LABEL}
+        </DropdownItem>
         <DropdownDivider />
         <DropdownItem
           className="http-method-custom"
