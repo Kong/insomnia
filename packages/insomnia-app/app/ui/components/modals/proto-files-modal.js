@@ -8,7 +8,7 @@ import ModalFooter from '../base/modal-footer';
 import autobind from 'autobind-decorator';
 import type { Workspace } from '../../../models/workspace';
 import Modal from '../base/modal';
-import ProtoFileList from '../proto-file-list';
+import ProtoFileList from '../proto-file/proto-file-list';
 
 type Props = {|
   workspace: Workspace,

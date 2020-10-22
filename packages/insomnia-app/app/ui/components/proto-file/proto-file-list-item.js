@@ -1,16 +1,14 @@
 // @flow
 import React from 'react';
-import type { ProtoFile } from '../../models/proto-file';
 import styled from 'styled-components';
-import { ListGroup, ListGroupItem } from 'insomnia-components';
-import PromptButton from './base/prompt-button';
-
-type SelectProtoFileHandler = (id: string) => void;
-type DeleteProtoFileHandler = (id: string) => Promise<void>;
+import type { ProtoFile } from '../../../models/proto-file';
+import PromptButton from '../base/prompt-button';
+import type { DeleteProtoFileHandler, SelectProtoFileHandler } from './proto-file-list';
+import { ListGroupItem } from '../../../../../insomnia-components';
 
 type Props = {
-  protoFiles: Array<ProtoFile>,
-  selectedId?: string,
+  protoFile: ProtoFile,
+  isSelected?: boolean,
   handleSelect: SelectProtoFileHandler,
   handleDelete: DeleteProtoFileHandler,
 };
@@ -23,13 +21,7 @@ const SelectableListItem: React.PureComponent<{ isSelected?: boolean }> = styled
   background-color: ${({ isSelected }) => isSelected && 'var(--hl-sm) !important'};
 `;
 
-const ProtoFileListItem = (props: {
-  protoFile: ProtoFile,
-  isSelected?: boolean,
-  handleSelect: SelectProtoFileHandler,
-  handleDelete: DeleteProtoFileHandler,
-}) => {
-  const { protoFile, isSelected, handleSelect, handleDelete } = props;
+const ProtoFileListItem = ({ protoFile, isSelected, handleSelect, handleDelete }: Props) => {
   const { name, _id } = protoFile;
 
   // Don't re-instantiate the callbacks if the dependencies have not changed
@@ -59,19 +51,4 @@ const ProtoFileListItem = (props: {
   );
 };
 
-const ProtoFileList = ({ protoFiles, selectedId, handleSelect, handleDelete }: Props) => (
-  <ListGroup>
-    {!protoFiles.length && <ListGroupItem>No proto files exist for this workspace</ListGroupItem>}
-    {protoFiles.map(p => (
-      <ProtoFileListItem
-        key={p.id}
-        protoFile={p}
-        isSelected={p._id === selectedId}
-        handleSelect={handleSelect}
-        handleDelete={handleDelete}
-      />
-    ))}
-  </ListGroup>
-);
-
-export default ProtoFileList;
+export default ProtoFileListItem;
