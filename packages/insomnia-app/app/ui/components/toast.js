@@ -6,7 +6,14 @@ import styled from 'styled-components';
 import classnames from 'classnames';
 import Link from './base/link';
 import * as models from '../../models/index';
-import { constants, getAppName, getDefaultAppId } from '../../common/constants';
+import {
+  getAppName,
+  getAppPlatform,
+  getAppId,
+  getAppVersion,
+  getDefaultAppId,
+  isLinux,
+} from '../../common/constants';
 import * as db from '../../common/database';
 import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
@@ -109,14 +116,14 @@ class Toast extends React.PureComponent<Props, State> {
       const data = {
         firstLaunch: stats.created,
         launches: stats.launches,
-        platform: constants.getAppPlatform(),
-        app: constants.getAppId(),
-        version: constants.getAppVersion(),
+        platform: getAppPlatform(),
+        app: getAppId(),
+        version: getAppVersion(),
         requests: await db.count(models.request.type),
         requestGroups: await db.count(models.requestGroup.type),
         environments: await db.count(models.environment.type),
         workspaces: await db.count(models.workspace.type),
-        updatesNotSupported: constants.isLinux(),
+        updatesNotSupported: isLinux(),
         autoUpdatesDisabled: !settings.updateAutomatically,
         disableUpdateNotification: settings.disableUpdateNotification,
         updateChannel: settings.updateChannel,
