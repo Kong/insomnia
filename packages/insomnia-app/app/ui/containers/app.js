@@ -340,26 +340,24 @@ class App extends PureComponent {
 
   async _recalculateMetaSortKey(docs) {
     function __updateDoc(doc, metaSortKey) {
-      models.getModel(doc.type).update(doc, { metaSortKey });
+      return models.getModel(doc.type).update(doc, { metaSortKey });
     }
 
-    await db.bufferChanges(300);
-    docs.map((doc, i) => __updateDoc(doc, i * 100));
+    return Promise.all(docs.map((doc, i) => __updateDoc(doc, i * 100)));
   }
 
   async _sortSidebar(order, parentId) {
-    console.log('[sort called]', order, parentId);
     if (!parentId) {
       parentId = this.props.activeWorkspace._id;
       this.state.activeSortOrder = order;
+      await db.bufferChanges(200);
     }
 
     const docs = [
       ...(await models.requestGroup.findByParentId(parentId)),
       ...(await models.request.findByParentId(parentId)),
     ].sort(_getSortMethod(order));
-
-    this._recalculateMetaSortKey(docs);
+    await this._recalculateMetaSortKey(docs);
 
     // sort RequestGroups recursively
     docs.filter(d => d.type === models.requestGroup.type).map(g => this._sortSidebar(order, g._id));
@@ -1562,7 +1560,7 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   }
 
   function __updateDoc(doc, patch) {
-    models.getModel(docToMove.type).update(doc, patch);
+    return models.getModel(docToMove.type).update(doc, patch);
   }
 
   // Change sort order to CUSTOM so that sidebar can be sorted again
