@@ -804,16 +804,16 @@ class CodeEditor extends React.Component {
       change.update(change.from, change.to, [text]);
     }
 
+    // Don't allow non-breaking spaces because they break the GraphQL syntax
+    if (doc.options.mode === 'graphql' && change.text && change.text.length > 0) {
+      change.text = change.text.map(text => text.replace(/\u00A0/g, ' '));
+    }
+
     // Suppress lint on empty doc or single space exists (default value)
     if (value.trim() === '') {
       this._codemirrorSmartSetOption('lint', false);
     } else {
       this._codemirrorSmartSetOption('lint', this.props.lintOptions || true);
-
-      // Don't allow non-breaking spaces because they break the GraphQL syntax
-      if (doc.options.mode === 'graphql' && change.text && change.text.length > 1) {
-        change.text = change.text.map(text => text.replace(/\u00A0/g, ' '));
-      }
     }
   }
 
