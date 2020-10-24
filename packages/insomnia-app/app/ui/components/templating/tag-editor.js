@@ -491,7 +491,6 @@ class TagEditor extends React.PureComponent<Props, State> {
       })
       .map(doc => {
         if (doc.type === models.request.type) sortedDocs.push(doc);
-
         if (doc.type === models.requestGroup.type)
           sortedDocs = sortedDocs.concat(this.sortDocs(allDocs, doc._id));
       });
