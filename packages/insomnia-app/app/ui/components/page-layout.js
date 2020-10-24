@@ -163,7 +163,9 @@ class PageLayout extends React.PureComponent<Props, State> {
           <>
             {renderPaneOne && (
               <ErrorBoundary showAlert>
-                <PaneOne ref={handleSetRequestPaneRef}>{renderPaneOne()}</PaneOne>
+                <Pane position="one" ref={handleSetRequestPaneRef}>
+                  {renderPaneOne()}
+                </Pane>
               </ErrorBoundary>
             )}
             {paneTwo && (
@@ -183,7 +185,9 @@ class PageLayout extends React.PureComponent<Props, State> {
                 </div>
 
                 <ErrorBoundary showAlert>
-                  <PaneTwo ref={handleSetResponsePaneRef}>{paneTwo}</PaneTwo>
+                  <Pane position="two" ref={handleSetResponsePaneRef}>
+                    {paneTwo}
+                  </Pane>
                 </ErrorBoundary>
               </>
             )}
@@ -196,14 +200,22 @@ class PageLayout extends React.PureComponent<Props, State> {
 
 export default PageLayout;
 
-class PaneOne extends React.PureComponent {
-  render() {
-    return <section className="pane-one theme--pane">{this.props.children}</section>;
-  }
-}
+// class PaneOne extends React.PureComponent {
+//   render() {
+//     return <section className="pane-one theme--pane">{this.props.children}</section>;
+//   }
+// }
 
-class PaneTwo extends React.PureComponent {
+// class PaneTwo extends React.PureComponent {
+//   render() {
+//     return <section className="pane-two theme--pane">{this.props.children}</section>;
+//   }
+// }
+
+class Pane extends React.PureComponent {
   render() {
-    return <section className="pane-two theme--pane">{this.props.children}</section>;
+    return (
+      <section className={`pane-${this.props.position} theme--pane`}>{this.props.children}</section>
+    );
   }
 }

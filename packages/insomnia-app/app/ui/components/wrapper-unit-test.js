@@ -285,7 +285,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     return selectableRequests;
   }
 
-  renderResults = (): React.Node => {
+  _renderResults(): React.Node {
     const { activeUnitTestResult } = this.props.wrapperProps;
     const { testsRunning, resultsError } = this.state;
 
@@ -354,7 +354,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         </div>
       </div>
     );
-  };
+  }
 
   renderUnitTest(unitTest: UnitTest): React.Node {
     const { settings } = this.props.wrapperProps;
@@ -398,7 +398,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     );
   }
 
-  renderTestSuite = (): React.Node => {
+  _renderTestSuite(): React.Node {
     const { activeUnitTests, activeUnitTestSuite } = this.props.wrapperProps;
     const { testsRunning } = this.state;
 
@@ -432,7 +432,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
       </div>
     );
-  };
+  }
 
   renderPageSidebar(): React.Node {
     const { activeUnitTestSuites, activeUnitTestSuite } = this.props.wrapperProps;
@@ -485,8 +485,8 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       <PageLayout
         wrapperProps={this.props.wrapperProps}
         renderPageSidebar={this.renderPageSidebar}
-        renderPaneOne={this.renderTestSuite}
-        renderPaneTwo={this.renderResults}
+        renderPaneOne={this._renderTestSuite}
+        renderPaneTwo={this._renderResults}
         renderPageHeader={() => (
           <Header
             className="app-header"

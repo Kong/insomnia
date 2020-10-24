@@ -154,12 +154,12 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     }
   }
 
-  renderEditor = (): React.Node => {
+  _renderEditor(): React.Node {
     const { activeApiSpec, settings } = this.props.wrapperProps;
     const { lintMessages } = this.state;
 
     return (
-      <div className="spec-editor theme--pane__body">
+      <div className="tall theme--pane__body">
         <CodeEditor
           manualPrettify
           ref={this._setEditorRef}
@@ -178,11 +178,15 @@ class WrapperDesign extends React.PureComponent<Props, State> {
         )}
       </div>
     );
-  };
+  }
 
-  renderPreview = (): React.Node => {
+  _renderPreview(): React.Node {
     const { activeApiSpec } = this.props.wrapperProps;
     const { previewHidden } = this.state;
+
+    if (previewHidden) {
+      return null;
+    }
 
     let swaggerUiSpec;
     try {
@@ -194,37 +198,35 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     }
 
     return (
-      !previewHidden && (
-        <div id="swagger-ui-wrapper">
-          <ErrorBoundary
-            invalidationKey={activeApiSpec.contents}
-            renderError={() => (
-              <div className="text-left margin pad">
-                <h3>An error occurred while trying to render Swagger UI 😢</h3>
-                <p>
-                  This preview will automatically refresh, once you have a valid specification that
-                  can be previewed.
-                </p>
-              </div>
-            )}>
-            <SwaggerUI
-              spec={swaggerUiSpec}
-              supportedSubmitMethods={[
-                'get',
-                'put',
-                'post',
-                'delete',
-                'options',
-                'head',
-                'patch',
-                'trace',
-              ]}
-            />
-          </ErrorBoundary>
-        </div>
-      )
+      <div id="swagger-ui-wrapper">
+        <ErrorBoundary
+          invalidationKey={activeApiSpec.contents}
+          renderError={() => (
+            <div className="text-left margin pad">
+              <h3>An error occurred while trying to render Swagger UI 😢</h3>
+              <p>
+                This preview will automatically refresh, once you have a valid specification that
+                can be previewed.
+              </p>
+            </div>
+          )}>
+          <SwaggerUI
+            spec={swaggerUiSpec}
+            supportedSubmitMethods={[
+              'get',
+              'put',
+              'post',
+              'delete',
+              'options',
+              'head',
+              'patch',
+              'trace',
+            ]}
+          />
+        </ErrorBoundary>
+      </div>
     );
-  };
+  }
 
   render() {
     const { gitSyncDropdown, wrapperProps, handleActivityChange } = this.props;
@@ -285,8 +287,8 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             }
           />
         )}
-        renderPaneOne={this.renderEditor}
-        renderPaneTwo={this.renderPreview}
+        renderPaneOne={this._renderEditor}
+        renderPaneTwo={this._renderPreview}
         renderPageSidebar={() => (
           <ErrorBoundary
             invalidationKey={activeApiSpec.contents}
