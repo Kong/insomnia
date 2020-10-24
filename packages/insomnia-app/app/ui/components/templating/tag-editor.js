@@ -457,6 +457,8 @@ class TagEditor extends React.PureComponent<Props, State> {
     const docs = allDocs[modelType] || [];
     const id = value || 'n/a';
 
+    const sortedDocs = docs.sort((a, b) => (a.metaSortKey < b.metaSortKey ? -1 : 1));
+
     if (loadingDocs) {
       return (
         <select disabled={loadingDocs}>
@@ -468,7 +470,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     return (
       <select value={id} onChange={this._handleChange}>
         <option value="n/a">-- Select Item --</option>
-        {docs.map((doc: any) => {
+        {sortedDocs.map((doc: any) => {
           let namePrefix = null;
 
           // Show paren't folder with name if it's a request
