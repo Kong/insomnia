@@ -152,15 +152,32 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       await newVCS.removeProjectsForRoot(project.rootDocumentId);
 
       // Set project, checkout master, and pull
-      await newVCS.setProject(project);
-      await newVCS.checkout([], 'master');
-      await newVCS.pull([]); // There won't be any existing docs since it's a new pull
+      const defaultBranch = 'master';
 
-      const flushId = await db.bufferChanges();
-      for (const doc of await newVCS.allDocuments()) {
-        await db.upsert(doc);
+      await newVCS.setProject(project);
+      await newVCS.checkout([], defaultBranch);
+
+      const remoteBranches = await newVCS.getRemoteBranches();
+      const defaultBranchMissing = !remoteBranches.includes(defaultBranch);
+
+      // The default branch does not exist, so we create it and the workspace locally
+      if (defaultBranchMissing) {
+        const workspace: Workspace = await models.initModel(models.workspace.type, {
+          _id: project.rootDocumentId,
+          name: project.name,
+        });
+
+        await db.upsert(workspace);
+      } else {
+        await newVCS.pull([]); // There won't be any existing docs since it's a new pull
+
+        const flushId = await db.bufferChanges();
+        for (const doc of await newVCS.allDocuments()) {
+          await db.upsert(doc);
+        }
+        await db.flushChanges(flushId);
       }
-      await db.flushChanges(flushId);
+
       await this._refreshRemoteWorkspaces();
     } catch (err) {
       this._dropdown && this._dropdown.hide();

@@ -1,3 +1,4 @@
+// @flow
 import React, { PureComponent } from 'react';
 import autobind from 'autobind-decorator';
 import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
@@ -12,9 +13,17 @@ import {
   METHOD_HEAD,
   METHOD_OPTIONS,
   METHOD_DELETE,
+  METHOD_GRPC,
 } from '../../../common/constants';
 import * as models from '../../../models/index';
 import { trackEvent } from '../../../common/analytics';
+import { showModal } from './index';
+import ProtoFilesModal from './proto-files-modal';
+
+type RequestCreateModalOptions = {
+  parentId: string,
+  onComplete: string => void,
+};
 
 @autobind
 class RequestCreateModal extends PureComponent {
@@ -44,19 +53,32 @@ class RequestCreateModal extends PureComponent {
     e.preventDefault();
 
     const { parentId, selectedContentType, selectedMethod } = this.state;
-    const request = await models.initModel(models.request.type, {
-      parentId,
-      name: this._input.value,
-      method: selectedMethod,
-    });
+    const requestName = this._input.value;
+    if (selectedMethod === METHOD_GRPC) {
+      showModal(ProtoFilesModal, {
+        onSave: async protofileId => {
+          // TODO: Create new grpc request with the name and selected proto file - INS-198
+          console.log(`Create request name: [${requestName}], and protofileId: [${protofileId}]`);
 
-    const finalRequest = await models.request.updateMimeType(
-      request,
-      this._shouldNotHaveBody() ? null : selectedContentType,
-      true,
-    );
+          const createdRequestId = 'gr_123';
+          this._onComplete(createdRequestId);
+        },
+      });
+    } else {
+      const request = await models.initModel(models.request.type, {
+        parentId,
+        name: requestName,
+        method: selectedMethod,
+      });
 
-    this._onComplete(finalRequest);
+      const finalRequest = await models.request.updateMimeType(
+        request,
+        this._shouldNotHaveBody() ? null : selectedContentType,
+        true,
+      );
+
+      this._onComplete(finalRequest._id);
+    }
 
     this.hide();
 
@@ -77,7 +99,8 @@ class RequestCreateModal extends PureComponent {
       selectedMethod === METHOD_GET ||
       selectedMethod === METHOD_HEAD ||
       selectedMethod === METHOD_DELETE ||
-      selectedMethod === METHOD_OPTIONS
+      selectedMethod === METHOD_OPTIONS ||
+      selectedMethod === METHOD_GRPC
     );
   }
 
@@ -85,7 +108,7 @@ class RequestCreateModal extends PureComponent {
     this.modal.hide();
   }
 
-  show({ parentId, onComplete }) {
+  show({ parentId, onComplete }: RequestCreateModalOptions) {
     this.setState({
       parentId,
       selectedContentType: null,

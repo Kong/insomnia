@@ -249,6 +249,14 @@ export const selectActiveRequest = createSelector(
   },
 );
 
+export const selectActiveProtoFiles = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspace,
+  (entities, workspace) => {
+    return entities.protoFiles.filter(pf => pf.parentId === workspace._id);
+  },
+);
+
 export const selectActiveCookieJar = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
