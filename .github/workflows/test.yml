@@ -13,7 +13,6 @@ on:
 jobs:
   OS:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -36,6 +35,8 @@ jobs:
       - name: Build designer for smoke tests
         run: npm run app-build:smoke:designer
       - name: Run core smoke tests
+        timeout-minutes: 5 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
         run: npm run test:smoke:core:build
       - name: Run designer smoke tests
+        timeout-minutes: 5 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
         run: npm run test:smoke:designer:build
