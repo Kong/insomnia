@@ -82,7 +82,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
       <React.Fragment>
         <h2 className="graphql-explorer__subheading">Fields</h2>
         <ul className="graphql-explorer__defs">
-          {Object.keys(fields).map(key => {
+          {Object.keys(fields).sort().map(key => {
             const field: GraphQLField<any, any> = (fields[key]: any);
 
             let argLinks = null;
