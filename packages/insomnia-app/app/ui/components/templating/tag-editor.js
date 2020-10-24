@@ -472,9 +472,37 @@ class TagEditor extends React.PureComponent<Props, State> {
     return prefix;
   }
 
+  sortDocs(allDocs, parentId: string) {
+    let sortedDocs = [];
+    let requests = allDocs[models.request.type];
+    let requestGroups = allDocs[models.requestGroup.type];
+    if (!requests || !requestGroups) return [];
+
+    requests = requests.filter(request => request.parentId === parentId);
+    requestGroups = requestGroups.filter(requestGroup => requestGroup.parentId === parentId);
+    requests
+      .concat(requestGroups)
+      .sort((a, b) => {
+        if (a.metaSortKey === b.metaSortKey) {
+          return a._id > b._id ? -1 : 1;
+        } else {
+          return a.metaSortKey < b.metaSortKey ? -1 : 1;
+        }
+      })
+      .map(doc => {
+        if (doc.type === models.request.type) sortedDocs.push(doc);
+
+        if (doc.type === models.requestGroup.type)
+          sortedDocs = sortedDocs.concat(this.sortDocs(allDocs, doc._id));
+      });
+
+    return sortedDocs;
+  }
+
   renderArgModel(value: string, modelType: string) {
     const { allDocs, loadingDocs } = this.state;
-    const docs = allDocs[modelType] || [];
+    const sortedDocs = this.sortDocs(allDocs, this.props.workspace._id);
+    const docs = sortedDocs !== [] ? sortedDocs : allDocs[modelType] || [];
     const id = value || 'n/a';
 
     if (loadingDocs) {
