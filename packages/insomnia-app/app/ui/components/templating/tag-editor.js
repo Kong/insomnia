@@ -472,16 +472,11 @@ class TagEditor extends React.PureComponent<Props, State> {
     return prefix;
   }
 
-  sortDocs(allDocs, parentId: string) {
+  sortDocs(requests: Array<any>, requestGroups: Array<any>, parentId: string) {
     let sortedDocs = [];
-    let requests = allDocs[models.request.type];
-    let requestGroups = allDocs[models.requestGroup.type];
-    if (!requests || !requestGroups) return [];
-
-    requests = requests.filter(request => request.parentId === parentId);
-    requestGroups = requestGroups.filter(requestGroup => requestGroup.parentId === parentId);
     requests
-      .concat(requestGroups)
+      .filter(request => request.parentId === parentId)
+      .concat(requestGroups.filter(requestGroup => requestGroup.parentId === parentId))
       .sort((a, b) => {
         if (a.metaSortKey === b.metaSortKey) {
           return a._id > b._id ? -1 : 1;
@@ -492,7 +487,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       .map(doc => {
         if (doc.type === models.request.type) sortedDocs.push(doc);
         if (doc.type === models.requestGroup.type)
-          sortedDocs = sortedDocs.concat(this.sortDocs(allDocs, doc._id));
+          sortedDocs = sortedDocs.concat(this.sortDocs(requests, requestGroups, doc._id));
       });
 
     return sortedDocs;
@@ -500,8 +495,10 @@ class TagEditor extends React.PureComponent<Props, State> {
 
   renderArgModel(value: string, modelType: string) {
     const { allDocs, loadingDocs } = this.state;
-    const sortedDocs = this.sortDocs(allDocs, this.props.workspace._id);
-    const docs = sortedDocs !== [] ? sortedDocs : allDocs[modelType] || [];
+    const requests = allDocs[models.request.type] || [];
+    const requestGroups = allDocs[models.requestGroup.type] || [];
+    const sortedReqs = this.sortDocs(requests, requestGroups, this.props.workspace._id);
+    const docs = modelType === models.request.type ? sortedReqs : allDocs[modelType] || [];
     const id = value || 'n/a';
 
     if (loadingDocs) {
