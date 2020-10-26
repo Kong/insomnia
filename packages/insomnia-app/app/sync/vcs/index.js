@@ -717,7 +717,7 @@ export default class VCS {
 
     if (errors && errors.length) {
       console.log(`[sync] Failed to query ${name}`, errors);
-      throw new Error(`Failed to query ${name}`);
+      throw new Error(`Failed to query ${name}: ${errors[0].message}`);
     }
 
     return data;
