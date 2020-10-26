@@ -90,6 +90,7 @@ import {
   getAppName,
 } from '../../common/constants';
 import { Spectral } from '@stoplight/spectral';
+import ProtoFilesModal from './modals/proto-files-modal';
 
 const spectral = new Spectral();
 
@@ -181,6 +182,7 @@ export type WrapperProps = {
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
   activeGitRepository: GitRepository | null,
+  activeProtoFiles: Array<ProtoFile>,
   activeUnitTestResult: UnitTestResult | null,
   activeUnitTestSuites: Array<UnitTestSuite>,
   activeUnitTests: Array<UnitTest>,
@@ -519,6 +521,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       activeCookieJar,
       activeEnvironment,
       activeGitRepository,
+      activeProtoFiles,
       activeRequest,
       activeWorkspace,
       activeWorkspaceClientCertificates,
@@ -769,6 +772,12 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               ref={registerModal}
               childObjects={sidebarChildren.all}
               handleExportRequestsToFile={handleExportRequestsToFile}
+            />
+
+            <ProtoFilesModal
+              ref={registerModal}
+              workspace={activeWorkspace}
+              protoFiles={activeProtoFiles}
             />
           </ErrorBoundary>
         </div>
