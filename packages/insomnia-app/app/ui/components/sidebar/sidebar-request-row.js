@@ -11,7 +11,7 @@ import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
 import { showModal } from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
-import { CONTENT_TYPE_GRAPHQL, METHOD_GRPC } from '../../../common/constants';
+import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
 import GrpcTag from '../tags/grpc-tag';
 
@@ -179,10 +179,7 @@ class SidebarRequestRow extends PureComponent {
         request.type === models.grpcRequest.type ? (
           <GrpcTag />
         ) : (
-          <MethodTag
-            method={request.type === models.grpcRequest.type ? METHOD_GRPC : request.method}
-            override={this._getMethodOverrideHeaderValue()}
-          />
+          <MethodTag method={request.method} override={this._getMethodOverrideHeaderValue()} />
         );
 
       node = (
