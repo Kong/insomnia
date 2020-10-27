@@ -58,6 +58,7 @@ class RequestCreateModal extends PureComponent {
       showModal(ProtoFilesModal, {
         onSave: async (protoFileId: string) => {
           const createdRequest = await models.grpcRequest.create({
+            parentId,
             name: requestName,
             protoFileId,
           });
