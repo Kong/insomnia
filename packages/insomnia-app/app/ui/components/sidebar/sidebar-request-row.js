@@ -11,8 +11,9 @@ import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
 import { showModal } from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
-import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
+import { CONTENT_TYPE_GRAPHQL, METHOD_GRPC } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
+import GrpcTag from '../tags/grpc-tag';
 
 @autobind
 class SidebarRequestRow extends PureComponent {
@@ -174,6 +175,16 @@ class SidebarRequestRow extends PureComponent {
         </li>
       );
     } else {
+      const methodTag =
+        request.type === models.grpcRequest.type ? (
+          <GrpcTag />
+        ) : (
+          <MethodTag
+            method={request.type === models.grpcRequest.type ? METHOD_GRPC : request.method}
+            override={this._getMethodOverrideHeaderValue()}
+          />
+        );
+
       node = (
         <li className={classes}>
           <div
@@ -185,10 +196,7 @@ class SidebarRequestRow extends PureComponent {
               onClick={this._handleRequestActivate}
               onContextMenu={this._handleShowRequestActions}>
               <div className="sidebar__clickable">
-                <MethodTag
-                  method={request.method}
-                  override={this._getMethodOverrideHeaderValue()}
-                />
+                {methodTag}
                 <Editable
                   value={request.name}
                   fallbackValue={this.state.renderedUrl}
@@ -267,7 +275,7 @@ SidebarRequestRow.propTypes = {
 
   // Optional
   requestGroup: PropTypes.object,
-  request: PropTypes.object,
+  request: PropTypes.object, // can be Request or GrpcRequest
   disableDragAndDrop: PropTypes.bool,
 };
 
