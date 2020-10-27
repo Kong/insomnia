@@ -1,6 +1,7 @@
 import { createSelector } from 'reselect';
 import { fuzzyMatchAll } from '../../common/misc';
 import * as models from '../../models';
+import { shouldIgnoreChildrenOf, shouldShowInSidebar, sortByMetaKeyOrId } from './helpers';
 
 // ~~~~~~~~~ //
 // Selectors //
@@ -155,22 +156,6 @@ export const selectPinnedRequests = createSelector(selectEntitiesLists, entities
   return pinned;
 });
 
-const shouldShowInSidebar = ({ type }) =>
-  type === models.request.type ||
-  type === models.grpcRequest.type ||
-  type === models.requestGroup.type;
-
-const shouldIgnoreChildrenOf = ({ type }) =>
-  type === models.request.type || type === models.grpcRequest.type;
-
-const sortByMetaKey = (a, b) => {
-  if (a.metaSortKey === b.metaSortKey) {
-    return a._id > b._id ? -1 : 1;
-  } else {
-    return a.metaSortKey < b.metaSortKey ? -1 : 1;
-  }
-};
-
 export const selectSidebarChildren = createSelector(
   selectCollapsedRequestGroups,
   selectPinnedRequests,
@@ -183,7 +168,7 @@ export const selectSidebarChildren = createSelector(
     function next(parentId, pinnedChildren) {
       const children = (childrenMap[parentId] || [])
         .filter(shouldShowInSidebar)
-        .sort(sortByMetaKey);
+        .sort(sortByMetaKeyOrId);
 
       if (children.length > 0) {
         return children.map(c => {
