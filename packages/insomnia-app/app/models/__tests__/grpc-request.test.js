@@ -51,7 +51,7 @@ describe('create()', () => {
   it('fails when missing parentId', async () => {
     Date.now = jest.fn().mockReturnValue(1478795580200);
     expect(() => models.grpcRequest.create({ name: 'no parentId' })).toThrow(
-      'New gRPC Request missing `parentId`',
+      'New GrpcRequest missing `parentId`',
     );
   });
 });

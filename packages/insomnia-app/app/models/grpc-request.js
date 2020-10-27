@@ -44,7 +44,7 @@ export function migrate(doc: GrpcRequest): GrpcRequest {
 
 export function create(patch: $Shape<GrpcRequest> = {}): Promise<GrpcRequest> {
   if (!patch.parentId) {
-    throw new Error('New gRPC Request missing `parentId`');
+    throw new Error('New GrpcRequest missing `parentId`');
   }
 
   return db.docCreate(type, patch);
