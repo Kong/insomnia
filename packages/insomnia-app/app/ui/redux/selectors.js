@@ -139,18 +139,37 @@ export const selectActiveWorkspaceEntities = createSelector(
 export const selectPinnedRequests = createSelector(selectEntitiesLists, entities => {
   const pinned = {};
 
+  const requests = [...entities.requests, ...entities.grpcRequests];
+  const requestMetas = [...entities.requestMetas, ...entities.grpcRequestMetas];
+
   // Default all to unpinned
-  for (const request of entities.requests) {
+  for (const request of requests) {
     pinned[request._id] = false;
   }
 
   // Update those that have metadata (not all do)
-  for (const meta of entities.requestMetas) {
+  for (const meta of requestMetas) {
     pinned[meta.parentId] = meta.pinned;
   }
 
   return pinned;
 });
+
+const shouldShowInSidebar = ({ type }) =>
+  type === models.request.type ||
+  type === models.grpcRequest.type ||
+  type === models.requestGroup.type;
+
+const shouldIgnoreChildrenOf = ({ type }) =>
+  type === models.request.type || type === models.grpcRequest.type;
+
+const sortByMetaKey = (a, b) => {
+  if (a.metaSortKey === b.metaSortKey) {
+    return a._id > b._id ? -1 : 1;
+  } else {
+    return a.metaSortKey < b.metaSortKey ? -1 : 1;
+  }
+};
 
 export const selectSidebarChildren = createSelector(
   selectCollapsedRequestGroups,
@@ -163,16 +182,8 @@ export const selectSidebarChildren = createSelector(
 
     function next(parentId, pinnedChildren) {
       const children = (childrenMap[parentId] || [])
-        .filter(doc => {
-          return doc.type === models.request.type || doc.type === models.requestGroup.type;
-        })
-        .sort((a, b) => {
-          if (a.metaSortKey === b.metaSortKey) {
-            return a._id > b._id ? -1 : 1;
-          } else {
-            return a.metaSortKey < b.metaSortKey ? -1 : 1;
-          }
-        });
+        .filter(shouldShowInSidebar)
+        .sort(sortByMetaKey);
 
       if (children.length > 0) {
         return children.map(c => {
@@ -188,7 +199,7 @@ export const selectSidebarChildren = createSelector(
           }
 
           // Don't add children of requests
-          child.children = c.type === models.request.type ? [] : next(c._id, pinnedChildren);
+          child.children = shouldIgnoreChildrenOf(c) ? [] : next(c._id, pinnedChildren);
 
           return child;
         });
