@@ -27,7 +27,7 @@ const ProtoFileList = ({
     {!protoFiles.length && <ListGroupItem>No proto files exist for this workspace</ListGroupItem>}
     {protoFiles.map(p => (
       <ProtoFileListItem
-        key={p.id}
+        key={p._id}
         protoFile={p}
         isSelected={p._id === selectedId}
         handleSelect={handleSelect}
