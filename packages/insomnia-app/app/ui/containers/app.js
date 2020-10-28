@@ -96,6 +96,7 @@ import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
+import { isGrpcRequest } from '../../models/is-model';
 
 @autobind
 class App extends PureComponent {
@@ -232,7 +233,9 @@ class App extends PureComponent {
               if (!confirmed) {
                 return;
               }
-              models.request.remove(activeRequest);
+              isGrpcRequest(activeRequest)
+                ? models.grpcRequest.remove(activeRequest)
+                : models.request.remove(activeRequest);
             },
           });
         },
