@@ -214,68 +214,17 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
-  renderModalBody(request: Request) {
-    const {
-      editorLineWrapping,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
-      workspaces,
-    } = this.props;
-
-    const {
-      showDescription,
-      defaultPreviewMode,
-      activeWorkspaceIdToCopyTo,
-      justMoved,
-      justCopied,
-      workspace,
-    } = this.state;
+  _renderRequestSettings(): React.Node {
+    const { request } = this.state;
+    if (!request || request.type === models.grpcRequest.type) {
+      // GrpcRequests do not have any request settings (yet)
+      // When the time comes, explore creating a standalone request settings modal for gRPC
+      return;
+    }
 
     return (
-      <div>
-        <div className="form-control form-control--outlined">
-          <label>
-            Name{' '}
-            <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
-            <DebouncedInput
-              delay={500}
-              type="text"
-              placeholder={request.url || 'My Request'}
-              defaultValue={request.name}
-              onChange={this._handleNameChange}
-            />
-          </label>
-        </div>
-        {showDescription ? (
-          <MarkdownEditor
-            ref={this._setEditorRef}
-            className="margin-top"
-            defaultPreviewMode={defaultPreviewMode}
-            fontSize={editorFontSize}
-            indentSize={editorIndentSize}
-            keyMap={editorKeyMap}
-            placeholder="Write a description"
-            lineWrapping={editorLineWrapping}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-            defaultValue={request.description}
-            onChange={this._handleDescriptionChange}
-          />
-        ) : (
-          <button
-            onClick={this._handleAddDescription}
-            className="btn btn--outlined btn--super-duper-compact">
-            Add Description
-          </button>
-        )}
-        <div className="pad-top">
+      <>
+        <div className="pad-top pad-bottom">
           <div className="form-control form-control--thin">
             <label>
               Send cookies automatically
@@ -319,64 +268,132 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
             </label>
           </div>
         </div>
-        <div className="pad-top">
+        <div className="form-control form-control--outlined">
+          <label>
+            Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
+            <select
+              defaultValue={this.state.request && this.state.request.settingFollowRedirects}
+              name="settingFollowRedirects"
+              onChange={this._updateRequestSettingString}>
+              <option value={'global'}>Use global setting</option>
+              <option value={'off'}>Don't follow redirects</option>
+              <option value={'on'}>Follow redirects</option>
+            </select>
+          </label>
+        </div>
+      </>
+    );
+  }
+
+  renderModalBody(): React.Node {
+    const {
+      editorLineWrapping,
+      editorFontSize,
+      editorIndentSize,
+      editorKeyMap,
+      handleRender,
+      handleGetRenderContext,
+      nunjucksPowerUserMode,
+      isVariableUncovered,
+      workspaces,
+    } = this.props;
+
+    const {
+      showDescription,
+      defaultPreviewMode,
+      activeWorkspaceIdToCopyTo,
+      justMoved,
+      justCopied,
+      workspace,
+      request,
+    } = this.state;
+
+    if (!request) {
+      return null;
+    }
+
+    return (
+      <div>
+        <div className="form-control form-control--outlined">
+          <label>
+            Name{' '}
+            <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
+            <DebouncedInput
+              delay={500}
+              type="text"
+              placeholder={request.url || 'My Request'}
+              defaultValue={request.name}
+              onChange={this._handleNameChange}
+            />
+          </label>
+        </div>
+        {showDescription ? (
+          <MarkdownEditor
+            ref={this._setEditorRef}
+            className="margin-top"
+            defaultPreviewMode={defaultPreviewMode}
+            fontSize={editorFontSize}
+            indentSize={editorIndentSize}
+            keyMap={editorKeyMap}
+            placeholder="Write a description"
+            lineWrapping={editorLineWrapping}
+            handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
+            defaultValue={request.description}
+            onChange={this._handleDescriptionChange}
+          />
+        ) : (
+          <button
+            onClick={this._handleAddDescription}
+            className="btn btn--outlined btn--super-duper-compact">
+            Add Description
+          </button>
+        )}
+        {this._renderRequestSettings()}
+        <hr />
+        <div className="form-row">
           <div className="form-control form-control--outlined">
             <label>
-              Follow redirects{' '}
-              <span className="txt-sm faint italic">(overrides global setting)</span>
+              Move/Copy to Workspace
+              <HelpTooltip position="top" className="space-left">
+                Copy or move the current request to a new workspace. It will be placed at the root
+                of the new workspace's folder structure.
+              </HelpTooltip>
               <select
-                defaultValue={this.state.request && this.state.request.settingFollowRedirects}
-                name="settingFollowRedirects"
-                onChange={this._updateRequestSettingString}>
-                <option value={'global'}>Use global setting</option>
-                <option value={'off'}>Don't follow redirects</option>
-                <option value={'on'}>Follow redirects</option>
+                value={activeWorkspaceIdToCopyTo || '__NULL__'}
+                onChange={this._handleUpdateMoveCopyWorkspace}>
+                <option value="__NULL__">-- Select Workspace --</option>
+                {workspaces.map(w => {
+                  if (workspace && workspace._id === w._id) {
+                    return null;
+                  }
+
+                  return (
+                    <option key={w._id} value={w._id}>
+                      {w.name}
+                    </option>
+                  );
+                })}
               </select>
             </label>
           </div>
-          <hr />
-          <div className="form-row">
-            <div className="form-control form-control--outlined">
-              <label>
-                Move/Copy to Workspace
-                <HelpTooltip position="top" className="space-left">
-                  Copy or move the current request to a new workspace. It will be placed at the root
-                  of the new workspace's folder structure.
-                </HelpTooltip>
-                <select
-                  value={activeWorkspaceIdToCopyTo || '__NULL__'}
-                  onChange={this._handleUpdateMoveCopyWorkspace}>
-                  <option value="__NULL__">-- Select Workspace --</option>
-                  {workspaces.map(w => {
-                    if (workspace && workspace._id === w._id) {
-                      return null;
-                    }
-
-                    return (
-                      <option key={w._id} value={w._id}>
-                        {w.name}
-                      </option>
-                    );
-                  })}
-                </select>
-              </label>
-            </div>
-            <div className="form-control form-control--no-label width-auto">
-              <button
-                disabled={justCopied || !activeWorkspaceIdToCopyTo}
-                className="btn btn--clicky"
-                onClick={this._handleCopyToWorkspace}>
-                {justCopied ? 'Copied!' : 'Copy'}
-              </button>
-            </div>
-            <div className="form-control form-control--no-label width-auto">
-              <button
-                disabled={justMoved || !activeWorkspaceIdToCopyTo}
-                className="btn btn--clicky"
-                onClick={this._handleMoveToWorkspace}>
-                {justMoved ? 'Moved!' : 'Move'}
-              </button>
-            </div>
+          <div className="form-control form-control--no-label width-auto">
+            <button
+              disabled={justCopied || !activeWorkspaceIdToCopyTo}
+              className="btn btn--clicky"
+              onClick={this._handleCopyToWorkspace}>
+              {justCopied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+          <div className="form-control form-control--no-label width-auto">
+            <button
+              disabled={justMoved || !activeWorkspaceIdToCopyTo}
+              className="btn btn--clicky"
+              onClick={this._handleMoveToWorkspace}>
+              {justMoved ? 'Moved!' : 'Move'}
+            </button>
           </div>
         </div>
       </div>
@@ -391,7 +408,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
           Request Settings{' '}
           <span className="txt-sm selectable faint monospace">{request ? request._id : ''}</span>
         </ModalHeader>
-        <ModalBody className="pad">{request ? this.renderModalBody(request) : null}</ModalBody>
+        <ModalBody className="pad">{this.renderModalBody()}</ModalBody>
       </Modal>
     );
   }
