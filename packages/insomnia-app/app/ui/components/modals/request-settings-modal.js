@@ -11,6 +11,7 @@ import MarkdownEditor from '../markdown-editor';
 import * as db from '../../../common/database';
 import type { Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
+import { isGrpcRequest } from '../../../models/is-model';
 
 type Props = {
   editorFontSize: number,
@@ -95,11 +96,18 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
   }
 
   async _handleNameChange(name: string) {
-    if (!this.state.request) {
+    const { request: originalRequest } = this.state;
+
+    if (!originalRequest) {
       return;
     }
-    const request = await models.request.update(this.state.request, { name });
-    this.setState({ request });
+    const patch = { name };
+
+    const updatedRequest = isGrpcRequest(originalRequest)
+      ? await models.grpcRequest.update(originalRequest, patch)
+      : await models.request.update(originalRequest, patch);
+
+    this.setState({ request: updatedRequest });
   }
 
   async _handleDescriptionChange(description: string) {
