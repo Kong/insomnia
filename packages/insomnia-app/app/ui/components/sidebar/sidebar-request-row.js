@@ -14,6 +14,7 @@ import RequestSettingsModal from '../modals/request-settings-modal';
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
 import GrpcTag from '../tags/grpc-tag';
+import { isGrpcRequest } from '../../../models/is-model';
 
 @autobind
 class SidebarRequestRow extends PureComponent {
@@ -41,7 +42,13 @@ class SidebarRequestRow extends PureComponent {
   }
 
   _handleRequestUpdateName(name) {
-    models.request.update(this.props.request, { name });
+    const { request } = this.props;
+    const patch = { name };
+
+    isGrpcRequest(request)
+      ? models.grpcRequest.update(request, patch)
+      : models.request.update(request, patch);
+
     this.setState({ isEditing: false });
   }
 
