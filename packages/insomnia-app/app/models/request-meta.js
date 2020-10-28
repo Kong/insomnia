@@ -67,6 +67,17 @@ export async function getOrCreateByParentId(parentId: string) {
   return create({ parentId });
 }
 
+export async function updateOrCreateByParentId(parentId: string, patch: $Shape<RequestMeta>) {
+  const requestMeta = await getByParentId(parentId);
+
+  if (requestMeta) {
+    return update(requestMeta, patch);
+  } else {
+    const newPatch = Object.assign({ parentId }, patch);
+    return create(newPatch);
+  }
+}
+
 export function all(): Promise<Array<RequestMeta>> {
   return db.all(type);
 }

@@ -10,6 +10,7 @@ export const canSync = false;
 
 type BaseGrpcRequestMeta = {
   pinned: boolean,
+  lastActive: number,
 };
 
 export type GrpcRequestMeta = BaseModel & BaseGrpcRequestMeta;
@@ -17,6 +18,7 @@ export type GrpcRequestMeta = BaseModel & BaseGrpcRequestMeta;
 export function init() {
   return {
     pinned: false,
+    lastActive: 0,
   };
 }
 
@@ -51,6 +53,17 @@ export async function getOrCreateByParentId(parentId: string): Promise<GrpcReque
   }
 
   return create({ parentId });
+}
+
+export async function updateOrCreateByParentId(parentId: string, patch: $Shape<GrpcRequestMeta>) {
+  const requestMeta = await getByParentId(parentId);
+
+  if (requestMeta) {
+    return update(requestMeta, patch);
+  } else {
+    const newPatch = Object.assign({ parentId }, patch);
+    return create(newPatch);
+  }
 }
 
 export function all(): Promise<Array<GrpcRequestMeta>> {
