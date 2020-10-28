@@ -1,7 +1,7 @@
 // @flow
 import * as db from '../common/database';
 import type { BaseModel } from './index';
-import { prefix as grpcRequestPrefix } from './grpc-request';
+import { isGrpcRequestId } from './is-model';
 
 export const name = 'gRPC Request Meta';
 export const type = 'GrpcRequestMeta';
@@ -32,7 +32,7 @@ export function create(patch: $Shape<GrpcRequestMeta> = {}): Promise<GrpcRequest
     throw new Error('New GrpcRequestMeta missing `parentId`');
   }
 
-  if (!patch.parentId.startsWith(`${grpcRequestPrefix}_`)) {
+  if (!isGrpcRequestId(patch.parentId)) {
     throw new Error('Expected the parent of GrpcRequestMeta to be a GrpcRequest');
   }
 

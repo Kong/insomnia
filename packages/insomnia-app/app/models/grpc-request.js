@@ -71,11 +71,3 @@ export function findByParentId(parentId: string): Promise<Array<GrpcRequest>> {
 export function all(): Promise<Array<GrpcRequest>> {
   return db.all(type);
 }
-
-export function isGrpcRequest(obj: BaseModel): boolean {
-  return obj.type === type;
-}
-
-export function isGrpcRequestId(id: string): boolean {
-  return id.startsWith(`${prefix}_`);
-}
