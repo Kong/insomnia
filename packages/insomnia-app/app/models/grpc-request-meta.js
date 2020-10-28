@@ -1,6 +1,7 @@
 // @flow
 import * as db from '../common/database';
 import type { BaseModel } from './index';
+import { prefix as grpcRequestPrefix } from './grpc-request';
 
 export const name = 'gRPC Request Meta';
 export const type = 'GrpcRequestMeta';
@@ -29,6 +30,10 @@ export function migrate(doc: GrpcRequestMeta): GrpcRequestMeta {
 export function create(patch: $Shape<GrpcRequestMeta> = {}): Promise<GrpcRequestMeta> {
   if (!patch.parentId) {
     throw new Error('New GrpcRequestMeta missing `parentId`');
+  }
+
+  if (!patch.parentId.startsWith(`${grpcRequestPrefix}_`)) {
+    throw new Error('Expected the parent of GrpcRequestMeta to be a GrpcRequest');
   }
 
   return db.docCreate(type, patch);

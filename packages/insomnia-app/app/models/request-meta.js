@@ -2,6 +2,7 @@
 import * as db from '../common/database';
 import { PREVIEW_MODE_FRIENDLY } from '../common/constants';
 import type { BaseModel } from './index';
+import { prefix as requestPrefix } from './request';
 
 export const name = 'Request Meta';
 export const type = 'RequestMeta';
@@ -44,6 +45,10 @@ export function migrate(doc: RequestMeta): RequestMeta {
 export function create(patch: $Shape<RequestMeta> = {}) {
   if (!patch.parentId) {
     throw new Error('New RequestMeta missing `parentId` ' + JSON.stringify(patch));
+  }
+
+  if (!patch.parentId.startsWith(`${requestPrefix}_`)) {
+    throw new Error('Expected the parent of RequestMeta to be a Request');
   }
 
   return db.docCreate(type, patch);
