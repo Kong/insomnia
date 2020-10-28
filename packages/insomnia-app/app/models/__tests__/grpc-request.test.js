@@ -9,6 +9,7 @@ describe('init()', () => {
     expect(models.grpcRequest.init()).toEqual({
       url: '',
       name: 'New gRPC Request',
+      description: '',
       protoFileId: '',
       protoServiceName: '',
       protoMethodName: '',
@@ -34,6 +35,7 @@ describe('create()', () => {
       modified: 1478795580200,
       parentId: 'fld_124',
       name: 'My request',
+      description: '',
       url: '',
       protoFileId: '',
       protoServiceName: '',

@@ -25,13 +25,18 @@ type Props = {
 };
 
 type State = {
-  request: Request | null,
+  request: Request | GrpcRequest | null,
   showDescription: boolean,
   defaultPreviewMode: boolean,
   activeWorkspaceIdToCopyTo: string | null,
   workspace: Workspace | null,
   justCopied: boolean,
   justMoved: boolean,
+};
+
+type RequestSettingsModalOptions = {
+  request: Request | GrpcRequest,
+  forceEditMode: boolean,
 };
 
 @autobind
@@ -163,7 +168,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     }, 2000);
   }
 
-  async show({ request, forceEditMode }: { request: Request, forceEditMode: boolean }) {
+  async show({ request, forceEditMode }: RequestSettingsModalOptions) {
     const { workspaces } = this.props;
 
     const hasDescription = !!request.description;
