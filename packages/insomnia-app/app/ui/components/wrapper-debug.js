@@ -252,6 +252,12 @@ class WrapperDebug extends React.PureComponent<Props> {
       settings,
     } = this.props.wrapperProps;
 
+    // activeRequest being truthy only needs to be checked for isGrpcRequest (for now)
+    // The RequestPane and ResponsePane components already handle the case where activeRequest is null
+    if (activeRequest && isGrpcRequest(activeRequest)) {
+      return null;
+    }
+
     return (
       <React.Fragment>
         <ErrorBoundary showAlert>
@@ -340,19 +346,17 @@ class WrapperDebug extends React.PureComponent<Props> {
   }
 
   render() {
-    const { activity, activeRequest } = this.props.wrapperProps;
+    const { activity } = this.props.wrapperProps;
 
     const insomnia = isInsomnia(activity);
     const designer = !insomnia;
-
-    const isGrpc = isGrpcRequest(activeRequest);
 
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={designer && this._renderPageHeader}
         renderPageSidebar={this._renderPageSidebar}
-        renderPageBody={isGrpc ? null : this._renderPageBody}
+        renderPageBody={this._renderPageBody}
       />
     );
   }
