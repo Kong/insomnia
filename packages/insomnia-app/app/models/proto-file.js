@@ -28,7 +28,7 @@ export function migrate(doc: ProtoFile): ProtoFile {
 
 export function create(patch: $Shape<ProtoFile> = {}): Promise<ProtoFile> {
   if (!patch.parentId) {
-    throw new Error('New Proto File missing `parentId`');
+    throw new Error('New ProtoFile missing `parentId`');
   }
 
   return db.docCreate(type, patch);
