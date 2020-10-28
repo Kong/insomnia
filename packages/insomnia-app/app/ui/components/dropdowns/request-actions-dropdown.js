@@ -42,7 +42,9 @@ class RequestActionsDropdown extends PureComponent {
 
   _handleRemove() {
     const { request } = this.props;
-    models.request.remove(request);
+
+    const isGrpc = models.grpcRequest.isGrpcRequest(request);
+    return isGrpc ? models.grpcRequest.remove(request) : models.request.remove(request);
   }
 
   show() {
