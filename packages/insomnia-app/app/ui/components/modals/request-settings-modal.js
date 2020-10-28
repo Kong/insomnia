@@ -11,6 +11,7 @@ import MarkdownEditor from '../markdown-editor';
 import * as db from '../../../common/database';
 import type { Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
+import type { GrpcRequest } from '../../../models/grpc-request';
 import { isGrpcRequest } from '../../../models/is-model';
 
 type Props = {
@@ -229,10 +230,11 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
 
   _renderRequestSettings(): React.Node {
     const { request } = this.state;
-    if (!request || request.type === models.grpcRequest.type) {
-      // GrpcRequests do not have any request settings (yet)
-      // When the time comes, explore creating a standalone request settings modal for gRPC
-      return;
+
+    // GrpcRequests do not have any request settings (yet)
+    // When the time comes, explore creating a standalone request settings modal for gRPC
+    if (!request || isGrpcRequest(request)) {
+      return null;
     }
 
     return (
@@ -298,7 +300,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
-  renderModalBody(): React.Node {
+  _renderDescription(): React.Node {
     const {
       editorLineWrapping,
       editorFontSize,
@@ -308,18 +310,45 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       handleGetRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
-      workspaces,
     } = this.props;
 
-    const {
-      showDescription,
-      defaultPreviewMode,
-      activeWorkspaceIdToCopyTo,
-      justMoved,
-      justCopied,
-      workspace,
-      request,
-    } = this.state;
+    const { showDescription, defaultPreviewMode, request } = this.state;
+
+    // Don't show description if it doesn't exist, or if it is a gRPC request
+    if (!request || isGrpcRequest(request)) {
+      return null;
+    }
+
+    return showDescription ? (
+      <MarkdownEditor
+        ref={this._setEditorRef}
+        className="margin-top"
+        defaultPreviewMode={defaultPreviewMode}
+        fontSize={editorFontSize}
+        indentSize={editorIndentSize}
+        keyMap={editorKeyMap}
+        placeholder="Write a description"
+        lineWrapping={editorLineWrapping}
+        handleRender={handleRender}
+        handleGetRenderContext={handleGetRenderContext}
+        nunjucksPowerUserMode={nunjucksPowerUserMode}
+        isVariableUncovered={isVariableUncovered}
+        defaultValue={request.description}
+        onChange={this._handleDescriptionChange}
+      />
+    ) : (
+      <button
+        onClick={this._handleAddDescription}
+        className="btn btn--outlined btn--super-duper-compact">
+        Add Description
+      </button>
+    );
+  }
+
+  renderModalBody(): React.Node {
+    const { workspaces } = this.props;
+
+    const { activeWorkspaceIdToCopyTo, justMoved, justCopied, workspace, request } = this.state;
 
     if (!request) {
       return null;
@@ -340,30 +369,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
             />
           </label>
         </div>
-        {showDescription ? (
-          <MarkdownEditor
-            ref={this._setEditorRef}
-            className="margin-top"
-            defaultPreviewMode={defaultPreviewMode}
-            fontSize={editorFontSize}
-            indentSize={editorIndentSize}
-            keyMap={editorKeyMap}
-            placeholder="Write a description"
-            lineWrapping={editorLineWrapping}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-            defaultValue={request.description}
-            onChange={this._handleDescriptionChange}
-          />
-        ) : (
-          <button
-            onClick={this._handleAddDescription}
-            className="btn btn--outlined btn--super-duper-compact">
-            Add Description
-          </button>
-        )}
+        {this._renderDescription()}
         {this._renderRequestSettings()}
         <hr />
         <div className="form-row">
