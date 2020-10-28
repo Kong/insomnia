@@ -15,6 +15,7 @@ type RequestBody = {
 type BaseGrpcRequest = {
   name: string,
   url: string,
+  description: string,
   protoFileId?: string,
   protoServiceName?: string,
   protoMethodName?: string,
@@ -29,6 +30,7 @@ export function init(): BaseGrpcRequest {
   return {
     url: '',
     name: 'New gRPC Request',
+    description: '',
     protoFileId: '',
     protoServiceName: '',
     protoMethodName: '',
