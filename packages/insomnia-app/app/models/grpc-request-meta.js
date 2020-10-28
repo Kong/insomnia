@@ -1,6 +1,7 @@
 // @flow
 import * as db from '../common/database';
 import type { BaseModel } from './index';
+import { prefix as grpcRequestPrefix } from './grpc-request';
 
 export const name = 'gRPC Request Meta';
 export const type = 'GrpcRequestMeta';
@@ -10,6 +11,7 @@ export const canSync = false;
 
 type BaseGrpcRequestMeta = {
   pinned: boolean,
+  lastActive: number,
 };
 
 export type GrpcRequestMeta = BaseModel & BaseGrpcRequestMeta;
@@ -17,6 +19,7 @@ export type GrpcRequestMeta = BaseModel & BaseGrpcRequestMeta;
 export function init() {
   return {
     pinned: false,
+    lastActive: 0,
   };
 }
 
@@ -27,6 +30,10 @@ export function migrate(doc: GrpcRequestMeta): GrpcRequestMeta {
 export function create(patch: $Shape<GrpcRequestMeta> = {}): Promise<GrpcRequestMeta> {
   if (!patch.parentId) {
     throw new Error('New GrpcRequestMeta missing `parentId`');
+  }
+
+  if (!patch.parentId.startsWith(`${grpcRequestPrefix}_`)) {
+    throw new Error('Expected the parent of GrpcRequestMeta to be a GrpcRequest');
   }
 
   return db.docCreate(type, patch);
@@ -51,6 +58,17 @@ export async function getOrCreateByParentId(parentId: string): Promise<GrpcReque
   }
 
   return create({ parentId });
+}
+
+export async function updateOrCreateByParentId(parentId: string, patch: $Shape<GrpcRequestMeta>) {
+  const requestMeta = await getByParentId(parentId);
+
+  if (requestMeta) {
+    return update(requestMeta, patch);
+  } else {
+    const newPatch = Object.assign({ parentId }, patch);
+    return create(newPatch);
+  }
 }
 
 export function all(): Promise<Array<GrpcRequestMeta>> {
