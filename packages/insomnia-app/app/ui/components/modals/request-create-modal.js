@@ -147,6 +147,7 @@ class RequestCreateModal extends PureComponent {
               <div className="form-control form-control--no-label" style={{ width: 'auto' }}>
                 <MethodDropdown
                   right
+                  showGrpc
                   className="btn btn--clicky no-wrap"
                   method={selectedMethod}
                   onChange={this._handleChangeSelectedMethod}

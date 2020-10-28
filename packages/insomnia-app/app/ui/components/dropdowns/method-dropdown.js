@@ -74,6 +74,7 @@ class MethodDropdown extends PureComponent {
       method,
       right,
       onChange, // eslint-disable-line no-unused-vars
+      showGrpc,
       ...extraProps
     } = this.props;
     const buttonLabel = method === METHOD_GRPC ? GRPC_LABEL : method;
@@ -92,10 +93,14 @@ class MethodDropdown extends PureComponent {
             {method}
           </DropdownItem>
         ))}
-        <DropdownDivider />
-        <DropdownItem className="method-grpc" onClick={this._handleChange} value={METHOD_GRPC}>
-          {GRPC_LABEL}
-        </DropdownItem>
+        {showGrpc && (
+          <>
+            <DropdownDivider />
+            <DropdownItem className="method-grpc" onClick={this._handleChange} value={METHOD_GRPC}>
+              {GRPC_LABEL}
+            </DropdownItem>
+          </>
+        )}
         <DropdownDivider />
         <DropdownItem
           className="http-method-custom"
@@ -115,6 +120,7 @@ MethodDropdown.propTypes = {
 
   // Optional
   right: PropTypes.bool,
+  showGrpc: PropTypes.bool,
 };
 
 export default MethodDropdown;
