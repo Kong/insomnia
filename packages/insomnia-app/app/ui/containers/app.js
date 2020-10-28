@@ -497,7 +497,7 @@ class App extends PureComponent {
   }
 
   static async _updateRequestMetaByParentId(requestId, patch) {
-    const isGrpcRequest = requestId.startsWith(models.grpcRequest.prefix);
+    const isGrpcRequest = requestId.startsWith(`${models.grpcRequest.prefix}_`);
 
     if (isGrpcRequest) {
       return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
