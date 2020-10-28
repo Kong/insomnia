@@ -12,6 +12,7 @@ import {
 import * as models from '../../../models';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import * as misc from '../../../common/misc';
+import { isGrpcRequest } from '../../../models/is-model';
 
 @autobind
 class RequestActionsDropdown extends PureComponent {
@@ -43,8 +44,9 @@ class RequestActionsDropdown extends PureComponent {
   _handleRemove() {
     const { request } = this.props;
 
-    const isGrpc = models.grpcRequest.isGrpcRequest(request);
-    return isGrpc ? models.grpcRequest.remove(request) : models.request.remove(request);
+    return isGrpcRequest(request)
+      ? models.grpcRequest.remove(request)
+      : models.request.remove(request);
   }
 
   show() {
