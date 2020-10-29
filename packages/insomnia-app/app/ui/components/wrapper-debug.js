@@ -281,7 +281,7 @@ class WrapperDebug extends React.PureComponent<Props> {
         <React.Fragment>
           <ErrorBoundary showAlert>
             <ResizablePaneWrapper ref={handleSetRequestPaneRef}>
-              <GrpcRequestPane />
+              <GrpcRequestPane activeRequest={activeRequest} />
             </ResizablePaneWrapper>
           </ErrorBoundary>
           {dragPanes}
