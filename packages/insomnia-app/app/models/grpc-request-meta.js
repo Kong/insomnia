@@ -32,9 +32,7 @@ export function create(patch: $Shape<GrpcRequestMeta> = {}): Promise<GrpcRequest
     throw new Error('New GrpcRequestMeta missing `parentId`');
   }
 
-  if (!isGrpcRequestId(patch.parentId)) {
-    throw new Error('Expected the parent of GrpcRequestMeta to be a GrpcRequest');
-  }
+  expectParentToBeGrpcRequest(patch.parentId);
 
   return db.docCreate(type, patch);
 }
@@ -43,10 +41,15 @@ export function update(
   requestMeta: GrpcRequestMeta,
   patch: $Shape<GrpcRequestMeta>,
 ): Promise<GrpcRequestMeta> {
+  expectParentToBeGrpcRequest(patch.parentId || requestMeta.parentId);
+
+  console.log('update grpc request meta');
   return db.docUpdate(requestMeta, patch);
 }
 
 export function getByParentId(parentId: string): Promise<GrpcRequestMeta> {
+  expectParentToBeGrpcRequest(parentId);
+
   return db.getWhere(type, { parentId });
 }
 
@@ -73,4 +76,10 @@ export async function updateOrCreateByParentId(parentId: string, patch: $Shape<G
 
 export function all(): Promise<Array<GrpcRequestMeta>> {
   return db.all(type);
+}
+
+function expectParentToBeGrpcRequest(parentId: string) {
+  if (!isGrpcRequestId(parentId)) {
+    throw new Error('Expected the parent of GrpcRequestMeta to be a GrpcRequest');
+  }
 }

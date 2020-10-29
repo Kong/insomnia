@@ -96,7 +96,7 @@ import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
-import { isGrpcRequest } from '../../models/is-model';
+import { isGrpcRequest, isGrpcRequestId } from '../../models/is-model';
 
 @autobind
 class App extends PureComponent {
@@ -263,15 +263,18 @@ class App extends PureComponent {
       [
         hotKeyRefs.REQUEST_TOGGLE_PIN,
         async () => {
-          if (!this.props.activeRequest) {
+          const { activeRequest, entities } = this.props;
+          if (!activeRequest) {
             return;
           }
 
-          const metas = Object.values(this.props.entities.requestMetas).find(
-            m => m.parentId === this.props.activeRequest._id,
-          );
+          const entitiesToCheck = isGrpcRequest(activeRequest)
+            ? entities.grpcRequestMetas
+            : entities.requestMetas;
 
-          await this._handleSetRequestPinned(this.props.activeRequest, !(metas && metas.pinned));
+          const meta = Object.values(entitiesToCheck).find(m => m.parentId === activeRequest._id);
+
+          await this._handleSetRequestPinned(this.props.activeRequest, !meta?.pinned);
         },
       ],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
@@ -500,9 +503,9 @@ class App extends PureComponent {
   }
 
   static async _updateRequestMetaByParentId(requestId, patch) {
-    const isGrpcRequest = requestId.startsWith(`${models.grpcRequest.prefix}_`);
+    const isGrpc = isGrpcRequestId(requestId);
 
-    if (isGrpcRequest) {
+    if (isGrpc) {
       return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
     } else {
       return models.requestMeta.updateOrCreateByParentId(requestId, patch);
