@@ -13,6 +13,7 @@ import type { Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import { isGrpcRequest } from '../../../models/helpers/is-model';
+import * as requestOperations from '../../../models/helpers/request-operations';
 
 type Props = {
   editorFontSize: number,
@@ -149,9 +150,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
 
     // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
 
-    isGrpcRequest(request)
-      ? await models.grpcRequest.update(request, patch)
-      : await models.request.update(request, patch);
+    await requestOperations.update(request, patch);
 
     this.setState({ justMoved: true });
     setTimeout(() => {
@@ -178,9 +177,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
 
     // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
 
-    isGrpcRequest(request)
-      ? await models.grpcRequest.duplicate(request, patch)
-      : await models.request.duplicate(request, patch);
+    await requestOperations.duplicate(request, patch);
 
     this.setState({ justCopied: true });
     setTimeout(() => {

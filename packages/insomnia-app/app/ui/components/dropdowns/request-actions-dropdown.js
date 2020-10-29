@@ -9,10 +9,10 @@ import {
   DropdownHint,
   DropdownItem,
 } from '../base/dropdown/index';
-import * as models from '../../../models';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import * as misc from '../../../common/misc';
-import { isGrpcRequest, isRequest } from '../../../models/helpers/is-model';
+import { isRequest } from '../../../models/helpers/is-model';
+import * as requestOperations from '../../../models/helpers/request-operations';
 
 @autobind
 class RequestActionsDropdown extends PureComponent {
@@ -44,9 +44,7 @@ class RequestActionsDropdown extends PureComponent {
   _handleRemove() {
     const { request } = this.props;
 
-    return isGrpcRequest(request)
-      ? models.grpcRequest.remove(request)
-      : models.request.remove(request);
+    return requestOperations.remove(request);
   }
 
   show() {

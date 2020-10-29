@@ -97,6 +97,7 @@ import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
 import { isGrpcRequest, isGrpcRequestId } from '../../models/helpers/is-model';
+import * as requestOperations from '../../models/helpers/request-operations';
 
 @autobind
 class App extends PureComponent {
@@ -229,13 +230,11 @@ class App extends PureComponent {
           showModal(AskModal, {
             title: 'Delete Request?',
             message: `Really delete ${activeRequest.name}?`,
-            onDone: confirmed => {
+            onDone: async confirmed => {
               if (!confirmed) {
                 return;
               }
-              isGrpcRequest(activeRequest)
-                ? models.grpcRequest.remove(activeRequest)
-                : models.request.remove(activeRequest);
+              await requestOperations.remove(activeRequest);
             },
           });
         },
@@ -371,9 +370,7 @@ class App extends PureComponent {
       label: 'New Name',
       selectText: true,
       onComplete: async name => {
-        const newRequest = isGrpcRequest(request)
-          ? await models.grpcRequest.duplicate(request, { name })
-          : await models.request.duplicate(request, { name });
+        const newRequest = await requestOperations.duplicate(request, { name });
         await this._handleSetActiveRequest(newRequest._id);
       },
     });
