@@ -52,11 +52,11 @@ import {
   selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
   selectEntitiesLists,
-  selectSidebarChildren,
   selectSyncItems,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
 } from '../redux/selectors';
+import { selectSidebarChildren } from '../redux/sidebar-selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
@@ -497,12 +497,12 @@ class App extends PureComponent {
   }
 
   static async _updateRequestMetaByParentId(requestId, patch) {
-    const requestMeta = await models.requestMeta.getByParentId(requestId);
-    if (requestMeta) {
-      return models.requestMeta.update(requestMeta, patch);
+    const isGrpcRequest = requestId.startsWith(`${models.grpcRequest.prefix}_`);
+
+    if (isGrpcRequest) {
+      return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
     } else {
-      const newPatch = Object.assign({ parentId: requestId }, patch);
-      return models.requestMeta.create(newPatch);
+      return models.requestMeta.updateOrCreateByParentId(requestId, patch);
     }
   }
 

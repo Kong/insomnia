@@ -18,6 +18,8 @@ import * as _unitTest from './unit-test';
 import * as _unitTestResult from './unit-test-result';
 import * as _unitTestSuite from './unit-test-suite';
 import * as _protoFile from './proto-file';
+import * as _grpcRequest from './grpc-request';
+import * as _grpcRequestMeta from './grpc-request-meta';
 import * as _workspace from './workspace';
 import * as _workspaceMeta from './workspace-meta';
 import { generateId } from '../common/misc';
@@ -50,6 +52,8 @@ export const unitTest = _unitTest;
 export const unitTestSuite = _unitTestSuite;
 export const unitTestResult = _unitTestResult;
 export const protoFile = _protoFile;
+export const grpcRequest = _grpcRequest;
+export const grpcRequestMeta = _grpcRequestMeta;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 
@@ -76,6 +80,8 @@ export function all() {
     unitTestResult,
     unitTest,
     protoFile,
+    grpcRequest,
+    grpcRequestMeta,
   ];
 }
 
