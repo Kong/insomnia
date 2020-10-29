@@ -371,7 +371,9 @@ class App extends PureComponent {
       label: 'New Name',
       selectText: true,
       onComplete: async name => {
-        const newRequest = await models.request.duplicate(request, { name });
+        const newRequest = isGrpcRequest(request)
+          ? await models.grpcRequest.duplicate(request, { name })
+          : await models.request.duplicate(request, { name });
         await this._handleSetActiveRequest(newRequest._id);
       },
     });
