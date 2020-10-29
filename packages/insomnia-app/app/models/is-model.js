@@ -1,6 +1,6 @@
 // @flow
 import type { BaseModel } from './index';
-import { grpcRequest, request } from './index';
+import { grpcRequest, request, requestGroup } from './index';
 
 export function isGrpcRequest(obj: BaseModel): boolean {
   return obj.type === grpcRequest.type;
@@ -16,4 +16,8 @@ export function isRequest(obj: BaseModel): boolean {
 
 export function isRequestId(id: string): boolean {
   return id.startsWith(`${request.prefix}_`);
+}
+
+export function isRequestGroup(obj: BaseModel): boolean {
+  return obj.type === requestGroup.type;
 }
