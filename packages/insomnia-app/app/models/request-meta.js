@@ -54,14 +54,11 @@ export function create(patch: $Shape<RequestMeta> = {}) {
 
 export function update(requestMeta: RequestMeta, patch: $Shape<RequestMeta>) {
   expectParentToBeRequest(patch.parentId || requestMeta.parentId);
-
-  console.log('update request meta');
   return db.docUpdate(requestMeta, patch);
 }
 
 export function getByParentId(parentId: string) {
   expectParentToBeRequest(parentId);
-
   return db.getWhere(type, { parentId });
 }
 

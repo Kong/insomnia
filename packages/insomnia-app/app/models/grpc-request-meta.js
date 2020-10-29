@@ -42,14 +42,11 @@ export function update(
   patch: $Shape<GrpcRequestMeta>,
 ): Promise<GrpcRequestMeta> {
   expectParentToBeGrpcRequest(patch.parentId || requestMeta.parentId);
-
-  console.log('update grpc request meta');
   return db.docUpdate(requestMeta, patch);
 }
 
 export function getByParentId(parentId: string): Promise<GrpcRequestMeta> {
   expectParentToBeGrpcRequest(parentId);
-
   return db.getWhere(type, { parentId });
 }
 
