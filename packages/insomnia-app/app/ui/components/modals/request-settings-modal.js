@@ -142,10 +142,16 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    await models.request.update(request, {
+    const patch = {
       metaSortKey: -1e9, // Move to top of sort order
       parentId: activeWorkspaceIdToCopyTo,
-    });
+    };
+
+    // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
+
+    isGrpcRequest(request)
+      ? await models.grpcRequest.update(request, patch)
+      : await models.request.update(request, patch);
 
     this.setState({ justMoved: true });
     setTimeout(() => {
@@ -164,12 +170,17 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    const newRequest = await models.request.duplicate(request);
-    await models.request.update(newRequest, {
+    const patch = {
       metaSortKey: -1e9, // Move to top of sort order
-      name: request.name, // Because duplicate will add (Copy) suffix
+      name: request.name, // Because duplicate will add (Copy) suffix if name is not provided in patch
       parentId: activeWorkspaceIdToCopyTo,
-    });
+    };
+
+    // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
+
+    isGrpcRequest(request)
+      ? await models.grpcRequest.duplicate(request, patch)
+      : await models.request.duplicate(request, patch);
 
     this.setState({ justCopied: true });
     setTimeout(() => {
