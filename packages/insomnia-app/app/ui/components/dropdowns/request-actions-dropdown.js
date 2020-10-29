@@ -12,7 +12,7 @@ import {
 import * as models from '../../../models';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import * as misc from '../../../common/misc';
-import { isGrpcRequest } from '../../../models/is-model';
+import { isGrpcRequest, isRequest } from '../../../models/is-model';
 
 @autobind
 class RequestActionsDropdown extends PureComponent {
@@ -61,8 +61,8 @@ class RequestActionsDropdown extends PureComponent {
       ...other
     } = this.props;
 
-    const isGrpc = request.type === models.grpcRequest.type;
-    const canGenerateCode = !isGrpc;
+    // Can only generate code for regular requests, not gRPC requests
+    const canGenerateCode = isRequest(request);
 
     return (
       <Dropdown ref={this._setDropdownRef} {...other}>
