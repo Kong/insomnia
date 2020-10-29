@@ -29,14 +29,15 @@ export async function lintSpecification(
       const fileName = path.isAbsolute(identifier)
         ? identifier
         : path.join(workingDir || '.', identifier);
-      logger.trace(`Reading specification from file \`${fileName}\``);
+      logger.trace(`Linting specification from file \`${fileName}\``);
       try {
         specContent = (await fs.promises.readFile(fileName)).toString();
       } catch (e) {
-        throw new InsoError('Specification not found.');
+        throw new InsoError(`Failed to read "${fileName}"`, e);
       }
     } else {
-      throw new InsoError('Invalid specification.');
+      logger.fatal(`Specification not found.`);
+      return false;
     }
   } catch (e) {
     logger.fatal(e.message);
