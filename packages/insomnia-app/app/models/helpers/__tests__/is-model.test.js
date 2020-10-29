@@ -1,4 +1,4 @@
-import * as models from '../';
+import * as models from '../../index';
 import { difference } from 'lodash';
 import {
   isGrpcRequest,
@@ -7,7 +7,7 @@ import {
   isRequestGroup,
   isRequestId,
 } from '../is-model';
-import { generateId } from '../../common/misc';
+import { generateId } from '../../../common/misc';
 
 const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);

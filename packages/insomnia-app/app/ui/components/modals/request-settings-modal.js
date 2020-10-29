@@ -12,7 +12,7 @@ import * as db from '../../../common/database';
 import type { Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
 import type { GrpcRequest } from '../../../models/grpc-request';
-import { isGrpcRequest } from '../../../models/is-model';
+import { isGrpcRequest } from '../../../models/helpers/is-model';
 
 type Props = {
   editorFontSize: number,

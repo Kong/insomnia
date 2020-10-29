@@ -1,7 +1,7 @@
 // @flow
 import * as db from '../common/database';
 import type { BaseModel } from './index';
-import { isGrpcRequestId } from './is-model';
+import { isGrpcRequestId } from './helpers/is-model';
 
 export const name = 'gRPC Request Meta';
 export const type = 'GrpcRequestMeta';

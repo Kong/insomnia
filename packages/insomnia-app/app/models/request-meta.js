@@ -2,7 +2,7 @@
 import * as db from '../common/database';
 import { PREVIEW_MODE_FRIENDLY } from '../common/constants';
 import type { BaseModel } from './index';
-import { isRequestId } from './is-model';
+import { isRequestId } from './helpers/is-model';
 
 export const name = 'Request Meta';
 export const type = 'RequestMeta';

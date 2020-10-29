@@ -12,7 +12,7 @@ import {
 import * as models from '../../../models';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import * as misc from '../../../common/misc';
-import { isGrpcRequest, isRequest } from '../../../models/is-model';
+import { isGrpcRequest, isRequest } from '../../../models/helpers/is-model';
 
 @autobind
 class RequestActionsDropdown extends PureComponent {

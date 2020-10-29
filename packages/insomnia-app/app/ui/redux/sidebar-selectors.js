@@ -12,7 +12,7 @@ import {
   selectEntitiesChildrenMap,
   selectPinnedRequests,
 } from './selectors';
-import { isGrpcRequest, isRequest, isRequestGroup } from '../../models/is-model';
+import { isGrpcRequest, isRequest, isRequestGroup } from '../../models/helpers/is-model';
 
 type SidebarModels = Request | GrpcRequest | RequestGroup;
 

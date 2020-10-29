@@ -1,6 +1,6 @@
 // @flow
-import type { BaseModel } from './index';
-import { grpcRequest, request, requestGroup } from './index';
+import type { BaseModel } from '../index';
+import { grpcRequest, request, requestGroup } from '../index';
 
 export function isGrpcRequest(obj: BaseModel): boolean {
   return obj.type === grpcRequest.type;

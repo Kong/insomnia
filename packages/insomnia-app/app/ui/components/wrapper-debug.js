@@ -14,7 +14,7 @@ import designerLogo from '../images/insomnia-designer-logo.svg';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
 import { ACTIVITY_HOME, isInsomnia } from '../../common/constants';
 import ActivityToggle from './activity-toggle';
-import { isGrpcRequest } from '../../models/is-model';
+import { isGrpcRequest } from '../../models/helpers/is-model';
 
 type Props = {
   forceRefreshKey: string,

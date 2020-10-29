@@ -96,7 +96,7 @@ import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
-import { isGrpcRequest, isGrpcRequestId } from '../../models/is-model';
+import { isGrpcRequest, isGrpcRequestId } from '../../models/helpers/is-model';
 
 @autobind
 class App extends PureComponent {

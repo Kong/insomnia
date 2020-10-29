@@ -14,7 +14,7 @@ import RequestSettingsModal from '../modals/request-settings-modal';
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
 import GrpcTag from '../tags/grpc-tag';
-import { isGrpcRequest } from '../../../models/is-model';
+import { isGrpcRequest } from '../../../models/helpers/is-model';
 
 @autobind
 class SidebarRequestRow extends PureComponent {
