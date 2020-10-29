@@ -13,6 +13,7 @@ import {
   selectEntitiesChildrenMap,
   selectPinnedRequests,
 } from './selectors';
+import { isGrpcRequest } from '../../models/is-model';
 
 type SidebarModels = Request | GrpcRequest | RequestGroup;
 
@@ -82,7 +83,9 @@ export const selectSidebarChildren = createSelector(
         const hasMatchedChildren = child.children.find(c => c.hidden === false);
 
         // Try to match request attributes
-        const { name, method } = child.doc;
+        const name = child.doc.name;
+        const method = isGrpcRequest(child.doc) ? 'gRPC' : child.doc.method;
+
         const match = fuzzyMatchAll(sidebarFilter, [name, method, ...parentNames], {
           splitSpace: true,
         });
