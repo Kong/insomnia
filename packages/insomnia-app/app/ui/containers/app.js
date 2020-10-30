@@ -30,7 +30,6 @@ import {
   PREVIEW_MODE_SOURCE,
   getAppId,
   getAppName,
-  SORT_CUSTOM,
 } from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as entitiesActions from '../redux/modules/entities';
@@ -96,7 +95,7 @@ import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
-import { _getSortMethod } from '../helpers/sorting';
+import { getSortMethod } from '../../common/sorting';
 
 @autobind
 class App extends PureComponent {
@@ -117,7 +116,6 @@ class App extends PureComponent {
       forceRefreshCounter: 0,
       forceRefreshHeaderCounter: 0,
       isMigratingChildren: false,
-      activeSortOrder: props.activeSortOrder || SORT_CUSTOM,
     };
 
     this._getRenderContextPromiseCache = {};
@@ -347,20 +345,24 @@ class App extends PureComponent {
   }
 
   async _sortSidebar(order, parentId) {
+    let flushId;
     if (!parentId) {
       parentId = this.props.activeWorkspace._id;
-      this.state.activeSortOrder = order;
-      await db.bufferChanges(200);
+      flushId = await db.bufferChanges();
     }
 
     const docs = [
       ...(await models.requestGroup.findByParentId(parentId)),
       ...(await models.request.findByParentId(parentId)),
-    ].sort(_getSortMethod(order));
+    ].sort(getSortMethod(order));
     await this._recalculateMetaSortKey(docs);
 
     // sort RequestGroups recursively
     docs.filter(d => d.type === models.requestGroup.type).map(g => this._sortSidebar(order, g._id));
+
+    if (flushId) {
+      await db.flushChanges(flushId);
+    }
   }
 
   static async _requestGroupDuplicate(requestGroup) {
@@ -1364,7 +1366,6 @@ class App extends PureComponent {
               isVariableUncovered={isVariableUncovered}
               headerEditorKey={forceRefreshHeaderCounter + ''}
               handleSidebarSort={this._sortSidebar}
-              sortOrder={this.state.activeSortOrder}
               vcs={vcs}
               gitVCS={gitVCS}
             />
@@ -1562,9 +1563,6 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   function __updateDoc(doc, patch) {
     return models.getModel(docToMove.type).update(doc, patch);
   }
-
-  // Change sort order to CUSTOM so that sidebar can be sorted again
-  // this.state.activeSortOrder = SORT_CUSTOM;
 
   if (targetId === null) {
     // We are moving to an empty area. No sorting required

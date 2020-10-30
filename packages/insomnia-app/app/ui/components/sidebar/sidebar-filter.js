@@ -14,7 +14,6 @@ type Props = {
   requestCreate: () => void,
   requestGroupCreate: () => void,
   sidebarSort: (sortOrder: SortOrder) => void,
-  sortOrder: SortOrder,
   filter: string,
   hotKeyRegistry: HotKeyRegistry,
 };
@@ -60,7 +59,7 @@ class SidebarFilter extends React.PureComponent<Props> {
   }
 
   render() {
-    const { filter, hotKeyRegistry, sidebarSort, sortOrder } = this.props;
+    const { filter, hotKeyRegistry, sidebarSort } = this.props;
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
         <div className="sidebar__filter">
@@ -78,7 +77,7 @@ class SidebarFilter extends React.PureComponent<Props> {
               </button>
             )}
           </div>
-          <SidebarSortDropdown handleSort={sidebarSort} sortOrder={sortOrder} />
+          <SidebarSortDropdown handleSort={sidebarSort} />
           <SidebarCreateDropdown
             handleCreateRequest={this._handleRequestCreate}
             handleCreateRequestGroup={this._handleRequestGroupCreate}

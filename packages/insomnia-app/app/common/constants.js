@@ -267,7 +267,6 @@ export type SortOrder =
   | 'method'
   | 'type-asc'
   | 'type-desc';
-export const SORT_CUSTOM: SortOrder = 'custom';
 export const SORT_NAME_ASC: SortOrder = 'name-asc';
 export const SORT_NAME_DESC: SortOrder = 'name-desc';
 export const SORT_CREATED_FIRST: SortOrder = 'created-first';

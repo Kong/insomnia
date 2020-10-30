@@ -5,7 +5,6 @@ import {
   sortOrderName,
   SORT_CREATED_FIRST,
   SORT_CREATED_LAST,
-  SORT_CUSTOM,
   SORT_METHOD,
   SORT_NAME_ASC,
   SORT_NAME_DESC,
@@ -16,22 +15,16 @@ import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 
 type Props = {
   handleSort: (sortOrder: SortOrder) => void,
-  sortOrder: SortOrder,
 };
 
 const SidebarSortDropdown = (props: Props) => {
   const _handleSort = (order: SortOrder) => {
-    if (order !== props.sortOrder) {
-      props.handleSort(order);
-    }
+    props.handleSort(order);
   };
 
   const _renderSortOrder = (order: SortOrder) => {
-    const currentSortOrder = props.sortOrder || SORT_CUSTOM;
-
     return (
       <DropdownItem onClick={_handleSort} value={order}>
-        {currentSortOrder === order ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}{' '}
         {sortOrderName[order]}
       </DropdownItem>
     );

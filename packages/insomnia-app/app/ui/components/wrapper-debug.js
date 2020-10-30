@@ -166,7 +166,6 @@ class WrapperDebug extends React.PureComponent<Props> {
       sidebarFilter,
       sidebarHidden,
       sidebarWidth,
-      sortOrder,
       unseenWorkspaces,
       vcs,
       workspaces,
@@ -217,7 +216,6 @@ class WrapperDebug extends React.PureComponent<Props> {
               requestCreate={handleRequestCreate}
               requestGroupCreate={handleRequestGroupCreate}
               sidebarSort={handleSidebarSort}
-              sortOrder={sortOrder}
               filter={sidebarFilter || ''}
               hotKeyRegistry={settings.hotKeyRegistry}
             />

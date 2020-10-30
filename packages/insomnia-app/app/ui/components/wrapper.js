@@ -193,7 +193,6 @@ export type WrapperProps = {
   gitVCS: GitVCS | null,
   gitRepositories: Array<GitRepository>,
   syncItems: Array<StatusCandidate>,
-  sortOrder: SortOrder,
 
   // Optional
   oAuth2Token: OAuth2Token | null,

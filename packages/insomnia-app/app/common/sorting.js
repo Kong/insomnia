@@ -9,12 +9,14 @@ import {
   SORT_NAME_DESC,
   SORT_TYPE_ASC,
   SORT_TYPE_DESC,
-} from '../../common/constants';
-import { request, requestGroup } from '../../models';
+} from './constants';
+import { request, requestGroup } from '../models';
+import type { Request } from '../../models/request';
+import type { RequestGroup } from '../../models/request-group';
 
-export function _getSortMethod(
+export function getSortMethod(
   order: SortOrder,
-): (a: request | requestGroup, b: request | requestGroup) => -1 | 1 {
+): (a: Request | RequestGroup, b: Request | RequestGroup) => -1 | 1 {
   switch (order) {
     case SORT_NAME_ASC:
       return (a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1);
