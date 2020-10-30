@@ -77,7 +77,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
 
     // $FlowFixMe
     const fields = type.getFields();
-    const fieldKeys = Object.keys(fields).sort();
+    const fieldKeys = Object.keys(fields).sort((a, b) => a.localeCompare(b));
 
     return (
       <React.Fragment>
