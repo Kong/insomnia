@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import { SvgIcon } from 'insomnia-components';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
 import autobind from 'autobind-decorator';
 import MarkdownPreview from '../markdown-preview';
@@ -7,6 +8,7 @@ import GraphQLExplorerFieldLink from './graph-ql-explorer-field-link';
 import type { GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { GraphQLInterfaceType, GraphQLObjectType, GraphQLUnionType } from 'graphql';
 import GraphQLDefaultValue from './graph-ql-default-value';
+import Tooltip from '../../components/tooltip';
 
 type Props = {
   onNavigateType: (type: Object) => void,
@@ -111,11 +113,20 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
               <GraphQLExplorerTypeLink onNavigate={this._handleNavigateType} type={field.type} />
             );
 
+            const isDeprecated = field.isDeprecated;
             const description = field.description;
             return (
               <li key={key}>
                 {fieldLink}
                 {argLinks}: {typeLink} <GraphQLDefaultValue field={field} />
+                {isDeprecated && (
+                  <Tooltip
+                    message={`The field "${field.name}" is deprecated. ${field.deprecationReason}`}
+                    position="bottom"
+                    delay={1000}>
+                    <SvgIcon icon="warning" />
+                  </Tooltip>
+                )}
                 {description && (
                   <div className="graphql-explorer__defs__description">
                     <MarkdownPreview markdown={description} />

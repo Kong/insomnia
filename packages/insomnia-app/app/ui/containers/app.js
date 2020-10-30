@@ -39,6 +39,7 @@ import {
   selectActiveCookieJar,
   selectActiveGitRepository,
   selectActiveOAuth2Token,
+  selectActiveProtoFiles,
   selectActiveRequest,
   selectActiveRequestMeta,
   selectActiveRequestResponses,
@@ -51,11 +52,11 @@ import {
   selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
   selectEntitiesLists,
-  selectSidebarChildren,
   selectSyncItems,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
 } from '../redux/selectors';
+import { selectSidebarChildren } from '../redux/sidebar-selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
@@ -329,8 +330,8 @@ class App extends PureComponent {
   _requestCreate(parentId) {
     showModal(RequestCreateModal, {
       parentId,
-      onComplete: request => {
-        this._handleSetActiveRequest(request._id);
+      onComplete: requestId => {
+        this._handleSetActiveRequest(requestId);
       },
     });
   }
@@ -496,12 +497,12 @@ class App extends PureComponent {
   }
 
   static async _updateRequestMetaByParentId(requestId, patch) {
-    const requestMeta = await models.requestMeta.getByParentId(requestId);
-    if (requestMeta) {
-      return models.requestMeta.update(requestMeta, patch);
+    const isGrpcRequest = requestId.startsWith(`${models.grpcRequest.prefix}_`);
+
+    if (isGrpcRequest) {
+      return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
     } else {
-      const newPatch = Object.assign({ parentId: requestId }, patch);
-      return models.requestMeta.create(newPatch);
+      return models.requestMeta.updateOrCreateByParentId(requestId, patch);
     }
   }
 
@@ -621,7 +622,7 @@ class App extends PureComponent {
   async _getDownloadLocation() {
     const options = {
       title: 'Select Download Location',
-      buttonLabel: 'Send and Save',
+      buttonLabel: 'Save',
     };
 
     const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
@@ -713,15 +714,15 @@ class App extends PureComponent {
           </div>
         ),
       });
+    } finally {
+      // Unset active response because we just made a new one
+      await App._updateRequestMetaByParentId(requestId, {
+        activeResponseId: null,
+      });
+
+      // Stop loading
+      handleStopLoading(requestId);
     }
-
-    // Unset active response because we just made a new one
-    await App._updateRequestMetaByParentId(requestId, {
-      activeResponseId: null,
-    });
-
-    // Stop loading
-    handleStopLoading(requestId);
   }
 
   async _handleSendRequestWithEnvironment(requestId, environmentId) {
@@ -1447,12 +1448,16 @@ function mapStateToProps(state, props) {
   const activeUnitTestSuites = selectActiveUnitTestSuites(state, props);
   const activeUnitTestResult = selectActiveUnitTestResult(state, props);
 
+  // Proto file stuff
+  const activeProtoFiles = selectActiveProtoFiles(state, props);
+
   return Object.assign({}, state, {
     activity: activeActivity,
     activeApiSpec,
     activeCookieJar,
     activeEnvironment,
     activeGitRepository,
+    activeProtoFiles,
     activeRequest,
     activeRequestResponses,
     activeResponse,

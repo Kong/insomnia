@@ -6,10 +6,10 @@ import { remote } from 'electron';
 
 type Props = {
   // Required
-  onChange: Function,
-  path: string,
+  onChange: (path: string) => void,
 
   // Optional
+  path?: string,
   itemtypes?: Array<string>,
   extensions?: Array<string>,
   showFileName?: boolean,

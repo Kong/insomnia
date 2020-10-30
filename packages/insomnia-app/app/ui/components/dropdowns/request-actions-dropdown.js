@@ -57,6 +57,9 @@ class RequestActionsDropdown extends PureComponent {
       ...other
     } = this.props;
 
+    const isGrpc = request.type === models.grpcRequest.type;
+    const canGenerateCode = !isGrpc;
+
     return (
       <Dropdown ref={this._setDropdownRef} {...other}>
         <DropdownButton>
@@ -68,21 +71,25 @@ class RequestActionsDropdown extends PureComponent {
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_DUPLICATE.id]} />
         </DropdownItem>
 
-        <DropdownItem onClick={this._handleGenerateCode}>
-          <i className="fa fa-code" /> Generate Code
-          <DropdownHint
-            keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR.id]}
-          />
-        </DropdownItem>
+        {canGenerateCode && (
+          <DropdownItem onClick={this._handleGenerateCode}>
+            <i className="fa fa-code" /> Generate Code
+            <DropdownHint
+              keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR.id]}
+            />
+          </DropdownItem>
+        )}
 
         <DropdownItem onClick={this._handleSetRequestPinned}>
           <i className="fa fa-thumb-tack" /> {this.props.isPinned ? 'Unpin' : 'Pin'}
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_TOGGLE_PIN.id]} />
         </DropdownItem>
 
-        <DropdownItem onClick={this._handleCopyAsCurl}>
-          <i className="fa fa-copy" /> Copy as Curl
-        </DropdownItem>
+        {canGenerateCode && (
+          <DropdownItem onClick={this._handleCopyAsCurl}>
+            <i className="fa fa-copy" /> Copy as Curl
+          </DropdownItem>
+        )}
 
         <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon>
           <i className="fa fa-trash-o" /> Delete
@@ -106,7 +113,7 @@ RequestActionsDropdown.propTypes = {
   handleCopyAsCurl: PropTypes.func.isRequired,
   handleShowSettings: PropTypes.func.isRequired,
   isPinned: PropTypes.bool.isRequired,
-  request: PropTypes.object.isRequired,
+  request: PropTypes.object.isRequired, // can be Request or GrpcRequest
   hotKeyRegistry: PropTypes.object.isRequired,
   handleSetRequestPinned: PropTypes.func.isRequired,
 };
