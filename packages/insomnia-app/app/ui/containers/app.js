@@ -358,7 +358,11 @@ class App extends PureComponent {
     await this._recalculateMetaSortKey(docs);
 
     // sort RequestGroups recursively
-    docs.filter(d => d.type === models.requestGroup.type).map(g => this._sortSidebar(order, g._id));
+    await Promise.all(
+      docs
+        .filter(d => d.type === models.requestGroup.type)
+        .map(g => this._sortSidebar(order, g._id)),
+    );
 
     if (flushId) {
       await db.flushChanges(flushId);
