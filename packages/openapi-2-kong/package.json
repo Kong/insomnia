@@ -29,5 +29,8 @@
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },
+  "repository": "https://github.com/Kong/insomnia/tree/develop/packages/openapi-2-kong",
+  "bugs": "https://github.com/Kong/insomnia/issues",
+  "license": "MIT",
   "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
 }
