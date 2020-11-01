@@ -9,7 +9,7 @@
   "longName": "Insomnia Core",
   "synopsis": "A simple, beautiful, and free REST API client",
   "icon": "https://github.com/kong/insomnia/blob/develop/packages/insomnia-app/app/icons/com.insomnia.app/icon.ico?raw=true",
-  "changelogBaseUrl": "https://insomnia.rest/changelog/core",
+  "changelogBaseUrl": "https://insomnia.rest/changelog",
   "theme": "default",
   "main": "main.min.js",
   "githubOrg": "Kong",
