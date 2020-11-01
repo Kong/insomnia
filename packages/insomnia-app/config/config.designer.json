@@ -9,7 +9,7 @@
   "longName": "Insomnia Designer",
   "synopsis": "The Collaborative API Design Tool",
   "icon": "https://github.com/kong/insomnia/blob/develop/packages/insomnia-app/app/icons/com.insomnia.designer/icon.ico?raw=true",
-  "changelogBaseUrl": "https://insomnia.rest/changelog/designer",
+  "changelogBaseUrl": "https://insomnia.rest/changelog",
   "theme": "studio-light",
   "main": "main.min.js",
   "githubOrg": "Kong",
