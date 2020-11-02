@@ -86,11 +86,13 @@ class SyncDeleteModal extends React.PureComponent<Props, State> {
         <ModalHeader>Delete Workspace</ModalHeader>
         <ModalBody className="wide pad-left pad-right text-center" noScroll>
           {error && <p className="notice error margin-bottom-sm no-margin-top">{error}</p>}
-          <p>
-            This will permanently delete the <strong>{workspace.name}</strong> workspace remotely.
+          <p className="selectable">
+            This will permanently delete the{' '}
+            <strong style={{ whiteSpace: 'pre-wrap' }}>{workspace.name}</strong> workspace remotely.
           </p>
-          <p>
-            Please type <strong>{workspace.name}</strong> to confirm.
+          <p className="selectable">
+            Please type <strong style={{ whiteSpace: 'pre-wrap' }}>{workspace.name}</strong> to
+            confirm.
           </p>
 
           <form onSubmit={this._handleDelete}>
