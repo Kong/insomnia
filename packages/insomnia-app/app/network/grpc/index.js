@@ -11,9 +11,6 @@ import fs from 'fs';
 import type { GrpcMethodDefinition } from './method';
 import { getMethodType, GrpcMethodTypeEnum } from './method';
 
-grpc.setLogger(console);
-grpc.setLogVerbosity(0);
-
 const writeTempFile = async (src: string): Promise<string> => {
   const root = path.join(os.tmpdir(), 'insomnia-grpc');
   mkdirp.sync(root);
@@ -45,7 +42,8 @@ const loadMethods = async (protoFile: ProtoFile): Array<GrpcMethodDefinition> =>
     .flatMap(Object.values);
 };
 
-const createClient = () => new grpc.Client('grpcb.in:9000', grpc.credentials.createInsecure());
+const createClient = (req: GrpcRequest) =>
+  new grpc.Client(req.url, grpc.credentials.createInsecure());
 
 export const sendUnary = async (requestId: string): Promise<void> => {
   const req = await models.grpcRequest.getById(requestId);
@@ -63,7 +61,7 @@ export const sendUnary = async (requestId: string): Promise<void> => {
   }
 
   // Create client
-  const client = createClient();
+  const client = createClient(req);
 
   const callback = (err, value) => {
     if (err) {
@@ -100,7 +98,7 @@ export const sendClientStreaming = async (requestId: string): Promise<void> => {
   }
 
   // Create client
-  const client = createClient();
+  const client = createClient(req);
 
   const callback = (err, value) => {
     if (err) {
