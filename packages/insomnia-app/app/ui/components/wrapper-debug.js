@@ -4,9 +4,9 @@ import autobind from 'autobind-decorator';
 import { Breadcrumb, Header } from 'insomnia-components';
 import PageLayout from './page-layout';
 import type { WrapperProps } from './wrapper';
-import RequestPane from './request-pane';
+import RequestPane from './panes/request-pane';
 import ErrorBoundary from './error-boundary';
-import ResponsePane from './response-pane';
+import ResponsePane from './panes/response-pane';
 import SidebarChildren from './sidebar/sidebar-children';
 import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
@@ -15,6 +15,10 @@ import WorkspaceDropdown from './dropdowns/workspace-dropdown';
 import { ACTIVITY_HOME, isInsomnia } from '../../common/constants';
 import ActivityToggle from './activity-toggle';
 import { isGrpcRequest } from '../../models/helpers/is-model';
+import type { ForceToWorkspace } from '../redux/modules/helpers';
+import GrpcRequestPane from './panes/grpc-request-pane';
+import GrpcResponsePane from './panes/grpc-response-pane';
+import { ResizablePaneWrapper } from './panes/pane';
 
 type Props = {
   forceRefreshKey: string,
@@ -26,7 +30,7 @@ type Props = {
   handleForceUpdateRequest: Function,
   handleForceUpdateRequestHeaders: Function,
   handleImport: Function,
-  handleImportFile: Function,
+  handleImportFile: (forceToWorkspace?: ForceToWorkspace) => void,
   handleRequestCreate: Function,
   handleRequestGroupCreate: Function,
   handleSendAndDownloadRequestWithActiveEnvironment: Function,
@@ -252,10 +256,42 @@ class WrapperDebug extends React.PureComponent<Props> {
       settings,
     } = this.props.wrapperProps;
 
+    const dragPanes = (
+      <>
+        <div className="drag drag--pane-horizontal">
+          <div
+            onMouseDown={handleStartDragPaneHorizontal}
+            onDoubleClick={handleResetDragPaneHorizontal}
+          />
+        </div>
+
+        <div className="drag drag--pane-vertical">
+          <div
+            onMouseDown={handleStartDragPaneVertical}
+            onDoubleClick={handleResetDragPaneVertical}
+          />
+        </div>
+      </>
+    );
+
     // activeRequest being truthy only needs to be checked for isGrpcRequest (for now)
     // The RequestPane and ResponsePane components already handle the case where activeRequest is null
     if (activeRequest && isGrpcRequest(activeRequest)) {
-      return null;
+      return (
+        <React.Fragment>
+          <ErrorBoundary showAlert>
+            <ResizablePaneWrapper ref={handleSetRequestPaneRef}>
+              <GrpcRequestPane />
+            </ResizablePaneWrapper>
+          </ErrorBoundary>
+          {dragPanes}
+          <ErrorBoundary showAlert>
+            <ResizablePaneWrapper ref={handleSetResponsePaneRef}>
+              <GrpcResponsePane />
+            </ResizablePaneWrapper>
+          </ErrorBoundary>
+        </React.Fragment>
+      );
     }
 
     return (
@@ -298,19 +334,7 @@ class WrapperDebug extends React.PureComponent<Props> {
           />
         </ErrorBoundary>
 
-        <div className="drag drag--pane-horizontal">
-          <div
-            onMouseDown={handleStartDragPaneHorizontal}
-            onDoubleClick={handleResetDragPaneHorizontal}
-          />
-        </div>
-
-        <div className="drag drag--pane-vertical">
-          <div
-            onMouseDown={handleStartDragPaneVertical}
-            onDoubleClick={handleResetDragPaneVertical}
-          />
-        </div>
+        {dragPanes}
 
         <ErrorBoundary showAlert>
           <ResponsePane
