@@ -96,6 +96,8 @@ import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
+import { isGrpcRequest, isGrpcRequestId } from '../../models/helpers/is-model';
+import * as requestOperations from '../../models/helpers/request-operations';
 
 @autobind
 class App extends PureComponent {
@@ -228,11 +230,11 @@ class App extends PureComponent {
           showModal(AskModal, {
             title: 'Delete Request?',
             message: `Really delete ${activeRequest.name}?`,
-            onDone: confirmed => {
+            onDone: async confirmed => {
               if (!confirmed) {
                 return;
               }
-              models.request.remove(activeRequest);
+              await requestOperations.remove(activeRequest);
             },
           });
         },
@@ -260,15 +262,18 @@ class App extends PureComponent {
       [
         hotKeyRefs.REQUEST_TOGGLE_PIN,
         async () => {
-          if (!this.props.activeRequest) {
+          const { activeRequest, entities } = this.props;
+          if (!activeRequest) {
             return;
           }
 
-          const metas = Object.values(this.props.entities.requestMetas).find(
-            m => m.parentId === this.props.activeRequest._id,
-          );
+          const entitiesToCheck = isGrpcRequest(activeRequest)
+            ? entities.grpcRequestMetas
+            : entities.requestMetas;
 
-          await this._handleSetRequestPinned(this.props.activeRequest, !(metas && metas.pinned));
+          const meta = Object.values(entitiesToCheck).find(m => m.parentId === activeRequest._id);
+
+          await this._handleSetRequestPinned(this.props.activeRequest, !meta?.pinned);
         },
       ],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
@@ -365,7 +370,7 @@ class App extends PureComponent {
       label: 'New Name',
       selectText: true,
       onComplete: async name => {
-        const newRequest = await models.request.duplicate(request, { name });
+        const newRequest = await requestOperations.duplicate(request, { name });
         await this._handleSetActiveRequest(newRequest._id);
       },
     });
@@ -497,9 +502,9 @@ class App extends PureComponent {
   }
 
   static async _updateRequestMetaByParentId(requestId, patch) {
-    const isGrpcRequest = requestId.startsWith(`${models.grpcRequest.prefix}_`);
+    const isGrpc = isGrpcRequestId(requestId);
 
-    if (isGrpcRequest) {
+    if (isGrpc) {
       return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
     } else {
       return models.requestMeta.updateOrCreateByParentId(requestId, patch);
@@ -1547,6 +1552,7 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   // NOTE: using requestToTarget's parentId so we can switch parents!
   const docs = [
     ...(await models.request.findByParentId(parentId)),
+    ...(await models.grpcRequest.findByParentId(parentId)),
     ...(await models.requestGroup.findByParentId(parentId)),
   ].sort((a, b) => (a.metaSortKey < b.metaSortKey ? -1 : 1));
 
