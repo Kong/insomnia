@@ -33,7 +33,7 @@ const isTypeOrEnumDefinition = (obj: Object) =>
 
 const isServiceDefinition = (obj: Object) => !isTypeOrEnumDefinition(obj);
 
-const loadMethods = async (protoFile: ProtoFile): Array<GrpcMethodDefinition> => {
+export const loadMethods = async (protoFile: ProtoFile): Promise<Array<GrpcMethodDefinition>> => {
   const tempProtoFile = await writeTempFile(protoFile.protoText);
   const definition = await protoLoader.load(tempProtoFile, GRPC_LOADER_OPTIONS);
 
