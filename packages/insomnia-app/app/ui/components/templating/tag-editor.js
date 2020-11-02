@@ -109,7 +109,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     );
   }
 
-  _sortRequests(requests: Array<any>, parentId: string) {
+  _sortRequests(requests: Array<models.request.type | models.requestGroup.type>, parentId: string) {
     let sortedReqs = [];
     requests
       .filter(request => request.parentId === parentId)
