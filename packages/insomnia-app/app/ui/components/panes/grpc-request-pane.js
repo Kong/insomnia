@@ -15,6 +15,9 @@ const GrpcRequestPane = ({ activeRequest }: Props) => {
     <Pane type="request">
       <PaneHeader>
         <Button onClick={() => grpc.sendUnary(activeRequest._id)}>send unary</Button>
+        <Button onClick={() => grpc.sendClientStreaming(activeRequest._id)}>
+          send client streaming
+        </Button>
       </PaneHeader>
       <PaneBody />
     </Pane>
