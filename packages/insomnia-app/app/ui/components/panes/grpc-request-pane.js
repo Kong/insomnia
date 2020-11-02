@@ -14,7 +14,9 @@ type Props = {
   activeRequest: GrpcRequest,
 };
 
-const rUpdate = (request, ...args) => models.grpcRequest.update(request, ...args);
+const saveUrl = (request, url) => models.grpcRequest.update(request, { url });
+const saveMethod = (request, protoMethodName) =>
+  models.grpcRequest.update(request, { protoMethodName });
 
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
   const [methods, setMethods] = React.useState([]);
@@ -29,9 +31,13 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
   }, [activeRequest.protoFileId]);
 
   const handleUrlChange = React.useCallback(
-    (e: ChangeEvent<HtmlInputElement>) => rUpdate(activeRequest, { url: e.target.value }),
+    (e: ChangeEvent<HtmlInputElement>) => saveUrl(activeRequest, e.target.value),
     [activeRequest],
   );
+
+  const handleMethodChange = React.useCallback((e: string) => saveMethod(activeRequest, e), [
+    activeRequest,
+  ]);
 
   return (
     <Pane type="request">
@@ -52,9 +58,12 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
 
       <PaneBody>
         <Dropdown>
-          <DropdownButton>Select method</DropdownButton>
+          <DropdownButton>{activeRequest.protoMethodName || 'Select Method'}</DropdownButton>
           {methods.map(c => (
-            <DropdownItem key={c.path}>{c.path}</DropdownItem>
+            <DropdownItem key={c.path} onClick={handleMethodChange} value={c.path}>
+              {c.path === activeRequest.protoMethodName && <i className="fa fa-check" />}
+              {c.path}
+            </DropdownItem>
           ))}
         </Dropdown>
       </PaneBody>

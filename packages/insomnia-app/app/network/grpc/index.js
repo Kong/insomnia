@@ -52,7 +52,12 @@ export const sendUnary = async (requestId: string): Promise<void> => {
   // TODO: maybe do this when activating a request or when changing the selected protoFile
   const methods = await loadMethods(protoFile);
 
-  const selectedMethod = methods[0];
+  const selectedMethod = methods.find(c => c.path === req.protoMethodName);
+
+  if (!selectedMethod) {
+    console.log('method not found');
+    return;
+  }
 
   // safety net
   if (getMethodType(selectedMethod) !== GrpcMethodTypeEnum.unary) {
@@ -89,7 +94,12 @@ export const sendClientStreaming = async (requestId: string): Promise<void> => {
   // TODO: maybe do this when activating a request or when changing the selected protoFile
   const methods = await loadMethods(protoFile);
 
-  const selectedMethod = methods[2];
+  const selectedMethod = methods.find(c => c.path === req.protoMethodName);
+
+  if (!selectedMethod) {
+    console.log('method not found');
+    return;
+  }
 
   // safety net
   if (getMethodType(selectedMethod) !== GrpcMethodTypeEnum.client) {
