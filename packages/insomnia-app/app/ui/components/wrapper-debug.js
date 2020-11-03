@@ -281,7 +281,14 @@ class WrapperDebug extends React.PureComponent<Props> {
         <React.Fragment>
           <ErrorBoundary showAlert>
             <ResizablePaneWrapper ref={handleSetRequestPaneRef}>
-              <GrpcRequestPane />
+              <GrpcRequestPane
+                settings={settings}
+                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                handleRender={handleRender}
+                isVariableUncovered={isVariableUncovered}
+                handleGetRenderContext={handleGetRenderContext}
+                workspace={activeWorkspace}
+              />
             </ResizablePaneWrapper>
           </ErrorBoundary>
           {dragPanes}
