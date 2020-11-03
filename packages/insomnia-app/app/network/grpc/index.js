@@ -42,8 +42,10 @@ export const loadMethods = async (protoFile: ProtoFile): Promise<Array<GrpcMetho
     .flatMap(Object.values);
 };
 
-const createClient = (req: GrpcRequest) =>
-  new grpc.Client(req.url, grpc.credentials.createInsecure());
+const createClient = (req: GrpcRequest) => {
+  const Client = grpc.makeGenericClientConstructor({});
+  return new Client(req.url, grpc.credentials.createInsecure());
+};
 
 export const sendUnary = async (requestId: string): Promise<void> => {
   const req = await models.grpcRequest.getById(requestId);
@@ -171,6 +173,7 @@ export const sendMessage = async (requestId: string) => {
     return;
   }
 
+  console.log('new message');
   call.write(messageBody);
 };
 
@@ -182,8 +185,8 @@ export const commit = (requestId: string) => {
     return;
   }
 
+  console.log('commit');
   call.end();
-  call.write({ greeting: 'test' });
 };
 
 export const cancel = (requestId: string) => {
@@ -194,5 +197,6 @@ export const cancel = (requestId: string) => {
     return;
   }
 
+  console.log('cancel');
   call.cancel();
 };

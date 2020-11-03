@@ -7,7 +7,6 @@ import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 import * as grpc from '../../../network/grpc';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import * as models from '../../../models';
-import { loadMethods } from '../../../network/grpc';
 import {
   getMethodType,
   GrpcMethodTypeEnum,
@@ -46,7 +45,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
   React.useEffect(() => {
     const func = async () => {
       const protoFile = await models.protoFile.getById(activeRequest.protoFileId);
-      setMethods(await loadMethods(protoFile));
+      setMethods(await grpc.loadMethods(protoFile));
     };
     func();
   }, [activeRequest.protoFileId]);
