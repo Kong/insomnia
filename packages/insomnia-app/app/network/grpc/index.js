@@ -96,7 +96,19 @@ export const sendUnary = async (requestId: string): Promise<void> => {
   );
 };
 
-export const sendClientStreaming = async (requestId: string): Promise<void> => {
+const calls = {};
+
+const getCallForId = (requestId: string) => calls[requestId];
+
+const saveCallForId = (requestId: string, call: Object) => {
+  calls[requestId] = call;
+};
+
+const clearCallForId = (requestId: string) => {
+  calls[requestId] = null;
+};
+
+export const startClientStreaming = async (requestId: string): Promise<void> => {
   const req = await models.grpcRequest.getById(requestId);
   const protoFile = await models.protoFile.getById(req.protoFileId);
 
@@ -126,6 +138,7 @@ export const sendClientStreaming = async (requestId: string): Promise<void> => {
       console.log(value);
     }
     client.close();
+    clearCallForId(requestId);
   };
 
   // Make call
@@ -136,12 +149,50 @@ export const sendClientStreaming = async (requestId: string): Promise<void> => {
     callback,
   );
 
-  const toGreet = ['Insomnia', 'Kong', 'Gruce'];
+  saveCallForId(requestId, call);
+};
 
-  toGreet.forEach(v => {
-    console.log(`send ${v}`);
-    call.write({ greeting: v });
-  });
+export const sendMessage = async (requestId: string) => {
+  const req = await models.grpcRequest.getById(requestId);
+
+  // TODO: decide where the following try-catch is best
+  let messageBody = {};
+  try {
+    messageBody = JSON.parse(req.body.text);
+  } catch (e) {
+    console.log(e);
+    return;
+  }
+
+  const call = getCallForId(requestId);
+
+  if (!call) {
+    console.log('call not found');
+    return;
+  }
+
+  call.write(messageBody);
+};
+
+export const commit = (requestId: string) => {
+  const call = getCallForId(requestId);
+
+  if (!call) {
+    console.log('call not found');
+    return;
+  }
 
   call.end();
+  call.write({ greeting: 'test' });
+};
+
+export const cancel = (requestId: string) => {
+  const call = getCallForId(requestId);
+
+  if (!call) {
+    console.log('call not found');
+    return;
+  }
+
+  call.cancel();
 };

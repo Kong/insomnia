@@ -81,7 +81,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
           <Button onClick={() => grpc.sendUnary(activeRequest._id)}>Send</Button>
         )}
         {selectedMethodType === GrpcMethodTypeEnum.client && (
-          <Button onClick={() => grpc.sendClientStreaming(activeRequest._id)}>Start</Button>
+          <Button onClick={() => grpc.startClientStreaming(activeRequest._id)}>Start</Button>
         )}
         {(selectedMethodType === GrpcMethodTypeEnum.server ||
           selectedMethodType === GrpcMethodTypeEnum.bidi) && <Button disabled>Coming soon</Button>}
@@ -118,6 +118,14 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
             onChange={handleBodyChange}
             defaultValue={activeRequest.body.text}
           />
+          {selectedMethodType === GrpcMethodTypeEnum.client && (
+            <>
+              <br />
+              <Button onClick={() => grpc.sendMessage(activeRequest._id)}>Stream</Button>
+              <Button onClick={() => grpc.commit(activeRequest._id)}>Commit</Button>
+              <Button onClick={() => grpc.cancel(activeRequest._id)}>Cancel</Button>
+            </>
+          )}
         </div>
       </PaneBody>
     </Pane>
