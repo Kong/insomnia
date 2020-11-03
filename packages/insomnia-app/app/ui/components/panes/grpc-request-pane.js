@@ -14,6 +14,7 @@ import {
   GrpcMethodTypeName,
 } from '../../../network/grpc/method';
 import type { GrpcMethodDefinition, GrpcMethodType } from '../../../network/grpc/method';
+import { GrpcEventEnum } from '../../../common/grpc-events';
 
 type Props = {
   forceRefreshKey: string,
@@ -65,9 +66,10 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
     activeRequest,
   ]);
 
-  const ipc = React.useCallback(channel => ipcRenderer.send(channel, activeRequest._id), [
-    activeRequest._id,
-  ]);
+  const sendToGrpcMain = React.useCallback(
+    (channel: GrpcEvent) => ipcRenderer.send(channel, activeRequest._id),
+    [activeRequest._id],
+  );
 
   return (
     <Pane type="request">
@@ -82,10 +84,10 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
 
         {!selectedMethod && <Button disabled>Send</Button>}
         {selectedMethodType === GrpcMethodTypeEnum.unary && (
-          <Button onClick={() => grpc.sendUnary(activeRequest._id)}>Send</Button>
+          <Button onClick={() => sendToGrpcMain(GrpcEventEnum.sendUnary)}>Send</Button>
         )}
         {selectedMethodType === GrpcMethodTypeEnum.client && (
-          <Button onClick={() => ipc('GRPC_START_CLIENT_STREAM')}>Start</Button>
+          <Button onClick={() => sendToGrpcMain(GrpcEventEnum.startStream)}>Start</Button>
         )}
         {(selectedMethodType === GrpcMethodTypeEnum.server ||
           selectedMethodType === GrpcMethodTypeEnum.bidi) && <Button disabled>Coming soon</Button>}
@@ -125,9 +127,9 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
           {selectedMethodType === GrpcMethodTypeEnum.client && (
             <>
               <br />
-              <Button onClick={() => ipc('GRPC_SEND_MESSAGE')}>Stream</Button>
-              <Button onClick={() => ipc('GRPC_COMMIT')}>Commit</Button>
-              <Button onClick={() => ipc('GRPC_CANCEL')}>Cancel</Button>
+              <Button onClick={() => sendToGrpcMain(GrpcEventEnum.sendMessage)}>Stream</Button>
+              <Button onClick={() => sendToGrpcMain(GrpcEventEnum.commit)}>Commit</Button>
+              <Button onClick={() => sendToGrpcMain(GrpcEventEnum.cancel)}>Cancel</Button>
             </>
           )}
         </div>

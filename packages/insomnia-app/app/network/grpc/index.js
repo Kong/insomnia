@@ -28,9 +28,7 @@ const GRPC_LOADER_OPTIONS = {
   oneofs: true,
 };
 
-const isTypeOrEnumDefinition = (obj: Object) =>
-  obj.hasOwnProperty('format') && obj.format.endsWith('DescriptorProto');
-
+const isTypeOrEnumDefinition = (obj: Object) => 'format' in obj;
 const isServiceDefinition = (obj: Object) => !isTypeOrEnumDefinition(obj);
 
 export const loadMethods = async (protoFile: ProtoFile): Promise<Array<GrpcMethodDefinition>> => {
@@ -173,8 +171,7 @@ export const sendMessage = async (requestId: string) => {
     return;
   }
 
-  console.log('new message');
-  call.write(messageBody, () => console.log('written'));
+  call.write(messageBody, () => console.log('sent'));
 };
 
 export const commit = (requestId: string) => {
@@ -185,7 +182,6 @@ export const commit = (requestId: string) => {
     return;
   }
 
-  console.log('commit');
   call.end();
 };
 
@@ -197,6 +193,5 @@ export const cancel = (requestId: string) => {
     return;
   }
 
-  console.log('cancel');
   call.cancel();
 };
