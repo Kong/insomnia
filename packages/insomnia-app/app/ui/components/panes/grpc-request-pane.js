@@ -22,6 +22,9 @@ type Props = {
 
 const saveUrl = (request, url) => models.grpcRequest.update(request, { url });
 
+const saveBody = (request, bodyText) =>
+  models.grpcRequest.update(request, { body: { ...request.body, text: bodyText } });
+
 const saveMethod = (request, protoMethodName) =>
   models.grpcRequest.update(request, { protoMethodName });
 
@@ -53,6 +56,11 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
     [activeRequest],
   );
 
+  const handleBodyChange = React.useCallback(
+    (e: ChangeEvent<HtmlInputElement>) => saveBody(activeRequest, e.target.value),
+    [activeRequest],
+  );
+
   const handleMethodChange = React.useCallback((e: string) => saveMethod(activeRequest, e), [
     activeRequest,
   ]);
@@ -80,16 +88,37 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
       </PaneHeader>
 
       <PaneBody>
-        <p>RPC type: {GrpcMethodTypeName[selectedMethodType]}</p>
-        <Dropdown>
-          <DropdownButton>{selectedMethod?.path || 'Select Method'}</DropdownButton>
-          {methods.map(c => (
-            <DropdownItem key={c.path} onClick={handleMethodChange} value={c.path}>
-              {c.path === selectedMethod?.path && <i className="fa fa-check" />}
-              {c.path}
-            </DropdownItem>
-          ))}
-        </Dropdown>
+        <div className="pad-bottom">
+          <strong>RPC type</strong>
+          <br />
+          {GrpcMethodTypeName[selectedMethodType]}
+        </div>
+        <div className="pad-bottom">
+          <strong>Selected Method</strong>
+          <br />
+          <Dropdown>
+            <DropdownButton>
+              {selectedMethod?.path || 'Select Method'} <i className="fa fa-caret-down" />
+            </DropdownButton>
+            {methods.map(c => (
+              <DropdownItem key={c.path} onClick={handleMethodChange} value={c.path}>
+                {c.path === selectedMethod?.path && <i className="fa fa-check" />}
+                {c.path}
+              </DropdownItem>
+            ))}
+          </Dropdown>
+        </div>
+        <div className="pad-bottom">
+          <strong>Message Body</strong>
+          <br />
+          <textarea
+            key={uniquenessKey}
+            type="text"
+            rows="5"
+            onChange={handleBodyChange}
+            defaultValue={activeRequest.body.text}
+          />
+        </div>
       </PaneBody>
     </Pane>
   );

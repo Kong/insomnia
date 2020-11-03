@@ -65,6 +65,15 @@ export const sendUnary = async (requestId: string): Promise<void> => {
     return;
   }
 
+  // TODO: decide where the following try-catch is best
+  let messageBody = {};
+  try {
+    messageBody = JSON.parse(req.body.text);
+  } catch (e) {
+    console.log(e);
+    return;
+  }
+
   // Create client
   const client = createClient(req);
 
@@ -82,7 +91,7 @@ export const sendUnary = async (requestId: string): Promise<void> => {
     selectedMethod.path,
     selectedMethod.requestSerialize,
     selectedMethod.responseDeserialize,
-    { greeting: 'Insomnia' },
+    messageBody,
     callback,
   );
 };
