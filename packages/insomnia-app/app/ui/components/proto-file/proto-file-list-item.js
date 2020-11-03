@@ -2,13 +2,12 @@
 import * as React from 'react';
 import styled from 'styled-components';
 import type { ProtoFile } from '../../../models/proto-file';
-import PromptButton from '../base/prompt-button';
 import type {
   DeleteProtoFileHandler,
   RenameProtoFileHandler,
   SelectProtoFileHandler,
 } from './proto-file-list';
-import { ListGroupItem } from '../../../../../insomnia-components';
+import { ListGroupItem, Button } from '../../../../../insomnia-components';
 import Editable from '../base/editable';
 
 type Props = {
@@ -55,15 +54,10 @@ const ProtoFileListItem = ({
   return (
     <SelectableListItem isSelected={isSelected} onClick={handleSelectCallback}>
       <div className="row-spaced">
-        <Editable onSubmit={handleRenameCallback} value={name} preventBlank />
-        <PromptButton
-          className="btn btn--super-compact btn--outlined"
-          addIcon
-          confirmMessage=""
-          onClick={handleDeleteCallback}
-          title="Delete Proto File">
+        <Editable className="wide" onSubmit={handleRenameCallback} value={name} preventBlank />
+        <Button size="small" title="Delete Proto File" onClick={handleDeleteCallback}>
           <i className="fa fa-trash-o" />
-        </PromptButton>
+        </Button>
       </div>
     </SelectableListItem>
   );
