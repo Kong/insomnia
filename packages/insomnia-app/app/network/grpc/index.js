@@ -174,7 +174,7 @@ export const sendMessage = async (requestId: string) => {
   }
 
   console.log('new message');
-  call.write(messageBody);
+  call.write(messageBody, () => console.log('written'));
 };
 
 export const commit = (requestId: string) => {

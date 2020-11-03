@@ -3,6 +3,7 @@ import React from 'react';
 import { Pane, PaneBody, PaneHeader } from './pane';
 import { Button } from 'insomnia-components';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
+import { ipcRenderer } from 'electron';
 
 import * as grpc from '../../../network/grpc';
 import type { GrpcRequest } from '../../../models/grpc-request';
@@ -64,6 +65,10 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
     activeRequest,
   ]);
 
+  const ipc = React.useCallback(channel => ipcRenderer.send(channel, activeRequest._id), [
+    activeRequest._id,
+  ]);
+
   return (
     <Pane type="request">
       <PaneHeader>
@@ -80,7 +85,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
           <Button onClick={() => grpc.sendUnary(activeRequest._id)}>Send</Button>
         )}
         {selectedMethodType === GrpcMethodTypeEnum.client && (
-          <Button onClick={() => grpc.startClientStreaming(activeRequest._id)}>Start</Button>
+          <Button onClick={() => ipc('GRPC_START_CLIENT_STREAM')}>Start</Button>
         )}
         {(selectedMethodType === GrpcMethodTypeEnum.server ||
           selectedMethodType === GrpcMethodTypeEnum.bidi) && <Button disabled>Coming soon</Button>}
@@ -120,9 +125,9 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
           {selectedMethodType === GrpcMethodTypeEnum.client && (
             <>
               <br />
-              <Button onClick={() => grpc.sendMessage(activeRequest._id)}>Stream</Button>
-              <Button onClick={() => grpc.commit(activeRequest._id)}>Commit</Button>
-              <Button onClick={() => grpc.cancel(activeRequest._id)}>Cancel</Button>
+              <Button onClick={() => ipc('GRPC_SEND_MESSAGE')}>Stream</Button>
+              <Button onClick={() => ipc('GRPC_COMMIT')}>Commit</Button>
+              <Button onClick={() => ipc('GRPC_CANCEL')}>Cancel</Button>
             </>
           )}
         </div>
