@@ -38,7 +38,7 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
       break;
 
     case GrpcMethodTypeEnum.client:
-      text = 'Send';
+      text = 'Start';
       event = GrpcRequestEventEnum.startStream;
       break;
 
