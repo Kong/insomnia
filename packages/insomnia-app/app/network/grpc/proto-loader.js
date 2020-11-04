@@ -36,10 +36,11 @@ export const loadMethods = async (protoFile: ProtoFile): Promise<Array<GrpcMetho
     .flatMap(Object.values);
 };
 
+// TODO: instead of reloading the methods from the protoFile,
+//  just get it from what has already been loaded in the react component
 export const getSelectedMethod = async (request: GrpcRequest): GrpcMethodDefinition | undefined => {
   const protoFile = await models.protoFile.getById(request.protoFileId);
 
-  // TODO: maybe do this when activating a request or when changing the selected protoFile
   const methods = await loadMethods(protoFile);
 
   return methods.find(c => c.path === request.protoMethodName);

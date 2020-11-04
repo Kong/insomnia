@@ -19,7 +19,7 @@ const GrpcEventWrapper = ({ children }: Props) => {
       console.log(val);
     });
 
-    ipcRenderer.on(GrpcResponseEventEnum.err, (_, requestId, err) => {
+    ipcRenderer.on(GrpcResponseEventEnum.error, (_, requestId, err) => {
       console.error(err);
     });
   }, []);
