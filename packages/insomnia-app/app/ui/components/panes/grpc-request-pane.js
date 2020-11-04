@@ -5,7 +5,7 @@ import { Button } from 'insomnia-components';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 import { ipcRenderer } from 'electron';
 
-import * as grpc from '../../../network/grpc';
+import * as protoLoader from '../../../network/grpc/proto-loader';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import * as models from '../../../models';
 import {
@@ -30,12 +30,28 @@ const saveBody = (request, bodyText) =>
 const saveMethod = (request, protoMethodName) =>
   models.grpcRequest.update(request, { protoMethodName });
 
+const useGrpcChangeHandlers = activeRequest => {
+  const handleUrlChange = React.useCallback(e => saveUrl(activeRequest, e.target.value), [
+    activeRequest,
+  ]);
+
+  const handleBodyChange = React.useCallback(e => saveBody(activeRequest, e.target.value), [
+    activeRequest,
+  ]);
+
+  const handleMethodChange = React.useCallback((e: string) => saveMethod(activeRequest, e), [
+    activeRequest,
+  ]);
+
+  return { handleUrlChange, handleBodyChange, handleMethodChange };
+};
+
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
   const [methods, setMethods] = React.useState<Array<GrpcMethodDefinition>>([]);
 
   const selectedMethod = React.useMemo<GrpcMethodDefinition | undefined>(
     () => methods.find(c => c.path === activeRequest.protoMethodName),
-    [activeRequest, methods],
+    [activeRequest.protoMethodName, methods],
   );
 
   const selectedMethodType = React.useMemo<GrpcMethodType | undefined>(
@@ -48,24 +64,14 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
   React.useEffect(() => {
     const func = async () => {
       const protoFile = await models.protoFile.getById(activeRequest.protoFileId);
-      setMethods(await grpc.loadMethods(protoFile));
+      setMethods(await protoLoader.loadMethods(protoFile));
     };
     func();
   }, [activeRequest.protoFileId]);
 
-  const handleUrlChange = React.useCallback(
-    (e: ChangeEvent<HtmlInputElement>) => saveUrl(activeRequest, e.target.value),
-    [activeRequest],
-  );
-
-  const handleBodyChange = React.useCallback(
-    (e: ChangeEvent<HtmlInputElement>) => saveBody(activeRequest, e.target.value),
-    [activeRequest],
-  );
-
-  const handleMethodChange = React.useCallback((e: string) => saveMethod(activeRequest, e), [
+  const { handleUrlChange, handleBodyChange, handleMethodChange } = useGrpcChangeHandlers(
     activeRequest,
-  ]);
+  );
 
   const sendToGrpcMain = React.useCallback(
     (channel: GrpcRequestEvent) => ipcRenderer.send(channel, activeRequest._id),

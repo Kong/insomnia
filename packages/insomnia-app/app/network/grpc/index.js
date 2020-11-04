@@ -1,45 +1,12 @@
 // @flow
 
-import * as protoLoader from '@grpc/proto-loader';
 import * as grpc from '@grpc/grpc-js';
 
 import * as models from '../../models';
-import path from 'path';
-import os from 'os';
-import mkdirp from 'mkdirp';
-import fs from 'fs';
-import type { GrpcMethodDefinition } from './method';
-import { getMethodType, GrpcMethodTypeEnum } from './method';
+import { ensureMethodIs, GrpcMethodTypeEnum } from './method';
 import type { ResponseCallbacks, SendError } from './response-callbacks';
-
-const writeTempFile = async (src: string): Promise<string> => {
-  const root = path.join(os.tmpdir(), 'insomnia-grpc');
-  mkdirp.sync(root);
-  // TODO: Maybe we should be smarter about where to write to, instead of a random file each time
-  const p = path.join(root, `${Math.random()}.proto`);
-  await fs.promises.writeFile(p, src);
-  return p;
-};
-
-const GRPC_LOADER_OPTIONS = {
-  keepCase: true,
-  longs: String,
-  enums: String,
-  defaults: true,
-  oneofs: true,
-};
-
-const isTypeOrEnumDefinition = (obj: Object) => 'format' in obj;
-const isServiceDefinition = (obj: Object) => !isTypeOrEnumDefinition(obj);
-
-export const loadMethods = async (protoFile: ProtoFile): Promise<Array<GrpcMethodDefinition>> => {
-  const tempProtoFile = await writeTempFile(protoFile.protoText);
-  const definition = await protoLoader.load(tempProtoFile, GRPC_LOADER_OPTIONS);
-
-  return Object.values(definition)
-    .filter(isServiceDefinition)
-    .flatMap(Object.values);
-};
+import * as protoLoader from './proto-loader';
+import callCache from './call-cache';
 
 const createClient = (req: GrpcRequest) => {
   const Client = grpc.makeGenericClientConstructor({});
@@ -48,33 +15,25 @@ const createClient = (req: GrpcRequest) => {
 
 export const sendUnary = async (requestId: string, respond: ResponseCallbacks): Promise<void> => {
   const req = await models.grpcRequest.getById(requestId);
-  const protoFile = await models.protoFile.getById(req.protoFileId);
+  const selectedMethod = await protoLoader.getSelectedMethod(req);
 
-  // TODO: maybe do this when activating a request or when changing the selected protoFile
-  const methods = await loadMethods(protoFile);
-
-  const selectedMethod = methods.find(c => c.path === req.protoMethodName);
-
-  if (!selectedMethod) {
-    console.log('method not found');
-    return;
-  }
-
-  // safety net
-  if (getMethodType(selectedMethod) !== GrpcMethodTypeEnum.unary) {
-    console.log('selected method is not unary');
+  if (!ensureMethodIs(GrpcMethodTypeEnum.unary, selectedMethod)) {
+    respond.sendError(new Error('bad method')); // fix this wording
     return;
   }
 
   const messageBody = _parseMessage(req, respond.sendError);
 
+  // What should happen when the body is an empty string?
   if (!messageBody) {
     return;
   }
 
   // Create client
   const client = createClient(req);
-  const callback = createUnaryCallback(requestId, client, respond);
+
+  // Create unary callback
+  const callback = _createUnaryCallback(requestId, respond);
 
   // Make call
   const call = client.makeUnaryRequest(
@@ -85,42 +44,8 @@ export const sendUnary = async (requestId: string, respond: ResponseCallbacks): 
     callback,
   );
 
-  saveCallForId(requestId, call);
-};
-
-const calls = {};
-
-const getCallForId = (requestId: string) => {
-  const call = calls[requestId];
-
-  if (!call) {
-    console.log('call not found');
-  }
-
-  return call;
-};
-
-const saveCallForId = (requestId: string, call: Object) => {
-  calls[requestId] = call;
-};
-
-const clearCallForId = (requestId: string) => {
-  calls[requestId] = null;
-};
-
-// This function returns a function
-const createUnaryCallback = (
-  requestId: string,
-  client: Object,
-  { sendError, sendData }: ResponseCallbacks,
-) => (err, value) => {
-  if (err) {
-    sendError(requestId, err);
-  } else {
-    sendData(requestId, value);
-  }
-  client.close();
-  clearCallForId(requestId);
+  // Save call
+  callCache.set(requestId, call);
 };
 
 export const startClientStreaming = async (
@@ -128,27 +53,18 @@ export const startClientStreaming = async (
   respond: ResponseCallbacks,
 ): Promise<void> => {
   const req = await models.grpcRequest.getById(requestId);
-  const protoFile = await models.protoFile.getById(req.protoFileId);
+  const selectedMethod = await protoLoader.getSelectedMethod(req);
 
-  // TODO: maybe do this when activating a request or when changing the selected protoFile
-  const methods = await loadMethods(protoFile);
-
-  const selectedMethod = methods.find(c => c.path === req.protoMethodName);
-
-  if (!selectedMethod) {
-    console.log('method not found');
-    return;
-  }
-
-  // safety net
-  if (getMethodType(selectedMethod) !== GrpcMethodTypeEnum.client) {
-    console.log('selected method is not client streaming');
+  if (!ensureMethodIs(GrpcMethodTypeEnum.client, selectedMethod)) {
+    respond.sendError(new Error('bad method')); // fix this wording
     return;
   }
 
   // Create client
   const client = createClient(req);
-  const callback = createUnaryCallback(requestId, client, respond);
+
+  // Create callback
+  const callback = _createUnaryCallback(requestId, respond);
 
   // Make call
   const call = client.makeClientStreamRequest(
@@ -158,16 +74,8 @@ export const startClientStreaming = async (
     callback,
   );
 
-  saveCallForId(requestId, call);
-};
-
-const _parseMessage = (request: Request, sendError: SendError): Object | undefined => {
-  try {
-    return JSON.parse(request.body.text || '');
-  } catch (e) {
-    sendError(request._id, e);
-    return undefined;
-  }
+  // Save call
+  callCache.set(requestId, call);
 };
 
 export const sendMessage = async (requestId: string, sendError: SendError) => {
@@ -178,9 +86,36 @@ export const sendMessage = async (requestId: string, sendError: SendError) => {
     return;
   }
 
-  getCallForId(requestId)?.write(messageBody);
+  callCache.get(requestId)?.write(messageBody, _streamWriteCallback);
 };
 
-export const commit = (requestId: string) => getCallForId(requestId)?.end();
+export const commit = (requestId: string) => callCache.get(requestId)?.end();
 
-export const cancel = (requestId: string) => getCallForId(requestId)?.cancel();
+export const cancel = (requestId: string) => callCache.get(requestId)?.cancel();
+
+// This function returns a function
+const _createUnaryCallback = (requestId: string, respond: ResponseCallbacks) => (err, value) => {
+  if (err) {
+    respond.sendError(requestId, err);
+  } else {
+    respond.sendData(requestId, value);
+  }
+  callCache.clear(requestId);
+};
+
+type WriteCallback = (error: Error | null | undefined) => void;
+
+const _streamWriteCallback: WriteCallback = err => {
+  if (err) {
+    console.error('[grpc] Error when writing to stream', err);
+  }
+};
+
+const _parseMessage = (request: Request, sendError: SendError): Object | undefined => {
+  try {
+    return JSON.parse(request.body.text || '');
+  } catch (e) {
+    sendError(request._id, e);
+    return undefined;
+  }
+};
