@@ -98,7 +98,7 @@ import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
 import { isGrpcRequest, isGrpcRequestId } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
-import GrpcEventWrapper from '../components/panes/grpc-event-wrapper';
+import { GrpcProvider } from '../context/grpc-context';
 
 @autobind
 class App extends PureComponent {
@@ -1290,7 +1290,7 @@ class App extends PureComponent {
 
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
-        <GrpcEventWrapper>
+        <GrpcProvider>
           <div className="app" key={uniquenessKey}>
             <ErrorBoundary showAlert>
               <Wrapper
@@ -1355,7 +1355,7 @@ class App extends PureComponent {
             {/* Block all mouse activity by showing an overlay while dragging */}
             {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
           </div>
-        </GrpcEventWrapper>
+        </GrpcProvider>
       </KeydownBinder>
     );
   }

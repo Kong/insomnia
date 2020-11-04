@@ -11,7 +11,6 @@ import type { GrpcMethodDefinition, GrpcMethodType } from '../../../network/grpc
 import {
   canClientStream,
   getMethodType,
-  GrpcMethodTypeEnum,
   GrpcMethodTypeName,
 } from '../../../network/grpc/method';
 import * as models from '../../../models';
@@ -19,6 +18,7 @@ import * as protoLoader from '../../../network/grpc/proto-loader';
 import type { GrpcRequestEvent } from '../../../common/grpc-events';
 import { ipcRenderer } from 'electron';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
+import GrpcSendButton from '../buttons/grpc-send-button';
 
 type Props = {
   forceRefreshKey: string,
@@ -118,31 +118,8 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
           selectedMethod={selectedMethod}
           handleChange={handleChange.method}
         />
-        {!selectedMethod && (
-          <button className="urlbar__send-btn" disabled>
-            Send
-          </button>
-        )}
-        {selectedMethodType === GrpcMethodTypeEnum.unary && (
-          <button
-            className="urlbar__send-btn"
-            onClick={() => sendIpc(GrpcRequestEventEnum.sendUnary)}>
-            Send
-          </button>
-        )}
-        {selectedMethodType === GrpcMethodTypeEnum.client && (
-          <button
-            className="urlbar__send-btn"
-            onClick={() => sendIpc(GrpcRequestEventEnum.startStream)}>
-            Start
-          </button>
-        )}
-        {(selectedMethodType === GrpcMethodTypeEnum.server ||
-          selectedMethodType === GrpcMethodTypeEnum.bidi) && (
-          <button className="urlbar__send-btn" disabled>
-            Coming soon
-          </button>
-        )}
+
+        <GrpcSendButton requestId={activeRequest._id} methodType={selectedMethodType} />
       </PaneHeader>
       <PaneBody>
         <Tabs className="react-tabs" forceRenderTabPanel>
