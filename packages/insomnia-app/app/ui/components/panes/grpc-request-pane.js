@@ -4,6 +4,7 @@ import { Pane, paneBodyClasses, PaneBody, PaneHeader } from './pane';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import classnames from 'classnames';
 import Button from '../base/button';
+import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 import GRPCEditor from '../editors/grpc-editor';
 import OneLineEditor from '../codemirror/one-line-editor';
 import type { Settings } from '../../../models/settings';
@@ -29,32 +30,49 @@ const GrpcRequestPane = (props: Props) => {
 
   return (
     <Pane type="request">
-      <PaneHeader>
+      <PaneHeader className="grpc-urlbar">
         <div className="method-grpc pad">gRPC</div>
-        <div className="urlbar">
-          <form className={'form-control'}>
-            <OneLineEditor
-              render={handleRender}
-              forceEditor
-              type="text"
-              getRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
-              isVariableUncovered={isVariableUncovered}
-              defaultValue={'grpcb.in:9000'}
-              onChange={value => console.log(value)}
-            />
-            <button
-              type="button"
-              key="cancel-interval"
-              className="urlbar__send-btn"
-              onClick={() => console.log('Send it!')}>
-              Start
-            </button>
-          </form>
-        </div>
+        <form className={'form-control form-control--outlined'}>
+          <OneLineEditor
+            render={handleRender}
+            forceEditor
+            type="text"
+            getRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
+            defaultValue={'grpcb.in:9000'}
+            onChange={value => console.log(value)}
+          />
+        </form>
+        <Dropdown>
+          <DropdownButton>
+            /hello.HellowService/LotsOfGreetings
+            <i className="fa fa-caret-down" />
+          </DropdownButton>
+
+          <DropdownItem
+            onClick={() => {
+              console.log('DD Item clicked...');
+            }}>
+            /hello.HellowService/someOtherStuff/hello.HellowService
+          </DropdownItem>
+          <DropdownItem
+            onClick={() => {
+              console.log('DD Item clicked...');
+            }}>
+            /hello.HellowService/evenMoreThings
+          </DropdownItem>
+        </Dropdown>
+        <button
+          type="button"
+          key="cancel-interval"
+          className="urlbar__send-btn"
+          onClick={() => console.log('Send it!')}>
+          Start
+        </button>
       </PaneHeader>
       <PaneBody>
-        <Tabs className={classnames(paneBodyClasses, 'react-tabs')}>
+        <Tabs className={'react-tabs'}>
           <TabList>
             <Tab>
               <button>Client Streaming</button>
@@ -117,6 +135,7 @@ const GrpcRequestPane = (props: Props) => {
               </TabPanel>
               <TabPanel className="react-tabs__tab-panel editor-wrapper">
                 <GRPCEditor
+                  readOnly
                   uniquenessKey="1234"
                   content={'{"greeting": "Hello 2"}'}
                   contentType={'application/json'}
@@ -135,6 +154,7 @@ const GrpcRequestPane = (props: Props) => {
               </TabPanel>
               <TabPanel className="react-tabs__tab-panel editor-wrapper">
                 <GRPCEditor
+                  readOnly
                   uniquenessKey="1235"
                   content={'{"greeting": "Hello 3"}'}
                   contentType={'application/json'}
@@ -153,6 +173,7 @@ const GrpcRequestPane = (props: Props) => {
               </TabPanel>
               <TabPanel className="react-tabs__tab-panel editor-wrapper">
                 <GRPCEditor
+                  readOnly
                   uniquenessKey="1236"
                   content={'{"greeting": "Hello 4"}'}
                   contentType={'application/json'}
@@ -171,6 +192,7 @@ const GrpcRequestPane = (props: Props) => {
               </TabPanel>
               <TabPanel className="react-tabs__tab-panel editor-wrapper">
                 <GRPCEditor
+                  readOnly
                   uniquenessKey="1237"
                   content={'{"greeting": "Hello 5"}'}
                   contentType={'application/json'}
@@ -189,6 +211,7 @@ const GrpcRequestPane = (props: Props) => {
               </TabPanel>
               <TabPanel className="react-tabs__tab-panel editor-wrapper">
                 <GRPCEditor
+                  readOnly
                   uniquenessKey="1238"
                   content={'{"greeting": "Hello 6"}'}
                   contentType={'application/json'}

@@ -21,6 +21,7 @@ class GRPCEditor extends PureComponent {
       onChange,
       render,
       uniquenessKey,
+      readOnly,
     } = this.props;
 
     return (
@@ -42,6 +43,7 @@ class GRPCEditor extends PureComponent {
           mode={contentType}
           lineWrapping={lineWrapping}
           placeholder="..."
+          readOnly={readOnly}
         />
       </React.Fragment>
     );
@@ -66,6 +68,7 @@ GRPCEditor.propTypes = {
   render: PropTypes.func,
   getRenderContext: PropTypes.func,
   indentWithTabs: PropTypes.bool,
+  readOnly: PropTypes.bool,
 };
 
 export default GRPCEditor;
