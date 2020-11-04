@@ -10,6 +10,7 @@ import mkdirp from 'mkdirp';
 import fs from 'fs';
 import type { GrpcMethodDefinition } from './method';
 import { getMethodType, GrpcMethodTypeEnum } from './method';
+import type { ResponseCallbacks, SendError } from './response-callbacks';
 
 const writeTempFile = async (src: string): Promise<string> => {
   const root = path.join(os.tmpdir(), 'insomnia-grpc');
@@ -45,7 +46,7 @@ const createClient = (req: GrpcRequest) => {
   return new Client(req.url, grpc.credentials.createInsecure());
 };
 
-export const sendUnary = async (requestId: string): Promise<void> => {
+export const sendUnary = async (requestId: string, respond: ResponseCallbacks): Promise<void> => {
   const req = await models.grpcRequest.getById(requestId);
   const protoFile = await models.protoFile.getById(req.protoFileId);
 
@@ -65,40 +66,39 @@ export const sendUnary = async (requestId: string): Promise<void> => {
     return;
   }
 
-  // TODO: decide where the following try-catch is best
-  let messageBody = {};
-  try {
-    messageBody = JSON.parse(req.body.text);
-  } catch (e) {
-    console.log(e);
+  const messageBody = _parseMessage(req, respond.sendError);
+
+  if (!messageBody) {
     return;
   }
 
   // Create client
   const client = createClient(req);
-
-  const callback = (err, value) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log(value);
-    }
-    client.close();
-  };
+  const callback = createUnaryCallback(requestId, client, respond);
 
   // Make call
-  client.makeUnaryRequest(
+  const call = client.makeUnaryRequest(
     selectedMethod.path,
     selectedMethod.requestSerialize,
     selectedMethod.responseDeserialize,
     messageBody,
     callback,
   );
+
+  saveCallForId(requestId, call);
 };
 
 const calls = {};
 
-const getCallForId = (requestId: string) => calls[requestId];
+const getCallForId = (requestId: string) => {
+  const call = calls[requestId];
+
+  if (!call) {
+    console.log('call not found');
+  }
+
+  return call;
+};
 
 const saveCallForId = (requestId: string, call: Object) => {
   calls[requestId] = call;
@@ -106,6 +106,21 @@ const saveCallForId = (requestId: string, call: Object) => {
 
 const clearCallForId = (requestId: string) => {
   calls[requestId] = null;
+};
+
+// This function returns a function
+const createUnaryCallback = (
+  requestId: string,
+  client: Object,
+  { sendError, sendData }: ResponseCallbacks,
+) => (err, value) => {
+  if (err) {
+    sendError(requestId, err);
+  } else {
+    sendData(requestId, value);
+  }
+  client.close();
+  clearCallForId(requestId);
 };
 
 export const startClientStreaming = async (
@@ -133,16 +148,7 @@ export const startClientStreaming = async (
 
   // Create client
   const client = createClient(req);
-
-  const callback = (err, value) => {
-    if (err) {
-      respond.sendError(requestId, err);
-    } else {
-      respond.sendData(requestId, value);
-    }
-    client.close();
-    clearCallForId(requestId);
-  };
+  const callback = createUnaryCallback(requestId, client, respond);
 
   // Make call
   const call = client.makeClientStreamRequest(
@@ -155,46 +161,26 @@ export const startClientStreaming = async (
   saveCallForId(requestId, call);
 };
 
-export const sendMessage = async (requestId: string) => {
-  const req = await models.grpcRequest.getById(requestId);
-
-  // TODO: decide where the following try-catch is best
-  let messageBody = {};
+const _parseMessage = (request: Request, sendError: SendError): Object | undefined => {
   try {
-    messageBody = JSON.parse(req.body.text);
+    return JSON.parse(request.body.text || '');
   } catch (e) {
-    console.log(e);
-    return;
+    sendError(request._id, e);
+    return undefined;
   }
-
-  const call = getCallForId(requestId);
-
-  if (!call) {
-    console.log('call not found');
-    return;
-  }
-
-  call.write(messageBody, () => console.log('sent'));
 };
 
-export const commit = (requestId: string) => {
-  const call = getCallForId(requestId);
+export const sendMessage = async (requestId: string, sendError: SendError) => {
+  const req = await models.grpcRequest.getById(requestId);
+  const messageBody = _parseMessage(req, sendError);
 
-  if (!call) {
-    console.log('call not found');
+  if (!messageBody) {
     return;
   }
 
-  call.end();
+  getCallForId(requestId)?.write(messageBody);
 };
 
-export const cancel = (requestId: string) => {
-  const call = getCallForId(requestId);
+export const commit = (requestId: string) => getCallForId(requestId)?.end();
 
-  if (!call) {
-    console.log('call not found');
-    return;
-  }
-
-  call.cancel();
-};
+export const cancel = (requestId: string) => getCallForId(requestId)?.cancel();
