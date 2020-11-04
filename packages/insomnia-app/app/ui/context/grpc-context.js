@@ -3,7 +3,10 @@ import React from 'react';
 import { ipcRenderer } from 'electron';
 import { GrpcResponseEventEnum } from '../../common/grpc-events';
 
-type Action = { type: 'start', requestId: string } | { type: 'stop', requestId: string };
+type StartAction = { type: 'start', requestId: string };
+type StopAction = { type: 'stop', requestId: string };
+
+type Action = StartAction | StopAction;
 type Dispatch = (action: Action) => void;
 type GrpcRequestState = { running: boolean };
 type State = { [requestId: string]: GrpcRequestState };
@@ -50,11 +53,17 @@ export const GrpcProvider = ({ children }: Props) => {
     // TODO: Do we need to clear listeners or will they overwrite?
     ipcRenderer.on(GrpcResponseEventEnum.data, (_, requestId, val) => {
       console.log(val);
-      dispatch({ type: 'stop', requestId });
     });
 
     ipcRenderer.on(GrpcResponseEventEnum.error, (_, requestId, err) => {
       console.error(err);
+    });
+
+    ipcRenderer.on(GrpcResponseEventEnum.start, (_, requestId) => {
+      dispatch({ type: 'start', requestId });
+    });
+
+    ipcRenderer.on(GrpcResponseEventEnum.end, (_, requestId) => {
       dispatch({ type: 'stop', requestId });
     });
   }, []);

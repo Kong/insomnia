@@ -55,6 +55,8 @@ export const sendUnary = async (requestId: string, respond: ResponseCallbacks): 
     callback,
   );
 
+  respond.sendStart(requestId);
+
   // Save call
   callCache.set(requestId, call);
 };
@@ -94,6 +96,8 @@ export const startClientStreaming = async (
     callback,
   );
 
+  respond.sendStart(requestId);
+
   // Save call
   callCache.set(requestId, call);
 };
@@ -120,6 +124,7 @@ const _createUnaryCallback = (requestId: string, respond: ResponseCallbacks) => 
   } else {
     respond.sendData(requestId, value);
   }
+  respond.sendEnd(requestId);
   callCache.clear(requestId);
 };
 

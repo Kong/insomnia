@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { findGrpcRequestState, useGrpc } from '../../context/grpc-context';
+import { findGrpcRequestState, useGrpcState } from '../../context/grpc-context';
 import type { GrpcMethodType } from '../../../network/grpc/method';
 import type { GrpcRequestEvent } from '../../../common/grpc-events';
 import { ipcRenderer } from 'electron';
@@ -14,7 +14,7 @@ type Props = {
 };
 
 const GrpcSendButton = ({ requestId, methodType }: Props) => {
-  const [grpcState, grpcDispatch] = useGrpc();
+  const grpcState = useGrpcState();
 
   const sendToGrpcMain = React.useCallback(
     (channel: GrpcRequestEvent) => ipcRenderer.send(channel, requestId),
@@ -57,8 +57,9 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
   return (
     <Button
       onClick={() => {
-        grpcDispatch({ type: 'start', requestId });
-        sendToGrpcMain(event);
+        if (event) {
+          sendToGrpcMain(event);
+        }
       }}
       disabled={disabled}>
       {text}
