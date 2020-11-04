@@ -4,11 +4,7 @@
 // These are TS types and too complex to translate entirely to flow types
 // A call can be a ClientUnaryCall, ClientReadableStream, ClientWritableStream, or ClientDuplexStream
 // A call can also emit 'metadata' and 'status' events
-type Call = {
-  call?: Object,
-  cancel(): void,
-  getPeer(): string,
-};
+type Call = Object;
 
 const _calls: { [requestId: string]: Call } = {};
 
