@@ -108,7 +108,10 @@ const clearCallForId = (requestId: string) => {
   calls[requestId] = null;
 };
 
-export const startClientStreaming = async (requestId: string): Promise<void> => {
+export const startClientStreaming = async (
+  requestId: string,
+  respond: ResponseCallbacks,
+): Promise<void> => {
   const req = await models.grpcRequest.getById(requestId);
   const protoFile = await models.protoFile.getById(req.protoFileId);
 
@@ -133,9 +136,9 @@ export const startClientStreaming = async (requestId: string): Promise<void> => 
 
   const callback = (err, value) => {
     if (err) {
-      console.log(err);
+      respond.sendError(requestId, err);
     } else {
-      console.log(value);
+      respond.sendData(requestId, value);
     }
     client.close();
     clearCallForId(requestId);
