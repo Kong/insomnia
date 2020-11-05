@@ -39,27 +39,32 @@ export const grpcReducer = (state: GrpcState, action: GrpcAction): GrpcState => 
 
   switch (action.type) {
     case GrpcActionTypeEnum.start: {
-      return _patch(state, requestId, { ...oldState, running: true });
+      return _patch(state, requestId, {
+        ...oldState,
+        running: true,
+        requestMessages: [],
+        responseMessages: [],
+      });
     }
     case GrpcActionTypeEnum.stop: {
       return _patch(state, requestId, { ...oldState, running: false });
     }
     case GrpcActionTypeEnum.requestMessage: {
-      const payload = (action: RequestMessageAction)?.payload;
+      const { payload }: RequestMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
         requestMessages: [...oldState.requestMessages, payload.message],
       });
     }
     case GrpcActionTypeEnum.responseMessage: {
-      const payload = (action: ResponseMessageAction)?.payload;
+      const { payload }: ResponseMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
         responseMessages: [...oldState.responseMessages, payload.message],
       });
     }
     case GrpcActionTypeEnum.error: {
-      const payload = (action: ErrorAction)?.payload;
+      const { payload }: ErrorAction = action;
       return _patch(state, requestId, { ...oldState, error: payload.error });
     }
     default: {

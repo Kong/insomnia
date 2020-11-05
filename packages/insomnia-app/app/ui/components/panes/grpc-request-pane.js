@@ -19,6 +19,8 @@ import type { GrpcRequestEvent } from '../../../common/grpc-events';
 import { ipcRenderer } from 'electron';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import GrpcSendButton from '../buttons/grpc-send-button';
+import { useGrpcDispatch } from '../../context/grpc/grpc-context';
+import grpcActions from '../../context/grpc/grpc-actions';
 
 type Props = {
   forceRefreshKey: string,
@@ -72,6 +74,7 @@ const demoRequestMessages = [
 demoRequestMessages.sort((a, b) => a.created - b.created);
 
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
+  const grpcDispatch = useGrpcDispatch();
   const [methods, setMethods] = React.useState<Array<GrpcMethodDefinition>>([]);
 
   // Reload the methods, on first mount, or if the request protoFile changes
@@ -141,7 +144,12 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
               handleBodyChange={handleChange.body}
               handleStream={
                 canClientStream(selectedMethodType) &&
-                (() => sendIpc(GrpcRequestEventEnum.sendMessage))
+                (() => {
+                  sendIpc(GrpcRequestEventEnum.sendMessage);
+                  grpcDispatch(
+                    grpcActions.requestMessage(activeRequest._id, activeRequest.body.text),
+                  );
+                })
               }
               handleCommit={
                 canClientStream(selectedMethodType) && (() => sendIpc(GrpcRequestEventEnum.commit))

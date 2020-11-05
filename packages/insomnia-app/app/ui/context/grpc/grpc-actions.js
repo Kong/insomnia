@@ -1,8 +1,10 @@
 // @flow
 
 import type { ServiceError } from '../../../network/grpc/service-error';
+import { generateId } from '../../../common/misc';
 
 export type GrpcMessage = {
+  id: string,
   text: string,
   created: number,
 };
@@ -52,24 +54,16 @@ const stop = (requestId: string): StopAction => ({
   requestId,
 });
 
-const responseMessage = (
-  requestId: string,
-  value: Object,
-  created: number,
-): ResponseMessageAction => ({
+const responseMessage = (requestId: string, value: Object): ResponseMessageAction => ({
   type: GrpcActionTypeEnum.responseMessage,
   requestId,
-  payload: { text: JSON.stringify(value), created },
+  payload: { message: { id: generateId(), text: JSON.stringify(value), created: Date.now() } },
 });
 
-const requestMessage = (
-  requestId: string,
-  text: string,
-  created: number,
-): RequestMessageAction => ({
+const requestMessage = (requestId: string, text: string): RequestMessageAction => ({
   type: GrpcActionTypeEnum.requestMessage,
   requestId,
-  payload: { text, created },
+  payload: { message: { id: generateId(), text, created: Date.now() } },
 });
 
 const error = (requestId: string, error: ServiceError): ErrorAction => ({
