@@ -3,9 +3,9 @@
 import * as grpc from '@grpc/grpc-js';
 
 import * as models from '../../models';
-import type { ResponseCallbacks, SendError } from './response-callbacks';
 import * as protoLoader from './proto-loader';
 import callCache from './call-cache';
+import { ResponseCallbacks } from './response-callbacks';
 
 const createClient = (req: GrpcRequest) => {
   const Client = grpc.makeGenericClientConstructor({});
