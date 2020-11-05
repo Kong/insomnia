@@ -14,5 +14,6 @@ export const GrpcResponseEventEnum = {
   data: 'GRPC_DATA',
   error: 'GRPC_ERROR',
   end: 'GRPC_END',
+  status: 'GRPC_STATUS',
 };
 export type GrpcResponseEvent = $Values<typeof GrpcResponseEventEnum>;

@@ -1,6 +1,6 @@
 // @flow
 
-import type { ServiceError } from '../../../network/grpc/service-error';
+import type { GrpcStatusObject, ServiceError } from '../../../network/grpc/service-error';
 import { generateId } from '../../../common/misc';
 
 export type GrpcMessage = {
@@ -29,18 +29,19 @@ type Payload<T> = {
 
 type StartAction = Action<GrpcActionTypeEnum.start>;
 type StopAction = Action<GrpcActionTypeEnum.stop>;
-export type RequestMessageAction = Action<GrpcActionTypeEnum.requestMessage> &
-  Payload<{ message: GrpcMessage }>;
+export type RequestMessageAction = Action<GrpcActionTypeEnum.requestMessage> & Payload<GrpcMessage>;
 export type ResponseMessageAction = Action<GrpcActionTypeEnum.responseMessage> &
-  Payload<{ messages: GrpcMessage }>;
-export type ErrorAction = Action<GrpcActionTypeEnum.error> & Payload<{ error: ServiceError }>;
+  Payload<GrpcMessage>;
+export type ErrorAction = Action<GrpcActionTypeEnum.error> & Payload<ServiceError>;
+export type StatusAction = Action<GrpcActionTypeEnum.error> & Payload<GrpcStatusObject>;
 
 export type GrpcAction =
   | StartAction
   | StopAction
   | ResponseMessageAction
   | RequestMessageAction
-  | ErrorAction;
+  | ErrorAction
+  | StatusAction;
 
 export type GrpcDispatch = (action: GrpcAction) => void;
 
@@ -57,21 +58,27 @@ const stop = (requestId: string): StopAction => ({
 const responseMessage = (requestId: string, value: Object): ResponseMessageAction => ({
   type: GrpcActionTypeEnum.responseMessage,
   requestId,
-  payload: { message: { id: generateId(), text: JSON.stringify(value), created: Date.now() } },
+  payload: { id: generateId(), text: JSON.stringify(value), created: Date.now() },
 });
 
 const requestMessage = (requestId: string, text: string): RequestMessageAction => ({
   type: GrpcActionTypeEnum.requestMessage,
   requestId,
-  payload: { message: { id: generateId(), text, created: Date.now() } },
+  payload: { id: generateId(), text, created: Date.now() },
 });
 
 const error = (requestId: string, error: ServiceError): ErrorAction => ({
   type: GrpcActionTypeEnum.error,
   requestId,
-  payload: { error },
+  payload: error,
 });
 
-const grpcActions = { start, stop, responseMessage, requestMessage, error };
+const status = (requestId: string, status: GrpcStatusObject): ErrorAction => ({
+  type: GrpcActionTypeEnum.status,
+  requestId,
+  payload: status,
+});
+
+const grpcActions = { start, stop, responseMessage, requestMessage, error, status };
 
 export default grpcActions;

@@ -30,9 +30,16 @@ const listenForError = (dispatch: GrpcDispatch) => {
   });
 };
 
+const listenForStatus = (dispatch: GrpcDispatch) => {
+  ipcRenderer.on(GrpcResponseEventEnum.status, (_, requestId, status) => {
+    dispatch(grpcActions.status(requestId, status));
+  });
+};
+
 export const createGrpcIpcListeners = (dispatch: GrpcDispatch): void => {
   listenForStart(dispatch);
   listenForStop(dispatch);
   listenForData(dispatch);
   listenForError(dispatch);
+  listenForStatus(dispatch);
 };

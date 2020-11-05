@@ -6,6 +6,7 @@ import type {
   GrpcMessage,
   RequestMessageAction,
   ResponseMessageAction,
+  StatusAction,
 } from './grpc-actions';
 import { GrpcActionTypeEnum } from './grpc-actions';
 import type { ServiceError } from '../../../network/grpc/service-error';
@@ -14,6 +15,7 @@ export type GrpcRequestState = {
   running: boolean,
   requestMessages: Array<GrpcMessage>,
   responseMessages: Array<GrpcMessage>,
+  status?: GrpcStatusObject,
   error: ServiceError,
 };
 export type GrpcState = { [requestId: string]: GrpcRequestState };
@@ -22,6 +24,8 @@ const INITIAL_GRPC_REQUEST_STATE: GrpcRequestState = {
   running: false,
   requestMessages: [],
   responseMessages: [],
+  status: undefined,
+  error: undefined,
 };
 
 const _patch = (state: GrpcState, requestId: string, requestState: GrpcRequestState): State => ({
@@ -40,10 +44,8 @@ export const grpcReducer = (state: GrpcState, action: GrpcAction): GrpcState => 
   switch (action.type) {
     case GrpcActionTypeEnum.start: {
       return _patch(state, requestId, {
-        ...oldState,
+        ...INITIAL_GRPC_REQUEST_STATE,
         running: true,
-        requestMessages: [],
-        responseMessages: [],
       });
     }
     case GrpcActionTypeEnum.stop: {
@@ -53,19 +55,23 @@ export const grpcReducer = (state: GrpcState, action: GrpcAction): GrpcState => 
       const { payload }: RequestMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
-        requestMessages: [...oldState.requestMessages, payload.message],
+        requestMessages: [...oldState.requestMessages, payload],
       });
     }
     case GrpcActionTypeEnum.responseMessage: {
       const { payload }: ResponseMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
-        responseMessages: [...oldState.responseMessages, payload.message],
+        responseMessages: [...oldState.responseMessages, payload],
       });
     }
     case GrpcActionTypeEnum.error: {
       const { payload }: ErrorAction = action;
-      return _patch(state, requestId, { ...oldState, error: payload.error });
+      return _patch(state, requestId, { ...oldState, error: payload });
+    }
+    case GrpcActionTypeEnum.status: {
+      const { payload }: StatusAction = action;
+      return _patch(state, requestId, { ...oldState, status: payload });
     }
     default: {
       throw new Error(`Unhandled action type: ${action.type}`);

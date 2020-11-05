@@ -5,7 +5,9 @@ import * as grpc from '@grpc/grpc-js';
 import * as models from '../../models';
 import * as protoLoader from './proto-loader';
 import callCache from './call-cache';
-import { ResponseCallbacks } from './response-callbacks';
+import type { ServiceError } from './service-error';
+import { GrpcStatusEnum } from './service-error';
+import { Call } from '@grpc/grpc-js';
 
 const createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | undefined => {
   if (!req.url) {
@@ -55,6 +57,7 @@ export const sendUnary = async (requestId: string, respond: ResponseCallbacks): 
     callback,
   );
 
+  _setupStatusListener(call, requestId, respond);
   respond.sendStart(requestId);
 
   // Save call
@@ -96,6 +99,7 @@ export const startClientStreaming = async (
     callback,
   );
 
+  _setupStatusListener(call, requestId, respond);
   respond.sendStart(requestId);
 
   // Save call
@@ -117,10 +121,21 @@ export const commit = (requestId: string) => callCache.get(requestId)?.end();
 
 export const cancel = (requestId: string) => callCache.get(requestId)?.cancel();
 
+const _setupStatusListener = (call: Call, requestId: string, respond: ResponseCallbacks) => {
+  call.on('status', s => respond.sendStatus(requestId, s));
+};
+
 // This function returns a function
-const _createUnaryCallback = (requestId: string, respond: ResponseCallbacks) => (err, value) => {
+const _createUnaryCallback = (requestId: string, respond: ResponseCallbacks) => (
+  err: ServiceError,
+  value: Object,
+) => {
   if (err) {
-    respond.sendError(requestId, err);
+    // Don't do anything if cancelled
+    // TODO: test with other errors
+    if (err.code !== GrpcStatusEnum.CANCELLED) {
+      respond.sendError(requestId, err);
+    }
   } else {
     respond.sendData(requestId, value);
   }

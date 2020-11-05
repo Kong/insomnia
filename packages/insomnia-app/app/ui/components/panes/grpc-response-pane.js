@@ -2,9 +2,7 @@
 import React from 'react';
 import { Pane, PaneBody, PaneHeader } from './pane';
 import GrpcTabbedMessages from '../viewers/grpc-tabbed-messages.js';
-import SizeTag from '../tags/size-tag';
 import StatusTag from '../tags/status-tag';
-import TimeTag from '../tags/time-tag';
 import type { Settings } from '../../../models/settings';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import { useGrpcState } from '../../context/grpc/grpc-context';
@@ -22,15 +20,15 @@ const GrpcResponsePane = ({ settings, activeRequest, forceRefreshKey }: Props) =
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
   const grpcState = useGrpcState();
-  const { responseMessages } = findGrpcRequestState(grpcState, activeRequest._id);
+  const { responseMessages, status } = findGrpcRequestState(grpcState, activeRequest._id);
 
   return (
     <Pane type="response">
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
-          <StatusTag statusCode={0} statusMessage={'Error'} />
-          <TimeTag milliseconds={0} />
-          <SizeTag bytesRead={22} bytesContent={11} />
+          {status && <StatusTag statusCode={status.code} statusMessage={status.details} />}
+          {/* <TimeTag milliseconds={0} /> */}
+          {/* <SizeTag bytesRead={22} bytesContent={11} /> */}
         </div>
       </PaneHeader>
       <PaneBody>

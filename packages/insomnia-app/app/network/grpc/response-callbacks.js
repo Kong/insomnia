@@ -1,5 +1,5 @@
 // @flow
-import type { ServiceError } from './service-error';
+import type { GrpcStatusObject, ServiceError } from './service-error';
 import { GrpcResponseEventEnum } from '../../common/grpc-events';
 
 interface IResponseCallbacks {
@@ -7,6 +7,7 @@ interface IResponseCallbacks {
   sendError(requestId: string, err: ServiceError): void;
   sendStart(requestId: string): void;
   sendEnd(requestId: string): void;
+  sendStatus(requestId: string, status: GrpcStatusObject): void;
 }
 
 export class ResponseCallbacks implements IResponseCallbacks {
@@ -30,5 +31,9 @@ export class ResponseCallbacks implements IResponseCallbacks {
 
   sendEnd(requestId) {
     this._event.reply(GrpcResponseEventEnum.end, requestId);
+  }
+
+  sendStatus(requestId, status) {
+    this._event.reply(GrpcResponseEventEnum.status, requestId, status);
   }
 }
