@@ -2,7 +2,7 @@
 import { ResponseCallbacks } from '../response-callbacks';
 import { GrpcResponseEventEnum } from '../../../common/grpc-events';
 
-describe('should reply with the expected events', () => {
+describe('response-callbacks', () => {
   const event = { reply: jest.fn() };
   const id = 'abc';
 

@@ -6,7 +6,7 @@
 // A call can also emit 'metadata' and 'status' events
 type Call = Object;
 
-const _calls: { [requestId: string]: Call } = {};
+let _calls: { [requestId: string]: Call } = {};
 
 const get = (requestId: string): Call | undefined => {
   const call: Call = _calls[requestId];
@@ -22,13 +22,24 @@ const set = (requestId: string, call: Call): void => {
   _calls[requestId] = call;
 };
 
-const _getChannel = (requestId: string) => get(requestId)?.call?.call.channel;
+const _tryCloseChannel = (requestId: string) => {
+  const channel = get(requestId)?.call?.call.channel;
+  if (channel) {
+    channel.close();
+  } else {
+    console.log(`[gRPC] failed to close channel for req=${requestId} because it was not found`);
+  }
+};
 
 const clear = (requestId: string): void => {
-  _getChannel(requestId)?.close();
+  _tryCloseChannel(requestId);
   delete _calls[requestId];
 };
 
-const callCache = { get, set, clear };
+const reset = (): void => {
+  _calls = {};
+};
+
+const callCache = { get, set, clear, reset };
 
 export default callCache;
