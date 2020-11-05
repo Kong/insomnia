@@ -12,7 +12,7 @@ const get = (requestId: string): Call | undefined => {
   const call: Call = _calls[requestId];
 
   if (!call) {
-    console.log('call not found');
+    console.log(`[gRPC] client call for req=${requestId} not found`);
   }
 
   return call;

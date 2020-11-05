@@ -3,7 +3,6 @@
 import * as grpc from '@grpc/grpc-js';
 
 import * as models from '../../models';
-import { ensureMethodIs, GrpcMethodTypeEnum } from './method';
 import type { ResponseCallbacks, SendError } from './response-callbacks';
 import * as protoLoader from './proto-loader';
 import callCache from './call-cache';
@@ -14,17 +13,18 @@ const createClient = (req: GrpcRequest) => {
 };
 
 export const sendUnary = async (requestId: string, respond: ResponseCallbacks): Promise<void> => {
+  // Load method
   const req = await models.grpcRequest.getById(requestId);
   const selectedMethod = await protoLoader.getSelectedMethod(req);
 
-  if (!ensureMethodIs(GrpcMethodTypeEnum.unary, selectedMethod)) {
-    respond.sendError(new Error('bad method')); // fix this wording
+  if (!selectedMethod) {
+    respond.sendError(new Error(`The gRPC method ${req.protoMethodName} could not be found`));
+    // TODO: sendEnd
     return;
   }
 
+  // Load initial message
   const messageBody = _parseMessage(req, respond.sendError);
-
-  // What should happen when the body is an empty string?
   if (!messageBody) {
     return;
   }
@@ -32,7 +32,7 @@ export const sendUnary = async (requestId: string, respond: ResponseCallbacks): 
   // Create client
   const client = createClient(req);
 
-  // Create unary callback
+  // Create callback
   const callback = _createUnaryCallback(requestId, respond);
 
   // Make call
@@ -52,11 +52,13 @@ export const startClientStreaming = async (
   requestId: string,
   respond: ResponseCallbacks,
 ): Promise<void> => {
+  // Load method
   const req = await models.grpcRequest.getById(requestId);
   const selectedMethod = await protoLoader.getSelectedMethod(req);
 
-  if (!ensureMethodIs(GrpcMethodTypeEnum.client, selectedMethod)) {
-    respond.sendError(new Error('bad method')); // fix this wording
+  if (!selectedMethod) {
+    respond.sendError(new Error(`The gRPC method ${req.protoMethodName} could not be found`));
+    // TODO: sendEnd
     return;
   }
 
@@ -107,7 +109,7 @@ type WriteCallback = (error: Error | null | undefined) => void;
 
 const _streamWriteCallback: WriteCallback = err => {
   if (err) {
-    console.error('[grpc] Error when writing to stream', err);
+    console.error('[gRPC] Error when writing to stream', err);
   }
 };
 
@@ -115,7 +117,10 @@ const _parseMessage = (request: Request, sendError: SendError): Object | undefin
   try {
     return JSON.parse(request.body.text || '');
   } catch (e) {
+    // TODO: How do we want to handle this case, where the message cannot be parsed?
+    //  Currently an error will be shown and the RPC stopped, but we can be less destructive
     sendError(request._id, e);
+    // TODO: sendEnd
     return undefined;
   }
 };

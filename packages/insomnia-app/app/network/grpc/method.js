@@ -33,21 +33,3 @@ export const GrpcMethodTypeName: { [GrpcMethodType]: string } = {
   [GrpcMethodTypeEnum.client]: 'Client Streaming',
   [GrpcMethodTypeEnum.bidi]: 'Bi-directional Streaming',
 };
-
-export const ensureMethodIs = (
-  expectedType: GrpcMethodType,
-  method: GrpcMethodDefinition,
-): boolean => {
-  if (!method) {
-    console.log('method not found');
-    return false;
-  }
-
-  // safety net
-  if (getMethodType(method) !== expectedType) {
-    console.log(`selected method is not ${GrpcMethodTypeName[expectedType]}`);
-    return false;
-  }
-
-  return true;
-};
