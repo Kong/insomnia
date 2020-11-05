@@ -22,45 +22,48 @@ type Props = {
   activeRequest: GrpcRequest,
 };
 
-const saveUrl = (request, url) => models.grpcRequest.update(request, { url });
+type MethodSelection = {
+  selectedMethod: GrpcMethodDefinition | undefined,
+  selectedMethodType: GrpcMethodType | undefined,
+};
 
-const saveBody = (request, bodyText) =>
-  models.grpcRequest.update(request, { body: { ...request.body, text: bodyText } });
+const getMethodSelection = (
+  methods: Array<GrpcMethodDefinition>,
+  methodName: string,
+): MethodSelection => {
+  const selectedMethod = methods.find(c => c.path === methodName);
+  const selectedMethodType = selectedMethod && getMethodType(selectedMethod);
 
-const saveMethod = (request, protoMethodName) =>
-  models.grpcRequest.update(request, { protoMethodName });
+  return { selectedMethod, selectedMethodType };
+};
 
-const useGrpcChangeHandlers = activeRequest => {
-  const handleUrlChange = React.useCallback(e => saveUrl(activeRequest, e.target.value), [
-    activeRequest,
-  ]);
+type ChangeHandlers = {
+  url: (SyntheticEvent<HTMLInputElement>) => Promise<void>,
+  body: (SyntheticEvent<HTMLInputElement>) => Promise<void>,
+  method: string => Promise<void>,
+};
 
-  const handleBodyChange = React.useCallback(e => saveBody(activeRequest, e.target.value), [
-    activeRequest,
-  ]);
+// This will create cached change handlers for the url, body and method selection
+const getChangeHandlers = (request: GrpcRequest): ChangeHandlers => {
+  const url = async (e: SyntheticEvent<HTMLInputElement>) => {
+    await models.grpcRequest.update(request, { url: e.target.value });
+  };
 
-  const handleMethodChange = React.useCallback((e: string) => saveMethod(activeRequest, e), [
-    activeRequest,
-  ]);
+  const body = async (e: SyntheticEvent<HTMLInputElement>) => {
+    await models.grpcRequest.update(request, { body: { ...request.body, text: e.target.value } });
+  };
 
-  return { handleUrlChange, handleBodyChange, handleMethodChange };
+  const method = async (e: string) => {
+    await models.grpcRequest.update(request, { protoMethodName: e });
+  };
+
+  return { url, body, method };
 };
 
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
   const [methods, setMethods] = React.useState<Array<GrpcMethodDefinition>>([]);
 
-  const selectedMethod = React.useMemo<GrpcMethodDefinition | undefined>(
-    () => methods.find(c => c.path === activeRequest.protoMethodName),
-    [activeRequest.protoMethodName, methods],
-  );
-
-  const selectedMethodType = React.useMemo<GrpcMethodType | undefined>(
-    () => selectedMethod && getMethodType(selectedMethod),
-    [selectedMethod],
-  );
-
-  const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
-
+  // Reload the methods, on first mount, or if the request protoFile changes
   React.useEffect(() => {
     const func = async () => {
       const protoFile = await models.protoFile.getById(activeRequest.protoFileId);
@@ -69,11 +72,19 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
     func();
   }, [activeRequest.protoFileId]);
 
-  const { handleUrlChange, handleBodyChange, handleMethodChange } = useGrpcChangeHandlers(
-    activeRequest,
+  // If the methods, or the selected proto method changes, get an updated method selection
+  const { selectedMethod, selectedMethodType } = React.useMemo(
+    () => getMethodSelection(methods, activeRequest.protoMethodName),
+    [methods, activeRequest.protoMethodName],
   );
 
-  const sendToGrpcMain = React.useCallback(
+  const handleChange = React.useMemo(() => getChangeHandlers(activeRequest), [activeRequest]);
+
+  // Used to refresh input fields to their default value when switching between requests.
+  // This is a common pattern in this codebase.
+  const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
+
+  const sendIpc = React.useCallback(
     (channel: GrpcRequestEvent) => ipcRenderer.send(channel, activeRequest._id),
     [activeRequest._id],
   );
@@ -84,17 +95,17 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
         <input
           key={uniquenessKey}
           type="text"
-          onChange={handleUrlChange}
+          onChange={handleChange.url}
           defaultValue={activeRequest.url}
           placeholder="test placeholder"
         />
 
         {!selectedMethod && <Button disabled>Send</Button>}
         {selectedMethodType === GrpcMethodTypeEnum.unary && (
-          <Button onClick={() => sendToGrpcMain(GrpcRequestEventEnum.sendUnary)}>Send</Button>
+          <Button onClick={() => sendIpc(GrpcRequestEventEnum.sendUnary)}>Send</Button>
         )}
         {selectedMethodType === GrpcMethodTypeEnum.client && (
-          <Button onClick={() => sendToGrpcMain(GrpcRequestEventEnum.startStream)}>Start</Button>
+          <Button onClick={() => sendIpc(GrpcRequestEventEnum.startStream)}>Start</Button>
         )}
         {(selectedMethodType === GrpcMethodTypeEnum.server ||
           selectedMethodType === GrpcMethodTypeEnum.bidi) && <Button disabled>Coming soon</Button>}
@@ -114,7 +125,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
               {selectedMethod?.path || 'Select Method'} <i className="fa fa-caret-down" />
             </DropdownButton>
             {methods.map(c => (
-              <DropdownItem key={c.path} onClick={handleMethodChange} value={c.path}>
+              <DropdownItem key={c.path} onClick={handleChange.method} value={c.path}>
                 {c.path === selectedMethod?.path && <i className="fa fa-check" />}
                 {c.path}
               </DropdownItem>
@@ -128,17 +139,15 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey }: Props) => {
             key={uniquenessKey}
             type="text"
             rows="5"
-            onChange={handleBodyChange}
+            onChange={handleChange.body}
             defaultValue={activeRequest.body.text}
           />
           {selectedMethodType === GrpcMethodTypeEnum.client && (
             <>
               <br />
-              <Button onClick={() => sendToGrpcMain(GrpcRequestEventEnum.sendMessage)}>
-                Stream
-              </Button>
-              <Button onClick={() => sendToGrpcMain(GrpcRequestEventEnum.commit)}>Commit</Button>
-              <Button onClick={() => sendToGrpcMain(GrpcRequestEventEnum.cancel)}>Cancel</Button>
+              <Button onClick={() => sendIpc(GrpcRequestEventEnum.sendMessage)}>Stream</Button>
+              <Button onClick={() => sendIpc(GrpcRequestEventEnum.commit)}>Commit</Button>
+              <Button onClick={() => sendIpc(GrpcRequestEventEnum.cancel)}>Cancel</Button>
             </>
           )}
         </div>
