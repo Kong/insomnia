@@ -1,12 +1,13 @@
 // @flow
 import React from 'react';
-import { findGrpcRequestState, useGrpcState } from '../../context/grpc/grpc-context';
+import { useGrpcState } from '../../context/grpc/grpc-context';
 import type { GrpcMethodType } from '../../../network/grpc/method';
 import type { GrpcRequestEvent } from '../../../common/grpc-events';
 import { ipcRenderer } from 'electron';
 import { Button } from 'insomnia-components';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
+import { findGrpcRequestState } from '../../context/grpc/grpc-reducer';
 
 type Props = {
   requestId: string,
@@ -14,55 +15,52 @@ type Props = {
 };
 
 const GrpcSendButton = ({ requestId, methodType }: Props) => {
-  const grpcState = useGrpcState();
-
   const sendToGrpcMain = React.useCallback(
     (channel: GrpcRequestEvent) => ipcRenderer.send(channel, requestId),
     [requestId],
   );
 
+  const config = React.useMemo(() => {
+    let text = '';
+    let onClick = null;
+    let disabled = false;
+
+    switch (methodType) {
+      case GrpcMethodTypeEnum.unary:
+        text = 'Send';
+        onClick = () => sendToGrpcMain(GrpcRequestEventEnum.sendUnary);
+        break;
+
+      case GrpcMethodTypeEnum.client:
+        text = 'Start';
+        onClick = () => sendToGrpcMain(GrpcRequestEventEnum.startStream);
+        break;
+
+      case GrpcMethodTypeEnum.server:
+      case GrpcMethodTypeEnum.bidi:
+        text = 'Coming soon';
+        disabled = true;
+        break;
+
+      default:
+        text = 'Send';
+        disabled = true;
+        break;
+    }
+
+    return { text, onClick, disabled };
+  }, [sendToGrpcMain, methodType]);
+
+  const grpcState = useGrpcState();
   const requestState = findGrpcRequestState(grpcState, requestId);
 
   if (requestState.running) {
     return <Button onClick={() => sendToGrpcMain(GrpcRequestEventEnum.cancel)}>Cancel</Button>;
   }
 
-  let text = '';
-  let event = '';
-  let disabled = false;
-
-  switch (methodType) {
-    case GrpcMethodTypeEnum.unary:
-      text = 'Send';
-      event = GrpcRequestEventEnum.sendUnary;
-      break;
-
-    case GrpcMethodTypeEnum.client:
-      text = 'Start';
-      event = GrpcRequestEventEnum.startStream;
-      break;
-
-    case GrpcMethodTypeEnum.server:
-    case GrpcMethodTypeEnum.bidi:
-      text = 'Coming soon';
-      disabled = true;
-      break;
-
-    default:
-      text = 'Send';
-      disabled = true;
-      break;
-  }
-
   return (
-    <Button
-      onClick={() => {
-        if (event) {
-          sendToGrpcMain(event);
-        }
-      }}
-      disabled={disabled}>
-      {text}
+    <Button onClick={config.onClick} disabled={config.disabled}>
+      {config.text}
     </Button>
   );
 };

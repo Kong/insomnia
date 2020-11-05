@@ -1,8 +1,8 @@
 // @flow
 import { ipcRenderer } from 'electron';
 import { GrpcResponseEventEnum } from '../../../common/grpc-events';
-import type { GrpcDispatch } from './grpc-context';
 import grpcActions from './grpc-actions';
+import type { GrpcDispatch } from './grpc-actions';
 
 // TODO: Do we need to clear listeners or will they overwrite?
 
@@ -13,20 +13,20 @@ const listenForStart = (dispatch: GrpcDispatch) => {
 };
 
 const listenForStop = (dispatch: GrpcDispatch) => {
-  ipcRenderer.on(GrpcResponseEventEnum.stop, (_, requestId) => {
+  ipcRenderer.on(GrpcResponseEventEnum.end, (_, requestId) => {
     dispatch(grpcActions.stop(requestId));
   });
 };
 
 const listenForData = (dispatch: GrpcDispatch) => {
   ipcRenderer.on(GrpcResponseEventEnum.data, (_, requestId, val) => {
-    console.log(val);
+    dispatch(grpcActions.responseMessage(requestId, val));
   });
 };
 
 const listenForError = (dispatch: GrpcDispatch) => {
   ipcRenderer.on(GrpcResponseEventEnum.error, (_, requestId, err) => {
-    console.error(err);
+    dispatch(grpcActions.error(requestId, err));
   });
 };
 
