@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { findGrpcRequestState, useGrpcState } from '../../context/grpc-context';
+import { findGrpcRequestState, useGrpcState } from '../../context/grpc/grpc-context';
 import type { GrpcMethodType } from '../../../network/grpc/method';
 import type { GrpcRequestEvent } from '../../../common/grpc-events';
 import { ipcRenderer } from 'electron';
