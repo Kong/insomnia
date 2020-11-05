@@ -43,7 +43,6 @@ export const sendUnary = async (requestId: string, respond: ResponseCallbacks): 
 
   // Create client
   const client = _createClient(req, respond);
-
   if (!client) {
     return;
   }
@@ -105,6 +104,90 @@ export const startClientStreaming = async (
   callCache.set(requestId, call);
 };
 
+export const startServerStreaming = async (
+  requestId: string,
+  respond: ResponseCallbacks,
+): Promise<void> => {
+  const req = await models.grpcRequest.getById(requestId);
+  const selectedMethod = await protoLoader.getSelectedMethod(req);
+
+  if (!selectedMethod) {
+    respond.sendError(
+      requestId,
+      new Error(`The gRPC method ${req.protoMethodName} could not be found`),
+    );
+    // TODO: sendEnd
+    return;
+  }
+
+  // Load initial message
+  const messageBody = _parseMessage(req, respond);
+  if (!messageBody) {
+    return;
+  }
+
+  // Create client
+  const client = createClient(req, respond);
+  if (!client) {
+    return;
+  }
+
+  // Make call
+  const call = client.makeServerStreamRequest(
+    selectedMethod.path,
+    selectedMethod.requestSerialize,
+    selectedMethod.responseDeserialize,
+    messageBody,
+  );
+
+  _setupStatusListener(call, requestId, respond);
+  _setupServerStreamListeners(call, requestId, respond);
+
+  respond.sendStart(requestId);
+
+  // Save call
+  callCache.set(requestId, call);
+};
+
+export const startBidiStreaming = async (
+  requestId: string,
+  respond: ResponseCallbacks,
+): Promise<void> => {
+  const req = await models.grpcRequest.getById(requestId);
+  const selectedMethod = await protoLoader.getSelectedMethod(req);
+
+  if (!selectedMethod) {
+    respond.sendError(
+      requestId,
+      new Error(`The gRPC method ${req.protoMethodName} could not be found`),
+    );
+    // TODO: sendEnd
+    return;
+  }
+
+  // Create client
+  const client = createClient(req, respond);
+
+  if (!client) {
+    return;
+  }
+
+  // Make call
+  const call = client.makeBidiStreamRequest(
+    selectedMethod.path,
+    selectedMethod.requestSerialize,
+    selectedMethod.responseDeserialize,
+  );
+
+  _setupStatusListener(call, requestId, respond);
+  _setupServerStreamListeners(call, requestId, respond);
+
+  respond.sendStart(requestId);
+
+  // Save call
+  callCache.set(requestId, call);
+};
+
 export const sendMessage = async (requestId: string, respond: ResponseCallbacks) => {
   const req = await models.grpcRequest.getById(requestId);
   const messageBody = _parseMessage(req, respond);
@@ -124,6 +207,22 @@ export const cancelMultiple = (requestIds: Array<string>) => requestIds.forEach(
 
 const _setupStatusListener = (call: Call, requestId: string, respond: ResponseCallbacks) => {
   call.on('status', s => respond.sendStatus(requestId, s));
+};
+
+const _setupServerStreamListeners = (call: Call, requestId: string, respond: ResponseCallbacks) => {
+  call.on('data', data => respond.sendData(requestId, data));
+
+  call.on('error', (error: ServiceError) => {
+    if (error?.code !== GrpcStatusEnum.CANCELLED) {
+      respond.sendError(requestId, error);
+
+      // Taken through inspiration from other implementation, needs validation
+      if (error.code === GrpcStatusEnum.UNKNOWN || error.code === GrpcStatusEnum.UNAVAILABLE) {
+        respond.sendEnd(requestId);
+      }
+    }
+  });
+  call.on('end', () => respond.sendEnd(requestId));
 };
 
 // This function returns a function

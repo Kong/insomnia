@@ -9,8 +9,14 @@ export function init() {
   ipcMain.on(GrpcRequestEventEnum.sendUnary, (e, requestId) =>
     grpc.sendUnary(requestId, new ResponseCallbacks(e)),
   );
-  ipcMain.on(GrpcRequestEventEnum.startStream, (e, requestId) =>
+  ipcMain.on(GrpcRequestEventEnum.startClientStream, (e, requestId) =>
     grpc.startClientStreaming(requestId, new ResponseCallbacks(e)),
+  );
+  ipcMain.on(GrpcRequestEventEnum.startServerStream, (e, requestId) =>
+    grpc.startServerStreaming(requestId, new ResponseCallbacks(e)),
+  );
+  ipcMain.on(GrpcRequestEventEnum.startBidiStream, (e, requestId) =>
+    grpc.startBidiStreaming(requestId, new ResponseCallbacks(e)),
   );
   ipcMain.on(GrpcRequestEventEnum.sendMessage, (e, requestId) =>
     grpc.sendMessage(requestId, new ResponseCallbacks(e)),
