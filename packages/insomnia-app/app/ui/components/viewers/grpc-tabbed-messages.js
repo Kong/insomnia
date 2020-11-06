@@ -19,6 +19,7 @@ type Props = {
   workspace: Workspace,
   settings: Settings,
   showTabActions: boolean,
+  singleTab: boolean,
   bodyText: string,
   messages: Array<Message>,
 };
@@ -38,6 +39,7 @@ const GrpcTabbedMessages = (props: Props) => {
     workspace,
     settings,
     showTabActions,
+    singleTab,
     bodyText,
   } = props;
 
@@ -46,16 +48,25 @@ const GrpcTabbedMessages = (props: Props) => {
       <div className="tab-action-wrapper">
         <div className="tab-action-tabs">
           <TabList>
-            {showTabActions && (
+            {showTabActions && singleTab && (
               <Tab>
                 <button>Body</button>
               </Tab>
             )}
-            {demoMessages.map((message, index) => (
-              <Tab key={message.id}>
-                <button>Stream {index + 1}</button>
+            {!showTabActions && singleTab && (
+              <Tab>
+                <button>Response</button>
               </Tab>
-            ))}
+            )}
+            {showTabActions && singleTab && (
+              <React.Fragment>
+                {demoMessages.map((message, index) => (
+                  <Tab key={message.id}>
+                    <button>Stream {index + 1}</button>
+                  </Tab>
+                ))}
+              </React.Fragment>
+            )}
           </TabList>
         </div>
         {showTabActions && (
@@ -69,7 +80,7 @@ const GrpcTabbedMessages = (props: Props) => {
           </div>
         )}
       </div>
-      {showTabActions && (
+      {!showTabActions && singleTab && (
         <TabPanel className="react-tabs__tab-panel editor-wrapper">
           <GRPCEditor
             uniquenessKey="123"

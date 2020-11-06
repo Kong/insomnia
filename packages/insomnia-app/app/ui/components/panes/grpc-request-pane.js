@@ -63,6 +63,8 @@ const GrpcRequestPane = (props: Props) => {
           </TabList>
           <TabPanel className="react-tabs__tab-panel">
             <GrpcTabbedMessages
+              singleTab
+              showTabActions
               settings={settings}
               workspace={workspace}
               handleRender={handleRender}
