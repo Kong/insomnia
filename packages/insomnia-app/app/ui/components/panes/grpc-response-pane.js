@@ -18,9 +18,9 @@ type Props = {
 };
 
 const demoResponseMessages = [
-  { id: '2', created: 1604589843467, text: '{"greeting": "Hello Response 2"}' },
-  { id: '3', created: 1604589843468, text: '{"greeting": "Hello Response 3"}' },
-  { id: '1', created: 1604589843466, text: '{"greeting": "Hello Response 1"}' },
+  { id: '2', created: 1604589843467, text: '{"reply": "Hello Response 2"}' },
+  { id: '3', created: 1604589843468, text: '{"reply": "Hello Response 3"}' },
+  { id: '1', created: 1604589843466, text: '{"reply": "Hello Response 1"}' },
 ];
 demoResponseMessages.sort((a, b) => a.created - b.created);
 
