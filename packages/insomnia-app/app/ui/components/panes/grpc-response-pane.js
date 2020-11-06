@@ -17,6 +17,13 @@ type Props = {
   response: ?Response,
 };
 
+const demoResponseMessages = [
+  { id: '2', created: 1604589843467, text: '{"greeting": "Hello Response 2"}' },
+  { id: '3', created: 1604589843468, text: '{"greeting": "Hello Response 3"}' },
+  { id: '1', created: 1604589843466, text: '{"greeting": "Hello Response 1"}' },
+];
+demoResponseMessages.sort((a, b) => a.created - b.created);
+
 const GrpcResponsePane = (props: Props) => {
   const { handleRender, nunjucksPowerUserMode, isVariableUncovered, workspace, settings } = props;
 
@@ -31,14 +38,13 @@ const GrpcResponsePane = (props: Props) => {
       </PaneHeader>
       <PaneBody>
         <GrpcTabbedMessages
-          singleTab
           readOnly
           settings={settings}
           workspace={workspace}
           handleRender={handleRender}
           isVariableUncovered={isVariableUncovered}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
-          bodyText={'{"reply": "hello, hello, hello"}'}
+          messages={demoResponseMessages}
         />
       </PaneBody>
     </Pane>

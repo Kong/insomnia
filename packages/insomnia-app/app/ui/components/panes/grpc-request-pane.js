@@ -26,6 +26,13 @@ const GrpcRequestPane = (props: Props) => {
     settings,
   } = props;
 
+  const demoRequestMessages = [
+    { id: '2', created: 1604589843467, text: '{"greeting": "Hello Stream 2"}' },
+    { id: '3', created: 1604589843468, text: '{"greeting": "Hello Stream 3"}' },
+    { id: '1', created: 1604589843466, text: '{"greeting": "Hello Stream 1"}' },
+  ];
+  demoRequestMessages.sort((a, b) => a.created - b.created);
+
   return (
     <Pane type="request">
       <PaneHeader className="grpc-urlbar">
@@ -63,14 +70,15 @@ const GrpcRequestPane = (props: Props) => {
           </TabList>
           <TabPanel className="react-tabs__tab-panel">
             <GrpcTabbedMessages
-              singleTab
+              showBodyTab
               showTabActions
               settings={settings}
               workspace={workspace}
               handleRender={handleRender}
               isVariableUncovered={isVariableUncovered}
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              bodyText={'{"greeting": "Hello 1"}'}
+              messages={demoRequestMessages}
+              bodyText={'{"greeting": "Hello Body Text"}'}
             />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel">

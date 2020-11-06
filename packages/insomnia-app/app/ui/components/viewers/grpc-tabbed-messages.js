@@ -19,18 +19,10 @@ type Props = {
   workspace: Workspace,
   settings: Settings,
   showTabActions: boolean,
-  singleTab: boolean,
-  bodyText: string,
-  messages: Array<Message>,
+  showBodyTab: boolean,
+  messages: ?Array<Message>,
+  bodyText: ?string,
 };
-
-// Stubbed > sorted messages
-const demoMessages = [
-  { id: '2', created: 1604589843467, text: '{"greeting": "Hello 2"}' },
-  { id: '3', created: 1604589843468, text: '{"greeting": "Hello 3"}' },
-  { id: '1', created: 1604589843466, text: '{"greeting": "Hello 1"}' },
-];
-demoMessages.sort((a, b) => a.created - b.created);
 
 const GrpcTabbedMessages = (props: Props) => {
   const {
@@ -39,8 +31,9 @@ const GrpcTabbedMessages = (props: Props) => {
     workspace,
     settings,
     showTabActions,
-    singleTab,
+    showBodyTab,
     bodyText,
+    messages,
   } = props;
 
   return (
@@ -48,21 +41,23 @@ const GrpcTabbedMessages = (props: Props) => {
       <div className="tab-action-wrapper">
         <div className="tab-action-tabs">
           <TabList>
-            {showTabActions && singleTab && (
-              <Tab>
-                <button>Body</button>
-              </Tab>
-            )}
-            {!showTabActions && singleTab && (
-              <Tab>
-                <button>Response</button>
-              </Tab>
-            )}
-            {showTabActions && singleTab && (
+            {showBodyTab && messages && (
               <React.Fragment>
-                {demoMessages.map((message, index) => (
+                <Tab>
+                  <button>Body</button>
+                </Tab>
+                {messages.map((message, index) => (
                   <Tab key={message.id}>
                     <button>Stream {index + 1}</button>
+                  </Tab>
+                ))}
+              </React.Fragment>
+            )}
+            {!showBodyTab && messages && (
+              <React.Fragment>
+                {messages.map((message, index) => (
+                  <Tab key={message.id}>
+                    <button>Response {index + 1}</button>
                   </Tab>
                 ))}
               </React.Fragment>
@@ -80,47 +75,75 @@ const GrpcTabbedMessages = (props: Props) => {
           </div>
         )}
       </div>
-      {!showTabActions && singleTab && (
-        <TabPanel className="react-tabs__tab-panel editor-wrapper">
-          <GRPCEditor
-            uniquenessKey="123"
-            content={bodyText}
-            contentType={'application/json'}
-            fontSize={props.settings.editorFontSize}
-            indentSize={settings.editorIndentSize}
-            keyMap={settings.editorKeyMap}
-            lineWrapping={settings.editorLineWrapping}
-            indentWithTabs={settings.editorIndentWithTabs}
-            settings={settings}
-            workspace={workspace}
-            handleRender={handleRender}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-            onChange={value => console.log(value)}
-          />
-        </TabPanel>
+      {/* Body Content */}
+      {showBodyTab && messages && (
+        <React.Fragment>
+          <TabPanel className="react-tabs__tab-panel editor-wrapper">
+            <GRPCEditor
+              uniquenessKey="123"
+              content={bodyText}
+              contentType={'application/json'}
+              fontSize={props.settings.editorFontSize}
+              indentSize={settings.editorIndentSize}
+              keyMap={settings.editorKeyMap}
+              lineWrapping={settings.editorLineWrapping}
+              indentWithTabs={settings.editorIndentWithTabs}
+              settings={settings}
+              workspace={workspace}
+              handleRender={handleRender}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
+              onChange={value => console.log(value)}
+            />
+          </TabPanel>
+          {messages.map((message, index) => (
+            <TabPanel key={message.id} className="react-tabs__tab-panel editor-wrapper">
+              <GRPCEditor
+                readOnly
+                uniquenessKey={message.id}
+                content={message.text}
+                contentType={'application/json'}
+                fontSize={settings.editorFontSize}
+                indentSize={settings.editorIndentSize}
+                keyMap={settings.editorKeyMap}
+                lineWrapping={settings.editorLineWrapping}
+                indentWithTabs={settings.editorIndentWithTabs}
+                settings={settings}
+                workspace={workspace}
+                handleRender={handleRender}
+                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                isVariableUncovered={isVariableUncovered}
+                onChange={value => console.log(value)}
+              />
+            </TabPanel>
+          ))}
+        </React.Fragment>
       )}
-      {demoMessages.map(message => (
-        <TabPanel key={message.id} className="react-tabs__tab-panel editor-wrapper">
-          <GRPCEditor
-            readOnly
-            uniquenessKey={message.id}
-            content={message.text}
-            contentType={'application/json'}
-            fontSize={settings.editorFontSize}
-            indentSize={settings.editorIndentSize}
-            keyMap={settings.editorKeyMap}
-            lineWrapping={settings.editorLineWrapping}
-            indentWithTabs={settings.editorIndentWithTabs}
-            settings={settings}
-            workspace={workspace}
-            handleRender={handleRender}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-            onChange={value => console.log(value)}
-          />
-        </TabPanel>
-      ))}
+      {!showBodyTab && messages && (
+        <React.Fragment>
+          {messages.map((message, index) => (
+            <TabPanel key={message.id} className="react-tabs__tab-panel editor-wrapper">
+              <GRPCEditor
+                readOnly
+                uniquenessKey={message.id}
+                content={message.text}
+                contentType={'application/json'}
+                fontSize={settings.editorFontSize}
+                indentSize={settings.editorIndentSize}
+                keyMap={settings.editorKeyMap}
+                lineWrapping={settings.editorLineWrapping}
+                indentWithTabs={settings.editorIndentWithTabs}
+                settings={settings}
+                workspace={workspace}
+                handleRender={handleRender}
+                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                isVariableUncovered={isVariableUncovered}
+                onChange={value => console.log(value)}
+              />
+            </TabPanel>
+          ))}
+        </React.Fragment>
+      )}
     </Tabs>
   );
 };
