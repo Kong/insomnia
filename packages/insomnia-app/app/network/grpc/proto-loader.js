@@ -1,19 +1,9 @@
 // @flow
-import path from 'path';
-import os from 'os';
-import mkdirp from 'mkdirp';
-import fs from 'fs';
+
 import type { GrpcMethodDefinition } from './method';
 import * as protoLoader from '@grpc/proto-loader';
 import * as models from '../../models';
-
-const writeTempFile = async (src: string): Promise<string> => {
-  const root = path.join(os.tmpdir(), 'insomnia-grpc');
-  mkdirp.sync(root);
-  const p = path.join(root, `${Math.random()}.proto`);
-  await fs.promises.writeFile(p, src);
-  return p;
-};
+import writeProtoFile from './write-proto-file';
 
 const GRPC_LOADER_OPTIONS = {
   keepCase: true,
@@ -27,9 +17,13 @@ const isTypeOrEnumDefinition = (obj: Object) => 'format' in obj; // same check e
 const isServiceDefinition = (obj: Object) => !isTypeOrEnumDefinition(obj);
 
 // TODO: instead of writing to a temp file and loading the protoFile every time methods are required,
-//  add an in-memory caching strategy, indexed by the protoFile._id
+//  add an in-memory caching strategy, indexed by the protoFile._id.
+//  The file path for protoLoader.load can also be a URL, so we can avoid
+//  writing to a file in those cases, but it becomes more important to cache
+//  We also need to think about how to store a reference to a proto file and it's
+//  implications on import/export/sync.
 export const loadMethods = async (protoFile: ProtoFile): Promise<Array<GrpcMethodDefinition>> => {
-  const tempProtoFile = await writeTempFile(protoFile.protoText);
+  const tempProtoFile = await writeProtoFile(protoFile.protoText);
   const definition = await protoLoader.load(tempProtoFile, GRPC_LOADER_OPTIONS);
 
   return Object.values(definition)
@@ -38,7 +32,8 @@ export const loadMethods = async (protoFile: ProtoFile): Promise<Array<GrpcMetho
 };
 
 // TODO: instead of reloading the methods from the protoFile,
-//  just get it from what has already been loaded in the react component
+//  just get it from what has already been loaded in the react component,
+//  or from the cache
 export const getSelectedMethod = async (request: GrpcRequest): GrpcMethodDefinition | undefined => {
   const protoFile = await models.protoFile.getById(request.protoFileId);
 
