@@ -269,20 +269,20 @@ export type SortOrder =
   | 'type-desc';
 export const SORT_NAME_ASC: SortOrder = 'name-asc';
 export const SORT_NAME_DESC: SortOrder = 'name-desc';
-export const SORT_CREATED_FIRST: SortOrder = 'created-first';
-export const SORT_CREATED_LAST: SortOrder = 'created-last';
+export const SORT_CREATED_ASC: SortOrder = 'created-asc';
+export const SORT_CREATED_DESC: SortOrder = 'created-desc';
 export const SORT_METHOD: SortOrder = 'method';
-export const SORT_TYPE_ASC: SortOrder = 'type-asc';
 export const SORT_TYPE_DESC: SortOrder = 'type-desc';
+export const SORT_TYPE_ASC: SortOrder = 'type-asc';
 
 export const sortOrderName: { [SortOrder]: string } = {
   [SORT_NAME_ASC]: 'Name Ascending',
   [SORT_NAME_DESC]: 'Name Descending',
-  [SORT_CREATED_FIRST]: 'Created First',
-  [SORT_CREATED_LAST]: 'Created Last',
-  [SORT_METHOD]: 'Method',
-  [SORT_TYPE_ASC]: 'Folder First',
-  [SORT_TYPE_DESC]: 'Folder Last',
+  [SORT_CREATED_ASC]: 'Oldest First',
+  [SORT_CREATED_DESC]: 'Newest First',
+  [SORT_METHOD]: 'HTTP Method',
+  [SORT_TYPE_DESC]: 'Folders First',
+  [SORT_TYPE_ASC]: 'Requests First',
 };
 
 export function getPreviewModeName(previewMode, useLong = false) {
