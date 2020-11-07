@@ -56,12 +56,14 @@ class RequestCreateModal extends PureComponent {
     const requestName = this._input.value;
     if (selectedMethod === METHOD_GRPC) {
       showModal(ProtoFilesModal, {
-        onSave: async protofileId => {
-          // TODO: Create new grpc request with the name and selected proto file - INS-198
-          console.log(`Create request name: [${requestName}], and protofileId: [${protofileId}]`);
+        onSave: async (protoFileId: string) => {
+          const createdRequest = await models.grpcRequest.create({
+            parentId,
+            name: requestName,
+            protoFileId,
+          });
 
-          const createdRequestId = 'gr_123';
-          this._onComplete(createdRequestId);
+          this._onComplete(createdRequest._id);
         },
       });
     } else {
@@ -147,6 +149,7 @@ class RequestCreateModal extends PureComponent {
               <div className="form-control form-control--no-label" style={{ width: 'auto' }}>
                 <MethodDropdown
                   right
+                  showGrpc
                   className="btn btn--clicky no-wrap"
                   method={selectedMethod}
                   onChange={this._handleChangeSelectedMethod}
