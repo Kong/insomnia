@@ -10,14 +10,11 @@ export type GrpcMethodDefinition = {
   responseDeserialize: Function,
 };
 
-// The values of this are converted from a two digit binary number xy, where:
-// x denotes request streaming, and
-// y denotes response streaming
 export const GrpcMethodTypeEnum = {
-  unary: 0, // 00
-  server: 1, // 01
-  client: 2, // 10
-  bidi: 3, // 11
+  unary: 'unary',
+  server: 'server',
+  client: 'client',
+  bidi: 'bidi',
 };
 
 export type GrpcMethodType = $Values<typeof GrpcMethodTypeEnum>;
@@ -25,7 +22,21 @@ export type GrpcMethodType = $Values<typeof GrpcMethodTypeEnum>;
 export const getMethodType = ({
   requestStream,
   responseStream,
-}: GrpcMethodDefinition): GrpcMethodType => parseInt(`${+requestStream}${+responseStream}`, 2);
+}: GrpcMethodDefinition): GrpcMethodType => {
+  if (requestStream) {
+    if (responseStream) {
+      return GrpcMethodTypeEnum.bidi;
+    } else {
+      return GrpcMethodTypeEnum.client;
+    }
+  } else {
+    if (responseStream) {
+      return GrpcMethodTypeEnum.server;
+    } else {
+      return GrpcMethodTypeEnum.unary;
+    }
+  }
+};
 
 export const GrpcMethodTypeName: { [GrpcMethodType]: string } = {
   [GrpcMethodTypeEnum.unary]: 'Unary',
