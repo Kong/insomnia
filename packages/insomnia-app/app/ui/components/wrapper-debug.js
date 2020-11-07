@@ -18,7 +18,6 @@ import { isGrpcRequest } from '../../models/helpers/is-model';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
-import { ResizablePaneWrapper } from './panes/pane';
 
 type Props = {
   forceRefreshKey: string,
@@ -226,7 +225,6 @@ class WrapperDebug extends React.PureComponent<Props> {
       handleGenerateCodeForActiveRequest,
       handleGetRenderContext,
       handleRender,
-      handleSetRequestPaneRef,
       handleUpdateDownloadPath,
       handleUpdateRequestMimeType,
       headerEditorKey,
@@ -241,9 +239,7 @@ class WrapperDebug extends React.PureComponent<Props> {
     if (activeRequest && isGrpcRequest(activeRequest)) {
       return (
         <ErrorBoundary showAlert>
-          <ResizablePaneWrapper ref={handleSetRequestPaneRef}>
-            <GrpcRequestPane />
-          </ResizablePaneWrapper>
+          <GrpcRequestPane />
         </ErrorBoundary>
       );
     }
@@ -251,7 +247,6 @@ class WrapperDebug extends React.PureComponent<Props> {
     return (
       <ErrorBoundary showAlert>
         <RequestPane
-          ref={handleSetRequestPaneRef}
           downloadPath={responseDownloadPath}
           environmentId={activeEnvironment ? activeEnvironment._id : ''}
           forceRefreshCounter={forceRefreshKey}
@@ -306,7 +301,6 @@ class WrapperDebug extends React.PureComponent<Props> {
       activeRequestResponses,
       activeResponse,
       activeUnitTestResult,
-      handleSetResponsePaneRef,
       loadStartTime,
       requestVersions,
       responseFilter,
@@ -320,9 +314,7 @@ class WrapperDebug extends React.PureComponent<Props> {
     if (activeRequest && isGrpcRequest(activeRequest)) {
       return (
         <ErrorBoundary showAlert>
-          <ResizablePaneWrapper ref={handleSetResponsePaneRef}>
-            <GrpcResponsePane />
-          </ResizablePaneWrapper>
+          <GrpcResponsePane />
         </ErrorBoundary>
       );
     }
@@ -330,7 +322,6 @@ class WrapperDebug extends React.PureComponent<Props> {
     return (
       <ErrorBoundary showAlert>
         <ResponsePane
-          ref={handleSetResponsePaneRef}
           disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
           disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
           editorFontSize={settings.editorFontSize}
