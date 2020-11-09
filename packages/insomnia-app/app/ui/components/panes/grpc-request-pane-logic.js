@@ -1,4 +1,5 @@
 // @flow
+// eslint-disable-next-line filenames/match-exported
 import React from 'react';
 import { Pane, PaneBody, PaneHeader } from './pane';
 import { Button } from 'insomnia-components';

@@ -16,7 +16,7 @@ import { ACTIVITY_HOME, isInsomnia } from '../../common/constants';
 import ActivityToggle from './activity-toggle';
 import { isGrpcRequest } from '../../models/helpers/is-model';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
-import GrpcRequestPane from './panes/grpc-request-pane';
+import GrpcRequestPane from './panes/grpc-request-pane-logic';
 import GrpcResponsePane from './panes/grpc-response-pane';
 import { ResizablePaneWrapper } from './panes/pane';
 
