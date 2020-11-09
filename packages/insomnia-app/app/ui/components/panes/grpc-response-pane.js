@@ -7,6 +7,7 @@ import type { GrpcRequest } from '../../../models/grpc-request';
 import { useGrpcState } from '../../context/grpc/grpc-context';
 import { findGrpcRequestState } from '../../context/grpc/grpc-reducer';
 import GrpcStatusTag from '../tags/grpc-status-tag';
+import GrpcSpinner from '../grpc-spinner';
 
 type Props = {
   forceRefreshKey: string,
@@ -20,16 +21,13 @@ const GrpcResponsePane = ({ settings, activeRequest, forceRefreshKey }: Props) =
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
   const grpcState = useGrpcState();
-  const { running, responseMessages, status, error } = findGrpcRequestState(
-    grpcState,
-    activeRequest._id,
-  );
+  const { responseMessages, status, error } = findGrpcRequestState(grpcState, activeRequest._id);
 
   return (
     <Pane type="response">
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
-          {running && <i className="fa fa-refresh fa-spin pad-right-sm" />}
+          <GrpcSpinner requestId={activeRequest._id} className="margin-right-sm" />
           {status && <GrpcStatusTag statusCode={status.code} statusMessage={status.details} />}
           {!status && error && <GrpcStatusTag statusMessage={error.message} />}
         </div>
