@@ -42,9 +42,14 @@ export const grpcReducer = (state: GrpcState, action: GrpcAction): GrpcState => 
   const oldState = findGrpcRequestState(state, requestId);
 
   switch (action.type) {
-    case GrpcActionTypeEnum.start: {
+    case GrpcActionTypeEnum.reset: {
       return _patch(state, requestId, {
         ...INITIAL_GRPC_REQUEST_STATE,
+      });
+    }
+    case GrpcActionTypeEnum.start: {
+      return _patch(state, requestId, {
+        ...oldState,
         running: true,
       });
     }

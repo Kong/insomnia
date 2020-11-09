@@ -14,6 +14,7 @@ const createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | un
     respond.sendError(req._id, new Error('gRPC url not specified')); // TODO: update wording
     return undefined;
   }
+  console.log(`[gRPC] connecting to url=${req.url}`);
   const Client = grpc.makeGenericClientConstructor({});
   return new Client(req.url, grpc.credentials.createInsecure());
 };

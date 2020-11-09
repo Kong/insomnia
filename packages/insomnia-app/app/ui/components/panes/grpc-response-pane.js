@@ -20,20 +20,18 @@ const GrpcResponsePane = ({ settings, activeRequest, forceRefreshKey }: Props) =
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
   const grpcState = useGrpcState();
-  const { responseMessages, status, error } = findGrpcRequestState(grpcState, activeRequest._id);
-
-  if (error) {
-    // TODO: How do we want to display this?
-    console.error(error);
-  }
+  const { running, responseMessages, status, error } = findGrpcRequestState(
+    grpcState,
+    activeRequest._id,
+  );
 
   return (
     <Pane type="response">
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
+          {running && <i className="fa fa-refresh fa-spin pad-right-sm" />}
           {status && <GrpcStatusTag statusCode={status.code} statusMessage={status.details} />}
-          {/* <TimeTag milliseconds={0} /> */}
-          {/* <SizeTag bytesRead={22} bytesContent={11} /> */}
+          {!status && error && <GrpcStatusTag statusMessage={error.message} />}
         </div>
       </PaneHeader>
       <PaneBody>

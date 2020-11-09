@@ -43,3 +43,11 @@ export const createGrpcIpcListeners = (dispatch: GrpcDispatch): void => {
   listenForError(dispatch);
   listenForStatus(dispatch);
 };
+
+export const destroyGrpcIpcListeners = (): void => {
+  ipcRenderer.removeAllListeners(GrpcResponseEventEnum.start);
+  ipcRenderer.removeAllListeners(GrpcResponseEventEnum.end);
+  ipcRenderer.removeAllListeners(GrpcResponseEventEnum.data);
+  ipcRenderer.removeAllListeners(GrpcResponseEventEnum.error);
+  ipcRenderer.removeAllListeners(GrpcResponseEventEnum.status);
+};

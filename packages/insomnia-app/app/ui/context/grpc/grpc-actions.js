@@ -10,6 +10,7 @@ export type GrpcMessage = {
 };
 
 export const GrpcActionTypeEnum = {
+  reset: 'reset',
   start: 'start',
   stop: 'stop',
   responseMessage: 'responseMessage',
@@ -27,6 +28,7 @@ type Payload<T> = {
   payload: T,
 };
 
+type ResetAction = Action<GrpcActionTypeEnum.reset>;
 type StartAction = Action<GrpcActionTypeEnum.start>;
 type StopAction = Action<GrpcActionTypeEnum.stop>;
 export type RequestMessageAction = Action<GrpcActionTypeEnum.requestMessage> & Payload<GrpcMessage>;
@@ -36,6 +38,7 @@ export type ErrorAction = Action<GrpcActionTypeEnum.error> & Payload<ServiceErro
 export type StatusAction = Action<GrpcActionTypeEnum.error> & Payload<GrpcStatusObject>;
 
 export type GrpcAction =
+  | ResetAction
   | StartAction
   | StopAction
   | ResponseMessageAction
@@ -44,6 +47,11 @@ export type GrpcAction =
   | StatusAction;
 
 export type GrpcDispatch = (action: GrpcAction) => void;
+
+const reset = (requestId: string): ResetAction => ({
+  type: GrpcActionTypeEnum.reset,
+  requestId,
+});
 
 const start = (requestId: string): StartAction => ({
   type: GrpcActionTypeEnum.start,
@@ -79,6 +87,6 @@ const status = (requestId: string, status: GrpcStatusObject): ErrorAction => ({
   payload: status,
 });
 
-const grpcActions = { start, stop, responseMessage, requestMessage, error, status };
+const grpcActions = { reset, start, stop, responseMessage, requestMessage, error, status };
 
 export default grpcActions;

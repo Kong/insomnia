@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { createGrpcIpcListeners } from './create-ipc-listeners';
+import { createGrpcIpcListeners, destroyGrpcIpcListeners } from './ipc-listeners';
 import { grpcReducer } from './grpc-reducer';
 import type { GrpcDispatch } from './grpc-actions';
 import type { GrpcState } from './grpc-reducer';
@@ -14,7 +14,10 @@ export const GrpcProvider = ({ children }: Props) => {
   const [state, dispatch] = React.useReducer(grpcReducer, {});
 
   // Only add listeners on mount
-  React.useEffect(() => createGrpcIpcListeners(dispatch), []);
+  React.useEffect(() => {
+    createGrpcIpcListeners(dispatch);
+    return destroyGrpcIpcListeners;
+  }, []);
 
   return (
     <GrpcStateContext.Provider value={state}>

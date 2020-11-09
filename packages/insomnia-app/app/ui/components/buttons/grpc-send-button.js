@@ -1,11 +1,12 @@
 // @flow
 import React from 'react';
-import { useGrpcState } from '../../context/grpc/grpc-context';
+import { useGrpc } from '../../context/grpc/grpc-context';
 import type { GrpcMethodType } from '../../../network/grpc/method';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
 import { findGrpcRequestState } from '../../context/grpc/grpc-reducer';
 import { useGrpcIpc } from '../panes/use-grpc-ipc';
+import grpcActions from '../../context/grpc/grpc-actions';
 
 type Props = {
   requestId: string,
@@ -46,7 +47,7 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
     return { text, onClick, disabled };
   }, [sendIpc, methodType]);
 
-  const grpcState = useGrpcState();
+  const [grpcState, grpcDispatch] = useGrpc();
   const requestState = findGrpcRequestState(grpcState, requestId);
 
   if (requestState.running) {
@@ -58,7 +59,13 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
   }
 
   return (
-    <button className="urlbar__send-btn" onClick={config.onClick} disabled={config.disabled}>
+    <button
+      className="urlbar__send-btn"
+      onClick={() => {
+        config.onClick();
+        grpcDispatch(grpcActions.reset(requestId));
+      }}
+      disabled={config.disabled}>
       {config.text}
     </button>
   );
