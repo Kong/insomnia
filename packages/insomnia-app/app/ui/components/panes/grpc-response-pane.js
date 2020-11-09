@@ -2,11 +2,11 @@
 import React from 'react';
 import { Pane, PaneBody, PaneHeader } from './pane';
 import GrpcTabbedMessages from '../viewers/grpc-tabbed-messages.js';
-import StatusTag from '../tags/status-tag';
 import type { Settings } from '../../../models/settings';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import { useGrpcState } from '../../context/grpc/grpc-context';
 import { findGrpcRequestState } from '../../context/grpc/grpc-reducer';
+import GrpcStatusTag from '../tags/grpc-status-tag';
 
 type Props = {
   forceRefreshKey: string,
@@ -20,24 +20,31 @@ const GrpcResponsePane = ({ settings, activeRequest, forceRefreshKey }: Props) =
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
   const grpcState = useGrpcState();
-  const { responseMessages, status } = findGrpcRequestState(grpcState, activeRequest._id);
+  const { responseMessages, status, error } = findGrpcRequestState(grpcState, activeRequest._id);
+
+  if (error) {
+    // TODO: How do we want to display this?
+    console.error(error);
+  }
 
   return (
     <Pane type="response">
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
-          {status && <StatusTag statusCode={status.code} statusMessage={status.details} />}
+          {status && <GrpcStatusTag statusCode={status.code} statusMessage={status.details} />}
           {/* <TimeTag milliseconds={0} /> */}
           {/* <SizeTag bytesRead={22} bytesContent={11} /> */}
         </div>
       </PaneHeader>
       <PaneBody>
-        <GrpcTabbedMessages
-          uniquenessKey={uniquenessKey}
-          settings={settings}
-          tabNamePrefix="Response"
-          messages={responseMessages}
-        />
+        {!!responseMessages.length && (
+          <GrpcTabbedMessages
+            uniquenessKey={uniquenessKey}
+            settings={settings}
+            tabNamePrefix="Response"
+            messages={responseMessages}
+          />
+        )}
       </PaneBody>
     </Pane>
   );

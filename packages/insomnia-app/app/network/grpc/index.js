@@ -28,7 +28,6 @@ export const sendUnary = async (requestId: string, respond: ResponseCallbacks): 
       requestId,
       new Error(`The gRPC method ${req.protoMethodName} could not be found`),
     );
-    // TODO: sendEnd
     return;
   }
 
@@ -77,7 +76,6 @@ export const startClientStreaming = async (
       requestId,
       new Error(`The gRPC method ${req.protoMethodName} could not be found`),
     );
-    // TODO: sendEnd
     return;
   }
 
@@ -156,9 +154,8 @@ const _parseMessage = (request: Request, respond: ResponseCallbacks): Object | u
     return JSON.parse(request.body.text || '');
   } catch (e) {
     // TODO: How do we want to handle this case, where the message cannot be parsed?
-    //  Currently an error will be shown and the RPC stopped, but we can be less destructive
+    //  Currently an error will be shown in console, but the stream will not be cancelled.
     respond.sendError(request._id, e);
-    // TODO: sendEnd
     return undefined;
   }
 };

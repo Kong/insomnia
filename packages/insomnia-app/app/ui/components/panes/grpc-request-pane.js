@@ -13,9 +13,10 @@ import * as models from '../../../models';
 import * as protoLoader from '../../../network/grpc/proto-loader';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import GrpcSendButton from '../buttons/grpc-send-button';
-import { useGrpcDispatch } from '../../context/grpc/grpc-context';
+import { useGrpc } from '../../context/grpc/grpc-context';
 import grpcActions from '../../context/grpc/grpc-actions';
 import { useGrpcIpc } from './use-grpc-ipc';
+import { findGrpcRequestState } from '../../context/grpc/grpc-reducer';
 
 type Props = {
   forceRefreshKey: string,
@@ -69,8 +70,10 @@ const demoRequestMessages = [
 demoRequestMessages.sort((a, b) => a.created - b.created);
 
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
-  const grpcDispatch = useGrpcDispatch();
+  const [grpcState, grpcDispatch] = useGrpc();
+
   const [methods, setMethods] = React.useState<Array<GrpcMethodDefinition>>([]);
+  const { requestMessages } = findGrpcRequestState(grpcState, activeRequest._id);
 
   // Reload the methods, on first mount, or if the request protoFile changes
   React.useEffect(() => {
@@ -105,6 +108,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
             type="text"
             forceEditor
             defaultValue={activeRequest.url}
+            placeholder="grpcb.in:9000"
             onChange={handleChange.url}
           />
         </form>
@@ -117,41 +121,54 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
         <GrpcSendButton requestId={activeRequest._id} methodType={selectedMethodType} />
       </PaneHeader>
       <PaneBody>
-        <Tabs className="react-tabs" forceRenderTabPanel>
-          <TabList>
-            <Tab>
-              <button>{GrpcMethodTypeName[selectedMethodType]}</button>
-            </Tab>
-            <Tab>
-              <button>Headers</button>
-            </Tab>
-          </TabList>
-          <TabPanel className="react-tabs__tab-panel">
-            <GrpcTabbedMessages
-              uniquenessKey={uniquenessKey}
-              settings={settings}
-              tabNamePrefix="Stream"
-              messages={canClientStream(selectedMethodType) ? demoRequestMessages : []}
-              bodyText={activeRequest.body.text}
-              handleBodyChange={handleChange.body}
-              handleStream={
-                canClientStream(selectedMethodType) &&
-                (() => {
-                  sendIpc(GrpcRequestEventEnum.sendMessage);
-                  grpcDispatch(
-                    grpcActions.requestMessage(activeRequest._id, activeRequest.body.text),
-                  );
-                })
-              }
-              handleCommit={
-                canClientStream(selectedMethodType) && (() => sendIpc(GrpcRequestEventEnum.commit))
-              }
-            />
-          </TabPanel>
-          <TabPanel className="react-tabs__tab-panel">
-            <h4 className="pad">Coming soon! 😊</h4>
-          </TabPanel>
-        </Tabs>
+        {selectedMethodType && (
+          <Tabs className="react-tabs" forceRenderTabPanel>
+            <TabList>
+              <Tab>
+                <button>{GrpcMethodTypeName[selectedMethodType]}</button>
+              </Tab>
+              <Tab>
+                <button>Headers</button>
+              </Tab>
+            </TabList>
+            <TabPanel className="react-tabs__tab-panel">
+              <GrpcTabbedMessages
+                uniquenessKey={uniquenessKey}
+                settings={settings}
+                tabNamePrefix="Stream"
+                messages={requestMessages}
+                bodyText={activeRequest.body.text}
+                handleBodyChange={handleChange.body}
+                handleStream={
+                  canClientStream(selectedMethodType) &&
+                  (() => {
+                    sendIpc(GrpcRequestEventEnum.sendMessage);
+                    grpcDispatch(
+                      grpcActions.requestMessage(activeRequest._id, activeRequest.body.text),
+                    );
+                  })
+                }
+                handleCommit={
+                  canClientStream(selectedMethodType) &&
+                  (() => sendIpc(GrpcRequestEventEnum.commit))
+                }
+              />
+            </TabPanel>
+            <TabPanel className="react-tabs__tab-panel">
+              <h4 className="pad">Coming soon! 😊</h4>
+            </TabPanel>
+          </Tabs>
+        )}
+        {!selectedMethodType && (
+          <div className="overflow-hidden editor vertically-center text-center">
+            <p className="pad super-faint text-sm text-center">
+              <i className="fa fa-hand-peace-o" style={{ fontSize: '8rem', opacity: 0.3 }} />
+              <br />
+              <br />
+              Select a gRPC method from above
+            </p>
+          </div>
+        )}
       </PaneBody>
     </Pane>
   );
