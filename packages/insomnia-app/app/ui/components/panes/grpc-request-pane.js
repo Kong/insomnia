@@ -8,19 +8,14 @@ import OneLineEditor from '../codemirror/one-line-editor';
 import type { Settings } from '../../../models/settings';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import type { GrpcMethodDefinition, GrpcMethodType } from '../../../network/grpc/method';
-import {
-  canClientStream,
-  getMethodType,
-  GrpcMethodTypeName,
-} from '../../../network/grpc/method';
+import { canClientStream, getMethodType, GrpcMethodTypeName } from '../../../network/grpc/method';
 import * as models from '../../../models';
 import * as protoLoader from '../../../network/grpc/proto-loader';
-import type { GrpcRequestEvent } from '../../../common/grpc-events';
-import { ipcRenderer } from 'electron';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import GrpcSendButton from '../buttons/grpc-send-button';
 import { useGrpcDispatch } from '../../context/grpc/grpc-context';
 import grpcActions from '../../context/grpc/grpc-actions';
+import { useGrpcIpc } from './use-grpc-ipc';
 
 type Props = {
   forceRefreshKey: string,
@@ -98,10 +93,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
   // This is a common pattern in this codebase.
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
-  const sendIpc = React.useCallback(
-    (channel: GrpcRequestEvent) => ipcRenderer.send(channel, activeRequest._id),
-    [activeRequest._id],
-  );
+  const sendIpc = useGrpcIpc(activeRequest._id);
 
   return (
     <Pane type="request">

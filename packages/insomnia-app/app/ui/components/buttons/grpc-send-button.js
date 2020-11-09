@@ -2,12 +2,10 @@
 import React from 'react';
 import { useGrpcState } from '../../context/grpc/grpc-context';
 import type { GrpcMethodType } from '../../../network/grpc/method';
-import type { GrpcRequestEvent } from '../../../common/grpc-events';
-import { ipcRenderer } from 'electron';
-import { Button } from 'insomnia-components';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
 import { findGrpcRequestState } from '../../context/grpc/grpc-reducer';
+import { useGrpcIpc } from '../panes/use-grpc-ipc';
 
 type Props = {
   requestId: string,
@@ -15,10 +13,7 @@ type Props = {
 };
 
 const GrpcSendButton = ({ requestId, methodType }: Props) => {
-  const sendToGrpcMain = React.useCallback(
-    (channel: GrpcRequestEvent) => ipcRenderer.send(channel, requestId),
-    [requestId],
-  );
+  const sendIpc = useGrpcIpc(requestId);
 
   const config = React.useMemo(() => {
     let text = '';
@@ -28,12 +23,12 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
     switch (methodType) {
       case GrpcMethodTypeEnum.unary:
         text = 'Send';
-        onClick = () => sendToGrpcMain(GrpcRequestEventEnum.sendUnary);
+        onClick = () => sendIpc(GrpcRequestEventEnum.sendUnary);
         break;
 
       case GrpcMethodTypeEnum.client:
         text = 'Start';
-        onClick = () => sendToGrpcMain(GrpcRequestEventEnum.startStream);
+        onClick = () => sendIpc(GrpcRequestEventEnum.startStream);
         break;
 
       case GrpcMethodTypeEnum.server:
@@ -49,19 +44,23 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
     }
 
     return { text, onClick, disabled };
-  }, [sendToGrpcMain, methodType]);
+  }, [sendIpc, methodType]);
 
   const grpcState = useGrpcState();
   const requestState = findGrpcRequestState(grpcState, requestId);
 
   if (requestState.running) {
-    return <Button onClick={() => sendToGrpcMain(GrpcRequestEventEnum.cancel)}>Cancel</Button>;
+    return (
+      <button className="urlbar__send-btn" onClick={() => sendIpc(GrpcRequestEventEnum.cancel)}>
+        Cancel
+      </button>
+    );
   }
 
   return (
-    <Button onClick={config.onClick} disabled={config.disabled}>
+    <button className="urlbar__send-btn" onClick={config.onClick} disabled={config.disabled}>
       {config.text}
-    </Button>
+    </button>
   );
 };
 
