@@ -1,7 +1,6 @@
 // @flow
 import React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import { paneBodyClasses } from '../panes/pane';
 import classnames from 'classnames';
 import GRPCEditor from '../editors/grpc-editor';
 import Button from '../base/button';
@@ -13,137 +12,73 @@ type Message = {
 };
 
 type Props = {
-  handleRender: Function,
-  nunjucksPowerUserMode: boolean,
-  isVariableUncovered: boolean,
-  workspace: Workspace,
   settings: Settings,
-  showTabActions: boolean,
-  showBodyTab: boolean,
   messages: ?Array<Message>,
-  bodyText: ?string,
+  tabNamePrefix: 'Stream' | 'Response',
+  bodyText: string,
+  uniquenessKey: string,
+
+  handleBodyChange?: string => Promise<void>,
+  handleStream?: () => void,
+  handleCommit?: () => void,
 };
 
-const GrpcTabbedMessages = (props: Props) => {
-  const {
-    handleRender,
-    isVariableUncovered,
-    workspace,
-    settings,
-    showTabActions,
-    showBodyTab,
-    bodyText,
-    messages,
-  } = props;
+const GrpcTabbedMessages = ({
+  settings,
+  bodyText,
+  messages,
+  tabNamePrefix,
+  handleBodyChange,
+  handleCommit,
+  handleStream,
+  uniquenessKey,
+}: Props) => {
+  const shouldShowBody = !!handleBodyChange;
 
   return (
-    <Tabs className={classnames(paneBodyClasses, 'react-tabs', 'react-tabs--nested')}>
+    <Tabs key={uniquenessKey} className={classnames('react-tabs', 'react-tabs--nested')}>
       <div className="tab-action-wrapper">
         <div className="tab-action-tabs">
           <TabList>
-            {showBodyTab && messages && (
-              <React.Fragment>
-                <Tab>
-                  <button>Body</button>
-                </Tab>
-                {messages.map((message, index) => (
-                  <Tab key={message.id}>
-                    <button>Stream {index + 1}</button>
-                  </Tab>
-                ))}
-              </React.Fragment>
+            {shouldShowBody && (
+              <Tab>
+                <button>Body</button>
+              </Tab>
             )}
-            {!showBodyTab && messages && (
-              <React.Fragment>
-                {messages.map((message, index) => (
-                  <Tab key={message.id}>
-                    <button>Response {index + 1}</button>
-                  </Tab>
-                ))}
-              </React.Fragment>
-            )}
+            {messages?.map((m, index) => (
+              <Tab key={m.id}>
+                <button>
+                  {tabNamePrefix} {index + 1}
+                </button>
+              </Tab>
+            ))}
           </TabList>
         </div>
-        {showTabActions && (
-          <div>
-            <Button className="btn btn--compact btn--clicky margin-sm bg-default">
-              Stream <i className="fa fa-plus" />
-            </Button>
-            <Button className="btn btn--compact btn--clicky margin-sm bg-surprise">
-              Commit <i className="fa fa-arrow-right" />
-            </Button>
-          </div>
+        {handleStream && (
+          <Button
+            className="btn btn--compact btn--clicky margin-sm bg-default"
+            onClick={handleStream}>
+            Stream <i className="fa fa-plus" />
+          </Button>
+        )}
+        {handleCommit && (
+          <Button
+            className="btn btn--compact btn--clicky margin-sm bg-surprise"
+            onClick={handleCommit}>
+            Stream <i className="fa fa-plus" />
+          </Button>
         )}
       </div>
-      {/* Body Content */}
-      {showBodyTab && messages && (
-        <React.Fragment>
-          <TabPanel className="react-tabs__tab-panel editor-wrapper">
-            <GRPCEditor
-              uniquenessKey="123"
-              content={bodyText}
-              contentType={'application/json'}
-              fontSize={props.settings.editorFontSize}
-              indentSize={settings.editorIndentSize}
-              keyMap={settings.editorKeyMap}
-              lineWrapping={settings.editorLineWrapping}
-              indentWithTabs={settings.editorIndentWithTabs}
-              settings={settings}
-              workspace={workspace}
-              handleRender={handleRender}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              isVariableUncovered={isVariableUncovered}
-              onChange={value => console.log(value)}
-            />
-          </TabPanel>
-          {messages.map((message, index) => (
-            <TabPanel key={message.id} className="react-tabs__tab-panel editor-wrapper">
-              <GRPCEditor
-                readOnly
-                uniquenessKey={message.id}
-                content={message.text}
-                contentType={'application/json'}
-                fontSize={settings.editorFontSize}
-                indentSize={settings.editorIndentSize}
-                keyMap={settings.editorKeyMap}
-                lineWrapping={settings.editorLineWrapping}
-                indentWithTabs={settings.editorIndentWithTabs}
-                settings={settings}
-                workspace={workspace}
-                handleRender={handleRender}
-                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-                isVariableUncovered={isVariableUncovered}
-                onChange={value => console.log(value)}
-              />
-            </TabPanel>
-          ))}
-        </React.Fragment>
+      {shouldShowBody && (
+        <TabPanel className="react-tabs__tab-panel editor-wrapper">
+          <GRPCEditor content={bodyText} settings={settings} handleChange={handleBodyChange} />
+        </TabPanel>
       )}
-      {!showBodyTab && messages && (
-        <React.Fragment>
-          {messages.map((message, index) => (
-            <TabPanel key={message.id} className="react-tabs__tab-panel editor-wrapper">
-              <GRPCEditor
-                readOnly
-                uniquenessKey={message.id}
-                content={message.text}
-                contentType={'application/json'}
-                fontSize={settings.editorFontSize}
-                indentSize={settings.editorIndentSize}
-                keyMap={settings.editorKeyMap}
-                lineWrapping={settings.editorLineWrapping}
-                indentWithTabs={settings.editorIndentWithTabs}
-                settings={settings}
-                workspace={workspace}
-                handleRender={handleRender}
-                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-                isVariableUncovered={isVariableUncovered}
-                onChange={value => console.log(value)}
-              />
-            </TabPanel>
-          ))}
-        </React.Fragment>
-      )}
+      {messages?.map(m => (
+        <TabPanel key={m.id} className="react-tabs__tab-panel editor-wrapper">
+          <GRPCEditor content={m.text} settings={settings} readOnly />
+        </TabPanel>
+      ))}
     </Tabs>
   );
 };

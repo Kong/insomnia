@@ -44,3 +44,6 @@ export const GrpcMethodTypeName: { [GrpcMethodType]: string } = {
   [GrpcMethodTypeEnum.client]: 'Client Streaming',
   [GrpcMethodTypeEnum.bidi]: 'Bi-directional Streaming',
 };
+
+export const canClientStream = (methodType: GrpcMethodType) =>
+  methodType === GrpcMethodTypeEnum.client || methodType === GrpcMethodTypeEnum.bidi;

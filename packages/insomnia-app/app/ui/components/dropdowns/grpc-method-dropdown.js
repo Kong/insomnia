@@ -1,43 +1,28 @@
 // @flow
 import React from 'react';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
-
-type Method = {
-  path: string,
-};
+import type { GrpcMethodDefinition } from '../../../network/grpc/method';
 
 type Props = {
-  methods?: Array<Method>,
-  selectedMethod?: Method,
+  methods: Array<GrpcMethodDefinition>,
+  selectedMethod?: GrpcMethodDefinition,
+  handleChange: string => Promise<void>,
 };
 
-const demoMethods = [
-  '/hello.HelloService/someOtherStuff',
-  '/hello.HelloService/LotsOfGreetings',
-  '/hello.HelloService/aFewMore',
-];
-
-const GrpcMethodDropdown = (props: Props) => {
-  // const { methods, selectedMethod } = props;
-
-  return (
-    <Dropdown>
-      <DropdownButton>
-        /hello.HellowService/LotsOfGreetings
-        <i className="fa fa-caret-down" />
-      </DropdownButton>
-      {demoMethods.map(method => (
-        <DropdownItem
-          key={method}
-          onClick={() => {
-            console.log('DD Item clicked...');
-          }}
-          value={method}>
-          {method}
-        </DropdownItem>
-      ))}
-    </Dropdown>
-  );
-};
+const GrpcMethodDropdown = ({ methods, selectedMethod, handleChange }: Props) => (
+  <Dropdown>
+    <DropdownButton>
+      {selectedMethod?.path || 'Select Method'}
+      <i className="fa fa-caret-down" />
+    </DropdownButton>
+    {!methods.length && <DropdownItem disabled>No methods found</DropdownItem>}
+    {methods.map(({ path }) => (
+      <DropdownItem key={path} onClick={handleChange} value={path}>
+        {path === selectedMethod?.path && <i className="fa fa-check" />}
+        {path}
+      </DropdownItem>
+    ))}
+  </Dropdown>
+);
 
 export default GrpcMethodDropdown;

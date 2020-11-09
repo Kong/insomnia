@@ -16,7 +16,7 @@ import { ACTIVITY_HOME, isInsomnia } from '../../common/constants';
 import ActivityToggle from './activity-toggle';
 import { isGrpcRequest } from '../../models/helpers/is-model';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
-import GrpcRequestPane from './panes/grpc-request-pane-logic';
+import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
 import { ResizablePaneWrapper } from './panes/pane';
 
@@ -285,11 +285,6 @@ class WrapperDebug extends React.PureComponent<Props> {
                 activeRequest={activeRequest}
                 forceRefreshCounter={forceRefreshKey}
                 settings={settings}
-                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-                handleRender={handleRender}
-                isVariableUncovered={isVariableUncovered}
-                handleGetRenderContext={handleGetRenderContext}
-                workspace={activeWorkspace}
               />
             </ResizablePaneWrapper>
           </ErrorBoundary>
@@ -297,12 +292,9 @@ class WrapperDebug extends React.PureComponent<Props> {
           <ErrorBoundary showAlert>
             <ResizablePaneWrapper ref={handleSetResponsePaneRef}>
               <GrpcResponsePane
+                activeRequest={activeRequest}
+                forceRefreshCounter={forceRefreshKey}
                 settings={settings}
-                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-                handleRender={handleRender}
-                isVariableUncovered={isVariableUncovered}
-                handleGetRenderContext={handleGetRenderContext}
-                workspace={activeWorkspace}
               />
             </ResizablePaneWrapper>
           </ErrorBoundary>
