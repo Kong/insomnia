@@ -7,7 +7,7 @@ import * as protoLoader from './proto-loader';
 import callCache from './call-cache';
 import type { ServiceError } from './service-error';
 import { GrpcStatusEnum } from './service-error';
-import { Call } from '@grpc/grpc-js';
+import type { Call } from './call-cache';
 
 const createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | undefined => {
   if (!req.url) {
