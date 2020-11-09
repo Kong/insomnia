@@ -1,6 +1,6 @@
 // @flow
 
-import { getMethodType, GrpcMethodTypeEnum, GrpcMethodTypeName } from '../method';
+import { canClientStream, getMethodType, GrpcMethodTypeEnum, GrpcMethodTypeName } from '../method';
 import type { GrpcMethodType } from '../method';
 
 describe('getMethodType', () => {
@@ -38,4 +38,20 @@ describe('GrpcMethodTypeName', () => {
   ])('should return expected result', (type: GrpcMethodType, expectedString: string) => {
     expect(GrpcMethodTypeName[type]).toBe(expectedString);
   });
+});
+
+describe('canClientStream', () => {
+  it.each([
+    GrpcMethodTypeEnum.unary,
+    GrpcMethodTypeEnum.server,
+  ])('should not support client streaming with %o', (type: GrpcMethodType) =>
+    expect(canClientStream(type)).toBe(false),
+  );
+
+  it.each([
+    GrpcMethodTypeEnum.client,
+    GrpcMethodTypeEnum.bidi,
+  ])('should support client streaming with %o', (type: GrpcMethodType) =>
+    expect(canClientStream(type)).toBe(true),
+  );
 });
