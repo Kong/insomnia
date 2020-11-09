@@ -17,6 +17,17 @@ export const _default = () => (
   </div>
 );
 
+export const _bordered = () => (
+  <div style={{ width: '350px' }}>
+    <ListGroup bordered>
+      <ListGroupItem>Bordered</ListGroupItem>
+      <ListGroupItem>list</ListGroupItem>
+      <ListGroupItem>of</ListGroupItem>
+      <ListGroupItem>things...</ListGroupItem>
+    </ListGroup>
+  </div>
+);
+
 const unitTestResults = [
   {
     _id: 'ut_A',

@@ -118,13 +118,13 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
       <Modal ref={this._setModalRef}>
         <ModalHeader>Select Protofile</ModalHeader>
         <ModalBody className="wide pad">
-          <div className="row-spaced">
+          <div className="row-spaced margin-bottom bold">
             Files
             <FileInputButton
-              name=".proto file"
-              showFileIcon
+              showFileName="false"
+              staticLabel="Add Protofile"
               extensions={['.proto']}
-              className="btn btn--clicky"
+              className="btn btn--clicky pad-sm"
               onChange={this._handleProtoFileUpload}
             />
           </div>
