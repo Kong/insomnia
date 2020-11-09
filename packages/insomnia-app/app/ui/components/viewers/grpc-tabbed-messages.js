@@ -65,7 +65,7 @@ const GrpcTabbedMessages = ({
           <Button
             className="btn btn--compact btn--clicky margin-sm bg-surprise"
             onClick={handleCommit}>
-            Stream <i className="fa fa-plus" />
+            Commit <i className="fa fa-arrow-right" />
           </Button>
         )}
       </div>
