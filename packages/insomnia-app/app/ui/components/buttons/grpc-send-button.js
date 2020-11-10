@@ -3,8 +3,7 @@ import React from 'react';
 import type { GrpcMethodType } from '../../../network/grpc/method';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
-import { useGrpcIpc } from '../panes/use-grpc-ipc';
-import { grpcActions, useGrpc } from '../../context/grpc';
+import { grpcActions, useGrpc, useGrpcIpc } from '../../context/grpc';
 
 type Props = {
   requestId: string,
