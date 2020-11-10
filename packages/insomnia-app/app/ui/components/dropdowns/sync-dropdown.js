@@ -11,6 +11,7 @@ import Link from '../base/link';
 import SyncHistoryModal from '../modals/sync-history-modal';
 import SyncShareModal from '../modals/sync-share-modal';
 import SyncBranchesModal from '../modals/sync-branches-modal';
+import SyncDeleteModal from '../modals/sync-delete-modal';
 import VCS from '../../../sync/vcs';
 import type { Project, Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import ErrorModal from '../modals/error-modal';
@@ -19,12 +20,15 @@ import LoginModal from '../modals/login-modal';
 import * as session from '../../../account/session';
 import PromptButton from '../base/prompt-button';
 import * as db from '../../../common/database';
+import * as models from '../../../models';
 
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
 
 // Refresh dropdown periodically
 const REFRESH_PERIOD = 1000 * 60 * 1;
+
+const DEFAULT_BRANCH_NAME = 'master';
 
 type Props = {
   workspace: Workspace,
@@ -252,27 +256,61 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     await vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
   }
 
+  _handleShowDeleteModal() {
+    showModal(SyncDeleteModal, {
+      onHide: this.refreshMainAttributes,
+    });
+  }
+
   async _handleSetProject(p: Project) {
     const { vcs } = this.props;
     this.setState({ loadingProjectPull: true });
     await vcs.setProject(p);
-    await vcs.checkout([], 'master');
 
-    // Pull changes
-    await vcs.pull([]); // There won't be any existing docs since it's a new pull
-    const flushId = await db.bufferChanges();
-    for (const doc of await vcs.allDocuments()) {
-      await db.upsert(doc);
+    await vcs.checkout([], DEFAULT_BRANCH_NAME);
+
+    const remoteBranches = await vcs.getRemoteBranches();
+    const defaultBranchMissing = !remoteBranches.includes(DEFAULT_BRANCH_NAME);
+
+    // The default branch does not exist, so we create it and the workspace locally
+    if (defaultBranchMissing) {
+      const workspace: Workspace = await models.initModel(models.workspace.type, {
+        _id: p.rootDocumentId,
+        name: p.name,
+      });
+
+      await db.upsert(workspace);
+    } else {
+      // Pull changes
+      await vcs.pull([]); // There won't be any existing docs since it's a new pull
+      const flushId = await db.bufferChanges();
+      for (const doc of await vcs.allDocuments()) {
+        await db.upsert(doc);
+      }
+      await db.flushChanges(flushId);
     }
-    await db.flushChanges(flushId);
 
     await this.refreshMainAttributes({ loadingProjectPull: false });
   }
 
   async _handleSwitchBranch(branch: string) {
     const { vcs, syncItems } = this.props;
+
     try {
       const delta = await vcs.checkout(syncItems, branch);
+
+      if (branch === DEFAULT_BRANCH_NAME) {
+        const { historyCount } = this.state;
+        const defaultBranchHistoryCount = await vcs.getHistoryCount(DEFAULT_BRANCH_NAME);
+
+        // If the default branch has no snapshots, but the current branch does
+        // It will result in the workspace getting deleted
+        // So we filter out the workspace from the delta to prevent this
+        if (!defaultBranchHistoryCount && historyCount) {
+          delta.remove = delta.remove.filter(e => e.type !== models.workspace.type);
+        }
+      }
+
       await db.batchModifyDocs(delta);
     } catch (err) {
       showAlert({
@@ -478,6 +516,11 @@ class SyncDropdown extends React.PureComponent<Props, State> {
           <DropdownItem onClick={this._handleShowBranchesModal}>
             <i className="fa fa-code-fork" />
             Branches
+          </DropdownItem>
+
+          <DropdownItem onClick={this._handleShowDeleteModal} disabled={historyCount === 0}>
+            <i className="fa fa-remove" />
+            Delete Workspace
           </DropdownItem>
 
           <DropdownDivider>Local Branches</DropdownDivider>

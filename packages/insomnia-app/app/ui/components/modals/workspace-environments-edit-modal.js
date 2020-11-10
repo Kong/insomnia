@@ -101,6 +101,7 @@ const SidebarList = SortableContainer(
 @autobind
 class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   environmentEditorRef: ?EnvironmentEditor;
+  environmentColorInputRef: HTMLInputElement;
   colorChangeTimeout: any;
   saveTimeout: any;
   modal: Modal;
@@ -126,6 +127,10 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
 
   _setEditorRef(n: ?EnvironmentEditor) {
     this.environmentEditorRef = n;
+  }
+
+  _setInputColorRef(ref: HTMLInputElement | null) {
+    this.environmentColorInputRef = ref;
   }
 
   _setModalRef(n: Modal | null) {
@@ -329,33 +334,19 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   }
 
   async _handleClickColorChange(environment: Environment) {
-    let el = document.querySelector('#env-color-picker');
-
-    // Remove existing child so we reset the event handlers. This
-    // was easier than trying to clean them up later.
-    if (el && el.parentNode) {
-      el.parentNode.removeChild(el);
-    }
-
-    el = document.createElement('input');
-    el.id = 'env-color-picker';
-    el.type = 'color';
-    document.body && document.body.appendChild(el);
-
     const color = environment.color || '#7d69cb';
-
     if (!environment.color) {
       await this._handleChangeEnvironmentColor(environment, color);
     }
 
-    el.setAttribute('value', color);
-    el.addEventListener('input', (e: Event) => {
-      if (e.target instanceof HTMLInputElement) {
-        this._handleChangeEnvironmentColor(environment, e.target && e.target.value);
-      }
-    });
+    this.environmentColorInputRef?.click();
+  }
 
-    el.click();
+  _handleInputColorChange(event: SyntheticEvent<HTMLInputElement>) {
+    this._handleChangeEnvironmentColor(
+      this._getActiveEnvironment(),
+      event.target && event.target.value,
+    );
   }
 
   _saveChanges() {
@@ -473,6 +464,14 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
 
               {activeEnvironment && rootEnvironment !== activeEnvironment ? (
                 <React.Fragment>
+                  <input
+                    className="hidden"
+                    type="color"
+                    value={activeEnvironment.color}
+                    ref={this._setInputColorRef}
+                    onInput={this._handleInputColorChange}
+                  />
+
                   <Dropdown className="space-right" right>
                     <DropdownButton className="btn btn--clicky">
                       {activeEnvironment.color && (

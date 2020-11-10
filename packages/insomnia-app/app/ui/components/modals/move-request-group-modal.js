@@ -49,8 +49,10 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    const newRequestGroup = await models.requestGroup.duplicate(requestGroup);
-    await models.requestGroup.update(newRequestGroup, {
+    // TODO: if there are gRPC requests in a request group
+    //  we should also copy the protofiles to the destination workspace - INS-267
+
+    await models.requestGroup.duplicate(requestGroup, {
       metaSortKey: -1e9,
       parentId: selectedWorkspaceId,
       name: requestGroup.name, // Because duplicating will add (Copy) suffix
@@ -86,7 +88,7 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
             <div className="form-control form-control--outlined">
               <label>
                 New Workspace&nbsp;
-                <HelpTooltip>Workspace will be moved to the root of the new workspace</HelpTooltip>
+                <HelpTooltip>Folder will be moved to the root of the new workspace</HelpTooltip>
                 <select onChange={this._handleChangeSelectedWorkspace} value={selectedWorkspaceId}>
                   <option value="n/a">-- Select Workspace --</option>
                   {workspaces.map(w => (

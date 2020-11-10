@@ -1,5 +1,5 @@
 {
-  "version": "2020.4.0",
+  "version": "2020.4.2",
   "name": "insomnia",
   "executableName": "insomnia",
   "appId": "com.insomnia.app",
@@ -16,7 +16,6 @@
   "githubRepo": "insomnia",
   "gaId": "UA-8499472-34",
   "gaLocation": "https://core.lytics.insomnia.rest",
-  "gravatarEmail": "avatar.core@insomnia.rest",
   "plugins": [
     "insomnia-plugin-base64",
     "insomnia-plugin-hash",

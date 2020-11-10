@@ -280,7 +280,10 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
       title = await render(str);
       const context = await renderContext();
       const con = context.context.getKeysContext();
-      title = '{' + con.keyContext[cleanedStr] + '}: ' + title;
+      const contextForKey = con.keyContext[cleanedStr];
+
+      // Only prefix the title with context, if context is found
+      title = contextForKey ? `{${contextForKey}}: ${title}` : title;
       innerHTML = isVariableUncovered ? title : cleanedStr;
     }
     dataError = 'off';

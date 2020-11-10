@@ -123,6 +123,14 @@ export function newAuth(type: string, oldAuth: RequestAuthentication = {}): Requ
 
     // HTTP Basic Authentication
     case AUTH_BASIC:
+      return {
+        type,
+        useISO88591: oldAuth.useISO88591 || false,
+        disabled: oldAuth.disabled || false,
+        username: oldAuth.username || '',
+        password: oldAuth.password || '',
+      };
+
     case AUTH_DIGEST:
     case AUTH_NTLM:
       return {

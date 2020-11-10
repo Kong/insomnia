@@ -795,18 +795,20 @@ class CodeEditor extends React.Component {
 
   _codemirrorValueBeforeChange(doc, change) {
     const value = this.codeMirror.getDoc().getValue();
+
+    // If we're in single-line mode, merge all changed lines into one
+    if (this.props.singleLine && change.text && change.text.length > 1) {
+      const text = change.text
+        .join('') // join all changed lines into one
+        .replace(/\n/g, ' '); // Convert all whitespace to spaces
+      change.update(change.from, change.to, [text]);
+    }
+
     // Suppress lint on empty doc or single space exists (default value)
     if (value.trim() === '') {
       this._codemirrorSmartSetOption('lint', false);
     } else {
       this._codemirrorSmartSetOption('lint', this.props.lintOptions || true);
-      // If we're in single-line mode, merge all changed lines into one
-      if (this.props.singleLine && change.text && change.text.length > 1) {
-        const text = change.text
-          .join('') // join all changed lines into one
-          .replace(/\n/g, ' '); // Convert all whitespace to spaces
-        change.update(change.from, change.to, [text]);
-      }
 
       // Don't allow non-breaking spaces because they break the GraphQL syntax
       if (doc.options.mode === 'graphql' && change.text && change.text.length > 1) {

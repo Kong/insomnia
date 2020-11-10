@@ -11,6 +11,7 @@ import * as templating from '../templating';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import orderedJSON from 'json-order';
+import * as templatingUtils from '../templating/utils';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -276,28 +277,30 @@ export async function getRenderContext(
   function getKeySource(subObject, inKey, inSource) {
     // Add key to map if it's not root
     if (inKey) {
-      keySource[inKey] = inSource;
+      keySource[templatingUtils.normalizeToDotAndBracketNotation(inKey)] = inSource;
     }
 
     // Recurse down for Objects and Arrays
     const typeStr = Object.prototype.toString.call(subObject);
     if (typeStr === '[object Object]') {
       for (const key of Object.keys(subObject)) {
-        getKeySource(subObject[key], inKey ? `${inKey}.${key}` : key, inSource);
+        getKeySource(subObject[key], templatingUtils.forceBracketNotation(inKey, key), inSource);
       }
     } else if (typeStr === '[object Array]') {
       for (let i = 0; i < subObject.length; i++) {
-        getKeySource(subObject[i], `${inKey}[${i}]`, inSource);
+        getKeySource(subObject[i], templatingUtils.forceBracketNotation(inKey, i), inSource);
       }
     }
   }
 
+  const inKey = templating.NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
+
   // Get Keys from root environment
-  getKeySource((rootEnvironment || {}).data, '', 'root');
+  getKeySource((rootEnvironment || {}).data, inKey, 'root');
 
   // Get Keys from sub environment
   if (subEnvironment) {
-    getKeySource(subEnvironment.data || {}, '', subEnvironment.name || '');
+    getKeySource(subEnvironment.data || {}, inKey, subEnvironment.name || '');
   }
 
   // Get Keys from ancestors (e.g. Folders)
@@ -309,7 +312,7 @@ export async function getRenderContext(
         ancestor.hasOwnProperty('environment') &&
         ancestor.hasOwnProperty('name')
       ) {
-        getKeySource(ancestor.environment || {}, '', ancestor.name || '');
+        getKeySource(ancestor.environment || {}, inKey, ancestor.name || '');
       }
     }
   }

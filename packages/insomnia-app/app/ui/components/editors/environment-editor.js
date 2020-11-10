@@ -4,6 +4,23 @@ import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
+
+// NeDB field names cannot begin with '$' or contain a period '.'
+// Docs: https://github.com/DeNA/nedb#inserting-documents
+const INVALID_NEDB_KEY_REGEX = /^\$|\./;
+
+export const ensureKeyIsValid = (key: string): string | null => {
+  if (key.match(INVALID_NEDB_KEY_REGEX)) {
+    return `"${key}" cannot begin with '$' or contain a '.'`;
+  }
+
+  if (key === NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME) {
+    return `"${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}" is a reserved key`; // verbiage WIP
+  }
+
+  return null;
+};
 
 export type EnvironmentInfo = {
   object: Object,
@@ -23,9 +40,10 @@ type Props = {
   lineWrapping: boolean,
 };
 
+// There was existing logic to also handle warnings, but it was removed in PR#2601 as there were no more warnings
+// to show. If warnings need to be added again, review git history to revert that particular change.
 type State = {
   error: string | null,
-  warning: string | null,
 };
 
 @autobind
@@ -36,13 +54,11 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     super(props);
     this.state = {
       error: null,
-      warning: null,
     };
   }
 
   _handleChange() {
     let error = null;
-    let warning = null;
     let value = null;
 
     // Check for JSON parse errors
@@ -53,18 +69,19 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     }
 
     // Check for invalid key names
+    // TODO: these only check root properties, not nested properties
     if (value && value.object) {
       for (const key of Object.keys(value.object)) {
-        if (!key.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
-          warning = `"${key}" must only contain letters, numbers, and underscores`;
+        error = ensureKeyIsValid(key);
+        if (error) {
           break;
         }
       }
     }
 
     // Call this last in case component unmounted
-    if (this.state.error !== error || this.state.warning !== warning) {
-      this.setState({ error, warning }, () => {
+    if (this.state.error !== error) {
+      this.setState({ error }, () => {
         this.props.didChange();
       });
     } else {
@@ -111,7 +128,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
       ...props
     } = this.props;
 
-    const { error, warning } = this.state;
+    const { error } = this.state;
 
     const defaultValue = orderedJSON.stringify(
       environmentInfo.object,
@@ -138,7 +155,6 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           {...(props: Object)}
         />
         {error && <p className="notice error margin">{error}</p>}
-        {!error && warning && <p className="notice warning margin">{warning}</p>}
       </div>
     );
   }
