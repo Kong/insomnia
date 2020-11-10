@@ -4,12 +4,13 @@ import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 import type { GrpcMethodDefinition } from '../../../network/grpc/method';
 
 type Props = {
+  disabled: boolean,
   methods: Array<GrpcMethodDefinition>,
   selectedMethod?: GrpcMethodDefinition,
   handleChange: string => Promise<void>,
 };
 
-const GrpcMethodDropdown = ({ methods, selectedMethod, handleChange }: Props) => (
+const GrpcMethodDropdown = ({ disabled, methods, selectedMethod, handleChange }: Props) => (
   <Dropdown>
     <DropdownButton>
       {selectedMethod?.path || 'Select Method'}
@@ -17,7 +18,7 @@ const GrpcMethodDropdown = ({ methods, selectedMethod, handleChange }: Props) =>
     </DropdownButton>
     {!methods.length && <DropdownItem disabled>No methods found</DropdownItem>}
     {methods.map(({ path }) => (
-      <DropdownItem key={path} onClick={handleChange} value={path}>
+      <DropdownItem key={path} onClick={handleChange} value={path} disabled={disabled}>
         {path === selectedMethod?.path && <i className="fa fa-check" />}
         {path}
       </DropdownItem>

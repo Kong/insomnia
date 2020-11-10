@@ -14,6 +14,7 @@ import * as protoLoader from '../../../network/grpc/proto-loader';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import GrpcSendButton from '../buttons/grpc-send-button';
 import { grpcActions, useGrpc, useGrpcIpc } from '../../context/grpc';
+import type { GrpcDispatch } from '../../context/grpc/grpc-actions';
 
 type Props = {
   forceRefreshKey: string,
@@ -43,7 +44,7 @@ type ChangeHandlers = {
 };
 
 // This will create cached change handlers for the url, body and method selection
-const getChangeHandlers = (request: GrpcRequest): ChangeHandlers => {
+const getChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): ChangeHandlers => {
   const url = async (value: string) => {
     await models.grpcRequest.update(request, { url: value });
   };
@@ -54,6 +55,7 @@ const getChangeHandlers = (request: GrpcRequest): ChangeHandlers => {
 
   const method = async (value: string) => {
     await models.grpcRequest.update(request, { protoMethodName: value });
+    dispatch(grpcActions.reset(request._id));
   };
 
   return { url, body, method };
@@ -67,7 +69,7 @@ const demoRequestMessages = [
 demoRequestMessages.sort((a, b) => a.created - b.created);
 
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
-  const [{ requestMessages }, grpcDispatch] = useGrpc(activeRequest._id);
+  const [{ requestMessages, running }, grpcDispatch] = useGrpc(activeRequest._id);
 
   const [methods, setMethods] = React.useState<Array<GrpcMethodDefinition>>([]);
 
@@ -86,7 +88,10 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
     [methods, activeRequest.protoMethodName],
   );
 
-  const handleChange = React.useMemo(() => getChangeHandlers(activeRequest), [activeRequest]);
+  const handleChange = React.useMemo(() => getChangeHandlers(activeRequest, grpcDispatch), [
+    grpcDispatch,
+    activeRequest,
+  ]);
 
   // Used to refresh input fields to their default value when switching between requests.
   // This is a common pattern in this codebase.
@@ -109,6 +114,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
           />
         </form>
         <GrpcMethodDropdown
+          disabled={running}
           methods={methods}
           selectedMethod={selectedMethod}
           handleChange={handleChange.method}
