@@ -43,22 +43,24 @@ type ChangeHandlers = {
   method: string => Promise<void>,
 };
 
-// This will create cached change handlers for the url, body and method selection
-const getChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): ChangeHandlers => {
-  const url = async (value: string) => {
-    await models.grpcRequest.update(request, { url: value });
-  };
+// This will create memoized change handlers for the url, body and method selection
+const useChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): ChangeHandlers => {
+  return React.useMemo(() => {
+    const url = async (value: string) => {
+      await models.grpcRequest.update(request, { url: value });
+    };
 
-  const body = async (value: string) => {
-    await models.grpcRequest.update(request, { body: { ...request.body, text: value } });
-  };
+    const body = async (value: string) => {
+      await models.grpcRequest.update(request, { body: { ...request.body, text: value } });
+    };
 
-  const method = async (value: string) => {
-    await models.grpcRequest.update(request, { protoMethodName: value });
-    dispatch(grpcActions.reset(request._id));
-  };
+    const method = async (value: string) => {
+      await models.grpcRequest.update(request, { protoMethodName: value });
+      dispatch(grpcActions.reset(request._id));
+    };
 
-  return { url, body, method };
+    return { url, body, method };
+  }, [request, dispatch]);
 };
 
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
@@ -81,10 +83,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
     [methods, activeRequest.protoMethodName],
   );
 
-  const handleChange = React.useMemo(() => getChangeHandlers(activeRequest, grpcDispatch), [
-    grpcDispatch,
-    activeRequest,
-  ]);
+  const handleChange = useChangeHandlers(activeRequest, grpcDispatch);
 
   // Used to refresh input fields to their default value when switching between requests.
   // This is a common pattern in this codebase.
