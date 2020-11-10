@@ -5,6 +5,7 @@ import path from 'path';
 import * as electron from 'electron';
 import * as errorHandling from './main/error-handling';
 import * as updates from './main/updates';
+import * as ipcGrpc from './main/ipc-grpc';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import * as database from './common/database';
@@ -52,6 +53,7 @@ app.on('ready', async () => {
 
   // Init the rest
   await updates.init();
+  ipcGrpc.init();
 });
 
 // Set as default protocol

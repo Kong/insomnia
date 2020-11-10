@@ -6,15 +6,12 @@ import SizeTag from '../tags/size-tag';
 import StatusTag from '../tags/status-tag';
 import TimeTag from '../tags/time-tag';
 import type { Settings } from '../../../models/settings';
+import type { GrpcRequest } from '../../../models/grpc-request';
 
 type Props = {
-  handleRender: Function,
-  handleGetRenderContext: Function,
-  nunjucksPowerUserMode: boolean,
-  isVariableUncovered: boolean,
-  workspace: Workspace,
+  forceRefreshKey: string,
+  activeRequest: GrpcRequest,
   settings: Settings,
-  response: ?Response,
 };
 
 const demoResponseMessages = [
@@ -24,8 +21,10 @@ const demoResponseMessages = [
 ];
 demoResponseMessages.sort((a, b) => a.created - b.created);
 
-const GrpcResponsePane = (props: Props) => {
-  const { handleRender, nunjucksPowerUserMode, isVariableUncovered, workspace, settings } = props;
+const GrpcResponsePane = ({ settings, activeRequest, forceRefreshKey }: Props) => {
+  // Used to refresh input fields to their default value when switching between requests.
+  // This is a common pattern in this codebase.
+  const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
   return (
     <Pane type="response">
@@ -38,12 +37,9 @@ const GrpcResponsePane = (props: Props) => {
       </PaneHeader>
       <PaneBody>
         <GrpcTabbedMessages
-          readOnly
+          uniquenessKey={uniquenessKey}
           settings={settings}
-          workspace={workspace}
-          handleRender={handleRender}
-          isVariableUncovered={isVariableUncovered}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
+          tabNamePrefix="Response"
           messages={demoResponseMessages}
         />
       </PaneBody>
