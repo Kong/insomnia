@@ -1,8 +1,10 @@
 // @flow
+import React from 'react';
 import { ipcRenderer } from 'electron';
 import { GrpcResponseEventEnum } from '../../../common/grpc-events';
-import grpcActions from './grpc-actions';
+import { grpcActions } from './grpc-actions';
 import type { GrpcDispatch } from './grpc-actions';
+import type { GrpcRequestEvent } from '../../../common/grpc-events';
 
 const listenForStart = (dispatch: GrpcDispatch) => {
   ipcRenderer.on(GrpcResponseEventEnum.start, (_, requestId) => {
@@ -50,9 +52,12 @@ const destroy = (): void => {
   ipcRenderer.removeAllListeners(GrpcResponseEventEnum.status);
 };
 
-const grpcIpcRenderer = {
+export const grpcIpcRenderer = {
   init,
   destroy,
 };
 
-export default grpcIpcRenderer;
+export const useGrpcIpc: string => GrpcRequestEvent => void = requestId =>
+  React.useCallback((channel: GrpcRequestEvent) => ipcRenderer.send(channel, requestId), [
+    requestId,
+  ]);

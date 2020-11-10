@@ -155,7 +155,7 @@ const _parseMessage = (request: Request, respond: ResponseCallbacks): Object | u
     return JSON.parse(request.body.text || '');
   } catch (e) {
     // TODO: How do we want to handle this case, where the message cannot be parsed?
-    //  Currently an error will be shown in console, but the stream will not be cancelled.
+    //  Currently an error will be shown, but the stream will not be cancelled.
     respond.sendError(request._id, e);
     return undefined;
   }

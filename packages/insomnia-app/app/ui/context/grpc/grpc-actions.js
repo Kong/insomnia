@@ -87,6 +87,4 @@ const status = (requestId: string, status: GrpcStatusObject): ErrorAction => ({
   payload: status,
 });
 
-const grpcActions = { reset, start, stop, responseMessage, requestMessage, error, status };
-
-export default grpcActions;
+export const grpcActions = { reset, start, stop, responseMessage, requestMessage, error, status };

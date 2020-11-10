@@ -4,10 +4,9 @@ import { Pane, PaneBody, PaneHeader } from './pane';
 import GrpcTabbedMessages from '../viewers/grpc-tabbed-messages.js';
 import type { Settings } from '../../../models/settings';
 import type { GrpcRequest } from '../../../models/grpc-request';
-import { useGrpcState } from '../../context/grpc/grpc-context';
-import { findGrpcRequestState } from '../../context/grpc/grpc-reducer';
 import GrpcStatusTag from '../tags/grpc-status-tag';
 import GrpcSpinner from '../grpc-spinner';
+import { useGrpcRequestState } from '../../context/grpc';
 
 type Props = {
   forceRefreshKey: string,
@@ -20,8 +19,7 @@ const GrpcResponsePane = ({ settings, activeRequest, forceRefreshKey }: Props) =
   // This is a common pattern in this codebase.
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
-  const grpcState = useGrpcState();
-  const { responseMessages, status, error } = findGrpcRequestState(grpcState, activeRequest._id);
+  const { responseMessages, status, error } = useGrpcRequestState(activeRequest._id);
 
   return (
     <Pane type="response">

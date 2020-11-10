@@ -1,12 +1,13 @@
 // @flow
 import React from 'react';
-import grpcIpcRenderer from './grpc-ipc-renderer';
-import { grpcReducer } from './grpc-reducer';
+import { grpcIpcRenderer } from './grpc-ipc-renderer';
+import { findGrpcRequestState, grpcReducer } from './grpc-reducer';
 import type { GrpcDispatch } from './grpc-actions';
-import type { GrpcState } from './grpc-reducer';
+import type { GrpcRequestState, GrpcState } from './grpc-reducer';
 
 type Props = { children: React.ReactNode };
 
+// These should not be exported, so that they are only accessed in a controlled manner
 const GrpcStateContext = React.createContext<GrpcState | undefined>();
 const GrpcDispatchContext = React.createContext<GrpcDispatch | undefined>();
 
@@ -26,14 +27,18 @@ export const GrpcProvider = ({ children }: Props) => {
   );
 };
 
-export const useGrpcState = (): GrpcState => {
+export const useGrpcRequestState = (requestId: string): GrpcRequestState => {
   const context = React.useContext(GrpcStateContext);
 
   if (context === undefined) {
-    throw new Error('useGrpcState must be used within a GrpcProvider');
+    throw new Error('useGrpcRequestState must be used within a GrpcProvider');
   }
 
-  return context;
+  if (!requestId) {
+    throw new Error('useGrpcRequestState must be invoked with a request id');
+  }
+
+  return findGrpcRequestState(context, requestId);
 };
 
 export const useGrpcDispatch = (): GrpcDispatch => {
@@ -46,4 +51,7 @@ export const useGrpcDispatch = (): GrpcDispatch => {
   return context;
 };
 
-export const useGrpc = (): [State, GrpcDispatch] => [useGrpcState(), useGrpcDispatch()];
+export const useGrpc = (requestId: string): [GrpcRequestState, GrpcDispatch] => [
+  useGrpcRequestState(requestId),
+  useGrpcDispatch(),
+];

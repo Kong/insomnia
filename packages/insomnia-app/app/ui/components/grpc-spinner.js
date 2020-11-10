@@ -1,8 +1,7 @@
 // @flow
 import React from 'react';
-import { useGrpcState } from '../context/grpc/grpc-context';
-import { findGrpcRequestState } from '../context/grpc/grpc-reducer';
 import classnames from 'classnames';
+import { useGrpcRequestState } from '../context/grpc';
 
 type Props = {
   className?: string,
@@ -10,8 +9,7 @@ type Props = {
 };
 
 const GrpcSpinner = ({ className, requestId }: Props) => {
-  const grpcState = useGrpcState();
-  const { running } = findGrpcRequestState(grpcState, requestId);
+  const { running } = useGrpcRequestState(requestId);
 
   return running && <i className={classnames('fa fa-refresh fa-spin', className)} />;
 };

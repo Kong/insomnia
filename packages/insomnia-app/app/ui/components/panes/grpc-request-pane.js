@@ -13,10 +13,7 @@ import * as models from '../../../models';
 import * as protoLoader from '../../../network/grpc/proto-loader';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import GrpcSendButton from '../buttons/grpc-send-button';
-import { useGrpc } from '../../context/grpc/grpc-context';
-import grpcActions from '../../context/grpc/grpc-actions';
-import { useGrpcIpc } from './use-grpc-ipc';
-import { findGrpcRequestState } from '../../context/grpc/grpc-reducer';
+import { grpcActions, useGrpc, useGrpcIpc } from '../../context/grpc';
 
 type Props = {
   forceRefreshKey: string,
@@ -70,10 +67,9 @@ const demoRequestMessages = [
 demoRequestMessages.sort((a, b) => a.created - b.created);
 
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
-  const [grpcState, grpcDispatch] = useGrpc();
+  const [{ requestMessages }, grpcDispatch] = useGrpc(activeRequest._id);
 
   const [methods, setMethods] = React.useState<Array<GrpcMethodDefinition>>([]);
-  const { requestMessages } = findGrpcRequestState(grpcState, activeRequest._id);
 
   // Reload the methods, on first mount, or if the request protoFile changes
   React.useEffect(() => {

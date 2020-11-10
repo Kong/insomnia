@@ -8,14 +8,11 @@ import { grpcStatusObjectSchema } from '../__schemas__';
 import { createBuilder } from '@develohpanda/fluent-builder';
 
 jest.mock('../grpc-actions', () => ({
-  __esModule: true,
-  default: {
-    start: jest.fn(),
-    stop: jest.fn(),
-    responseMessage: jest.fn(),
-    error: jest.fn(),
-    status: jest.fn(),
-  },
+  start: jest.fn(),
+  stop: jest.fn(),
+  responseMessage: jest.fn(),
+  error: jest.fn(),
+  status: jest.fn(),
 }));
 
 describe('init', () => {

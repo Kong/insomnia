@@ -1,12 +1,10 @@
 // @flow
 import React from 'react';
-import { useGrpc } from '../../context/grpc/grpc-context';
 import type { GrpcMethodType } from '../../../network/grpc/method';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
-import { findGrpcRequestState } from '../../context/grpc/grpc-reducer';
 import { useGrpcIpc } from '../panes/use-grpc-ipc';
-import grpcActions from '../../context/grpc/grpc-actions';
+import { grpcActions, useGrpc } from '../../context/grpc';
 
 type Props = {
   requestId: string,
@@ -47,10 +45,9 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
     return { text, onClick, disabled };
   }, [sendIpc, methodType]);
 
-  const [grpcState, grpcDispatch] = useGrpc();
-  const requestState = findGrpcRequestState(grpcState, requestId);
+  const [{ running }, grpcDispatch] = useGrpc(requestId);
 
-  if (requestState.running) {
+  if (running) {
     return (
       <button className="urlbar__send-btn" onClick={() => sendIpc(GrpcRequestEventEnum.cancel)}>
         Cancel
