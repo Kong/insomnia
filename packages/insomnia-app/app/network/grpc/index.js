@@ -13,14 +13,14 @@ import parseGrpcUrl from './parse-grpc-url';
 const _createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | undefined => {
   const { url, enableTls } = parseGrpcUrl(req.url);
 
-  if (url) {
+  if (!url) {
     respond.sendError(req._id, new Error('gRPC url not specified'));
     return undefined;
   }
 
   const credentials = enableTls ? grpc.credentials.createSsl() : grpc.credentials.createInsecure();
 
-  console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLSÏ`);
+  console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`);
   const Client = grpc.makeGenericClientConstructor({});
   return new Client(url, credentials);
 };

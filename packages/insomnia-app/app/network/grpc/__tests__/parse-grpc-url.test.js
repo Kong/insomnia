@@ -16,7 +16,7 @@ describe('parseGrpcUrl', () => {
     ['grpcs://grpcb.in:9000', 'grpcb.in:9000'],
     ['GRPCS://GRPCB.IN:9000', 'grpcb.in:9000'],
     ['grpcs://custom.co', 'custom.co'],
-  ])('should enable tls with no grpcs:// protocol: %s', (input, expected) => {
+  ])('should enable tls with grpcs:// protocol: %s', (input, expected) => {
     expect(parseGrpcUrl(input)).toStrictEqual({
       url: expected,
       enableTls: true,
@@ -34,7 +34,7 @@ describe('parseGrpcUrl', () => {
     });
   });
 
-  it.each([null, undefined, ''])('can handle falsey values', input => {
+  it.each([null, undefined, ''])('can handle falsey urls', input => {
     expect(parseGrpcUrl(input)).toStrictEqual({
       url: '',
       enableTls: false,
