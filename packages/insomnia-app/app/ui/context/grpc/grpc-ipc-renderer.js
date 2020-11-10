@@ -34,7 +34,7 @@ const listenForStatus = (dispatch: GrpcDispatch) => {
   });
 };
 
-export const createGrpcIpcListeners = (dispatch: GrpcDispatch): void => {
+const init = (dispatch: GrpcDispatch): void => {
   listenForStart(dispatch);
   listenForStop(dispatch);
   listenForData(dispatch);
@@ -42,10 +42,17 @@ export const createGrpcIpcListeners = (dispatch: GrpcDispatch): void => {
   listenForStatus(dispatch);
 };
 
-export const destroyGrpcIpcListeners = (): void => {
+const destroy = (): void => {
   ipcRenderer.removeAllListeners(GrpcResponseEventEnum.start);
   ipcRenderer.removeAllListeners(GrpcResponseEventEnum.end);
   ipcRenderer.removeAllListeners(GrpcResponseEventEnum.data);
   ipcRenderer.removeAllListeners(GrpcResponseEventEnum.error);
   ipcRenderer.removeAllListeners(GrpcResponseEventEnum.status);
 };
+
+const grpcIpcRenderer = {
+  init,
+  destroy,
+};
+
+export default grpcIpcRenderer;

@@ -1,4 +1,4 @@
-import * as ipcGrpc from '../ipc-grpc';
+import * as grpcIpcMain from '../grpc-ipc-main';
 import * as grpc from '../../network/grpc';
 import { ipcMain } from 'electron';
 import { GrpcRequestEventEnum } from '../../common/grpc-events';
@@ -6,12 +6,12 @@ import { ResponseCallbacks } from '../../network/grpc/response-callbacks';
 
 jest.mock('../../network/grpc');
 
-describe('ipc-grpc', () => {
+describe('grpcIpcMain', () => {
   const event = { reply: jest.fn() };
   const id = 'abc';
 
   beforeEach(() => {
-    ipcGrpc.init(); // ipcMain is mocked
+    grpcIpcMain.init(); // ipcMain is mocked
   });
 
   it.each(Object.values(GrpcRequestEventEnum))('should add listener for channel: %s', channel => {

@@ -1,7 +1,7 @@
 // @flow
 
 import grpcActions from '../grpc-actions';
-import { createGrpcIpcListeners, destroyGrpcIpcListeners } from '../ipc-listeners';
+import grpcIpcRenderer from '../grpc-ipc-renderer';
 import { ipcRenderer } from 'electron';
 import { GrpcResponseEventEnum } from '../../../../common/grpc-events';
 import { grpcStatusObjectSchema } from '../__schemas__';
@@ -18,13 +18,13 @@ jest.mock('../grpc-actions', () => ({
   },
 }));
 
-describe('createGrpcIpcListeners', () => {
+describe('init', () => {
   const e = {};
   const id = 'abc';
   const dispatch = jest.fn();
 
   beforeEach(() => {
-    createGrpcIpcListeners(dispatch);
+    grpcIpcRenderer.init(dispatch);
   });
 
   it.each(Object.values(GrpcResponseEventEnum))('should add listener for channel: %s', channel => {
@@ -90,11 +90,11 @@ describe('createGrpcIpcListeners', () => {
   });
 });
 
-describe('destroyGrpcIpcListeners', () => {
+describe('destroy', () => {
   it.each(Object.values(GrpcResponseEventEnum))(
     'should remove listeners for channel: %s',
     channel => {
-      destroyGrpcIpcListeners();
+      grpcIpcRenderer.destroy();
       expect(ipcRenderer.removeAllListeners).toHaveBeenCalledWith(channel);
     },
   );
