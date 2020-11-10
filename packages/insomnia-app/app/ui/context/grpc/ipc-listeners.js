@@ -4,8 +4,6 @@ import { GrpcResponseEventEnum } from '../../../common/grpc-events';
 import grpcActions from './grpc-actions';
 import type { GrpcDispatch } from './grpc-actions';
 
-// TODO: Do we need to clear listeners or will they overwrite?
-
 const listenForStart = (dispatch: GrpcDispatch) => {
   ipcRenderer.on(GrpcResponseEventEnum.start, (_, requestId) => {
     dispatch(grpcActions.start(requestId));
