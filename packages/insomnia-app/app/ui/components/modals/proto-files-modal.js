@@ -121,7 +121,6 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
           <div className="row-spaced margin-bottom bold">
             Files
             <FileInputButton
-              showFileName="false"
               staticLabel="Add Protofile"
               extensions={['.proto']}
               className="btn btn--clicky pad-sm"
