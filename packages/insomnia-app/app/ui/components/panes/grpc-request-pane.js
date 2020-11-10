@@ -61,13 +61,6 @@ const getChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): Change
   return { url, body, method };
 };
 
-const demoRequestMessages = [
-  { id: '2', created: 1604589843467, text: '{"greeting": "Hello Stream 2"}' },
-  { id: '3', created: 1604589843468, text: '{"greeting": "Hello Stream 3"}' },
-  { id: '1', created: 1604589843466, text: '{"greeting": "Hello Stream 1"}' },
-];
-demoRequestMessages.sort((a, b) => a.created - b.created);
-
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
   const [{ requestMessages, running }, grpcDispatch] = useGrpc(activeRequest._id);
 
@@ -141,19 +134,14 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
                 messages={requestMessages}
                 bodyText={activeRequest.body.text}
                 handleBodyChange={handleChange.body}
-                handleStream={
-                  canClientStream(selectedMethodType) &&
-                  (() => {
-                    sendIpc(GrpcRequestEventEnum.sendMessage);
-                    grpcDispatch(
-                      grpcActions.requestMessage(activeRequest._id, activeRequest.body.text),
-                    );
-                  })
-                }
-                handleCommit={
-                  canClientStream(selectedMethodType) &&
-                  (() => sendIpc(GrpcRequestEventEnum.commit))
-                }
+                showActions={running && canClientStream(selectedMethodType)}
+                handleStream={() => {
+                  sendIpc(GrpcRequestEventEnum.sendMessage);
+                  grpcDispatch(
+                    grpcActions.requestMessage(activeRequest._id, activeRequest.body.text),
+                  );
+                }}
+                handleCommit={() => sendIpc(GrpcRequestEventEnum.commit)}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel">
