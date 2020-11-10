@@ -1,9 +1,9 @@
 // @flow
 import { findGrpcRequestState, grpcReducer } from '../grpc-reducer';
 import type { GrpcRequestState } from '../grpc-reducer';
-import grpcActions from '../grpc-actions';
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { grpcMessageSchema, grpcStatusObjectSchema, requestStateSchema } from '../__schemas__';
+import { grpcActions } from '../grpc-actions';
 
 const messageBuilder = createBuilder(grpcMessageSchema);
 const requestStateBuilder = createBuilder(requestStateSchema);

@@ -1,11 +1,11 @@
 // @flow
 
 import grpcActions from '../grpc-actions';
-import grpcIpcRenderer from '../grpc-ipc-renderer';
 import { ipcRenderer } from 'electron';
 import { GrpcResponseEventEnum } from '../../../../common/grpc-events';
 import { grpcStatusObjectSchema } from '../__schemas__';
 import { createBuilder } from '@develohpanda/fluent-builder';
+import { grpcIpcRenderer } from '../grpc-ipc-renderer';
 
 jest.mock('../grpc-actions', () => ({
   start: jest.fn(),
