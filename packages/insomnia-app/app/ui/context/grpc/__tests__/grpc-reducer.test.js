@@ -3,28 +3,11 @@ import { findGrpcRequestState, grpcReducer } from '../grpc-reducer';
 import type { GrpcRequestState } from '../grpc-reducer';
 import grpcActions from '../grpc-actions';
 import { createBuilder } from '@develohpanda/fluent-builder';
-import type { GrpcStatusObject } from '../../../../network/grpc/service-error';
-import { GrpcStatusEnum } from '../../../../network/grpc/service-error';
+import { grpcMessageSchema, grpcStatusObjectSchema, requestStateSchema } from '../__schemas__';
 
-const messageBuilder = createBuilder<GrpcMessage>({
-  id: () => Math.random(),
-  text: () => '{}',
-  created: () => Date.now(),
-});
-
-const requestStateBuilder = createBuilder<GrpcRequestState>({
-  running: () => false,
-  requestMessages: () => [],
-  responseMessages: () => [],
-  status: () => undefined,
-  error: () => undefined,
-});
-
-const grpcStatusBuilder = createBuilder<GrpcStatusObject>({
-  code: () => GrpcStatusEnum.OK,
-  details: () => 'details',
-  metadatA: () => ({}),
-});
+const messageBuilder = createBuilder(grpcMessageSchema);
+const requestStateBuilder = createBuilder(requestStateSchema);
+const grpcStatusBuilder = createBuilder(grpcStatusObjectSchema);
 
 const expectedInitialState: GrpcRequestState = {
   running: false,
