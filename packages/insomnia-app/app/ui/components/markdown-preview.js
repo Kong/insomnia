@@ -63,6 +63,9 @@ class MarkdownPreview extends PureComponent {
     }
 
     for (const a of el.querySelectorAll('a')) {
+      if (a.getAttribute('href') && a.getAttribute('href').startsWith('#')) {
+        continue;
+      }
       a.title = `Open ${a.getAttribute('href')} in browser`;
       a.removeEventListener('click', this._handleClickLink);
       a.addEventListener('click', this._handleClickLink);
