@@ -10,7 +10,7 @@ import type { Workspace } from '../../../models/workspace';
 import Modal from '../base/modal';
 import ProtoFileList from '../proto-file/proto-file-list';
 import FileInputButton from '../base/file-input-button';
-import { showError } from './index';
+import { showAlert, showError } from './index';
 import fs from 'fs';
 import path from 'path';
 
@@ -72,9 +72,25 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     this.setState({ selectedProtoFileId: id });
   }
 
-  _handleDelete(protoFile: ProtoFile) {
-    // TODO: to be built in INS-209
-    console.log(`delete ${protoFile._id}`);
+  async _handleDelete(protoFile: ProtoFile) {
+    showAlert({
+      title: `Delete ${protoFile.name}`,
+      message: (
+        <span>
+          Really delete <strong>{protoFile.name}</strong>? All requests that use this proto file
+          will stop working.
+        </span>
+      ),
+      addCancel: true,
+      onConfirm: async () => {
+        await models.protoFile.remove(protoFile);
+
+        // if the deleted protoFile was previously selected, clear the selection
+        if (this.state.selectedProtoFileId === protoFile._id) {
+          this.setState({ selectedProtoFileId: '' });
+        }
+      },
+    });
   }
 
   async _handleProtoFileUpload(filePath: string) {
@@ -102,13 +118,12 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
       <Modal ref={this._setModalRef}>
         <ModalHeader>Select Protofile</ModalHeader>
         <ModalBody className="wide pad">
-          <div className="row-spaced">
+          <div className="row-spaced margin-bottom bold">
             Files
             <FileInputButton
-              name=".proto file"
-              showFileIcon
+              staticLabel="Add Protofile"
               extensions={['.proto']}
-              className="btn btn--clicky"
+              className="btn btn--clicky pad-sm"
               onChange={this._handleProtoFileUpload}
             />
           </div>

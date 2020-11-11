@@ -49,8 +49,10 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    const newRequestGroup = await models.requestGroup.duplicate(requestGroup);
-    await models.requestGroup.update(newRequestGroup, {
+    // TODO: if there are gRPC requests in a request group
+    //  we should also copy the protofiles to the destination workspace - INS-267
+
+    await models.requestGroup.duplicate(requestGroup, {
       metaSortKey: -1e9,
       parentId: selectedWorkspaceId,
       name: requestGroup.name, // Because duplicating will add (Copy) suffix
