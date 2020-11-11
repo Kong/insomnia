@@ -12,7 +12,9 @@ describe('init()', () => {
       description: '',
       protoFileId: '',
       protoMethodName: '',
-      body: {},
+      body: {
+        text: '{}',
+      },
       metaSortKey: -1478795580200,
       idPrivate: false,
     });
@@ -38,7 +40,9 @@ describe('create()', () => {
       url: '',
       protoFileId: '',
       protoMethodName: '',
-      body: {},
+      body: {
+        text: '{}',
+      },
       metaSortKey: -1478795580200,
       idPrivate: false,
       type: 'GrpcRequest',

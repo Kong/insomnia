@@ -15,6 +15,8 @@ import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import GrpcSendButton from '../buttons/grpc-send-button';
 import { grpcActions, useGrpc, useGrpcIpc } from '../../context/grpc';
 import type { GrpcDispatch } from '../../context/grpc/grpc-actions';
+import { showModal } from '../modals';
+import ProtoFilesModal from '../modals/proto-files-modal';
 
 type Props = {
   forceRefreshKey: string,
@@ -41,6 +43,7 @@ type ChangeHandlers = {
   url: string => Promise<void>,
   body: string => Promise<void>,
   method: string => Promise<void>,
+  protoFile: string => Promise<void>,
 };
 
 // This will create memoized change handlers for the url, body and method selection
@@ -59,7 +62,25 @@ const useChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): Change
       dispatch(grpcActions.reset(request._id));
     };
 
-    return { url, body, method };
+    const protoFile = async () => {
+      showModal(ProtoFilesModal, {
+        preselectProtoFileId: request.protoFileId,
+        onSave: async (protoFileId: string) => {
+          if (request.protoFileId !== protoFileId) {
+            const initial = models.grpcRequest.init();
+
+            await models.grpcRequest.update(request, {
+              protoFileId,
+              body: initial.body,
+              protoMethodName: initial.protoMethodName,
+            });
+            dispatch(grpcActions.reset(request._id));
+          }
+        },
+      });
+    };
+
+    return { url, body, method, protoFile };
   }, [request, dispatch]);
 };
 
@@ -110,6 +131,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
           methods={methods}
           selectedMethod={selectedMethod}
           handleChange={handleChange.method}
+          handleChangeProtoFile={handleChange.protoFile}
         />
 
         <GrpcSendButton requestId={activeRequest._id} methodType={selectedMethodType} />
