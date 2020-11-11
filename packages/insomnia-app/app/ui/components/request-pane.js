@@ -5,33 +5,31 @@ import type {
   RequestBody,
   RequestHeader,
   RequestParameter,
-} from '../../../models/request';
-import type { Workspace } from '../../../models/workspace';
-import type { OAuth2Token } from '../../../models/o-auth-2-token';
+} from '../../models/request';
+import type { Workspace } from '../../models/workspace';
+import type { OAuth2Token } from '../../models/o-auth-2-token';
 import autobind from 'autobind-decorator';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
 import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import { getAuthTypeName, getContentTypeName } from '../../../common/constants';
-import * as db from '../../../common/database';
-import * as models from '../../../models';
-import AuthDropdown from '../dropdowns/auth-dropdown';
-import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
-import AuthWrapper from '../editors/auth/auth-wrapper';
-import BodyEditor from '../editors/body/body-editor';
-import RequestHeadersEditor from '../editors/request-headers-editor';
-import ErrorBoundary from '../error-boundary';
-import MarkdownPreview from '../markdown-preview';
-import { showModal } from '../modals';
-import RequestSettingsModal from '../modals/request-settings-modal';
-import RenderedQueryString from '../rendered-query-string';
-import RequestUrlBar from '../request-url-bar.js';
-import type { Settings } from '../../../models/settings';
-import RequestParametersEditor from '../editors/request-parameters-editor';
-import type { ForceToWorkspace } from '../../redux/modules/helpers';
-import PlaceholderRequestPane from './placeholder-request-pane';
-import { Pane, paneBodyClasses, PaneHeader } from './pane';
-import classnames from 'classnames';
+import { getAuthTypeName, getContentTypeName } from '../../common/constants';
+import * as db from '../../common/database';
+import { hotKeyRefs } from '../../common/hotkeys';
+import * as models from '../../models';
+import AuthDropdown from './dropdowns/auth-dropdown';
+import ContentTypeDropdown from './dropdowns/content-type-dropdown';
+import AuthWrapper from './editors/auth/auth-wrapper';
+import BodyEditor from './editors/body/body-editor';
+import RequestHeadersEditor from './editors/request-headers-editor';
+import ErrorBoundary from './error-boundary';
+import Hotkey from './hotkey';
+import MarkdownPreview from './markdown-preview';
+import { showModal } from './modals/index';
+import RequestSettingsModal from './modals/request-settings-modal';
+import RenderedQueryString from './rendered-query-string';
+import RequestUrlBar from './request-url-bar.js';
+import type { Settings } from '../../models/settings';
+import RequestParametersEditor from './editors/request-parameters-editor';
 
 type Props = {
   // Functions
@@ -55,7 +53,7 @@ type Props = {
   updateSettingsUseBulkHeaderEditor: Function,
   updateSettingsUseBulkParametersEditor: Function,
   handleImport: Function,
-  handleImportFile: (forceToWorkspace?: ForceToWorkspace) => void,
+  handleImportFile: Function,
 
   // Other
   workspace: Workspace,
@@ -111,6 +109,14 @@ class RequestPane extends React.PureComponent<Props> {
     updateSettingsUseBulkParametersEditor(!settings.useBulkParametersEditor);
   }
 
+  _handleImportFile() {
+    this.props.handleImportFile();
+  }
+
+  _handleCreateRequest() {
+    this.props.handleCreateRequest();
+  }
+
   _handleImportQueryFromUrl() {
     const { request, forceUpdateRequest } = this.props;
 
@@ -144,8 +150,6 @@ class RequestPane extends React.PureComponent<Props> {
       handleGenerateCode,
       handleGetRenderContext,
       handleImport,
-      handleImportFile,
-      handleCreateRequest,
       handleRender,
       handleSend,
       handleSendAndDownload,
@@ -168,15 +172,69 @@ class RequestPane extends React.PureComponent<Props> {
       downloadPath,
     } = this.props;
 
+    const paneClasses = 'request-pane theme--pane pane';
+    const paneHeaderClasses = 'pane__header theme--pane__header';
+    const paneBodyClasses = 'pane__body theme--pane__body';
+
     const hotKeyRegistry = settings.hotKeyRegistry;
 
     if (!request) {
       return (
-        <PlaceholderRequestPane
-          hotKeyRegistry={hotKeyRegistry}
-          handleImportFile={handleImportFile}
-          handleCreateRequest={handleCreateRequest}
-        />
+        <section className={paneClasses}>
+          <header className={paneHeaderClasses} />
+          <div className={paneBodyClasses + ' pane__body--placeholder'}>
+            <div>
+              <table className="table--fancy">
+                <tbody>
+                  <tr>
+                    <td>New Request</td>
+                    <td className="text-right">
+                      <code>
+                        <Hotkey
+                          keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]}
+                          useFallbackMessage
+                        />
+                      </code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Switch Requests</td>
+                    <td className="text-right">
+                      <code>
+                        <Hotkey
+                          keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_QUICK_SWITCH.id]}
+                          useFallbackMessage
+                        />
+                      </code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Edit Environments</td>
+                    <td className="text-right">
+                      <code>
+                        <Hotkey
+                          keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]}
+                          useFallbackMessage
+                        />
+                      </code>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div className="text-center pane__body--placeholder__cta">
+                <button className="btn inline-block btn--clicky" onClick={this._handleImportFile}>
+                  Import from File
+                </button>
+                <button
+                  className="btn inline-block btn--clicky"
+                  onClick={this._handleCreateRequest}>
+                  New Request
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
       );
     }
 
@@ -192,8 +250,8 @@ class RequestPane extends React.PureComponent<Props> {
     const uniqueKey = `${forceRefreshCounter}::${request._id}`;
 
     return (
-      <Pane type="request">
-        <PaneHeader>
+      <section className={paneClasses}>
+        <header className={paneHeaderClasses}>
           <ErrorBoundary errorClassName="font-error pad text-center">
             <RequestUrlBar
               uniquenessKey={uniqueKey}
@@ -214,8 +272,8 @@ class RequestPane extends React.PureComponent<Props> {
               downloadPath={downloadPath}
             />
           </ErrorBoundary>
-        </PaneHeader>
-        <Tabs className={classnames(paneBodyClasses, 'react-tabs')} forceRenderTabPanel>
+        </header>
+        <Tabs className={paneBodyClasses + ' react-tabs'} forceRenderTabPanel>
           <TabList>
             <Tab tabIndex="-1">
               <ContentTypeDropdown
@@ -401,7 +459,7 @@ class RequestPane extends React.PureComponent<Props> {
             )}
           </TabPanel>
         </Tabs>
-      </Pane>
+      </section>
     );
   }
 }

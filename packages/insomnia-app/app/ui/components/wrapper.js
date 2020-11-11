@@ -45,7 +45,6 @@ import SyncMergeModal from './modals/sync-merge-modal';
 import SyncHistoryModal from './modals/sync-history-modal';
 import SyncShareModal from './modals/sync-share-modal';
 import SyncBranchesModal from './modals/sync-branches-modal';
-import SyncDeleteModal from './modals/sync-delete-modal';
 import RequestRenderErrorModal from './modals/request-render-error-modal';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
@@ -750,7 +749,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
                   vcs={vcs}
                   syncItems={syncItems}
                 />
-                <SyncDeleteModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
                 <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
                 <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
               </React.Fragment>

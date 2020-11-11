@@ -168,7 +168,7 @@ export const selectActiveRequest = createSelector(
   selectActiveWorkspaceMeta,
   (entities, workspaceMeta) => {
     const id = workspaceMeta ? workspaceMeta.activeRequestId : 'n/a';
-    return entities.requests[id] || entities.grpcRequests[id] || null;
+    return entities.requests[id] || null;
   },
 );
 

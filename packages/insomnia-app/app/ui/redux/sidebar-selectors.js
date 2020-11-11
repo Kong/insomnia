@@ -1,4 +1,5 @@
 // @flow
+import * as models from '../../models';
 import type { BaseModel } from '../../models';
 import type { Request } from '../../models/request';
 import type { GrpcRequest } from '../../models/grpc-request';
@@ -12,15 +13,16 @@ import {
   selectEntitiesChildrenMap,
   selectPinnedRequests,
 } from './selectors';
-import { isGrpcRequest, isRequest, isRequestGroup } from '../../models/helpers/is-model';
 
 type SidebarModels = Request | GrpcRequest | RequestGroup;
 
-export const shouldShowInSidebar = (model: BaseModel): boolean =>
-  isRequest(model) || isGrpcRequest(model) || isRequestGroup(model);
+export const shouldShowInSidebar = ({ type }: BaseModel): boolean =>
+  type === models.request.type ||
+  type === models.grpcRequest.type ||
+  type === models.requestGroup.type;
 
-export const shouldIgnoreChildrenOf = (model: SidebarModels): boolean =>
-  isRequest(model) || isGrpcRequest(model);
+export const shouldIgnoreChildrenOf = ({ type }: SidebarModels): boolean =>
+  type === models.request.type || type === models.grpcRequest.type;
 
 export const sortByMetaKeyOrId = (a: SidebarModels, b: SidebarModels): number => {
   if (a.metaSortKey === b.metaSortKey) {
@@ -80,9 +82,7 @@ export const selectSidebarChildren = createSelector(
         const hasMatchedChildren = child.children.find(c => c.hidden === false);
 
         // Try to match request attributes
-        const name = child.doc.name;
-        const method = isGrpcRequest(child.doc) ? 'gRPC' : child.doc.method;
-
+        const { name, method } = child.doc;
         const match = fuzzyMatchAll(sidebarFilter, [name, method, ...parentNames], {
           splitSpace: true,
         });

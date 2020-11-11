@@ -48,7 +48,7 @@ module.exports = {
   ...remote,
   remote: remote,
   ipcMain: {
-    on: jest.fn(),
+    on() {},
     once() {},
   },
   ipcRenderer: {

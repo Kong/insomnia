@@ -2,12 +2,13 @@
 import * as React from 'react';
 import styled from 'styled-components';
 import type { ProtoFile } from '../../../models/proto-file';
+import PromptButton from '../base/prompt-button';
 import type {
   DeleteProtoFileHandler,
   RenameProtoFileHandler,
   SelectProtoFileHandler,
 } from './proto-file-list';
-import { ListGroupItem, Button } from '../../../../../insomnia-components';
+import { ListGroupItem } from '../../../../../insomnia-components';
 import Editable from '../base/editable';
 
 type Props = {
@@ -22,12 +23,8 @@ const SelectableListItem: React.PureComponent<{ isSelected?: boolean }> = styled
   &:hover {
     background-color: var(--hl-sm) !important;
   }
-  background-color: ${({ isSelected }) =>
-    isSelected && 'var(--hl-xs) !important; font-weight: bold;'};
 
-  i.fa {
-    font-size: var(--font-size-lg);
-  }
+  background-color: ${({ isSelected }) => isSelected && 'var(--hl-sm) !important'};
 `;
 
 const ProtoFileListItem = ({
@@ -58,15 +55,15 @@ const ProtoFileListItem = ({
   return (
     <SelectableListItem isSelected={isSelected} onClick={handleSelectCallback}>
       <div className="row-spaced">
-        <Editable className="wide" onSubmit={handleRenameCallback} value={name} preventBlank />
-        <Button
-          variant="text"
-          size="default"
-          title="Delete Proto File"
-          bg="danger"
-          onClick={handleDeleteCallback}>
+        <Editable onSubmit={handleRenameCallback} value={name} preventBlank />
+        <PromptButton
+          className="btn btn--super-compact btn--outlined"
+          addIcon
+          confirmMessage=""
+          onClick={handleDeleteCallback}
+          title="Delete Proto File">
           <i className="fa fa-trash-o" />
-        </Button>
+        </PromptButton>
       </div>
     </SelectableListItem>
   );

@@ -15,7 +15,6 @@ type Props = {
   showFileName?: boolean,
   showFileIcon?: boolean,
   name?: string,
-  staticLabel?: string,
 };
 
 @autobind
@@ -79,7 +78,7 @@ class FileInputButton extends React.PureComponent<Props> {
   }
 
   render() {
-    const { showFileName, showFileIcon, path, name, staticLabel, ...extraProps } = this.props;
+    const { showFileName, showFileIcon, path, name, ...extraProps } = this.props;
 
     // NOTE: Basename fails if path is not a string, so let's make sure it is
     const fileName = typeof path === 'string' ? pathBasename(path) : null;
@@ -92,7 +91,7 @@ class FileInputButton extends React.PureComponent<Props> {
         title={path}
         {...(extraProps: Object)}>
         {showFileIcon && <i className="fa fa-file-o space-right" />}
-        {staticLabel || (showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`)}
+        {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
       </button>
     );
   }

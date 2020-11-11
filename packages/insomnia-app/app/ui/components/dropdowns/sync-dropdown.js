@@ -11,7 +11,6 @@ import Link from '../base/link';
 import SyncHistoryModal from '../modals/sync-history-modal';
 import SyncShareModal from '../modals/sync-share-modal';
 import SyncBranchesModal from '../modals/sync-branches-modal';
-import SyncDeleteModal from '../modals/sync-delete-modal';
 import VCS from '../../../sync/vcs';
 import type { Project, Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import ErrorModal from '../modals/error-modal';
@@ -254,12 +253,6 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   async _handleEnableSync() {
     const { vcs, workspace } = this.props;
     await vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
-  }
-
-  _handleShowDeleteModal() {
-    showModal(SyncDeleteModal, {
-      onHide: this.refreshMainAttributes,
-    });
   }
 
   async _handleSetProject(p: Project) {
@@ -516,11 +509,6 @@ class SyncDropdown extends React.PureComponent<Props, State> {
           <DropdownItem onClick={this._handleShowBranchesModal}>
             <i className="fa fa-code-fork" />
             Branches
-          </DropdownItem>
-
-          <DropdownItem onClick={this._handleShowDeleteModal} disabled={historyCount === 0}>
-            <i className="fa fa-remove" />
-            Delete Workspace
           </DropdownItem>
 
           <DropdownDivider>Local Branches</DropdownDivider>

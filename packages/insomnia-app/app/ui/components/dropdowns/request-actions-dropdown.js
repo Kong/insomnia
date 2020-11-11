@@ -9,10 +9,9 @@ import {
   DropdownHint,
   DropdownItem,
 } from '../base/dropdown/index';
+import * as models from '../../../models';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import * as misc from '../../../common/misc';
-import { isRequest } from '../../../models/helpers/is-model';
-import * as requestOperations from '../../../models/helpers/request-operations';
 
 @autobind
 class RequestActionsDropdown extends PureComponent {
@@ -43,8 +42,7 @@ class RequestActionsDropdown extends PureComponent {
 
   _handleRemove() {
     const { request } = this.props;
-
-    return requestOperations.remove(request);
+    models.request.remove(request);
   }
 
   show() {
@@ -59,8 +57,8 @@ class RequestActionsDropdown extends PureComponent {
       ...other
     } = this.props;
 
-    // Can only generate code for regular requests, not gRPC requests
-    const canGenerateCode = isRequest(request);
+    const isGrpc = request.type === models.grpcRequest.type;
+    const canGenerateCode = !isGrpc;
 
     return (
       <Dropdown ref={this._setDropdownRef} {...other}>
