@@ -22,8 +22,12 @@ const SelectableListItem: React.PureComponent<{ isSelected?: boolean }> = styled
   &:hover {
     background-color: var(--hl-sm) !important;
   }
+  background-color: ${({ isSelected }) =>
+    isSelected && 'var(--hl-xs) !important; font-weight: bold;'};
 
-  background-color: ${({ isSelected }) => isSelected && 'var(--hl-sm) !important'};
+  i.fa {
+    font-size: var(--font-size-lg);
+  }
 `;
 
 const ProtoFileListItem = ({
@@ -55,7 +59,12 @@ const ProtoFileListItem = ({
     <SelectableListItem isSelected={isSelected} onClick={handleSelectCallback}>
       <div className="row-spaced">
         <Editable className="wide" onSubmit={handleRenameCallback} value={name} preventBlank />
-        <Button size="small" title="Delete Proto File" onClick={handleDeleteCallback}>
+        <Button
+          variant="text"
+          size="default"
+          title="Delete Proto File"
+          bg="danger"
+          onClick={handleDeleteCallback}>
           <i className="fa fa-trash-o" />
         </Button>
       </div>
