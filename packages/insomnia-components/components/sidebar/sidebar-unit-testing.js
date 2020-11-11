@@ -137,10 +137,7 @@ const SidebarUnitTesting = ({
 
   const filteredItems = unitTestSuites
     .filter(suite => {
-      if (filter == null) return suite;
-      else if (suite.name.toLowerCase().includes(filter.toLowerCase())) {
-        return suite;
-      }
+      return !filter || suite.name.toLowerCase().includes(filter.toLowerCase())
     })
     .map(suite => (
       <SidebarUnitTestSuiteItem
