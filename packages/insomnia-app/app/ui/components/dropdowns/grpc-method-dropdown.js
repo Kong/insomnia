@@ -23,10 +23,8 @@ const GrpcMethodDropdown = ({
       {selectedMethod?.path || 'Select Method'}
       <i className="fa fa-caret-down" />
     </DropdownButton>
+    <DropdownItem onClick={handleChangeProtoFile}>Click to change proto file</DropdownItem>
     {!methods.length && <DropdownItem disabled>No methods found</DropdownItem>}
-    {methods.length && (
-      <DropdownItem onClick={handleChangeProtoFile}>Click to change proto file</DropdownItem>
-    )}
     {methods.map(({ path }) => (
       <DropdownItem key={path} onClick={handleChange} value={path} disabled={disabled}>
         {path === selectedMethod?.path && <i className="fa fa-check" />}

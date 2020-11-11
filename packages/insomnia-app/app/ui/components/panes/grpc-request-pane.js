@@ -84,7 +84,7 @@ const useChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): Change
   }, [request, dispatch]);
 };
 
-const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
+const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings, activeProtoFiles }: Props) => {
   const [{ requestMessages, running }, grpcDispatch] = useGrpc(activeRequest._id);
 
   const [methods, setMethods] = React.useState<Array<GrpcMethodDefinition>>([]);
@@ -103,6 +103,13 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
     () => getMethodSelection(methods, activeRequest.protoMethodName),
     [methods, activeRequest.protoMethodName],
   );
+
+  // If there is no longer a method selected, reset the request state
+  React.useEffect(() => {
+    if (!selectedMethod) {
+      grpcDispatch(grpcActions.reset(activeRequest._id));
+    }
+  }, [activeRequest._id, grpcDispatch, selectedMethod]);
 
   const handleChange = useChangeHandlers(activeRequest, grpcDispatch);
 

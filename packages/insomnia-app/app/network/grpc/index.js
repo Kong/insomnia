@@ -14,7 +14,7 @@ const _createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | u
   const { url, enableTls } = parseGrpcUrl(req.url);
 
   if (!url) {
-    respond.sendError(req._id, new Error('gRPC url not specified'));
+    respond.sendError(req._id, new Error('URL not specified'));
     return undefined;
   }
 
@@ -31,10 +31,7 @@ export const sendUnary = async (requestId: string, respond: ResponseCallbacks): 
   const selectedMethod = await protoLoader.getSelectedMethod(req);
 
   if (!selectedMethod) {
-    respond.sendError(
-      requestId,
-      new Error(`The gRPC method ${req.protoMethodName} could not be found`),
-    );
+    respond.sendError(requestId, new Error(`Method definition could not be found`));
     return;
   }
 
@@ -79,10 +76,7 @@ export const startClientStreaming = async (
   const selectedMethod = await protoLoader.getSelectedMethod(req);
 
   if (!selectedMethod) {
-    respond.sendError(
-      requestId,
-      new Error(`The gRPC method ${req.protoMethodName} could not be found`),
-    );
+    respond.sendError(requestId, new Error(`Method definition could not be found`));
     return;
   }
 
