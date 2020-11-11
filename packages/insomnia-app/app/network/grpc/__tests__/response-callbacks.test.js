@@ -27,4 +27,27 @@ describe('response-callbacks', () => {
     expect(event.reply).toHaveBeenCalledTimes(1);
     expect(event.reply).toHaveBeenCalledWith(GrpcResponseEventEnum.error, id, err);
   });
+
+  it('should sendEnd with expected arguments', () => {
+    new ResponseCallbacks(event).sendEnd(id);
+
+    expect(event.reply).toHaveBeenCalledTimes(1);
+    expect(event.reply).toHaveBeenCalledWith(GrpcResponseEventEnum.end, id);
+  });
+
+  it('should sendStart with expected arguments', () => {
+    new ResponseCallbacks(event).sendStart(id);
+
+    expect(event.reply).toHaveBeenCalledTimes(1);
+    expect(event.reply).toHaveBeenCalledWith(GrpcResponseEventEnum.start, id);
+  });
+
+  it('should sendStatus with expected arguments', () => {
+    const obj = {};
+
+    new ResponseCallbacks(event).sendStatus(id, obj);
+
+    expect(event.reply).toHaveBeenCalledTimes(1);
+    expect(event.reply).toHaveBeenCalledWith(GrpcResponseEventEnum.status, id, obj);
+  });
 });

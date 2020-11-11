@@ -1,6 +1,6 @@
 // @flow
 
-const GrpcStatusEnum = {
+export const GrpcStatusEnum = {
   OK: 0,
   CANCELLED: 1,
   UNKNOWN: 2,
@@ -22,7 +22,7 @@ const GrpcStatusEnum = {
 
 type GrpcStatus = $Values<typeof GrpcStatusEnum>;
 
-type GrpcStatusObject = {
+export type GrpcStatusObject = {
   code: GrpcStatus,
   details: string,
   metadata: Object, // https://grpc.github.io/grpc/node/grpc.Metadata.html

@@ -8,17 +8,13 @@ import OneLineEditor from '../codemirror/one-line-editor';
 import type { Settings } from '../../../models/settings';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import type { GrpcMethodDefinition, GrpcMethodType } from '../../../network/grpc/method';
-import {
-  canClientStream,
-  getMethodType,
-  GrpcMethodTypeEnum,
-  GrpcMethodTypeName,
-} from '../../../network/grpc/method';
+import { canClientStream, getMethodType, GrpcMethodTypeName } from '../../../network/grpc/method';
 import * as models from '../../../models';
 import * as protoLoader from '../../../network/grpc/proto-loader';
-import type { GrpcRequestEvent } from '../../../common/grpc-events';
-import { ipcRenderer } from 'electron';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
+import GrpcSendButton from '../buttons/grpc-send-button';
+import { grpcActions, useGrpc, useGrpcIpc } from '../../context/grpc';
+import type { GrpcDispatch } from '../../context/grpc/grpc-actions';
 
 type Props = {
   forceRefreshKey: string,
@@ -47,31 +43,29 @@ type ChangeHandlers = {
   method: string => Promise<void>,
 };
 
-// This will create cached change handlers for the url, body and method selection
-const getChangeHandlers = (request: GrpcRequest): ChangeHandlers => {
-  const url = async (value: string) => {
-    await models.grpcRequest.update(request, { url: value });
-  };
+// This will create memoized change handlers for the url, body and method selection
+const useChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): ChangeHandlers => {
+  return React.useMemo(() => {
+    const url = async (value: string) => {
+      await models.grpcRequest.update(request, { url: value });
+    };
 
-  const body = async (value: string) => {
-    await models.grpcRequest.update(request, { body: { ...request.body, text: value } });
-  };
+    const body = async (value: string) => {
+      await models.grpcRequest.update(request, { body: { ...request.body, text: value } });
+    };
 
-  const method = async (value: string) => {
-    await models.grpcRequest.update(request, { protoMethodName: value });
-  };
+    const method = async (value: string) => {
+      await models.grpcRequest.update(request, { protoMethodName: value });
+      dispatch(grpcActions.reset(request._id));
+    };
 
-  return { url, body, method };
+    return { url, body, method };
+  }, [request, dispatch]);
 };
 
-const demoRequestMessages = [
-  { id: '2', created: 1604589843467, text: '{"greeting": "Hello Stream 2"}' },
-  { id: '3', created: 1604589843468, text: '{"greeting": "Hello Stream 3"}' },
-  { id: '1', created: 1604589843466, text: '{"greeting": "Hello Stream 1"}' },
-];
-demoRequestMessages.sort((a, b) => a.created - b.created);
-
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
+  const [{ requestMessages, running }, grpcDispatch] = useGrpc(activeRequest._id);
+
   const [methods, setMethods] = React.useState<Array<GrpcMethodDefinition>>([]);
 
   // Reload the methods, on first mount, or if the request protoFile changes
@@ -89,16 +83,13 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
     [methods, activeRequest.protoMethodName],
   );
 
-  const handleChange = React.useMemo(() => getChangeHandlers(activeRequest), [activeRequest]);
+  const handleChange = useChangeHandlers(activeRequest, grpcDispatch);
 
   // Used to refresh input fields to their default value when switching between requests.
   // This is a common pattern in this codebase.
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
-  const sendIpc = React.useCallback(
-    (channel: GrpcRequestEvent) => ipcRenderer.send(channel, activeRequest._id),
-    [activeRequest._id],
-  );
+  const sendIpc = useGrpcIpc(activeRequest._id);
 
   return (
     <Pane type="request">
@@ -110,71 +101,63 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
             type="text"
             forceEditor
             defaultValue={activeRequest.url}
+            placeholder="grpcb.in:9000"
             onChange={handleChange.url}
           />
         </form>
         <GrpcMethodDropdown
+          disabled={running}
           methods={methods}
           selectedMethod={selectedMethod}
           handleChange={handleChange.method}
         />
-        {!selectedMethod && (
-          <button className="urlbar__send-btn" disabled>
-            Send
-          </button>
-        )}
-        {selectedMethodType === GrpcMethodTypeEnum.unary && (
-          <button
-            className="urlbar__send-btn"
-            onClick={() => sendIpc(GrpcRequestEventEnum.sendUnary)}>
-            Send
-          </button>
-        )}
-        {selectedMethodType === GrpcMethodTypeEnum.client && (
-          <button
-            className="urlbar__send-btn"
-            onClick={() => sendIpc(GrpcRequestEventEnum.startStream)}>
-            Start
-          </button>
-        )}
-        {(selectedMethodType === GrpcMethodTypeEnum.server ||
-          selectedMethodType === GrpcMethodTypeEnum.bidi) && (
-          <button className="urlbar__send-btn" disabled>
-            Coming soon
-          </button>
-        )}
+
+        <GrpcSendButton requestId={activeRequest._id} methodType={selectedMethodType} />
       </PaneHeader>
       <PaneBody>
-        <Tabs className="react-tabs" forceRenderTabPanel>
-          <TabList>
-            <Tab>
-              <button>{GrpcMethodTypeName[selectedMethodType]}</button>
-            </Tab>
-            <Tab>
-              <button>Headers</button>
-            </Tab>
-          </TabList>
-          <TabPanel className="react-tabs__tab-panel">
-            <GrpcTabbedMessages
-              uniquenessKey={uniquenessKey}
-              settings={settings}
-              tabNamePrefix="Stream"
-              messages={canClientStream(selectedMethodType) ? demoRequestMessages : []}
-              bodyText={activeRequest.body.text}
-              handleBodyChange={handleChange.body}
-              handleStream={
-                canClientStream(selectedMethodType) &&
-                (() => sendIpc(GrpcRequestEventEnum.sendMessage))
-              }
-              handleCommit={
-                canClientStream(selectedMethodType) && (() => sendIpc(GrpcRequestEventEnum.commit))
-              }
-            />
-          </TabPanel>
-          <TabPanel className="react-tabs__tab-panel">
-            <h4 className="pad">Coming soon! 😊</h4>
-          </TabPanel>
-        </Tabs>
+        {selectedMethodType && (
+          <Tabs className="react-tabs" forceRenderTabPanel>
+            <TabList>
+              <Tab>
+                <button>{GrpcMethodTypeName[selectedMethodType]}</button>
+              </Tab>
+              <Tab>
+                <button>Headers</button>
+              </Tab>
+            </TabList>
+            <TabPanel className="react-tabs__tab-panel">
+              <GrpcTabbedMessages
+                uniquenessKey={uniquenessKey}
+                settings={settings}
+                tabNamePrefix="Stream"
+                messages={requestMessages}
+                bodyText={activeRequest.body.text}
+                handleBodyChange={handleChange.body}
+                showActions={running && canClientStream(selectedMethodType)}
+                handleStream={() => {
+                  sendIpc(GrpcRequestEventEnum.sendMessage);
+                  grpcDispatch(
+                    grpcActions.requestMessage(activeRequest._id, activeRequest.body.text),
+                  );
+                }}
+                handleCommit={() => sendIpc(GrpcRequestEventEnum.commit)}
+              />
+            </TabPanel>
+            <TabPanel className="react-tabs__tab-panel">
+              <h4 className="pad">Coming soon! 😊</h4>
+            </TabPanel>
+          </Tabs>
+        )}
+        {!selectedMethodType && (
+          <div className="overflow-hidden editor vertically-center text-center">
+            <p className="pad super-faint text-sm text-center">
+              <i className="fa fa-hand-peace-o" style={{ fontSize: '8rem', opacity: 0.3 }} />
+              <br />
+              <br />
+              Select a gRPC method from above
+            </p>
+          </div>
+        )}
       </PaneBody>
     </Pane>
   );

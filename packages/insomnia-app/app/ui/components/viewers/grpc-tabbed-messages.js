@@ -21,10 +21,12 @@ type Props = {
   handleBodyChange?: string => Promise<void>,
   handleStream?: () => void,
   handleCommit?: () => void,
+  showActions?: boolean,
 };
 
 const GrpcTabbedMessages = ({
   settings,
+  showActions,
   bodyText,
   messages,
   tabNamePrefix,
@@ -34,6 +36,8 @@ const GrpcTabbedMessages = ({
   uniquenessKey,
 }: Props) => {
   const shouldShowBody = !!handleBodyChange;
+
+  const orderedMessages = messages?.sort((a, b) => a.created - b.created) || [];
 
   return (
     <Tabs key={uniquenessKey} className={classnames('react-tabs', 'react-tabs--nested')}>
@@ -54,19 +58,23 @@ const GrpcTabbedMessages = ({
             ))}
           </TabList>
         </div>
-        {handleStream && (
-          <Button
-            className="btn btn--compact btn--clicky margin-sm bg-default"
-            onClick={handleStream}>
-            Stream <i className="fa fa-plus" />
-          </Button>
-        )}
-        {handleCommit && (
-          <Button
-            className="btn btn--compact btn--clicky margin-sm bg-surprise"
-            onClick={handleCommit}>
-            Commit <i className="fa fa-arrow-right" />
-          </Button>
+        {showActions && (
+          <>
+            {handleStream && (
+              <Button
+                className="btn btn--compact btn--clicky margin-sm bg-default"
+                onClick={handleStream}>
+                Stream <i className="fa fa-plus" />
+              </Button>
+            )}
+            {handleCommit && (
+              <Button
+                className="btn btn--compact btn--clicky margin-sm bg-surprise"
+                onClick={handleCommit}>
+                Commit <i className="fa fa-arrow-right" />
+              </Button>
+            )}
+          </>
         )}
       </div>
       {shouldShowBody && (
@@ -74,7 +82,7 @@ const GrpcTabbedMessages = ({
           <GRPCEditor content={bodyText} settings={settings} handleChange={handleBodyChange} />
         </TabPanel>
       )}
-      {messages?.map(m => (
+      {orderedMessages.map(m => (
         <TabPanel key={m.id} className="react-tabs__tab-panel editor-wrapper">
           <GRPCEditor content={m.text} settings={settings} readOnly />
         </TabPanel>

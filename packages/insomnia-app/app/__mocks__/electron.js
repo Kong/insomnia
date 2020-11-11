@@ -52,7 +52,8 @@ module.exports = {
     once() {},
   },
   ipcRenderer: {
-    on() {},
+    on: jest.fn(),
+    removeAllListeners: jest.fn(),
     once() {},
     send() {},
   },

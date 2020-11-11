@@ -2,11 +2,11 @@
 import React from 'react';
 import { Pane, PaneBody, PaneHeader } from './pane';
 import GrpcTabbedMessages from '../viewers/grpc-tabbed-messages.js';
-import SizeTag from '../tags/size-tag';
-import StatusTag from '../tags/status-tag';
-import TimeTag from '../tags/time-tag';
 import type { Settings } from '../../../models/settings';
 import type { GrpcRequest } from '../../../models/grpc-request';
+import GrpcStatusTag from '../tags/grpc-status-tag';
+import GrpcSpinner from '../grpc-spinner';
+import { useGrpcRequestState } from '../../context/grpc';
 
 type Props = {
   forceRefreshKey: string,
@@ -14,34 +14,31 @@ type Props = {
   settings: Settings,
 };
 
-const demoResponseMessages = [
-  { id: '2', created: 1604589843467, text: '{"reply": "Hello Response 2"}' },
-  { id: '3', created: 1604589843468, text: '{"reply": "Hello Response 3"}' },
-  { id: '1', created: 1604589843466, text: '{"reply": "Hello Response 1"}' },
-];
-demoResponseMessages.sort((a, b) => a.created - b.created);
-
 const GrpcResponsePane = ({ settings, activeRequest, forceRefreshKey }: Props) => {
   // Used to refresh input fields to their default value when switching between requests.
   // This is a common pattern in this codebase.
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
+  const { responseMessages, status, error } = useGrpcRequestState(activeRequest._id);
+
   return (
     <Pane type="response">
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
-          <StatusTag statusCode={0} statusMessage={'Error'} />
-          <TimeTag milliseconds={0} />
-          <SizeTag bytesRead={22} bytesContent={11} />
+          <GrpcSpinner requestId={activeRequest._id} className="margin-right-sm" />
+          {status && <GrpcStatusTag statusCode={status.code} statusMessage={status.details} />}
+          {!status && error && <GrpcStatusTag statusMessage={error.message} />}
         </div>
       </PaneHeader>
       <PaneBody>
-        <GrpcTabbedMessages
-          uniquenessKey={uniquenessKey}
-          settings={settings}
-          tabNamePrefix="Response"
-          messages={demoResponseMessages}
-        />
+        {!!responseMessages.length && (
+          <GrpcTabbedMessages
+            uniquenessKey={uniquenessKey}
+            settings={settings}
+            tabNamePrefix="Response"
+            messages={responseMessages}
+          />
+        )}
       </PaneBody>
     </Pane>
   );
