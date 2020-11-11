@@ -8,15 +8,21 @@ import callCache from './call-cache';
 import type { ServiceError } from './service-error';
 import { GrpcStatusEnum } from './service-error';
 import type { Call } from './call-cache';
+import parseGrpcUrl from './parse-grpc-url';
 
-const createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | undefined => {
-  if (!req.url) {
-    respond.sendError(req._id, new Error('gRPC url not specified')); // TODO: update wording
+const _createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | undefined => {
+  const { url, enableTls } = parseGrpcUrl(req.url);
+
+  if (!url) {
+    respond.sendError(req._id, new Error('gRPC url not specified'));
     return undefined;
   }
-  console.log(`[gRPC] connecting to url=${req.url}`);
+
+  const credentials = enableTls ? grpc.credentials.createSsl() : grpc.credentials.createInsecure();
+
+  console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`);
   const Client = grpc.makeGenericClientConstructor({});
-  return new Client(req.url, grpc.credentials.createInsecure());
+  return new Client(url, credentials);
 };
 
 export const sendUnary = async (requestId: string, respond: ResponseCallbacks): Promise<void> => {
@@ -39,7 +45,7 @@ export const sendUnary = async (requestId: string, respond: ResponseCallbacks): 
   }
 
   // Create client
-  const client = createClient(req, respond);
+  const client = _createClient(req, respond);
 
   if (!client) {
     return;
@@ -81,7 +87,7 @@ export const startClientStreaming = async (
   }
 
   // Create client
-  const client = createClient(req, respond);
+  const client = _createClient(req, respond);
 
   if (!client) {
     return;
