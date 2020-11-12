@@ -100,39 +100,34 @@ const status = (requestId: string, status: GrpcStatusObject): ErrorAction => ({
   payload: status,
 });
 
-const clear = (dispatch: GrpcDispatch, requestId: string) => {
-  dispatch({
-    type: GrpcActionTypeEnum.clear,
-    requestId,
-  });
-};
+const clear = (requestId: string): ClearAction => ({
+  type: GrpcActionTypeEnum.clear,
+  requestId,
+});
 
-const invalidate = (dispatch: GrpcDispatch, requestId: string) => {
-  dispatch({
-    type: GrpcActionTypeEnum.invalidate,
-    requestId,
-  });
-};
+const invalidate = (requestId: string): InvalidateAction => ({
+  type: GrpcActionTypeEnum.invalidate,
+  requestId,
+});
 
 const loadMethods = async (
-  dispatch: GrpcDispatch,
   requestId: string,
   protoFileId: string,
   reloadMethods: boolean,
-) => {
+): LoadMethodsAction | undefined => {
   if (!reloadMethods) {
-    return;
+    return undefined;
   }
 
-  console.log(`[gRPC] reloading proto file pf=${protoFileId}`);
+  console.log(`[gRPC] loading proto file methods pf=${protoFileId}`);
   const protoFile = await models.protoFile.getById(protoFileId);
   const methods = await protoLoader.loadMethods(protoFile);
 
-  dispatch({
+  return {
     type: GrpcActionTypeEnum.loadMethods,
     requestId,
     payload: methods,
-  });
+  };
 };
 
 export const grpcActions = {

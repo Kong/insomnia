@@ -10,7 +10,7 @@ import type {
   StatusAction,
 } from './grpc-actions';
 import { GrpcActionTypeEnum } from './grpc-actions';
-import type { ServiceError } from '../../../network/grpc/service-error';
+import type { GrpcStatusObject, ServiceError } from '../../../network/grpc/service-error';
 import type { GrpcMethodDefinition } from '../../../network/grpc/method';
 
 export type GrpcRequestState = {
@@ -35,7 +35,6 @@ const INITIAL_GRPC_REQUEST_STATE: GrpcRequestState = {
 };
 
 const CLEAR_GRPC_REQUEST_STATE: Shape<GrpcRequestState> = {
-  running: false,
   requestMessages: [],
   responseMessages: [],
   status: undefined,
@@ -51,7 +50,11 @@ export const findGrpcRequestState = (state: GrpcState, requestId: string): GrpcR
   return state[requestId] || INITIAL_GRPC_REQUEST_STATE;
 };
 
-export const grpcReducer = (state: GrpcState, action: GrpcAction): GrpcState => {
+export const grpcReducer = (state: GrpcState, action: GrpcAction | undefined): GrpcState => {
+  if (!action) {
+    return;
+  }
+
   const requestId = action.requestId;
   const oldState = findGrpcRequestState(state, requestId);
 

@@ -10,4 +10,5 @@ export const requestStateSchema: Schema<GrpcRequestState> = {
   status: () => undefined,
   error: () => undefined,
   methods: () => [],
+  reloadMethods: () => false,
 };
