@@ -127,7 +127,7 @@ export const startServerStreaming = async (
   }
 
   // Create client
-  const client = createClient(req, respond);
+  const client = _createClient(req, respond);
   if (!client) {
     return;
   }
@@ -166,7 +166,7 @@ export const startBidiStreaming = async (
   }
 
   // Create client
-  const client = createClient(req, respond);
+  const client = _createClient(req, respond);
 
   if (!client) {
     return;
