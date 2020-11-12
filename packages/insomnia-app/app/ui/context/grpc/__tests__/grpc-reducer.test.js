@@ -328,4 +328,8 @@ describe('grpcReducer actions', () => {
       'Unhandled action type: not-found',
     );
   });
+
+  it.each([null, undefined])('should do nothing if action is falsey', action => {
+    expect(grpcReducer({}, action)).toStrictEqual({});
+  });
 });

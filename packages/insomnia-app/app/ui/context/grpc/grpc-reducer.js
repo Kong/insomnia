@@ -52,7 +52,7 @@ export const findGrpcRequestState = (state: GrpcState, requestId: string): GrpcR
 
 export const grpcReducer = (state: GrpcState, action: GrpcAction | undefined): GrpcState => {
   if (!action) {
-    return;
+    return state;
   }
 
   const requestId = action.requestId;
