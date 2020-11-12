@@ -45,6 +45,13 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
 
   const sendIpc = useGrpcIpc(activeRequest._id);
 
+  const handleStream = React.useCallback(() => {
+    sendIpc(GrpcRequestEventEnum.sendMessage);
+    grpcDispatch(grpcActions.requestMessage(activeRequest._id, activeRequest.body.text));
+  }, [activeRequest._id, activeRequest.body.text, grpcDispatch, sendIpc]);
+
+  const handleCommit = React.useCallback(() => sendIpc(GrpcRequestEventEnum.commit), [sendIpc]);
+
   return (
     <Pane type="request">
       <PaneHeader className="grpc-urlbar">
@@ -55,7 +62,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
             type="text"
             forceEditor
             defaultValue={activeRequest.url}
-            placeholder="grpcb.in:9000"
+            placeholder="example.com:9000"
             onChange={handleChange.url}
           />
         </form>
@@ -89,13 +96,8 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
                 bodyText={activeRequest.body.text}
                 handleBodyChange={handleChange.body}
                 showActions={running && enableClientStream}
-                handleStream={() => {
-                  sendIpc(GrpcRequestEventEnum.sendMessage);
-                  grpcDispatch(
-                    grpcActions.requestMessage(activeRequest._id, activeRequest.body.text),
-                  );
-                }}
-                handleCommit={() => sendIpc(GrpcRequestEventEnum.commit)}
+                handleStream={handleStream}
+                handleCommit={handleCommit}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel">
