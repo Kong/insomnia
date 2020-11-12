@@ -1,92 +1,22 @@
 // @flow
 import React from 'react';
-import { Pane, PaneBody, PaneHeader } from './pane';
+import { Pane, PaneBody, PaneHeader } from '../pane';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import GrpcMethodDropdown from '../dropdowns/grpc-method-dropdown';
-import GrpcTabbedMessages from '../viewers/grpc-tabbed-messages';
-import OneLineEditor from '../codemirror/one-line-editor';
-import type { Settings } from '../../../models/settings';
-import type { GrpcRequest } from '../../../models/grpc-request';
-import type { GrpcMethodDefinition, GrpcMethodType } from '../../../network/grpc/method';
-import { canClientStream, getMethodType, GrpcMethodTypeName } from '../../../network/grpc/method';
-import * as models from '../../../models';
-import { GrpcRequestEventEnum } from '../../../common/grpc-events';
-import GrpcSendButton from '../buttons/grpc-send-button';
-import { grpcActions, useGrpc, useGrpcIpc, useGrpcRequestState } from '../../context/grpc';
-import type { GrpcDispatch } from '../../context/grpc/grpc-actions';
-import { showModal } from '../modals';
-import ProtoFilesModal from '../modals/proto-files-modal';
+import GrpcMethodDropdown from '../../dropdowns/grpc-method-dropdown';
+import GrpcTabbedMessages from '../../viewers/grpc-tabbed-messages';
+import OneLineEditor from '../../codemirror/one-line-editor';
+import type { Settings } from '../../../../models/settings';
+import type { GrpcRequest } from '../../../../models/grpc-request';
+import { GrpcRequestEventEnum } from '../../../../common/grpc-events';
+import GrpcSendButton from '../../buttons/grpc-send-button';
+import { grpcActions, useGrpc, useGrpcIpc } from '../../../context/grpc';
+import useChangeHandlers from './use-change-handlers';
+import useSelectedMethod from './use-selected-method';
 
 type Props = {
   forceRefreshKey: string,
   activeRequest: GrpcRequest,
   settings: Settings,
-};
-
-type ChangeHandlers = {
-  url: string => Promise<void>,
-  body: string => Promise<void>,
-  method: string => Promise<void>,
-  protoFile: string => Promise<void>,
-};
-
-// This will create memoized change handlers for the url, body and method selection
-const useChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): ChangeHandlers => {
-  return React.useMemo(() => {
-    const url = async (value: string) => {
-      await models.grpcRequest.update(request, { url: value });
-    };
-
-    const body = async (value: string) => {
-      await models.grpcRequest.update(request, { body: { ...request.body, text: value } });
-    };
-
-    const method = async (value: string) => {
-      await models.grpcRequest.update(request, { protoMethodName: value });
-      grpcActions.clear(dispatch, request._id);
-    };
-
-    const protoFile = async () => {
-      showModal(ProtoFilesModal, {
-        preselectProtoFileId: request.protoFileId,
-        onSave: async (protoFileId: string) => {
-          if (request.protoFileId !== protoFileId) {
-            const initial = models.grpcRequest.init();
-
-            // Reset the body as it is no longer relevant
-            await models.grpcRequest.update(request, {
-              protoFileId,
-              body: initial.body,
-              protoMethodName: initial.protoMethodName,
-            });
-            grpcActions.invalidate(dispatch, request._id);
-          }
-        },
-      });
-    };
-
-    return { url, body, method, protoFile };
-  }, [request, dispatch]);
-};
-
-type MethodSelection = {
-  method: GrpcMethodDefinition | undefined,
-  methodType: GrpcMethodType | undefined,
-  methodTypeName: string | undefined,
-  enableClientStream: boolean | undefined,
-};
-
-const useSelectedMethod = (requestId: string, protoMethodName: string): MethodSelection => {
-  const { methods } = useGrpcRequestState(requestId);
-
-  return React.useMemo(() => {
-    const selectedMethod = methods.find(c => c.path === protoMethodName);
-    const methodType = selectedMethod && getMethodType(selectedMethod);
-    const methodTypeName = GrpcMethodTypeName[methodType];
-    const enableClientStream = canClientStream(methodType);
-
-    return { method: selectedMethod, methodType, methodTypeName, enableClientStream };
-  }, [methods, protoMethodName]);
 };
 
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
@@ -107,9 +37,8 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
     func();
   }, [activeRequest._id, activeRequest.protoFileId, reloadMethods, grpcDispatch]);
 
-  const { method, methodType, methodTypeName, enableClientStream } = useSelectedMethod(
-    activeRequest._id,
-    activeRequest.protoMethodName,
+  const { method, methodType, methodTypeLabel, enableClientStream } = useSelectedMethod(
+    activeRequest,
   );
 
   const handleChange = useChangeHandlers(activeRequest, grpcDispatch);
@@ -149,7 +78,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
           <Tabs className="react-tabs" forceRenderTabPanel>
             <TabList>
               <Tab>
-                <button>{methodTypeName}</button>
+                <button>{methodTypeLabel}</button>
               </Tab>
               <Tab>
                 <button>Headers</button>
