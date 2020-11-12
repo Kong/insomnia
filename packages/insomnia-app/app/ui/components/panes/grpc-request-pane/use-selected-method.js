@@ -1,7 +1,6 @@
 // @flow
 import React from 'react';
 import type { GrpcMethodDefinition, GrpcMethodType } from '../../../../network/grpc/method';
-import { useGrpcRequestState } from '../../../context/grpc';
 import {
   canClientStream,
   getMethodType,
@@ -16,10 +15,11 @@ type MethodSelection = {
   enableClientStream?: boolean,
 };
 
-const useSelectedMethod = ({ _id, protoMethodName }: GrpcRequest): MethodSelection => {
-  const { methods } = useGrpcRequestState(_id);
-
-  return React.useMemo(() => {
+const useSelectedMethod = (
+  methods: Array<GrpcMethodDefinition>,
+  { _id, protoMethodName }: GrpcRequest,
+): MethodSelection =>
+  React.useMemo(() => {
     const selectedMethod = methods.find(c => c.path === protoMethodName);
 
     const methodType = selectedMethod && getMethodType(selectedMethod);
@@ -28,6 +28,5 @@ const useSelectedMethod = ({ _id, protoMethodName }: GrpcRequest): MethodSelecti
 
     return { method: selectedMethod, methodType, methodTypeLabel, enableClientStream };
   }, [methods, protoMethodName]);
-};
 
 export default useSelectedMethod;

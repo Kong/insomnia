@@ -37,9 +37,8 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
     func();
   }, [activeRequest._id, activeRequest.protoFileId, reloadMethods, grpcDispatch]);
 
-  const { method, methodType, methodTypeLabel, enableClientStream } = useSelectedMethod(
-    activeRequest,
-  );
+  const selection = useSelectedMethod(methods, activeRequest);
+  const { method, methodType, methodTypeLabel, enableClientStream } = selection;
 
   const handleChange = useChangeHandlers(activeRequest, grpcDispatch);
 

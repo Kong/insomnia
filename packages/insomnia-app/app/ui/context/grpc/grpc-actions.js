@@ -38,13 +38,14 @@ type ResetAction = Action<GrpcActionTypeEnum.reset>;
 type ClearAction = Action<GrpcActionTypeEnum.clear>;
 type StartAction = Action<GrpcActionTypeEnum.start>;
 type StopAction = Action<GrpcActionTypeEnum.stop>;
+type InvalidateAction = Action<GrpcActionTypeEnum.invalidate>;
 export type RequestMessageAction = Action<GrpcActionTypeEnum.requestMessage> & Payload<GrpcMessage>;
 export type ResponseMessageAction = Action<GrpcActionTypeEnum.responseMessage> &
   Payload<GrpcMessage>;
 export type ErrorAction = Action<GrpcActionTypeEnum.error> & Payload<ServiceError>;
-export type StatusAction = Action<GrpcActionTypeEnum.error> & Payload<GrpcStatusObject>;
+export type StatusAction = Action<GrpcActionTypeEnum.status> & Payload<GrpcStatusObject>;
 export type LoadMethodsAction = Action<GrpcActionTypeEnum.loadMethods> &
-  Payload<{ selectedMethod: GrpcMethodDefinition, methods: Array<GrpcMethodDefinition> }>;
+  Payload<Array<GrpcMethodDefinition>>;
 
 export type GrpcAction =
   | ClearAction
@@ -55,6 +56,7 @@ export type GrpcAction =
   | RequestMessageAction
   | ErrorAction
   | StatusAction
+  | InvalidateAction
   | LoadMethodsAction;
 
 export type GrpcDispatch = (action: GrpcAction) => void;
