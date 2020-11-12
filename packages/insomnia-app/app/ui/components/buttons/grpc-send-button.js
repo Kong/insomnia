@@ -59,7 +59,7 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
       className="urlbar__send-btn"
       onClick={() => {
         config.onClick();
-        grpcActions.clear(dispatch, requestId);
+        dispatch(grpcActions.clear(requestId));
       }}
       disabled={config.disabled}>
       {config.text}

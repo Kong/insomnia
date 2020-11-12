@@ -28,7 +28,7 @@ const useChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): Change
 
     const method = async (value: string) => {
       await models.grpcRequest.update(request, { protoMethodName: value });
-      grpcActions.clear(dispatch, request._id);
+      dispatch(grpcActions.clear(request._id));
     };
 
     const protoFile = async () => {
@@ -44,7 +44,7 @@ const useChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): Change
               body: initial.body,
               protoMethodName: initial.protoMethodName,
             });
-            grpcActions.invalidate(dispatch, request._id);
+            dispatch(grpcActions.invalidate(request._id));
           }
         },
       });
