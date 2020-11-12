@@ -2,6 +2,9 @@
 
 import type { GrpcStatusObject, ServiceError } from '../../../network/grpc/service-error';
 import { generateId } from '../../../common/misc';
+import type { GrpcMethodDefinition } from '../../../network/grpc/method';
+import * as models from '../../../models';
+import * as protoLoader from '../../../network/grpc/proto-loader';
 
 export type GrpcMessage = {
   id: string,
@@ -11,11 +14,14 @@ export type GrpcMessage = {
 
 export const GrpcActionTypeEnum = {
   reset: 'reset',
+  clear: 'clear',
   start: 'start',
   stop: 'stop',
   responseMessage: 'responseMessage',
   requestMessage: 'requestStream',
   error: 'error',
+  invalidate: 'invalidate',
+  loadMethods: 'loadMethods',
 };
 type GrpcActionType = $Values<typeof GrpcActionTypeEnum>;
 
@@ -29,6 +35,7 @@ type Payload<T> = {
 };
 
 type ResetAction = Action<GrpcActionTypeEnum.reset>;
+type ClearAction = Action<GrpcActionTypeEnum.clear>;
 type StartAction = Action<GrpcActionTypeEnum.start>;
 type StopAction = Action<GrpcActionTypeEnum.stop>;
 export type RequestMessageAction = Action<GrpcActionTypeEnum.requestMessage> & Payload<GrpcMessage>;
@@ -36,15 +43,19 @@ export type ResponseMessageAction = Action<GrpcActionTypeEnum.responseMessage> &
   Payload<GrpcMessage>;
 export type ErrorAction = Action<GrpcActionTypeEnum.error> & Payload<ServiceError>;
 export type StatusAction = Action<GrpcActionTypeEnum.error> & Payload<GrpcStatusObject>;
+export type LoadMethodsAction = Action<GrpcActionTypeEnum.loadMethods> &
+  Payload<{ selectedMethod: GrpcMethodDefinition, methods: Array<GrpcMethodDefinition> }>;
 
 export type GrpcAction =
+  | ClearAction
   | ResetAction
   | StartAction
   | StopAction
   | ResponseMessageAction
   | RequestMessageAction
   | ErrorAction
-  | StatusAction;
+  | StatusAction
+  | LoadMethodsAction;
 
 export type GrpcDispatch = (action: GrpcAction) => void;
 
@@ -87,4 +98,50 @@ const status = (requestId: string, status: GrpcStatusObject): ErrorAction => ({
   payload: status,
 });
 
-export const grpcActions = { reset, start, stop, responseMessage, requestMessage, error, status };
+const clear = (dispatch: GrpcDispatch, requestId: string) => {
+  dispatch({
+    type: GrpcActionTypeEnum.clear,
+    requestId,
+  });
+};
+
+const invalidate = (dispatch: GrpcDispatch, requestId: string) => {
+  dispatch({
+    type: GrpcActionTypeEnum.invalidate,
+    requestId,
+  });
+};
+
+const loadMethods = async (
+  dispatch: GrpcDispatch,
+  requestId: string,
+  protoFileId: string,
+  reloadMethods: boolean,
+) => {
+  if (!reloadMethods) {
+    return;
+  }
+
+  console.log(`[gRPC] reloading proto file pf=${protoFileId}`);
+  const protoFile = await models.protoFile.getById(protoFileId);
+  const methods = await protoLoader.loadMethods(protoFile);
+
+  dispatch({
+    type: GrpcActionTypeEnum.loadMethods,
+    requestId,
+    payload: methods,
+  });
+};
+
+export const grpcActions = {
+  reset,
+  clear,
+  start,
+  stop,
+  responseMessage,
+  requestMessage,
+  error,
+  status,
+  invalidate,
+  loadMethods,
+};

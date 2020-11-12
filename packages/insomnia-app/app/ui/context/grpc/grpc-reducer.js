@@ -4,12 +4,14 @@ import type {
   ErrorAction,
   GrpcAction,
   GrpcMessage,
+  LoadMethodsAction,
   RequestMessageAction,
   ResponseMessageAction,
   StatusAction,
 } from './grpc-actions';
 import { GrpcActionTypeEnum } from './grpc-actions';
 import type { ServiceError } from '../../../network/grpc/service-error';
+import type { GrpcMethodDefinition } from '../../../network/grpc/method';
 
 export type GrpcRequestState = {
   running: boolean,
@@ -17,10 +19,22 @@ export type GrpcRequestState = {
   responseMessages: Array<GrpcMessage>,
   status?: GrpcStatusObject,
   error: ServiceError,
+  methods: Array<GrpcMethodDefinition>,
+  reloadMethods: boolean,
 };
 export type GrpcState = { [requestId: string]: GrpcRequestState };
 
 const INITIAL_GRPC_REQUEST_STATE: GrpcRequestState = {
+  running: false,
+  requestMessages: [],
+  responseMessages: [],
+  status: undefined,
+  error: undefined,
+  methods: [],
+  reloadMethods: true,
+};
+
+const CLEAR_GRPC_REQUEST_STATE: Shape<GrpcRequestState> = {
   running: false,
   requestMessages: [],
   responseMessages: [],
@@ -43,9 +57,7 @@ export const grpcReducer = (state: GrpcState, action: GrpcAction): GrpcState => 
 
   switch (action.type) {
     case GrpcActionTypeEnum.reset: {
-      return _patch(state, requestId, {
-        ...INITIAL_GRPC_REQUEST_STATE,
-      });
+      return _patch(state, requestId, INITIAL_GRPC_REQUEST_STATE);
     }
     case GrpcActionTypeEnum.start: {
       return _patch(state, requestId, {
@@ -77,6 +89,27 @@ export const grpcReducer = (state: GrpcState, action: GrpcAction): GrpcState => 
     case GrpcActionTypeEnum.status: {
       const { payload }: StatusAction = action;
       return _patch(state, requestId, { ...oldState, status: payload });
+    }
+    case GrpcActionTypeEnum.clear: {
+      return _patch(state, requestId, {
+        ...oldState,
+        ...CLEAR_GRPC_REQUEST_STATE,
+      });
+    }
+    case GrpcActionTypeEnum.loadMethods: {
+      const { payload }: LoadMethodsAction = action;
+      return _patch(state, requestId, {
+        ...oldState,
+        ...CLEAR_GRPC_REQUEST_STATE,
+        methods: payload,
+        reloadMethods: false,
+      });
+    }
+    case GrpcActionTypeEnum.invalidate: {
+      return _patch(state, requestId, {
+        ...oldState,
+        reloadMethods: true,
+      });
     }
     default: {
       throw new Error(`Unhandled action type: ${action.type}`);

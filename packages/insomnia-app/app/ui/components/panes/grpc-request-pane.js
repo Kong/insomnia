@@ -10,10 +10,9 @@ import type { GrpcRequest } from '../../../models/grpc-request';
 import type { GrpcMethodDefinition, GrpcMethodType } from '../../../network/grpc/method';
 import { canClientStream, getMethodType, GrpcMethodTypeName } from '../../../network/grpc/method';
 import * as models from '../../../models';
-import * as protoLoader from '../../../network/grpc/proto-loader';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import GrpcSendButton from '../buttons/grpc-send-button';
-import { grpcActions, useGrpc, useGrpcIpc } from '../../context/grpc';
+import { grpcActions, useGrpc, useGrpcIpc, useGrpcRequestState } from '../../context/grpc';
 import type { GrpcDispatch } from '../../context/grpc/grpc-actions';
 import { showModal } from '../modals';
 import ProtoFilesModal from '../modals/proto-files-modal';
@@ -22,21 +21,6 @@ type Props = {
   forceRefreshKey: string,
   activeRequest: GrpcRequest,
   settings: Settings,
-};
-
-type MethodSelection = {
-  selectedMethod: GrpcMethodDefinition | undefined,
-  selectedMethodType: GrpcMethodType | undefined,
-};
-
-const getMethodSelection = (
-  methods: Array<GrpcMethodDefinition>,
-  methodName: string,
-): MethodSelection => {
-  const selectedMethod = methods.find(c => c.path === methodName);
-  const selectedMethodType = selectedMethod && getMethodType(selectedMethod);
-
-  return { selectedMethod, selectedMethodType };
 };
 
 type ChangeHandlers = {
@@ -59,7 +43,7 @@ const useChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): Change
 
     const method = async (value: string) => {
       await models.grpcRequest.update(request, { protoMethodName: value });
-      dispatch(grpcActions.reset(request._id));
+      grpcActions.clear(dispatch, request._id);
     };
 
     const protoFile = async () => {
@@ -69,12 +53,13 @@ const useChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): Change
           if (request.protoFileId !== protoFileId) {
             const initial = models.grpcRequest.init();
 
+            // Reset the body as it is no longer relevant
             await models.grpcRequest.update(request, {
               protoFileId,
               body: initial.body,
               protoMethodName: initial.protoMethodName,
             });
-            dispatch(grpcActions.reset(request._id));
+            grpcActions.invalidate(dispatch, request._id);
           }
         },
       });
@@ -84,32 +69,48 @@ const useChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): Change
   }, [request, dispatch]);
 };
 
-const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings, activeProtoFiles }: Props) => {
-  const [{ requestMessages, running }, grpcDispatch] = useGrpc(activeRequest._id);
+type MethodSelection = {
+  method: GrpcMethodDefinition | undefined,
+  methodType: GrpcMethodType | undefined,
+  methodTypeName: string | undefined,
+  enableClientStream: boolean | undefined,
+};
 
-  const [methods, setMethods] = React.useState<Array<GrpcMethodDefinition>>([]);
+const useSelectedMethod = (requestId: string, protoMethodName: string): MethodSelection => {
+  const { methods } = useGrpcRequestState(requestId);
+
+  return React.useMemo(() => {
+    const selectedMethod = methods.find(c => c.path === protoMethodName);
+    const methodType = selectedMethod && getMethodType(selectedMethod);
+    const methodTypeName = GrpcMethodTypeName[methodType];
+    const enableClientStream = canClientStream(methodType);
+
+    return { method: selectedMethod, methodType, methodTypeName, enableClientStream };
+  }, [methods, protoMethodName]);
+};
+
+const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
+  const [{ requestMessages, running, methods, reloadMethods }, grpcDispatch] = useGrpc(
+    activeRequest._id,
+  );
 
   // Reload the methods, on first mount, or if the request protoFile changes
   React.useEffect(() => {
     const func = async () => {
-      const protoFile = await models.protoFile.getById(activeRequest.protoFileId);
-      setMethods(await protoLoader.loadMethods(protoFile));
+      await grpcActions.loadMethods(
+        grpcDispatch,
+        activeRequest._id,
+        activeRequest.protoFileId,
+        reloadMethods,
+      );
     };
     func();
-  }, [activeRequest.protoFileId]);
+  }, [activeRequest._id, activeRequest.protoFileId, reloadMethods, grpcDispatch]);
 
-  // If the methods, or the selected proto method changes, get an updated method selection
-  const { selectedMethod, selectedMethodType } = React.useMemo(
-    () => getMethodSelection(methods, activeRequest.protoMethodName),
-    [methods, activeRequest.protoMethodName],
+  const { method, methodType, methodTypeName, enableClientStream } = useSelectedMethod(
+    activeRequest._id,
+    activeRequest.protoMethodName,
   );
-
-  // If there is no longer a method selected, reset the request state
-  React.useEffect(() => {
-    if (!selectedMethod) {
-      grpcDispatch(grpcActions.reset(activeRequest._id));
-    }
-  }, [activeRequest._id, grpcDispatch, selectedMethod]);
 
   const handleChange = useChangeHandlers(activeRequest, grpcDispatch);
 
@@ -136,19 +137,19 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings, activeProto
         <GrpcMethodDropdown
           disabled={running}
           methods={methods}
-          selectedMethod={selectedMethod}
+          selectedMethod={method}
           handleChange={handleChange.method}
           handleChangeProtoFile={handleChange.protoFile}
         />
 
-        <GrpcSendButton requestId={activeRequest._id} methodType={selectedMethodType} />
+        <GrpcSendButton requestId={activeRequest._id} methodType={methodType} />
       </PaneHeader>
       <PaneBody>
-        {selectedMethodType && (
+        {methodType && (
           <Tabs className="react-tabs" forceRenderTabPanel>
             <TabList>
               <Tab>
-                <button>{GrpcMethodTypeName[selectedMethodType]}</button>
+                <button>{methodTypeName}</button>
               </Tab>
               <Tab>
                 <button>Headers</button>
@@ -162,7 +163,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings, activeProto
                 messages={requestMessages}
                 bodyText={activeRequest.body.text}
                 handleBodyChange={handleChange.body}
-                showActions={running && canClientStream(selectedMethodType)}
+                showActions={running && enableClientStream}
                 handleStream={() => {
                   sendIpc(GrpcRequestEventEnum.sendMessage);
                   grpcDispatch(
@@ -177,7 +178,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings, activeProto
             </TabPanel>
           </Tabs>
         )}
-        {!selectedMethodType && (
+        {!methodType && (
           <div className="overflow-hidden editor vertically-center text-center">
             <p className="pad super-faint text-sm text-center">
               <i className="fa fa-hand-peace-o" style={{ fontSize: '8rem', opacity: 0.3 }} />
