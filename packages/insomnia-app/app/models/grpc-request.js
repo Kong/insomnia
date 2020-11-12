@@ -32,7 +32,9 @@ export function init(): BaseGrpcRequest {
     description: '',
     protoFileId: '',
     protoMethodName: '',
-    body: {},
+    body: {
+      text: '{}',
+    },
     metaSortKey: -1 * Date.now(),
     idPrivate: false,
   };
