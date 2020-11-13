@@ -47,7 +47,7 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
         return c;
       }
 
-      return { ...c, choose: e.currentTarget.value };
+      return { ...c, choose: e.currentTarget.value || null };
     });
 
     this.setState({ conflicts });
@@ -93,7 +93,7 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
                       Mine{' '}
                       <input
                         type="radio"
-                        value={conflict.mineBlob}
+                        value={conflict.mineBlob || ''}
                         checked={conflict.choose === conflict.mineBlob}
                         onChange={e => this._handleToggleSelect(conflict.key, e)}
                       />
@@ -102,7 +102,7 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
                       Theirs{' '}
                       <input
                         type="radio"
-                        value={conflict.theirsBlob}
+                        value={conflict.theirsBlob || ''}
                         checked={conflict.choose === conflict.theirsBlob}
                         onChange={e => this._handleToggleSelect(conflict.key, e)}
                       />

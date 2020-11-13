@@ -15,6 +15,7 @@ import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
 import GrpcTag from '../tags/grpc-tag';
 import * as requestOperations from '../../../models/helpers/request-operations';
+import GrpcSpinner from '../grpc-spinner';
 
 @autobind
 class SidebarRequestRow extends PureComponent {
@@ -215,6 +216,7 @@ class SidebarRequestRow extends PureComponent {
                     />
                   )}
                 />
+                <GrpcSpinner requestId={request._id} className="margin-right-sm" />
               </div>
             </button>
             <div className="sidebar__actions">

@@ -17,7 +17,6 @@ type BaseGrpcRequest = {
   url: string,
   description: string,
   protoFileId?: string,
-  protoServiceName?: string,
   protoMethodName?: string,
   body: RequestBody,
   metaSortKey: number,
@@ -32,9 +31,10 @@ export function init(): BaseGrpcRequest {
     name: 'New gRPC Request',
     description: '',
     protoFileId: '',
-    protoServiceName: '',
     protoMethodName: '',
-    body: {},
+    body: {
+      text: '{}',
+    },
     metaSortKey: -1 * Date.now(),
     idPrivate: false,
   };

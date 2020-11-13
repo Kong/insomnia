@@ -239,7 +239,11 @@ class WrapperDebug extends React.PureComponent<Props> {
     if (activeRequest && isGrpcRequest(activeRequest)) {
       return (
         <ErrorBoundary showAlert>
-          <GrpcRequestPane />
+          <GrpcRequestPane
+            activeRequest={activeRequest}
+            forceRefreshCounter={forceRefreshKey}
+            settings={settings}
+          />
         </ErrorBoundary>
       );
     }

@@ -48,11 +48,12 @@ module.exports = {
   ...remote,
   remote: remote,
   ipcMain: {
-    on() {},
+    on: jest.fn(),
     once() {},
   },
   ipcRenderer: {
-    on() {},
+    on: jest.fn(),
+    removeAllListeners: jest.fn(),
     once() {},
     send() {},
   },

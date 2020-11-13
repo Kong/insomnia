@@ -98,6 +98,7 @@ import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
 import { isGrpcRequest, isGrpcRequestId } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
+import { GrpcProvider } from '../context/grpc/grpc-context';
 
 @autobind
 class App extends PureComponent {
@@ -1289,70 +1290,72 @@ class App extends PureComponent {
 
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
-        <div className="app" key={uniquenessKey}>
-          <ErrorBoundary showAlert>
-            <Wrapper
-              {...this.props}
-              ref={this._setWrapperRef}
-              paneWidth={paneWidth}
-              paneHeight={paneHeight}
-              sidebarWidth={sidebarWidth}
-              handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
-              handleSetRequestPinned={this._handleSetRequestPinned}
-              handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
-              handleActivateRequest={this._handleSetActiveRequest}
-              handleSetRequestPaneRef={this._setRequestPaneRef}
-              handleSetResponsePaneRef={this._setResponsePaneRef}
-              handleSetSidebarRef={this._setSidebarRef}
-              handleStartDragSidebar={this._startDragSidebar}
-              handleResetDragSidebar={this._resetDragSidebar}
-              handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
-              handleStartDragPaneVertical={this._startDragPaneVertical}
-              handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
-              handleResetDragPaneVertical={this._resetDragPaneVertical}
-              handleCreateRequest={this._requestCreate}
-              handleRender={this._handleRenderText}
-              handleGetRenderContext={this._handleGetRenderContext}
-              handleDuplicateRequest={this._requestDuplicate}
-              handleDuplicateRequestGroup={App._requestGroupDuplicate}
-              handleMoveRequestGroup={App._requestGroupMove}
-              handleDuplicateWorkspace={this._workspaceDuplicate}
-              handleDuplicateWorkspaceById={this._workspaceDuplicateById}
-              handleRenameWorkspaceById={this._workspaceRename}
-              handleDeleteWorkspaceById={this._workspaceDeleteById}
-              handleCreateRequestGroup={this._requestGroupCreate}
-              handleGenerateCode={App._handleGenerateCode}
-              handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
-              handleCopyAsCurl={this._handleCopyAsCurl}
-              handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
-              handleSetResponseFilter={this._handleSetResponseFilter}
-              handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
-              handleSendAndDownloadRequestWithEnvironment={
-                this._handleSendAndDownloadRequestWithEnvironment
-              }
-              handleSetActiveResponse={this._handleSetActiveResponse}
-              handleSetActiveRequest={this._handleSetActiveRequest}
-              handleSetActiveEnvironment={this._handleSetActiveEnvironment}
-              handleSetSidebarFilter={this._handleSetSidebarFilter}
-              handleToggleMenuBar={this._handleToggleMenuBar}
-              handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-              handleShowExportRequestsModal={this._handleShowExportRequestsModal}
-              handleShowSettingsModal={App._handleShowSettingsModal}
-              handleUpdateDownloadPath={this._handleUpdateDownloadPath}
-              isVariableUncovered={isVariableUncovered}
-              headerEditorKey={forceRefreshHeaderCounter + ''}
-              vcs={vcs}
-              gitVCS={gitVCS}
-            />
-          </ErrorBoundary>
+        <GrpcProvider>
+          <div className="app" key={uniquenessKey}>
+            <ErrorBoundary showAlert>
+              <Wrapper
+                {...this.props}
+                ref={this._setWrapperRef}
+                paneWidth={paneWidth}
+                paneHeight={paneHeight}
+                sidebarWidth={sidebarWidth}
+                handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+                handleSetRequestPinned={this._handleSetRequestPinned}
+                handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
+                handleActivateRequest={this._handleSetActiveRequest}
+                handleSetRequestPaneRef={this._setRequestPaneRef}
+                handleSetResponsePaneRef={this._setResponsePaneRef}
+                handleSetSidebarRef={this._setSidebarRef}
+                handleStartDragSidebar={this._startDragSidebar}
+                handleResetDragSidebar={this._resetDragSidebar}
+                handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
+                handleStartDragPaneVertical={this._startDragPaneVertical}
+                handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
+                handleResetDragPaneVertical={this._resetDragPaneVertical}
+                handleCreateRequest={this._requestCreate}
+                handleRender={this._handleRenderText}
+                handleGetRenderContext={this._handleGetRenderContext}
+                handleDuplicateRequest={this._requestDuplicate}
+                handleDuplicateRequestGroup={App._requestGroupDuplicate}
+                handleMoveRequestGroup={App._requestGroupMove}
+                handleDuplicateWorkspace={this._workspaceDuplicate}
+                handleDuplicateWorkspaceById={this._workspaceDuplicateById}
+                handleRenameWorkspaceById={this._workspaceRename}
+                handleDeleteWorkspaceById={this._workspaceDeleteById}
+                handleCreateRequestGroup={this._requestGroupCreate}
+                handleGenerateCode={App._handleGenerateCode}
+                handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
+                handleCopyAsCurl={this._handleCopyAsCurl}
+                handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
+                handleSetResponseFilter={this._handleSetResponseFilter}
+                handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
+                handleSendAndDownloadRequestWithEnvironment={
+                  this._handleSendAndDownloadRequestWithEnvironment
+                }
+                handleSetActiveResponse={this._handleSetActiveResponse}
+                handleSetActiveRequest={this._handleSetActiveRequest}
+                handleSetActiveEnvironment={this._handleSetActiveEnvironment}
+                handleSetSidebarFilter={this._handleSetSidebarFilter}
+                handleToggleMenuBar={this._handleToggleMenuBar}
+                handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
+                handleShowExportRequestsModal={this._handleShowExportRequestsModal}
+                handleShowSettingsModal={App._handleShowSettingsModal}
+                handleUpdateDownloadPath={this._handleUpdateDownloadPath}
+                isVariableUncovered={isVariableUncovered}
+                headerEditorKey={forceRefreshHeaderCounter + ''}
+                vcs={vcs}
+                gitVCS={gitVCS}
+              />
+            </ErrorBoundary>
 
-          <ErrorBoundary showAlert>
-            <Toast />
-          </ErrorBoundary>
+            <ErrorBoundary showAlert>
+              <Toast />
+            </ErrorBoundary>
 
-          {/* Block all mouse activity by showing an overlay while dragging */}
-          {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
-        </div>
+            {/* Block all mouse activity by showing an overlay while dragging */}
+            {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
+          </div>
+        </GrpcProvider>
       </KeydownBinder>
     );
   }
