@@ -55,3 +55,17 @@ export const useGrpc = (requestId: string): [GrpcRequestState, GrpcDispatch] => 
   useGrpcRequestState(requestId),
   useGrpcDispatch(),
 ];
+
+type GrpcContextModalWrapperProps = {|
+  children: (dispatch: GrpcDispatch) => React.Node,
+|};
+
+export const GrpcDispatchModalWrapper = ({ children }: GrpcContextModalWrapperProps) => {
+  const dispatch = useGrpcDispatch();
+
+  React.useEffect(() => {
+    console.log('mounted');
+  }, []);
+
+  return children(dispatch);
+};
