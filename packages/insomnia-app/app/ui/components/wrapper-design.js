@@ -235,15 +235,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
     const { previewHidden, hasConfigPlugins } = this.state;
 
-    let swaggerUiSpec;
-    try {
-      swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
-    } catch (err) {}
-
-    if (!swaggerUiSpec) {
-      swaggerUiSpec = {};
-    }
-
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
