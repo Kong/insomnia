@@ -195,7 +195,6 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     } catch (err) {
       showError({
         title: 'Push Error',
-        message: err.message,
         error: err,
       });
     }
@@ -214,7 +213,6 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     } catch (err) {
       showError({
         title: 'Pull Error',
-        message: err.message,
         error: err,
       });
     }
@@ -237,7 +235,6 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     } catch (err) {
       showError({
         title: 'Revert Error',
-        message: err.message,
         error: err,
       });
     }
@@ -323,7 +320,6 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     } catch (err) {
       showError({
         title: 'Branch Switch Error',
-        message: err.message,
         error: err,
       });
     }
