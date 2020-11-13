@@ -4,7 +4,7 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
-import { showAlert, showModal } from '../modals';
+import { showError, showModal } from '../modals';
 import SyncStagingModal from '../modals/sync-staging-modal';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
@@ -14,7 +14,6 @@ import SyncBranchesModal from '../modals/sync-branches-modal';
 import SyncDeleteModal from '../modals/sync-delete-modal';
 import VCS from '../../../sync/vcs';
 import type { Project, Snapshot, Status, StatusCandidate } from '../../../sync/types';
-import ErrorModal from '../modals/error-modal';
 import Tooltip from '../tooltip';
 import LoginModal from '../modals/login-modal';
 import * as session from '../../../account/session';
@@ -194,9 +193,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     try {
       await vcs.push();
     } catch (err) {
-      showModal(ErrorModal, {
+      showError({
         title: 'Push Error',
         message: err.message,
+        error: err,
       });
     }
 
@@ -212,9 +212,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       await db.batchModifyDocs(delta);
       this.refreshOnNextSyncItems = true;
     } catch (err) {
-      showModal(ErrorModal, {
+      showError({
         title: 'Pull Error',
         message: err.message,
+        error: err,
       });
     }
     this.setState({ loadingPull: false });
@@ -234,9 +235,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       const delta = await vcs.rollbackToLatest(syncItems);
       await db.batchModifyDocs(delta);
     } catch (err) {
-      showModal(ErrorModal, {
+      showError({
         title: 'Revert Error',
         message: err.message,
+        error: err,
       });
     }
   }
@@ -265,6 +267,8 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   async _handleSetProject(p: Project) {
     const { vcs } = this.props;
     this.setState({ loadingProjectPull: true });
+    const modelTypes = models.types();
+
     await vcs.setProject(p);
 
     await vcs.checkout([], DEFAULT_BRANCH_NAME);
@@ -285,6 +289,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       await vcs.pull([]); // There won't be any existing docs since it's a new pull
       const flushId = await db.bufferChanges();
       for (const doc of await vcs.allDocuments()) {
+        if (!modelTypes.find(c => c === doc.type)) {
+          console.warn(`Unknown doc type for pull: ${doc.type}. Failed to load _id=${doc._id}.`);
+          continue;
+        }
         await db.upsert(doc);
       }
       await db.flushChanges(flushId);
@@ -313,9 +321,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
       await db.batchModifyDocs(delta);
     } catch (err) {
-      showAlert({
+      showError({
         title: 'Branch Switch Error',
         message: err.message,
+        error: err,
       });
     }
 
