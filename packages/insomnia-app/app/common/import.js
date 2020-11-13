@@ -202,7 +202,7 @@ export async function importRaw(
     // Hack to switch to GraphQL based on finding `graphql` in the URL path
     // TODO: Support this in a better way
     if (
-      model.type === models.request.type &&
+      isRequest(model) &&
       resource.body &&
       typeof resource.body.text === 'string' &&
       typeof resource.url === 'string' &&
