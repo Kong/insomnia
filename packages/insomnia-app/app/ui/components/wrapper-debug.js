@@ -290,6 +290,7 @@ class WrapperDebug extends React.PureComponent<Props> {
 
   _renderResponsePane() {
     const {
+      forceRefreshKey,
       handleDeleteResponse,
       handleDeleteResponses,
       handleSetActiveResponse,
@@ -318,7 +319,11 @@ class WrapperDebug extends React.PureComponent<Props> {
     if (activeRequest && isGrpcRequest(activeRequest)) {
       return (
         <ErrorBoundary showAlert>
-          <GrpcResponsePane />
+          <GrpcResponsePane
+            activeRequest={activeRequest}
+            forceRefreshCounter={forceRefreshKey}
+            settings={settings}
+          />
         </ErrorBoundary>
       );
     }
