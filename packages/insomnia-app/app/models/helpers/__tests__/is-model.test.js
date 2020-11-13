@@ -3,6 +3,7 @@ import { difference } from 'lodash';
 import {
   isGrpcRequest,
   isGrpcRequestId,
+  isProtoFile,
   isRequest,
   isRequestGroup,
   isRequestId,
@@ -74,5 +75,18 @@ describe('isRequestGroup', () => {
 
   it.each(unsupported)('should return false: "%s"', type => {
     expect(isRequestGroup({ type })).toBe(false);
+  });
+});
+
+describe('isProtoFile', () => {
+  const supported = [models.protoFile.type];
+  const unsupported = difference(allTypes, supported);
+
+  it.each(supported)('should return true: "%s"', type => {
+    expect(isProtoFile({ type })).toBe(true);
+  });
+
+  it.each(unsupported)('should return false: "%s"', type => {
+    expect(isProtoFile({ type })).toBe(false);
   });
 });

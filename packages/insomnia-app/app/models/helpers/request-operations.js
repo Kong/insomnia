@@ -1,6 +1,13 @@
 // @flow
 import * as models from '../index';
-import { isGrpcRequest } from './is-model';
+import { isGrpcRequest, isGrpcRequestId } from './is-model';
+import type { GrpcRequest } from '../grpc-request';
+
+export function getById(requestId: string): Promise<Request | GrpcRequest | null> {
+  return isGrpcRequestId(requestId)
+    ? models.grpcRequest.getById(requestId)
+    : models.request.getById(requestId);
+}
 
 export function remove<T>(request: T): Promise<void> {
   return isGrpcRequest(request)
