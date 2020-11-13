@@ -118,5 +118,8 @@ export async function allDocs() {
     ...(await models.unitTestSuite.all()),
     ...(await models.unitTest.all()),
     ...(await models.unitTestResult.all()),
+    ...(await models.protoFile.all()),
+    ...(await models.grpcRequest.all()),
+    ...(await models.grpcRequestMeta.all()),
   ];
 }

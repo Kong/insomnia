@@ -177,6 +177,9 @@ export const HTTP_METHODS = [
   METHOD_HEAD,
 ];
 
+// Additional methods
+export const METHOD_GRPC = 'GRPC';
+
 // Preview Modes
 export const PREVIEW_MODE_FRIENDLY = 'friendly';
 export const PREVIEW_MODE_SOURCE = 'source';

@@ -13,6 +13,9 @@ import { showModal } from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
+import GrpcTag from '../tags/grpc-tag';
+import * as requestOperations from '../../../models/helpers/request-operations';
+import GrpcSpinner from '../grpc-spinner';
 
 @autobind
 class SidebarRequestRow extends PureComponent {
@@ -39,8 +42,12 @@ class SidebarRequestRow extends PureComponent {
     this.setState({ isEditing: true });
   }
 
-  _handleRequestUpdateName(name) {
-    models.request.update(this.props.request, { name });
+  async _handleRequestUpdateName(name) {
+    const { request } = this.props;
+    const patch = { name };
+
+    await requestOperations.update(request, patch);
+
     this.setState({ isEditing: false });
   }
 
@@ -174,6 +181,13 @@ class SidebarRequestRow extends PureComponent {
         </li>
       );
     } else {
+      const methodTag =
+        request.type === models.grpcRequest.type ? (
+          <GrpcTag />
+        ) : (
+          <MethodTag method={request.method} override={this._getMethodOverrideHeaderValue()} />
+        );
+
       node = (
         <li className={classes}>
           <div
@@ -185,10 +199,7 @@ class SidebarRequestRow extends PureComponent {
               onClick={this._handleRequestActivate}
               onContextMenu={this._handleShowRequestActions}>
               <div className="sidebar__clickable">
-                <MethodTag
-                  method={request.method}
-                  override={this._getMethodOverrideHeaderValue()}
-                />
+                {methodTag}
                 <Editable
                   value={request.name}
                   fallbackValue={this.state.renderedUrl}
@@ -205,6 +216,7 @@ class SidebarRequestRow extends PureComponent {
                     />
                   )}
                 />
+                <GrpcSpinner requestId={request._id} className="margin-right-sm" />
               </div>
             </button>
             <div className="sidebar__actions">
@@ -267,7 +279,7 @@ SidebarRequestRow.propTypes = {
 
   // Optional
   requestGroup: PropTypes.object,
-  request: PropTypes.object,
+  request: PropTypes.object, // can be Request or GrpcRequest
   disableDragAndDrop: PropTypes.bool,
 };
 

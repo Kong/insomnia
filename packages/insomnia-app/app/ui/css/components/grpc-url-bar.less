@@ -1,0 +1,60 @@
+.grpc-urlbar {
+
+    &.pane,
+    &.pane__header {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+
+        .form-control {
+            height: 100%;
+            flex: 1 0 auto;
+            align-self: auto;
+            margin-bottom: 0;
+            flex-basis: 4em; 
+        }
+        .dropdown {
+            flex: 1 0 auto;
+        }
+    }
+
+  button:focus,
+  button:hover {
+    background-color: var(--hl-xs);
+
+
+  }
+
+  & > .dropdown > button {
+    height: 100%;
+    padding-left: var(--padding-sm);
+    padding-right: var(--padding-sm);
+    width: 100%;
+    min-width: 4.5em;
+    display: flex;
+    justify-content: space-between;
+
+    // Pad the method name on the right
+    & > *:first-child {
+      padding-left: 0.5em;
+    }
+
+    // Make everything the same height
+    &,
+    & > i.fa {
+      line-height: var(--height-nav);
+    }
+  }
+
+  .urlbar__send-btn {
+    padding-right: var(--padding-md);
+    padding-left: var(--padding-md);
+    min-width: 5em;
+    text-align: center;
+    line-height: var(--height-nav);
+    height: 100%;
+    margin-left: auto;
+  }
+}

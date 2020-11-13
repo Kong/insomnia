@@ -39,6 +39,7 @@ import {
   selectActiveCookieJar,
   selectActiveGitRepository,
   selectActiveOAuth2Token,
+  selectActiveProtoFiles,
   selectActiveRequest,
   selectActiveRequestMeta,
   selectActiveRequestResponses,
@@ -51,11 +52,11 @@ import {
   selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
   selectEntitiesLists,
-  selectSidebarChildren,
   selectSyncItems,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
 } from '../redux/selectors';
+import { selectSidebarChildren } from '../redux/sidebar-selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
@@ -95,6 +96,9 @@ import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
+import { isGrpcRequest, isGrpcRequestId } from '../../models/helpers/is-model';
+import * as requestOperations from '../../models/helpers/request-operations';
+import { GrpcProvider } from '../context/grpc/grpc-context';
 import { getSortMethod } from '../../common/sorting';
 
 @autobind
@@ -228,11 +232,11 @@ class App extends PureComponent {
           showModal(AskModal, {
             title: 'Delete Request?',
             message: `Really delete ${activeRequest.name}?`,
-            onDone: confirmed => {
+            onDone: async confirmed => {
               if (!confirmed) {
                 return;
               }
-              models.request.remove(activeRequest);
+              await requestOperations.remove(activeRequest);
             },
           });
         },
@@ -260,15 +264,18 @@ class App extends PureComponent {
       [
         hotKeyRefs.REQUEST_TOGGLE_PIN,
         async () => {
-          if (!this.props.activeRequest) {
+          const { activeRequest, entities } = this.props;
+          if (!activeRequest) {
             return;
           }
 
-          const metas = Object.values(this.props.entities.requestMetas).find(
-            m => m.parentId === this.props.activeRequest._id,
-          );
+          const entitiesToCheck = isGrpcRequest(activeRequest)
+            ? entities.grpcRequestMetas
+            : entities.requestMetas;
 
-          await this._handleSetRequestPinned(this.props.activeRequest, !(metas && metas.pinned));
+          const meta = Object.values(entitiesToCheck).find(m => m.parentId === activeRequest._id);
+
+          await this._handleSetRequestPinned(this.props.activeRequest, !meta?.pinned);
         },
       ],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
@@ -330,8 +337,8 @@ class App extends PureComponent {
   _requestCreate(parentId) {
     showModal(RequestCreateModal, {
       parentId,
-      onComplete: request => {
-        this._handleSetActiveRequest(request._id);
+      onComplete: requestId => {
+        this._handleSetActiveRequest(requestId);
       },
     });
   }
@@ -398,7 +405,7 @@ class App extends PureComponent {
       label: 'New Name',
       selectText: true,
       onComplete: async name => {
-        const newRequest = await models.request.duplicate(request, { name });
+        const newRequest = await requestOperations.duplicate(request, { name });
         await this._handleSetActiveRequest(newRequest._id);
       },
     });
@@ -530,12 +537,12 @@ class App extends PureComponent {
   }
 
   static async _updateRequestMetaByParentId(requestId, patch) {
-    const requestMeta = await models.requestMeta.getByParentId(requestId);
-    if (requestMeta) {
-      return models.requestMeta.update(requestMeta, patch);
+    const isGrpc = isGrpcRequestId(requestId);
+
+    if (isGrpc) {
+      return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
     } else {
-      const newPatch = Object.assign({ parentId: requestId }, patch);
-      return models.requestMeta.create(newPatch);
+      return models.requestMeta.updateOrCreateByParentId(requestId, patch);
     }
   }
 
@@ -655,7 +662,7 @@ class App extends PureComponent {
   async _getDownloadLocation() {
     const options = {
       title: 'Select Download Location',
-      buttonLabel: 'Send and Save',
+      buttonLabel: 'Save',
     };
 
     const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
@@ -747,15 +754,15 @@ class App extends PureComponent {
           </div>
         ),
       });
+    } finally {
+      // Unset active response because we just made a new one
+      await App._updateRequestMetaByParentId(requestId, {
+        activeResponseId: null,
+      });
+
+      // Stop loading
+      handleStopLoading(requestId);
     }
-
-    // Unset active response because we just made a new one
-    await App._updateRequestMetaByParentId(requestId, {
-      activeResponseId: null,
-    });
-
-    // Stop loading
-    handleStopLoading(requestId);
   }
 
   async _handleSendRequestWithEnvironment(requestId, environmentId) {
@@ -1317,71 +1324,73 @@ class App extends PureComponent {
 
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
-        <div className="app" key={uniquenessKey}>
-          <ErrorBoundary showAlert>
-            <Wrapper
-              {...this.props}
-              ref={this._setWrapperRef}
-              paneWidth={paneWidth}
-              paneHeight={paneHeight}
-              sidebarWidth={sidebarWidth}
-              handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
-              handleSetRequestPinned={this._handleSetRequestPinned}
-              handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
-              handleActivateRequest={this._handleSetActiveRequest}
-              handleSetRequestPaneRef={this._setRequestPaneRef}
-              handleSetResponsePaneRef={this._setResponsePaneRef}
-              handleSetSidebarRef={this._setSidebarRef}
-              handleStartDragSidebar={this._startDragSidebar}
-              handleResetDragSidebar={this._resetDragSidebar}
-              handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
-              handleStartDragPaneVertical={this._startDragPaneVertical}
-              handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
-              handleResetDragPaneVertical={this._resetDragPaneVertical}
-              handleCreateRequest={this._requestCreate}
-              handleRender={this._handleRenderText}
-              handleGetRenderContext={this._handleGetRenderContext}
-              handleDuplicateRequest={this._requestDuplicate}
-              handleDuplicateRequestGroup={App._requestGroupDuplicate}
-              handleMoveRequestGroup={App._requestGroupMove}
-              handleDuplicateWorkspace={this._workspaceDuplicate}
-              handleDuplicateWorkspaceById={this._workspaceDuplicateById}
-              handleRenameWorkspaceById={this._workspaceRename}
-              handleDeleteWorkspaceById={this._workspaceDeleteById}
-              handleCreateRequestGroup={this._requestGroupCreate}
-              handleGenerateCode={App._handleGenerateCode}
-              handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
-              handleCopyAsCurl={this._handleCopyAsCurl}
-              handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
-              handleSetResponseFilter={this._handleSetResponseFilter}
-              handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
-              handleSendAndDownloadRequestWithEnvironment={
-                this._handleSendAndDownloadRequestWithEnvironment
-              }
-              handleSetActiveResponse={this._handleSetActiveResponse}
-              handleSetActiveRequest={this._handleSetActiveRequest}
-              handleSetActiveEnvironment={this._handleSetActiveEnvironment}
-              handleSetSidebarFilter={this._handleSetSidebarFilter}
-              handleToggleMenuBar={this._handleToggleMenuBar}
-              handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-              handleShowExportRequestsModal={this._handleShowExportRequestsModal}
-              handleShowSettingsModal={App._handleShowSettingsModal}
-              handleUpdateDownloadPath={this._handleUpdateDownloadPath}
-              isVariableUncovered={isVariableUncovered}
-              headerEditorKey={forceRefreshHeaderCounter + ''}
-              handleSidebarSort={this._sortSidebar}
-              vcs={vcs}
-              gitVCS={gitVCS}
-            />
-          </ErrorBoundary>
+        <GrpcProvider>
+          <div className="app" key={uniquenessKey}>
+            <ErrorBoundary showAlert>
+              <Wrapper
+                {...this.props}
+                ref={this._setWrapperRef}
+                paneWidth={paneWidth}
+                paneHeight={paneHeight}
+                sidebarWidth={sidebarWidth}
+                handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+                handleSetRequestPinned={this._handleSetRequestPinned}
+                handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
+                handleActivateRequest={this._handleSetActiveRequest}
+                handleSetRequestPaneRef={this._setRequestPaneRef}
+                handleSetResponsePaneRef={this._setResponsePaneRef}
+                handleSetSidebarRef={this._setSidebarRef}
+                handleStartDragSidebar={this._startDragSidebar}
+                handleResetDragSidebar={this._resetDragSidebar}
+                handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
+                handleStartDragPaneVertical={this._startDragPaneVertical}
+                handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
+                handleResetDragPaneVertical={this._resetDragPaneVertical}
+                handleCreateRequest={this._requestCreate}
+                handleRender={this._handleRenderText}
+                handleGetRenderContext={this._handleGetRenderContext}
+                handleDuplicateRequest={this._requestDuplicate}
+                handleDuplicateRequestGroup={App._requestGroupDuplicate}
+                handleMoveRequestGroup={App._requestGroupMove}
+                handleDuplicateWorkspace={this._workspaceDuplicate}
+                handleDuplicateWorkspaceById={this._workspaceDuplicateById}
+                handleRenameWorkspaceById={this._workspaceRename}
+                handleDeleteWorkspaceById={this._workspaceDeleteById}
+                handleCreateRequestGroup={this._requestGroupCreate}
+                handleGenerateCode={App._handleGenerateCode}
+                handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
+                handleCopyAsCurl={this._handleCopyAsCurl}
+                handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
+                handleSetResponseFilter={this._handleSetResponseFilter}
+                handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
+                handleSendAndDownloadRequestWithEnvironment={
+                  this._handleSendAndDownloadRequestWithEnvironment
+                }
+                handleSetActiveResponse={this._handleSetActiveResponse}
+                handleSetActiveRequest={this._handleSetActiveRequest}
+                handleSetActiveEnvironment={this._handleSetActiveEnvironment}
+                handleSetSidebarFilter={this._handleSetSidebarFilter}
+                handleToggleMenuBar={this._handleToggleMenuBar}
+                handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
+                handleShowExportRequestsModal={this._handleShowExportRequestsModal}
+                handleShowSettingsModal={App._handleShowSettingsModal}
+                handleUpdateDownloadPath={this._handleUpdateDownloadPath}
+                isVariableUncovered={isVariableUncovered}
+                headerEditorKey={forceRefreshHeaderCounter + ''}
+                handleSidebarSort={this._sortSidebar}
+                vcs={vcs}
+                gitVCS={gitVCS}
+              />
+            </ErrorBoundary>
 
-          <ErrorBoundary showAlert>
-            <Toast />
-          </ErrorBoundary>
+            <ErrorBoundary showAlert>
+              <Toast />
+            </ErrorBoundary>
 
-          {/* Block all mouse activity by showing an overlay while dragging */}
-          {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
-        </div>
+            {/* Block all mouse activity by showing an overlay while dragging */}
+            {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
+          </div>
+        </GrpcProvider>
       </KeydownBinder>
     );
   }
@@ -1482,12 +1491,16 @@ function mapStateToProps(state, props) {
   const activeUnitTestSuites = selectActiveUnitTestSuites(state, props);
   const activeUnitTestResult = selectActiveUnitTestResult(state, props);
 
+  // Proto file stuff
+  const activeProtoFiles = selectActiveProtoFiles(state, props);
+
   return Object.assign({}, state, {
     activity: activeActivity,
     activeApiSpec,
     activeCookieJar,
     activeEnvironment,
     activeGitRepository,
+    activeProtoFiles,
     activeRequest,
     activeRequestResponses,
     activeResponse,
@@ -1577,6 +1590,7 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   // NOTE: using requestToTarget's parentId so we can switch parents!
   const docs = [
     ...(await models.request.findByParentId(parentId)),
+    ...(await models.grpcRequest.findByParentId(parentId)),
     ...(await models.requestGroup.findByParentId(parentId)),
   ].sort((a, b) => (a.metaSortKey < b.metaSortKey ? -1 : 1));
 

@@ -6,15 +6,16 @@ import { remote } from 'electron';
 
 type Props = {
   // Required
-  onChange: Function,
-  path: string,
+  onChange: (path: string) => void,
 
   // Optional
+  path?: string,
   itemtypes?: Array<string>,
   extensions?: Array<string>,
   showFileName?: boolean,
   showFileIcon?: boolean,
   name?: string,
+  staticLabel?: string,
 };
 
 @autobind
@@ -78,7 +79,7 @@ class FileInputButton extends React.PureComponent<Props> {
   }
 
   render() {
-    const { showFileName, showFileIcon, path, name, ...extraProps } = this.props;
+    const { showFileName, showFileIcon, path, name, staticLabel, ...extraProps } = this.props;
 
     // NOTE: Basename fails if path is not a string, so let's make sure it is
     const fileName = typeof path === 'string' ? pathBasename(path) : null;
@@ -91,7 +92,7 @@ class FileInputButton extends React.PureComponent<Props> {
         title={path}
         {...(extraProps: Object)}>
         {showFileIcon && <i className="fa fa-file-o space-right" />}
-        {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
+        {staticLabel || (showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`)}
       </button>
     );
   }

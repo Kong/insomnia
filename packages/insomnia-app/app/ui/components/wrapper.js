@@ -45,6 +45,7 @@ import SyncMergeModal from './modals/sync-merge-modal';
 import SyncHistoryModal from './modals/sync-history-modal';
 import SyncShareModal from './modals/sync-share-modal';
 import SyncBranchesModal from './modals/sync-branches-modal';
+import SyncDeleteModal from './modals/sync-delete-modal';
 import RequestRenderErrorModal from './modals/request-render-error-modal';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
@@ -91,6 +92,7 @@ import {
   SortOrder,
 } from '../../common/constants';
 import { Spectral } from '@stoplight/spectral';
+import ProtoFilesModal from './modals/proto-files-modal';
 
 const spectral = new Spectral();
 
@@ -183,6 +185,7 @@ export type WrapperProps = {
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
   activeGitRepository: GitRepository | null,
+  activeProtoFiles: Array<ProtoFile>,
   activeUnitTestResult: UnitTestResult | null,
   activeUnitTestSuites: Array<UnitTestSuite>,
   activeUnitTests: Array<UnitTest>,
@@ -521,6 +524,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       activeCookieJar,
       activeEnvironment,
       activeGitRepository,
+      activeProtoFiles,
       activeRequest,
       activeWorkspace,
       activeWorkspaceClientCertificates,
@@ -748,6 +752,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
                   vcs={vcs}
                   syncItems={syncItems}
                 />
+                <SyncDeleteModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
                 <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
                 <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
               </React.Fragment>
@@ -772,6 +777,12 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               ref={registerModal}
               childObjects={sidebarChildren.all}
               handleExportRequestsToFile={handleExportRequestsToFile}
+            />
+
+            <ProtoFilesModal
+              ref={registerModal}
+              workspace={activeWorkspace}
+              protoFiles={activeProtoFiles}
             />
           </ErrorBoundary>
         </div>
