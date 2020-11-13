@@ -85,7 +85,7 @@ export function all() {
   ];
 }
 
-export function types(): Array<any> {
+export function types(): Array<string> {
   return all().map(model => model.type);
 }
 

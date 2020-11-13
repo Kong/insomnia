@@ -10,7 +10,7 @@ import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
 import { getAppName, getAppVersion } from '../../../common/constants';
-import { showAlert, showError, showModal, showPrompt } from '../modals';
+import { showError, showModal, showPrompt } from '../modals';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
@@ -145,6 +145,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     }));
 
     try {
+      const modelTypes = models.types();
+
       // Clone old VCS so we don't mess anything up while working on other projects
       const newVCS = vcs.newInstance();
 
@@ -173,6 +175,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
         const flushId = await db.bufferChanges();
         for (const doc of await newVCS.allDocuments()) {
+          if (!modelTypes.find(c => c === doc.type)) {
+            console.warn(`Unknown doc type for pull: ${doc.type}. Failed to load _id=${doc._id}.`);
+            continue;
+          }
           await db.upsert(doc);
         }
         await db.flushChanges(flushId);
@@ -181,9 +187,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       await this._refreshRemoteWorkspaces();
     } catch (err) {
       this._dropdown && this._dropdown.hide();
-      showAlert({
+      showError({
         title: 'Pull Error',
         message: `Failed to pull workspace. ${err.message}`,
+        error: err,
       });
     }
 
