@@ -136,7 +136,7 @@ function importArgs(args) {
   try {
     const urlObject = new URL(getPairValue(pairs, singletons[0] || '', 'url'));
     parameters = Array.from(urlObject.searchParams.entries()).map(([key, value]) => ({
-      name: key,
+      name: key.replace('\\[', '[').replace('\\]', ']'),
       value,
       disabled: false,
     }));
