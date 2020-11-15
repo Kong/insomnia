@@ -159,7 +159,8 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
           return;
         }
 
-        if (stderr) {
+        // If we do not check on 'warning', the plugin setup may fail for any generic message
+        if (stderr && !stderr.toString().includes('warning')) {
           reject(new Error(`Yarn error ${stderr.toString()}`));
           return;
         }
