@@ -138,17 +138,16 @@ const SidebarUnitTestSuiteItem = ({
         initial={{ height: isToggled ? '100%' : '0px', display: isToggled ? 'block' : 'none' }}
         animate={{ height: isToggled ? '100%' : '0px' }}
         transition={{ duration: 0.2, ease: 'easeInOut', delay: 0 }}>
-        {unitTests.length !== 0 &&
-          unitTests
-            .filter(unitTest => unitTest.parentId === parentId)
-            .map(filteredUnitTest => (
-              <SidebarItem key={filteredUnitTest._id}>
-                <StyledUnitTest>
-                  <SvgIcon icon="file" />
-                  <span onClick={onTestSuiteClick}>{filteredUnitTest.name}</span>
-                </StyledUnitTest>
-              </SidebarItem>
-            ))}
+        {unitTests
+          .filter(unitTest => unitTest.parentId === parentId)
+          .map(filteredUnitTest => (
+            <SidebarItem key={filteredUnitTest._id}>
+              <StyledUnitTest>
+                <SvgIcon icon="file" />
+                <span onClick={onTestSuiteClick}>{filteredUnitTest.name}</span>
+              </StyledUnitTest>
+            </SidebarItem>
+          ))}
       </motion.div>
     </StyledSection>
   );

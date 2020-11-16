@@ -227,9 +227,11 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
 
   async _handleSetActiveSuite(e, unitTestSuite: UnitTestSuite): Promise<void> {
     const { activeWorkspace } = this.props.wrapperProps;
-    await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
-      activeUnitTestSuiteId: unitTestSuite._id,
-    });
+    if (unitTestSuite) {
+      await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
+        activeUnitTestSuiteId: unitTestSuite._id,
+      });
+    }
   }
 
   async _handleChangeTestName(unitTest: UnitTest, name: string): Promise<void> {
