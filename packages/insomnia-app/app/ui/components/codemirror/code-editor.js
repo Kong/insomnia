@@ -312,9 +312,8 @@ class CodeEditor extends React.Component {
         let startToken = '{';
         let endToken = '}';
 
-        // Prevent from creating an invalid fold state
-        if (!from.line || !to.line)
-          throw new Error('Unable to execute folding due to invalid state');
+        // Prevent retrieving an invalid content if undefined
+        if (!from.line || !to.line) return '\u2194';
 
         const prevLine = this.codeMirror.getLine(from.line);
 
