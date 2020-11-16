@@ -292,7 +292,8 @@ class ResponseViewer extends React.Component<Props, State> {
         .slice(0, 100)
         .toString()
         .trim()
-        .match(/^<!doctype html.*>/i);
+        .match(/^<!doctype html.*>|<script>/i);
+
       if (contentType.indexOf('text/html') !== 0 && isProbablyHTML) {
         contentType = 'text/html';
       }
