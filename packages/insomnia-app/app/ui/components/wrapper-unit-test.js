@@ -10,6 +10,7 @@ import {
   UnitTestItem,
   UnitTestResultItem,
   SidebarUnitTesting,
+  SidebarHeaderUnitTesting,
 } from 'insomnia-components';
 import UnitTestEditable from './unit-test-editable';
 import ErrorBoundary from './error-boundary';
@@ -227,6 +228,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
 
   async _handleSetActiveSuite(e, unitTestSuite: UnitTestSuite): Promise<void> {
     const { activeWorkspace } = this.props.wrapperProps;
+
     if (unitTestSuite) {
       await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
         activeUnitTestSuiteId: unitTestSuite._id,
@@ -465,6 +467,10 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     return (
       <ErrorBoundary showAlert>
         <div className="unit-tests__sidebar">
+          <SidebarHeaderUnitTesting
+            headerTitle="TESTS"
+            onAddSuiteClick={this._handleCreateTestSuite}
+          />
           {unitTests.length > 0 && (
             <SidebarUnitTesting
               unitTestSuites={activeUnitTestSuites}

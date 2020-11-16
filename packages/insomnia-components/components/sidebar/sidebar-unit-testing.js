@@ -2,7 +2,6 @@
 import * as React from 'react';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
-import SidebarHeaderUnitTesting from './sidebar-header-unit-testing';
 import SidebarPanel from './sidebar-panel';
 import SidebarUnitTestSuiteItem from './sidebar-unit-test-suite-item';
 
@@ -158,7 +157,6 @@ const SidebarUnitTesting = ({
     <div>
       <StyledSidebar className="theme--sidebar">
         <StyledSection>
-          <SidebarHeaderUnitTesting headerTitle="TESTS" onAddSuiteClick={onAddSuiteClick} />
           <div>
             {unitTestSuites.length !== 0 && (
               <div>
