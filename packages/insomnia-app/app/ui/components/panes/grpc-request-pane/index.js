@@ -28,11 +28,16 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
   React.useEffect(() => {
     const func = async () => {
       grpcDispatch(
-        await grpcActions.loadMethods(activeRequest._id, activeRequest.protoFileId, reloadMethods),
+        await grpcActions.loadMethods(
+          activeRequest._id,
+          activeRequest.protoFileId,
+          reloadMethods,
+          running,
+        ),
       );
     };
     func();
-  }, [activeRequest._id, activeRequest.protoFileId, reloadMethods, grpcDispatch]);
+  }, [activeRequest._id, activeRequest.protoFileId, reloadMethods, grpcDispatch, running]);
 
   const selection = useSelectedMethod(methods, activeRequest);
   const { method, methodType, methodTypeLabel, enableClientStream } = selection;

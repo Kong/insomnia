@@ -17,4 +17,7 @@ export function init() {
   );
   ipcMain.on(GrpcRequestEventEnum.commit, (_, requestId) => grpc.commit(requestId));
   ipcMain.on(GrpcRequestEventEnum.cancel, (_, requestId) => grpc.cancel(requestId));
+  ipcMain.on(GrpcRequestEventEnum.cancelMultiple, (_, requestIdS) =>
+    grpc.cancelMultiple(requestIdS),
+  );
 }

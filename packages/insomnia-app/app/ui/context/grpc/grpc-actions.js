@@ -137,8 +137,9 @@ const loadMethods = async (
   requestId: string,
   protoFileId: string,
   reloadMethods: boolean,
+  running: boolean,
 ): LoadMethodsAction | undefined => {
-  if (!reloadMethods) {
+  if (!reloadMethods || running) {
     return undefined;
   }
 

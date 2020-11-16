@@ -15,7 +15,8 @@ import path from 'path';
 import selectFileOrFolder from '../../../common/select-file-or-folder';
 import { Button } from 'insomnia-components';
 import type { GrpcDispatch } from '../../context/grpc/grpc-actions';
-import { grpcActions } from '../../context/grpc';
+import { grpcActions, sendGrpcIpcMultiple } from '../../context/grpc';
+import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 
 type Props = {|
   grpcDispatch: GrpcDispatch,
@@ -123,7 +124,9 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
       // Create or update a protoFile
       if (protoFile) {
         await models.protoFile.update(protoFile, { name, protoText });
-        grpcDispatch(await grpcActions.invalidateMany(protoFile._id));
+        const action = await grpcActions.invalidateMany(protoFile._id);
+        grpcDispatch(action);
+        sendGrpcIpcMultiple(GrpcRequestEventEnum.cancelMultiple, action.requestIds);
       } else {
         const newFile = await models.protoFile.create({ name, parentId: workspace._id, protoText });
         this.setState({ selectedProtoFileId: newFile._id });

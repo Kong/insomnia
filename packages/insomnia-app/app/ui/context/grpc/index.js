@@ -6,4 +6,4 @@ export {
   useGrpcRequestState,
   GrpcDispatchModalWrapper,
 } from './grpc-context';
-export { useGrpcIpc } from './grpc-ipc-renderer';
+export { useGrpcIpc, sendGrpcIpcMultiple } from './grpc-ipc-renderer';

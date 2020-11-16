@@ -6,6 +6,7 @@ export const GrpcRequestEventEnum = {
   sendMessage: 'GRPC_SEND_MESSAGE',
   commit: 'GRPC_COMMIT',
   cancel: 'GRPC_CANCEL',
+  cancelMultiple: 'GRPC_CANCEL_MULTIPLE',
 };
 export type GrpcRequestEvent = $Values<typeof GrpcRequestEventEnum>;
 
