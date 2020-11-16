@@ -54,7 +54,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
             type="text"
             forceEditor
             defaultValue={activeRequest.url}
-            placeholder="brpcb.in:9000"
+            placeholder="grpcb.in:9000"
             onChange={handleChange.url}
           />
         </form>
