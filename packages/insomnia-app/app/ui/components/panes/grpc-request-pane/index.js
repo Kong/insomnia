@@ -26,13 +26,12 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
   // Reload the methods, on first mount, or if the request protoFile changes
   React.useEffect(() => {
     const func = async () => {
-      grpcDispatch(
-        await grpcActions.loadMethods(
-          activeRequest._id,
-          activeRequest.protoFileId,
-          reloadMethods,
-          running,
-        ),
+      await grpcActions.loadMethods(
+        grpcDispatch,
+        activeRequest._id,
+        activeRequest.protoFileId,
+        reloadMethods,
+        running,
       );
     };
     func();

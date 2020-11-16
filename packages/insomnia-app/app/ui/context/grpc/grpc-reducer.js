@@ -119,7 +119,6 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
       const { payload }: LoadMethodsAction = action;
       return _patch(state, requestId, {
         ...oldState,
-        ...CLEAR_GRPC_REQUEST_STATE,
         methods: payload,
         reloadMethods: false,
       });
