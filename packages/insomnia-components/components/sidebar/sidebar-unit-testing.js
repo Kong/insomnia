@@ -23,7 +23,7 @@ type Props = {|
     created: number,
     name: string,
   }>,
-  onAddSuiteClick: (e: SyntheticEvent<HTMLSpanElement>) => any,
+  onAddSuiteClick: (e: SyntheticEvent<HTMLButtonElement>) => any,
   onTestSuiteClick: (
     e: SyntheticEvent<HTMLSpanElement>,
     suite: {
@@ -36,7 +36,7 @@ type Props = {|
     },
   ) => any,
   onDeleteSuiteClick: (
-    e: SyntheticEvent<HTMLSpanElement>,
+    e: SyntheticEvent<HTMLButtonElement>,
     suite: {
       _id: string,
       type: string,
@@ -47,7 +47,7 @@ type Props = {|
     },
   ) => any,
   onExecuteSuiteClick: (
-    e: SyntheticEvent<HTMLSpanElement>,
+    e: SyntheticEvent<HTMLButtonElement>,
     suite: {
       _id: string,
       type: string,
@@ -57,9 +57,10 @@ type Props = {|
       name: string,
     },
   ) => any,
-  onCreateTestClick: (e: SyntheticEvent<HTMLSpanElement>) => any,
+  onCreateTestClick: (e: SyntheticEvent<HTMLButtonElement>) => any,
   activeTestSuite: string,
   className?: string,
+  disableActions: boolean,
 |};
 
 const StyledSidebar: React.ComponentType<{}> = styled.div`
@@ -125,6 +126,7 @@ const SidebarUnitTesting = ({
   onCreateTestClick,
   activeTestSuite,
   className,
+  disableActions,
 }: Props) => {
   const [filter, setFilter] = React.useState(null);
   if (unitTestSuites === null) {
@@ -151,6 +153,7 @@ const SidebarUnitTesting = ({
         onCreateTestClick={onCreateTestClick}
         activeTestSuite={activeTestSuite}
         className={activeTestSuite === suite._id ? 'itemActive' : ''}
+        disableActions={disableActions}
       />
     ));
 

@@ -456,6 +456,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
 
   renderPageSidebar(): React.Node {
     const { activeUnitTestSuites, activeUnitTestSuite } = this.props.wrapperProps;
+    const { testsRunning } = this.state;
     const { unitTests } = this.state;
     const activeId = activeUnitTestSuite ? activeUnitTestSuite._id : 'n/a';
 
@@ -472,6 +473,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               onExecuteSuiteClick={this._handleRunTests}
               onCreateTestClick={this._handleCreateTest}
               activeTestSuite={activeId}
+              disableActions={testsRunning}
             />
           )}
         </div>

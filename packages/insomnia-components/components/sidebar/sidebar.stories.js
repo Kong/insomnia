@@ -3263,6 +3263,7 @@ export const UnitTesting = () => {
         onExecuteSuiteClick={_handleExecuteTestSuite}
         onCreateTestClick={_handleCreateTest}
         activeTestSuite="uts_1a58fcfade894f828c8ca4d89b6b212e"
+        disableActions={false}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import styled from 'styled-components';
+import Button from '../button';
 import { useToggle } from 'react-use';
 import { motion } from 'framer-motion';
 import SidebarItem from './sidebar-item';
@@ -28,31 +29,12 @@ type Props = {|
       name: string,
     },
   ) => any,
-  onDeleteSuiteClick: (
-    e: SyntheticEvent<HTMLSpanElement>,
-    suite: {
-      _id: string,
-      type: string,
-      parentId: string,
-      modified: number,
-      created: number,
-      name: string,
-    },
-  ) => any,
-  onExecuteSuiteClick: (
-    e: SyntheticEvent<HTMLSpanElement>,
-    suite: {
-      _id: string,
-      type: string,
-      parentId: string,
-      modified: number,
-      created: number,
-      name: string,
-    },
-  ) => any,
-  onCreateTestClick: (e: SyntheticEvent<HTMLSpanElement>) => any,
+  onDeleteSuiteClick: (e: SyntheticEvent<HTMLButtonElement>) => any,
+  onExecuteSuiteClick: (e: SyntheticEvent<HTMLButtonElement>) => any,
+  onCreateTestClick: (e: SyntheticEvent<HTMLButtonElement>) => any,
   activeTestSuite: string,
   className?: string,
+  disableActions: boolean,
 |};
 
 const StyledTestSuiteActions: React.ComponentType<{}> = styled.div`
@@ -70,10 +52,29 @@ const StyledTestSuiteActions: React.ComponentType<{}> = styled.div`
   }
   svg {
     transition: 0.2s;
-    fill: var(--hl-sm) !important;
+    fill: var(--hl-lg) !important;
     &:hover {
       fill: var(--hl-xl) !important;
       opacity: 1;
+    }
+  }
+
+  button {
+    padding: 0px var(--padding-xxs);
+    width: auto;
+    &:first-of-type {
+      padding-right: var(--padding-xs);
+    }
+    &.active,
+    &:hover,
+    &:focus:not(:disabled) {
+      background: none !important;
+    }
+    &:hover {
+      svg {
+        fill: var(--hl-xl);
+        opacity: 1;
+      }
     }
   }
 `;
@@ -108,6 +109,7 @@ const SidebarUnitTestSuiteItem = ({
   name,
   activeTestSuite,
   className,
+  disableActions,
 }: Props) => {
   const [isToggled, toggle] = useToggle(true);
 
@@ -120,16 +122,15 @@ const SidebarUnitTestSuiteItem = ({
         <StyledTestSuiteLabel onClick={onTestSuiteClick}>{name}</StyledTestSuiteLabel>
         {className && (
           <StyledTestSuiteActions>
-            <span onClick={onDeleteSuiteClick}>
+            <Button disabled={disableActions} variant="text" onClick={onDeleteSuiteClick}>
               <SvgIcon icon="trashcan" />
-            </span>
-            <span onClick={onExecuteSuiteClick}>
-              &nbsp;
+            </Button>
+            <Button disabled={disableActions} variant="text" onClick={onExecuteSuiteClick}>
               <SvgIcon icon="play" />
-            </span>
-            <span onClick={onCreateTestClick}>
+            </Button>
+            <Button disabled={disableActions} variant="text" onClick={onCreateTestClick}>
               <SvgIcon icon="plus" />
-            </span>
+            </Button>
           </StyledTestSuiteActions>
         )}
       </SidebarItem>
