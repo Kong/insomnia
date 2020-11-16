@@ -67,4 +67,14 @@ describe('grpcIpcMain', () => {
     listener(event, id);
     expect(grpc.cancel).toHaveBeenCalledWith(id);
   });
+
+  it('should add expected listener for cancel multiple', () => {
+    const [channel, listener] = ipcMain.on.mock.calls[5];
+
+    expect(channel).toBe(GrpcRequestEventEnum.cancelMultiple);
+
+    // Execute the callback, and make sure the correct grpc method is called
+    listener(event, id);
+    expect(grpc.cancelMultiple).toHaveBeenCalledWith(id);
+  });
 });

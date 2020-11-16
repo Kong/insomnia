@@ -11,6 +11,7 @@ import {
 import { grpcActions } from '../grpc-actions';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import * as protoLoader from '../../../../network/grpc/proto-loader';
+import * as models from '../../../../models';
 
 jest.mock('../../../../network/grpc/proto-loader');
 
@@ -244,6 +245,57 @@ describe('grpcReducer actions', () => {
     });
   });
 
+  describe('invalidateMany', () => {
+    beforeEach(() => {
+      globalBeforeEach();
+    });
+
+    it('should set reloadMethods to true only for requests that refer to the updated proto file', async () => {
+      const parentId = 'wrk_1';
+
+      // Create 3 requests, two of them referencing the protofile in question
+      const pf = await models.protoFile.create({ parentId });
+
+      const r1 = 'r1';
+      const r2 = 'r2';
+      const r3 = 'r3';
+
+      await models.grpcRequest.create({ parentId, _id: r1 });
+      await models.grpcRequest.create({ parentId, _id: r2, protoFileId: pf._id });
+      await models.grpcRequest.create({ parentId, _id: r3, protoFileId: pf._id });
+
+      // Setup original state for each request
+      const originalState: GrpcState = {
+        [r1]: requestStateBuilder
+          .reset()
+          .reloadMethods(false)
+          .build(),
+        [r2]: requestStateBuilder
+          .reset()
+          .reloadMethods(false)
+          .build(),
+        [r3]: requestStateBuilder
+          .reset()
+          .reloadMethods(false)
+          .build(),
+      };
+
+      // Dispatch an invalidateMany action, with the modified protofile id as an argument
+      const newState = grpcReducer(originalState, await grpcActions.invalidateMany(pf._id));
+
+      // Expect r1 to remain unchanged, while r2 and r3 have reloadMethods set to true
+      const r1Expected = originalState[r1];
+      const r2Expected = { ...originalState[r2], reloadMethods: true };
+      const r3Expected = { ...originalState[r3], reloadMethods: true };
+
+      expect(newState).toStrictEqual({
+        [r1]: r1Expected,
+        [r2]: r2Expected,
+        [r3]: r3Expected,
+      });
+    });
+  });
+
   describe('clear', () => {
     it('should clear per-run state', () => {
       const state: GrpcState = {
@@ -285,7 +337,7 @@ describe('grpcReducer actions', () => {
       globalBeforeEach();
     });
 
-    it('should clear per-run state when methods are loaded', async () => {
+    it('should store methods after they are loaded', async () => {
       const state: GrpcState = {
         a: requestStateBuilder
           .reset()
@@ -293,26 +345,19 @@ describe('grpcReducer actions', () => {
           .build(),
         b: requestStateBuilder
           .reset()
-          .running(true)
-          .requestMessages([messageBuilder.reset().build()])
-          .responseMessages([messageBuilder.reset().build()])
           .methods([methodBuilder.reset().build()])
-          .status(statusBuilder.reset().build())
-          .error(new Error('error'))
+          .reloadMethods(true)
           .build(),
       };
 
       const newMethods = [methodBuilder.reset().build()];
       protoLoader.loadMethods.mockResolvedValue(newMethods);
 
-      const newState = grpcReducer(state, await grpcActions.loadMethods('b', 'pfid', true));
+      const newState = grpcReducer(state, await grpcActions.loadMethods('b', 'pfid'));
 
       const expectedRequestState: GrpcRequestState = {
         ...state.b,
-        requestMessages: [],
-        responseMessages: [],
-        status: undefined,
-        error: undefined,
+        reloadMethods: false,
         methods: newMethods,
       };
 
@@ -325,7 +370,7 @@ describe('grpcReducer actions', () => {
 
   it('should throw error if action not found', () => {
     expect(() => grpcReducer({}, { requestId: 'abc', type: 'not-found' })).toThrowError(
-      'Unhandled action type: not-found',
+      'Unhandled single request action type: not-found',
     );
   });
 
