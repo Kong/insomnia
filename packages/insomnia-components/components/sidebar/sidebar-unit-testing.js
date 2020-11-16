@@ -129,9 +129,6 @@ const SidebarUnitTesting = ({
   disableActions,
 }: Props) => {
   const [filter, setFilter] = React.useState(null);
-  if (unitTestSuites === null) {
-    return null;
-  }
 
   const searchTests = event => {
     setFilter(event.target.value);
