@@ -123,6 +123,7 @@ const invalidate = (requestId: string): InvalidateAction => ({
 const invalidateMany = async (protoFileId: string): Promise<InvalidateManyAction> => {
   const impacted = await models.grpcRequest.findByProtoFileId(protoFileId);
 
+  // skip invalidation if no requests are linked to the proto file
   if (!impacted.length) {
     return;
   }
@@ -139,6 +140,7 @@ const loadMethods = async (
   reloadMethods: boolean,
   running: boolean,
 ): LoadMethodsAction | undefined => {
+  // don't actually reload until the request has stopped running or if methods do not need to be reloaded
   if (!reloadMethods || running) {
     return undefined;
   }

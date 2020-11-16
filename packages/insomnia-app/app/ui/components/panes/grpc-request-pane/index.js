@@ -20,9 +20,8 @@ type Props = {
 };
 
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
-  const [{ requestMessages, running, methods, reloadMethods }, grpcDispatch] = useGrpc(
-    activeRequest._id,
-  );
+  const [grpcRequestState, grpcDispatch] = useGrpc(activeRequest._id);
+  const { requestMessages, running, methods, reloadMethods } = grpcRequestState;
 
   // Reload the methods, on first mount, or if the request protoFile changes
   React.useEffect(() => {
@@ -39,7 +38,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
     func();
   }, [activeRequest._id, activeRequest.protoFileId, reloadMethods, grpcDispatch, running]);
 
-  const selection = useSelectedMethod(methods, activeRequest);
+  const selection = useSelectedMethod(grpcRequestState, activeRequest);
   const { method, methodType, methodTypeLabel, enableClientStream } = selection;
 
   const handleChange = useChangeHandlers(activeRequest, grpcDispatch);
@@ -67,7 +66,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
             type="text"
             forceEditor
             defaultValue={activeRequest.url}
-            placeholder="example.com:9000"
+            placeholder="brpcb.in:9000"
             onChange={handleChange.url}
           />
         </form>
