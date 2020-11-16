@@ -116,7 +116,6 @@ export const startServerStreaming = async (
       requestId,
       new Error(`The gRPC method ${req.protoMethodName} could not be found`),
     );
-    // TODO: sendEnd
     return;
   }
 
@@ -161,7 +160,6 @@ export const startBidiStreaming = async (
       requestId,
       new Error(`The gRPC method ${req.protoMethodName} could not be found`),
     );
-    // TODO: sendEnd
     return;
   }
 

@@ -90,7 +90,7 @@ describe('grpcIpcMain', () => {
   });
 
   it('should add expected listener for cancel multiple', () => {
-    const [channel, listener] = ipcMain.on.mock.calls[5];
+    const [channel, listener] = ipcMain.on.mock.calls[7];
 
     expect(channel).toBe(GrpcRequestEventEnum.cancelMultiple);
 

@@ -24,7 +24,7 @@ export type GrpcRequestState = {
   reloadMethods: boolean,
 };
 
-// TODO: delete from here when deleting a request
+// TODO: delete from here when deleting a request - INS-288
 export type GrpcState = { [requestId: string]: GrpcRequestState };
 
 const INITIAL_GRPC_REQUEST_STATE: GrpcRequestState = {
