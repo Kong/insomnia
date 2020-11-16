@@ -186,7 +186,6 @@ export type WrapperProps = {
   activeUnitTestResult: UnitTestResult | null,
   activeUnitTestSuites: Array<UnitTestSuite>,
   activeUnitTests: Array<UnitTest>,
-  allUnitTests: Array<UnitTest>,
   activeWorkspaceClientCertificates: Array<ClientCertificate>,
   headerEditorKey: string,
   isVariableUncovered: boolean,

@@ -138,7 +138,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           parentId: activeWorkspace._id,
           name,
         });
-        await this._handleSetActiveUnitTestSuite(unitTestSuite);
+        await this._handleSetActiveSuite(unitTestSuite);
       },
     });
   }
@@ -176,7 +176,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
 
   async _handleRunTests(e, unitTestSuite: UnitTestSuite): Promise<void> {
     if (unitTestSuite !== undefined) {
-      await this._handleSetActiveUnitTestSuite(e, unitTestSuite);
+      await this._handleSetActiveSuite(e, unitTestSuite);
     }
     const { activeUnitTests } = this.props.wrapperProps;
     await this._runTests(activeUnitTests);
@@ -222,13 +222,6 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       onConfirm: async () => {
         await models.unitTestSuite.remove(unitTestSuite);
       },
-    });
-  }
-
-  async _handleSetActiveUnitTestSuite(e, unitTestSuite: UnitTestSuite): Promise<void> {
-    const { activeWorkspace } = this.props.wrapperProps;
-    await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
-      activeUnitTestSuiteId: unitTestSuite._id,
     });
   }
 
@@ -474,7 +467,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               unitTestSuites={activeUnitTestSuites}
               unitTests={unitTests}
               onAddSuiteClick={this._handleCreateTestSuite}
-              onTestSuiteClick={this._handleSetActiveUnitTestSuite}
+              onTestSuiteClick={this._handleSetActiveSuite}
               onDeleteSuiteClick={this._handleDeleteUnitTestSuite}
               onExecuteSuiteClick={this._handleRunTests}
               onCreateTestClick={this._handleCreateTest}
