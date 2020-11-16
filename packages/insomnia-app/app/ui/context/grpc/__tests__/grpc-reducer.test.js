@@ -377,7 +377,7 @@ describe('grpcReducer actions', () => {
 
   it('should throw error if action not found', () => {
     expect(() => grpcReducer({}, { requestId: 'abc', type: 'not-found' })).toThrowError(
-      'Unhandled action type: not-found',
+      'Unhandled single request action type: not-found',
     );
   });
 
