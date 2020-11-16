@@ -63,9 +63,5 @@ type GrpcContextModalWrapperProps = {|
 export const GrpcDispatchModalWrapper = ({ children }: GrpcContextModalWrapperProps) => {
   const dispatch = useGrpcDispatch();
 
-  React.useEffect(() => {
-    console.log('mounted');
-  }, []);
-
   return children(dispatch);
 };
