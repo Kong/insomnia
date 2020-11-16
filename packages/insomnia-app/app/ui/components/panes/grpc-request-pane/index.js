@@ -12,6 +12,7 @@ import GrpcSendButton from '../../buttons/grpc-send-button';
 import { grpcActions, useGrpc, useGrpcIpc } from '../../../context/grpc';
 import useChangeHandlers from './use-change-handlers';
 import useSelectedMethod from './use-selected-method';
+import useProtoFileReload from './use-proto-file-reload';
 
 type Props = {
   forceRefreshKey: string,
@@ -20,27 +21,15 @@ type Props = {
 };
 
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
-  const [grpcRequestState, grpcDispatch] = useGrpc(activeRequest._id);
-  const { requestMessages, running, methods, reloadMethods } = grpcRequestState;
+  const [state, dispatch] = useGrpc(activeRequest._id);
+  const { requestMessages, running, methods } = state;
 
-  // Reload the methods, on first mount, or if the request protoFile changes
-  React.useEffect(() => {
-    const func = async () => {
-      await grpcActions.loadMethods(
-        grpcDispatch,
-        activeRequest._id,
-        activeRequest.protoFileId,
-        reloadMethods,
-        running,
-      );
-    };
-    func();
-  }, [activeRequest._id, activeRequest.protoFileId, reloadMethods, grpcDispatch, running]);
+  useProtoFileReload(state, dispatch, activeRequest);
+  const selection = useSelectedMethod(state, activeRequest);
 
-  const selection = useSelectedMethod(grpcRequestState, activeRequest);
   const { method, methodType, methodTypeLabel, enableClientStream } = selection;
 
-  const handleChange = useChangeHandlers(activeRequest, grpcDispatch);
+  const handleChange = useChangeHandlers(activeRequest, dispatch);
 
   // Used to refresh input fields to their default value when switching between requests.
   // This is a common pattern in this codebase.
@@ -50,8 +39,8 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
 
   const handleStream = React.useCallback(() => {
     sendIpc(GrpcRequestEventEnum.sendMessage);
-    grpcDispatch(grpcActions.requestMessage(activeRequest._id, activeRequest.body.text));
-  }, [activeRequest._id, activeRequest.body.text, grpcDispatch, sendIpc]);
+    dispatch(grpcActions.requestMessage(activeRequest._id, activeRequest.body.text));
+  }, [activeRequest._id, activeRequest.body.text, dispatch, sendIpc]);
 
   const handleCommit = React.useCallback(() => sendIpc(GrpcRequestEventEnum.commit), [sendIpc]);
 

@@ -1,3 +1,7 @@
+// @flow
+export type { GrpcRequestState } from './grpc-reducer';
+export type { GrpcDispatch } from './grpc-actions';
+
 export { grpcActions } from './grpc-actions';
 export {
   useGrpc,

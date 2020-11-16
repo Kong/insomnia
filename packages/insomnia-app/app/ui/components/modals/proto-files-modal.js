@@ -14,7 +14,7 @@ import fs from 'fs';
 import path from 'path';
 import selectFileOrFolder from '../../../common/select-file-or-folder';
 import { Button } from 'insomnia-components';
-import type { GrpcDispatch } from '../../context/grpc/grpc-actions';
+import type { GrpcDispatch } from '../../context/grpc';
 import { grpcActions, sendGrpcIpcMultiple } from '../../context/grpc';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 

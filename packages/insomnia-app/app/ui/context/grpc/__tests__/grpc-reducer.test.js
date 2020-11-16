@@ -337,7 +337,7 @@ describe('grpcReducer actions', () => {
       globalBeforeEach();
     });
 
-    it('should clear per-run state when methods are loaded', async () => {
+    it('should store methods after they are loaded', async () => {
       const state: GrpcState = {
         a: requestStateBuilder
           .reset()
@@ -345,26 +345,19 @@ describe('grpcReducer actions', () => {
           .build(),
         b: requestStateBuilder
           .reset()
-          .running(true)
-          .requestMessages([messageBuilder.reset().build()])
-          .responseMessages([messageBuilder.reset().build()])
           .methods([methodBuilder.reset().build()])
-          .status(statusBuilder.reset().build())
-          .error(new Error('error'))
+          .reloadMethods(true)
           .build(),
       };
 
       const newMethods = [methodBuilder.reset().build()];
       protoLoader.loadMethods.mockResolvedValue(newMethods);
 
-      const newState = grpcReducer(state, await grpcActions.loadMethods('b', 'pfid', true));
+      const newState = grpcReducer(state, await grpcActions.loadMethods('b', 'pfid'));
 
       const expectedRequestState: GrpcRequestState = {
         ...state.b,
-        requestMessages: [],
-        responseMessages: [],
-        status: undefined,
-        error: undefined,
+        reloadMethods: false,
         methods: newMethods,
       };
 

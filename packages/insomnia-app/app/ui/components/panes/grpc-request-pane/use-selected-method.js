@@ -7,7 +7,7 @@ import {
   GrpcMethodTypeName,
 } from '../../../../network/grpc/method';
 import type { GrpcRequest } from '../../../../models/grpc-request';
-import type { GrpcRequestState } from '../../../context/grpc/grpc-reducer';
+import type { GrpcRequestState } from '../../../context/grpc';
 
 type MethodSelection = {
   method?: GrpcMethodDefinition,

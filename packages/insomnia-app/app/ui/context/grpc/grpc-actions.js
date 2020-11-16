@@ -134,29 +134,16 @@ const invalidateMany = async (protoFileId: string): Promise<InvalidateManyAction
   };
 };
 
-const loadMethods = async (
-  dispatch: GrpcDispatch,
-  requestId: string,
-  protoFileId: string,
-  reloadMethods: boolean,
-  running: boolean,
-): Promise<void> => {
-  // don't actually reload until the request has stopped running or if methods do not need to be reloaded
-  if (!reloadMethods || running) {
-    return undefined;
-  }
-
-  dispatch(clear(requestId));
-
+const loadMethods = async (requestId: string, protoFileId: string): Promise<LoadMethodsAction> => {
   console.log(`[gRPC] loading proto file methods pf=${protoFileId}`);
   const protoFile = await models.protoFile.getById(protoFileId);
   const methods = await protoLoader.loadMethods(protoFile);
 
-  dispatch({
+  return {
     type: GrpcActionTypeEnum.loadMethods,
     requestId,
     payload: methods,
-  });
+  };
 };
 
 export const grpcActions = {
