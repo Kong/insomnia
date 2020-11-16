@@ -85,6 +85,13 @@ export default class VCS {
     }
   }
 
+  async archiveProject(): Promise<void> {
+    const projectId = this._projectId();
+    await this._queryProjectArchive(projectId);
+    await this._store.removeItem(paths.project(projectId));
+    this._project = null;
+  }
+
   async switchProject(rootDocumentId: string): Promise<void> {
     const project = await this._getProjectByRootDocument(rootDocumentId);
     if (project !== null) {
@@ -717,7 +724,7 @@ export default class VCS {
 
     if (errors && errors.length) {
       console.log(`[sync] Failed to query ${name}`, errors);
-      throw new Error(`Failed to query ${name}`);
+      throw new Error(`Failed to query ${name}: ${errors[0].message}`);
     }
 
     return data;
@@ -1484,6 +1491,22 @@ export default class VCS {
 
   async _hasBlob(id: string): Promise<boolean> {
     return this._store.hasItem(paths.blob(this._projectId(), id));
+  }
+
+  async _queryProjectArchive(projectId: string): Promise<void> {
+    await this._runGraphQL(
+      `
+        mutation ($id: ID!) {
+          projectArchive(id: $id)
+        }
+      `,
+      {
+        id: projectId,
+      },
+      'projectArchive',
+    );
+
+    console.log(`[sync] Archived remote project ${projectId}`);
   }
 }
 

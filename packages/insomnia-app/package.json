@@ -31,8 +31,7 @@
     ],
     "moduleNameMapper": {
       "\\.(css|less|png)$": "<rootDir>/__mocks__/dummy.js",
-      "^worker-loader!": "<rootDir>/__mocks__/dummy.js",
-      "react-dom": "@hot-loader/react-dom"
+      "^worker-loader!": "<rootDir>/__mocks__/dummy.js"
     },
     "testMatch": [
       "**/__tests__/**/*.test.js?(x)"
@@ -182,9 +181,14 @@
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.4.0",
     "@babel/plugin-proposal-optional-chaining": "^7.9.0",
+    "@develohpanda/fluent-builder": "^2.1.2",
+    "@grpc/grpc-js": "^1.1.8",
+    "@grpc/proto-loader": "^0.5.5",
     "@octokit/rest": "^17.6.0",
     "@storybook/addon-info": "^5.2.8",
     "@storybook/react": "^5.2.6",
+    "@testing-library/jest-dom": "^5.11.5",
+    "@testing-library/react": "^11.1.1",
     "concurrently": "^3.5.0",
     "cross-env": "^2.0.0",
     "css-loader": "^2.1.1",

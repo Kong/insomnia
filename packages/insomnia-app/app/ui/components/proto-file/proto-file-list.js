@@ -23,7 +23,7 @@ const ProtoFileList = ({
   handleDelete,
   handleRename,
 }: Props) => (
-  <ListGroup>
+  <ListGroup bordered>
     {!protoFiles.length && <ListGroupItem>No proto files exist for this workspace</ListGroupItem>}
     {protoFiles.map(p => (
       <ProtoFileListItem

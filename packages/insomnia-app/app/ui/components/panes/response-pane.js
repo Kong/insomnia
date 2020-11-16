@@ -1,6 +1,6 @@
 // @flow
-import type { Request } from '../../models/request';
-import type { Response } from '../../models/response';
+import type { Request } from '../../../models/request';
+import type { Response } from '../../../models/response';
 
 import * as React from 'react';
 import autobind from 'autobind-decorator';
@@ -8,30 +8,32 @@ import fs from 'fs';
 import mime from 'mime-types';
 import { remote } from 'electron';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import SizeTag from './tags/size-tag';
-import StatusTag from './tags/status-tag';
-import TimeTag from './tags/time-tag';
-import Button from './base/button';
-import PreviewModeDropdown from './dropdowns/preview-mode-dropdown';
-import ResponseViewer from './viewers/response-viewer';
-import ResponseHistoryDropdown from './dropdowns/response-history-dropdown';
-import ResponseTimer from './response-timer';
-import ResponseTimelineViewer from './viewers/response-timeline-viewer';
-import ResponseHeadersViewer from './viewers/response-headers-viewer';
-import ResponseCookiesViewer from './viewers/response-cookies-viewer';
-import * as models from '../../models';
-import { PREVIEW_MODE_SOURCE } from '../../common/constants';
-import { getSetCookieHeaders } from '../../common/misc';
-import { cancelRequestById } from '../../network/network';
-import Hotkey from './hotkey';
-import ErrorBoundary from './error-boundary';
-import type { HotKeyRegistry } from '../../common/hotkeys';
-import { hotKeyRefs } from '../../common/hotkeys';
-import type { RequestVersion } from '../../models/request-version';
-import { showError } from '../components/modals/index';
+import SizeTag from '../tags/size-tag';
+import StatusTag from '../tags/status-tag';
+import TimeTag from '../tags/time-tag';
+import Button from '../base/button';
+import PreviewModeDropdown from '../dropdowns/preview-mode-dropdown';
+import ResponseViewer from '../viewers/response-viewer';
+import ResponseHistoryDropdown from '../dropdowns/response-history-dropdown';
+import ResponseTimer from '../response-timer';
+import ResponseTimelineViewer from '../viewers/response-timeline-viewer';
+import ResponseHeadersViewer from '../viewers/response-headers-viewer';
+import ResponseCookiesViewer from '../viewers/response-cookies-viewer';
+import * as models from '../../../models';
+import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
+import { getSetCookieHeaders } from '../../../common/misc';
+import { cancelRequestById } from '../../../network/network';
+import ErrorBoundary from '../error-boundary';
+import type { HotKeyRegistry } from '../../../common/hotkeys';
+import type { RequestVersion } from '../../../models/request-version';
+import { showError } from '../modals';
 import { json as jsonPrettify } from 'insomnia-prettify';
-import type { Environment } from '../../models/environment';
-import type { UnitTestResult } from '../../models/unit-test-result';
+import type { Environment } from '../../../models/environment';
+import type { UnitTestResult } from '../../../models/unit-test-result';
+import BlankPane from './blank-pane';
+import PlaceholderResponsePane from './placeholder-response-pane';
+import { Pane, paneBodyClasses, PaneHeader } from './pane';
+import classnames from 'classnames';
 
 type Props = {
   // Functions
@@ -204,90 +206,28 @@ class ResponsePane extends React.PureComponent<Props> {
       responses,
       showCookiesModal,
     } = this.props;
-    const paneClasses = 'response-pane theme--pane pane';
-    const paneHeaderClasses = 'pane__header theme--pane__header';
-    const paneBodyClasses = 'pane__body theme--pane__body';
 
     if (!request) {
-      return (
-        <section className={paneClasses}>
-          <header className={paneHeaderClasses} />
-          <div className={paneBodyClasses + ' pane__body--placeholder'} />
-        </section>
-      );
+      return <BlankPane type="response" />;
     }
 
     if (!response) {
       return (
-        <section className={paneClasses}>
-          <header className={paneHeaderClasses} />
-          <div className={paneBodyClasses + ' pane__body--placeholder'}>
-            <div>
-              <table className="table--fancy">
-                <tbody>
-                  <tr>
-                    <td>Send Request</td>
-                    <td className="text-right">
-                      <code>
-                        <Hotkey
-                          keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]}
-                          useFallbackMessage
-                        />
-                      </code>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Focus Url Bar</td>
-                    <td className="text-right">
-                      <code>
-                        <Hotkey
-                          keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_FOCUS_URL.id]}
-                          useFallbackMessage
-                        />
-                      </code>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Manage Cookies</td>
-                    <td className="text-right">
-                      <code>
-                        <Hotkey
-                          keyBindings={hotKeyRegistry[hotKeyRefs.SHOW_COOKIES_EDITOR.id]}
-                          useFallbackMessage
-                        />
-                      </code>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Edit Environments</td>
-                    <td className="text-right">
-                      <code>
-                        <Hotkey
-                          keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]}
-                          useFallbackMessage
-                        />
-                      </code>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
+        <PlaceholderResponsePane hotKeyRegistry={hotKeyRegistry}>
           <ResponseTimer
             handleCancel={() => cancelRequestById(request._id)}
             loadStartTime={loadStartTime}
           />
-        </section>
+        </PlaceholderResponsePane>
       );
     }
 
     const cookieHeaders = getSetCookieHeaders(response.headers);
 
     return (
-      <section className={paneClasses}>
+      <Pane type="response">
         {!response ? null : (
-          <header className={paneHeaderClasses + ' row-spaced'}>
+          <PaneHeader className="row-spaced">
             <div className="no-wrap scrollable scrollable--no-bars pad-left">
               <StatusTag statusCode={response.statusCode} statusMessage={response.statusMessage} />
               <TimeTag milliseconds={response.elapsedTime} />
@@ -305,10 +245,10 @@ class ResponsePane extends React.PureComponent<Props> {
               className="tall pane__header__right"
               right
             />
-          </header>
+          </PaneHeader>
         )}
         <Tabs
-          className={paneBodyClasses + ' react-tabs'}
+          className={classnames(paneBodyClasses, 'react-tabs')}
           onSelect={this._handleTabSelect}
           forceRenderTabPanel>
           <TabList>
@@ -400,7 +340,7 @@ class ResponsePane extends React.PureComponent<Props> {
             loadStartTime={loadStartTime}
           />
         </ErrorBoundary>
-      </section>
+      </Pane>
     );
   }
 }
