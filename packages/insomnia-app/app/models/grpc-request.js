@@ -64,6 +64,10 @@ export function getById(_id: string): Promise<GrpcRequest | null> {
   return db.getWhere(type, { _id });
 }
 
+export function findByProtoFileId(protoFileId: string): Promise<Array<GrpcRequest>> {
+  return db.find(type, { protoFileId });
+}
+
 export function findByParentId(parentId: string): Promise<Array<GrpcRequest>> {
   return db.find(type, { parentId });
 }

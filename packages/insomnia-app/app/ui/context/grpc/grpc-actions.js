@@ -21,6 +21,7 @@ export const GrpcActionTypeEnum = {
   requestMessage: 'requestStream',
   error: 'error',
   invalidate: 'invalidate',
+  invalidateMany: 'invalidateMany',
   loadMethods: 'loadMethods',
 };
 type GrpcActionType = $Values<typeof GrpcActionTypeEnum>;
@@ -28,6 +29,11 @@ type GrpcActionType = $Values<typeof GrpcActionTypeEnum>;
 type Action<T: GrpcActionType> = {
   type: T,
   requestId: string,
+};
+
+type ActionMany<T: GrpcActionType> = {
+  type: T,
+  requestIds: Array<string>,
 };
 
 type Payload<T> = {
@@ -46,6 +52,7 @@ export type ErrorAction = Action<GrpcActionTypeEnum.error> & Payload<ServiceErro
 export type StatusAction = Action<GrpcActionTypeEnum.status> & Payload<GrpcStatusObject>;
 export type LoadMethodsAction = Action<GrpcActionTypeEnum.loadMethods> &
   Payload<Array<GrpcMethodDefinition>>;
+type InvalidateManyAction = ActionMany<GrpcActionTypeEnum.invalidateMany>;
 
 export type GrpcAction =
   | ClearAction
@@ -57,7 +64,10 @@ export type GrpcAction =
   | ErrorAction
   | StatusAction
   | InvalidateAction
+  | InvalidateManyAction
   | LoadMethodsAction;
+
+export type GrpcActionMany = InvalidateManyAction;
 
 export type GrpcDispatch = (action: GrpcAction) => void;
 
@@ -110,15 +120,21 @@ const invalidate = (requestId: string): InvalidateAction => ({
   requestId,
 });
 
-const loadMethods = async (
-  requestId: string,
-  protoFileId: string,
-  reloadMethods: boolean,
-): LoadMethodsAction | undefined => {
-  if (!reloadMethods) {
-    return undefined;
+const invalidateMany = async (protoFileId: string): Promise<InvalidateManyAction> => {
+  const impacted = await models.grpcRequest.findByProtoFileId(protoFileId);
+
+  // skip invalidation if no requests are linked to the proto file
+  if (!impacted.length) {
+    return;
   }
 
+  return {
+    type: GrpcActionTypeEnum.invalidateMany,
+    requestIds: impacted.map(g => g._id),
+  };
+};
+
+const loadMethods = async (requestId: string, protoFileId: string): Promise<LoadMethodsAction> => {
   console.log(`[gRPC] loading proto file methods pf=${protoFileId}`);
   const protoFile = await models.protoFile.getById(protoFileId);
   const methods = await protoLoader.loadMethods(protoFile);
@@ -140,5 +156,6 @@ export const grpcActions = {
   error,
   status,
   invalidate,
+  invalidateMany,
   loadMethods,
 };
