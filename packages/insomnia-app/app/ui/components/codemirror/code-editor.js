@@ -317,6 +317,8 @@ class CodeEditor extends React.Component {
 
         const prevLine = this.codeMirror.getLine(from.line);
 
+        if (!prevLine) return '\u2194';
+
         if (prevLine.lastIndexOf('[') > prevLine.lastIndexOf('{')) {
           startToken = '[';
           endToken = ']';
