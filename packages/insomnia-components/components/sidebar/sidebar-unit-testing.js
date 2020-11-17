@@ -160,11 +160,9 @@ const SidebarUnitTesting = ({
         <StyledSection>
           <SidebarHeaderUnitTesting headerTitle="TESTS" onAddSuiteClick={onAddSuiteClick} />
           <div>
-            {unitTestSuites.length !== 0 && (
-              <div>
-                <input type="text" placeholder="Filter..." onChange={e => searchTests(e)} />
-              </div>
-            )}
+            <div>
+              <input type="text" placeholder="Filter..." onChange={e => searchTests(e)} />
+            </div>
           </div>
         </StyledSection>
         <SidebarPanel childrenVisible={true}>{filteredItems}</SidebarPanel>

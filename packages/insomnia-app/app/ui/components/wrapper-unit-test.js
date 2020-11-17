@@ -34,7 +34,6 @@ type Props = {|
   gitSyncDropdown: React.Node,
   handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>,
   wrapperProps: WrapperProps,
-  settings: Settings,
 |};
 
 type State = {|
@@ -298,7 +297,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
   }
 
   renderResults(): React.Node {
-    const { activeUnitTestResult } = this.props.wrapperProps;
+    const { activeUnitTestResult, activeUnitTest } = this.props.wrapperProps;
     const { testsRunning, resultsError } = this.state;
 
     if (resultsError) {
@@ -322,12 +321,20 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       );
     }
 
-    if (!activeUnitTestResult) {
+    if (!activeUnitTestResult && activeUnitTest) {
       return (
         <div className="unit-tests__results">
           <div className="unit-tests__top-header">
             <h2>No Results</h2>
           </div>
+        </div>
+      );
+    }
+
+    if (!activeUnitTest) {
+      return (
+        <div className="unit-tests__results">
+          <div className="unit-tests__top-header"></div>
         </div>
       );
     }
@@ -419,10 +426,13 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     if (!activeUnitTestSuite) {
       return (
         <div className="unit-tests layout-body--sidebar theme--pane">
-          <div className="unit-tests__tests theme--pane__body pad pane__body--placeholder">
+          <div className="unit-tests__tests theme--pane__body">
+            <div className="unit-tests__top-header"></div>
             <div>
-              <div className="text-center pane__body--placeholder__cta pad-top">
-                <p className="pad-bottom margin-top">No test suite(s) exist for this workspace.</p>
+              <div className="text-center">
+                <h3 className="pad-bottom margin-top">
+                  No test suite(s) exist for this workspace.
+                </h3>
                 <button
                   className="btn inline-block btn--clicky"
                   onClick={this._handleCreateTestSuite}>
@@ -431,6 +441,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
               </div>
             </div>
           </div>
+          {this.renderResults()}
         </div>
       );
     }
@@ -475,19 +486,17 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     return (
       <ErrorBoundary showAlert>
         <div className="unit-tests__sidebar">
-          {activeUnitTestSuite && (
-            <SidebarUnitTesting
-              unitTestSuites={activeUnitTestSuites}
-              unitTests={unitTests}
-              onAddSuiteClick={this._handleCreateTestSuite}
-              onTestSuiteClick={this._handleSetActiveSuite}
-              onDeleteSuiteClick={this._handleDeleteUnitTestSuite}
-              onExecuteSuiteClick={this._handleRunTests}
-              onCreateTestClick={this._handleCreateTest}
-              activeTestSuite={activeId}
-              disableActions={testsRunning}
-            />
-          )}
+          <SidebarUnitTesting
+            unitTestSuites={activeUnitTestSuites}
+            unitTests={unitTests}
+            onAddSuiteClick={this._handleCreateTestSuite}
+            onTestSuiteClick={this._handleSetActiveSuite}
+            onDeleteSuiteClick={this._handleDeleteUnitTestSuite}
+            onExecuteSuiteClick={this._handleRunTests}
+            onCreateTestClick={this._handleCreateTest}
+            activeTestSuite={activeId}
+            disableActions={testsRunning}
+          />
         </div>
       </ErrorBoundary>
     );
