@@ -34,6 +34,7 @@ type Props = {|
   gitSyncDropdown: React.Node,
   handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>,
   wrapperProps: WrapperProps,
+  settings: Settings,
 |};
 
 type State = {|
@@ -138,7 +139,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           parentId: activeWorkspace._id,
           name,
         });
-        await this._handleSetActiveSuite(unitTestSuite);
+        await this._handleSetActiveSuite(null, unitTestSuite);
       },
     });
   }
@@ -227,11 +228,9 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
 
   async _handleSetActiveSuite(e, unitTestSuite: UnitTestSuite): Promise<void> {
     const { activeWorkspace } = this.props.wrapperProps;
-    if (unitTestSuite) {
-      await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
-        activeUnitTestSuiteId: unitTestSuite._id,
-      });
-    }
+    await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
+      activeUnitTestSuiteId: unitTestSuite._id,
+    });
   }
 
   async _handleChangeTestName(unitTest: UnitTest, name: string): Promise<void> {
@@ -420,7 +419,18 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     if (!activeUnitTestSuite) {
       return (
         <div className="unit-tests layout-body--sidebar theme--pane">
-          <div className="unit-tests__tests theme--pane__body pad">No test suite selected</div>
+          <div className="unit-tests__tests theme--pane__body pad pane__body--placeholder">
+            <div>
+              <div className="text-center pane__body--placeholder__cta pad-top">
+                <p className="pad-bottom margin-top">No test suite(s) exist for this workspace.</p>
+                <button
+                  className="btn inline-block btn--clicky"
+                  onClick={this._handleCreateTestSuite}>
+                  Create Test Suite
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       );
     }
@@ -465,7 +475,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     return (
       <ErrorBoundary showAlert>
         <div className="unit-tests__sidebar">
-          {unitTests.length > 0 && (
+          {activeUnitTestSuite && (
             <SidebarUnitTesting
               unitTestSuites={activeUnitTestSuites}
               unitTests={unitTests}
