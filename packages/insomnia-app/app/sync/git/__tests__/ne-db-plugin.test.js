@@ -40,6 +40,8 @@ describe('NeDBPlugin', () => {
         models.unitTest.type,
         models.unitTestSuite.type,
         models.workspace.type,
+        models.grpcRequest.type,
+        models.protoFile.type,
       ]);
 
       expect(await pNeDB.readdir(reqDir)).toEqual(['req_1.yml', 'req_2.yml']);

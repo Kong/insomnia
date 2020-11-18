@@ -127,6 +127,8 @@ export default class NeDBPlugin {
         models.apiSpec.type,
         models.unitTestSuite.type,
         models.unitTest.type,
+        models.grpcRequest.type,
+        models.protoFile.type,
       ];
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
