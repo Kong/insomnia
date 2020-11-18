@@ -55,3 +55,13 @@ export const useGrpc = (requestId: string): [GrpcRequestState, GrpcDispatch] => 
   useGrpcRequestState(requestId),
   useGrpcDispatch(),
 ];
+
+type GrpcContextModalWrapperProps = {|
+  children: (dispatch: GrpcDispatch) => React.Node,
+|};
+
+export const GrpcDispatchModalWrapper = ({ children }: GrpcContextModalWrapperProps) => {
+  const dispatch = useGrpcDispatch();
+
+  return children(dispatch);
+};

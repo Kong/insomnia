@@ -26,13 +26,17 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
 
       case GrpcMethodTypeEnum.client:
         text = 'Start';
-        onClick = () => sendIpc(GrpcRequestEventEnum.startStream);
+        onClick = () => sendIpc(GrpcRequestEventEnum.startClientStream);
         break;
 
       case GrpcMethodTypeEnum.server:
+        text = 'Start';
+        onClick = () => sendIpc(GrpcRequestEventEnum.startServerStream);
+        break;
+
       case GrpcMethodTypeEnum.bidi:
-        text = 'Coming soon';
-        disabled = true;
+        text = 'Start';
+        onClick = () => sendIpc(GrpcRequestEventEnum.startBidiStream);
         break;
 
       default:
