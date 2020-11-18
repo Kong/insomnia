@@ -35,13 +35,13 @@ describe('NeDBPlugin', () => {
       expect(await pNeDB.readdir(GIT_INSOMNIA_DIR)).toEqual([
         models.apiSpec.type,
         models.environment.type,
+        models.grpcRequest.type,
+        models.protoFile.type,
         models.request.type,
         models.requestGroup.type,
         models.unitTest.type,
         models.unitTestSuite.type,
         models.workspace.type,
-        models.grpcRequest.type,
-        models.protoFile.type,
       ]);
 
       expect(await pNeDB.readdir(reqDir)).toEqual(['req_1.yml', 'req_2.yml']);
