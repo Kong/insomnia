@@ -9,3 +9,8 @@ export const resetToOnboarding = async app => {
   await app.webContents.executeJavaScript("localStorage['insomnia::meta::activity'] = null;");
   await app.browserWindow.reload(); // reload for local storage clearing to take effect
 };
+
+export const resetToHome = async app => {
+  await app.webContents.executeJavaScript("localStorage['insomnia::meta::activity'] = 'home';");
+  await app.browserWindow.reload(); // reload for local storage clearing to take effect
+};
