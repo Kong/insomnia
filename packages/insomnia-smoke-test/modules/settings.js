@@ -18,7 +18,6 @@ export const goToPlugins = async app => {
 
   // Wait for the plugins component to show
   await app.client.react$('Plugins').then(e => e.waitForDisplayed());
-  // await app.client.pause(100);
 };
 
 export const installPlugin = async (app, pluginName) => {

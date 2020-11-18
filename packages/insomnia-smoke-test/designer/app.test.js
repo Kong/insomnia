@@ -47,7 +47,7 @@ describe('Application launch', function() {
     const dd = await home.openDocumentMenuDropdown(app);
 
     // Click the "Deploy to Portal" button, installed from that plugin
-    await dropdown.clickDropdownItem(dd, 'Deploy to Portal');
+    await dropdown.clickDropdownItemByText(dd, 'Deploy to Portal');
 
     // Ensure a modal opens, then close it - the rest is plugin behavior
     await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });
