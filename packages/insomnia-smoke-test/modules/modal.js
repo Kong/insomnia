@@ -19,6 +19,4 @@ export const close = async (app, modalName) => {
   }
 
   await modal.$('button.modal__close-btn').then(e => e.click());
-  // Wait until modal cannot be seen
-  await app.client.waitUntil(async () => !(await modal.isDisplayed()));
 };

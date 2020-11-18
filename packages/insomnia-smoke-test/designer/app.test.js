@@ -33,7 +33,7 @@ describe('Application launch', function() {
     await home.documentListingShown(app);
   });
 
-  it.if(isPackage())('can install insomnia-plugin-kong-bundle', async () => {
+  it.if(isPackage())('can install and consume a plugin', async () => {
     await client.correctlyLaunched(app);
     await home.documentListingShown(app);
 

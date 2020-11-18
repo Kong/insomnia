@@ -50,12 +50,15 @@ export const installPlugin = async (app, pluginName) => {
   await installButton.$('i.fa.fa-refresh.fa-spin').then(e => e.waitForDisplayed());
 
   // Button and field should re-enable
-  await plugins.waitUntil(async () => {
-    const buttonEnabled = await inputField.isEnabled();
-    const fieldEnabled = await installButton.isEnabled();
+  await plugins.waitUntil(
+    async () => {
+      const buttonEnabled = await inputField.isEnabled();
+      const fieldEnabled = await installButton.isEnabled();
 
-    return buttonEnabled && fieldEnabled;
-  }, 10000); // Wait 10 seconds because this can be a slow install
+      return buttonEnabled && fieldEnabled;
+    },
+    { timeout: 10000, timeoutMsg: 'npm was slow to install the plugin' },
+  );
 
   // Plugin entry should exist in the table in the first row and second column
   await app.client.waitUntilTextExists('table tr:nth-of-type(1) td:nth-of-type(2)', pluginName);
