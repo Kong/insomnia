@@ -109,7 +109,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
       // Select file
       const { filePath, canceled } = await selectFileOrFolder({
         itemTypes: ['file'],
-        extensions: ['.proto'],
+        extensions: ['proto'],
       });
 
       // Exit if no file selected
