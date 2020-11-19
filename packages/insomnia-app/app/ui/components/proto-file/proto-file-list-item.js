@@ -2,13 +2,13 @@
 import * as React from 'react';
 import styled from 'styled-components';
 import type { ProtoFile } from '../../../models/proto-file';
-import PromptButton from '../base/prompt-button';
 import type {
   DeleteProtoFileHandler,
   RenameProtoFileHandler,
   SelectProtoFileHandler,
+  UpdateProtoFileHandler,
 } from './proto-file-list';
-import { ListGroupItem } from '../../../../../insomnia-components';
+import { ListGroupItem, Button } from '../../../../../insomnia-components';
 import Editable from '../base/editable';
 
 type Props = {
@@ -17,14 +17,19 @@ type Props = {
   handleSelect: SelectProtoFileHandler,
   handleDelete: DeleteProtoFileHandler,
   handleRename: RenameProtoFileHandler,
+  handleUpdate: UpdateProtoFileHandler,
 };
 
 const SelectableListItem: React.PureComponent<{ isSelected?: boolean }> = styled(ListGroupItem)`
   &:hover {
     background-color: var(--hl-sm) !important;
   }
+  background-color: ${({ isSelected }) =>
+    isSelected && 'var(--hl-xs) !important; font-weight: bold;'};
 
-  background-color: ${({ isSelected }) => isSelected && 'var(--hl-sm) !important'};
+  i.fa {
+    font-size: var(--font-size-lg);
+  }
 `;
 
 const ProtoFileListItem = ({
@@ -33,6 +38,7 @@ const ProtoFileListItem = ({
   handleSelect,
   handleDelete,
   handleRename,
+  handleUpdate,
 }: Props) => {
   const { name, _id } = protoFile;
 
@@ -52,18 +58,34 @@ const ProtoFileListItem = ({
     [handleRename, protoFile],
   );
 
+  const handleUpdateCallback = React.useCallback(
+    async (e: SyntheticEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      await handleUpdate(protoFile);
+    },
+    [handleUpdate, protoFile],
+  );
+
   return (
     <SelectableListItem isSelected={isSelected} onClick={handleSelectCallback}>
       <div className="row-spaced">
-        <Editable onSubmit={handleRenameCallback} value={name} preventBlank />
-        <PromptButton
-          className="btn btn--super-compact btn--outlined"
-          addIcon
-          confirmMessage=""
-          onClick={handleDeleteCallback}
-          title="Delete Proto File">
-          <i className="fa fa-trash-o" />
-        </PromptButton>
+        <Editable className="wide" onSubmit={handleRenameCallback} value={name} preventBlank />
+        <div className="row">
+          <Button
+            variant="text"
+            title="Re-upload Proto File"
+            onClick={handleUpdateCallback}
+            className="space-right">
+            <i className="fa fa-upload" />
+          </Button>
+          <Button
+            variant="text"
+            title="Delete Proto File"
+            bg="danger"
+            onClick={handleDeleteCallback}>
+            <i className="fa fa-trash-o" />
+          </Button>
+        </div>
       </div>
     </SelectableListItem>
   );

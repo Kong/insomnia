@@ -14,6 +14,8 @@ import RequestSettingsModal from '../modals/request-settings-modal';
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
 import GrpcTag from '../tags/grpc-tag';
+import * as requestOperations from '../../../models/helpers/request-operations';
+import GrpcSpinner from '../grpc-spinner';
 
 @autobind
 class SidebarRequestRow extends PureComponent {
@@ -40,8 +42,12 @@ class SidebarRequestRow extends PureComponent {
     this.setState({ isEditing: true });
   }
 
-  _handleRequestUpdateName(name) {
-    models.request.update(this.props.request, { name });
+  async _handleRequestUpdateName(name) {
+    const { request } = this.props;
+    const patch = { name };
+
+    await requestOperations.update(request, patch);
+
     this.setState({ isEditing: false });
   }
 
@@ -210,6 +216,7 @@ class SidebarRequestRow extends PureComponent {
                     />
                   )}
                 />
+                <GrpcSpinner requestId={request._id} className="margin-right-sm" />
               </div>
             </button>
             <div className="sidebar__actions">

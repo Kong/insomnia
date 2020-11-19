@@ -93,20 +93,28 @@
     }
   }
 
-  .request-pane {
+  .pane-one {
     min-width: 0;
     grid-column-start: 4;
     grid-row-start: 2;
     grid-row-end: span 3;
     background: inherit;
+
+    border-left: 1px solid var(--hl-md);
+    background: var(--color-bg);
+    color: var(--color-font);
   }
 
-  .response-pane {
+  .pane-two {
     min-width: 0;
     grid-column-start: 6;
     grid-row-start: 2;
     grid-row-end: span 3;
     background: inherit;
+
+    border-left: 1px solid var(--hl-md);
+    background: var(--color-bg);
+    color: var(--color-font);
   }
 
   .app-header {
@@ -119,13 +127,6 @@
   .layout-body {
     grid-column-start: 1;
     grid-column-end: span 6;
-    grid-row-start: 2;
-    grid-row-end: span 3;
-  }
-
-  .layout-body--sidebar {
-    grid-column-start: 3;
-    grid-column-end: span 4;
     grid-row-start: 2;
     grid-row-end: span 3;
   }
@@ -150,14 +151,14 @@
 }
 
 .wrapper--vertical {
-  .request-pane {
+  .pane-one {
     grid-column-start: 4;
     grid-column-end: span 3;
     grid-row-start: 2;
     grid-row-end: span 1;
   }
 
-  .response-pane {
+  .pane-two {
     grid-column-start: 4;
     grid-column-end: span 3;
     grid-row-start: 4;
