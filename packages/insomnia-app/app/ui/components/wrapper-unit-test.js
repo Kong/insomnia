@@ -285,7 +285,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     return selectableRequests;
   }
 
-  renderResults(): React.Node {
+  _renderResults(): React.Node {
     const { activeUnitTestResult } = this.props.wrapperProps;
     const { testsRunning, resultsError } = this.state;
 
@@ -348,11 +348,9 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       );
     }
     return (
-      <div className="unit-tests__results">
-        <div>
-          <div className="unit-tests__top-header">
-            <h2 className="success">Awaiting Test Execution</h2>
-          </div>
+      <div className="unit-tests">
+        <div className="unit-tests__top-header">
+          <h2 className="success">Awaiting Test Execution</h2>
         </div>
       </div>
     );
@@ -400,45 +398,38 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     );
   }
 
-  renderPageBody(): React.Node {
+  _renderTestSuite(): React.Node {
     const { activeUnitTests, activeUnitTestSuite } = this.props.wrapperProps;
     const { testsRunning } = this.state;
 
     if (!activeUnitTestSuite) {
-      return (
-        <div className="unit-tests layout-body--sidebar theme--pane">
-          <div className="unit-tests__tests theme--pane__body pad">No test suite selected</div>
-        </div>
-      );
+      return <div className="unit-tests pad theme--pane__body">No test suite selected</div>;
     }
 
     return (
-      <div className="unit-tests layout-body--sidebar theme--pane">
-        <div className="unit-tests__tests theme--pane__body">
-          <div className="unit-tests__top-header">
-            <h2>
-              <Editable
-                singleClick
-                onSubmit={this._handleChangeActiveSuiteName}
-                value={activeUnitTestSuite.name}
-              />
-            </h2>
-            <Button variant="outlined" onClick={this._handleCreateTest}>
-              New Test
-            </Button>
-            <Button
-              variant="contained"
-              bg="surprise"
-              onClick={this._handleRunTests}
-              size="default"
-              disabled={testsRunning}>
-              {testsRunning ? 'Running... ' : 'Run Tests'}
-              <i className="fa fa-play space-left"></i>
-            </Button>
-          </div>
-          <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
+      <div className="unit-tests theme--pane__body">
+        <div className="unit-tests__top-header">
+          <h2>
+            <Editable
+              singleClick
+              onSubmit={this._handleChangeActiveSuiteName}
+              value={activeUnitTestSuite.name}
+            />
+          </h2>
+          <Button variant="outlined" onClick={this._handleCreateTest}>
+            New Test
+          </Button>
+          <Button
+            variant="contained"
+            bg="surprise"
+            onClick={this._handleRunTests}
+            size="default"
+            disabled={testsRunning}>
+            {testsRunning ? 'Running... ' : 'Run Tests'}
+            <i className="fa fa-play space-left"></i>
+          </Button>
         </div>
-        {this.renderResults()}
+        <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
       </div>
     );
   }
@@ -494,7 +485,8 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       <PageLayout
         wrapperProps={this.props.wrapperProps}
         renderPageSidebar={this.renderPageSidebar}
-        renderPageBody={this.renderPageBody}
+        renderPaneOne={this._renderTestSuite}
+        renderPaneTwo={this._renderResults}
         renderPageHeader={() => (
           <Header
             className="app-header"
