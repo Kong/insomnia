@@ -18,7 +18,6 @@ import { isGrpcRequest } from '../../models/helpers/is-model';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
-import { ResizablePaneWrapper } from './panes/pane';
 
 type Props = {
   forceRefreshKey: string,
@@ -197,22 +196,15 @@ class WrapperDebug extends React.PureComponent<Props> {
     );
   }
 
-  _renderPageBody() {
+  _renderRequestPane() {
     const {
       forceRefreshKey,
-      handleDeleteResponse,
-      handleDeleteResponses,
       handleForceUpdateRequest,
       handleForceUpdateRequestHeaders,
       handleImport,
       handleImportFile,
       handleSendAndDownloadRequestWithActiveEnvironment,
       handleSendRequestWithActiveEnvironment,
-      handleSetActiveResponse,
-      handleSetPreviewMode,
-      handleSetResponseFilter,
-      handleShowCookiesModal,
-      handleShowRequestSettingsModal,
       handleUpdateRequestAuthentication,
       handleUpdateRequestBody,
       handleUpdateRequestHeaders,
@@ -227,153 +219,144 @@ class WrapperDebug extends React.PureComponent<Props> {
     const {
       activeEnvironment,
       activeRequest,
-      activeRequestResponses,
-      activeResponse,
       activeUnitTest,
-      activeUnitTestResult,
       activeWorkspace,
       handleCreateRequestForWorkspace,
       handleGenerateCodeForActiveRequest,
       handleGetRenderContext,
       handleRender,
-      handleResetDragPaneHorizontal,
-      handleResetDragPaneVertical,
-      handleSetRequestPaneRef,
-      handleSetResponsePaneRef,
-      handleStartDragPaneHorizontal,
-      handleStartDragPaneVertical,
       handleUpdateDownloadPath,
       handleUpdateRequestMimeType,
       headerEditorKey,
       isVariableUncovered,
-      loadStartTime,
       oAuth2Token,
-      requestVersions,
       responseDownloadPath,
+      settings,
+    } = this.props.wrapperProps;
+
+    // activeRequest being truthy only needs to be checked for isGrpcRequest (for now)
+    // The RequestPane and ResponsePane components already handle the case where activeRequest is null
+    if (activeRequest && isGrpcRequest(activeRequest)) {
+      return (
+        <ErrorBoundary showAlert>
+          <GrpcRequestPane
+            activeRequest={activeRequest}
+            forceRefreshCounter={forceRefreshKey}
+            settings={settings}
+          />
+        </ErrorBoundary>
+      );
+    }
+
+    return (
+      <ErrorBoundary showAlert>
+        <RequestPane
+          downloadPath={responseDownloadPath}
+          environmentId={activeEnvironment ? activeEnvironment._id : ''}
+          forceRefreshCounter={forceRefreshKey}
+          forceUpdateRequest={handleForceUpdateRequest}
+          forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
+          handleCreateRequest={handleCreateRequestForWorkspace}
+          handleGenerateCode={handleGenerateCodeForActiveRequest}
+          handleGetRenderContext={handleGetRenderContext}
+          handleImport={handleImport}
+          handleImportFile={handleImportFile}
+          handleRender={handleRender}
+          handleSend={handleSendRequestWithActiveEnvironment}
+          handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
+          handleUpdateDownloadPath={handleUpdateDownloadPath}
+          headerEditorKey={headerEditorKey}
+          isVariableUncovered={isVariableUncovered}
+          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+          oAuth2Token={oAuth2Token}
+          request={activeRequest}
+          unitTest={activeUnitTest}
+          settings={settings}
+          updateRequestAuthentication={handleUpdateRequestAuthentication}
+          updateRequestBody={handleUpdateRequestBody}
+          updateRequestHeaders={handleUpdateRequestHeaders}
+          updateRequestMethod={handleUpdateRequestMethod}
+          updateRequestMimeType={handleUpdateRequestMimeType}
+          updateRequestParameters={handleUpdateRequestParameters}
+          updateRequestUrl={handleUpdateRequestUrl}
+          updateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
+          updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
+          updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
+          workspace={activeWorkspace}
+        />
+      </ErrorBoundary>
+    );
+  }
+
+  _renderResponsePane() {
+    const {
+      forceRefreshKey,
+      handleDeleteResponse,
+      handleDeleteResponses,
+      handleSetActiveResponse,
+      handleSetPreviewMode,
+      handleSetResponseFilter,
+      handleShowCookiesModal,
+      handleShowRequestSettingsModal,
+    } = this.props;
+
+    const {
+      activeEnvironment,
+      activeRequest,
+      activeRequestResponses,
+      activeResponse,
+      activeUnitTestResult,
+      loadStartTime,
+      requestVersions,
       responseFilter,
       responseFilterHistory,
       responsePreviewMode,
       settings,
     } = this.props.wrapperProps;
 
-    const dragPanes = (
-      <>
-        <div className="drag drag--pane-horizontal">
-          <div
-            onMouseDown={handleStartDragPaneHorizontal}
-            onDoubleClick={handleResetDragPaneHorizontal}
-          />
-        </div>
-
-        <div className="drag drag--pane-vertical">
-          <div
-            onMouseDown={handleStartDragPaneVertical}
-            onDoubleClick={handleResetDragPaneVertical}
-          />
-        </div>
-      </>
-    );
-
     // activeRequest being truthy only needs to be checked for isGrpcRequest (for now)
     // The RequestPane and ResponsePane components already handle the case where activeRequest is null
     if (activeRequest && isGrpcRequest(activeRequest)) {
       return (
-        <React.Fragment>
-          <ErrorBoundary showAlert>
-            <ResizablePaneWrapper ref={handleSetRequestPaneRef}>
-              <GrpcRequestPane
-                activeRequest={activeRequest}
-                forceRefreshCounter={forceRefreshKey}
-                settings={settings}
-              />
-            </ResizablePaneWrapper>
-          </ErrorBoundary>
-          {dragPanes}
-          <ErrorBoundary showAlert>
-            <ResizablePaneWrapper ref={handleSetResponsePaneRef}>
-              <GrpcResponsePane
-                activeRequest={activeRequest}
-                forceRefreshCounter={forceRefreshKey}
-                settings={settings}
-              />
-            </ResizablePaneWrapper>
-          </ErrorBoundary>
-        </React.Fragment>
+        <ErrorBoundary showAlert>
+          <GrpcResponsePane
+            activeRequest={activeRequest}
+            forceRefreshCounter={forceRefreshKey}
+            settings={settings}
+          />
+        </ErrorBoundary>
       );
     }
 
     return (
-      <React.Fragment>
-        <ErrorBoundary showAlert>
-          <RequestPane
-            ref={handleSetRequestPaneRef}
-            downloadPath={responseDownloadPath}
-            environmentId={activeEnvironment ? activeEnvironment._id : ''}
-            forceRefreshCounter={forceRefreshKey}
-            forceUpdateRequest={handleForceUpdateRequest}
-            forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
-            handleCreateRequest={handleCreateRequestForWorkspace}
-            handleGenerateCode={handleGenerateCodeForActiveRequest}
-            handleGetRenderContext={handleGetRenderContext}
-            handleImport={handleImport}
-            handleImportFile={handleImportFile}
-            handleRender={handleRender}
-            handleSend={handleSendRequestWithActiveEnvironment}
-            handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
-            handleUpdateDownloadPath={handleUpdateDownloadPath}
-            headerEditorKey={headerEditorKey}
-            isVariableUncovered={isVariableUncovered}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            oAuth2Token={oAuth2Token}
-            request={activeRequest}
-            unitTest={activeUnitTest}
-            settings={settings}
-            updateRequestAuthentication={handleUpdateRequestAuthentication}
-            updateRequestBody={handleUpdateRequestBody}
-            updateRequestHeaders={handleUpdateRequestHeaders}
-            updateRequestMethod={handleUpdateRequestMethod}
-            updateRequestMimeType={handleUpdateRequestMimeType}
-            updateRequestParameters={handleUpdateRequestParameters}
-            updateRequestUrl={handleUpdateRequestUrl}
-            updateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-            updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
-            updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
-            workspace={activeWorkspace}
-          />
-        </ErrorBoundary>
-
-        {dragPanes}
-
-        <ErrorBoundary showAlert>
-          <ResponsePane
-            ref={handleSetResponsePaneRef}
-            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-            disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            editorLineWrapping={settings.editorLineWrapping}
-            environment={activeEnvironment}
-            filter={responseFilter}
-            filterHistory={responseFilterHistory}
-            handleDeleteResponse={handleDeleteResponse}
-            handleDeleteResponses={handleDeleteResponses}
-            handleSetActiveResponse={handleSetActiveResponse}
-            handleSetFilter={handleSetResponseFilter}
-            handleSetPreviewMode={handleSetPreviewMode}
-            handleShowRequestSettings={handleShowRequestSettingsModal}
-            showCookiesModal={handleShowCookiesModal}
-            hotKeyRegistry={settings.hotKeyRegistry}
-            loadStartTime={loadStartTime}
-            previewMode={responsePreviewMode}
-            request={activeRequest}
-            requestVersions={requestVersions}
-            response={activeResponse}
-            responses={activeRequestResponses}
-            unitTestResult={activeUnitTestResult}
-          />
-        </ErrorBoundary>
-      </React.Fragment>
+      <ErrorBoundary showAlert>
+        <ResponsePane
+          disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+          disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
+          editorFontSize={settings.editorFontSize}
+          editorIndentSize={settings.editorIndentSize}
+          editorKeyMap={settings.editorKeyMap}
+          editorLineWrapping={settings.editorLineWrapping}
+          environment={activeEnvironment}
+          filter={responseFilter}
+          filterHistory={responseFilterHistory}
+          handleDeleteResponse={handleDeleteResponse}
+          handleDeleteResponses={handleDeleteResponses}
+          handleSetActiveResponse={handleSetActiveResponse}
+          handleSetFilter={handleSetResponseFilter}
+          handleSetPreviewMode={handleSetPreviewMode}
+          handleShowRequestSettings={handleShowRequestSettingsModal}
+          showCookiesModal={handleShowCookiesModal}
+          hotKeyRegistry={settings.hotKeyRegistry}
+          loadStartTime={loadStartTime}
+          previewMode={responsePreviewMode}
+          request={activeRequest}
+          requestVersions={requestVersions}
+          response={activeResponse}
+          responses={activeRequestResponses}
+          unitTestResult={activeUnitTestResult}
+        />
+      </ErrorBoundary>
     );
   }
 
@@ -388,7 +371,8 @@ class WrapperDebug extends React.PureComponent<Props> {
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={designer && this._renderPageHeader}
         renderPageSidebar={this._renderPageSidebar}
-        renderPageBody={this._renderPageBody}
+        renderPaneOne={this._renderRequestPane}
+        renderPaneTwo={this._renderResponsePane}
       />
     );
   }

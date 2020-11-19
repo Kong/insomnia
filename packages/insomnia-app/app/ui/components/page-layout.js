@@ -14,6 +14,8 @@ type Props = {
   renderPageSidebar?: () => React.Node,
   renderPageHeader?: () => React.Node,
   renderPageBody?: () => React.Node,
+  renderPaneOne?: () => React.Node,
+  renderPaneTwo?: () => React.Node,
 };
 
 type State = {};
@@ -29,7 +31,14 @@ class PageLayout extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { renderPageBody, renderPageHeader, renderPageSidebar, wrapperProps } = this.props;
+    const {
+      renderPaneOne,
+      renderPaneTwo,
+      renderPageBody,
+      renderPageHeader,
+      renderPageSidebar,
+      wrapperProps,
+    } = this.props;
 
     const {
       activity,
@@ -43,6 +52,12 @@ class PageLayout extends React.PureComponent<Props, State> {
       handleSetActiveWorkspace,
       handleSetSidebarRef,
       handleShowSettingsModal,
+      handleSetRequestPaneRef,
+      handleSetResponsePaneRef,
+      handleStartDragPaneHorizontal,
+      handleResetDragPaneHorizontal,
+      handleStartDragPaneVertical,
+      handleResetDragPaneVertical,
       isLoading,
       paneHeight,
       paneWidth,
@@ -57,10 +72,12 @@ class PageLayout extends React.PureComponent<Props, State> {
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
 
+    const paneTwo = renderPaneTwo && renderPaneTwo();
+
     const gridRows = `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
     const gridColumns =
       `auto ${realSidebarWidth}rem 0 ` +
-      `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)`;
+      `${paneTwo ? `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)` : '1fr'}`;
 
     return (
       <div
@@ -140,11 +157,53 @@ class PageLayout extends React.PureComponent<Props, State> {
             </div>
           </ErrorBoundary>
         )}
+        {renderPageBody ? (
+          <ErrorBoundary showAlert>{renderPageBody()}</ErrorBoundary>
+        ) : (
+          <>
+            {renderPaneOne && (
+              <ErrorBoundary showAlert>
+                <Pane position="one" ref={handleSetRequestPaneRef}>
+                  {renderPaneOne()}
+                </Pane>
+              </ErrorBoundary>
+            )}
+            {paneTwo && (
+              <>
+                <div className="drag drag--pane-horizontal">
+                  <div
+                    onMouseDown={handleStartDragPaneHorizontal}
+                    onDoubleClick={handleResetDragPaneHorizontal}
+                  />
+                </div>
 
-        {renderPageBody && <ErrorBoundary showAlert>{renderPageBody()}</ErrorBoundary>}
+                <div className="drag drag--pane-vertical">
+                  <div
+                    onMouseDown={handleStartDragPaneVertical}
+                    onDoubleClick={handleResetDragPaneVertical}
+                  />
+                </div>
+
+                <ErrorBoundary showAlert>
+                  <Pane position="two" ref={handleSetResponsePaneRef}>
+                    {paneTwo}
+                  </Pane>
+                </ErrorBoundary>
+              </>
+            )}
+          </>
+        )}
       </div>
     );
   }
 }
 
 export default PageLayout;
+
+class Pane extends React.PureComponent {
+  render() {
+    return (
+      <section className={`pane-${this.props.position} theme--pane`}>{this.props.children}</section>
+    );
+  }
+}
