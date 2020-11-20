@@ -79,12 +79,13 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
 
     // $FlowFixMe
     const fields = type.getFields();
+    const fieldKeys = Object.keys(fields).sort((a, b) => a.localeCompare(b));
 
     return (
       <React.Fragment>
         <h2 className="graphql-explorer__subheading">Fields</h2>
         <ul className="graphql-explorer__defs">
-          {Object.keys(fields).map(key => {
+          {fieldKeys.map(key => {
             const field: GraphQLField<any, any> = (fields[key]: any);
 
             let argLinks = null;

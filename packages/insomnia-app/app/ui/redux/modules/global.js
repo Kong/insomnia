@@ -13,6 +13,7 @@ import AlertModal from '../../components/modals/alert-modal';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
 import LoginModal from '../../components/modals/login-modal';
 import * as models from '../../../models';
+import * as requestOperations from '../../../models/helpers/request-operations';
 import SelectModal from '../../components/modals/select-modal';
 import { showError, showModal } from '../../components/modals/index';
 import * as db from '../../../common/database';
@@ -535,7 +536,7 @@ export function exportRequestsToFile(requestIds) {
         const privateEnvironments = [];
         const workspaceLookup = {};
         for (const requestId of requestIds) {
-          const request = await models.request.getById(requestId);
+          const request = await requestOperations.getById(requestId);
           if (request == null) {
             continue;
           }

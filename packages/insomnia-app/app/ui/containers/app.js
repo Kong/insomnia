@@ -98,7 +98,7 @@ import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
 import { isGrpcRequest, isGrpcRequestId } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { GrpcProvider } from '../context/grpc/grpc-context';
+import { GrpcProvider } from '../context/grpc';
 import { getSortMethod } from '../../common/sorting';
 
 @autobind

@@ -35,11 +35,3 @@ export const PaneBody = ({ placeholder, children }: PaneBodyProps) => (
     {children}
   </div>
 );
-
-// This class component is needed in order to apply a ref to it for resizing
-// The component can be removed, once PR #2712 is merged
-export class ResizablePaneWrapper extends React.PureComponent {
-  render() {
-    return <>{this.props.children}</>;
-  }
-}

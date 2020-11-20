@@ -2,7 +2,7 @@
 
 import React from 'react';
 import type { GrpcRequest } from '../../../../models/grpc-request';
-import type { GrpcDispatch } from '../../../context/grpc/grpc-actions';
+import type { GrpcDispatch } from '../../../context/grpc';
 import * as models from '../../../../models';
 import { grpcActions } from '../../../context/grpc';
 import { showModal } from '../../modals';

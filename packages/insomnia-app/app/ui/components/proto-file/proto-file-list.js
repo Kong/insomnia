@@ -6,6 +6,7 @@ import ProtoFileListItem from './proto-file-list-item';
 
 export type SelectProtoFileHandler = (id: string) => void;
 export type DeleteProtoFileHandler = (protofile: ProtoFile) => Promise<void>;
+export type UpdateProtoFileHandler = (protofile: ProtoFile) => Promise<void>;
 export type RenameProtoFileHandler = (protoFile: ProtoFile, name: string) => Promise<void>;
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
   handleSelect: SelectProtoFileHandler,
   handleDelete: DeleteProtoFileHandler,
   handleRename: RenameProtoFileHandler,
+  handleUpdate: UpdateProtoFileHandler,
 };
 
 const ProtoFileList = ({
@@ -22,6 +24,7 @@ const ProtoFileList = ({
   handleSelect,
   handleDelete,
   handleRename,
+  handleUpdate,
 }: Props) => (
   <ListGroup bordered>
     {!protoFiles.length && <ListGroupItem>No proto files exist for this workspace</ListGroupItem>}
@@ -33,6 +36,7 @@ const ProtoFileList = ({
         handleSelect={handleSelect}
         handleDelete={handleDelete}
         handleRename={handleRename}
+        handleUpdate={handleUpdate}
       />
     ))}
   </ListGroup>
