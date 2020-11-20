@@ -10,13 +10,15 @@ import {
   SORT_TYPE_ASC,
   SORT_TYPE_DESC,
 } from './constants';
-import { request, requestGroup } from '../models';
-import type { Request } from '../../models/request';
-import type { RequestGroup } from '../../models/request-group';
+import type { Request } from '../models/request';
+import type { GrpcRequest } from '../models/grpc-request';
+import type { RequestGroup } from '../models/request-group';
+import { isGrpcRequest, isRequest, isRequestGroup } from '../models/helpers/is-model';
 
-export function getSortMethod(
-  order: SortOrder,
-): (a: Request | RequestGroup, b: Request | RequestGroup) => number {
+type SortableModel = Request | RequestGroup | GrpcRequest;
+type SortFunction = (a: SortableModel, b: SortableModel) => number;
+
+export function getSortMethod(order: SortOrder): SortFunction {
   switch (order) {
     case SORT_NAME_ASC:
       return ascendingNameSort;
@@ -37,66 +39,76 @@ export function getSortMethod(
   }
 }
 
-export function ascendingNameSort(a: Request | RequestGroup, b: Request | RequestGroup): number {
+const ascendingNameSort: SortFunction = (a, b) => {
   return a.name.localeCompare(b.name);
-}
+};
 
-export function descendingNameSort(a: Request | RequestGroup, b: Request | RequestGroup): number {
+const descendingNameSort: SortFunction = (a, b) => {
   return b.name.localeCompare(a.name);
-}
+};
 
-export function createdFirstSort(a: Request | RequestGroup, b: Request | RequestGroup): number {
+const createdFirstSort: SortFunction = (a, b) => {
   if (a.created === b.created) {
     return 0;
   }
 
   return a.created < b.created ? -1 : 1;
-}
+};
 
-export function createdLastSort(a: Request | RequestGroup, b: Request | RequestGroup): number {
+const createdLastSort: SortFunction = (a, b) => {
   if (a.created === b.created) {
     return 0;
   }
 
   return a.created > b.created ? -1 : 1;
-}
+};
 
-export function httpMethodSort(a: Request | RequestGroup, b: Request | RequestGroup): number {
+const httpMethodSort: SortFunction = (a, b) => {
   if (a.type !== b.type) {
-    return a.type === request.type ? -1 : 1;
+    if (isRequest(a) || isRequest(b)) {
+      return isRequest(a) ? -1 : 1;
+    }
+
+    if (isGrpcRequest(a) || isGrpcRequest(b)) {
+      return isGrpcRequest(a) ? -1 : 1;
+    }
   }
 
-  if (a.type === request.type) {
+  if (isRequest(a)) {
     const aIndex = HTTP_METHODS.indexOf(a.method);
     const bIndex = HTTP_METHODS.indexOf(b.method);
     if (aIndex !== bIndex) {
       return aIndex < bIndex ? -1 : 1;
     }
+
+    if (aIndex === -1 && a.method.localeCompare(b.method) !== 0) {
+      return a.method.localeCompare(b.method);
+    }
   }
 
   return metaSortKeySort(a, b);
-}
+};
 
-export function ascendingTypeSort(a: Request | RequestGroup, b: Request | RequestGroup): number {
-  if (a.type === b.type) {
-    return metaSortKeySort(a, b);
+const ascendingTypeSort: SortFunction = (a, b) => {
+  if (a.type !== b.type && (isRequestGroup(a) || isRequestGroup(b))) {
+    return isRequestGroup(b) ? -1 : 1;
   }
 
-  return a.type === request.type ? -1 : 1;
-}
+  return metaSortKeySort(a, b);
+};
 
-export function descendingTypeSort(a: Request | RequestGroup, b: Request | RequestGroup): number {
-  if (a.type === b.type) {
-    return metaSortKeySort(a, b);
+const descendingTypeSort: SortFunction = (a, b) => {
+  if (a.type !== b.type && (isRequestGroup(a) || isRequestGroup(b))) {
+    return isRequestGroup(a) ? -1 : 1;
   }
 
-  return a.type === requestGroup.type ? -1 : 1;
-}
+  return metaSortKeySort(a, b);
+};
 
-export function metaSortKeySort(a: Request | RequestGroup, b: Request | RequestGroup): number {
+export const metaSortKeySort: SortFunction = (a, b) => {
   if (a.metaSortKey === b.metaSortKey) {
     return a._id > b._id ? -1 : 1;
   }
 
   return a.metaSortKey < b.metaSortKey ? -1 : 1;
-}
+};

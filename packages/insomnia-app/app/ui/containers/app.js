@@ -361,6 +361,7 @@ class App extends PureComponent {
     const docs = [
       ...(await models.requestGroup.findByParentId(parentId)),
       ...(await models.request.findByParentId(parentId)),
+      ...(await models.grpcRequest.findByParentId(parentId)),
     ].sort(getSortMethod(order));
     await this._recalculateMetaSortKey(docs);
 
