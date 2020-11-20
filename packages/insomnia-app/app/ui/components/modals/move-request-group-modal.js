@@ -12,6 +12,7 @@ import HelpTooltip from '../help-tooltip';
 
 type Props = {
   workspaces: Array<Workspace>,
+  workspace: Workspace,
 };
 
 type State = {
@@ -78,7 +79,7 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { workspaces } = this.props;
+    const { workspaces, workspace } = this.props;
     const { selectedWorkspaceId } = this.state;
     return (
       <form onSubmit={this._handleSubmit}>
@@ -91,11 +92,15 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
                 <HelpTooltip>Folder will be moved to the root of the new workspace</HelpTooltip>
                 <select onChange={this._handleChangeSelectedWorkspace} value={selectedWorkspaceId}>
                   <option value="n/a">-- Select Workspace --</option>
-                  {workspaces.map(w => (
-                    <option key={w._id} value={w._id}>
-                      {w.name}
-                    </option>
-                  ))}
+                  {workspaces.flatMap(w =>
+                    w._id === workspace._id ? (
+                      []
+                    ) : (
+                      <option key={w._id} value={w._id}>
+                        {w.name}
+                      </option>
+                    ),
+                  )}
                 </select>
               </label>
             </div>
