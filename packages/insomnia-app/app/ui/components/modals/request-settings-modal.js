@@ -353,10 +353,65 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
-  renderModalBody(): React.Node {
+  _renderMoveCopy(): React.Node {
     const { workspaces } = this.props;
 
     const { activeWorkspaceIdToCopyTo, justMoved, justCopied, workspace, request } = this.state;
+
+    // Don't show move/copy items if it doesn't exist, or if it is a gRPC request
+    if (!request || isGrpcRequest(request)) {
+      return null;
+    }
+
+    return (
+      <div className="form-row">
+        <div className="form-control form-control--outlined">
+          <label>
+            Move/Copy to Workspace
+            <HelpTooltip position="top" className="space-left">
+              Copy or move the current request to a new workspace. It will be placed at the root of
+              the new workspace's folder structure.
+            </HelpTooltip>
+            <select
+              value={activeWorkspaceIdToCopyTo || '__NULL__'}
+              onChange={this._handleUpdateMoveCopyWorkspace}>
+              <option value="__NULL__">-- Select Workspace --</option>
+              {workspaces.map(w => {
+                if (workspace && workspace._id === w._id) {
+                  return null;
+                }
+
+                return (
+                  <option key={w._id} value={w._id}>
+                    {w.name}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+        </div>
+        <div className="form-control form-control--no-label width-auto">
+          <button
+            disabled={justCopied || !activeWorkspaceIdToCopyTo}
+            className="btn btn--clicky"
+            onClick={this._handleCopyToWorkspace}>
+            {justCopied ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
+        <div className="form-control form-control--no-label width-auto">
+          <button
+            disabled={justMoved || !activeWorkspaceIdToCopyTo}
+            className="btn btn--clicky"
+            onClick={this._handleMoveToWorkspace}>
+            {justMoved ? 'Moved!' : 'Move'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  renderModalBody(): React.Node {
+    const { request } = this.state;
 
     if (!request) {
       return null;
@@ -380,49 +435,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
         {this._renderDescription()}
         {this._renderRequestSettings()}
         <hr />
-        <div className="form-row">
-          <div className="form-control form-control--outlined">
-            <label>
-              Move/Copy to Workspace
-              <HelpTooltip position="top" className="space-left">
-                Copy or move the current request to a new workspace. It will be placed at the root
-                of the new workspace's folder structure.
-              </HelpTooltip>
-              <select
-                value={activeWorkspaceIdToCopyTo || '__NULL__'}
-                onChange={this._handleUpdateMoveCopyWorkspace}>
-                <option value="__NULL__">-- Select Workspace --</option>
-                {workspaces.map(w => {
-                  if (workspace && workspace._id === w._id) {
-                    return null;
-                  }
-
-                  return (
-                    <option key={w._id} value={w._id}>
-                      {w.name}
-                    </option>
-                  );
-                })}
-              </select>
-            </label>
-          </div>
-          <div className="form-control form-control--no-label width-auto">
-            <button
-              disabled={justCopied || !activeWorkspaceIdToCopyTo}
-              className="btn btn--clicky"
-              onClick={this._handleCopyToWorkspace}>
-              {justCopied ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
-          <div className="form-control form-control--no-label width-auto">
-            <button
-              disabled={justMoved || !activeWorkspaceIdToCopyTo}
-              className="btn btn--clicky"
-              onClick={this._handleMoveToWorkspace}>
-              {justMoved ? 'Moved!' : 'Move'}
-            </button>
-          </div>
-        </div>
+        {this._renderMoveCopy()}
       </div>
     );
   }
