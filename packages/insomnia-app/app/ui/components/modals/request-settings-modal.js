@@ -353,6 +353,22 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
+  _renderFeatureRequestPrompt(): React.Node {
+    const { request } = this.state;
+
+    // Don't show move/copy items if it doesn't exist, or if it is a gRPC request
+    if (request && isGrpcRequest(request)) {
+      return (
+        <p className="faint italic">
+          Are there any gRPC settings you expect to see? Create a{' '}
+          <a href={'https://github.com/Kong/insomnia/issues/new/choose'}>feature request</a>!
+        </p>
+      );
+    }
+
+    return null;
+  }
+
   _renderMoveCopy(): React.Node {
     const { workspaces } = this.props;
 
@@ -436,6 +452,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
         {this._renderRequestSettings()}
         <hr />
         {this._renderMoveCopy()}
+        {this._renderFeatureRequestPrompt()}
       </div>
     );
   }
