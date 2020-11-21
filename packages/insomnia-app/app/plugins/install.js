@@ -159,8 +159,7 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
           return;
         }
 
-        // If we do not check on 'warning', the plugin setup may fail for any generic message
-        if (stderr && !stderr.toString().includes('warning')) {
+        if (stderr && !isFalsePositive(stderr)) {
           reject(new Error(`Yarn error ${stderr.toString()}`));
           return;
         }
@@ -169,6 +168,43 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
       },
     );
   });
+}
+
+function isFalsePositive(stderr) {
+  // Let's assume is a false positive
+  let isFalsePositive: boolean = true;
+  // Split into array and remove falsy values (null, undefined, 0, -0, NaN, "", false)
+  const arr = stderr.split(/\r?\n/).filter(e => e);
+  // arr.find() stops and return the first match which is not a deprecated dependency warning
+  if (arr.find(e => !isDeprecatedDependencies(e))) isFalsePositive = false;
+
+  return isFalsePositive;
+}
+
+/**
+ * Provided a string, it checks for the following message:<br>
+ * <<[warning] xxx > yyy > zzz: yyy<n is [no longer maintained] and [not recommended for usage] <br>
+ * due to the number of issues. Please, [upgrade your dependencies] to xxx>> <br>
+ * @param str The error message
+ * @returns {boolean} Returns true if it's a deprecated warning
+ */
+function isDeprecatedDependencies(str: string): boolean {
+  // Search for: warning + dep-list + issue
+  const regex = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/gm;
+  let result = false;
+  // The array[3](issue) contains the message as it is without the dependency list
+  const message = regex.exec(str)[3];
+  // Strict check, everything must be matched to be a false positive
+  if (
+    message &&
+    message.includes('no longer maintained') &&
+    message.includes('not recommended for usage') &&
+    message.includes('upgrade your dependencies')
+  ) {
+    result = true;
+  }
+
+  return result;
 }
 
 function _getYarnPath() {
