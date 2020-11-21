@@ -9,12 +9,17 @@ import autobind from 'autobind-decorator';
 import type { Workspace } from '../../../models/workspace';
 import Modal from '../base/modal';
 import ProtoFileList from '../proto-file/proto-file-list';
-import FileInputButton from '../base/file-input-button';
 import { showAlert, showError } from './index';
 import fs from 'fs';
 import path from 'path';
+import selectFileOrFolder from '../../../common/select-file-or-folder';
+import { Button } from 'insomnia-components';
+import type { GrpcDispatch } from '../../context/grpc';
+import { grpcActions, sendGrpcIpcMultiple } from '../../context/grpc';
+import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 
 type Props = {|
+  grpcDispatch: GrpcDispatch,
   workspace: Workspace,
   protoFiles: Array<ProtoFile>,
 |};
@@ -93,14 +98,39 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     });
   }
 
-  async _handleProtoFileUpload(filePath: string) {
-    const { workspace } = this.props;
+  _handleAdd() {
+    return this._handleUpload();
+  }
+
+  async _handleUpload(protoFile?: ProtoFile) {
+    const { workspace, grpcDispatch } = this.props;
 
     try {
+      // Select file
+      const { filePath, canceled } = await selectFileOrFolder({
+        itemTypes: ['file'],
+        extensions: ['.proto'],
+      });
+
+      // Exit if no file selected
+      if (canceled || !filePath) {
+        return;
+      }
+
+      // Read contents
       const protoText = fs.readFileSync(filePath, 'utf-8');
       const name = path.basename(filePath);
-      const newFile = await models.protoFile.create({ name, parentId: workspace._id, protoText });
-      this.setState({ selectedProtoFileId: newFile._id });
+
+      // Create or update a protoFile
+      if (protoFile) {
+        await models.protoFile.update(protoFile, { name, protoText });
+        const action = await grpcActions.invalidateMany(protoFile._id);
+        grpcDispatch(action);
+        sendGrpcIpcMultiple(GrpcRequestEventEnum.cancelMultiple, action.requestIds);
+      } else {
+        const newFile = await models.protoFile.create({ name, parentId: workspace._id, protoText });
+        this.setState({ selectedProtoFileId: newFile._id });
+      }
     } catch (e) {
       showError({ error: e });
     }
@@ -116,21 +146,17 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
 
     return (
       <Modal ref={this._setModalRef}>
-        <ModalHeader>Select Protofile</ModalHeader>
+        <ModalHeader>Select Proto File</ModalHeader>
         <ModalBody className="wide pad">
           <div className="row-spaced margin-bottom bold">
             Files
-            <FileInputButton
-              staticLabel="Add Protofile"
-              extensions={['.proto']}
-              className="btn btn--clicky pad-sm"
-              onChange={this._handleProtoFileUpload}
-            />
+            <Button onClick={this._handleAdd}>Add Proto File</Button>
           </div>
           <ProtoFileList
             protoFiles={protoFiles}
             selectedId={selectedProtoFileId}
             handleSelect={this._handleSelect}
+            handleUpdate={this._handleUpload}
             handleDelete={this._handleDelete}
             handleRename={this._handleRename}
           />

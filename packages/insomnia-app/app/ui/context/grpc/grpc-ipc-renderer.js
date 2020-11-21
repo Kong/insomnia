@@ -58,6 +58,12 @@ export const grpcIpcRenderer = {
 };
 
 export const useGrpcIpc: string => GrpcRequestEvent => void = requestId =>
-  React.useCallback((channel: GrpcRequestEvent) => ipcRenderer.send(channel, requestId), [
-    requestId,
-  ]);
+  React.useCallback((channel: GrpcRequestEvent) => sendGrpcIpc(channel, requestId), [requestId]);
+
+const sendGrpcIpc = (channel: GrpcRequestEvent, requestId: string) => {
+  ipcRenderer.send(channel, requestId);
+};
+
+export const sendGrpcIpcMultiple = (channel: GrpcRequestEvent, requestIds: Array<string>) => {
+  ipcRenderer.send(channel, requestIds);
+};

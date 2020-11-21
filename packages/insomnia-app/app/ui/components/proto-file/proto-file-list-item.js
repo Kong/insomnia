@@ -6,6 +6,7 @@ import type {
   DeleteProtoFileHandler,
   RenameProtoFileHandler,
   SelectProtoFileHandler,
+  UpdateProtoFileHandler,
 } from './proto-file-list';
 import { ListGroupItem, Button } from '../../../../../insomnia-components';
 import Editable from '../base/editable';
@@ -16,6 +17,7 @@ type Props = {
   handleSelect: SelectProtoFileHandler,
   handleDelete: DeleteProtoFileHandler,
   handleRename: RenameProtoFileHandler,
+  handleUpdate: UpdateProtoFileHandler,
 };
 
 const SelectableListItem: React.PureComponent<{ isSelected?: boolean }> = styled(ListGroupItem)`
@@ -36,6 +38,7 @@ const ProtoFileListItem = ({
   handleSelect,
   handleDelete,
   handleRename,
+  handleUpdate,
 }: Props) => {
   const { name, _id } = protoFile;
 
@@ -55,18 +58,34 @@ const ProtoFileListItem = ({
     [handleRename, protoFile],
   );
 
+  const handleUpdateCallback = React.useCallback(
+    async (e: SyntheticEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      await handleUpdate(protoFile);
+    },
+    [handleUpdate, protoFile],
+  );
+
   return (
     <SelectableListItem isSelected={isSelected} onClick={handleSelectCallback}>
       <div className="row-spaced">
         <Editable className="wide" onSubmit={handleRenameCallback} value={name} preventBlank />
-        <Button
-          variant="text"
-          size="default"
-          title="Delete Proto File"
-          bg="danger"
-          onClick={handleDeleteCallback}>
-          <i className="fa fa-trash-o" />
-        </Button>
+        <div className="row">
+          <Button
+            variant="text"
+            title="Re-upload Proto File"
+            onClick={handleUpdateCallback}
+            className="space-right">
+            <i className="fa fa-upload" />
+          </Button>
+          <Button
+            variant="text"
+            title="Delete Proto File"
+            bg="danger"
+            onClick={handleDeleteCallback}>
+            <i className="fa fa-trash-o" />
+          </Button>
+        </div>
       </div>
     </SelectableListItem>
   );
