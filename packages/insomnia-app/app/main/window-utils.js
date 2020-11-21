@@ -298,13 +298,6 @@ export function createWindow() {
           shell.openExternal('https://insomnia.rest/license');
         },
       },
-      {
-        label: `Insomnia ${MNEMONIC_SYM}Help`,
-        accelerator: !isMac() ? 'F1' : null,
-        click: () => {
-          shell.openExternal('https://support.insomnia.rest');
-        },
-      },
     ],
   };
 
