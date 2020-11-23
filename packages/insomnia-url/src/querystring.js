@@ -2,7 +2,7 @@ const { parse: urlParse, format: urlFormat } = require('url');
 const { setDefaultProtocol } = require('./protocol');
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
-const URL_PATH_CHARACTER_WHITELIST = '+,;@=:';
+const URL_PATH_CHARACTER_WHITELIST = '+,;@=:$';
 
 /**
  * Join querystring to URL
