@@ -2,7 +2,7 @@ import { parse as urlParse, format as urlFormat } from 'url';
 import { setDefaultProtocol } from './protocol';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
-const URL_PATH_CHARACTER_WHITELIST = '+,;@=:';
+const URL_PATH_CHARACTER_WHITELIST = '+,;@=:$';
 
 export const getJoiner = (url: string) => {
   url = url || '';
