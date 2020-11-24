@@ -157,6 +157,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           code: this.generateSendReqSnippet('', ''),
           name,
         });
+        await this.getUnitTests();
       },
     });
   }
