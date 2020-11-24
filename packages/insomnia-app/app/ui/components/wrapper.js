@@ -647,7 +647,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             <MoveRequestGroupModal
               ref={registerModal}
               workspaces={workspaces}
-              workspace={activeWorkspace}
+              activeWorkspace={activeWorkspace}
             />
 
             <WorkspaceSettingsModal

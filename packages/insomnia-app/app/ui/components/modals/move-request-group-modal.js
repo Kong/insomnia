@@ -12,7 +12,7 @@ import HelpTooltip from '../help-tooltip';
 
 type Props = {
   workspaces: Array<Workspace>,
-  workspace: Workspace,
+  activeWorkspace: Workspace,
 };
 
 type State = {
@@ -79,7 +79,7 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { workspaces, workspace } = this.props;
+    const { workspaces, activeWorkspace } = this.props;
     const { selectedWorkspaceId } = this.state;
     return (
       <form onSubmit={this._handleSubmit}>
@@ -93,7 +93,7 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
                 <select onChange={this._handleChangeSelectedWorkspace} value={selectedWorkspaceId}>
                   <option value="n/a">-- Select Workspace --</option>
                   {workspaces.flatMap(w =>
-                    w._id === workspace._id ? (
+                    w._id === activeWorkspace._id ? (
                       []
                     ) : (
                       <option key={w._id} value={w._id}>
