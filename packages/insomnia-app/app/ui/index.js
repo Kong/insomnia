@@ -32,7 +32,7 @@ document.title = getAppLongName();
   if (settings.clearOAuth2SessionOnRestart) {
     initNewOAuthSession();
   }
-  await setTheme(settings.theme);
+  await applyColorScheme(settings);
   await setFont(settings);
 
   // Create Redux store
