@@ -1,0 +1,21 @@
+openapi: '3.0.2'
+info:
+  title: Sample Spec
+  version: '1.2'
+servers:
+  - url: https://200.insomnia.rest
+tags:
+  - name: Folder
+paths:
+  /global:
+    get:
+      tags:
+        - Folder
+      responses:
+        '200':
+          description: OK
+  /override:
+    get:
+      responses:
+        '200':
+          description: OK
