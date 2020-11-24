@@ -1,17 +1,15 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import classnames from 'classnames';
 import PageLayout from './page-layout';
 import {
   Breadcrumb,
   Button,
-  Dropdown,
-  DropdownItem,
   Header,
   ListGroup,
   UnitTestItem,
   UnitTestResultItem,
+  SidebarUnitTesting,
 } from 'insomnia-components';
 import UnitTestEditable from './unit-test-editable';
 import ErrorBoundary from './error-boundary';
@@ -41,6 +39,7 @@ type Props = {|
 type State = {|
   testsRunning: Array<UnitTest> | null,
   resultsError: string | null,
+  unitTests: Array<UnitTest> | null,
 |};
 
 @autobind
@@ -48,6 +47,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
   state = {
     testsRunning: null,
     resultsError: null,
+    unitTests: models.unitTest.all(),
   };
 
   // Defining it here instead of in render() so it won't act as a changed prop
@@ -119,6 +119,12 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     ];
   }
 
+  async getUnitTests(): Promise<void> {
+    await models.unitTest.all().then(res => {
+      this.setState({ unitTests: res });
+    });
+  }
+
   async _handleCreateTestSuite(): Promise<void> {
     const { activeWorkspace } = this.props.wrapperProps;
     showPrompt({
@@ -167,7 +173,10 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     await handleActivityChange(activeWorkspace._id, ACTIVITY_HOME);
   }
 
-  async _handleRunTests(): Promise<void> {
+  async _handleRunTests(e, unitTestSuite: UnitTestSuite): Promise<void> {
+    if (unitTestSuite !== undefined) {
+      await this._handleSetActiveSuite(e, unitTestSuite);
+    }
     const { activeUnitTests } = this.props.wrapperProps;
     await this._runTests(activeUnitTests);
   }
@@ -187,6 +196,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       addCancel: true,
       onConfirm: async () => {
         await models.unitTest.remove(unitTest);
+        await this.getUnitTests();
       },
     });
   }
@@ -214,7 +224,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     });
   }
 
-  async _handleSetActiveUnitTestSuite(unitTestSuite: UnitTestSuite): Promise<void> {
+  async _handleSetActiveSuite(e, unitTestSuite: UnitTestSuite): Promise<void> {
     const { activeWorkspace } = this.props.wrapperProps;
     await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
       activeUnitTestSuiteId: unitTestSuite._id,
@@ -407,7 +417,22 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     if (!activeUnitTestSuite) {
       return (
         <div className="unit-tests layout-body--sidebar theme--pane">
-          <div className="unit-tests__tests theme--pane__body pad">No test suite selected</div>
+          <div className="unit-tests__tests theme--pane__body">
+            <div className="unit-tests__top-header"></div>
+            <div>
+              <div className="text-center">
+                <h3 className="pad-bottom margin-top">
+                  No test suite(s) exist for this workspace.
+                </h3>
+                <button
+                  className="btn inline-block btn--clicky"
+                  onClick={this._handleCreateTestSuite}>
+                  Create Test Suite
+                </button>
+              </div>
+            </div>
+          </div>
+          {this.renderResults()}
         </div>
       );
     }
@@ -446,45 +471,32 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
   renderPageSidebar(): React.Node {
     const { activeUnitTestSuites, activeUnitTestSuite } = this.props.wrapperProps;
     const { testsRunning } = this.state;
+    const { unitTests } = this.state;
     const activeId = activeUnitTestSuite ? activeUnitTestSuite._id : 'n/a';
 
     return (
       <ErrorBoundary showAlert>
         <div className="unit-tests__sidebar">
-          <div className="pad-sm">
-            <Button variant="outlined" onClick={this._handleCreateTestSuite}>
-              New Test Suite
-            </Button>
-          </div>
-          <ul>
-            {activeUnitTestSuites.map(s => (
-              <li key={s._id} className={classnames({ active: s._id === activeId })}>
-                <button key={s._id} onClick={this._handleSetActiveUnitTestSuite.bind(this, s)}>
-                  {s.name}
-                </button>
-                <Dropdown
-                  right
-                  renderButton={() => (
-                    <button className="unit-tests__sidebar__action">
-                      <i className="fa fa-caret-down" />
-                    </button>
-                  )}>
-                  <DropdownItem
-                    stayOpenAfterClick
-                    onClick={this._handleRunTests}
-                    disabled={testsRunning}>
-                    {testsRunning ? 'Running... ' : 'Run Tests'}
-                  </DropdownItem>
-                  <DropdownItem onClick={this._handleDeleteUnitTestSuite.bind(this, s)}>
-                    Delete Suite
-                  </DropdownItem>
-                </Dropdown>
-              </li>
-            ))}
-          </ul>
+          <SidebarUnitTesting
+            unitTestSuites={activeUnitTestSuites}
+            unitTests={unitTests}
+            onAddSuiteClick={this._handleCreateTestSuite}
+            onTestSuiteClick={this._handleSetActiveSuite}
+            onDeleteSuiteClick={this._handleDeleteUnitTestSuite}
+            onExecuteSuiteClick={this._handleRunTests}
+            onCreateTestClick={this._handleCreateTest}
+            activeTestSuite={activeId}
+            disableActions={testsRunning}
+          />
         </div>
       </ErrorBoundary>
     );
+  }
+
+  componentDidMount() {
+    models.unitTest.all().then(res => {
+      this.setState({ unitTests: res });
+    });
   }
 
   render() {
