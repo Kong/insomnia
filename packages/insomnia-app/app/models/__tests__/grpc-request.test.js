@@ -11,9 +11,10 @@ describe('init()', () => {
       name: 'New gRPC Request',
       description: '',
       protoFileId: '',
-      protoServiceName: '',
       protoMethodName: '',
-      body: {},
+      body: {
+        text: '{}',
+      },
       metaSortKey: -1478795580200,
       idPrivate: false,
     });
@@ -38,9 +39,10 @@ describe('create()', () => {
       description: '',
       url: '',
       protoFileId: '',
-      protoServiceName: '',
       protoMethodName: '',
-      body: {},
+      body: {
+        text: '{}',
+      },
       metaSortKey: -1478795580200,
       idPrivate: false,
       type: 'GrpcRequest',
