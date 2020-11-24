@@ -372,4 +372,58 @@ describe('exportHarWithRequest()', () => {
       settingEncodeUrl: true,
     });
   });
+
+  it('export multipart request with file', async () => {
+    const workspace = await models.workspace.create();
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_123',
+      parentId: workspace._id,
+      headers: [{ name: 'Content-Type', value: 'multipart/form-data' }],
+      parameters: [],
+      method: 'POST',
+      body: {
+        mimeType: 'multipart/form-data',
+        params: [
+          { name: 'a_file', value: '', fileName: '/tmp/my_file', type: 'file' },
+          { name: 'a_simple_field', value: 'a_simple_value' },
+          { name: 'a_second_file', value: '', fileName: '/tmp/my_file_2', type: 'file' },
+        ],
+      },
+      url: 'http://example.com/post',
+      authentication: {},
+    });
+
+    const renderedRequest = await render.getRenderedRequest(request);
+    const har = await harUtils.exportHarWithRequest(renderedRequest);
+
+    expect(har).toEqual({
+      bodySize: -1,
+      cookies: [],
+      headers: [{ name: 'Content-Type', value: 'multipart/form-data' }],
+      headersSize: -1,
+      httpVersion: 'HTTP/1.1',
+      method: 'POST',
+      postData: {
+        mimeType: 'multipart/form-data',
+        params: [
+          {
+            name: 'a_file',
+            fileName: '/tmp/my_file',
+          },
+          {
+            name: 'a_simple_field',
+            value: 'a_simple_value',
+          },
+          {
+            name: 'a_second_file',
+            fileName: '/tmp/my_file_2',
+          },
+        ],
+        text: '',
+      },
+      queryString: [],
+      url: 'http://example.com/post',
+      settingEncodeUrl: true,
+    });
+  });
 });
