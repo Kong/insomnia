@@ -2,6 +2,18 @@ import { isDeprecatedDependencies } from '../plugins/install';
 
 describe('install.js', () => {
   describe('isDeprecatedDependencies', () => {
+    it('invalid-dataset-0', () => {
+      const msg = '';
+      expect(isDeprecatedDependencies(msg)).toBe(false);
+    });
+    it('invalid-dataset-1', () => {
+      const msg = null;
+      expect(isDeprecatedDependencies(msg)).toBe(false);
+    });
+    it('invalid-dataset-2', () => {
+      const msg = undefined;
+      expect(isDeprecatedDependencies(msg)).toBe(false);
+    });
     it('valid-warning-0', () => {
       const msg =
         'warning insomnia-plugin-xxx-yyy > xyz > xyz > xyz > xyz > xyz: ' +
