@@ -1244,6 +1244,10 @@ class App extends PureComponent {
 
     // Give it a bit before letting the backend know it's ready
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
+
+    window
+      .matchMedia('(prefers-color-scheme: dark)')
+      .addListener(async () => themes.applyColorScheme(this.props.settings));
   }
 
   componentWillUnmount() {
