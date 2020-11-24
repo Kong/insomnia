@@ -55,6 +55,6 @@ module.exports = {
     on: jest.fn(),
     removeAllListeners: jest.fn(),
     once() {},
-    send() {},
+    send: jest.fn(),
   },
 };

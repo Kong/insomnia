@@ -141,8 +141,9 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
       if (protoFile) {
         await models.protoFile.update(protoFile, { name, protoText });
         const action = await grpcActions.invalidateMany(protoFile._id);
+
         grpcDispatch(action);
-        sendGrpcIpcMultiple(GrpcRequestEventEnum.cancelMultiple, action.requestIds);
+        sendGrpcIpcMultiple(GrpcRequestEventEnum.cancelMultiple, action?.requestIds);
       } else {
         const newFile = await models.protoFile.create({ name, parentId: workspace._id, protoText });
         this.setState({ selectedProtoFileId: newFile._id });
