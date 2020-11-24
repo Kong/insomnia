@@ -102,6 +102,8 @@ export type Theme = {
   theme: PluginTheme,
 };
 
+export type ColorScheme = 'default' | 'light' | 'dark';
+
 let plugins: ?Array<Plugin> = null;
 
 export async function init(): Promise<void> {

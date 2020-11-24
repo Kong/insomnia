@@ -230,6 +230,39 @@ function wrapStyles(theme: string, selector: string, styles: string) {
   ].join('\n');
 }
 
+export function isDarkTheme(theme: Theme) {
+  // TODO just a heuristic, should be replaced with a property on themes
+  const background = theme.theme.theme.background?.default;
+  return background && Color(background).isDark();
+}
+
+export function getColorScheme(settings: Settings): ColorScheme {
+  if (!settings.autoDetectColorScheme) {
+    return 'default';
+  }
+
+  if (window.matchMedia(`(prefers-color-scheme: light)`).matches) {
+    return 'light';
+  }
+
+  if (window.matchMedia(`(prefers-color-scheme: dark)`).matches) {
+    return 'dark';
+  }
+
+  return 'default';
+}
+
+export async function applyColorScheme(settings: Settings): Promise<IColorTheme | null> {
+  const scheme = getColorScheme(settings);
+  if (scheme === 'light') {
+    await setTheme(settings.lightTheme);
+  } else if (scheme === 'dark') {
+    await setTheme(settings.darkTheme);
+  } else {
+    await setTheme(settings.theme);
+  }
+}
+
 export async function setTheme(themeName: string) {
   if (!document) {
     return;
