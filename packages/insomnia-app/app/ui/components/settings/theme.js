@@ -3,14 +3,20 @@ import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Button from '../base/button';
-import type { Theme as ThemeType } from '../../../plugins';
+import type { Theme as ThemeType, ColorScheme } from '../../../plugins';
 import { getThemes } from '../../../plugins';
+import { isDarkTheme } from '../../../plugins/misc';
+import HelpTooltip from '../help-tooltip';
 
 const THEMES_PER_ROW = 5;
 
 type Props = {
-  handleChangeTheme: string => void,
+  handleChangeTheme: (ThemeType, ColorScheme) => void,
   activeTheme: string,
+  handleAutoDetectColorSchemeChange: boolean => void,
+  autoDetectColorScheme: boolean,
+  activeLightTheme: string,
+  activeDarkTheme: string,
 };
 
 type State = {
@@ -35,9 +41,13 @@ class Theme extends React.PureComponent<Props, State> {
     this.setState({ themes });
   }
 
-  renderTheme(theme: ThemeType) {
-    const { handleChangeTheme, activeTheme } = this.props;
-    const isActive = activeTheme === theme.theme.name;
+  renderTheme(theme: ThemeType, colorScheme: ColorScheme) {
+    const { handleChangeTheme, activeTheme, activeLightTheme, activeDarkTheme } = this.props;
+
+    const isActive =
+      (colorScheme === 'default' && activeTheme === theme.theme.name) ||
+      (colorScheme === 'light' && activeLightTheme === theme.theme.name) ||
+      (colorScheme === 'dark' && activeDarkTheme === theme.theme.name);
 
     return (
       <div
@@ -46,7 +56,7 @@ class Theme extends React.PureComponent<Props, State> {
         style={{ maxWidth: `${100 / THEMES_PER_ROW}%` }}>
         <h2 className="txt-lg">{theme.theme.displayName}</h2>
         <Button
-          onClick={handleChangeTheme}
+          onClick={() => handleChangeTheme(theme, colorScheme)}
           value={theme.theme.name}
           className={isActive ? 'active' : ''}>
           <svg theme={theme.theme.name} width="100%" height="100%" viewBox="0 0 500 300">
@@ -95,12 +105,18 @@ class Theme extends React.PureComponent<Props, State> {
     );
   }
 
-  renderThemeRows(): React.Node {
+  renderThemeRows(colorScheme: ColorScheme): React.Node {
     const { themes } = this.state;
+
+    const filteredThemes: { ColorScheme: Array<ThemeType> } = {
+      default: themes,
+      light: themes.filter(theme => !isDarkTheme(theme)),
+      dark: themes.filter(theme => isDarkTheme(theme)),
+    }[colorScheme];
 
     const rows = [];
     let row = [];
-    for (const theme of themes) {
+    for (const theme of filteredThemes) {
       row.push(theme);
       if (row.length === THEMES_PER_ROW) {
         rows.push(row);
@@ -115,13 +131,61 @@ class Theme extends React.PureComponent<Props, State> {
 
     return rows.map((row, i) => (
       <div key={i} className="themes__row">
-        {row.map(this.renderTheme)}
+        {row.map(theme => this.renderTheme(theme, colorScheme))}
       </div>
     ));
   }
 
+  renderColorSchemes(): React.Node {
+    const { autoDetectColorScheme } = this.props;
+
+    if (!autoDetectColorScheme) {
+      return (
+        <>
+          <h2>Theme</h2>
+          <div className="themes">{this.renderThemeRows('default')}</div>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <h2>Light Theme</h2>
+        <div className="themes">{this.renderThemeRows('light')}</div>
+        <h2>Dark Theme</h2>
+        <div className="themes">{this.renderThemeRows('dark')}</div>
+      </>
+    );
+  }
+
+  _handleAutoDetectColorSchemeChange(e: SyntheticEvent<HTMLInputElement>) {
+    const { handleAutoDetectColorSchemeChange } = this.props;
+
+    handleAutoDetectColorSchemeChange(e.target.checked);
+  }
+
   render() {
-    return <div className="themes pad-top">{this.renderThemeRows()}</div>;
+    const { autoDetectColorScheme } = this.props;
+
+    return (
+      <>
+        <div className="form-control form-control--thin">
+          <label className="inline-block">
+            Use OS color scheme
+            <HelpTooltip className="space-left">
+              Lets you choose one theme for light mode and one for dark mode.
+            </HelpTooltip>
+            <input
+              type="checkbox"
+              name="autoDetectColorScheme"
+              checked={autoDetectColorScheme}
+              onChange={this._handleAutoDetectColorSchemeChange}
+            />
+          </label>
+        </div>
+        {this.renderColorSchemes()}
+      </>
+    );
   }
 }
 
