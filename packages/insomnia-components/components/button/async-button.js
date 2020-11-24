@@ -30,9 +30,12 @@ export const AsyncButton = ({
     async e => {
       const result = onClick(e);
       if (isPromise(result)) {
-        setLoading(true);
-        await result;
-        setLoading(false);
+        try {
+          setLoading(true);
+          await result;
+        } finally {
+          setLoading(false);
+        }
       }
     },
     [onClick],
