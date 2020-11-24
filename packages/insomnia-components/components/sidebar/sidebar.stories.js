@@ -1,5 +1,6 @@
 import React from 'react';
 import Sidebar from './';
+import SidebarUnitTesting from './sidebar-unit-testing';
 import SidebarItem from './sidebar-item';
 import SidebarBadge from './sidebar-badge';
 import SvgIcon from '../svg-icon';
@@ -10,6 +11,96 @@ export default {
   title: 'Navigation | Sidebar',
   decorators: [withKnobs, withDesign],
 };
+
+const unitTestSuites = [
+  {
+    _id: 'uts_eed12433b6b74050b485bdac98bdea07',
+    type: 'UnitTestSuite',
+    parentId: 'wrk_7ebb13f9f8ee4e75a96176958633d8b1',
+    modified: 1601580617372,
+    created: 1601576241143,
+    name: 'Authentication',
+  },
+  {
+    _id: 'uts_1a58fcfade894f828c8ca4d89b6b212e',
+    type: 'UnitTestSuite',
+    parentId: 'wrk_7ebb13f9f8ee4e75a96176958633d8b1',
+    modified: 1602088651973,
+    created: 1602088651973,
+    name: 'Credentials',
+  },
+  {
+    _id: 'uts_947b6f777cb54eaf8f6ecab3042583d7',
+    type: 'UnitTestSuite',
+    parentId: 'wrk_7ebb13f9f8ee4e75a96176958633d8b1',
+    modified: 1602096653570,
+    created: 1602096653570,
+    name: 'Dependancies check',
+  },
+];
+
+const unitTests = [
+  {
+    _id: 'ut_56fd5deff7c74ea098fea0f0964beb4a',
+    type: 'UnitTest',
+    parentId: 'uts_eed12433b6b74050b485bdac98bdea07',
+    modified: 1601581203900,
+    created: 1601576242965,
+    requestId: 'req_wrk_7ebb13f9f8ee4e75a96176958633d8b123acbe44',
+    name: 'Should return proper resource',
+    code: 'const response1 = await insomnia.send();\nexpect(response1.status).to.equal(200);',
+  },
+  {
+    _id: 'ut_c7f5201d5681406db619dc68ce037dd8',
+    type: 'UnitTest',
+    parentId: 'uts_eed12433b6b74050b485bdac98bdea07',
+    modified: 1601581195333,
+    created: 1601577136791,
+    requestId: 'req_wrk_7ebb13f9f8ee4e75a96176958633d8b123acbe44',
+    name: 'Adding entries is successful',
+    code: 'const response1 = await insomnia.send();\nexpect(response1.status).to.equal(200);',
+  },
+  {
+    _id: 'ut_d561d1af6b9743c2b0eabacad62da4ea',
+    type: 'UnitTest',
+    parentId: 'uts_eed12433b6b74050b485bdac98bdea07',
+    modified: 1601581162512,
+    created: 1601581042123,
+    requestId: 'req_wrk_7ebb13f9f8ee4e75a96176958633d8b13d1a51d3',
+    name: 'Popular endpoints return 200',
+    code: 'const response1 = await insomnia.send();\nexpect(response1.status).to.equal(200);',
+  },
+  {
+    _id: 'ut_6bf55f86122c4192b4752749e1b488b7',
+    type: 'UnitTest',
+    parentId: 'uts_eed12433b6b74050b485bdac98bdea07',
+    modified: 1601582260732,
+    created: 1601582260732,
+    requestId: null,
+    name: 'Nothing breaks \uD83E\uDD1E',
+    code: 'const response1 = await insomnia.send();\nexpect(response1.status).to.equal(200);',
+  },
+  {
+    _id: 'ut_62ed11d7d0634acd9630beabc5652de7',
+    type: 'UnitTest',
+    parentId: 'uts_1a58fcfade894f828c8ca4d89b6b212e',
+    modified: 1602088657934,
+    created: 1602088657934,
+    requestId: null,
+    name: 'Get perms by ID',
+    code: 'const response1 = await insomnia.send();\nexpect(response1.status).to.equal(200);',
+  },
+  {
+    _id: 'ut_1fae783e87c946249c093f8c66328b82',
+    type: 'UnitTest',
+    parentId: 'uts_947b6f777cb54eaf8f6ecab3042583d7',
+    modified: 1603469640094,
+    created: 1602096656740,
+    requestId: 'req_wrk_7ebb13f9f8ee4e75a96176958633d8b123acbe44',
+    name: 'Some random test',
+    code: 'const response1 = await insomnia.send();\nexpect(response1.status).to.equal(200);',
+  },
+];
 
 const apiSpec = {
   openapi: '3.0.0',
@@ -3133,6 +3224,47 @@ export const _default = () => {
     <div style={{ width: '350px' }}>
       <div style={{ display: 'block', margin: '0px 0px 20px 0px' }}>Target: {targetPath}</div>
       <Sidebar jsonData={apiSpec} onClick={_handleItemClick} />
+    </div>
+  );
+};
+
+export const UnitTesting = () => {
+  const _handleAddTestSuite = () => {
+    console.log('Adding test suite');
+  };
+
+  const _handleSetActiveSuite = (e, suite) => {
+    console.log('Setting active suite - > ' + suite.name);
+  };
+
+  const _handleDeleteTestSuite = (e, suite) => {
+    console.log('Deleting suite - > ' + suite.name);
+  };
+
+  const _handleExecuteTestSuite = (e, suite) => {
+    console.log('Running active test suite - > ' + suite.name);
+  };
+
+  const _handleCreateTest = () => {
+    console.log('Creating unit test.');
+  };
+
+  return (
+    <div style={{ width: '300px' }}>
+      <p>For demo "Credentials" is the active suite.</p>
+      <br />
+      <SidebarUnitTesting
+        unitTestSuites={unitTestSuites}
+        unitTests={unitTests}
+        headline="testing prop"
+        onAddSuiteClick={_handleAddTestSuite}
+        onTestSuiteClick={_handleSetActiveSuite}
+        onDeleteSuiteClick={_handleDeleteTestSuite}
+        onExecuteSuiteClick={_handleExecuteTestSuite}
+        onCreateTestClick={_handleCreateTest}
+        activeTestSuite="uts_1a58fcfade894f828c8ca4d89b6b212e"
+        disableActions={false}
+      />
     </div>
   );
 };

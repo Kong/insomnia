@@ -6,6 +6,7 @@ type Props = {
   children: React.Node,
   gridLayout?: boolean,
   onClick?: () => void,
+  className?: string,
 };
 
 const StyledBlockItem: React.ComponentType<{}> = styled.div`
@@ -37,6 +38,10 @@ const StyledBlockItem: React.ComponentType<{}> = styled.div`
   }
   div.tooltip {
     padding: 0;
+  }
+  &.active {
+    background-color: var(--hl-xxs);
+    cursor: default;
   }
 `;
 
@@ -74,13 +79,28 @@ const StyledGridItem: React.ComponentType<{}> = styled.li`
   &:last-child {
     margin-bottom: var(--padding-md);
   }
+  &.itemActive {
+    background-color: var(--hl-sm);
+    color: var(--hl-xxl) !important;
+    * {
+      opacity: 1;
+    }
+  }
 `;
 
-const SidebarItem = ({ children, gridLayout, onClick }: Props) => {
+const SidebarItem = ({ children, gridLayout, onClick, className }: Props) => {
   if (gridLayout) {
-    return <StyledGridItem onClick={onClick}>{children}</StyledGridItem>;
+    return (
+      <StyledGridItem onClick={onClick} className={className}>
+        {children}
+      </StyledGridItem>
+    );
   } else {
-    return <StyledBlockItem onClick={onClick}>{children}</StyledBlockItem>;
+    return (
+      <StyledBlockItem onClick={onClick} className={className}>
+        {children}
+      </StyledBlockItem>
+    );
   }
 };
 
