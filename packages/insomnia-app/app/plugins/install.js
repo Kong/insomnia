@@ -7,6 +7,8 @@ import { getTempDir, isDevelopment, isWindows, PLUGIN_PATH } from '../common/con
 import mkdirp from 'mkdirp';
 import path from 'path';
 
+const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
+
 export default async function(lookupName: string): Promise<void> {
   return new Promise(async (resolve, reject) => {
     let info: Object = {};
@@ -171,14 +173,14 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
 }
 
 function isFalsePositive(stderr) {
-  // Let's assume is a false positive
-  let isFalsePositive: boolean = true;
-  // Split into array and remove falsy values (null, undefined, 0, -0, NaN, "", false)
+  // Split on line breaks and remove falsy values (null, undefined, 0, -0, NaN, "", false)
   const arr = stderr.split(/\r?\n/).filter(e => e);
-  // arr.find() stops and return the first match which is not a deprecated dependency warning
-  if (arr.find(e => !isDeprecatedDependencies(e))) isFalsePositive = false;
-
-  return isFalsePositive;
+  // Retrieve all matching deprecated dependency warning
+  const warnings = arr.filter(e => isDeprecatedDependencies(e));
+  // Print each deprecation warnings to the console, so we don't hide them.
+  warnings.forEach(e => console.log(e));
+  // If they mismatch, it means there are warnings and errors
+  return warnings.length === arr.length;
 }
 
 /**
@@ -188,23 +190,17 @@ function isFalsePositive(stderr) {
  * @param str The error message
  * @returns {boolean} Returns true if it's a deprecated warning
  */
-function isDeprecatedDependencies(str: string): boolean {
-  // Search for: warning + dep-list + issue
-  const regex = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/gm;
-  let result = false;
-  // The array[3](issue) contains the message as it is without the dependency list
-  const message = regex.exec(str)[3];
+export function isDeprecatedDependencies(str: string): boolean {
+  // The issue contains the message as it is without the dependency list
+  const message = YARN_DEPRECATED_WARN.exec(str)?.groups.issue;
   // Strict check, everything must be matched to be a false positive
-  if (
+  // !! is not a mistake, makes it returns boolean instead of undefined on error
+  return !!(
     message &&
     message.includes('no longer maintained') &&
     message.includes('not recommended for usage') &&
     message.includes('upgrade your dependencies')
-  ) {
-    result = true;
-  }
-
-  return result;
+  );
 }
 
 function _getYarnPath() {
