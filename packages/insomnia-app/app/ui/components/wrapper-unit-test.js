@@ -210,7 +210,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     await models.unitTest.update(unitTest, { requestId });
   }
 
-  async _handleDeleteUnitTestSuite(unitTestSuite: UnitTestSuite): Promise<void> {
+  async _handleDeleteUnitTestSuite(e, unitTestSuite: UnitTestSuite): Promise<void> {
     showAlert({
       title: `Delete ${unitTestSuite.name}`,
       message: (
