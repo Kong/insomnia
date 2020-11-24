@@ -74,7 +74,7 @@ export const reference = () => (
     {Object.values(ButtonSizeEnum).map(s => (
       <Padded>
         <h2>
-          <code>size={s}</code>
+          <code>size={(s: any)}</code>
         </h2>
         {Object.values(ButtonVariantEnum).map(v => (
           <Wrapper>
