@@ -166,7 +166,7 @@ class SettingsModal extends PureComponent {
                 handleImportUri={this._handleImportUri}
               />
             </TabPanel>
-            <TabPanel className="react-tabs__tab-panel scrollable">
+            <TabPanel className="react-tabs__tab-panel pad scrollable">
               <Theme
                 handleChangeTheme={this._handleChangeTheme}
                 activeTheme={settings.theme}
