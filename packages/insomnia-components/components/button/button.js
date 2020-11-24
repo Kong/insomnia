@@ -2,14 +2,34 @@
 import * as React from 'react';
 import styled from 'styled-components';
 
-type Props = {
-  onClick?: (e: SyntheticEvent<HTMLButtonElement>) => any,
-  bg?: 'default' | 'success' | 'notice' | 'warning' | 'danger' | 'surprise' | 'info',
-  variant?: 'outlined' | 'contained' | 'text',
-  size?: 'default' | 'small',
+export const ButtonSizeEnum = {
+  Default: 'default',
+  Small: 'small',
 };
 
-const StyledButton: React.ComponentType<Props> = styled.button`
+export const ButtonVariantEnum = {
+  Outlined: 'outlined',
+  Contained: 'contained',
+  Text: 'text',
+};
+
+export const ButtonThemeEnum = {
+  Default: 'default',
+  Surprise: 'surprise',
+  Info: 'info',
+  Success: 'success',
+  Notice: 'notice',
+  Warning: 'warning',
+  Danger: 'danger',
+};
+
+export type ButtonProps = React.ElementProps<'button'> & {
+  bg?: $Values<typeof ButtonThemeEnum>,
+  variant?: $Values<typeof ButtonVariantEnum>,
+  size?: $Values<typeof ButtonSizeEnum>,
+};
+
+const StyledButton: React.ComponentType<ButtonProps> = styled.button`
   color: ${({ bg }) => (bg ? `var(--color-${bg})` : 'var(--color-font)')};
   text-align: center;
   font-size: var(--font-size-sm);
@@ -100,7 +120,7 @@ const StyledButton: React.ComponentType<Props> = styled.button`
   }
 `;
 
-const Button = ({ variant, bg, size, ...props }: Props) => (
+export const Button = ({ variant, bg, size, ...props }: ButtonProps) => (
   <StyledButton
     {...props}
     variant={variant || 'outlined'}
@@ -108,5 +128,3 @@ const Button = ({ variant, bg, size, ...props }: Props) => (
     size={size || 'default'}
   />
 );
-
-export default Button;
