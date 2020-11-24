@@ -3,16 +3,13 @@ import { isDeprecatedDependencies } from '../plugins/install';
 describe('install.js', () => {
   describe('isDeprecatedDependencies', () => {
     it('invalid-dataset-0', () => {
-      const msg = '';
-      expect(isDeprecatedDependencies(msg)).toBe(false);
+      expect(isDeprecatedDependencies('')).toBe(false);
     });
     it('invalid-dataset-1', () => {
-      const msg = null;
-      expect(isDeprecatedDependencies(msg)).toBe(false);
+      expect(isDeprecatedDependencies(null)).toBe(false);
     });
     it('invalid-dataset-2', () => {
-      const msg = undefined;
-      expect(isDeprecatedDependencies(msg)).toBe(false);
+      expect(isDeprecatedDependencies(undefined)).toBe(false);
     });
     it('valid-warning-0', () => {
       const msg =
