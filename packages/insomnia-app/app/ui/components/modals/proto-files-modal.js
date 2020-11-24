@@ -13,10 +13,11 @@ import { showAlert, showError } from './index';
 import fs from 'fs';
 import path from 'path';
 import selectFileOrFolder from '../../../common/select-file-or-folder';
-import { Button } from 'insomnia-components';
+import { AsyncButton } from 'insomnia-components';
 import type { GrpcDispatch } from '../../context/grpc';
 import { grpcActions, sendGrpcIpcMultiple } from '../../context/grpc';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
+import * as protoLoader from '../../../network/grpc/proto-loader';
 
 type Props = {|
   grpcDispatch: GrpcDispatch,
@@ -36,6 +37,8 @@ type ProtoFilesModalOptions = {|
 const INITIAL_STATE: State = {
   selectedProtoFileId: '',
 };
+
+const spinner = <i className="fa fa-spin fa-refresh" />;
 
 @autobind
 class ProtoFilesModal extends React.PureComponent<Props, State> {
@@ -98,11 +101,11 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     });
   }
 
-  _handleAdd() {
+  _handleAdd(): Promise<void> {
     return this._handleUpload();
   }
 
-  async _handleUpload(protoFile?: ProtoFile) {
+  async _handleUpload(protoFile?: ProtoFile): Promise<void> {
     const { workspace, grpcDispatch } = this.props;
 
     try {
@@ -120,6 +123,19 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
       // Read contents
       const protoText = fs.readFileSync(filePath, 'utf-8');
       const name = path.basename(filePath);
+
+      // Try parse proto file to make sure the file is valid
+      try {
+        await protoLoader.loadMethodsFromText(protoText);
+      } catch (e) {
+        showError({
+          title: 'Invalid Proto File',
+          message: `The file ${filePath} and could not be parsed`,
+          error: e,
+        });
+
+        return;
+      }
 
       // Create or update a protoFile
       if (protoFile) {
@@ -150,7 +166,9 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
         <ModalBody className="wide pad">
           <div className="row-spaced margin-bottom bold">
             Files
-            <Button onClick={this._handleAdd}>Add Proto File</Button>
+            <AsyncButton onClick={this._handleAdd} loadingNode={spinner}>
+              Add Proto File
+            </AsyncButton>
           </div>
           <ProtoFileList
             protoFiles={protoFiles}

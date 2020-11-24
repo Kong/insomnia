@@ -8,7 +8,7 @@ import type {
   SelectProtoFileHandler,
   UpdateProtoFileHandler,
 } from './proto-file-list';
-import { ListGroupItem, Button } from '../../../../../insomnia-components';
+import { ListGroupItem, Button, AsyncButton } from '../../../../../insomnia-components';
 import Editable from '../base/editable';
 
 type Props = {
@@ -19,6 +19,8 @@ type Props = {
   handleRename: RenameProtoFileHandler,
   handleUpdate: UpdateProtoFileHandler,
 };
+
+const spinner = <i className="fa fa-spin fa-refresh" />;
 
 const SelectableListItem: React.PureComponent<{ isSelected?: boolean }> = styled(ListGroupItem)`
   &:hover {
@@ -71,13 +73,14 @@ const ProtoFileListItem = ({
       <div className="row-spaced">
         <Editable className="wide" onSubmit={handleRenameCallback} value={name} preventBlank />
         <div className="row">
-          <Button
+          <AsyncButton
             variant="text"
             title="Re-upload Proto File"
             onClick={handleUpdateCallback}
+            loadingNode={spinner}
             className="space-right">
             <i className="fa fa-upload" />
-          </Button>
+          </AsyncButton>
           <Button
             variant="text"
             title="Delete Proto File"
