@@ -12,6 +12,19 @@ type Props = {
   children?: React.Node,
 };
 
+const filterTriggerDisplay = {
+  expanded: {
+    opacity: 0.6,
+    display: 'inline',
+  },
+  collapsed: {
+    opacity: 0,
+    transitionEnd: {
+      display: 'none',
+    },
+  },
+};
+
 const StyledHeader: React.ComponentType<{}> = styled.li`
   display: flex;
   justify-content: space-between;
@@ -69,8 +82,9 @@ const SidebarHeader = ({
       {children || (
         <motion.span
           onClick={toggleFilter}
-          initial={{ opacity: sectionVisible ? 0.6 : 0 }}
-          animate={{ opacity: sectionVisible ? 0.6 : 0 }}>
+          initial={sectionVisible ? 'expanded' : 'collapsed'}
+          animate={sectionVisible ? 'expanded' : 'collapsed'}
+          variants={filterTriggerDisplay}>
           <SvgIcon icon={IconEnum.search} />
         </motion.span>
       )}
