@@ -15,12 +15,12 @@ type Props = {
 const filterTriggerDisplay = {
   expanded: {
     opacity: 0.6,
-    display: 'inline',
+    pointerEvents: 'auto',
   },
   collapsed: {
     opacity: 0,
     transitionEnd: {
-      display: 'none',
+      pointerEvents: 'none',
     },
   },
 };
