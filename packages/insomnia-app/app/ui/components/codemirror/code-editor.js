@@ -312,7 +312,13 @@ class CodeEditor extends React.Component {
         let startToken = '{';
         let endToken = '}';
 
+        // Prevent retrieving an invalid content if undefined
+        if (!from?.line || !to?.line) return '\u2194';
+
         const prevLine = this.codeMirror.getLine(from.line);
+
+        if (!prevLine) return '\u2194';
+
         if (prevLine.lastIndexOf('[') > prevLine.lastIndexOf('{')) {
           startToken = '[';
           endToken = ']';
