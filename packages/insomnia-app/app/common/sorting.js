@@ -4,7 +4,7 @@ import {
   SortOrder,
   SORT_CREATED_ASC,
   SORT_CREATED_DESC,
-  SORT_METHOD,
+  SORT_HTTP_METHOD,
   SORT_NAME_ASC,
   SORT_NAME_DESC,
   SORT_TYPE_ASC,
@@ -17,27 +17,6 @@ import { isGrpcRequest, isRequest, isRequestGroup } from '../models/helpers/is-m
 
 type SortableModel = Request | RequestGroup | GrpcRequest;
 type SortFunction = (a: SortableModel, b: SortableModel) => number;
-
-export function getSortMethod(order: SortOrder): SortFunction {
-  switch (order) {
-    case SORT_NAME_ASC:
-      return ascendingNameSort;
-    case SORT_NAME_DESC:
-      return descendingNameSort;
-    case SORT_CREATED_ASC:
-      return createdFirstSort;
-    case SORT_CREATED_DESC:
-      return createdLastSort;
-    case SORT_METHOD:
-      return httpMethodSort;
-    case SORT_TYPE_ASC:
-      return ascendingTypeSort;
-    case SORT_TYPE_DESC:
-      return descendingTypeSort;
-    default:
-      return metaSortKeySort;
-  }
-}
 
 const ascendingNameSort: SortFunction = (a, b) => {
   return a.name.localeCompare(b.name);
@@ -64,6 +43,7 @@ const createdLastSort: SortFunction = (a, b) => {
 };
 
 const httpMethodSort: SortFunction = (a, b) => {
+  // Sort Requests and GrpcRequests to top, in that order
   if (a.type !== b.type) {
     if (isRequest(a) || isRequest(b)) {
       return isRequest(a) ? -1 : 1;
@@ -74,6 +54,7 @@ const httpMethodSort: SortFunction = (a, b) => {
     }
   }
 
+  // Sort Requests by HTTP method
   if (isRequest(a)) {
     const aIndex = HTTP_METHODS.indexOf(a.method);
     const bIndex = HTTP_METHODS.indexOf(b.method);
@@ -81,11 +62,14 @@ const httpMethodSort: SortFunction = (a, b) => {
       return aIndex < bIndex ? -1 : 1;
     }
 
+    // Sort by ascending method name if comparing two custom methods
     if (aIndex === -1 && a.method.localeCompare(b.method) !== 0) {
       return a.method.localeCompare(b.method);
     }
   }
 
+  // Sort by metaSortKey if comparing two Requests with the same method,
+  // two GrpcRequests, or two RequestGroups
   return metaSortKeySort(a, b);
 };
 
@@ -111,4 +95,14 @@ export const metaSortKeySort: SortFunction = (a, b) => {
   }
 
   return a.metaSortKey < b.metaSortKey ? -1 : 1;
+};
+
+export const sortMethodMap: { [SortOrder]: SortFunction } = {
+  [SORT_NAME_ASC]: ascendingNameSort,
+  [SORT_NAME_DESC]: descendingNameSort,
+  [SORT_CREATED_ASC]: createdFirstSort,
+  [SORT_CREATED_DESC]: createdLastSort,
+  [SORT_HTTP_METHOD]: httpMethodSort,
+  [SORT_TYPE_DESC]: descendingTypeSort,
+  [SORT_TYPE_ASC]: ascendingTypeSort,
 };

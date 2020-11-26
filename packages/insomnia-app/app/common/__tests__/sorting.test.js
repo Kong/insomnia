@@ -1,4 +1,4 @@
-import { getSortMethod } from '../sorting';
+import { metaSortKeySort, sortMethodMap } from '../sorting';
 import { request, requestGroup, grpcRequest } from '../../models';
 import {
   METHOD_DELETE,
@@ -10,7 +10,7 @@ import {
   METHOD_PUT,
   SORT_CREATED_ASC,
   SORT_CREATED_DESC,
-  SORT_METHOD,
+  SORT_HTTP_METHOD,
   SORT_NAME_ASC,
   SORT_NAME_DESC,
   SORT_TYPE_ASC,
@@ -19,7 +19,7 @@ import {
 
 describe('Sorting methods', () => {
   it('sorts by name', () => {
-    const ascendingNameSort = getSortMethod(SORT_NAME_ASC);
+    const ascendingNameSort = sortMethodMap[SORT_NAME_ASC];
     expect(ascendingNameSort({ name: 'a' }, { name: 'b' })).toBe(-1);
     expect(ascendingNameSort({ name: 'b' }, { name: 'a' })).toBe(1);
     expect(ascendingNameSort({ name: 'ab' }, { name: 'abb' })).toBe(-1);
@@ -32,7 +32,7 @@ describe('Sorting methods', () => {
     expect(ascendingNameSort({ name: 'bbb' }, { name: 'åbb' })).toBe(1);
     expect(ascendingNameSort({ name: 'abcdef' }, { name: 'abcdef' })).toBe(0);
 
-    const descendingNameSort = getSortMethod(SORT_NAME_DESC);
+    const descendingNameSort = sortMethodMap[SORT_NAME_DESC];
     expect(descendingNameSort({ name: 'a' }, { name: 'b' })).toBe(1);
     expect(descendingNameSort({ name: 'b' }, { name: 'a' })).toBe(-1);
     expect(descendingNameSort({ name: 'ab' }, { name: 'abb' })).toBe(1);
@@ -47,14 +47,14 @@ describe('Sorting methods', () => {
   });
 
   it('sorts by timestamp', () => {
-    const createdFirstSort = getSortMethod(SORT_CREATED_ASC);
+    const createdFirstSort = sortMethodMap[SORT_CREATED_ASC];
     expect(createdFirstSort({ created: 1000 }, { created: 1100 })).toBe(-1);
     expect(createdFirstSort({ created: 1100 }, { created: 1000 })).toBe(1);
     expect(createdFirstSort({ created: 0 }, { created: 1 })).toBe(-1);
     expect(createdFirstSort({ created: 1 }, { created: 0 })).toBe(1);
     expect(createdFirstSort({ created: 123456789 }, { created: 123456789 })).toBe(0);
 
-    const createdLastSort = getSortMethod(SORT_CREATED_DESC);
+    const createdLastSort = sortMethodMap[SORT_CREATED_DESC];
     expect(createdLastSort({ created: 1000 }, { created: 1100 })).toBe(1);
     expect(createdLastSort({ created: 1100 }, { created: 1000 })).toBe(-1);
     expect(createdLastSort({ created: 0 }, { created: 1 })).toBe(1);
@@ -63,7 +63,7 @@ describe('Sorting methods', () => {
   });
 
   it('sorts by type', () => {
-    const ascendingTypeSort = getSortMethod(SORT_TYPE_ASC);
+    const ascendingTypeSort = sortMethodMap[SORT_TYPE_ASC];
     expect(
       ascendingTypeSort(
         { type: request.type, metaSortKey: 2 },
@@ -137,7 +137,7 @@ describe('Sorting methods', () => {
       ),
     ).toBe(1);
 
-    const descendingTypeSort = getSortMethod(SORT_TYPE_DESC);
+    const descendingTypeSort = sortMethodMap[SORT_TYPE_DESC];
     expect(
       descendingTypeSort(
         { type: request.type, metaSortKey: 2 },
@@ -213,7 +213,7 @@ describe('Sorting methods', () => {
   });
 
   it('sorts by HTTP method', () => {
-    const httpMethodSort = getSortMethod(SORT_METHOD);
+    const httpMethodSort = sortMethodMap[SORT_HTTP_METHOD];
     expect(httpMethodSort({ type: request.type }, { type: requestGroup.type })).toBe(-1);
     expect(httpMethodSort({ type: requestGroup.type }, { type: request.type })).toBe(1);
     expect(httpMethodSort({ type: request.type }, { type: grpcRequest.type })).toBe(-1);
@@ -333,7 +333,6 @@ describe('Sorting methods', () => {
   });
 
   it('sorts by metaSortKey', () => {
-    const metaSortKeySort = getSortMethod('');
     expect(metaSortKeySort({ metaSortKey: 1 }, { metaSortKey: 2 })).toBe(-1);
     expect(metaSortKeySort({ metaSortKey: 2 }, { metaSortKey: 1 })).toBe(1);
     expect(metaSortKeySort({ metaSortKey: -2 }, { metaSortKey: 1 })).toBe(-1);

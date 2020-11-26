@@ -99,7 +99,7 @@ import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
 import { isGrpcRequest, isGrpcRequestId } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
-import { getSortMethod } from '../../common/sorting';
+import { sortMethodMap } from '../../common/sorting';
 
 @autobind
 class App extends PureComponent {
@@ -362,7 +362,7 @@ class App extends PureComponent {
       ...(await models.requestGroup.findByParentId(parentId)),
       ...(await models.request.findByParentId(parentId)),
       ...(await models.grpcRequest.findByParentId(parentId)),
-    ].sort(getSortMethod(order));
+    ].sort(sortMethodMap[order]);
     await this._recalculateMetaSortKey(docs);
 
     // sort RequestGroups recursively
