@@ -2,10 +2,13 @@
 
 export const GrpcRequestEventEnum = {
   sendUnary: 'GRPC_SEND_UNARY',
-  startStream: 'GRPC_START_STREAM',
+  startClientStream: 'GRPC_START_CLIENT_STREAM',
+  startServerStream: 'GRPC_START_SERVER_STREAM',
+  startBidiStream: 'GRPC_START_BIDI_STREAM',
   sendMessage: 'GRPC_SEND_MESSAGE',
   commit: 'GRPC_COMMIT',
   cancel: 'GRPC_CANCEL',
+  cancelMultiple: 'GRPC_CANCEL_MULTIPLE',
 };
 export type GrpcRequestEvent = $Values<typeof GrpcRequestEventEnum>;
 

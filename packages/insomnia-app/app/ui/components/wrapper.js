@@ -92,6 +92,7 @@ import {
 } from '../../common/constants';
 import { Spectral } from '@stoplight/spectral';
 import ProtoFilesModal from './modals/proto-files-modal';
+import { GrpcDispatchModalWrapper } from '../context/grpc';
 
 const spectral = new Spectral();
 
@@ -643,7 +644,11 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               workspace={activeWorkspace}
             />
 
-            <MoveRequestGroupModal ref={registerModal} workspaces={workspaces} />
+            <MoveRequestGroupModal
+              ref={registerModal}
+              workspaces={workspaces}
+              activeWorkspace={activeWorkspace}
+            />
 
             <WorkspaceSettingsModal
               ref={registerModal}
@@ -776,11 +781,16 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleExportRequestsToFile={handleExportRequestsToFile}
             />
 
-            <ProtoFilesModal
-              ref={registerModal}
-              workspace={activeWorkspace}
-              protoFiles={activeProtoFiles}
-            />
+            <GrpcDispatchModalWrapper>
+              {dispatch => (
+                <ProtoFilesModal
+                  ref={registerModal}
+                  grpcDispatch={dispatch}
+                  workspace={activeWorkspace}
+                  protoFiles={activeProtoFiles}
+                />
+              )}
+            </GrpcDispatchModalWrapper>
           </ErrorBoundary>
         </div>
         <React.Fragment key={`views::${this.state.activeGitBranch}`}>

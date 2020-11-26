@@ -3,6 +3,7 @@
 import type {
   ErrorAction,
   GrpcAction,
+  GrpcActionMany,
   GrpcMessage,
   LoadMethodsAction,
   RequestMessageAction,
@@ -22,6 +23,8 @@ export type GrpcRequestState = {
   methods: Array<GrpcMethodDefinition>,
   reloadMethods: boolean,
 };
+
+// TODO: delete from here when deleting a request - INS-288
 export type GrpcState = { [requestId: string]: GrpcRequestState };
 
 const INITIAL_GRPC_REQUEST_STATE: GrpcRequestState = {
@@ -50,11 +53,26 @@ export const findGrpcRequestState = (state: GrpcState, requestId: string): GrpcR
   return state[requestId] || INITIAL_GRPC_REQUEST_STATE;
 };
 
-export const grpcReducer = (state: GrpcState, action: GrpcAction | undefined): GrpcState => {
-  if (!action) {
-    return state;
-  }
+const multiRequestReducer = (state: GrpcState, action: GrpcActionMany): GrpcState => {
+  const requestIds = action.requestIds;
 
+  switch (action.type) {
+    case GrpcActionTypeEnum.invalidateMany: {
+      const newStates = {};
+      requestIds.forEach(id => {
+        const oldState = findGrpcRequestState(state, id);
+        const newState: GrpcRequestState = { ...oldState, reloadMethods: true };
+        newStates[id] = newState;
+      });
+      return { ...state, ...newStates };
+    }
+    default: {
+      throw new Error(`Unhandled multi request action type: ${action.type}`);
+    }
+  }
+};
+
+const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState => {
   const requestId = action.requestId;
   const oldState = findGrpcRequestState(state, requestId);
 
@@ -103,7 +121,6 @@ export const grpcReducer = (state: GrpcState, action: GrpcAction | undefined): G
       const { payload }: LoadMethodsAction = action;
       return _patch(state, requestId, {
         ...oldState,
-        ...CLEAR_GRPC_REQUEST_STATE,
         methods: payload,
         reloadMethods: false,
       });
@@ -115,7 +132,20 @@ export const grpcReducer = (state: GrpcState, action: GrpcAction | undefined): G
       });
     }
     default: {
-      throw new Error(`Unhandled action type: ${action.type}`);
+      throw new Error(`Unhandled single request action type: ${action.type}`);
     }
   }
+};
+
+export const grpcReducer = (
+  state: GrpcState,
+  action: GrpcAction | GrpcActionMany | undefined,
+): GrpcState => {
+  if (!action) {
+    return state;
+  }
+
+  return action.requestIds
+    ? multiRequestReducer(state, action)
+    : singleRequestReducer(state, action);
 };

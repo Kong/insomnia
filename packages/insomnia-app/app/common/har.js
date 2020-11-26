@@ -489,6 +489,13 @@ function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | voi
   let params = [];
   if (body.params) {
     params = body.params.map(param => {
+      if (param.type === 'file') {
+        return {
+          name: param.name,
+          fileName: param.fileName,
+        };
+      }
+
       return {
         name: param.name,
         value: param.value,
