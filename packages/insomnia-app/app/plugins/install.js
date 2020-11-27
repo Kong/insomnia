@@ -173,10 +173,9 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
 }
 
 export function containsOnlyDeprecationWarnings(stderr) {
-  // Split on line breaks
+  // Split on line breaks and remove falsy values (null, undefined, 0, -0, NaN, "", false)
   const arr = stderr.split(/\r?\n/).filter(e => e);
-  /* Retrieve all matching deprecated dependency warning and
-  /* remove falsy values (null, undefined, 0, -0, NaN, "", false) */
+  // Retrieve all matching deprecated dependency warning
   const warnings = arr.filter(e => isDeprecatedDependencies(e));
   // Print each deprecation warnings to the console, so we don't hide them.
   warnings.forEach(e => console.log('[plugins] deprecation warning during installation: ', e));
