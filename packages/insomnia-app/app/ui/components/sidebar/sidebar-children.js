@@ -14,7 +14,7 @@ import { Dropdown } from '../base/dropdown';
 import SidebarCreateDropdown from './sidebar-create-dropdown';
 
 type Child = {
-  doc: Request | RequestGroup,
+  doc: Request | GrpcRequest | RequestGroup,
   children: Array<Child>,
   collapsed: boolean,
   hidden: boolean,
@@ -103,7 +103,7 @@ class SidebarChildren extends React.PureComponent<Props> {
         return null;
       }
 
-      if (child.doc.type === models.request.type) {
+      if (child.doc.type === models.request.type || child.doc.type === models.grpcRequest.type) {
         return (
           <SidebarRequestRow
             key={child.doc._id}

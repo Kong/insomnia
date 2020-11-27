@@ -17,7 +17,8 @@ import {
 } from '../../../common/constants';
 import * as models from '../../../models/index';
 import { trackEvent } from '../../../common/analytics';
-import { showAlert } from './index';
+import { showModal } from './index';
+import ProtoFilesModal from './proto-files-modal';
 
 type RequestCreateModalOptions = {
   parentId: string,
@@ -54,13 +55,17 @@ class RequestCreateModal extends PureComponent {
     const { parentId, selectedContentType, selectedMethod } = this.state;
     const requestName = this._input.value;
     if (selectedMethod === METHOD_GRPC) {
-      // TODO: Create new grpc request with the name - INS-198
+      showModal(ProtoFilesModal, {
+        onSave: async (protoFileId: string) => {
+          const createdRequest = await models.grpcRequest.create({
+            parentId,
+            name: requestName,
+            protoFileId,
+          });
 
-      const id = 'gr_123';
-      this._onComplete(id);
-
-      // TODO: Show protofile selection modal - INS-188
-      showAlert({ title: 'Select protofile', message: 'To be built', okLabel: 'ok' });
+          this._onComplete(createdRequest._id);
+        },
+      });
     } else {
       const request = await models.initModel(models.request.type, {
         parentId,
@@ -144,6 +149,7 @@ class RequestCreateModal extends PureComponent {
               <div className="form-control form-control--no-label" style={{ width: 'auto' }}>
                 <MethodDropdown
                   right
+                  showGrpc
                   className="btn btn--clicky no-wrap"
                   method={selectedMethod}
                   onChange={this._handleChangeSelectedMethod}

@@ -1,6 +1,5 @@
 # Insomnia REST Client
 
-[![Travis](https://api.travis-ci.org/Kong/insomnia.svg)](https://travis-ci.org/Kong/insomnia)
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/Kong/insomnia/blob/master/LICENSE)
 [![CodeFund](https://img.shields.io/badge/codefund-advertiser-success.svg)](https://codefund.io)

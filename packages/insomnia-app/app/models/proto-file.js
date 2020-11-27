@@ -28,7 +28,7 @@ export function migrate(doc: ProtoFile): ProtoFile {
 
 export function create(patch: $Shape<ProtoFile> = {}): Promise<ProtoFile> {
   if (!patch.parentId) {
-    throw new Error('New Proto File missing `parentId`');
+    throw new Error('New ProtoFile missing `parentId`');
   }
 
   return db.docCreate(type, patch);
@@ -46,8 +46,8 @@ export function getById(_id: string): Promise<ProtoFile | null> {
   return db.getWhere(type, { _id });
 }
 
-export function getByParentId(parentId: string): Promise<ProtoFile | null> {
-  return db.getWhere(type, { parentId });
+export function findByParentId(parentId: string): Promise<Array<ProtoFile>> {
+  return db.find(type, { parentId });
 }
 
 export function all(): Promise<Array<ProtoFile>> {
