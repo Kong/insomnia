@@ -260,7 +260,7 @@ class TagEditor extends React.PureComponent<Props, State> {
 
   async _handleActionClick(action: NunjucksActionTag) {
     const templateTags = await getTemplateTags();
-    const activeTemplateTag = templateTags.find(({ plugin, templateTag }) => {
+    const activeTemplateTag = templateTags.find(({ templateTag }) => {
       return templateTag.name === this.state.activeTagData.name;
     });
 
@@ -646,11 +646,7 @@ class TagEditor extends React.PureComponent<Props, State> {
   }
 
   renderActions(actions = []) {
-    return (
-      <div className="form-row">
-        {actions.map((action, index) => this.renderAction(action, index))}
-      </div>
-    );
+    return <div className="form-row">{actions.map(this.renderAction)}</div>;
   }
 
   renderAction(action: NunjucksActionTag, index: number) {
@@ -659,7 +655,7 @@ class TagEditor extends React.PureComponent<Props, State> {
 
     return (
       <button
-        key={index}
+        key={name}
         className="btn btn--clicky fa-pull-right"
         type="button"
         onClick={() => this._handleActionClick(action)}>
@@ -715,7 +711,7 @@ class TagEditor extends React.PureComponent<Props, State> {
             this.renderArg(argDefinition, activeTagData.args, index),
           )}
 
-        {activeTagDefinition && this.renderActions(activeTagDefinition.actions)}
+        {activeTagDefinition?.actions?.length && this.renderActions(activeTagDefinition.actions)}
 
         {!activeTagDefinition && (
           <div className="form-control form-control--outlined">
