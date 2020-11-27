@@ -178,7 +178,7 @@ export function containsOnlyDeprecationWarnings(stderr) {
   // Retrieve all matching deprecated dependency warning
   const warnings = arr.filter(e => isDeprecatedDependencies(e));
   // Print each deprecation warnings to the console, so we don't hide them.
-  warnings.forEach(e => console.log('[plugins] deprecation warning during installation: ', e));
+  warnings.forEach(e => console.warn('[plugins] deprecation warning during installation: ', e));
   // If they mismatch, it means there are warnings and errors
   return warnings.length === arr.length;
 }
