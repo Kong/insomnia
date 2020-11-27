@@ -647,7 +647,14 @@ class TagEditor extends React.PureComponent<Props, State> {
   }
 
   renderActions(actions = []) {
-    return <div className="form-row">{actions.map(this.renderAction)}</div>;
+    return (
+      <div className="form-row">
+        <div className="form-control">
+          <label>Actions</label>
+          <div className="form-row">{actions.map(this.renderAction)}</div>
+        </div>
+      </div>
+    );
   }
 
   renderAction(action: NunjucksActionTag, index: number) {
@@ -657,7 +664,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     return (
       <button
         key={name}
-        className="btn btn--clicky fa-pull-right"
+        className="btn btn--clicky btn--largest"
         type="button"
         onClick={() => this._handleActionClick(action)}>
         {icon}
