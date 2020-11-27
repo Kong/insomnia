@@ -96,7 +96,7 @@ import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
-import { isGrpcRequest, isGrpcRequestId } from '../../models/helpers/is-model';
+import { isGrpcRequest, isGrpcRequestId, isRequestGroup } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
 import { sortMethodMap } from '../../common/sorting';
@@ -366,11 +366,7 @@ class App extends PureComponent {
     await this._recalculateMetaSortKey(docs);
 
     // sort RequestGroups recursively
-    await Promise.all(
-      docs
-        .filter(d => d.type === models.requestGroup.type)
-        .map(g => this._sortSidebar(order, g._id)),
-    );
+    await Promise.all(docs.filter(isRequestGroup).map(g => this._sortSidebar(order, g._id)));
 
     if (flushId) {
       await db.flushChanges(flushId);
