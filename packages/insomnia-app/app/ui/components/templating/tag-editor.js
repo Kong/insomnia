@@ -268,7 +268,8 @@ class TagEditor extends React.PureComponent<Props, State> {
       ...pluginContexts.store.init(activeTemplateTag.plugin),
     };
 
-    return action.run(helperContext);
+    await action.run(helperContext);
+    return this._handleRefresh();
   }
 
   _setSelectRef(n: ?HTMLSelectElement) {
