@@ -75,6 +75,12 @@ export const getResponseViewer = async app => {
   return codeEditor;
 };
 
+export const getTimelineViewer = async app => {
+  const codeEditor = await app.client.react$('ResponseTimelineViewer');
+  await codeEditor.waitForDisplayed();
+  return codeEditor;
+};
+
 export const getCsvViewer = async app => {
   const csvViewer = await app.client.react$('ResponseCSVViewer');
   await csvViewer.waitForDisplayed();
@@ -120,6 +126,9 @@ export const expectNoAuthSelected = async app => {
 };
 
 export const typeBasicAuthUsernameAndPassword = async (app, username, password, clear = false) => {
+  const basicAuth = await app.client.react$('BasicAuth');
+  await basicAuth.waitForExist();
+
   const usernameEditor = await app.client.react$('OneLineEditor', {
     props: { id: 'username' },
   });
@@ -171,6 +180,14 @@ export const expectText = async (element, text) => {
   await expect(element.getText()).resolves.toBe(text);
 };
 
+export const expectContainsText = async (element, text) => {
+  await expect(element.getText()).resolves.toContain(text);
+};
+
+export const expectNotContainsText = async (element, text) => {
+  await expect(element.getText()).resolves.not.toContain(text);
+};
+
 export const clickTimelineTab = async app => {
   await app.client
     .$('.response-pane')
@@ -183,12 +200,6 @@ export const clickPreviewTab = async app => {
     .$('.response-pane')
     .then(e => e.$('#react-tabs-10'))
     .then(e => e.click());
-};
-
-export const getTimelineViewerText = async app => {
-  const viewer = await app.client.react$('ResponseTimelineViewer');
-  await app.client.waitUntil(async () => (await viewer.getText()) !== '');
-  return await viewer.getText();
 };
 
 export const selectAll = async app => {

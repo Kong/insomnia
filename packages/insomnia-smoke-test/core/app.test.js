@@ -58,9 +58,8 @@ describe('Application launch', function() {
     // Investigate how we can extract text from the canvas, or compare images
     await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
-  const iterations = [0];
 
-  fit.each(iterations)('sends request with basic authentication: %i', async i => {
+  fit('sends request with basic authentication', async () => {
     const url = 'http://127.0.0.1:4010/auth/basic';
 
     await debug.workspaceDropdownExists(app);
@@ -91,8 +90,11 @@ describe('Application launch', function() {
 
     // Check auth header in timeline
     await debug.clickTimelineTab(app);
-    let timelineText = await debug.getTimelineViewerText(app);
-    expect(timelineText).toContain('> Authorization: Basic dXNlcjpwYXNz');
+
+    await debug.expectContainsText(
+      await debug.getTimelineViewer(app),
+      '> Authorization: Basic dXNlcjpwYXNz',
+    );
 
     // Clear and type username/password with special characters
     await debug.typeBasicAuthUsernameAndPassword(app, 'user-é', 'pass-é', true);
@@ -108,8 +110,10 @@ describe('Application launch', function() {
     await debug.clickPreviewTab(app);
     await debug.clickTimelineTab(app);
 
-    timelineText = await debug.getTimelineViewerText(app);
-    expect(timelineText).toContain('> Authorization: Basic dXNlci3pOnBhc3Mt6Q==');
+    await debug.expectContainsText(
+      await debug.getTimelineViewer(app),
+      '> Authorization: Basic dXNlci3pOnBhc3Mt6Q==',
+    );
 
     // Toggle basic auth to disabled
     await debug.toggleBasicAuthEnabled(app);
@@ -122,7 +126,6 @@ describe('Application launch', function() {
     await debug.clickPreviewTab(app);
     await debug.clickTimelineTab(app);
 
-    timelineText = await debug.getTimelineViewerText(app);
-    expect(timelineText).not.toContain('> Authorization: Basic');
+    await debug.expectNotContainsText(await debug.getTimelineViewer(app), '> Authorization: Basic');
   });
 });
