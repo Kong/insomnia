@@ -5,7 +5,7 @@ import * as models from '../../models';
 export type PluginStore = {
   hasItem(string): Promise<boolean>,
   setItem(string, string): Promise<void>,
-  getItem(string): Promise<boolean | null>,
+  getItem(string): Promise<string | null>,
   removeItem(string): Promise<void>,
   clear(): Promise<void>,
   all(): Promise<Array<{ key: string, value: string }>>,
