@@ -178,9 +178,16 @@ export const clickTimelineTab = async app => {
     .then(e => e.click());
 };
 
-export const getTimelineViewerText = async (app, oldText = '') => {
+export const clickPreviewTab = async app => {
+  await app.client
+    .$('.response-pane')
+    .then(e => e.$('#react-tabs-10'))
+    .then(e => e.click());
+};
+
+export const getTimelineViewerText = async app => {
   const viewer = await app.client.react$('ResponseTimelineViewer');
-  await app.client.waitUntil(async () => (await viewer.getText()) !== oldText);
+  await app.client.waitUntil(async () => (await viewer.getText()) !== '');
   return await viewer.getText();
 };
 

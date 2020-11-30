@@ -58,8 +58,9 @@ describe('Application launch', function() {
     // Investigate how we can extract text from the canvas, or compare images
     await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
+  const iterations = [0];
 
-  it('sends request with basic authentication', async () => {
+  fit.each(iterations)('sends request with basic authentication: %i', async i => {
     const url = 'http://127.0.0.1:4010/auth/basic';
 
     await debug.workspaceDropdownExists(app);
@@ -93,27 +94,35 @@ describe('Application launch', function() {
     let timelineText = await debug.getTimelineViewerText(app);
     expect(timelineText).toContain('> Authorization: Basic dXNlcjpwYXNz');
 
-    // Toggle basic auth disabled
-    await debug.toggleBasicAuthEnabled(app);
-
-    // Send request
-    await debug.clickSendRequest(app);
-    await debug.expect401(app);
-    timelineText = await debug.getTimelineViewerText(app, timelineText);
-    expect(timelineText).not.toContain('> Authorization: Basic');
-
     // Clear and type username/password with special characters
     await debug.typeBasicAuthUsernameAndPassword(app, 'user-é', 'pass-é', true);
 
     // Toggle basic auth and encoding enabled
-    await debug.toggleBasicAuthEnabled(app);
     await debug.toggleBasicAuthEncoding(app);
 
     // Send request
     await debug.clickSendRequest(app);
     await debug.expect200(app);
 
-    timelineText = await debug.getTimelineViewerText(app, timelineText);
+    // Force update timeline tab
+    await debug.clickPreviewTab(app);
+    await debug.clickTimelineTab(app);
+
+    timelineText = await debug.getTimelineViewerText(app);
     expect(timelineText).toContain('> Authorization: Basic dXNlci3pOnBhc3Mt6Q==');
+
+    // Toggle basic auth to disabled
+    await debug.toggleBasicAuthEnabled(app);
+
+    // Send request
+    await debug.clickSendRequest(app);
+    await debug.expect401(app);
+
+    // Force update timeline tab
+    await debug.clickPreviewTab(app);
+    await debug.clickTimelineTab(app);
+
+    timelineText = await debug.getTimelineViewerText(app);
+    expect(timelineText).not.toContain('> Authorization: Basic');
   });
 });
