@@ -59,7 +59,12 @@ describe('Application launch', function() {
     await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
 
-  fit('sends request with basic authentication', async () => {
+  // This test will ensure that for an endpoint which expects basic auth:
+  //  1. sending no basic auth will fail
+  //  2. sending basic auth will succeed
+  //  3. sending basic auth with special characters encoded with IS0-8859-1 will succeed
+  //  4. sending while basic auth is disabled within insomnnia will fail
+  it('sends request with basic authentication', async () => {
     const url = 'http://127.0.0.1:4010/auth/basic';
 
     await debug.workspaceDropdownExists(app);
@@ -96,7 +101,7 @@ describe('Application launch', function() {
       '> Authorization: Basic dXNlcjpwYXNz',
     );
 
-    // Clear and type username/password with special characters
+    // Clear inputs and type username/password with special characters
     await debug.typeBasicAuthUsernameAndPassword(app, 'user-é', 'pass-é', true);
 
     // Toggle basic auth and encoding enabled
