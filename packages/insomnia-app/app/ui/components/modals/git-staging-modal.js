@@ -417,7 +417,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
             <button className="btn" onClick={this._hideModal}>
               Close
             </button>
-            <button className="btn" onClick={this._handleCommit} disabled={!hasChanges}>
+            <button className="btn" onClick={this._handleCommit} disabled={loading || !hasChanges}>
               Commit
             </button>
           </div>
