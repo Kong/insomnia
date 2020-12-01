@@ -1,8 +1,10 @@
 // @flow
 import React from 'react';
-import { Dropdown, DropdownItem, Button } from 'insomnia-components';
+import { Dropdown, DropdownItem, DropdownDivider, Button } from 'insomnia-components';
 import type { GrpcMethodDefinition } from '../../../network/grpc/method';
 import styled from 'styled-components';
+import { getMethodType } from '../../../network/grpc/method';
+import GrpcMethodTag from '../tags/grpc-method-tag';
 
 type Props = {
   disabled: boolean,
@@ -21,7 +23,7 @@ const SpaceBetween = styled.span`
 `;
 
 const DropdownButton = (props: { text: string }) => (
-  <Button variant="text" className="tall wide" title={props.text}>
+  <Button variant="text" size="medium" className="tall wide" title={props.text}>
     <SpaceBetween>
       {props.text}
       <i className="fa fa-caret-down pad-left-sm" />
@@ -44,6 +46,7 @@ const GrpcMethodDropdown = ({
   return (
     <Dropdown className="tall wide" renderButton={dropdownButton}>
       <DropdownItem onClick={handleChangeProtoFile}>Click to change proto file</DropdownItem>
+      <DropdownDivider />
       {!methods.length && <DropdownItem disabled>No methods found</DropdownItem>}
       {methods.map(method => (
         <DropdownItem
@@ -51,7 +54,8 @@ const GrpcMethodDropdown = ({
           onClick={handleChange}
           value={method.path}
           disabled={disabled}
-          icon="SS">
+          selected={method.path === selectedMethod?.path}
+          icon={<GrpcMethodTag methodType={getMethodType(method)} />}>
           {method.path}
         </DropdownItem>
       ))}

@@ -53,7 +53,11 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
 
   if (running) {
     return (
-      <Button className="tall" variant="text" onClick={() => sendIpc(GrpcRequestEventEnum.cancel)}>
+      <Button
+        className="tall"
+        size="medium"
+        variant="text"
+        onClick={() => sendIpc(GrpcRequestEventEnum.cancel)}>
         Cancel
       </Button>
     );
@@ -63,6 +67,7 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
     <Button
       className="tall"
       variant="text"
+      size="medium"
       onClick={() => {
         config.onClick();
         dispatch(grpcActions.clear(requestId));

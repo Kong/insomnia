@@ -1,10 +1,11 @@
 // @flow
 import * as React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 export const ButtonSizeEnum = {
   Default: 'default',
   Small: 'small',
+  Medium: 'medium',
 };
 
 export const ButtonVariantEnum = {
@@ -42,13 +43,19 @@ const StyledButton: React.ComponentType<ButtonProps> = styled.button`
   ${({ size }) => {
     switch (size) {
       case 'small':
-        return `
+        return css`
           padding: 0 calc(var(--padding-md) * 0.8);
           height: calc(var(--line-height-xs) * 0.8);
           font-size: var(--font-size-sm);
         `;
+      case 'medium':
+        return css`
+          padding: 0 var(--padding-md);
+          height: calc(var(--line-height-md) * 0.8);
+          font-size: var(--font-size-md);
+        `;
       default:
-        return `
+        return css`
           padding: 0 var(--padding-md);
           height: var(--line-height-xs);
         `;

@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import type { ProtoFile } from '../../../models/proto-file';
 import type {
   DeleteProtoFileHandler,
@@ -24,10 +24,15 @@ const spinner = <i className="fa fa-spin fa-refresh" />;
 
 const SelectableListItem: React.PureComponent<{ isSelected?: boolean }> = styled(ListGroupItem)`
   &:hover {
-    background-color: var(--hl-sm) !important;
+    background-color: var(--hl-xs) !important;
   }
-  background-color: ${({ isSelected }) =>
-    isSelected && 'var(--hl-xs) !important; font-weight: bold;'};
+
+  ${({ isSelected }) =>
+    isSelected &&
+    css`
+      background-color: var(--hl-xs) !important;
+      font-weight: bold;
+    `};
 
   i.fa {
     font-size: var(--font-size-lg);
