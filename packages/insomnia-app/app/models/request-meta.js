@@ -2,7 +2,6 @@
 import * as db from '../common/database';
 import { PREVIEW_MODE_FRIENDLY } from '../common/constants';
 import type { BaseModel } from './index';
-import { isRequestId } from './helpers/is-model';
 
 export const name = 'Request Meta';
 export const type = 'RequestMeta';
@@ -47,18 +46,18 @@ export function create(patch: $Shape<RequestMeta> = {}) {
     throw new Error('New RequestMeta missing `parentId` ' + JSON.stringify(patch));
   }
 
-  expectParentToBeRequest(patch.parentId);
+  // expectParentToBeRequest(patch.parentId);
 
   return db.docCreate(type, patch);
 }
 
 export function update(requestMeta: RequestMeta, patch: $Shape<RequestMeta>) {
-  expectParentToBeRequest(patch.parentId || requestMeta.parentId);
+  // expectParentToBeRequest(patch.parentId || requestMeta.parentId);
   return db.docUpdate(requestMeta, patch);
 }
 
 export function getByParentId(parentId: string) {
-  expectParentToBeRequest(parentId);
+  // expectParentToBeRequest(parentId);
   return db.getWhere(type, { parentId });
 }
 
@@ -87,8 +86,9 @@ export function all(): Promise<Array<RequestMeta>> {
   return db.all(type);
 }
 
-function expectParentToBeRequest(parentId: string) {
-  if (!isRequestId(parentId)) {
-    throw new Error('Expected the parent of RequestMeta to be a Request');
-  }
-}
+// TODO: Ensure the parent of RequestMeta can only be a Request - INS-341
+// function expectParentToBeRequest(parentId: string) {
+//   if (!isRequestId(parentId)) {
+//     throw new Error('Expected the parent of RequestMeta to be a Request');
+//   }
+// }
