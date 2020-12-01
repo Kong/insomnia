@@ -4,6 +4,7 @@ import type { GrpcMethodType } from '../../../network/grpc/method';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
 import { grpcActions, useGrpc, useGrpcIpc } from '../../context/grpc';
+import { Button } from 'insomnia-components';
 
 type Props = {
   requestId: string,
@@ -52,22 +53,23 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
 
   if (running) {
     return (
-      <button className="urlbar__send-btn" onClick={() => sendIpc(GrpcRequestEventEnum.cancel)}>
+      <Button className="tall" variant="text" onClick={() => sendIpc(GrpcRequestEventEnum.cancel)}>
         Cancel
-      </button>
+      </Button>
     );
   }
 
   return (
-    <button
-      className="urlbar__send-btn"
+    <Button
+      className="tall"
+      variant="text"
       onClick={() => {
         config.onClick();
         dispatch(grpcActions.clear(requestId));
       }}
       disabled={config.disabled}>
       {config.text}
-    </button>
+    </Button>
   );
 };
 

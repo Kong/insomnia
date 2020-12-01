@@ -1,7 +1,8 @@
 // @flow
 import React from 'react';
-import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
+import { Dropdown, DropdownItem, Button } from 'insomnia-components';
 import type { GrpcMethodDefinition } from '../../../network/grpc/method';
+import styled from 'styled-components';
 
 type Props = {
   disabled: boolean,
@@ -11,27 +12,51 @@ type Props = {
   handleChangeProtoFile: string => Promise<void>,
 };
 
+const SpaceBetween = styled.span`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const DropdownButton = (props: { text: string }) => (
+  <Button variant="text" className="tall wide">
+    <SpaceBetween>
+      {props.text}
+      <i className="fa fa-caret-down pad-left-sm" />
+    </SpaceBetween>
+  </Button>
+);
+
 const GrpcMethodDropdown = ({
   disabled,
   methods,
   selectedMethod,
   handleChange,
   handleChangeProtoFile,
-}: Props) => (
-  <Dropdown>
-    <DropdownButton>
-      {selectedMethod?.path || 'Select Method'}
-      <i className="fa fa-caret-down" />
-    </DropdownButton>
-    <DropdownItem onClick={handleChangeProtoFile}>Click to change proto file</DropdownItem>
-    {!methods.length && <DropdownItem disabled>No methods found</DropdownItem>}
-    {methods.map(({ path }) => (
-      <DropdownItem key={path} onClick={handleChange} value={path} disabled={disabled}>
-        {path === selectedMethod?.path && <i className="fa fa-check" />}
-        {path}
-      </DropdownItem>
-    ))}
-  </Dropdown>
-);
+}: Props) => {
+  const dropdownButton = React.useMemo(
+    () => () => <DropdownButton text={selectedMethod?.path || 'Select Method'} />,
+    [selectedMethod?.path],
+  );
+
+  return (
+    <Dropdown className="tall wide" renderButton={dropdownButton}>
+      <DropdownItem onClick={handleChangeProtoFile}>Click to change proto file</DropdownItem>
+      {!methods.length && <DropdownItem disabled>No methods found</DropdownItem>}
+      {methods.map(method => (
+        <DropdownItem
+          key={method.path}
+          onClick={handleChange}
+          value={method.path}
+          disabled={disabled}
+          icon="SS">
+          {method.path}
+        </DropdownItem>
+      ))}
+    </Dropdown>
+  );
+};
 
 export default GrpcMethodDropdown;

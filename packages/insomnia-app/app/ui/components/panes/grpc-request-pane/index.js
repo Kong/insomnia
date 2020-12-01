@@ -13,12 +13,30 @@ import { grpcActions, useGrpc, useGrpcIpc } from '../../../context/grpc';
 import useChangeHandlers from './use-change-handlers';
 import useSelectedMethod from './use-selected-method';
 import useProtoFileReload from './use-proto-file-reload';
+import styled from 'styled-components';
 
 type Props = {
   forceRefreshKey: string,
   activeRequest: GrpcRequest,
   settings: Settings,
 };
+
+const StyledUrlBar = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: stretch;
+`;
+
+const UrlEditor = styled.div`
+  flex: 1 0 4em;
+`;
+
+const StyledDropdown = styled.div`
+  flex: 1 0 auto;
+`;
 
 const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
   const [state, dispatch] = useGrpc(activeRequest._id);
@@ -46,26 +64,31 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
 
   return (
     <Pane type="request">
-      <PaneHeader className="grpc-urlbar">
-        <div className="method-grpc pad">gRPC</div>
-        <OneLineEditor
-          className="urlbar__url-editor"
-          key={uniquenessKey}
-          type="text"
-          forceEditor
-          defaultValue={activeRequest.url}
-          placeholder="grpcb.in:9000"
-          onChange={handleChange.url}
-        />
-        <GrpcMethodDropdown
-          disabled={running}
-          methods={methods}
-          selectedMethod={method}
-          handleChange={handleChange.method}
-          handleChangeProtoFile={handleChange.protoFile}
-        />
+      <PaneHeader>
+        <StyledUrlBar>
+          <div className="method-grpc pad">gRPC</div>
+          <UrlEditor>
+            <OneLineEditor
+              key={uniquenessKey}
+              type="text"
+              forceEditor
+              defaultValue={activeRequest.url}
+              placeholder="grpcb.in:9000"
+              onChange={handleChange.url}
+            />
+          </UrlEditor>
+          <StyledDropdown>
+            <GrpcMethodDropdown
+              disabled={running}
+              methods={methods}
+              selectedMethod={method}
+              handleChange={handleChange.method}
+              handleChangeProtoFile={handleChange.protoFile}
+            />
+          </StyledDropdown>
 
-        <GrpcSendButton requestId={activeRequest._id} methodType={methodType} />
+          <GrpcSendButton requestId={activeRequest._id} methodType={methodType} />
+        </StyledUrlBar>
       </PaneHeader>
       <PaneBody>
         {methodType && (
