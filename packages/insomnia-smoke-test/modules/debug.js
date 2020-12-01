@@ -47,6 +47,24 @@ const waitUntilRequestIsActive = async (app, name) => {
   await app.client.waitUntil(requestIsActive);
 };
 
+export const clickFolderByName = async (app, name) => {
+  const folder = await app.client.react$('SidebarRequestGroupRow', {
+    props: { requestGroup: { name } },
+  });
+
+  await folder.waitForClickable();
+  await folder.click();
+};
+
+export const clickRequestByName = async (app, name) => {
+  const folder = await app.client.react$('SidebarRequestRow', {
+    props: { request: { name } },
+  });
+
+  await folder.waitForClickable();
+  await folder.click();
+};
+
 export const typeInUrlBar = async (app, url) => {
   const urlEditor = await app.client.react$('RequestUrlBar');
   await urlEditor.waitForExist();

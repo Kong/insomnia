@@ -43,8 +43,8 @@ describe('Application launch', function() {
     await app.electron.clipboard.writeText(swagger2Text);
 
     await settings.importFromClipboard(app);
-
-    await app.client.debug();
+    await debug.clickFolderByName(app, 'custom-tag');
+    await debug.clickRequestByName(app, 'get pet by id');
 
     await debug.clickSendRequest(app);
 

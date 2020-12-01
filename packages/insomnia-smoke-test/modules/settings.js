@@ -21,16 +21,15 @@ export const goToPlugins = async app => {
   await app.client.react$('Plugins').then(e => e.waitForDisplayed());
 };
 
-export const importFromClipboard = async app => {
+export const importFromClipboard = async (app, newWorkspace = false) => {
   const importExport = await app.client.react$('ImportExport');
   await importExport.waitForDisplayed();
 
   await importExport.$('button*=Import Data').then(e => e.click());
 
-  // Need to search on the entire dom rather than the ImportExport component for some reason :(
   await dropdown.clickOpenDropdownItemByText(app, 'From Clipboard');
 
-  await modal.clickModalFooterByText(app, 'AskModal', 'Current');
+  await modal.clickModalFooterByText(app, 'AskModal', newWorkspace ? 'New Workspace' : 'Current');
 };
 
 export const installPlugin = async (app, pluginName) => {
