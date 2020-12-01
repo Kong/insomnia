@@ -83,7 +83,9 @@ const GrpcMethodDropdown = ({
 
   return (
     <Dropdown className="tall wide" renderButton={dropdownButton}>
-      <DropdownItem onClick={handleChangeProtoFile}>Click to change proto file</DropdownItem>
+      <DropdownItem onClick={handleChangeProtoFile}>
+        <em>Click to change proto file</em>
+      </DropdownItem>
       {!methods.length && (
         <>
           <DropdownDivider />
