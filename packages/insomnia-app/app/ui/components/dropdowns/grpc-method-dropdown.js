@@ -21,7 +21,7 @@ const SpaceBetween = styled.span`
 `;
 
 const DropdownButton = (props: { text: string }) => (
-  <Button variant="text" className="tall wide">
+  <Button variant="text" className="tall wide" title={props.text}>
     <SpaceBetween>
       {props.text}
       <i className="fa fa-caret-down pad-left-sm" />
