@@ -4,6 +4,10 @@ export const workspaceDropdownExists = async (app, workspaceName = 'Insomnia') =
   await app.client.waitUntilTextExists('.workspace-dropdown', workspaceName);
 };
 
+export const clickWorkspaceDropdown = async app => {
+  await app.client.react$('WorkspaceDropdown').then(e => e.click());
+};
+
 export const createNewRequest = async (app, name) => {
   await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
 

@@ -30,6 +30,16 @@ describe('Application launch', function() {
     await debug.expect200(app);
   });
 
+  fit('imports swagger 2 and sends JSON request', async () => {
+    await debug.workspaceDropdownExists(app);
+    await debug.clickWorkspaceDropdown(app);
+    await app.client.debug();
+
+    await debug.clickSendRequest(app);
+
+    await debug.expect200(app);
+  });
+
   it('sends CSV request and shows rich response', async () => {
     const url = 'http://127.0.0.1:4010/csv';
 
