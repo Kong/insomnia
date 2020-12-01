@@ -33,23 +33,34 @@ describe('Application launch', function() {
     await debug.expect200(app);
   });
 
-  fit('imports swagger 2 and sends JSON request', async () => {
-    await debug.workspaceDropdownExists(app);
-    const workspaceDropdown = await debug.clickWorkspaceDropdown(app);
-    await dropdown.clickDropdownItemByText(workspaceDropdown, 'Import/Export');
+  it.each([true, false])(
+    'imports swagger 2 and sends request: new workspace=%s ',
+    async newWorkspace => {
+      await debug.workspaceDropdownExists(app);
 
-    const buffer = await fs.promises.readFile(`${__dirname}/../prism/swagger2.yaml`);
-    const swagger2Text = buffer.toString();
-    await app.electron.clipboard.writeText(swagger2Text);
+      // Copy text to clipboard
+      const buffer = await fs.promises.readFile(`${__dirname}/../prism/swagger2.yaml`);
+      const swagger2Text = buffer.toString();
+      await app.electron.clipboard.writeText(swagger2Text);
 
-    await settings.importFromClipboard(app);
-    await debug.clickFolderByName(app, 'custom-tag');
-    await debug.clickRequestByName(app, 'get pet by id');
+      // Click dropdown and open import modal
+      const workspaceDropdown = await debug.clickWorkspaceDropdown(app);
+      await dropdown.clickDropdownItemByText(workspaceDropdown, 'Import/Export');
 
-    await debug.clickSendRequest(app);
+      // Import from clipboard into new/current workspace
+      await settings.importFromClipboard(app, newWorkspace);
 
-    await debug.expect200(app);
-  });
+      // Click imported folder and request
+      await debug.clickFolderByName(app, 'custom-tag');
+      await debug.clickRequestByName(app, 'get pet by id');
+
+      // Click send
+      await debug.clickSendRequest(app);
+
+      // Ensure 200
+      await debug.expect200(app);
+    },
+  );
 
   it('sends CSV request and shows rich response', async () => {
     const url = 'http://127.0.0.1:4010/csv';
