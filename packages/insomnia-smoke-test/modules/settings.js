@@ -1,6 +1,7 @@
 import { clickTabByText } from './tabs';
 import { mapAccelerator } from 'spectron-keys';
 import * as modal from './modal';
+import * as dropdown from './dropdown';
 
 export const openWithKeyboardShortcut = async app => {
   await app.client.keys(mapAccelerator('CommandOrControl+,'));
@@ -18,6 +19,18 @@ export const goToPlugins = async app => {
 
   // Wait for the plugins component to show
   await app.client.react$('Plugins').then(e => e.waitForDisplayed());
+};
+
+export const importFromClipboard = async app => {
+  const importExport = await app.client.react$('ImportExport');
+  await importExport.waitForDisplayed();
+
+  await importExport.$('button*=Import Data').then(e => e.click());
+
+  // Need to search on the entire dom rather than the ImportExport component for some reason :(
+  await dropdown.clickOpenDropdownItemByText(app, 'From Clipboard');
+
+  await modal.clickModalFooterByText(app, 'AskModal', 'Current');
 };
 
 export const installPlugin = async (app, pluginName) => {

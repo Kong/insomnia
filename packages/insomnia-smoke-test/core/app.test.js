@@ -1,6 +1,9 @@
 import * as debug from '../modules/debug';
 import * as client from '../modules/client';
 import { launchCore, stop } from '../modules/application';
+import * as dropdown from '../modules/dropdown';
+import * as settings from '../modules/settings';
+import fs from 'fs';
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
@@ -32,7 +35,15 @@ describe('Application launch', function() {
 
   fit('imports swagger 2 and sends JSON request', async () => {
     await debug.workspaceDropdownExists(app);
-    await debug.clickWorkspaceDropdown(app);
+    const workspaceDropdown = await debug.clickWorkspaceDropdown(app);
+    await dropdown.clickDropdownItemByText(workspaceDropdown, 'Import/Export');
+
+    const buffer = await fs.promises.readFile(`${__dirname}/../prism/swagger2.yaml`);
+    const swagger2Text = buffer.toString();
+    await app.electron.clipboard.writeText(swagger2Text);
+
+    await settings.importFromClipboard(app);
+
     await app.client.debug();
 
     await debug.clickSendRequest(app);
