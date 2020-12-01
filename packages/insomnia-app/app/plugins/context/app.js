@@ -29,7 +29,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
       dialog(
         title,
         body: HTMLElement,
-        options?: {
+        options: {
           onHide?: () => void,
           tall?: boolean,
           skinny?: boolean,
@@ -104,7 +104,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
       // ~~~~~~~~~~~~~~~~~~ //
 
       /** @deprecated as it was never officially supported */
-      showGenericModalDialog(title: string, options?: { html: string } = {}): void {
+      showGenericModalDialog(title: string, options: { html: string } = {}): void {
         console.warn('app.showGenericModalDialog() is deprecated. Use app.dialog() instead.');
 
         // Create DOM node so we can adapt to the new dialog() method

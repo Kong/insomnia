@@ -24,7 +24,7 @@ type State = {
   placeholder: ?string,
   inputType: ?string,
   cancelable: ?boolean,
-  onComplete: ?(string) => void,
+  onChange: ?(string, ?Array<string>) => void,
   onCancel: ?() => void,
   onDeleteHint: ?(string) => void,
   currentValue: string,
@@ -50,17 +50,18 @@ class PromptModal extends React.PureComponent<Props, State> {
       placeholder: '',
       inputType: '',
       cancelable: false,
-      onComplete: undefined,
+      onChange: undefined,
       onCancel: undefined,
       onDeleteHint: undefined,
       currentValue: '',
     };
   }
 
-  _done(rawValue: string) {
-    const { onComplete, upperCase } = this.state;
+  _done(rawValue: string = '') {
+    const { onChange, upperCase, hints } = this.state;
     const value = upperCase ? rawValue.toUpperCase() : rawValue;
-    onComplete && onComplete(value);
+    if (hints) onChange && onChange(value, hints);
+    else onChange && onChange(value);
     this.hide();
   }
 
@@ -77,16 +78,26 @@ class PromptModal extends React.PureComponent<Props, State> {
   }
 
   _handleDeleteHint(hint: string) {
-    const { onDeleteHint } = this.state;
+    const { onDeleteHint, onChange, currentValue } = this.state;
     onDeleteHint && onDeleteHint(hint);
     const hints = this.state.hints.filter(h => h !== hint);
-    this.setState({ hints });
+    this.setState({ hints }, () => onChange && onChange(currentValue, hints));
   }
 
   _handleSubmit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (this._input) {
+    const { _sanitizeHints } = this;
+
+    if (this._input && this.state.inputType === 'hint') {
+      this.setState(prev => {
+        return {
+          ...prev,
+          hints: _sanitizeHints(prev.hints, this._input.value),
+          currentValue: '',
+        };
+      });
+    } else if (this._input) {
       const result =
         this._input.type === 'checkbox' ? this._input.checked.toString() : this._input.value;
       this._done(result);
@@ -100,6 +111,21 @@ class PromptModal extends React.PureComponent<Props, State> {
       const errorMessage = validate(e.currentTarget.value);
       e.currentTarget.setCustomValidity(errorMessage);
     }
+
+    this.setState({ currentValue: e.currentTarget.value });
+  }
+
+  _sanitizeHints(hints: Array<string>, newValue?: string) {
+    let sanitizedHints = [];
+    if (Array.isArray(hints)) {
+      if (!this._isBlank(newValue) && !hints.includes(newValue)) hints.push(newValue.trim());
+      sanitizedHints = hints.slice(0, 15);
+    }
+    return sanitizedHints;
+  }
+
+  _isBlank(str: string) {
+    return !str || /^\s*$/.test(str);
   }
 
   hide() {
@@ -119,7 +145,7 @@ class PromptModal extends React.PureComponent<Props, State> {
     validate?: string => string,
     label?: string,
     hints?: Array<string>,
-    onComplete?: string => void,
+    onChange: ?(string, ?Array<string>) => void,
     onDeleteHint?: string => void,
     onCancel?: () => void,
   }) {
@@ -135,7 +161,7 @@ class PromptModal extends React.PureComponent<Props, State> {
       placeholder,
       label,
       hints,
-      onComplete,
+      onChange,
       onCancel,
       validate,
       onDeleteHint,
@@ -146,7 +172,7 @@ class PromptModal extends React.PureComponent<Props, State> {
       title,
       onCancel,
       onDeleteHint,
-      onComplete,
+      onChange,
       defaultValue,
       submitName,
       selectText,
@@ -157,24 +183,27 @@ class PromptModal extends React.PureComponent<Props, State> {
       inputType,
       label,
       validate,
-      hints: hints || [],
+      hints: this._sanitizeHints(hints) || [],
     });
 
     this.modal && this.modal.show();
 
     // Need to do this after render because modal focuses itself too
-    setTimeout(() => {
-      if (!this._input) {
-        return;
-      }
-      if (inputType === 'checkbox') {
-        this._input.checked = !!defaultValue;
-      } else {
-        this._input.value = defaultValue || '';
-      }
-      this._input.focus();
-      selectText && this._input && this._input.select();
-    }, 100);
+    setTimeout(this._focusInput, 100);
+  }
+
+  _focusInput() {
+    const { selectText, currentValue, defaultValue, inputType } = this.state;
+    if (!this._input) {
+      return;
+    }
+    if (inputType === 'checkbox') {
+      this._input.checked = !!defaultValue;
+    } else {
+      this._input.value = currentValue || defaultValue || '';
+    }
+    this._input.focus();
+    selectText && this._input && this._input.select();
   }
 
   _renderHintButton(hint: string) {
@@ -185,10 +214,11 @@ class PromptModal extends React.PureComponent<Props, State> {
 
     return (
       <div key={hint} className={classes}>
-        <Button className="tall" onClick={this._handleSelectHint} value={hint}>
+        <Button type="button" className="tall" onClick={this._handleSelectHint} value={hint}>
           {hint}
         </Button>
         <PromptButton
+          type="button"
           addIcon
           confirmMessage=""
           className="tall space-left icon"
@@ -205,11 +235,12 @@ class PromptModal extends React.PureComponent<Props, State> {
       submitName,
       title,
       hint,
+      currentValue,
       inputType,
       placeholder,
       label,
-      upperCase,
       hints,
+      upperCase,
       cancelable,
       onCancel,
     } = this.state;
@@ -224,13 +255,9 @@ class PromptModal extends React.PureComponent<Props, State> {
         min={inputType === 'decimal' ? '0.5' : null}
         style={{ textTransform: upperCase ? 'uppercase' : 'none' }}
         placeholder={placeholder || ''}
+        value={currentValue}
       />
     );
-
-    let sanitizedHints = [];
-    if (Array.isArray(hints)) {
-      sanitizedHints = hints.slice(0, 15).map(this._renderHintButton);
-    }
 
     let field = input;
     if (label) {
@@ -248,21 +275,41 @@ class PromptModal extends React.PureComponent<Props, State> {
       'form-control--outlined': inputType !== 'checkbox',
     });
     return (
-      <Modal ref={this._setModalRef} noEscape={!cancelable} onCancel={onCancel}>
-        <ModalHeader>{title}</ModalHeader>
-        <ModalBody className="wide">
-          <form onSubmit={this._handleSubmit} className="wide pad">
-            <div className={divClassnames}>{field}</div>
-            {sanitizedHints}
-          </form>
-        </ModalBody>
-        <ModalFooter>
-          <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
-          <button className="btn" onClick={this._handleSubmit}>
-            {submitName || 'Submit'}
-          </button>
-        </ModalFooter>
-      </Modal>
+      <form onSubmit={this._handleSubmit}>
+        <Modal
+          ref={this._setModalRef}
+          noEscape={!cancelable}
+          onCancel={() => {
+            if (inputType === 'hint') {
+              this._done();
+            } else {
+              onCancel();
+            }
+          }}>
+          <ModalHeader>{title}</ModalHeader>
+          <ModalBody className="wide">
+            <div className="form-control-wrapper wide pad">
+              <div className={divClassnames}>{field}</div>
+              {hints.map(this._renderHintButton)}
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
+            <button
+              type="button"
+              className="btn"
+              onClick={e => {
+                if (inputType === 'hint') {
+                  this._done();
+                } else {
+                  this._handleSubmit(e);
+                }
+              }}>
+              {submitName || 'Submit'}
+            </button>
+          </ModalFooter>
+        </Modal>
+      </form>
     );
   }
 }

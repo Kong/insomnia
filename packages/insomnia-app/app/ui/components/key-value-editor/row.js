@@ -13,6 +13,7 @@ import Button from '../base/button';
 import OneLineEditor from '../codemirror/one-line-editor';
 import { showModal } from '../modals/index';
 import { describeByteSize } from '../../../common/misc';
+import HintDropdown from '../dropdowns/hint-dropdown';
 
 @autobind
 class KeyValueEditorRow extends PureComponent {
@@ -96,6 +97,10 @@ class KeyValueEditorRow extends PureComponent {
 
   _handleValueChange(value) {
     this._sendChange({ value });
+  }
+
+  _handleSelectorChange(value, items) {
+    this._sendChange({ value, items });
   }
 
   _handleFileNameChange(fileName) {
@@ -256,6 +261,14 @@ class KeyValueEditorRow extends PureComponent {
           onChange={this._handleFileNameChange}
         />
       );
+    } else if (pair.type === 'selection') {
+      return (
+        <HintDropdown
+          defaultValue={pair.value}
+          items={pair.items}
+          onChange={this._handleSelectorChange}
+        />
+      );
     } else if (pair.type === 'text' && pair.multiline) {
       const bytes = Buffer.from(pair.value, 'utf8').length;
       return (
@@ -291,9 +304,9 @@ class KeyValueEditorRow extends PureComponent {
   }
 
   renderPairSelector() {
-    const { hideButtons, allowMultiline, allowFile } = this.props;
+    const { hideButtons, allowMultiline, allowFile, allowSelection } = this.props;
 
-    const showDropdown = allowMultiline || allowFile;
+    const showDropdown = allowMultiline || allowFile || allowSelection;
 
     // Put a spacer in for dropdown if needed
     if (hideButtons && showDropdown) {
@@ -327,6 +340,11 @@ class KeyValueEditorRow extends PureComponent {
           {allowFile && (
             <DropdownItem onClick={this._handleTypeChange} value={{ type: 'file' }}>
               File
+            </DropdownItem>
+          )}
+          {allowSelection && (
+            <DropdownItem onClick={this._handleTypeChange} value={{ type: 'selection' }}>
+              Selection
             </DropdownItem>
           )}
         </Dropdown>
@@ -500,6 +518,7 @@ KeyValueEditorRow.propTypes = {
   forceInput: PropTypes.bool,
   allowMultiline: PropTypes.bool,
   allowFile: PropTypes.bool,
+  allowSelection: PropTypes.bool,
   sortable: PropTypes.bool,
   noDelete: PropTypes.bool,
   noDropZone: PropTypes.bool,

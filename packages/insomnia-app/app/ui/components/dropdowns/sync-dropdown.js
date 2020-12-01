@@ -26,7 +26,7 @@ import * as models from '../../../models';
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
 
 // Refresh dropdown periodically
-const REFRESH_PERIOD = 1000 * 60 * 1;
+const REFRESH_PERIOD = 1000 * 60;
 
 const DEFAULT_BRANCH_NAME = 'master';
 
@@ -84,7 +84,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     };
   }
 
-  async refreshMainAttributes(extraState?: Object = {}) {
+  async refreshMainAttributes(extraState: Object = {}) {
     const { vcs, syncItems, workspace } = this.props;
 
     if (!vcs.hasProject()) {
