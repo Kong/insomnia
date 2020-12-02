@@ -1,3 +1,4 @@
+// @flow
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
@@ -6,6 +7,8 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
+import orderedJSON from 'json-order';
+import { JSON_ORDER_SEPARATOR } from '../../../common/constants';
 
 @autobind
 class EnvironmentEditModal extends PureComponent {
@@ -21,7 +24,7 @@ class EnvironmentEditModal extends PureComponent {
     this.modal = n;
   }
 
-  _setEditorRef(n) {
+  _setEditorRef(n: EnvironmentEditor) {
     this._envEditor = n;
   }
 
@@ -36,6 +39,7 @@ class EnvironmentEditModal extends PureComponent {
       patch = {
         environment: data && data.object,
         environmentPropertyOrder: data && data.propertyOrder,
+        environmentTextValue: data ? data.textValue : JSON.stringify({}),
       };
     } catch (err) {
       // Invalid JSON probably
@@ -83,6 +87,15 @@ class EnvironmentEditModal extends PureComponent {
     const environmentInfo = {
       object: requestGroup ? requestGroup.environment : {},
       propertyOrder: requestGroup && requestGroup.environmentPropertyOrder,
+      textValue: requestGroup
+        ? requestGroup.environmentTextValue === JSON.stringify({})
+          ? orderedJSON.stringify(
+              requestGroup.environment,
+              requestGroup.environmentPropertyOrder || null,
+              JSON_ORDER_SEPARATOR,
+            )
+          : requestGroup.environmentTextValue
+        : JSON.stringify({}),
     };
 
     return (

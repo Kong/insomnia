@@ -13,6 +13,7 @@ type BaseRequestGroup = {
   description: string,
   environment: Object,
   environmentPropertyOrder: Object | null,
+  environmentTextValue: string,
   metaSortKey: number,
 };
 
@@ -24,6 +25,7 @@ export function init(): BaseRequestGroup {
     description: '',
     environment: {},
     environmentPropertyOrder: null,
+    environmentTextValue: JSON.stringify({}),
     metaSortKey: -1 * Date.now(),
   };
 }

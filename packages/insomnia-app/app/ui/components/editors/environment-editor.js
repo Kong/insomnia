@@ -5,7 +5,8 @@ import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
-
+import { Parser as objectLiteralParser } from 'literal-parser';
+import { objectLiteralValidator } from '../codemirror/lint/javascript-object-literal-lint';
 // NeDB field names cannot begin with '$' or contain a period '.'
 // Docs: https://github.com/DeNA/nedb#inserting-documents
 const INVALID_NEDB_KEY_REGEX = /^\$|\./;
@@ -25,6 +26,7 @@ export const ensureKeyIsValid = (key: string): string | null => {
 export type EnvironmentInfo = {
   object: Object,
   propertyOrder: Object | null,
+  textValue: string | null,
 };
 
 type Props = {
@@ -95,8 +97,11 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
   getValue(): EnvironmentInfo | null {
     if (this._editor) {
+      const textValue = this._editor.getValue();
+      const object = objectLiteralParser.parse(textValue);
+
       const data = orderedJSON.parse(
-        this._editor.getValue(),
+        JSON.stringify(object),
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
@@ -104,6 +109,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
       return {
         object: data.object,
         propertyOrder: data.map || null,
+        textValue: textValue,
       };
     } else {
       return null;
@@ -130,11 +136,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
     const { error } = this.state;
 
-    const defaultValue = orderedJSON.stringify(
-      environmentInfo.object,
-      environmentInfo.propertyOrder || null,
-      JSON_ORDER_SEPARATOR,
-    );
+    const defaultValue = environmentInfo.textValue;
 
     return (
       <div className="environment-editor">
@@ -152,6 +154,10 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           render={render}
           getRenderContext={getRenderContext}
           mode="application/json"
+          lintOptions={{
+            getAnnotations: objectLiteralValidator,
+            async: true,
+          }}
           {...(props: Object)}
         />
         {error && <p className="notice error margin">{error}</p>}

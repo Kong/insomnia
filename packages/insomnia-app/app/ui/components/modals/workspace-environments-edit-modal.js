@@ -14,12 +14,13 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import * as models from '../../../models';
-import { DEBOUNCE_MILLIS } from '../../../common/constants';
+import { DEBOUNCE_MILLIS, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import type { Workspace } from '../../../models/workspace';
 import type { Environment } from '../../../models/environment';
 import * as db from '../../../common/database';
 import HelpTooltip from '../help-tooltip';
 import Tooltip from '../tooltip';
+import orderedJSON from 'json-order';
 
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
@@ -361,6 +362,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       patch = {
         data: data && data.object,
         dataPropertyOrder: data && data.propertyOrder,
+        dataTextValue: data ? data.textValue : JSON.stringify({}),
       };
     } catch (err) {
       // Invalid JSON probably
@@ -396,6 +398,15 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     const environmentInfo = {
       object: activeEnvironment ? activeEnvironment.data : {},
       propertyOrder: activeEnvironment && activeEnvironment.dataPropertyOrder,
+      textValue: activeEnvironment
+        ? activeEnvironment.dataTextValue === JSON.stringify({})
+          ? orderedJSON.stringify(
+              activeEnvironment.data,
+              activeEnvironment.dataPropertyOrder || null,
+              JSON_ORDER_SEPARATOR,
+            )
+          : activeEnvironment.dataTextValue
+        : JSON.stringify({}),
     };
 
     return (

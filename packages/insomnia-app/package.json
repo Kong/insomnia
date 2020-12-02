@@ -141,6 +141,7 @@
     "jsonlint": "^1.6.3",
     "jsonpath": "^1.0.2",
     "jwt-authentication": "^0.4.0",
+    "literal-parser": "^2.1.0",
     "marked": "^0.3.9",
     "mime-types": "^2.1.18",
     "mkdirp": "^0.5.1",

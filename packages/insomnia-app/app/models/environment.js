@@ -14,6 +14,7 @@ type BaseEnvironment = {
   name: string,
   data: Object,
   dataPropertyOrder: Object | null,
+  dataTextValue: string,
   color: string | null,
   metaSortKey: number,
 
@@ -28,6 +29,7 @@ export function init() {
     name: 'New Environment',
     data: {},
     dataPropertyOrder: null,
+    dataTextValue: JSON.stringify({}),
     color: null,
     isPrivate: false,
     metaSortKey: Date.now(),
