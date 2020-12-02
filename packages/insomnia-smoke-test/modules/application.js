@@ -70,6 +70,10 @@ const launch = async config => {
     // https://github.com/electron-userland/spectron/issues/60
     await app.browserWindow.focus();
     await app.browserWindow.setAlwaysOnTop(true);
+
+    // When needed, fetch elements every 100ms rather than the default wait timeout (5000s)
+    // https://github.com/electron-userland/spectron/issues/763
+    await app.client.setTimeout({ implicit: 100 });
   });
 
   return app;
