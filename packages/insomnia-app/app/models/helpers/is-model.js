@@ -14,9 +14,10 @@ export function isRequest(obj: BaseModel): boolean {
   return obj.type === request.type;
 }
 
-export function isRequestId(id: string): boolean {
-  return id.startsWith(`${request.prefix}_`);
-}
+// TODO: Invalid until we can ensure all requests are prefixed by the id correctly INS-341
+// export function isRequestId(id: string): boolean {
+//   return id.startsWith(`${request.prefix}_`);
+// }
 
 export function isRequestGroup(obj: BaseModel): boolean {
   return obj.type === requestGroup.type;

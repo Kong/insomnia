@@ -4,7 +4,7 @@ import Dropdown from './dropdown';
 import DropdownItem from './dropdown-item';
 import DropdownDivider from './dropdown-divider';
 import SvgIcon from '../svg-icon';
-import Button from '../button';
+import { Button } from '../button';
 
 export default {
   title: 'Navigation | Dropdown',
