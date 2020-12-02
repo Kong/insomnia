@@ -71,9 +71,11 @@ const launch = async config => {
     await app.browserWindow.focus();
     await app.browserWindow.setAlwaysOnTop(true);
 
-    // When needed, fetch elements every 100ms rather than the default wait timeout (5000ms)
-    // https://github.com/electron-userland/spectron/issues/763
-    await app.client.setTimeout({ implicit: 100 });
+    // Set the implicit wait timeout to 0 (webdriver default)
+    //  https://webdriver.io/docs/timeouts.html#session-implicit-wait-timeout
+    // Spectron overrides it to an unreasonable value, as per the issue
+    //  https://github.com/electron-userland/spectron/issues/763
+    await app.client.setTimeout({ implicit: 0 });
   });
 
   return app;
