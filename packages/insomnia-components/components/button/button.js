@@ -28,13 +28,14 @@ export type ButtonProps = React.ElementProps<'button'> & {
   bg?: $Values<typeof ButtonThemeEnum>,
   variant?: $Values<typeof ButtonVariantEnum>,
   size?: $Values<typeof ButtonSizeEnum>,
+  radius?: string,
 };
 
 const StyledButton: React.ComponentType<ButtonProps> = styled.button`
   color: ${({ bg }) => (bg ? `var(--color-${bg})` : 'var(--color-font)')};
   text-align: center;
   font-size: var(--font-size-sm);
-  border-radius: 3px;
+  border-radius: ${({ radius }) => radius || '3px'};
   display: inline-flex !important;
   flex-direction: row !important;
   align-items: center !important;

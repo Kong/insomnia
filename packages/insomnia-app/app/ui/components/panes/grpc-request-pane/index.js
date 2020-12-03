@@ -2,7 +2,7 @@
 import React from 'react';
 import { Pane, PaneBody, PaneHeader } from '../pane';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import GrpcMethodDropdown from '../../dropdowns/grpc-method-dropdown';
+import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown';
 import GrpcTabbedMessages from '../../viewers/grpc-tabbed-messages';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import type { Settings } from '../../../../models/settings';

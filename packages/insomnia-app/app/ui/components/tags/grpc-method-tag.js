@@ -1,6 +1,7 @@
 // @flow
 import React from 'react';
-import Tooltip from '../tooltip';
+import { Tooltip } from 'insomnia-components';
+
 import type { GrpcMethodType } from '../../../network/grpc/method';
 import { GrpcMethodTypeAcronym, GrpcMethodTypeName } from '../../../network/grpc/method';
 import styled from 'styled-components';
@@ -15,7 +16,7 @@ const StyledTag = styled.div`
 `;
 
 const GrpcMethodTag = ({ methodType }: Props) => (
-  <Tooltip message={GrpcMethodTypeName[methodType]} position="bottom" delay={500}>
+  <Tooltip message={GrpcMethodTypeName[methodType]} position="left" delay={500}>
     <StyledTag>
       <em>{GrpcMethodTypeAcronym[methodType]}</em>
     </StyledTag>
