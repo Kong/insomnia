@@ -15,6 +15,7 @@ describe('getGrpcPathSegments', () => {
     ['pkg', 'svc', 'mthd'],
     ['a.pkg', 'svc', 'mthd'],
     ['a.2.pkg', 'svc', 'mthd'],
+    ['.a.2.pkg', 'svc', 'mthd'],
   ])(
     'should extract package, service and method from "/%s.%s/%s"',
     (packageName, serviceName, methodName) => {
