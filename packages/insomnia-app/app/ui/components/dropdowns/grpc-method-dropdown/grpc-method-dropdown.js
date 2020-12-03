@@ -4,7 +4,11 @@ import { Dropdown, DropdownItem, DropdownDivider } from 'insomnia-components';
 import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
 import styled from 'styled-components';
 import GrpcMethodTag from '../../tags/grpc-method-tag';
-import { getShortGrpcPath, groupGrpcMethodsByPackage } from '../../../../common/grpc-paths';
+import {
+  getShortGrpcPath,
+  groupGrpcMethodsByPackage,
+  NO_PACKAGE_KEY,
+} from '../../../../common/grpc-paths';
 import type { GrpcMethodInfo } from '../../../../common/grpc-paths';
 import GrpcMethodDropdownButton from './grpc-method-dropdown-button';
 
@@ -47,7 +51,9 @@ const GrpcMethodDropdown = ({
       )}
       {Object.keys(groupedByPkg).map(pkgName => (
         <React.Fragment key={pkgName}>
-          <DropdownDivider children={pkgName && <NormalCase>pkg: {pkgName}</NormalCase>} />
+          <DropdownDivider
+            children={pkgName !== NO_PACKAGE_KEY && <NormalCase>pkg: {pkgName}</NormalCase>}
+          />
           {groupedByPkg[pkgName].map(({ segments, type, fullPath }: GrpcMethodInfo) => (
             <DropdownItem
               key={fullPath}
