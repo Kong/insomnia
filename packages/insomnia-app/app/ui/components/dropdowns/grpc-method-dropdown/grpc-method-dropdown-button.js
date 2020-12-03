@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { getGrpcPathSegments, getShortGrpcPath } from '../../../../common/grpc-paths';
 import { Button, Tooltip } from 'insomnia-components';
 
-const SpaceBetween = styled.span`
+const FlexSpaceBetween = styled.span`
   width: 100%;
   height: 100%;
   display: flex;
@@ -27,10 +27,10 @@ const useLabel = (fullPath: string): string =>
 const GrpcMethodDropdownButton = ({ fullPath }: Props) => (
   <Button className="tall wide" variant="text" size="medium" radius="0">
     <Tooltip className="tall wide" message={fullPath} position="bottom" delay={500}>
-      <SpaceBetween>
+      <FlexSpaceBetween>
         {useLabel(fullPath)}
         <i className="fa fa-caret-down pad-left-sm" />
-      </SpaceBetween>
+      </FlexSpaceBetween>
     </Tooltip>
   </Button>
 );

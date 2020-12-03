@@ -13,7 +13,7 @@ import type { GrpcMethodInfo } from '../../../../common/grpc-paths';
 import GrpcMethodDropdownButton from './grpc-method-dropdown-button';
 
 type Props = {
-  disabled: boolean,
+  disabled?: boolean,
   methods: Array<GrpcMethodDefinition>,
   selectedMethod?: GrpcMethodDefinition,
   handleChange: string => Promise<void>,

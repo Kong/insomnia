@@ -35,11 +35,14 @@ const StyledButton: React.ComponentType<ButtonProps> = styled.button`
   color: ${({ bg }) => (bg ? `var(--color-${bg})` : 'var(--color-font)')};
   text-align: center;
   font-size: var(--font-size-sm);
-  border-radius: ${({ radius }) => radius || '3px'};
   display: inline-flex !important;
   flex-direction: row !important;
   align-items: center !important;
   border: 1px solid transparent;
+
+  ${({ radius }) => css`
+    border-radius: ${radius};
+  `};
 
   ${({ size }) => {
     switch (size) {
@@ -128,11 +131,12 @@ const StyledButton: React.ComponentType<ButtonProps> = styled.button`
   }
 `;
 
-export const Button = ({ variant, bg, size, ...props }: ButtonProps) => (
+export const Button = ({ variant, bg, size, radius, ...props }: ButtonProps) => (
   <StyledButton
     {...props}
     variant={variant || 'outlined'}
     bg={bg || 'default'}
     size={size || 'default'}
+    radius={radius || '3px'}
   />
 );
