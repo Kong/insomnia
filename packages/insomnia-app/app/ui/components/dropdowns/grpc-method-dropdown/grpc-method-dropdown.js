@@ -4,7 +4,7 @@ import { Dropdown, DropdownItem, DropdownDivider } from 'insomnia-components';
 import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
 import styled from 'styled-components';
 import GrpcMethodTag from '../../tags/grpc-method-tag';
-import { groupGrpcMethodsByPackage } from '../../../../common/grpc-paths';
+import { getShortGrpcPath, groupGrpcMethodsByPackage } from '../../../../common/grpc-paths';
 import type { GrpcMethodInfo } from '../../../../common/grpc-paths';
 import GrpcMethodDropdownButton from './grpc-method-dropdown-button';
 
@@ -16,8 +16,8 @@ type Props = {
   handleChangeProtoFile: string => Promise<void>,
 };
 
-const Lowercase = styled.span`
-  text-transform: lowercase;
+const NormalCase = styled.span`
+  text-transform: initial;
 `;
 
 const GrpcMethodDropdown = ({
@@ -47,20 +47,18 @@ const GrpcMethodDropdown = ({
       )}
       {Object.keys(groupedByPkg).map(pkgName => (
         <React.Fragment key={pkgName}>
-          <DropdownDivider children={pkgName && <Lowercase>{pkgName}</Lowercase>} />
-          {groupedByPkg[pkgName].map(
-            ({ segments: { serviceName, methodName }, type, fullPath }: GrpcMethodInfo) => (
-              <DropdownItem
-                key={fullPath}
-                onClick={handleChange}
-                value={fullPath}
-                disabled={disabled}
-                selected={fullPath === selectedMethod?.path}
-                icon={<GrpcMethodTag methodType={type} />}>
-                {pkgName ? `${serviceName}/${methodName}` : fullPath}
-              </DropdownItem>
-            ),
-          )}
+          <DropdownDivider children={pkgName && <NormalCase>pkg: {pkgName}</NormalCase>} />
+          {groupedByPkg[pkgName].map(({ segments, type, fullPath }: GrpcMethodInfo) => (
+            <DropdownItem
+              key={fullPath}
+              onClick={handleChange}
+              value={fullPath}
+              disabled={disabled}
+              selected={fullPath === selectedMethod?.path}
+              icon={<GrpcMethodTag methodType={type} />}>
+              {getShortGrpcPath(segments, fullPath)}
+            </DropdownItem>
+          ))}
         </React.Fragment>
       ))}
     </Dropdown>

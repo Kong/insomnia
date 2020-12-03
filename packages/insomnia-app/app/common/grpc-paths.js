@@ -4,7 +4,7 @@ import type { GrpcMethodDefinition, GrpcMethodType } from '../network/grpc/metho
 import { groupBy } from 'lodash';
 import { getMethodType } from '../network/grpc/method';
 
-const PROTO_PATH_REGEX = /^\/(?<package>[\w.]+)\.(?<service>\w+)\/(?<method>\w+)$/;
+const PROTO_PATH_REGEX = /^\/(?:(?<package>[\w.]+)\.)?(?<service>\w+)\/(?<method>\w+)$/;
 
 type GrpcPathSegments = {
   packageName?: string,
@@ -42,4 +42,11 @@ export const groupGrpcMethodsByPackage = (
   }));
 
   return groupBy(mapped, m => m.segments.packageName || '');
+};
+
+export const getShortGrpcPath = (
+  { packageName, serviceName, methodName }: GrpcPathSegments,
+  fullPath: string,
+): string => {
+  return packageName && serviceName && methodName ? `/${serviceName}/${methodName}` : fullPath;
 };

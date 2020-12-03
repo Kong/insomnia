@@ -1,7 +1,7 @@
 // @flow
 import React from 'react';
 import styled from 'styled-components';
-import { getGrpcPathSegments } from '../../../../common/grpc-paths';
+import { getGrpcPathSegments, getShortGrpcPath } from '../../../../common/grpc-paths';
 import { Button, Tooltip } from 'insomnia-components';
 
 const SpaceBetween = styled.span`
@@ -17,8 +17,8 @@ type Props = { fullPath?: string };
 const useLabel = (fullPath: string): string =>
   React.useMemo(() => {
     if (fullPath) {
-      const { packageName, serviceName, methodName } = getGrpcPathSegments(fullPath);
-      return packageName && serviceName && methodName ? `${serviceName}/${methodName}` : fullPath;
+      const segments = getGrpcPathSegments(fullPath);
+      return getShortGrpcPath(segments, fullPath);
     }
 
     return 'Select Method';
