@@ -16,6 +16,7 @@ import Tooltip from '../tooltip';
 import PromptButton from '../base/prompt-button';
 import { gitRollback } from '../../../sync/git/git-rollback';
 import classnames from 'classnames';
+import parseGitPath from '../../../sync/git/parse-git-path';
 
 type Props = {|
   workspace: Workspace,
@@ -215,14 +216,10 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         }
       }
 
-      // We know that type is in the path but we don't know where. This
-      // is the safest way to check for the type
-      let type = 'Unknown';
-      for (const t of models.types()) {
-        if (gitPath.includes(t)) {
-          type = t;
-          break;
-        }
+      // We know that type is in the path; extract it. If the model is not found, set to Unknown.
+      let { type } = parseGitPath(gitPath);
+      if (!models.types().includes(type)) {
+        type = 'Unknown';
       }
 
       const added = status.includes('added');

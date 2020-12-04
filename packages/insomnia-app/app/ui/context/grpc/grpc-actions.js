@@ -120,12 +120,12 @@ const invalidate = (requestId: string): InvalidateAction => ({
   requestId,
 });
 
-const invalidateMany = async (protoFileId: string): Promise<InvalidateManyAction> => {
+const invalidateMany = async (protoFileId: string): Promise<InvalidateManyAction | undefined> => {
   const impacted = await models.grpcRequest.findByProtoFileId(protoFileId);
 
   // skip invalidation if no requests are linked to the proto file
   if (!impacted.length) {
-    return;
+    return undefined;
   }
 
   return {
