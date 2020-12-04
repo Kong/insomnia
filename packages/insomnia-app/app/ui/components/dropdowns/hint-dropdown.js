@@ -9,6 +9,7 @@ import { showPrompt } from '../modals';
 type Props = {
   title?: string,
   hint?: string,
+  readOnly?: boolean,
   placeholder?: string,
   items?: Array<string>,
   defaultValue?: string,
@@ -37,6 +38,7 @@ class HintDropdown extends React.PureComponent<Props> {
 
   render() {
     const { title, hint, placeholder, selected, items, submitName } = this.state;
+    const { readOnly } = this.props;
     return (
       <>
         <Dropdown className="editor--single-line wide">
@@ -52,24 +54,26 @@ class HintDropdown extends React.PureComponent<Props> {
             );
           })}
         </Dropdown>
-        <button
-          className="btn btn--micro no-pad"
-          style={{ marginLeft: 3 }}
-          onClick={() =>
-            showPrompt({
-              inputType: 'hint',
-              title: title,
-              hints: items,
-              hint: hint,
-              submitName: submitName,
-              onChange: this._handleOnChange,
-            })
-          }>
-          <h6>
-            <i className="fa fa-edit space-right" />
-            Edit
-          </h6>
-        </button>
+        {!readOnly && (
+          <button
+            className="btn btn--micro no-pad"
+            style={{ marginLeft: 3 }}
+            onClick={() =>
+              showPrompt({
+                inputType: 'hint',
+                title: title,
+                hints: items,
+                hint: hint,
+                submitName: submitName,
+                onChange: this._handleOnChange,
+              })
+            }>
+            <h6>
+              <i className="fa fa-edit space-right" />
+              Edit
+            </h6>
+          </button>
+        )}
       </>
     );
   }
