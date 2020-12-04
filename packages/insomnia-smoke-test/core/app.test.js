@@ -39,7 +39,7 @@ describe('Application launch', function() {
       await debug.workspaceDropdownExists(app);
 
       // Copy text to clipboard
-      const buffer = await fs.promises.readFile(`${__dirname}/../prism/swagger2.yaml`);
+      const buffer = await fs.promises.readFile(`${__dirname}/../fixtures/swagger2.yaml`);
       const swagger2Text = buffer.toString();
       await app.electron.clipboard.writeText(swagger2Text);
 
