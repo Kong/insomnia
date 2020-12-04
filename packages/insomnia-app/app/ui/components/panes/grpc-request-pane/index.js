@@ -48,16 +48,15 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
     <Pane type="request">
       <PaneHeader className="grpc-urlbar">
         <div className="method-grpc pad">gRPC</div>
-        <form className={'form-control form-control--outlined'}>
-          <OneLineEditor
-            key={uniquenessKey}
-            type="text"
-            forceEditor
-            defaultValue={activeRequest.url}
-            placeholder="grpcb.in:9000"
-            onChange={handleChange.url}
-          />
-        </form>
+        <OneLineEditor
+          className="urlbar__url-editor"
+          key={uniquenessKey}
+          type="text"
+          forceEditor
+          defaultValue={activeRequest.url}
+          placeholder="grpcb.in:9000"
+          onChange={handleChange.url}
+        />
         <GrpcMethodDropdown
           disabled={running}
           methods={methods}
