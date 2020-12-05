@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-kong-portal",
-  "version": "2.2.24",
+  "version": "2.2.26",
   "main": "dist/index.js",
   "scripts": {
     "build": "webpack --config webpack.config.js --display errors-only",
@@ -19,7 +19,7 @@
     "@babel/preset-flow": "^7.9.0",
     "@babel/preset-react": "^7.9.4",
     "autobind-decorator": "^2.4.0",
-    "insomnia-components": "^2.2.24",
+    "insomnia-components": "^2.2.26",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "url-join": "^4.0.1",

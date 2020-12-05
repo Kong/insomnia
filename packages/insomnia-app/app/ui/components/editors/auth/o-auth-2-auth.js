@@ -255,7 +255,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
               className="btn btn--super-duper-compact"
               id="use-pkce"
               onClick={onChange}
-              value={authentication.usePkce}
+              value={!authentication.usePkce}
               title={authentication.usePkce ? 'Disable PKCE' : 'Enable PKCE'}>
               {authentication.usePkce ? (
                 <i className="fa fa-check-square-o" />
