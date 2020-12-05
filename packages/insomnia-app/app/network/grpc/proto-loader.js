@@ -27,7 +27,11 @@ export const loadMethods = async (
     return [];
   }
 
-  const tempProtoFile = await writeProtoFile(protoFile.protoText);
+  return await loadMethodsFromText(protoFile.protoText);
+};
+
+export const loadMethodsFromText = async (text: string): Promise<Array<GrpcMethodDefinition>> => {
+  const tempProtoFile = await writeProtoFile(text);
   const definition = await protoLoader.load(tempProtoFile, GRPC_LOADER_OPTIONS);
 
   return Object.values(definition)

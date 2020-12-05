@@ -4,7 +4,11 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import clone from 'clone';
 import * as templating from '../../../templating';
-import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/utils';
+import type {
+  NunjucksActionTag,
+  NunjucksParsedTag,
+  NunjucksParsedTagArg,
+} from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
@@ -15,6 +19,8 @@ import type { Workspace } from '../../../models/workspace';
 import type { PluginArgumentEnumOption } from '../../../templating/extensions/index';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown/index';
 import FileInputButton from '../base/file-input-button';
+import { getTemplateTags } from '../../../plugins';
+import * as pluginContexts from '../../../plugins/context';
 
 type Props = {
   handleRender: Function,
@@ -250,6 +256,20 @@ class TagEditor extends React.PureComponent<Props, State> {
     const tagDefinitions = await templating.getTagDefinitions();
     const tagDefinition = tagDefinitions.find(d => d.name === name) || null;
     this._update(this.state.tagDefinitions, tagDefinition, null, false);
+  }
+
+  async _handleActionClick(action: NunjucksActionTag) {
+    const templateTags = await getTemplateTags();
+    const activeTemplateTag = templateTags.find(({ templateTag }) => {
+      return templateTag.name === this.state.activeTagData.name;
+    });
+
+    const helperContext = {
+      ...pluginContexts.store.init(activeTemplateTag.plugin),
+    };
+
+    await action.run(helperContext);
+    return this._handleRefresh();
   }
 
   _setSelectRef(n: ?HTMLSelectElement) {
@@ -626,6 +646,33 @@ class TagEditor extends React.PureComponent<Props, State> {
     );
   }
 
+  renderActions(actions = []) {
+    return (
+      <div className="form-row">
+        <div className="form-control">
+          <label>Actions</label>
+          <div className="form-row">{actions.map(this.renderAction)}</div>
+        </div>
+      </div>
+    );
+  }
+
+  renderAction(action: NunjucksActionTag, index: number) {
+    const name = action.name;
+    const icon = action.icon ? <i className={action.icon} /> : undefined;
+
+    return (
+      <button
+        key={name}
+        className="btn btn--clicky btn--largest"
+        type="button"
+        onClick={() => this._handleActionClick(action)}>
+        {icon}
+        {name}
+      </button>
+    );
+  }
+
   render() {
     const { error, preview, activeTagDefinition, activeTagData, rendering } = this.state;
 
@@ -671,6 +718,9 @@ class TagEditor extends React.PureComponent<Props, State> {
           activeTagDefinition.args.map((argDefinition: NunjucksParsedTagArg, index) =>
             this.renderArg(argDefinition, activeTagData.args, index),
           )}
+
+        {activeTagDefinition?.actions?.length && this.renderActions(activeTagDefinition.actions)}
+
         {!activeTagDefinition && (
           <div className="form-control form-control--outlined">
             <label>

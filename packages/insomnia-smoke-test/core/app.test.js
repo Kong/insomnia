@@ -1,6 +1,9 @@
 import * as debug from '../modules/debug';
 import * as client from '../modules/client';
 import { launchCore, stop } from '../modules/application';
+import * as dropdown from '../modules/dropdown';
+import * as settings from '../modules/settings';
+import fs from 'fs';
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
@@ -29,6 +32,35 @@ describe('Application launch', function() {
 
     await debug.expect200(app);
   });
+
+  it.each([true, false])(
+    'imports swagger 2 and sends request: new workspace=%s ',
+    async newWorkspace => {
+      await debug.workspaceDropdownExists(app);
+
+      // Copy text to clipboard
+      const buffer = await fs.promises.readFile(`${__dirname}/../fixtures/swagger2.yaml`);
+      const swagger2Text = buffer.toString();
+      await app.electron.clipboard.writeText(swagger2Text);
+
+      // Click dropdown and open import modal
+      const workspaceDropdown = await debug.clickWorkspaceDropdown(app);
+      await dropdown.clickDropdownItemByText(workspaceDropdown, 'Import/Export');
+
+      // Import from clipboard into new/current workspace
+      await settings.importFromClipboard(app, newWorkspace);
+
+      // Click imported folder and request
+      await debug.clickFolderByName(app, 'custom-tag');
+      await debug.clickRequestByName(app, 'get pet by id');
+
+      // Click send
+      await debug.clickSendRequest(app);
+
+      // Ensure 200
+      await debug.expect200(app);
+    },
+  );
 
   it('sends CSV request and shows rich response', async () => {
     const url = 'http://127.0.0.1:4010/csv';

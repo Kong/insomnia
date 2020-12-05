@@ -1,6 +1,7 @@
 import { clickTabByText } from './tabs';
 import { mapAccelerator } from 'spectron-keys';
 import * as modal from './modal';
+import * as dropdown from './dropdown';
 
 export const openWithKeyboardShortcut = async app => {
   await app.client.keys(mapAccelerator('CommandOrControl+,'));
@@ -18,6 +19,17 @@ export const goToPlugins = async app => {
 
   // Wait for the plugins component to show
   await app.client.react$('Plugins').then(e => e.waitForDisplayed());
+};
+
+export const importFromClipboard = async (app, newWorkspace = false) => {
+  const importExport = await app.client.react$('ImportExport');
+  await importExport.waitForDisplayed();
+
+  await importExport.$('button*=Import Data').then(e => e.click());
+
+  await dropdown.clickOpenDropdownItemByText(app, 'From Clipboard');
+
+  await modal.clickModalFooterByText(app, 'AskModal', newWorkspace ? 'New Workspace' : 'Current');
 };
 
 export const installPlugin = async (app, pluginName) => {

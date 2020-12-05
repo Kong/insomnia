@@ -5,6 +5,12 @@ export const workspaceDropdownExists = async (app, workspaceName = 'Insomnia') =
   await app.client.waitUntilTextExists('.workspace-dropdown', workspaceName);
 };
 
+export const clickWorkspaceDropdown = async app => {
+  const dropdown = await app.client.react$('WorkspaceDropdown');
+  await dropdown.click();
+  return dropdown;
+};
+
 export const createNewRequest = async (app, name) => {
   await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
 
@@ -32,14 +38,29 @@ export const createNewRequest = async (app, name) => {
 };
 
 const waitUntilRequestIsActive = async (app, name) => {
-  const requestIsActive = async () => {
-    const requests = await app.client.react$$('SidebarRequestRow', { props: { isActive: true } });
-    const firstRequest = requests[0];
-    const activeRequestName = await firstRequest.react$('Editable').then(e => e.getText());
-    return activeRequestName === name;
-  };
+  const request = await app.client.react$('SidebarRequestRow', {
+    props: { isActive: true, request: { name } },
+  });
 
-  await app.client.waitUntil(requestIsActive);
+  await request.waitForDisplayed();
+};
+
+export const clickFolderByName = async (app, name) => {
+  const folder = await app.client.react$('SidebarRequestGroupRow', {
+    props: { requestGroup: { name } },
+  });
+
+  await folder.waitForClickable();
+  await folder.click();
+};
+
+export const clickRequestByName = async (app, name) => {
+  const folder = await app.client.react$('SidebarRequestRow', {
+    props: { request: { name } },
+  });
+
+  await folder.waitForClickable();
+  await folder.click();
 };
 
 export const typeInUrlBar = async (app, url) => {
@@ -54,6 +75,13 @@ export const clickSendRequest = async app => {
     .react$('RequestUrlBar')
     .then(e => e.$('.urlbar__send-btn'))
     .then(e => e.click());
+
+  // Wait for spinner to show
+  const spinner = await app.client.react$('ResponseTimer');
+  await spinner.waitForDisplayed();
+
+  // Wait for spinner to hide
+  await spinner.waitForDisplayed({ reverse: true });
 };
 
 export const expect200 = async app => {

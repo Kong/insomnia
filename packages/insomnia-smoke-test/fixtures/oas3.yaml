@@ -1,7 +1,7 @@
 openapi: "3.0.0"
 info:
   version: 1.0.0
-  title: E2E testing specification
+  title: E2E testing specification - openapi 3
   description: This is a specification used for E2E testing of Insomnia, and is served via prism
 servers:
   - url: http://127.0.0.1:4010

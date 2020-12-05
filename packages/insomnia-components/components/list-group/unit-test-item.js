@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { useToggle } from 'react-use';
 import { motion } from 'framer-motion';
 import SvgIcon from '../svg-icon';
-import Button from '../button';
+import { Button } from '../button';
 import ListGroupItem from './list-group-item';
 import UnitTestRequestSelector from './unit-test-request-selector';
 

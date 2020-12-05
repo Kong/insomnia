@@ -49,12 +49,16 @@ class RequestCreateModal extends PureComponent {
     }
   }
 
+  _isGrpcSelected() {
+    return this.state.selectedMethod === METHOD_GRPC;
+  }
+
   async _handleSubmit(e) {
     e.preventDefault();
 
     const { parentId, selectedContentType, selectedMethod } = this.state;
     const requestName = this._input.value;
-    if (selectedMethod === METHOD_GRPC) {
+    if (this._isGrpcSelected()) {
       showModal(ProtoFilesModal, {
         onSave: async (protoFileId: string) => {
           const createdRequest = await models.grpcRequest.create({
@@ -172,9 +176,11 @@ class RequestCreateModal extends PureComponent {
           </form>
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left italic txt-sm tall">
-            * Tip: paste Curl command into URL afterwards to import it
-          </div>
+          {!this._isGrpcSelected() && (
+            <div className="margin-left italic txt-sm tall">
+              * Tip: paste Curl command into URL afterwards to import it
+            </div>
+          )}
           <button className="btn" onClick={this._handleSubmit}>
             Create
           </button>

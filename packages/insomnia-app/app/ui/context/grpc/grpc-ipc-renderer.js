@@ -60,10 +60,14 @@ export const grpcIpcRenderer = {
 export const useGrpcIpc: string => GrpcRequestEvent => void = requestId =>
   React.useCallback((channel: GrpcRequestEvent) => sendGrpcIpc(channel, requestId), [requestId]);
 
-const sendGrpcIpc = (channel: GrpcRequestEvent, requestId: string) => {
-  ipcRenderer.send(channel, requestId);
+const sendGrpcIpc = (channel: GrpcRequestEvent, requestId?: string) => {
+  if (requestId) {
+    ipcRenderer.send(channel, requestId);
+  }
 };
 
-export const sendGrpcIpcMultiple = (channel: GrpcRequestEvent, requestIds: Array<string>) => {
-  ipcRenderer.send(channel, requestIds);
+export const sendGrpcIpcMultiple = (channel: GrpcRequestEvent, requestIds?: Array<string>) => {
+  if (requestIds?.length) {
+    ipcRenderer.send(channel, requestIds);
+  }
 };
