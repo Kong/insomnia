@@ -96,7 +96,7 @@ describe('Application launch', function() {
   //  2. sending basic auth will succeed
   //  3. sending basic auth with special characters encoded with IS0-8859-1 will succeed
   //  4. sending while basic auth is disabled within insomnnia will fail
-  fit('sends request with basic authentication', async () => {
+  it('sends request with basic authentication', async () => {
     const url = 'http://127.0.0.1:4010/auth/basic';
 
     await debug.workspaceDropdownExists(app);

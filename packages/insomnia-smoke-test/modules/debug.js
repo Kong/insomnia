@@ -137,6 +137,8 @@ export const clickRequestAuthTab = async app => {
     .then(e => e.click());
 };
 
+const basicAuthPause = 200;
+
 export const clickBasicAuth = async app => {
   await app.client
     .react$('AuthDropdown')
@@ -144,7 +146,7 @@ export const clickBasicAuth = async app => {
     .then(e => e.click());
 
   // Wait for basic auth to be enabled on the request
-  await app.client.pause(500);
+  await app.client.pause(basicAuthPause);
 };
 
 export const expectNoAuthSelected = async app => {
@@ -160,8 +162,11 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password, 
   const usernameEditor = await app.client.react$('OneLineEditor', {
     props: { id: 'username' },
   });
-  await usernameEditor.waitForExist();
   await usernameEditor.click();
+
+  // Wait for the username editor field to update
+  await app.client.pause(basicAuthPause);
+
   if (clear) {
     await selectAll(app);
   }
@@ -170,11 +175,11 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password, 
   const passwordEditor = await app.client.react$('OneLineEditor', {
     props: { id: 'password' },
   });
-  await passwordEditor.waitForExist();
   await passwordEditor.click();
 
-  // Allow username changes to persist
-  await app.client.pause(100);
+  // Allow username changes to persist and wait for
+  // the password editor field to update
+  await app.client.pause(basicAuthPause);
 
   if (clear) {
     await selectAll(app);
@@ -182,7 +187,7 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password, 
   await passwordEditor.keys(password);
 
   // Allow password changes to persist
-  await app.client.pause(100);
+  await app.client.pause(basicAuthPause);
 };
 
 export const toggleBasicAuthEnabled = async app => {
@@ -191,7 +196,7 @@ export const toggleBasicAuthEnabled = async app => {
     .then(e => e.$('button#enabled'))
     .then(e => e.click());
   // Allow toggle to persist
-  await app.client.pause(100);
+  await app.client.pause(basicAuthPause);
 };
 
 export const toggleBasicAuthEncoding = async app => {
@@ -201,7 +206,7 @@ export const toggleBasicAuthEncoding = async app => {
     .then(e => e.click());
 
   // Allow toggle to persist
-  await app.client.pause(100);
+  await app.client.pause(basicAuthPause);
 };
 
 export const expectText = async (element, text) => {
