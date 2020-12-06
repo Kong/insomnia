@@ -479,13 +479,15 @@ export async function _actuallySend(
       // Set proxy settings if we have them
       if (settings.proxyEnabled) {
         const { protocol } = urlParse(renderedRequest.url);
-        const { httpProxy, httpsProxy, noProxy } = settings;
+        const { httpProxy, httpsProxy, noProxy, httpProxyUser, httpProxyPassword } = settings;
         const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
         const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
         addTimelineText(`Enable network proxy for ${protocol || ''}`);
         if (proxy) {
           setOpt(Curl.option.PROXY, proxy);
           setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
+          setOpt(Curl.option.PROXYUSERNAME, httpProxyUser);
+          setOpt(Curl.option.PROXYPASSWORD, httpProxyPassword);
         }
         if (noProxy) {
           setOpt(Curl.option.NOPROXY, noProxy);

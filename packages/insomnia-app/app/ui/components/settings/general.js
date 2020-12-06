@@ -441,6 +441,16 @@ class General extends React.PureComponent<Props, State> {
             },
           )}
         </div>
+        <div className="form-row pad-top-sm">
+          {this.renderTextSetting('HTTP Proxy User', 'httpProxyUser', '', {
+            placeholder: 'user',
+            disabled: !settings.proxyEnabled,
+          })}
+          {this.renderTextSetting('HTTPS Proxy Password', 'httpProxyPassword', '', {
+            placeholder: 'pass',
+            disabled: !settings.proxyEnabled,
+          })}
+        </div>
 
         {(isWindows() || isMac()) && (
           <React.Fragment>
