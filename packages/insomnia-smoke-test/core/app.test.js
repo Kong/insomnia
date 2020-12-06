@@ -4,6 +4,7 @@ import { launchCore, stop } from '../modules/application';
 import * as dropdown from '../modules/dropdown';
 import * as settings from '../modules/settings';
 import fs from 'fs';
+import { basicAuthCreds } from '../fixtures/constants';
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
@@ -96,8 +97,10 @@ describe('Application launch', function() {
   //  2. sending basic auth will succeed
   //  3. sending basic auth with special characters encoded with IS0-8859-1 will succeed
   //  4. sending while basic auth is disabled within insomnnia will fail
+
   it('sends request with basic authentication', async () => {
     const url = 'http://127.0.0.1:4010/auth/basic';
+    const { latin1, utf8 } = basicAuthCreds;
 
     await debug.workspaceDropdownExists(app);
     await debug.createNewRequest(app, 'basic-auth');
@@ -116,7 +119,7 @@ describe('Application launch', function() {
     await debug.clickBasicAuth(app);
 
     // Enter username and password with regular characters
-    await debug.typeBasicAuthUsernameAndPassword(app, 'user', 'pass');
+    await debug.typeBasicAuthUsernameAndPassword(app, utf8.raw.user, utf8.raw.pass);
 
     // Send request with auth present
     await debug.clickSendRequest(app);
@@ -130,11 +133,11 @@ describe('Application launch', function() {
 
     await debug.expectContainsText(
       await debug.getTimelineViewer(app),
-      '> Authorization: Basic dXNlcjpwYXNz',
+      `> Authorization: Basic ${utf8.encoded.combined}`,
     );
 
     // Clear inputs and type username/password with special characters
-    await debug.typeBasicAuthUsernameAndPassword(app, 'user-é', 'pass-é', true);
+    await debug.typeBasicAuthUsernameAndPassword(app, latin1.raw.user, latin1.raw.pass, true);
 
     // Toggle basic auth and encoding enabled
     await debug.toggleBasicAuthEncoding(app);
@@ -143,13 +146,9 @@ describe('Application launch', function() {
     await debug.clickSendRequest(app);
     await debug.expect200(app);
 
-    // Force update timeline tab
-    await debug.clickPreviewTab(app);
-    await debug.clickTimelineTab(app);
-
     await debug.expectContainsText(
       await debug.getTimelineViewer(app),
-      '> Authorization: Basic dXNlci3pOnBhc3Mt6Q==',
+      `> Authorization: Basic ${latin1.encoded.combined}`,
     );
 
     // Toggle basic auth to disabled
@@ -158,10 +157,6 @@ describe('Application launch', function() {
     // Send request
     await debug.clickSendRequest(app);
     await debug.expect401(app);
-
-    // Force update timeline tab
-    await debug.clickPreviewTab(app);
-    await debug.clickTimelineTab(app);
 
     await debug.expectNotContainsText(await debug.getTimelineViewer(app), '> Authorization: Basic');
   });

@@ -21,11 +21,11 @@ app.get('/csv', (_, res) => {
   );
 });
 
-const { utf8, iso88591 } = basicAuthCreds;
+const { utf8, latin1 } = basicAuthCreds;
 
 const users = {
-  [utf8.user]: utf8.pass,
-  [iso88591.user]: iso88591.pass,
+  [utf8.encoded.user]: utf8.encoded.pass,
+  [latin1.encoded.user]: latin1.encoded.pass,
 };
 
 basicAuthRouter.use(

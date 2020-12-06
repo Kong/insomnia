@@ -137,7 +137,7 @@ export const clickRequestAuthTab = async app => {
     .then(e => e.click());
 };
 
-const basicAuthPause = 200;
+const basicAuthPause = 300;
 
 export const clickBasicAuth = async app => {
   await app.client
