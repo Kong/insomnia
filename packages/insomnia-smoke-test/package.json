@@ -8,7 +8,7 @@
     "spectron:designer:build": "cross-env BUNDLE=build xvfb-maybe jest --detectOpenHandles --testPathPattern designer",
     "spectron:core:package": "cross-env BUNDLE=package xvfb-maybe jest --detectOpenHandles --testPathPattern core",
     "spectron:designer:package": "cross-env BUNDLE=package xvfb-maybe jest --detectOpenHandles --testPathPattern designer",
-    "serve": "node tinyhttp/index.js",
+    "serve": "node server/index.js",
     "with-mock": "concurrently --names server,spectron --success first --kill-others \"npm run serve\"",
     "test:core:build": "npm run with-mock \"npm run spectron:core:build\"",
     "test:designer:build": "npm run with-mock \"npm run spectron:designer:build\"",
@@ -16,10 +16,10 @@
     "test:designer:package": "npm run with-mock \"npm run spectron:designer:package\""
   },
   "devDependencies": {
-    "@tinyhttp/app": "^1.0.2",
-    "@tinyhttp/logger": "^1.0.2",
     "concurrently": "^5.3.0",
     "cross-env": "^7.0.2",
+    "express": "^4.17.1",
+    "express-basic-auth": "^1.2.0",
     "faker": "^5.1.0",
     "jest": "^26.4.2",
     "spectron": "^11.1.0",
