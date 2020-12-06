@@ -96,7 +96,7 @@ describe('Application launch', function() {
   //  2. sending basic auth will succeed
   //  3. sending basic auth with special characters encoded with IS0-8859-1 will succeed
   //  4. sending while basic auth is disabled within insomnnia will fail
-  it('sends request with basic authentication', async () => {
+  fit('sends request with basic authentication', async () => {
     const url = 'http://127.0.0.1:4010/auth/basic';
 
     await debug.workspaceDropdownExists(app);
@@ -106,8 +106,6 @@ describe('Application launch', function() {
     // Send request with no auth present
     await debug.clickSendRequest(app);
     await debug.expect401(app);
-    const responseViewer = await debug.getResponseViewer(app);
-    await debug.expectText(responseViewer, '1\nbasic auth not received');
 
     // Click auth tab
     await debug.clickRequestAuthTab(app);
@@ -123,6 +121,8 @@ describe('Application launch', function() {
     // Send request with auth present
     await debug.clickSendRequest(app);
     await debug.expect200(app);
+
+    const responseViewer = await debug.getResponseViewer(app);
     await debug.expectText(responseViewer, '1\nbasic auth received');
 
     // Check auth header in timeline

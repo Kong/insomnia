@@ -31,13 +31,15 @@ const users = {
 basicAuthRouter.use(
   basicAuth({
     users,
-    unauthorizedResponse: () => 'basic auth not received',
   }),
 );
 
 basicAuthRouter.get('/', (_, res) => {
   delay(() => {
-    res.status(200).send('basic auth received');
+    res
+      .status(200)
+      .header('content-type', 'text/plain')
+      .send('basic auth received');
   });
 });
 
