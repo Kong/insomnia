@@ -35,7 +35,7 @@
         "xApiKey": "xApiKey"
       },
       "_type": "environment",
-      "_id": "env___BASE_ENVIRONMENT_ID___sub"
+      "_id": "env___BASE_ENVIRONMENT_ID___sub_0"
     },
     {
       "parentId": "__WORKSPACE_ID__",

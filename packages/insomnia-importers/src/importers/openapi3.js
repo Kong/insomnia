@@ -73,33 +73,34 @@ module.exports.convert = async function(rawData) {
     },
   };
 
-  const defaultServerUrl = getDefaultServerUrl(api);
+  const serverUrls = getServersOrDefaultUrl(api);
   const securityVariables = getSecurityEnvVariables(
     api.components && api.components.securitySchemes,
   );
+  const openapiEnvs = serverUrls.map((serverUrl, index) => {
+    const protocol = serverUrl.url.protocol || '';
 
-  const protocol = defaultServerUrl.protocol || '';
+    // Base path is pulled out of the URL, and the trailing slash is removed
+    const basePath = (serverUrl.url.pathname || '').replace(/\/$/, '');
 
-  // Base path is pulled out of the URL, and the trailing slash is removed
-  const basePath = (defaultServerUrl.pathname || '').replace(/\/$/, '');
-
-  const openapiEnv = {
-    _type: 'environment',
-    _id: 'env___BASE_ENVIRONMENT_ID___sub',
-    parentId: baseEnv._id,
-    name: 'OpenAPI env',
-    data: {
-      // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
-      scheme: protocol.replace(/:$/, '') || ['http'],
-      base_path: basePath,
-      host: defaultServerUrl.host || '',
-      ...securityVariables,
-    },
-  };
+    return {
+      _type: 'environment',
+      _id: 'env___BASE_ENVIRONMENT_ID___sub_' + index,
+      parentId: baseEnv._id,
+      name: serverUrl.name || 'OpenAPI env',
+      data: {
+        // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
+        scheme: protocol.replace(/:$/, '') || ['http'],
+        base_path: basePath,
+        host: serverUrl.url.host || '',
+        ...securityVariables,
+      },
+    };
+  });
 
   const endpoints = parseEndpoints(api);
 
-  return [workspace, baseEnv, openapiEnv, ...endpoints];
+  return [workspace, baseEnv, ...openapiEnvs, ...endpoints];
 };
 
 /**
@@ -116,12 +117,38 @@ function getDefaultServerUrl(api) {
   const foundServer = firstServer && firstServer.url;
 
   if (!foundServer) {
-    return urlParse(exampleServer);
+    return {
+      url: urlParse(exampleServer),
+    };
   }
 
   const url = resolveVariables(firstServer);
 
-  return urlParse(url);
+  return {
+    url: urlParse(url),
+    name: firstServer.description,
+  };
+}
+
+/**
+ * Gets a server to use as the default
+ * Either the first server defined in the specification, or an example if none are specified
+ *
+ * @param {Object} api - openapi3 object
+ * @returns {UrlWithStringQuery[]} the resolved server URL
+ */
+function getServersOrDefaultUrl(api) {
+  const servers = api.servers || [];
+  if (servers.length < 2) {
+    return [getDefaultServerUrl(api)];
+  }
+
+  return servers.map(server => {
+    return {
+      url: urlParse(resolveVariables(server)),
+      name: server.description,
+    };
+  });
 }
 
 /**

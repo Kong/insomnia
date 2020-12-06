@@ -1,5 +1,5 @@
 {
-  "__export_date": "2020-03-24T06:16:20.516Z",
+  "__export_date": "2020-05-11T00:51:52.464Z",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -7,8 +7,8 @@
     {
       "_id": "__WORKSPACE_ID__",
       "_type": "workspace",
-      "description": "",
-      "name": "Simple API overview 2.0.0",
+      "description": "This API is for administrating files and file storages.",
+      "name": "File and Storage API 0.1.0",
       "parentId": null
     },
     {
@@ -24,36 +24,35 @@
       "_id": "env___BASE_ENVIRONMENT_ID___sub_0",
       "_type": "environment",
       "data": {
-        "base_path": "",
-        "host": "example.com",
-        "scheme": "http"
+        "base_path": "/filemanagement",
+        "host": "localhost:8080",
+        "scheme": "https"
       },
-      "name": "OpenAPI env",
+      "name": "Devserver",
       "parentId": "__BASE_ENVIRONMENT_ID__"
     },
     {
-      "_id": "req___WORKSPACE_ID__316fc296",
-      "_type": "request",
-      "authentication": {},
-      "body": {},
-      "headers": [],
-      "method": "GET",
-      "name": "List API versions",
-      "parameters": [],
-      "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/"
+      "_id": "env___BASE_ENVIRONMENT_ID___sub_1",
+      "_type": "environment",
+      "data": {
+        "base_path": "/filemanagement",
+        "host": "localhost:8080",
+        "scheme": "https"
+      },
+      "name": "Intserver",
+      "parentId": "__BASE_ENVIRONMENT_ID__"
     },
     {
-      "_id": "req___WORKSPACE_ID__4dd01204",
+      "_id": "req___WORKSPACE_ID__a6294159",
       "_type": "request",
       "authentication": {},
       "body": {},
       "headers": [],
       "method": "GET",
-      "name": "Show API version details",
+      "name": "/files",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/v2"
+      "url": "{{ base_url }}/files"
     }
   ]
 }

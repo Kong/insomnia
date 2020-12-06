@@ -21,7 +21,7 @@
       "parentId": "__WORKSPACE_ID__"
     },
     {
-      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_id": "env___BASE_ENVIRONMENT_ID___sub_0",
       "_type": "environment",
       "data": {
         "base_path": "",
