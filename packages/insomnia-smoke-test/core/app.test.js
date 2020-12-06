@@ -133,7 +133,7 @@ describe('Application launch', function() {
 
     await debug.expectContainsText(
       await debug.getTimelineViewer(app),
-      `> Authorization: Basic ${utf8.encoded.combined}`,
+      `> Authorization: Basic ${utf8.combined}`,
     );
 
     // Clear inputs and type username/password with special characters
@@ -148,7 +148,7 @@ describe('Application launch', function() {
 
     await debug.expectContainsText(
       await debug.getTimelineViewer(app),
-      `> Authorization: Basic ${latin1.encoded.combined}`,
+      `> Authorization: Basic ${latin1.combined}`,
     );
 
     // Toggle basic auth to disabled

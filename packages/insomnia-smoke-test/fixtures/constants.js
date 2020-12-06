@@ -1,34 +1,13 @@
-const usernames = {
-  utf8: 'user',
-  latin1: 'user-é',
-};
-
-const passwords = {
-  utf8: 'pass',
-  latin1: 'pass-é',
-};
+const getCreds = (user, pass, encoding) => ({
+  raw: { user, pass },
+  encoded: {
+    user: Buffer.from(user, encoding).toString(),
+    pass: Buffer.from(pass, encoding).toString(),
+  },
+  combined: Buffer.from(`${user}:${pass}`, encoding).toString('base64'),
+});
 
 export const basicAuthCreds = {
-  utf8: {
-    raw: {
-      user: usernames.utf8,
-      pass: passwords.utf8,
-    },
-    encoded: {
-      user: usernames.utf8,
-      pass: passwords.utf8,
-      combined: Buffer.from(`${usernames.utf8}:${passwords.utf8}`).toString('base64'),
-    },
-  },
-  latin1: {
-    raw: {
-      user: usernames.latin1,
-      pass: passwords.latin1,
-    },
-    encoded: {
-      user: Buffer.from(usernames.latin1, 'latin1').toString(),
-      pass: Buffer.from(passwords.latin1, 'latin1').toString(),
-      combined: Buffer.from(`${usernames.latin1}:${passwords.latin1}`, 'latin1').toString('base64'),
-    },
-  },
+  utf8: getCreds('user', 'pass', 'utf8'),
+  latin1: getCreds('user-é', 'pass-é', 'latin1'),
 };

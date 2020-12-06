@@ -6,19 +6,20 @@ const app = express();
 const basicAuthRouter = express.Router();
 const port = 4010;
 
-const delay = (cb, timeout = 500) => setTimeout(cb, timeout);
+// Artificallly slow each request down
+app.use((req, res, next) => {
+  setTimeout(next, 500);
+});
 
 app.get('/pets/:id', (req, res) => {
-  delay(() => res.status(200).send({ id: req.params.id }));
+  res.status(200).send({ id: req.params.id });
 });
 
 app.get('/csv', (_, res) => {
-  delay(() =>
-    res
-      .status(200)
-      .header('content-type', 'text/csv')
-      .send(`a,b,c\n1,2,3`),
-  );
+  res
+    .status(200)
+    .header('content-type', 'text/csv')
+    .send(`a,b,c\n1,2,3`);
 });
 
 const { utf8, latin1 } = basicAuthCreds;
@@ -35,12 +36,10 @@ basicAuthRouter.use(
 );
 
 basicAuthRouter.get('/', (_, res) => {
-  delay(() => {
-    res
-      .status(200)
-      .header('content-type', 'text/plain')
-      .send('basic auth received');
-  });
+  res
+    .status(200)
+    .header('content-type', 'text/plain')
+    .send('basic auth received');
 });
 
 app.use('/auth/basic', basicAuthRouter);
