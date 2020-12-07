@@ -12,10 +12,10 @@ import { GrpcMethodTypeEnum } from '../../network/grpc/method';
 
 describe('getGrpcPathSegments', () => {
   it.each([
-    ['pkg', 'svc', 'mthd'],
-    ['a.pkg', 'svc', 'mthd'],
-    ['a.2.pkg', 'svc', 'mthd'],
-    ['.a.2.pkg', 'svc', 'mthd'],
+    ['package', 'service', 'method'],
+    ['nested.package', 'service', 'method'],
+    ['another.nested.package', 'service', 'method'],
+    ['.another.package', 'service', 'method'],
   ])(
     'should extract package, service and method from "/%s.%s/%s"',
     (packageName, serviceName, methodName) => {
@@ -27,7 +27,7 @@ describe('getGrpcPathSegments', () => {
     },
   );
 
-  it.each([['svc', 'mthd']])(
+  it.each([['service', 'method']])(
     'should extract service and method from "/%s/%s"',
     (serviceName, methodName) => {
       expect(getGrpcPathSegments(`/${serviceName}/${methodName}`)).toStrictEqual({
@@ -41,21 +41,21 @@ describe('getGrpcPathSegments', () => {
 
 describe('getShortGrpcPath', () => {
   it('should return shortened path', () => {
-    const packageName = 'pkg';
-    const serviceName = 'svc';
-    const methodName = 'mthd';
-    const fullPath = '/pkg.svc/mthd';
+    const packageName = 'package';
+    const serviceName = 'service';
+    const methodName = 'method';
+    const fullPath = '/package.service/method';
 
     const shortPath = getShortGrpcPath({ packageName, serviceName, methodName }, fullPath);
 
-    expect(shortPath).toBe('/svc/mthd');
+    expect(shortPath).toBe('/service/method');
   });
 
   it('should return full path', () => {
     const packageName = undefined;
-    const serviceName = 'svc';
-    const methodName = 'mthd';
-    const fullPath = '/svc/mthd';
+    const serviceName = 'service';
+    const methodName = 'method';
+    const fullPath = '/service/method';
 
     const shortPath = getShortGrpcPath({ packageName, serviceName, methodName }, fullPath);
 
@@ -68,22 +68,22 @@ const methodBuilder = createBuilder(grpcMethodDefinitionSchema);
 describe('groupGrpcMethodsByPackage', () => {
   it('should group methods by package', () => {
     const packageMethod1 = methodBuilder
-      .path('/pkg1.svc/u')
+      .path('/package1.service/u')
       .requestStream(false)
       .responseStream(false)
       .build();
     const packageMethod2 = methodBuilder
-      .path('/pkg1.svc/ss')
+      .path('/package1.service/ss')
       .requestStream(false)
       .responseStream(true)
       .build();
     const newPackage = methodBuilder
-      .path('/pkg2.svc/cs')
+      .path('/package2.service/cs')
       .requestStream(true)
       .responseStream(false)
       .build();
     const noPackage = methodBuilder
-      .path('/svc/bd')
+      .path('/service/bd')
       .requestStream(true)
       .responseStream(true)
       .build();
@@ -101,7 +101,7 @@ describe('groupGrpcMethodsByPackage', () => {
       {
         segments: {
           packageName: undefined,
-          serviceName: 'svc',
+          serviceName: 'service',
           methodName: 'bd',
         },
         type: GrpcMethodTypeEnum.bidi,
@@ -109,11 +109,11 @@ describe('groupGrpcMethodsByPackage', () => {
       },
     ]);
 
-    expect(grouped.pkg1).toStrictEqual([
+    expect(grouped.package1).toStrictEqual([
       {
         segments: {
-          packageName: 'pkg1',
-          serviceName: 'svc',
+          packageName: 'package1',
+          serviceName: 'service',
           methodName: 'u',
         },
         type: GrpcMethodTypeEnum.unary,
@@ -121,8 +121,8 @@ describe('groupGrpcMethodsByPackage', () => {
       },
       {
         segments: {
-          packageName: 'pkg1',
-          serviceName: 'svc',
+          packageName: 'package1',
+          serviceName: 'service',
           methodName: 'ss',
         },
         type: GrpcMethodTypeEnum.server,
@@ -130,11 +130,11 @@ describe('groupGrpcMethodsByPackage', () => {
       },
     ]);
 
-    expect(grouped.pkg2).toStrictEqual([
+    expect(grouped.package2).toStrictEqual([
       {
         segments: {
-          packageName: 'pkg2',
-          serviceName: 'svc',
+          packageName: 'package2',
+          serviceName: 'service',
           methodName: 'cs',
         },
         type: GrpcMethodTypeEnum.client,
