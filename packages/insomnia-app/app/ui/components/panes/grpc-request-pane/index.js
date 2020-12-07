@@ -30,7 +30,7 @@ const StyledUrlBar = styled.div`
   align-items: stretch;
 `;
 
-const UrlEditor = styled.div`
+const StyledUrlEditor = styled.div`
   flex: 3 0 4em;
   max-width: 11em;
 `;
@@ -68,7 +68,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
       <PaneHeader>
         <StyledUrlBar>
           <div className="method-grpc pad">gRPC</div>
-          <UrlEditor title={activeRequest.url}>
+          <StyledUrlEditor title={activeRequest.url}>
             <OneLineEditor
               key={uniquenessKey}
               type="text"
@@ -77,7 +77,7 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
               placeholder="grpcb.in:9000"
               onChange={handleChange.url}
             />
-          </UrlEditor>
+          </StyledUrlEditor>
           <StyledDropdown>
             <GrpcMethodDropdown
               disabled={running}
