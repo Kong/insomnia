@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { Dropdown, DropdownItem, DropdownDivider } from 'insomnia-components';
+import { Dropdown, DropdownItem, DropdownDivider, Tooltip } from 'insomnia-components';
 import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
 import styled from 'styled-components';
 import GrpcMethodTag from '../../tags/grpc-method-tag';
@@ -62,7 +62,9 @@ const GrpcMethodDropdown = ({
               disabled={disabled}
               selected={fullPath === selectedMethod?.path}
               icon={<GrpcMethodTag methodType={type} />}>
-              {getShortGrpcPath(segments, fullPath)}
+              <Tooltip message={fullPath} position="right" delay={500}>
+                {getShortGrpcPath(segments, fullPath)}
+              </Tooltip>
             </DropdownItem>
           ))}
         </React.Fragment>
