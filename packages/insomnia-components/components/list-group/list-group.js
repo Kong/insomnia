@@ -1,7 +1,6 @@
 // @flow
 import * as React from 'react';
-import styled, { css } from 'styled-components';
-import ListGroupItem from './list-group-item';
+import styled from 'styled-components';
 
 type Props = {|
   children?: React.Node,
@@ -15,17 +14,9 @@ const StyledListGroup: React.ComponentType<{}> = styled.ul`
 
   ${({ bordered }) =>
     bordered &&
-    css`
-      border: 1px solid var(--hl-sm);
-      border-radius: var(--radius-sm);
-      ${ListGroupItem} {
-        margin: -1px;
-        border-radius: var(--radius-sm);
-
-        &:last-of-type {
-          border-bottom: none;
-        }
-      }
+    `border: 1px solid var(--hl-sm);
+     border-radius: var(--radius-sm);
+     li:last-of-type {border-bottom:none;};
     `}
 `;
 
