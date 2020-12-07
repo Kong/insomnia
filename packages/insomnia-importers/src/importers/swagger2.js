@@ -457,7 +457,7 @@ function convertParameters(parameters) {
  *
  * @returns {*}
  */
-function generateParameterExample(schema) {
+function generateParameterExample(schema, ancestors = []) {
   const typeExamples = {
     string: () => 'string',
     string_email: () => 'user@example.com',
@@ -471,17 +471,21 @@ function generateParameterExample(schema) {
     object: schema => {
       const example = {};
       const { properties } = schema;
-
+      if (ancestors.indexOf(schema) !== -1) {
+        return example;
+      }
       if (properties) {
+        ancestors.push(schema);
         Object.keys(properties).forEach(propertyName => {
-          example[propertyName] = generateParameterExample(properties[propertyName]);
+          example[propertyName] = generateParameterExample(properties[propertyName], ancestors);
         });
+        ancestors.pop();
       }
 
       return example;
     },
     array: schema => {
-      const value = generateParameterExample(schema.items);
+      const value = generateParameterExample(schema.items, ancestors);
       if (schema.collectionFormat === 'csv') {
         return value;
       } else {
