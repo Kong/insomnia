@@ -9,7 +9,7 @@
     "spectron:core:package": "cross-env BUNDLE=package xvfb-maybe jest --detectOpenHandles --testPathPattern core",
     "spectron:designer:package": "cross-env BUNDLE=package xvfb-maybe jest --detectOpenHandles --testPathPattern designer",
     "cli": "jest --detectOpenHandles --testPathPattern cli",
-    "serve": "node tinyhttp/index.js",
+    "serve": "node server/index.js",
     "with-mock": "concurrently --names server,app --success first --kill-others \"npm run serve\"",
     "test:cli": "npm run with-mock \"npm run cli\"",
     "test:core:build": "npm run with-mock \"npm run spectron:core:build\"",
@@ -18,11 +18,11 @@
     "test:designer:package": "npm run with-mock \"npm run spectron:designer:package\""
   },
   "devDependencies": {
-    "@tinyhttp/app": "^1.0.2",
-    "@tinyhttp/logger": "^1.0.2",
     "concurrently": "^5.3.0",
     "cross-env": "^7.0.2",
     "execa": "^5.0.0",
+    "express": "^4.17.1",
+    "express-basic-auth": "^1.2.0",
     "faker": "^5.1.0",
     "get-bin-path": "^5.1.0",
     "jest": "^26.4.2",
