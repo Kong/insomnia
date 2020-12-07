@@ -1,26 +1,14 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import GrpcMethodDropdown from '../grpc-method-dropdown';
+import { grpcMethodDefinitionSchema } from '../../../../context/grpc/__schemas__';
+import { createBuilder } from '@develohpanda/fluent-builder';
+
+const builder = createBuilder(grpcMethodDefinitionSchema);
 
 describe('<GrpcMethodDropdown />', () => {
-  it('should handle changing a proto file', () => {
-    const handleChangeProtoFile = jest.fn();
-
-    const { getByRole, queryByText } = render(
-      <GrpcMethodDropdown
-        methods={[]}
-        handleChange={jest.fn()}
-        handleChangeProtoFile={handleChangeProtoFile}
-      />,
-    );
-
-    fireEvent.click(getByRole('button'));
-
-    const changeProtoFileButton = queryByText('Click to change proto file');
-    expect(changeProtoFileButton).toBeTruthy();
-    fireEvent.click(changeProtoFileButton);
-
-    expect(handleChangeProtoFile).toHaveBeenCalledTimes(1);
+  beforeEach(() => {
+    builder.reset();
   });
 
   it('should show "No methods found" and clicking it should do nothing', () => {
@@ -34,6 +22,7 @@ describe('<GrpcMethodDropdown />', () => {
       />,
     );
 
+    // Open dropdown
     fireEvent.click(getByRole('button'));
 
     const nothingFound = queryByText('No methods found');
@@ -41,5 +30,86 @@ describe('<GrpcMethodDropdown />', () => {
     fireEvent.click(nothingFound);
 
     expect(handleChange).not.toHaveBeenCalled();
+  });
+
+  it('should allow you to change a proto file when no methods exist', () => {
+    const handleChangeProtoFile = jest.fn();
+
+    const { getByRole, queryByText } = render(
+      <GrpcMethodDropdown
+        methods={[]}
+        handleChange={jest.fn()}
+        handleChangeProtoFile={handleChangeProtoFile}
+      />,
+    );
+
+    // Open dropdown
+    fireEvent.click(getByRole('button'));
+
+    const clickToChange = queryByText('Click to change proto file');
+    expect(clickToChange).toBeTruthy();
+    fireEvent.click(clickToChange);
+
+    expect(handleChangeProtoFile).toHaveBeenCalledTimes(1);
+  });
+
+  it('should allow you to change a proto file when methods exist', () => {
+    const handleChangeProtoFile = jest.fn();
+
+    const { getByRole, getByText } = render(
+      <GrpcMethodDropdown
+        methods={[builder.build()]}
+        handleChange={jest.fn()}
+        handleChangeProtoFile={handleChangeProtoFile}
+      />,
+    );
+
+    // Open dropdown
+    fireEvent.click(getByRole('button'));
+
+    fireEvent.click(getByText('Click to change proto file'));
+
+    expect(handleChangeProtoFile).toHaveBeenCalledTimes(1);
+  });
+
+  it('should send selected method path to handle change', () => {
+    const handleChange = jest.fn();
+    const method = builder.path('/service/method').build();
+
+    const { getByRole, getByText } = render(
+      <GrpcMethodDropdown
+        methods={[method]}
+        handleChange={handleChange}
+        handleChangeProtoFile={jest.fn()}
+      />,
+    );
+
+    // Open dropdown
+    fireEvent.click(getByRole('button'));
+
+    fireEvent.click(getByText(method.path));
+
+    expect(handleChange).toHaveBeenCalledWith(method.path, expect.anything());
+  });
+
+  it('should create a divider with the package name', () => {
+    const handleChange = jest.fn();
+    const method = builder.path('/package.service/method').build();
+
+    const { getByRole, queryByText, getByText } = render(
+      <GrpcMethodDropdown
+        methods={[method]}
+        handleChange={handleChange}
+        handleChangeProtoFile={jest.fn()}
+      />,
+    );
+
+    // Open dropdown
+    fireEvent.click(getByRole('button'));
+
+    expect(queryByText('pkg: package')).toBeTruthy();
+    fireEvent.click(getByText('/service/method'));
+
+    expect(handleChange).toHaveBeenCalledWith(method.path, expect.anything());
   });
 });
