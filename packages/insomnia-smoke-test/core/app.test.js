@@ -125,10 +125,6 @@ describe('Application launch', function() {
     await debug.clickSendRequest(app);
     await debug.expect200(app);
 
-    // Force update timeline tab
-    await debug.clickPreviewTab(app);
-    await debug.clickTimelineTab(app);
-
     const responseViewer = await debug.getResponseViewer(app);
     await debug.expectText(responseViewer, '1\nbasic auth received');
 
@@ -161,10 +157,6 @@ describe('Application launch', function() {
     // Send request
     await debug.clickSendRequest(app);
     await debug.expect401(app);
-
-    // Force update timeline tab
-    await debug.clickPreviewTab(app);
-    await debug.clickTimelineTab(app);
 
     await debug.expectNotContainsText(await debug.getTimelineViewer(app), '> Authorization: Basic');
   });

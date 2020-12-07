@@ -226,13 +226,10 @@ export const clickTimelineTab = async app => {
     .$('.response-pane')
     .then(e => e.$('#react-tabs-16'))
     .then(e => e.click());
-};
 
-export const clickPreviewTab = async app => {
-  await app.client
-    .$('.response-pane')
-    .then(e => e.$('#react-tabs-10'))
-    .then(e => e.click());
+  // Wait until some text shows
+  const codeEditor = await getTimelineViewer(app);
+  await app.client.waitUntil(() => codeEditor.getText());
 };
 
 export const selectAll = async app => {
