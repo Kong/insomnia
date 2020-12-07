@@ -76,7 +76,7 @@ describe('<GrpcMethodDropdown />', () => {
     const handleChange = jest.fn();
     const method = builder.path('/service/method').build();
 
-    const { getByRole, getByText } = render(
+    const { getByRole, queryAllByText } = render(
       <GrpcMethodDropdown
         methods={[method]}
         handleChange={handleChange}
@@ -87,7 +87,14 @@ describe('<GrpcMethodDropdown />', () => {
     // Open dropdown
     fireEvent.click(getByRole('button'));
 
-    fireEvent.click(getByText(method.path));
+    // Should find two items - a dropdown item and a tooltip with the same text
+    const [dropdownButton, tooltip] = queryAllByText(method.path);
+
+    expect(tooltip).toBeTruthy();
+    expect(tooltip).toHaveAttribute('role', 'tooltip');
+    expect(tooltip).toHaveAttribute('aria-hidden', 'true');
+
+    fireEvent.click(dropdownButton);
 
     expect(handleChange).toHaveBeenCalledWith(method.path, expect.anything());
   });
