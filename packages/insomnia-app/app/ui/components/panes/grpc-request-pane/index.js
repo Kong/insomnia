@@ -18,9 +18,22 @@ type Props = {
   forceRefreshKey: string,
   activeRequest: GrpcRequest,
   settings: Settings,
+
+  // For variables
+  handleRender: string => Promise<string>,
+  isVariableUncovered: boolean,
+  handleGetRenderContext: Function,
 };
 
-const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
+const GrpcRequestPane = ({
+  activeRequest,
+  forceRefreshKey,
+  settings,
+  handleRender,
+  handleAutocompleteUrls,
+  handleGetRenderContext,
+  isVariableUncovered,
+}: Props) => {
   const [state, dispatch] = useGrpc(activeRequest._id);
   const { requestMessages, running, methods } = state;
 
@@ -56,6 +69,11 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
           defaultValue={activeRequest.url}
           placeholder="grpcb.in:9000"
           onChange={handleChange.url}
+          render={handleRender}
+          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+          isVariableUncovered={isVariableUncovered}
+          getAutocompleteConstants={() => []}
+          getRenderContext={handleGetRenderContext}
         />
         <GrpcMethodDropdown
           disabled={running}

@@ -246,6 +246,9 @@ class WrapperDebug extends React.PureComponent<Props> {
             activeRequest={activeRequest}
             forceRefreshCounter={forceRefreshKey}
             settings={settings}
+            handleRender={handleRender}
+            isVariableUncovered={isVariableUncovered}
+            handleGetRenderContext={handleGetRenderContext}
           />
         </ErrorBoundary>
       );
