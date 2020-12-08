@@ -103,7 +103,7 @@ export async function getDeviceId(): Promise<string> {
   let { deviceId } = settings;
   if (!deviceId) {
     // Migrate old GA ID into settings model if needed
-    const oldId = (window && window.localStorage.gaClientId) || null;
+    const oldId = (window && window.localStorage.getItem('gaClientId')) || null;
     deviceId = oldId || uuid.v4();
 
     await models.settings.update(settings, { deviceId });
