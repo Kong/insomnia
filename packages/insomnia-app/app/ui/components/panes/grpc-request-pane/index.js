@@ -17,6 +17,7 @@ import useProtoFileReload from './use-proto-file-reload';
 type Props = {
   forceRefreshKey: string,
   activeRequest: GrpcRequest,
+  environmentId: string,
   settings: Settings,
 
   // For variables
@@ -27,10 +28,10 @@ type Props = {
 
 const GrpcRequestPane = ({
   activeRequest,
+  environmentId,
   forceRefreshKey,
   settings,
   handleRender,
-  handleAutocompleteUrls,
   handleGetRenderContext,
   isVariableUncovered,
 }: Props) => {
@@ -83,7 +84,11 @@ const GrpcRequestPane = ({
           handleChangeProtoFile={handleChange.protoFile}
         />
 
-        <GrpcSendButton requestId={activeRequest._id} methodType={methodType} />
+        <GrpcSendButton
+          requestId={activeRequest._id}
+          environmentId={environmentId}
+          methodType={methodType}
+        />
       </PaneHeader>
       <PaneBody>
         {methodType && (

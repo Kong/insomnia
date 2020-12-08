@@ -9,6 +9,7 @@ import type { ServiceError } from './service-error';
 import { GrpcStatusEnum } from './service-error';
 import type { Call } from './call-cache';
 import parseGrpcUrl from './parse-grpc-url';
+import type { PreparedGrpcRequest } from './prepare';
 
 const _createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | undefined => {
   const { url, enableTls } = parseGrpcUrl(req.url);
@@ -25,10 +26,12 @@ const _createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | u
   return new Client(url, credentials);
 };
 
-export const sendUnary = async (requestId: string, respond: ResponseCallbacks): Promise<void> => {
-  // Load method
-  const req = await models.grpcRequest.getById(requestId);
-  const selectedMethod = await protoLoader.getSelectedMethod(req);
+export const sendUnary = async (
+  { request }: PreparedGrpcRequest,
+  respond: ResponseCallbacks,
+): Promise<void> => {
+  const requestId = request._id;
+  const selectedMethod = await protoLoader.getSelectedMethod(request);
 
   if (!selectedMethod) {
     respond.sendError(requestId, new Error(`Method definition could not be found`));
@@ -36,13 +39,13 @@ export const sendUnary = async (requestId: string, respond: ResponseCallbacks): 
   }
 
   // Load initial message
-  const messageBody = _parseMessage(req, respond);
+  const messageBody = _parseMessage(request, respond);
   if (!messageBody) {
     return;
   }
 
   // Create client
-  const client = _createClient(req, respond);
+  const client = _createClient(request, respond);
   if (!client) {
     return;
   }

@@ -12,6 +12,7 @@ import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import orderedJSON from 'json-order';
 import * as templatingUtils from '../templating/utils';
+import type { GrpcRequest } from '../models/grpc-request';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -29,6 +30,8 @@ export type RenderedRequest = Request & {
   cookies: Array<{ name: string, value: string, disabled?: boolean }>,
   cookieJar: CookieJar,
 };
+
+export type RenderedGrpcRequest = GrpcRequest;
 
 export async function buildRenderContext(
   ancestors: Array<BaseModel> | null,
@@ -247,7 +250,7 @@ export async function render<T>(
 }
 
 export async function getRenderContext(
-  request: Request,
+  request: Request | GrpcRequest,
   environmentId: string | null,
   ancestors: Array<BaseModel> | null = null,
   purpose: RenderPurpose | null = null,
@@ -256,6 +259,7 @@ export async function getRenderContext(
   if (!ancestors) {
     ancestors = await db.withAncestors(request, [
       models.request.type,
+      models.grpcRequest.type,
       models.requestGroup.type,
       models.workspace.type,
     ]);
@@ -342,6 +346,62 @@ export async function getRenderContext(
 
   // Generate the context we need to render
   return buildRenderContext(ancestors, rootEnvironment, subEnvironment, baseContext);
+}
+
+const _shouldRenderGrpcBody = (request: GrpcRequest, renderBody?: boolean): boolean => {
+  // TODO: Add this to grpc request settings?
+  if (request.settingDisableRenderRequestBody) {
+    return false;
+  }
+
+  return !!renderBody;
+};
+
+export async function getRenderedGrpcRequestAndContext(
+  request: GrpcRequest,
+  environmentId: string | null,
+  purpose?: RenderPurpose,
+  extraInfo?: ExtraRenderInfo,
+  renderBody?: boolean,
+): Promise<{ request: RenderedGrpcRequest, context: Object }> {
+  const ancestors = await db.withAncestors(request, [
+    models.request.type,
+    models.requestGroup.type,
+    models.workspace.type,
+  ]);
+
+  const renderContext = await getRenderContext(
+    request,
+    environmentId,
+    ancestors,
+    purpose,
+    extraInfo || null,
+  );
+
+  // Render description separately because it's lower priority
+  const description = request.description;
+  request.description = '';
+
+  const ignorePathRegex = _shouldRenderGrpcBody(request, renderBody) ? null : /^body.*/;
+
+  // Render all request properties
+  const renderedRequest = await render(request, renderContext, ignorePathRegex);
+
+  renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
+
+  // Remove disabled headers
+  if (renderedRequest.headers) {
+    renderedRequest.headers = renderedRequest.headers.filter(p => !p.disabled);
+  }
+
+  return {
+    context: renderContext,
+    request: renderedRequest,
+  };
+}
+
+export function getRenderedGrpcRequestMessage() {
+  throw new Error('Not done yet');
 }
 
 export async function getRenderedRequestAndContext(
@@ -445,6 +505,7 @@ export async function getRenderedRequestAndContext(
   };
 }
 
+// TODO: I don't think this is used anywhere
 export async function getRenderedRequest(
   request: Request,
   environmentId: string,

@@ -244,6 +244,7 @@ class WrapperDebug extends React.PureComponent<Props> {
         <ErrorBoundary showAlert>
           <GrpcRequestPane
             activeRequest={activeRequest}
+            environmentId={activeEnvironment ? activeEnvironment._id : ''}
             forceRefreshCounter={forceRefreshKey}
             settings={settings}
             handleRender={handleRender}

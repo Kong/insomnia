@@ -4,13 +4,15 @@ import type { GrpcMethodType } from '../../../network/grpc/method';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
 import { grpcActions, useGrpc, useGrpcIpc } from '../../context/grpc';
+import { sendStartGrpcIpc } from '../../context/grpc/grpc-ipc-renderer';
 
 type Props = {
   requestId: string,
+  environmentId?: string,
   methodType: GrpcMethodType | undefined,
 };
 
-const GrpcSendButton = ({ requestId, methodType }: Props) => {
+const GrpcSendButton = ({ requestId, environmentId, methodType }: Props) => {
   const sendIpc = useGrpcIpc(requestId);
 
   const config = React.useMemo(() => {
@@ -21,7 +23,7 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
     switch (methodType) {
       case GrpcMethodTypeEnum.unary:
         text = 'Send';
-        onClick = () => sendIpc(GrpcRequestEventEnum.sendUnary);
+        onClick = () => sendStartGrpcIpc(GrpcRequestEventEnum.sendUnary, requestId, environmentId);
         break;
 
       case GrpcMethodTypeEnum.client:
@@ -46,7 +48,7 @@ const GrpcSendButton = ({ requestId, methodType }: Props) => {
     }
 
     return { text, onClick, disabled };
-  }, [sendIpc, methodType]);
+  }, [sendIpc, methodType, requestId, environmentId]);
 
   const [{ running }, dispatch] = useGrpc(requestId);
 

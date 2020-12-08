@@ -5,6 +5,7 @@ import { GrpcResponseEventEnum } from '../../../common/grpc-events';
 import { grpcActions } from './grpc-actions';
 import type { GrpcDispatch } from './grpc-actions';
 import type { GrpcRequestEvent } from '../../../common/grpc-events';
+import { prepareGrpcRequest } from '../../../network/grpc/prepare';
 
 const listenForStart = (dispatch: GrpcDispatch) => {
   ipcRenderer.on(GrpcResponseEventEnum.start, (_, requestId) => {
@@ -59,6 +60,15 @@ export const grpcIpcRenderer = {
 
 export const useGrpcIpc: string => GrpcRequestEvent => void = requestId =>
   React.useCallback((channel: GrpcRequestEvent) => sendGrpcIpc(channel, requestId), [requestId]);
+
+export const sendStartGrpcIpc = async (
+  channel: GrpcRequestEvent,
+  requestId: string,
+  environmentId?: string,
+) => {
+  const preparedRequest = await prepareGrpcRequest(requestId, environmentId);
+  ipcRenderer.send(channel, preparedRequest);
+};
 
 const sendGrpcIpc = (channel: GrpcRequestEvent, requestId?: string) => {
   if (requestId) {
