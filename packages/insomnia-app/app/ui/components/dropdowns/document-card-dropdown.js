@@ -97,7 +97,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
           await models.workspace.create({ name: getAppName(), scope: 'spec' });
         }
 
-        await models.stats.incrementDeletedRequests(workspace);
+        await models.stats.incrementDeletedRequestsForDescendents(workspace);
 
         await models.workspace.remove(workspace);
       },
