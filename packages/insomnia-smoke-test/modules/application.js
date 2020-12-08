@@ -70,6 +70,12 @@ const launch = async config => {
     // https://github.com/electron-userland/spectron/issues/60
     await app.browserWindow.focus();
     await app.browserWindow.setAlwaysOnTop(true);
+
+    // Set the implicit wait timeout to 0 (webdriver default)
+    //  https://webdriver.io/docs/timeouts.html#session-implicit-wait-timeout
+    // Spectron overrides it to an unreasonable value, as per the issue
+    //  https://github.com/electron-userland/spectron/issues/763
+    await app.client.setTimeout({ implicit: 0 });
   });
 
   return app;

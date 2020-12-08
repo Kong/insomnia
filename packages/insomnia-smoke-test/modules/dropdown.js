@@ -10,3 +10,11 @@ export const clickDropdownItemByText = async (dropdown, text) => {
   await item.waitForDisplayed();
   await item.click();
 };
+
+export const clickOpenDropdownItemByText = async (app, text) => {
+  const item = await app.client
+    .$('.dropdown__menu[aria-hidden=false]')
+    .then(e => e.$(`button*=${text}`));
+  await item.waitForDisplayed();
+  await item.click();
+};
