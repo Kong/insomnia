@@ -660,13 +660,6 @@ class App extends PureComponent {
     // Update request stats
     trackExecutedRequest();
 
-    // NOTE: Since request is by far the most popular event, we will throttle
-    // it so that we only track it if the request has changed since the last one
-    const key = request._id;
-    if (this._sendRequestTrackingKey !== key) {
-      this._sendRequestTrackingKey = key;
-    }
-
     // Start loading
     handleStartLoading(requestId);
 
@@ -750,13 +743,6 @@ class App extends PureComponent {
 
     // Update request stats
     trackExecutedRequest();
-
-    // NOTE: Since request is by far the most popular event, we will throttle
-    // it so that we only track it if the request has changed since the last noe
-    const key = `${request._id}::${request.modified}`;
-    if (this._sendRequestTrackingKey !== key) {
-      this._sendRequestTrackingKey = key;
-    }
 
     handleStartLoading(requestId);
 
