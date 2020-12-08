@@ -55,3 +55,11 @@ export async function get(): Promise<Stats> {
     return results[0];
   }
 }
+
+export async function incrementRequestStats(createdRequests: number, deletedRequests: number) {
+  const stats = await get();
+  await update({
+    ...(createdRequests && { createdRequests: stats.createdRequests + createdRequests }),
+    ...(deletedRequests && { deletedRequests: stats.deletedRequests + deletedRequests }),
+  });
+}

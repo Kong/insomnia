@@ -1244,11 +1244,7 @@ class App extends PureComponent {
       };
 
       // Persist the stats to the database
-      const stats = await models.stats.get();
-      await models.stats.update({
-        ...(createdRequests && { createdRequests: stats.createdRequests + createdRequests }),
-        ...(deletedRequests && { deletedRequests: stats.deletedRequests + deletedRequests }),
-      });
+      await models.stats.incrementRequestStats(createdRequests, deletedRequests);
     }
   }
 
