@@ -51,6 +51,8 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
         const newWorkspace = await db.duplicate(workspace, { name: newName });
         await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, { fileName: newName });
 
+        models.stats.incrementCreatedRequestsForDescendents(newWorkspace);
+
         handleSetActiveWorkspace(newWorkspace._id);
       },
     });
@@ -94,6 +96,9 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
         if (isLastWorkspace) {
           await models.workspace.create({ name: getAppName(), scope: 'spec' });
         }
+
+        await models.stats.incrementDeletedRequests(workspace);
+
         await models.workspace.remove(workspace);
       },
     });

@@ -96,10 +96,9 @@ import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
-import { isGrpcRequest, isGrpcRequestId, isRequest } from '../../models/helpers/is-model';
+import { isGrpcRequest, isGrpcRequestId } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
-import { trackExecutedRequest } from '../../common/analytics';
 
 @autobind
 class App extends PureComponent {
@@ -133,12 +132,6 @@ class App extends PureComponent {
     this._globalKeyMap = null;
 
     this._updateVCSLock = null;
-
-    this._requestStats = {
-      interval: null,
-      createdRequests: 0,
-      deletedRequests: 0,
-    };
   }
 
   _setGlobalKeyMap() {
@@ -216,6 +209,7 @@ class App extends PureComponent {
           const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
           const request = await models.request.create({ parentId, name: 'New Request' });
           await this._handleSetActiveRequest(request._id);
+          models.stats.incrementCreatedRequests();
         },
       ],
       [
@@ -243,6 +237,7 @@ class App extends PureComponent {
                 return;
               }
               await requestOperations.remove(activeRequest);
+              models.stats.incrementDeletedRequests();
             },
           });
         },
@@ -345,6 +340,7 @@ class App extends PureComponent {
       parentId,
       onComplete: requestId => {
         this._handleSetActiveRequest(requestId);
+        models.stats.incrementCreatedRequests();
       },
     });
   }
@@ -358,6 +354,8 @@ class App extends PureComponent {
       selectText: true,
       onComplete: async name => {
         await models.requestGroup.duplicate(requestGroup, { name });
+
+        models.stats.incrementCreatedRequestsForDescendents(requestGroup);
       },
     });
   }
@@ -380,6 +378,7 @@ class App extends PureComponent {
       onComplete: async name => {
         const newRequest = await requestOperations.duplicate(request, { name });
         await this._handleSetActiveRequest(newRequest._id);
+        models.stats.incrementCreatedRequests();
       },
     });
   }
@@ -411,6 +410,9 @@ class App extends PureComponent {
         if (!isYes) {
           return;
         }
+
+        await models.stats.incrementDeletedRequestsForDescendents(workspace);
+
         await models.workspace.remove(workspace);
       },
     });
@@ -429,6 +431,8 @@ class App extends PureComponent {
         const newWorkspace = await db.duplicate(workspace, { name });
         await this.props.handleSetActiveWorkspace(newWorkspace._id);
         callback();
+
+        models.stats.incrementCreatedRequestsForDescendents(newWorkspace);
       },
     });
   }
@@ -658,7 +662,7 @@ class App extends PureComponent {
     }
 
     // Update request stats
-    trackExecutedRequest();
+    models.stats.incrementExecutedRequests();
 
     // Start loading
     handleStartLoading(requestId);
@@ -742,7 +746,7 @@ class App extends PureComponent {
     }
 
     // Update request stats
-    trackExecutedRequest();
+    models.stats.incrementExecutedRequests();
 
     handleStartLoading(requestId);
 
@@ -1136,18 +1140,6 @@ class App extends PureComponent {
         if (vcs && doc.type === models.workspace.type && type === db.CHANGE_REMOVE) {
           await vcs.removeProjectsForRoot(doc._id);
         }
-
-        // If a request has been created or deleted, increment the stats
-        if (isRequest(doc) || isGrpcRequest(doc)) {
-          switch (type) {
-            case db.CHANGE_INSERT:
-              this._requestStats.createdRequests++;
-              break;
-            case db.CHANGE_REMOVE:
-              this._requestStats.deletedRequests++;
-              break;
-          }
-        }
       }
 
       if (needsRefresh) {
@@ -1228,32 +1220,12 @@ class App extends PureComponent {
 
     // Give it a bit before letting the backend know it's ready
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
-
-    this._requestStats.interval = setInterval(this._persistRequestStats, 1000 * 60);
-  }
-
-  async _persistRequestStats() {
-    const { createdRequests, deletedRequests } = this._requestStats;
-
-    if (createdRequests || deletedRequests) {
-      // Reset the counters
-      this._requestStats = {
-        ...this._requestStats,
-        createdRequests: 0,
-        deletedRequests: 0,
-      };
-
-      // Persist the stats to the database
-      await models.stats.incrementRequestStats(createdRequests, deletedRequests);
-    }
   }
 
   componentWillUnmount() {
     // Remove mouse and key handlers
     document.removeEventListener('mouseup', this._handleMouseUp);
     document.removeEventListener('mousemove', this._handleMouseMove);
-
-    clearInterval(this._requestStats.interval);
   }
 
   async _ensureWorkspaceChildren() {

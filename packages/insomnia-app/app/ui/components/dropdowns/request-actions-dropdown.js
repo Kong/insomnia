@@ -13,6 +13,7 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import * as misc from '../../../common/misc';
 import { isRequest } from '../../../models/helpers/is-model';
 import * as requestOperations from '../../../models/helpers/request-operations';
+import { incrementDeletedRequests } from '../../../models/stats';
 
 @autobind
 class RequestActionsDropdown extends PureComponent {
@@ -44,6 +45,7 @@ class RequestActionsDropdown extends PureComponent {
   _handleRemove() {
     const { request } = this.props;
 
+    incrementDeletedRequests();
     return requestOperations.remove(request);
   }
 

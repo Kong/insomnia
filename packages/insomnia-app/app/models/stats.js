@@ -1,6 +1,7 @@
 // @flow
 import * as db from '../common/database';
 import type { BaseModel } from './index';
+import { isRequest, isGrpcRequest } from './helpers/is-model';
 
 export const name = 'Stats';
 export const type = 'Stats';
@@ -56,10 +57,39 @@ export async function get(): Promise<Stats> {
   }
 }
 
-export async function incrementRequestStats(createdRequests: number, deletedRequests: number) {
+export async function incrementRequestStats({
+  createdRequests,
+  deletedRequests,
+  executedRequests,
+}: $Shape<Stats>) {
   const stats = await get();
   await update({
     ...(createdRequests && { createdRequests: stats.createdRequests + createdRequests }),
     ...(deletedRequests && { deletedRequests: stats.deletedRequests + deletedRequests }),
+    ...(executedRequests && { executedRequests: stats.executedRequests + executedRequests }),
   });
+}
+
+export async function incrementCreatedRequests() {
+  await incrementRequestStats({ createdRequests: 1 });
+}
+
+export async function incrementDeletedRequests() {
+  await incrementRequestStats({ deletedRequests: 1 });
+}
+
+export async function incrementExecutedRequests() {
+  await incrementRequestStats({ executedRequests: 1 });
+}
+
+export async function incrementCreatedRequestsForDescendents(doc: BaseModel) {
+  const docs = await db.withDescendants(doc);
+  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
+  await incrementRequestStats({ createdRequests: requests.length });
+}
+
+export async function incrementDeletedRequestsForDescendents(doc: BaseModel) {
+  const docs = await db.withDescendants(doc);
+  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
+  await incrementRequestStats({ deletedRequests: requests.length });
 }

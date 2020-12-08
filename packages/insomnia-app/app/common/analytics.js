@@ -90,13 +90,6 @@ export function trackPageView(path: string) {
   });
 }
 
-export async function trackExecutedRequest() {
-  const stats = await models.stats.get();
-  await models.stats.update({
-    executedRequests: stats.executedRequests + 1,
-  });
-}
-
 export async function getDeviceId(): Promise<string> {
   const settings = await models.settings.getOrCreate();
 
