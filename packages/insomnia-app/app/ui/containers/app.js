@@ -96,9 +96,10 @@ import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
-import { isGrpcRequest, isGrpcRequestId } from '../../models/helpers/is-model';
+import { isGrpcRequest, isGrpcRequestId, isRequest } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
+import { trackExecutedRequest } from '../../common/analytics';
 
 @autobind
 class App extends PureComponent {
@@ -132,6 +133,12 @@ class App extends PureComponent {
     this._globalKeyMap = null;
 
     this._updateVCSLock = null;
+
+    this._requestStats = {
+      interval: null,
+      createdRequests: 0,
+      deletedRequests: 0,
+    };
   }
 
   _setGlobalKeyMap() {
@@ -650,6 +657,9 @@ class App extends PureComponent {
       return;
     }
 
+    // Update request stats
+    trackExecutedRequest();
+
     // NOTE: Since request is by far the most popular event, we will throttle
     // it so that we only track it if the request has changed since the last one
     const key = request._id;
@@ -737,6 +747,9 @@ class App extends PureComponent {
     if (!request) {
       return;
     }
+
+    // Update request stats
+    trackExecutedRequest();
 
     // NOTE: Since request is by far the most popular event, we will throttle
     // it so that we only track it if the request has changed since the last noe
@@ -1137,6 +1150,18 @@ class App extends PureComponent {
         if (vcs && doc.type === models.workspace.type && type === db.CHANGE_REMOVE) {
           await vcs.removeProjectsForRoot(doc._id);
         }
+
+        // If a request has been created or deleted, increment the stats
+        if (isRequest(doc) || isGrpcRequest(doc)) {
+          switch (type) {
+            case db.CHANGE_INSERT:
+              this._requestStats.createdRequests++;
+              break;
+            case db.CHANGE_REMOVE:
+              this._requestStats.deletedRequests++;
+              break;
+          }
+        }
       }
 
       if (needsRefresh) {
@@ -1217,12 +1242,36 @@ class App extends PureComponent {
 
     // Give it a bit before letting the backend know it's ready
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
+
+    this._requestStats.interval = setInterval(this._persistRequestStats, 1000 * 60);
+  }
+
+  async _persistRequestStats() {
+    const { createdRequests, deletedRequests } = this._requestStats;
+
+    if (createdRequests || deletedRequests) {
+      // Reset the counters
+      this._requestStats = {
+        ...this._requestStats,
+        createdRequests: 0,
+        deletedRequests: 0,
+      };
+
+      // Persist the stats to the database
+      const stats = await models.stats.get();
+      await models.stats.update({
+        ...(createdRequests && { createdRequests: stats.createdRequests + createdRequests }),
+        ...(deletedRequests && { deletedRequests: stats.deletedRequests + deletedRequests }),
+      });
+    }
   }
 
   componentWillUnmount() {
     // Remove mouse and key handlers
     document.removeEventListener('mouseup', this._handleMouseUp);
     document.removeEventListener('mousemove', this._handleMouseMove);
+
+    clearInterval(this._requestStats.interval);
   }
 
   async _ensureWorkspaceChildren() {

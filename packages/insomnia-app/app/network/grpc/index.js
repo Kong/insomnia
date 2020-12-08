@@ -9,6 +9,7 @@ import type { ServiceError } from './service-error';
 import { GrpcStatusEnum } from './service-error';
 import type { Call } from './call-cache';
 import parseGrpcUrl from './parse-grpc-url';
+import { trackExecutedRequest } from '../../common/analytics';
 
 const _createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | undefined => {
   const { url, enableTls } = parseGrpcUrl(req.url);
@@ -50,6 +51,9 @@ export const sendUnary = async (requestId: string, respond: ResponseCallbacks): 
   // Create callback
   const callback = _createUnaryCallback(requestId, respond);
 
+  // Update request stats
+  trackExecutedRequest();
+
   // Make call
   const call = client.makeUnaryRequest(
     selectedMethod.path,
@@ -88,6 +92,9 @@ export const startClientStreaming = async (
 
   // Create callback
   const callback = _createUnaryCallback(requestId, respond);
+
+  // Update request stats
+  trackExecutedRequest();
 
   // Make call
   const call = client.makeClientStreamRequest(
@@ -131,6 +138,9 @@ export const startServerStreaming = async (
     return;
   }
 
+  // Update request stats
+  trackExecutedRequest();
+
   // Make call
   const call = client.makeServerStreamRequest(
     selectedMethod.path,
@@ -169,6 +179,9 @@ export const startBidiStreaming = async (
   if (!client) {
     return;
   }
+
+  // Update request stats
+  trackExecutedRequest();
 
   // Make call
   const call = client.makeBidiStreamRequest(
