@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import Modal from '../base/modal';
@@ -12,26 +12,25 @@ import PromptButton from '../base/prompt-button';
 import { shareWithTeam, unshareWithAllTeams } from '../../../sync-legacy/network';
 import * as session from '../../../account/session';
 
-@autobind
 class WorkspaceShareSettingsModal extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {};
   }
 
-  static _handleSubmit(e) {
+  static _handleSubmit = e => {
     e.preventDefault();
-  }
+  };
 
-  _handleClose() {
+  _handleClose = () => {
     this.hide();
-  }
+  };
 
-  _setModalRef(n) {
+  _setModalRef = n => {
     this.modal = n;
-  }
+  };
 
-  async _handleUnshare() {
+  _handleUnshare = async () => {
     if (!session.isLoggedIn()) {
       return;
     }
@@ -47,9 +46,9 @@ class WorkspaceShareSettingsModal extends PureComponent {
       console.warn('Failed to unshare workspace', err);
       this._resetState({ error: err.message, loading: false });
     }
-  }
+  };
 
-  async _handleShareWithTeam(team) {
+  _handleShareWithTeam = async team => {
     const { resourceGroup } = this.state;
     this._resetState({ loading: true });
 
@@ -59,9 +58,9 @@ class WorkspaceShareSettingsModal extends PureComponent {
     } catch (err) {
       this._resetState({ error: err.message, loading: false });
     }
-  }
+  };
 
-  async _load() {
+  _load = async () => {
     if (!session.isLoggedIn()) {
       this._resetState({});
       return;
@@ -82,9 +81,9 @@ class WorkspaceShareSettingsModal extends PureComponent {
         loading: false,
       });
     }
-  }
+  };
 
-  _resetState(patch = {}) {
+  _resetState = (patch = {}) => {
     this.setState(
       Object.assign(
         {
@@ -96,26 +95,26 @@ class WorkspaceShareSettingsModal extends PureComponent {
         patch,
       ),
     );
-  }
+  };
 
-  async show() {
+  show = async () => {
     this._resetState();
     this.modal.show();
 
     // This takes a while, so do it after show()
     await this._load();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount() {
+  UNSAFE_componentWillMount = () => {
     this._resetState();
-  }
+  };
 
-  render() {
+  render = () => {
     const { teams, resourceGroup, error, loading } = this.state;
     const { workspace } = this.props;
     return (
@@ -193,7 +192,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
         </Modal>
       </form>
     );
-  }
+  };
 }
 
 WorkspaceShareSettingsModal.propTypes = {

@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Button from '../base/button';
 import type { Theme as ThemeType } from '../../../plugins';
 import { getThemes } from '../../../plugins';
@@ -16,7 +16,6 @@ type State = {
   themes: Array<ThemeType>,
 };
 
-@autobind
 class Theme extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -25,16 +24,16 @@ class Theme extends React.PureComponent<Props, State> {
     };
   }
 
-  componentDidMount() {
+  componentDidMount = () => {
     this._loadThemes();
-  }
+  };
 
-  async _loadThemes() {
+  _loadThemes = async () => {
     const themes = await getThemes();
     this.setState({ themes });
-  }
+  };
 
-  renderTheme(theme: ThemeType) {
+  renderTheme = (theme: ThemeType) => {
     const { handleChangeTheme, activeTheme } = this.props;
     const isActive = activeTheme === theme.theme.name;
 
@@ -92,9 +91,9 @@ class Theme extends React.PureComponent<Props, State> {
         </Button>
       </div>
     );
-  }
+  };
 
-  renderThemeRows(): React.Node {
+  renderThemeRows = (): React.Node => {
     const { themes } = this.state;
 
     const rows = [];
@@ -117,11 +116,9 @@ class Theme extends React.PureComponent<Props, State> {
         {row.map(this.renderTheme)}
       </div>
     ));
-  }
+  };
 
-  render() {
-    return <div className="themes pad-top">{this.renderThemeRows()}</div>;
-  }
+  render = () => <div className="themes pad-top">{this.renderThemeRows()}</div>;
 }
 
 export default Theme;

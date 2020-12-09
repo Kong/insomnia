@@ -1,10 +1,9 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from 'insomnia-url';
 import CopyButton from './base/copy-button';
 
-@autobind
 class RenderedQueryString extends PureComponent {
   constructor(props) {
     super(props);
@@ -14,14 +13,14 @@ class RenderedQueryString extends PureComponent {
     };
   }
 
-  async _debouncedUpdate(props) {
+  _debouncedUpdate = async props => {
     clearTimeout(this._interval);
     this._interval = setTimeout(() => {
       this._update(props);
     }, 300);
-  }
+  };
 
-  async _update(props) {
+  _update = async props => {
     const { request } = props;
     const enabledParameters = request.parameters.filter(p => !p.disabled);
 
@@ -43,26 +42,26 @@ class RenderedQueryString extends PureComponent {
         string: smartEncodeUrl(fullUrl, request.settingEncodeUrl),
       });
     }
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     this._update(this.props);
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     clearTimeout(this._interval);
-  }
+  };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps = nextProps => {
     if (nextProps.request._id !== this.props.request._id) {
       this._update(nextProps);
     } else {
       this._debouncedUpdate(nextProps);
     }
-  }
+  };
 
-  render() {
+  render = () => {
     let inner;
     if (this.state.string) {
       inner = <span className="selectable force-wrap">{this.state.string}</span>;
@@ -83,7 +82,7 @@ class RenderedQueryString extends PureComponent {
         {inner}
       </div>
     );
-  }
+  };
 }
 
 RenderedQueryString.propTypes = {

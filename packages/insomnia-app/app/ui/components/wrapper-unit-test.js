@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import PageLayout from './page-layout';
 import {
@@ -43,7 +43,6 @@ type State = {|
   resultsError: string | null,
 |};
 
-@autobind
 class WrapperUnitTest extends React.PureComponent<Props, State> {
   state = {
     testsRunning: null,
@@ -66,7 +65,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     esversion: 8, // ES8 syntax (async/await, etc)
   };
 
-  generateSendReqSnippet(existingCode: string, requestId: string): string {
+  generateSendReqSnippet = (existingCode: string, requestId: string): string => {
     let variableName = 'response';
 
     for (let i = 1; i < 100; i++) {
@@ -85,41 +84,41 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       `const ${variableName} = await insomnia.send(${requestId});\n` +
       `expect(${variableName}.status).to.equal(200);`
     );
-  }
+  };
 
-  autocompleteSnippets(unitTest: UnitTest): Array<{ name: string, value: () => Promise<string> }> {
-    return [
-      {
-        name: 'Send Current Request',
-        displayValue: '',
-        value: this.generateSendReqSnippet(unitTest.code, ''),
-      },
-      {
-        name: 'Send Request By ID',
-        displayValue: '',
-        value: async () => {
-          return new Promise(resolve => {
-            showModal(SelectModal, {
-              title: 'Select Request',
-              message: 'Select a request to fill',
-              value: '__NULL__',
-              options: [
-                { name: '-- Select Request --', value: '__NULL__' },
-                ...this.buildSelectableRequests().map(({ name, request }) => ({
-                  name: name,
-                  displayValue: '',
-                  value: this.generateSendReqSnippet(unitTest.code, `'${request._id}'`),
-                })),
-              ],
-              onDone: v => resolve(v),
-            });
+  autocompleteSnippets = (
+    unitTest: UnitTest,
+  ): (Array<{ name: string, value: () => Promise<string> }>) => [
+    {
+      name: 'Send Current Request',
+      displayValue: '',
+      value: this.generateSendReqSnippet(unitTest.code, ''),
+    },
+    {
+      name: 'Send Request By ID',
+      displayValue: '',
+      value: async () => {
+        return new Promise(resolve => {
+          showModal(SelectModal, {
+            title: 'Select Request',
+            message: 'Select a request to fill',
+            value: '__NULL__',
+            options: [
+              { name: '-- Select Request --', value: '__NULL__' },
+              ...this.buildSelectableRequests().map(({ name, request }) => ({
+                name: name,
+                displayValue: '',
+                value: this.generateSendReqSnippet(unitTest.code, `'${request._id}'`),
+              })),
+            ],
+            onDone: v => resolve(v),
           });
-        },
+        });
       },
-    ];
-  }
+    },
+  ];
 
-  async _handleCreateTestSuite(): Promise<void> {
+  _handleCreateTestSuite = async (): Promise<void> => {
     const { activeWorkspace } = this.props.wrapperProps;
     showPrompt({
       title: 'New Test Suite',
@@ -135,9 +134,9 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         await this._handleSetActiveUnitTestSuite(unitTestSuite);
       },
     });
-  }
+  };
 
-  async _handleCreateTest(): Promise<void> {
+  _handleCreateTest = async (): Promise<void> => {
     const { activeUnitTestSuite } = this.props.wrapperProps;
     showPrompt({
       title: 'New Test',
@@ -153,30 +152,30 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         });
       },
     });
-  }
+  };
 
-  async _handleUnitTestCodeChange(unitTest: UnitTest, v: string): Promise<void> {
+  _handleUnitTestCodeChange = async (unitTest: UnitTest, v: string): Promise<void> => {
     await models.unitTest.update(unitTest, { code: v });
-  }
+  };
 
-  async _handleBreadcrumb(): void {
+  _handleBreadcrumb = async (): void => {
     const {
       handleActivityChange,
       wrapperProps: { activeWorkspace },
     } = this.props;
     await handleActivityChange(activeWorkspace._id, ACTIVITY_HOME);
-  }
+  };
 
-  async _handleRunTests(): Promise<void> {
+  _handleRunTests = async (): Promise<void> => {
     const { activeUnitTests } = this.props.wrapperProps;
     await this._runTests(activeUnitTests);
-  }
+  };
 
-  async _handleRunTest(unitTest: UnitTest): Promise<void> {
+  _handleRunTest = async (unitTest: UnitTest): Promise<void> => {
     await this._runTests([unitTest]);
-  }
+  };
 
-  async _handleDeleteTest(unitTest: UnitTest): Promise<void> {
+  _handleDeleteTest = async (unitTest: UnitTest): Promise<void> => {
     showAlert({
       title: `Delete ${unitTest.name}`,
       message: (
@@ -189,17 +188,17 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         await models.unitTest.remove(unitTest);
       },
     });
-  }
+  };
 
-  async _handleSetActiveRequest(
+  _handleSetActiveRequest = async (
     unitTest: UnitTest,
     e: SyntheticEvent<HTMLSelectElement>,
-  ): Promise<void> {
+  ): Promise<void> => {
     const requestId = e.currentTarget.value === '__NULL__' ? null : e.currentTarget.value;
     await models.unitTest.update(unitTest, { requestId });
-  }
+  };
 
-  async _handleDeleteUnitTestSuite(unitTestSuite: UnitTestSuite): Promise<void> {
+  _handleDeleteUnitTestSuite = async (unitTestSuite: UnitTestSuite): Promise<void> => {
     showAlert({
       title: `Delete ${unitTestSuite.name}`,
       message: (
@@ -212,25 +211,25 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         await models.unitTestSuite.remove(unitTestSuite);
       },
     });
-  }
+  };
 
-  async _handleSetActiveUnitTestSuite(unitTestSuite: UnitTestSuite): Promise<void> {
+  _handleSetActiveUnitTestSuite = async (unitTestSuite: UnitTestSuite): Promise<void> => {
     const { activeWorkspace } = this.props.wrapperProps;
     await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
       activeUnitTestSuiteId: unitTestSuite._id,
     });
-  }
+  };
 
-  async _handleChangeTestName(unitTest: UnitTest, name: string): Promise<void> {
+  _handleChangeTestName = async (unitTest: UnitTest, name: string): Promise<void> => {
     await models.unitTest.update(unitTest, { name });
-  }
+  };
 
-  async _handleChangeActiveSuiteName(name: string): Promise<void> {
+  _handleChangeActiveSuiteName = async (name: string): Promise<void> => {
     const { activeUnitTestSuite } = this.props.wrapperProps;
     await models.unitTestSuite.update(activeUnitTestSuite, { name });
-  }
+  };
 
-  async _runTests(unitTests: Array<UnitTest>): Promise<void> {
+  _runTests = async (unitTests: Array<UnitTest>): Promise<void> => {
     const { requests, activeWorkspace, activeEnvironment } = this.props.wrapperProps;
 
     this.setState({ testsRunning: unitTests, resultsError: null });
@@ -261,9 +260,9 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     await models.unitTestResult.create({ results, parentId: activeWorkspace._id });
 
     this.setState({ testsRunning: null });
-  }
+  };
 
-  buildSelectableRequests(): Array<{ name: string, request: Request }> {
+  buildSelectableRequests = (): Array<{ name: string, request: Request }> => {
     const { children } = this.props;
     const selectableRequests: Array<{ name: string, request: Request }> = [];
 
@@ -283,9 +282,9 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     next('', children.all);
 
     return selectableRequests;
-  }
+  };
 
-  _renderResults(): React.Node {
+  _renderResults = (): React.Node => {
     const { activeUnitTestResult } = this.props.wrapperProps;
     const { testsRunning, resultsError } = this.state;
 
@@ -354,9 +353,9 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         </div>
       </div>
     );
-  }
+  };
 
-  renderUnitTest(unitTest: UnitTest): React.Node {
+  renderUnitTest = (unitTest: UnitTest): React.Node => {
     const { settings } = this.props.wrapperProps;
     const { testsRunning } = this.state;
     const selectableRequests = this.buildSelectableRequests();
@@ -396,9 +395,9 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         />
       </UnitTestItem>
     );
-  }
+  };
 
-  _renderTestSuite(): React.Node {
+  _renderTestSuite = (): React.Node => {
     const { activeUnitTests, activeUnitTestSuite } = this.props.wrapperProps;
     const { testsRunning } = this.state;
 
@@ -432,9 +431,9 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
       </div>
     );
-  }
+  };
 
-  renderPageSidebar(): React.Node {
+  renderPageSidebar = (): React.Node => {
     const { activeUnitTestSuites, activeUnitTestSuite } = this.props.wrapperProps;
     const { testsRunning } = this.state;
     const activeId = activeUnitTestSuite ? activeUnitTestSuite._id : 'n/a';
@@ -476,9 +475,9 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         </div>
       </ErrorBoundary>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { handleActivityChange, gitSyncDropdown } = this.props;
     const { activeWorkspace, activity, activeApiSpec } = this.props.wrapperProps;
     return (
@@ -512,7 +511,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         )}
       />
     );
-  }
+  };
 }
 
 export default WrapperUnitTest;

@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import DebouncedInput from '../base/debounced-input';
 import FileInputButton from '../base/file-input-button';
@@ -42,7 +42,6 @@ type State = {
   defaultPreviewMode: boolean,
 };
 
-@autobind
 class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
   modal: Modal | null;
 
@@ -62,35 +61,35 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _workspaceUpdate(patch: Object) {
+  _workspaceUpdate = (patch: Object) => {
     models.workspace.update(this.props.workspace, patch);
-  }
+  };
 
-  _handleAddDescription() {
+  _handleAddDescription = () => {
     this.setState({ showDescription: true });
-  }
+  };
 
-  _handleSetModalRef(n: ?Modal) {
+  _handleSetModalRef = (n: ?Modal) => {
     this.modal = n;
-  }
+  };
 
-  _handleRemoveWorkspace() {
+  _handleRemoveWorkspace = () => {
     this.props.handleRemoveWorkspace();
     this.hide();
-  }
+  };
 
-  _handleClearAllResponses() {
+  _handleClearAllResponses = () => {
     this.props.handleClearAllResponses();
     this.hide();
-  }
+  };
 
-  _handleDuplicateWorkspace() {
+  _handleDuplicateWorkspace = () => {
     this.props.handleDuplicateWorkspace(() => {
       this.hide();
     });
-  }
+  };
 
-  _handleToggleCertificateForm() {
+  _handleToggleCertificateForm = () => {
     this.setState(state => ({
       showAddCertificateForm: !state.showAddCertificateForm,
       crtPath: '',
@@ -100,45 +99,45 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
       passphrase: '',
       isPrivate: false,
     }));
-  }
+  };
 
-  _handleRename(name: string) {
+  _handleRename = (name: string) => {
     this._workspaceUpdate({ name });
-  }
+  };
 
-  _handleDescriptionChange(description: string) {
+  _handleDescriptionChange = (description: string) => {
     this._workspaceUpdate({ description });
 
     if (this.state.defaultPreviewMode !== false) {
       this.setState({ defaultPreviewMode: false });
     }
-  }
+  };
 
-  _handleCreateHostChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleCreateHostChange = (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ host: e.currentTarget.value });
-  }
+  };
 
-  _handleCreatePfxChange(pfxPath: string) {
+  _handleCreatePfxChange = (pfxPath: string) => {
     this.setState({ pfxPath });
-  }
+  };
 
-  _handleCreateCrtChange(crtPath: string) {
+  _handleCreateCrtChange = (crtPath: string) => {
     this.setState({ crtPath });
-  }
+  };
 
-  _handleCreateKeyChange(keyPath: string) {
+  _handleCreateKeyChange = (keyPath: string) => {
     this.setState({ keyPath });
-  }
+  };
 
-  _handleCreatePassphraseChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleCreatePassphraseChange = (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ passphrase: e.currentTarget.value });
-  }
+  };
 
-  _handleCreateIsPrivateChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleCreateIsPrivateChange = (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ isPrivate: e.currentTarget.checked });
-  }
+  };
 
-  async _handleCreateCertificate(e: SyntheticEvent<HTMLFormElement>) {
+  _handleCreateCertificate = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const { workspace } = this.props;
@@ -157,19 +156,19 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
 
     await models.clientCertificate.create(certificate);
     this._handleToggleCertificateForm();
-  }
+  };
 
-  static async _handleDeleteCertificate(certificate: ClientCertificate) {
+  static _handleDeleteCertificate = async (certificate: ClientCertificate) => {
     await models.clientCertificate.remove(certificate);
-  }
+  };
 
-  static async _handleToggleCertificate(certificate: ClientCertificate) {
+  static _handleToggleCertificate = async (certificate: ClientCertificate) => {
     await models.clientCertificate.update(certificate, {
       disabled: !certificate.disabled,
     });
-  }
+  };
 
-  show() {
+  show = () => {
     const hasDescription = !!this.props.workspace.description;
     this.setState({
       showDescription: hasDescription,
@@ -178,13 +177,13 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     });
 
     this.modal && this.modal.show();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  renderModalHeader() {
+  renderModalHeader = () => {
     const { workspace } = this.props;
     return (
       <ModalHeader key={`header::${workspace._id}`}>
@@ -192,63 +191,60 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
         <div className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
       </ModalHeader>
     );
-  }
+  };
 
-  renderCertificate(certificate: ClientCertificate) {
-    return (
-      <div key={certificate._id}>
-        <div className="row-spaced">
-          <div>
-            <span className="pad-right no-wrap">
-              <strong>PFX:</strong>{' '}
-              {certificate.pfx ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
-            </span>
-            <span className="pad-right no-wrap">
-              <strong>CRT:</strong>{' '}
-              {certificate.cert ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
-            </span>
-            <span className="pad-right no-wrap">
-              <strong>Key:</strong>{' '}
-              {certificate.key ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
-            </span>
-            <span className="pad-right no-wrap" title={certificate.passphrase || null}>
-              <strong>Passphrase:</strong>{' '}
-              {certificate.passphrase ? (
-                <i className="fa fa-check" />
-              ) : (
-                <i className="fa fa-remove" />
-              )}
-            </span>
-            <span className="pad-right">
-              <strong>Host:</strong>{' '}
-              <span className="monospace selectable">{certificate.host}</span>
-            </span>
-          </div>
-          <div className="no-wrap">
-            <button
-              className="btn btn--super-compact width-auto"
-              title="Enable or disable certificate"
-              onClick={() => WorkspaceSettingsModal._handleToggleCertificate(certificate)}>
-              {certificate.disabled ? (
-                <i className="fa fa-square-o" />
-              ) : (
-                <i className="fa fa-check-square-o" />
-              )}
-            </button>
-            <PromptButton
-              className="btn btn--super-compact width-auto"
-              confirmMessage=""
-              addIcon
-              onClick={() => WorkspaceSettingsModal._handleDeleteCertificate(certificate)}>
-              <i className="fa fa-trash-o" />
-            </PromptButton>
-          </div>
+  renderCertificate = (certificate: ClientCertificate) => (
+    <div key={certificate._id}>
+      <div className="row-spaced">
+        <div>
+          <span className="pad-right no-wrap">
+            <strong>PFX:</strong>{' '}
+            {certificate.pfx ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
+          </span>
+          <span className="pad-right no-wrap">
+            <strong>CRT:</strong>{' '}
+            {certificate.cert ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
+          </span>
+          <span className="pad-right no-wrap">
+            <strong>Key:</strong>{' '}
+            {certificate.key ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
+          </span>
+          <span className="pad-right no-wrap" title={certificate.passphrase || null}>
+            <strong>Passphrase:</strong>{' '}
+            {certificate.passphrase ? (
+              <i className="fa fa-check" />
+            ) : (
+              <i className="fa fa-remove" />
+            )}
+          </span>
+          <span className="pad-right">
+            <strong>Host:</strong> <span className="monospace selectable">{certificate.host}</span>
+          </span>
+        </div>
+        <div className="no-wrap">
+          <button
+            className="btn btn--super-compact width-auto"
+            title="Enable or disable certificate"
+            onClick={() => WorkspaceSettingsModal._handleToggleCertificate(certificate)}>
+            {certificate.disabled ? (
+              <i className="fa fa-square-o" />
+            ) : (
+              <i className="fa fa-check-square-o" />
+            )}
+          </button>
+          <PromptButton
+            className="btn btn--super-compact width-auto"
+            confirmMessage=""
+            addIcon
+            onClick={() => WorkspaceSettingsModal._handleDeleteCertificate(certificate)}>
+            <i className="fa fa-trash-o" />
+          </PromptButton>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  renderModalBody() {
+  renderModalBody = () => {
     const {
       clientCertificates,
       workspace,
@@ -481,9 +477,9 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
         </Tabs>
       </ModalBody>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { workspace } = this.props;
     return (
       <Modal ref={this._handleSetModalRef} freshState>
@@ -491,7 +487,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
         {workspace ? this.renderModalBody() : null}
       </Modal>
     );
-  }
+  };
 }
 
 export default WorkspaceSettingsModal;

@@ -1,11 +1,10 @@
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 
-@autobind
 class AlertModal extends PureComponent {
   constructor(props) {
     super(props);
@@ -18,32 +17,32 @@ class AlertModal extends PureComponent {
     };
   }
 
-  _setModalRef(m) {
+  _setModalRef = m => {
     this.modal = m;
-  }
+  };
 
-  _handleOk() {
+  _handleOk = () => {
     this.hide();
     this._okCallback();
 
     if (typeof this._okCallback2 === 'function') {
       this._okCallback2();
     }
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
-  setCancelRef(n) {
+  setCancelRef = n => {
     this._cancel = n;
-  }
+  };
 
-  setOkRef(n) {
+  setOkRef = n => {
     this._ok = n;
-  }
+  };
 
-  show(options = {}) {
+  show = (options = {}) => {
     const { title, message, addCancel, onConfirm, okLabel } = options;
     this.setState({ title, message, addCancel, okLabel });
 
@@ -59,9 +58,9 @@ class AlertModal extends PureComponent {
     return new Promise(resolve => {
       this._okCallback = resolve;
     });
-  }
+  };
 
-  render() {
+  render = () => {
     const { message, title, addCancel, okLabel } = this.state;
 
     return (
@@ -82,7 +81,7 @@ class AlertModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default AlertModal;

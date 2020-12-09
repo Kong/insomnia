@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import KeydownBinder from '../keydown-binder';
 
 export const shouldSave = (oldValue, newValue, preventBlank) => {
@@ -18,7 +18,6 @@ export const shouldSave = (oldValue, newValue, preventBlank) => {
   return true;
 };
 
-@autobind
 class Editable extends PureComponent {
   constructor(props) {
     super(props);
@@ -27,17 +26,17 @@ class Editable extends PureComponent {
     };
   }
 
-  _handleSetInputRef(n) {
+  _handleSetInputRef = n => {
     this._input = n;
-  }
+  };
 
-  _handleSingleClickEditStart() {
+  _handleSingleClickEditStart = () => {
     if (this.props.singleClick) {
       this._handleEditStart();
     }
-  }
+  };
 
-  _handleEditStart() {
+  _handleEditStart = () => {
     this.setState({ editing: true });
 
     setTimeout(() => {
@@ -48,9 +47,9 @@ class Editable extends PureComponent {
     if (this.props.onEditStart) {
       this.props.onEditStart();
     }
-  }
+  };
 
-  _handleEditEnd() {
+  _handleEditEnd = () => {
     const originalValue = this.props.value;
     const newValue = this._input.value.trim();
 
@@ -62,9 +61,9 @@ class Editable extends PureComponent {
     // This timeout prevents the UI from showing the old value after submit.
     // It should give the UI enough time to redraw the new value.
     setTimeout(async () => this.setState({ editing: false }), 100);
-  }
+  };
 
-  _handleEditKeyDown(e) {
+  _handleEditKeyDown = e => {
     if (e.keyCode === 13) {
       // Pressed Enter
       this._handleEditEnd();
@@ -80,9 +79,9 @@ class Editable extends PureComponent {
         this._handleEditEnd();
       }
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       value,
       fallbackValue,
@@ -127,7 +126,7 @@ class Editable extends PureComponent {
         return <span {...readViewProps}>{initialValue || blankValue}</span>;
       }
     }
-  }
+  };
 }
 
 Editable.propTypes = {

@@ -1,11 +1,10 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 
-@autobind
 class DropdownItem extends PureComponent {
-  _handleClick(e) {
+  _handleClick = e => {
     const { stayOpenAfterClick, onClick, disabled } = this.props;
 
     if (stayOpenAfterClick) {
@@ -21,9 +20,9 @@ class DropdownItem extends PureComponent {
     } else {
       onClick(e);
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       buttonClass,
       children,
@@ -51,7 +50,7 @@ class DropdownItem extends PureComponent {
     };
 
     return React.createElement(buttonClass || 'button', buttonProps, inner);
-  }
+  };
 }
 
 DropdownItem.propTypes = {

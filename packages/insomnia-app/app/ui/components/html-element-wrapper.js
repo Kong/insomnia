@@ -1,6 +1,5 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
 
 type Props = {|
   el: HTMLElement,
@@ -12,9 +11,9 @@ type Props = {|
  * application. This was created to facilitate the layer between UI plugins
  * and the Insomnia application.
  */
-@autobind
+
 class HtmlElementWrapper extends React.Component<Props> {
-  _setRef(n: ?HTMLDivElement) {
+  _setRef = (n: ?HTMLDivElement) => {
     if (!n) {
       return;
     }
@@ -22,18 +21,16 @@ class HtmlElementWrapper extends React.Component<Props> {
     // Add the element directly to the React ref
     n.innerHTML = '';
     n.appendChild(this.props.el);
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     const { onUnmount } = this.props;
     if (typeof onUnmount === 'function') {
       onUnmount();
     }
-  }
+  };
 
-  render() {
-    return <div ref={this._setRef} />;
-  }
+  render = () => <div ref={this._setRef} />;
 }
 
 export default HtmlElementWrapper;

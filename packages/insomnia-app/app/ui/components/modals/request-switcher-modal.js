@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import Button from '../base/button';
@@ -46,7 +46,6 @@ type State = {
   title: string | null,
 };
 
-@autobind
 class RequestSwitcherModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _input: ?HTMLInputElement;
@@ -71,7 +70,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _handleInputKeydown(e: KeyboardEvent) {
+  _handleInputKeydown = (e: KeyboardEvent) => {
     const keyCode = e.keyCode;
 
     if (keyCode === 38 || (keyCode === 9 && e.shiftKey)) {
@@ -88,17 +87,17 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     }
 
     e.preventDefault();
-  }
+  };
 
-  _setModalRef(n: ?Modal) {
+  _setModalRef = (n: ?Modal) => {
     this.modal = n;
-  }
+  };
 
-  _setInputRef(n: ?HTMLInputElement) {
+  _setInputRef = (n: ?HTMLInputElement) => {
     this._input = n;
-  }
+  };
 
-  _setActiveIndex(activeIndex: number) {
+  _setActiveIndex = (activeIndex: number) => {
     const maxIndex = this.state.matchedRequests.length + this.state.matchedWorkspaces.length;
     if (activeIndex < 0) {
       activeIndex = this.state.matchedRequests.length - 1;
@@ -107,9 +106,9 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     }
 
     this.setState({ activeIndex });
-  }
+  };
 
-  async _activateCurrentIndex() {
+  _activateCurrentIndex = async () => {
     const { activeIndex, matchedRequests, matchedWorkspaces, searchString } = this.state;
 
     if (activeIndex < matchedRequests.length) {
@@ -129,9 +128,9 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     } else {
       // Do nothing
     }
-  }
+  };
 
-  async _createRequestFromSearch() {
+  _createRequestFromSearch = async () => {
     const { activeRequest, workspace } = this.props;
     const { searchString } = this.state;
 
@@ -144,28 +143,28 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
 
     const request = await models.request.create(patch);
     this._activateRequest(request);
-  }
+  };
 
-  _activateWorkspace(workspace: Workspace) {
+  _activateWorkspace = (workspace: Workspace) => {
     this.props.handleSetActiveWorkspace(workspace._id);
     this.modal && this.modal.hide();
-  }
+  };
 
-  _activateRequest(request: ?Request) {
+  _activateRequest = (request: ?Request) => {
     if (!request) {
       return;
     }
 
     this.props.activateRequest(request._id);
     this.modal && this.modal.hide();
-  }
+  };
 
-  _handleChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleChange = (e: SyntheticEvent<HTMLInputElement>) => {
     this._handleChangeValue(e.currentTarget.value);
-  }
+  };
 
   /** Return array of path segments for given request or folder */
-  _groupOf(requestOrRequestGroup: BaseModel): Array<string> {
+  _groupOf = (requestOrRequestGroup: BaseModel): Array<string> => {
     const { workspaceChildren } = this.props;
     const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
     const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
@@ -186,9 +185,9 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
 
     // It's the child
     return this._groupOf(matchedGroups[0]);
-  }
+  };
 
-  _isMatch(request: Request, searchStrings: string): number | null {
+  _isMatch = (request: Request, searchStrings: string): number | null => {
     let finalUrl = request.url;
     if (request.parameters) {
       finalUrl = joinUrlAndQueryString(finalUrl, buildQueryStringFromParams(request.parameters));
@@ -213,9 +212,9 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     }
 
     return match.score;
-  }
+  };
 
-  _handleChangeValue(searchString: string) {
+  _handleChangeValue = (searchString: string) => {
     const { workspace, workspaceChildren, workspaces, requestMetas, activeRequest } = this.props;
     const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = this.state;
 
@@ -273,9 +272,9 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       matchedRequests: (matchedRequests: Array<any>).slice(0, maxRequests),
       matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     });
-  }
+  };
 
-  async show(
+  show = async (
     options: {
       maxRequests?: number,
       maxWorkspaces?: number,
@@ -285,7 +284,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       title?: string,
       openDelay?: number,
     } = {},
-  ) {
+  ) => {
     // Don't show if we're already showing
     if (this.modal && this.modal.isOpen()) {
       return;
@@ -319,22 +318,22 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.show();
 
     setTimeout(() => this._input && this._input.focus(), 100);
-  }
+  };
 
-  hide() {
+  hide = () => {
     clearTimeout(this._openTimeout);
     this.modal && this.modal.hide();
-  }
+  };
 
-  toggle() {
+  toggle = () => {
     if (this.modal && this.modal.isOpen()) {
       this.hide();
     } else {
       this.show();
     }
-  }
+  };
 
-  _handleKeydown(e: KeyboardEvent) {
+  _handleKeydown = (e: KeyboardEvent) => {
     if (e.keyCode === keyboardKeys.esc.keyCode) {
       this.hide();
       return;
@@ -353,9 +352,9 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
         this._setActiveIndex(this.state.activeIndex - 1);
       }
     });
-  }
+  };
 
-  async _handleKeyup(e: KeyboardEvent) {
+  _handleKeyup = async (e: KeyboardEvent) => {
     const { selectOnKeyup } = this.state;
 
     // Handle selection if unpresses all modifier keys. Ideally this would trigger once
@@ -367,9 +366,9 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       await this._activateCurrentIndex();
       this.hide();
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       searchString,
       activeIndex,
@@ -490,7 +489,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
         </Modal>
       </KeydownBinder>
     );
-  }
+  };
 }
 
 export default RequestSwitcherModal;

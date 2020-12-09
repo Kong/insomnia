@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import * as sync from '../../../sync-legacy/index';
 import Link from '../base/link';
 import LoginModal from '../modals/login-modal';
@@ -21,7 +21,6 @@ type State = {
   finishedResetting: boolean,
 };
 
-@autobind
 class Account extends React.PureComponent<Props, State> {
   state = {
     code: '',
@@ -33,26 +32,26 @@ class Account extends React.PureComponent<Props, State> {
     finishedResetting: false,
   };
 
-  async _handleShowChangePasswordForm(e: SyntheticEvent<HTMLInputElement>) {
+  _handleShowChangePasswordForm = async (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState(state => ({
       showChangePassword: !state.showChangePassword,
       finishedResetting: false,
     }));
-  }
+  };
 
-  _handleChangeCode(e: SyntheticEvent<HTMLInputElement>) {
+  _handleChangeCode = (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ code: e.currentTarget.value });
-  }
+  };
 
-  _handleChangePassword(e: SyntheticEvent<HTMLInputElement>) {
+  _handleChangePassword = (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ password: e.currentTarget.value });
-  }
+  };
 
-  _handleChangePassword2(e: SyntheticEvent<HTMLInputElement>) {
+  _handleChangePassword2 = (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ password2: e.currentTarget.value });
-  }
+  };
 
-  async _handleSubmitPasswordChange(e: SyntheticEvent<HTMLFormElement>) {
+  _handleSubmitPasswordChange = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     this.setState({ error: '' });
 
@@ -78,20 +77,20 @@ class Account extends React.PureComponent<Props, State> {
     }
 
     this.setState({ error: '', finishedResetting: true, showChangePassword: false });
-  }
+  };
 
-  async _handleLogout() {
+  _handleLogout = async () => {
     await sync.logout();
     this.forceUpdate();
-  }
+  };
 
-  static _handleLogin(e: SyntheticEvent<HTMLButtonElement>) {
+  static _handleLogin = (e: SyntheticEvent<HTMLButtonElement>) => {
     e.preventDefault();
     hideAllModals();
     showModal(LoginModal);
-  }
+  };
 
-  async _sendCode() {
+  _sendCode = async () => {
     try {
       await session.sendPasswordChangeCode();
     } catch (err) {
@@ -100,50 +99,48 @@ class Account extends React.PureComponent<Props, State> {
     }
 
     this.setState({ codeSent: true });
-  }
+  };
 
-  async _handleSendCode(e: SyntheticEvent<HTMLAnchorElement>) {
+  _handleSendCode = async (e: SyntheticEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     await this._sendCode();
-  }
+  };
 
-  static renderUpgrade() {
-    return (
-      <React.Fragment>
-        <div className="notice pad surprise">
-          <h1 className="no-margin-top">Try Insomnia Plus!</h1>
-          <p>
-            &#128640; Sync your data across devices or with a team
-            <br />
-            &#128640; Keep synced data safe with end-to-end encryption
-            <br />
-            &#128640; Prioritized email support
-            <br />
-          </p>
-          <br />
-          <div className="pad">
-            <Link button className="btn btn--clicky" href="https://insomnia.rest/plus/">
-              Plus for Individuals <i className="fa fa-external-link" />
-            </Link>
-            <Link
-              button
-              className="margin-left-sm btn btn--clicky"
-              href="https://insomnia.rest/teams/">
-              Plus for Teams <i className="fa fa-external-link" />
-            </Link>
-          </div>
-        </div>
+  static renderUpgrade = () => (
+    <React.Fragment>
+      <div className="notice pad surprise">
+        <h1 className="no-margin-top">Try Insomnia Plus!</h1>
         <p>
-          Or{' '}
-          <a href="#" onClick={Account._handleLogin} className="theme--link">
-            Login
-          </a>
+          &#128640; Sync your data across devices or with a team
+          <br />
+          &#128640; Keep synced data safe with end-to-end encryption
+          <br />
+          &#128640; Prioritized email support
+          <br />
         </p>
-      </React.Fragment>
-    );
-  }
+        <br />
+        <div className="pad">
+          <Link button className="btn btn--clicky" href="https://insomnia.rest/plus/">
+            Plus for Individuals <i className="fa fa-external-link" />
+          </Link>
+          <Link
+            button
+            className="margin-left-sm btn btn--clicky"
+            href="https://insomnia.rest/teams/">
+            Plus for Teams <i className="fa fa-external-link" />
+          </Link>
+        </div>
+      </div>
+      <p>
+        Or{' '}
+        <a href="#" onClick={Account._handleLogin} className="theme--link">
+          Login
+        </a>
+      </p>
+    </React.Fragment>
+  );
 
-  renderAccount() {
+  renderAccount = () => {
     const {
       code,
       password,
@@ -236,11 +233,9 @@ class Account extends React.PureComponent<Props, State> {
         )}
       </React.Fragment>
     );
-  }
+  };
 
-  render() {
-    return session.isLoggedIn() ? this.renderAccount() : Account.renderUpgrade();
-  }
+  render = () => (session.isLoggedIn() ? this.renderAccount() : Account.renderUpgrade());
 }
 
 export default Account;

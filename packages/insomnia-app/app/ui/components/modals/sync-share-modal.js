@@ -1,7 +1,7 @@
 // @flow
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import Modal from '../base/modal';
@@ -25,7 +25,6 @@ type State = {
   error: string,
 };
 
-@autobind
 class SyncShareModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 
@@ -39,11 +38,11 @@ class SyncShareModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(n: ?Modal) {
+  _setModalRef = (n: ?Modal) => {
     this.modal = n;
-  }
+  };
 
-  async _handleChangeTeam(team: Team) {
+  _handleChangeTeam = async (team: Team) => {
     const { vcs } = this.props;
     this.setState({ loading: true });
 
@@ -65,9 +64,9 @@ class SyncShareModal extends React.PureComponent<Props, State> {
       error: '',
       loading: false,
     });
-  }
+  };
 
-  async show() {
+  show = async () => {
     const { vcs } = this.props;
     this.setState({ loading: true });
     this.modal && this.modal.show();
@@ -95,13 +94,13 @@ class SyncShareModal extends React.PureComponent<Props, State> {
       error: '',
       loading: false,
     });
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const { teams, error, selectedTeam, loading } = this.state;
     const { workspace } = this.props;
     return (
@@ -166,7 +165,7 @@ class SyncShareModal extends React.PureComponent<Props, State> {
         </ModalBody>
       </Modal>
     );
-  }
+  };
 }
 
 export default SyncShareModal;

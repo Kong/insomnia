@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { Breadcrumb, Header } from 'insomnia-components';
 import PageLayout from './page-layout';
 import type { WrapperProps } from './wrapper';
@@ -51,13 +51,12 @@ type Props = {
   wrapperProps: WrapperProps,
 };
 
-@autobind
 class WrapperDebug extends React.PureComponent<Props> {
-  _handleBreadcrumb() {
+  _handleBreadcrumb = () => {
     this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
-  }
+  };
 
-  _renderPageHeader() {
+  _renderPageHeader = () => {
     const {
       gitSyncDropdown,
       handleActivityChange,
@@ -87,9 +86,9 @@ class WrapperDebug extends React.PureComponent<Props> {
         gridRight={gitSyncDropdown}
       />
     );
-  }
+  };
 
-  _renderPageSidebar() {
+  _renderPageSidebar = () => {
     const {
       handleChangeEnvironment,
       handleRequestCreate,
@@ -197,9 +196,9 @@ class WrapperDebug extends React.PureComponent<Props> {
         />
       </React.Fragment>
     );
-  }
+  };
 
-  _renderRequestPane() {
+  _renderRequestPane = () => {
     const {
       forceRefreshKey,
       handleForceUpdateRequest,
@@ -289,9 +288,9 @@ class WrapperDebug extends React.PureComponent<Props> {
         />
       </ErrorBoundary>
     );
-  }
+  };
 
-  _renderResponsePane() {
+  _renderResponsePane = () => {
     const {
       forceRefreshKey,
       handleDeleteResponse,
@@ -361,9 +360,9 @@ class WrapperDebug extends React.PureComponent<Props> {
         />
       </ErrorBoundary>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { activity } = this.props.wrapperProps;
 
     const insomnia = isInsomnia(activity);
@@ -378,7 +377,7 @@ class WrapperDebug extends React.PureComponent<Props> {
         renderPaneTwo={this._renderResponsePane}
       />
     );
-  }
+  };
 }
 
 export default WrapperDebug;

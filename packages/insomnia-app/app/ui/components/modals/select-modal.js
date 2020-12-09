@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -16,7 +16,6 @@ type State = {
   onCancel?: Function,
 };
 
-@autobind
 class SelectModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   doneButton: ?HTMLButtonElement;
@@ -33,28 +32,28 @@ class SelectModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(m: ?Modal) {
+  _setModalRef = (m: ?Modal) => {
     this.modal = m;
-  }
+  };
 
-  _setDoneButtonRef(n: ?HTMLButtonElement) {
+  _setDoneButtonRef = (n: ?HTMLButtonElement) => {
     this.doneButton = n;
-  }
+  };
 
-  _handleDone() {
+  _handleDone = () => {
     this.hide();
     this._doneCallback && this._doneCallback(this.state.value);
-  }
+  };
 
-  _handleSelectChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleSelectChange = (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ value: e.currentTarget.value });
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  show(data: Object = {}) {
+  show = (data: Object = {}) => {
     const { title, message, options, value, onDone, onCancel } = data;
 
     this._doneCallback = onDone;
@@ -65,9 +64,9 @@ class SelectModal extends React.PureComponent<Props, State> {
     setTimeout(() => {
       this.doneButton && this.doneButton.focus();
     }, 100);
-  }
+  };
 
-  render() {
+  render = () => {
     const { message, title, options, value, onCancel } = this.state;
 
     return (
@@ -92,7 +91,7 @@ class SelectModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default SelectModal;

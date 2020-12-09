@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -22,7 +22,6 @@ const MODES = {
   'text/html': 'HTML',
 };
 
-@autobind
 class CodePromptModal extends PureComponent {
   constructor(props) {
     super(props);
@@ -39,24 +38,24 @@ class CodePromptModal extends PureComponent {
     };
   }
 
-  _setModalRef(n) {
+  _setModalRef = n => {
     this.modal = n;
-  }
+  };
 
-  _handleChange(value) {
+  _handleChange = value => {
     this._onChange(value);
-  }
+  };
 
-  _handleChangeMode(mode) {
+  _handleChangeMode = mode => {
     this.setState({ mode });
     this._onModeChange && this._onModeChange(mode);
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
-  show(options) {
+  show = options => {
     const {
       title,
       defaultValue,
@@ -89,9 +88,9 @@ class CodePromptModal extends PureComponent {
     });
 
     this.modal.show();
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       handleGetRenderContext,
       nunjucksPowerUserMode,
@@ -200,7 +199,7 @@ class CodePromptModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 CodePromptModal.propTypes = {

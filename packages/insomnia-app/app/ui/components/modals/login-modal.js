@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+
 import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -8,7 +8,6 @@ import ModalFooter from '../base/modal-footer';
 import * as sync from '../../../sync-legacy';
 import * as session from '../../../account/session';
 
-@autobind
 class LoginModal extends PureComponent {
   constructor(props) {
     super(props);
@@ -21,19 +20,19 @@ class LoginModal extends PureComponent {
     };
   }
 
-  _setModalRef(n) {
+  _setModalRef = n => {
     this.modal = n;
-  }
+  };
 
-  _setPasswordInputRef(n) {
+  _setPasswordInputRef = n => {
     this._passwordInput = n;
-  }
+  };
 
-  _setEmailInputRef(n) {
+  _setEmailInputRef = n => {
     this._emailInput = n;
-  }
+  };
 
-  async _handleLogin(e) {
+  _handleLogin = async e => {
     e.preventDefault();
     this.setState({ error: '', loading: true });
 
@@ -50,20 +49,20 @@ class LoginModal extends PureComponent {
     } catch (e) {
       this.setState({ error: e.message, loading: false });
     }
-  }
+  };
 
-  show(options = {}) {
+  show = (options = {}) => {
     const { title, message } = options;
     this.setState({ error: '', loading: false, title, message });
     this.modal.show();
     setTimeout(() => this._emailInput.focus(), 100);
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const { title, message, loading, error } = this.state;
     return (
       <form onSubmit={this._handleLogin}>
@@ -107,7 +106,7 @@ class LoginModal extends PureComponent {
         </Modal>
       </form>
     );
-  }
+  };
 }
 
 export default LoginModal;

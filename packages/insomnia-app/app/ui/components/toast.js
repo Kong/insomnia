@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import * as electron from 'electron';
-import autobind from 'autobind-decorator';
+
 import styled from 'styled-components';
 import classnames from 'classnames';
 import Link from './base/link';
@@ -64,7 +64,6 @@ const StyledFooter: React.ComponentType<{}> = styled.footer`
   width: 100%;
 `;
 
-@autobind
 class Toast extends React.PureComponent<Props, State> {
   _interval: any;
 
@@ -77,30 +76,30 @@ class Toast extends React.PureComponent<Props, State> {
     };
   }
 
-  _handlePostCTACleanup() {
+  _handlePostCTACleanup = () => {
     const { notification } = this.state;
     if (!notification) {
       return;
     }
 
     this._dismissNotification();
-  }
+  };
 
-  _handleCancelClick() {
+  _handleCancelClick = () => {
     const { notification } = this.state;
     if (!notification) {
       return;
     }
 
     this._dismissNotification();
-  }
+  };
 
-  _hasSeenNotification(notification: ToastNotification) {
+  _hasSeenNotification = (notification: ToastNotification) => {
     const seenNotifications = this._loadSeen();
     return seenNotifications[notification.key];
-  }
+  };
 
-  async _checkForNotifications() {
+  _checkForNotifications = async () => {
     // If there is a notification open, skip check
     if (this.state.notification) {
       return;
@@ -135,9 +134,9 @@ class Toast extends React.PureComponent<Props, State> {
     }
 
     this._handleNotification(notification);
-  }
+  };
 
-  _handleNotification(notification: ?ToastNotification) {
+  _handleNotification = (notification: ?ToastNotification) => {
     // No new notifications
     if (!notification || this._hasSeenNotification(notification)) {
       return;
@@ -154,17 +153,17 @@ class Toast extends React.PureComponent<Props, State> {
 
     // Fade the notification in
     setTimeout(() => this.setState({ visible: true }), 1000);
-  }
+  };
 
-  _loadSeen() {
+  _loadSeen = () => {
     try {
       return JSON.parse(window.localStorage.getItem(LOCALSTORAGE_KEY)) || {};
     } catch (e) {
       return {};
     }
-  }
+  };
 
-  _dismissNotification() {
+  _dismissNotification = () => {
     const { notification } = this.state;
     if (!notification) {
       return;
@@ -179,25 +178,25 @@ class Toast extends React.PureComponent<Props, State> {
         await this._checkForNotifications();
       });
     }, 1000);
-  }
+  };
 
-  _listenerShowNotification(e: any, notification: ToastNotification) {
+  _listenerShowNotification = (e: any, notification: ToastNotification) => {
     console.log('[toast] Received notification ' + notification.key);
     this._handleNotification(notification);
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     setTimeout(this._checkForNotifications, 1000 * 10);
     this._interval = setInterval(this._checkForNotifications, 1000 * 60 * 30);
     electron.ipcRenderer.on('show-notification', this._listenerShowNotification);
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     clearInterval(this._interval);
     electron.ipcRenderer.removeListener('show-notification', this._listenerShowNotification);
-  }
+  };
 
-  render() {
+  render = () => {
     const { notification, visible, appName } = this.state;
 
     if (!notification) {
@@ -235,7 +234,7 @@ class Toast extends React.PureComponent<Props, State> {
         </StyledContent>
       </div>
     );
-  }
+  };
 }
 
 export default Toast;

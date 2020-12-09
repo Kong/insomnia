@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import Button from '../base/button';
 import ModalBody from '../base/modal-body';
@@ -24,72 +24,71 @@ export const TAB_INDEX_SHORTCUTS = 3;
 export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
 
-@autobind
 class SettingsModal extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {};
   }
 
-  _setModalRef(n) {
+  _setModalRef = n => {
     this.modal = n;
-  }
+  };
 
-  async _handleUpdateSetting(key, value) {
+  _handleUpdateSetting = async (key, value) => {
     return models.settings.update(this.props.settings, { [key]: value });
-  }
+  };
 
-  _handleExportAllToFile() {
+  _handleExportAllToFile = () => {
     this.props.handleExportAllToFile();
     this.modal.hide();
-  }
+  };
 
-  _handleShowExportRequestsModal() {
+  _handleShowExportRequestsModal = () => {
     this.props.handleShowExportRequestsModal();
     this.modal.hide();
-  }
+  };
 
-  _handleImportFile() {
+  _handleImportFile = () => {
     this.props.handleImportFile();
     this.modal.hide();
-  }
+  };
 
-  _handleImportClipBoard() {
+  _handleImportClipBoard = () => {
     this.props.handleImportClipBoard();
     this.modal.hide();
-  }
+  };
 
-  _handleImportUri(uri) {
+  _handleImportUri = uri => {
     this.props.handleImportUri(uri);
     this.modal.hide();
-  }
+  };
 
-  async _handleChangeTheme(theme, persist = true) {
+  _handleChangeTheme = async (theme, persist = true) => {
     await setTheme(theme);
 
     if (persist) {
       models.settings.update(this.props.settings, { theme });
     }
-  }
+  };
 
-  async _handleUpdateKeyBindings(hotKeyRegistry) {
+  _handleUpdateKeyBindings = async hotKeyRegistry => {
     models.settings.update(this.props.settings, { hotKeyRegistry });
-  }
+  };
 
-  show(currentTabIndex = 0) {
+  show = (currentTabIndex = 0) => {
     if (typeof currentTabIndex !== 'number') {
       currentTabIndex = 0;
     }
 
     this.setState({ currentTabIndex });
     this.modal.show();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const { settings, activity } = this.props;
     const { currentTabIndex } = this.state;
     const email = session.isLoggedIn() ? session.getFullName() : null;
@@ -168,7 +167,7 @@ class SettingsModal extends PureComponent {
         </ModalBody>
       </Modal>
     );
-  }
+  };
 }
 
 SettingsModal.propTypes = {

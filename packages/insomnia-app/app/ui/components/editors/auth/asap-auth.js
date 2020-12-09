@@ -2,7 +2,7 @@
 
 import classnames from 'classnames';
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import OneLineEditor from '../../codemirror/one-line-editor';
 import HelpTooltip from '../../help-tooltip';
 import { showModal } from '../../modals';
@@ -32,27 +32,26 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 -----END RSA PRIVATE KEY-----
 `.trim();
 
-@autobind
 class AsapAuth extends React.PureComponent<Props> {
-  _handleDisable() {
+  _handleDisable = () => {
     const { request, onChange } = this.props;
     onChange(request, {
       ...request.authentication,
       disabled: !request.authentication.disabled,
     });
-  }
+  };
 
-  _handleChangeProperty(property: string, value: string | boolean): void {
+  _handleChangeProperty = (property: string, value: string | boolean): void => {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, [property]: value });
-  }
+  };
 
-  _handleChangePrivateKey(value: string): void {
+  _handleChangePrivateKey = (value: string): void => {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, privateKey: value });
-  }
+  };
 
-  renderAsapAuthenticationFields(): React.Node {
+  renderAsapAuthenticationFields = (): React.Node => {
     const asapIssuer = this.renderTextInput('Issuer (iss)', 'issuer', 'text/plain', value =>
       this._handleChangeProperty('issuer', value),
     );
@@ -79,14 +78,14 @@ class AsapAuth extends React.PureComponent<Props> {
     const asapPrivateKey = this.renderPrivateKeyInput('Private Key');
 
     return [asapIssuer, asapSubject, asapAudience, asapAdditionalClaims, asapKeyId, asapPrivateKey];
-  }
+  };
 
-  renderTextInput(
+  renderTextInput = (
     label: string,
     property: string,
     mode: string,
     onChange: Function,
-  ): React.Element<*> {
+  ): React.Element<*> => {
     const {
       handleRender,
       handleGetRenderContext,
@@ -124,9 +123,9 @@ class AsapAuth extends React.PureComponent<Props> {
         </td>
       </tr>
     );
-  }
+  };
 
-  _handleEditPrivateKey() {
+  _handleEditPrivateKey = () => {
     const { handleRender, handleGetRenderContext, request } = this.props;
 
     const { authentication } = request;
@@ -141,9 +140,9 @@ class AsapAuth extends React.PureComponent<Props> {
       mode: 'text/plain',
       hideMode: true,
     });
-  }
+  };
 
-  renderPrivateKeyInput(label: string): React.Element<*> {
+  renderPrivateKeyInput = (label: string): React.Element<*> => {
     const { authentication } = this.props.request;
     const id = label.replace(/ /g, '-');
 
@@ -174,9 +173,9 @@ class AsapAuth extends React.PureComponent<Props> {
         </td>
       </tr>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { authentication } = this.props.request;
     const fields = this.renderAsapAuthenticationFields();
 
@@ -212,7 +211,7 @@ class AsapAuth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  }
+  };
 }
 
 export default AsapAuth;

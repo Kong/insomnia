@@ -2,7 +2,7 @@
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+
 import OneLineEditor from '../../codemirror/one-line-editor';
 import HelpTooltip from '../../help-tooltip';
 import {
@@ -38,9 +38,8 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 -----END RSA PRIVATE KEY-----
 `.trim();
 
-@autobind
 class OAuth1Auth extends React.PureComponent<Props> {
-  _handleEditPrivateKey() {
+  _handleEditPrivateKey = () => {
     const { handleRender, handleGetRenderContext, request } = this.props;
     const { privateKey } = request.authentication;
     showModal(CodePromptModal, {
@@ -53,78 +52,78 @@ class OAuth1Auth extends React.PureComponent<Props> {
       mode: 'text/plain',
       hideMode: true,
     });
-  }
+  };
 
-  _handleChangeProperty(property: string, value: string | boolean): void {
+  _handleChangeProperty = (property: string, value: string | boolean): void => {
     const { request } = this.props;
     const authentication = Object.assign({}, request.authentication, {
       [property]: value,
     });
     this.props.onChange(request, authentication);
-  }
+  };
 
-  _handleChangeConsumerKey(value: string): void {
+  _handleChangeConsumerKey = (value: string): void => {
     this._handleChangeProperty('consumerKey', value);
-  }
+  };
 
-  _handleChangeConsumerSecret(value: string): void {
+  _handleChangeConsumerSecret = (value: string): void => {
     this._handleChangeProperty('consumerSecret', value);
-  }
+  };
 
-  _handleChangeTokenKey(value: string): void {
+  _handleChangeTokenKey = (value: string): void => {
     this._handleChangeProperty('tokenKey', value);
-  }
+  };
 
-  _handleChangeTokenSecret(value: string): void {
+  _handleChangeTokenSecret = (value: string): void => {
     this._handleChangeProperty('tokenSecret', value);
-  }
+  };
 
-  _handleChangeRealm(value: string): void {
+  _handleChangeRealm = (value: string): void => {
     this._handleChangeProperty('realm', value);
-  }
+  };
 
-  _handleChangeCallback(value: string): void {
+  _handleChangeCallback = (value: string): void => {
     this._handleChangeProperty('callback', value);
-  }
+  };
 
-  _handleChangeNonce(value: string): void {
+  _handleChangeNonce = (value: string): void => {
     this._handleChangeProperty('nonce', value);
-  }
+  };
 
-  _handleChangeVerifier(value: string): void {
+  _handleChangeVerifier = (value: string): void => {
     this._handleChangeProperty('verifier', value);
-  }
+  };
 
-  _handleChangeTimestamp(value: string): void {
+  _handleChangeTimestamp = (value: string): void => {
     this._handleChangeProperty('timestamp', value);
-  }
+  };
 
-  _handleChangeSignatureMethod(e: SyntheticEvent<HTMLInputElement>): void {
+  _handleChangeSignatureMethod = (e: SyntheticEvent<HTMLInputElement>): void => {
     this._handleChangeProperty('signatureMethod', e.currentTarget.value);
-  }
+  };
 
-  _handleChangePrivateKey(value: string): void {
+  _handleChangePrivateKey = (value: string): void => {
     this._handleChangeProperty('privateKey', value);
-  }
+  };
 
-  _handleChangeIncludeBodyHash(value: boolean): void {
+  _handleChangeIncludeBodyHash = (value: boolean): void => {
     this._handleChangeProperty('includeBodyHash', value);
-  }
+  };
 
-  _handleChangeVersion(value: string): void {
+  _handleChangeVersion = (value: string): void => {
     this._handleChangeProperty('version', value);
-  }
+  };
 
-  _handleChangeEnabled(value: boolean): void {
+  _handleChangeEnabled = (value: boolean): void => {
     this._handleChangeProperty('disabled', value);
-  }
+  };
 
-  renderCheckbox(
+  renderCheckbox = (
     label: string,
     property: string,
     help: string,
     onChange: boolean => void,
-  ): React.Element<*> {
+  ): React.Element<*> => {
     const { request } = this.props;
     const { authentication } = request;
     return (
@@ -152,9 +151,9 @@ class OAuth1Auth extends React.PureComponent<Props> {
         </td>
       </tr>
     );
-  }
+  };
 
-  renderEnabledRow(onChange: boolean => void): React.Element<*> {
+  renderEnabledRow = (onChange: boolean => void): React.Element<*> => {
     const { request } = this.props;
     const { authentication } = request;
     return (
@@ -182,15 +181,15 @@ class OAuth1Auth extends React.PureComponent<Props> {
         </td>
       </tr>
     );
-  }
+  };
 
-  renderInputRow(
+  renderInputRow = (
     label: string,
     property: string,
     onChange: Function,
     help: string | null = null,
     handleAutocomplete: Function | null = null,
-  ): React.Element<*> {
+  ): React.Element<*> => {
     const {
       handleRender,
       handleGetRenderContext,
@@ -229,15 +228,15 @@ class OAuth1Auth extends React.PureComponent<Props> {
         </td>
       </tr>
     );
-  }
+  };
 
-  renderSelectRow(
+  renderSelectRow = (
     label: string,
     property: string,
     options: Array<{ name: string, value: string }>,
     onChange: Function,
     help: string | null = null,
-  ): React.Element<*> {
+  ): React.Element<*> => {
     const { request } = this.props;
     const { authentication } = request;
     const id = label.replace(/ /g, '-');
@@ -269,9 +268,13 @@ class OAuth1Auth extends React.PureComponent<Props> {
         </td>
       </tr>
     );
-  }
+  };
 
-  renderPrivateKeyInput(label: string, property: string, onChange: Function): React.Element<*> {
+  renderPrivateKeyInput = (
+    label: string,
+    property: string,
+    onChange: Function,
+  ): React.Element<*> => {
     const id = label.replace(/ /g, '-');
     const { authentication } = this.props.request;
     return (
@@ -292,9 +295,9 @@ class OAuth1Auth extends React.PureComponent<Props> {
         </td>
       </tr>
     );
-  }
+  };
 
-  renderFields(): Array<React.Element<*>> {
+  renderFields = (): Array<React.Element<*>> => {
     const consumerKey = this.renderInputRow(
       'Consumer Key',
       'consumerKey',
@@ -398,9 +401,9 @@ class OAuth1Auth extends React.PureComponent<Props> {
     }
 
     return fields;
-  }
+  };
 
-  render() {
+  render = () => {
     const fields = this.renderFields();
 
     return (
@@ -410,7 +413,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  }
+  };
 }
 
 export default OAuth1Auth;

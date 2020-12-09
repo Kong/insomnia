@@ -1,7 +1,7 @@
 // @flow
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showModal } from '../modals';
 import AlertModal from '../modals/alert-modal';
@@ -31,9 +31,8 @@ type Props = {
   children: React.Node,
 };
 
-@autobind
 class AuthDropdown extends React.PureComponent<Props> {
-  async _handleTypeChange(type: string) {
+  _handleTypeChange = async (type: string) => {
     const { request, onChange } = this.props;
     const { authentication } = request;
 
@@ -66,9 +65,9 @@ class AuthDropdown extends React.PureComponent<Props> {
     }
 
     onChange(request, newAuthentication);
-  }
+  };
 
-  renderAuthType(type: string, nameOverride: string | null = null) {
+  renderAuthType = (type: string, nameOverride: string | null = null) => {
     const { authentication } = this.props.request;
     const currentType = authentication.type || AUTH_NONE;
 
@@ -78,9 +77,9 @@ class AuthDropdown extends React.PureComponent<Props> {
         {nameOverride || getAuthTypeName(type, true)}
       </DropdownItem>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { children, className } = this.props;
     return (
       <Dropdown beside debug="true">
@@ -100,7 +99,7 @@ class AuthDropdown extends React.PureComponent<Props> {
         {this.renderAuthType(AUTH_NONE, 'No Authentication')}
       </Dropdown>
     );
-  }
+  };
 }
 
 export default AuthDropdown;

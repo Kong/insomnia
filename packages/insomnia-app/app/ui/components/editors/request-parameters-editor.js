@@ -1,7 +1,7 @@
 // @flow
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import KeyValueEditor from '../key-value-editor/editor';
 import CodeEditor from '../codemirror/code-editor';
 import type { Request, RequestParameter } from '../../../models/request';
@@ -19,21 +19,20 @@ type Props = {
   request: Request,
 };
 
-@autobind
 class RequestParametersEditor extends React.PureComponent<Props> {
-  _handleBulkUpdate(paramsString: string) {
+  _handleBulkUpdate = (paramsString: string) => {
     const { onChange, request } = this.props;
     const params = RequestParametersEditor._getParamsFromString(paramsString);
 
     onChange(request, params);
-  }
+  };
 
-  _handleKeyValueUpdate(parameters: Array<RequestParameter>) {
+  _handleKeyValueUpdate = (parameters: Array<RequestParameter>) => {
     const { onChange, request } = this.props;
     onChange(request, parameters);
-  }
+  };
 
-  static _getParamsFromString(paramsString: string) {
+  static _getParamsFromString = (paramsString: string) => {
     const params = [];
     const rows = paramsString.split(/\n+/);
 
@@ -51,9 +50,9 @@ class RequestParametersEditor extends React.PureComponent<Props> {
     }
 
     return params;
-  }
+  };
 
-  _getQueriesString() {
+  _getQueriesString = () => {
     const { parameters } = this.props.request;
 
     let paramsString = '';
@@ -73,9 +72,9 @@ class RequestParametersEditor extends React.PureComponent<Props> {
     }
 
     return paramsString;
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       bulk,
       request,
@@ -115,7 +114,7 @@ class RequestParametersEditor extends React.PureComponent<Props> {
         onChange={this._handleKeyValueUpdate}
       />
     );
-  }
+  };
 }
 
 export default RequestParametersEditor;

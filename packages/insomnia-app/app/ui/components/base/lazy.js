@@ -1,31 +1,27 @@
 import { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
 
-@autobind
 class Lazy extends PureComponent {
   constructor(props) {
     super(props);
     this.state = { show: false };
   }
 
-  show() {
+  show = () => {
     this.setState({ show: true });
-  }
+  };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount() {
+  UNSAFE_componentWillMount = () => {
     if (this.props.delay < 0) {
       // Show right away if negative delay passed
       this.show();
     } else {
       setTimeout(this.show, this.props.delay || 50);
     }
-  }
+  };
 
-  render() {
-    return this.state.show ? this.props.children : null;
-  }
+  render = () => (this.state.show ? this.props.children : null);
 }
 
 Lazy.propTypes = {

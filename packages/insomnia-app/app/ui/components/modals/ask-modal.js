@@ -1,11 +1,10 @@
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 
-@autobind
 class AskModal extends PureComponent {
   constructor(props) {
     super(props);
@@ -19,15 +18,15 @@ class AskModal extends PureComponent {
     };
   }
 
-  _setModalRef(m) {
+  _setModalRef = m => {
     this.modal = m;
-  }
+  };
 
-  _setYesButtonRef(n) {
+  _setYesButtonRef = n => {
     this.yesButton = n;
-  }
+  };
 
-  async _handleYes() {
+  _handleYes = async () => {
     this.setState({ loading: true });
 
     if (this._doneCallback) {
@@ -38,19 +37,19 @@ class AskModal extends PureComponent {
     this._promiseCallback(true);
 
     this.hide();
-  }
+  };
 
-  _handleNo() {
+  _handleNo = () => {
     this.hide();
     this._doneCallback && this._doneCallback(false);
     this._promiseCallback(false);
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
-  show(options = {}) {
+  show = (options = {}) => {
     const { title, message, onDone, yesText, noText } = options;
 
     this._doneCallback = onDone;
@@ -72,9 +71,9 @@ class AskModal extends PureComponent {
     return new Promise(resolve => {
       this._promiseCallback = resolve;
     });
-  }
+  };
 
-  render() {
+  render = () => {
     const { message, title, yesText, noText, loading } = this.state;
 
     return (
@@ -97,7 +96,7 @@ class AskModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default AskModal;

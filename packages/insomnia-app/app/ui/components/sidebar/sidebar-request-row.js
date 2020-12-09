@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import ReactDOM from 'react-dom';
 import { DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
@@ -17,7 +17,6 @@ import GrpcTag from '../tags/grpc-tag';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import GrpcSpinner from '../grpc-spinner';
 
-@autobind
 class SidebarRequestRow extends PureComponent {
   constructor(props) {
     super(props);
@@ -29,34 +28,34 @@ class SidebarRequestRow extends PureComponent {
     this._urlUpdateInterval = null;
   }
 
-  _setRequestActionsDropdownRef(n) {
+  _setRequestActionsDropdownRef = n => {
     this._requestActionsDropdown = n;
-  }
+  };
 
-  _handleShowRequestActions(e) {
+  _handleShowRequestActions = e => {
     e.preventDefault();
     this._requestActionsDropdown.show();
-  }
+  };
 
-  _handleEditStart() {
+  _handleEditStart = () => {
     this.setState({ isEditing: true });
-  }
+  };
 
-  async _handleRequestUpdateName(name) {
+  _handleRequestUpdateName = async name => {
     const { request } = this.props;
     const patch = { name };
 
     await requestOperations.update(request, patch);
 
     this.setState({ isEditing: false });
-  }
+  };
 
-  _handleRequestCreateFromEmpty() {
+  _handleRequestCreateFromEmpty = () => {
     const parentId = this.props.requestGroup._id;
     this.props.requestCreate(parentId);
-  }
+  };
 
-  _handleRequestActivate() {
+  _handleRequestActivate = () => {
     const { isActive, request, handleActivateRequest } = this.props;
 
     if (isActive) {
@@ -64,13 +63,13 @@ class SidebarRequestRow extends PureComponent {
     }
 
     handleActivateRequest(request._id);
-  }
+  };
 
-  _handleShowRequestSettings() {
+  _handleShowRequestSettings = () => {
     showModal(RequestSettingsModal, { request: this.props.request });
-  }
+  };
 
-  _getMethodOverrideHeaderValue() {
+  _getMethodOverrideHeaderValue = () => {
     const { request } = this.props;
 
     const header = getMethodOverrideHeader(request.headers);
@@ -85,17 +84,17 @@ class SidebarRequestRow extends PureComponent {
     }
 
     return null;
-  }
+  };
 
-  async _debouncedUpdateRenderedUrl(props) {
+  _debouncedUpdateRenderedUrl = async props => {
     clearTimeout(this._urlUpdateInterval);
 
     this._urlUpdateInterval = setTimeout(() => {
       this._updateRenderedUrl(props);
     }, 300);
-  }
+  };
 
-  async _updateRenderedUrl(props) {
+  _updateRenderedUrl = async props => {
     let renderedUrl;
 
     try {
@@ -110,23 +109,23 @@ class SidebarRequestRow extends PureComponent {
     this.setState({
       renderedUrl,
     });
-  }
+  };
 
-  setDragDirection(dragDirection) {
+  setDragDirection = dragDirection => {
     if (dragDirection !== this.state.dragDirection) {
       this.setState({ dragDirection });
     }
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     const { request } = this.props;
     if (request && !request.name) {
       this._debouncedUpdateRenderedUrl(this.props);
     }
-  }
+  };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillUpdate(nextProps) {
+  UNSAFE_componentWillUpdate = nextProps => {
     if (!nextProps.request) {
       return;
     }
@@ -135,13 +134,13 @@ class SidebarRequestRow extends PureComponent {
     if (nextProps.request.url !== requestUrl) {
       this._debouncedUpdateRenderedUrl(nextProps);
     }
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     clearTimeout(this._urlUpdateInterval);
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       filter,
       handleDuplicateRequest,
@@ -251,7 +250,7 @@ class SidebarRequestRow extends PureComponent {
     } else {
       return connectDropTarget(node);
     }
-  }
+  };
 }
 
 SidebarRequestRow.propTypes = {
@@ -289,14 +288,14 @@ const dragSource = {
   },
 };
 
-function isAbove(monitor, component) {
+const isAbove = (monitor, component) => {
   const hoveredNode = ReactDOM.findDOMNode(component);
 
   const hoveredTop = hoveredNode.getBoundingClientRect().top;
   const draggedTop = monitor.getSourceClientOffset().y;
 
   return hoveredTop > draggedTop;
-}
+};
 
 const dragTarget = {
   drop(props, monitor, component) {
@@ -320,19 +319,15 @@ const dragTarget = {
   },
 };
 
-function sourceCollect(connect, monitor) {
-  return {
-    connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging(),
-  };
-}
+const sourceCollect = (connect, monitor) => ({
+  connectDragSource: connect.dragSource(),
+  isDragging: monitor.isDragging(),
+});
 
-function targetCollect(connect, monitor) {
-  return {
-    connectDropTarget: connect.dropTarget(),
-    isDraggingOver: monitor.isOver(),
-  };
-}
+const targetCollect = (connect, monitor) => ({
+  connectDropTarget: connect.dropTarget(),
+  isDraggingOver: monitor.isOver(),
+});
 
 const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestRow);
 export default DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);

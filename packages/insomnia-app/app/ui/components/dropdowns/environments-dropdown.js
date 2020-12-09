@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import EnvironmentsModal from '../modals/workspace-environments-edit-modal';
 import {
   Dropdown,
@@ -30,41 +30,38 @@ type Props = {
   activeEnvironment: Environment | null,
 };
 
-@autobind
 class EnvironmentsDropdown extends React.PureComponent<Props> {
   _dropdown: ?Dropdown;
 
-  _handleActivateEnvironment(environmentId: string) {
+  _handleActivateEnvironment = (environmentId: string) => {
     this.props.handleChangeEnvironment(environmentId);
-  }
+  };
 
-  _handleShowEnvironmentModal() {
+  _handleShowEnvironmentModal = () => {
     showModal(EnvironmentsModal, this.props.workspace);
-  }
+  };
 
-  _setDropdownRef(n: ?Dropdown) {
+  _setDropdownRef = (n: ?Dropdown) => {
     this._dropdown = n;
-  }
+  };
 
-  renderEnvironmentItem(environment: Environment) {
-    return (
-      <DropdownItem
-        key={environment._id}
-        value={environment._id}
-        onClick={this._handleActivateEnvironment}>
-        <i className="fa fa-random" style={{ color: environment.color }} />
-        Use <strong>{environment.name}</strong>
-      </DropdownItem>
-    );
-  }
+  renderEnvironmentItem = (environment: Environment) => (
+    <DropdownItem
+      key={environment._id}
+      value={environment._id}
+      onClick={this._handleActivateEnvironment}>
+      <i className="fa fa-random" style={{ color: environment.color }} />
+      Use <strong>{environment.name}</strong>
+    </DropdownItem>
+  );
 
-  _handleKeydown(e: KeyboardEvent) {
+  _handleKeydown = (e: KeyboardEvent) => {
     executeHotKey(e, hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       className,
       workspace,
@@ -132,7 +129,7 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
         </Dropdown>
       </KeydownBinder>
     );
-  }
+  };
 }
 
 export default EnvironmentsDropdown;

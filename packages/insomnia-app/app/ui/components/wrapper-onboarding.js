@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
@@ -24,17 +24,16 @@ type State = {|
   step: number,
 |};
 
-@autobind
 class WrapperOnboarding extends React.PureComponent<Props, State> {
   state = {
     step: 1,
   };
 
-  componentDidMount() {
+  componentDidMount = () => {
     db.onChange(this._handleDbChange);
-  }
+  };
 
-  _handleDbChange(changes: Array<[string, BaseModel, boolean]>) {
+  _handleDbChange = (changes: Array<[string, BaseModel, boolean]>) => {
     for (const change of changes) {
       if (change[1].type === models.workspace.type) {
         setTimeout(() => {
@@ -42,46 +41,46 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
         }, 400);
       }
     }
-  }
+  };
 
-  async _handleDone() {
+  _handleDone = async () => {
     const { handleSetActiveActivity } = this.props.wrapperProps;
 
     handleSetActiveActivity(ACTIVITY_HOME);
 
     // Unsubscribe DB listener
     db.offChange(this._handleDbChange);
-  }
+  };
 
-  _handleBackStep(e: SyntheticEvent<HTMLAnchorElement>) {
+  _handleBackStep = (e: SyntheticEvent<HTMLAnchorElement>) => {
     e.preventDefault();
 
     this.setState(state => ({ step: state.step - 1 }));
-  }
+  };
 
-  async _handleCompleteAnalyticsStep(enableAnalytics: boolean) {
+  _handleCompleteAnalyticsStep = async (enableAnalytics: boolean) => {
     const { settings } = this.props.wrapperProps;
 
     // Update settings with analytics preferences
     await models.settings.update(settings, { enableAnalytics });
 
     this.setState(state => ({ step: state.step + 1 }));
-  }
+  };
 
-  async _handleClickEnableAnalytics(e: SyntheticEvent<HTMLButtonElement>) {
+  _handleClickEnableAnalytics = async (e: SyntheticEvent<HTMLButtonElement>) => {
     this._handleCompleteAnalyticsStep(true);
-  }
+  };
 
-  async _handleClickDisableAnalytics(e: SyntheticEvent<HTMLButtonElement>) {
+  _handleClickDisableAnalytics = async (e: SyntheticEvent<HTMLButtonElement>) => {
     this._handleCompleteAnalyticsStep(false);
-  }
+  };
 
-  _handleImportFile() {
+  _handleImportFile = () => {
     const { handleImportFile } = this.props;
     handleImportFile(ForceToWorkspaceKeys.current);
-  }
+  };
 
-  _handleImportUri(defaultValue: string) {
+  _handleImportUri = (defaultValue: string) => {
     const { handleImportUri } = this.props;
 
     showPrompt({
@@ -93,45 +92,42 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
         handleImportUri(value, ForceToWorkspaceKeys.current);
       },
     });
-  }
+  };
 
-  _handleImportPetstore() {
+  _handleImportPetstore = () => {
     this._handleImportUri(
       'https://gist.githubusercontent.com/gschier/4e2278d5a50b4bbf1110755d9b48a9f9' +
         '/raw/801c05266ae102bcb9288ab92c60f52d45557425/petstore-spec.yaml',
     );
-  }
+  };
 
-  _handleSkipImport() {
+  _handleSkipImport = () => {
     const { handleSetActiveActivity } = this.props.wrapperProps;
     handleSetActiveActivity(ACTIVITY_HOME);
-  }
+  };
 
-  renderStep1() {
-    return (
-      <React.Fragment>
-        <p>
-          <strong>Share Usage Analytics with Kong Inc</strong>
-        </p>
-        <img src={chartSrc} alt="Demonstration chart" />
-        <p>
-          Help us understand how <strong>you</strong> use {getAppLongName()} so we can make it
-          better.
-        </p>
-        <button key="enable" className="btn btn--clicky" onClick={this._handleClickEnableAnalytics}>
-          Share Usage Analytics
-        </button>
-        <button
-          key="disable"
-          className="btn btn--super-compact"
-          onClick={this._handleClickDisableAnalytics}>
-          Don't share usage analytics
-        </button>
-      </React.Fragment>
-    );
-  }
+  renderStep1 = () => (
+    <React.Fragment>
+      <p>
+        <strong>Share Usage Analytics with Kong Inc</strong>
+      </p>
+      <img src={chartSrc} alt="Demonstration chart" />
+      <p>
+        Help us understand how <strong>you</strong> use {getAppLongName()} so we can make it better.
+      </p>
+      <button key="enable" className="btn btn--clicky" onClick={this._handleClickEnableAnalytics}>
+        Share Usage Analytics
+      </button>
+      <button
+        key="disable"
+        className="btn btn--super-compact"
+        onClick={this._handleClickDisableAnalytics}>
+        Don't share usage analytics
+      </button>
+    </React.Fragment>
+  );
 
-  renderStep2() {
+  renderStep2 = () => {
     const {
       settings: { enableAnalytics },
     } = this.props.wrapperProps;
@@ -157,9 +153,9 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
         </button>
       </React.Fragment>
     );
-  }
+  };
 
-  renderPageBody() {
+  renderPageBody = () => {
     const { step } = this.state;
 
     let stepBody;
@@ -184,16 +180,14 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
         </div>
       </div>
     );
-  }
+  };
 
-  render() {
-    return (
-      <PageLayout
-        wrapperProps={this.props.wrapperProps}
-        renderPageBody={() => this.renderPageBody()}
-      />
-    );
-  }
+  render = () => (
+    <PageLayout
+      wrapperProps={this.props.wrapperProps}
+      renderPageBody={() => this.renderPageBody()}
+    />
+  );
 }
 
 export default WrapperOnboarding;

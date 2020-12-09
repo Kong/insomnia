@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -24,7 +24,6 @@ type State = {|
   },
 |};
 
-@autobind
 class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   input: ?HTMLInputElement;
@@ -39,22 +38,22 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(n: ?Modal) {
+  _setModalRef = (n: ?Modal) => {
     this.modal = n;
-  }
+  };
 
-  _setInputRef(n: ?HTMLInputElement) {
+  _setInputRef = (n: ?HTMLInputElement) => {
     this.input = n;
-  }
+  };
 
-  async _handleInputChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleInputChange = async (e: SyntheticEvent<HTMLInputElement>) => {
     const { name, value } = e.currentTarget;
     this.setState(state => ({
       inputs: { ...state.inputs, [name]: value },
     }));
-  }
+  };
 
-  async _handleReset() {
+  _handleReset = async () => {
     const { gitRepository } = this.state;
 
     if (!gitRepository) {
@@ -74,9 +73,9 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
     await models.gitRepository.remove(gitRepository);
 
     this.hide();
-  }
+  };
 
-  async _handleSubmitEdit(e: SyntheticEvent<HTMLFormElement>) {
+  _handleSubmitEdit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const { inputs, gitRepository } = this.state;
@@ -103,9 +102,12 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
     }
 
     this.hide();
-  }
+  };
 
-  show(options: { gitRepository: GitRepository | null, onSubmitEdits: GitRepository => any }) {
+  show = (options: {
+    gitRepository: GitRepository | null,
+    onSubmitEdits: GitRepository => any,
+  }) => {
     this._onSubmitEdits = options.onSubmitEdits;
 
     const { gitRepository } = options;
@@ -128,13 +130,13 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
     setTimeout(() => {
       this.input && this.input.focus();
     }, 100);
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const { inputs, gitRepository } = this.state;
 
     const linkIcon = <i className="fa fa-external-link-square" />;
@@ -254,7 +256,7 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
         </Modal>
       </form>
     );
-  }
+  };
 }
 
 export default GitRepositorySettingsModal;

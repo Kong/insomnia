@@ -8,7 +8,7 @@ import type {
 } from '../../../models/request';
 import type { Workspace } from '../../../models/workspace';
 import type { OAuth2Token } from '../../../models/o-auth-2-token';
-import autobind from 'autobind-decorator';
+
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
 import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
@@ -71,20 +71,19 @@ type Props = {
   oAuth2Token: ?OAuth2Token,
 };
 
-@autobind
 class RequestPane extends React.PureComponent<Props> {
-  _handleEditDescriptionAdd() {
+  _handleEditDescriptionAdd = () => {
     this._handleEditDescription(true);
-  }
+  };
 
-  _handleEditDescription(addDescription: boolean) {
+  _handleEditDescription = (addDescription: boolean) => {
     showModal(RequestSettingsModal, {
       request: this.props.request,
       forceEditMode: addDescription,
     });
-  }
+  };
 
-  async _autocompleteUrls(): Promise<Array<string>> {
+  _autocompleteUrls = async (): Promise<Array<string>> => {
     const docs = await db.withDescendants(this.props.workspace, models.request.type);
 
     const requestId = this.props.request ? this.props.request._id : 'n/a';
@@ -99,19 +98,19 @@ class RequestPane extends React.PureComponent<Props> {
       .map((r: any) => (r.url || '').trim());
 
     return Array.from(new Set(urls));
-  }
+  };
 
-  _handleUpdateSettingsUseBulkHeaderEditor() {
+  _handleUpdateSettingsUseBulkHeaderEditor = () => {
     const { settings, updateSettingsUseBulkHeaderEditor } = this.props;
     updateSettingsUseBulkHeaderEditor(!settings.useBulkHeaderEditor);
-  }
+  };
 
-  _handleUpdateSettingsUseBulkParametersEditor() {
+  _handleUpdateSettingsUseBulkParametersEditor = () => {
     const { settings, updateSettingsUseBulkParametersEditor } = this.props;
     updateSettingsUseBulkParametersEditor(!settings.useBulkParametersEditor);
-  }
+  };
 
-  _handleImportQueryFromUrl() {
+  _handleImportQueryFromUrl = () => {
     const { request, forceUpdateRequest } = this.props;
 
     if (!request) {
@@ -135,9 +134,9 @@ class RequestPane extends React.PureComponent<Props> {
     if (url !== request.url) {
       forceUpdateRequest(request, { url, parameters });
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       forceRefreshCounter,
       forceUpdateRequestHeaders,
@@ -403,7 +402,7 @@ class RequestPane extends React.PureComponent<Props> {
         </Tabs>
       </Pane>
     );
-  }
+  };
 }
 
 export default RequestPane;

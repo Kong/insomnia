@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import {
   CONTENT_TYPE_FILE,
@@ -31,9 +31,8 @@ type Props = {
 
 const EMPTY_MIME_TYPE = null;
 
-@autobind
 class ContentTypeDropdown extends React.PureComponent<Props> {
-  async _checkMimeTypeChange(body: RequestBody, mimeType: string | null) {
+  _checkMimeTypeChange = async (body: RequestBody, mimeType: string | null) => {
     // Nothing to do
     if (body.mimeType === mimeType) {
       return;
@@ -63,9 +62,9 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
         addCancel: true,
       });
     }
-  }
+  };
 
-  async _handleChangeMimeType(mimeType: string | null) {
+  _handleChangeMimeType = async (mimeType: string | null) => {
     const { request } = this.props;
 
     if (request) {
@@ -75,9 +74,9 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
     this.props.onChange(mimeType);
 
     trackEvent('Request', 'Change MimeType', mimeType);
-  }
+  };
 
-  _renderDropdownItem(mimeType: string | null, forcedName: string = '') {
+  _renderDropdownItem = (mimeType: string | null, forcedName: string = '') => {
     const contentType =
       typeof this.props.contentType === 'string' ? this.props.contentType : EMPTY_MIME_TYPE;
 
@@ -89,9 +88,9 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
         {forcedName || getContentTypeName(mimeType, true)}
       </DropdownItem>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { children, className, ...extraProps } = this.props;
     return (
       <Dropdown beside {...(extraProps: Object)}>
@@ -123,7 +122,7 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
         {this._renderDropdownItem(EMPTY_MIME_TYPE, 'No Body')}
       </Dropdown>
     );
-  }
+  };
 }
 
 export default ContentTypeDropdown;

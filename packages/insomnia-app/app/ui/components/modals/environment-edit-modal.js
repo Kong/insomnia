@@ -1,13 +1,12 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import EnvironmentEditor from '../editors/environment-editor';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 
-@autobind
 class EnvironmentEditModal extends PureComponent {
   constructor(props) {
     super(props);
@@ -17,15 +16,15 @@ class EnvironmentEditModal extends PureComponent {
     };
   }
 
-  _setModalRef(n) {
+  _setModalRef = n => {
     this.modal = n;
-  }
+  };
 
-  _setEditorRef(n) {
+  _setEditorRef = n => {
     this._envEditor = n;
-  }
+  };
 
-  _saveChanges() {
+  _saveChanges = () => {
     if (!this._envEditor.isValid()) {
       return;
     }
@@ -44,9 +43,9 @@ class EnvironmentEditModal extends PureComponent {
     const { requestGroup } = this.state;
 
     this.props.onChange(Object.assign({}, requestGroup, patch));
-  }
+  };
 
-  _didChange() {
+  _didChange = () => {
     this._saveChanges();
 
     const isValid = this._envEditor.isValid();
@@ -54,18 +53,18 @@ class EnvironmentEditModal extends PureComponent {
     if (this.state.isValid !== isValid) {
       this.setState({ isValid });
     }
-  }
+  };
 
-  show(requestGroup) {
+  show = requestGroup => {
     this.setState({ requestGroup });
     this.modal.show();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       editorKeyMap,
       editorFontSize,
@@ -114,7 +113,7 @@ class EnvironmentEditModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 EnvironmentEditModal.propTypes = {

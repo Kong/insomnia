@@ -1,7 +1,7 @@
 // @flow
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import KeyValueEditor from '../key-value-editor/editor';
 import CodeEditor from '../codemirror/code-editor';
 import allHeaderNames from '../../../datasets/header-names';
@@ -23,21 +23,20 @@ type Props = {
   request: Request,
 };
 
-@autobind
 class RequestHeadersEditor extends React.PureComponent<Props> {
-  _handleBulkUpdate(headersString: string) {
+  _handleBulkUpdate = (headersString: string) => {
     const { onChange, request } = this.props;
     const headers = RequestHeadersEditor._getHeadersFromString(headersString);
 
     onChange(request, headers);
-  }
+  };
 
-  _handleKeyValueUpdate(headers: Array<RequestHeader>) {
+  _handleKeyValueUpdate = (headers: Array<RequestHeader>) => {
     const { onChange, request } = this.props;
     onChange(request, headers);
-  }
+  };
 
-  static _getHeadersFromString(headersString: string) {
+  static _getHeadersFromString = (headersString: string) => {
     const headers = [];
     const rows = headersString.split(/\n+/);
 
@@ -55,9 +54,9 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
     }
 
     return headers;
-  }
+  };
 
-  _getHeadersString() {
+  _getHeadersString = () => {
     const { headers } = this.props.request;
 
     let headersString = '';
@@ -77,9 +76,9 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
     }
 
     return headersString;
-  }
+  };
 
-  static _getCommonHeaderValues(pair: RequestHeader) {
+  static _getCommonHeaderValues = (pair: RequestHeader) => {
     switch (pair.name.toLowerCase()) {
       case 'content-type':
       case 'accept':
@@ -91,13 +90,11 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
       default:
         return [];
     }
-  }
+  };
 
-  static _getCommonHeaderNames(pair: RequestHeader) {
-    return allHeaderNames;
-  }
+  static _getCommonHeaderNames = (pair: RequestHeader) => allHeaderNames;
 
-  render() {
+  render = () => {
     const {
       bulk,
       request,
@@ -144,7 +141,7 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
         </div>
       </div>
     );
-  }
+  };
 }
 
 export default RequestHeadersEditor;

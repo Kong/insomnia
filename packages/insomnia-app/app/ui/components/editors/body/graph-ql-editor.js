@@ -2,7 +2,7 @@
 import classnames from 'classnames';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import autobind from 'autobind-decorator';
+
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { parse, print, typeFromAST } from 'graphql';
@@ -75,7 +75,6 @@ type State = {
   },
 };
 
-@autobind
 class GraphQLEditor extends React.PureComponent<Props, State> {
   _disabledOperationMarkers: Array<TextMarker>;
   _documentAST: null | Object;
@@ -113,7 +112,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     };
   }
 
-  _getCurrentOperation(): string | null {
+  _getCurrentOperation = (): string | null => {
     const { _queryEditor } = this;
 
     if (!_queryEditor) {
@@ -157,31 +156,31 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
 
     return operationName;
-  }
+  };
 
-  _handleCloseExplorer() {
+  _handleCloseExplorer = () => {
     this.setState({ explorerVisible: false });
-  }
+  };
 
-  _handleClickReference(reference: Object, e: MouseEvent) {
+  _handleClickReference = (reference: Object, e: MouseEvent) => {
     e.preventDefault();
     this.setState({ explorerVisible: true, activeReference: reference });
-  }
+  };
 
-  _handleQueryFocus() {
+  _handleQueryFocus = () => {
     this._handleQueryUserActivity();
-  }
+  };
 
-  _handleQueryUserActivity() {
+  _handleQueryUserActivity = () => {
     const newOperationName = this._getCurrentOperation();
 
     const { query, variables, operationName } = this.state.body;
     if (newOperationName !== operationName) {
       this._handleBodyChange(query, variables, newOperationName);
     }
-  }
+  };
 
-  _highlightOperation(operationName: string | null) {
+  _highlightOperation = (operationName: string | null) => {
     const { _documentAST, _queryEditor } = this;
 
     if (!_documentAST || !_queryEditor) {
@@ -216,9 +215,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         className: 'cm-gql-disabled',
       });
     });
-  }
+  };
 
-  _handleViewResponse() {
+  _handleViewResponse = () => {
     const { schemaFetchError } = this.state;
 
     if (!schemaFetchError || !schemaFetchError.response) {
@@ -231,20 +230,20 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       title: 'GraphQL Introspection Response',
       response: response,
     });
-  }
+  };
 
-  _hideSchemaFetchError() {
+  _hideSchemaFetchError = () => {
     this.setState({ hideSchemaFetchErrors: true });
-  }
+  };
 
-  _handleQueryEditorInit(codeMirror: CodeMirror) {
+  _handleQueryEditorInit = (codeMirror: CodeMirror) => {
     this._queryEditor = codeMirror;
     window.cm = this._queryEditor;
     const { query, variables, operationName } = this.state.body;
     this._handleBodyChange(query, variables, operationName);
-  }
+  };
 
-  async _fetchAndSetSchema(rawRequest: Request) {
+  _fetchAndSetSchema = async (rawRequest: Request) => {
     this.setState({ schemaIsFetching: true });
 
     const { environmentId } = this.props;
@@ -311,9 +310,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     if (this._isMounted) {
       this.setState(newState);
     }
-  }
+  };
 
-  _buildVariableTypes(schema: Object | null): { [string]: Object } | null {
+  _buildVariableTypes = (schema: Object | null): { [string]: Object } | null => {
     if (!schema) {
       return null;
     }
@@ -338,29 +337,29 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       }
     }
     return variableToType;
-  }
+  };
 
-  _handleShowDocumentation() {
+  _handleShowDocumentation = () => {
     this.setState({
       explorerVisible: true,
     });
-  }
+  };
 
-  _handleRefreshSchema() {
+  _handleRefreshSchema = () => {
     // First, "forget" preference to hide errors so they always show
     // again after a refresh
     this.setState({ hideSchemaFetchErrors: false }, async () => {
       await this._fetchAndSetSchema(this.props.request);
     });
-  }
+  };
 
-  async _handleToggleAutomaticFetching(): Promise<void> {
+  _handleToggleAutomaticFetching = async (): Promise<void> => {
     const automaticFetch = !this.state.automaticFetch;
     this.setState({ automaticFetch });
     window.localStorage.setItem('graphql.automaticFetch', automaticFetch);
-  }
+  };
 
-  _handlePrettify() {
+  _handlePrettify = () => {
     const { body } = this.state;
     const { variables, query } = body;
     const prettyQuery = query && print(parse(query));
@@ -371,25 +370,25 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     if (this._queryEditor) {
       this._queryEditor.setValue(prettyQuery);
     }
-  }
+  };
 
-  _getOperations(): Array<any> {
+  _getOperations = (): Array<any> => {
     if (!this._documentAST) {
       return [];
     }
 
     return this._documentAST.definitions.filter(def => def.kind === 'OperationDefinition');
-  }
+  };
 
-  _setDocumentAST(query: string) {
+  _setDocumentAST = (query: string) => {
     try {
       this._documentAST = parse(query);
     } catch (e) {
       this._documentAST = null;
     }
-  }
+  };
 
-  _handleBodyChange(query: string, variables: ?Object, operationName: ?string): void {
+  _handleBodyChange = (query: string, variables: ?Object, operationName: ?string): void => {
     this._setDocumentAST(query);
 
     const body: GraphQLBody = { query };
@@ -419,25 +418,25 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     this.props.onChange(newContent);
     this._highlightOperation(body.operationName || null);
-  }
+  };
 
-  _handleQueryChange(query: string): void {
+  _handleQueryChange = (query: string): void => {
     // Since we're editing the query, we may be changing the operation name, so
     // Don't pass it to the body change in order to automatically re-detect it
     // based on the current cursor position.
     this._handleBodyChange(query, this.state.body.variables, null);
-  }
+  };
 
-  _handleVariablesChange(variables: string): void {
+  _handleVariablesChange = (variables: string): void => {
     try {
       const variablesObj = JSON.parse(variables || 'null');
       this._handleBodyChange(this.state.body.query, variablesObj, this.state.body.operationName);
     } catch (err) {
       this.setState({ variablesSyntaxError: err.message });
     }
-  }
+  };
 
-  static _stringToGraphQL(text: string): GraphQLBody {
+  static _stringToGraphQL = (text: string): GraphQLBody => {
     let obj: GraphQLBody;
     try {
       obj = JSON.parse(text);
@@ -464,44 +463,42 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
 
     return body;
-  }
+  };
 
-  static _graphQLToString(body: GraphQLBody): string {
-    return JSON.stringify(body);
-  }
+  static _graphQLToString = (body: GraphQLBody): string => JSON.stringify(body);
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
+  UNSAFE_componentWillReceiveProps = (nextProps: Props) => {
     if (this.state.automaticFetch && nextProps.request.url !== this.props.request.url) {
       clearTimeout(this._schemaFetchTimeout);
       this._schemaFetchTimeout = setTimeout(async () => {
         await this._fetchAndSetSchema(nextProps.request);
       }, 2000);
     }
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     this._isMounted = true;
     (async () => {
       await this._fetchAndSetSchema(this.props.request);
     })();
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     this._isMounted = false;
     clearTimeout(this._schemaFetchTimeout);
-  }
+  };
 
-  renderSelectedOperationName() {
+  renderSelectedOperationName = () => {
     const { operationName } = this.state.body;
     if (!operationName) {
       return null;
     } else {
       return <span title="Current operationName">{operationName}</span>;
     }
-  }
+  };
 
-  renderSchemaFetchMessage() {
+  renderSchemaFetchMessage = () => {
     let message;
     const { schemaLastFetchTime, schemaIsFetching } = this.state;
     if (schemaIsFetching) {
@@ -517,14 +514,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
 
     return message;
-  }
+  };
 
-  static renderMarkdown(text: string) {
+  static renderMarkdown = (text: string) => {
     const html = markdownToHTML(text);
     return `<div class="markdown-preview__content">${html}</div>`;
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       content,
       render,
@@ -687,7 +684,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         {graphQLExplorerPortal}
       </div>
     );
-  }
+  };
 }
 
 export default GraphQLEditor;

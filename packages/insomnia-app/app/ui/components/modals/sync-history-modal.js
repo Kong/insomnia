@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -23,7 +23,6 @@ type State = {
   history: Array<Snapshot>,
 };
 
-@autobind
 class SyncHistoryModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   handleRollback: Snapshot => Promise<void>;
@@ -36,16 +35,16 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(m: ?Modal) {
+  _setModalRef = (m: ?Modal) => {
     this.modal = m;
-  }
+  };
 
-  async _handleClickRollback(snapshot: Snapshot) {
+  _handleClickRollback = async (snapshot: Snapshot) => {
     await this.handleRollback(snapshot);
     await this.refreshState();
-  }
+  };
 
-  async refreshState(newState?: Object) {
+  refreshState = async (newState?: Object) => {
     const { vcs } = this.props;
     const branch = await vcs.getBranch();
     const history = await vcs.getHistory();
@@ -55,19 +54,19 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
       history: history.sort((a, b) => (a.created < b.created ? 1 : -1)),
       ...newState,
     });
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  async show(options: { handleRollback: Snapshot => Promise<void> }) {
+  show = async (options: { handleRollback: Snapshot => Promise<void> }) => {
     this.modal && this.modal.show();
     this.handleRollback = options.handleRollback;
     await this.refreshState();
-  }
+  };
 
-  static renderAuthorName(snapshot: Snapshot) {
+  static renderAuthorName = (snapshot: Snapshot) => {
     let name = '';
     let email = '';
 
@@ -93,9 +92,9 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
     } else {
       return '--';
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const { branch, history } = this.state;
 
     return (
@@ -150,7 +149,7 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
         </ModalBody>
       </Modal>
     );
-  }
+  };
 }
 
 export default SyncHistoryModal;

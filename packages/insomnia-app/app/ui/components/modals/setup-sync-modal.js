@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -26,7 +26,6 @@ type State = {
   syncDisableClientCertificates: boolean,
 };
 
-@autobind
 class SetupSyncModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _onSelectSyncMode: ?(selectedSyncMode: string) => void;
@@ -41,19 +40,19 @@ class SetupSyncModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(n: ?Modal) {
+  _setModalRef = (n: ?Modal) => {
     this.modal = n;
-  }
+  };
 
-  _handleToggleSyncCertificates(e: SyntheticEvent<HTMLInputElement>) {
+  _handleToggleSyncCertificates = (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ syncDisableClientCertificates: !e.currentTarget.checked });
-  }
+  };
 
-  _handleToggleSyncCookieJars(e: SyntheticEvent<HTMLInputElement>) {
+  _handleToggleSyncCookieJars = (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ syncDisableCookieJars: !e.currentTarget.checked });
-  }
+  };
 
-  async _handleDone() {
+  _handleDone = async () => {
     const { workspace } = this.props;
     const { selectedSyncMode, syncDisableClientCertificates, syncDisableCookieJars } = this.state;
 
@@ -67,17 +66,17 @@ class SetupSyncModal extends React.PureComponent<Props, State> {
     this.hide();
 
     this._onSelectSyncMode && this._onSelectSyncMode(selectedSyncMode);
-  }
+  };
 
-  _handleSyncModeChange(e: SyntheticEvent<HTMLSelectElement>) {
+  _handleSyncModeChange = (e: SyntheticEvent<HTMLSelectElement>) => {
     const selectedSyncMode = e.currentTarget.value;
 
     this.setState({
       selectedSyncMode,
     });
-  }
+  };
 
-  async show(options: { onSelectSyncMode: (syncMode: string) => void }) {
+  show = async (options: { onSelectSyncMode: (syncMode: string) => void }) => {
     const { workspace } = this.props;
 
     const resource = await sync.getOrCreateResourceForDoc(workspace);
@@ -97,13 +96,13 @@ class SetupSyncModal extends React.PureComponent<Props, State> {
     this._onSelectSyncMode = options.onSelectSyncMode;
 
     this.modal && this.modal.show();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const { workspace } = this.props;
     const {
       syncMode,
@@ -175,7 +174,7 @@ class SetupSyncModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default SetupSyncModal;

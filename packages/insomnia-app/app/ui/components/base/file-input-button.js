@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { basename as pathBasename } from 'path';
 import selectFileOrFolder from '../../../common/select-file-or-folder';
 
@@ -17,23 +17,22 @@ type Props = {
   name?: string,
 };
 
-@autobind
 class FileInputButton extends React.PureComponent<Props> {
   _button: ?HTMLButtonElement;
 
-  focus() {
+  focus = () => {
     this._button && this._button.focus();
-  }
+  };
 
-  focusEnd() {
+  focusEnd = () => {
     this._button && this._button.focus();
-  }
+  };
 
-  _setRef(n: ?HTMLButtonElement) {
+  _setRef = (n: ?HTMLButtonElement) => {
     this._button = n;
-  }
+  };
 
-  async _handleChooseFile() {
+  _handleChooseFile = async () => {
     const { canceled, filePath } = await selectFileOrFolder({
       itemTypes: this.props.itemtypes,
       extensions: this.props.extensions,
@@ -45,9 +44,9 @@ class FileInputButton extends React.PureComponent<Props> {
     }
 
     this.props.onChange(filePath);
-  }
+  };
 
-  render() {
+  render = () => {
     const { showFileName, showFileIcon, path, name, ...extraProps } = this.props;
 
     // NOTE: Basename fails if path is not a string, so let's make sure it is
@@ -64,7 +63,7 @@ class FileInputButton extends React.PureComponent<Props> {
         {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
       </button>
     );
-  }
+  };
 }
 
 export default FileInputButton;

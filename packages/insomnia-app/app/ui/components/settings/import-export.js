@@ -1,14 +1,13 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import { showPrompt } from '../modals/index';
 import Strings from '../../../common/strings';
 
-@autobind
 class ImportExport extends PureComponent {
-  _handleImportUri() {
+  _handleImportUri = () => {
     showPrompt({
       title: 'Import Data from URL',
       submitName: 'Fetch and Import',
@@ -18,9 +17,9 @@ class ImportExport extends PureComponent {
         this.props.handleImportUri(uri);
       },
     });
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       handleImportFile,
       handleImportClipBoard,
@@ -83,7 +82,7 @@ class ImportExport extends PureComponent {
         <p className="italic faint">* Tip: You can also paste Curl commands into the URL bar</p>
       </div>
     );
-  }
+  };
 }
 
 ImportExport.propTypes = {

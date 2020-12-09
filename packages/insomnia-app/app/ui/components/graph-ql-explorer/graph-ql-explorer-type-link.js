@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { GraphQLList, GraphQLNonNull } from 'graphql';
 import type { GraphQLType } from 'graphql';
 
@@ -9,15 +9,14 @@ type Props = {
   type: GraphQLType,
 };
 
-@autobind
 class GraphQLExplorerTypeLink extends React.PureComponent<Props> {
-  _handleClick(e: MouseEvent) {
+  _handleClick = (e: MouseEvent) => {
     e.preventDefault();
     const { onNavigate, type } = this.props;
     onNavigate(type);
-  }
+  };
 
-  render() {
+  render = () => {
     const { type, onNavigate } = this.props;
 
     if (type instanceof GraphQLList) {
@@ -42,7 +41,7 @@ class GraphQLExplorerTypeLink extends React.PureComponent<Props> {
         {type.name}
       </a>
     );
-  }
+  };
 }
 
 export default GraphQLExplorerTypeLink;

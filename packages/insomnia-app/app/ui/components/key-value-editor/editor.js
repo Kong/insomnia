@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import { DEBOUNCE_MILLIS } from '../../../common/constants';
 import Lazy from '../base/lazy';
@@ -19,7 +19,6 @@ const DOWN = 40;
 const LEFT = 37;
 const RIGHT = 39;
 
-@autobind
 class Editor extends PureComponent {
   constructor(props) {
     super(props);
@@ -44,14 +43,14 @@ class Editor extends PureComponent {
     };
   }
 
-  _setRowRef(n) {
+  _setRowRef = n => {
     // NOTE: We're not handling unmounting (may lead to a bug)
     if (n) {
       this._rows[n.props.pair.id] = n;
     }
-  }
+  };
 
-  _handlePairChange(pair) {
+  _handlePairChange = pair => {
     const i = this._getPairIndex(pair);
     const pairs = [
       ...this.state.pairs.slice(0, i),
@@ -60,13 +59,13 @@ class Editor extends PureComponent {
     ];
 
     this._onChange(pairs);
-  }
+  };
 
-  _handleDeleteAll() {
+  _handleDeleteAll = () => {
     this._onChange([]);
-  }
+  };
 
-  _handleMove(pairToMove, pairToTarget, targetOffset) {
+  _handleMove = (pairToMove, pairToTarget, targetOffset) => {
     if (pairToMove.id === pairToTarget.id) {
       // Nothing to do
       return;
@@ -87,60 +86,60 @@ class Editor extends PureComponent {
     ];
 
     this._onChange(pairs);
-  }
+  };
 
-  _handlePairDelete(pair) {
+  _handlePairDelete = pair => {
     const i = this.state.pairs.findIndex(p => p.id === pair.id);
     this._deletePair(i, true);
-  }
+  };
 
-  _handleBlurName() {
+  _handleBlurName = () => {
     this._focusedField = null;
-  }
+  };
 
-  _handleBlurValue() {
+  _handleBlurValue = () => {
     this._focusedField = null;
-  }
+  };
 
-  _handleBlurDescription() {
+  _handleBlurDescription = () => {
     this._focusedField = null;
-  }
+  };
 
-  _handleFocusName(pair) {
+  _handleFocusName = pair => {
     this._setFocusedPair(pair);
     this._focusedField = NAME;
     this._rows[pair.id].focusNameEnd();
-  }
+  };
 
-  _handleFocusValue(pair) {
+  _handleFocusValue = pair => {
     this._setFocusedPair(pair);
     this._focusedField = VALUE;
     this._rows[pair.id].focusValueEnd();
-  }
+  };
 
-  _handleFocusDescription(pair) {
+  _handleFocusDescription = pair => {
     this._setFocusedPair(pair);
     this._focusedField = DESCRIPTION;
     this._rows[pair.id].focusDescriptionEnd();
-  }
+  };
 
-  _handleAddFromName() {
+  _handleAddFromName = () => {
     this._focusedField = NAME;
     this._addPair();
-  }
+  };
 
   // Sometimes multiple focus events come in, so lets debounce it
-  _handleAddFromValue() {
+  _handleAddFromValue = () => {
     this._focusedField = VALUE;
     this._addPair();
-  }
+  };
 
-  _handleAddFromDescription() {
+  _handleAddFromDescription = () => {
     this._focusedField = DESCRIPTION;
     this._addPair();
-  }
+  };
 
-  _handleKeyDown(pair, e, value) {
+  _handleKeyDown = (pair, e, value) => {
     if (e.metaKey || e.ctrlKey) {
       return;
     }
@@ -162,18 +161,18 @@ class Editor extends PureComponent {
     } else if (e.keyCode === RIGHT) {
       // TODO: Implement this
     }
-  }
+  };
 
-  _onChange(pairs) {
+  _onChange = pairs => {
     this.setState({ pairs }, () => {
       clearTimeout(this._triggerTimeout);
       this._triggerTimeout = setTimeout(() => {
         this.props.onChange(pairs);
       }, DEBOUNCE_MILLIS);
     });
-  }
+  };
 
-  _addPair(position) {
+  _addPair = position => {
     const numPairs = this.state.pairs.length;
     const { maxPairs } = this.props;
 
@@ -205,9 +204,9 @@ class Editor extends PureComponent {
     this._onChange(pairs);
 
     this.props.onCreate && this.props.onCreate();
-  }
+  };
 
-  _deletePair(position, breakFocus = false) {
+  _deletePair = (position, breakFocus = false) => {
     if (this.props.disableDelete) {
       return;
     }
@@ -225,9 +224,9 @@ class Editor extends PureComponent {
     }
 
     this._onChange(pairs);
-  }
+  };
 
-  _focusNext(addIfValue = false) {
+  _focusNext = (addIfValue = false) => {
     if (this.props.maxPairs === 1) {
       return;
     }
@@ -246,9 +245,9 @@ class Editor extends PureComponent {
         this._focusNextPair();
       }
     }
-  }
+  };
 
-  _focusPrevious(deleteIfEmpty = false) {
+  _focusPrevious = (deleteIfEmpty = false) => {
     if (this._focusedField === DESCRIPTION) {
       this._focusedField = VALUE;
       this._updateFocus();
@@ -267,9 +266,9 @@ class Editor extends PureComponent {
         this._focusPreviousPair();
       }
     }
-  }
+  };
 
-  _focusNextPair() {
+  _focusNextPair = () => {
     if (this.props.maxPairs === 1) {
       return;
     }
@@ -288,9 +287,9 @@ class Editor extends PureComponent {
       this._setFocusedPair(this.state.pairs[i + 1]);
       this._updateFocus();
     }
-  }
+  };
 
-  _focusPreviousPair() {
+  _focusPreviousPair = () => {
     if (this.props.maxPairs === 1) {
       return;
     }
@@ -300,9 +299,9 @@ class Editor extends PureComponent {
       this._setFocusedPair(this.state.pairs[i - 1]);
       this._updateFocus();
     }
-  }
+  };
 
-  _updateFocus() {
+  _updateFocus = () => {
     const pair = this._getFocusedPair();
     const id = pair ? pair.id : 'n/a';
     const row = this._rows[id];
@@ -318,41 +317,37 @@ class Editor extends PureComponent {
     } else if (this._focusedField === DESCRIPTION) {
       row.focusDescriptionEnd();
     }
-  }
+  };
 
-  _getPairIndex(pair) {
+  _getPairIndex = pair => {
     if (pair) {
       return this.state.pairs.findIndex(p => p.id === pair.id);
     } else {
       return -1;
     }
-  }
+  };
 
-  _getFocusedPairIndex() {
-    return this._getPairIndex(this._getFocusedPair());
-  }
+  _getFocusedPairIndex = () => this._getPairIndex(this._getFocusedPair());
 
-  _getFocusedPair() {
-    return this.state.pairs.find(p => p.id === this._focusedPairId) || null;
-  }
+  _getFocusedPair = () => this.state.pairs.find(p => p.id === this._focusedPairId) || null;
 
-  _setFocusedPair(pair) {
+  _setFocusedPair = pair => {
     if (pair) {
       this._focusedPairId = pair.id;
     } else {
       this._focusedPairId = null;
     }
-  }
+  };
 
-  _toggleDescription() {
+  _toggleDescription = () => {
     this.setState({ displayDescription: !this.state.displayDescription });
-  }
+  };
 
-  componentDidUpdate() {
+  componentDidUpdate = () => {
     this._updateFocus();
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       maxPairs,
       className,
@@ -450,7 +445,7 @@ class Editor extends PureComponent {
         </ul>
       </Lazy>
     );
-  }
+  };
 }
 
 Editor.propTypes = {

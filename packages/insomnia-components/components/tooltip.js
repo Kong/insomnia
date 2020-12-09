@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import ReactDOM from 'react-dom';
 import styled from 'styled-components';
@@ -59,7 +59,6 @@ const StyledTooltipBubble: React.ComponentType<{}> = styled.div`
   }
 `;
 
-@autobind
 class Tooltip extends React.PureComponent<Props, State> {
   _showTimeout: TimeoutID;
   _hideTimeout: TimeoutID;
@@ -85,19 +84,19 @@ class Tooltip extends React.PureComponent<Props, State> {
     this._id = Math.random() + '';
   }
 
-  _setTooltipRef(n: ?any) {
+  _setTooltipRef = (n: ?any) => {
     this._tooltip = n;
-  }
+  };
 
-  _setBubbleRef(n: ?any) {
+  _setBubbleRef = (n: ?any) => {
     this._bubble = n;
-  }
+  };
 
-  _handleStopClick(e: MouseEvent): void {
+  _handleStopClick = (e: MouseEvent): void => {
     e.stopPropagation();
-  }
+  };
 
-  _handleMouseEnter(e: MouseEvent): void {
+  _handleMouseEnter = (e: MouseEvent): void => {
     clearTimeout(this._showTimeout);
     clearTimeout(this._hideTimeout);
     this._showTimeout = setTimeout((): void => {
@@ -146,9 +145,9 @@ class Tooltip extends React.PureComponent<Props, State> {
 
       this.setState({ visible: true });
     }, this.props.delay || 400);
-  }
+  };
 
-  _handleMouseLeave(): void {
+  _handleMouseLeave = (): void => {
     clearTimeout(this._showTimeout);
     clearTimeout(this._hideTimeout);
     this._hideTimeout = setTimeout(() => {
@@ -165,9 +164,9 @@ class Tooltip extends React.PureComponent<Props, State> {
       bubble.style.bottom = '';
       bubble.style.right = '';
     }, 100);
-  }
+  };
 
-  _getContainer(): HTMLElement {
+  _getContainer = (): HTMLElement => {
     let container = document.querySelector('#tooltips-container');
     if (!container) {
       container = document.createElement('div');
@@ -179,25 +178,25 @@ class Tooltip extends React.PureComponent<Props, State> {
     }
 
     return container;
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     // Move the element to the body so we can position absolutely
     if (this._bubble) {
       const el = ReactDOM.findDOMNode(this._bubble);
       el && this._getContainer().appendChild(el);
     }
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     // Remove the element from the body
     if (this._bubble) {
       const el = ReactDOM.findDOMNode(this._bubble);
       el && this._getContainer().removeChild(el);
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const { children, message, className, selectable, wide } = this.props;
     const { visible } = this.state;
 
@@ -231,7 +230,7 @@ class Tooltip extends React.PureComponent<Props, State> {
         {children}
       </StyledTooltip>
     );
-  }
+  };
 }
 
 export default Tooltip;

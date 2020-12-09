@@ -1,7 +1,6 @@
 // @flow
 import * as React from 'react';
 import Papa from 'papaparse';
-import autobind from 'autobind-decorator';
 
 type Props = {
   body: Buffer,
@@ -11,7 +10,6 @@ type State = {
   result: null | { data: Array<Array<string>> },
 };
 
-@autobind
 class ResponseCSVViewer extends React.PureComponent<Props, State> {
   currentHash: string;
 
@@ -23,7 +21,7 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
     this.currentHash = '';
   }
 
-  update(body: Buffer) {
+  update = (body: Buffer) => {
     const csv = body.toString('utf8');
 
     Papa.parse(csv, {
@@ -32,22 +30,22 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
         this.setState({ result });
       },
     });
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     this.update(this.props.body);
-  }
+  };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillUpdate(nextProps: Props, nextState: State) {
+  UNSAFE_componentWillUpdate = (nextProps: Props, nextState: State) => {
     if (this.props.body === nextProps.body) {
       return;
     }
 
     this.update(nextProps.body);
-  }
+  };
 
-  render() {
+  render = () => {
     const { result } = this.state;
     if (!result) {
       return 'Parsing CSV...';
@@ -68,7 +66,7 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
         </table>
       </div>
     );
-  }
+  };
 }
 
 export default ResponseCSVViewer;

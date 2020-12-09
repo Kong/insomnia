@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 
 const DISMISSED_VALUE = 'dismissed';
@@ -17,7 +17,6 @@ type State = {
   localStorageKey: string | null,
 };
 
-@autobind
 class Notice extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -39,16 +38,16 @@ class Notice extends React.PureComponent<Props, State> {
     };
   }
 
-  _dismissNotification() {
+  _dismissNotification = () => {
     const { localStorageKey } = this.state;
 
     // Hide the currently showing notification
     this.setState({ visible: false });
 
     window.localStorage.setItem(localStorageKey, DISMISSED_VALUE);
-  }
+  };
 
-  render() {
+  render = () => {
     const { children, color, className } = this.props;
     const { visible, localStorageKey } = this.state;
 
@@ -66,7 +65,7 @@ class Notice extends React.PureComponent<Props, State> {
         {children}
       </p>
     );
-  }
+  };
 }
 
 export default Notice;

@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+
 import jq from 'jsonpath';
 import RequestSettingsModal from '../modals/request-settings-modal';
 import Modal from '../base/modal';
@@ -8,7 +8,6 @@ import ModalHeader from '../base/modal-header';
 import { showModal } from './index';
 import Link from '../base/link';
 
-@autobind
 class RequestRenderErrorModal extends PureComponent {
   constructor(props) {
     super(props);
@@ -17,25 +16,25 @@ class RequestRenderErrorModal extends PureComponent {
     };
   }
 
-  _setModalRef(n) {
+  _setModalRef = n => {
     this.modal = n;
-  }
+  };
 
-  _handleShowRequestSettings() {
+  _handleShowRequestSettings = () => {
     this.hide();
     showModal(RequestSettingsModal, { request: this.state.request });
-  }
+  };
 
-  show({ request, error }) {
+  show = ({ request, error }) => {
     this.setState({ request, error });
     this.modal.show();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
-  renderModalBody(request, error) {
+  renderModalBody = (request, error) => {
     const fullPath = `Request.${error.path}`;
 
     const result = jq.query(request, `$.${error.path}`);
@@ -79,9 +78,9 @@ class RequestRenderErrorModal extends PureComponent {
         </p>
       </div>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { request, error } = this.state;
     return (
       <Modal ref={this._setModalRef} freshState>
@@ -89,7 +88,7 @@ class RequestRenderErrorModal extends PureComponent {
         <ModalBody>{request && error ? this.renderModalBody(request, error) : null}</ModalBody>
       </Modal>
     );
-  }
+  };
 }
 
 export default RequestRenderErrorModal;

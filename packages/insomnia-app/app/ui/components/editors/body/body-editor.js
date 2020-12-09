@@ -2,7 +2,7 @@
 import * as React from 'react';
 import * as mimes from 'mime-types';
 import clone from 'clone';
-import autobind from 'autobind-decorator';
+
 import RawEditor from './raw-editor';
 import UrlEncodedEditor from './url-encoded-editor';
 import FormEditor from './form-editor';
@@ -47,36 +47,35 @@ type Props = {
   isVariableUncovered: boolean,
 };
 
-@autobind
 class BodyEditor extends React.PureComponent<Props> {
-  _handleRawChange(rawValue: string) {
+  _handleRawChange = (rawValue: string) => {
     const { onChange, request } = this.props;
 
     const oldContentType = request.body.mimeType || '';
     const newBody = newBodyRaw(rawValue, oldContentType);
 
     onChange(request, newBody);
-  }
+  };
 
-  _handleGraphQLChange(content: string) {
+  _handleGraphQLChange = (content: string) => {
     const { onChange, request } = this.props;
     const newBody = newBodyRaw(content, CONTENT_TYPE_GRAPHQL);
     onChange(request, newBody);
-  }
+  };
 
-  _handleFormUrlEncodedChange(parameters: Array<RequestBodyParameter>) {
+  _handleFormUrlEncodedChange = (parameters: Array<RequestBodyParameter>) => {
     const { onChange, request } = this.props;
     const newBody = newBodyFormUrlEncoded(parameters);
     onChange(request, newBody);
-  }
+  };
 
-  _handleFormChange(parameters: Array<RequestBodyParameter>) {
+  _handleFormChange = (parameters: Array<RequestBodyParameter>) => {
     const { onChange, request } = this.props;
     const newBody = newBodyForm(parameters);
     onChange(request, newBody);
-  }
+  };
 
-  async _handleFileChange(path: string) {
+  _handleFileChange = async (path: string) => {
     const { onChange, onChangeHeaders, request } = this.props;
     const headers = clone(request.headers);
 
@@ -110,9 +109,9 @@ class BodyEditor extends React.PureComponent<Props> {
         },
       });
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       request,
       workspace,
@@ -207,7 +206,7 @@ class BodyEditor extends React.PureComponent<Props> {
         </div>
       );
     }
-  }
+  };
 }
 
 export default BodyEditor;

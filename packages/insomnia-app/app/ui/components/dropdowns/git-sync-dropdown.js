@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
@@ -40,7 +40,6 @@ type State = {|
   branches: Array<string>,
 |};
 
-@autobind
 class GitSyncDropdown extends React.PureComponent<Props, State> {
   _dropdown: ?Dropdown;
 
@@ -56,11 +55,11 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     };
   }
 
-  _setDropdownRef(n: ?Dropdown) {
+  _setDropdownRef = (n: ?Dropdown) => {
     this._dropdown = n;
-  }
+  };
 
-  async _refreshState(otherState?: Object) {
+  _refreshState = async (otherState?: Object) => {
     const { vcs, workspace, handleGitBranchChanged } = this.props;
 
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
@@ -92,14 +91,14 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
       cachedGitLastCommitTime,
     });
     handleGitBranchChanged(branch);
-  }
+  };
 
-  async _handleOpen() {
+  _handleOpen = async () => {
     trackEvent('Git Dropdown', 'Open');
     await this._refreshState();
-  }
+  };
 
-  async _handlePull() {
+  _handlePull = async () => {
     this.setState({ loadingPull: true });
     const { vcs, gitRepository } = this.props;
 
@@ -117,9 +116,9 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     await db.flushChanges(bufferId);
 
     this.setState({ loadingPull: false });
-  }
+  };
 
-  async _handlePush(e: any, force: boolean = false) {
+  _handlePush = async (e: any, force: boolean = false) => {
     this.setState({ loadingPush: true });
     const { vcs, gitRepository } = this.props;
 
@@ -171,9 +170,9 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     await db.flushChanges(bufferId);
 
     this.setState({ loadingPush: false });
-  }
+  };
 
-  _handleConfig() {
+  _handleConfig = () => {
     const { gitRepository } = this.props;
     showModal(GitRepositorySettingsModal, {
       gitRepository,
@@ -189,21 +188,21 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
         }
       },
     });
-  }
+  };
 
-  _handleLog() {
+  _handleLog = () => {
     showModal(GitLogModal);
-  }
+  };
 
-  async _handleCommit() {
+  _handleCommit = async () => {
     showModal(GitStagingModal, { onCommit: this._refreshState });
-  }
+  };
 
-  _handleManageBranches() {
+  _handleManageBranches = () => {
     showModal(GitBranchesModal, { onHide: this._refreshState });
-  }
+  };
 
-  async _handleCheckoutBranch(branch: string) {
+  _handleCheckoutBranch = async (branch: string) => {
     const { vcs, handleInitializeEntities } = this.props;
 
     const bufferId = await db.bufferChanges();
@@ -216,13 +215,13 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
     await handleInitializeEntities();
     await this._refreshState();
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     this._refreshState();
-  }
+  };
 
-  renderButton() {
+  renderButton = () => {
     const { branch } = this.state;
     const { vcs, renderDropdownButton } = this.props;
 
@@ -250,9 +249,9 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
         <i className="fa fa-code-fork space-left" />
       </React.Fragment>,
     );
-  }
+  };
 
-  renderBranch(branch: string) {
+  renderBranch = (branch: string) => {
     const { branch: currentBranch } = this.state;
 
     const icon =
@@ -269,9 +268,9 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
         {branch}
       </DropdownItem>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { className, vcs } = this.props;
     const { log, branches, branch, loadingPull, loadingPush } = this.state;
 
@@ -345,7 +344,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
         </Dropdown>
       </div>
     );
-  }
+  };
 }
 
 export default GitSyncDropdown;

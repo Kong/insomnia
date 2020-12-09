@@ -1,13 +1,12 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import Button from './base/button';
 import CodeEditor from './codemirror/code-editor';
 import MarkdownPreview from './markdown-preview';
 
-@autobind
 class MarkdownEditor extends PureComponent {
   constructor(props) {
     super(props);
@@ -16,24 +15,24 @@ class MarkdownEditor extends PureComponent {
     };
   }
 
-  _handleChange(markdown) {
+  _handleChange = markdown => {
     this.props.onChange(markdown);
     this.setState({ markdown });
-  }
+  };
 
-  _setEditorRef(n) {
+  _setEditorRef = n => {
     this._editor = n;
-  }
+  };
 
-  focusEnd() {
+  focusEnd = () => {
     this._editor && this._editor.focusEnd();
-  }
+  };
 
-  focus() {
+  focus = () => {
     this._editor && this._editor.focus();
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       fontSize,
       lineWrapping,
@@ -97,7 +96,7 @@ class MarkdownEditor extends PureComponent {
         </TabPanel>
       </Tabs>
     );
-  }
+  };
 }
 
 MarkdownEditor.propTypes = {

@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
@@ -58,7 +58,6 @@ type State = {
   remoteProjects: Array<Project>,
 };
 
-@autobind
 class WorkspaceDropdown extends React.PureComponent<Props, State> {
   _dropdown: ?Dropdown;
 
@@ -70,7 +69,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     remoteProjects: [],
   };
 
-  async _handlePluginClick(p: WorkspaceAction) {
+  _handlePluginClick = async (p: WorkspaceAction) => {
     this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: true } }));
 
     const { activeEnvironment, activeWorkspace } = this.props;
@@ -99,9 +98,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
     this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
     this._dropdown && this._dropdown.hide();
-  }
+  };
 
-  async _handleDropdownHide() {
+  _handleDropdownHide = async () => {
     // Mark all unseen workspace as seen
     for (const workspace of this.props.unseenWorkspaces) {
       const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
@@ -109,17 +108,17 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
         await models.workspaceMeta.update(workspaceMeta, { hasSeen: true });
       }
     }
-  }
+  };
 
-  async _handleDropdownOpen() {
+  _handleDropdownOpen = async () => {
     this._refreshRemoteWorkspaces();
 
     // Load action plugins
     const plugins = await getWorkspaceActions();
     this.setState({ actionPlugins: plugins });
-  }
+  };
 
-  async _refreshRemoteWorkspaces() {
+  _refreshRemoteWorkspaces = async () => {
     const { vcs } = this.props;
     if (!vcs) {
       return;
@@ -132,9 +131,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     const remoteProjects = await vcs.remoteProjects();
     const localProjects = await vcs.localProjects();
     this.setState({ remoteProjects, localProjects });
-  }
+  };
 
-  async _handlePullRemoteWorkspace(project: Project) {
+  _handlePullRemoteWorkspace = async (project: Project) => {
     const { vcs } = this.props;
     if (!vcs) {
       throw new Error('VCS is not defined');
@@ -190,37 +189,37 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     this.setState(state => ({
       pullingProjects: { ...state.pullingProjects, [project.id]: false },
     }));
-  }
+  };
 
-  _setDropdownRef(n: ?Dropdown) {
+  _setDropdownRef = (n: ?Dropdown) => {
     this._dropdown = n;
-  }
+  };
 
-  static async _handleLogout() {
+  static _handleLogout = async () => {
     await sync.logout();
-  }
+  };
 
-  static _handleShowExport() {
+  static _handleShowExport = () => {
     showModal(SettingsModal, TAB_INDEX_EXPORT);
-  }
+  };
 
-  static _handleShowSettings() {
+  static _handleShowSettings = () => {
     showModal(SettingsModal);
-  }
+  };
 
-  static _handleShowWorkspaceSettings() {
+  static _handleShowWorkspaceSettings = () => {
     showModal(WorkspaceSettingsModal);
-  }
+  };
 
-  _handleShowShareSettings() {
+  _handleShowShareSettings = () => {
     if (this.props.enableSyncBeta) {
       showModal(SyncShareModal);
     } else {
       showModal(WorkspaceShareSettingsModal);
     }
-  }
+  };
 
-  _handleWorkspaceCreate() {
+  _handleWorkspaceCreate = () => {
     showPrompt({
       title: 'Create New Workspace',
       defaultValue: 'My Workspace',
@@ -231,26 +230,26 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
         this.props.handleSetActiveWorkspace(workspace._id);
       },
     });
-  }
+  };
 
-  _handleKeydown(e: KeyboardEvent) {
+  _handleKeydown = (e: KeyboardEvent) => {
     executeHotKey(e, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
-  }
+  };
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate = (prevProps: Props) => {
     // Reload workspaces if we just got a new VCS instance
     if (this.props.vcs && !prevProps.vcs) {
       this._refreshRemoteWorkspaces();
     }
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     this._refreshRemoteWorkspaces();
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       className,
       workspaces,
@@ -422,7 +421,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
         </Dropdown>
       </KeydownBinder>
     );
-  }
+  };
 }
 
 export default WorkspaceDropdown;

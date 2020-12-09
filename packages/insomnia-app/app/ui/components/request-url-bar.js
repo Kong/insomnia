@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { remote } from 'electron';
 import { DEBOUNCE_MILLIS, isMac } from '../../common/constants';
 import {
@@ -44,7 +44,6 @@ type State = {
   currentTimeout: number | null,
 };
 
-@autobind
 class RequestUrlBar extends React.PureComponent<Props, State> {
   _urlChangeDebounceTimeout: TimeoutID;
   _sendTimeout: TimeoutID;
@@ -64,35 +63,35 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     this._lastPastedText = null;
   }
 
-  _setDropdownRef(n: Dropdown | null) {
+  _setDropdownRef = (n: Dropdown | null) => {
     this._dropdown = n;
-  }
+  };
 
-  _setMethodDropdownRef(n: Dropdown | null) {
+  _setMethodDropdownRef = (n: Dropdown | null) => {
     this._methodDropdown = n;
-  }
+  };
 
-  _setInputRef(n: HTMLInputElement | null) {
+  _setInputRef = (n: HTMLInputElement | null) => {
     this._input = n;
-  }
+  };
 
-  _handleMetaClickSend(e: MouseEvent) {
+  _handleMetaClickSend = (e: MouseEvent) => {
     e.preventDefault();
     this._dropdown && this._dropdown.show();
-  }
+  };
 
-  _handleFormSubmit(e: SyntheticEvent<HTMLFormElement>) {
+  _handleFormSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     e.stopPropagation();
 
     this._handleSend();
-  }
+  };
 
-  _handleMethodChange(method: string) {
+  _handleMethodChange = (method: string) => {
     this.props.onMethodChange(this.props.request, method);
-  }
+  };
 
-  _handleUrlChange(url: string) {
+  _handleUrlChange = (url: string) => {
     clearTimeout(this._urlChangeDebounceTimeout);
     this._urlChangeDebounceTimeout = setTimeout(async () => {
       const pastedText = this._lastPastedText;
@@ -114,18 +113,18 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
         this.props.onUrlChange(this.props.request, url);
       }
     }, DEBOUNCE_MILLIS);
-  }
+  };
 
-  _handleUrlPaste(e: SyntheticClipboardEvent<HTMLInputElement>) {
+  _handleUrlPaste = (e: SyntheticClipboardEvent<HTMLInputElement>) => {
     // NOTE: We're not actually doing the import here to avoid races with onChange
     this._lastPastedText = e.clipboardData.getData('text/plain');
-  }
+  };
 
-  _handleGenerateCode() {
+  _handleGenerateCode = () => {
     this.props.handleGenerateCode();
-  }
+  };
 
-  async _handleSetDownloadLocation() {
+  _handleSetDownloadLocation = async () => {
     const { request } = this.props;
 
     const options = {
@@ -140,15 +139,15 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     }
 
     this.props.handleUpdateDownloadPath(request._id, filePaths[0]);
-  }
+  };
 
-  _handleClearDownloadLocation() {
+  _handleClearDownloadLocation = () => {
     const { request } = this.props;
 
     this.props.handleUpdateDownloadPath(request._id, null);
-  }
+  };
 
-  async _handleKeyDown(e: KeyboardEvent) {
+  _handleKeyDown = async (e: KeyboardEvent) => {
     if (!this._input) {
       return;
     }
@@ -165,9 +164,9 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     executeHotKey(e, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
-  }
+  };
 
-  _handleSend() {
+  _handleSend = () => {
     // Don't stop interval because duh, it needs to keep going!
     // XXX this._handleStopInterval(); XXX
 
@@ -179,13 +178,13 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     } else {
       this.props.handleSend();
     }
-  }
+  };
 
-  _handleClickSendAndDownload() {
+  _handleClickSendAndDownload = () => {
     this.props.handleSendAndDownload();
-  }
+  };
 
-  _handleSendAfterDelay() {
+  _handleSendAfterDelay = () => {
     showPrompt({
       inputType: 'decimal',
       title: 'Send After Delay',
@@ -198,9 +197,9 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
         this.setState({ currentTimeout: seconds });
       },
     });
-  }
+  };
 
-  _handleSendOnInterval() {
+  _handleSendOnInterval = () => {
     showPrompt({
       inputType: 'decimal',
       title: 'Send on Interval',
@@ -213,28 +212,28 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
         this.setState({ currentInterval: seconds });
       },
     });
-  }
+  };
 
-  _handleStopInterval() {
+  _handleStopInterval = () => {
     clearInterval(this._sendInterval);
     if (this.state.currentInterval) {
       this.setState({ currentInterval: null });
     }
-  }
+  };
 
-  _handleStopTimeout() {
+  _handleStopTimeout = () => {
     clearTimeout(this._sendTimeout);
     if (this.state.currentTimeout) {
       this.setState({ currentTimeout: null });
     }
-  }
+  };
 
-  _handleResetTimeouts() {
+  _handleResetTimeouts = () => {
     this._handleStopTimeout();
     this._handleStopInterval();
-  }
+  };
 
-  _handleClickSend(e: MouseEvent) {
+  _handleClickSend = (e: MouseEvent) => {
     const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
 
     // If we're pressing a meta key, let the dropdown open
@@ -245,16 +244,16 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     // If we're not pressing a meta key, cancel dropdown and send the request
     e.stopPropagation(); // Don't trigger the dropdown
     this._handleSend();
-  }
+  };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
+  UNSAFE_componentWillReceiveProps = (nextProps: Props) => {
     if (nextProps.request._id !== this.props.request._id) {
       this._handleResetTimeouts();
     }
-  }
+  };
 
-  renderSendButton() {
+  renderSendButton = () => {
     const { hotKeyRegistry, downloadPath } = this.props;
     const { currentInterval, currentTimeout } = this.state;
 
@@ -328,9 +327,9 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     }
 
     return [cancelButton, sendButton];
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       request,
       handleRender,
@@ -373,7 +372,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
         </div>
       </KeydownBinder>
     );
-  }
+  };
 }
 
 export default RequestUrlBar;

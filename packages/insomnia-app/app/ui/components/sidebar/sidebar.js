@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Workspace } from '../../../models/workspace';
 import type { Environment } from '../../../models/environment';
@@ -29,9 +29,8 @@ type Props = {|
   workspaces: Array<Workspace>,
 |};
 
-@autobind
 class Sidebar extends React.PureComponent<Props> {
-  render() {
+  render = () => {
     const {
       activeEnvironment,
       children,
@@ -79,7 +78,7 @@ class Sidebar extends React.PureComponent<Props> {
         )}
       </aside>
     );
-  }
+  };
 }
 
 export default Sidebar;

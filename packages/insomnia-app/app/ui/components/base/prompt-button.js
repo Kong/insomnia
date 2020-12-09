@@ -1,13 +1,12 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import Button from './button';
 
 const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
 
-@autobind
 class PromptButton extends PureComponent {
   constructor(props) {
     super(props);
@@ -17,7 +16,7 @@ class PromptButton extends PureComponent {
     };
   }
 
-  _confirm(...args) {
+  _confirm = (...args) => {
     // Clear existing timeouts
     clearTimeout(this._triggerTimeout);
 
@@ -33,9 +32,9 @@ class PromptButton extends PureComponent {
     this._triggerTimeout = setTimeout(() => {
       this.setState({ state: STATE_DEFAULT });
     }, 2000);
-  }
+  };
 
-  _ask(...args) {
+  _ask = (...args) => {
     const e = args[args.length - 1];
 
     // Prevent events (ex. won't close dropdown if it's in one)
@@ -49,9 +48,9 @@ class PromptButton extends PureComponent {
     this._triggerTimeout = setTimeout(() => {
       this.setState({ state: STATE_DEFAULT });
     }, 2000);
-  }
+  };
 
-  _handleClick(...args) {
+  _handleClick = (...args) => {
     const { state } = this.state;
     if (state === STATE_ASK) {
       this._confirm(...args);
@@ -60,14 +59,14 @@ class PromptButton extends PureComponent {
     } else {
       // Do nothing
     }
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     clearTimeout(this._triggerTimeout);
     clearTimeout(this._doneTimeout);
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       onClick, // eslint-disable-line no-unused-vars
       children,
@@ -112,7 +111,7 @@ class PromptButton extends PureComponent {
         {innerMsg}
       </Button>
     );
-  }
+  };
 }
 
 PromptButton.propTypes = {

@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Tooltip from './tooltip';
 import SvgIcon from './svg-icon';
 
@@ -15,9 +15,8 @@ type Props = {
   info?: boolean,
 };
 
-@autobind
 class HelpTooltip extends React.PureComponent<Props> {
-  render() {
+  render = () => {
     const { children, className, style, info, position, delay } = this.props;
     return (
       <Tooltip
@@ -29,7 +28,7 @@ class HelpTooltip extends React.PureComponent<Props> {
         {info ? <SvgIcon icon="info" /> : <SvgIcon icon="question" />}
       </Tooltip>
     );
-  }
+  };
 }
 
 export default HelpTooltip;

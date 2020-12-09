@@ -1,9 +1,8 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import { REQUEST_TIME_TO_SHOW_COUNTER } from '../../common/constants';
 
-@autobind
 class ResponseTimer extends PureComponent {
   constructor(props) {
     super(props);
@@ -13,18 +12,18 @@ class ResponseTimer extends PureComponent {
     };
   }
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     clearInterval(this._interval);
-  }
+  };
 
-  _handleUpdateElapsedTime() {
+  _handleUpdateElapsedTime = () => {
     const { loadStartTime } = this.props;
     const millis = Date.now() - loadStartTime - 200;
     const elapsedTime = millis / 1000;
     this.setState({ elapsedTime });
-  }
+  };
 
-  componentDidUpdate() {
+  componentDidUpdate = () => {
     const { loadStartTime } = this.props;
 
     if (loadStartTime <= 0) {
@@ -35,9 +34,9 @@ class ResponseTimer extends PureComponent {
     clearInterval(this._interval); // Just to be sure
     this._interval = setInterval(this._handleUpdateElapsedTime, 100);
     this._handleUpdateElapsedTime();
-  }
+  };
 
-  render() {
+  render = () => {
     const { handleCancel, loadStartTime } = this.props;
     const { elapsedTime } = this.state;
 
@@ -64,7 +63,7 @@ class ResponseTimer extends PureComponent {
         </div>
       </div>
     );
-  }
+  };
 }
 
 ResponseTimer.propTypes = {

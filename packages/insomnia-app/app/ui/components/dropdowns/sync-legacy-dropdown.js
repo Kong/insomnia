@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showModal } from '../modals';
 import * as syncStorage from '../../../sync-legacy/storage';
@@ -27,7 +27,6 @@ type State = {
   workspaceName: string,
 };
 
-@autobind
 class SyncLegacyDropdown extends React.PureComponent<Props, State> {
   _hasPrompted: boolean;
   _isMounted: boolean;
@@ -48,11 +47,11 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
     };
   }
 
-  _handleShowShareSettings() {
+  _handleShowShareSettings = () => {
     showModal(WorkspaceShareSettingsModal, { workspace: this.props.workspace });
-  }
+  };
 
-  async _handleSyncResourceGroupId() {
+  _handleSyncResourceGroupId = async () => {
     const { resourceGroupId } = this.state;
 
     // Set loading state
@@ -66,9 +65,9 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
 
     // Unset loading state
     this.setState({ loading: false });
-  }
+  };
 
-  async _reloadData() {
+  _reloadData = async () => {
     const loggedIn = session.isLoggedIn();
 
     if (loggedIn !== this.state.loggedIn) {
@@ -98,32 +97,32 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
         workspaceName: workspace.name,
       });
     }
-  }
+  };
 
-  static _handleShowSyncBetaPrompt() {
+  static _handleShowSyncBetaPrompt = () => {
     clickLink('https://support.insomnia.rest/article/67-version-control');
-  }
+  };
 
-  async _handleShowSyncModePrompt() {
+  _handleShowSyncModePrompt = async () => {
     showModal(SetupSyncModal, {
       onSelectSyncMode: async syncMode => {
         await this._reloadData();
       },
     });
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     this._isMounted = true;
     syncStorage.onChange(this._reloadData);
     this._reloadData();
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     syncStorage.offChange(this._reloadData);
     this._isMounted = false;
-  }
+  };
 
-  componentDidUpdate() {
+  componentDidUpdate = () => {
     const { resourceGroupId, syncMode } = this.state;
 
     if (!resourceGroupId) {
@@ -136,9 +135,9 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
       this._hasPrompted = true;
       this._handleShowSyncModePrompt();
     }
-  }
+  };
 
-  _getSyncDescription(syncMode: string | null, syncPercentage: number) {
+  _getSyncDescription = (syncMode: string | null, syncPercentage: number) => {
     let el = null;
     if (syncMode === syncStorage.SYNC_MODE_NEVER) {
       el = <span>Sync Disabled</span>;
@@ -161,9 +160,9 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
     }
 
     return el;
-  }
+  };
 
-  render() {
+  render = () => {
     const { className } = this.props;
     const { resourceGroupId, loading, loggedIn } = this.state;
 
@@ -228,7 +227,7 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
         </div>
       );
     }
-  }
+  };
 }
 
 export default SyncLegacyDropdown;

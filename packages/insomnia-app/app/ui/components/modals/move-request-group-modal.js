@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -20,7 +20,6 @@ type State = {
   selectedWorkspaceId: string | null,
 };
 
-@autobind
 class MoveRequestGroupModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 
@@ -33,11 +32,11 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(n: ?Modal) {
+  _setModalRef = (n: ?Modal) => {
     this.modal = n;
-  }
+  };
 
-  async _handleSubmit(e: SyntheticEvent<HTMLFormElement>) {
+  _handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const { requestGroup, selectedWorkspaceId } = this.state;
@@ -61,24 +60,24 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
 
     await models.requestGroup.remove(requestGroup);
     this.hide();
-  }
+  };
 
-  _handleChangeSelectedWorkspace(e: SyntheticEvent<HTMLSelectElement>) {
+  _handleChangeSelectedWorkspace = (e: SyntheticEvent<HTMLSelectElement>) => {
     const selectedWorkspaceId = e.currentTarget.value;
     this.setState({ selectedWorkspaceId });
-  }
+  };
 
-  show(options: { requestGroup: RequestGroup }) {
+  show = (options: { requestGroup: RequestGroup }) => {
     const { requestGroup } = options;
     this.setState({ requestGroup });
     this.modal && this.modal.show();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const { workspaces, activeWorkspace } = this.props;
     const { selectedWorkspaceId } = this.state;
     return (
@@ -111,7 +110,7 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
         </Modal>
       </form>
     );
-  }
+  };
 }
 
 export default MoveRequestGroupModal;

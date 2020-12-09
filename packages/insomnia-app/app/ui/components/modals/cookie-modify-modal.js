@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import autobind from 'autobind-decorator';
+
 import * as toughCookie from 'tough-cookie';
 import * as models from '../../../models';
 import clone from 'clone';
@@ -29,7 +29,6 @@ type State = {
   rawValue: string,
 };
 
-@autobind
 class CookieModifyModal extends React.PureComponent<Props, State> {
   modal: Modal | null;
   _rawTimeout: TimeoutID;
@@ -44,11 +43,11 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(n: Modal | null) {
+  _setModalRef = (n: Modal | null) => {
     this.modal = n;
-  }
+  };
 
-  async show(cookie: Cookie) {
+  show = async (cookie: Cookie) => {
     // Dunno why this is sent as an array
     cookie = cookie[0] || cookie;
 
@@ -63,17 +62,17 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     this.setState({ cookie });
 
     this.modal && this.modal.show();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  static async _saveChanges(cookieJar: CookieJar) {
+  static _saveChanges = async (cookieJar: CookieJar) => {
     await models.cookieJar.update(cookieJar);
-  }
+  };
 
-  _handleChangeRawValue(e: SyntheticEvent<HTMLInputElement>) {
+  _handleChangeRawValue = (e: SyntheticEvent<HTMLInputElement>) => {
     const value = e.currentTarget.value;
 
     clearTimeout(this._rawTimeout);
@@ -97,9 +96,9 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
 
       await this._handleCookieUpdate(cookie);
     }, DEBOUNCE_MILLIS * 2);
-  }
+  };
 
-  async _handleCookieUpdate(newCookie: Cookie) {
+  _handleCookieUpdate = async (newCookie: Cookie) => {
     const oldCookie = this.state.cookie;
     if (!oldCookie) {
       // We don't have a cookie to edit
@@ -134,9 +133,9 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     await CookieModifyModal._saveChanges(cookieJar);
 
     return cookie;
-  }
+  };
 
-  _handleChange(field: string, eventOrValue: string | Event) {
+  _handleChange = (field: string, eventOrValue: string | Event) => {
     const { cookie } = this.state;
 
     let value;
@@ -160,13 +159,11 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
       await this._handleCookieUpdate(newCookie);
       this.setState({ cookie: newCookie });
     }, DEBOUNCE_MILLIS * 2);
-  }
+  };
 
-  static _capitalize(str: string) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
+  static _capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
-  _getRawCookieString() {
+  _getRawCookieString = () => {
     const { cookie } = this.state;
 
     if (!cookie) {
@@ -179,9 +176,9 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
       console.warn('Failed to parse cookie string', err);
       return '';
     }
-  }
+  };
 
-  _renderInputField(field: string, error: string | null = null) {
+  _renderInputField = (field: string, error: string | null = null) => {
     const { cookie } = this.state;
     const {
       handleRender,
@@ -211,9 +208,9 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
         </label>
       </div>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { cookieJar } = this.props;
     const { cookie } = this.state;
     const checkFields = ['secure', 'httpOnly'];
@@ -288,7 +285,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 // export CookieModifyModal;

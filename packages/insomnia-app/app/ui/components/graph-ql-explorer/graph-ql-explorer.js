@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import GraphQLExplorerField from './graph-ql-explorer-field';
 import GraphQLExplorerType from './graph-ql-explorer-type';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
@@ -28,7 +28,6 @@ type State = HistoryItem & {
   history: Array<HistoryItem>,
 };
 
-@autobind
 class GraphQLExplorer extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -39,23 +38,23 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
     };
   }
 
-  _handleNavigateType(type: GraphQLType | GraphQLEnumType) {
+  _handleNavigateType = (type: GraphQLType | GraphQLEnumType) => {
     this.setState({
       currentType: type,
       currentField: null,
       history: this._addToHistory(),
     });
-  }
+  };
 
-  _handleNavigateField(field: GraphQLField<any, any>) {
+  _handleNavigateField = (field: GraphQLField<any, any>) => {
     this.setState({
       currentType: field.type,
       currentField: field,
       history: this._addToHistory(),
     });
-  }
+  };
 
-  _handlePopHistory() {
+  _handlePopHistory = () => {
     this.setState(({ history }) => {
       const last = history[history.length - 1] || null;
       return {
@@ -64,9 +63,9 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
         currentField: last ? last.currentField : null,
       };
     });
-  }
+  };
 
-  _addToHistory() {
+  _addToHistory = () => {
     const { currentType, currentField, history } = this.state;
 
     // Nothing to add
@@ -75,10 +74,10 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
     }
 
     return [...history, { currentType, currentField }];
-  }
+  };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
+  UNSAFE_componentWillReceiveProps = (nextProps: Props) => {
     if (!nextProps.reference) {
       return;
     }
@@ -103,9 +102,9 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
       currentType: type || null,
       currentField: field || null,
     });
-  }
+  };
 
-  renderHistoryItem() {
+  renderHistoryItem = () => {
     const { history, currentField, currentType } = this.state;
 
     if (history.length === 0 && (currentType || currentField)) {
@@ -147,9 +146,9 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
         <i className="fa--skinny fa fa-angle-left" /> {name}
       </a>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { schema, handleClose, visible } = this.props;
 
     if (!visible) {
@@ -200,7 +199,7 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
         <div className="graphql-explorer__body">{child}</div>
       </div>
     );
-  }
+  };
 }
 
 export default GraphQLExplorer;

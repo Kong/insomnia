@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import type { GraphQLField } from 'graphql';
 
 type Props = {
@@ -8,15 +8,14 @@ type Props = {
   field: GraphQLField<any, any>,
 };
 
-@autobind
 class GraphQLExplorerFieldLink extends React.PureComponent<Props> {
-  _handleClick(e: MouseEvent) {
+  _handleClick = (e: MouseEvent) => {
     e.preventDefault();
     const { onNavigate, field } = this.props;
     onNavigate(field);
-  }
+  };
 
-  render() {
+  render = () => {
     const { field } = this.props;
 
     return (
@@ -24,7 +23,7 @@ class GraphQLExplorerFieldLink extends React.PureComponent<Props> {
         {field.name}
       </a>
     );
-  }
+  };
 }
 
 export default GraphQLExplorerFieldLink;

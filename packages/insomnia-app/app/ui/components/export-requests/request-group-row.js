@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import type { RequestGroup } from '../../../models/request-group';
 
@@ -17,29 +17,28 @@ type Props = {
   children?: React.Node,
 };
 
-@autobind
 class RequestGroupRow extends React.PureComponent<Props> {
   checkbox: HTMLInputElement;
 
-  setCheckboxRef(checkbox: ?HTMLInputElement) {
+  setCheckboxRef = (checkbox: ?HTMLInputElement) => {
     if (checkbox != null) {
       this.checkbox = checkbox;
     }
-  }
+  };
 
-  handleCollapse() {
+  handleCollapse = () => {
     const { requestGroup, handleSetRequestGroupCollapsed, isCollapsed } = this.props;
     handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
-  }
+  };
 
-  handleSelect(e: SyntheticEvent<HTMLInputElement>) {
+  handleSelect = (e: SyntheticEvent<HTMLInputElement>) => {
     const el = e.currentTarget;
     const value = el.checked;
     const { handleSetItemSelected, requestGroup } = this.props;
     return handleSetItemSelected(requestGroup._id, value);
-  }
+  };
 
-  render() {
+  render = () => {
     const { children, requestGroup, isCollapsed, totalRequests, selectedRequests } = this.props;
 
     let folderIconClass = 'fa-folder';
@@ -78,7 +77,7 @@ class RequestGroupRow extends React.PureComponent<Props> {
         </ul>
       </li>
     );
-  }
+  };
 }
 
 export default RequestGroupRow;

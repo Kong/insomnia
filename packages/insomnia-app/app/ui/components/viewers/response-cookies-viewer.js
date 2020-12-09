@@ -1,11 +1,10 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import { Cookie } from 'tough-cookie';
 
-@autobind
 class ResponseCookiesViewer extends PureComponent {
-  renderRow(h, i) {
+  renderRow = (h, i) => {
     let cookie = null;
     try {
       cookie = h ? Cookie.parse(h.value || '') : null;
@@ -20,9 +19,9 @@ class ResponseCookiesViewer extends PureComponent {
         <td className="force-wrap">{cookie ? cookie.value : blank}</td>
       </tr>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { headers, showCookiesModal, cookiesSent, cookiesStored } = this.props;
 
     const notifyNotStored = !cookiesStored && headers.length;
@@ -62,7 +61,7 @@ class ResponseCookiesViewer extends PureComponent {
         </p>
       </div>
     );
-  }
+  };
 }
 
 ResponseCookiesViewer.propTypes = {

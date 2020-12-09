@@ -2,12 +2,11 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+
 import highlight from 'highlight.js';
 import * as misc from '../../common/misc';
 import { markdownToHTML } from '../../common/markdown-to-html';
 
-@autobind
 class MarkdownPreview extends PureComponent {
   constructor(props) {
     super(props);
@@ -20,7 +19,7 @@ class MarkdownPreview extends PureComponent {
   /**
    * Debounce and compile the markdown (won't debounce first render)
    */
-  _compileMarkdown(markdown) {
+  _compileMarkdown = markdown => {
     clearTimeout(this._compileTimeout);
     this._compileTimeout = setTimeout(
       async () => {
@@ -41,18 +40,18 @@ class MarkdownPreview extends PureComponent {
       },
       this.state.compiled ? this.props.debounceMillis : 0,
     );
-  }
+  };
 
-  _setPreviewRef(n) {
+  _setPreviewRef = n => {
     this._preview = n;
-  }
+  };
 
-  _handleClickLink(e) {
+  _handleClickLink = e => {
     e.preventDefault();
     misc.clickLink(e.target.getAttribute('href'));
-  }
+  };
 
-  _highlightCodeBlocks() {
+  _highlightCodeBlocks = () => {
     if (!this._preview) {
       return;
     }
@@ -67,31 +66,31 @@ class MarkdownPreview extends PureComponent {
       a.removeEventListener('click', this._handleClickLink);
       a.addEventListener('click', this._handleClickLink);
     }
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     clearTimeout(this._compileTimeout);
-  }
+  };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount() {
+  UNSAFE_componentWillMount = () => {
     this._compileMarkdown(this.props.markdown);
-  }
+  };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps = nextProps => {
     this._compileMarkdown(nextProps.markdown);
-  }
+  };
 
-  componentDidUpdate() {
+  componentDidUpdate = () => {
     this._highlightCodeBlocks();
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     this._highlightCodeBlocks();
-  }
+  };
 
-  render() {
+  render = () => {
     const { className, heading } = this.props;
     const { compiled, renderError } = this.state;
 
@@ -107,7 +106,7 @@ class MarkdownPreview extends PureComponent {
         </div>
       </div>
     );
-  }
+  };
 }
 
 MarkdownPreview.propTypes = {

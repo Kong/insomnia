@@ -13,7 +13,7 @@ import type {
 } from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { registerModal, showModal } from './modals/index';
 import AlertModal from './modals/alert-modal';
 import WrapperModal from './modals/wrapper-modal';
@@ -219,7 +219,6 @@ const rUpdate = (request, ...args) => {
 
 const sUpdate = models.settings.update;
 
-@autobind
 class Wrapper extends React.PureComponent<WrapperProps, State> {
   constructor(props: any) {
     super(props);
@@ -230,7 +229,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
   }
 
   // Request updaters
-  async _handleForceUpdateRequest(r: Request, patch: Object): Promise<Request> {
+  _handleForceUpdateRequest = async (r: Request, patch: Object): Promise<Request> => {
     const newRequest = await rUpdate(r, patch);
 
     // Give it a second for the app to render first. If we don't wait, it will refresh
@@ -239,52 +238,48 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     window.setTimeout(this._forceRequestPaneRefresh, 100);
 
     return newRequest;
-  }
+  };
 
-  _handleForceUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>): Promise<Request> {
-    return this._handleForceUpdateRequest(r, { headers });
-  }
+  _handleForceUpdateRequestHeaders = (
+    r: Request,
+    headers: Array<RequestHeader>,
+  ): Promise<Request> => this._handleForceUpdateRequest(r, { headers });
 
-  async _handleUpdateApiSpec(s: ApiSpec): Promise<void> {
+  _handleUpdateApiSpec = async (s: ApiSpec): Promise<void> => {
     await models.apiSpec.update(s);
-  }
+  };
 
-  static _handleUpdateRequestBody(r: Request, body: RequestBody): Promise<Request> {
-    return rUpdate(r, { body });
-  }
+  static _handleUpdateRequestBody = (r: Request, body: RequestBody): Promise<Request> =>
+    rUpdate(r, { body });
 
-  static _handleUpdateRequestParameters(
+  static _handleUpdateRequestParameters = (
     r: Request,
     parameters: Array<RequestParameter>,
-  ): Promise<Request> {
-    return rUpdate(r, { parameters });
-  }
+  ): Promise<Request> => rUpdate(r, { parameters });
 
-  static _handleUpdateRequestAuthentication(
+  static _handleUpdateRequestAuthentication = (
     r: Request,
     authentication: RequestAuthentication,
-  ): Promise<Request> {
-    return rUpdate(r, { authentication });
-  }
+  ): Promise<Request> => rUpdate(r, { authentication });
 
-  static _handleUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>): Promise<Request> {
-    return rUpdate(r, { headers });
-  }
+  static _handleUpdateRequestHeaders = (
+    r: Request,
+    headers: Array<RequestHeader>,
+  ): Promise<Request> => rUpdate(r, { headers });
 
-  static _handleUpdateRequestMethod(r: Request, method: string): Promise<Request> {
-    return rUpdate(r, { method });
-  }
+  static _handleUpdateRequestMethod = (r: Request, method: string): Promise<Request> =>
+    rUpdate(r, { method });
 
-  static _handleUpdateRequestUrl(r: Request, url: string): Promise<Request> {
+  static _handleUpdateRequestUrl = (r: Request, url: string): Promise<Request> => {
     // Don't update if we don't need to
     if (r.url === url) {
       return Promise.resolve(r);
     }
 
     return rUpdate(r, { url });
-  }
+  };
 
-  async _handleImport(text: string): Promise<Request | null> {
+  _handleImport = async (text: string): Promise<Request | null> => {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
     try {
@@ -308,9 +303,9 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     }
 
     return null;
-  }
+  };
 
-  async _handleWorkspaceActivityChange(workspaceId: string, nextActivity: GlobalActivity) {
+  _handleWorkspaceActivityChange = async (workspaceId: string, nextActivity: GlobalActivity) => {
     const { activity, activeApiSpec, handleSetActiveActivity } = this.props;
 
     // Remember last activity on workspace for later, but only if it isn't HOME
@@ -349,61 +344,60 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     setTimeout(() => {
       importRaw(() => Promise.resolve(workspaceId), activeApiSpec.contents);
     }, 1000);
-  }
+  };
 
   // Settings updaters
-  _handleUpdateSettingsShowPasswords(showPasswords: boolean): Promise<Settings> {
-    return sUpdate(this.props.settings, { showPasswords });
-  }
+  _handleUpdateSettingsShowPasswords = (showPasswords: boolean): Promise<Settings> =>
+    sUpdate(this.props.settings, { showPasswords });
 
-  _handleUpdateSettingsUseBulkHeaderEditor(useBulkHeaderEditor: boolean): Promise<Settings> {
-    return sUpdate(this.props.settings, { useBulkHeaderEditor });
-  }
+  _handleUpdateSettingsUseBulkHeaderEditor = (useBulkHeaderEditor: boolean): Promise<Settings> =>
+    sUpdate(this.props.settings, { useBulkHeaderEditor });
 
-  _handleUpdateSettingsUseBulkParametersEditor(
+  _handleUpdateSettingsUseBulkParametersEditor = (
     useBulkParametersEditor: boolean,
-  ): Promise<Settings> {
-    return sUpdate(this.props.settings, { useBulkParametersEditor });
-  }
+  ): Promise<Settings> => sUpdate(this.props.settings, { useBulkParametersEditor });
 
-  _handleImportFile(forceToWorkspace?: ForceToWorkspace): void {
+  _handleImportFile = (forceToWorkspace?: ForceToWorkspace): void => {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
-  }
+  };
 
-  _handleImportUri(uri: string, forceToWorkspace?: ForceToWorkspace): void {
+  _handleImportUri = (uri: string, forceToWorkspace?: ForceToWorkspace): void => {
     this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri, forceToWorkspace);
-  }
+  };
 
-  _handleImportClipBoard(forceToWorkspace?: ForceToWorkspace): void {
+  _handleImportClipBoard = (forceToWorkspace?: ForceToWorkspace): void => {
     this.props.handleImportClipBoardToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
-  }
+  };
 
-  _handleSetActiveResponse(responseId: string | null): void {
+  _handleSetActiveResponse = (responseId: string | null): void => {
     if (!this.props.activeRequest) {
       console.warn('Tried to set active response when request not active');
       return;
     }
 
     this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
-  }
+  };
 
-  _handleShowEnvironmentsModal(): void {
+  _handleShowEnvironmentsModal = (): void => {
     showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
-  }
+  };
 
-  _handleShowCookiesModal(): void {
+  _handleShowCookiesModal = (): void => {
     showModal(CookiesModal, this.props.activeWorkspace);
-  }
+  };
 
-  static _handleShowModifyCookieModal(cookie: Object): void {
+  static _handleShowModifyCookieModal = (cookie: Object): void => {
     showModal(CookieModifyModal, cookie);
-  }
+  };
 
-  _handleShowRequestSettingsModal(): void {
+  _handleShowRequestSettingsModal = (): void => {
     showModal(RequestSettingsModal, { request: this.props.activeRequest });
-  }
+  };
 
-  async _handleDeleteResponses(requestId: string, environmentId: string | null): Promise<void> {
+  _handleDeleteResponses = async (
+    requestId: string,
+    environmentId: string | null,
+  ): Promise<void> => {
     const { handleSetActiveResponse, activeRequest } = this.props;
 
     await models.response.removeForRequest(requestId, environmentId);
@@ -411,9 +405,9 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     if (activeRequest && activeRequest._id === requestId) {
       await handleSetActiveResponse(requestId, null);
     }
-  }
+  };
 
-  async _handleDeleteResponse(response: Response): Promise<void> {
+  _handleDeleteResponse = async (response: Response): Promise<void> => {
     if (response) {
       await models.response.remove(response);
     }
@@ -422,9 +416,9 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     if (this.props.activeResponse && this.props.activeResponse._id === response._id) {
       this._handleSetActiveResponse(null);
     }
-  }
+  };
 
-  async _handleRemoveActiveWorkspace(): Promise<void> {
+  _handleRemoveActiveWorkspace = async (): Promise<void> => {
     const { workspaces, activeWorkspace } = this.props;
     if (workspaces.length <= 1) {
       showModal(AlertModal, {
@@ -438,24 +432,24 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     } else {
       await models.workspace.remove(activeWorkspace);
     }
-  }
+  };
 
-  async _handleActiveWorkspaceClearAllResponses(): Promise<void> {
+  _handleActiveWorkspaceClearAllResponses = async (): Promise<void> => {
     const docs = await db.withDescendants(this.props.activeWorkspace, models.request.type);
     const requests = docs.filter(doc => doc.type === models.request.type);
     for (const req of requests) {
       await models.response.removeForRequest(req._id);
     }
-  }
+  };
 
-  _handleSendRequestWithActiveEnvironment(): void {
+  _handleSendRequestWithActiveEnvironment = (): void => {
     const { activeRequest, activeEnvironment, handleSendRequestWithEnvironment } = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
-  }
+  };
 
-  async _handleSendAndDownloadRequestWithActiveEnvironment(filename?: string): Promise<void> {
+  _handleSendAndDownloadRequestWithActiveEnvironment = async (filename?: string): Promise<void> => {
     const {
       activeRequest,
       activeEnvironment,
@@ -469,58 +463,58 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       activeEnvironmentId,
       filename,
     );
-  }
+  };
 
-  _handleSetPreviewMode(previewMode: string): void {
+  _handleSetPreviewMode = (previewMode: string): void => {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     this.props.handleSetResponsePreviewMode(activeRequestId, previewMode);
-  }
+  };
 
-  _handleSetResponseFilter(filter: string): void {
+  _handleSetResponseFilter = (filter: string): void => {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     this.props.handleSetResponseFilter(activeRequestId, filter);
-  }
+  };
 
-  _handleCreateRequestInWorkspace() {
+  _handleCreateRequestInWorkspace = () => {
     const { activeWorkspace, handleCreateRequest } = this.props;
     handleCreateRequest(activeWorkspace._id);
-  }
+  };
 
-  _handleCreateRequestGroupInWorkspace() {
+  _handleCreateRequestGroupInWorkspace = () => {
     const { activeWorkspace, handleCreateRequestGroup } = this.props;
     handleCreateRequestGroup(activeWorkspace._id);
-  }
+  };
 
-  _handleChangeEnvironment(id: string | null) {
+  _handleChangeEnvironment = (id: string | null) => {
     const { handleSetActiveEnvironment } = this.props;
     handleSetActiveEnvironment(id);
-  }
+  };
 
-  _forceRequestPaneRefresh(): void {
+  _forceRequestPaneRefresh = (): void => {
     this.setState({ forceRefreshKey: Date.now() });
-  }
+  };
 
-  _handleGitBranchChanged(branch) {
+  _handleGitBranchChanged = branch => {
     this.setState({ activeGitBranch: branch || 'no-vcs' });
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     const { activity } = this.props;
     trackPageView(`/${activity || ''}`);
-  }
+  };
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate = (prevProps: Props) => {
     // We're using activities as page views so here we monitor
     // for a change in activity and send it as a pageview.
     const { activity } = this.props;
     if (prevProps.activity !== activity) {
       trackPageView(`/${activity || ''}`);
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       activeCookieJar,
       activeEnvironment,
@@ -875,7 +869,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
         </React.Fragment>
       </React.Fragment>
     );
-  }
+  };
 }
 
 export default Wrapper;

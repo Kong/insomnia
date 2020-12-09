@@ -3,7 +3,7 @@ import type { Request } from '../../../models/request';
 import type { Response } from '../../../models/response';
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import fs from 'fs';
 import mime from 'mime-types';
 import { remote } from 'electron';
@@ -67,23 +67,22 @@ type Props = {
   unitTestResult: ?UnitTestResult,
 };
 
-@autobind
 class ResponsePane extends React.PureComponent<Props> {
   _responseViewer: any;
 
-  _setResponseViewerRef(n: any) {
+  _setResponseViewerRef = (n: any) => {
     this._responseViewer = n;
-  }
+  };
 
-  _handleGetResponseBody(): Buffer | null {
+  _handleGetResponseBody = (): Buffer | null => {
     if (!this.props.response) {
       return null;
     }
 
     return models.response.getBodyBuffer(this.props.response);
-  }
+  };
 
-  async _handleDownloadResponseBody(prettify: boolean) {
+  _handleDownloadResponseBody = async (prettify: boolean) => {
     const { response, request } = this.props;
     if (!response || !request) {
       // Should never happen
@@ -130,9 +129,9 @@ class ResponsePane extends React.PureComponent<Props> {
         }
       });
     }
-  }
+  };
 
-  async _handleDownloadFullResponseBody() {
+  _handleDownloadFullResponseBody = async () => {
     const { response, request } = this.props;
 
     if (!response || !request) {
@@ -167,9 +166,9 @@ class ResponsePane extends React.PureComponent<Props> {
         console.warn('Failed to save full response', err);
       });
     }
-  }
+  };
 
-  _handleTabSelect(index: number, lastIndex: number) {
+  _handleTabSelect = (index: number, lastIndex: number) => {
     if (this._responseViewer != null && index === 0 && index !== lastIndex) {
       // Fix for CodeMirror editor not updating its content.
       // Refresh must be called when the editor is visible,
@@ -178,9 +177,9 @@ class ResponsePane extends React.PureComponent<Props> {
         this._responseViewer.refresh();
       });
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       disableHtmlPreviewJs,
       editorFontSize,
@@ -342,7 +341,7 @@ class ResponsePane extends React.PureComponent<Props> {
         </ErrorBoundary>
       </Pane>
     );
-  }
+  };
 }
 
 export default ResponsePane;

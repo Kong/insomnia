@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -19,7 +19,6 @@ type State = {|
   branch: string,
 |};
 
-@autobind
 class GitLogModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 
@@ -32,11 +31,11 @@ class GitLogModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(ref: ?Modal) {
+  _setModalRef = (ref: ?Modal) => {
     this.modal = ref;
-  }
+  };
 
-  async show() {
+  show = async () => {
     const { vcs } = this.props;
 
     const log = await vcs.log();
@@ -45,13 +44,13 @@ class GitLogModal extends React.PureComponent<Props, State> {
     this.setState({ log, branch });
 
     this.modal && this.modal.show();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  renderLogEntryRow(entry: GitLogEntry) {
+  renderLogEntryRow = (entry: GitLogEntry) => {
     const { author, message, oid } = entry;
 
     return (
@@ -71,9 +70,9 @@ class GitLogModal extends React.PureComponent<Props, State> {
         </td>
       </tr>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { log, branch } = this.state;
 
     return (
@@ -103,7 +102,7 @@ class GitLogModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default GitLogModal;

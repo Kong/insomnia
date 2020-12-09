@@ -3,7 +3,7 @@ import * as path from 'path';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import * as electron from 'electron';
 import CopyButton from '../base/copy-button';
 import { reload } from '../../../templating/index';
@@ -31,7 +31,6 @@ type Props = {
   updateSetting: Function,
 };
 
-@autobind
 class Plugins extends React.PureComponent<Props, State> {
   _isMounted: boolean;
 
@@ -47,17 +46,17 @@ class Plugins extends React.PureComponent<Props, State> {
     };
   }
 
-  _handleClearError() {
+  _handleClearError = () => {
     this.setState({ error: null });
-  }
+  };
 
-  _handleAddNpmPluginChange(e: Event) {
+  _handleAddNpmPluginChange = (e: Event) => {
     if (e.target instanceof HTMLInputElement) {
       this.setState({ npmPluginValue: e.target.value });
     }
-  }
+  };
 
-  async _handleAddFromNpm(e: Event): Promise<void> {
+  _handleAddFromNpm = async (e: Event): Promise<void> => {
     e.preventDefault();
 
     this.setState({ isInstallingFromNpm: true });
@@ -77,13 +76,13 @@ class Plugins extends React.PureComponent<Props, State> {
     }
 
     this.setState(newState);
-  }
+  };
 
-  static _handleOpenDirectory(directory: string): void {
+  static _handleOpenDirectory = (directory: string): void => {
     electron.remote.shell.showItemInFolder(directory);
-  }
+  };
 
-  async _handleRefreshPlugins(): Promise<void> {
+  _handleRefreshPlugins = async (): Promise<void> => {
     const start = Date.now();
 
     this.setState({ isRefreshingPlugins: true });
@@ -102,17 +101,17 @@ class Plugins extends React.PureComponent<Props, State> {
         isRefreshingPlugins: false,
       });
     }
-  }
+  };
 
-  async _handleClickRefreshPlugins() {
+  _handleClickRefreshPlugins = async () => {
     await this._handleRefreshPlugins();
-  }
+  };
 
-  static _handleClickShowPluginsFolder() {
+  static _handleClickShowPluginsFolder = () => {
     electron.remote.shell.showItemInFolder(PLUGIN_PATH);
-  }
+  };
 
-  _handleCreatePlugin() {
+  _handleCreatePlugin = () => {
     showPrompt({
       title: 'New Plugin',
       defaultValue: 'demo-example',
@@ -145,27 +144,27 @@ class Plugins extends React.PureComponent<Props, State> {
         await this._handleRefreshPlugins();
       },
     });
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     this._isMounted = true;
     this._handleRefreshPlugins();
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     this._isMounted = false;
-  }
+  };
 
-  async _handleUpdatePluginConfig(pluginName: string, config: PluginConfig) {
+  _handleUpdatePluginConfig = async (pluginName: string, config: PluginConfig) => {
     const { updateSetting, settings } = this.props;
 
     await updateSetting('pluginConfig', {
       ...settings.pluginConfig,
       [pluginName]: config,
     });
-  }
+  };
 
-  async _togglePluginEnabled(name: string, enabled: boolean, config: PluginConfig) {
+  _togglePluginEnabled = async (name: string, enabled: boolean, config: PluginConfig) => {
     const newConfig = {
       ...config,
       disabled: !enabled,
@@ -177,22 +176,20 @@ class Plugins extends React.PureComponent<Props, State> {
 
     await this._handleUpdatePluginConfig(name, newConfig);
     await this._handleRefreshPlugins();
-  }
+  };
 
-  renderToggleSwitch(plugin: Plugin) {
-    return (
-      <ToggleSwitch
-        className="valign-middle"
-        checked={!plugin.config.disabled}
-        disabled={this.state.isRefreshingPlugins}
-        onChange={async checked => {
-          await this._togglePluginEnabled(plugin.name, checked, plugin.config);
-        }}
-      />
-    );
-  }
+  renderToggleSwitch = (plugin: Plugin) => (
+    <ToggleSwitch
+      className="valign-middle"
+      checked={!plugin.config.disabled}
+      disabled={this.state.isRefreshingPlugins}
+      onChange={async checked => {
+        await this._togglePluginEnabled(plugin.name, checked, plugin.config);
+      }}
+    />
+  );
 
-  renderLink(plugin: Plugin) {
+  renderLink = (plugin: Plugin) => {
     const { name } = plugin;
 
     const base = /^insomnia-plugin-/.test(name) ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE;
@@ -203,9 +200,9 @@ class Plugins extends React.PureComponent<Props, State> {
         <i className="fa fa-external-link-square" />
       </a>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       plugins,
       error,
@@ -329,7 +326,7 @@ class Plugins extends React.PureComponent<Props, State> {
         </div>
       </div>
     );
-  }
+  };
 }
 
 export default Plugins;

@@ -1,6 +1,6 @@
 // @flow
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+
 import Hotkey from '../hotkey';
 import type { HotKeyDefinition, HotKeyRegistry, KeyCombination } from '../../../common/hotkeys';
 import {
@@ -24,14 +24,13 @@ type Props = {
 
 const HOT_KEY_DEFS: Array<HotKeyDefinition> = Object.keys(hotKeyRefs).map(k => hotKeyRefs[k]);
 
-@autobind
 class Shortcuts extends PureComponent<Props> {
   /**
    * Checks whether the given key combination already existed.
    * @param newKeyComb the key combination to be checked.
    * @returns {boolean} true if already existed.
    */
-  checkKeyCombinationDuplicate(newKeyComb: KeyCombination): boolean {
+  checkKeyCombinationDuplicate = (newKeyComb: KeyCombination): boolean => {
     const { hotKeyRegistry } = this.props;
     for (const hotKeyRefId in hotKeyRegistry) {
       if (!hotKeyRegistry.hasOwnProperty(hotKeyRefId)) {
@@ -45,30 +44,30 @@ class Shortcuts extends PureComponent<Props> {
       }
     }
     return false;
-  }
+  };
 
   /**
    * Registers a new key combination under a hot key.
    * @param hotKeyRefId the reference id of a hot key to be given the new key combination.
    * @param keyComb the new key combination.
    */
-  addKeyCombination(hotKeyRefId: string, keyComb: KeyCombination) {
+  addKeyCombination = (hotKeyRefId: string, keyComb: KeyCombination) => {
     const { hotKeyRegistry, handleUpdateKeyBindings } = this.props;
     const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefId]);
     keyCombs.push(keyComb);
     handleUpdateKeyBindings(hotKeyRegistry);
-  }
+  };
 
-  handleAddKeyCombination(hotKeyRefId: string) {
+  handleAddKeyCombination = (hotKeyRefId: string) => {
     showModal(
       AddKeyCombinationModal,
       hotKeyRefId,
       this.checkKeyCombinationDuplicate,
       this.addKeyCombination,
     );
-  }
+  };
 
-  handleRemoveKeyCombination(toBeRemoved: Object) {
+  handleRemoveKeyCombination = (toBeRemoved: Object) => {
     const { hotKeyRefId, keyComb } = toBeRemoved;
     const { hotKeyRegistry, handleUpdateKeyBindings } = this.props;
     const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefId]);
@@ -82,20 +81,20 @@ class Shortcuts extends PureComponent<Props> {
       keyCombs.splice(toBeRemovedIndex, 1);
       handleUpdateKeyBindings(hotKeyRegistry);
     }
-  }
+  };
 
-  handleResetKeyBindings(hotKeyRefId: string) {
+  handleResetKeyBindings = (hotKeyRefId: string) => {
     const { hotKeyRegistry, handleUpdateKeyBindings } = this.props;
     hotKeyRegistry[hotKeyRefId] = newDefaultKeyBindings(hotKeyRefId);
     handleUpdateKeyBindings(hotKeyRegistry);
-  }
+  };
 
-  handleResetAllKeyBindings() {
+  handleResetAllKeyBindings = () => {
     const { handleUpdateKeyBindings } = this.props;
     handleUpdateKeyBindings(newDefaultRegistry());
-  }
+  };
 
-  renderHotKey(def: HotKeyDefinition, i: number) {
+  renderHotKey = (def: HotKeyDefinition, i: number) => {
     const keyBindings = this.props.hotKeyRegistry[def.id];
     const keyCombinations = getPlatformKeyCombinations(keyBindings);
     const hasRemoveItems = keyCombinations.length > 0;
@@ -151,28 +150,26 @@ class Shortcuts extends PureComponent<Props> {
         </td>
       </tr>
     );
-  }
+  };
 
-  render() {
-    return (
-      <div className="shortcuts">
-        <div className="row-spaced margin-bottom-xs">
-          <div>
-            <PromptButton className="btn btn--clicky" onClick={this.handleResetAllKeyBindings}>
-              Reset all
-            </PromptButton>
-          </div>
+  render = () => (
+    <div className="shortcuts">
+      <div className="row-spaced margin-bottom-xs">
+        <div>
+          <PromptButton className="btn btn--clicky" onClick={this.handleResetAllKeyBindings}>
+            Reset all
+          </PromptButton>
         </div>
-        <table className="table--fancy">
-          <tbody>
-            {HOT_KEY_DEFS.map((def: HotKeyDefinition, idx: number) => {
-              return this.renderHotKey(def, idx);
-            })}
-          </tbody>
-        </table>
       </div>
-    );
-  }
+      <table className="table--fancy">
+        <tbody>
+          {HOT_KEY_DEFS.map((def: HotKeyDefinition, idx: number) => {
+            return this.renderHotKey(def, idx);
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 export default Shortcuts;

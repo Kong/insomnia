@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { DEBOUNCE_MILLIS, SortOrder } from '../../../common/constants';
 import KeydownBinder from '../keydown-binder';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
@@ -18,47 +18,46 @@ type Props = {
   hotKeyRegistry: HotKeyRegistry,
 };
 
-@autobind
 class SidebarFilter extends React.PureComponent<Props> {
   _input: ?HTMLInputElement;
   _triggerTimeout: TimeoutID;
 
-  _setInputRef(n: ?HTMLInputElement) {
+  _setInputRef = (n: ?HTMLInputElement) => {
     this._input = n;
-  }
+  };
 
-  _handleClearFilter(e: SyntheticEvent<HTMLButtonElement>) {
+  _handleClearFilter = (e: SyntheticEvent<HTMLButtonElement>) => {
     this.props.onChange('');
     if (this._input) {
       this._input.value = '';
       this._input.focus();
     }
-  }
+  };
 
-  _handleOnChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleOnChange = (e: SyntheticEvent<HTMLInputElement>) => {
     const value = e.currentTarget.value;
 
     clearTimeout(this._triggerTimeout);
     this._triggerTimeout = setTimeout(() => {
       this.props.onChange(value);
     }, DEBOUNCE_MILLIS);
-  }
+  };
 
-  _handleRequestGroupCreate() {
+  _handleRequestGroupCreate = () => {
     this.props.requestGroupCreate();
-  }
+  };
 
-  _handleRequestCreate() {
+  _handleRequestCreate = () => {
     this.props.requestCreate();
-  }
+  };
 
-  _handleKeydown(e: KeyboardEvent) {
+  _handleKeydown = (e: KeyboardEvent) => {
     executeHotKey(e, hotKeyRefs.SIDEBAR_FOCUS_FILTER, () => {
       this._input && this._input.focus();
     });
-  }
+  };
 
-  render() {
+  render = () => {
     const { filter, hotKeyRegistry, sidebarSort } = this.props;
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
@@ -86,7 +85,7 @@ class SidebarFilter extends React.PureComponent<Props> {
         </div>
       </KeydownBinder>
     );
-  }
+  };
 }
 
 export default SidebarFilter;

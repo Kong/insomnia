@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import clone from 'clone';
 import * as templating from '../../../templating';
@@ -42,7 +42,6 @@ type State = {
   variables: Array<{ name: string, value: string }>,
 };
 
-@autobind
 class TagEditor extends React.PureComponent<Props, State> {
   _select: ?HTMLSelectElement;
 
@@ -62,7 +61,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     };
   }
 
-  async load() {
+  load = async () => {
     const activeTagData = templateUtils.tokenizeTag(this.props.defaultValue);
 
     const tagDefinitions = await templating.getTagDefinitions();
@@ -78,38 +77,38 @@ class TagEditor extends React.PureComponent<Props, State> {
       this._refreshModels(this.props.workspace),
       this._update(tagDefinitions, activeTagDefinition, activeTagData, true),
     ]);
-  }
+  };
 
-  async loadVariables() {
+  loadVariables = async () => {
     const context = await this.props.handleGetRenderContext();
     const variables = context.keys;
     this.setState({ variables });
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     this.load();
     this.loadVariables();
-  }
+  };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
+  UNSAFE_componentWillReceiveProps = (nextProps: Props) => {
     const { workspace } = nextProps;
 
     if (this.props.workspace._id !== workspace._id) {
       this._refreshModels(workspace);
     }
-  }
+  };
 
-  async _handleRefresh() {
+  _handleRefresh = async () => {
     await this._update(
       this.state.tagDefinitions,
       this.state.activeTagDefinition,
       this.state.activeTagData,
       true,
     );
-  }
+  };
 
-  async _refreshModels(workspace: Workspace) {
+  _refreshModels = async (workspace: Workspace) => {
     this.setState({ loadingDocs: true });
 
     const allDocs = {};
@@ -125,14 +124,14 @@ class TagEditor extends React.PureComponent<Props, State> {
       allDocs,
       loadingDocs: false,
     });
-  }
+  };
 
-  async _updateArg(
+  _updateArg = async (
     argValue: string | number | boolean,
     argIndex: number,
     forceNewType: string | null = null,
     patch: Object = {},
-  ) {
+  ) => {
     const { tagDefinitions, activeTagData, activeTagDefinition } = this.state;
 
     if (!activeTagData) {
@@ -181,9 +180,9 @@ class TagEditor extends React.PureComponent<Props, State> {
     }
 
     await this._update(tagDefinitions, activeTagDefinition, tagData, false);
-  }
+  };
 
-  async _handleChangeArgVariable(options: { argIndex: number, variable: boolean }) {
+  _handleChangeArgVariable = async (options: { argIndex: number, variable: boolean }) => {
     const { variable, argIndex } = options;
     const { activeTagData, activeTagDefinition, variables } = this.state;
 
@@ -207,13 +206,11 @@ class TagEditor extends React.PureComponent<Props, State> {
       const value = variable ? variable.value : '';
       return this._updateArg(value, argIndex, initialType, { quotedBy: "'" });
     }
-  }
+  };
 
-  _handleChangeFile(path: string, argIndex: number) {
-    return this._updateArg(path, argIndex);
-  }
+  _handleChangeFile = (path: string, argIndex: number) => this._updateArg(path, argIndex);
 
-  _handleChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleChange = (e: SyntheticEvent<HTMLInputElement>) => {
     const parent = e.currentTarget.parentNode;
     let argIndex = -1;
     if (parent instanceof HTMLElement) {
@@ -237,9 +234,9 @@ class TagEditor extends React.PureComponent<Props, State> {
     } else {
       return this._updateArg(e.currentTarget.value, argIndex);
     }
-  }
+  };
 
-  _handleChangeCustomArg(e: SyntheticEvent<HTMLInputElement>) {
+  _handleChangeCustomArg = (e: SyntheticEvent<HTMLInputElement>) => {
     const { tagDefinitions, activeTagData, activeTagDefinition } = this.state;
 
     const tagData: NunjucksParsedTag | null = clone(activeTagData);
@@ -249,16 +246,16 @@ class TagEditor extends React.PureComponent<Props, State> {
     }
 
     this._update(tagDefinitions, activeTagDefinition, tagData, false);
-  }
+  };
 
-  async _handleChangeTag(e: SyntheticEvent<HTMLInputElement>) {
+  _handleChangeTag = async (e: SyntheticEvent<HTMLInputElement>) => {
     const name = e.currentTarget.value;
     const tagDefinitions = await templating.getTagDefinitions();
     const tagDefinition = tagDefinitions.find(d => d.name === name) || null;
     this._update(this.state.tagDefinitions, tagDefinition, null, false);
-  }
+  };
 
-  async _handleActionClick(action: NunjucksActionTag) {
+  _handleActionClick = async (action: NunjucksActionTag) => {
     const templateTags = await getTemplateTags();
     const activeTemplateTag = templateTags.find(({ templateTag }) => {
       return templateTag.name === this.state.activeTagData.name;
@@ -270,9 +267,9 @@ class TagEditor extends React.PureComponent<Props, State> {
 
     await action.run(helperContext);
     return this._handleRefresh();
-  }
+  };
 
-  _setSelectRef(n: ?HTMLSelectElement) {
+  _setSelectRef = (n: ?HTMLSelectElement) => {
     this._select = n;
 
     // Let it render, then focus the input
@@ -281,23 +278,23 @@ class TagEditor extends React.PureComponent<Props, State> {
         this._select.focus();
       }
     }, 100);
-  }
+  };
 
-  static _getDefaultTagData(tagDefinition: NunjucksParsedTag): NunjucksParsedTag {
+  static _getDefaultTagData = (tagDefinition: NunjucksParsedTag): NunjucksParsedTag => {
     const defaultFill: string = templateUtils.getDefaultFill(
       tagDefinition.name,
       tagDefinition.args,
     );
 
     return templateUtils.tokenizeTag(defaultFill);
-  }
+  };
 
-  async _update(
+  _update = async (
     tagDefinitions: Array<NunjucksParsedTag>,
     tagDefinition: NunjucksParsedTag | null,
     tagData: NunjucksParsedTag | null,
     noCallback: boolean = false,
-  ) {
+  ) => {
     const { handleRender } = this.props;
     this.setState({ rendering: true });
 
@@ -351,9 +348,9 @@ class TagEditor extends React.PureComponent<Props, State> {
       rendering: false,
       preview,
     });
-  }
+  };
 
-  renderArgVariable(path: string) {
+  renderArgVariable = (path: string) => {
     const { variables } = this.state;
 
     if (variables.length === 0) {
@@ -376,55 +373,49 @@ class TagEditor extends React.PureComponent<Props, State> {
         ))}
       </select>
     );
-  }
+  };
 
-  renderArgString(value: string, placeholder: string, encoding: string) {
-    return (
-      <input
-        type="text"
-        defaultValue={value || ''}
-        placeholder={placeholder}
-        onChange={this._handleChange}
-        data-encoding={encoding || 'utf8'}
-      />
-    );
-  }
+  renderArgString = (value: string, placeholder: string, encoding: string) => (
+    <input
+      type="text"
+      defaultValue={value || ''}
+      placeholder={placeholder}
+      onChange={this._handleChange}
+      data-encoding={encoding || 'utf8'}
+    />
+  );
 
-  renderArgNumber(value: string, placeholder: string) {
-    return (
-      <input
-        type="number"
-        defaultValue={value || '0'}
-        placeholder={placeholder}
-        onChange={this._handleChange}
-      />
-    );
-  }
+  renderArgNumber = (value: string, placeholder: string) => (
+    <input
+      type="number"
+      defaultValue={value || '0'}
+      placeholder={placeholder}
+      onChange={this._handleChange}
+    />
+  );
 
-  renderArgBoolean(checked: boolean) {
-    return <input type="checkbox" checked={checked} onChange={this._handleChange} />;
-  }
+  renderArgBoolean = (checked: boolean) => (
+    <input type="checkbox" checked={checked} onChange={this._handleChange} />
+  );
 
-  renderArgFile(
+  renderArgFile = (
     value: string,
     argIndex: number,
     itemTypes?: Array<string>,
     extensions?: Array<string>,
-  ) {
-    return (
-      <FileInputButton
-        showFileIcon
-        showFileName
-        className="btn btn--clicky btn--super-compact"
-        onChange={path => this._handleChangeFile(path, argIndex)}
-        path={value}
-        itemtypes={itemTypes}
-        extensions={extensions}
-      />
-    );
-  }
+  ) => (
+    <FileInputButton
+      showFileIcon
+      showFileName
+      className="btn btn--clicky btn--super-compact"
+      onChange={path => this._handleChangeFile(path, argIndex)}
+      path={value}
+      itemtypes={itemTypes}
+      extensions={extensions}
+    />
+  );
 
-  renderArgEnum(value: string, options: Array<PluginArgumentEnumOption>) {
+  renderArgEnum = (value: string, options: Array<PluginArgumentEnumOption>) => {
     const argDatas = this.state.activeTagData ? this.state.activeTagData.args : [];
 
     let unsetOption = null;
@@ -452,9 +443,9 @@ class TagEditor extends React.PureComponent<Props, State> {
         })}
       </select>
     );
-  }
+  };
 
-  resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: Array<any>): string {
+  resolveRequestGroupPrefix = (requestGroupId: string, allRequestGroups: Array<any>): string => {
     let prefix = '';
     let reqGroup: any;
 
@@ -470,9 +461,9 @@ class TagEditor extends React.PureComponent<Props, State> {
     } while (true);
 
     return prefix;
-  }
+  };
 
-  renderArgModel(value: string, modelType: string) {
+  renderArgModel = (value: string, modelType: string) => {
     const { allDocs, loadingDocs } = this.state;
     const docs = allDocs[modelType] || [];
     const id = value || 'n/a';
@@ -512,13 +503,13 @@ class TagEditor extends React.PureComponent<Props, State> {
         })}
       </select>
     );
-  }
+  };
 
-  renderArg(
+  renderArg = (
     argDefinition: NunjucksParsedTagArg,
     argDatas: Array<NunjucksParsedTagArg>,
     argIndex: number,
-  ) {
+  ) => {
     // Decide whether or not to show it
     if (typeof argDefinition.hide === 'function' && argDefinition.hide(argDatas)) {
       return null;
@@ -644,20 +635,18 @@ class TagEditor extends React.PureComponent<Props, State> {
         ) : null}
       </div>
     );
-  }
+  };
 
-  renderActions(actions = []) {
-    return (
-      <div className="form-row">
-        <div className="form-control">
-          <label>Actions</label>
-          <div className="form-row">{actions.map(this.renderAction)}</div>
-        </div>
+  renderActions = (actions = []) => (
+    <div className="form-row">
+      <div className="form-control">
+        <label>Actions</label>
+        <div className="form-row">{actions.map(this.renderAction)}</div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  renderAction(action: NunjucksActionTag, index: number) {
+  renderAction = (action: NunjucksActionTag, index: number) => {
     const name = action.name;
     const icon = action.icon ? <i className={action.icon} /> : undefined;
 
@@ -671,9 +660,9 @@ class TagEditor extends React.PureComponent<Props, State> {
         {name}
       </button>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { error, preview, activeTagDefinition, activeTagData, rendering } = this.state;
 
     if (!activeTagData) {
@@ -759,7 +748,7 @@ class TagEditor extends React.PureComponent<Props, State> {
         </div>
       </div>
     );
-  }
+  };
 }
 
 export default TagEditor;

@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import type { DocumentAction } from '../../../plugins';
@@ -30,14 +30,13 @@ type State = {
   loadingActions: { [string]: boolean },
 };
 
-@autobind
 class DocumentCardDropdown extends React.PureComponent<Props, State> {
   state = {
     actionPlugins: [],
     loadingActions: {},
   };
 
-  _handleDuplicate() {
+  _handleDuplicate = () => {
     const { apiSpec, workspace, handleSetActiveWorkspace } = this.props;
     const { fileName } = apiSpec;
 
@@ -54,9 +53,9 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
         handleSetActiveWorkspace(newWorkspace._id);
       },
     });
-  }
+  };
 
-  _handleRename() {
+  _handleRename = () => {
     const { apiSpec } = this.props;
 
     showPrompt({
@@ -69,9 +68,9 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
         await models.apiSpec.update(apiSpec, { fileName });
       },
     });
-  }
+  };
 
-  _handleDelete() {
+  _handleDelete = () => {
     const { apiSpec, workspace, isLastWorkspace } = this.props;
 
     const messages = [
@@ -97,14 +96,14 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
         await models.workspace.remove(workspace);
       },
     });
-  }
+  };
 
-  async _onOpen() {
+  _onOpen = async () => {
     const plugins = await getDocumentActions();
     this.setState({ actionPlugins: plugins });
-  }
+  };
 
-  async _handlePluginClick(p: DocumentAction) {
+  _handlePluginClick = async (p: DocumentAction) => {
     this.setState(state => ({
       loadingActions: {
         ...state.loadingActions,
@@ -131,9 +130,9 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
 
     this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
     this._dropdown && this._dropdown.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       children,
       workspaceId,
@@ -170,7 +169,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
         </DropdownItem>
       </Dropdown>
     );
-  }
+  };
 }
 
 export default DocumentCardDropdown;

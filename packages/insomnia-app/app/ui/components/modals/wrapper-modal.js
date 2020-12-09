@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -15,7 +15,6 @@ type State = {
   wide: ?boolean,
 };
 
-@autobind
 class WrapperModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 
@@ -32,11 +31,11 @@ class WrapperModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(m: ?Modal) {
+  _setModalRef = (m: ?Modal) => {
     this.modal = m;
-  }
+  };
 
-  show(options: Object = {}) {
+  show = (options: Object = {}) => {
     const { title, body, bodyHTML, tall, skinny, wide } = options;
     this.setState({
       title,
@@ -48,9 +47,9 @@ class WrapperModal extends React.PureComponent<Props, State> {
     });
 
     this.modal && this.modal.show();
-  }
+  };
 
-  render() {
+  render = () => {
     const { title, body, bodyHTML, tall, skinny, wide } = this.state;
 
     let finalBody = body;
@@ -64,7 +63,7 @@ class WrapperModal extends React.PureComponent<Props, State> {
         <ModalBody>{finalBody}</ModalBody>
       </Modal>
     );
-  }
+  };
 }
 
 export default WrapperModal;

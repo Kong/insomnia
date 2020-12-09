@@ -1,6 +1,6 @@
 // @flow
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+
 import MethodTag from '../tags/method-tag';
 import type { Request } from '../../../models/request';
 import type { GrpcRequest } from '../../../models/grpc-request';
@@ -13,16 +13,15 @@ type Props = {
   request: Request | GrpcRequest,
 };
 
-@autobind
 class RequestRow extends PureComponent<Props> {
-  handleSelect(e: SyntheticEvent<HTMLInputElement>) {
+  handleSelect = (e: SyntheticEvent<HTMLInputElement>) => {
     const el = e.currentTarget;
     const value = el.checked;
     const { handleSetItemSelected, request } = this.props;
     return handleSetItemSelected(request._id, value);
-  }
+  };
 
-  render() {
+  render = () => {
     const { request, isSelected } = this.props;
     const isGrpc = isGrpcRequest(request);
 
@@ -39,7 +38,7 @@ class RequestRow extends PureComponent<Props> {
         </div>
       </li>
     );
-  }
+  };
 }
 
 export default RequestRow;

@@ -1,7 +1,7 @@
 // @flow
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -24,7 +24,6 @@ const INITIAL_STATE: State = {
   workspaceName: '',
 };
 
-@autobind
 class SyncDeleteModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   input: ?HTMLInputElement;
@@ -34,19 +33,19 @@ class SyncDeleteModal extends React.PureComponent<Props, State> {
     this.state = INITIAL_STATE;
   }
 
-  _setModalRef(n: ?Modal) {
+  _setModalRef = (n: ?Modal) => {
     this.modal = n;
-  }
+  };
 
-  _setInputRef(m: ?HTMLInputElement) {
+  _setInputRef = (m: ?HTMLInputElement) => {
     this.input = m;
-  }
+  };
 
-  _updateWorkspaceName(e: SyntheticEvent<HTMLInputElement>) {
+  _updateWorkspaceName = (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ workspaceName: e.currentTarget.value });
-  }
+  };
 
-  async _handleDelete(e: SyntheticEvent<HTMLFormElement>) {
+  _handleDelete = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const { vcs } = this.props;
@@ -59,9 +58,9 @@ class SyncDeleteModal extends React.PureComponent<Props, State> {
         error: err.message,
       });
     }
-  }
+  };
 
-  async show(options: { onHide: Function }) {
+  show = async (options: { onHide: Function }) => {
     this.modal && this.modal.show({ onHide: options.onHide });
 
     // Reset state
@@ -71,13 +70,13 @@ class SyncDeleteModal extends React.PureComponent<Props, State> {
     setTimeout(() => {
       this.input && this.input.focus();
     }, 100);
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const { error, workspaceName } = this.state;
     const { workspace } = this.props;
 
@@ -111,7 +110,7 @@ class SyncDeleteModal extends React.PureComponent<Props, State> {
         </ModalBody>
       </Modal>
     );
-  }
+  };
 }
 
 export default SyncDeleteModal;

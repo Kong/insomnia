@@ -1,8 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
 
-@autobind
 class VariableEditor extends PureComponent {
   constructor(props) {
     super(props);
@@ -17,38 +15,38 @@ class VariableEditor extends PureComponent {
     };
   }
 
-  componentDidMount() {
+  componentDidMount = () => {
     this._update(this.state.value, true);
     this._resize();
-  }
+  };
 
-  componentDidUpdate() {
+  componentDidUpdate = () => {
     this._resize();
-  }
+  };
 
-  _handleChange(e) {
+  _handleChange = e => {
     const name = e.target.value;
     this._update(name);
-  }
+  };
 
-  _resize() {
+  _resize = () => {
     setTimeout(() => {
       const element = this.textAreaRef.current;
       element.style.cssText = 'height:auto';
       element.style.cssText = `height:${element.scrollHeight}px;overflow:hidden`;
     }, 200);
-  }
+  };
 
-  _setSelectRef(n) {
+  _setSelectRef = n => {
     this._select = n;
 
     // Let it render, then focus the input
     setTimeout(() => {
       this._select && this._select.focus();
     }, 100);
-  }
+  };
 
-  async _update(value, noCallback = false) {
+  _update = async (value, noCallback = false) => {
     const { handleRender } = this.props;
     const cleanedValue = value
       .replace(/^{%/, '')
@@ -77,9 +75,9 @@ class VariableEditor extends PureComponent {
     if (!noCallback) {
       this.props.onChange(value);
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const { error, value, preview, variables, variableSource } = this.state;
     const isOther = !variables.find(v => value === `{{ ${v.name} }}`);
     return (
@@ -114,7 +112,7 @@ class VariableEditor extends PureComponent {
         </div>
       </div>
     );
-  }
+  };
 }
 
 VariableEditor.propTypes = {

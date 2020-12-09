@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import * as PDF from 'pdfjs-dist/webpack';
 
 type Props = {
@@ -12,16 +12,15 @@ type State = {
   numPages: number | null,
 };
 
-@autobind
 class ResponsePDFViewer extends React.PureComponent<Props, State> {
   container: ?HTMLDivElement;
   debounceTimeout: any;
 
-  setRef(n: ?HTMLDivElement) {
+  setRef = (n: ?HTMLDivElement) => {
     this.container = n;
-  }
+  };
 
-  loadPDF() {
+  loadPDF = () => {
     clearTimeout(this.debounceTimeout);
     this.debounceTimeout = setTimeout(async () => {
       // get node for this react component
@@ -69,31 +68,31 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
         await page.render(renderContext).promise;
       }
     }, 100);
-  }
+  };
 
-  handleResize(e: SyntheticEvent<HTMLDivElement>) {
+  handleResize = (e: SyntheticEvent<HTMLDivElement>) => {
     if (!this.container) {
       return;
     }
 
     clearTimeout(this.debounceTimeout);
     this.debounceTimeout = setTimeout(this.loadPDF, 300);
-  }
+  };
 
-  componentDidUpdate() {
+  componentDidUpdate = () => {
     this.loadPDF();
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     this.loadPDF();
     window.addEventListener('resize', this.handleResize);
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     window.removeEventListener('resize', this.handleResize);
-  }
+  };
 
-  render() {
+  render = () => {
     const styles = {
       width: '100%',
       height: '100%',
@@ -107,7 +106,7 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
         <div className="faded text-center vertically-center tall">Loading PDF...</div>
       </div>
     );
-  }
+  };
 }
 
 export default ResponsePDFViewer;

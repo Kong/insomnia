@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import fuzzySort from 'fuzzysort';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import DropdownItem from './dropdown-item';
 import DropdownDivider from './dropdown-divider';
@@ -109,7 +109,6 @@ const StyledMenu = styled.div`
   }
 `;
 
-@autobind
 class Dropdown extends PureComponent {
   constructor(props) {
     super(props);
@@ -153,20 +152,20 @@ class Dropdown extends PureComponent {
     }
   }
 
-  _setRef(n) {
+  _setRef = n => {
     this._node = n;
-  }
+  };
 
-  _handleCheckFilterSubmit(e) {
+  _handleCheckFilterSubmit = e => {
     if (e.key === 'Enter') {
       // Listen for the Enter key and "click" on the active list item
       const selector = `li[data-filter-index="${this.state.filterActiveIndex}"] button`;
       const button = this._dropdownList.querySelector(selector);
       button && button.click();
     }
-  }
+  };
 
-  _handleChangeFilter(e) {
+  _handleChangeFilter = e => {
     const newFilter = e.target.value;
 
     // Nothing to do if the filter didn't change
@@ -195,9 +194,9 @@ class Dropdown extends PureComponent {
       filterActiveIndex: filterItems[0] || -1,
       filterVisible: this.state.filterVisible ? true : newFilter.length > 0,
     });
-  }
+  };
 
-  _handleDropdownNavigation(e) {
+  _handleDropdownNavigation = e => {
     const { key, shiftKey } = e;
 
     // Handle tab and arrows to move up and down dropdown entries
@@ -224,9 +223,9 @@ class Dropdown extends PureComponent {
     }
 
     this._filter.focus();
-  }
+  };
 
-  _handleKeyDown(e) {
+  _handleKeyDown = e => {
     if (!this.state.open) {
       return;
     }
@@ -239,9 +238,9 @@ class Dropdown extends PureComponent {
     if (e.key === 'Escape') {
       this.hide();
     }
-  }
+  };
 
-  _checkSizeAndPosition() {
+  _checkSizeAndPosition = () => {
     if (!this.state.open || !this._dropdownList) {
       return;
     }
@@ -325,38 +324,38 @@ class Dropdown extends PureComponent {
       this._dropdownList.style.top = `${bottom}px`;
       this._dropdownList.style.maxHeight = `${bodyRect.height - bottom - screenMargin}px`;
     }
-  }
+  };
 
-  _handleClick(e) {
+  _handleClick = e => {
     e.preventDefault();
     e.stopPropagation();
 
     this.toggle();
-  }
+  };
 
-  static _handleMouseDown(e) {
+  static _handleMouseDown = e => {
     // Intercept mouse down so that clicks don't trigger things like drag and drop.
     e.preventDefault();
-  }
+  };
 
-  _addDropdownListRef(n) {
+  _addDropdownListRef = n => {
     this._dropdownList = n;
-  }
+  };
 
-  _addFilterRef(n) {
+  _addFilterRef = n => {
     this._filter = n;
 
     // Automatically focus the filter element when mounted so we can start typing
     if (this._filter) {
       this._filter.focus();
     }
-  }
+  };
 
-  _addDropdownMenuRef(n) {
+  _addDropdownMenuRef = n => {
     this._dropdownMenu = n;
-  }
+  };
 
-  _getFlattenedChildren(children) {
+  _getFlattenedChildren = children => {
     let newChildren = [];
     for (const child of React.Children.toArray(children)) {
       if (!child) {
@@ -374,13 +373,13 @@ class Dropdown extends PureComponent {
     }
 
     return newChildren;
-  }
+  };
 
-  componentDidUpdate() {
+  componentDidUpdate = () => {
     this._checkSizeAndPosition();
-  }
+  };
 
-  hide() {
+  hide = () => {
     // Focus the dropdown button after hiding
     if (this._node) {
       const button = this._node.querySelector('button');
@@ -389,9 +388,9 @@ class Dropdown extends PureComponent {
 
     this.setState({ open: false });
     this.props.onHide && this.props.onHide();
-  }
+  };
 
-  show(filterVisible = false, forcedPosition = null) {
+  show = (filterVisible = false, forcedPosition = null) => {
     const bodyHeight = document.body.getBoundingClientRect().height;
     const dropdownTop = this._node.getBoundingClientRect().top;
     const dropUp = dropdownTop > bodyHeight - 200;
@@ -408,9 +407,9 @@ class Dropdown extends PureComponent {
     });
 
     this.props.onOpen && this.props.onOpen();
-  }
+  };
 
-  toggle(filterVisible = false) {
+  toggle = (filterVisible = false) => {
     if (this.state.open) {
       this.hide();
       document.body.style.overflow = this.defaultBodyOverflow;
@@ -420,9 +419,9 @@ class Dropdown extends PureComponent {
       // Prevent body from scrolling when dropdown is open
       document.body.style.overflow = 'hidden';
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const { className, style, children, renderButton } = this.props;
 
     const {
@@ -511,7 +510,7 @@ class Dropdown extends PureComponent {
         )}
       </StyledDropdown>
     );
-  }
+  };
 }
 
 Dropdown.propTypes = {

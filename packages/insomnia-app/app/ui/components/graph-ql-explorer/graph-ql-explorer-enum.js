@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import MarkdownPreview from '../markdown-preview';
 import type { GraphQLEnumValue } from 'graphql';
 import { GraphQLEnumType } from 'graphql';
@@ -9,14 +9,13 @@ type Props = {|
   type: GraphQLEnumType,
 |};
 
-@autobind
 class GraphQLExplorerEnum extends React.PureComponent<Props> {
-  renderDescription() {
+  renderDescription = () => {
     const { type } = this.props;
     return <MarkdownPreview markdown={type.description || '*no description*'} />;
-  }
+  };
 
-  renderValues() {
+  renderValues = () => {
     const { type } = this.props;
 
     const values = type.getValues();
@@ -43,16 +42,14 @@ class GraphQLExplorerEnum extends React.PureComponent<Props> {
         </ul>
       </React.Fragment>
     );
-  }
+  };
 
-  render() {
-    return (
-      <div className="graphql-explorer__type">
-        {this.renderDescription()}
-        {this.renderValues()}
-      </div>
-    );
-  }
+  render = () => (
+    <div className="graphql-explorer__type">
+      {this.renderDescription()}
+      {this.renderValues()}
+    </div>
+  );
 }
 
 export default GraphQLExplorerEnum;

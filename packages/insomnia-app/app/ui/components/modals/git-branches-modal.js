@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -26,7 +26,6 @@ type State = {|
   newBranchName: string,
 |};
 
-@autobind
 class GitBranchesModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   input: ?HTMLInputElement;
@@ -44,15 +43,15 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(ref: ?Modal) {
+  _setModalRef = (ref: ?Modal) => {
     this.modal = ref;
-  }
+  };
 
-  _setInputRef(ref: ?HTMLInputElement) {
+  _setInputRef = (ref: ?HTMLInputElement) => {
     this.input = ref;
-  }
+  };
 
-  async show(options: { onHide?: () => void } = {}) {
+  show = async (options: { onHide?: () => void } = {}) => {
     await this._refreshState({
       newBranchName: '',
     });
@@ -70,9 +69,9 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
     const { vcs, gitRepository } = this.props;
     await vcs.fetch(false, 1, gitRepository.credentials);
     await this._refreshState();
-  }
+  };
 
-  async _refreshState(newState?: Object) {
+  _refreshState = async (newState?: Object) => {
     const { vcs, handleGitBranchChanged } = this.props;
 
     const branch = await vcs.getBranch();
@@ -86,27 +85,27 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
       ...newState,
     });
     handleGitBranchChanged(branch);
-  }
+  };
 
-  _handleClearError() {
+  _handleClearError = () => {
     this.setState({ error: '' });
-  }
+  };
 
-  _handleHide() {
+  _handleHide = () => {
     if (this._onHide) {
       this._onHide();
     }
-  }
+  };
 
-  async _errorHandler(cb: () => Promise<void>) {
+  _errorHandler = async (cb: () => Promise<void>) => {
     try {
       return await cb();
     } catch (err) {
       this.setState({ error: err.message });
     }
-  }
+  };
 
-  async _handleCreate(e: SyntheticEvent<HTMLFormElement>) {
+  _handleCreate = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     await this._errorHandler(async () => {
@@ -116,9 +115,9 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
       await vcs.checkout(newBranchName);
       await this._refreshState({ newBranchName: '' });
     });
-  }
+  };
 
-  async _handleMerge(branch: string) {
+  _handleMerge = async (branch: string) => {
     await this._errorHandler(async () => {
       const { vcs } = this.props;
 
@@ -127,18 +126,18 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
       // Apparently merge doesn't update the working dir so need to checkout too
       await this._handleCheckout(branch);
     });
-  }
+  };
 
-  async _handleDelete(branch: string) {
+  _handleDelete = async (branch: string) => {
     await this._errorHandler(async () => {
       const { vcs } = this.props;
 
       await vcs.deleteBranch(branch);
       await this._refreshState();
     });
-  }
+  };
 
-  async _handleRemoteCheckout(branch: string) {
+  _handleRemoteCheckout = async (branch: string) => {
     await this._errorHandler(async () => {
       const { vcs, gitRepository } = this.props;
 
@@ -147,9 +146,9 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
 
       await this._handleCheckout(branch);
     });
-  }
+  };
 
-  async _handleCheckout(branch: string) {
+  _handleCheckout = async (branch: string) => {
     await this._errorHandler(async () => {
       const { vcs, handleInitializeEntities } = this.props;
 
@@ -160,17 +159,17 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
       await handleInitializeEntities();
       await this._refreshState();
     });
-  }
+  };
 
-  _updateNewBranchName(e: SyntheticEvent<HTMLInputElement>) {
+  _updateNewBranchName = (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ newBranchName: e.currentTarget.value });
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const { branch: currentBranch, branches, remoteBranches, newBranchName, error } = this.state;
 
     const remoteOnlyBranches = remoteBranches.filter(b => !branches.includes(b));
@@ -293,7 +292,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default GitBranchesModal;

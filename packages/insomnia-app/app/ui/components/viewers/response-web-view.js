@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import { EventEmitter } from 'events';
-import autobind from 'autobind-decorator';
+
 import contextMenu from 'electron-context-menu';
 
 type Props = {
@@ -11,19 +11,18 @@ type Props = {
   webpreferences: string,
 };
 
-@autobind
 class ResponseWebView extends React.PureComponent<Props> {
   _webview: ?HTMLElement;
 
-  _handleSetWebViewRef(n: ?HTMLElement) {
+  _handleSetWebViewRef = (n: ?HTMLElement) => {
     this._webview = n;
 
     if (this._webview) {
       this._webview.addEventListener('dom-ready', this._handleDOMReady);
     }
-  }
+  };
 
-  _handleDOMReady() {
+  _handleDOMReady = () => {
     if (!this._webview) {
       return;
     }
@@ -31,9 +30,9 @@ class ResponseWebView extends React.PureComponent<Props> {
     this._webview.removeEventListener('dom-ready', this._handleDOMReady);
     contextMenu({ window: this._webview });
     this._setBody();
-  }
+  };
 
-  _setBody() {
+  _setBody = () => {
     const webview: Object = this._webview;
 
     if (!webview) {
@@ -61,19 +60,19 @@ class ResponseWebView extends React.PureComponent<Props> {
     // this isn't here.
     webview.webContents = webview;
     webview.webContents.session = new EventEmitter();
-  }
+  };
 
-  componentDidUpdate() {
+  componentDidUpdate = () => {
     this._setBody();
-  }
+  };
 
-  render() {
+  render = () => {
     const { webpreferences } = this.props;
 
     return (
       <webview ref={this._handleSetWebViewRef} src="about:blank" webpreferences={webpreferences} />
     );
-  }
+  };
 }
 
 export default ResponseWebView;

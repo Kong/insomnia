@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import PromptButton from '../base/prompt-button';
 import {
@@ -39,7 +39,6 @@ type State = {
   loadingActions: { [string]: boolean },
 };
 
-@autobind
 class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
   _dropdown: ?Dropdown;
 
@@ -48,11 +47,11 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
     loadingActions: {},
   };
 
-  _setDropdownRef(n: ?Dropdown) {
+  _setDropdownRef = (n: ?Dropdown) => {
     this._dropdown = n;
-  }
+  };
 
-  _handleRename() {
+  _handleRename = () => {
     const { requestGroup } = this.props;
 
     showPrompt({
@@ -62,42 +61,42 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
         models.requestGroup.update(requestGroup, { name });
       },
     });
-  }
+  };
 
-  async _handleRequestCreate() {
+  _handleRequestCreate = async () => {
     this.props.handleCreateRequest(this.props.requestGroup._id);
-  }
+  };
 
-  _handleRequestGroupDuplicate() {
+  _handleRequestGroupDuplicate = () => {
     this.props.handleDuplicateRequestGroup(this.props.requestGroup);
-  }
+  };
 
-  _handleRequestGroupMove() {
+  _handleRequestGroupMove = () => {
     this.props.handleMoveRequestGroup(this.props.requestGroup);
-  }
+  };
 
-  async _handleRequestGroupCreate() {
+  _handleRequestGroupCreate = async () => {
     this.props.handleCreateRequestGroup(this.props.requestGroup._id);
-  }
+  };
 
-  _handleDeleteFolder() {
+  _handleDeleteFolder = () => {
     models.requestGroup.remove(this.props.requestGroup);
-  }
+  };
 
-  _handleEditEnvironment() {
+  _handleEditEnvironment = () => {
     showModal(EnvironmentEditModal, this.props.requestGroup);
-  }
+  };
 
-  async onOpen() {
+  onOpen = async () => {
     const plugins = await getRequestGroupActions();
     this.setState({ actionPlugins: plugins });
-  }
+  };
 
-  async show() {
+  show = async () => {
     this._dropdown && this._dropdown.show();
-  }
+  };
 
-  async _handlePluginClick(p: RequestGroupAction) {
+  _handlePluginClick = async (p: RequestGroupAction) => {
     this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: true } }));
 
     try {
@@ -123,9 +122,9 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
 
     this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
     this._dropdown && this._dropdown.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       workspace, // eslint-disable-line no-unused-vars
       requestGroup, // eslint-disable-line no-unused-vars
@@ -177,7 +176,7 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
         ))}
       </Dropdown>
     );
-  }
+  };
 }
 
 export default RequestGroupActionsDropdown;

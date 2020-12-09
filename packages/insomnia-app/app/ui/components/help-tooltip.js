@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Tooltip from './tooltip';
 
 type Props = {
@@ -13,16 +13,15 @@ type Props = {
   info?: boolean,
 };
 
-@autobind
 class HelpTooltip extends React.PureComponent<Props> {
-  render() {
+  render = () => {
     const { children, className, style, info } = this.props;
     return (
       <Tooltip position="top" className={className} message={children} style={style}>
         <i className={'fa ' + (info ? 'fa-info-circle' : 'fa-question-circle')} />
       </Tooltip>
     );
-  }
+  };
 }
 
 export default HelpTooltip;

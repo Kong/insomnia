@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import * as constants from '../../../common/constants';
 import { showPrompt } from '../modals/index';
@@ -9,13 +9,12 @@ import { METHOD_GRPC } from '../../../common/constants';
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 const GRPC_LABEL = 'gRPC';
 
-@autobind
 class MethodDropdown extends PureComponent {
-  _setDropdownRef(n) {
+  _setDropdownRef = n => {
     this._dropdown = n;
-  }
+  };
 
-  _handleSetCustomMethod() {
+  _handleSetCustomMethod = () => {
     let recentMethods;
     try {
       const v = window.localStorage.getItem(LOCALSTORAGE_KEY);
@@ -59,17 +58,17 @@ class MethodDropdown extends PureComponent {
         this.props.onChange(method);
       },
     });
-  }
+  };
 
-  _handleChange(method) {
+  _handleChange = method => {
     this.props.onChange(method);
-  }
+  };
 
-  toggle() {
+  toggle = () => {
     this._dropdown && this._dropdown.toggle(true);
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       method,
       right,
@@ -110,7 +109,7 @@ class MethodDropdown extends PureComponent {
         </DropdownItem>
       </Dropdown>
     );
-  }
+  };
 }
 
 MethodDropdown.propTypes = {

@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
@@ -55,7 +55,6 @@ type State = {
   remoteProjects: Array<Project>,
 };
 
-@autobind
 class SyncDropdown extends React.PureComponent<Props, State> {
   checkInterval: IntervalID;
   refreshOnNextSyncItems = false;
@@ -84,7 +83,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     };
   }
 
-  async refreshMainAttributes(extraState?: Object = {}) {
+  refreshMainAttributes = async (extraState: Object = {}) => {
     const { vcs, syncItems, workspace } = this.props;
 
     if (!vcs.hasProject()) {
@@ -117,9 +116,9 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     }
 
     this.setState(newState);
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     this.setState({ initializing: true });
     this.refreshMainAttributes()
       .catch(err => console.log('[sync_menu] Error refreshing sync state', err))
@@ -133,14 +132,14 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     }, REFRESH_PERIOD);
 
     document.addEventListener('mousemove', this._handleUserActivity);
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     clearInterval(this.checkInterval);
     document.removeEventListener('mousemove', this._handleUserActivity);
-  }
+  };
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate = (prevProps: Props) => {
     const { vcs, syncItems } = this.props;
 
     // Update if new sync items
@@ -156,19 +155,19 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         this.refreshOnNextSyncItems = false;
       }
     }
-  }
+  };
 
-  _handleUserActivity() {
+  _handleUserActivity = () => {
     this.lastUserActivity = Date.now();
-  }
+  };
 
-  _handleShowBranchesModal() {
+  _handleShowBranchesModal = () => {
     showModal(SyncBranchesModal, {
       onHide: this.refreshMainAttributes,
     });
-  }
+  };
 
-  _handleShowStagingModal() {
+  _handleShowStagingModal = () => {
     showModal(SyncStagingModal, {
       onSnapshot: async () => {
         await this.refreshMainAttributes();
@@ -177,17 +176,17 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         await this._handlePushChanges();
       },
     });
-  }
+  };
 
-  static _handleShowSharingModal() {
+  static _handleShowSharingModal = () => {
     showModal(SyncShareModal);
-  }
+  };
 
-  static _handleShowLoginModal() {
+  static _handleShowLoginModal = () => {
     showModal(LoginModal);
-  }
+  };
 
-  async _handlePushChanges() {
+  _handlePushChanges = async () => {
     const { vcs } = this.props;
     this.setState({ loadingPush: true });
 
@@ -201,9 +200,9 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     }
 
     await this.refreshMainAttributes({ loadingPush: false });
-  }
+  };
 
-  async _handlePullChanges() {
+  _handlePullChanges = async () => {
     const { vcs, syncItems } = this.props;
 
     this.setState({ loadingPull: true });
@@ -218,16 +217,16 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       });
     }
     this.setState({ loadingPull: false });
-  }
+  };
 
-  async _handleRollback(snapshot: Snapshot) {
+  _handleRollback = async (snapshot: Snapshot) => {
     const { vcs, syncItems } = this.props;
     const delta = await vcs.rollback(snapshot.id, syncItems);
     await db.batchModifyDocs(delta);
     this.refreshOnNextSyncItems = true;
-  }
+  };
 
-  async _handleRevert() {
+  _handleRevert = async () => {
     const { vcs, syncItems } = this.props;
 
     try {
@@ -239,30 +238,30 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         message: err.message,
       });
     }
-  }
+  };
 
-  _handleShowHistoryModal() {
+  _handleShowHistoryModal = () => {
     showModal(SyncHistoryModal, {
       handleRollback: this._handleRollback,
     });
-  }
+  };
 
-  async _handleOpen() {
+  _handleOpen = async () => {
     await this.refreshMainAttributes();
-  }
+  };
 
-  async _handleEnableSync() {
+  _handleEnableSync = async () => {
     const { vcs, workspace } = this.props;
     await vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
-  }
+  };
 
-  _handleShowDeleteModal() {
+  _handleShowDeleteModal = () => {
     showModal(SyncDeleteModal, {
       onHide: this.refreshMainAttributes,
     });
-  }
+  };
 
-  async _handleSetProject(p: Project) {
+  _handleSetProject = async (p: Project) => {
     const { vcs } = this.props;
     this.setState({ loadingProjectPull: true });
     await vcs.setProject(p);
@@ -291,9 +290,9 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     }
 
     await this.refreshMainAttributes({ loadingProjectPull: false });
-  }
+  };
 
-  async _handleSwitchBranch(branch: string) {
+  _handleSwitchBranch = async (branch: string) => {
     const { vcs, syncItems } = this.props;
 
     try {
@@ -324,9 +323,9 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
     // Still need to do this in case sync items don't change
     this.setState({ currentBranch: branch });
-  }
+  };
 
-  renderBranch(branch: string) {
+  renderBranch = (branch: string) => {
     const { currentBranch } = this.state;
 
     const icon =
@@ -343,9 +342,9 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         {branch}
       </DropdownItem>
     );
-  }
+  };
 
-  renderButton() {
+  renderButton = () => {
     const {
       currentBranch,
       compare: { ahead, behind },
@@ -422,9 +421,9 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         </div>
       </DropdownButton>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     if (!session.isLoggedIn()) {
       return null;
     }
@@ -575,7 +574,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         </Dropdown>
       </div>
     );
-  }
+  };
 }
 
 export default SyncDropdown;

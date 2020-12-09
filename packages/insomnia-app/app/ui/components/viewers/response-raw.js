@@ -1,15 +1,14 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import CodeEditor from '../codemirror/code-editor';
 
-@autobind
 class ResponseRaw extends PureComponent {
-  _setCodeEditorRef(n) {
+  _setCodeEditorRef = n => {
     this._codeEditor = n;
-  }
+  };
 
-  shouldComponentUpdate(nextProps) {
+  shouldComponentUpdate = nextProps => {
     for (const key in nextProps) {
       if (nextProps.hasOwnProperty(key)) {
         if (nextProps[key] !== this.props[key]) {
@@ -19,21 +18,21 @@ class ResponseRaw extends PureComponent {
     }
 
     return false;
-  }
+  };
 
-  focus() {
+  focus = () => {
     if (this._codeEditor) {
       this._codeEditor.focus();
     }
-  }
+  };
 
-  selectAll() {
+  selectAll = () => {
     if (this._codeEditor) {
       this._codeEditor.selectAll();
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const { fontSize, responseId, value } = this.props;
     return (
       <CodeEditor
@@ -50,7 +49,7 @@ class ResponseRaw extends PureComponent {
         uniquenessKey={responseId}
       />
     );
-  }
+  };
 }
 
 ResponseRaw.propTypes = {

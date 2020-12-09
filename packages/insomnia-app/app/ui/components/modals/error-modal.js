@@ -1,7 +1,7 @@
 // @flow
 
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -14,7 +14,6 @@ export type ErrorModalOptions = {|
   message?: string,
 |};
 
-@autobind
 class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
   constructor(props) {
     super(props);
@@ -27,20 +26,20 @@ class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
     };
   }
 
-  _setModalRef(m) {
+  _setModalRef = m => {
     this.modal = m;
-  }
+  };
 
-  _handleOk() {
+  _handleOk = () => {
     this.hide();
     this._okCallback();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
-  show(options: ErrorModalOptions = {}) {
+  show = (options: ErrorModalOptions = {}) => {
     const { title, error, addCancel, message } = options;
     this.setState({ title, error, addCancel, message });
 
@@ -51,9 +50,9 @@ class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
     return new Promise(resolve => {
       this._okCallback = resolve;
     });
-  }
+  };
 
-  render() {
+  render = () => {
     const { error, title, addCancel } = this.state;
 
     const message = this.state.message || error?.message;
@@ -86,7 +85,7 @@ class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default ErrorModal;

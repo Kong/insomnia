@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import autobind from 'autobind-decorator';
+
 import SidebarRequestRow from './sidebar-request-row';
 import SidebarRequestGroupRow from './sidebar-request-group-row';
 import * as models from '../../../models/index';
@@ -50,11 +50,10 @@ type Props = {
   activeRequest: ?Request,
 };
 
-@autobind
 class SidebarChildren extends React.PureComponent<Props> {
   _contextMenu: ?SidebarCreateDropdown;
 
-  _handleContextMenu(e: MouseEvent) {
+  _handleContextMenu = (e: MouseEvent) => {
     const { target, currentTarget, clientX, clientY } = e;
 
     if (target !== currentTarget) {
@@ -69,13 +68,13 @@ class SidebarChildren extends React.PureComponent<Props> {
       const y = document.body.getBoundingClientRect().height - clientY;
       menu.show({ x, y });
     }
-  }
+  };
 
-  _setContextMenuRef(n: ?Dropdown) {
+  _setContextMenuRef = (n: ?Dropdown) => {
     this._contextMenu = n;
-  }
+  };
 
-  _renderChildren(children: Array<Child>, isInPinnedList: boolean): React.Node {
+  _renderChildren = (children: Array<Child>, isInPinnedList: boolean): React.Node => {
     const {
       filter,
       handleCreateRequest,
@@ -130,7 +129,7 @@ class SidebarChildren extends React.PureComponent<Props> {
 
       const requestGroup = child.doc;
 
-      function hasActiveChild(children) {
+      const hasActiveChild = children => {
         for (const c of children) {
           if (hasActiveChild(c.children || [])) {
             return true;
@@ -141,7 +140,7 @@ class SidebarChildren extends React.PureComponent<Props> {
 
         // Didn't find anything, so return
         return false;
-      }
+      };
 
       const isActive = hasActiveChild(child.children);
       const children = this._renderChildren(child.children, isInPinnedList);
@@ -169,29 +168,27 @@ class SidebarChildren extends React.PureComponent<Props> {
         />
       );
     });
-  }
+  };
 
-  _renderList(children: Array<Child>, pinnedList: boolean): React.Node {
-    return (
-      <ul
-        className="sidebar__list sidebar__list-root theme--sidebar__list"
-        onContextMenu={this._handleContextMenu}>
-        {this._renderChildren(children, pinnedList)}
-      </ul>
-    );
-  }
+  _renderList = (children: Array<Child>, pinnedList: boolean): React.Node => (
+    <ul
+      className="sidebar__list sidebar__list-root theme--sidebar__list"
+      onContextMenu={this._handleContextMenu}>
+      {this._renderChildren(children, pinnedList)}
+    </ul>
+  );
 
-  _handleCreateRequest() {
+  _handleCreateRequest = () => {
     const { handleCreateRequest, workspace } = this.props;
     handleCreateRequest(workspace._id);
-  }
+  };
 
-  _handleCreateRequestGroup() {
+  _handleCreateRequestGroup = () => {
     const { handleCreateRequestGroup, workspace } = this.props;
     handleCreateRequestGroup(workspace._id);
-  }
+  };
 
-  render() {
+  render = () => {
     const { childObjects, hotKeyRegistry } = this.props;
 
     const showSeparator = childObjects.pinned.length > 0;
@@ -216,7 +213,7 @@ class SidebarChildren extends React.PureComponent<Props> {
         {contextMenuPortal}
       </React.Fragment>
     );
-  }
+  };
 }
 
 export default SidebarChildren;

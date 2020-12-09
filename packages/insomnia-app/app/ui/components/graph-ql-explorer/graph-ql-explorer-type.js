@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { SvgIcon } from 'insomnia-components';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
-import autobind from 'autobind-decorator';
+
 import MarkdownPreview from '../markdown-preview';
 import GraphQLExplorerFieldLink from './graph-ql-explorer-field-link';
 import type { GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
@@ -17,24 +17,23 @@ type Props = {
   schema: GraphQLSchema | null,
 };
 
-@autobind
 class GraphQLExplorerType extends React.PureComponent<Props> {
-  _handleNavigateType(type: Object) {
+  _handleNavigateType = (type: Object) => {
     const { onNavigateType } = this.props;
     onNavigateType(type);
-  }
+  };
 
-  _handleNavigateField(field: Object) {
+  _handleNavigateField = (field: Object) => {
     const { onNavigateField } = this.props;
     onNavigateField(field);
-  }
+  };
 
-  renderDescription() {
+  renderDescription = () => {
     const { type } = this.props;
     return <MarkdownPreview markdown={type.description || '*no description*'} />;
-  }
+  };
 
-  renderTypesMaybe() {
+  renderTypesMaybe = () => {
     const { schema, type, onNavigateType } = this.props;
 
     if (schema === null) {
@@ -69,9 +68,9 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
         </ul>
       </React.Fragment>
     );
-  }
+  };
 
-  renderFieldsMaybe() {
+  renderFieldsMaybe = () => {
     const { type, onNavigateType } = this.props;
     if (typeof type.getFields !== 'function') {
       return null;
@@ -138,17 +137,15 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
         </ul>
       </React.Fragment>
     );
-  }
+  };
 
-  render() {
-    return (
-      <div className="graphql-explorer__type">
-        {this.renderDescription()}
-        {this.renderTypesMaybe()}
-        {this.renderFieldsMaybe()}
-      </div>
-    );
-  }
+  render = () => (
+    <div className="graphql-explorer__type">
+      {this.renderDescription()}
+      {this.renderTypesMaybe()}
+      {this.renderFieldsMaybe()}
+    </div>
+  );
 }
 
 export default GraphQLExplorerType;

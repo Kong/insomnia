@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
@@ -46,7 +46,6 @@ type State = {
   error: string | null,
 };
 
-@autobind
 class EnvironmentEditor extends React.PureComponent<Props, State> {
   _editor: CodeEditor | null;
 
@@ -57,7 +56,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     };
   }
 
-  _handleChange() {
+  _handleChange = () => {
     let error = null;
     let value = null;
 
@@ -87,13 +86,13 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     } else {
       this.props.didChange();
     }
-  }
+  };
 
-  _setEditorRef(n: ?CodeEditor) {
+  _setEditorRef = (n: ?CodeEditor) => {
     this._editor = n;
-  }
+  };
 
-  getValue(): EnvironmentInfo | null {
+  getValue = (): EnvironmentInfo | null => {
     if (this._editor) {
       const data = orderedJSON.parse(
         this._editor.getValue(),
@@ -108,13 +107,11 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     } else {
       return null;
     }
-  }
+  };
 
-  isValid() {
-    return !this.state.error;
-  }
+  isValid = () => !this.state.error;
 
-  render() {
+  render = () => {
     const {
       environmentInfo,
       editorFontSize,
@@ -157,7 +154,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
         {error && <p className="notice error margin">{error}</p>}
       </div>
     );
-  }
+  };
 }
 
 export default EnvironmentEditor;

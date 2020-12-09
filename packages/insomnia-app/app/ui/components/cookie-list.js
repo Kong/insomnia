@@ -2,7 +2,7 @@
 import React from 'react';
 import * as uuid from 'uuid';
 import * as toughCookie from 'tough-cookie';
-import autobind from 'autobind-decorator';
+
 import { cookieToString } from 'insomnia-cookies';
 import PromptButton from './base/prompt-button';
 import RenderedText from './rendered-text';
@@ -19,9 +19,8 @@ type Props = {
   handleRender: Function,
 };
 
-@autobind
 class CookieList extends React.PureComponent<Props> {
-  _handleCookieAdd() {
+  _handleCookieAdd = () => {
     const newCookie: Cookie = {
       id: uuid.v4(),
       key: 'foo',
@@ -34,13 +33,13 @@ class CookieList extends React.PureComponent<Props> {
     };
 
     this.props.handleCookieAdd(newCookie);
-  }
+  };
 
-  _handleDeleteCookie(cookie: Cookie) {
+  _handleDeleteCookie = (cookie: Cookie) => {
     this.props.handleCookieDelete(cookie);
-  }
+  };
 
-  render() {
+  render = () => {
     const { cookies, handleDeleteAll, handleShowModifyCookieModal, handleRender } = this.props;
 
     return (
@@ -111,7 +110,7 @@ class CookieList extends React.PureComponent<Props> {
         )}
       </div>
     );
-  }
+  };
 }
 
 export default CookieList;

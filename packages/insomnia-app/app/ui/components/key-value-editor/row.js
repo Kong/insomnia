@@ -2,7 +2,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
-import autobind from 'autobind-decorator';
+
 import { DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 import FileInputButton from '../base/file-input-button';
@@ -14,7 +14,6 @@ import OneLineEditor from '../codemirror/one-line-editor';
 import { showModal } from '../modals/index';
 import { describeByteSize } from '../../../common/misc';
 
-@autobind
 class KeyValueEditorRow extends PureComponent {
   constructor(props) {
     super(props);
@@ -27,52 +26,52 @@ class KeyValueEditorRow extends PureComponent {
     };
   }
 
-  focusNameEnd() {
+  focusNameEnd = () => {
     if (this._nameInput) {
       this._nameInput.focusEnd();
     }
-  }
+  };
 
-  focusValueEnd() {
+  focusValueEnd = () => {
     if (this._valueInput) {
       this._valueInput.focusEnd();
     }
-  }
+  };
 
-  focusDescriptionEnd() {
+  focusDescriptionEnd = () => {
     if (this._descriptionInput) {
       this._descriptionInput.focusEnd();
     }
-  }
+  };
 
-  setDragDirection(dragDirection) {
+  setDragDirection = dragDirection => {
     if (dragDirection !== this.state.dragDirection) {
       this.setState({ dragDirection });
     }
-  }
+  };
 
-  _setNameInputRef(n) {
+  _setNameInputRef = n => {
     this._nameInput = n;
-  }
+  };
 
-  _setValueInputRef(n) {
+  _setValueInputRef = n => {
     this._valueInput = n;
-  }
+  };
 
-  _setDescriptionInputRef(n) {
+  _setDescriptionInputRef = n => {
     this._descriptionInput = n;
-  }
+  };
 
-  _sendChange(patch) {
+  _sendChange = patch => {
     const pair = Object.assign({}, this.props.pair, patch);
     this.props.onChange && this.props.onChange(pair);
-  }
+  };
 
-  _handleNameChange(name) {
+  _handleNameChange = name => {
     this._sendChange({ name });
-  }
+  };
 
-  _handleValuePaste(e) {
+  _handleValuePaste = e => {
     if (!this.props.allowMultiline) {
       return;
     }
@@ -92,21 +91,21 @@ class KeyValueEditorRow extends PureComponent {
       this._handleTypeChange({ type: 'text', multiline: 'text/plain' });
       this._handleValueChange(finalValue);
     }
-  }
+  };
 
-  _handleValueChange(value) {
+  _handleValueChange = value => {
     this._sendChange({ value });
-  }
+  };
 
-  _handleFileNameChange(fileName) {
+  _handleFileNameChange = fileName => {
     this._sendChange({ fileName });
-  }
+  };
 
-  _handleDescriptionChange(description) {
+  _handleDescriptionChange = description => {
     this._sendChange({ description });
-  }
+  };
 
-  _handleTypeChange(def) {
+  _handleTypeChange = def => {
     // Remove newlines if converting to text
     let value = this.props.pair.value || '';
     if (def.type === 'text' && !def.multiline && value.includes('\n')) {
@@ -114,69 +113,69 @@ class KeyValueEditorRow extends PureComponent {
     }
 
     this._sendChange({ type: def.type, multiline: def.multiline, value });
-  }
+  };
 
-  _handleDisableChange(disabled) {
+  _handleDisableChange = disabled => {
     this._sendChange({ disabled });
-  }
+  };
 
-  _handleFocusName(e) {
+  _handleFocusName = e => {
     this.props.onFocusName(this.props.pair, e);
-  }
+  };
 
-  _handleFocusValue(e) {
+  _handleFocusValue = e => {
     this.props.onFocusValue(this.props.pair, e);
-  }
+  };
 
-  _handleFocusDescription(e) {
+  _handleFocusDescription = e => {
     this.props.onFocusDescription(this.props.pair, e);
-  }
+  };
 
-  _handleBlurName(e) {
+  _handleBlurName = e => {
     if (this.props.onBlurName) {
       this.props.onBlurName(this.props.pair, e);
     }
-  }
+  };
 
-  _handleBlurValue(e) {
+  _handleBlurValue = e => {
     if (this.props.onBlurName) {
       this.props.onBlurValue(this.props.pair, e);
     }
-  }
+  };
 
-  _handleBlurDescription(e) {
+  _handleBlurDescription = e => {
     if (this.props.onBlurDescription) {
       this.props.onBlurDescription(this.props.pair, e);
     }
-  }
+  };
 
-  _handleDelete() {
+  _handleDelete = () => {
     if (this.props.onDelete) {
       this.props.onDelete(this.props.pair);
     }
-  }
+  };
 
-  _handleKeyDown(e, value) {
+  _handleKeyDown = (e, value) => {
     if (this.props.onKeyDown) {
       this.props.onKeyDown(this.props.pair, e, value);
     }
-  }
+  };
 
-  _handleAutocompleteNames() {
+  _handleAutocompleteNames = () => {
     const { handleGetAutocompleteNameConstants } = this.props;
     if (handleGetAutocompleteNameConstants) {
       return handleGetAutocompleteNameConstants(this.props.pair);
     }
-  }
+  };
 
-  _handleAutocompleteValues() {
+  _handleAutocompleteValues = () => {
     const { handleGetAutocompleteValueConstants } = this.props;
     if (handleGetAutocompleteValueConstants) {
       return handleGetAutocompleteValueConstants(this.props.pair);
     }
-  }
+  };
 
-  _handleEditMultiline() {
+  _handleEditMultiline = () => {
     const { pair, handleRender, handleGetRenderContext } = this.props;
 
     showModal(CodePromptModal, {
@@ -190,9 +189,9 @@ class KeyValueEditorRow extends PureComponent {
         this._handleTypeChange(Object.assign({}, pair, { multiline: mode }));
       },
     });
-  }
+  };
 
-  renderPairDescription() {
+  renderPairDescription = () => {
     const {
       displayDescription,
       readOnly,
@@ -230,9 +229,9 @@ class KeyValueEditorRow extends PureComponent {
         />
       </div>
     ) : null;
-  }
+  };
 
-  renderPairValue() {
+  renderPairValue = () => {
     const {
       pair,
       readOnly,
@@ -288,9 +287,9 @@ class KeyValueEditorRow extends PureComponent {
         />
       );
     }
-  }
+  };
 
-  renderPairSelector() {
+  renderPairSelector = () => {
     const { hideButtons, allowMultiline, allowFile } = this.props;
 
     const showDropdown = allowMultiline || allowFile;
@@ -334,9 +333,9 @@ class KeyValueEditorRow extends PureComponent {
     } else {
       return null;
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       pair,
       namePlaceholder,
@@ -459,7 +458,7 @@ class KeyValueEditorRow extends PureComponent {
     } else {
       return connectDragPreview(connectDropTarget(row));
     }
-  }
+  };
 }
 
 KeyValueEditorRow.propTypes = {
@@ -521,7 +520,7 @@ const dragSource = {
   },
 };
 
-function isAbove(monitor, component) {
+const isAbove = (monitor, component) => {
   const hoveredNode = ReactDOM.findDOMNode(component);
 
   const hoveredTop = hoveredNode.getBoundingClientRect().top;
@@ -530,7 +529,7 @@ function isAbove(monitor, component) {
 
   // NOTE: Not quite sure why it's height / 3 (seems to work)
   return hoveredTop > draggedTop - height / 3;
-}
+};
 
 const dragTarget = {
   drop(props, monitor, component) {
@@ -549,34 +548,30 @@ const dragTarget = {
   },
 };
 
-function sourceCollect(connect, monitor) {
-  return {
-    connectDragSource: connect.dragSource(),
-    connectDragPreview: connect.dragPreview(),
-    isDragging: monitor.isDragging(),
-  };
-}
+const sourceCollect = (connect, monitor) => ({
+  connectDragSource: connect.dragSource(),
+  connectDragPreview: connect.dragPreview(),
+  isDragging: monitor.isDragging(),
+});
 
-function targetCollect(connect, monitor) {
-  return {
-    connectDropTarget: connect.dropTarget(),
-    isDraggingOver: monitor.isOver(),
-  };
-}
+const targetCollect = (connect, monitor) => ({
+  connectDropTarget: connect.dropTarget(),
+  isDraggingOver: monitor.isOver(),
+});
 
 const source = DragSource('KEY_VALUE_EDITOR', dragSource, sourceCollect)(KeyValueEditorRow);
 const target = DropTarget('KEY_VALUE_EDITOR', dragTarget, targetCollect)(source);
 
 target.prototype.focusNameEnd = function() {
-  this.decoratedRef.current.decoratedRef.current.focusNameEnd();
+  this.decoratedRef.current?.decoratedRef?.current?.focusNameEnd();
 };
 
 target.prototype.focusValueEnd = function() {
-  this.decoratedRef.current.decoratedRef.current.focusValueEnd();
+  this.decoratedRef.current?.decoratedRef?.current?.focusValueEnd();
 };
 
 target.prototype.focusDescriptionEnd = function() {
-  this.decoratedRef.current.decoratedRef.current.focusDescriptionEnd();
+  this.decoratedRef.current?.decoratedRef?.current?.focusDescriptionEnd();
 };
 
 export default target;

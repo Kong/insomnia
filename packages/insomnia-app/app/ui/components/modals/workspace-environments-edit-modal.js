@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc/dist/es6';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
@@ -98,7 +98,6 @@ const SidebarList = SortableContainer(
   ),
 );
 
-@autobind
 class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   environmentEditorRef: ?EnvironmentEditor;
   environmentColorInputRef: HTMLInputElement;
@@ -121,23 +120,23 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     this.editorKey = 0;
   }
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  _setEditorRef(n: ?EnvironmentEditor) {
+  _setEditorRef = (n: ?EnvironmentEditor) => {
     this.environmentEditorRef = n;
-  }
+  };
 
-  _setInputColorRef(ref: HTMLInputElement | null) {
+  _setInputColorRef = (ref: HTMLInputElement | null) => {
     this.environmentColorInputRef = ref;
-  }
+  };
 
-  _setModalRef(n: Modal | null) {
+  _setModalRef = (n: Modal | null) => {
     this.modal = n;
-  }
+  };
 
-  async show(workspace: Workspace) {
+  show = async (workspace: Workspace) => {
     const { activeEnvironmentId } = this.props;
 
     // Default to showing the currently active environment
@@ -148,9 +147,9 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     await this._load(workspace);
 
     this.modal && this.modal.show();
-  }
+  };
 
-  async _load(workspace: Workspace | null, environmentToSelect: Environment | null = null) {
+  _load = async (workspace: Workspace | null, environmentToSelect: Environment | null = null) => {
     if (!workspace) {
       console.warn('Failed to reload environment editor without Workspace');
       return;
@@ -178,9 +177,9 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       subEnvironments,
       selectedEnvironmentId,
     });
-  }
+  };
 
-  async _handleAddEnvironment(isPrivate: boolean = false) {
+  _handleAddEnvironment = async (isPrivate: boolean = false) => {
     const { rootEnvironment, workspace } = this.state;
 
     if (!rootEnvironment) {
@@ -194,9 +193,9 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       isPrivate,
     });
     await this._load(workspace, environment);
-  }
+  };
 
-  async _handleShowEnvironment(environment: Environment) {
+  _handleShowEnvironment = async (environment: Environment) => {
     // Don't allow switching if the current one has errors
     if (this.environmentEditorRef && !this.environmentEditorRef.isValid()) {
       return;
@@ -209,15 +208,15 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     const { workspace } = this.state;
 
     await this._load(workspace, environment);
-  }
+  };
 
-  async _handleDuplicateEnvironment(environment: Environment) {
+  _handleDuplicateEnvironment = async (environment: Environment) => {
     const { workspace } = this.state;
     const newEnvironment = await models.environment.duplicate(environment);
     await this._load(workspace, newEnvironment);
-  }
+  };
 
-  async _handleDeleteEnvironment(environment: Environment) {
+  _handleDeleteEnvironment = async (environment: Environment) => {
     const { handleChangeEnvironment, activeEnvironmentId } = this.props;
     const { rootEnvironment, workspace } = this.state;
 
@@ -235,9 +234,9 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     await models.environment.remove(environment);
 
     await this._load(workspace, rootEnvironment);
-  }
+  };
 
-  async _updateEnvironment(environment: Environment, patch: Object, refresh: boolean = true) {
+  _updateEnvironment = async (environment: Environment, patch: Object, refresh: boolean = true) => {
     const { workspace } = this.state;
 
     // NOTE: Fetch the environment first because it might not be up to date.
@@ -253,20 +252,20 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     if (refresh) {
       await this._load(workspace);
     }
-  }
+  };
 
-  async _handleChangeEnvironmentName(environment: Environment, name: string) {
+  _handleChangeEnvironmentName = async (environment: Environment, name: string) => {
     await this._updateEnvironment(environment, { name });
-  }
+  };
 
-  _handleChangeEnvironmentColor(environment: Environment, color: string | null) {
+  _handleChangeEnvironmentColor = (environment: Environment, color: string | null) => {
     clearTimeout(this.colorChangeTimeout);
     this.colorChangeTimeout = setTimeout(async () => {
       await this._updateEnvironment(environment, { color });
     }, DEBOUNCE_MILLIS);
-  }
+  };
 
-  _didChange() {
+  _didChange = () => {
     this._saveChanges();
 
     // Call this last in case component unmounted
@@ -274,22 +273,22 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     if (this.state.isValid !== isValid) {
       this.setState({ isValid });
     }
-  }
+  };
 
-  _getActiveEnvironment(): Environment | null {
+  _getActiveEnvironment = (): Environment | null => {
     const { selectedEnvironmentId, subEnvironments, rootEnvironment } = this.state;
     if (rootEnvironment && rootEnvironment._id === selectedEnvironmentId) {
       return rootEnvironment;
     } else {
       return subEnvironments.find(e => e._id === selectedEnvironmentId) || null;
     }
-  }
+  };
 
-  _handleUnsetColor(environment: Environment) {
+  _handleUnsetColor = (environment: Environment) => {
     this._handleChangeEnvironmentColor(environment, null);
-  }
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
     db.onChange(async changes => {
       const { selectedEnvironmentId } = this.state;
 
@@ -307,13 +306,13 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
         }
       }
     });
-  }
+  };
 
-  async _handleSortEnd(results: {
+  _handleSortEnd = async (results: {
     oldIndex: number,
     newIndex: number,
     collection: Array<Environment>,
-  }) {
+  }) => {
     const { oldIndex, newIndex } = results;
     if (newIndex === oldIndex) {
       return;
@@ -331,25 +330,25 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       await this._updateEnvironment(environment, { metaSortKey: i }, false);
     }
     db.flushChanges();
-  }
+  };
 
-  async _handleClickColorChange(environment: Environment) {
+  _handleClickColorChange = async (environment: Environment) => {
     const color = environment.color || '#7d69cb';
     if (!environment.color) {
       await this._handleChangeEnvironmentColor(environment, color);
     }
 
     this.environmentColorInputRef?.click();
-  }
+  };
 
-  _handleInputColorChange(event: SyntheticEvent<HTMLInputElement>) {
+  _handleInputColorChange = (event: SyntheticEvent<HTMLInputElement>) => {
     this._handleChangeEnvironmentColor(
       this._getActiveEnvironment(),
       event.target && event.target.value,
     );
-  }
+  };
 
-  _saveChanges() {
+  _saveChanges = () => {
     // Only save if it's valid
     if (!this.environmentEditorRef || !this.environmentEditorRef.isValid()) {
       return;
@@ -375,9 +374,9 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
         await this._updateEnvironment(activeEnvironment, patch);
       }, DEBOUNCE_MILLIS * 4);
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       editorFontSize,
       editorIndentSize,
@@ -545,7 +544,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default WorkspaceEnvironmentsEditModal;

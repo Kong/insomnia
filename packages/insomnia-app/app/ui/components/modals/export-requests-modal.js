@@ -1,6 +1,6 @@
 // @flow
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -29,7 +29,6 @@ type State = {
   treeRoot: ?Node,
 };
 
-@autobind
 class ExportRequestsModal extends PureComponent<Props, State> {
   modal: Modal;
 
@@ -40,22 +39,22 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     };
   }
 
-  setModalRef(modal: ?Modal) {
+  setModalRef = (modal: ?Modal) => {
     if (modal != null) {
       this.modal = modal;
     }
-  }
+  };
 
-  show() {
+  show = () => {
     this.modal.show();
     this.createTree();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
-  handleExport() {
+  handleExport = () => {
     const { treeRoot } = this.state;
     if (treeRoot == null || treeRoot.selectedRequests === 0) {
       return;
@@ -63,9 +62,9 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     const exportedRequestIds = this.getSelectedRequestIds(treeRoot);
     this.props.handleExportRequestsToFile(exportedRequestIds);
     this.hide();
-  }
+  };
 
-  getSelectedRequestIds(node: Node): Array<string> {
+  getSelectedRequestIds = (node: Node): Array<string> => {
     const docIsRequest = isRequest(node.doc) || isGrpcRequest(node.doc);
     if (docIsRequest && node.selectedRequests === node.totalRequests) {
       return [node.doc._id];
@@ -76,9 +75,9 @@ class ExportRequestsModal extends PureComponent<Props, State> {
       requestIds.push(...reqIds);
     }
     return requestIds;
-  }
+  };
 
-  createTree() {
+  createTree = () => {
     const { childObjects } = this.props;
     const children: Array<Node> = childObjects.map(child => this.createNode(child));
     const totalRequests = children
@@ -101,9 +100,9 @@ class ExportRequestsModal extends PureComponent<Props, State> {
         selectedRequests: totalRequests, // Default select all
       },
     });
-  }
+  };
 
-  createNode(item: Object): Node {
+  createNode = (item: Object): Node => {
     const children: Array<Node> = item.children.map(child => this.createNode(child));
     let totalRequests = children
       .map(child => child.totalRequests)
@@ -120,9 +119,9 @@ class ExportRequestsModal extends PureComponent<Props, State> {
       totalRequests: totalRequests,
       selectedRequests: totalRequests, // Default select all
     };
-  }
+  };
 
-  handleSetRequestGroupCollapsed(requestGroupId: string, isCollapsed: boolean) {
+  handleSetRequestGroupCollapsed = (requestGroupId: string, isCollapsed: boolean) => {
     const { treeRoot } = this.state;
     if (treeRoot == null) {
       return;
@@ -134,9 +133,9 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     this.setState({
       treeRoot: { ...treeRoot },
     });
-  }
+  };
 
-  handleSetItemSelected(itemId: string, isSelected: boolean) {
+  handleSetItemSelected = (itemId: string, isSelected: boolean) => {
     const { treeRoot } = this.state;
     if (treeRoot == null) {
       return;
@@ -148,9 +147,13 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     this.setState({
       treeRoot: { ...treeRoot },
     });
-  }
+  };
 
-  setRequestGroupCollapsed(node: Node, isCollapsed: boolean, requestGroupId: string): boolean {
+  setRequestGroupCollapsed = (
+    node: Node,
+    isCollapsed: boolean,
+    requestGroupId: string,
+  ): boolean => {
     if (!isRequestGroup(node.doc)) {
       return false;
     }
@@ -165,9 +168,9 @@ class ExportRequestsModal extends PureComponent<Props, State> {
       }
     }
     return false;
-  }
+  };
 
-  setItemSelected(node: Node, isSelected: boolean, id?: string): boolean {
+  setItemSelected = (node: Node, isSelected: boolean, id?: string): boolean => {
     if (id == null || node.doc._id === id) {
       // Switch the flags of all children in this subtree.
       for (const child of node.children) {
@@ -187,9 +190,9 @@ class ExportRequestsModal extends PureComponent<Props, State> {
       }
     }
     return false;
-  }
+  };
 
-  render() {
+  render = () => {
     const { treeRoot } = this.state;
     const isExportDisabled = treeRoot != null ? treeRoot.selectedRequests === 0 : false;
     return (
@@ -216,7 +219,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default ExportRequestsModal;

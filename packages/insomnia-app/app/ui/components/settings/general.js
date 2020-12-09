@@ -2,7 +2,7 @@
 import * as React from 'react';
 import * as fontScanner from 'font-scanner';
 import * as electron from 'electron';
-import autobind from 'autobind-decorator';
+
 import HelpTooltip from '../help-tooltip';
 import type { HttpVersion } from '../../../common/constants';
 import {
@@ -40,7 +40,6 @@ type State = {
   fontsMono: Array<{ family: string, monospace: boolean }> | null,
 };
 
-@autobind
 class General extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -50,7 +49,7 @@ class General extends React.PureComponent<Props, State> {
     };
   }
 
-  async componentDidMount() {
+  componentDidMount = async () => {
     const allFonts = await fontScanner.getAvailableFonts();
 
     // Find regular fonts
@@ -67,9 +66,9 @@ class General extends React.PureComponent<Props, State> {
       fonts,
       fontsMono,
     });
-  }
+  };
 
-  async _handleUpdateSetting(e: SyntheticEvent<HTMLInputElement>): Promise<Settings> {
+  _handleUpdateSetting = async (e: SyntheticEvent<HTMLInputElement>): Promise<Settings> => {
     const el = e.currentTarget;
     let value = el.type === 'checkbox' ? el.checked : el.value;
 
@@ -82,32 +81,32 @@ class General extends React.PureComponent<Props, State> {
     }
 
     return this.props.updateSetting(el.name, value);
-  }
+  };
 
-  async _handleUpdateSettingAndRestart(e: SyntheticEvent<HTMLInputElement>) {
+  _handleUpdateSettingAndRestart = async (e: SyntheticEvent<HTMLInputElement>) => {
     await this._handleUpdateSetting(e);
     const { app } = electron.remote || electron;
     app.relaunch();
     app.exit();
-  }
+  };
 
-  async _handleFontSizeChange(el: SyntheticEvent<HTMLInputElement>) {
+  _handleFontSizeChange = async (el: SyntheticEvent<HTMLInputElement>) => {
     const settings = await this._handleUpdateSetting(el);
     setFont(settings);
-  }
+  };
 
-  async _handleFontChange(el: SyntheticEvent<HTMLInputElement>) {
+  _handleFontChange = async (el: SyntheticEvent<HTMLInputElement>) => {
     const settings = await this._handleUpdateSetting(el);
     setFont(settings);
-  }
+  };
 
-  renderEnumSetting(
+  renderEnumSetting = (
     label: string,
     name: string,
     values: Array<{ name: string, value: any }>,
     help: string,
     forceRestart?: boolean,
-  ) {
+  ) => {
     const { settings } = this.props;
     const onChange = forceRestart ? this._handleUpdateSettingAndRestart : this._handleUpdateSetting;
     return (
@@ -125,9 +124,9 @@ class General extends React.PureComponent<Props, State> {
         </label>
       </div>
     );
-  }
+  };
 
-  renderBooleanSetting(label: string, name: string, help: string, forceRestart?: boolean) {
+  renderBooleanSetting = (label: string, name: string, help: string, forceRestart?: boolean) => {
     const { settings } = this.props;
 
     if (!settings.hasOwnProperty(name)) {
@@ -150,9 +149,9 @@ class General extends React.PureComponent<Props, State> {
         </label>
       </div>
     );
-  }
+  };
 
-  renderTextSetting(label: string, name: string, help: string, props: Object) {
+  renderTextSetting = (label: string, name: string, help: string, props: Object) => {
     const { settings } = this.props;
 
     if (!settings.hasOwnProperty(name)) {
@@ -174,16 +173,15 @@ class General extends React.PureComponent<Props, State> {
         </label>
       </div>
     );
-  }
+  };
 
-  renderNumberSetting(label: string, name: string, help: string, props: Object) {
-    return this.renderTextSetting(label, name, help, {
+  renderNumberSetting = (label: string, name: string, help: string, props: Object) =>
+    this.renderTextSetting(label, name, help, {
       ...props,
       type: 'number',
     });
-  }
 
-  render() {
+  render = () => {
     const { settings } = this.props;
     const { fonts, fontsMono } = this.state;
     return (
@@ -528,7 +526,7 @@ class General extends React.PureComponent<Props, State> {
         )}
       </div>
     );
-  }
+  };
 }
 
 export default General;

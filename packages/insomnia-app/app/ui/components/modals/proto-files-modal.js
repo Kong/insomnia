@@ -5,7 +5,7 @@ import type { ProtoFile } from '../../../models/proto-file';
 import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
 import ModalFooter from '../base/modal-footer';
-import autobind from 'autobind-decorator';
+
 import type { Workspace } from '../../../models/workspace';
 import Modal from '../base/modal';
 import ProtoFileList from '../proto-file/proto-file-list';
@@ -40,7 +40,6 @@ const INITIAL_STATE: State = {
 
 const spinner = <i className="fa fa-spin fa-refresh" />;
 
-@autobind
 class ProtoFilesModal extends React.PureComponent<Props, State> {
   modal: Modal | null;
   onSave: (string => Promise<void>) | null;
@@ -52,35 +51,35 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     this.onSave = null;
   }
 
-  _setModalRef(ref: ?Modal) {
+  _setModalRef = (ref: ?Modal) => {
     this.modal = ref;
-  }
+  };
 
-  async show(options: ProtoFilesModalOptions) {
+  show = async (options: ProtoFilesModalOptions) => {
     this.onSave = options.onSave;
     this.setState({ selectedProtoFileId: options.preselectProtoFileId });
 
     this.modal && this.modal.show();
-  }
+  };
 
-  async _handleSave(e: SyntheticEvent<HTMLButtonElement>) {
+  _handleSave = async (e: SyntheticEvent<HTMLButtonElement>) => {
     e.preventDefault();
     this.hide();
 
     if (typeof this.onSave === 'function') {
       await this.onSave(this.state.selectedProtoFileId);
     }
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  _handleSelect(id: string) {
+  _handleSelect = (id: string) => {
     this.setState({ selectedProtoFileId: id });
-  }
+  };
 
-  async _handleDelete(protoFile: ProtoFile) {
+  _handleDelete = async (protoFile: ProtoFile) => {
     showAlert({
       title: `Delete ${protoFile.name}`,
       message: (
@@ -99,13 +98,11 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
         }
       },
     });
-  }
+  };
 
-  _handleAdd(): Promise<void> {
-    return this._handleUpload();
-  }
+  _handleAdd = (): Promise<void> => this._handleUpload();
 
-  async _handleUpload(protoFile?: ProtoFile): Promise<void> {
+  _handleUpload = async (protoFile?: ProtoFile): Promise<void> => {
     const { workspace, grpcDispatch } = this.props;
 
     try {
@@ -151,13 +148,13 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     } catch (e) {
       showError({ error: e });
     }
-  }
+  };
 
-  async _handleRename(protoFile: ProtoFile, name: string): Promise<void> {
+  _handleRename = async (protoFile: ProtoFile, name: string): Promise<void> => {
     await models.protoFile.update(protoFile, { name });
-  }
+  };
 
-  render() {
+  render = () => {
     const { protoFiles } = this.props;
     const { selectedProtoFileId } = this.state;
 
@@ -189,7 +186,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default ProtoFilesModal;

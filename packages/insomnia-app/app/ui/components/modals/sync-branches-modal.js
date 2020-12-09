@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -26,7 +26,6 @@ type State = {
   remoteBranches: Array<string>,
 };
 
-@autobind
 class SyncBranchesModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 
@@ -41,11 +40,11 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(m: ?Modal) {
+  _setModalRef = (m: ?Modal) => {
     this.modal = m;
-  }
+  };
 
-  async _handleCheckout(branch: string) {
+  _handleCheckout = async (branch: string) => {
     const { vcs, syncItems } = this.props;
     try {
       const delta = await vcs.checkout(syncItems, branch);
@@ -55,9 +54,9 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
       console.log('Failed to checkout', err.stack);
       this.setState({ error: err.message });
     }
-  }
+  };
 
-  async _handleMerge(branch: string) {
+  _handleMerge = async (branch: string) => {
     const { vcs, syncItems } = this.props;
     const delta = await vcs.merge(syncItems, branch);
     try {
@@ -67,9 +66,9 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
       console.log('Failed to merge', err.stack);
       this.setState({ error: err.message });
     }
-  }
+  };
 
-  async _handleRemoteDelete(branch: string) {
+  _handleRemoteDelete = async (branch: string) => {
     const { vcs } = this.props;
     try {
       await vcs.removeRemoteBranch(branch);
@@ -78,9 +77,9 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
       console.log('Failed to remote delete', err.stack);
       this.setState({ error: err.message });
     }
-  }
+  };
 
-  async _handleDelete(branch: string) {
+  _handleDelete = async (branch: string) => {
     const { vcs } = this.props;
     try {
       await vcs.removeBranch(branch);
@@ -89,9 +88,9 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
       console.log('Failed to delete', err.stack);
       this.setState({ error: err.message });
     }
-  }
+  };
 
-  async _handleCreate(e: SyntheticEvent<HTMLFormElement>) {
+  _handleCreate = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const { vcs, syncItems } = this.props;
@@ -110,17 +109,17 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
       console.log('Failed to create', err.stack);
       this.setState({ error: err.message });
     }
-  }
+  };
 
-  _updateNewBranchName(e: SyntheticEvent<HTMLTextAreaElement>) {
+  _updateNewBranchName = (e: SyntheticEvent<HTMLTextAreaElement>) => {
     this.setState({ newBranchName: e.currentTarget.value });
-  }
+  };
 
-  _handleClearError() {
+  _handleClearError = () => {
     this.setState({ error: '' });
-  }
+  };
 
-  async refreshState(newState?: Object) {
+  refreshState = async (newState?: Object) => {
     const { vcs } = this.props;
     try {
       const currentBranch = await vcs.getBranch();
@@ -141,18 +140,18 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
       console.log('Failed to refresh', err.stack);
       this.setState({ error: err.message });
     }
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  async show(options: { onHide: Function }) {
+  show = async (options: { onHide: Function }) => {
     this.modal && this.modal.show({ onHide: options.onHide });
     await this.refreshState();
-  }
+  };
 
-  render() {
+  render = () => {
     const { vcs } = this.props;
     const { branches, remoteBranches, currentBranch, newBranchName, error } = this.state;
 
@@ -279,7 +278,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
         </ModalBody>
       </Modal>
     );
-  }
+  };
 }
 
 export default SyncBranchesModal;

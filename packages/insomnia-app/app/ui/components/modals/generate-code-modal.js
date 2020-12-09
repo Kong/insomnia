@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import HTTPSnippet, { availableTargets } from 'httpsnippet';
 import CopyButton from '../base/copy-button';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
@@ -27,7 +27,6 @@ const TO_ADD_CONTENT_LENGTH = {
   node: ['native'],
 };
 
-@autobind
 class GenerateCodeModal extends PureComponent {
   constructor(props) {
     super(props);
@@ -52,24 +51,24 @@ class GenerateCodeModal extends PureComponent {
     };
   }
 
-  _setModalRef(n) {
+  _setModalRef = n => {
     this.modal = n;
-  }
+  };
 
-  _setEditorRef(n) {
+  _setEditorRef = n => {
     this._editor = n;
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
-  _handleClientChange(client) {
+  _handleClientChange = client => {
     const { target, request } = this.state;
     this._generateCode(request, target, client);
-  }
+  };
 
-  _handleTargetChange(target) {
+  _handleTargetChange = target => {
     const { target: currentTarget } = this.state;
     if (currentTarget.key === target.key) {
       // No change
@@ -78,9 +77,9 @@ class GenerateCodeModal extends PureComponent {
 
     const client = target.clients.find(c => c.key === target.default);
     this._generateCode(this.state.request, target, client);
-  }
+  };
 
-  async _generateCode(request, target, client) {
+  _generateCode = async (request, target, client) => {
     // Some clients need a content-length for the request to succeed
     const addContentLength = (TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key);
 
@@ -94,15 +93,15 @@ class GenerateCodeModal extends PureComponent {
     // Save client/target for next time
     window.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(client));
     window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(target));
-  }
+  };
 
-  show(request) {
+  show = request => {
     const { client, target } = this.state;
     this._generateCode(request, target, client);
     this.modal.show();
-  }
+  };
 
-  render() {
+  render = () => {
     const { cmd, target, client } = this.state;
     const { editorFontSize, editorIndentSize, editorKeyMap } = this.props;
 
@@ -175,7 +174,7 @@ class GenerateCodeModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 GenerateCodeModal.propTypes = {

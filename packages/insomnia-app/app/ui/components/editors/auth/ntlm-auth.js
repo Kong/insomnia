@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+
 import OneLineEditor from '../../codemirror/one-line-editor';
 import Button from '../../base/button';
 import type { Request, RequestAuthentication } from '../../../../models/request';
@@ -18,27 +18,26 @@ type Props = {
   isVariableUncovered: boolean,
 };
 
-@autobind
 class NTLMAuth extends React.PureComponent<Props> {
-  _handleDisable() {
+  _handleDisable = () => {
     const { request, onChange } = this.props;
     onChange(request, {
       ...request.authentication,
       disabled: !request.authentication.disabled,
     });
-  }
+  };
 
-  _handleChangeUsername(value: string) {
+  _handleChangeUsername = (value: string) => {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, username: value });
-  }
+  };
 
-  _handleChangePassword(value: string) {
+  _handleChangePassword = (value: string) => {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, password: value });
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       request,
       showPasswords,
@@ -130,7 +129,7 @@ class NTLMAuth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  }
+  };
 }
 
 export default NTLMAuth;

@@ -1,10 +1,9 @@
 import React, { PureComponent } from 'react';
 import { clipboard } from 'electron';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import { Button } from 'insomnia-components';
 
-@autobind
 class CopyButton extends PureComponent {
   constructor(props) {
     super(props);
@@ -13,7 +12,7 @@ class CopyButton extends PureComponent {
     };
   }
 
-  async _handleClick(e) {
+  _handleClick = async e => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -29,13 +28,13 @@ class CopyButton extends PureComponent {
     this._triggerTimeout = setTimeout(() => {
       this.setState({ showConfirmation: false });
     }, 2000);
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     clearTimeout(this._triggerTimeout);
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       content, // eslint-disable-line no-unused-vars
       children,
@@ -58,7 +57,7 @@ class CopyButton extends PureComponent {
         )}
       </Button>
     );
-  }
+  };
 }
 
 CopyButton.propTypes = {

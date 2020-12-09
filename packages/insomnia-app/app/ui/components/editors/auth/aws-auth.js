@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import Button from '../../base/button';
@@ -19,42 +19,41 @@ type Props = {
   handleUpdateSettingsShowPasswords: boolean => Promise<Settings>,
 };
 
-@autobind
 class AWSAuth extends React.PureComponent<Props> {
-  _handleDisable() {
+  _handleDisable = () => {
     const { request, onChange } = this.props;
     onChange(request, {
       ...request.authentication,
       disabled: !request.authentication.disabled,
     });
-  }
+  };
 
-  _handleChangeAccessKeyId(value: string) {
+  _handleChangeAccessKeyId = (value: string) => {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, accessKeyId: value });
-  }
+  };
 
-  _handleChangeSecretAccessKey(value: string) {
+  _handleChangeSecretAccessKey = (value: string) => {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, secretAccessKey: value });
-  }
+  };
 
-  _handleChangeRegion(value: string) {
+  _handleChangeRegion = (value: string) => {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, region: value });
-  }
+  };
 
-  _handleChangeService(value: string) {
+  _handleChangeService = (value: string) => {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, service: value });
-  }
+  };
 
-  _handleChangeSessionToken(value: string) {
+  _handleChangeSessionToken = (value: string) => {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, sessionToken: value });
-  }
+  };
 
-  renderRow(key: string, label: string, onChange: Function, help?: string) {
+  renderRow = (key: string, label: string, onChange: Function, help?: string) => {
     const {
       request,
       nunjucksPowerUserMode,
@@ -89,9 +88,9 @@ class AWSAuth extends React.PureComponent<Props> {
         </td>
       </tr>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { authentication } = this.props.request;
     return (
       <div className="pad">
@@ -148,7 +147,7 @@ class AWSAuth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  }
+  };
 }
 
 export default AWSAuth;

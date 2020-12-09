@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import urlJoin from 'url-join';
-import autobind from 'autobind-decorator';
+
 import { Button } from 'insomnia-components';
 
 type Props = {
@@ -49,7 +49,6 @@ const STATE_KEYS_TO_PERSIST = [
   'kongPortalUserWorkspace',
 ];
 
-@autobind
 class DeployToPortal extends React.Component<Props, State> {
   state = {
     workspaceId: '',
@@ -67,23 +66,22 @@ class DeployToPortal extends React.Component<Props, State> {
     kongPortalDeployError: '',
   };
 
-  _handleLoadingToggle(status: boolean) {
+  _handleLoadingToggle = (status: boolean) => {
     this.setState({ isLoading: status });
-  }
+  };
 
-  _hasConnectInfo() {
-    return this.state.kongPortalApiUrl.length > 0 && this.state.kongPortalUserWorkspace.length > 0;
-  }
+  _hasConnectInfo = () =>
+    this.state.kongPortalApiUrl.length > 0 && this.state.kongPortalUserWorkspace.length > 0;
 
-  _handleEditKongConnection() {
+  _handleEditKongConnection = () => {
     this.setState({ kongPortalDeployView: 'edit' });
-  }
+  };
 
-  _handleReturnToUpload() {
+  _handleReturnToUpload = () => {
     this.setState({ kongPortalDeployView: 'upload' });
-  }
+  };
 
-  async _handleUploadSpec(overwrite: boolean, e?: SyntheticEvent<HTMLFormElement>) {
+  _handleUploadSpec = async (overwrite: boolean, e?: SyntheticEvent<HTMLFormElement>) => {
     if (e) {
       e.preventDefault();
     }
@@ -157,9 +155,9 @@ class DeployToPortal extends React.Component<Props, State> {
         this.setState({ kongPortalDeployView: 'error' });
       }
     }
-  }
+  };
 
-  async _handleConnectKong(e: SyntheticEvent<HTMLFormElement>) {
+  _handleConnectKong = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const { axios, trackEvent } = this.props;
@@ -197,9 +195,9 @@ class DeployToPortal extends React.Component<Props, State> {
       this._handleLoadingToggle(false);
       this.setState({ showConnectionError: true });
     }
-  }
+  };
 
-  async componentDidMount() {
+  componentDidMount = async () => {
     const newState = {};
     for (const key of STATE_KEYS_TO_PERSIST) {
       const value = await this.props.store.getItem(key);
@@ -211,27 +209,27 @@ class DeployToPortal extends React.Component<Props, State> {
     }
 
     this.setState(newState);
-  }
+  };
 
-  async componentDidUpdate() {
+  componentDidUpdate = async () => {
     for (const key of STATE_KEYS_TO_PERSIST) {
       await this.props.store.setItem(key, this.state[key]);
     }
-  }
+  };
 
-  async _handleKongPortalApiUrlChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleKongPortalApiUrlChange = async (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ kongPortalApiUrl: e.currentTarget.value });
-  }
+  };
 
-  async _handleRBACKTokenChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleRBACKTokenChange = async (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ kongPortalRbacToken: e.currentTarget.value });
-  }
+  };
 
-  async _handleKongPortalUserWorkspaceChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleKongPortalUserWorkspaceChange = async (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ kongPortalUserWorkspace: e.currentTarget.value });
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       kongPortalApiUrl,
       kongSpecFileName,
@@ -416,7 +414,7 @@ class DeployToPortal extends React.Component<Props, State> {
     } else {
       return <p>Nothing to see here...</p>;
     }
-  }
+  };
 }
 
 export default DeployToPortal;

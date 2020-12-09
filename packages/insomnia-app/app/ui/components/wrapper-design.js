@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
 import { Breadcrumb, Button, Header, NoticeTable } from 'insomnia-components';
@@ -41,7 +41,6 @@ type State = {|
   }>,
 |};
 
-@autobind
 class WrapperDesign extends React.PureComponent<Props, State> {
   editor: ?CodeEditor;
   debounceTimeout: IntervalID;
@@ -62,16 +61,16 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     delay: 1000,
   };
 
-  _setEditorRef(n: ?CodeEditor) {
+  _setEditorRef = (n: ?CodeEditor) => {
     this.editor = n;
-  }
+  };
 
-  async _handleGenerateConfig() {
+  _handleGenerateConfig = async () => {
     const { activeApiSpec } = this.props.wrapperProps;
     showModal(GenerateConfigModal, { apiSpec: activeApiSpec });
-  }
+  };
 
-  async _handleTogglePreview() {
+  _handleTogglePreview = async () => {
     await this.setState(
       prevState => ({ previewHidden: !prevState.previewHidden }),
       async () => {
@@ -80,9 +79,9 @@ class WrapperDesign extends React.PureComponent<Props, State> {
         await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden });
       },
     );
-  }
+  };
 
-  _handleOnChange(v: string) {
+  _handleOnChange = (v: string) => {
     const {
       wrapperProps: { activeApiSpec },
       handleUpdateApiSpec,
@@ -93,9 +92,9 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     this.debounceTimeout = setTimeout(async () => {
       await handleUpdateApiSpec({ ...activeApiSpec, contents: v });
     }, 500);
-  }
+  };
 
-  _handleSetSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
+  _handleSetSelection = (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
     const editor = this.editor;
 
     if (!editor) {
@@ -103,15 +102,15 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     }
 
     editor.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
-  }
+  };
 
-  _handleLintClick(notice: {}) {
+  _handleLintClick = (notice: {}) => {
     // TODO: Export Notice from insomnia-components and use here, instead of {}
     const { start, end } = notice._range;
     this._handleSetSelection(start.character, end.character, start.line, end.line);
-  }
+  };
 
-  async _reLint() {
+  _reLint = async () => {
     const { activeApiSpec } = this.props.wrapperProps;
 
     // Lint only if spec has content
@@ -132,29 +131,29 @@ class WrapperDesign extends React.PureComponent<Props, State> {
         lintMessages: [],
       });
     }
-  }
+  };
 
-  _handleBreadcrumb() {
+  _handleBreadcrumb = () => {
     this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
-  }
+  };
 
-  async componentDidMount() {
+  componentDidMount = async () => {
     const generateConfigPlugins = await getConfigGenerators();
     this.setState({ hasConfigPlugins: generateConfigPlugins.length > 0 });
 
     await this._reLint();
-  }
+  };
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate = (prevProps: Props) => {
     const { activeApiSpec } = this.props.wrapperProps;
 
     // Re-lint if content changed
     if (activeApiSpec.contents !== prevProps.wrapperProps.activeApiSpec.contents) {
       this._reLint();
     }
-  }
+  };
 
-  _renderEditor(): React.Node {
+  _renderEditor = (): React.Node => {
     const { activeApiSpec, settings } = this.props.wrapperProps;
     const { lintMessages } = this.state;
 
@@ -178,9 +177,9 @@ class WrapperDesign extends React.PureComponent<Props, State> {
         )}
       </div>
     );
-  }
+  };
 
-  _renderPreview(): React.Node {
+  _renderPreview = (): React.Node => {
     const { activeApiSpec } = this.props.wrapperProps;
     const { previewHidden } = this.state;
 
@@ -226,9 +225,9 @@ class WrapperDesign extends React.PureComponent<Props, State> {
         </ErrorBoundary>
       </div>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { gitSyncDropdown, wrapperProps, handleActivityChange } = this.props;
 
     const { activeApiSpec, activity, activeWorkspace } = wrapperProps;
@@ -300,7 +299,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
         )}
       />
     );
-  }
+  };
 }
 
 export default WrapperDesign;

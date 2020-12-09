@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import PromptButton from '../base/prompt-button';
 import {
   Dropdown,
@@ -14,44 +14,41 @@ import * as misc from '../../../common/misc';
 import { isRequest } from '../../../models/helpers/is-model';
 import * as requestOperations from '../../../models/helpers/request-operations';
 
-@autobind
 class RequestActionsDropdown extends PureComponent {
-  _setDropdownRef(n) {
+  _setDropdownRef = n => {
     this._dropdown = n;
-  }
+  };
 
-  _handleDuplicate() {
+  _handleDuplicate = () => {
     const { request, handleDuplicateRequest } = this.props;
     handleDuplicateRequest(request);
-  }
+  };
 
-  _handleGenerateCode() {
+  _handleGenerateCode = () => {
     this.props.handleGenerateCode(this.props.request);
-  }
+  };
 
-  _handleCopyAsCurl() {
+  _handleCopyAsCurl = () => {
     this.props.handleCopyAsCurl(this.props.request);
-  }
+  };
 
-  _canPin() {
-    return this.props.handleSetRequestPinned !== misc.nullFn;
-  }
+  _canPin = () => this.props.handleSetRequestPinned !== misc.nullFn;
 
-  _handleSetRequestPinned() {
+  _handleSetRequestPinned = () => {
     this.props.handleSetRequestPinned(this.props.request, !this.props.isPinned);
-  }
+  };
 
-  _handleRemove() {
+  _handleRemove = () => {
     const { request } = this.props;
 
     return requestOperations.remove(request);
-  }
+  };
 
-  show() {
+  show = () => {
     this._dropdown.show();
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       request, // eslint-disable-line no-unused-vars
       handleShowSettings,
@@ -106,7 +103,7 @@ class RequestActionsDropdown extends PureComponent {
         </DropdownItem>
       </Dropdown>
     );
-  }
+  };
 }
 
 RequestActionsDropdown.propTypes = {

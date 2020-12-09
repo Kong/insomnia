@@ -10,7 +10,7 @@ type Props = {
   headers: Array<ResponseHeader>,
 };
 
-function validateURL(urlString) {
+const validateURL = urlString => {
   try {
     const parsedUrl = new URL(urlString);
     if (!parsedUrl.hostname) return false;
@@ -18,7 +18,7 @@ function validateURL(urlString) {
   } catch (error) {
     return false;
   }
-}
+};
 
 class ResponseHeadersViewer extends React.PureComponent<Props> {
   render() {

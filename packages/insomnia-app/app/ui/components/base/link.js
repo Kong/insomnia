@@ -1,7 +1,7 @@
 // @flow
 import classnames from 'classnames';
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import * as misc from '../../../common/misc';
 
 type Props = {|
@@ -15,9 +15,8 @@ type Props = {|
   noTheme?: boolean,
 |};
 
-@autobind
 class Link extends React.PureComponent<Props> {
-  _handleClick(e: SyntheticEvent<HTMLAnchorElement>) {
+  _handleClick = (e: SyntheticEvent<HTMLAnchorElement>) => {
     e && e.preventDefault();
     const { href, onClick } = this.props;
 
@@ -25,9 +24,9 @@ class Link extends React.PureComponent<Props> {
     onClick && onClick(e);
 
     misc.clickLink(href);
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       onClick, // eslint-disable-line no-unused-vars
       button,
@@ -52,7 +51,7 @@ class Link extends React.PureComponent<Props> {
         {children}
       </a>
     );
-  }
+  };
 }
 
 export default Link;

@@ -1,6 +1,6 @@
 // @flow
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+
 import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
 import MethodDropdown from '../dropdowns/method-dropdown';
 import Modal from '../base/modal';
@@ -25,7 +25,6 @@ type RequestCreateModalOptions = {
   onComplete: string => void,
 };
 
-@autobind
 class RequestCreateModal extends PureComponent {
   constructor(props) {
     super(props);
@@ -37,23 +36,21 @@ class RequestCreateModal extends PureComponent {
     };
   }
 
-  _setModalRef(n) {
+  _setModalRef = n => {
     this.modal = n;
-  }
+  };
 
-  _setInputRef(n) {
+  _setInputRef = n => {
     this._input = n;
     if (this._input) {
       this._input.value = 'My Request';
       this._input.placeholder = 'My Request';
     }
-  }
+  };
 
-  _isGrpcSelected() {
-    return this.state.selectedMethod === METHOD_GRPC;
-  }
+  _isGrpcSelected = () => this.state.selectedMethod === METHOD_GRPC;
 
-  async _handleSubmit(e) {
+  _handleSubmit = async e => {
     e.preventDefault();
 
     const { parentId, selectedContentType, selectedMethod } = this.state;
@@ -89,17 +86,17 @@ class RequestCreateModal extends PureComponent {
     this.hide();
 
     trackEvent('Request', 'Create');
-  }
+  };
 
-  _handleChangeSelectedContentType(selectedContentType) {
+  _handleChangeSelectedContentType = selectedContentType => {
     this.setState({ selectedContentType });
-  }
+  };
 
-  _handleChangeSelectedMethod(selectedMethod) {
+  _handleChangeSelectedMethod = selectedMethod => {
     this.setState({ selectedMethod });
-  }
+  };
 
-  _shouldNotHaveBody() {
+  _shouldNotHaveBody = () => {
     const { selectedMethod } = this.state;
     return (
       selectedMethod === METHOD_GET ||
@@ -108,13 +105,13 @@ class RequestCreateModal extends PureComponent {
       selectedMethod === METHOD_OPTIONS ||
       selectedMethod === METHOD_GRPC
     );
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
-  show({ parentId, onComplete }: RequestCreateModalOptions) {
+  show = ({ parentId, onComplete }: RequestCreateModalOptions) => {
     this.setState({
       parentId,
       selectedContentType: null,
@@ -130,9 +127,9 @@ class RequestCreateModal extends PureComponent {
     }, 200);
 
     this._onComplete = onComplete;
-  }
+  };
 
-  render() {
+  render = () => {
     const { selectedContentType, selectedMethod } = this.state;
 
     return (
@@ -187,7 +184,7 @@ class RequestCreateModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default RequestCreateModal;

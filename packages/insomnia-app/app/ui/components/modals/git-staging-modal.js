@@ -1,7 +1,7 @@
 // @flow
 import YAML from 'yaml';
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import path from 'path';
 import * as models from '../../../models';
 import Modal from '../base/modal';
@@ -48,7 +48,6 @@ const INITIAL_STATE: State = {
   items: {},
 };
 
-@autobind
 class GitStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   statusNames: { [string]: string };
@@ -61,19 +60,19 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     this.onCommit = null;
   }
 
-  _setModalRef(ref: ?Modal) {
+  _setModalRef = (ref: ?Modal) => {
     this.modal = ref;
-  }
+  };
 
-  _setTextareaRef(ref: ?Modal) {
+  _setTextareaRef = (ref: ?Modal) => {
     this.textarea = ref;
-  }
+  };
 
-  async _handleMessageChange(e: SyntheticEvent<HTMLTextAreaElement>) {
+  _handleMessageChange = async (e: SyntheticEvent<HTMLTextAreaElement>) => {
     this.setState({ message: e.currentTarget.value });
-  }
+  };
 
-  async _handleCommit(e: SyntheticEvent<HTMLButtonElement>) {
+  _handleCommit = async (e: SyntheticEvent<HTMLButtonElement>) => {
     const { vcs } = this.props;
     const { items, message } = this.state;
 
@@ -99,13 +98,13 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     if (typeof this.onCommit === 'function') {
       this.onCommit();
     }
-  }
+  };
 
-  _hideModal() {
+  _hideModal = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  async _toggleAll(items: Array<Item>, forceAdd: boolean = false) {
+  _toggleAll = async (items: Array<Item>, forceAdd: boolean = false) => {
     const allStaged = items.every(i => i.staged);
     const doStage = !allStaged;
 
@@ -120,9 +119,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     }
 
     this.setState({ items: newItems });
-  }
+  };
 
-  async _handleToggleOne(e: SyntheticEvent<HTMLInputElement>) {
+  _handleToggleOne = async (e: SyntheticEvent<HTMLInputElement>) => {
     const newItems = { ...this.state.items };
 
     const gitPath = e.currentTarget.name;
@@ -134,9 +133,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     newItems[gitPath].staged = !newItems[gitPath].staged;
 
     this.setState({ items: newItems });
-  }
+  };
 
-  async getAllPaths(): Promise<Array<string>> {
+  getAllPaths = async (): Promise<Array<string>> => {
     const { vcs } = this.props;
 
     const f = vcs.getFs().promises;
@@ -159,9 +158,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     const uniquePaths = new Set([...fsPaths, ...gitPaths]);
 
     return Array.from(uniquePaths).sort();
-  }
+  };
 
-  async show(options: { onCommit?: () => void }) {
+  show = async (options: { onCommit?: () => void }) => {
     this.onCommit = options.onCommit || null;
 
     this.modal && this.modal.show();
@@ -171,9 +170,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     await this._refresh(() => {
       this.textarea && this.textarea.focus();
     });
-  }
+  };
 
-  async _refresh(callback?: () => void) {
+  _refresh = async (callback?: () => void) => {
     const { vcs, workspace } = this.props;
 
     this.setState({ loading: true });
@@ -245,9 +244,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     }
 
     this.setState({ items, loading: false }, callback);
-  }
+  };
 
-  renderOperation(item: Item) {
+  renderOperation = (item: Item) => {
     let child = null;
     let message = '';
 
@@ -272,18 +271,18 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         </Tooltip>
       </React.Fragment>
     );
-  }
+  };
 
-  async _handleRollback(items: Array<Item>) {
+  _handleRollback = async (items: Array<Item>) => {
     const { vcs } = this.props;
 
     const files = items.map(i => ({ filePath: i.path, status: i.status }));
 
     await gitRollback(vcs, files);
     await this._refresh();
-  }
+  };
 
-  renderItem(item: Item) {
+  renderItem = (item: Item) => {
     const { path: gitPath, staged, editable } = item;
 
     const docName = this.statusNames[gitPath] || 'n/a';
@@ -315,9 +314,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         </td>
       </tr>
     );
-  }
+  };
 
-  renderTable(title: string, items: Array<Item>, rollbackLabel: string) {
+  renderTable = (title: string, items: Array<Item>, rollbackLabel: string) => {
     if (items.length === 0) {
       return null;
     }
@@ -357,9 +356,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         </table>
       </div>
     );
-  }
+  };
 
-  _renderEmpty() {
+  _renderEmpty = () => {
     const { loading } = this.state;
 
     if (loading) {
@@ -367,9 +366,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     }
 
     return <>No changes to commit.</>;
-  }
+  };
 
-  _renderItems(items: Array<Item>) {
+  _renderItems = (items: Array<Item>) => {
     const { message } = this.state;
 
     const newItems = items.filter(i => i.status.includes('added'));
@@ -391,9 +390,9 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         {this.renderTable('Unversioned Objects', newItems, 'Delete all')}
       </>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { items, branch, loading } = this.state;
 
     const itemsList = Object.keys(items).map(k => items[k]);
@@ -421,7 +420,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default GitStagingModal;

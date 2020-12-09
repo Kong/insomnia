@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -46,7 +46,6 @@ const _initialState: State = {
   lookupMap: {},
 };
 
-@autobind
 class SyncStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _onSnapshot: ?() => void;
@@ -55,23 +54,23 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
 
   state = _initialState;
 
-  _setModalRef(m: ?Modal) {
+  _setModalRef = (m: ?Modal) => {
     this.modal = m;
-  }
+  };
 
-  _setTextAreaRef(m: ?HTMLTextAreaElement) {
+  _setTextAreaRef = (m: ?HTMLTextAreaElement) => {
     this.textarea = m;
-  }
+  };
 
-  _handleClearError() {
+  _handleClearError = () => {
     this.setState({ error: '' });
-  }
+  };
 
-  _handleMessageChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleMessageChange = (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ message: e.currentTarget.value });
-  }
+  };
 
-  async _handleStageToggle(e: SyntheticEvent<HTMLInputElement>) {
+  _handleStageToggle = async (e: SyntheticEvent<HTMLInputElement>) => {
     const { vcs } = this.props;
     const { status } = this.state;
     const id = e.currentTarget.name;
@@ -83,9 +82,9 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       : await vcs.stage(status.stage, [status.unstaged[id]]);
 
     await this.refreshMainAttributes({}, newStage);
-  }
+  };
 
-  async _handleAllToggle(keys: Array<DocumentKey>, doStage: boolean) {
+  _handleAllToggle = async (keys: Array<DocumentKey>, doStage: boolean) => {
     const { vcs } = this.props;
     const { status } = this.state;
 
@@ -109,16 +108,16 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     }
 
     await this.refreshMainAttributes({}, stage);
-  }
+  };
 
-  async _handleTakeSnapshotAndPush() {
+  _handleTakeSnapshotAndPush = async () => {
     const success = await this._handleTakeSnapshot();
     if (success) {
       this._handlePush && this._handlePush();
     }
-  }
+  };
 
-  async _handleTakeSnapshot(): Promise<boolean> {
+  _handleTakeSnapshot = async (): Promise<boolean> => {
     const { vcs } = this.props;
     const {
       message,
@@ -136,9 +135,9 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     await this.refreshMainAttributes({ message: '', error: '' });
     this.hide();
     return true;
-  }
+  };
 
-  async refreshMainAttributes(newState?: Object = {}, newStage?: Stage = {}) {
+  refreshMainAttributes = async (newState: Object = {}, newStage: Stage = {}) => {
     const { vcs, syncItems } = this.props;
     const branch = await vcs.getBranch();
     const status = await vcs.status(syncItems, newStage);
@@ -175,13 +174,13 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
       error: '',
       ...newState,
     });
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  async show(options: { onSnapshot?: () => any, handlePush: () => Promise<void> }) {
+  show = async (options: { onSnapshot?: () => any, handlePush: () => Promise<void> }) => {
     const { vcs, syncItems } = this.props;
 
     this.modal && this.modal.show();
@@ -206,9 +205,9 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     const stage = await vcs.stage(status.stage, toStage);
     await this.refreshMainAttributes({}, stage);
     this.textarea && this.textarea.focus();
-  }
+  };
 
-  static renderOperation(entry: StageEntry, type: string, changes: Array<string>) {
+  static renderOperation = (entry: StageEntry, type: string, changes: Array<string>) => {
     let child = null;
     let message = '';
 
@@ -233,9 +232,9 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
         </Tooltip>
       </React.Fragment>
     );
-  }
+  };
 
-  renderTable(keys: Array<DocumentKey>, title: React.Node) {
+  renderTable = (keys: Array<DocumentKey>, title: React.Node) => {
     const { status, lookupMap } = this.state;
 
     if (keys.length === 0) {
@@ -313,9 +312,9 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
         </table>
       </div>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { status, message, error, branch } = this.state;
 
     const nonAddedKeys = [];
@@ -378,7 +377,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default SyncStagingModal;

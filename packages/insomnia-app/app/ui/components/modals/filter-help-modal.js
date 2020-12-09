@@ -1,11 +1,10 @@
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+
 import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 
-@autobind
 class FilterHelpModal extends PureComponent {
   constructor(props) {
     super(props);
@@ -14,20 +13,20 @@ class FilterHelpModal extends PureComponent {
     };
   }
 
-  _setModalRef(n) {
+  _setModalRef = n => {
     this.modal = n;
-  }
+  };
 
-  show(isJson) {
+  show = isJson => {
     this.setState({ isJson });
     this.modal.show();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const { isJson } = this.state;
 
     const link = isJson ? (
@@ -94,7 +93,7 @@ class FilterHelpModal extends PureComponent {
         </ModalBody>
       </Modal>
     );
-  }
+  };
 }
 
 export default FilterHelpModal;

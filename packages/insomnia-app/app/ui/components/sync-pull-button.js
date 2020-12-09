@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import VCS from '../../sync/vcs';
 import { showError } from './modals';
 
@@ -17,14 +17,13 @@ type State = {
   loading: boolean,
 };
 
-@autobind
 class SyncPullButton extends React.PureComponent<Props, State> {
   _timeout: TimeoutID;
   state = {
     loading: false,
   };
 
-  async _handleClick() {
+  _handleClick = async () => {
     const { vcs, onPull, branch } = this.props;
 
     this.setState({ loading: true });
@@ -58,13 +57,13 @@ class SyncPullButton extends React.PureComponent<Props, State> {
     if (!failed) {
       onPull && onPull();
     }
-  }
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     clearTimeout(this._timeout);
-  }
+  };
 
-  render() {
+  render = () => {
     const { className, children, disabled } = this.props;
     const { loading } = this.state;
     return (
@@ -73,7 +72,7 @@ class SyncPullButton extends React.PureComponent<Props, State> {
         {children || 'Pull'}
       </button>
     );
-  }
+  };
 }
 
 export default SyncPullButton;

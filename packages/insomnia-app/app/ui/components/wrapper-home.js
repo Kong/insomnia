@@ -3,7 +3,7 @@ import * as React from 'react';
 import * as git from 'isomorphic-git';
 import path from 'path';
 import * as db from '../../common/database';
-import autobind from 'autobind-decorator';
+
 import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
 import {
@@ -57,7 +57,6 @@ type State = {|
   filter: string,
 |};
 
-@autobind
 class WrapperHome extends React.PureComponent<Props, State> {
   state = {
     filter: '',
@@ -65,15 +64,15 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
   _filterInput: ?HTMLInputElement;
 
-  _setFilterInputRef(n: ?HTMLInputElement) {
+  _setFilterInputRef = (n: ?HTMLInputElement) => {
     this._filterInput = n;
-  }
+  };
 
-  _handleFilterChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleFilterChange = (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ filter: e.currentTarget.value });
-  }
+  };
 
-  _handleWorkspaceCreate() {
+  _handleWorkspaceCreate = () => {
     showPrompt({
       title: 'New Document',
       submitName: 'Create',
@@ -88,17 +87,17 @@ class WrapperHome extends React.PureComponent<Props, State> {
         trackEvent('Workspace', 'Create');
       },
     });
-  }
+  };
 
-  _handleImportFile() {
+  _handleImportFile = () => {
     this.props.handleImportFile(ForceToWorkspaceKeys.new);
-  }
+  };
 
-  _handleImportClipBoard() {
+  _handleImportClipBoard = () => {
     this.props.handleImportClipboard(ForceToWorkspaceKeys.new);
-  }
+  };
 
-  _handleImportUri() {
+  _handleImportUri = () => {
     showPrompt({
       title: 'Import document from URL',
       submitName: 'Fetch and Import',
@@ -108,9 +107,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
         this.props.handleImportUri(uri, ForceToWorkspaceKeys.new);
       },
     });
-  }
+  };
 
-  async _handleWorkspaceClone() {
+  _handleWorkspaceClone = async () => {
     // This is a huge flow and we don't really have anywhere to put something like this. I guess
     // it's fine here for now (?)
     showModal(GitRepositorySettingsModal, {
@@ -260,17 +259,17 @@ class WrapperHome extends React.PureComponent<Props, State> {
         });
       },
     });
-  }
+  };
 
-  _handleKeyDown(e) {
+  _handleKeyDown = e => {
     executeHotKey(e, hotKeyRefs.FILTER_DOCUMENTS, () => {
       if (this._filterInput) {
         this._filterInput.focus();
       }
     });
-  }
+  };
 
-  async _handleSetActiveWorkspace(id: string, defaultActivity: GlobalActivity) {
+  _handleSetActiveWorkspace = async (id: string, defaultActivity: GlobalActivity) => {
     const { handleSetActiveWorkspace, handleSetActiveActivity } = this.props.wrapperProps;
 
     const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
@@ -282,9 +281,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
     }
 
     handleSetActiveWorkspace(id);
-  }
+  };
 
-  renderCard(w: Workspace) {
+  renderCard = (w: Workspace) => {
     const {
       apiSpecs,
       handleSetActiveWorkspace,
@@ -388,40 +387,36 @@ class WrapperHome extends React.PureComponent<Props, State> {
         onClick={() => this._handleSetActiveWorkspace(w._id, defaultActivity)}
       />
     );
-  }
+  };
 
-  renderMenu() {
-    return (
-      <Dropdown
-        renderButton={() => (
-          <Button variant="contained" bg="surprise" className="margin-left">
-            Create <i className="fa fa-caret-down" />
-          </Button>
-        )}>
-        <DropdownDivider>New</DropdownDivider>
-        <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleWorkspaceCreate}>
-          Blank Document
-        </DropdownItem>
-        <DropdownDivider>Import From</DropdownDivider>
-        <DropdownItem icon={<i className="fa fa-file" />} onClick={this._handleImportFile}>
-          File
-        </DropdownItem>
-        <DropdownItem icon={<i className="fa fa-link" />} onClick={this._handleImportUri}>
-          URL
-        </DropdownItem>
-        <DropdownItem
-          icon={<i className="fa fa-clipboard" />}
-          onClick={this._handleImportClipBoard}>
-          Clipboard
-        </DropdownItem>
-        <DropdownItem icon={<i className="fa fa-code-fork" />} onClick={this._handleWorkspaceClone}>
-          Git Clone
-        </DropdownItem>
-      </Dropdown>
-    );
-  }
+  renderMenu = () => (
+    <Dropdown
+      renderButton={() => (
+        <Button variant="contained" bg="surprise" className="margin-left">
+          Create <i className="fa fa-caret-down" />
+        </Button>
+      )}>
+      <DropdownDivider>New</DropdownDivider>
+      <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleWorkspaceCreate}>
+        Blank Document
+      </DropdownItem>
+      <DropdownDivider>Import From</DropdownDivider>
+      <DropdownItem icon={<i className="fa fa-file" />} onClick={this._handleImportFile}>
+        File
+      </DropdownItem>
+      <DropdownItem icon={<i className="fa fa-link" />} onClick={this._handleImportUri}>
+        URL
+      </DropdownItem>
+      <DropdownItem icon={<i className="fa fa-clipboard" />} onClick={this._handleImportClipBoard}>
+        Clipboard
+      </DropdownItem>
+      <DropdownItem icon={<i className="fa fa-code-fork" />} onClick={this._handleWorkspaceClone}>
+        Git Clone
+      </DropdownItem>
+    </Dropdown>
+  );
 
-  render() {
+  render = () => {
     const { workspaces } = this.props.wrapperProps;
     const { filter } = this.state;
 
@@ -471,7 +466,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         )}
       />
     );
-  }
+  };
 }
 
 export default WrapperHome;

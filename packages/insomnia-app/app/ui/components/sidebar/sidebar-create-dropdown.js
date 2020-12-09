@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { Dropdown, DropdownHint, DropdownButton, DropdownItem } from '../base/dropdown';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -12,21 +12,20 @@ type Props = {
   right?: boolean,
 };
 
-@autobind
 class SidebarCreateDropdown extends React.PureComponent<Props> {
   _dropdown: ?Dropdown;
 
-  show(position: { x: number, y: number }) {
+  show = (position: { x: number, y: number }) => {
     if (this._dropdown) {
       this._dropdown.show(false, position);
     }
-  }
+  };
 
-  _setDropdownRef(n: ?Dropdown) {
+  _setDropdownRef = (n: ?Dropdown) => {
     this._dropdown = n;
-  }
+  };
 
-  render() {
+  render = () => {
     const { handleCreateRequest, handleCreateRequestGroup, hotKeyRegistry, right } = this.props;
 
     return (
@@ -45,7 +44,7 @@ class SidebarCreateDropdown extends React.PureComponent<Props> {
         </DropdownItem>
       </Dropdown>
     );
-  }
+  };
 }
 
 export default SidebarCreateDropdown;

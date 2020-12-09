@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import Link from './link';
 
@@ -11,9 +11,8 @@ type Props = {|
   body?: string,
 |};
 
-@autobind
 class Mailto extends React.PureComponent<Props> {
-  render() {
+  render = () => {
     const { email, body, subject, children } = this.props;
 
     const params = [];
@@ -28,7 +27,7 @@ class Mailto extends React.PureComponent<Props> {
     const href = joinUrlAndQueryString(`mailto:${email}`, qs);
 
     return <Link href={href}>{children || email}</Link>;
-  }
+  };
 }
 
 export default Mailto;

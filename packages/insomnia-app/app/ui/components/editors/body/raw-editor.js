@@ -1,11 +1,10 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import CodeEditor from '../../codemirror/code-editor';
 
-@autobind
 class RawEditor extends PureComponent {
-  render() {
+  render = () => {
     const {
       className,
       content,
@@ -45,7 +44,7 @@ class RawEditor extends PureComponent {
         />
       </React.Fragment>
     );
-  }
+  };
 }
 
 RawEditor.propTypes = {

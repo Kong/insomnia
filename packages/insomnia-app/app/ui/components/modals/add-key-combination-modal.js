@@ -1,6 +1,6 @@
 // @flow
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import Modal from '../base/modal';
 import ModalHeader from '../base/modal-header';
@@ -19,7 +19,6 @@ type State = {
   pressedKeyCombination: KeyCombination | null,
 };
 
-@autobind
 class AddKeyCombinationModal extends PureComponent<Props, State> {
   _modal: Modal | null;
 
@@ -33,11 +32,11 @@ class AddKeyCombinationModal extends PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(modal: ?Modal) {
+  _setModalRef = (modal: ?Modal) => {
     this._modal = modal;
-  }
+  };
 
-  _handleKeyDown(e: KeyboardEvent) {
+  _handleKeyDown = (e: KeyboardEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -92,9 +91,13 @@ class AddKeyCombinationModal extends PureComponent<Props, State> {
     this.setState({
       pressedKeyCombination: pressed,
     });
-  }
+  };
 
-  show(hotKeyRefId: string, checkKeyCombinationDuplicate: Function, onAddKeyCombination: Function) {
+  show = (
+    hotKeyRefId: string,
+    checkKeyCombinationDuplicate: Function,
+    onAddKeyCombination: Function,
+  ) => {
     this.setState({
       hotKeyRefId: hotKeyRefId,
       checkKeyCombinationDuplicate: checkKeyCombinationDuplicate,
@@ -102,13 +105,13 @@ class AddKeyCombinationModal extends PureComponent<Props, State> {
       pressedKeyCombination: null,
     });
     this._modal && this._modal.show();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this._modal && this._modal.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const { checkKeyCombinationDuplicate, pressedKeyCombination } = this.state;
     let keyCombDisplay = '';
     let isDuplicate = false;
@@ -139,7 +142,7 @@ class AddKeyCombinationModal extends PureComponent<Props, State> {
         </ModalBody>
       </Modal>
     );
-  }
+  };
 }
 
 export default AddKeyCombinationModal;

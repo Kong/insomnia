@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import iconv from 'iconv-lite';
-import autobind from 'autobind-decorator';
+
 import { shell } from 'electron';
 import PDFViewer from './response-pdf-viewer';
 import CSVViewer from './response-csv-viewer';
@@ -50,7 +50,6 @@ type State = {
   error: string,
 };
 
-@autobind
 class ResponseViewer extends React.Component<Props, State> {
   _selectableView: any;
 
@@ -63,36 +62,36 @@ class ResponseViewer extends React.Component<Props, State> {
     };
   }
 
-  refresh() {
+  refresh = () => {
     if (this._selectableView != null && typeof this._selectableView.refresh === 'function') {
       this._selectableView.refresh();
     }
-  }
+  };
 
-  _decodeIconv(bodyBuffer: Buffer, charset: string): string {
+  _decodeIconv = (bodyBuffer: Buffer, charset: string): string => {
     try {
       return iconv.decode(bodyBuffer, charset);
     } catch (err) {
       console.warn('[response] Failed to decode body', err);
       return bodyBuffer.toString();
     }
-  }
+  };
 
-  _handleOpenLink(link: string) {
+  _handleOpenLink = (link: string) => {
     shell.openExternal(link);
-  }
+  };
 
-  _handleDismissBlocker() {
+  _handleDismissBlocker = () => {
     this.setState({ blockingBecauseTooLarge: false });
     this._maybeLoadResponseBody(this.props, true);
-  }
+  };
 
-  _handleDisableBlocker() {
+  _handleDisableBlocker = () => {
     alwaysShowLargeResponses = true;
     this._handleDismissBlocker();
-  }
+  };
 
-  _maybeLoadResponseBody(props: Props, forceShow?: boolean) {
+  _maybeLoadResponseBody = (props: Props, forceShow?: boolean) => {
     // Block the response if it's too large
     const responseIsTooLarge = props.bytes > LARGE_RESPONSE_MB * 1024 * 1024;
     if (!forceShow && !alwaysShowLargeResponses && responseIsTooLarge) {
@@ -110,19 +109,19 @@ class ResponseViewer extends React.Component<Props, State> {
         });
       }
     }
-  }
+  };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount() {
+  UNSAFE_componentWillMount = () => {
     this._maybeLoadResponseBody(this.props);
-  }
+  };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
+  UNSAFE_componentWillReceiveProps = (nextProps: Props) => {
     this._maybeLoadResponseBody(nextProps);
-  }
+  };
 
-  shouldComponentUpdate(nextProps: Props, nextState: State) {
+  shouldComponentUpdate = (nextProps: Props, nextState: State) => {
     for (const k of Object.keys(nextProps)) {
       const next = nextProps[k];
       const current = this.props[k];
@@ -165,21 +164,18 @@ class ResponseViewer extends React.Component<Props, State> {
     }
 
     return false;
-  }
+  };
 
-  _setSelectableViewRef(n: any) {
+  _setSelectableViewRef = (n: any) => {
     this._selectableView = n;
-  }
+  };
 
-  _isViewSelectable() {
-    return (
-      this._selectableView != null &&
-      typeof this._selectableView.focus === 'function' &&
-      typeof this._selectableView.selectAll === 'function'
-    );
-  }
+  _isViewSelectable = () =>
+    this._selectableView != null &&
+    typeof this._selectableView.focus === 'function' &&
+    typeof this._selectableView.selectAll === 'function';
 
-  _handleKeyDown(e: KeyboardEvent) {
+  _handleKeyDown = (e: KeyboardEvent) => {
     if (!this._isViewSelectable()) {
       return;
     }
@@ -192,9 +188,9 @@ class ResponseViewer extends React.Component<Props, State> {
       this._selectableView.focus();
       this._selectableView.selectAll();
     });
-  }
+  };
 
-  _renderView() {
+  _renderView = () => {
     const {
       bytes,
       disableHtmlPreviewJs,
@@ -418,11 +414,11 @@ class ResponseViewer extends React.Component<Props, State> {
         />
       );
     }
-  }
+  };
 
-  render() {
-    return <KeydownBinder onKeydown={this._handleKeyDown}>{this._renderView()}</KeydownBinder>;
-  }
+  render = () => (
+    <KeydownBinder onKeydown={this._handleKeyDown}>{this._renderView()}</KeydownBinder>
+  );
 }
 
 export default ResponseViewer;

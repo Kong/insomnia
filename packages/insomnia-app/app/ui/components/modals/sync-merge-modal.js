@@ -1,7 +1,7 @@
 // @flow
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -20,7 +20,6 @@ type State = {
   conflicts: Array<MergeConflict>,
 };
 
-@autobind
 class SyncMergeModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _handleDone: (Array<MergeConflict>) => void;
@@ -32,16 +31,16 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(n: ?Modal) {
+  _setModalRef = (n: ?Modal) => {
     this.modal = n;
-  }
+  };
 
-  _handleOk() {
+  _handleOk = () => {
     this._handleDone(this.state.conflicts);
     this.hide();
-  }
+  };
 
-  _handleToggleSelect(key: DocumentKey, e: SyntheticEvent<HTMLInputElement>) {
+  _handleToggleSelect = (key: DocumentKey, e: SyntheticEvent<HTMLInputElement>) => {
     const conflicts = this.state.conflicts.map(c => {
       if (c.key !== key) {
         return c;
@@ -51,25 +50,25 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
     });
 
     this.setState({ conflicts });
-  }
+  };
 
-  async show(options: {
+  show = async (options: {
     conflicts: Array<MergeConflict>,
     handleDone: (Array<MergeConflict>) => void,
-  }) {
+  }) => {
     this.modal && this.modal.show();
     this._handleDone = options.handleDone;
 
     this.setState({
       conflicts: options.conflicts,
     });
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const { conflicts } = this.state;
     return (
       <Modal ref={this._setModalRef}>
@@ -120,7 +119,7 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default SyncMergeModal;

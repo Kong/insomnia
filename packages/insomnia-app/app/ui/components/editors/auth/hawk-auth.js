@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+
 import OneLineEditor from '../../codemirror/one-line-editor';
 import { HAWK_ALGORITHM_SHA1, HAWK_ALGORITHM_SHA256 } from '../../../../common/constants';
 import HelpTooltip from '../../help-tooltip';
@@ -18,43 +18,42 @@ type Props = {
   onChange: (Request, RequestAuthentication) => Promise<Request>,
 };
 
-@autobind
 class HawkAuth extends React.PureComponent<Props> {
-  _handleDisable() {
+  _handleDisable = () => {
     const { request, onChange } = this.props;
     onChange(request, {
       ...request.authentication,
       disabled: !request.authentication.disabled,
     });
-  }
+  };
 
-  _handleChangeProperty(property: string, value: string | boolean): void {
+  _handleChangeProperty = (property: string, value: string | boolean): void => {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, [property]: value });
-  }
+  };
 
-  _handleChangeHawkAuthId(value: string): void {
+  _handleChangeHawkAuthId = (value: string): void => {
     this._handleChangeProperty('id', value);
-  }
+  };
 
-  _handleChangeHawkAuthKey(value: string): void {
+  _handleChangeHawkAuthKey = (value: string): void => {
     this._handleChangeProperty('key', value);
-  }
+  };
 
-  _handleChangeAlgorithm(e: SyntheticEvent<HTMLSelectElement>): void {
+  _handleChangeAlgorithm = (e: SyntheticEvent<HTMLSelectElement>): void => {
     this._handleChangeProperty('algorithm', e.currentTarget.value);
-  }
+  };
 
-  _handleChangeExt(value: string): void {
+  _handleChangeExt = (value: string): void => {
     this._handleChangeProperty('ext', value);
-  }
+  };
 
-  _handleChangePayloadValidation(): void {
+  _handleChangePayloadValidation = (): void => {
     const { request } = this.props;
     this._handleChangeProperty('validatePayload', !request.authentication.validatePayload);
-  }
+  };
 
-  renderHawkAuthenticationFields(): React.Node {
+  renderHawkAuthenticationFields = (): React.Node => {
     const hawkAuthId = this.renderInputRow('Auth ID', 'id', this._handleChangeHawkAuthId);
 
     const hawkAuthKey = this.renderInputRow('Auth Key', 'key', this._handleChangeHawkAuthKey);
@@ -78,15 +77,15 @@ class HawkAuth extends React.PureComponent<Props> {
     );
 
     return [hawkAuthId, hawkAuthKey, algorithm, ext, payloadValidation];
-  }
+  };
 
-  renderSelectRow(
+  renderSelectRow = (
     label: string,
     property: string,
     options: Array<{ name: string, value: string }>,
     onChange: Function,
     help: string | null = null,
-  ): React.Element<*> {
+  ): React.Element<*> => {
     const { authentication } = this.props.request;
     const id = label.replace(/ /g, '-');
     const value = authentication.hasOwnProperty(property) ? authentication[property] : options[0];
@@ -115,9 +114,9 @@ class HawkAuth extends React.PureComponent<Props> {
         </td>
       </tr>
     );
-  }
+  };
 
-  renderInputRow(label: string, property: string, onChange: Function): React.Element<*> {
+  renderInputRow = (label: string, property: string, onChange: Function): React.Element<*> => {
     const {
       handleRender,
       handleGetRenderContext,
@@ -155,9 +154,9 @@ class HawkAuth extends React.PureComponent<Props> {
         </td>
       </tr>
     );
-  }
+  };
 
-  renderButtonRow(label: string, property: string, onChange: Function): React.Element<*> {
+  renderButtonRow = (label: string, property: string, onChange: Function): React.Element<*> => {
     const { request } = this.props;
     const { authentication } = request;
     const id = label.replace(/ /g, '-');
@@ -193,9 +192,9 @@ class HawkAuth extends React.PureComponent<Props> {
         </td>
       </tr>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const fields = this.renderHawkAuthenticationFields();
     const { authentication } = this.props.request;
 
@@ -231,7 +230,7 @@ class HawkAuth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  }
+  };
 }
 
 export default HawkAuth;

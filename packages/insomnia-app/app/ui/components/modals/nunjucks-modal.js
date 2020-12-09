@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import VariableEditor from '../templating/variable-editor';
 import TagEditor from '../templating/tag-editor';
 import Modal from '../base/modal';
@@ -8,7 +8,6 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 
-@autobind
 class NunjucksModal extends PureComponent {
   constructor(props) {
     super(props);
@@ -20,39 +19,39 @@ class NunjucksModal extends PureComponent {
     this._currentTemplate = null;
   }
 
-  _setModalRef(n) {
+  _setModalRef = n => {
     this.modal = n;
-  }
+  };
 
-  _handleTemplateChange(template) {
+  _handleTemplateChange = template => {
     this._currentTemplate = template;
-  }
+  };
 
-  _handleSubmit(e) {
+  _handleSubmit = e => {
     e.preventDefault();
     this.hide();
-  }
+  };
 
-  _handleModalHide() {
+  _handleModalHide = () => {
     if (this._onDone) {
       this._onDone(this._currentTemplate);
       this.setState({ defaultTemplate: '' });
     }
-  }
+  };
 
-  show({ template, onDone }) {
+  show = ({ template, onDone }) => {
     this._onDone = onDone;
     this._currentTemplate = template;
 
     this.setState({ defaultTemplate: template });
     this.modal.show();
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal.hide();
-  }
+  };
 
-  render() {
+  render = () => {
     const { handleRender, handleGetRenderContext, uniqueKey, workspace } = this.props;
     const { defaultTemplate } = this.state;
 
@@ -94,7 +93,7 @@ class NunjucksModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 NunjucksModal.propTypes = {

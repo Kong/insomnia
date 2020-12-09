@@ -23,7 +23,7 @@ import HawkAuth from './hawk-auth';
 import AWSAuth from './aws-auth';
 import NetrcAuth from './netrc-auth';
 import AsapAuth from './asap-auth';
-import autobind from 'autobind-decorator';
+
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Settings } from '../../../../models/settings';
@@ -42,9 +42,8 @@ type Props = {
   oAuth2Token: ?OAuth2Token,
 };
 
-@autobind
 class AuthWrapper extends React.PureComponent<Props> {
-  renderEditor() {
+  renderEditor = () => {
     const {
       oAuth2Token,
       request,
@@ -184,11 +183,9 @@ class AuthWrapper extends React.PureComponent<Props> {
         </div>
       );
     }
-  }
+  };
 
-  render() {
-    return <div className="tall">{this.renderEditor()}</div>;
-  }
+  render = () => <div className="tall">{this.renderEditor()}</div>;
 }
 
 export default AuthWrapper;

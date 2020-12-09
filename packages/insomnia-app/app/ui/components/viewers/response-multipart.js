@@ -7,7 +7,7 @@ import moment from 'moment';
 import path from 'path';
 import { PassThrough } from 'stream';
 import multiparty from 'multiparty';
-import autobind from 'autobind-decorator';
+
 import ResponseViewer from './response-viewer';
 import { getContentTypeFromHeaders, PREVIEW_MODE_FRIENDLY } from '../../../common/constants';
 import type { ResponseHeader } from '../../../models/response';
@@ -46,7 +46,6 @@ type State = {
   error: string | null,
 };
 
-@autobind
 class ResponseMultipart extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -57,33 +56,33 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
     };
   }
 
-  componentDidMount() {
+  componentDidMount = () => {
     this._setParts();
-  }
+  };
 
-  async _setParts() {
+  _setParts = async () => {
     try {
       const parts = await this._getParts();
       this.setState({ parts, activePart: 0, error: null });
     } catch (err) {
       this.setState({ error: err.message });
     }
-  }
+  };
 
-  _describePart(part: Part) {
+  _describePart = (part: Part) => {
     const segments = [part.name];
     if (part.filename) {
       segments.push(`(${part.filename})`);
     }
 
     return segments.join(' ');
-  }
+  };
 
-  async _handleSelectPart(index: number) {
+  _handleSelectPart = async (index: number) => {
     this.setState({ activePart: index });
-  }
+  };
 
-  _getBody() {
+  _getBody = () => {
     const { parts, activePart } = this.state;
     const part = parts[activePart];
 
@@ -92,9 +91,9 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
     }
 
     return part.value;
-  }
+  };
 
-  _handleViewHeaders() {
+  _handleViewHeaders = () => {
     const { parts, activePart } = this.state;
     const part = parts[activePart];
 
@@ -110,9 +109,9 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
       ),
       body: <ResponseHeadersViewer headers={[...part.headers]} />,
     });
-  }
+  };
 
-  async _handleSaveAsFile() {
+  _handleSaveAsFile = async () => {
     const { parts, activePart } = this.state;
     const part = parts[activePart];
 
@@ -153,10 +152,10 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
     } catch (err) {
       console.warn('Failed to save multipart to file', err);
     }
-  }
+  };
 
-  _getParts(): Promise<Array<Part>> {
-    return new Promise((resolve, reject) => {
+  _getParts = (): Promise<Array<Part>> =>
+    new Promise((resolve, reject) => {
       const { bodyBuffer, contentType } = this.props;
       const parts = [];
 
@@ -207,9 +206,8 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
       fakeReq.write(bodyBuffer);
       fakeReq.end();
     });
-  }
 
-  render() {
+  render = () => {
     const {
       download,
       disableHtmlPreviewJs,
@@ -300,7 +298,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
         ) : null}
       </div>
     );
-  }
+  };
 }
 
 export default ResponseMultipart;

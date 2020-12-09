@@ -1,23 +1,22 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import fs from 'fs';
 import electron from 'electron';
 import FileInputButton from '../../base/file-input-button';
 import PromptButton from '../../base/prompt-button';
 import * as misc from '../../../../common/misc';
 
-@autobind
 class FileEditor extends PureComponent {
-  _handleResetFile() {
+  _handleResetFile = () => {
     this.props.onChange('');
-  }
+  };
 
-  _handleChooseFile(path) {
+  _handleChooseFile = path => {
     this.props.onChange(path);
-  }
+  };
 
-  render() {
+  render = () => {
     const { path } = this.props;
 
     // Replace home path with ~/ to make the path shorter
@@ -63,7 +62,7 @@ class FileEditor extends PureComponent {
         </div>
       </div>
     );
-  }
+  };
 }
 
 FileEditor.propTypes = {

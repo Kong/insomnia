@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import moment from 'moment';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import StatusTag from '../tags/status-tag';
@@ -28,35 +28,34 @@ type Props = {
   activeEnvironment: ?Environment,
 };
 
-@autobind
 class ResponseHistoryDropdown extends React.PureComponent<Props> {
   _dropdown: ?Dropdown;
 
-  _setDropdownRef(n: ?Dropdown) {
+  _setDropdownRef = (n: ?Dropdown) => {
     this._dropdown = n;
-  }
+  };
 
-  _handleDeleteResponses() {
+  _handleDeleteResponses = () => {
     const { requestId, activeEnvironment } = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
     this.props.handleDeleteResponses(requestId, environmentId);
-  }
+  };
 
-  _handleDeleteResponse() {
+  _handleDeleteResponse = () => {
     this.props.handleDeleteResponse(this.props.activeResponse);
-  }
+  };
 
-  _handleSetActiveResponse(response: Response) {
+  _handleSetActiveResponse = (response: Response) => {
     this.props.handleSetActiveResponse(response);
-  }
+  };
 
-  _handleKeydown(e: KeyboardEvent) {
+  _handleKeydown = (e: KeyboardEvent) => {
     executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
-  }
+  };
 
-  renderDropdownItem(response: Response, i: number) {
+  renderDropdownItem = (response: Response, i: number) => {
     const { activeResponse, requestVersions } = this.props;
 
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
@@ -96,9 +95,9 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
         {!response.requestVersionId && <i className="icon fa fa-info-circle" title={message} />}
       </DropdownItem>
     );
-  }
+  };
 
-  renderPastResponses(responses: Array<Response>) {
+  renderPastResponses = (responses: Array<Response>) => {
     const now = moment();
     // Four arrays for four time groups
     const categories = { minutes: [], hours: [], today: [], week: [], other: [] };
@@ -136,9 +135,9 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
         {categories.other.map(this.renderDropdownItem)}
       </React.Fragment>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       activeResponse, // eslint-disable-line no-unused-vars
       handleSetActiveResponse, // eslint-disable-line no-unused-vars
@@ -182,7 +181,7 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
         </Dropdown>
       </KeydownBinder>
     );
-  }
+  };
 }
 
 export default ResponseHistoryDropdown;

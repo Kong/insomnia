@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+
 import OneLineEditor from '../../codemirror/one-line-editor';
 import Button from '../../base/button';
 import HelpTooltip from '../../help-tooltip';
@@ -16,27 +16,26 @@ type Props = {
   isVariableUncovered: boolean,
 };
 
-@autobind
 class BearerAuth extends React.PureComponent<Props> {
-  _handleDisable() {
+  _handleDisable = () => {
     const { request, onChange } = this.props;
     onChange(request, {
       ...request.authentication,
       disabled: !request.authentication.disabled,
     });
-  }
+  };
 
-  _handleChangeToken(token: string) {
+  _handleChangeToken = (token: string) => {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, token });
-  }
+  };
 
-  _handleChangePrefix(prefix: string) {
+  _handleChangePrefix = (prefix: string) => {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, prefix });
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       request,
       handleRender,
@@ -131,7 +130,7 @@ class BearerAuth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  }
+  };
 }
 
 export default BearerAuth;

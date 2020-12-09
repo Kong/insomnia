@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import type { WrapperProps } from './wrapper';
 import classnames from 'classnames';
 import ErrorBoundary from './error-boundary';
@@ -20,17 +20,16 @@ type Props = {
 
 type State = {};
 
-@autobind
 class PageLayout extends React.PureComponent<Props, State> {
   // Special request updaters
-  _handleStartDragSidebar(e: Event): void {
+  _handleStartDragSidebar = (e: Event): void => {
     e.preventDefault();
 
     const { handleStartDragSidebar } = this.props.wrapperProps;
     handleStartDragSidebar();
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       renderPaneOne,
       renderPaneTwo,
@@ -195,15 +194,13 @@ class PageLayout extends React.PureComponent<Props, State> {
         )}
       </div>
     );
-  }
+  };
 }
 
 export default PageLayout;
 
 class Pane extends React.PureComponent {
-  render() {
-    return (
-      <section className={`pane-${this.props.position} theme--pane`}>{this.props.children}</section>
-    );
-  }
+  render = () => (
+    <section className={`pane-${this.props.position} theme--pane`}>{this.props.children}</section>
+  );
 }

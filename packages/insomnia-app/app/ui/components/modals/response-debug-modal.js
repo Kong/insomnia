@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import ResponseTimelineViewer from '../../components/viewers/response-timeline-viewer';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -18,7 +18,6 @@ type State = {|
   title: string | null,
 |};
 
-@autobind
 class ResponseDebugModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 
@@ -31,15 +30,15 @@ class ResponseDebugModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(n: ?Modal) {
+  _setModalRef = (n: ?Modal) => {
     this.modal = n;
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  async show(options: { responseId?: string, response?: Response, title?: string }) {
+  show = async (options: { responseId?: string, response?: Response, title?: string }) => {
     const response = options.response
       ? options.response
       : await models.response.getById(options.responseId || 'n/a');
@@ -50,9 +49,9 @@ class ResponseDebugModal extends React.PureComponent<Props, State> {
     });
 
     this.modal && this.modal.show();
-  }
+  };
 
-  render() {
+  render = () => {
     const { settings } = this.props;
     const { response, title } = this.state;
 
@@ -75,7 +74,7 @@ class ResponseDebugModal extends React.PureComponent<Props, State> {
         </ModalBody>
       </Modal>
     );
-  }
+  };
 }
 
 export default ResponseDebugModal;

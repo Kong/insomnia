@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -42,7 +42,6 @@ type RequestSettingsModalOptions = {
   forceEditMode: boolean,
 };
 
-@autobind
 class RequestSettingsModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _editor: ?MarkdownEditor;
@@ -61,15 +60,15 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(n: ?Modal) {
+  _setModalRef = (n: ?Modal) => {
     this.modal = n;
-  }
+  };
 
-  _setEditorRef(n: ?MarkdownEditor) {
+  _setEditorRef = (n: ?MarkdownEditor) => {
     this._editor = n;
-  }
+  };
 
-  async _updateRequestSettingBoolean(e: SyntheticEvent<HTMLInputElement>) {
+  _updateRequestSettingBoolean = async (e: SyntheticEvent<HTMLInputElement>) => {
     if (!this.state.request) {
       // Should never happen
       return;
@@ -81,9 +80,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       [setting]: value,
     });
     this.setState({ request });
-  }
+  };
 
-  async _updateRequestSettingString(e: SyntheticEvent<HTMLInputElement>) {
+  _updateRequestSettingString = async (e: SyntheticEvent<HTMLInputElement>) => {
     if (!this.state.request) {
       // Should never happen
       return;
@@ -95,9 +94,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       [setting]: value,
     });
     this.setState({ request });
-  }
+  };
 
-  async _handleNameChange(name: string) {
+  _handleNameChange = async (name: string) => {
     const { request: originalRequest } = this.state;
 
     if (!originalRequest) {
@@ -110,9 +109,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       : await models.request.update(originalRequest, patch);
 
     this.setState({ request: updatedRequest });
-  }
+  };
 
-  async _handleDescriptionChange(description: string) {
+  _handleDescriptionChange = async (description: string) => {
     if (!this.state.request) {
       return;
     }
@@ -120,19 +119,19 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       description,
     });
     this.setState({ request, defaultPreviewMode: false });
-  }
+  };
 
-  _handleAddDescription() {
+  _handleAddDescription = () => {
     this.setState({ showDescription: true });
-  }
+  };
 
-  _handleUpdateMoveCopyWorkspace(e: SyntheticEvent<HTMLSelectElement>) {
+  _handleUpdateMoveCopyWorkspace = (e: SyntheticEvent<HTMLSelectElement>) => {
     const { value } = e.currentTarget;
     const workspaceId = value === '__NULL__' ? null : value;
     this.setState({ activeWorkspaceIdToCopyTo: workspaceId });
-  }
+  };
 
-  async _handleMoveToWorkspace() {
+  _handleMoveToWorkspace = async () => {
     const { activeWorkspaceIdToCopyTo, request } = this.state;
     if (!request || !activeWorkspaceIdToCopyTo) {
       return;
@@ -156,9 +155,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     setTimeout(() => {
       this.setState({ justMoved: false });
     }, 2000);
-  }
+  };
 
-  async _handleCopyToWorkspace() {
+  _handleCopyToWorkspace = async () => {
     const { activeWorkspaceIdToCopyTo, request } = this.state;
     if (!request || !activeWorkspaceIdToCopyTo) {
       return;
@@ -183,9 +182,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     setTimeout(() => {
       this.setState({ justCopied: false });
     }, 2000);
-  }
+  };
 
-  async show({ request, forceEditMode }: RequestSettingsModalOptions) {
+  show = async ({ request, forceEditMode }: RequestSettingsModalOptions) => {
     const { workspaces } = this.props;
 
     const hasDescription = !!request.description;
@@ -214,13 +213,13 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
         }
       },
     );
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  renderCheckboxInput(setting: string) {
+  renderCheckboxInput = (setting: string) => {
     const { request } = this.state;
     if (!request) {
       return;
@@ -234,9 +233,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
         onChange={this._updateRequestSettingBoolean}
       />
     );
-  }
+  };
 
-  _renderRequestSettings(): React.Node {
+  _renderRequestSettings = (): React.Node => {
     const { request } = this.state;
 
     // GrpcRequests do not have any request settings (yet)
@@ -306,9 +305,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
         </div>
       </>
     );
-  }
+  };
 
-  _renderDescription(): React.Node {
+  _renderDescription = (): React.Node => {
     const {
       editorLineWrapping,
       editorFontSize,
@@ -351,9 +350,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
         Add Description
       </button>
     );
-  }
+  };
 
-  _renderFeatureRequestPrompt(): React.Node {
+  _renderFeatureRequestPrompt = (): React.Node => {
     const { request } = this.state;
 
     // Don't show move/copy items if it doesn't exist, or if it is a gRPC request
@@ -367,9 +366,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     }
 
     return null;
-  }
+  };
 
-  _renderMoveCopy(): React.Node {
+  _renderMoveCopy = (): React.Node => {
     const { workspaces } = this.props;
 
     const { activeWorkspaceIdToCopyTo, justMoved, justCopied, workspace, request } = this.state;
@@ -424,9 +423,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
         </div>
       </div>
     );
-  }
+  };
 
-  renderModalBody(): React.Node {
+  renderModalBody = (): React.Node => {
     const { request } = this.state;
 
     if (!request) {
@@ -455,9 +454,9 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
         {this._renderFeatureRequestPrompt()}
       </div>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { request } = this.state;
     return (
       <Modal ref={this._setModalRef} freshState>
@@ -468,7 +467,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
         <ModalBody className="pad">{this.renderModalBody()}</ModalBody>
       </Modal>
     );
-  }
+  };
 }
 
 export default RequestSettingsModal;

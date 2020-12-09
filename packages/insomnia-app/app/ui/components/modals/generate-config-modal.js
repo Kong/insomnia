@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -31,7 +31,6 @@ type State = {|
   activeTab: number,
 |};
 
-@autobind
 class GenerateConfigModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 
@@ -43,11 +42,11 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _setModalRef(n: ?Modal) {
+  _setModalRef = (n: ?Modal) => {
     this.modal = n;
-  }
+  };
 
-  async _generate(generatePlugin: ConfigGenerator, apiSpec: ApiSpec): Promise<Config> {
+  _generate = async (generatePlugin: ConfigGenerator, apiSpec: ApiSpec): Promise<Config> => {
     const config: Config = {
       content: '',
       mimeType: 'text/yaml',
@@ -67,9 +66,9 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
     config.error = result.error || null;
 
     return config;
-  }
+  };
 
-  async show(options: { apiSpec: ApiSpec }) {
+  show = async (options: { apiSpec: ApiSpec }) => {
     const configs = [];
 
     for (const p of await plugins.getConfigGenerators()) {
@@ -79,9 +78,9 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
     this.setState({ configs });
 
     this.modal && this.modal.show();
-  }
+  };
 
-  renderConfigTabPanel(config: Config) {
+  renderConfigTabPanel = (config: Config) => {
     const { settings } = this.props;
 
     if (config.error) {
@@ -110,21 +109,19 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
         />
       </TabPanel>
     );
-  }
+  };
 
-  _handleTabSelect(index: number) {
+  _handleTabSelect = (index: number) => {
     this.setState({ activeTab: index });
-  }
+  };
 
-  renderConfigTab(config: Config) {
-    return (
-      <Tab key={config.label} tabIndex="-1">
-        <button>{config.label}</button>
-      </Tab>
-    );
-  }
+  renderConfigTab = (config: Config) => (
+    <Tab key={config.label} tabIndex="-1">
+      <button>{config.label}</button>
+    </Tab>
+  );
 
-  render() {
+  render = () => {
     const { configs, activeTab } = this.state;
 
     const activeConfig = configs[activeTab];
@@ -147,7 +144,7 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
         )}
       </Modal>
     );
-  }
+  };
 }
 
 export default GenerateConfigModal;

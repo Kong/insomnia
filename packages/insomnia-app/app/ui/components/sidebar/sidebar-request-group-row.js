@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import ReactDOM from 'react-dom';
 import { DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
@@ -9,7 +9,6 @@ import RequestGroupActionsDropdown from '../dropdowns/request-group-actions-drop
 import SidebarRequestRow from './sidebar-request-row';
 import * as misc from '../../../common/misc';
 
-@autobind
 class SidebarRequestGroupRow extends PureComponent {
   constructor(props) {
     super(props);
@@ -18,35 +17,33 @@ class SidebarRequestGroupRow extends PureComponent {
     };
   }
 
-  _setRequestGroupActionsDropdownRef(n) {
+  _setRequestGroupActionsDropdownRef = n => {
     this._requestGroupActionsDropdown = n;
-  }
+  };
 
-  _setExpandTagRef(n) {
+  _setExpandTagRef = n => {
     this._expandTag = n;
-  }
+  };
 
-  getExpandTag() {
-    return this._expandTag;
-  }
+  getExpandTag = () => this._expandTag;
 
-  _handleCollapse() {
+  _handleCollapse = () => {
     const { requestGroup, handleSetRequestGroupCollapsed, isCollapsed } = this.props;
     handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
-  }
+  };
 
-  _handleShowActions(e) {
+  _handleShowActions = e => {
     e.preventDefault();
     this._requestGroupActionsDropdown.show();
-  }
+  };
 
-  setDragDirection(dragDirection) {
+  setDragDirection = dragDirection => {
     if (dragDirection !== this.state.dragDirection) {
       this.setState({ dragDirection });
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       connectDragSource,
       connectDropTarget,
@@ -160,7 +157,7 @@ class SidebarRequestGroupRow extends PureComponent {
         </ul>
       </li>
     );
-  }
+  };
 }
 
 SidebarRequestGroupRow.propTypes = {
@@ -204,16 +201,16 @@ const dragSource = {
   },
 };
 
-function isAbove(monitor, component) {
+const isAbove = (monitor, component) => {
   const hoveredNode = ReactDOM.findDOMNode(component);
 
   const hoveredTop = hoveredNode.getBoundingClientRect().top;
   const draggedTop = monitor.getSourceClientOffset().y;
 
   return hoveredTop > draggedTop;
-}
+};
 
-function isOnExpandTag(monitor, component) {
+const isOnExpandTag = (monitor, component) => {
   const rect = component.getExpandTag().getBoundingClientRect();
   const pointer = monitor.getClientOffset();
 
@@ -223,7 +220,7 @@ function isOnExpandTag(monitor, component) {
     rect.top <= pointer.y &&
     pointer.y <= rect.bottom
   );
-}
+};
 
 const dragTarget = {
   drop(props, monitor, component) {
@@ -249,19 +246,15 @@ const dragTarget = {
   },
 };
 
-function sourceCollect(connect, monitor) {
-  return {
-    connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging(),
-  };
-}
+const sourceCollect = (connect, monitor) => ({
+  connectDragSource: connect.dragSource(),
+  isDragging: monitor.isDragging(),
+});
 
-function targetCollect(connect, monitor) {
-  return {
-    connectDropTarget: connect.dropTarget(),
-    isDraggingOver: monitor.isOver(),
-  };
-}
+const targetCollect = (connect, monitor) => ({
+  connectDropTarget: connect.dropTarget(),
+  isDraggingOver: monitor.isOver(),
+});
 
 const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestGroupRow);
 export default DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);

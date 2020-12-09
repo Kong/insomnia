@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { getPreviewModeName, PREVIEW_MODES } from '../../../common/constants';
 
@@ -12,24 +12,23 @@ type Props = {|
   showPrettifyOption?: boolean,
 |};
 
-@autobind
 class PreviewModeDropdown extends React.PureComponent<Props> {
-  async _handleClick(previewMode: string) {
+  _handleClick = async (previewMode: string) => {
     const { updatePreviewMode } = this.props;
     await updatePreviewMode(previewMode);
-  }
+  };
 
-  async _handleDownloadPrettify() {
+  _handleDownloadPrettify = async () => {
     const { download } = this.props;
     download(true);
-  }
+  };
 
-  async _handleDownloadNormal() {
+  _handleDownloadNormal = async () => {
     const { download } = this.props;
     download(false);
-  }
+  };
 
-  renderPreviewMode(mode: string) {
+  renderPreviewMode = (mode: string) => {
     const { previewMode } = this.props;
     return (
       <DropdownItem key={mode} onClick={this._handleClick} value={mode}>
@@ -37,9 +36,9 @@ class PreviewModeDropdown extends React.PureComponent<Props> {
         {getPreviewModeName(mode, true)}
       </DropdownItem>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const { fullDownload, previewMode, showPrettifyOption } = this.props;
 
     return (
@@ -67,7 +66,7 @@ class PreviewModeDropdown extends React.PureComponent<Props> {
         </DropdownItem>
       </Dropdown>
     );
-  }
+  };
 }
 
 export default PreviewModeDropdown;

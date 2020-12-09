@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -30,7 +30,6 @@ type State = {
   currentValue: string,
 };
 
-@autobind
 class PromptModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _input: ?HTMLInputElement;
@@ -57,33 +56,33 @@ class PromptModal extends React.PureComponent<Props, State> {
     };
   }
 
-  _done(rawValue: string) {
+  _done = (rawValue: string) => {
     const { onComplete, upperCase } = this.state;
     const value = upperCase ? rawValue.toUpperCase() : rawValue;
     onComplete && onComplete(value);
     this.hide();
-  }
+  };
 
-  _setInputRef(n: ?HTMLInputElement) {
+  _setInputRef = (n: ?HTMLInputElement) => {
     this._input = n;
-  }
+  };
 
-  _setModalRef(n: ?Modal) {
+  _setModalRef = (n: ?Modal) => {
     this.modal = n;
-  }
+  };
 
-  _handleSelectHint(hint: string) {
+  _handleSelectHint = (hint: string) => {
     this._done(hint);
-  }
+  };
 
-  _handleDeleteHint(hint: string) {
+  _handleDeleteHint = (hint: string) => {
     const { onDeleteHint } = this.state;
     onDeleteHint && onDeleteHint(hint);
     const hints = this.state.hints.filter(h => h !== hint);
     this.setState({ hints });
-  }
+  };
 
-  _handleSubmit(e: SyntheticEvent<HTMLFormElement>) {
+  _handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (this._input) {
@@ -91,22 +90,22 @@ class PromptModal extends React.PureComponent<Props, State> {
         this._input.type === 'checkbox' ? this._input.checked.toString() : this._input.value;
       this._done(result);
     }
-  }
+  };
 
-  _handleChange(e: SyntheticEvent<HTMLInputElement>) {
+  _handleChange = (e: SyntheticEvent<HTMLInputElement>) => {
     const { validate } = this.state;
 
     if (validate) {
       const errorMessage = validate(e.currentTarget.value);
       e.currentTarget.setCustomValidity(errorMessage);
     }
-  }
+  };
 
-  hide() {
+  hide = () => {
     this.modal && this.modal.hide();
-  }
+  };
 
-  show(options: {
+  show = (options: {
     title: string,
     defaultValue?: string,
     submitName?: string,
@@ -122,7 +121,7 @@ class PromptModal extends React.PureComponent<Props, State> {
     onComplete?: string => void,
     onDeleteHint?: string => void,
     onCancel?: () => void,
-  }) {
+  }) => {
     const {
       title,
       defaultValue,
@@ -175,9 +174,9 @@ class PromptModal extends React.PureComponent<Props, State> {
       this._input.focus();
       selectText && this._input && this._input.select();
     }, 100);
-  }
+  };
 
-  _renderHintButton(hint: string) {
+  _renderHintButton = (hint: string) => {
     const classes = classnames(
       'btn btn--outlined btn--super-duper-compact',
       'margin-right-sm margin-top-sm inline-block',
@@ -198,9 +197,9 @@ class PromptModal extends React.PureComponent<Props, State> {
         </PromptButton>
       </div>
     );
-  }
+  };
 
-  render() {
+  render = () => {
     const {
       submitName,
       title,
@@ -264,7 +263,7 @@ class PromptModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  }
+  };
 }
 
 export default PromptModal;

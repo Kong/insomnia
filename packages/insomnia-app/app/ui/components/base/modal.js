@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+
 import classnames from 'classnames';
 import KeydownBinder from '../keydown-binder';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -10,7 +10,6 @@ import { pressedHotKey } from '../../../common/hotkeys-listener';
 // appear over top of an existing one.
 let globalZIndex = 1000;
 
-@autobind
 class Modal extends PureComponent {
   constructor(props) {
     super(props);
@@ -22,7 +21,7 @@ class Modal extends PureComponent {
     };
   }
 
-  async _handleKeyDown(e) {
+  _handleKeyDown = async e => {
     if (!this.state.open) {
       return;
     }
@@ -44,9 +43,9 @@ class Modal extends PureComponent {
       this.hide();
       this.props.onCancel && this.props.onCancel();
     }
-  }
+  };
 
-  _handleClick(e) {
+  _handleClick = e => {
     // Don't check for close keys if we don't want them
     if (this.props.noEscape) {
       return;
@@ -71,13 +70,13 @@ class Modal extends PureComponent {
       this.hide();
       this.props.onCancel && this.props.onCancel();
     }
-  }
+  };
 
-  _setModalRef(n) {
+  _setModalRef = n => {
     this._node = n;
-  }
+  };
 
-  show(options) {
+  show = options => {
     const { freshState } = this.props;
     const { forceRefreshCounter } = this.state;
 
@@ -95,27 +94,25 @@ class Modal extends PureComponent {
     this.onHide = options ? options.onHide : null;
 
     setTimeout(() => this._node && this._node.focus());
-  }
+  };
 
-  toggle() {
+  toggle = () => {
     if (this.state.open) {
       this.hide();
     } else {
       this.show();
     }
-  }
+  };
 
-  isOpen() {
-    return this.state.open;
-  }
+  isOpen = () => this.state.open;
 
-  hide() {
+  hide = () => {
     this.setState({ open: false });
     this.props.onHide && this.props.onHide();
     this.onHide && this.onHide();
-  }
+  };
 
-  render() {
+  render = () => {
     const { tall, wide, skinny, noEscape, className, children } = this.props;
     const { open, zIndex, forceRefreshCounter } = this.state;
 
@@ -156,7 +153,7 @@ class Modal extends PureComponent {
         </div>
       </KeydownBinder>
     );
-  }
+  };
 }
 
 Modal.propTypes = {
