@@ -133,6 +133,12 @@
         {
           "disabled": false,
           "name": "status",
+          "items": [
+            "available",
+            "pending",
+            "sold"
+          ],
+          "type": "selection",
           "value": "available"
         }
       ],

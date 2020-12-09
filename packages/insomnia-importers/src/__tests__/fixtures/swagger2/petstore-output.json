@@ -123,7 +123,13 @@
       "parameters": [
         {
           "name": "status",
+          "items": [
+            "available",
+            "pending",
+            "sold"
+          ],
           "disabled": false,
+          "type": "selection",
           "value": "available"
         }
       ],

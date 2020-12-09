@@ -506,7 +506,7 @@ function prepareBody(endpointSchema) {
 }
 
 /**
- * Converts openapi schema of parametes into insomnia one.
+ * Converts openapi schema of parameters into insomnia one.
  *
  * @param {Object[]} parameters - array of OpenAPI schemas of parameters
  * @returns {Object[]} array of insomnia parameters definitions
@@ -514,6 +514,15 @@ function prepareBody(endpointSchema) {
 function convertParameters(parameters) {
   return parameters.map(parameter => {
     const { required, name, schema } = parameter;
+    if (schema.items && schema.items.enum && schema.items.type && schema.items.type === 'string') {
+      return {
+        name,
+        disabled: required !== true,
+        value: `${generateParameterExample(schema)}`,
+        type: 'selection',
+        items: schema.items.enum,
+      };
+    }
     return {
       name,
       disabled: required !== true,

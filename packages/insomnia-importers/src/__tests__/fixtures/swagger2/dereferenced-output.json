@@ -124,6 +124,12 @@
         {
           "name": "status",
           "disabled": false,
+          "items": [
+            "available",
+            "pending",
+            "sold"
+          ],
+          "type": "selection",
           "value": "available"
         }
       ],

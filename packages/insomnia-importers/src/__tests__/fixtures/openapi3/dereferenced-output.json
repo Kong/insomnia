@@ -73,7 +73,13 @@
       "parameters": [
         {
           "disabled": false,
+          "items": [
+            "available",
+            "pending",
+            "sold"
+          ],
           "name": "status",
+          "type": "selection",
           "value": "available"
         }
       ],

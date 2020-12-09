@@ -440,6 +440,21 @@ function convertParameters(parameters) {
         type: 'file',
       };
     }
+    if (
+      type === 'array' &&
+      parameter.items &&
+      parameter.items.type &&
+      parameter.items.enum &&
+      parameter.items.type === 'string'
+    ) {
+      return {
+        name,
+        disabled: required !== true,
+        value: `${generateParameterExample(parameter)}`,
+        type: 'selection',
+        items: parameter.items.enum,
+      };
+    }
     return {
       name,
       disabled: required !== true,
