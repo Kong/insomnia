@@ -83,6 +83,7 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     case GrpcActionTypeEnum.start: {
       return _patch(state, requestId, {
         ...oldState,
+        ...CLEAR_GRPC_REQUEST_STATE,
         running: true,
       });
     }

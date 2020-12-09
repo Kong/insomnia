@@ -1,28 +1,59 @@
 // @flow
-
+import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
+import type { GrpcMethodType } from './method';
 import * as models from '../../models';
-import { getRenderedGrpcRequestAndContext, RENDER_PURPOSE_SEND } from '../../common/render';
-import type { RenderedGrpcRequest } from '../../common/render';
-import * as protoLoader from './proto-loader';
-import { getMethodType, GrpcMethodTypeEnum } from './method';
+import {
+  getRenderedGrpcRequestAndContext,
+  GrpcRenderOptionEnum,
+  RENDER_PURPOSE_SEND,
+} from '../../common/render';
+import { GrpcMethodTypeEnum } from './method';
+
+export type GrpcIpcRequestParams = {
+  requestId: string,
+  request: RenderedGrpcRequest,
+};
+
+export type GrpcIpcMessageParams = {
+  requestId: string,
+  body: RenderedGrpcRequestBody,
+};
 
 export const prepareGrpcRequest = async (
   requestId: string,
-  environmentId?: string,
-): Promise<RenderedGrpcRequest> => {
+  environmentId: string,
+  methodType: GrpcMethodType,
+): Promise<GrpcIpcRequestParams> => {
   const req = await models.grpcRequest.getById(requestId);
   const environment = await models.environment.getById(environmentId || 'n/a');
-
-  const method = await protoLoader.getSelectedMethod(req);
-  const methodType = getMethodType(method);
 
   const { request } = await getRenderedGrpcRequestAndContext(
     req,
     environment || null,
     RENDER_PURPOSE_SEND,
     {},
-    methodType === GrpcMethodTypeEnum.unary,
+    methodType === GrpcMethodTypeEnum.unary
+      ? GrpcRenderOptionEnum.all
+      : GrpcRenderOptionEnum.ignoreBody,
   );
 
   return { request };
+};
+
+export const prepareGrpcMessage = async (
+  requestId: string,
+  environmentId: string,
+): Promise<GrpcIpcMessageParams> => {
+  const req = await models.grpcRequest.getById(requestId);
+  const environment = await models.environment.getById(environmentId || 'n/a');
+
+  const { request } = await getRenderedGrpcRequestAndContext(
+    req,
+    environment || null,
+    RENDER_PURPOSE_SEND,
+    {},
+    GrpcRenderOptionEnum.onlyBody,
+  );
+
+  return { body: request.body };
 };

@@ -1,6 +1,7 @@
 // @flow
 
 export const GrpcRequestEventEnum = {
+  start: 'GRPC_START',
   sendUnary: 'GRPC_SEND_UNARY',
   startClientStream: 'GRPC_START_CLIENT_STREAM',
   startServerStream: 'GRPC_START_SERVER_STREAM',

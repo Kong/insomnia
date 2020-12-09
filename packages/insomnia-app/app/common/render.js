@@ -12,7 +12,7 @@ import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import orderedJSON from 'json-order';
 import * as templatingUtils from '../templating/utils';
-import type { GrpcRequest } from '../models/grpc-request';
+import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -23,6 +23,14 @@ export const RENDER_PURPOSE_SEND: RenderPurpose = 'send';
 export const RENDER_PURPOSE_GENERAL: RenderPurpose = 'general';
 export const RENDER_PURPOSE_NO_RENDER: RenderPurpose = 'no-render';
 
+export const GrpcRenderOptionEnum = {
+  all: 'all',
+  ignoreBody: 'ignore-body',
+  onlyBody: 'only-body',
+};
+
+export type GrpcRenderOption = $Values<typeof GrpcRenderOptionEnum>;
+
 /** Key/value pairs to be provided to the render context */
 export type ExtraRenderInfo = Array<{ name: string, value: any }>;
 
@@ -32,6 +40,7 @@ export type RenderedRequest = Request & {
 };
 
 export type RenderedGrpcRequest = GrpcRequest;
+export type RenderedGrpcRequestBody = GrpcRequestBody;
 
 export async function buildRenderContext(
   ancestors: Array<BaseModel> | null,
@@ -348,21 +357,12 @@ export async function getRenderContext(
   return buildRenderContext(ancestors, rootEnvironment, subEnvironment, baseContext);
 }
 
-const _shouldRenderGrpcBody = (request: GrpcRequest, renderBody?: boolean): boolean => {
-  // TODO: Add this to grpc request settings?
-  if (request.settingDisableRenderRequestBody) {
-    return false;
-  }
-
-  return !!renderBody;
-};
-
 export async function getRenderedGrpcRequestAndContext(
   request: GrpcRequest,
   environmentId: string | null,
   purpose?: RenderPurpose,
   extraInfo?: ExtraRenderInfo,
-  renderBody?: boolean,
+  grpcOption?: GrpcRenderOption,
 ): Promise<{ request: RenderedGrpcRequest, context: Object }> {
   const ancestors = await db.withAncestors(request, [
     models.request.type,
@@ -382,7 +382,21 @@ export async function getRenderedGrpcRequestAndContext(
   const description = request.description;
   request.description = '';
 
-  const ignorePathRegex = _shouldRenderGrpcBody(request, renderBody) ? null : /^body.*/;
+  let ignorePathRegex;
+  switch (grpcOption) {
+    case GrpcRenderOptionEnum.ignoreBody:
+      // ignore body* and render everything else
+      ignorePathRegex = /^body.*/;
+      break;
+    case GrpcRenderOptionEnum.onlyBody:
+      // ignore everything else but render body*
+      ignorePathRegex = /^(?!body).*/;
+      break;
+    case GrpcRenderOptionEnum.all:
+    default:
+      ignorePathRegex = null;
+      break;
+  }
 
   // Render all request properties
   const renderedRequest = await render(request, renderContext, ignorePathRegex);

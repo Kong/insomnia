@@ -7,12 +7,12 @@ import GrpcTabbedMessages from '../../viewers/grpc-tabbed-messages';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import type { Settings } from '../../../../models/settings';
 import type { GrpcRequest } from '../../../../models/grpc-request';
-import { GrpcRequestEventEnum } from '../../../../common/grpc-events';
 import GrpcSendButton from '../../buttons/grpc-send-button';
-import { grpcActions, useGrpc, useGrpcIpc } from '../../../context/grpc';
+import { useGrpc } from '../../../context/grpc';
 import useChangeHandlers from './use-change-handlers';
 import useSelectedMethod from './use-selected-method';
 import useProtoFileReload from './use-proto-file-reload';
+import useGrpcIpcSend from './use-grpc-ipc-send';
 
 type Props = {
   forceRefreshKey: string,
@@ -49,14 +49,12 @@ const GrpcRequestPane = ({
   // This is a common pattern in this codebase.
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
-  const sendIpc = useGrpcIpc(activeRequest._id);
-
-  const handleStream = React.useCallback(() => {
-    sendIpc(GrpcRequestEventEnum.sendMessage);
-    dispatch(grpcActions.requestMessage(activeRequest._id, activeRequest.body.text));
-  }, [activeRequest._id, activeRequest.body.text, dispatch, sendIpc]);
-
-  const handleCommit = React.useCallback(() => sendIpc(GrpcRequestEventEnum.commit), [sendIpc]);
+  const { handleStart, handleCancel, handleCommit, handleMessage } = useGrpcIpcSend(
+    activeRequest._id,
+    environmentId,
+    methodType,
+    dispatch,
+  );
 
   return (
     <Pane type="request">
@@ -76,6 +74,7 @@ const GrpcRequestPane = ({
           getAutocompleteConstants={() => []}
           getRenderContext={handleGetRenderContext}
         />
+
         <GrpcMethodDropdown
           disabled={running}
           methods={methods}
@@ -86,8 +85,9 @@ const GrpcRequestPane = ({
 
         <GrpcSendButton
           requestId={activeRequest._id}
-          environmentId={environmentId}
           methodType={methodType}
+          handleCancel={handleCancel}
+          handleStart={handleStart}
         />
       </PaneHeader>
       <PaneBody>
@@ -110,7 +110,7 @@ const GrpcRequestPane = ({
                 bodyText={activeRequest.body.text}
                 handleBodyChange={handleChange.body}
                 showActions={running && enableClientStream}
-                handleStream={handleStream}
+                handleStream={handleMessage}
                 handleCommit={handleCommit}
               />
             </TabPanel>

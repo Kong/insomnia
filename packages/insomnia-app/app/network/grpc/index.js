@@ -9,7 +9,7 @@ import type { ServiceError } from './service-error';
 import { GrpcStatusEnum } from './service-error';
 import type { Call } from './call-cache';
 import parseGrpcUrl from './parse-grpc-url';
-import type { PreparedGrpcRequest } from './prepare';
+import type { GrpcIpcRequestParams } from './prepare';
 
 const _createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | undefined => {
   const { url, enableTls } = parseGrpcUrl(req.url);
@@ -27,7 +27,7 @@ const _createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | u
 };
 
 export const sendUnary = async (
-  { request }: PreparedGrpcRequest,
+  { request }: GrpcIpcRequestParams,
   respond: ResponseCallbacks,
 ): Promise<void> => {
   const requestId = request._id;

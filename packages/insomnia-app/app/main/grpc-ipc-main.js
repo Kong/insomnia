@@ -4,9 +4,12 @@ import * as grpc from '../network/grpc';
 import { ipcMain } from 'electron';
 import { GrpcRequestEventEnum } from '../common/grpc-events';
 import { ResponseCallbacks } from '../network/grpc/response-callbacks';
-import type { PreparedGrpcRequest } from '../network/grpc/prepare';
+import type { GrpcIpcRequestParams } from '../ui/context/grpc/prepare';
 
 export function init() {
+  ipcMain.on(GrpcRequestEventEnum.start, (e, params: GrpcIpcRequestParams) =>
+    grpc.sendUnary(params, new ResponseCallbacks(e)),
+  );
   ipcMain.on(GrpcRequestEventEnum.sendUnary, (e, preparedRequest: PreparedGrpcRequest) =>
     grpc.sendUnary(preparedRequest, new ResponseCallbacks(e)),
   );
