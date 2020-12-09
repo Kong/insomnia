@@ -2,14 +2,17 @@
 
 import * as grpc from '@grpc/grpc-js';
 
-import * as models from '../../models';
 import * as protoLoader from './proto-loader';
 import callCache from './call-cache';
 import type { ServiceError } from './service-error';
 import { GrpcStatusEnum } from './service-error';
 import type { Call } from './call-cache';
 import parseGrpcUrl from './parse-grpc-url';
-import type { GrpcIpcRequestParams } from './prepare';
+import type { GrpcIpcMessageParams, GrpcIpcRequestParams } from './prepare';
+import { ResponseCallbacks } from './response-callbacks';
+import { getMethodType, GrpcMethodTypeEnum } from './method';
+import type { GrpcRequest } from '../../models/grpc-request';
+import type { GrpcMethodDefinition } from './method';
 
 const _createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | undefined => {
   const { url, enableTls } = parseGrpcUrl(req.url);
@@ -26,21 +29,109 @@ const _createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | u
   return new Client(url, credentials);
 };
 
-export const sendUnary = async (
+const _makeUnaryRequest = (
+  {
+    requestId,
+    method: { path, requestSerialize, responseDeserialize },
+    client,
+    respond,
+  }: RequestData,
+  bodyText: string,
+): Call | undefined => {
+  // Create callback
+  const callback = _createUnaryCallback(requestId, respond);
+
+  // Load initial message
+  const messageBody = _parseMessage(bodyText, requestId, respond);
+  if (!messageBody) {
+    return;
+  }
+
+  // Make call
+  return client.makeUnaryRequest(
+    path,
+    requestSerialize,
+    responseDeserialize,
+    messageBody,
+    callback,
+  );
+};
+
+const _makeClientStreamRequest = ({
+  requestId,
+  method: { path, requestSerialize, responseDeserialize },
+  client,
+  respond,
+}: RequestData): Call | undefined => {
+  // Create callback
+  const callback = _createUnaryCallback(requestId, respond);
+
+  // Make call
+  return client.makeClientStreamRequest(path, requestSerialize, responseDeserialize, callback);
+};
+
+const _makeServerStreamRequest = (
+  {
+    requestId,
+    method: { path, requestSerialize, responseDeserialize },
+    client,
+    respond,
+  }: RequestData,
+  bodyText: string,
+): Call | undefined => {
+  // Load initial message
+  const messageBody = _parseMessage(bodyText, requestId, respond);
+  if (!messageBody) {
+    return;
+  }
+
+  // Make call
+  const call = client.makeServerStreamRequest(
+    path,
+    requestSerialize,
+    responseDeserialize,
+    messageBody,
+  );
+
+  _setupServerStreamListeners(call, requestId, respond);
+
+  return call;
+};
+
+const _makeBidiStreamRequest = ({
+  requestId,
+  method: { path, requestSerialize, responseDeserialize },
+  client,
+  respond,
+}: RequestData): Call | undefined => {
+  // Make call
+  const call = client.makeBidiStreamRequest(path, requestSerialize, responseDeserialize);
+
+  _setupServerStreamListeners(call, requestId, respond);
+
+  return call;
+};
+
+type RequestData = {
+  requestId: string,
+  respond: ResponseCallbacks,
+  client: Object,
+  method: GrpcMethodDefinition,
+};
+
+export const start = async (
   { request }: GrpcIpcRequestParams,
   respond: ResponseCallbacks,
 ): Promise<void> => {
   const requestId = request._id;
-  const selectedMethod = await protoLoader.getSelectedMethod(request);
+  const method = await protoLoader.getSelectedMethod(request);
+  const methodType = getMethodType(method);
 
-  if (!selectedMethod) {
-    respond.sendError(requestId, new Error(`Method definition could not be found`));
-    return;
-  }
-
-  // Load initial message
-  const messageBody = _parseMessage(request, respond);
-  if (!messageBody) {
+  if (!method) {
+    respond.sendError(
+      requestId,
+      new Error(`The gRPC method ${request.protoMethodName} could not be found`),
+    );
     return;
   }
 
@@ -50,17 +141,30 @@ export const sendUnary = async (
     return;
   }
 
-  // Create callback
-  const callback = _createUnaryCallback(requestId, respond);
+  const requestParams: RequestData = { requestId, client, method, respond };
 
-  // Make call
-  const call = client.makeUnaryRequest(
-    selectedMethod.path,
-    selectedMethod.requestSerialize,
-    selectedMethod.responseDeserialize,
-    messageBody,
-    callback,
-  );
+  let call;
+  switch (methodType) {
+    case GrpcMethodTypeEnum.unary:
+      call = _makeUnaryRequest(requestParams, request.body.text || '');
+      break;
+
+    case GrpcMethodTypeEnum.server:
+      call = _makeServerStreamRequest(requestParams, request.body.text || '');
+      break;
+
+    case GrpcMethodTypeEnum.client:
+      call = _makeClientStreamRequest(requestParams);
+      break;
+
+    case GrpcMethodTypeEnum.bidi:
+      call = _makeBidiStreamRequest(requestParams);
+      break;
+  }
+
+  if (!call) {
+    return;
+  }
 
   _setupStatusListener(call, requestId, respond);
   respond.sendStart(requestId);
@@ -69,130 +173,11 @@ export const sendUnary = async (
   callCache.set(requestId, call);
 };
 
-export const startClientStreaming = async (
-  requestId: string,
+export const sendMessage = async (
+  { body, requestId }: GrpcIpcMessageParams,
   respond: ResponseCallbacks,
-): Promise<void> => {
-  // Load method
-  const req = await models.grpcRequest.getById(requestId);
-  const selectedMethod = await protoLoader.getSelectedMethod(req);
-
-  if (!selectedMethod) {
-    respond.sendError(requestId, new Error(`Method definition could not be found`));
-    return;
-  }
-
-  // Create client
-  const client = _createClient(req, respond);
-
-  if (!client) {
-    return;
-  }
-
-  // Create callback
-  const callback = _createUnaryCallback(requestId, respond);
-
-  // Make call
-  const call = client.makeClientStreamRequest(
-    selectedMethod.path,
-    selectedMethod.requestSerialize,
-    selectedMethod.responseDeserialize,
-    callback,
-  );
-
-  _setupStatusListener(call, requestId, respond);
-  respond.sendStart(requestId);
-
-  // Save call
-  callCache.set(requestId, call);
-};
-
-export const startServerStreaming = async (
-  requestId: string,
-  respond: ResponseCallbacks,
-): Promise<void> => {
-  const req = await models.grpcRequest.getById(requestId);
-  const selectedMethod = await protoLoader.getSelectedMethod(req);
-
-  if (!selectedMethod) {
-    respond.sendError(
-      requestId,
-      new Error(`The gRPC method ${req.protoMethodName} could not be found`),
-    );
-    return;
-  }
-
-  // Load initial message
-  const messageBody = _parseMessage(req, respond);
-  if (!messageBody) {
-    return;
-  }
-
-  // Create client
-  const client = _createClient(req, respond);
-  if (!client) {
-    return;
-  }
-
-  // Make call
-  const call = client.makeServerStreamRequest(
-    selectedMethod.path,
-    selectedMethod.requestSerialize,
-    selectedMethod.responseDeserialize,
-    messageBody,
-  );
-
-  _setupStatusListener(call, requestId, respond);
-  _setupServerStreamListeners(call, requestId, respond);
-
-  respond.sendStart(requestId);
-
-  // Save call
-  callCache.set(requestId, call);
-};
-
-export const startBidiStreaming = async (
-  requestId: string,
-  respond: ResponseCallbacks,
-): Promise<void> => {
-  const req = await models.grpcRequest.getById(requestId);
-  const selectedMethod = await protoLoader.getSelectedMethod(req);
-
-  if (!selectedMethod) {
-    respond.sendError(
-      requestId,
-      new Error(`The gRPC method ${req.protoMethodName} could not be found`),
-    );
-    return;
-  }
-
-  // Create client
-  const client = _createClient(req, respond);
-
-  if (!client) {
-    return;
-  }
-
-  // Make call
-  const call = client.makeBidiStreamRequest(
-    selectedMethod.path,
-    selectedMethod.requestSerialize,
-    selectedMethod.responseDeserialize,
-  );
-
-  _setupStatusListener(call, requestId, respond);
-  _setupServerStreamListeners(call, requestId, respond);
-
-  respond.sendStart(requestId);
-
-  // Save call
-  callCache.set(requestId, call);
-};
-
-export const sendMessage = async (requestId: string, respond: ResponseCallbacks) => {
-  const req = await models.grpcRequest.getById(requestId);
-  const messageBody = _parseMessage(req, respond);
-
+) => {
+  const messageBody = _parseMessage(body.text, requestId, respond);
   if (!messageBody) {
     return;
   }
@@ -252,13 +237,17 @@ const _streamWriteCallback: WriteCallback = err => {
   }
 };
 
-const _parseMessage = (request: Request, respond: ResponseCallbacks): Object | undefined => {
+const _parseMessage = (
+  bodyText: string,
+  requestId: string,
+  respond: ResponseCallbacks,
+): Object | undefined => {
   try {
-    return JSON.parse(request.body.text || '');
+    return JSON.parse(bodyText);
   } catch (e) {
     // TODO: How do we want to handle this case, where the message cannot be parsed?
     //  Currently an error will be shown, but the stream will not be cancelled.
-    respond.sendError(request._id, e);
+    respond.sendError(requestId, e);
     return undefined;
   }
 };

@@ -389,8 +389,8 @@ export async function getRenderedGrpcRequestAndContext(
       ignorePathRegex = /^body.*/;
       break;
     case GrpcRenderOptionEnum.onlyBody:
-      // ignore everything else but render body*
-      ignorePathRegex = /^(?!body).*/;
+      // ignore everything else except body*
+      ignorePathRegex = /^(?!body).+/;
       break;
     case GrpcRenderOptionEnum.all:
     default:

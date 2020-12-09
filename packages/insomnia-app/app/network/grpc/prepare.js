@@ -7,7 +7,7 @@ import {
   GrpcRenderOptionEnum,
   RENDER_PURPOSE_SEND,
 } from '../../common/render';
-import { GrpcMethodTypeEnum } from './method';
+import { canClientStream } from './method';
 
 export type GrpcIpcRequestParams = {
   request: RenderedGrpcRequest,
@@ -31,9 +31,7 @@ export const prepareGrpcRequest = async (
     environment || null,
     RENDER_PURPOSE_SEND,
     {},
-    methodType === GrpcMethodTypeEnum.unary
-      ? GrpcRenderOptionEnum.all
-      : GrpcRenderOptionEnum.ignoreBody,
+    canClientStream(methodType) ? GrpcRenderOptionEnum.ignoreBody : GrpcRenderOptionEnum.all,
   );
 
   return { request };
