@@ -1,6 +1,8 @@
 // @flow
 import * as db from '../common/database';
 import type { BaseModel } from './index';
+import type { Workspace } from './workspace';
+import type { RequestGroup } from './request-group';
 import { isRequest, isGrpcRequest } from './helpers/is-model';
 
 export const name = 'Stats';
@@ -82,13 +84,13 @@ export async function incrementExecutedRequests() {
   await incrementRequestStats({ executedRequests: 1 });
 }
 
-export async function incrementCreatedRequestsForDescendents(doc: BaseModel) {
+export async function incrementCreatedRequestsForDescendents(doc: Workspace | RequestGroup) {
   const docs = await db.withDescendants(doc);
   const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   await incrementRequestStats({ createdRequests: requests.length });
 }
 
-export async function incrementDeletedRequestsForDescendents(doc: BaseModel) {
+export async function incrementDeletedRequestsForDescendents(doc: Workspace | RequestGroup) {
   const docs = await db.withDescendants(doc);
   const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   await incrementRequestStats({ deletedRequests: requests.length });

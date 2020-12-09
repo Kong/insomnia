@@ -353,9 +353,9 @@ class App extends PureComponent {
       label: 'New Name',
       selectText: true,
       onComplete: async name => {
-        await models.requestGroup.duplicate(requestGroup, { name });
+        const newRequestGroup = await models.requestGroup.duplicate(requestGroup, { name });
 
-        models.stats.incrementCreatedRequestsForDescendents(requestGroup);
+        models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
       },
     });
   }
