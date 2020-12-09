@@ -2,18 +2,15 @@
 import React from 'react';
 import type { GrpcMethodType } from '../../../network/grpc/method';
 import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
-import { useGrpcRequestState } from '../../context/grpc';
 
 type Props = {
-  requestId: string,
+  running: boolean,
   methodType?: GrpcMethodType,
-  handleStart: () => void,
+  handleStart: () => Promise<void>,
   handleCancel: () => void,
 };
 
-const GrpcSendButton = ({ requestId, methodType, handleStart, handleCancel }: Props) => {
-  const { running } = useGrpcRequestState(requestId);
-
+const GrpcSendButton = ({ running, methodType, handleStart, handleCancel }: Props) => {
   if (running) {
     return (
       <button className="urlbar__send-btn" onClick={handleCancel}>

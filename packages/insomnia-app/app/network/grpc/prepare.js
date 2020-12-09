@@ -10,7 +10,6 @@ import {
 import { GrpcMethodTypeEnum } from './method';
 
 export type GrpcIpcRequestParams = {
-  requestId: string,
   request: RenderedGrpcRequest,
 };
 
@@ -55,5 +54,5 @@ export const prepareGrpcMessage = async (
     GrpcRenderOptionEnum.onlyBody,
   );
 
-  return { body: request.body };
+  return { body: request.body, requestId: req._id };
 };

@@ -12,7 +12,7 @@ import { useGrpc } from '../../../context/grpc';
 import useChangeHandlers from './use-change-handlers';
 import useSelectedMethod from './use-selected-method';
 import useProtoFileReload from './use-proto-file-reload';
-import useGrpcIpcSend from './use-grpc-ipc-send';
+import useActionHandlers from './use-action-handlers';
 
 type Props = {
   forceRefreshKey: string,
@@ -44,17 +44,11 @@ const GrpcRequestPane = ({
   const { method, methodType, methodTypeLabel, enableClientStream } = selection;
 
   const handleChange = useChangeHandlers(activeRequest, dispatch);
+  const handleAction = useActionHandlers(activeRequest._id, environmentId, methodType, dispatch);
 
   // Used to refresh input fields to their default value when switching between requests.
   // This is a common pattern in this codebase.
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
-
-  const { handleStart, handleCancel, handleCommit, handleMessage } = useGrpcIpcSend(
-    activeRequest._id,
-    environmentId,
-    methodType,
-    dispatch,
-  );
 
   return (
     <Pane type="request">
@@ -84,10 +78,10 @@ const GrpcRequestPane = ({
         />
 
         <GrpcSendButton
-          requestId={activeRequest._id}
+          running={running}
           methodType={methodType}
-          handleCancel={handleCancel}
-          handleStart={handleStart}
+          handleCancel={handleAction.cancel}
+          handleStart={handleAction.start}
         />
       </PaneHeader>
       <PaneBody>
@@ -110,8 +104,11 @@ const GrpcRequestPane = ({
                 bodyText={activeRequest.body.text}
                 handleBodyChange={handleChange.body}
                 showActions={running && enableClientStream}
-                handleStream={handleMessage}
-                handleCommit={handleCommit}
+                handleStream={handleAction.stream}
+                handleCommit={handleAction.commit}
+                handleRender={handleRender}
+                handleGetRenderContext={handleGetRenderContext}
+                isVariableUncovered={isVariableUncovered}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel">
