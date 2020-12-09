@@ -313,6 +313,10 @@ function handleImportResult(result: ImportResult, errorMessage: string): Array<W
     return [];
   }
 
+  const createdRequests =
+    summary[models.request.type].length + summary[models.grpcRequest.type].length;
+  models.stats.incrementRequestStats({ createdRequests: createdRequests });
+
   return summary[models.workspace.type] || [];
 }
 
