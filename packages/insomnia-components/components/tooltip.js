@@ -198,14 +198,14 @@ class Tooltip extends React.PureComponent<Props, State> {
     this._moveBubbleToBody();
   }
 
-  // componentDidUpdate() {
-  //   // If the bubble has not been moved to body, move it
-  //   //  this can happen if there is no message during the first mount
-  //   //  but a message is provided during on a subsequent render
-  //   if (!this.state.movedToBody) {
-  //     this._moveBubbleToBody();
-  //   }
-  // }
+  componentDidUpdate() {
+    // If the bubble has not been moved to body, move it
+    //  this can happen if there is no message during the first mount
+    //  but a message is provided during on a subsequent render
+    if (!this.state.movedToBody) {
+      this._moveBubbleToBody();
+    }
+  }
 
   componentWillUnmount() {
     // Remove the element from the body
