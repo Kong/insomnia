@@ -47,7 +47,7 @@ describe('<Tooltip />', () => {
     expectNoTooltip(queryByRole);
   });
 
-  it('should add tooltip is message is empty first then updates', async () => {
+  it('should unmount successfully if message is empty in the first render then and non-empty after update', async () => {
     const childText = 'some child';
     const initialMessage = '';
     const newMessage = 'message';
