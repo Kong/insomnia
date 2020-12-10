@@ -4,13 +4,18 @@ import Tooltip from '../tooltip';
 
 const pause = time => new Promise(resolve => setTimeout(resolve, time));
 
+const expectNoTooltip = queryByRole => {
+  expect(queryByRole('tooltip', { hidden: true })).toBeNull();
+  expect(queryByRole('tooltip')).toBeNull();
+};
+
 describe('<Tooltip />', () => {
   it('should show and hide the tooltip correctly', async () => {
     const childText = 'some child';
     const delay = 200;
     const message = 'message';
 
-    const { getByRole, getByText, queryAllByRole, unmount } = render(
+    const { getByRole, getByText, queryByRole, unmount } = render(
       <Tooltip message={message} delay={delay}>
         {childText}
       </Tooltip>,
@@ -30,18 +35,16 @@ describe('<Tooltip />', () => {
 
     unmount();
 
-    expect(queryAllByRole('tooltip', { hidden: true })).toHaveLength(0);
-    expect(queryAllByRole('tooltip')).toHaveLength(0);
+    expectNoTooltip(queryByRole);
   });
 
-  it('should not render tooltip is no message exists', () => {
+  it('should not render tooltip if no message exists', () => {
     const childText = 'some child';
     const message = '';
 
-    const { queryAllByRole } = render(<Tooltip message={message}>{childText}</Tooltip>);
+    const { queryByRole } = render(<Tooltip message={message}>{childText}</Tooltip>);
 
-    expect(queryAllByRole('tooltip', { hidden: true })).toHaveLength(0);
-    expect(queryAllByRole('tooltip')).toHaveLength(0);
+    expectNoTooltip(queryByRole);
   });
 
   it('should add tooltip is message is empty first then updates', async () => {
@@ -49,12 +52,11 @@ describe('<Tooltip />', () => {
     const initialMessage = '';
     const newMessage = 'message';
 
-    const { queryAllByRole, getByRole, rerender, unmount } = render(
+    const { queryByRole, getByRole, rerender, unmount } = render(
       <Tooltip message={initialMessage}>{childText}</Tooltip>,
     );
 
-    expect(queryAllByRole('tooltip', { hidden: true })).toHaveLength(0);
-    expect(queryAllByRole('tooltip')).toHaveLength(0);
+    expectNoTooltip(queryByRole);
 
     rerender(<Tooltip message={newMessage}>{childText}</Tooltip>);
 
@@ -62,7 +64,6 @@ describe('<Tooltip />', () => {
 
     unmount();
 
-    expect(queryAllByRole('tooltip', { hidden: true })).toHaveLength(0);
-    expect(queryAllByRole('tooltip')).toHaveLength(0);
+    expectNoTooltip(queryByRole);
   });
 });
