@@ -189,7 +189,7 @@ class Tooltip extends React.PureComponent<Props, State> {
     if (this._bubble) {
       const el = ReactDOM.findDOMNode(this._bubble);
       el && this._getContainer().removeChild(el);
-      this.setState({ movedToBody: true });
+      this.setState({ movedToBody: false });
     }
   }
 
