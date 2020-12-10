@@ -1,8 +1,10 @@
 // @flow
+import electron from 'electron';
 import classnames from 'classnames';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
+import { readFileSync } from 'fs';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { parse, print, typeFromAST } from 'graphql';
@@ -313,6 +315,52 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
+  async _loadAndSetLocalSchema() {
+    const newState = {
+      schema: this.state.schema,
+      schemaFetchError: (null: any),
+      schemaLastFetchTime: this.state.schemaLastFetchTime,
+      schemaIsFetching: false,
+    };
+
+    const options = {
+      title: 'Import GraphQL introspection schema',
+      buttonLabel: 'Import',
+      properties: ['openFile'],
+      filters: [
+        {
+          name: 'GraphQL file',
+          extensions: ['', 'json'],
+        },
+      ],
+    };
+
+    const { canceled, filePaths: paths } = await electron.remote.dialog.showOpenDialog(options);
+
+    if (canceled) {
+      return;
+    }
+
+    try {
+      const path = paths[0]; // showOpenDialog is single select
+      const file = readFileSync(path);
+
+      const { data } = JSON.parse(file.toString());
+      newState.schema = buildClientSchema(data);
+      newState.schemaLastFetchTime = Date.now();
+    } catch (err) {
+      console.log('[graphql] ERROR: Failed to fetch schema', err);
+      newState.schemaFetchError = {
+        message: `Failed to fetch schema: ${err.message}`,
+        response: null,
+      };
+    }
+
+    if (this._isMounted) {
+      this.setState(newState);
+    }
+  }
+
   _buildVariableTypes(schema: Object | null): { [string]: Object } | null {
     if (!schema) {
       return null;
@@ -351,6 +399,12 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     // again after a refresh
     this.setState({ hideSchemaFetchErrors: false }, async () => {
       await this._fetchAndSetSchema(this.props.request);
+    });
+  }
+
+  _handleSetLocalSchema() {
+    this.setState({ hideSchemaFetchErrors: false }, async () => {
+      await this._loadAndSetLocalSchema();
     });
   }
 
@@ -587,6 +641,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             />{' '}
             Automatic Fetch
             <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
+          </DropdownItem>
+          <DropdownItem onClick={this._handleSetLocalSchema}>
+            <i className="fa fa-file-code-o" /> Load Schema from file
+            <HelpTooltip>
+              Import the schema from a JSON file. Run{' '}
+              <pre>apollo-codegen introspect-schema schema.graphql --output schema.json</pre> to
+              convert the GraphQL DSL to JSON.
+            </HelpTooltip>
           </DropdownItem>
         </Dropdown>
         <div className="graphql-editor__query">
