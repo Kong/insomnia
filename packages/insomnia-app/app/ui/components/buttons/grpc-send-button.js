@@ -28,7 +28,11 @@ const GrpcSendButton = ({ running, methodType, handleStart, handleCancel }: Prop
   }
 
   if (!methodType) {
-    return <Button {...buttonProps}>Send</Button>;
+    return (
+      <Button {...buttonProps} disabled>
+        Send
+      </Button>
+    );
   }
 
   return (
