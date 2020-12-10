@@ -3,6 +3,7 @@
 import * as db from '../../common/database';
 import * as models from '../index';
 import type { Workspace } from '../workspace';
+import type { GrpcRequest } from '../grpc-request';
 
 export const queryAllWorkspaceUrls = async (
   workspace: Workspace,
@@ -18,7 +19,7 @@ export const queryAllWorkspaceUrls = async (
         d._id !== reqId && // Not current request
         (d.url || ''), // Only ones with non-empty URLs
     )
-    .map((r: any) => (r.url || '').trim());
+    .map((r: Request | GrpcRequest) => (r.url || '').trim());
 
   return Array.from(new Set(urls));
 };

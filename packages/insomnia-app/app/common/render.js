@@ -12,7 +12,7 @@ import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import orderedJSON from 'json-order';
 import * as templatingUtils from '../templating/utils';
-import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
+import type { GrpcRequest } from '../models/grpc-request';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -40,7 +40,6 @@ export type RenderedRequest = Request & {
 };
 
 export type RenderedGrpcRequest = GrpcRequest;
-export type RenderedGrpcRequestBody = GrpcRequestBody;
 
 export async function buildRenderContext(
   ancestors: Array<BaseModel> | null,
@@ -414,10 +413,6 @@ export async function getRenderedGrpcRequestAndContext(
   };
 }
 
-export function getRenderedGrpcRequestMessage() {
-  throw new Error('Not done yet');
-}
-
 export async function getRenderedRequestAndContext(
   request: Request,
   environmentId: string | null,
@@ -425,7 +420,7 @@ export async function getRenderedRequestAndContext(
   extraInfo?: ExtraRenderInfo,
 ): Promise<{ request: RenderedRequest, context: Object }> {
   const ancestors = await db.withAncestors(request, [
-    models.request.type,
+    models.grpcRequest.type,
     models.requestGroup.type,
     models.workspace.type,
   ]);

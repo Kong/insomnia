@@ -1,5 +1,5 @@
 // @flow
-import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
+import type { RenderedGrpcRequest } from '../../common/render';
 import type { GrpcMethodType } from './method';
 import * as models from '../../models';
 import {
@@ -8,6 +8,7 @@ import {
   RENDER_PURPOSE_SEND,
 } from '../../common/render';
 import { canClientStream } from './method';
+import type { GrpcRequestBody } from '../../models/grpc-request';
 
 export type GrpcIpcRequestParams = {
   request: RenderedGrpcRequest,
@@ -15,7 +16,7 @@ export type GrpcIpcRequestParams = {
 
 export type GrpcIpcMessageParams = {
   requestId: string,
-  body: RenderedGrpcRequestBody,
+  body: GrpcRequestBody,
 };
 
 export const prepareGrpcRequest = async (
