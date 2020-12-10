@@ -24,12 +24,16 @@ describe('<Tooltip />', () => {
     expect(getByRole('tooltip', { hidden: true })).toBeTruthy();
 
     fireEvent.mouseEnter(getByText(childText));
+
+    // Should open after the configured delay, wait a sufficient amount
     await pause(delay * 2);
 
     expect(getByRole('tooltip')).toBeTruthy();
 
     fireEvent.mouseLeave(getByText(childText));
-    await pause(delay * 2);
+
+    // Should close after 100ms default, wait a sufficient amount
+    await pause(200);
 
     expect(getByRole('tooltip', { hidden: true })).toBeTruthy();
 
