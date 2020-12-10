@@ -345,8 +345,12 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       const path = paths[0]; // showOpenDialog is single select
       const file = readFileSync(path);
 
-      const { data } = JSON.parse(file.toString());
-      newState.schema = buildClientSchema(data);
+      const content = JSON.parse(file.toString());
+      if (!content.data) {
+        throw new Error('JSON file should have a data field with the introspection results');
+      }
+
+      newState.schema = buildClientSchema(content.data);
       newState.schemaLastFetchTime = Date.now();
     } catch (err) {
       console.log('[graphql] ERROR: Failed to fetch schema', err);
