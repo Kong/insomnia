@@ -1,5 +1,5 @@
 import * as db from './database';
-import { types as modelTypes } from '../models';
+import { types as modelTypes, stats } from '../models';
 import { send } from '../network/network';
 import { getBodyBuffer } from '../models/response';
 
@@ -24,6 +24,7 @@ export async function getSendRequestCallbackMemDb(environmentId, memDB) {
 
 export function getSendRequestCallback(environmentId) {
   return async function sendRequest(requestId) {
+    stats.incrementExecutedRequests();
     return sendAndTransform(requestId, environmentId);
   };
 }

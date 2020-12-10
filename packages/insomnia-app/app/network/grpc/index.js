@@ -2,6 +2,7 @@
 
 import * as grpc from '@grpc/grpc-js';
 
+import * as models from '../../models';
 import * as protoLoader from './proto-loader';
 import callCache from './call-cache';
 import type { ServiceError } from './service-error';
@@ -165,6 +166,9 @@ export const start = async (
   if (!call) {
     return;
   }
+
+  // Update request stats
+  models.stats.incrementExecutedRequests();
 
   _setupStatusListener(call, requestId, respond);
   respond.sendStart(requestId);

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Pane, PaneBody, PaneHeader } from '../pane';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import GrpcMethodDropdown from '../../dropdowns/grpc-method-dropdown';
+import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown';
 import GrpcTabbedMessages from '../../viewers/grpc-tabbed-messages';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import type { Settings } from '../../../../models/settings';
@@ -12,6 +12,7 @@ import { useGrpc } from '../../../context/grpc';
 import useChangeHandlers from './use-change-handlers';
 import useSelectedMethod from './use-selected-method';
 import useProtoFileReload from './use-proto-file-reload';
+import styled from 'styled-components';
 import useActionHandlers from './use-action-handlers';
 
 type Props = {
@@ -25,6 +26,24 @@ type Props = {
   isVariableUncovered: boolean,
   handleGetRenderContext: Function,
 };
+
+const StyledUrlBar = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: stretch;
+`;
+
+const StyledUrlEditor = styled.div`
+  flex: 3 0 4em;
+  max-width: 11em;
+`;
+
+const StyledDropdown = styled.div`
+  flex: 1 0 auto;
+`;
 
 const GrpcRequestPane = ({
   activeRequest,
@@ -52,37 +71,41 @@ const GrpcRequestPane = ({
 
   return (
     <Pane type="request">
-      <PaneHeader className="grpc-urlbar">
-        <div className="method-grpc pad">gRPC</div>
-        <OneLineEditor
-          className="urlbar__url-editor"
-          key={uniquenessKey}
-          type="text"
-          forceEditor
-          defaultValue={activeRequest.url}
-          placeholder="grpcb.in:9000"
-          onChange={handleChange.url}
-          render={handleRender}
-          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-          isVariableUncovered={isVariableUncovered}
-          getAutocompleteConstants={() => []}
-          getRenderContext={handleGetRenderContext}
-        />
+      <PaneHeader>
+        <StyledUrlBar>
+          <div className="method-grpc pad">gRPC</div>
+          <StyledUrlEditor title={activeRequest.url}>
+            <OneLineEditor
+              key={uniquenessKey}
+              type="text"
+              forceEditor
+              defaultValue={activeRequest.url}
+              placeholder="grpcb.in:9000"
+              onChange={handleChange.url}
+              render={handleRender}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
+              getAutocompleteConstants={() => []}
+              getRenderContext={handleGetRenderContext}
+            />
+          </StyledUrlEditor>
+          <StyledDropdown>
+            <GrpcMethodDropdown
+              disabled={running}
+              methods={methods}
+              selectedMethod={method}
+              handleChange={handleChange.method}
+              handleChangeProtoFile={handleChange.protoFile}
+            />
+          </StyledDropdown>
 
-        <GrpcMethodDropdown
-          disabled={running}
-          methods={methods}
-          selectedMethod={method}
-          handleChange={handleChange.method}
-          handleChangeProtoFile={handleChange.protoFile}
-        />
-
-        <GrpcSendButton
-          running={running}
-          methodType={methodType}
-          handleCancel={handleAction.cancel}
-          handleStart={handleAction.start}
-        />
+          <GrpcSendButton
+            running={running}
+            methodType={methodType}
+            handleCancel={handleAction.cancel}
+            handleStart={handleAction.start}
+          />
+        </StyledUrlBar>
       </PaneHeader>
       <PaneBody>
         {methodType && (

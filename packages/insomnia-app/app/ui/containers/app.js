@@ -210,6 +210,7 @@ class App extends PureComponent {
           const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
           const request = await models.request.create({ parentId, name: 'New Request' });
           await this._handleSetActiveRequest(request._id);
+          models.stats.incrementCreatedRequests();
         },
       ],
       [
@@ -237,6 +238,7 @@ class App extends PureComponent {
                 return;
               }
               await requestOperations.remove(activeRequest);
+              models.stats.incrementDeletedRequests();
             },
           });
         },
@@ -339,6 +341,7 @@ class App extends PureComponent {
       parentId,
       onComplete: requestId => {
         this._handleSetActiveRequest(requestId);
+        models.stats.incrementCreatedRequests();
       },
     });
   }
@@ -381,7 +384,9 @@ class App extends PureComponent {
       label: 'New Name',
       selectText: true,
       onComplete: async name => {
-        await models.requestGroup.duplicate(requestGroup, { name });
+        const newRequestGroup = await models.requestGroup.duplicate(requestGroup, { name });
+
+        models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
       },
     });
   }
@@ -404,6 +409,7 @@ class App extends PureComponent {
       onComplete: async name => {
         const newRequest = await requestOperations.duplicate(request, { name });
         await this._handleSetActiveRequest(newRequest._id);
+        models.stats.incrementCreatedRequests();
       },
     });
   }
@@ -435,6 +441,9 @@ class App extends PureComponent {
         if (!isYes) {
           return;
         }
+
+        await models.stats.incrementDeletedRequestsForDescendents(workspace);
+
         await models.workspace.remove(workspace);
       },
     });
@@ -453,6 +462,8 @@ class App extends PureComponent {
         const newWorkspace = await db.duplicate(workspace, { name });
         await this.props.handleSetActiveWorkspace(newWorkspace._id);
         callback();
+
+        models.stats.incrementCreatedRequestsForDescendents(newWorkspace);
       },
     });
   }
@@ -681,12 +692,8 @@ class App extends PureComponent {
       return;
     }
 
-    // NOTE: Since request is by far the most popular event, we will throttle
-    // it so that we only track it if the request has changed since the last one
-    const key = request._id;
-    if (this._sendRequestTrackingKey !== key) {
-      this._sendRequestTrackingKey = key;
-    }
+    // Update request stats
+    models.stats.incrementExecutedRequests();
 
     // Start loading
     handleStartLoading(requestId);
@@ -769,12 +776,8 @@ class App extends PureComponent {
       return;
     }
 
-    // NOTE: Since request is by far the most popular event, we will throttle
-    // it so that we only track it if the request has changed since the last noe
-    const key = `${request._id}::${request.modified}`;
-    if (this._sendRequestTrackingKey !== key) {
-      this._sendRequestTrackingKey = key;
-    }
+    // Update request stats
+    models.stats.incrementExecutedRequests();
 
     handleStartLoading(requestId);
 

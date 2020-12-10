@@ -1,6 +1,7 @@
 // @flow
 import React from 'react';
 import type { GrpcMethodType } from '../../../network/grpc/method';
+import { Button } from 'insomnia-components';
 import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
 
 type Props = {
@@ -10,27 +11,30 @@ type Props = {
   handleCancel: () => void,
 };
 
+const buttonProps = {
+  className: 'tall',
+  size: 'medium',
+  variant: 'text',
+  radius: '0',
+};
+
 const GrpcSendButton = ({ running, methodType, handleStart, handleCancel }: Props) => {
   if (running) {
     return (
-      <button className="urlbar__send-btn" onClick={handleCancel}>
+      <Button {...buttonProps} onClick={handleCancel}>
         Cancel
-      </button>
+      </Button>
     );
   }
 
   if (!methodType) {
-    return (
-      <button className="urlbar__send-btn" disabled>
-        Send
-      </button>
-    );
+    return <Button {...buttonProps}>Send</Button>;
   }
 
   return (
-    <button className="urlbar__send-btn" onClick={handleStart}>
+    <Button {...buttonProps} onClick={handleStart}>
       {methodType === GrpcMethodTypeEnum.unary ? 'Send' : 'Start'}
-    </button>
+    </Button>
   );
 };
 
