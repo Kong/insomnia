@@ -42,9 +42,10 @@ describe('<Tooltip />', () => {
     const childText = 'some child';
     const message = '';
 
-    const { queryByRole } = render(<Tooltip message={message}>{childText}</Tooltip>);
+    const { queryByRole, getByText } = render(<Tooltip message={message}>{childText}</Tooltip>);
 
     expectNoTooltip(queryByRole);
+    expect(getByText(childText)).toBeTruthy();
   });
 
   it('should unmount successfully if message is empty in the first render then and non-empty after update', async () => {
@@ -52,18 +53,21 @@ describe('<Tooltip />', () => {
     const initialMessage = '';
     const newMessage = 'message';
 
-    const { queryByRole, getByRole, rerender, unmount } = render(
+    const { queryByRole, getByRole, getByText, queryByText, rerender, unmount } = render(
       <Tooltip message={initialMessage}>{childText}</Tooltip>,
     );
 
     expectNoTooltip(queryByRole);
+    expect(getByText(childText)).toBeTruthy();
 
     rerender(<Tooltip message={newMessage}>{childText}</Tooltip>);
 
     expect(getByRole('tooltip', { hidden: true })).toBeTruthy();
+    expect(getByText(childText)).toBeTruthy();
 
     unmount();
 
     expectNoTooltip(queryByRole);
+    expect(queryByText(childText)).toBeFalsy();
   });
 });
