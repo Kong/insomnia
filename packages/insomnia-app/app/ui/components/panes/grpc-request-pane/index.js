@@ -14,11 +14,13 @@ import useSelectedMethod from './use-selected-method';
 import useProtoFileReload from './use-proto-file-reload';
 import styled from 'styled-components';
 import useActionHandlers from './use-action-handlers';
+import useExistingGrpcUrls from './use-existing-grpc-urls';
 
 type Props = {
   forceRefreshKey: string,
   activeRequest: GrpcRequest,
   environmentId: string,
+  workspaceId: string,
   settings: Settings,
 
   // For variables
@@ -48,6 +50,7 @@ const StyledDropdown = styled.div`
 const GrpcRequestPane = ({
   activeRequest,
   environmentId,
+  workspaceId,
   forceRefreshKey,
   settings,
   handleRender,
@@ -64,6 +67,7 @@ const GrpcRequestPane = ({
 
   const handleChange = useChangeHandlers(activeRequest, dispatch);
   const handleAction = useActionHandlers(activeRequest._id, environmentId, methodType, dispatch);
+  const getExistingGrpcUrls = useExistingGrpcUrls(workspaceId, activeRequest._id);
 
   // Used to refresh input fields to their default value when switching between requests.
   // This is a common pattern in this codebase.
@@ -85,7 +89,7 @@ const GrpcRequestPane = ({
               render={handleRender}
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
-              getAutocompleteConstants={() => []}
+              getAutocompleteConstants={getExistingGrpcUrls}
               getRenderContext={handleGetRenderContext}
             />
           </StyledUrlEditor>
