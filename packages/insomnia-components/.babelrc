@@ -3,7 +3,9 @@
     "babel-plugin-styled-components",
     "babel-plugin-inline-react-svg",
     ["@babel/plugin-proposal-decorators", {"legacy": true}],
-    "@babel/plugin-proposal-class-properties"
+    "@babel/plugin-proposal-class-properties",
+    "@babel/plugin-proposal-optional-chaining",
+    "@babel/plugin-transform-runtime"
   ],
   "presets": [
     "@babel/preset-flow",
@@ -11,7 +13,9 @@
     [
       "@babel/preset-env",
       {
-        "targets": "> 0.25%, not dead"
+        "targets": [
+          "> 0.25%, not dead"
+        ]
       }
     ]
   ]
