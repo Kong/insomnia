@@ -29,7 +29,7 @@ export const prepareGrpcRequest = async (
 
   const { request } = await getRenderedGrpcRequestAndContext(
     req,
-    environment || null,
+    environment,
     RENDER_PURPOSE_SEND,
     {},
     canClientStream(methodType) ? GrpcRenderOptionEnum.ignoreBody : GrpcRenderOptionEnum.all,
@@ -47,7 +47,7 @@ export const prepareGrpcMessage = async (
 
   const { request } = await getRenderedGrpcRequestAndContext(
     req,
-    environment || null,
+    environment,
     RENDER_PURPOSE_SEND,
     {},
     GrpcRenderOptionEnum.onlyBody,

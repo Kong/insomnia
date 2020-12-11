@@ -1,6 +1,7 @@
 import * as renderUtils from '../render';
 import * as models from '../../models';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import { GrpcRenderOptionEnum } from '../render';
 
 jest.mock('electron');
 
@@ -793,6 +794,125 @@ describe('getRenderedRequest()', () => {
           },
         ],
         description: 'hi {{ some error }}',
+      }),
+    );
+  });
+});
+
+describe('getRenderedGrpcRequestAndContext()', () => {
+  let w1, env;
+  beforeEach(async () => {
+    await globalBeforeEach();
+    w1 = await models.workspace.create();
+    env = await models.environment.create({
+      parentId: w1._id,
+      data: {
+        foo: 'bar',
+        host: 'testb.in:9000',
+      },
+    });
+  });
+
+  it('renders all grpc request properties', async () => {
+    const grpcRequest = await models.grpcRequest.create({
+      parentId: w1._id,
+      name: 'hi {{ foo }}',
+      url: '{{ host }}',
+      description: 'hi {{ foo }}',
+      body: {
+        text: '{ "prop": "{{ foo }}" }',
+      },
+    });
+    const { request } = await renderUtils.getRenderedGrpcRequestAndContext(grpcRequest, env._id);
+    expect(request).toEqual(
+      expect.objectContaining({
+        name: 'hi bar',
+        url: 'testb.in:9000',
+        description: 'hi bar',
+        body: {
+          text: '{ "prop": "bar" }',
+        },
+      }),
+    );
+  });
+
+  it('renders but ignores the body for a grpc request ', async () => {
+    const grpcRequest = await models.grpcRequest.create({
+      parentId: w1._id,
+      name: 'hi {{ foo }}',
+      url: '{{ host }}',
+      description: 'hi {{ foo }}',
+      body: {
+        text: '{ "prop": "{{ foo }}" }',
+      },
+    });
+    const { request } = await renderUtils.getRenderedGrpcRequestAndContext(
+      grpcRequest,
+      env._id,
+      null,
+      null,
+      GrpcRenderOptionEnum.ignoreBody,
+    );
+    expect(request).toEqual(
+      expect.objectContaining({
+        name: 'hi bar',
+        url: 'testb.in:9000',
+        description: 'hi bar',
+        body: {
+          text: '{ "prop": "{{ foo }}" }',
+        },
+      }),
+    );
+  });
+
+  it('renders only the body for a grpc request ', async () => {
+    const grpcRequest = await models.grpcRequest.create({
+      parentId: w1._id,
+      name: 'hi {{ foo }}',
+      url: '{{ host }}',
+      description: 'hi {{ foo }}',
+      body: {
+        text: '{ "prop": "{{ foo }}" }',
+      },
+    });
+    const { request } = await renderUtils.getRenderedGrpcRequestAndContext(
+      grpcRequest,
+      env._id,
+      null,
+      null,
+      GrpcRenderOptionEnum.onlyBody,
+    );
+    expect(request).toEqual(
+      expect.objectContaining({
+        name: 'hi {{ foo }}',
+        url: '{{ host }}',
+        description: 'hi {{ foo }}',
+        body: {
+          text: '{ "prop": "bar" }',
+        },
+      }),
+    );
+  });
+
+  it('should still render with bad description', async () => {
+    const grpcRequest = await models.grpcRequest.create({
+      parentId: w1._id,
+      name: 'hi {{ foo }}',
+      url: '{{ host }}',
+      description: 'hi {{ some error }}',
+      body: {
+        text: '{ "prop": "{{ foo }}" }',
+      },
+    });
+    const { request } = await renderUtils.getRenderedGrpcRequestAndContext(grpcRequest, env._id);
+    expect(request).toEqual(
+      expect.objectContaining({
+        name: 'hi bar',
+        url: 'testb.in:9000',
+        description: 'hi {{ some error }}',
+        body: {
+          text: '{ "prop": "bar" }',
+        },
       }),
     );
   });

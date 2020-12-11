@@ -377,9 +377,12 @@ export async function getRenderedGrpcRequestAndContext(
     extraInfo || null,
   );
 
-  // Render description separately because it's lower priority
   const description = request.description;
-  request.description = '';
+
+  if (grpcOption !== GrpcRenderOptionEnum.onlyBody) {
+    // Render description separately because it's lower priority
+    request.description = '';
+  }
 
   let ignorePathRegex;
   switch (grpcOption) {
@@ -400,7 +403,9 @@ export async function getRenderedGrpcRequestAndContext(
   // Render all request properties
   const renderedRequest = await render(request, renderContext, ignorePathRegex);
 
-  renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
+  if (grpcOption !== GrpcRenderOptionEnum.onlyBody) {
+    renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
+  }
 
   // Remove disabled headers
   if (renderedRequest.headers) {
