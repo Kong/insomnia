@@ -1,3 +1,4 @@
+// @flow
 import * as networkUtils from '../network';
 import fs from 'fs';
 import { join as pathJoin, resolve as pathResolve } from 'path';
@@ -16,6 +17,8 @@ import {
 import { filterHeaders } from '../../common/misc';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { DEFAULT_BOUNDARY } from '../multipart';
+import { Settings } from '../../models/settings';
+import { Workspace } from '../../models/workspace';
 
 const CONTEXT = {};
 
@@ -659,6 +662,106 @@ describe('actuallySend()', () => {
 
     expect(networkUtils.hasCancelFunctionForId(request1._id)).toBe(false);
     expect(networkUtils.hasCancelFunctionForId(request2._id)).toBe(false);
+  });
+
+  describe('with a proxy defined', () => {
+    const HTTP_PROXY_URL = 'http://localhost:3000';
+    const HTTPS_PROXY_URL = 'https://localhost:4000';
+
+    let workspace: Workspace;
+    let settings: Settings;
+    let baseRequest: Request;
+
+    beforeEach(async () => {
+      workspace = await models.workspace.create();
+      settings = await models.settings.create({
+        proxyEnabled: true,
+        httpProxy: HTTP_PROXY_URL,
+        httpsProxy: HTTPS_PROXY_URL,
+      });
+
+      baseRequest = Object.assign(models.request.init(), {
+        _id: 'req_123',
+        parentId: workspace._id,
+      });
+    });
+
+    it('fills curl proxy options', async () => {
+      const request = { ...baseRequest };
+
+      const responseBody = await send(request);
+      expect(responseBody.options).toMatchObject({
+        PROXY: HTTP_PROXY_URL,
+        PROXYAUTH: 'Any',
+      });
+    });
+
+    it('fills curl proxy options with httpsProxy when the request is HTTPS', async () => {
+      const request = {
+        ...baseRequest,
+        url: 'https://example.com',
+      };
+
+      const responseBody = await send(request);
+      expect(responseBody.options).toMatchObject({
+        PROXY: HTTPS_PROXY_URL,
+        PROXYAUTH: 'Any',
+      });
+    });
+
+    it('fills curl proxy username/password options when defined', async () => {
+      settings = await models.settings.create({
+        proxyEnabled: true,
+        httpProxy: HTTP_PROXY_URL,
+        httpsProxy: HTTPS_PROXY_URL,
+        httpProxyUser: 'myuser',
+        httpProxyPassword: 'apassword',
+      });
+
+      const request = {
+        ...baseRequest,
+        url: 'https://example.com',
+      };
+
+      const responseBody = await send(request);
+      expect(responseBody.options).toMatchObject({
+        PROXY: HTTPS_PROXY_URL,
+        PROXYAUTH: 'Any',
+        PROXYUSERNAME: 'myuser',
+        PROXYPASSWORD: 'apassword',
+      });
+    });
+
+    it('does not fill curl proxy username/password options when if empty', async () => {
+      settings = await models.settings.create({
+        proxyEnabled: true,
+        httpProxy: HTTP_PROXY_URL,
+        httpsProxy: HTTPS_PROXY_URL,
+        httpProxyUser: '',
+        httpProxyPassword: '',
+      });
+
+      const request = {
+        ...baseRequest,
+        url: 'https://example.com',
+      };
+
+      const responseBody = await send(request);
+      expect(responseBody.options.PROXYUSERNAME).toBeUndefined();
+      expect(responseBody.options.PROXYPASSWORD).toBeUndefined();
+    });
+
+    async function send(request: Request) {
+      const renderedRequest = await getRenderedRequest(request);
+      const response = await networkUtils._actuallySend(
+        renderedRequest,
+        CONTEXT,
+        workspace,
+        settings,
+      );
+      const bodyBuffer = models.response.getBodyBuffer(response);
+      return JSON.parse(bodyBuffer);
+    }
   });
 });
 

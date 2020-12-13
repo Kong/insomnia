@@ -486,8 +486,11 @@ export async function _actuallySend(
         if (proxy) {
           setOpt(Curl.option.PROXY, proxy);
           setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
-          setOpt(Curl.option.PROXYUSERNAME, httpProxyUser);
-          setOpt(Curl.option.PROXYPASSWORD, httpProxyPassword);
+
+          if (httpProxyUser.length > 0 && httpProxyPassword.length > 0) {
+            setOpt(Curl.option.PROXYUSERNAME, httpProxyUser);
+            setOpt(Curl.option.PROXYPASSWORD, httpProxyPassword);
+          }
         }
         if (noProxy) {
           setOpt(Curl.option.NOPROXY, noProxy);
