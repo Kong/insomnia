@@ -447,6 +447,7 @@ class General extends React.PureComponent<Props, State> {
             disabled: !settings.proxyEnabled,
           })}
           {this.renderTextSetting('HTTPS Proxy Password', 'httpProxyPassword', '', {
+            type: 'password',
             placeholder: 'pass',
             disabled: !settings.proxyEnabled,
           })}
