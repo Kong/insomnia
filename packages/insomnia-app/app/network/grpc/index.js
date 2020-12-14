@@ -186,9 +186,7 @@ export const sendMessage = async (
     return;
   }
 
-  const call = callCache.get(requestId);
-  // console.log('write');
-  call?.write(messageBody, _streamWriteCallback);
+  callCache.get(requestId)?.write(messageBody, _streamWriteCallback);
 };
 
 export const commit = (requestId: string) => callCache.get(requestId)?.end();
@@ -245,8 +243,6 @@ const _streamWriteCallback: WriteCallback = err => {
   if (err) {
     console.error('[gRPC] Error when writing to stream', err);
   }
-
-  console.log('written successfully');
 };
 
 const _parseMessage = (
