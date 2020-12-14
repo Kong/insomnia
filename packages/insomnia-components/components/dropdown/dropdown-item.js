@@ -142,7 +142,7 @@ DropdownItem.propTypes = {
   right: PropTypes.node,
   className: PropTypes.string,
   color: PropTypes.string,
-  selected: PropTypes.string,
+  selected: PropTypes.bool,
 };
 
 export default DropdownItem;
