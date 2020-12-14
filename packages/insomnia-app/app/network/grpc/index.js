@@ -177,7 +177,7 @@ export const start = async (
   callCache.set(requestId, call);
 };
 
-export const sendMessage = async (
+export const sendMessage = (
   { body, requestId }: GrpcIpcMessageParams,
   respond: ResponseCallbacks,
 ) => {
@@ -186,7 +186,12 @@ export const sendMessage = async (
     return;
   }
 
-  callCache.get(requestId)?.write(messageBody, _streamWriteCallback);
+  // HACK BUT DO NOT REMOVE
+  // this must happen in the next tick otherwise the stream does not flush correctly
+  // Try removing it and using a bidi RPC and notice messages don't send consistently
+  process.nextTick(() => {
+    callCache.get(requestId)?.write(messageBody, _streamWriteCallback);
+  });
 };
 
 export const commit = (requestId: string) => callCache.get(requestId)?.end();
