@@ -6,12 +6,18 @@ import { ipcRenderer } from 'electron';
 import { grpcActions } from '../../../context/grpc';
 import { prepareGrpcMessage, prepareGrpcRequest } from '../../../../network/grpc/prepare';
 
-const _sendStart = async (reqId: string, envId: string, type: GrpcMethodType) => {
+const _sendStart = async (
+  reqId: string,
+  envId: string,
+  type: GrpcMethodType,
+  dispatch: GrpcDispatch,
+) => {
   if (!reqId) {
     return;
   }
   const preparedRequest = await prepareGrpcRequest(reqId, envId, type);
   ipcRenderer.send(GrpcRequestEventEnum.start, preparedRequest);
+  dispatch(grpcActions.clear(reqId));
 };
 
 const _sendCancel = (reqId: string) => {
@@ -50,7 +56,12 @@ const useActionHandlers = (
   type: GrpcMethodType,
   dispatch: GrpcDispatch,
 ): ActionHandlers => ({
-  start: useCallback(() => _sendStart(reqId, envId, type), [envId, reqId, type]),
+  start: useCallback(() => _sendStart(reqId, envId, type, dispatch), [
+    envId,
+    reqId,
+    type,
+    dispatch,
+  ]),
   cancel: useCallback(() => _sendCancel(reqId), [reqId]),
   stream: useCallback(() => _sendMessage(reqId, envId, dispatch), [dispatch, envId, reqId]),
   commit: useCallback(() => _sendCommit(reqId), [reqId]),

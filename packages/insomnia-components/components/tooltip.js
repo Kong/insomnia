@@ -168,10 +168,10 @@ class Tooltip extends React.PureComponent<Props, State> {
   }
 
   _getContainer(): HTMLElement {
-    let container = document.querySelector('#tooltips-container-insomnia-components');
+    let container = document.querySelector('#tooltips-container');
     if (!container) {
       container = document.createElement('div');
-      container.id = 'tooltips-container-insomnia-components';
+      container.id = 'tooltips-container';
       container.style.zIndex = '1000000';
       container.style.position = 'relative';
 
