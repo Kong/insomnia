@@ -1,7 +1,6 @@
 import * as renderUtils from '../render';
 import * as models from '../../models';
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { GrpcRenderOptionEnum } from '../render';
 
 jest.mock('electron');
 
@@ -799,7 +798,38 @@ describe('getRenderedRequest()', () => {
   });
 });
 
-describe('getRenderedGrpcRequestAndContext()', () => {
+describe('getRenderedGrpcRequestMessage()', () => {
+  beforeEach(globalBeforeEach);
+
+  it('renders only the body for a grpc request ', async () => {
+    const w1 = await models.workspace.create();
+    const env = await models.environment.create({
+      parentId: w1._id,
+      data: {
+        foo: 'bar',
+        host: 'testb.in:9000',
+      },
+    });
+
+    const grpcRequest = await models.grpcRequest.create({
+      parentId: w1._id,
+      name: 'hi {{ foo }}',
+      url: '{{ host }}',
+      description: 'hi {{ foo }}',
+      body: {
+        text: '{ "prop": "{{ foo }}" }',
+      },
+    });
+    const request = await renderUtils.getRenderedGrpcRequestMessage(grpcRequest, env._id);
+    expect(request).toEqual(
+      expect.objectContaining({
+        text: '{ "prop": "bar" }',
+      }),
+    );
+  });
+});
+
+describe('getRenderedGrpcRequest()', () => {
   let w1, env;
   beforeEach(async () => {
     await globalBeforeEach();
@@ -823,7 +853,7 @@ describe('getRenderedGrpcRequestAndContext()', () => {
         text: '{ "prop": "{{ foo }}" }',
       },
     });
-    const { request } = await renderUtils.getRenderedGrpcRequestAndContext(grpcRequest, env._id);
+    const request = await renderUtils.getRenderedGrpcRequest(grpcRequest, env._id);
     expect(request).toEqual(
       expect.objectContaining({
         name: 'hi bar',
@@ -846,12 +876,12 @@ describe('getRenderedGrpcRequestAndContext()', () => {
         text: '{ "prop": "{{ foo }}" }',
       },
     });
-    const { request } = await renderUtils.getRenderedGrpcRequestAndContext(
+    const request = await renderUtils.getRenderedGrpcRequest(
       grpcRequest,
       env._id,
       null,
       null,
-      GrpcRenderOptionEnum.ignoreBody,
+      true,
     );
     expect(request).toEqual(
       expect.objectContaining({
@@ -860,35 +890,6 @@ describe('getRenderedGrpcRequestAndContext()', () => {
         description: 'hi bar',
         body: {
           text: '{ "prop": "{{ foo }}" }',
-        },
-      }),
-    );
-  });
-
-  it('renders only the body for a grpc request ', async () => {
-    const grpcRequest = await models.grpcRequest.create({
-      parentId: w1._id,
-      name: 'hi {{ foo }}',
-      url: '{{ host }}',
-      description: 'hi {{ foo }}',
-      body: {
-        text: '{ "prop": "{{ foo }}" }',
-      },
-    });
-    const { request } = await renderUtils.getRenderedGrpcRequestAndContext(
-      grpcRequest,
-      env._id,
-      null,
-      null,
-      GrpcRenderOptionEnum.onlyBody,
-    );
-    expect(request).toEqual(
-      expect.objectContaining({
-        name: 'hi {{ foo }}',
-        url: '{{ host }}',
-        description: 'hi {{ foo }}',
-        body: {
-          text: '{ "prop": "bar" }',
         },
       }),
     );
@@ -904,7 +905,7 @@ describe('getRenderedGrpcRequestAndContext()', () => {
         text: '{ "prop": "{{ foo }}" }',
       },
     });
-    const { request } = await renderUtils.getRenderedGrpcRequestAndContext(grpcRequest, env._id);
+    const request = await renderUtils.getRenderedGrpcRequest(grpcRequest, env._id);
     expect(request).toEqual(
       expect.objectContaining({
         name: 'hi bar',

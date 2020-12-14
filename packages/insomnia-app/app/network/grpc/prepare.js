@@ -1,14 +1,13 @@
 // @flow
-import type { RenderedGrpcRequest } from '../../common/render';
+import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import type { GrpcMethodType } from './method';
 import * as models from '../../models';
 import {
-  getRenderedGrpcRequestAndContext,
-  GrpcRenderOptionEnum,
+  getRenderedGrpcRequest,
+  getRenderedGrpcRequestMessage,
   RENDER_PURPOSE_SEND,
 } from '../../common/render';
 import { canClientStream } from './method';
-import type { GrpcRequestBody } from '../../models/grpc-request';
 
 export type GrpcIpcRequestParams = {
   request: RenderedGrpcRequest,
@@ -16,7 +15,7 @@ export type GrpcIpcRequestParams = {
 
 export type GrpcIpcMessageParams = {
   requestId: string,
-  body: GrpcRequestBody,
+  body: RenderedGrpcRequestBody,
 };
 
 export const prepareGrpcRequest = async (
@@ -27,12 +26,12 @@ export const prepareGrpcRequest = async (
   const req = await models.grpcRequest.getById(requestId);
   const environment = await models.environment.getById(environmentId || 'n/a');
 
-  const { request } = await getRenderedGrpcRequestAndContext(
+  const request = await getRenderedGrpcRequest(
     req,
     environment,
     RENDER_PURPOSE_SEND,
     {},
-    canClientStream(methodType) ? GrpcRenderOptionEnum.ignoreBody : GrpcRenderOptionEnum.all,
+    canClientStream(methodType),
   );
 
   return { request };
@@ -45,13 +44,12 @@ export const prepareGrpcMessage = async (
   const req = await models.grpcRequest.getById(requestId);
   const environment = await models.environment.getById(environmentId || 'n/a');
 
-  const { request } = await getRenderedGrpcRequestAndContext(
+  const requestBody = await getRenderedGrpcRequestMessage(
     req,
     environment,
     RENDER_PURPOSE_SEND,
     {},
-    GrpcRenderOptionEnum.onlyBody,
   );
 
-  return { body: request.body, requestId: req._id };
+  return { body: requestBody, requestId: req._id };
 };

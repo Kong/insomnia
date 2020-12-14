@@ -12,7 +12,7 @@ import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import orderedJSON from 'json-order';
 import * as templatingUtils from '../templating/utils';
-import type { GrpcRequest } from '../models/grpc-request';
+import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -23,14 +23,6 @@ export const RENDER_PURPOSE_SEND: RenderPurpose = 'send';
 export const RENDER_PURPOSE_GENERAL: RenderPurpose = 'general';
 export const RENDER_PURPOSE_NO_RENDER: RenderPurpose = 'no-render';
 
-export const GrpcRenderOptionEnum = {
-  all: 'all',
-  ignoreBody: 'ignore-body',
-  onlyBody: 'only-body',
-};
-
-export type GrpcRenderOption = $Values<typeof GrpcRenderOptionEnum>;
-
 /** Key/value pairs to be provided to the render context */
 export type ExtraRenderInfo = Array<{ name: string, value: any }>;
 
@@ -40,6 +32,7 @@ export type RenderedRequest = Request & {
 };
 
 export type RenderedGrpcRequest = GrpcRequest;
+export type RenderedGrpcRequestBody = GrpcRequestBody;
 
 export async function buildRenderContext(
   ancestors: Array<BaseModel> | null,
@@ -356,12 +349,12 @@ export async function getRenderContext(
   return buildRenderContext(ancestors, rootEnvironment, subEnvironment, baseContext);
 }
 
-export async function getRenderedGrpcRequestAndContext(
+export async function getRenderedGrpcRequest(
   request: GrpcRequest,
   environmentId: string | null,
   purpose?: RenderPurpose,
   extraInfo?: ExtraRenderInfo,
-  grpcOption?: GrpcRenderOption,
+  skipBody?: boolean,
 ): Promise<{ request: RenderedGrpcRequest, context: Object }> {
   const ancestors = await db.withAncestors(request, [
     models.request.type,
@@ -379,43 +372,47 @@ export async function getRenderedGrpcRequestAndContext(
 
   const description = request.description;
 
-  if (grpcOption !== GrpcRenderOptionEnum.onlyBody) {
-    // Render description separately because it's lower priority
-    request.description = '';
-  }
+  // Render description separately because it's lower priority
+  request.description = '';
 
-  let ignorePathRegex;
-  switch (grpcOption) {
-    case GrpcRenderOptionEnum.ignoreBody:
-      // ignore body* and render everything else
-      ignorePathRegex = /^body.*/;
-      break;
-    case GrpcRenderOptionEnum.onlyBody:
-      // ignore everything else except body*
-      ignorePathRegex = /^(?!body).+/;
-      break;
-    case GrpcRenderOptionEnum.all:
-    default:
-      ignorePathRegex = null;
-      break;
-  }
+  // Ignore body by default and only include if specified to
+  const ignorePathRegex = skipBody ? /^body.*/ : null;
 
   // Render all request properties
   const renderedRequest = await render(request, renderContext, ignorePathRegex);
 
-  if (grpcOption !== GrpcRenderOptionEnum.onlyBody) {
-    renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
-  }
+  renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
 
   // Remove disabled headers
   if (renderedRequest.headers) {
     renderedRequest.headers = renderedRequest.headers.filter(p => !p.disabled);
   }
 
-  return {
-    context: renderContext,
-    request: renderedRequest,
-  };
+  return renderedRequest;
+}
+
+export async function getRenderedGrpcRequestMessage(
+  request: GrpcRequest,
+  environmentId: string | null,
+  purpose?: RenderPurpose,
+  extraInfo?: ExtraRenderInfo,
+): Promise<RenderedGrpcRequestBody> {
+  const ancestors = await db.withAncestors(request, [
+    models.request.type,
+    models.requestGroup.type,
+    models.workspace.type,
+  ]);
+
+  const renderContext = await getRenderContext(
+    request,
+    environmentId,
+    ancestors,
+    purpose,
+    extraInfo || null,
+  );
+
+  // Render request body
+  return await render(request.body, renderContext);
 }
 
 export async function getRenderedRequestAndContext(
