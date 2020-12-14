@@ -186,7 +186,9 @@ export const sendMessage = async (
     return;
   }
 
-  callCache.get(requestId)?.write(messageBody, _streamWriteCallback);
+  const call = callCache.get(requestId);
+  // console.log('write');
+  call?.write(messageBody, _streamWriteCallback);
 };
 
 export const commit = (requestId: string) => callCache.get(requestId)?.end();
@@ -209,10 +211,14 @@ const _setupServerStreamListeners = (call: Call, requestId: string, respond: Res
       // Taken through inspiration from other implementation, needs validation
       if (error.code === GrpcStatusEnum.UNKNOWN || error.code === GrpcStatusEnum.UNAVAILABLE) {
         respond.sendEnd(requestId);
+        callCache.clear(requestId);
       }
     }
   });
-  call.on('end', () => respond.sendEnd(requestId));
+  call.on('end', () => {
+    respond.sendEnd(requestId);
+    callCache.clear(requestId);
+  });
 };
 
 // This function returns a function
@@ -239,6 +245,8 @@ const _streamWriteCallback: WriteCallback = err => {
   if (err) {
     console.error('[gRPC] Error when writing to stream', err);
   }
+
+  console.log('written successfully');
 };
 
 const _parseMessage = (
