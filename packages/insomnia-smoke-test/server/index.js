@@ -6,7 +6,7 @@ const app = express();
 const basicAuthRouter = express.Router();
 const port = 4010;
 
-// Artificallly slow each request down
+// Artificially slow each request down
 app.use((req, res, next) => {
   setTimeout(next, 500);
 });
@@ -15,11 +15,10 @@ app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
 });
 
-app.get('/csv', (_, res) => {
-  res
-    .status(200)
-    .header('content-type', 'text/csv')
-    .send(`a,b,c\n1,2,3`);
+const options = { root: 'fixtures' };
+
+app.get('/file/:fileName', (req, res) => {
+  res.sendFile(req.params.fileName, options);
 });
 
 const { utf8, latin1 } = basicAuthCreds;
@@ -29,11 +28,7 @@ const users = {
   [latin1.encoded.user]: latin1.encoded.pass,
 };
 
-basicAuthRouter.use(
-  basicAuth({
-    users,
-  }),
-);
+basicAuthRouter.use(basicAuth({ users }));
 
 basicAuthRouter.get('/', (_, res) => {
   res
