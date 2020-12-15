@@ -183,6 +183,8 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     setTimeout(() => {
       this.setState({ justCopied: false });
     }, 2000);
+
+    models.stats.incrementCreatedRequests();
   }
 
   async show({ request, forceEditMode }: RequestSettingsModalOptions) {
