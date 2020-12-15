@@ -126,7 +126,6 @@ export const start = async (
 ): Promise<void> => {
   const requestId = request._id;
   const method = await protoLoader.getSelectedMethod(request);
-  const methodType = getMethodType(method);
 
   if (!method) {
     respond.sendError(
@@ -135,6 +134,8 @@ export const start = async (
     );
     return;
   }
+
+  const methodType = getMethodType(method);
 
   // Create client
   const client = _createClient(request, respond);
@@ -181,7 +182,7 @@ export const sendMessage = (
   { body, requestId }: GrpcIpcMessageParams,
   respond: ResponseCallbacks,
 ) => {
-  const messageBody = _parseMessage(body.text, requestId, respond);
+  const messageBody = _parseMessage(body.text || '', requestId, respond);
   if (!messageBody) {
     return;
   }
@@ -208,7 +209,7 @@ const _setupServerStreamListeners = (call: Call, requestId: string, respond: Res
   call.on('data', data => respond.sendData(requestId, data));
 
   call.on('error', (error: ServiceError) => {
-    if (error?.code !== GrpcStatusEnum.CANCELLED) {
+    if (error && error.code !== GrpcStatusEnum.CANCELLED) {
       respond.sendError(requestId, error);
 
       // Taken through inspiration from other implementation, needs validation
