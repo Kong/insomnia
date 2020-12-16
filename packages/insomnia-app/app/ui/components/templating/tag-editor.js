@@ -14,10 +14,11 @@ import * as db from '../../../common/database';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 import { delay, fnOrString } from '../../../common/misc';
+import { metaSortKeySort } from '../../../common/sorting';
 import type { BaseModel } from '../../../models/index';
 import type { Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/requestGroup';
+import type { RequestGroup } from '../../../models/request-group';
 import { isRequest, isRequestGroup } from '../../../models/helpers/is-model';
 import type { PluginArgumentEnumOption } from '../../../templating/extensions/index';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown/index';
@@ -116,10 +117,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     let sortedModels = [];
     _models
       .filter(model => model.parentId === parentId)
-      .sort((a, b) => {
-        if (a.metaSortKey === b.metaSortKey) return a._id > b._id ? -1 : 1;
-        else return a.metaSortKey < b.metaSortKey ? -1 : 1;
-      })
+      .sort(metaSortKeySort)
       .map(model => {
         if (isRequest(model)) sortedModels.push(model);
         if (isRequestGroup(model))
