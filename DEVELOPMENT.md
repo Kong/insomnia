@@ -64,12 +64,14 @@ the codebase. NeDB should essentially replace it*
 
 ## Automated testing
 
-Unit tests are written using [Jest](https://jestjs.io/), [react-testing-library](https://testing-library.com/docs/react-testing-library),
-while integration tests are written using [Spectron](https://www.electronjs.org/spectron).
+We use [Jest](https://jestjs.io/) and [react-testing-library](https://testing-library.com/docs/react-testing-library)
+to write our unit tests, and [Spectron](https://www.electronjs.org/spectron) for integration tests.
 
 Unit tests exist alongside the file under test. For example:
-- `/app/commom/database.js` contains the database business logic
+- `/app/common/database.js` contains the database business logic
 - `/app/common/__tests__/database.test.js` contains the database tests
+
+Unit tests for components follow the same pattern.
 
 The structure for smoke tests is explained in the smoke testing package: [`packages/insomnia-smoke-test`](/packages/insomnia-smoke-test).
 

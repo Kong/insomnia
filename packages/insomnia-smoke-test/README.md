@@ -30,12 +30,12 @@ npm run app-build:smoke:designer    # Compile Designer
 You can then run the smoke tests, again from the root:
 
 ``` sh
-npm run test:smoke:cli              # Run CLI smoke tests
-npm run test:smoke:core:build       # Run Core smoke tests
-npm run test:smoke:designer:build   # Run Cesigner smoke tests
+npm run test:smoke:cli              # Run CLI tests
+npm run test:smoke:core:build       # Run Core tests
+npm run test:smoke:designer:build   # Run Designer tests
 ```
 
-Sometimes, you need to run tests against a _packaged_ application. Packaging takes longer to do and is only required for edge cases (such as a [plugin installation](https://github.com/Kong/insomnia/blob/develop/packages/insomnia-smoke-test/designer/app.test.js#L36)). To run packaged tests, from the root:
+Sometimes, you might need to run tests against a _packaged_ application. A packaged application is the final artifact which bundles all of the various resources together, and is created for distribution in the form of a `.dmg` or `.exe`, etc. Packaging takes longer to do and is only required for edge cases (such as a [plugin installation](https://github.com/Kong/insomnia/blob/357b8f05f89fd5c07a75d8418670abe37b2882dc/packages/insomnia-smoke-test/designer/app.test.js#L36)), so we typically run tests against a build. To run packaged tests, from the root:
 
 ``` sh
 npm run app-package:smoke:core      # Package Core
@@ -49,7 +49,7 @@ Each of the above commands will automatically run the Express server, so you do 
 
 ## How to write
 
-When writing tests, I suggest to use the scripts in this project directly (instead of from the root, as per the section above). After building and/or packaging your application under test, it will be available under `packages/insomnia-app/{build|dist}` and you can begin writing your test.
+When writing tests, it is recommended to use the scripts in this project directly (instead of from the root, as per the section above). After building and/or packaging your application under test, it will be available under `packages/insomnia-app/{build|dist}` and you can begin writing your test.
 
 In order to run tests for development, open two terminal tabs in `packages/insomnia-smoke-test`:
 ```sh
@@ -75,7 +75,7 @@ You may also need to run a test multiple times. You can focus a particular test 
 Individual tests will automatically run against a clean Insomnia data directory to keep data isolated.
 
 ### Dependencies
-A test should not depend on any external services unless absolutely necessary. If a particular endpoint is required (eg. for authentication or a specific content type), simply implement a new endpoint in `/server` .
+A test should not depend on any external services unless absolutely necessary. If a particular endpoint is required (eg. for authentication or a specific content type), implement a new endpoint in `/server`.
 
 ### Interactions
 Spectron is built heavily on top of WebdriverIO, and WebdriverIO's `browser` object is available under `app.client` ([docs](https://github.com/electron-userland/spectron#client)). This is the primary API you will need for user interactions, see examples with existing tests.
@@ -91,10 +91,62 @@ It is important for a smoke test to be _readable_ so the flow can be understood,
 
 In most cases, it will be beneficial to create helper functions under `/modules`, regardless of how reusable they are. Some modules (such as `dropdown`, `tabs` and `settings`) are reusable, while some are specific to certain pages (eg `debug`, `home`, `onboarding`). These can be broken down into more granular modules as the test suite grows.
 
+### Element selection
+Through WebdriverIO you can use a host of CSS or React selectors,. There is no clear solution about which selector to use, but whichever approach is used it must be understandable and stable.
+
+There are trade-offs with each selector approach but it's important to know how generic or specific a particular selector is in order to ensure that the correct element is always selected as the application evolves.
+
+#### Select by component and props
+Sometimes selecting by a React component and props, directly from `app.client` is the cleanest approach, as the following two examples show:
+
+```js
+const waitUntilRequestIsActive = async (app, name) => {
+  const request = await app.client.react$('SidebarRequestRow', {
+    props: { isActive: true, request: { name } },
+  });
+
+  await request.waitForDisplayed();
+};
+
+export const clickFolderByName = async (app, name) => {
+  const folder = await app.client.react$('SidebarRequestGroupRow', {
+    props: { requestGroup: { name } },
+  });
+
+  await folder.waitForClickable();
+  await folder.click();
+};
+```
+
+#### Scoping
+It is important to scope an element to an appropriate ancestor. In a way the selector becomes self-documenting, but also ensures stability as the UI evolves.
+
+In the following example, it is possible for multiple buttons which match the `button#enabled` selector to exist on the page. By chaining a React and CSS selector, we can ensure the test runner will always click the expected button within the `BasicAuth` component.
+
+```js
+export const toggleBasicAuthEnabled = async app => {
+  await app.client
+    .react$('BasicAuth')
+    .then(e => e.$('button#enabled'))
+    .then(e => e.click());
+};
+```
+
+A similar approach can be achieved through a CSS selector where appropriate. In the following example, after sending a successful request, we want to detect an element containing the CSS classes `tag bg-success` and ensure it contains the text `200 OK`.
+
+These classes are fairly generic and could exist multiple times on the page, but the HTTP response code will always be in the response pane (`response-pane`) header (`pane__header`). As such, the selector is scoped to always select the expected element, wait for it to show, and ensure it has the expected text.
+
+```js
+export const expect200 = async app => {
+  const tag = await app.client.$('.response-pane .pane__header .tag.bg-success');
+  await tag.waitForDisplayed();
+  await expectText(tag, '200 OK');
+};
+```
 
 ## Contributing a smoke test?
 
-Smoke tests are often flaky, and one attempt to avoid that is to run the final implementation of a test atleast 20 times locally to prove its stability. If a test is unable to achieve this, it is very unlikely to be accepted into the test suite.
+Smoke tests can potentially be flaky, and one attempt to avoid flaky tests in the default branch is to run the final implementation of a test atleast 20 times locally to prove its stability. If a test is unable to achieve this, it is very unlikely to be accepted into the test suite.
 
 You can repeat a test quickly by wrapping it with the following block:
 ```js
@@ -104,4 +156,4 @@ describe.only.each(new Array(20).fill(1))('iteration %#', _ => {
   });
 });
 ```
-When you raise a PR, paste a screenshot of the test results showing at least 20 successful iterations.
+When raising a PR, paste a screenshot of the test results showing at least 20 successful iterations.
