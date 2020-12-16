@@ -50,6 +50,9 @@ export const sendUnary = async (requestId: string, respond: ResponseCallbacks): 
   // Create callback
   const callback = _createUnaryCallback(requestId, respond);
 
+  // Update request stats
+  models.stats.incrementExecutedRequests();
+
   // Make call
   const call = client.makeUnaryRequest(
     selectedMethod.path,
@@ -88,6 +91,9 @@ export const startClientStreaming = async (
 
   // Create callback
   const callback = _createUnaryCallback(requestId, respond);
+
+  // Update request stats
+  models.stats.incrementExecutedRequests();
 
   // Make call
   const call = client.makeClientStreamRequest(
@@ -131,6 +137,9 @@ export const startServerStreaming = async (
     return;
   }
 
+  // Update request stats
+  models.stats.incrementExecutedRequests();
+
   // Make call
   const call = client.makeServerStreamRequest(
     selectedMethod.path,
@@ -169,6 +178,9 @@ export const startBidiStreaming = async (
   if (!client) {
     return;
   }
+
+  // Update request stats
+  models.stats.incrementExecutedRequests();
 
   // Make call
   const call = client.makeBidiStreamRequest(
