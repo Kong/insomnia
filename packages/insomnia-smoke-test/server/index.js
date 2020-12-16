@@ -15,11 +15,7 @@ app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
 });
 
-const options = { root: 'fixtures' };
-
-app.get('/file/:fileName', (req, res) => {
-  res.sendFile(req.params.fileName, options);
-});
+app.use('/file', express.static('fixtures'));
 
 const { utf8, latin1 } = basicAuthCreds;
 
