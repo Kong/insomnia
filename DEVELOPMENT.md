@@ -11,7 +11,8 @@ to provide access to operating system features.
 There are a few more technologies and tools worth mentioning:
 
 - [`React`](https://reactjs.org/) is the library used for all UI components.
-- [`Less`](http://lesscss.org/) is used for styling UI components.
+- [`styled-components`](https://styled-components.com/) and [`Less`](http://lesscss.org/) are used 
+  for styling UI components.
 - [`Electron Builder`](https://github.com/electron-userland/electron-builder) is used to help build,
   sign, and package Insomnia for distribution.
 - [`Flow`](https://flow.org/) is used for adding types to the codebase. Not everything is Flow but
@@ -23,6 +24,7 @@ There are a few more technologies and tools worth mentioning:
 - [`node-libcurl`](https://github.com/JCMais/node-libcurl) is a NodeJS wrapper around the native.
 - [`Codemirror`](https://codemirror.net/) is a web-based, extendable, code editor used for 
   highlighting and linting of data formats like JSON, GraphQL, and XML.
+- [`Commander.js`](https://github.com/tj/commander.js) is used for building the inso CLI.
 
 ## Project Structure
 
@@ -41,7 +43,7 @@ There are a few notable directories inside of it:
 
 - `/main.development.js` Entry for Electron.
 - `/app/main` Stuff that runs inside Electron's main process.
-- `/app/ui` React components and styling .
+- `/app/ui` React components and styling.
 - `/app/common` Utilities used across both main and render processes.
 - `/app/plugins` Logic around installation and usage of plugins.
 - `/app/models` DB models used to store user data.
@@ -55,9 +57,21 @@ Insomnia stores data in a few places:
 
 - A local in-memory NeDB database stores data for data models (requests, folder, workspaces, etc).
 - A local Redux store contains an in-memory copy of all database entities.
+- Multiple React Context stores, defined in `/app/ui/context`.
 
 *Eventually, Redux could/should be removed, which would both reduce memory overhead and simplify
 the codebase. NeDB should essentially replace it*
+
+## Automated testing
+
+Unit tests are written using [Jest](https://jestjs.io/), [react-testing-library](https://testing-library.com/docs/react-testing-library),
+while integration tests are written using [Spectron](https://www.electronjs.org/spectron).
+
+Unit tests exist alongside the file under test. For example:
+- `/app/commom/database.js` contains the database business logic
+- `/app/common/__tests__/database.test.js` contains the database tests
+
+The structure for smoke tests is explained in the smoke testing package: [`packages/insomnia-smoke-test`](/packages/insomnia-smoke-test).
 
 ## Technical Debt
 

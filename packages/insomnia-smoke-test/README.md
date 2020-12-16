@@ -96,7 +96,7 @@ In most cases, it will be beneficial to create helper functions under `/modules`
 
 Smoke tests are often flaky, and one attempt to avoid that is to run the final implementation of a test atleast 20 times locally to prove its stability. If a test is unable to achieve this, it is very unlikely to be accepted into the test suite.
 
-You repeat a test quickly by wrapping it with the following block:
+You can repeat a test quickly by wrapping it with the following block:
 ```js
 describe.only.each(new Array(20).fill(1))('iteration %#', _ => {
   it('your test name', () => {
