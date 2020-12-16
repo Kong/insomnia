@@ -118,7 +118,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     _models
       .filter(model => model.parentId === parentId)
       .sort(metaSortKeySort)
-      .map(model => {
+      .forEach(model => {
         if (isRequest(model)) sortedModels.push(model);
         if (isRequestGroup(model))
           sortedModels = sortedModels.concat(this._sortRequests(_models, model._id));
