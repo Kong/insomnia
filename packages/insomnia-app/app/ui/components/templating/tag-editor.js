@@ -16,6 +16,9 @@ import HelpTooltip from '../help-tooltip';
 import { delay, fnOrString } from '../../../common/misc';
 import type { BaseModel } from '../../../models/index';
 import type { Workspace } from '../../../models/workspace';
+import type { Request } from '../../../models/request';
+import type { RequestGroup } from '../../../models/requestGroup';
+import { isRequest, isRequestGroup } from '../../../models/helpers/is-model';
 import type { PluginArgumentEnumOption } from '../../../templating/extensions/index';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown/index';
 import FileInputButton from '../base/file-input-button';
@@ -109,21 +112,21 @@ class TagEditor extends React.PureComponent<Props, State> {
     );
   }
 
-  _sortRequests(requests: Array<models.request.type | models.requestGroup.type>, parentId: string) {
-    let sortedReqs = [];
-    requests
-      .filter(request => request.parentId === parentId)
+  _sortRequests(_models: Array<Request | RequestGroup>, parentId: string) {
+    let sortedModels = [];
+    _models
+      .filter(model => model.parentId === parentId)
       .sort((a, b) => {
         if (a.metaSortKey === b.metaSortKey) return a._id > b._id ? -1 : 1;
         else return a.metaSortKey < b.metaSortKey ? -1 : 1;
       })
-      .map(request => {
-        if (request.type === models.request.type) sortedReqs.push(request);
-        if (request.type === models.requestGroup.type)
-          sortedReqs = sortedReqs.concat(this._sortRequests(requests, request._id));
+      .map(model => {
+        if (isRequest(model)) sortedModels.push(model);
+        if (isRequestGroup(model))
+          sortedModels = sortedModels.concat(this._sortRequests(_models, model._id));
       });
 
-    return sortedReqs;
+    return sortedModels;
   }
 
   async _refreshModels(workspace: Workspace) {
