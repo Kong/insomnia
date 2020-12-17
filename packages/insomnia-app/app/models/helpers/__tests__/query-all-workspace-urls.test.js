@@ -9,6 +9,12 @@ describe('queryAllWorkspaceUrls', () => {
 
   it('should return empty array when no requests exist', async () => {
     const w = await models.workspace.create({ name: 'Workspace' });
+    await expect(queryAllWorkspaceUrls(w, models.request.type)).resolves.toHaveLength(0);
+    await expect(queryAllWorkspaceUrls(w, models.grpcRequest.type)).resolves.toHaveLength(0);
+  });
+
+  it('should return urls and exclude that of the selected request', async () => {
+    const w = await models.workspace.create({ name: 'Workspace' });
 
     const r1 = await models.request.create({
       name: 'Request 1',
