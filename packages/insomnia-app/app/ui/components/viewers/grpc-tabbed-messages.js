@@ -22,6 +22,10 @@ type Props = {
   handleStream?: () => void,
   handleCommit?: () => void,
   showActions?: boolean,
+
+  handleRender: string => Promise<string>,
+  isVariableUncovered: boolean,
+  handleGetRenderContext: Function,
 };
 
 const GrpcTabbedMessages = ({
@@ -34,6 +38,9 @@ const GrpcTabbedMessages = ({
   handleCommit,
   handleStream,
   uniquenessKey,
+  handleRender,
+  isVariableUncovered,
+  handleGetRenderContext,
 }: Props) => {
   const shouldShowBody = !!handleBodyChange;
 
@@ -79,7 +86,14 @@ const GrpcTabbedMessages = ({
       </div>
       {shouldShowBody && (
         <TabPanel className="react-tabs__tab-panel editor-wrapper">
-          <GRPCEditor content={bodyText} settings={settings} handleChange={handleBodyChange} />
+          <GRPCEditor
+            content={bodyText}
+            settings={settings}
+            handleChange={handleBodyChange}
+            handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
+            isVariableUncovered={isVariableUncovered}
+          />
         </TabPanel>
       )}
       {orderedMessages.map(m => (

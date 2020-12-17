@@ -10,4 +10,4 @@ export {
   useGrpcRequestState,
   GrpcDispatchModalWrapper,
 } from './grpc-context';
-export { useGrpcIpc, sendGrpcIpcMultiple } from './grpc-ipc-renderer';
+export { sendGrpcIpcMultiple } from './grpc-ipc-renderer';

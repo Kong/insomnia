@@ -8,6 +8,8 @@ export type Call = Object;
 
 let _calls: { [requestId: string]: Call } = {};
 
+const activeCount = () => Object.keys(_calls).length;
+
 const get = (requestId: string): Call | undefined => {
   const call: Call = _calls[requestId];
 
@@ -40,6 +42,6 @@ const reset = (): void => {
   _calls = {};
 };
 
-const callCache = { get, set, clear, reset };
+const callCache = { activeCount, get, set, clear, reset };
 
 export default callCache;
