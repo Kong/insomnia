@@ -13,6 +13,7 @@ import type { Environment } from '../models/environment';
 import orderedJSON from 'json-order';
 import * as templatingUtils from '../templating/utils';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
+import { isRequestGroup } from '../models/helpers/is-model';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -258,12 +259,7 @@ export async function getRenderContext(
   extraInfo: ExtraRenderInfo | null = null,
 ): Promise<Object> {
   if (!ancestors) {
-    ancestors = await db.withAncestors(request, [
-      models.request.type,
-      models.grpcRequest.type,
-      models.requestGroup.type,
-      models.workspace.type,
-    ]);
+    ancestors = await _getRequestAncestors(request);
   }
 
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
@@ -313,7 +309,7 @@ export async function getRenderContext(
     for (let idx = 0; idx < ancestors.length; idx++) {
       const ancestor: any = ancestors[idx] || {};
       if (
-        ancestor.type === 'RequestGroup' &&
+        isRequestGroup(ancestor) &&
         ancestor.hasOwnProperty('environment') &&
         ancestor.hasOwnProperty('name')
       ) {
@@ -356,16 +352,10 @@ export async function getRenderedGrpcRequest(
   extraInfo?: ExtraRenderInfo,
   skipBody?: boolean,
 ): Promise<{ request: RenderedGrpcRequest, context: Object }> {
-  const ancestors = await db.withAncestors(request, [
-    models.request.type,
-    models.requestGroup.type,
-    models.workspace.type,
-  ]);
-
   const renderContext = await getRenderContext(
     request,
     environmentId,
-    ancestors,
+    null,
     purpose,
     extraInfo || null,
   );
@@ -379,14 +369,13 @@ export async function getRenderedGrpcRequest(
   const ignorePathRegex = skipBody ? /^body.*/ : null;
 
   // Render all request properties
-  const renderedRequest = await render(request, renderContext, ignorePathRegex);
+  const renderedRequest: RenderedGrpcRequest = await render(
+    request,
+    renderContext,
+    ignorePathRegex,
+  );
 
   renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
-
-  // Remove disabled headers
-  if (renderedRequest.headers) {
-    renderedRequest.headers = renderedRequest.headers.filter(p => !p.disabled);
-  }
 
   return renderedRequest;
 }
@@ -397,22 +386,18 @@ export async function getRenderedGrpcRequestMessage(
   purpose?: RenderPurpose,
   extraInfo?: ExtraRenderInfo,
 ): Promise<RenderedGrpcRequestBody> {
-  const ancestors = await db.withAncestors(request, [
-    models.request.type,
-    models.requestGroup.type,
-    models.workspace.type,
-  ]);
-
   const renderContext = await getRenderContext(
     request,
     environmentId,
-    ancestors,
+    null,
     purpose,
     extraInfo || null,
   );
 
   // Render request body
-  return await render(request.body, renderContext);
+  const renderedBody: RenderedGrpcRequestBody = await render(request.body, renderContext);
+
+  return renderedBody;
 }
 
 export async function getRenderedRequestAndContext(
@@ -421,11 +406,7 @@ export async function getRenderedRequestAndContext(
   purpose?: RenderPurpose,
   extraInfo?: ExtraRenderInfo,
 ): Promise<{ request: RenderedRequest, context: Object }> {
-  const ancestors = await db.withAncestors(request, [
-    models.grpcRequest.type,
-    models.requestGroup.type,
-    models.workspace.type,
-  ]);
+  const ancestors = await _getRequestAncestors(request);
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
@@ -534,4 +515,13 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Object): Array<string> {
     const k2Sort = _nunjucksSortValue(finalRenderContext[k2]);
     return k1Sort - k2Sort;
   });
+}
+
+async function _getRequestAncestors(request: Request | GrpcRequest): Promise<Array<BaseModel>> {
+  return await db.withAncestors(request, [
+    models.request.type,
+    models.grpcRequest.type,
+    models.requestGroup.type,
+    models.workspace.type,
+  ]);
 }
