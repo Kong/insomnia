@@ -516,16 +516,6 @@ export async function getRenderedRequestAndContext(
   };
 }
 
-// TODO: I don't think this is used anywhere
-export async function getRenderedRequest(
-  request: Request,
-  environmentId: string,
-  purpose?: RenderPurpose,
-): Promise<RenderedRequest> {
-  const result = await getRenderedRequestAndContext(request, environmentId, purpose);
-  return result.request;
-}
-
 /**
  * Sort the keys that may have Nunjucks last, so that other keys get
  * defined first. Very important if env variables defined in same obj
