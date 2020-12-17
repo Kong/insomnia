@@ -42,6 +42,8 @@ export const loadMethodsFromText = async (text: string): Promise<Array<GrpcMetho
 // TODO: instead of reloading the methods from the protoFile,
 //  just get it from what has already been loaded in the react component,
 //  or from the cache
+//  We can't send the method over IPC because of the following deprecation in Electron v9
+//  https://www.electronjs.org/docs/breaking-changes#behavior-changed-sending-non-js-objects-over-ipc-now-throws-an-exception
 export const getSelectedMethod = async (request: GrpcRequest): GrpcMethodDefinition | undefined => {
   const protoFile = await models.protoFile.getById(request.protoFileId);
 
