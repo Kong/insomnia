@@ -64,7 +64,7 @@ describe('Application launch', function() {
   );
 
   it('sends CSV request and shows rich response', async () => {
-    const url = 'http://127.0.0.1:4010/csv';
+    const url = 'http://127.0.0.1:4010/file/dummy.csv';
 
     await debug.workspaceDropdownExists(app);
     await debug.createNewRequest(app, 'csv');
@@ -77,9 +77,7 @@ describe('Application launch', function() {
   });
 
   it('sends PDF request and shows rich response', async () => {
-    // Cannot mock the pdf response using Prism because it is not yet supported
-    // https://github.com/stoplightio/prism/issues/1248#issuecomment-646056440
-    const url = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+    const url = 'http://127.0.0.1:4010/file/dummy.pdf';
 
     await debug.workspaceDropdownExists(app);
     await debug.createNewRequest(app, 'pdf');
