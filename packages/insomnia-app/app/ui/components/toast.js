@@ -20,6 +20,7 @@ import * as fetch from '../../account/fetch';
 import imgSrcDesigner from '../images/insomnia-designer-logo.png';
 import imgSrcCore from '../images/insomnia-core-logo.png';
 import { APP_ID_INSOMNIA } from '../../../config';
+import { getDeviceId } from '../../common/analytics';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
@@ -127,6 +128,10 @@ class Toast extends React.PureComponent<Props, State> {
         autoUpdatesDisabled: !settings.updateAutomatically,
         disableUpdateNotification: settings.disableUpdateNotification,
         updateChannel: settings.updateChannel,
+        deviceId: await getDeviceId(),
+        createdRequests: stats.createdRequests,
+        deletedRequests: stats.deletedRequests,
+        executedRequests: stats.executedRequests,
       };
 
       notification = await fetch.post('/notification', data, session.getCurrentSessionId());
