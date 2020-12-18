@@ -4,9 +4,8 @@ import { ipcRenderer } from 'electron';
 import { GrpcRequestEventEnum, GrpcResponseEventEnum } from '../../../../common/grpc-events';
 import { grpcStatusObjectSchema } from '../__schemas__';
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { grpcIpcRenderer, sendGrpcIpcMultiple, useGrpcIpc } from '../grpc-ipc-renderer';
+import { grpcIpcRenderer, sendGrpcIpcMultiple } from '../grpc-ipc-renderer';
 import { grpcActions } from '../grpc-actions';
-import { renderHook } from '@testing-library/react-hooks';
 
 jest.mock('../grpc-actions', () => ({
   grpcActions: {
@@ -98,49 +97,6 @@ describe('destroy', () => {
       expect(ipcRenderer.removeAllListeners).toHaveBeenCalledWith(channel);
     },
   );
-});
-
-describe('useGrpcIpc', () => {
-  const channel = GrpcRequestEventEnum.cancel;
-
-  it('should send request id on channel', () => {
-    const requestId = 'r1';
-
-    const { result } = renderHook(() => useGrpcIpc(requestId));
-
-    result.current(channel);
-
-    expect(ipcRenderer.send).toHaveBeenCalledTimes(1);
-    expect(ipcRenderer.send).toHaveBeenCalledWith(channel, requestId);
-  });
-
-  it.each([undefined, null, ''])('should not send if request id is %o', rId => {
-    const { result } = renderHook(() => useGrpcIpc(rId));
-    result.current(channel);
-
-    expect(ipcRenderer.send).not.toHaveBeenCalled();
-  });
-
-  it('should update hook if request id changes', () => {
-    const { result, rerender } = renderHook(id => useGrpcIpc(id));
-    result.current(channel);
-
-    expect(ipcRenderer.send).not.toHaveBeenCalled();
-
-    const r1 = 'r1';
-    rerender(r1);
-    result.current(channel);
-
-    expect(ipcRenderer.send).toHaveBeenCalledTimes(1);
-    expect(ipcRenderer.send).toHaveBeenLastCalledWith(channel, r1);
-
-    const r2 = 'r2';
-    rerender(r2);
-    result.current(channel);
-
-    expect(ipcRenderer.send).toHaveBeenCalledTimes(2);
-    expect(ipcRenderer.send).toHaveBeenLastCalledWith(channel, r2);
-  });
 });
 
 describe('sendGrpcIpcMultiple', () => {
