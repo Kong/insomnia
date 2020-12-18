@@ -8,9 +8,21 @@ type Props = {
   handleChange: string => Promise<void>,
   settings: Settings,
   readOnly: boolean,
+
+  handleRender?: string => Promise<string>,
+  isVariableUncovered?: boolean,
+  handleGetRenderContext?: Function,
 };
 
-const GRPCEditor = ({ content, handleChange, readOnly, settings, uniquenessKey }: Props) => (
+const GRPCEditor = ({
+  content,
+  handleChange,
+  readOnly,
+  settings,
+  handleGetRenderContext,
+  handleRender,
+  isVariableUncovered,
+}: Props) => (
   <CodeEditor
     fontSize={settings.editorFontSize}
     indentSize={settings.editorIndentSize}
@@ -23,6 +35,10 @@ const GRPCEditor = ({ content, handleChange, readOnly, settings, uniquenessKey }
     readOnly={readOnly}
     autoPrettify={readOnly}
     manualPrettify={!readOnly}
+    render={handleRender}
+    getRenderContext={handleGetRenderContext}
+    isVariableUncovered={isVariableUncovered}
+    nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
   />
 );
 
