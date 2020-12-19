@@ -79,7 +79,8 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
     this.props.handleCreateRequestGroup(this.props.requestGroup._id);
   };
 
-  _handleDeleteFolder = () => {
+  _handleDeleteFolder = async () => {
+    await models.stats.incrementDeletedRequestsForDescendents(this.props.requestGroup);
     models.requestGroup.remove(this.props.requestGroup);
   };
 

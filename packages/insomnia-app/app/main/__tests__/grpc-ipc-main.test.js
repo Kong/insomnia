@@ -18,59 +18,33 @@ describe('grpcIpcMain', () => {
     expect(ipcMain.on).toHaveBeenCalledWith(channel, expect.anything());
   });
 
-  it('should add expected listener for sendUnary', () => {
+  it('should add expected listener for start', () => {
     const [channel, listener] = ipcMain.on.mock.calls[0];
 
-    expect(channel).toBe(GrpcRequestEventEnum.sendUnary);
+    expect(channel).toBe(GrpcRequestEventEnum.start);
+
+    const param = {};
 
     // Execute the callback, and make sure the correct grpc method is called
-    listener(event, id);
-    expect(grpc.sendUnary).toHaveBeenCalledWith(id, expect.any(ResponseCallbacks));
-  });
-
-  it('should add expected listener for startClientStream', () => {
-    const [channel, listener] = ipcMain.on.mock.calls[1];
-
-    expect(channel).toBe(GrpcRequestEventEnum.startClientStream);
-
-    // Execute the callback, and make sure the correct grpc method is called
-    listener(event, id);
-    expect(grpc.startClientStreaming).toHaveBeenCalledWith(id, expect.any(ResponseCallbacks));
-  });
-
-  it('should add expected listener for startServerStream', () => {
-    const [channel, listener] = ipcMain.on.mock.calls[2];
-
-    expect(channel).toBe(GrpcRequestEventEnum.startServerStream);
-
-    // Execute the callback, and make sure the correct grpc method is called
-    listener(event, id);
-    expect(grpc.startServerStreaming).toHaveBeenCalledWith(id, expect.any(ResponseCallbacks));
-  });
-
-  it('should add expected listener for startBidiStream', () => {
-    const [channel, listener] = ipcMain.on.mock.calls[3];
-
-    expect(channel).toBe(GrpcRequestEventEnum.startBidiStream);
-
-    // Execute the callback, and make sure the correct grpc method is called
-    listener(event, id);
-    expect(grpc.startBidiStreaming).toHaveBeenCalledWith(id, expect.any(ResponseCallbacks));
+    listener(event, param);
+    expect(grpc.start).toHaveBeenCalledWith(param, expect.any(ResponseCallbacks));
   });
 
   it('should add expected listener for sendMessage', () => {
-    const [channel, listener] = ipcMain.on.mock.calls[4];
+    const [channel, listener] = ipcMain.on.mock.calls[1];
 
     // Expect the sendUnary channel
     expect(channel).toBe(GrpcRequestEventEnum.sendMessage);
 
+    const param = {};
+
     // Execute the callback, and make sure the correct grpc method is called
-    listener(event, id);
-    expect(grpc.sendMessage).toHaveBeenCalledWith(id, expect.any(ResponseCallbacks));
+    listener(event, param);
+    expect(grpc.sendMessage).toHaveBeenCalledWith(param, expect.any(ResponseCallbacks));
   });
 
   it('should add expected listener for commit', () => {
-    const [channel, listener] = ipcMain.on.mock.calls[5];
+    const [channel, listener] = ipcMain.on.mock.calls[2];
 
     expect(channel).toBe(GrpcRequestEventEnum.commit);
 
@@ -80,7 +54,7 @@ describe('grpcIpcMain', () => {
   });
 
   it('should add expected listener for cancel', () => {
-    const [channel, listener] = ipcMain.on.mock.calls[6];
+    const [channel, listener] = ipcMain.on.mock.calls[3];
 
     expect(channel).toBe(GrpcRequestEventEnum.cancel);
 
@@ -90,7 +64,7 @@ describe('grpcIpcMain', () => {
   });
 
   it('should add expected listener for cancel multiple', () => {
-    const [channel, listener] = ipcMain.on.mock.calls[7];
+    const [channel, listener] = ipcMain.on.mock.calls[4];
 
     expect(channel).toBe(GrpcRequestEventEnum.cancelMultiple);
 

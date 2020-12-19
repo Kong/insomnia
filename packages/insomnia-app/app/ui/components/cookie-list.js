@@ -19,6 +19,10 @@ type Props = {
   handleRender: Function,
 };
 
+// Use tough-cookie MAX_DATE value
+// https://github.com/salesforce/tough-cookie/blob/5ae97c6a28122f3fb309adcd8428274d9b2bd795/lib/cookie.js#L77
+const MAX_TIME = 2147483647000;
+
 class CookieList extends React.PureComponent<Props> {
   _handleCookieAdd = () => {
     const newCookie: Cookie = {
@@ -26,7 +30,7 @@ class CookieList extends React.PureComponent<Props> {
       key: 'foo',
       value: 'bar',
       domain: this.props.newCookieDomainName,
-      expires: null,
+      expires: MAX_TIME,
       path: '/',
       secure: false,
       httpOnly: false,

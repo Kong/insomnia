@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 const StyledButton = styled.button`
   display: flex;
@@ -27,6 +26,13 @@ const StyledButton = styled.button`
   &:active:not(:disabled) {
     background: var(--hl-md);
   }
+
+  ${({ selected }) =>
+    selected &&
+    css`
+      background: var(--hl-xs) !important;
+      font-weight: bold;
+    `};
 
   &:disabled {
     opacity: 0.5;
@@ -134,6 +140,7 @@ DropdownItem.propTypes = {
   right: PropTypes.node,
   className: PropTypes.string,
   color: PropTypes.string,
+  selected: PropTypes.bool,
 };
 
 export default DropdownItem;

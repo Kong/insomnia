@@ -13,7 +13,6 @@ import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insom
 import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import { getAuthTypeName, getContentTypeName } from '../../../common/constants';
-import * as db from '../../../common/database';
 import * as models from '../../../models';
 import AuthDropdown from '../dropdowns/auth-dropdown';
 import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
@@ -32,6 +31,7 @@ import type { ForceToWorkspace } from '../../redux/modules/helpers';
 import PlaceholderRequestPane from './placeholder-request-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import classnames from 'classnames';
+import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 
 type Props = {
   // Functions
@@ -83,21 +83,9 @@ class RequestPane extends React.PureComponent<Props> {
     });
   };
 
-  _autocompleteUrls = async (): Promise<Array<string>> => {
-    const docs = await db.withDescendants(this.props.workspace, models.request.type);
-
-    const requestId = this.props.request ? this.props.request._id : 'n/a';
-
-    const urls = docs
-      .filter(
-        (d: any) =>
-          d.type === models.request.type && // Only requests
-          d._id !== requestId && // Not current request
-          (d.url || ''), // Only ones with non-empty URLs
-      )
-      .map((r: any) => (r.url || '').trim());
-
-    return Array.from(new Set(urls));
+  _autocompleteUrls = (): Promise<Array<string>> => {
+    const { workspace, request } = this.props;
+    return queryAllWorkspaceUrls(workspace, models.request.type, request?._id);
   };
 
   _handleUpdateSettingsUseBulkHeaderEditor = () => {

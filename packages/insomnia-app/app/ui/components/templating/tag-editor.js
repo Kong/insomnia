@@ -14,8 +14,12 @@ import * as db from '../../../common/database';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 import { delay, fnOrString } from '../../../common/misc';
+import { metaSortKeySort } from '../../../common/sorting';
 import type { BaseModel } from '../../../models/index';
 import type { Workspace } from '../../../models/workspace';
+import type { Request } from '../../../models/request';
+import type { RequestGroup } from '../../../models/request-group';
+import { isRequest, isRequestGroup } from '../../../models/helpers/is-model';
 import type { PluginArgumentEnumOption } from '../../../templating/extensions/index';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown/index';
 import FileInputButton from '../base/file-input-button';
@@ -108,7 +112,22 @@ class TagEditor extends React.PureComponent<Props, State> {
     );
   };
 
+  _sortRequests = (_models: Array<Request | RequestGroup>, parentId: string) => {
+    let sortedModels = [];
+    _models
+      .filter(model => model.parentId === parentId)
+      .sort(metaSortKeySort)
+      .forEach(model => {
+        if (isRequest(model)) sortedModels.push(model);
+        if (isRequestGroup(model))
+          sortedModels = sortedModels.concat(this._sortRequests(_models, model._id));
+      });
+
+    return sortedModels;
+  };
+
   _refreshModels = async (workspace: Workspace) => {
+    
     this.setState({ loadingDocs: true });
 
     const allDocs = {};
@@ -120,6 +139,10 @@ class TagEditor extends React.PureComponent<Props, State> {
       allDocs[doc.type].push(doc);
     }
 
+    const requests = allDocs[models.request.type] || [];
+    const requestGroups = allDocs[models.requestGroup.type] || [];
+    const sortedReqs = this._sortRequests(requests.concat(requestGroups), this.props.workspace._id);
+    allDocs[models.request.type] = sortedReqs;
     this.setState({
       allDocs,
       loadingDocs: false,

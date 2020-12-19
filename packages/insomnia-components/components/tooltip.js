@@ -19,6 +19,7 @@ type Props = {
 
 type State = {
   visible: boolean,
+  movedToBody: boolean,
 };
 
 const StyledTooltip: React.ComponentType<{}> = styled.div`
@@ -72,13 +73,8 @@ class Tooltip extends React.PureComponent<Props, State> {
     super(props);
 
     this.state = {
-      left: null,
-      top: null,
-      bottom: null,
-      right: null,
-      maxWidth: null,
-      maxHeight: null,
       visible: false,
+      movedToBody: false,
     };
 
     this._id = Math.random() + '';
@@ -180,20 +176,42 @@ class Tooltip extends React.PureComponent<Props, State> {
     return container;
   };
 
-  componentDidMount = () => {
+  _moveBubbleToBody = () => {
     // Move the element to the body so we can position absolutely
     if (this._bubble) {
       const el = ReactDOM.findDOMNode(this._bubble);
       el && this._getContainer().appendChild(el);
+      this.setState({ movedToBody: true });
+    }
+  };
+
+
+  _removeBubbleFromBody = () => {
+    // Remove the element from the body
+    if (this._bubble) {
+      const el = ReactDOM.findDOMNode(this._bubble);
+      el && this._getContainer().removeChild(el);
+      this.setState({ movedToBody: false });
+    }
+  };
+
+  componentDidMount = () => {
+    // Move the element to the body so we can position absolutely
+    this._moveBubbleToBody();
+  };
+
+  componentDidUpdate = () => {
+    // If the bubble has not been moved to body, move it
+    //  this can happen if there is no message during the first mount
+    //  but a message is provided during on a subsequent render
+    if (!this.state.movedToBody) {
+      this._moveBubbleToBody();
     }
   };
 
   componentWillUnmount = () => {
     // Remove the element from the body
-    if (this._bubble) {
-      const el = ReactDOM.findDOMNode(this._bubble);
-      el && this._getContainer().removeChild(el);
-    }
+    this._removeBubbleFromBody();
   };
 
   render = () => {
