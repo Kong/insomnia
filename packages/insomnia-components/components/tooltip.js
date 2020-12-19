@@ -185,7 +185,6 @@ class Tooltip extends React.PureComponent<Props, State> {
     }
   };
 
-
   _removeBubbleFromBody = () => {
     // Remove the element from the body
     if (this._bubble) {

@@ -127,7 +127,6 @@ class TagEditor extends React.PureComponent<Props, State> {
   };
 
   _refreshModels = async (workspace: Workspace) => {
-    
     this.setState({ loadingDocs: true });
 
     const allDocs = {};
