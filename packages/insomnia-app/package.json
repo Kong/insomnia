@@ -202,7 +202,7 @@
     "license-checker": "^25.0.1",
     "ncp": "^2.0.0",
     "prompt-run": "^1.4.5",
-    "react-hot-loader": "^4.8.3",
+    "react-hot-loader": "^4.13.0",
     "react-test-renderer": "^16.14.0",
     "source-map-loader": "^1.0.0",
     "spectron": "^11.1.0",

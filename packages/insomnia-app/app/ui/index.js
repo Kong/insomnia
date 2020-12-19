@@ -1,3 +1,4 @@
+import { hot } from 'react-hot-loader';
 import * as React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
@@ -10,7 +11,6 @@ import { init as initPlugins } from '../plugins';
 import './css/index.less';
 import { getAppId, getAppLongName, isDevelopment } from '../common/constants';
 import { setFont, setTheme } from '../plugins/misc';
-import { AppContainer } from 'react-hot-loader';
 import { DragDropContext } from 'react-dnd';
 import DNDBackend from './dnd-backend';
 import { trackEvent } from '../common/analytics';
@@ -25,7 +25,7 @@ initializeLogging();
 document.body.setAttribute('data-platform', process.platform);
 document.title = getAppLongName();
 
-(async function() {
+(async () => {
   await db.initClient();
   await initPlugins();
 
@@ -42,24 +42,16 @@ document.title = getAppLongName();
   const context = DragDropContext(DNDBackend);
   const render = Component => {
     const DnDComponent = context(Component);
-    ReactDOM.render(
-      <AppContainer>
-        <Provider store={store}>
-          <DnDComponent />
-        </Provider>
-      </AppContainer>,
-      document.getElementById('root'),
+    const app = () => (
+      <Provider store={store}>
+        <DnDComponent />
+      </Provider>
     );
+    const TheHottestApp = hot(module)(app);
+    ReactDOM.render(<TheHottestApp />, document.getElementById('root'));
   };
 
   render(App);
-
-  // Hot Module Replacement API
-  if (module.hot) {
-    // module.hot.accept('./containers/app', () => {
-    //   render(App);
-    // });
-  }
 
   const appId = getAppId();
 
