@@ -1,5 +1,4 @@
 // @flow
-import React from 'react';
 import { ipcRenderer } from 'electron';
 import { GrpcResponseEventEnum } from '../../../common/grpc-events';
 import { grpcActions } from './grpc-actions';
@@ -55,15 +54,6 @@ const destroy = (): void => {
 export const grpcIpcRenderer = {
   init,
   destroy,
-};
-
-export const useGrpcIpc: string => GrpcRequestEvent => void = requestId =>
-  React.useCallback((channel: GrpcRequestEvent) => sendGrpcIpc(channel, requestId), [requestId]);
-
-const sendGrpcIpc = (channel: GrpcRequestEvent, requestId?: string) => {
-  if (requestId) {
-    ipcRenderer.send(channel, requestId);
-  }
 };
 
 export const sendGrpcIpcMultiple = (channel: GrpcRequestEvent, requestIds?: Array<string>) => {
