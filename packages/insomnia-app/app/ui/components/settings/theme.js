@@ -56,7 +56,6 @@ class Theme extends React.PureComponent<Props, State> {
         <h2 className="txt-lg">{theme.theme.displayName}</h2>
         <Button
           onClick={() => handleChangeTheme(theme, colorScheme)}
-          value={theme.theme.name}
           className={isActive ? 'active' : ''}>
           <svg theme={theme.theme.name} width="100%" height="100%" viewBox="0 0 500 300">
             <g subtheme={theme.theme.name}>
