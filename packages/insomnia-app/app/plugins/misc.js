@@ -252,7 +252,7 @@ export function getColorScheme(settings: Settings): ColorScheme {
   return 'default';
 }
 
-export async function applyColorScheme(settings: Settings): Promise<IColorTheme | null> {
+export async function applyColorScheme(settings: Settings): Promise<void> {
   const scheme = getColorScheme(settings);
   if (scheme === 'light') {
     await setTheme(settings.lightTheme);
