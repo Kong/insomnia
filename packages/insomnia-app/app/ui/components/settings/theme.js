@@ -5,7 +5,6 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import Button from '../base/button';
 import type { Theme as ThemeType, ColorScheme } from '../../../plugins';
 import { getThemes } from '../../../plugins';
-import { isDarkTheme } from '../../../plugins/misc';
 import HelpTooltip from '../help-tooltip';
 
 const THEMES_PER_ROW = 5;
@@ -108,15 +107,9 @@ class Theme extends React.PureComponent<Props, State> {
   renderThemeRows(colorScheme: ColorScheme): React.Node {
     const { themes } = this.state;
 
-    const filteredThemes: { ColorScheme: Array<ThemeType> } = {
-      default: themes,
-      light: themes.filter(theme => !isDarkTheme(theme)),
-      dark: themes.filter(theme => isDarkTheme(theme)),
-    }[colorScheme];
-
     const rows = [];
     let row = [];
-    for (const theme of filteredThemes) {
+    for (const theme of themes) {
       row.push(theme);
       if (row.length === THEMES_PER_ROW) {
         rows.push(row);

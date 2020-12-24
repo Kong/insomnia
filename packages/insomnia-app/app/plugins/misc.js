@@ -230,12 +230,6 @@ function wrapStyles(theme: string, selector: string, styles: string) {
   ].join('\n');
 }
 
-export function isDarkTheme(theme: Theme) {
-  // TODO just a heuristic, should be replaced with a property on themes
-  const background = theme.theme.theme.background?.default;
-  return background && Color(background).isDark();
-}
-
 export function getColorScheme(settings: Settings): ColorScheme {
   if (!settings.autoDetectColorScheme) {
     return 'default';
