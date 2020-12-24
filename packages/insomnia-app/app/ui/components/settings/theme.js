@@ -10,7 +10,7 @@ import HelpTooltip from '../help-tooltip';
 const THEMES_PER_ROW = 5;
 
 type Props = {
-  handleChangeTheme: (ThemeType, ColorScheme) => void,
+  handleChangeTheme: (string, ColorScheme) => void,
   activeTheme: string,
   handleAutoDetectColorSchemeChange: boolean => void,
   autoDetectColorScheme: boolean,
@@ -41,12 +41,9 @@ class Theme extends React.PureComponent<Props, State> {
   }
 
   renderTheme(theme: ThemeType, colorScheme: ColorScheme) {
-    const { handleChangeTheme, activeTheme, activeLightTheme, activeDarkTheme } = this.props;
+    const { handleChangeTheme, activeTheme } = this.props;
 
-    const isActive =
-      (colorScheme === 'default' && activeTheme === theme.theme.name) ||
-      (colorScheme === 'light' && activeLightTheme === theme.theme.name) ||
-      (colorScheme === 'dark' && activeDarkTheme === theme.theme.name);
+    const isActive = activeTheme === theme.theme.name;
 
     return (
       <div
@@ -55,7 +52,7 @@ class Theme extends React.PureComponent<Props, State> {
         style={{ maxWidth: `${100 / THEMES_PER_ROW}%` }}>
         <h2 className="txt-lg">{theme.theme.displayName}</h2>
         <Button
-          onClick={() => handleChangeTheme(theme, colorScheme)}
+          onClick={() => handleChangeTheme(theme.theme.name, 'default')}
           className={isActive ? 'active' : ''}>
           <svg theme={theme.theme.name} width="100%" height="100%" viewBox="0 0 500 300">
             <g subtheme={theme.theme.name}>
@@ -103,7 +100,7 @@ class Theme extends React.PureComponent<Props, State> {
     );
   }
 
-  renderThemeRows(colorScheme: ColorScheme): React.Node {
+  renderThemeRows(): React.Node {
     const { themes } = this.state;
 
     const rows = [];
@@ -123,44 +120,48 @@ class Theme extends React.PureComponent<Props, State> {
 
     return rows.map((row, i) => (
       <div key={i} className="themes__row">
-        {row.map(theme => this.renderTheme(theme, colorScheme))}
+        {row.map(theme => this.renderTheme(theme))}
       </div>
     ));
   }
 
-  renderColorSchemes(): React.Node {
-    const { autoDetectColorScheme } = this.props;
+  renderThemeSelect(scheme: ColorScheme) {
+    const { activeLightTheme, activeDarkTheme, handleChangeTheme } = this.props;
+    const { themes } = this.state;
 
-    if (!autoDetectColorScheme) {
-      return (
-        <>
-          <h2>Theme</h2>
-          <div className="themes">{this.renderThemeRows('default')}</div>
-        </>
-      );
-    }
+    const activeColorTheme = {
+      light: activeLightTheme,
+      dark: activeDarkTheme,
+    }[scheme];
 
     return (
-      <>
-        <h2>Light Theme</h2>
-        <div className="themes">{this.renderThemeRows('light')}</div>
-        <h2>Dark Theme</h2>
-        <div className="themes">{this.renderThemeRows('dark')}</div>
-      </>
+      <div className="form-control form-control--outlined">
+        <label>
+          Preferred {scheme} color scheme
+          <HelpTooltip className="space-left">
+            Lets you choose the color scheme that is used in {scheme} mode.
+          </HelpTooltip>
+          <select
+            value={activeColorTheme}
+            onChange={e => handleChangeTheme(e.target.value, scheme)}>
+            {themes.map(theme => (
+              <option key={theme.theme.name} value={theme.theme.name}>
+                {theme.theme.displayName}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
     );
   }
 
-  _handleAutoDetectColorSchemeChange(e: SyntheticEvent<HTMLInputElement>) {
-    const { handleAutoDetectColorSchemeChange } = this.props;
-
-    handleAutoDetectColorSchemeChange(e.target.checked);
-  }
-
   render() {
-    const { autoDetectColorScheme } = this.props;
+    const { autoDetectColorScheme, handleAutoDetectColorSchemeChange } = this.props;
 
     return (
       <>
+        <h2>Theme</h2>
+        <div className="themes">{this.renderThemeRows('default')}</div>
         <div className="form-control form-control--thin">
           <label className="inline-block">
             Use OS color scheme
@@ -171,11 +172,14 @@ class Theme extends React.PureComponent<Props, State> {
               type="checkbox"
               name="autoDetectColorScheme"
               checked={autoDetectColorScheme}
-              onChange={this._handleAutoDetectColorSchemeChange}
+              onChange={e => handleAutoDetectColorSchemeChange(e.target.checked)}
             />
           </label>
         </div>
-        {this.renderColorSchemes()}
+        <div className="form-row">
+          {this.renderThemeSelect('light')}
+          {this.renderThemeSelect('dark')}
+        </div>
       </>
     );
   }
