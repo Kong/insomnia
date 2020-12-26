@@ -378,10 +378,10 @@ class Editor extends PureComponent {
     return (
       <Lazy delay={pairs.length > 20 ? 50 : -1}>
         <ul className={classes}>
-          {pairs.map((pair, i) => (
+          {this.props.pairs.map((pair, i) => (
             <KeyValueEditorRow
               noDelete={disableDelete}
-              key={pair.id || 'no-id'}
+              key={i || 'no-id'}
               index={i} // For dragging
               ref={this._setRowRef}
               sortable={sortable}
@@ -412,7 +412,7 @@ class Editor extends PureComponent {
             />
           ))}
 
-          {!maxPairs || pairs.length < maxPairs ? (
+          {!maxPairs || this.props.pairs.length < maxPairs ? (
             <KeyValueEditorRow
               key="empty-row"
               hideButtons
