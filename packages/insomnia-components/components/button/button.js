@@ -1,34 +1,65 @@
 // @flow
 import * as React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
-type Props = {
-  onClick?: (e: SyntheticEvent<HTMLButtonElement>) => any,
-  bg?: 'default' | 'success' | 'notice' | 'warning' | 'danger' | 'surprise' | 'info',
-  variant?: 'outlined' | 'contained' | 'text',
-  size?: 'default' | 'small',
+export const ButtonSizeEnum = {
+  Default: 'default',
+  Small: 'small',
+  Medium: 'medium',
 };
 
-const StyledButton: React.ComponentType<Props> = styled.button`
+export const ButtonVariantEnum = {
+  Outlined: 'outlined',
+  Contained: 'contained',
+  Text: 'text',
+};
+
+export const ButtonThemeEnum = {
+  Default: 'default',
+  Surprise: 'surprise',
+  Info: 'info',
+  Success: 'success',
+  Notice: 'notice',
+  Warning: 'warning',
+  Danger: 'danger',
+};
+
+export type ButtonProps = React.ElementProps<'button'> & {
+  bg?: $Values<typeof ButtonThemeEnum>,
+  variant?: $Values<typeof ButtonVariantEnum>,
+  size?: $Values<typeof ButtonSizeEnum>,
+  radius?: string,
+};
+
+const StyledButton: React.ComponentType<ButtonProps> = styled.button`
   color: ${({ bg }) => (bg ? `var(--color-${bg})` : 'var(--color-font)')};
   text-align: center;
   font-size: var(--font-size-sm);
-  border-radius: 3px;
   display: inline-flex !important;
   flex-direction: row !important;
   align-items: center !important;
   border: 1px solid transparent;
 
+  ${({ radius }) => css`
+    border-radius: ${radius};
+  `};
+
   ${({ size }) => {
     switch (size) {
       case 'small':
-        return `
+        return css`
           padding: 0 calc(var(--padding-md) * 0.8);
           height: calc(var(--line-height-xs) * 0.8);
           font-size: var(--font-size-sm);
         `;
+      case 'medium':
+        return css`
+          padding: 0 var(--padding-md);
+          height: calc(var(--line-height-md) * 0.8);
+          font-size: var(--font-size-md);
+        `;
       default:
-        return `
+        return css`
           padding: 0 var(--padding-md);
           height: var(--line-height-xs);
         `;
@@ -100,13 +131,12 @@ const StyledButton: React.ComponentType<Props> = styled.button`
   }
 `;
 
-const Button = ({ variant, bg, size, ...props }: Props) => (
+export const Button = ({ variant, bg, size, radius, ...props }: ButtonProps) => (
   <StyledButton
     {...props}
     variant={variant || 'outlined'}
     bg={bg || 'default'}
     size={size || 'default'}
+    radius={radius || '3px'}
   />
 );
-
-export default Button;

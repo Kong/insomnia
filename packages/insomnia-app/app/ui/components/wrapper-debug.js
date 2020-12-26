@@ -39,6 +39,7 @@ type Props = {
   handleSetResponseFilter: Function,
   handleShowCookiesModal: Function,
   handleShowRequestSettingsModal: Function,
+  handleSidebarSort: (sortOrder: SortOrder) => void,
   handleUpdateRequestAuthentication: Function,
   handleUpdateRequestBody: Function,
   handleUpdateRequestHeaders: Function,
@@ -94,6 +95,7 @@ class WrapperDebug extends React.PureComponent<Props> {
       handleRequestCreate,
       handleRequestGroupCreate,
       handleShowCookiesModal,
+      handleSidebarSort,
     } = this.props;
 
     const {
@@ -166,6 +168,7 @@ class WrapperDebug extends React.PureComponent<Props> {
           onChange={handleSetSidebarFilter}
           requestCreate={handleRequestCreate}
           requestGroupCreate={handleRequestGroupCreate}
+          sidebarSort={handleSidebarSort}
           filter={sidebarFilter || ''}
           hotKeyRegistry={settings.hotKeyRegistry}
         />
@@ -241,8 +244,13 @@ class WrapperDebug extends React.PureComponent<Props> {
         <ErrorBoundary showAlert>
           <GrpcRequestPane
             activeRequest={activeRequest}
+            environmentId={activeEnvironment ? activeEnvironment._id : ''}
+            workspaceId={activeWorkspace._id}
             forceRefreshCounter={forceRefreshKey}
             settings={settings}
+            handleRender={handleRender}
+            isVariableUncovered={isVariableUncovered}
+            handleGetRenderContext={handleGetRenderContext}
           />
         </ErrorBoundary>
       );

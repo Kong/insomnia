@@ -48,6 +48,16 @@ module.exports.templateTags = [
         defaultValue: true,
       },
     ],
+    actions: [
+      {
+        name: 'Clear',
+        icon: 'fa fa-trash',
+        run: context => {
+          console.log(`[prompt] Clear action`);
+          return context.store.clear();
+        },
+      },
+    ],
     async run(context, title, label, defaultValue, explicitStorageKey, maskText, saveLastValue) {
       if (!title) {
         throw new Error('Title attribute is required for prompt tag');

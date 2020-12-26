@@ -7,6 +7,8 @@ import { getTempDir, isDevelopment, isWindows, PLUGIN_PATH } from '../common/con
 import mkdirp from 'mkdirp';
 import path from 'path';
 
+const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
+
 export default async function(lookupName: string): Promise<void> {
   return new Promise(async (resolve, reject) => {
     let info: Object = {};
@@ -159,7 +161,7 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
           return;
         }
 
-        if (stderr) {
+        if (stderr && !containsOnlyDeprecationWarnings(stderr)) {
           reject(new Error(`Yarn error ${stderr.toString()}`));
           return;
         }
@@ -168,6 +170,37 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
       },
     );
   });
+}
+
+export function containsOnlyDeprecationWarnings(stderr) {
+  // Split on line breaks and remove falsy values (null, undefined, 0, -0, NaN, "", false)
+  const arr = stderr.split(/\r?\n/).filter(e => e);
+  // Retrieve all matching deprecated dependency warning
+  const warnings = arr.filter(e => isDeprecatedDependencies(e));
+  // Print each deprecation warnings to the console, so we don't hide them.
+  warnings.forEach(e => console.warn('[plugins] deprecation warning during installation: ', e));
+  // If they mismatch, it means there are warnings and errors
+  return warnings.length === arr.length;
+}
+
+/**
+ * Provided a string, it checks for the following message:<br>
+ * <<[warning] xxx > yyy > zzz: yyy<n is [no longer maintained] and [not recommended for usage] <br>
+ * due to the number of issues. Please, [upgrade your dependencies] to xxx>> <br>
+ * @param str The error message
+ * @returns {boolean} Returns true if it's a deprecated warning
+ */
+export function isDeprecatedDependencies(str: string): boolean {
+  // The issue contains the message as it is without the dependency list
+  const message = YARN_DEPRECATED_WARN.exec(str)?.groups.issue;
+  // Strict check, everything must be matched to be a false positive
+  // !! is not a mistake, makes it returns boolean instead of undefined on error
+  return !!(
+    message &&
+    message.includes('no longer maintained') &&
+    message.includes('not recommended for usage') &&
+    message.includes('upgrade your dependencies')
+  );
 }
 
 function _getYarnPath() {

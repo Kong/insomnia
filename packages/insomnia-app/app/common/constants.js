@@ -260,6 +260,42 @@ const authTypesMap = {
   [AUTH_NETRC]: ['Netrc', 'Netrc File'],
 };
 
+// Sort Orders
+export type SortOrder =
+  | 'name-asc'
+  | 'name-desc'
+  | 'created-first'
+  | 'created-last'
+  | 'method'
+  | 'type-desc'
+  | 'type-asc';
+export const SORT_NAME_ASC: SortOrder = 'name-asc';
+export const SORT_NAME_DESC: SortOrder = 'name-desc';
+export const SORT_CREATED_ASC: SortOrder = 'created-asc';
+export const SORT_CREATED_DESC: SortOrder = 'created-desc';
+export const SORT_HTTP_METHOD: SortOrder = 'http-method';
+export const SORT_TYPE_DESC: SortOrder = 'type-desc';
+export const SORT_TYPE_ASC: SortOrder = 'type-asc';
+export const SORT_ORDERS = [
+  SORT_NAME_ASC,
+  SORT_NAME_DESC,
+  SORT_CREATED_ASC,
+  SORT_CREATED_DESC,
+  SORT_HTTP_METHOD,
+  SORT_TYPE_DESC,
+  SORT_TYPE_ASC,
+];
+
+export const sortOrderName: { [SortOrder]: string } = {
+  [SORT_NAME_ASC]: 'Name Ascending',
+  [SORT_NAME_DESC]: 'Name Descending',
+  [SORT_CREATED_ASC]: 'Oldest First',
+  [SORT_CREATED_DESC]: 'Newest First',
+  [SORT_HTTP_METHOD]: 'HTTP Method',
+  [SORT_TYPE_DESC]: 'Folders First',
+  [SORT_TYPE_ASC]: 'Requests First',
+};
+
 export function getPreviewModeName(previewMode, useLong = false) {
   if (previewModeMap.hasOwnProperty(previewMode)) {
     return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];

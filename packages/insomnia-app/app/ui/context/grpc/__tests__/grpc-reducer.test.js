@@ -294,6 +294,30 @@ describe('grpcReducer actions', () => {
         [r3]: r3Expected,
       });
     });
+
+    it('should do nothing if no requests found for the proto file', async () => {
+      const parentId = 'wrk_1';
+
+      // Create a request not linked to the proto file
+      const pf = await models.protoFile.create({ parentId });
+
+      const r1 = 'r1';
+      await models.grpcRequest.create({ parentId, _id: r1 });
+
+      // Setup original state
+      const originalState: GrpcState = {
+        [r1]: requestStateBuilder
+          .reset()
+          .reloadMethods(false)
+          .build(),
+      };
+
+      // Dispatch an invalidateMany action, with the modified proto file id as an argument
+      const newState = grpcReducer(originalState, await grpcActions.invalidateMany(pf._id));
+
+      // Expect no state change
+      expect(newState).toStrictEqual(originalState);
+    });
   });
 
   describe('clear', () => {

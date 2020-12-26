@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "2.2.25",
+  "version": "2.2.27",
   "name": "insomnia-app",
   "homepage": "https://konghq.com",
   "description": "The Collaborative API Design Tool",
@@ -28,6 +28,9 @@
   "jest": {
     "setupFiles": [
       "./__jest__/setup.js"
+    ],
+    "setupFilesAfterEnv": [
+      "./__jest__/setup-after-env.js"
     ],
     "moduleNameMapper": {
       "\\.(css|less|png)$": "<rootDir>/__mocks__/dummy.js",
@@ -111,12 +114,12 @@
     "fuzzysort": "^1.1.1",
     "graphql": "^14.5.8",
     "hawk": "^6.0.2",
-    "highlight.js": "^9.12.0",
+    "highlight.js": "^10.4.1",
     "hkdf": "^0.0.2",
     "html-entities": "^1.2.0",
     "httpsnippet": "^1.23.0",
     "iconv-lite": "^0.4.15",
-    "insomnia-components": "^2.2.24",
+    "insomnia-components": "^2.2.26",
     "insomnia-cookies": "^2.2.24",
     "insomnia-importers": "^2.2.24",
     "insomnia-plugin-base64": "^2.2.24",
@@ -132,7 +135,7 @@
     "insomnia-plugin-response": "^2.2.25",
     "insomnia-plugin-uuid": "^2.2.24",
     "insomnia-prettify": "^2.2.24",
-    "insomnia-testing": "^2.2.24",
+    "insomnia-testing": "^2.2.26",
     "insomnia-url": "^2.2.24",
     "insomnia-xpath": "^2.2.24",
     "isomorphic-git": "^0.70.3",
@@ -148,11 +151,11 @@
     "multiparty": "^4.2.1",
     "nedb": "^1.8.0",
     "node-forge": "^0.10.0",
-    "node-libcurl": "^2.2.0",
+    "node-libcurl": "2.2.0",
     "nunjucks": "^3.2.0",
     "oauth-1.0a": "^2.2.2",
     "objectpath": "^2.0.0",
-    "openapi-2-kong": "^2.2.24",
+    "openapi-2-kong": "^2.2.26",
     "papaparse": "^5.2.0",
     "pdfjs-dist": "^2.5.207",
     "prop-types": "^15.6.1",
@@ -187,6 +190,7 @@
     "@octokit/rest": "^17.6.0",
     "@storybook/addon-info": "^5.2.8",
     "@storybook/react": "^5.2.6",
+    "@testing-library/dom": "^7.28.1",
     "@testing-library/jest-dom": "^5.11.5",
     "@testing-library/react": "^11.1.1",
     "@testing-library/react-hooks": "^3.4.2",

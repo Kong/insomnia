@@ -96,9 +96,10 @@ import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
 import { APP_ID_INSOMNIA } from '../../../config';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
-import { isGrpcRequest, isGrpcRequestId } from '../../models/helpers/is-model';
+import { isGrpcRequest, isGrpcRequestId, isRequestGroup } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
+import { sortMethodMap } from '../../common/sorting';
 
 @autobind
 class App extends PureComponent {
@@ -209,6 +210,7 @@ class App extends PureComponent {
           const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
           const request = await models.request.create({ parentId, name: 'New Request' });
           await this._handleSetActiveRequest(request._id);
+          models.stats.incrementCreatedRequests();
         },
       ],
       [
@@ -236,6 +238,7 @@ class App extends PureComponent {
                 return;
               }
               await requestOperations.remove(activeRequest);
+              models.stats.incrementDeletedRequests();
             },
           });
         },
@@ -338,8 +341,39 @@ class App extends PureComponent {
       parentId,
       onComplete: requestId => {
         this._handleSetActiveRequest(requestId);
+        models.stats.incrementCreatedRequests();
       },
     });
+  }
+
+  async _recalculateMetaSortKey(docs) {
+    function __updateDoc(doc, metaSortKey) {
+      return models.getModel(doc.type).update(doc, { metaSortKey });
+    }
+
+    return Promise.all(docs.map((doc, i) => __updateDoc(doc, i * 100)));
+  }
+
+  async _sortSidebar(order, parentId) {
+    let flushId;
+    if (!parentId) {
+      parentId = this.props.activeWorkspace._id;
+      flushId = await db.bufferChanges();
+    }
+
+    const docs = [
+      ...(await models.requestGroup.findByParentId(parentId)),
+      ...(await models.request.findByParentId(parentId)),
+      ...(await models.grpcRequest.findByParentId(parentId)),
+    ].sort(sortMethodMap[order]);
+    await this._recalculateMetaSortKey(docs);
+
+    // sort RequestGroups recursively
+    await Promise.all(docs.filter(isRequestGroup).map(g => this._sortSidebar(order, g._id)));
+
+    if (flushId) {
+      await db.flushChanges(flushId);
+    }
   }
 
   static async _requestGroupDuplicate(requestGroup) {
@@ -350,7 +384,9 @@ class App extends PureComponent {
       label: 'New Name',
       selectText: true,
       onComplete: async name => {
-        await models.requestGroup.duplicate(requestGroup, { name });
+        const newRequestGroup = await models.requestGroup.duplicate(requestGroup, { name });
+
+        models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
       },
     });
   }
@@ -373,6 +409,7 @@ class App extends PureComponent {
       onComplete: async name => {
         const newRequest = await requestOperations.duplicate(request, { name });
         await this._handleSetActiveRequest(newRequest._id);
+        models.stats.incrementCreatedRequests();
       },
     });
   }
@@ -404,6 +441,9 @@ class App extends PureComponent {
         if (!isYes) {
           return;
         }
+
+        await models.stats.incrementDeletedRequestsForDescendents(workspace);
+
         await models.workspace.remove(workspace);
       },
     });
@@ -422,6 +462,8 @@ class App extends PureComponent {
         const newWorkspace = await db.duplicate(workspace, { name });
         await this.props.handleSetActiveWorkspace(newWorkspace._id);
         callback();
+
+        models.stats.incrementCreatedRequestsForDescendents(newWorkspace);
       },
     });
   }
@@ -650,12 +692,8 @@ class App extends PureComponent {
       return;
     }
 
-    // NOTE: Since request is by far the most popular event, we will throttle
-    // it so that we only track it if the request has changed since the last one
-    const key = request._id;
-    if (this._sendRequestTrackingKey !== key) {
-      this._sendRequestTrackingKey = key;
-    }
+    // Update request stats
+    models.stats.incrementExecutedRequests();
 
     // Start loading
     handleStartLoading(requestId);
@@ -738,12 +776,8 @@ class App extends PureComponent {
       return;
     }
 
-    // NOTE: Since request is by far the most popular event, we will throttle
-    // it so that we only track it if the request has changed since the last noe
-    const key = `${request._id}::${request.modified}`;
-    if (this._sendRequestTrackingKey !== key) {
-      this._sendRequestTrackingKey = key;
-    }
+    // Update request stats
+    models.stats.incrementExecutedRequests();
 
     handleStartLoading(requestId);
 
@@ -1343,6 +1377,7 @@ class App extends PureComponent {
                 handleUpdateDownloadPath={this._handleUpdateDownloadPath}
                 isVariableUncovered={isVariableUncovered}
                 headerEditorKey={forceRefreshHeaderCounter + ''}
+                handleSidebarSort={this._sortSidebar}
                 vcs={vcs}
                 gitVCS={gitVCS}
               />
@@ -1543,7 +1578,7 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   }
 
   function __updateDoc(doc, patch) {
-    models.getModel(docToMove.type).update(doc, patch);
+    return models.getModel(docToMove.type).update(doc, patch);
   }
 
   if (targetId === null) {

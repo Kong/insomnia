@@ -27,6 +27,7 @@ import Button from '../../base/button';
 import { showModal } from '../../modals';
 import ResponseDebugModal from '../../modals/response-debug-modal';
 import type { Settings } from '../../../../models/settings';
+import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
 
 type Props = {
   handleRender: Function,
@@ -255,7 +256,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
               className="btn btn--super-duper-compact"
               id="use-pkce"
               onClick={onChange}
-              value={authentication.usePkce}
+              value={!authentication.usePkce}
               title={authentication.usePkce ? 'Disable PKCE' : 'Enable PKCE'}>
               {authentication.usePkce ? (
                 <i className="fa fa-check-square-o" />
@@ -584,6 +585,13 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
             {showAdvanced && fields.advanced}
           </tbody>
         </table>
+        {showAdvanced ? (
+          <div className="pad-top text-right">
+            <button className="btn btn--clicky" onClick={initNewOAuthSession}>
+              Clear OAuth 2 session
+            </button>
+          </div>
+        ) : null}
         <div className="notice subtle margin-top text-left">
           {error && <p className="selectable notice warning margin-bottom">{error}</p>}
           {this.renderError()}

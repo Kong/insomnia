@@ -2,7 +2,16 @@
 import type { Plugin } from '../index';
 import * as models from '../../models';
 
-export function init(plugin: Plugin) {
+export type PluginStore = {
+  hasItem(string): Promise<boolean>,
+  setItem(string, string): Promise<void>,
+  getItem(string): Promise<string | null>,
+  removeItem(string): Promise<void>,
+  clear(): Promise<void>,
+  all(): Promise<Array<{ key: string, value: string }>>,
+};
+
+export function init(plugin: Plugin): { store: PluginStore } {
   return {
     store: {
       async hasItem(key: string): Promise<boolean> {

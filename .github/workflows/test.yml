@@ -40,3 +40,5 @@ jobs:
       - name: Run designer smoke tests
         timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
         run: npm run test:smoke:designer:build
+      - name: Run CLI smoke tests
+        run: npm run test:smoke:cli

@@ -89,6 +89,7 @@ import {
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   getAppName,
+  SortOrder,
 } from '../../common/constants';
 import { Spectral } from '@stoplight/spectral';
 import ProtoFilesModal from './modals/proto-files-modal';
@@ -140,6 +141,7 @@ export type WrapperProps = {
   handleSetResponseFilter: Function,
   handleSetActiveResponse: Function,
   handleSetSidebarRef: Function,
+  handleSidebarSort: (sortOrder: SortOrder) => void,
   handleStartDragSidebar: Function,
   handleResetDragSidebar: Function,
   handleStartDragPaneHorizontal: Function,
@@ -429,11 +431,15 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
         title: 'Deleting Last Workspace',
         message: 'Since you deleted your only workspace, a new one has been created for you.',
         onConfirm: async () => {
+          await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
+
           await models.workspace.create({ name: getAppName() });
           await models.workspace.remove(activeWorkspace);
         },
       });
     } else {
+      await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
+
       await models.workspace.remove(activeWorkspace);
     }
   }
@@ -538,6 +544,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       handleRender,
       handleSetActiveWorkspace,
       handleShowExportRequestsModal,
+      handleSidebarSort,
       handleToggleMenuBar,
       isVariableUncovered,
       requestMetas,
@@ -844,6 +851,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleSetResponseFilter={this._handleSetResponseFilter}
               handleShowCookiesModal={this._handleShowCookiesModal}
               handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
+              handleSidebarSort={handleSidebarSort}
               handleUpdateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
               handleUpdateRequestBody={Wrapper._handleUpdateRequestBody}
               handleUpdateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
