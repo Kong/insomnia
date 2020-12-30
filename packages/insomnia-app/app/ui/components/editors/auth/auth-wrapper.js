@@ -27,6 +27,8 @@ import autobind from 'autobind-decorator';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Settings } from '../../../../models/settings';
+import { showModal } from '../../modals';
+import SettingsModal from '../../modals/settings-modal';
 
 type Props = {
   handleRender: Function,
@@ -44,6 +46,10 @@ type Props = {
 
 @autobind
 class AuthWrapper extends React.PureComponent<Props> {
+  static _handleShowSettings() {
+    showModal(SettingsModal);
+  }
+
   renderEditor() {
     const {
       oAuth2Token,
@@ -180,6 +186,15 @@ class AuthWrapper extends React.PureComponent<Props> {
             <br />
             <br />
             Select an auth type from above
+            <br />
+            <br />
+            Use Reveal passwords in{' '}
+            <button
+              onClick={AuthWrapper._handleShowSettings}
+              className="btn btn--outlined btn--super-duper-compact">
+              Preferences
+            </button>{' '}
+            to toggle password visibility
           </p>
         </div>
       );

@@ -152,7 +152,7 @@ export const clickBasicAuth = async app => {
 export const expectNoAuthSelected = async app => {
   const wrapper = await app.client.react$('RequestPane').then(e => e.react$('AuthWrapper'));
   await wrapper.waitForDisplayed();
-  await expectText(wrapper, 'Select an auth type from above');
+  await expectContainsText(wrapper, 'Select an auth type from above');
 };
 
 export const typeBasicAuthUsernameAndPassword = async (app, username, password, clear = false) => {
