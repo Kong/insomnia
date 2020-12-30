@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "2.2.26",
+  "version": "2.2.27",
   "name": "insomnia-app",
   "homepage": "https://konghq.com",
   "description": "The Collaborative API Design Tool",
@@ -28,6 +28,9 @@
   "jest": {
     "setupFiles": [
       "./__jest__/setup.js"
+    ],
+    "setupFilesAfterEnv": [
+      "./__jest__/setup-after-env.js"
     ],
     "moduleNameMapper": {
       "\\.(css|less|png)$": "<rootDir>/__mocks__/dummy.js",
@@ -111,7 +114,7 @@
     "fuzzysort": "^1.1.1",
     "graphql": "^14.5.8",
     "hawk": "^6.0.2",
-    "highlight.js": "^9.12.0",
+    "highlight.js": "^10.4.1",
     "hkdf": "^0.0.2",
     "html-entities": "^1.2.0",
     "httpsnippet": "^1.23.0",
@@ -187,6 +190,7 @@
     "@octokit/rest": "^17.6.0",
     "@storybook/addon-info": "^5.2.8",
     "@storybook/react": "^5.2.6",
+    "@testing-library/dom": "^7.28.1",
     "@testing-library/jest-dom": "^5.11.5",
     "@testing-library/react": "^11.1.1",
     "@testing-library/react-hooks": "^3.4.2",

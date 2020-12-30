@@ -8,7 +8,7 @@ export const prefix = 'greq';
 export const canDuplicate = true;
 export const canSync = true;
 
-type RequestBody = {
+export type GrpcRequestBody = {
   text?: string,
 };
 
@@ -18,7 +18,7 @@ type BaseGrpcRequest = {
   description: string,
   protoFileId?: string,
   protoMethodName?: string,
-  body: RequestBody,
+  body: GrpcRequestBody,
   metaSortKey: number,
   isPrivate: boolean,
 };
