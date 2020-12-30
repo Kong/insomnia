@@ -29,7 +29,11 @@
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },
-  "repository": "https://github.com/Kong/insomnia/tree/develop/packages/openapi-2-kong",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/insomnia.git",
+    "directory": "packages/openapi-2-kong"
+  },
   "bugs": {
     "url": "https://github.com/Kong/insomnia/issues"
   },
