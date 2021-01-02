@@ -19,8 +19,19 @@ type Props = {
   isVariableUncovered: boolean,
 };
 
+type State = {
+  showPassword: Boolean,
+};
+
 @autobind
-class BasicAuth extends React.PureComponent<Props> {
+class BasicAuth extends React.PureComponent<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      showPassword: false,
+    };
+  }
+
   _handleUseISO88591() {
     const { request, onChange } = this.props;
     onChange(request, {
@@ -47,7 +58,12 @@ class BasicAuth extends React.PureComponent<Props> {
     onChange(request, { ...request.authentication, password: value });
   }
 
+  _handleShowPassword() {
+    this.setState({ showPassword: !this.state.showPassword });
+  }
+
   render() {
+    const { showPassword } = this.state;
     const {
       request,
       showPasswords,
@@ -94,13 +110,13 @@ class BasicAuth extends React.PureComponent<Props> {
                   Password
                 </label>
               </td>
-              <td className="wide">
+              <td className="flex wide">
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
                     'form-control--inactive': authentication.disabled,
                   })}>
                   <OneLineEditor
-                    type={showPasswords ? 'text' : 'password'}
+                    type={showPasswords || showPassword ? 'text' : 'password'}
                     id="password"
                     onChange={this._handleChangePassword}
                     defaultValue={authentication.password || ''}
@@ -110,6 +126,16 @@ class BasicAuth extends React.PureComponent<Props> {
                     isVariableUncovered={isVariableUncovered}
                   />
                 </div>
+                {!showPasswords ? (
+                  <Button
+                    className="btn btn--super-duper-compact pointer"
+                    onClick={this._handleShowPassword}
+                    value={showPassword}>
+                    {showPassword ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}
+                  </Button>
+                ) : (
+                  <></>
+                )}
               </td>
             </tr>
             <tr>
