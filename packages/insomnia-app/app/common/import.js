@@ -265,11 +265,13 @@ export async function importRaw(
       importedDocs[spec.type].push(spec);
     }
 
-    // Set default environment if there is one
+    // Set active environment when none is currently selected and one exists
     const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
     const envs = importedDocs[models.environment.type];
-    meta.activeEnvironmentId = envs.length > 0 ? envs[0]._id : null;
-    await models.workspaceMeta.update(meta);
+    if (!meta.activeEnvironmentId && envs.length > 0) {
+      meta.activeEnvironmentId = envs[0]._id;
+      await models.workspaceMeta.update(meta);
+    }
   }
 
   await db.flushChanges();
