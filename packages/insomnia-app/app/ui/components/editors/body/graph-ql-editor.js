@@ -336,7 +336,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     };
 
     const { canceled, filePaths: paths } = await electron.remote.dialog.showOpenDialog(options);
-
     if (canceled) {
       return;
     }
